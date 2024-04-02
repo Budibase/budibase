@@ -367,7 +367,7 @@
         "value": {
           "data": {
             "_id": "us_693a73206518477283a8d5ae31103252",
-            "email": "test@test.com",
+            "email": "test@example.com",
             "roles": {
               "app_957b12f943d348faa61db7e18e088d0f": "BASIC"
             },
@@ -397,7 +397,7 @@
           "data": [
             {
               "_id": "us_693a73206518477283a8d5ae31103252",
-              "email": "test@test.com",
+              "email": "test@example.com",
               "roles": {
                 "app_957b12f943d348faa61db7e18e088d0f": "BASIC"
               },
@@ -2152,7 +2152,7 @@
     "/applications/{appId}/publish": {
       "post": {
         "operationId": "appPublish",
-        "summary": "Unpublish an application",
+        "summary": "Publish an application",
         "tags": [
           "applications"
         ],

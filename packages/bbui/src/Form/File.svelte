@@ -14,6 +14,7 @@
   export let title = null
   export let value = null
   export let tooltip = null
+  export let helpText = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -22,7 +23,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error} {tooltip}>
+<Field {helpText} {label} {labelPosition} {error} {tooltip}>
   <CoreFile
     {error}
     {disabled}

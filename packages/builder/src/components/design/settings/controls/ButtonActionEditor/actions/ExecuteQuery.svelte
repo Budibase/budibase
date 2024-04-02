@@ -1,6 +1,6 @@
 <script>
   import { Select, Layout, Input, Checkbox } from "@budibase/bbui"
-  import { datasources, integrations, queries } from "stores/backend"
+  import { datasources, integrations, queries } from "stores/builder"
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import {
@@ -64,7 +64,13 @@
 
       {#if parameters.confirm}
         <Input
-          label="Confirm text"
+          label="Title"
+          placeholder="Execute Query"
+          bind:value={parameters.customTitleText}
+        />
+
+        <Input
+          label="Text"
           placeholder="Are you sure you want to execute this query?"
           bind:value={parameters.confirmText}
         />

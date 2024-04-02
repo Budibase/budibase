@@ -51,10 +51,22 @@ export async function removeAppRole(ctx: Ctx) {
   const users = await sdk.users.db.allUsers()
   const bulk = []
   const cacheInvalidations = []
+  const prodAppId = dbCore.getProdAppID(appId)
   for (let user of users) {
-    if (user.roles[appId]) {
-      cacheInvalidations.push(cache.user.invalidateUser(user._id))
-      delete user.roles[appId]
+    let updated = false
+    if (user.roles[prodAppId]) {
+      cacheInvalidations.push(cache.user.invalidateUser(user._id!))
+      delete user.roles[prodAppId]
+      updated = true
+    }
+    if (user.builder && Array.isArray(user.builder?.apps)) {
+      const idx = user.builder.apps.indexOf(prodAppId)
+      if (idx !== -1) {
+        user.builder.apps.splice(idx, 1)
+        updated = true
+      }
+    }
+    if (updated) {
       bulk.push(user)
     }
   }

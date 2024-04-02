@@ -59,7 +59,7 @@
 
 <LockedFeature
   title={"Environment Variables"}
-  planType={"Business plan"}
+  planType={"Enterprise plan"}
   description={"Add and manage environment variables for development and production"}
   enabled={$licensing.environmentVariablesEnabled}
   upgradeButtonClick={async () => {

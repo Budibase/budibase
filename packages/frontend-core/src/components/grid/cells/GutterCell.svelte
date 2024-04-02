@@ -1,9 +1,8 @@
 <script>
   import { GutterWidth } from "../lib/constants"
-  import { getContext } from "svelte"
+  import { getContext, createEventDispatcher } from "svelte"
   import { Checkbox, Icon } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
-  import { createEventDispatcher } from "svelte"
 
   export let row
   export let rowFocused = false
@@ -37,6 +36,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <GridCell
   width={GutterWidth}
   highlighted={rowFocused || rowHovered}

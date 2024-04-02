@@ -1,23 +1,22 @@
 <script>
   import Icon from "../Icon/Icon.svelte"
-  import { createEventDispatcher } from "svelte"
 
   export let name
-  export let show = false
+  export let initiallyShow = false
   export let collapsible = true
 
-  const dispatch = createEventDispatcher()
+  let show = initiallyShow
+
   const onHeaderClick = () => {
     if (!collapsible) {
       return
     }
     show = !show
-    if (show) {
-      dispatch("open")
-    }
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="property-group-container">
   {#if name}
     <div class="property-group-name" on:click={onHeaderClick}>
@@ -81,7 +80,7 @@
       var(--spacing-xl);
   }
   .property-panel.no-title {
-    padding: var(--spacing-xl);
+    padding-top: var(--spacing-xl);
   }
 
   .show {

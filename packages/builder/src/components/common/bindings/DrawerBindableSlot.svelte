@@ -3,7 +3,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
 
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
@@ -16,7 +16,6 @@
   export let placeholder
   export let label
   export let disabled = false
-  export let fillWidth
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
@@ -26,7 +25,6 @@
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
-  let valid = true
   let currentVal = value
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
@@ -44,7 +42,11 @@
   })
 
   const onChange = value => {
-    if (type === "link" && value && hasValidLinks(value)) {
+    if (
+      (type === "link" || type === "bb_reference") &&
+      value &&
+      hasValidLinks(value)
+    ) {
       currentVal = value.split(",")
     } else if (type === "array" && value && hasValidOptions(value)) {
       currentVal = value.split(",")
@@ -95,6 +97,7 @@
     date: isValidDate,
     datetime: isValidDate,
     link: hasValidLinks,
+    bb_reference: hasValidLinks,
     array: hasValidOptions,
     longform: value => !isJSBinding(value),
     json: value => !isJSBinding(value),
@@ -113,13 +116,15 @@
     if (type === "json" && !isJSBinding(value)) {
       return "json-slot-icon"
     }
-    if (type !== "string" && type !== "number") {
+    if (!["string", "number", "bigint", "barcodeqr"].includes(type)) {
       return "slot-icon"
     }
     return ""
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="control" class:disabled>
   {#if !isValid(value)}
     <Input
@@ -166,22 +171,14 @@
 <Drawer
   on:drawerHide
   on:drawerShow
-  {fillWidth}
   bind:this={bindingDrawer}
-  {title}
+  title={title ?? placeholder ?? "Bindings"}
   left={drawerLeft}
-  headless
 >
-  <svelte:fragment slot="description">
-    Add the objects on the left to enrich your text.
-  </svelte:fragment>
-  <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
-    Save
-  </Button>
+  <Button cta slot="buttons" on:click={saveBinding}>Save</Button>
   <svelte:component
     this={panel}
     slot="body"
-    bind:valid
     value={readableValue}
     on:change={event => (tempValue = event.detail)}
     {bindings}
@@ -206,12 +203,12 @@
   .text-area-slot-icon {
     border-bottom: 1px solid var(--spectrum-alias-border-color);
     border-bottom-right-radius: 0px !important;
-    top: 26px !important;
+    top: 1px !important;
   }
   .json-slot-icon {
     border-bottom: 1px solid var(--spectrum-alias-border-color);
     border-bottom-right-radius: 0px !important;
-    top: 23px !important;
+    top: 1px !important;
     right: 0px !important;
   }
 

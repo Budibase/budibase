@@ -9,7 +9,7 @@
 
   export let id = null
   export let disabled = false
-  export let error = null
+  export let readonly = false
   export let enableTime = true
   export let value = null
   export let placeholder = null
@@ -186,31 +186,23 @@
   >
     <div
       id={flatpickrId}
-      class:is-disabled={disabled}
-      class:is-invalid={!!error}
+      class:is-disabled={disabled || readonly}
       class="flatpickr spectrum-InputGroup spectrum-Datepicker"
       class:is-focused={open}
       aria-readonly="false"
       aria-required="false"
       aria-haspopup="true"
     >
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div
         on:click={flatpickr?.open}
         class="spectrum-Textfield spectrum-InputGroup-textfield"
         class:is-disabled={disabled}
-        class:is-invalid={!!error}
       >
-        {#if !!error}
-          <svg
-            class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-icon-18-Alert" />
-          </svg>
-        {/if}
         <input
           {disabled}
+          {readonly}
           data-input
           type="text"
           class="spectrum-Textfield-input spectrum-InputGroup-input"
@@ -225,7 +217,6 @@
         class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
         tabindex="-1"
         class:is-disabled={disabled}
-        class:is-invalid={!!error}
         on:click={flatpickr?.open}
       >
         <svg
@@ -241,6 +232,7 @@
   </Flatpickr>
 {/key}
 {#if open}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="overlay" on:mousedown|self={flatpickr?.close} />
 {/if}
 

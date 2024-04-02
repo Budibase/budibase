@@ -1,13 +1,17 @@
 import newid from "./newid"
 import { db as dbCore } from "@budibase/backend-core"
 import {
+  DatabaseQueryOpts,
+  Datasource,
   DocumentType,
   FieldSchema,
-  RelationshipFieldMetadata,
-  VirtualDocumentType,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  RelationshipFieldMetadata,
+  SourceName,
+  VirtualDocumentType,
 } from "@budibase/types"
-import { FieldTypes } from "../constants"
+
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
 
 type Optional = string | null
@@ -18,11 +22,11 @@ export const enum AppStatus {
   DEPLOYED = "published",
 }
 
-export const BudibaseInternalDB = {
+export const BudibaseInternalDB: Datasource = {
   _id: INTERNAL_TABLE_SOURCE_ID,
   type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Budibase DB",
-  source: "BUDIBASE",
+  source: SourceName.BUDIBASE,
   config: {},
 }
 
@@ -229,7 +233,10 @@ export function getAutomationMetadataParams(otherProps: any = {}) {
 /**
  * Gets parameters for retrieving a query, this is a utility function for the getDocParams function.
  */
-export function getQueryParams(datasourceId?: Optional, otherProps: any = {}) {
+export function getQueryParams(
+  datasourceId?: Optional,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) {
   if (datasourceId == null) {
     return getDocParams(DocumentType.QUERY, null, otherProps)
   }
@@ -256,7 +263,7 @@ export function generateMetadataID(type: string, entityId: string) {
 export function getMetadataParams(
   type: string,
   entityId?: Optional,
-  otherProps: any = {}
+  otherProps: Partial<DatabaseQueryOpts> = {}
 ) {
   let docId = `${type}${SEPARATOR}`
   if (entityId != null) {
@@ -269,22 +276,14 @@ export function generateMemoryViewID(viewName: string) {
   return `${DocumentType.MEM_VIEW}${SEPARATOR}${viewName}`
 }
 
-export function getMemoryViewParams(otherProps: any = {}) {
+export function getMemoryViewParams(
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) {
   return getDocParams(DocumentType.MEM_VIEW, null, otherProps)
 }
 
 export function generatePluginID(name: string) {
   return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
-}
-
-/**
- * This can be used with the db.allDocs to get a list of IDs
- */
-export function getMultiIDParams(ids: string[]) {
-  return {
-    keys: ids,
-    include_docs: true,
-  }
 }
 
 /**
@@ -318,5 +317,5 @@ export function extractViewInfoFromID(viewId: string) {
 export function isRelationshipColumn(
   column: FieldSchema
 ): column is RelationshipFieldMetadata {
-  return column.type === FieldTypes.LINK
+  return column.type === FieldType.LINK
 }

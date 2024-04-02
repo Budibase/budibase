@@ -1,4 +1,5 @@
 import ClientApp from "./components/ClientApp.svelte"
+import UpdatingApp from "./components/UpdatingApp.svelte"
 import {
   builderStore,
   appStore,
@@ -7,6 +8,7 @@ import {
   environmentStore,
   dndStore,
   eventStore,
+  hoverStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
@@ -15,6 +17,7 @@ import { initWebsocket } from "./websocket.js"
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
 import * as internal from "svelte/internal"
+
 window.svelte_internal = internal
 window.svelte = svelte
 
@@ -39,6 +42,7 @@ const loadBudibase = async () => {
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
     location: window["##BUDIBASE_LOCATION##"],
+    snippets: window["##BUDIBASE_SNIPPETS##"],
   })
 
   // Set app ID - this window flag is set by both the preview and the real
@@ -49,6 +53,13 @@ const loadBudibase = async () => {
   appStore.actions.setAppEmbedded(
     window["##BUDIBASE_APP_EMBEDDED##"] === "true"
   )
+
+  if (window.MIGRATING_APP) {
+    new UpdatingApp({
+      target: window.document.body,
+    })
+    return
+  }
 
   // Fetch environment info
   if (!get(environmentStore)?.loaded) {
@@ -74,6 +85,22 @@ const loadBudibase = async () => {
       } else {
         dndStore.actions.reset()
       }
+    } else if (type === "request-context") {
+      const { selectedComponentInstance } = get(componentStore)
+      const context = selectedComponentInstance?.getDataContext()
+      let stringifiedContext = null
+      try {
+        stringifiedContext = JSON.stringify(context)
+      } catch (error) {
+        // Ignore - invalid context
+      }
+      eventStore.actions.dispatchEvent("provide-context", {
+        context: stringifiedContext,
+      })
+    } else if (type === "hover-component") {
+      hoverStore.actions.hoverComponent(data, false)
+    } else if (type === "builder-meta") {
+      builderStore.actions.setMetadata(data)
     }
   }
 

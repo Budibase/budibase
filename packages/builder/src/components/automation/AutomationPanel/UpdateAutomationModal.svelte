@@ -1,7 +1,12 @@
 <script>
-  import { automationStore } from "builderStore"
-  import { notifications } from "@budibase/bbui"
-  import { Icon, Input, ModalContent, Modal } from "@budibase/bbui"
+  import { automationStore } from "stores/builder"
+  import {
+    notifications,
+    Icon,
+    Input,
+    ModalContent,
+    Modal,
+  } from "@budibase/bbui"
 
   export let automation
   export let onCancel = undefined

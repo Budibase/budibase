@@ -9,6 +9,7 @@
   export let text = null
   export let disabled = false
   export let error = null
+  export let helpText = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -17,6 +18,6 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
-  <Switch {error} {disabled} {text} {value} on:change={onChange} />
+<Field {helpText} {label} {labelPosition} {error}>
+  <Switch {error} {disabled} {text} {value} on:change={onChange} on:click />
 </Field>

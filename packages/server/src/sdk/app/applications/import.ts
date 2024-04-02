@@ -85,13 +85,15 @@ async function getImportableDocuments(db: Database) {
   const docPromises = []
   for (let docType of DocumentTypesToImport) {
     docPromises.push(
-      db.allDocs(dbCore.getDocParams(docType, null, { include_docs: true }))
+      db.allDocs<Document>(
+        dbCore.getDocParams(docType, null, { include_docs: true })
+      )
     )
   }
   // map the responses to the document itself
   let documents: Document[] = []
   for (let response of await Promise.all(docPromises)) {
-    documents = documents.concat(response.rows.map(row => row.doc))
+    documents = documents.concat(response.rows.map(row => row.doc!))
   }
   // remove the _rev, stops it being written
   documents.forEach(doc => {

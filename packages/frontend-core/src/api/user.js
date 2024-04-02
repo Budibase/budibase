@@ -214,15 +214,23 @@ export const buildUserEndpoints = API => ({
   inviteUsers: async users => {
     return await API.post({
       url: "/api/global/users/multi/invite",
-      body: users.map(user => ({
-        email: user.email,
-        userInfo: {
-          admin: user.admin ? { global: true } : undefined,
-          builder: user.admin || user.builder ? { global: true } : undefined,
-          userGroups: user.groups,
-          roles: user.apps ? user.apps : undefined,
-        },
-      })),
+      body: users.map(user => {
+        let builder = undefined
+        if (user.admin || user.builder) {
+          builder = { global: true }
+        } else if (user.creator) {
+          builder = { creator: true }
+        }
+        return {
+          email: user.email,
+          userInfo: {
+            admin: user.admin ? { global: true } : undefined,
+            builder,
+            userGroups: user.groups,
+            roles: user.apps ? user.apps : undefined,
+          },
+        }
+      }),
     })
   },
 

@@ -4,18 +4,34 @@ import * as fs from "fs"
 import { join } from "path"
 
 const baseConfig: Config.InitialProjectOptions = {
-  preset: "@trendyol/jest-testcontainers",
   setupFiles: ["./src/tests/jestEnv.ts"],
+  moduleFileExtensions: [
+    "js",
+    "mjs",
+    "cjs",
+    "jsx",
+    "ts",
+    "tsx",
+    "json",
+    "node",
+    "svelte",
+  ],
   setupFilesAfterEnv: ["./src/tests/jestSetup.ts"],
+  globalSetup: "./../../globalSetup.ts",
   transform: {
     "^.+\\.ts?$": "@swc/jest",
+    "^.+\\.js?$": "@swc/jest",
+    "^.+\\.svelte?$": "<rootDir>/scripts/svelteTransformer.js",
   },
+  transformIgnorePatterns: ["/node_modules/(?!svelte/).*"],
   moduleNameMapper: {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
     "@budibase/shared-core/(.*)": "<rootDir>/../shared-core/$1",
     "@budibase/backend-core": "<rootDir>/../backend-core/src",
     "@budibase/shared-core": "<rootDir>/../shared-core/src",
     "@budibase/types": "<rootDir>/../types/src",
+    "@budibase/string-templates/(.*)": ["<rootDir>/../string-templates/$1"],
+    "@budibase/string-templates": ["<rootDir>/../string-templates/src"],
   },
 }
 

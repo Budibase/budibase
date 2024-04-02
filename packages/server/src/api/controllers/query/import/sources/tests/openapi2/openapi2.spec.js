@@ -1,13 +1,16 @@
 const { OpenAPI2 } = require("../../openapi2")
 const fs = require("fs")
-const path = require('path')
+const path = require("path")
 
 const getData = (file, extension) => {
-  return fs.readFileSync(path.join(__dirname, `./data/${file}/${file}.${extension}`), "utf8")
+  return fs.readFileSync(
+    path.join(__dirname, `./data/${file}/${file}.${extension}`),
+    "utf8"
+  )
 }
 
 describe("OpenAPI2 Import", () => {
-  let openapi2 
+  let openapi2
 
   beforeEach(() => {
     openapi2 = new OpenAPI2()
@@ -47,9 +50,9 @@ describe("OpenAPI2 Import", () => {
   it("returns import info", async () => {
     await runTests("petstore", testImportInfo)
   })
-  
+
   describe("Returns queries", () => {
-    const indexQueries = (queries) => {
+    const indexQueries = queries => {
       return queries.reduce((acc, query) => {
         acc[query.name] = query
         return acc
@@ -72,15 +75,15 @@ describe("OpenAPI2 Import", () => {
 
     it("populates verb", async () => {
       const assertions = {
-        "createEntity" : "create",
-        "getEntities" : "read",
-        "getEntity" : "read",
-        "updateEntity" : "update",
-        "patchEntity" : "patch",
-        "deleteEntity" : "delete"
+        createEntity: "create",
+        getEntities: "read",
+        getEntity: "read",
+        updateEntity: "update",
+        patchEntity: "patch",
+        deleteEntity: "delete",
       }
       await runTests("crud", testVerb, assertions)
-    }) 
+    })
 
     const testPath = async (file, extension, assertions) => {
       const queries = await getQueries(file, extension)
@@ -91,12 +94,12 @@ describe("OpenAPI2 Import", () => {
 
     it("populates path", async () => {
       const assertions = {
-        "createEntity" : "http://example.com/entities",
-        "getEntities" : "http://example.com/entities",
-        "getEntity" : "http://example.com/entities/{{entityId}}",
-        "updateEntity" : "http://example.com/entities/{{entityId}}",
-        "patchEntity" : "http://example.com/entities/{{entityId}}",
-        "deleteEntity" : "http://example.com/entities/{{entityId}}"
+        createEntity: "http://example.com/entities",
+        getEntities: "http://example.com/entities",
+        getEntity: "http://example.com/entities/{{entityId}}",
+        updateEntity: "http://example.com/entities/{{entityId}}",
+        patchEntity: "http://example.com/entities/{{entityId}}",
+        deleteEntity: "http://example.com/entities/{{entityId}}",
       }
       await runTests("crud", testPath, assertions)
     })
@@ -109,27 +112,25 @@ describe("OpenAPI2 Import", () => {
     }
 
     const contentTypeHeader = {
-      "Content-Type" : "application/json",
+      "Content-Type": "application/json",
     }
 
     it("populates headers", async () => {
       const assertions = {
-        "createEntity" : {
-         ...contentTypeHeader
+        createEntity: {
+          ...contentTypeHeader,
         },
-        "getEntities" : {
+        getEntities: {},
+        getEntity: {},
+        updateEntity: {
+          ...contentTypeHeader,
         },
-        "getEntity" : {
+        patchEntity: {
+          ...contentTypeHeader,
         },
-        "updateEntity" : {
-          ...contentTypeHeader
+        deleteEntity: {
+          "x-api-key": "{{x-api-key}}",
         },
-        "patchEntity" : {
-          ...contentTypeHeader
-        },
-        "deleteEntity" : {
-            "x-api-key" : "{{x-api-key}}",
-        }
       }
 
       await runTests("crud", testHeaders, assertions)
@@ -138,18 +139,20 @@ describe("OpenAPI2 Import", () => {
     const testQuery = async (file, extension, assertions) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, queryString] of Object.entries(assertions)) {
-        expect(queries[operationId].fields.queryString).toStrictEqual(queryString)
+        expect(queries[operationId].fields.queryString).toStrictEqual(
+          queryString
+        )
       }
     }
 
     it("populates query", async () => {
       const assertions = {
-        "createEntity" : "",
-        "getEntities" : "page={{page}}&size={{size}}",
-        "getEntity" : "",
-        "updateEntity" : "",
-        "patchEntity" : "",
-        "deleteEntity" : ""
+        createEntity: "",
+        getEntities: "page={{page}}&size={{size}}",
+        getEntity: "",
+        updateEntity: "",
+        patchEntity: "",
+        deleteEntity: "",
       }
       await runTests("crud", testQuery, assertions)
     })
@@ -163,45 +166,45 @@ describe("OpenAPI2 Import", () => {
 
     it("populates parameters", async () => {
       const assertions = {
-        "createEntity" : [],
-        "getEntities" : [
+        createEntity: [],
+        getEntities: [
           {
-            "name" : "page",
-            "default" : "",
+            name: "page",
+            default: "",
           },
           {
-            "name" : "size",
-            "default" : "",
-          }
+            name: "size",
+            default: "",
+          },
         ],
-        "getEntity" : [
+        getEntity: [
           {
-            "name" : "entityId",
-            "default" : "",
-          }
+            name: "entityId",
+            default: "",
+          },
         ],
-        "updateEntity" : [
+        updateEntity: [
           {
-            "name" : "entityId",
-            "default" : "",
-          }
+            name: "entityId",
+            default: "",
+          },
         ],
-        "patchEntity" : [
+        patchEntity: [
           {
-            "name" : "entityId",
-            "default" : "",
-          }
+            name: "entityId",
+            default: "",
+          },
         ],
-        "deleteEntity" : [
+        deleteEntity: [
           {
-            "name" : "entityId",
-            "default" : "",
+            name: "entityId",
+            default: "",
           },
           {
-            "name" : "x-api-key",
-            "default" : "",
-          }
-        ]
+            name: "x-api-key",
+            default: "",
+          },
+        ],
       }
       await runTests("crud", testParameters, assertions)
     })
@@ -209,28 +212,30 @@ describe("OpenAPI2 Import", () => {
     const testBody = async (file, extension, assertions) => {
       const queries = await getQueries(file, extension)
       for (let [operationId, body] of Object.entries(assertions)) {
-        expect(queries[operationId].fields.requestBody).toStrictEqual(JSON.stringify(body, null, 2))
+        expect(queries[operationId].fields.requestBody).toStrictEqual(
+          JSON.stringify(body, null, 2)
+        )
       }
     }
     it("populates body", async () => {
       const assertions = {
-        "createEntity" : {
-          "name" : "name",
-          "type" : "type",
+        createEntity: {
+          name: "name",
+          type: "type",
         },
-        "getEntities" : undefined,
-        "getEntity" : undefined,
-        "updateEntity" : {
-          "id": 1,
-          "name" : "name",
-          "type" : "type",
+        getEntities: undefined,
+        getEntity: undefined,
+        updateEntity: {
+          id: 1,
+          name: "name",
+          type: "type",
         },
-        "patchEntity" : {
-          "id": 1,
-          "name" : "name",
-          "type" : "type",
+        patchEntity: {
+          id: 1,
+          name: "name",
+          type: "type",
         },
-        "deleteEntity" : undefined
+        deleteEntity: undefined,
       }
       await runTests("crud", testBody, assertions)
     })

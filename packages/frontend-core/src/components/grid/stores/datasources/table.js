@@ -1,5 +1,4 @@
 import { get } from "svelte/store"
-import TableFetch from "../../../../fetch/TableFetch"
 
 const SuppressErrors = true
 
@@ -46,10 +45,6 @@ export const createActions = context => {
     return $columns.some(col => col.name === name) || $sticky?.name === name
   }
 
-  const getFeatures = () => {
-    return new TableFetch({ API }).determineFeatureFlags()
-  }
-
   return {
     table: {
       actions: {
@@ -60,7 +55,6 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
-        getFeatures,
       },
     },
   }

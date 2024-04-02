@@ -1,9 +1,13 @@
 <script>
   import { goto, url } from "@roxi/routify"
-  import { tables } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
-  import { Input, Label, ModalContent, Layout } from "@budibase/bbui"
-  import { datasources } from "stores/backend"
+  import { tables, datasources } from "stores/builder"
+  import {
+    notifications,
+    Input,
+    Label,
+    ModalContent,
+    Layout,
+  } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import {
     BUDIBASE_INTERNAL_DB_ID,

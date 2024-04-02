@@ -8,13 +8,13 @@ import {
 import env from "../../../environment"
 import { context } from "@budibase/backend-core"
 import viewBuilder from "./viewBuilder"
-import { Database } from "@budibase/types"
+import { Database, DBView, DesignDocument, InMemoryView } from "@budibase/types"
 
 export async function getView(viewName: string) {
   const db = context.getAppDB()
   if (env.SELF_HOSTED) {
-    const designDoc = await db.get<any>("_design/database")
-    return designDoc.views[viewName]
+    const designDoc = await db.get<DesignDocument>("_design/database")
+    return designDoc.views?.[viewName]
   } else {
     // This is a table view, don't read the view from the DB
     if (viewName.startsWith(DocumentType.TABLE + SEPARATOR)) {
@@ -22,7 +22,7 @@ export async function getView(viewName: string) {
     }
 
     try {
-      const viewDoc = await db.get<any>(generateMemoryViewID(viewName))
+      const viewDoc = await db.get<InMemoryView>(generateMemoryViewID(viewName))
       return viewDoc.view
     } catch (err: any) {
       // Return null when PouchDB doesn't found the view
@@ -35,30 +35,33 @@ export async function getView(viewName: string) {
   }
 }
 
-export async function getViews() {
+export async function getViews(): Promise<DBView[]> {
   const db = context.getAppDB()
-  const response = []
+  const response: DBView[] = []
   if (env.SELF_HOSTED) {
-    const designDoc = await db.get<any>("_design/database")
-    for (let name of Object.keys(designDoc.views)) {
+    const designDoc = await db.get<DesignDocument>("_design/database")
+    for (let name of Object.keys(designDoc.views || {})) {
       // Only return custom views, not built ins
       const viewNames = Object.values(ViewName) as string[]
       if (viewNames.indexOf(name) !== -1) {
         continue
       }
-      response.push({
-        name,
-        ...designDoc.views[name],
-      })
+      const view = designDoc.views?.[name]
+      if (view) {
+        response.push({
+          name,
+          ...view,
+        })
+      }
     }
   } else {
     const views = (
-      await db.allDocs(
+      await db.allDocs<InMemoryView>(
         getMemoryViewParams({
           include_docs: true,
         })
       )
-    ).rows.map(row => row.doc)
+    ).rows.map(row => row.doc!)
     for (let viewDoc of views) {
       response.push({
         name: viewDoc.name,
@@ -72,11 +75,11 @@ export async function getViews() {
 export async function saveView(
   originalName: string | null,
   viewName: string,
-  viewTemplate: any
+  viewTemplate: DBView
 ) {
   const db = context.getAppDB()
   if (env.SELF_HOSTED) {
-    const designDoc = await db.get<any>("_design/database")
+    const designDoc = await db.get<DesignDocument>("_design/database")
     designDoc.views = {
       ...designDoc.views,
       [viewName]: viewTemplate,
@@ -89,17 +92,17 @@ export async function saveView(
   } else {
     const id = generateMemoryViewID(viewName)
     const originalId = originalName ? generateMemoryViewID(originalName) : null
-    const viewDoc: any = {
+    const viewDoc: InMemoryView = {
       _id: id,
       view: viewTemplate,
       name: viewName,
-      tableId: viewTemplate.meta.tableId,
+      tableId: viewTemplate.meta!.tableId,
     }
     try {
-      const old = await db.get<any>(id)
+      const old = await db.get<InMemoryView>(id)
       if (originalId) {
-        const originalDoc = await db.get<any>(originalId)
-        await db.remove(originalDoc._id, originalDoc._rev)
+        const originalDoc = await db.get<InMemoryView>(originalId)
+        await db.remove(originalDoc._id!, originalDoc._rev)
       }
       if (old && old._rev) {
         viewDoc._rev = old._rev
@@ -114,52 +117,65 @@ export async function saveView(
 export async function deleteView(viewName: string) {
   const db = context.getAppDB()
   if (env.SELF_HOSTED) {
-    const designDoc = await db.get<any>("_design/database")
-    const view = designDoc.views[viewName]
-    delete designDoc.views[viewName]
+    const designDoc = await db.get<DesignDocument>("_design/database")
+    const view = designDoc.views?.[viewName]
+    delete designDoc.views?.[viewName]
     await db.put(designDoc)
     return view
   } else {
     const id = generateMemoryViewID(viewName)
-    const viewDoc = await db.get<any>(id)
-    await db.remove(viewDoc._id, viewDoc._rev)
+    const viewDoc = await db.get<InMemoryView>(id)
+    await db.remove(viewDoc._id!, viewDoc._rev)
     return viewDoc.view
   }
 }
 
 export async function migrateToInMemoryView(db: Database, viewName: string) {
   // delete the view initially
-  const designDoc = await db.get<any>("_design/database")
+  const designDoc = await db.get<DesignDocument>("_design/database")
+  const meta = designDoc.views?.[viewName].meta
+  if (!meta) {
+    throw new Error("Unable to migrate view - no metadata")
+  }
   // run the view back through the view builder to update it
-  const view = viewBuilder(designDoc.views[viewName].meta)
-  delete designDoc.views[viewName]
+  const view = viewBuilder(meta)
+  delete designDoc.views?.[viewName]
   await db.put(designDoc)
-  await exports.saveView(db, null, viewName, view)
+  await saveView(null, viewName, view)
 }
 
 export async function migrateToDesignView(db: Database, viewName: string) {
-  let view = await db.get<any>(generateMemoryViewID(viewName))
-  const designDoc = await db.get<any>("_design/database")
-  designDoc.views[viewName] = viewBuilder(view.view.meta)
+  let view = await db.get<InMemoryView>(generateMemoryViewID(viewName))
+  const designDoc = await db.get<DesignDocument>("_design/database")
+  const meta = view.view.meta
+  if (!meta) {
+    throw new Error("Unable to migrate view - no metadata")
+  }
+  if (!designDoc.views) {
+    designDoc.views = {}
+  }
+  designDoc.views[viewName] = viewBuilder(meta)
   await db.put(designDoc)
-  await db.remove(view._id, view._rev)
+  await db.remove(view._id!, view._rev)
 }
 
 export async function getFromDesignDoc(db: Database, viewName: string) {
-  const designDoc = await db.get<any>("_design/database")
-  let view = designDoc.views[viewName]
+  const designDoc = await db.get<DesignDocument>("_design/database")
+  let view = designDoc.views?.[viewName]
   if (view == null) {
     throw { status: 404, message: "Unable to get view" }
   }
   return view
 }
 
-export async function getFromMemoryDoc(db: Database, viewName: string) {
-  let view = await db.get<any>(generateMemoryViewID(viewName))
+export async function getFromMemoryDoc(
+  db: Database,
+  viewName: string
+): Promise<DBView> {
+  let view = await db.get<InMemoryView>(generateMemoryViewID(viewName))
   if (view) {
-    view = view.view
+    return view.view
   } else {
     throw { status: 404, message: "Unable to get view" }
   }
-  return view
 }

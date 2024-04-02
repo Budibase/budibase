@@ -2,7 +2,7 @@
   "user":{
     "_id":"ro_ta_users_us_b0bc7ba0ce304294accc1ced8165dd23",
     "_rev":"1-e9199d92e7286005a9c11c614fdbcc51",
-    "email":"test2@test.com",
+    "email":"test2@example.com",
     "status":"active",
     "roleId":"PUBLIC",
     "test-Created By_text":"",

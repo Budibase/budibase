@@ -14,6 +14,7 @@
     linkable,
     builderStore,
     sidePanelStore,
+    appStore,
   } = sdk
   const component = getContext("component")
   const context = getContext("context")
@@ -33,6 +34,9 @@
   export let navTextColor
   export let navWidth
   export let pageWidth
+  export let logoLinkUrl
+  export let openLogoLinkInNewTab
+  export let textAlign
 
   export let embedded = false
 
@@ -150,8 +154,20 @@
     }
     return style
   }
+
+  const getSanitizedUrl = (url, openInNewTab) => {
+    if (!isInternal(url)) {
+      return ensureExternal(url)
+    }
+    if (openInNewTab) {
+      return `#${url}`
+    }
+    return url
+  }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="component {screenId} layout layout--{typeClass}"
   use:styleable={$component.styles}
@@ -192,15 +208,36 @@
               {/if}
               <div class="logo">
                 {#if !hideLogo}
-                  <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                  {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
+                    <a
+                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
+                      use:linkable
+                    >
+                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                    </a>
+                  {:else if logoLinkUrl}
+                    <a
+                      target={openLogoLinkInNewTab ? "_blank" : "_self"}
+                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
+                    >
+                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                    </a>
+                  {:else}
+                    <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                  {/if}
                 {/if}
                 {#if !hideTitle && title}
-                  <Heading size="S">{title}</Heading>
+                  <Heading size="S" {textAlign}>{title}</Heading>
                 {/if}
               </div>
               {#if !embedded}
                 <div class="portal">
-                  <Icon hoverable name="Apps" on:click={navigateToPortal} />
+                  <Icon
+                    hoverable
+                    name="Apps"
+                    on:click={navigateToPortal}
+                    disabled={$appStore.isDevApp}
+                  />
                 </div>
               {/if}
             </div>
@@ -254,7 +291,10 @@
   <div
     id="side-panel-container"
     class:open={$sidePanelStore.open}
-    use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
+    use:clickOutside={{
+      callback: autoCloseSidePanel ? sidePanelStore.actions.close : null,
+      allowedType: "mousedown",
+    }}
     class:builder={$builderStore.inBuilder}
   >
     <div class="side-panel-header">

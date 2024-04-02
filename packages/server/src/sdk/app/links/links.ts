@@ -1,5 +1,5 @@
-import { context } from "@budibase/backend-core"
-import { isTableId } from "@budibase/backend-core/src/docIds"
+import { context, docIds } from "@budibase/backend-core"
+
 import {
   DatabaseQueryOpts,
   LinkDocument,
@@ -8,7 +8,7 @@ import {
 import { ViewName, getQueryIndex } from "../../../../src/db/utils"
 
 export async function fetch(tableId: string): Promise<LinkDocumentValue[]> {
-  if (!isTableId(tableId)) {
+  if (!docIds.isTableId(tableId)) {
     throw new Error(`Invalid tableId: ${tableId}`)
   }
 
@@ -24,7 +24,7 @@ export async function fetch(tableId: string): Promise<LinkDocumentValue[]> {
 export async function fetchWithDocument(
   tableId: string
 ): Promise<LinkDocument[]> {
-  if (!isTableId(tableId)) {
+  if (!docIds.isTableId(tableId)) {
     throw new Error(`Invalid tableId: ${tableId}`)
   }
 

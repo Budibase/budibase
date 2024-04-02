@@ -3,7 +3,7 @@ import Resource from "./utils/Resource"
 
 const user = {
   _id: "us_693a73206518477283a8d5ae31103252",
-  email: "test@test.com",
+  email: "test@example.com",
   roles: {
     app_957b12f943d348faa61db7e18e088d0f: "BASIC",
   },

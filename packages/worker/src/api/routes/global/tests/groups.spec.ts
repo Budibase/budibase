@@ -25,9 +25,9 @@ describe("/api/global/groups", () => {
     it("should be able to create a new group", async () => {
       const group = structures.groups.UserGroup()
       await config.api.groups.saveGroup(group)
-      expect(events.group.created).toBeCalledTimes(1)
-      expect(events.group.updated).not.toBeCalled()
-      expect(events.group.permissionsEdited).not.toBeCalled()
+      expect(events.group.created).toHaveBeenCalledTimes(1)
+      expect(events.group.updated).not.toHaveBeenCalled()
+      expect(events.group.permissionsEdited).not.toHaveBeenCalled()
     })
 
     it("should not allow undefined names", async () => {
@@ -57,7 +57,7 @@ describe("/api/global/groups", () => {
     it("should trim names", async () => {
       const group = { ...structures.groups.UserGroup(), name: "   group name " }
       await config.api.groups.saveGroup(group)
-      expect(events.group.created).toBeCalledWith(
+      expect(events.group.created).toHaveBeenCalledWith(
         expect.objectContaining({ name: "group name" })
       )
     })
@@ -100,21 +100,83 @@ describe("/api/global/groups", () => {
       }
       await config.api.groups.saveGroup(updatedGroup)
 
-      expect(events.group.updated).toBeCalledTimes(1)
-      expect(events.group.permissionsEdited).not.toBeCalled()
+      expect(events.group.updated).toHaveBeenCalledTimes(1)
+      expect(events.group.permissionsEdited).not.toHaveBeenCalled()
     })
 
-    describe("destroy", () => {
-      it("should be able to delete a basic group", async () => {
-        const group = structures.groups.UserGroup()
-        let oldGroup = await config.api.groups.saveGroup(group)
-        await config.api.groups.deleteGroup(
-          oldGroup.body._id,
-          oldGroup.body._rev
-        )
+    describe("scim", () => {
+      async function createScimGroup() {
+        mocks.licenses.useScimIntegration()
+        await config.setSCIMConfig(true)
 
-        expect(events.group.deleted).toBeCalledTimes(1)
+        const scimGroup = await config.api.scimGroupsAPI.post({
+          body: structures.scim.createGroupRequest({
+            displayName: generator.word(),
+          }),
+        })
+
+        const { body: group } = await config.api.groups.find(scimGroup.id)
+
+        expect(group).toBeDefined()
+        return group
+      }
+
+      it("update will not allow sending SCIM fields", async () => {
+        const group = await createScimGroup()
+
+        const updatedGroup: UserGroup = {
+          ...group,
+          name: generator.word(),
+        }
+        await config.api.groups.saveGroup(updatedGroup, {
+          expect: {
+            message: 'Invalid body - "scimInfo" is not allowed',
+            status: 400,
+          },
+        })
+
+        expect(events.group.updated).not.toHaveBeenCalled()
       })
+
+      it("update will not amend the SCIM fields", async () => {
+        const group: UserGroup = await createScimGroup()
+
+        const updatedGroup: UserGroup = {
+          ...group,
+          name: generator.word(),
+          scimInfo: undefined,
+        }
+
+        await config.api.groups.saveGroup(updatedGroup, {
+          expect: 200,
+        })
+
+        expect(events.group.updated).toHaveBeenCalledTimes(1)
+        expect(
+          (
+            await config.api.groups.find(group._id!, {
+              expect: 200,
+            })
+          ).body
+        ).toEqual(
+          expect.objectContaining({
+            ...group,
+            name: updatedGroup.name,
+            scimInfo: group.scimInfo,
+            _rev: expect.any(String),
+          })
+        )
+      })
+    })
+  })
+
+  describe("destroy", () => {
+    it("should be able to delete a basic group", async () => {
+      const group = structures.groups.UserGroup()
+      let oldGroup = await config.api.groups.saveGroup(group)
+      await config.api.groups.deleteGroup(oldGroup.body._id, oldGroup.body._rev)
+
+      expect(events.group.deleted).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -147,7 +209,7 @@ describe("/api/global/groups", () => {
 
         await Promise.all(
           Array.from({ length: 30 }).map(async (_, i) => {
-            const email = `user${i}@${generator.domain()}`
+            const email = `user${i}+${generator.guid()}@example.com`
             const user = await config.api.users.saveUser({
               ...structures.users.user(),
               email,
@@ -257,12 +319,16 @@ describe("/api/global/groups", () => {
       })
     })
 
-    it("update should return 200", async () => {
+    it("update should return forbidden", async () => {
       await config.withUser(builder, async () => {
-        await config.api.groups.updateGroupUsers(group._id!, {
-          add: [builder._id!],
-          remove: [],
-        })
+        await config.api.groups.updateGroupUsers(
+          group._id!,
+          {
+            add: [builder._id!],
+            remove: [],
+          },
+          { expect: 403 }
+        )
       })
     })
   })

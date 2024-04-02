@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { views, viewsV2 } from "stores/backend"
+  import { views, viewsV2 } from "stores/builder"
   import { redirect } from "@roxi/routify"
 
   onMount(async () => {

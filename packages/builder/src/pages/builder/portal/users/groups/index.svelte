@@ -13,7 +13,7 @@
     Search,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth, licensing, admin, features } from "stores/portal"
+  import { groups, auth, licensing, admin } from "stores/portal"
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import { cloneDeep } from "lodash/fp"
@@ -21,7 +21,6 @@
   import UsersTableRenderer from "./_components/UsersTableRenderer.svelte"
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
   import { goto } from "@roxi/routify"
-  import ScimBanner from "../_components/SCIMBanner.svelte"
   import { sdk } from "@budibase/shared-core"
 
   const DefaultGroup = {
@@ -97,7 +96,7 @@
       <Heading size="M">Groups</Heading>
       {#if !$licensing.groupsEnabled}
         <Tags>
-          <Tag icon="LockClosed">Business</Tag>
+          <Tag icon="LockClosed">Enterpise</Tag>
         </Tags>
       {/if}
     </div>
@@ -110,14 +109,10 @@
   <div class="controls">
     <ButtonGroup>
       {#if $licensing.groupsEnabled}
-        {#if !$features.isScimEnabled}
-          <!--Show the group create button-->
-          <Button disabled={readonly} cta on:click={showCreateGroupModal}>
-            Add group
-          </Button>
-        {:else}
-          <ScimBanner />
-        {/if}
+        <!--Show the group create button-->
+        <Button disabled={readonly} cta on:click={showCreateGroupModal}>
+          Add group
+        </Button>
       {:else}
         <Button
           primary

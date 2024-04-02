@@ -13,6 +13,7 @@
 
 <style>
   .free-footer {
+    min-height: 51px;
     flex: 0 0 auto;
     padding: 16px 20px;
     border-top: 1px solid var(--spectrum-global-color-gray-300);

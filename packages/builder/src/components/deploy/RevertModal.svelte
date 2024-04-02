@@ -1,6 +1,6 @@
 <script>
   import { Input, Modal, notifications, ModalContent } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { appStore, initialise } from "stores/builder"
   import { API } from "api"
 
   export let onComplete = () => {}
@@ -8,7 +8,7 @@
   let revertModal
   let appName
 
-  $: appId = $store.appId
+  $: appId = $appStore.appId
 
   const revert = async () => {
     try {
@@ -16,7 +16,7 @@
 
       // Reset frontend state after revert
       const applicationPkg = await API.fetchAppPackage(appId)
-      await store.actions.initialise(applicationPkg)
+      await initialise(applicationPkg)
       notifications.info("Changes reverted successfully")
       onComplete()
     } catch (error) {
@@ -38,7 +38,7 @@
     title="Revert Changes"
     confirmText="Revert"
     onConfirm={revert}
-    disabled={appName !== $store.name}
+    disabled={appName !== $appStore.name}
   >
     <span
       >The changes you have made will be deleted and the application reverted

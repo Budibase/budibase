@@ -1,26 +1,6 @@
 import { IntegrationTypes } from "constants/backend"
 import { findHBSBlocks } from "@budibase/string-templates"
 
-export function schemaToFields(schema) {
-  const response = {}
-  if (schema && typeof schema === "object") {
-    for (let [field, value] of Object.entries(schema)) {
-      response[field] = value?.type || "string"
-    }
-  }
-  return response
-}
-
-export function fieldsToSchema(fields) {
-  const response = {}
-  if (fields && typeof fields === "object") {
-    for (let [name, type] of Object.entries(fields)) {
-      response[name] = { name, type }
-    }
-  }
-  return response
-}
-
 export function breakQueryString(qs) {
   if (!qs) {
     return {}
@@ -35,6 +15,10 @@ export function breakQueryString(qs) {
     paramObj[split[0]] = decodeURIComponent(split.slice(1).join("="))
   }
   return paramObj
+}
+
+function isEncoded(str) {
+  return typeof str == "string" && decodeURIComponent(str) !== str
 }
 
 export function buildQueryString(obj) {
@@ -55,7 +39,7 @@ export function buildQueryString(obj) {
         value = value.replace(binding, marker)
         bindingMarkers[marker] = binding
       })
-      let encoded = encodeURIComponent(value || "")
+      let encoded = isEncoded(value) ? value : encodeURIComponent(value || "")
       Object.entries(bindingMarkers).forEach(([marker, binding]) => {
         encoded = encoded.replace(marker, binding)
       })
@@ -184,10 +168,8 @@ export const parseToCsv = (headers, rows) => {
 export default {
   breakQueryString,
   buildQueryString,
-  fieldsToSchema,
   flipHeaderState,
   keyValueToQueryParameters,
   parseToCsv,
   queryParametersToKeyValue,
-  schemaToFields,
 }

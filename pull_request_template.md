@@ -1,7 +1,7 @@
 ## Description
 _Describe the problem or feature in addition to a link to the relevant github issues._
 
-Addresses: 
+## Addresses
 - `<Enter the Link to the issue(s) this PR addresses>`
 - ...more if required
 
@@ -11,8 +11,6 @@ Addresses:
 ## Screenshots
 _If a UI facing feature, a short video of the happy path, and some screenshots of the new functionality._
 
-## Documentation
-- [ ] I have reviewed the budibase documentatation to verify if this feature requires any changes. If changes or new docs are required I have written them.
+## Launchcontrol
 
-
-
+_Add a small description in layman's terms of what this PR achieves. This will be used in the release notes._

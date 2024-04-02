@@ -74,7 +74,7 @@ export class Thread {
     )
   }
 
-  run(job: AutomationJob | QueryEvent) {
+  run<T>(job: AutomationJob | QueryEvent): Promise<T> {
     const timeout = this.timeoutMs
     return new Promise((resolve, reject) => {
       function fire(worker: any) {

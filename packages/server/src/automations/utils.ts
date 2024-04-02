@@ -16,8 +16,9 @@ import {
 } from "@budibase/types"
 import sdk from "../sdk"
 import { automationsEnabled } from "../features"
+import { helpers, REBOOT_CRON } from "@budibase/shared-core"
+import tracer from "dd-trace"
 
-const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
 let Runner: Thread
@@ -39,26 +40,62 @@ function loggingArgs(job: AutomationJob) {
 }
 
 export async function processEvent(job: AutomationJob) {
-  const appId = job.data.event.appId!
-  const automationId = job.data.automation._id!
-  const task = async () => {
-    try {
-      // need to actually await these so that an error can be captured properly
-      console.log("automation running", ...loggingArgs(job))
+  return tracer.trace(
+    "processEvent",
+    { resource: "automation" },
+    async span => {
+      const appId = job.data.event.appId!
+      const automationId = job.data.automation._id!
 
-      const runFn = () => Runner.run(job)
-      const result = await quotas.addAutomation(runFn, {
+      span?.addTags({
+        appId,
         automationId,
+        job: {
+          id: job.id,
+          name: job.name,
+          attemptsMade: job.attemptsMade,
+          opts: {
+            attempts: job.opts.attempts,
+            priority: job.opts.priority,
+            delay: job.opts.delay,
+            repeat: job.opts.repeat,
+            backoff: job.opts.backoff,
+            lifo: job.opts.lifo,
+            timeout: job.opts.timeout,
+            jobId: job.opts.jobId,
+            removeOnComplete: job.opts.removeOnComplete,
+            removeOnFail: job.opts.removeOnFail,
+            stackTraceLimit: job.opts.stackTraceLimit,
+            preventParsingData: job.opts.preventParsingData,
+          },
+        },
       })
-      console.log("automation completed", ...loggingArgs(job))
-      return result
-    } catch (err) {
-      console.error(`automation was unable to run`, err, ...loggingArgs(job))
-      return { err }
-    }
-  }
 
-  return await context.doInAutomationContext({ appId, automationId, task })
+      const task = async () => {
+        try {
+          // need to actually await these so that an error can be captured properly
+          console.log("automation running", ...loggingArgs(job))
+
+          const runFn = () => Runner.run(job)
+          const result = await quotas.addAutomation(runFn, {
+            automationId,
+          })
+          console.log("automation completed", ...loggingArgs(job))
+          return result
+        } catch (err) {
+          span?.addTags({ error: true })
+          console.error(
+            `automation was unable to run`,
+            err,
+            ...loggingArgs(job)
+          )
+          return { err }
+        }
+      }
+
+      return await context.doInAutomationContext({ appId, automationId, task })
+    }
+  )
 }
 
 export async function updateTestHistory(
@@ -161,6 +198,13 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
     !isRebootTrigger(automation) &&
     trigger?.inputs.cron
   ) {
+    const cronExp = trigger.inputs.cron
+    const validation = helpers.cron.validate(cronExp)
+    if (!validation.valid) {
+      throw new Error(
+        `Invalid automation CRON "${cronExp}" - ${validation.err.join(", ")}`
+      )
+    }
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${newid()}`
     const job: any = await automationQueue.add(
@@ -168,7 +212,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
         automation,
         event: { appId, timestamp: Date.now() },
       },
-      { repeat: { cron: trigger.inputs.cron }, jobId }
+      { repeat: { cron: cronExp }, jobId }
     )
     // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
     trigger.cronJobId = job.id

@@ -26,7 +26,7 @@ export async function fetchSelf(ctx: UserCtx) {
   }
 
   const appId = context.getAppId()
-  let user: ContextUser = await getFullUser(ctx, userId)
+  let user: ContextUser = await getFullUser(userId)
   // this shouldn't be returned by the app self
   delete user.roles
   // forward the csrf token from the session

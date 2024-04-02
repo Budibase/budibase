@@ -4,6 +4,7 @@ import fs from "fs"
 import path from "path"
 import yaml from "yaml"
 import { getAppService } from "./utils"
+
 const randomString = require("randomstring")
 
 const SINGLE_IMAGE = "budibase/budibase:latest"

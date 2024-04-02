@@ -18,6 +18,7 @@
   export let autocomplete = false
   export let searchTerm = null
   export let customPopoverHeight
+  export let helpText = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -26,7 +27,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <Multiselect
     {error}
     {disabled}

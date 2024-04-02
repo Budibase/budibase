@@ -99,12 +99,20 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve("./src/components"),
         },
         {
-          find: "builderStore",
-          replacement: path.resolve("./src/builderStore"),
+          find: "pages",
+          replacement: path.resolve("./src/pages"),
+        },
+        {
+          find: "templates",
+          replacement: path.resolve("./src/templates"),
         },
         {
           find: "stores",
           replacement: path.resolve("./src/stores"),
+        },
+        {
+          find: "dataBinding",
+          replacement: path.resolve("./src/dataBinding.js"),
         },
         {
           find: "api",
@@ -133,6 +141,10 @@ export default defineConfig(({ mode }) => {
         {
           find: "@budibase/shared-core",
           replacement: path.resolve("../shared-core/src"),
+        },
+        {
+          find: "@budibase/bbui",
+          replacement: path.resolve("../bbui/src"),
         },
       ],
     },

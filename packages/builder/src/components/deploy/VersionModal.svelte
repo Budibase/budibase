@@ -1,4 +1,5 @@
 <script>
+  import { admin } from "stores/portal"
   import {
     Modal,
     notifications,
@@ -7,8 +8,9 @@
     Button,
     StatusLight,
   } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { appStore, initialise } from "stores/builder"
   import { API } from "api"
+  import RevertModalVersionSelect from "./RevertModalVersionSelect.svelte"
 
   export function show() {
     updateModal.show()
@@ -23,17 +25,19 @@
 
   let updateModal
 
-  $: appId = $store.appId
+  $: appId = $appStore.appId
   $: updateAvailable =
-    $store.upgradableVersion &&
-    $store.version &&
-    $store.upgradableVersion !== $store.version
-  $: revertAvailable = $store.revertableVersion != null
+    $appStore.upgradableVersion &&
+    $appStore.version &&
+    $appStore.upgradableVersion !== $appStore.version
+  $: revertAvailable =
+    $appStore.revertableVersion != null ||
+    ($admin.isDev && $appStore.version === "0.0.0")
 
   const refreshAppPackage = async () => {
     try {
       const pkg = await API.fetchAppPackage(appId)
-      await store.actions.initialise(pkg)
+      await initialise(pkg)
     } catch (error) {
       notifications.error("Error fetching app package")
     }
@@ -46,7 +50,7 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App updated successfully to version ${$store.upgradableVersion}`
+        `App updated successfully to version ${$appStore.upgradableVersion}`
       )
       onComplete()
     } catch (err) {
@@ -62,7 +66,9 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App reverted successfully to version ${$store.revertableVersion}`
+        $appStore.revertableVersion
+          ? `App reverted successfully to version ${$appStore.revertableVersion}`
+          : "App reverted successfully"
       )
     } catch (err) {
       notifications.error(`Error reverting app: ${err}`)
@@ -89,20 +95,27 @@
     </div>
     {#if updateAvailable}
       <Body size="S">
-        This app is currently using version <b>{$store.version}</b>, but version
-        <b>{$store.upgradableVersion}</b> is available. Updates can contain new features,
-        performance improvements and bug fixes.
+        This app is currently using version <b>{$appStore.version}</b>, but
+        version
+        <b>{$appStore.upgradableVersion}</b> is available. Updates can contain new
+        features, performance improvements and bug fixes.
       </Body>
     {:else}
       <Body size="S">
-        This app is currently using version <b>{$store.version}</b> which is the
+        This app is currently using version <b>{$appStore.version}</b> which is the
         latest version available.
       </Body>
     {/if}
     {#if revertAvailable}
       <Body size="S">
         You can revert this app to version
-        <b>{$store.revertableVersion}</b>
+        {#if $admin.isDev}
+          <RevertModalVersionSelect
+            revertableVersion={$appStore.revertableVersion}
+          />
+        {:else}
+          <b>{$appStore.revertableVersion}</b>
+        {/if}
         if you're experiencing issues with the current version.
       </Body>
     {/if}

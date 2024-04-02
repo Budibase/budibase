@@ -1,4 +1,5 @@
 import env from "../environment"
+import * as Redis from "ioredis"
 
 const SLOT_REFRESH_MS = 2000
 const CONNECT_TIMEOUT_MS = 10000
@@ -28,6 +29,8 @@ export enum Databases {
   WRITE_THROUGH = "writeThrough",
   LOCKS = "locks",
   SOCKET_IO = "socket_io",
+  BPM_EVENTS = "bpmEvents",
+  DOC_WRITE_THROUGH = "docWriteThrough",
 }
 
 /**
@@ -42,7 +45,7 @@ export enum Databases {
 export enum SelectableDatabase {
   DEFAULT = 0,
   SOCKET_IO = 1,
-  UNUSED_1 = 2,
+  RATE_LIMITING = 2,
   UNUSED_2 = 3,
   UNUSED_3 = 4,
   UNUSED_4 = 5,
@@ -58,7 +61,7 @@ export enum SelectableDatabase {
   UNUSED_14 = 15,
 }
 
-export function getRedisOptions() {
+export function getRedisConnectionDetails() {
   let password = env.REDIS_PASSWORD
   let url: string[] | string = env.REDIS_URL.split("//")
   // get rid of the protocol
@@ -74,28 +77,36 @@ export function getRedisOptions() {
   }
   const [host, port] = url.split(":")
 
-  let redisProtocolUrl
-
-  // fully qualified redis URL
-  if (/rediss?:\/\//.test(env.REDIS_URL)) {
-    redisProtocolUrl = env.REDIS_URL
+  const portNumber = parseInt(port)
+  return {
+    host,
+    password,
+    // assume default port for redis if invalid found
+    port: isNaN(portNumber) ? 6379 : portNumber,
   }
+}
 
-  const opts: any = {
+export function getRedisOptions() {
+  const { host, password, port } = getRedisConnectionDetails()
+  let redisOpts: Redis.RedisOptions = {
     connectTimeout: CONNECT_TIMEOUT_MS,
+    port: port,
+    host,
+    password,
   }
+  let opts: Redis.ClusterOptions | Redis.RedisOptions = redisOpts
   if (env.REDIS_CLUSTERED) {
-    opts.redisOptions = {}
-    opts.redisOptions.tls = {}
-    opts.redisOptions.password = password
-    opts.slotsRefreshTimeout = SLOT_REFRESH_MS
-    opts.dnsLookup = (address: string, callback: any) => callback(null, address)
-  } else {
-    opts.host = host
-    opts.port = port
-    opts.password = password
+    opts = {
+      connectTimeout: CONNECT_TIMEOUT_MS,
+      redisOptions: {
+        ...redisOpts,
+        tls: {},
+      },
+      slotsRefreshTimeout: SLOT_REFRESH_MS,
+      dnsLookup: (address: string, callback: any) => callback(null, address),
+    } as Redis.ClusterOptions
   }
-  return { opts, host, port: parseInt(port), redisProtocolUrl }
+  return opts
 }
 
 export function addDbPrefix(db: string, key: string) {

@@ -1,6 +1,6 @@
 import * as ActionComponents from "./actions"
 import { get } from "svelte/store"
-import { store } from "builderStore"
+import { appStore } from "stores/builder"
 // @ts-ignore
 import ActionDefinitions from "./manifest.json"
 
@@ -18,7 +18,7 @@ export const getAvailableActions = (getAllActions = false) => {
       if (getAllActions || !action.dependsOnFeature) {
         return true
       }
-      return get(store).clientFeatures?.[action.dependsOnFeature] === true
+      return get(appStore).clientFeatures?.[action.dependsOnFeature] === true
     })
     .map(action => {
       // Then enrich the actions with real components

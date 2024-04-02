@@ -72,9 +72,9 @@
   {:else}
     <p>‎</p>
   {/if}
-  <Button size="L" cta disabled={!isValid || disabled} on:click={onNext}
-    >Lets go!</Button
-  >
+  <Button size="L" cta disabled={!isValid || disabled} on:click={onNext}>
+    Lets go!
+  </Button>
 </div>
 
 <style>

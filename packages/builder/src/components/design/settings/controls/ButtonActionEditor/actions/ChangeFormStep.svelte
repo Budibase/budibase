@@ -1,17 +1,19 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { currentAsset, store } from "builderStore"
-  import { getActionProviderComponents } from "builderStore/dataBinding"
+  import { selectedScreen, componentStore } from "stores/builder"
+  import { getActionProviders } from "dataBinding"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
   export let bindings = []
+  export let nested
 
-  $: actionProviders = getActionProviderComponents(
-    $currentAsset,
-    $store.selectedComponentId,
-    "ChangeFormStep"
+  $: actionProviders = getActionProviders(
+    $selectedScreen,
+    $componentStore.selectedComponentId,
+    "ChangeFormStep",
+    { includeSelf: nested }
   )
 
   const typeOptions = [
@@ -46,8 +48,8 @@
     placeholder={null}
     bind:value={parameters.componentId}
     options={actionProviders}
-    getOptionLabel={x => x._instanceName}
-    getOptionValue={x => x._id}
+    getOptionLabel={x => x.readableBinding}
+    getOptionValue={x => x.runtimeBinding}
   />
   <Label small>Step</Label>
   <Select bind:value={parameters.type} options={typeOptions} />

@@ -18,8 +18,8 @@
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
-  import { users, auth, groups, apps, licensing, features } from "stores/portal"
-  import { roles } from "stores/backend"
+  import { users, auth, groups, appsStore, licensing } from "stores/portal"
+  import { roles } from "stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import DeleteUserModal from "./_components/DeleteUserModal.svelte"
@@ -30,8 +30,8 @@
   import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
-  import ScimBanner from "../_components/SCIMBanner.svelte"
   import { sdk } from "@budibase/shared-core"
+  import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
 
   export let userId
 
@@ -39,9 +39,10 @@
     name: {
       width: "1fr",
     },
-    ...(readonly
+    ...(!isAdmin
       ? {}
-      : {
+      : // Add
+        {
           _id: {
             displayName: "",
             width: "auto",
@@ -55,6 +56,7 @@
     },
     role: {
       width: "1fr",
+      displayName: "Access",
     },
   }
   const customGroupTableRenderers = [
@@ -86,19 +88,22 @@
   let user
   let loaded = false
 
-  $: scimEnabled = $features.isScimEnabled
+  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
+
   $: isSSO = !!user?.provider
-  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
+  $: isAdmin = sdk.users.isAdmin($auth.user)
+  $: isScim = user?.scimInfo?.isSync
+  $: readonly = !isAdmin || isScim
   $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
-  $: filteredGroups = getFilteredGroups($groups, searchTerm)
-  $: availableApps = getAvailableApps($apps, privileged, user?.roles)
+  $: filteredGroups = getFilteredGroups(internalGroups, searchTerm)
+  $: availableApps = getAvailableApps($appsStore.apps, privileged, user?.roles)
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
       return y._id === userId
     })
   })
-  $: globalRole = sdk.users.isAdmin(user) ? "admin" : "appUser"
+  $: globalRole = users.getUserRole(user)
 
   const getAvailableApps = (appList, privileged, roles) => {
     let availableApps = appList.slice()
@@ -106,12 +111,12 @@
       availableApps = availableApps.filter(x => {
         let roleKeys = Object.keys(roles || {})
         return roleKeys.concat(user?.builder?.apps).find(y => {
-          return x.appId === apps.extractAppId(y)
+          return x.appId === appsStore.extractAppId(y)
         })
       })
     }
     return availableApps.map(app => {
-      const prodAppId = apps.getProdAppID(app.devId)
+      const prodAppId = appsStore.getProdAppID(app.devId)
       return {
         name: app.name,
         devId: app.devId,
@@ -177,12 +182,21 @@
   }
 
   async function updateUserRole({ detail }) {
-    if (detail === "developer") {
+    if (detail === Constants.BudibaseRoles.Developer) {
       toggleFlags({ admin: { global: false }, builder: { global: true } })
-    } else if (detail === "admin") {
+    } else if (detail === Constants.BudibaseRoles.Admin) {
       toggleFlags({ admin: { global: true }, builder: { global: true } })
-    } else if (detail === "appUser") {
+    } else if (detail === Constants.BudibaseRoles.AppUser) {
       toggleFlags({ admin: { global: false }, builder: { global: false } })
+    } else if (detail === Constants.BudibaseRoles.Creator) {
+      toggleFlags({
+        admin: { global: false },
+        builder: {
+          global: false,
+          creator: true,
+          apps: user?.builder?.apps || [],
+        },
+      })
     }
   }
 
@@ -264,8 +278,8 @@
     <Layout noPadding gap="S">
       <div class="details-title">
         <Heading size="S">Details</Heading>
-        {#if scimEnabled}
-          <ScimBanner />
+        {#if user?.scimInfo?.isSync}
+          <ActiveDirectoryInfo text="User synced from your AD" />
         {/if}
       </div>
       <div class="fields">
@@ -295,6 +309,7 @@
           <div class="field">
             <Label size="L">Role</Label>
             <Select
+              placeholder={null}
               disabled={!sdk.users.isAdmin($auth.user)}
               value={globalRole}
               options={Constants.BudibaseRoleOptions}
@@ -310,23 +325,23 @@
       <Layout gap="S" noPadding>
         <div class="tableTitle">
           <Heading size="S">Groups</Heading>
-          <div bind:this={popoverAnchor}>
-            <Button disabled={readonly} on:click={popover.show()} secondary>
-              Add to group
-            </Button>
-          </div>
-          <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
-            <UserGroupPicker
-              labelKey="name"
-              bind:searchTerm
-              list={filteredGroups}
-              selected={user.userGroups}
-              on:select={e => addGroup(e.detail)}
-              on:deselect={e => removeGroup(e.detail)}
-              iconComponent={GroupIcon}
-              extractIconProps={item => ({ group: item, size: "S" })}
-            />
-          </Popover>
+          {#if internalGroups?.length && isAdmin}
+            <div bind:this={popoverAnchor}>
+              <Button on:click={popover.show()} secondary>Add to group</Button>
+            </div>
+            <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
+              <UserGroupPicker
+                labelKey="name"
+                bind:searchTerm
+                list={filteredGroups}
+                selected={user.userGroups}
+                on:select={e => addGroup(e.detail)}
+                on:deselect={e => removeGroup(e.detail)}
+                iconComponent={GroupIcon}
+                extractIconProps={item => ({ group: item, size: "S" })}
+              />
+            </Popover>
+          {/if}
         </div>
         <Table
           schema={groupSchema}

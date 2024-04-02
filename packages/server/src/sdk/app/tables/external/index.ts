@@ -1,7 +1,9 @@
 import {
+  FieldType,
   Operation,
   RelationshipType,
   RenameColumn,
+  AddColumn,
   Table,
   TableRequest,
   ViewV2,
@@ -14,7 +16,6 @@ import {
   setStaticSchemas,
 } from "../../../../api/controllers/table/utils"
 import { cloneDeep } from "lodash/fp"
-import { FieldTypes } from "../../../../constants"
 import { makeTableRequest } from "../../../../api/controllers/table/ExternalRequest"
 import {
   isRelationshipSetup,
@@ -32,7 +33,7 @@ import * as viewSdk from "../../views"
 export async function save(
   datasourceId: string,
   update: Table,
-  opts?: { tableId?: string; renaming?: RenameColumn }
+  opts?: { tableId?: string; renaming?: RenameColumn; adding?: AddColumn }
 ) {
   let tableToSave: TableRequest = {
     ...update,
@@ -78,7 +79,7 @@ export async function save(
 
   // check if relations need setup
   for (let schema of Object.values(tableToSave.schema)) {
-    if (schema.type !== FieldTypes.LINK || isRelationshipSetup(schema)) {
+    if (schema.type !== FieldType.LINK || isRelationshipSetup(schema)) {
       continue
     }
     const schemaTableId = schema.tableId
@@ -136,6 +137,8 @@ export async function save(
     schema.main = true
   }
 
+  // add in the new table for relationship purposes
+  tables[tableToSave.name] = tableToSave
   cleanupRelationships(tableToSave, tables, oldTable)
 
   const operation = tableId ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
@@ -163,8 +166,17 @@ export async function save(
 
   // remove the rename prop
   delete tableToSave._rename
+
+  // if adding a new column, we need to rebuild the schema for that table to get the 'externalType' of the column
+  if (opts?.adding) {
+    datasource.entities[tableToSave.name] = (
+      await datasourceSdk.buildFilteredSchema(datasource, [tableToSave.name])
+    ).tables[tableToSave.name]
+  } else {
+    datasource.entities[tableToSave.name] = tableToSave
+  }
+
   // store it into couch now for budibase reference
-  datasource.entities[tableToSave.name] = tableToSave
   await db.put(populateExternalTableSchemas(datasource))
 
   // Since tables are stored inside datasources, we need to notify clients

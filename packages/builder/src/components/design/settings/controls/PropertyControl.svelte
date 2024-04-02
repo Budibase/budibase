@@ -3,8 +3,8 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
-  import { store } from "builderStore"
+  } from "dataBinding"
+  import { builderStore } from "stores/builder"
   import { onDestroy } from "svelte"
 
   export let label = ""
@@ -20,14 +20,22 @@
   export let bindings = []
   export let componentBindings = []
   export let nested = false
-  export let highlighted = false
   export let propertyFocus = false
   export let info = null
+  export let disableBindings = false
+  export let wide
 
-  $: nullishValue = value == null || value === ""
+  let highlightType
+
+  $: highlightedProp = $builderStore.highlightedSetting
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
+
+  $: if (!Array.isArray(value)) {
+    highlightType =
+      highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
+  }
 
   const getAllBindings = (bindings, componentBindings, nested) => {
     if (!nested) {
@@ -69,16 +77,17 @@
   }
 
   onDestroy(() => {
-    if (highlighted) {
-      store.actions.settings.highlight(null)
+    if (highlightedProp) {
+      builderStore.highlightSetting(null)
     }
   })
 </script>
 
 <div
-  class="property-control"
-  class:wide={!label || labelHidden}
-  class:highlighted={highlighted && nullishValue}
+  id={`${key}-prop-control-wrap`}
+  class={`property-control ${highlightType}`}
+  class:wide={!label || labelHidden || wide === true}
+  class:highlighted={highlightType}
   class:property-focus={propertyFocus}
 >
   {#if label && !labelHidden}
@@ -96,12 +105,15 @@
       onChange={handleChange}
       bindings={allBindings}
       name={key}
+      title={label}
       {nested}
       {key}
       {type}
+      {disableBindings}
       {...props}
       on:drawerHide
       on:drawerShow
+      on:meta
     />
   </div>
   {#if info}
@@ -111,6 +123,16 @@
 </div>
 
 <style>
+  .property-control.highlighted.highlighted-info {
+    border-color: var(--spectrum-semantic-informative-color-background);
+  }
+  .property-control.highlighted.highlighted-error {
+    border-color: var(--spectrum-global-color-static-red-600);
+  }
+  .property-control.highlighted.highlighted-warning {
+    border-color: var(--spectrum-global-color-static-orange-700);
+  }
+
   .property-control {
     position: relative;
     display: grid;
@@ -128,6 +150,10 @@
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-static-red-600);
+    margin-top: -3.5px;
+    margin-bottom: -3.5px;
+    padding-bottom: 3.5px;
+    padding-top: 3.5px;
   }
 
   .property-control.property-focus :global(input) {
@@ -144,15 +170,28 @@
   .control {
     position: relative;
   }
-  .property-control.wide .control {
-    grid-column: 1 / -1;
-  }
   .text {
     font-size: var(--spectrum-global-dimension-font-size-75);
     color: var(--grey-6);
     grid-column: 2 / 2;
   }
+
+  .property-control.wide .control {
+    flex: 1;
+  }
+  .property-control.wide {
+    grid-template-columns: unset;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  .property-control.wide > * {
+    width: 100%;
+  }
   .property-control.wide .text {
     grid-column: 1 / -1;
+  }
+  .property-control.wide .label {
+    margin-bottom: -8px;
   }
 </style>

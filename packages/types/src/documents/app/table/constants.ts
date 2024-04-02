@@ -8,7 +8,7 @@ export enum AutoReason {
   FOREIGN_KEY = "foreign_key",
 }
 
-export enum AutoFieldSubTypes {
+export enum AutoFieldSubType {
   CREATED_BY = "createdBy",
   CREATED_AT = "createdAt",
   UPDATED_BY = "updatedBy",
@@ -16,7 +16,11 @@ export enum AutoFieldSubTypes {
   AUTO_ID = "autoID",
 }
 
-export enum FormulaTypes {
+export enum JsonFieldSubType {
+  ARRAY = "array",
+}
+
+export enum FormulaType {
   STATIC = "static",
   DYNAMIC = "dynamic",
 }

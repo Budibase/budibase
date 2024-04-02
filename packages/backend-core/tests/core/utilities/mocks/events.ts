@@ -15,6 +15,7 @@ beforeAll(async () => {
 
   jest.spyOn(events.app, "created")
   jest.spyOn(events.app, "updated")
+  jest.spyOn(events.app, "duplicated")
   jest.spyOn(events.app, "deleted")
   jest.spyOn(events.app, "published")
   jest.spyOn(events.app, "unpublished")

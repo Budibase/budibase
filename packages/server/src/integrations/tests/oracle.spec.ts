@@ -1,5 +1,7 @@
 const oracledb = require("oracledb")
+
 import { default as OracleIntegration } from "../oracle"
+
 jest.mock("oracledb")
 
 class TestConfiguration {
@@ -20,11 +22,6 @@ describe("Oracle Integration", () => {
     config = new TestConfiguration()
   })
 
-  afterEach(() => {
-    expect(oracledb.closeMock).toHaveBeenCalled()
-    expect(oracledb.closeMock).toHaveBeenCalledTimes(1)
-  })
-
   it("calls the create method with the correct params", async () => {
     const sql = "insert into users (name, age) values ('Joe', 123);"
     await config.integration.create({
@@ -32,6 +29,7 @@ describe("Oracle Integration", () => {
     })
     expect(oracledb.executeMock).toHaveBeenCalledWith(sql, [], options)
     expect(oracledb.executeMock).toHaveBeenCalledTimes(1)
+    expect(oracledb.closeMock).toHaveBeenCalledTimes(1)
   })
 
   it("calls the read method with the correct params", async () => {
@@ -41,15 +39,17 @@ describe("Oracle Integration", () => {
     })
     expect(oracledb.executeMock).toHaveBeenCalledWith(sql, [], options)
     expect(oracledb.executeMock).toHaveBeenCalledTimes(1)
+    expect(oracledb.closeMock).toHaveBeenCalledTimes(1)
   })
 
   it("calls the update method with the correct params", async () => {
     const sql = "update table users set name = 'test';"
-    const response = await config.integration.update({
+    await config.integration.update({
       sql,
     })
     expect(oracledb.executeMock).toHaveBeenCalledWith(sql, [], options)
     expect(oracledb.executeMock).toHaveBeenCalledTimes(1)
+    expect(oracledb.closeMock).toHaveBeenCalledTimes(1)
   })
 
   it("calls the delete method with the correct params", async () => {
@@ -59,6 +59,7 @@ describe("Oracle Integration", () => {
     })
     expect(oracledb.executeMock).toHaveBeenCalledWith(sql, [], options)
     expect(oracledb.executeMock).toHaveBeenCalledTimes(1)
+    expect(oracledb.closeMock).toHaveBeenCalledTimes(1)
   })
 
   describe("no rows returned", () => {
@@ -73,6 +74,7 @@ describe("Oracle Integration", () => {
       })
       expect(response).toEqual([{ created: true }])
       expect(oracledb.executeMock).toHaveBeenCalledTimes(1)
+      expect(oracledb.closeMock).toHaveBeenCalledTimes(1)
     })
 
     it("returns the correct response when the update response has no rows", async () => {
@@ -82,6 +84,7 @@ describe("Oracle Integration", () => {
       })
       expect(response).toEqual([{ updated: true }])
       expect(oracledb.executeMock).toHaveBeenCalledTimes(1)
+      expect(oracledb.closeMock).toHaveBeenCalledTimes(1)
     })
 
     it("returns the correct response when the delete response has no rows", async () => {
@@ -91,6 +94,7 @@ describe("Oracle Integration", () => {
       })
       expect(response).toEqual([{ deleted: true }])
       expect(oracledb.executeMock).toHaveBeenCalledTimes(1)
+      expect(oracledb.closeMock).toHaveBeenCalledTimes(1)
     })
   })
 })

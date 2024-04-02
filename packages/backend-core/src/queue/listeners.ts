@@ -87,6 +87,8 @@ enum QueueEventType {
   APP_BACKUP_EVENT = "app-backup-event",
   AUDIT_LOG_EVENT = "audit-log-event",
   SYSTEM_EVENT = "system-event",
+  APP_MIGRATION = "app-migration",
+  DOC_WRITETHROUGH = "doc-writethrough",
 }
 
 const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
@@ -94,6 +96,8 @@ const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
   [JobQueue.APP_BACKUP]: QueueEventType.APP_BACKUP_EVENT,
   [JobQueue.AUDIT_LOG]: QueueEventType.AUDIT_LOG_EVENT,
   [JobQueue.SYSTEM_EVENT_QUEUE]: QueueEventType.SYSTEM_EVENT,
+  [JobQueue.APP_MIGRATION]: QueueEventType.APP_MIGRATION,
+  [JobQueue.DOC_WRITETHROUGH_QUEUE]: QueueEventType.DOC_WRITETHROUGH,
 }
 
 function logging(queue: Queue, jobQueue: JobQueue) {
@@ -128,7 +132,7 @@ function logging(queue: Queue, jobQueue: JobQueue) {
         // A Job is waiting to be processed as soon as a worker is idling.
         console.info(...getLogParams(eventType, BullEvent.WAITING, { jobId }))
       })
-      .on(BullEvent.ACTIVE, async (job: Job, jobPromise: any) => {
+      .on(BullEvent.ACTIVE, async (job: Job) => {
         // A job has started. You can use `jobPromise.cancel()`` to abort it.
         await doInJobContext(job, () => {
           console.info(...getLogParams(eventType, BullEvent.ACTIVE, { job }))

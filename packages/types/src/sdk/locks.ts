@@ -10,6 +10,7 @@ export enum LockType {
   DEFAULT = "default",
   DELAY_500 = "delay_500",
   CUSTOM = "custom",
+  AUTO_EXTEND = "auto_extend",
 }
 
 export enum LockName {
@@ -19,9 +20,12 @@ export enum LockName {
   UPDATE_TENANTS_DOC = "update_tenants_doc",
   PERSIST_WRITETHROUGH = "persist_writethrough",
   QUOTA_USAGE_EVENT = "quota_usage_event",
+  APP_MIGRATION = "app_migrations",
+  PROCESS_AUTO_COLUMNS = "process_auto_columns",
+  PROCESS_USER_INVITE = "process_user_invite",
 }
 
-export interface LockOptions {
+export type LockOptions = {
   /**
    * The lock type determines which client to use
    */
@@ -36,10 +40,6 @@ export interface LockOptions {
    */
   name: LockName
   /**
-   * The ttl to auto-expire the lock if not unlocked manually
-   */
-  ttl: number
-  /**
    * The individual resource to lock. This is useful for locking around very specific identifiers, e.g. a document that is prone to conflicts
    */
   resource?: string
@@ -47,4 +47,16 @@ export interface LockOptions {
    * This is a system-wide lock - don't use tenancy in lock key
    */
   systemLock?: boolean
-}
+} & (
+  | {
+      /**
+       * The ttl to auto-expire the lock if not unlocked manually
+       */
+      ttl: number
+      type: Exclude<LockType, LockType.AUTO_EXTEND>
+    }
+  | {
+      type: LockType.AUTO_EXTEND
+      onExtend?: () => void
+    }
+)

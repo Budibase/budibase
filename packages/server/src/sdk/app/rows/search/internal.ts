@@ -1,6 +1,7 @@
 import {
   context,
   db,
+  HTTPError,
   SearchParams as InternalSearchParams,
 } from "@budibase/backend-core"
 import env from "../../../../environment"
@@ -31,6 +32,7 @@ import sdk from "../../../../sdk"
 import { ExportRowsParams, ExportRowsResult } from "../search"
 import { searchInputMapping } from "./utils"
 import pick from "lodash/pick"
+import { breakRowIdField } from "../../../../integrations/utils"
 
 export async function search(options: SearchParams) {
   const { tableId } = options
@@ -84,7 +86,17 @@ export async function search(options: SearchParams) {
 export async function exportRows(
   options: ExportRowsParams
 ): Promise<ExportRowsResult> {
-  const { tableId, format, rowIds, columns, query } = options
+  const {
+    tableId,
+    format,
+    rowIds,
+    columns,
+    query,
+    sort,
+    sortOrder,
+    delimiter,
+    customHeaders,
+  } = options
   const db = context.getAppDB()
   const table = await sdk.tables.getTable(tableId)
 
@@ -93,19 +105,33 @@ export async function exportRows(
     let response = (
       await db.allDocs({
         include_docs: true,
-        keys: rowIds,
+        keys: rowIds.map((row: string) => {
+          const ids = breakRowIdField(row)
+          if (ids.length > 1) {
+            throw new HTTPError(
+              "Export data does not support composite keys.",
+              400
+            )
+          }
+          return ids[0]
+        }),
       })
     ).rows.map(row => row.doc)
 
     result = await outputProcessing(table, response)
   } else if (query) {
-    let searchResponse = await search({ tableId, query })
+    let searchResponse = await search({
+      tableId,
+      query,
+      sort,
+      sortOrder,
+    })
     result = searchResponse.rows
   }
 
   let rows: Row[] = []
   let schema = table.schema
-
+  let headers
   // Filter data to only specified columns if required
   if (columns && columns.length) {
     for (let i = 0; i < result.length; i++) {
@@ -114,15 +140,21 @@ export async function exportRows(
         rows[i][column] = result[i][column]
       }
     }
+    headers = columns
   } else {
     rows = result
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, columns)
+  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
   if (format === Format.CSV) {
     return {
       fileName: "export.csv",
-      content: csv(Object.keys(rows[0]), exportRows),
+      content: csv(
+        headers ?? Object.keys(rows[0]),
+        exportRows,
+        delimiter,
+        customHeaders
+      ),
     }
   } else if (format === Format.JSON) {
     return {
@@ -180,8 +212,8 @@ export async function fetchView(
       group: !!group,
     })
   } else {
-    const tableId = viewInfo.meta.tableId
-    const data = await fetchRaw(tableId)
+    const tableId = viewInfo.meta!.tableId
+    const data = await fetchRaw(tableId!)
     response = await inMemoryViews.runView(
       viewInfo,
       calculation as string,
@@ -195,7 +227,7 @@ export async function fetchView(
     response.rows = response.rows.map(row => row.doc)
     let table: Table
     try {
-      table = await sdk.tables.getTable(viewInfo.meta.tableId)
+      table = await sdk.tables.getTable(viewInfo.meta!.tableId)
     } catch (err) {
       throw new Error("Unable to retrieve view table.")
     }

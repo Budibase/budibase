@@ -1,8 +1,7 @@
 import emitter from "../events/index"
-import { getAutomationParams } from "../db/utils"
+import { getAutomationParams, isDevAppID } from "../db/utils"
 import { coerce } from "../utilities/rowProcessor"
 import { definitions } from "./triggerInfo"
-import { isDevAppID } from "../db/utils"
 // need this to call directly, so we can get a response
 import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"
@@ -10,7 +9,7 @@ import * as utils from "./utils"
 import env from "../environment"
 import { context, db as dbCore } from "@budibase/backend-core"
 import { Automation, Row, AutomationData, AutomationJob } from "@budibase/types"
-import { executeSynchronously } from "../threads/automation"
+import { executeInThread } from "../threads/automation"
 
 export const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
@@ -20,10 +19,10 @@ const JOB_OPTS = {
 
 async function getAllAutomations() {
   const db = context.getAppDB()
-  let automations = await db.allDocs(
+  let automations = await db.allDocs<Automation>(
     getAutomationParams(null, { include_docs: true })
   )
-  return automations.rows.map(row => row.doc)
+  return automations.rows.map(row => row.doc!)
 }
 
 async function queueRelevantRowAutomations(
@@ -45,19 +44,19 @@ async function queueRelevantRowAutomations(
 
     for (let automation of automations) {
       let automationDef = automation.definition
-      let automationTrigger = automationDef ? automationDef.trigger : {}
+      let automationTrigger = automationDef?.trigger
       // don't queue events which are for dev apps, only way to test automations is
       // running tests on them, in production the test flag will never
       // be checked due to lazy evaluation (first always false)
       if (
         !env.ALLOW_DEV_AUTOMATIONS &&
         isDevAppID(event.appId) &&
-        !(await checkTestFlag(automation._id))
+        !(await checkTestFlag(automation._id!))
       ) {
         continue
       }
       if (
-        automationTrigger.inputs &&
+        automationTrigger?.inputs &&
         automationTrigger.inputs.tableId === event.row.tableId
       ) {
         await automationQueue.add({ automation, event }, JOB_OPTS)
@@ -94,7 +93,7 @@ export async function externalTrigger(
   automation: Automation,
   params: { fields: Record<string, any>; timeout?: number },
   { getResponses }: { getResponses?: boolean } = {}
-) {
+): Promise<any> {
   if (
     automation.definition != null &&
     automation.definition.trigger != null &&
@@ -118,8 +117,7 @@ export async function externalTrigger(
       appId: context.getAppId(),
       automation,
     }
-    const job = { data } as AutomationJob
-    return executeSynchronously(job)
+    return executeInThread({ data } as AutomationJob)
   } else {
     return automationQueue.add(data, JOB_OPTS)
   }

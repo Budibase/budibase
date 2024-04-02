@@ -15,64 +15,71 @@ import env from "../../../environment"
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
 import { middleware, redis } from "@budibase/backend-core"
+import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
 
-const PREFIX = "/api/public/v1"
-// allow a lot more requests when in test
-const DEFAULT_API_REQ_LIMIT_PER_SEC = env.isTest() ? 100 : 10
-
-function getApiLimitPerSecond(): number {
-  if (!env.API_REQ_LIMIT_PER_SEC) {
-    return DEFAULT_API_REQ_LIMIT_PER_SEC
+interface KoaRateLimitOptions {
+  socket: {
+    host: string
+    port: number
   }
-  return parseInt(env.API_REQ_LIMIT_PER_SEC)
+  password?: string
+  database?: number
 }
 
-let rateLimitStore: any = null
-if (!env.isTest()) {
-  const REDIS_OPTS = redis.utils.getRedisOptions()
-  let options
-  if (REDIS_OPTS.redisProtocolUrl) {
-    // fully qualified redis URL
-    options = {
-      url: REDIS_OPTS.redisProtocolUrl,
+const PREFIX = "/api/public/v1"
+
+// type can't be known - untyped libraries
+let limiter: any, rateLimitStore: any
+if (!env.DISABLE_RATE_LIMITING) {
+  // allow a lot more requests when in test
+  const DEFAULT_API_REQ_LIMIT_PER_SEC = env.isTest() ? 100 : 10
+
+  function getApiLimitPerSecond(): number {
+    if (!env.API_REQ_LIMIT_PER_SEC) {
+      return DEFAULT_API_REQ_LIMIT_PER_SEC
     }
-  } else {
-    options = {
+    return parseInt(env.API_REQ_LIMIT_PER_SEC)
+  }
+
+  if (!env.isTest()) {
+    const { password, host, port } = redis.utils.getRedisConnectionDetails()
+    let options: KoaRateLimitOptions = {
       socket: {
-        host: REDIS_OPTS.host,
-        port: REDIS_OPTS.port,
+        host: host,
+        port: port,
       },
     }
 
-    if (REDIS_OPTS.opts?.password || REDIS_OPTS.opts.redisOptions?.password) {
-      // @ts-ignore
-      options.password =
-        REDIS_OPTS.opts.password || REDIS_OPTS.opts.redisOptions.password
+    if (password) {
+      options.password = password
     }
 
     if (!env.REDIS_CLUSTERED) {
-      // @ts-ignore
       // Can't set direct redis db in clustered env
-      options.database = 1
+      options.database = SelectableDatabase.RATE_LIMITING
     }
+    rateLimitStore = new Stores.Redis(options)
+    RateLimit.defaultOptions({
+      store: rateLimitStore,
+    })
   }
-  rateLimitStore = new Stores.Redis(options)
-  RateLimit.defaultOptions({
-    store: rateLimitStore,
+  // rate limiting, allows for 2 requests per second
+  limiter = RateLimit.middleware({
+    interval: { sec: 1 },
+    // per ip, per interval
+    max: getApiLimitPerSecond(),
   })
+} else {
+  console.log("**** PUBLIC API RATE LIMITING DISABLED ****")
 }
-// rate limiting, allows for 2 requests per second
-const limiter = RateLimit.middleware({
-  interval: { sec: 1 },
-  // per ip, per interval
-  max: getApiLimitPerSecond(),
-})
 
 const publicRouter = new Router({
   prefix: PREFIX,
 })
 
-publicRouter.use(limiter)
+if (limiter && !env.isDev()) {
+  publicRouter.use(limiter)
+}
 
 function addMiddleware(
   endpoints: any,

@@ -2,19 +2,24 @@ import LinkController from "./LinkController"
 import {
   IncludeDocs,
   getLinkDocuments,
-  createLinkView,
   getUniqueByProp,
   getRelatedTableForField,
   getLinkedTableIDs,
   getLinkedTable,
 } from "./linkUtils"
 import flatten from "lodash/flatten"
-import { getMultiIDParams, USER_METDATA_PREFIX } from "../utils"
+import { USER_METDATA_PREFIX } from "../utils"
 import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
-import { Table, Row, LinkDocumentValue, FieldType } from "@budibase/types"
+import {
+  Table,
+  Row,
+  LinkDocumentValue,
+  FieldType,
+  ContextUser,
+} from "@budibase/types"
 import sdk from "../../sdk"
 
 export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
@@ -73,18 +78,16 @@ async function getFullLinkedDocs(links: LinkDocumentValue[]) {
   const db = context.getAppDB()
   const linkedRowIds = links.map(link => link.id)
   const uniqueRowIds = [...new Set(linkedRowIds)]
-  let dbRows = (await db.allDocs(getMultiIDParams(uniqueRowIds))).rows.map(
-    row => row.doc
-  )
+  let dbRows = await db.getMultiple<Row>(uniqueRowIds, { allowMissing: true })
   // convert the unique db rows back to a full list of linked rows
   const linked = linkedRowIds
     .map(id => dbRows.find(row => row && row._id === id))
-    .filter(row => row != null)
+    .filter(row => row != null) as Row[]
   // need to handle users as specific cases
   let [users, other] = partition(linked, linkRow =>
-    linkRow._id.startsWith(USER_METDATA_PREFIX)
+    linkRow._id!.startsWith(USER_METDATA_PREFIX)
   )
-  users = await getGlobalUsersFromMetadata(users)
+  users = await getGlobalUsersFromMetadata(users as ContextUser[])
   return [...other, ...users]
 }
 
@@ -176,7 +179,7 @@ export async function attachFullLinkedDocs(
   // clear any existing links that could be dupe'd
   rows = clearRelationshipFields(table, rows)
   // now get the docs and combine into the rows
-  let linked = []
+  let linked: Row[] = []
   if (linksWithoutFromRow.length > 0) {
     linked = await getFullLinkedDocs(linksWithoutFromRow)
   }
@@ -189,7 +192,7 @@ export async function attachFullLinkedDocs(
       if (opts?.fromRow && opts?.fromRow?._id === link.id) {
         linkedRow = opts.fromRow!
       } else {
-        linkedRow = linked.find(row => row._id === link.id)
+        linkedRow = linked.find(row => row._id === link.id)!
       }
       if (linkedRow) {
         const linkedTableId =
@@ -198,7 +201,8 @@ export async function attachFullLinkedDocs(
           table => table._id === linkedTableId
         )
         if (linkedTable) {
-          row[link.fieldName].push(processFormulas(linkedTable, linkedRow))
+          const processed = await processFormulas(linkedTable, linkedRow)
+          row[link.fieldName].push(processed)
         }
       }
     }

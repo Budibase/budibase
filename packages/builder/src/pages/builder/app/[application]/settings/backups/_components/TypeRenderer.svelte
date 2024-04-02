@@ -1,5 +1,6 @@
 <script>
   import { BackupTrigger } from "constants/backend/backups"
+
   export let row
 
   $: trigger = row?.trigger || "manual"

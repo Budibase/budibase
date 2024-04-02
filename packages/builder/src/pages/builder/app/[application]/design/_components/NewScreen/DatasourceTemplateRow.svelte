@@ -1,11 +1,14 @@
 <script>
   import { Icon } from "@budibase/bbui"
+
   export let datasource
   export let selected = false
 
   $: icon = datasource.type === "viewV2" ? "Remove" : "Table"
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="data-source-entry" class:selected on:click>
   <Icon name={icon} color="var(--spectrum-global-color-gray-600)" />
   {datasource.label}

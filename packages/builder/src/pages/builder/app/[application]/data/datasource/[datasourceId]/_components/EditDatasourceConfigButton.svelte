@@ -2,6 +2,7 @@
   import { Body } from "@budibase/bbui"
   import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
   import { IntegrationTypes } from "constants/backend"
+
   export let datasource
   const getSubtitle = datasource => {
     if (datasource.source === IntegrationTypes.REST) {
@@ -53,6 +54,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="button" on:click>
   <div class="left">
     {#if datasource.source !== IntegrationTypes.REST}

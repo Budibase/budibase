@@ -1,25 +1,25 @@
 <script>
   import { ActionGroup, ActionButton } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { previewStore } from "stores/builder"
 </script>
 
 <ActionGroup compact quiet>
   <ActionButton
     quiet
     icon="DeviceDesktop"
-    selected={$store.previewDevice === "desktop"}
-    on:click={() => store.actions.preview.setDevice("desktop")}
+    selected={$previewStore.previewDevice === "desktop"}
+    on:click={() => previewStore.setDevice("desktop")}
   />
   <ActionButton
     quiet
     icon="DeviceTablet"
-    selected={$store.previewDevice === "tablet"}
-    on:click={() => store.actions.preview.setDevice("tablet")}
+    selected={$previewStore.previewDevice === "tablet"}
+    on:click={() => previewStore.setDevice("tablet")}
   />
   <ActionButton
     quiet
     icon="DevicePhone"
-    selected={$store.previewDevice === "mobile"}
-    on:click={() => store.actions.preview.setDevice("mobile")}
+    selected={$previewStore.previewDevice === "mobile"}
+    on:click={() => previewStore.setDevice("mobile")}
   />
 </ActionGroup>

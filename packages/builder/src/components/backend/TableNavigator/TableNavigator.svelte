@@ -1,20 +1,20 @@
 <script>
-  import { tables, views, viewsV2, database } from "stores/backend"
+  import {
+    tables as tablesStore,
+    views,
+    viewsV2,
+    userSelectedResourceMap,
+  } from "stores/builder"
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { goto, isActive } from "@roxi/routify"
-  import { userSelectedResourceMap } from "builderStore"
 
-  export let sourceId
+  export let tables
   export let selectTable
 
-  $: sortedTables = $tables.list
-    .filter(
-      table => table.sourceId === sourceId && table._id !== TableNames.USERS
-    )
-    .sort(alphabetical)
+  $: sortedTables = tables.sort(alphabetical)
 
   const alphabetical = (a, b) => {
     return a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
@@ -28,42 +28,40 @@
   }
 </script>
 
-{#if $database?._id}
-  <div class="hierarchy-items-container">
-    {#each sortedTables as table, idx}
+<div class="hierarchy-items-container">
+  {#each sortedTables as table, idx}
+    <NavItem
+      indentLevel={1}
+      border={idx > 0}
+      icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
+      text={table.name}
+      selected={$isActive("./table/:tableId") &&
+        $tablesStore.selected?._id === table._id}
+      on:click={() => selectTable(table._id)}
+      selectedBy={$userSelectedResourceMap[table._id]}
+    >
+      {#if table._id !== TableNames.USERS}
+        <EditTablePopover {table} />
+      {/if}
+    </NavItem>
+    {#each [...Object.entries(table.views || {})].sort() as [name, view], idx (idx)}
       <NavItem
-        indentLevel={1}
-        border={idx > 0}
-        icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
-        text={table.name}
-        selected={$isActive("./table/:tableId") &&
-          $tables.selected?._id === table._id}
-        on:click={() => selectTable(table._id)}
-        selectedBy={$userSelectedResourceMap[table._id]}
+        indentLevel={2}
+        icon="Remove"
+        text={name}
+        selected={isViewActive(view, $isActive, $views, $viewsV2)}
+        on:click={() => {
+          if (view.version === 2) {
+            $goto(`./view/v2/${encodeURIComponent(view.id)}`)
+          } else {
+            $goto(`./view/v1/${encodeURIComponent(name)}`)
+          }
+        }}
+        selectedBy={$userSelectedResourceMap[name] ||
+          $userSelectedResourceMap[view.id]}
       >
-        {#if table._id !== TableNames.USERS}
-          <EditTablePopover {table} />
-        {/if}
+        <EditViewPopover {view} />
       </NavItem>
-      {#each [...Object.entries(table.views || {})].sort() as [name, view], idx (idx)}
-        <NavItem
-          indentLevel={2}
-          icon="Remove"
-          text={name}
-          selected={isViewActive(view, $isActive, $views, $viewsV2)}
-          on:click={() => {
-            if (view.version === 2) {
-              $goto(`./view/v2/${view.id}`)
-            } else {
-              $goto(`./view/v1/${encodeURIComponent(name)}`)
-            }
-          }}
-          selectedBy={$userSelectedResourceMap[name] ||
-            $userSelectedResourceMap[view.id]}
-        >
-          <EditViewPopover {view} />
-        </NavItem>
-      {/each}
     {/each}
-  </div>
-{/if}
+  {/each}
+</div>

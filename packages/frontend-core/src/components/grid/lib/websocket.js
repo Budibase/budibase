@@ -29,7 +29,7 @@ export const createGridWebsocket = context => {
     connectToDatasource(get(datasource))
   })
   socket.on("connect_error", err => {
-    console.log("Failed to connect to grid websocket:", err.message)
+    console.error("Failed to connect to grid websocket:", err.message)
   })
 
   // User events

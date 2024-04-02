@@ -1,8 +1,8 @@
 <script>
   import { Popover, Layout, Heading, Body, Button, Link } from "@budibase/bbui"
-  import { store } from "builderStore"
-  import { TOURS } from "./tours.js"
+  import { TOURS, getCurrentStepIdx } from "./tours.js"
   import { goto, layout, isActive } from "@roxi/routify"
+  import { builderStore } from "stores/builder"
 
   let popoverAnchor
   let popover
@@ -12,14 +12,21 @@
   let lastStep
   let skipping = false
 
-  $: tourNodes = { ...$store.tourNodes }
-  $: tourKey = $store.tourKey
-  $: tourStepKey = $store.tourStepKey
+  $: tourNodes = { ...$builderStore.tourNodes }
+  $: tourKey = $builderStore.tourKey
+  $: tourStepKey = $builderStore.tourStepKey
   $: tour = TOURS[tourKey]
   $: tourOnSkip = tour?.onSkip
 
   const updateTourStep = (targetStepKey, tourKey) => {
     if (!tourKey) {
+      tourSteps = null
+      tourStepIdx = null
+      lastStep = null
+      tourStep = null
+      popoverAnchor = null
+      popover = null
+      skipping = false
       return
     }
     if (!tourSteps?.length) {
@@ -47,12 +54,11 @@
     if (step.route) {
       const activeNav = $layout.children.find(c => $isActive(c.path))
       if (activeNav) {
-        store.update(state => {
-          if (!state.previousTopNavPath) state.previousTopNavPath = {}
-          state.previousTopNavPath[activeNav.path] = window.location.pathname
-          $goto(state.previousTopNavPath[step.route] || step.route)
-          return state
-        })
+        builderStore.setPreviousTopNavPath(
+          activeNav.path,
+          window.location.pathname
+        )
+        $goto($builderStore.previousTopNavPath[step.route] || step.route)
       }
     }
   }
@@ -61,13 +67,13 @@
     if (!lastStep === true) {
       let target = tourSteps[tourStepIdx + 1]
       if (target) {
-        store.update(state => ({
+        builderStore.update(state => ({
           ...state,
           tourStepKey: target.id,
         }))
         navigateStep(target)
       } else {
-        console.log("Could not retrieve step")
+        console.warn("Could not retrieve step")
       }
     } else {
       if (typeof tourStep.onComplete === "function") {
@@ -79,16 +85,6 @@
       }
     }
   }
-
-  const getCurrentStepIdx = (steps, tourStepKey) => {
-    if (!steps?.length) {
-      return
-    }
-    if (steps?.length && !tourStepKey) {
-      return 0
-    }
-    return steps.findIndex(step => step.id === tourStepKey)
-  }
 </script>
 
 {#if tourKey}
@@ -99,7 +95,9 @@
       anchor={popoverAnchor}
       maxWidth={300}
       dismissible={false}
-      offset={15}
+      offset={12}
+      handlePostionUpdate={tourStep?.positionHandler}
+      customZindex={3}
     >
       <div class="tour-content">
         <Layout noPadding gap="M">
@@ -120,7 +118,7 @@
           </Body>
           <div class="tour-footer">
             <div class="tour-navigation">
-              {#if typeof tourOnSkip === "function"}
+              {#if typeof tourOnSkip === "function" && !lastStep}
                 <Link
                   secondary
                   quiet

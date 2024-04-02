@@ -1,6 +1,6 @@
 <script>
   import { goto, params } from "@roxi/routify"
-  import { datasources, flags, integrations, queries } from "stores/backend"
+  import { datasources, flags, integrations, queries } from "stores/builder"
   import { environment } from "stores/portal"
   import {
     Banner,
@@ -33,7 +33,7 @@
     PaginationTypes,
     RawRestBodyTypes,
     RestBodyTypes as bodyTypes,
-    SchemaTypeOptions,
+    SchemaTypeOptionsExpanded,
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
@@ -48,7 +48,7 @@
     runtimeToReadableBinding,
     runtimeToReadableMap,
     toBindingsArray,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
 
   export let queryId
 
@@ -60,6 +60,7 @@
   let authConfigId
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
+  let nestedSchemaFields = {}
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -97,9 +98,7 @@
   $: schemaReadOnly = !responseSuccess
   $: variablesReadOnly = !responseSuccess
   $: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
-  $: hasSchema =
-    Object.keys(schema || {}).length !== 0 ||
-    Object.keys(query?.schema || {}).length !== 0
+  $: hasSchema = Object.keys(schema || {}).length !== 0
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
@@ -161,7 +160,8 @@
     newQuery.fields.queryString = queryString
     newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
-    newQuery.schema = restUtils.fieldsToSchema(schema)
+    newQuery.schema = schema || {}
+    newQuery.nestedSchemaFields = nestedSchemaFields || {}
 
     return newQuery
   }
@@ -231,7 +231,16 @@
         notifications.info("Request did not return any data")
       } else {
         response.info = response.info || { code: 200 }
+        // if existing schema, copy over what it is
+        if (schema) {
+          for (let [name, field] of Object.entries(schema)) {
+            if (response.schema[name]) {
+              response.schema[name] = field
+            }
+          }
+        }
         schema = response.schema
+        nestedSchemaFields = response.nestedSchemaFields
         notifications.success("Request sent successfully")
       }
     } catch (error) {
@@ -386,6 +395,7 @@
 
   onMount(async () => {
     query = getSelectedQuery()
+    schema = query.schema
 
     try {
       // Clear any unsaved changes to the datasource
@@ -404,7 +414,7 @@
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
-    breakQs = restUtils.breakQueryString(qs)
+    breakQs = restUtils.breakQueryString(encodeURI(qs ?? ""))
     breakQs = runtimeToReadableMap(mergedBindings, breakQs)
 
     const path = query.fields.path
@@ -416,7 +426,6 @@
       query.fields.path = `${datasource.config.url}/${path ? path : ""}`
     }
     url = buildUrl(query.fields.path, breakQs)
-    schema = restUtils.schemaToFields(query.schema)
     requestBindings = restUtils.queryParametersToKeyValue(query.parameters)
     authConfigId = getAuthConfigId()
     if (!query.fields.disabledHeaders) {
@@ -652,7 +661,7 @@
     <div class="bottom">
       <Layout paddingY="S" gap="S">
         <Divider />
-        {#if !response && Object.keys(schema).length === 0}
+        {#if !response && Object.keys(schema || {}).length === 0}
           <Heading size="M">Response</Heading>
           <div class="placeholder">
             <div class="placeholder-internal">
@@ -682,10 +691,11 @@
                   bind:object={schema}
                   name="schema"
                   headings
-                  options={SchemaTypeOptions}
+                  options={SchemaTypeOptionsExpanded}
                   menuItems={schemaMenuItems}
                   showMenu={!schemaReadOnly}
                   readOnly={schemaReadOnly}
+                  compare={(option, value) => option.type === value.type}
                 />
               </Tab>
             {/if}

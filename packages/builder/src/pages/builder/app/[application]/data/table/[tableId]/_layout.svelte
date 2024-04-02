@@ -1,12 +1,11 @@
 <script>
   import { syncURLToState } from "helpers/urlStateSync"
-  import { tables } from "stores/backend"
+  import { tables, builderStore } from "stores/builder"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
-  import { store } from "builderStore"
 
   $: tableId = $tables.selectedTableId
-  $: store.actions.websocket.selectResource(tableId)
+  $: builderStore.selectResource(tableId)
 
   const stopSyncing = syncURLToState({
     urlParam: "tableId",

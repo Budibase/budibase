@@ -1,11 +1,14 @@
 <script>
   import BindingPanel from "./BindingPanel.svelte"
+  import { previewStore, snippets } from "stores/builder"
+  import { onMount } from "svelte"
 
   export let bindings = []
-  export let valid
   export let value = ""
   export let allowJS = false
   export let allowHelpers = true
+  export let autofocusEditor = false
+  export let context = null
 
   $: enrichedBindings = enrichBindings(bindings)
 
@@ -19,13 +22,17 @@
       type: null,
     }))
   }
+
+  onMount(previewStore.requestComponentContext)
 </script>
 
 <BindingPanel
-  bind:valid
   bindings={enrichedBindings}
+  context={{ ...$previewStore.selectedComponentContext, ...context }}
+  snippets={$snippets}
   {value}
   {allowJS}
   {allowHelpers}
+  {autofocusEditor}
   on:change
 />

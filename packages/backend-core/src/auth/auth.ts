@@ -1,5 +1,6 @@
 const _passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
+
 import { getGlobalDB } from "../context"
 import { Cookie } from "../constants"
 import { getSessionsForUser, invalidateSessions } from "../security/sessions"
@@ -18,6 +19,7 @@ import {
   GoogleInnerConfig,
   OIDCInnerConfig,
   PlatformLogoutOpts,
+  SessionCookie,
   SSOProviderType,
 } from "@budibase/types"
 import * as events from "../events"
@@ -26,6 +28,7 @@ import { clearCookie, getCookie } from "../utils"
 import { ssoSaveUserNoOp } from "../middleware/passport/sso/sso"
 
 const refresh = require("passport-oauth2-refresh")
+
 export {
   auditLog,
   authError,
@@ -42,7 +45,6 @@ export const buildAuthMiddleware = authenticated
 export const buildTenancyMiddleware = tenancy
 export const buildCsrfMiddleware = csrf
 export const passport = _passport
-export const jwt = require("jsonwebtoken")
 
 // Strategies
 _passport.use(new LocalStrategy(local.options, local.authenticate))
@@ -131,7 +133,7 @@ export async function refreshOAuthToken(
   configId?: string
 ): Promise<RefreshResponse> {
   switch (providerType) {
-    case SSOProviderType.OIDC:
+    case SSOProviderType.OIDC: {
       if (!configId) {
         return { err: { data: "OIDC config id not provided" } }
       }
@@ -140,12 +142,14 @@ export async function refreshOAuthToken(
         return { err: { data: "OIDC configuration not found" } }
       }
       return refreshOIDCAccessToken(oidcConfig, refreshToken)
-    case SSOProviderType.GOOGLE:
+    }
+    case SSOProviderType.GOOGLE: {
       let googleConfig = await configs.getGoogleConfig()
       if (!googleConfig) {
         return { err: { data: "Google configuration not found" } }
       }
       return refreshGoogleAccessToken(googleConfig, refreshToken)
+    }
   }
 }
 
@@ -189,10 +193,10 @@ export async function platformLogout(opts: PlatformLogoutOpts) {
 
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
-  const currentSession = getCookie(ctx, Cookie.Auth)
+  const currentSession = getCookie<SessionCookie>(ctx, Cookie.Auth)
   let sessions = await getSessionsForUser(userId)
 
-  if (keepActiveSession) {
+  if (currentSession && keepActiveSession) {
     sessions = sessions.filter(
       session => session.sessionId !== currentSession.sessionId
     )

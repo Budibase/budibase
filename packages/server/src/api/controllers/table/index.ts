@@ -14,7 +14,6 @@ import { events } from "@budibase/backend-core"
 import {
   BulkImportRequest,
   BulkImportResponse,
-  DocumentType,
   FetchTablesResponse,
   MigrateRequest,
   MigrateResponse,
@@ -25,7 +24,6 @@ import {
   TableResponse,
   TableSourceType,
   UserCtx,
-  SEPARATOR,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
@@ -76,10 +74,18 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const appId = ctx.appId
   const table = ctx.request.body
   const isImport = table.rows
+  const renaming = ctx.request.body._rename
 
-  const savedTable = await pickApi({ table }).save(ctx)
+  const api = pickApi({ table })
+  // do not pass _rename or _add if saving to CouchDB
+  if (api === internal) {
+    delete ctx.request.body._add
+    delete ctx.request.body._rename
+  }
+  let savedTable = await api.save(ctx, renaming)
   if (!table._id) {
     await events.table.created(savedTable)
+    savedTable = sdk.tables.enrichViewSchemas(savedTable)
   } else {
     await events.table.updated(savedTable)
   }

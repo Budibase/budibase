@@ -1,7 +1,7 @@
 <script>
   import GeneralPanel from "./GeneralPanel.svelte"
   import ThemePanel from "./ThemePanel.svelte"
-  import { selectedScreen } from "builderStore"
+  import { selectedScreen } from "stores/builder"
   import Panel from "components/design/Panel.svelte"
   import { capitalise } from "helpers"
   import { ActionButton, Layout } from "@budibase/bbui"
@@ -10,36 +10,38 @@
   const tabs = ["general", "theme"]
 </script>
 
-<Panel
-  title={$selectedScreen.routing.route}
-  icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
-  borderLeft
-  wide
->
-  <div slot="panel-header-content">
-    <div class="settings-tabs">
-      {#each tabs as tab}
-        <ActionButton
-          size="M"
-          quiet
-          selected={activeTab === tab}
-          on:click={() => {
-            activeTab = tab
-          }}
-        >
-          {capitalise(tab)}
-        </ActionButton>
-      {/each}
+{#if $selectedScreen}
+  <Panel
+    title={$selectedScreen.routing.route}
+    icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
+    borderLeft
+    wide
+  >
+    <div slot="panel-header-content">
+      <div class="settings-tabs">
+        {#each tabs as tab}
+          <ActionButton
+            size="M"
+            quiet
+            selected={activeTab === tab}
+            on:click={() => {
+              activeTab = tab
+            }}
+          >
+            {capitalise(tab)}
+          </ActionButton>
+        {/each}
+      </div>
     </div>
-  </div>
-  <Layout gap="S" paddingX="L" paddingY="XL">
-    {#if activeTab === "theme"}
-      <ThemePanel />
-    {:else}
-      <GeneralPanel />
-    {/if}
-  </Layout>
-</Panel>
+    <Layout gap="S" paddingX="L" paddingY="XL">
+      {#if activeTab === "theme"}
+        <ThemePanel />
+      {:else}
+        <GeneralPanel />
+      {/if}
+    </Layout>
+  </Panel>
+{/if}
 
 <style>
   .settings-tabs {

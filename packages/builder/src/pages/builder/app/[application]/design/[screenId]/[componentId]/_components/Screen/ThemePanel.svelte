@@ -7,21 +7,17 @@
     Icon,
     Body,
   } from "@budibase/bbui"
-  import { store } from "builderStore"
-  import { get } from "svelte/store"
+  import { themeStore, appStore } from "stores/builder"
   import { DefaultAppTheme } from "constants"
   import AppThemeSelect from "./AppThemeSelect.svelte"
   import ButtonRoundnessSelect from "./ButtonRoundnessSelect.svelte"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
 
-  $: customTheme = $store.customTheme || {}
+  $: customTheme = $themeStore.customTheme || {}
 
   const update = async (property, value) => {
     try {
-      store.actions.customTheme.save({
-        ...get(store).customTheme,
-        [property]: value,
-      })
+      themeStore.saveCustom({ [property]: value }, $appStore.appId)
     } catch (error) {
       notifications.error("Error updating custom theme")
     }
@@ -49,7 +45,7 @@
     value={customTheme.primaryColor || DefaultAppTheme.primaryColor}
     onChange={val => update("primaryColor", val)}
     props={{
-      spectrumTheme: $store.theme,
+      spectrumTheme: $themeStore.theme,
     }}
   />
   <PropertyControl
@@ -58,7 +54,7 @@
     value={customTheme.primaryColorHover || DefaultAppTheme.primaryColorHover}
     onChange={val => update("primaryColorHover", val)}
     props={{
-      spectrumTheme: $store.theme,
+      spectrumTheme: $themeStore.theme,
     }}
   />
 </Layout>

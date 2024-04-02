@@ -26,15 +26,15 @@
   $: parentId = $component?.id
   $: inBuilder = $builderStore.inBuilder
   $: instance = {
+    ...props,
     _component: getComponent(type),
     _id: id,
     _instanceName: getInstanceName(name, type),
+    _containsSlot: containsSlot,
     _styles: {
       ...styles,
       normal: styles?.normal || {},
     },
-    _containsSlot: containsSlot,
-    ...props,
   }
 
   // Register this block component if we're inside the builder so it can be

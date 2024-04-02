@@ -1,5 +1,6 @@
 <script>
   import "@spectrum-css/avatar/dist/index-vars.css"
+
   let sizes = new Map([
     ["XXS", "--spectrum-alias-avatar-size-50"],
     ["XS", "--spectrum-alias-avatar-size-75"],

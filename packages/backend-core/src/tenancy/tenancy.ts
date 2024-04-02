@@ -39,7 +39,7 @@ const ALL_STRATEGIES = Object.values(TenantResolutionStrategy)
 export const getTenantIDFromCtx = (
   ctx: BBContext,
   opts: GetTenantIdOptions
-): string | null => {
+): string | undefined => {
   // exit early if not multi-tenant
   if (!isMultiTenant()) {
     return DEFAULT_TENANT_ID
@@ -93,11 +93,19 @@ export const getTenantIDFromCtx = (
   // subdomain
   if (isAllowed(TenantResolutionStrategy.SUBDOMAIN)) {
     // e.g. budibase.app or local.com:10000
-    const platformHost = new URL(getPlatformURL()).host.split(":")[0]
+    let platformHost
+    try {
+      platformHost = new URL(getPlatformURL()).host.split(":")[0]
+    } catch (err: any) {
+      // if invalid URL, just don't try to process subdomain
+      if (err.code !== "ERR_INVALID_URL") {
+        throw err
+      }
+    }
     // e.g. tenant.budibase.app or tenant.local.com
     const requestHost = ctx.host
     // parse the tenant id from the difference
-    if (requestHost.includes(platformHost)) {
+    if (platformHost && requestHost.includes(platformHost)) {
       const tenantId = requestHost.substring(
         0,
         requestHost.indexOf(`.${platformHost}`)
@@ -136,5 +144,5 @@ export const getTenantIDFromCtx = (
     ctx.throw(403, "Tenant id not set")
   }
 
-  return null
+  return undefined
 }

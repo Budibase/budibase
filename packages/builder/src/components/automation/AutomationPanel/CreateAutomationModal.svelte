@@ -1,7 +1,7 @@
 <script>
-  import { automationStore } from "builderStore"
-  import { notifications } from "@budibase/bbui"
+  import { automationStore } from "stores/builder"
   import {
+    notifications,
     Input,
     InlineAlert,
     ModalContent,
@@ -46,6 +46,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <ModalContent
   title="Create Automation"
   confirmText="Save"

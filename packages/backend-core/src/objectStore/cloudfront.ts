@@ -23,7 +23,7 @@ const getCloudfrontSignParams = () => {
   return {
     keypairId: env.CLOUDFRONT_PUBLIC_KEY_ID!,
     privateKeyString: getPrivateKey(),
-    expireTime: new Date().getTime() + 1000 * 60 * 60, // 1 hour
+    expireTime: new Date().getTime() + 1000 * 60 * 60 * 24, // 1 day
   }
 }
 

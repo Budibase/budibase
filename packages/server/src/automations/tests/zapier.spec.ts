@@ -12,9 +12,9 @@ describe("test the outgoing webhook action", () => {
   it("should be able to run the action", async () => {
     const res = await runStep(actions.zapier.stepId, {
       value1: "test",
-      url: "http://www.test.com",
+      url: "http://www.example.com",
     })
-    expect(res.response.url).toEqual("http://www.test.com")
+    expect(res.response.url).toEqual("http://www.example.com")
     expect(res.response.method).toEqual("post")
     expect(res.success).toEqual(true)
   })
@@ -30,9 +30,9 @@ describe("test the outgoing webhook action", () => {
       body: {
         value: payload,
       },
-      url: "http://www.test.com",
+      url: "http://www.example.com",
     })
-    expect(res.response.url).toEqual("http://www.test.com")
+    expect(res.response.url).toEqual("http://www.example.com")
     expect(res.response.method).toEqual("post")
     expect(res.response.body).toEqual(
       `{"platform":"budibase","value1":1,"value2":2,"value3":3,"value4":4,"value5":5,"name":"Adam","age":9}`
@@ -47,7 +47,7 @@ describe("test the outgoing webhook action", () => {
       body: {
         value: payload,
       },
-      url: "http://www.test.com",
+      url: "http://www.example.com",
     })
     expect(res.httpStatus).toEqual(400)
     expect(res.response).toEqual("Invalid payload JSON")

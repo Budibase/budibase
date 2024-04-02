@@ -8,6 +8,7 @@ import {
   SaveSSOUserFunction,
   GoogleInnerConfig,
 } from "@budibase/types"
+
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
 export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {

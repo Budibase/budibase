@@ -1,26 +1,17 @@
-import { store } from "builderStore/index"
+import { builderStore } from "stores/builder"
 import { get } from "svelte/store"
 
 const registerNode = async (node, tourStepKey) => {
   if (!node) {
-    console.log("Tour Handler - an anchor node is required")
+    console.warn("Tour Handler - an anchor node is required")
   }
 
-  if (!get(store).tourKey) {
-    console.log("Tour Handler - No active tour ", tourStepKey, node)
+  if (!get(builderStore).tourKey) {
+    console.warn("Tour Handler - No active tour ", tourStepKey, node)
     return
   }
 
-  store.update(state => {
-    const update = {
-      ...state,
-      tourNodes: {
-        ...state.tourNodes,
-        [tourStepKey]: node,
-      },
-    }
-    return update
-  })
+  builderStore.registerTourNode(tourStepKey, node)
 }
 
 export function tourHandler(node, tourStepKey) {
@@ -29,19 +20,7 @@ export function tourHandler(node, tourStepKey) {
   }
   return {
     destroy: () => {
-      const updatedTourNodes = get(store).tourNodes
-      if (updatedTourNodes && updatedTourNodes[tourStepKey]) {
-        delete updatedTourNodes[tourStepKey]
-        store.update(state => {
-          const update = {
-            ...state,
-            tourNodes: {
-              ...updatedTourNodes,
-            },
-          }
-          return update
-        })
-      }
+      builderStore.destroyTourNode(tourStepKey)
     },
   }
 }

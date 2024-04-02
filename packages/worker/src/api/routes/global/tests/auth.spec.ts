@@ -7,11 +7,14 @@ import {
   structures,
   generator,
 } from "../../../../tests"
+
 const sendMailMock = mocks.email.mock()
 import { events, constants } from "@budibase/backend-core"
 import { Response } from "superagent"
 
 import * as userSdk from "../../../../sdk/users"
+import nock from "nock"
+import * as jwt from "jsonwebtoken"
 
 function getAuthCookie(response: Response) {
   return response.headers["set-cookie"]
@@ -57,7 +60,7 @@ describe("/api/global/auth", () => {
         const response = await config.api.auth.login(tenantId, email, password)
 
         expectSetAuthCookie(response)
-        expect(events.auth.login).toBeCalledTimes(1)
+        expect(events.auth.login).toHaveBeenCalledTimes(1)
       })
 
       it("should return 403 with incorrect credentials", async () => {
@@ -79,7 +82,7 @@ describe("/api/global/auth", () => {
 
       it("should return 403 when user doesn't exist", async () => {
         const tenantId = config.tenantId!
-        const email = "invaliduser@test.com"
+        const email = "invaliduser@example.com"
         const password = "password"
 
         const response = await config.api.auth.login(
@@ -138,7 +141,7 @@ describe("/api/global/auth", () => {
     describe("POST /api/global/auth/logout", () => {
       it("should logout", async () => {
         const response = await config.api.auth.logout()
-        expect(events.auth.logout).toBeCalledTimes(1)
+        expect(events.auth.logout).toHaveBeenCalledTimes(1)
 
         const authCookie = getAuthCookie(response)
         expect(authCookie).toBe("")
@@ -159,18 +162,15 @@ describe("/api/global/auth", () => {
         })
         expect(sendMailMock).toHaveBeenCalled()
         expect(code).toBeDefined()
-        expect(events.user.passwordResetRequested).toBeCalledTimes(1)
-        expect(events.user.passwordResetRequested).toBeCalledWith(user)
+        expect(events.user.passwordResetRequested).toHaveBeenCalledTimes(1)
+        expect(events.user.passwordResetRequested).toHaveBeenCalledWith(user)
       })
 
       describe("sso user", () => {
         let user: User
 
         async function testSSOUser() {
-          const { res } = await config.api.auth.requestPasswordReset(
-            sendMailMock,
-            user.email
-          )
+          await config.api.auth.requestPasswordReset(sendMailMock, user.email)
           expect(sendMailMock).not.toHaveBeenCalled()
         }
 
@@ -210,8 +210,8 @@ describe("/api/global/auth", () => {
         delete user.password
 
         expect(res.body).toEqual({ message: "password reset successfully." })
-        expect(events.user.passwordReset).toBeCalledTimes(1)
-        expect(events.user.passwordReset).toBeCalledWith(user)
+        expect(events.user.passwordReset).toHaveBeenCalledTimes(1)
+        expect(events.user.passwordReset).toHaveBeenCalledWith(user)
 
         // login using new password
         await config.api.auth.login(user.tenantId, user.email, newPassword)
@@ -228,7 +228,7 @@ describe("/api/global/auth", () => {
           )
 
           expect(res.body).toEqual({
-            message: "Cannot reset password.",
+            message: "Password change is disabled for this user",
             status: 400,
           })
         }
@@ -260,8 +260,12 @@ describe("/api/global/auth", () => {
             )
 
             // convert to account owner now that password has been requested
-            const account = structures.accounts.ssoAccount() as CloudAccount
-            mocks.accounts.getAccount.mockReturnValueOnce(
+            const account: CloudAccount = {
+              ...structures.accounts.ssoAccount(),
+              budibaseUserId: "budibaseUserId",
+              email: user.email,
+            }
+            mocks.accounts.getAccountByTenantId.mockReturnValueOnce(
               Promise.resolve(account)
             )
 
@@ -272,45 +276,9 @@ describe("/api/global/auth", () => {
     })
   })
 
-  describe("init", () => {
-    describe("POST /api/global/auth/init", () => {})
-
-    describe("GET /api/global/auth/init", () => {})
-  })
-
-  describe("datasource", () => {
-    // MULTI TENANT
-
-    describe("GET /api/global/auth/:tenantId/datasource/:provider", () => {})
-
-    describe("GET /api/global/auth/:tenantId/datasource/:provider/callback", () => {})
-
-    // SINGLE TENANT
-
-    describe("GET /api/global/auth/datasource/:provider/callback", () => {})
-  })
-
-  describe("google", () => {
-    // MULTI TENANT
-
-    describe("GET /api/global/auth/:tenantId/google", () => {})
-
-    describe("GET /api/global/auth/:tenantId/google/callback", () => {})
-
-    // SINGLE TENANT
-
-    describe("GET /api/global/auth/google/callback", () => {})
-
-    describe("GET /api/admin/auth/google/callback", () => {})
-  })
-
   describe("oidc", () => {
-    beforeEach(async () => {
-      jest.clearAllMocks()
-      mockGetWellKnownConfig()
-
-      // see: __mocks__/oauth
-      // for associated mocking inside passport
+    afterEach(() => {
+      nock.cleanAll()
     })
 
     const generateOidcConfig = async () => {
@@ -319,21 +287,16 @@ describe("/api/global/auth", () => {
       return chosenConfig.uuid
     }
 
-    const mockGetWellKnownConfig = () => {
-      mocks.fetch.mockReturnValue({
-        ok: true,
-        json: () => ({
+    // MULTI TENANT
+    describe("GET /api/global/auth/:tenantId/oidc/configs/:configId", () => {
+      it("redirects to auth provider", async () => {
+        nock("http://someconfigurl").get("/").times(1).reply(200, {
           issuer: "test",
           authorization_endpoint: "http://localhost/auth",
           token_endpoint: "http://localhost/token",
           userinfo_endpoint: "http://localhost/userinfo",
-        }),
-      })
-    }
+        })
 
-    // MULTI TENANT
-    describe("GET /api/global/auth/:tenantId/oidc/configs/:configId", () => {
-      it("redirects to auth provider", async () => {
         const configId = await generateOidcConfig()
 
         const res = await config.api.configs.getOIDCConfig(configId)
@@ -350,26 +313,54 @@ describe("/api/global/auth", () => {
 
     describe("GET /api/global/auth/:tenantId/oidc/callback", () => {
       it("logs in", async () => {
+        nock("http://someconfigurl").get("/").times(2).reply(200, {
+          issuer: "test",
+          authorization_endpoint: "http://localhost/auth",
+          token_endpoint: "http://localhost/token",
+          userinfo_endpoint: "http://localhost/userinfo",
+        })
+
+        const token = jwt.sign(
+          {
+            iss: "test",
+            sub: "sub",
+            aud: "clientId",
+            exp: Math.floor(Date.now() / 1000) + 60 * 60,
+            email: "oauth@example.com",
+          },
+          "secret"
+        )
+
+        nock("http://localhost").post("/token").reply(200, {
+          access_token: "access",
+          refresh_token: "refresh",
+          id_token: token,
+        })
+
+        nock("http://localhost").get("/userinfo?schema=openid").reply(200, {
+          sub: "sub",
+          email: "oauth@example.com",
+        })
+
         const configId = await generateOidcConfig()
         const preAuthRes = await config.api.configs.getOIDCConfig(configId)
-
         const res = await config.api.configs.OIDCCallback(configId, preAuthRes)
+        if (res.status > 399) {
+          throw new Error(
+            `OIDC callback failed with status ${res.status}: ${res.text}`
+          )
+        }
 
-        expect(events.auth.login).toBeCalledWith("oidc", "oauth@example.com")
-        expect(events.auth.login).toBeCalledTimes(1)
+        expect(events.auth.login).toHaveBeenCalledWith(
+          "oidc",
+          "oauth@example.com"
+        )
+        expect(events.auth.login).toHaveBeenCalledTimes(1)
         expect(res.status).toBe(302)
         const location: string = res.get("location")
         expect(location).toBe("/")
         expectSetAuthCookie(res)
       })
     })
-
-    // SINGLE TENANT
-
-    describe("GET /api/global/auth/oidc/callback", () => {})
-
-    describe("GET /api/global/auth/oidc/callback", () => {})
-
-    describe("GET /api/admin/auth/oidc/callback", () => {})
   })
 })

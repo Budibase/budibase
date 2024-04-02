@@ -12,14 +12,16 @@ import {
   SourceName,
   Schema,
   TableSourceType,
+  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import {
   getSqlQuery,
   buildExternalTableId,
-  convertSqlType,
+  generateColumnDefinition,
   finaliseExternalTables,
   SqlClient,
   checkExternalTables,
+  HOST_ADDRESS,
 } from "./utils"
 import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
@@ -29,6 +31,7 @@ import { Client, ClientConfig, types } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import { exec } from "child_process"
 import { storeTempFile } from "../utilities/fileSystem"
+import { env } from "@budibase/backend-core"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -70,7 +73,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
@@ -149,8 +152,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   private index: number = 1
   private open: boolean
 
-  COLUMNS_SQL!: string
-
   PRIMARY_KEYS_SQL = () => `
   SELECT pg_namespace.nspname table_schema
      , pg_class.relname table_name
@@ -159,7 +160,21 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   JOIN pg_index ON pg_class.oid = pg_index.indrelid AND pg_index.indisprimary
   JOIN pg_attribute ON pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey)
   JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-  WHERE pg_namespace.nspname = '${this.config.schema}';
+  WHERE pg_namespace.nspname = ANY(current_schemas(false))
+  AND pg_table_is_visible(pg_class.oid);
+  `
+
+  ENUM_VALUES = () => `
+  SELECT t.typname,  
+      e.enumlabel
+  FROM pg_type t 
+  JOIN pg_enum e on t.oid = e.enumtypid  
+  JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace;
+  `
+
+  COLUMNS_SQL = () => `
+    select * from information_schema.columns where table_schema = ANY(current_schemas(false)) 
+      AND pg_table_is_visible(to_regclass(format('%I.%I', table_schema, table_name)));
   `
 
   constructor(config: PostgresConfig) {
@@ -190,8 +205,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       await this.openConnection()
       response.connected = true
     } catch (e: any) {
-      console.log(e)
-      response.error = e.message as string
+      if (typeof e.message === "string" && e.message !== "") {
+        response.error = e.message as string
+      } else if (typeof e.code === "string" && e.code !== "") {
+        response.error = e.code
+      } else {
+        response.error = "Unknown error"
+      }
     } finally {
       await this.closeConnection()
     }
@@ -211,8 +231,10 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     if (!this.config.schema) {
       this.config.schema = "public"
     }
-    await this.client.query(`SET search_path TO "${this.config.schema}"`)
-    this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
+    const search_path = this.config.schema
+      .split(",")
+      .map(item => `"${item.trim()}"`)
+    await this.client.query(`SET search_path TO ${search_path.join(",")};`)
     this.open = true
   }
 
@@ -248,7 +270,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       }
     }
     try {
-      return await client.query(query.sql, query.bindings || [])
+      const bindings = query.bindings || []
+      this.log(query.sql, bindings)
+      return await client.query(query.sql, bindings)
     } catch (err: any) {
       await this.closeConnection()
       let readableMessage = getReadableErrorMessage(
@@ -299,9 +323,21 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
     try {
       const columnsResponse: { rows: PostgresColumn[] } =
-        await this.client.query(this.COLUMNS_SQL)
+        await this.client.query(this.COLUMNS_SQL())
 
       const tables: { [key: string]: Table } = {}
+
+      // Fetch enum values
+      const enumsResponse = await this.client.query(this.ENUM_VALUES())
+      const enumValues = enumsResponse.rows?.reduce((acc, row) => {
+        if (!acc[row.typname]) {
+          return {
+            [row.typname]: [row.enumlabel],
+          }
+        }
+        acc[row.typname].push(row.enumlabel)
+        return acc
+      }, {})
 
       for (let column of columnsResponse.rows) {
         const tableName: string = column.table_name
@@ -333,20 +369,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           column.is_generated && column.is_generated !== "NEVER"
         const isAuto: boolean = hasNextVal || identity || isGenerated
         const required = column.is_nullable === "NO"
-        const constraints = {
-          presence: required && !hasDefault && !isGenerated,
-        }
-        tables[tableName].schema[columnName] = {
+        tables[tableName].schema[columnName] = generateColumnDefinition({
           autocolumn: isAuto,
           name: columnName,
-          constraints,
-          ...convertSqlType(column.data_type),
+          presence: required && !hasDefault && !isGenerated,
           externalType: column.data_type,
-        }
+          options: enumValues?.[column.udt_name],
+        })
       }
 
-      let finalizedTables = finaliseExternalTables(tables, entities)
-      let errors = checkExternalTables(finalizedTables)
+      const finalizedTables = finaliseExternalTables(tables, entities)
+      const errors = checkExternalTables(finalizedTables)
       return { tables: finalizedTables, errors }
     } catch (err) {
       // @ts-ignore
@@ -360,7 +393,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     try {
       await this.openConnection()
       const columnsResponse: { rows: PostgresColumn[] } =
-        await this.client.query(this.COLUMNS_SQL)
+        await this.client.query(this.COLUMNS_SQL())
       const names = columnsResponse.rows.map(row => row.table_name)
       return [...new Set(names)]
     } finally {
@@ -388,9 +421,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     return response.rows.length ? response.rows : [{ deleted: true }]
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): DatasourcePlusQueryResponse {
     const operation = this._operation(json).toLowerCase()
-    const input = this._query(json)
+    const input = this._query(json) as SqlQuery
     if (Array.isArray(input)) {
       const responses = []
       for (let query of input) {
@@ -405,6 +438,14 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   }
 
   async getExternalSchema() {
+    if (!env.SELF_HOSTED) {
+      // This is because it relies on shelling out to pg_dump and we don't want
+      // to enable shell injection attacks.
+      throw new Error(
+        "schema export for Postgres is not supported in Budibase Cloud"
+      )
+    }
+
     const dumpCommandParts = [
       `user=${this.config.user}`,
       `host=${this.config.host}`,

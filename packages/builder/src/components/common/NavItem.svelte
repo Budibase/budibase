@@ -1,12 +1,14 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { AbsTooltip, Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { helpers } from "@budibase/shared-core"
   import { UserAvatars } from "@budibase/frontend-core"
 
   export let icon
+  export let iconTooltip
   export let withArrow = false
   export let withActions = true
+  export let showActions = false
   export let indentLevel = 0
   export let text
   export let border = true
@@ -22,6 +24,7 @@
   export let showTooltip = false
   export let selectedBy = null
   export let compact = false
+  export let hovering = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -58,11 +61,16 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="nav-item"
+  class:hovering
   class:border
   class:selected
   class:withActions
+  class:showActions
+  class:actionsOpen={highlighted && withActions}
   class:scrollable
   class:highlighted
   class:selectedBy
@@ -70,6 +78,8 @@
   on:dragstart
   on:dragover
   on:drop
+  on:mouseenter
+  on:mouseleave
   on:click={onClick}
   ondragover="return false"
   ondragenter="return false"
@@ -77,7 +87,11 @@
   {style}
   {draggable}
 >
-  <div class="nav-item-content" bind:this={contentRef}>
+  <div
+    class="nav-item-content"
+    bind:this={contentRef}
+    class:right={rightAlignIcon}
+  >
     {#if withArrow}
       <div
         class:opened
@@ -98,7 +112,9 @@
       </div>
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
-        <Icon color={iconColor} size="S" name={icon} />
+        <AbsTooltip type="info" position="right" text={iconTooltip}>
+          <Icon color={iconColor} size="S" name={icon} />
+        </AbsTooltip>
       </div>
     {/if}
     <div class="text" title={showTooltip ? text : null}>
@@ -145,16 +161,20 @@
     --avatars-background: var(--spectrum-global-color-gray-200);
   }
   .nav-item.selected {
-    background-color: var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-300) !important;
     --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
   }
-  .nav-item:hover {
-    background-color: var(--spectrum-global-color-gray-300);
+  .nav-item:hover,
+  .hovering {
+    background-color: var(--spectrum-global-color-gray-200);
     --avatars-background: var(--spectrum-global-color-gray-300);
   }
-  .nav-item:hover .actions {
-    visibility: visible;
+  .nav-item:hover .actions,
+  .hovering .actions,
+  .nav-item.withActions.actionsOpen .actions,
+  .nav-item.withActions.showActions .actions {
+    opacity: 1;
   }
   .nav-item-content {
     flex: 1 1 auto;
@@ -166,6 +186,11 @@
     width: max-content;
     position: relative;
     padding-left: var(--spacing-l);
+    box-sizing: border-box;
+  }
+
+  .nav-item-content.right {
+    width: 100%;
   }
 
   /* Needed to fully display the actions icon */
@@ -189,6 +214,7 @@
     flex: 0 0 20px;
     pointer-events: all;
     order: 0;
+    transition: transform 100ms linear;
   }
   .icon.arrow.absolute {
     position: absolute;
@@ -251,7 +277,6 @@
     position: relative;
     display: grid;
     place-items: center;
-    visibility: hidden;
     order: 3;
     opacity: 0;
     width: 20px;
@@ -263,6 +288,7 @@
   }
 
   .right {
+    margin-left: auto;
     order: 10;
   }
 </style>

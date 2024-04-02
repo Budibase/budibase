@@ -9,6 +9,7 @@ import JSONArrayFetch from "./JSONArrayFetch.js"
 import UserFetch from "./UserFetch.js"
 import GroupUserFetch from "./GroupUserFetch.js"
 import CustomFetch from "./CustomFetch.js"
+import QueryArrayFetch from "./QueryArrayFetch.js"
 
 const DataFetchMap = {
   table: TableFetch,
@@ -24,6 +25,7 @@ const DataFetchMap = {
   provider: NestedProviderFetch,
   field: FieldFetch,
   jsonarray: JSONArrayFetch,
+  queryarray: QueryArrayFetch,
 }
 
 // Constructs a new fetch model for a certain datasource

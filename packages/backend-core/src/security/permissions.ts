@@ -160,4 +160,5 @@ export function isPermissionLevelHigherThanRead(level: PermissionLevel) {
 
 // utility as a lot of things need simply the builder permission
 export const BUILDER = PermissionType.BUILDER
+export const CREATOR = PermissionType.CREATOR
 export const GLOBAL_BUILDER = PermissionType.GLOBAL_BUILDER

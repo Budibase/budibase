@@ -19,7 +19,6 @@
     auth,
     licensing,
     organisation,
-    features,
     admin,
   } from "stores/portal"
   import { onMount } from "svelte"
@@ -28,6 +27,7 @@
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
+  import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import { goto } from "@roxi/routify"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
@@ -36,8 +36,7 @@
   import { get } from "svelte/store"
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "api"
-  import { OnboardingType } from "../../../../../constants"
-  import ScimBanner from "../_components/SCIMBanner.svelte"
+  import { OnboardingType } from "constants"
   import { sdk } from "@budibase/shared-core"
 
   const fetch = fetchData({
@@ -63,6 +62,7 @@
   let selectedRows = []
   let bulkSaveResponse
   let customRenderers = [
+    { column: "email", component: EmailTableRenderer },
     { column: "userGroups", component: GroupsTableRenderer },
     { column: "apps", component: AppsTableRenderer },
     { column: "role", component: RoleTableRenderer },
@@ -73,7 +73,7 @@
   let parsedInvites = []
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
-  $: readonly = !sdk.users.isAdmin($auth.user) || $features.isScimEnabled
+  $: readonly = !sdk.users.isAdmin($auth.user)
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -82,6 +82,7 @@
       minWidth: "200px",
     },
     role: {
+      displayName: "Access",
       sortable: false,
       width: "1fr",
     },
@@ -171,6 +172,7 @@
     const payload = userData?.users?.map(user => ({
       email: user.email,
       builder: user.role === Constants.BudibaseRoles.Developer,
+      creator: user.role === Constants.BudibaseRoles.Creator,
       admin: user.role === Constants.BudibaseRoles.Admin,
       groups: userData.groups,
     }))
@@ -189,18 +191,18 @@
 
     for (const user of userData?.users ?? []) {
       const { email } = user
-
       if (
         newUsers.find(x => x.email === email) ||
         currentUserEmails.includes(email)
-      )
+      ) {
         continue
-
+      }
       newUsers.push(user)
     }
 
-    if (!newUsers.length)
+    if (!newUsers.length) {
       notifications.info("Duplicated! There is no new users to add.")
+    }
     return { ...userData, users: newUsers }
   }
 
@@ -245,19 +247,25 @@
     }
   }
 
-  const deleteRows = async () => {
+  const deleteUsers = async () => {
     try {
       let ids = selectedRows.map(user => user._id)
       if (ids.includes(get(auth).user._id)) {
         notifications.error("You cannot delete yourself")
         return
       }
+
+      if (selectedRows.some(u => u.scimInfo?.isSync)) {
+        notifications.error("You cannot remove users created via your AD")
+        return
+      }
+
       await users.bulkDelete(ids)
       notifications.success(`Successfully deleted ${selectedRows.length} rows`)
       selectedRows = []
       await fetch.refresh()
     } catch (error) {
-      notifications.error("Error deleting rows")
+      notifications.error("Error deleting users")
     }
   }
 
@@ -265,7 +273,6 @@
     try {
       await groups.actions.init()
       groupsLoaded = true
-
       pendingInvites = await users.getInvites()
       invitesLoaded = true
     } catch (error) {
@@ -319,8 +326,6 @@
           Import
         </Button>
       </div>
-    {:else}
-      <ScimBanner />
     {/if}
     <div class="controls-right">
       <Search bind:value={searchEmail} placeholder="Search" />
@@ -329,7 +334,7 @@
           item="user"
           on:updaterows
           {selectedRows}
-          {deleteRows}
+          deleteRows={deleteUsers}
         />
       {/if}
     </div>
@@ -345,6 +350,7 @@
     {customRenderers}
     loading={!$fetch.loaded || !groupsLoaded}
   />
+
   <div class="pagination">
     <Pagination
       page={$fetch.pageNumber + 1}
@@ -354,6 +360,7 @@
       goToNextPage={fetch.nextPage}
     />
   </div>
+
   <Table
     schema={pendingSchema}
     data={parsedInvites}
@@ -401,6 +408,7 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+    margin-left: auto;
   }
   .controls {
     display: flex;

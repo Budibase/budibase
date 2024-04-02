@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "builderStore"
+  import { automationStore } from "stores/builder"
   import { ModalContent } from "@budibase/bbui"
   import { onMount } from "svelte"
   import WebhookDisplay from "../automation/Shared/WebhookDisplay.svelte"

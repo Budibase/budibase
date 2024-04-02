@@ -2,6 +2,7 @@ import { Webhook } from "@budibase/types"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { mocks } from "@budibase/backend-core/tests"
+
 const { basicWebhook, basicAutomation, collectAutomation } = setup.structures
 
 describe("/webhooks", () => {
@@ -35,7 +36,7 @@ describe("/webhooks", () => {
       const automation = await config.createAutomation()
       const res = await request
         .put(`/api/webhooks`)
-        .send(basicWebhook(automation._id))
+        .send(basicWebhook(automation._id!))
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -139,12 +140,12 @@ describe("/webhooks", () => {
     })
   })
 
-  it("should trigger a synchronous webhook call ", async () => {
+  it("should trigger a synchronous webhook call", async () => {
     mocks.licenses.useSyncAutomations()
     let automation = collectAutomation()
     let newAutomation = await config.createAutomation(automation)
     let syncWebhook = await config.createWebhook(
-      basicWebhook(newAutomation._id)
+      basicWebhook(newAutomation._id!)
     )
 
     // replicate changes before checking webhook

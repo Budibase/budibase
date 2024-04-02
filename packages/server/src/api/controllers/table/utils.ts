@@ -2,25 +2,22 @@ import { parse, isSchema, isRows } from "../../../utilities/schema"
 import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
 import isEqual from "lodash/isEqual"
 import {
-  AutoFieldSubTypes,
-  FieldTypes,
   GOOGLE_SHEETS_PRIMARY_KEY,
-} from "../../../constants"
-import {
-  inputProcessing,
-  cleanupAttachments,
-} from "../../../utilities/rowProcessor"
-import {
   USERS_TABLE_SCHEMA,
   SwitchableTypes,
   CanSwitchTypes,
 } from "../../../constants"
+import {
+  inputProcessing,
+  AttachmentCleanup,
+} from "../../../utilities/rowProcessor"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
 import {
+  AutoFieldSubType,
   ContextUser,
   Datasource,
   Row,
@@ -33,6 +30,8 @@ import {
   View,
   RelationshipFieldMetadata,
   FieldType,
+  FieldTypeSubtypes,
+  AttachmentFieldMetadata,
 } from "@budibase/types"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
@@ -84,10 +83,34 @@ export async function checkForColumnUpdates(
     })
 
     // cleanup any attachments from object storage for deleted attachment columns
-    await cleanupAttachments(updatedTable, { oldTable, rows: rawRows })
+    await AttachmentCleanup.tableUpdate(updatedTable, rawRows, {
+      oldTable,
+      rename: columnRename,
+    })
     // Update views
     await checkForViewUpdates(updatedTable, deletedColumns, columnRename)
   }
+
+  const changedAttachmentSubtypeColumns = Object.values(
+    updatedTable.schema
+  ).filter(
+    (column): column is AttachmentFieldMetadata =>
+      column.type === FieldType.ATTACHMENT &&
+      column.subtype !== oldTable?.schema[column.name]?.subtype
+  )
+  for (const attachmentColumn of changedAttachmentSubtypeColumns) {
+    if (attachmentColumn.subtype === FieldTypeSubtypes.ATTACHMENT.SINGLE) {
+      attachmentColumn.constraints ??= { length: {} }
+      attachmentColumn.constraints.length ??= {}
+      attachmentColumn.constraints.length.maximum = 1
+      attachmentColumn.constraints.length.message =
+        "cannot contain multiple files"
+    } else {
+      delete attachmentColumn.constraints?.length?.maximum
+      delete attachmentColumn.constraints?.length?.message
+    }
+  }
+
   return { rows: updatedRows, table: updatedTable }
 }
 
@@ -105,7 +128,7 @@ export function makeSureTableUpToDate(table: Table, tableToSave: Table) {
   for ([field, column] of Object.entries(table.schema)) {
     if (
       column.autocolumn &&
-      column.subtype === AutoFieldSubTypes.AUTO_ID &&
+      column.subtype === AutoFieldSubType.AUTO_ID &&
       tableToSave.schema[field]
     ) {
       const tableCol = tableToSave.schema[field] as NumberFieldMetadata
@@ -143,8 +166,8 @@ export async function importToRows(
         ? row[fieldName]
         : [row[fieldName]]
       if (
-        (schema.type === FieldTypes.OPTIONS ||
-          schema.type === FieldTypes.ARRAY) &&
+        (schema.type === FieldType.OPTIONS ||
+          schema.type === FieldType.ARRAY) &&
         row[fieldName]
       ) {
         let merged = [...schema.constraints!.inclusion!, ...rowVal]
@@ -333,29 +356,33 @@ export async function checkForViewUpdates(
   columnRename?: RenameColumn
 ) {
   const views = await getViews()
-  const tableViews = views.filter(view => view.meta.tableId === table._id)
+  const tableViews = views.filter(view => view.meta?.tableId === table._id)
 
   // Check each table view to see if impacted by this table action
   for (let view of tableViews) {
     let needsUpdated = false
+    const viewMetadata = view.meta as any
+    if (!viewMetadata) {
+      continue
+    }
 
     // First check for renames, otherwise check for deletions
     if (columnRename) {
       // Update calculation field if required
-      if (view.meta.field === columnRename.old) {
-        view.meta.field = columnRename.updated
+      if (viewMetadata.field === columnRename.old) {
+        viewMetadata.field = columnRename.updated
         needsUpdated = true
       }
 
       // Update group by field if required
-      if (view.meta.groupBy === columnRename.old) {
-        view.meta.groupBy = columnRename.updated
+      if (viewMetadata.groupBy === columnRename.old) {
+        viewMetadata.groupBy = columnRename.updated
         needsUpdated = true
       }
 
       // Update filters if required
-      if (view.meta.filters) {
-        view.meta.filters.forEach((filter: any) => {
+      if (viewMetadata.filters) {
+        viewMetadata.filters.forEach((filter: any) => {
           if (filter.key === columnRename.old) {
             filter.key = columnRename.updated
             needsUpdated = true
@@ -365,26 +392,26 @@ export async function checkForViewUpdates(
     } else if (deletedColumns) {
       deletedColumns.forEach((column: string) => {
         // Remove calculation statement if required
-        if (view.meta.field === column) {
-          delete view.meta.field
-          delete view.meta.calculation
-          delete view.meta.groupBy
+        if (viewMetadata.field === column) {
+          delete viewMetadata.field
+          delete viewMetadata.calculation
+          delete viewMetadata.groupBy
           needsUpdated = true
         }
 
         // Remove group by field if required
-        if (view.meta.groupBy === column) {
-          delete view.meta.groupBy
+        if (viewMetadata.groupBy === column) {
+          delete viewMetadata.groupBy
           needsUpdated = true
         }
 
         // Remove filters referencing deleted field if required
-        if (view.meta.filters && view.meta.filters.length) {
-          const initialLength = view.meta.filters.length
-          view.meta.filters = view.meta.filters.filter((filter: any) => {
+        if (viewMetadata.filters && viewMetadata.filters.length) {
+          const initialLength = viewMetadata.filters.length
+          viewMetadata.filters = viewMetadata.filters.filter((filter: any) => {
             return filter.key !== column
           })
-          if (initialLength !== view.meta.filters.length) {
+          if (initialLength !== viewMetadata.filters.length) {
             needsUpdated = true
           }
         }
@@ -397,15 +424,16 @@ export async function checkForViewUpdates(
         (field: any) => field.name == view.groupBy
       )
       const newViewTemplate = viewTemplate(
-        view.meta,
-        groupByField?.type === FieldTypes.ARRAY
+        viewMetadata,
+        groupByField?.type === FieldType.ARRAY
       )
-      await saveView(null, view.name, newViewTemplate)
-      if (!newViewTemplate.meta.schema) {
-        newViewTemplate.meta.schema = table.schema
+      const viewName = view.name!
+      await saveView(null, viewName, newViewTemplate)
+      if (!newViewTemplate.meta?.schema) {
+        newViewTemplate.meta!.schema = table.schema
       }
-      if (table.views?.[view.name]) {
-        table.views[view.name] = newViewTemplate.meta as View
+      if (table.views?.[viewName]) {
+        table.views[viewName] = newViewTemplate.meta as View
       }
     }
   }
@@ -428,7 +456,7 @@ export function generateJunctionTableName(
 
 export function foreignKeyStructure(keyName: string, meta?: any) {
   const structure: any = {
-    type: FieldTypes.NUMBER,
+    type: FieldType.NUMBER,
     constraints: {},
     name: keyName,
   }

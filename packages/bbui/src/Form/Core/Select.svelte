@@ -6,13 +6,14 @@
   export let id = null
   export let placeholder = "Choose an option"
   export let disabled = false
-  export let error = null
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
-  export let useOptionIconImage = false
   export let getOptionColour = () => null
+  export let getOptionSubtitle = () => null
+  export let compare = null
+  export let useOptionIconImage = false
   export let isOptionEnabled
   export let readonly = false
   export let quiet = false
@@ -23,8 +24,6 @@
   export let footer = null
   export let open = false
   export let tag = null
-  export let customPopoverOffsetBelow
-  export let customPopoverMaxHeight
   export let searchTerm = null
   export let loading
 
@@ -34,13 +33,19 @@
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
+  function compareOptionAndValue(option, value) {
+    return typeof compare === "function"
+      ? compare(option, value)
+      : option === value
+  }
+
   const getFieldAttribute = (getAttribute, value, options) => {
     // Wait for options to load if there is a value but no options
     if (!options?.length) {
       return ""
     }
-    const index = options.findIndex(
-      (option, idx) => getOptionValue(option, idx) === value
+    const index = options.findIndex((option, idx) =>
+      compareOptionAndValue(getOptionValue(option, idx), value)
     )
     return index !== -1 ? getAttribute(options[index], index) : null
   }
@@ -71,7 +76,6 @@
   on:loadMore
   {quiet}
   {id}
-  {error}
   {disabled}
   {readonly}
   {fieldText}
@@ -84,17 +88,16 @@
   {getOptionLabel}
   {getOptionValue}
   {getOptionIcon}
-  {useOptionIconImage}
   {getOptionColour}
+  {getOptionSubtitle}
+  {useOptionIconImage}
   {isOptionEnabled}
   {autocomplete}
   {sort}
   {tag}
-  {customPopoverOffsetBelow}
-  {customPopoverMaxHeight}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder === false ? null : placeholder}
-  isOptionSelected={option => option === value}
+  isOptionSelected={option => compareOptionAndValue(option, value)}
   onSelectOption={selectOption}
   {loading}
 />

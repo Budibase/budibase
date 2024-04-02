@@ -1,4 +1,4 @@
-{{- if .Values.ingress.aws }}
+{{- if .Values.awsAlbIngress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -7,24 +7,24 @@ metadata:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/success-codes: 200,301
-    alb.ingress.kubernetes.io/healthcheck-path: /
-    {{- if .Values.ingress.certificateArn }}
+    alb.ingress.kubernetes.io/success-codes: '200'
+    alb.ingress.kubernetes.io/healthcheck-path: '/health'
+    {{- if .Values.awsAlbIngress.certificateArn }}
     alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }} 
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.awsAlbIngress.certificateArn }} 
     {{- end }}
-    {{- if .Values.ingress.sslPolicy }}
-    alb.ingress.kubernetes.io/actions.ssl-policy: {{ .Values.ingress.sslPolicy }}
+    {{- if .Values.awsAlbIngress.sslPolicy }}
+    alb.ingress.kubernetes.io/actions.ssl-policy: {{ .Values.awsAlbIngress.sslPolicy }}
     {{- end }}
-    {{- if .Values.ingress.securityGroups }}
-    alb.ingress.kubernetes.io/security-groups: {{ .Values.ingress.securityGroups }}
+    {{- if .Values.awsAlbIngress.securityGroups }}
+    alb.ingress.kubernetes.io/security-groups: {{ .Values.awsAlbIngress.securityGroups }}
     {{- end }}
 spec:
   rules:
     - http:
         paths:
-        {{- if .Values.ingress.certificateArn }}
+        {{- if .Values.awsAlbIngress.certificateArn }}
         - path: /
           pathType: Prefix
           backend:

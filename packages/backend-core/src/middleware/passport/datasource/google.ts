@@ -58,7 +58,14 @@ export async function postAuth(
   const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
-  const authStateCookie = utils.getCookie(ctx, Cookie.DatasourceAuth)
+  const authStateCookie = utils.getCookie<{ appId: string }>(
+    ctx,
+    Cookie.DatasourceAuth
+  )
+
+  if (!authStateCookie) {
+    throw new Error("Unable to fetch datasource auth cookie")
+  }
 
   return passport.authenticate(
     new GoogleStrategy(

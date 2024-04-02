@@ -1,5 +1,5 @@
 import env from "../environment"
-import Redis from "ioredis"
+import Redis, { Cluster } from "ioredis"
 // mock-redis doesn't have any typing
 let MockRedis: any | undefined
 if (env.MOCK_REDIS) {
@@ -16,7 +16,9 @@ import {
   getRedisOptions,
   SEPARATOR,
   SelectableDatabase,
+  getRedisConnectionDetails,
 } from "./utils"
+import { logAlert } from "../logging"
 import * as timers from "../timers"
 
 const RETRY_PERIOD_MS = 2000
@@ -26,8 +28,7 @@ const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 
 // for testing just generate the client once
 let CLOSED = false
-let CLIENTS: { [key: number]: any } = {}
-0
+const CLIENTS: Record<number, Redis> = {}
 let CONNECTED = false
 
 // mock redis always connected
@@ -35,25 +36,20 @@ if (env.MOCK_REDIS) {
   CONNECTED = true
 }
 
-function pickClient(selectDb: number): any {
+function pickClient(selectDb: number) {
   return CLIENTS[selectDb]
 }
 
-function connectionError(
-  selectDb: number,
-  timeout: NodeJS.Timeout,
-  err: Error | string
-) {
+function connectionError(timeout: NodeJS.Timeout, err: Error | string) {
   // manually shut down, ignore errors
   if (CLOSED) {
     return
   }
-  pickClient(selectDb).disconnect()
   CLOSED = true
   // always clear this on error
   clearTimeout(timeout)
   CONNECTED = false
-  console.error("Redis connection failed - " + err)
+  logAlert("Redis connection failed", err)
   setTimeout(() => {
     init()
   }, RETRY_PERIOD_MS)
@@ -79,11 +75,7 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   // start the timer - only allowed 5 seconds to connect
   timeout = setTimeout(() => {
     if (!CONNECTED) {
-      connectionError(
-        selectDb,
-        timeout,
-        "Did not successfully connect in timeout"
-      )
+      connectionError(timeout, "Did not successfully connect in timeout")
     }
   }, STARTUP_TIMEOUT_MS)
 
@@ -91,12 +83,11 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   if (client) {
     client.disconnect()
   }
-  const { redisProtocolUrl, opts, host, port } = getRedisOptions()
+  const { host, port } = getRedisConnectionDetails()
+  const opts = getRedisOptions()
 
   if (CLUSTERED) {
     client = new RedisCore.Cluster([{ host, port }], opts)
-  } else if (redisProtocolUrl) {
-    client = new RedisCore(redisProtocolUrl)
   } else {
     client = new RedisCore(opts)
   }
@@ -107,12 +98,13 @@ function init(selectDb = DEFAULT_SELECT_DB) {
       // allow the process to exit
       return
     }
-    connectionError(selectDb, timeout, err)
+    connectionError(timeout, err)
   })
   client.on("error", (err: Error) => {
-    connectionError(selectDb, timeout, err)
+    connectionError(timeout, err)
   })
   client.on("connect", () => {
+    console.log(`Connected to Redis DB: ${selectDb}`)
     clearTimeout(timeout)
     CONNECTED = true
   })
@@ -209,12 +201,15 @@ class RedisWrapper {
     key = `${db}${SEPARATOR}${key}`
     let stream
     if (CLUSTERED) {
-      let node = this.getClient().nodes("master")
+      let node = (this.getClient() as never as Cluster).nodes("master")
       stream = node[0].scanStream({ match: key + "*", count: 100 })
     } else {
-      stream = this.getClient().scanStream({ match: key + "*", count: 100 })
+      stream = (this.getClient() as Redis).scanStream({
+        match: key + "*",
+        count: 100,
+      })
     }
-    return promisifyStream(stream, this.getClient())
+    return promisifyStream(stream, this.getClient() as any)
   }
 
   async keys(pattern: string) {
@@ -229,14 +224,16 @@ class RedisWrapper {
 
   async get(key: string) {
     const db = this._db
-    let response = await this.getClient().get(addDbPrefix(db, key))
+    const response = await this.getClient().get(addDbPrefix(db, key))
     // overwrite the prefixed key
+    // @ts-ignore
     if (response != null && response.key) {
+      // @ts-ignore
       response.key = key
     }
     // if its not an object just return the response
     try {
-      return JSON.parse(response)
+      return JSON.parse(response!)
     } catch (err) {
       return response
     }
@@ -282,13 +279,37 @@ class RedisWrapper {
     }
   }
 
+  async bulkStore(
+    data: Record<string, any>,
+    expirySeconds: number | null = null
+  ) {
+    const client = this.getClient()
+
+    const dataToStore = Object.entries(data).reduce((acc, [key, value]) => {
+      acc[addDbPrefix(this._db, key)] =
+        typeof value === "object" ? JSON.stringify(value) : value
+      return acc
+    }, {} as Record<string, any>)
+
+    const pipeline = client.pipeline()
+    pipeline.mset(dataToStore)
+
+    if (expirySeconds !== null) {
+      for (const key of Object.keys(dataToStore)) {
+        pipeline.expire(key, expirySeconds)
+      }
+    }
+
+    await pipeline.exec()
+  }
+
   async getTTL(key: string) {
     const db = this._db
     const prefixedKey = addDbPrefix(db, key)
     return this.getClient().ttl(prefixedKey)
   }
 
-  async setExpiry(key: string, expirySeconds: number | null) {
+  async setExpiry(key: string, expirySeconds: number) {
     const db = this._db
     const prefixedKey = addDbPrefix(db, key)
     await this.getClient().expire(prefixedKey, expirySeconds)
@@ -299,9 +320,34 @@ class RedisWrapper {
     await this.getClient().del(addDbPrefix(db, key))
   }
 
+  async bulkDelete(keys: string[]) {
+    const db = this._db
+    await this.getClient().del(keys.map(key => addDbPrefix(db, key)))
+  }
+
   async clear() {
     let items = await this.scan()
     await Promise.all(items.map((obj: any) => this.delete(obj.key)))
+  }
+
+  async increment(key: string) {
+    const result = await this.getClient().incr(addDbPrefix(this._db, key))
+    if (isNaN(result)) {
+      throw new Error(`Redis ${key} does not contain a number`)
+    }
+    return result
+  }
+
+  async deleteIfValue(key: string, value: any) {
+    const client = this.getClient()
+
+    const luaScript = `
+      if redis.call('GET', KEYS[1]) == ARGV[1] then
+        redis.call('DEL', KEYS[1])
+      end
+      `
+
+    await client.eval(luaScript, 1, addDbPrefix(this._db, key), value)
   }
 }
 

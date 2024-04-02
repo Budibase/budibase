@@ -29,10 +29,11 @@
     },
   ]
   $: hasError = userData.find(x => x.error != null)
-
   $: userCount = $licensing.userCount + userData.length
   $: reached = licensing.usersLimitReached(userCount)
   $: exceeded = licensing.usersLimitExceeded(userCount)
+
+  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
 
   function removeInput(idx) {
     userData = userData.filter((e, i) => i !== idx)
@@ -98,7 +99,7 @@
         align-items: center;
         flex-direction: row;"
       >
-        <div style="width: 90%">
+        <div style="flex: 1 1 auto;">
           <InputDropdown
             inputType="email"
             bind:inputValue={input.email}
@@ -134,12 +135,12 @@
     {/if}
   </Layout>
 
-  {#if $licensing.groupsEnabled}
+  {#if $licensing.groupsEnabled && internalGroups?.length}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"
       label="Groups"
-      options={$groups}
+      options={internalGroups}
       getOptionLabel={option => option.name}
       getOptionValue={option => option._id}
     />

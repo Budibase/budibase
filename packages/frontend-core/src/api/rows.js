@@ -19,11 +19,12 @@ export const buildRowEndpoints = API => ({
    * @param suppressErrors whether or not to suppress error notifications
    */
   saveRow: async (row, suppressErrors = false) => {
-    if (!row?.tableId) {
+    const resourceId = row?._viewId || row?.tableId
+    if (!resourceId) {
       return
     }
     return await API.post({
-      url: `/api/${row._viewId || row.tableId}/rows`,
+      url: `/api/${resourceId}/rows`,
       body: row,
       suppressErrors,
     })
@@ -35,11 +36,12 @@ export const buildRowEndpoints = API => ({
    * @param suppressErrors whether or not to suppress error notifications
    */
   patchRow: async (row, suppressErrors = false) => {
-    if (!row?.tableId && !row?._viewId) {
+    const resourceId = row?._viewId || row?.tableId
+    if (!resourceId) {
       return
     }
     return await API.patch({
-      url: `/api/${row._viewId || row.tableId}/rows`,
+      url: `/api/${resourceId}/rows`,
       body: row,
       suppressErrors,
     })
@@ -87,13 +89,24 @@ export const buildRowEndpoints = API => ({
    * @param rows the array of rows to export
    * @param format the format to export (csv or json)
    * @param columns which columns to export (all if undefined)
+   * @param delimiter how values should be separated in a CSV (default is comma)
    */
-  exportRows: async ({ tableId, rows, format, columns, search }) => {
+  exportRows: async ({
+    tableId,
+    rows,
+    format,
+    columns,
+    search,
+    delimiter,
+    customHeaders,
+  }) => {
     return await API.post({
       url: `/api/${tableId}/rows/exportRows?format=${format}`,
       body: {
         rows,
         columns,
+        delimiter,
+        customHeaders,
         ...search,
       },
       parseResponse: async response => {

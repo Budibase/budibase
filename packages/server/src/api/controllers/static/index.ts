@@ -1,10 +1,8 @@
-import { ValidFileExtensions } from "@budibase/shared-core"
-
-require("svelte/register")
-
+import { InvalidFileExtensions } from "@budibase/shared-core"
+import AppComponent from "./templates/BudibaseApp.svelte"
 import { join } from "../../../utilities/centralPath"
-import uuid from "uuid"
-import { ObjectStoreBuckets } from "../../../constants"
+import * as uuid from "uuid"
+import { ObjectStoreBuckets, devClientVersion } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
   loadHandlebarsFile,
@@ -24,9 +22,20 @@ import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import { App, Ctx, ProcessAttachmentResponse, Upload } from "@budibase/types"
+import {
+  UserCtx,
+  App,
+  Ctx,
+  ProcessAttachmentResponse,
+  Feature,
+} from "@budibase/types"
+import {
+  getAppMigrationVersion,
+  getLatestMigrationId,
+} from "../../../appMigrations"
 
-const send = require("koa-send")
+import send from "koa-send"
+import { getThemeVariables } from "../../../constants/themes"
 
 export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`
@@ -86,7 +95,10 @@ export const uploadFile = async function (
         )
       }
 
-      if (!env.SELF_HOSTED && !ValidFileExtensions.includes(extension)) {
+      if (
+        !env.SELF_HOSTED &&
+        InvalidFileExtensions.includes(extension.toLowerCase())
+      ) {
         throw new BadRequestError(
           `File "${file.name}" has an invalid extension: "${extension}"`
         )
@@ -122,7 +134,26 @@ export const deleteObjects = async function (ctx: Ctx) {
   )
 }
 
-export const serveApp = async function (ctx: Ctx) {
+const requiresMigration = async (ctx: Ctx) => {
+  const appId = context.getAppId()
+  if (!appId) {
+    ctx.throw("AppId could not be found")
+  }
+
+  const latestMigration = getLatestMigrationId()
+  if (!latestMigration) {
+    return false
+  }
+
+  const latestMigrationApplied = await getAppMigrationVersion(appId)
+
+  const requiresMigrations = latestMigrationApplied !== latestMigration
+  return requiresMigrations
+}
+
+export const serveApp = async function (ctx: UserCtx) {
+  const needMigrations = await requiresMigration(ctx)
+
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
 
@@ -139,19 +170,29 @@ export const serveApp = async function (ctx: Ctx) {
   try {
     db = context.getAppDB({ skip_setup: true })
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
+
     let appId = context.getAppId()
+    const hideDevTools = !!ctx.params.appUrl
+    const sideNav = appInfo.navigation.navigation === "Left"
+    const hideFooter =
+      ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
+    const themeVariables = getThemeVariables(appInfo?.theme)
 
     if (!env.isJest()) {
-      const App = require("./templates/BudibaseApp.svelte").default
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
-      const { head, html, css } = App.render({
+
+      const { head, html, css } = AppComponent.render({
+        title: branding?.platformTitle || `${appInfo.name}`,
+        showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
+        hideDevTools,
+        sideNav,
+        hideFooter,
         metaImage:
           branding?.metaImageUrl ||
-          "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
+          "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         metaTitle:
           branding?.metaTitle || `${appInfo.name} - built with Budibase`,
-        title: appInfo.name,
         production: env.isProd(),
         appId,
         clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
@@ -164,12 +205,13 @@ export const serveApp = async function (ctx: Ctx) {
           config?.logoUrl !== ""
             ? objectStore.getGlobalFileUrl("settings", "logoUrl")
             : "",
+        appMigrating: needMigrations,
       })
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
         head,
         body: html,
-        style: css.code,
+        css: `:root{${themeVariables}} ${css.code}`,
         appId,
         embedded: bbHeaderEmbed,
       })
@@ -179,13 +221,12 @@ export const serveApp = async function (ctx: Ctx) {
     }
   } catch (error) {
     if (!env.isJest()) {
-      const App = require("./templates/BudibaseApp.svelte").default
-      const { head, html, css } = App.render({
+      const { head, html, css } = AppComponent.render({
         title: branding?.metaTitle,
         metaTitle: branding?.metaTitle,
         metaImage:
           branding?.metaImageUrl ||
-          "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
+          "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         favicon:
           branding.faviconUrl !== ""
@@ -209,7 +250,9 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
 
   if (!env.isJest()) {
     let appId = context.getAppId()
-    const previewHbs = loadHandlebarsFile(`${__dirname}/preview.hbs`)
+    const templateLoc = join(__dirname, "templates")
+    const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
+    const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
     ctx.body = await processString(previewHbs, {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
     })
@@ -220,18 +263,20 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
 }
 
 export const serveClientLibrary = async function (ctx: Ctx) {
+  const version = ctx.request.query.version
+
   const appId = context.getAppId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
-  if (env.isProd()) {
+  if (env.isProd() || (env.isDev() && version !== devClientVersion)) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
     )
     ctx.set("Content-Type", "application/javascript")
-  } else if (env.isDev()) {
+  } else if (env.isDev() && version === devClientVersion) {
     // incase running from TS directly
     const tsPath = join(require.resolve("@budibase/client"), "..")
     return send(ctx, "budibase-client.js", {
@@ -268,7 +313,6 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
       ctx.throw(400, "bucket and key values are required")
-      return
     }
     try {
       const s3 = new AWS.S3({

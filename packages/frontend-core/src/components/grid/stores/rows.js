@@ -114,10 +114,6 @@ export const createActions = context => {
     const $allFilters = get(allFilters)
     const $sort = get(sort)
 
-    // Determine how many rows to fetch per page
-    const features = datasource.actions.getFeatures()
-    const limit = features?.supportsPagination ? RowPageSize : null
-
     // Create new fetch model
     const newFetch = fetchData({
       API,
@@ -126,8 +122,12 @@ export const createActions = context => {
         filter: $allFilters,
         sortColumn: $sort.column,
         sortOrder: $sort.order,
-        limit,
+        limit: RowPageSize,
         paginate: true,
+
+        // Disable client side limiting, so that for queries and custom data
+        // sources we don't impose fake row limits. We want all the data.
+        clientSideLimiting: false,
       },
     })
 
@@ -314,8 +314,12 @@ export const createActions = context => {
 
   // Refreshes a specific row
   const refreshRow = async id => {
-    const row = await datasource.actions.getRow(id)
-    replaceRow(id, row)
+    try {
+      const row = await datasource.actions.getRow(id)
+      replaceRow(id, row)
+    } catch {
+      // Do nothing - we probably just don't support refreshing individual rows
+    }
   }
 
   // Refreshes all data
@@ -323,29 +327,31 @@ export const createActions = context => {
     get(fetch)?.getInitialData()
   }
 
-  // Patches a row with some changes
-  const updateRow = async (rowId, changes, options = { save: true }) => {
+  // Checks if a changeset for a row actually mutates the row or not
+  const changesAreValid = (row, changes) => {
+    const columns = Object.keys(changes || {})
+    if (!row || !columns.length) {
+      return false
+    }
+
+    // Ensure there is at least 1 column that creates a difference
+    return columns.some(column => row[column] !== changes[column])
+  }
+
+  // Patches a row with some changes in local state, and returns whether a
+  // valid pending change was made or not
+  const stashRowChanges = (rowId, changes) => {
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[rowId]
     const row = $rows[index]
-    if (index == null || !Object.keys(changes || {}).length) {
-      return
+
+    // Check this is a valid change
+    if (!row || !changesAreValid(row, changes)) {
+      return false
     }
 
-    // Abandon if no changes
-    let same = true
-    for (let column of Object.keys(changes)) {
-      if (row[column] !== changes[column]) {
-        same = false
-        break
-      }
-    }
-    if (same) {
-      return
-    }
-
-    // Immediately update state so that the change is reflected
+    // Add change to cache
     rowChangeCache.update(state => ({
       ...state,
       [rowId]: {
@@ -353,26 +359,30 @@ export const createActions = context => {
         ...changes,
       },
     }))
+    return true
+  }
 
-    // Stop here if we don't want to persist the change
-    if (!options?.save) {
+  // Saves any pending changes to a row
+  const applyRowChanges = async rowId => {
+    const $rows = get(rows)
+    const $rowLookupMap = get(rowLookupMap)
+    const index = $rowLookupMap[rowId]
+    const row = $rows[index]
+    if (row == null) {
       return
     }
 
     // Save change
     try {
-      inProgressChanges.update(state => ({
-        ...state,
-        [rowId]: true,
-      }))
+      // Mark as in progress
+      inProgressChanges.update(state => ({ ...state, [rowId]: true }))
 
       // Update row
-      const saved = await datasource.actions.updateRow({
-        ...cleanRow(row),
-        ...get(rowChangeCache)[rowId],
-      })
+      const changes = get(rowChangeCache)[rowId]
+      const newRow = { ...cleanRow(row), ...changes }
+      const saved = await datasource.actions.updateRow(newRow)
 
-      // Update state after a successful change
+      // Update row state after a successful change
       if (saved?._id) {
         rows.update(state => {
           state[index] = saved
@@ -382,6 +392,8 @@ export const createActions = context => {
         // Handle users table edge case
         await refreshRow(saved.id)
       }
+
+      // Wipe row change cache now that we've saved the row
       rowChangeCache.update(state => {
         delete state[rowId]
         return state
@@ -389,15 +401,17 @@ export const createActions = context => {
     } catch (error) {
       handleValidationError(rowId, error)
     }
-    inProgressChanges.update(state => ({
-      ...state,
-      [rowId]: false,
-    }))
+
+    // Mark as completed
+    inProgressChanges.update(state => ({ ...state, [rowId]: false }))
   }
 
   // Updates a value of a row
-  const updateValue = async ({ rowId, column, value, save = true }) => {
-    return await updateRow(rowId, { [column]: value }, { save })
+  const updateValue = async ({ rowId, column, value, apply = true }) => {
+    const success = stashRowChanges(rowId, { [column]: value })
+    if (success && apply) {
+      await applyRowChanges(rowId)
+    }
   }
 
   // Deletes an array of rows
@@ -407,9 +421,7 @@ export const createActions = context => {
     }
 
     // Actually delete rows
-    rowsToDelete.forEach(row => {
-      delete row.__idx
-    })
+    rowsToDelete.forEach(row => delete row.__idx)
     await datasource.actions.deleteRows(rowsToDelete)
 
     // Update state
@@ -429,7 +441,7 @@ export const createActions = context => {
       newRow = newRows[i]
 
       // Ensure we have a unique _id.
-      // This means generating one for non DS+, overriting any that may already
+      // This means generating one for non DS+, overwriting any that may already
       // exist as we cannot allow duplicates.
       if (!$isDatasourcePlus) {
         newRow._id = Helpers.uuid()
@@ -490,7 +502,7 @@ export const createActions = context => {
         duplicateRow,
         getRow,
         updateValue,
-        updateRow,
+        applyRowChanges,
         deleteRows,
         hasRow,
         loadNextPage,
@@ -504,7 +516,14 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { rowChangeCache, inProgressChanges, previousFocusedRowId } = context
+  const {
+    rowChangeCache,
+    inProgressChanges,
+    previousFocusedRowId,
+    previousFocusedCellId,
+    rows,
+    validation,
+  } = context
 
   // Wipe the row change cache when changing row
   previousFocusedRowId.subscribe(id => {
@@ -513,6 +532,17 @@ export const initialise = context => {
         delete state[id]
         return state
       })
+    }
+  })
+
+  // Ensure any unsaved changes are saved when changing cell
+  previousFocusedCellId.subscribe(async id => {
+    const rowId = id?.split("-")[0]
+    const hasErrors = validation.actions.rowHasErrors(rowId)
+    const hasChanges = Object.keys(get(rowChangeCache)[rowId] || {}).length > 0
+    const isSavingChanges = get(inProgressChanges)[rowId]
+    if (rowId && !hasErrors && hasChanges && !isSavingChanges) {
+      await rows.actions.applyRowChanges(rowId)
     }
   })
 }

@@ -1,4 +1,3 @@
-import { FormulaTypes } from "../../../constants"
 import { clearColumns } from "./utils"
 import { doesContainStrings } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
@@ -7,6 +6,7 @@ import uniq from "lodash/uniq"
 import { updateAllFormulasInTable } from "../row/staticFormula"
 import { context } from "@budibase/backend-core"
 import {
+  FormulaType,
   FieldSchema,
   FieldType,
   FormulaFieldMetadata,
@@ -17,10 +17,10 @@ import { isRelationshipColumn } from "../../../db/utils"
 
 function isStaticFormula(
   column: FieldSchema
-): column is FormulaFieldMetadata & { formulaType: FormulaTypes.STATIC } {
+): column is FormulaFieldMetadata & { formulaType: FormulaType.STATIC } {
   return (
     column.type === FieldType.FORMULA &&
-    column.formulaType === FormulaTypes.STATIC
+    column.formulaType === FormulaType.STATIC
   )
 }
 

@@ -11,7 +11,10 @@ import {
 import * as exporters from "../../../../api/controllers/view/exporters"
 import sdk from "../../../../sdk"
 import { handleRequest } from "../../../../api/controllers/row/external"
-import { breakExternalTableId } from "../../../../integrations/utils"
+import {
+  breakExternalTableId,
+  breakRowIdField,
+} from "../../../../integrations/utils"
 import { cleanExportRows } from "../utils"
 import { utils } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "../search"
@@ -52,6 +55,15 @@ export async function search(options: SearchParams) {
     }
   }
 
+  // Make sure oneOf _id queries decode the Row IDs
+  if (query?.oneOf?._id) {
+    const rowIds = query.oneOf._id
+    query.oneOf._id = rowIds.map((row: string) => {
+      const ids = breakRowIdField(row)
+      return ids[0]
+    })
+  }
+
   try {
     const table = await sdk.tables.getTable(tableId)
     options = searchInputMapping(table, options)
@@ -80,7 +92,10 @@ export async function search(options: SearchParams) {
       rows = rows.map((r: any) => pick(r, fields))
     }
 
-    rows = await outputProcessing(table, rows, { preserveLinks: true })
+    rows = await outputProcessing(table, rows, {
+      preserveLinks: true,
+      squash: true,
+    })
 
     // need wrapper object for bookmarks etc when paginating
     return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
@@ -98,17 +113,25 @@ export async function search(options: SearchParams) {
 export async function exportRows(
   options: ExportRowsParams
 ): Promise<ExportRowsResult> {
-  const { tableId, format, columns, rowIds } = options
+  const {
+    tableId,
+    format,
+    columns,
+    rowIds,
+    query,
+    sort,
+    sortOrder,
+    delimiter,
+    customHeaders,
+  } = options
   const { datasourceId, tableName } = breakExternalTableId(tableId)
 
-  let query: SearchFilters = {}
+  let requestQuery: SearchFilters = {}
   if (rowIds?.length) {
-    query = {
+    requestQuery = {
       oneOf: {
         _id: rowIds.map((row: string) => {
-          const ids = JSON.parse(
-            decodeURI(row).replace(/'/g, `"`).replace(/%2C/g, ",")
-          )
+          const ids = breakRowIdField(row)
           if (ids.length > 1) {
             throw new HTTPError(
               "Export data does not support composite keys.",
@@ -119,6 +142,8 @@ export async function exportRows(
         }),
       },
     }
+  } else {
+    requestQuery = query || {}
   }
 
   const datasource = await sdk.datasources.get(datasourceId!)
@@ -126,11 +151,16 @@ export async function exportRows(
     throw new HTTPError("Datasource has not been configured for plus API.", 400)
   }
 
-  let result = await search({ tableId, query })
+  let result = await search({ tableId, query: requestQuery, sort, sortOrder })
   let rows: Row[] = []
+  let headers
+
+  if (!tableName) {
+    throw new HTTPError("Could not find table name.", 400)
+  }
+  const schema = datasource.entities[tableName].schema
 
   // Filter data to only specified columns if required
-
   if (columns && columns.length) {
     for (let i = 0; i < result.rows.length; i++) {
       rows[i] = {}
@@ -138,22 +168,22 @@ export async function exportRows(
         rows[i][column] = result.rows[i][column]
       }
     }
+    headers = columns
   } else {
     rows = result.rows
   }
 
-  if (!tableName) {
-    throw new HTTPError("Could not find table name.", 400)
-  }
-  const schema = datasource.entities[tableName].schema
-  let exportRows = cleanExportRows(rows, schema, format, columns)
-
-  let headers = Object.keys(schema)
+  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
 
   let content: string
   switch (format) {
     case exporters.Format.CSV:
-      content = exporters.csv(headers, exportRows)
+      content = exporters.csv(
+        headers ?? Object.keys(schema),
+        exportRows,
+        delimiter,
+        customHeaders
+      )
       break
     case exporters.Format.JSON:
       content = exporters.json(exportRows)
@@ -183,6 +213,7 @@ export async function fetch(tableId: string): Promise<Row[]> {
   const table = await sdk.tables.getTable(tableId)
   return await outputProcessing<Row[]>(table, response, {
     preserveLinks: true,
+    squash: true,
   })
 }
 

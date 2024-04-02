@@ -4,20 +4,20 @@ import * as external from "./external"
 import { isExternalTableID } from "../../../integrations/utils"
 import {
   Ctx,
-  UserCtx,
-  DeleteRowRequest,
   DeleteRow,
+  DeleteRowRequest,
   DeleteRows,
-  Row,
-  PatchRowRequest,
-  PatchRowResponse,
-  SearchRowResponse,
-  SearchRowRequest,
-  SearchParams,
-  GetRowResponse,
-  ValidateResponse,
   ExportRowsRequest,
   ExportRowsResponse,
+  GetRowResponse,
+  PatchRowRequest,
+  PatchRowResponse,
+  Row,
+  SearchParams,
+  SearchRowRequest,
+  SearchRowResponse,
+  UserCtx,
+  ValidateResponse,
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
@@ -25,11 +25,12 @@ import { addRev } from "../public/utils"
 import { fixRow } from "../public/rows"
 import sdk from "../../../sdk"
 import * as exporters from "../view/exporters"
-import { apiFileReturn } from "../../../utilities/fileSystem"
 import { Format } from "../view/exporters"
+import { apiFileReturn } from "../../../utilities/fileSystem"
+
 export * as views from "./views"
 
-function pickApi(tableId: any) {
+function pickApi(tableId: string) {
   if (isExternalTableID(tableId)) {
     return external
   }
@@ -48,12 +49,7 @@ export async function patch(
     return save(ctx)
   }
   try {
-    const { row, table } = await quotas.addQuery(
-      () => pickApi(tableId).patch(ctx),
-      {
-        datasourceId: tableId,
-      }
-    )
+    const { row, table } = await pickApi(tableId).patch(ctx)
     if (!row) {
       ctx.throw(404, "Row not found")
     }
@@ -83,9 +79,7 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
     return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   const { row, table, squashed } = await quotas.addRow(() =>
-    quotas.addQuery(() => pickApi(tableId).save(ctx), {
-      datasourceId: tableId,
-    })
+    sdk.rows.save(tableId, ctx.request.body, ctx.user?._id)
   )
   ctx.status = 200
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
@@ -101,31 +95,21 @@ export async function fetchView(ctx: any) {
 
   const { calculation, group, field } = ctx.query
 
-  ctx.body = await quotas.addQuery(
-    () =>
-      sdk.rows.fetchView(tableId, viewName, {
-        calculation,
-        group: calculation ? group : null,
-        field,
-      }),
-    {
-      datasourceId: tableId,
-    }
-  )
+  ctx.body = await sdk.rows.fetchView(tableId, viewName, {
+    calculation,
+    group: calculation ? group : null,
+    field,
+  })
 }
 
 export async function fetch(ctx: any) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => sdk.rows.fetch(tableId), {
-    datasourceId: tableId,
-  })
+  ctx.body = await sdk.rows.fetch(tableId)
 }
 
 export async function find(ctx: UserCtx<void, GetRowResponse>) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => pickApi(tableId).find(ctx), {
-    datasourceId: tableId,
-  })
+  ctx.body = await pickApi(tableId).find(ctx)
 }
 
 function isDeleteRows(input: any): input is DeleteRows {
@@ -147,7 +131,10 @@ async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
       : fixRow(processedRow, ctx.params)
   })
 
-  return await Promise.all(processedRows)
+  const responses = await Promise.allSettled(processedRows)
+  return responses
+    .filter(resp => resp.status === "fulfilled")
+    .map(resp => (resp as PromiseFulfilledResult<Row>).value)
 }
 
 async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
@@ -156,15 +143,9 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 
   let deleteRequest = ctx.request.body as DeleteRows
 
-  const rowDeletes: Row[] = await processDeleteRowsRequest(ctx)
-  deleteRequest.rows = rowDeletes
+  deleteRequest.rows = await processDeleteRowsRequest(ctx)
 
-  const { rows } = await quotas.addQuery(
-    () => pickApi(tableId).bulkDestroy(ctx),
-    {
-      datasourceId: tableId,
-    }
-  )
+  const { rows } = await pickApi(tableId).bulkDestroy(ctx)
   await quotas.removeRows(rows.length)
 
   for (let row of rows) {
@@ -179,9 +160,7 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
 
-  const resp = await quotas.addQuery(() => pickApi(tableId).destroy(ctx), {
-    datasourceId: tableId,
-  })
+  const resp = await pickApi(tableId).destroy(ctx)
   await quotas.removeRow()
 
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
@@ -219,9 +198,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   }
 
   ctx.status = 200
-  ctx.body = await quotas.addQuery(() => sdk.rows.search(searchParams), {
-    datasourceId: tableId,
-  })
+  ctx.body = await sdk.rows.search(searchParams)
 }
 
 export async function validate(ctx: Ctx<Row, ValidateResponse>) {
@@ -237,14 +214,9 @@ export async function validate(ctx: Ctx<Row, ValidateResponse>) {
   }
 }
 
-export async function fetchEnrichedRow(ctx: any) {
+export async function fetchEnrichedRow(ctx: UserCtx<void, Row>) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(
-    () => pickApi(tableId).fetchEnrichedRow(ctx),
-    {
-      datasourceId: tableId,
-    }
-  )
+  ctx.body = await pickApi(tableId).fetchEnrichedRow(ctx)
 }
 
 export const exportRows = async (
@@ -254,7 +226,8 @@ export const exportRows = async (
 
   const format = ctx.query.format
 
-  const { rows, columns, query } = ctx.request.body
+  const { rows, columns, query, sort, sortOrder, delimiter, customHeaders } =
+    ctx.request.body
   if (typeof format !== "string" || !exporters.isFormat(format)) {
     ctx.throw(
       400,
@@ -264,20 +237,17 @@ export const exportRows = async (
     )
   }
 
-  ctx.body = await quotas.addQuery(
-    async () => {
-      const { fileName, content } = await sdk.rows.exportRows({
-        tableId,
-        format: format as Format,
-        rowIds: rows,
-        columns,
-        query,
-      })
-      ctx.attachment(fileName)
-      return apiFileReturn(content)
-    },
-    {
-      datasourceId: tableId,
-    }
-  )
+  const { fileName, content } = await sdk.rows.exportRows({
+    tableId,
+    format: format as Format,
+    rowIds: rows,
+    columns,
+    query,
+    sort,
+    sortOrder,
+    delimiter,
+    customHeaders,
+  })
+  ctx.attachment(fileName)
+  ctx.body = apiFileReturn(content)
 }

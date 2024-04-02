@@ -10,9 +10,9 @@
     Input,
     DatePicker,
   } from "@budibase/bbui"
-  import { currentAsset, selectedComponent } from "builderStore"
-  import { findClosestMatchingComponent } from "builderStore/componentUtils"
-  import { getSchemaForDatasource } from "builderStore/dataBinding"
+  import { selectedScreen, selectedComponent } from "stores/builder"
+  import { findClosestMatchingComponent } from "helpers/components"
+  import { getSchemaForDatasource, getDatasourceForProvider } from "dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
 
@@ -124,7 +124,14 @@
     ],
   }
 
-  $: dataSourceSchema = getDataSourceSchema($currentAsset, $selectedComponent)
+  const resolveDatasource = (selectedScreen, componentInstance, parent) => {
+    return (
+      getDatasourceForProvider(selectedScreen, parent || componentInstance) ||
+      {}
+    )
+  }
+
+  $: dataSourceSchema = getDataSourceSchema($selectedScreen, $selectedComponent)
   $: field = fieldName || $selectedComponent?.field
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
   $: fieldType = type?.split("/")[1] || "string"
@@ -146,8 +153,8 @@
         component._component.endsWith("/formblock") ||
         component._component.endsWith("/tableblock")
     )
-
-    return getSchemaForDatasource(asset, formParent?.dataSource)
+    const dataSource = resolveDatasource(asset, component, formParent)
+    return getSchemaForDatasource(asset, dataSource)
   }
 
   const parseRulesFromSchema = (field, dataSourceSchema) => {
@@ -164,7 +171,8 @@
     // Required constraint
     if (
       field === dataSourceSchema?.table?.primaryDisplay ||
-      constraints.presence?.allowEmpty === false
+      constraints.presence?.allowEmpty === false ||
+      constraints.presence === true
     ) {
       rules.push({
         constraint: "required",

@@ -22,7 +22,6 @@
   export let handleFileTooLarge = null
   export let handleTooManyFiles = null
   export let gallery = true
-  export let error = null
   export let fileTags = []
   export let maximum = null
   export let extensions = "*"
@@ -54,7 +53,7 @@
   $: {
     if (selectedImage?.url) {
       selectedUrl = selectedImage?.url
-    } else if (selectedImage) {
+    } else if (selectedImage && isImage) {
       try {
         let reader = new FileReader()
         reader.readAsDataURL(selectedImage)
@@ -138,6 +137,9 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <div class="container" class:compact>
   {#if selectedImage}
     {#if gallery}
@@ -195,7 +197,9 @@
         >
           <Icon name="ChevronRight" />
         </div>
-        <div class="footer">File {selectedImageIdx + 1} of {fileCount}</div>
+        {#if maximum !== 1}
+          <div class="footer">File {selectedImageIdx + 1} of {fileCount}</div>
+        {/if}
       </div>
     {:else if value?.length}
       {#each value as file}
@@ -222,7 +226,6 @@
   {#if showDropzone}
     <div
       class="spectrum-Dropzone"
-      class:is-invalid={!!error}
       class:disabled
       role="region"
       tabindex="0"
@@ -351,9 +354,6 @@
   .spectrum-Dropzone {
     user-select: none;
   }
-  .spectrum-Dropzone.is-invalid {
-    border-color: var(--spectrum-global-color-red-400);
-  }
   input[type="file"] {
     display: none;
   }
@@ -386,7 +386,7 @@
   }
   .compact .placeholder,
   .compact img {
-    margin: 10px 16px;
+    margin: 8px 16px;
   }
   .compact img {
     height: 90px;
@@ -456,16 +456,18 @@
     color: var(--red);
   }
 
+  .spectrum-Dropzone {
+    height: 220px;
+  }
+  .compact .spectrum-Dropzone {
+    height: 40px;
+  }
   .spectrum-Dropzone.disabled {
     pointer-events: none;
     background-color: var(--spectrum-global-color-gray-200);
   }
   .disabled .spectrum-Heading--sizeL {
     color: var(--spectrum-alias-text-color-disabled);
-  }
-  .compact .spectrum-Dropzone {
-    padding-top: 8px;
-    padding-bottom: 8px;
   }
   .compact .spectrum-IllustratedMessage-description {
     margin: 0;
@@ -477,7 +479,6 @@
     flex-wrap: wrap;
     justify-content: center;
   }
-
   .tag {
     margin-top: 8px;
   }

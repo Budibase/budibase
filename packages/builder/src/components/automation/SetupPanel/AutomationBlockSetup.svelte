@@ -12,14 +12,11 @@
     Drawer,
     Modal,
     notifications,
-    Icon,
     Checkbox,
     DatePicker,
-    Detail,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, selectedAutomation } from "builderStore"
-  import { tables } from "stores/backend"
+  import { automationStore, selectedAutomation, tables } from "stores/builder"
   import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
@@ -28,22 +25,24 @@
   import CodeEditorModal from "./CodeEditorModal.svelte"
   import QuerySelector from "./QuerySelector.svelte"
   import QueryParamSelector from "./QueryParamSelector.svelte"
+  import AutomationSelector from "./AutomationSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
+  import BindingSidePanel from "components/common/bindings/BindingSidePanel.svelte"
+  import { BindingHelpers, BindingType } from "components/common/bindings/utils"
   import {
     bindingsToCompletions,
     hbAutocomplete,
     EditorModes,
   } from "components/common/CodeEditor"
   import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
-  import { LuceneUtils } from "@budibase/frontend-core"
+  import { LuceneUtils, Utils } from "@budibase/frontend-core"
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
-  } from "builderStore/dataBinding"
-  import { Utils } from "@budibase/frontend-core"
+  } from "dataBinding"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
@@ -55,9 +54,8 @@
 
   let webhookModal
   let drawer
-  let fillWidth = true
   let inputData
-  let codeBindingOpen = false
+  let insertAtPos, getCaretPosition
 
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
@@ -77,7 +75,11 @@
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
   $: codeMode =
     stepId === "EXECUTE_BASH" ? EditorModes.Handlebars : EditorModes.JS
-
+  $: bindingsHelpers = new BindingHelpers(getCaretPosition, insertAtPos, {
+    disableWrapping: true,
+  })
+  $: editingJs = codeMode === EditorModes.JS
+  $: requiredProperties = block.schema.inputs.required || []
   $: stepCompletions =
     codeMode === EditorModes.Handlebars
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
@@ -103,7 +105,6 @@
       }
     }
   }
-
   const onChange = Utils.sequential(async (e, key) => {
     // We need to cache the schema as part of the definition because it is
     // used in the server to detect relationships. It would be far better to
@@ -147,6 +148,7 @@
     if (!block || !automation) {
       return []
     }
+
     // Find previous steps to the selected one
     let allSteps = [...automation.steps]
 
@@ -155,25 +157,101 @@
     }
     let blockIdx = allSteps.findIndex(step => step.id === block.id)
 
-    // Extract all outputs from all previous steps as available bindins
+    // Extract all outputs from all previous steps as available bindingsx§x
     let bindings = []
     let loopBlockCount = 0
+    const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
+      if (!name) return
+      const runtimeBinding = determineRuntimeBinding(name, idx, isLoopBlock)
+      const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
+
+      bindings.push(
+        createBindingObject(
+          name,
+          value,
+          icon,
+          idx,
+          loopBlockCount,
+          isLoopBlock,
+          runtimeBinding,
+          categoryName,
+          bindingName
+        )
+      )
+    }
+
+    const determineRuntimeBinding = (name, idx, isLoopBlock) => {
+      let runtimeName
+
+      /* Begin special cases for generating custom schemas based on triggers */
+      if (idx === 0 && automation.trigger?.event === "app:trigger") {
+        return `trigger.fields.${name}`
+      }
+
+      if (
+        idx === 0 &&
+        (automation.trigger?.event === "row:update" ||
+          automation.trigger?.event === "row:save")
+      ) {
+        if (name !== "id" && name !== "revision") return `trigger.row.${name}`
+      }
+      /* End special cases for generating custom schemas based on triggers */
+
+      if (isLoopBlock) {
+        runtimeName = `loop.${name}`
+      } else if (block.name.startsWith("JS")) {
+        runtimeName = `steps[${idx - loopBlockCount}].${name}`
+      } else {
+        runtimeName = `steps.${idx - loopBlockCount}.${name}`
+      }
+      return idx === 0 ? `trigger.${name}` : runtimeName
+    }
+
+    const determineCategoryName = (idx, isLoopBlock, bindingName) => {
+      if (idx === 0) return "Trigger outputs"
+      if (isLoopBlock) return "Loop Outputs"
+      return bindingName
+        ? `${bindingName} outputs`
+        : `Step ${idx - loopBlockCount} outputs`
+    }
+
+    const createBindingObject = (
+      name,
+      value,
+      icon,
+      idx,
+      loopBlockCount,
+      isLoopBlock,
+      runtimeBinding,
+      categoryName,
+      bindingName
+    ) => {
+      return {
+        readableBinding: bindingName
+          ? `${bindingName}.${name}`
+          : runtimeBinding,
+        runtimeBinding,
+        type: value.type,
+        description: value.description,
+        icon,
+        category: categoryName,
+        display: {
+          type: value.type,
+          name,
+          rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
+        },
+      }
+    }
+
     for (let idx = 0; idx < blockIdx; idx++) {
       let wasLoopBlock = allSteps[idx - 1]?.stepId === ActionStepID.LOOP
       let isLoopBlock =
         allSteps[idx]?.stepId === ActionStepID.LOOP &&
-        allSteps.find(x => x.blockToLoop === block.id)
+        allSteps.some(x => x.blockToLoop === block.id)
+      let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
+      let bindingName =
+        automation.stepNames?.[allSteps[idx - loopBlockCount].id]
 
-      // If the previous block was a loop block, decrement the index so the following
-      // steps are in the correct order
-      if (wasLoopBlock) {
-        loopBlockCount++
-        continue
-      }
-
-      let schema = allSteps[idx]?.schema?.outputs?.properties ?? {}
-
-      // If its a Loop Block, we need to add this custom schema
       if (isLoopBlock) {
         schema = {
           currentItem: {
@@ -182,49 +260,44 @@
           },
         }
       }
-      const outputs = Object.entries(schema)
 
-      let bindingIcon = ""
-      let bindindingRank = 0
-
-      if (idx === 0) {
-        bindingIcon = automation.trigger.icon
-      } else if (isLoopBlock) {
-        bindingIcon = "Reuse"
-        bindindingRank = idx + 1
-      } else {
-        bindingIcon = allSteps[idx].icon
-        bindindingRank = idx - loopBlockCount
+      if (idx === 0 && automation.trigger?.event === "app:trigger") {
+        schema = Object.fromEntries(
+          Object.keys(automation.trigger.inputs.fields || []).map(key => [
+            key,
+            { type: automation.trigger.inputs.fields[key] },
+          ])
+        )
       }
-
-      bindings = bindings.concat(
-        outputs.map(([name, value]) => {
-          let runtimeName = isLoopBlock
-            ? `loop.${name}`
-            : block.name.startsWith("JS")
-            ? `steps[${idx - loopBlockCount}].${name}`
-            : `steps.${idx - loopBlockCount}.${name}`
-          const runtime = idx === 0 ? `trigger.${name}` : runtimeName
-          const categoryName =
-            idx === 0
-              ? "Trigger outputs"
-              : isLoopBlock
-              ? "Loop Outputs"
-              : `Step ${idx - loopBlockCount} outputs`
-          return {
-            readableBinding: runtime,
-            runtimeBinding: runtime,
-            type: value.type,
-            description: value.description,
-            icon: bindingIcon,
-            category: categoryName,
-            display: {
-              type: value.type,
-              name: name,
-              rank: bindindingRank,
-            },
+      if (
+        (idx === 0 && automation.trigger.event === "row:update") ||
+        (idx === 0 && automation.trigger.event === "row:save")
+      ) {
+        let table = $tables.list.find(
+          table => table._id === automation.trigger.inputs.tableId
+        )
+        // We want to generate our own schema for the bindings from the table schema itself
+        for (const key in table?.schema) {
+          schema[key] = {
+            type: table.schema[key].type,
           }
-        })
+        }
+        // remove the original binding
+        delete schema.row
+      }
+      let icon =
+        idx === 0
+          ? automation.trigger.icon
+          : isLoopBlock
+          ? "Reuse"
+          : allSteps[idx].icon
+
+      if (wasLoopBlock) {
+        loopBlockCount++
+        continue
+      }
+      Object.entries(schema).forEach(([name, value]) =>
+        addBinding(name, value, icon, idx, isLoopBlock, bindingName)
       )
     }
 
@@ -242,10 +315,8 @@
         })
       )
     }
-
     return bindings
   }
-
   function lookForFilters(properties) {
     if (!properties) {
       return []
@@ -277,6 +348,22 @@
     return !dependsOn || !!inputData[dependsOn]
   }
 
+  function shouldRenderField(value) {
+    return (
+      value.customType !== "row" &&
+      value.customType !== "code" &&
+      value.customType !== "queryParams" &&
+      value.customType !== "cron" &&
+      value.customType !== "triggerSchema" &&
+      value.customType !== "automationFields"
+    )
+  }
+
+  function getFieldLabel(key, value) {
+    const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
+    return `${value.title || (key === "row" ? "Table" : key)} ${requiredSuffix}`
+  }
+
   onMount(async () => {
     try {
       await environment.loadVariables()
@@ -289,245 +376,253 @@
 <div class="fields">
   {#each schemaProperties as [key, value]}
     {#if canShowField(key, value)}
-      <div class="block-field">
-        {#if key !== "fields" && value.type !== "boolean"}
+      {@const label = getFieldLabel(key, value)}
+      <div class:block-field={shouldRenderField(value)}>
+        {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
           <Label
             tooltip={value.title === "Binding / Value"
               ? "If using the String input type, please use a comma or newline separated string"
-              : null}>{value.title || (key === "row" ? "Table" : key)}</Label
+              : null}>{label}</Label
           >
         {/if}
-        {#if value.type === "string" && value.enum && canShowField(key, value)}
-          <Select
-            on:change={e => onChange(e, key)}
-            value={inputData[key]}
-            placeholder={false}
-            options={value.enum}
-            getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
-          />
-        {:else if value.type === "json"}
-          <Editor
-            editorHeight="250"
-            editorWidth="448"
-            mode="json"
-            value={inputData[key]?.value}
-            on:change={e => {
-              onChange(e, key)
-            }}
-          />
-        {:else if value.type === "boolean"}
-          <div style="margin-top: 10px">
-            <Checkbox
-              text={value.title}
-              value={inputData[key]}
+        <div class:field-width={shouldRenderField(value)}>
+          {#if value.type === "string" && value.enum && canShowField(key, value)}
+            <Select
               on:change={e => onChange(e, key)}
-            />
-          </div>
-        {:else if value.type === "date"}
-          <DrawerBindableSlot
-            fillWidth
-            title={value.title}
-            panel={AutomationBindingPanel}
-            type={"date"}
-            value={inputData[key]}
-            on:change={e => onChange(e, key)}
-            {bindings}
-            allowJS={true}
-            updateOnChange={false}
-            drawerLeft="260px"
-          >
-            <DatePicker
               value={inputData[key]}
-              on:change={e => onChange(e, key)}
+              placeholder={false}
+              options={value.enum}
+              getOptionLabel={(x, idx) =>
+                value.pretty ? value.pretty[idx] : x}
             />
-          </DrawerBindableSlot>
-        {:else if value.customType === "column"}
-          <Select
-            on:change={e => onChange(e, key)}
-            value={inputData[key]}
-            options={Object.keys(table?.schema || {})}
-          />
-        {:else if value.customType === "filters"}
-          <ActionButton on:click={drawer.show}>Define filters</ActionButton>
-          <Drawer bind:this={drawer} {fillWidth} title="Filtering">
-            <Button cta slot="buttons" on:click={() => saveFilters(key)}>
-              Save
-            </Button>
-            <FilterDrawer
-              slot="body"
-              {filters}
-              {bindings}
-              {schemaFields}
-              datasource={{ type: "table", tableId }}
-              panel={AutomationBindingPanel}
-              fillWidth
-              on:change={e => (tempFilters = e.detail)}
+          {:else if value.type === "json"}
+            <Editor
+              editorHeight="250"
+              editorWidth="448"
+              mode="json"
+              value={inputData[key]?.value}
+              on:change={e => {
+                onChange(e, key)
+              }}
             />
-          </Drawer>
-        {:else if value.customType === "password"}
-          <Input
-            type="password"
-            on:change={e => onChange(e, key)}
-            value={inputData[key]}
-          />
-        {:else if value.customType === "email"}
-          {#if isTestModal}
-            <ModalBindableInput
-              title={value.title}
-              value={inputData[key]}
+          {:else if value.type === "boolean"}
+            <div style="margin-top: 10px">
+              <Checkbox
+                text={value.title}
+                value={inputData[key]}
+                on:change={e => onChange(e, key)}
+              />
+            </div>
+          {:else if value.type === "date"}
+            <DrawerBindableSlot
+              title={value.title ?? label}
               panel={AutomationBindingPanel}
-              type="email"
-              on:change={e => onChange(e, key)}
-              {bindings}
-              fillWidth
-              updateOnChange={false}
-            />
-          {:else}
-            <DrawerBindableInput
-              fillWidth
-              title={value.title}
-              panel={AutomationBindingPanel}
-              type="email"
+              type={"date"}
               value={inputData[key]}
               on:change={e => onChange(e, key)}
               {bindings}
-              allowJS={false}
+              allowJS={true}
               updateOnChange={false}
               drawerLeft="260px"
-            />
-          {/if}
-        {:else if value.customType === "query"}
-          <QuerySelector
-            on:change={e => onChange(e, key)}
-            value={inputData[key]}
-          />
-        {:else if value.customType === "cron"}
-          <CronBuilder
-            on:change={e => onChange(e, key)}
-            value={inputData[key]}
-          />
-        {:else if value.customType === "queryParams"}
-          <QueryParamSelector
-            on:change={e => onChange(e, key)}
-            value={inputData[key]}
-            {bindings}
-          />
-        {:else if value.customType === "table"}
-          <TableSelector
-            {isTrigger}
-            value={inputData[key]}
-            on:change={e => onChange(e, key)}
-          />
-        {:else if value.customType === "row"}
-          <RowSelector
-            value={inputData[key]}
-            meta={inputData["meta"] || {}}
-            on:change={e => {
-              if (e.detail?.key) {
-                onChange(e, e.detail.key)
-              } else {
-                onChange(e, key)
-              }
-            }}
-            {bindings}
-            {isTestModal}
-            {isUpdateRow}
-          />
-        {:else if value.customType === "webhookUrl"}
-          <WebhookDisplay
-            on:change={e => onChange(e, key)}
-            value={inputData[key]}
-          />
-        {:else if value.customType === "fields"}
-          <FieldSelector
-            {block}
-            value={inputData[key]}
-            on:change={e => onChange(e, key)}
-            {bindings}
-            {isTestModal}
-          />
-        {:else if value.customType === "triggerSchema"}
-          <SchemaSetup
-            on:change={e => onChange(e, key)}
-            value={inputData[key]}
-          />
-        {:else if value.customType === "code"}
-          <CodeEditorModal>
-            {#if codeMode == EditorModes.JS}
-              <ActionButton
-                on:click={() => (codeBindingOpen = !codeBindingOpen)}
-                quiet
-                icon={codeBindingOpen ? "ChevronDown" : "ChevronRight"}
-              >
-                <Detail size="S">Bindings</Detail>
-              </ActionButton>
-              {#if codeBindingOpen}
-                <pre>{JSON.stringify(bindings, null, 2)}</pre>
-              {/if}
-            {/if}
-            <CodeEditor
-              value={inputData[key]}
-              on:change={e => {
-                // need to pass without the value inside
-                onChange({ detail: e.detail }, key)
-                inputData[key] = e.detail
-              }}
-              completions={stepCompletions}
-              mode={codeMode}
-              autocompleteEnabled={codeMode != EditorModes.JS}
-              height={500}
-            />
-            <div class="messaging">
-              {#if codeMode == EditorModes.Handlebars}
-                <Icon name="FlashOn" />
-                <div class="messaging-wrap">
-                  <div>
-                    Add available bindings by typing <strong>
-                      &#125;&#125;
-                    </strong>
-                  </div>
-                </div>
-              {/if}
-            </div>
-          </CodeEditorModal>
-        {:else if value.customType === "loopOption"}
-          <Select
-            on:change={e => onChange(e, key)}
-            autoWidth
-            value={inputData[key]}
-            options={["Array", "String"]}
-            defaultValue={"Array"}
-          />
-        {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
-          {#if isTestModal}
-            <ModalBindableInput
-              title={value.title}
-              value={inputData[key]}
-              panel={AutomationBindingPanel}
-              type={value.customType}
-              on:change={e => onChange(e, key)}
-              {bindings}
-              updateOnChange={false}
-            />
-          {:else}
-            <div class="test">
-              <DrawerBindableInput
-                fillWidth={true}
-                title={value.title}
-                panel={AutomationBindingPanel}
-                type={value.customType}
+            >
+              <DatePicker
                 value={inputData[key]}
+                on:change={e => onChange(e, key)}
+              />
+            </DrawerBindableSlot>
+          {:else if value.customType === "column"}
+            <Select
+              on:change={e => onChange(e, key)}
+              value={inputData[key]}
+              options={Object.keys(table?.schema || {})}
+            />
+          {:else if value.customType === "filters"}
+            <ActionButton on:click={drawer.show}>Define filters</ActionButton>
+            <Drawer bind:this={drawer} title="Filtering">
+              <Button cta slot="buttons" on:click={() => saveFilters(key)}>
+                Save
+              </Button>
+              <FilterDrawer
+                slot="body"
+                {filters}
+                {bindings}
+                {schemaFields}
+                datasource={{ type: "table", tableId }}
+                panel={AutomationBindingPanel}
+                on:change={e => (tempFilters = e.detail)}
+              />
+            </Drawer>
+          {:else if value.customType === "password"}
+            <Input
+              type="password"
+              on:change={e => onChange(e, key)}
+              value={inputData[key]}
+            />
+          {:else if value.customType === "email"}
+            {#if isTestModal}
+              <ModalBindableInput
+                title={value.title ?? label}
+                value={inputData[key]}
+                panel={AutomationBindingPanel}
+                type="email"
                 on:change={e => onChange(e, key)}
                 {bindings}
                 updateOnChange={false}
-                placeholder={value.customType === "queryLimit"
-                  ? queryLimit
-                  : ""}
+              />
+            {:else}
+              <DrawerBindableInput
+                title={value.title ?? label}
+                panel={AutomationBindingPanel}
+                type="email"
+                value={inputData[key]}
+                on:change={e => onChange(e, key)}
+                {bindings}
+                allowJS={false}
+                updateOnChange={false}
                 drawerLeft="260px"
               />
-            </div>
+            {/if}
+          {:else if value.customType === "query"}
+            <QuerySelector
+              on:change={e => onChange(e, key)}
+              value={inputData[key]}
+            />
+          {:else if value.customType === "cron"}
+            <CronBuilder
+              on:change={e => onChange(e, key)}
+              value={inputData[key]}
+            />
+          {:else if value.customType === "automationFields"}
+            <AutomationSelector
+              on:change={e => onChange(e, key)}
+              value={inputData[key]}
+              {bindings}
+            />
+          {:else if value.customType === "queryParams"}
+            <QueryParamSelector
+              on:change={e => onChange(e, key)}
+              value={inputData[key]}
+              {bindings}
+            />
+          {:else if value.customType === "table"}
+            <TableSelector
+              {isTrigger}
+              value={inputData[key]}
+              on:change={e => onChange(e, key)}
+            />
+          {:else if value.customType === "row"}
+            <RowSelector
+              value={inputData[key]}
+              meta={inputData["meta"] || {}}
+              on:change={e => {
+                if (e.detail?.key) {
+                  onChange(e, e.detail.key)
+                } else {
+                  onChange(e, key)
+                }
+              }}
+              {bindings}
+              {isTestModal}
+              {isUpdateRow}
+            />
+          {:else if value.customType === "webhookUrl"}
+            <WebhookDisplay
+              on:change={e => onChange(e, key)}
+              value={inputData[key]}
+            />
+          {:else if value.customType === "fields"}
+            <FieldSelector
+              {block}
+              value={inputData[key]}
+              on:change={e => onChange(e, key)}
+              {bindings}
+              {isTestModal}
+            />
+          {:else if value.customType === "triggerSchema"}
+            <SchemaSetup
+              on:change={e => onChange(e, key)}
+              value={inputData[key]}
+            />
+          {:else if value.customType === "code"}
+            <CodeEditorModal>
+              <div class:js-editor={editingJs}>
+                <div class:js-code={editingJs} style="width:100%;height:500px;">
+                  <CodeEditor
+                    value={inputData[key]}
+                    on:change={e => {
+                      // need to pass without the value inside
+                      onChange({ detail: e.detail }, key)
+                      inputData[key] = e.detail
+                    }}
+                    completions={stepCompletions}
+                    mode={codeMode}
+                    autocompleteEnabled={codeMode !== EditorModes.JS}
+                    bind:getCaretPosition
+                    bind:insertAtPos
+                    placeholder={codeMode === EditorModes.Handlebars
+                      ? "Add bindings by typing {{"
+                      : null}
+                  />
+                </div>
+                {#if editingJs}
+                  <div class="js-binding-picker">
+                    <BindingSidePanel
+                      {bindings}
+                      allowHelpers={false}
+                      addBinding={binding =>
+                        bindingsHelpers.onSelectBinding(
+                          inputData[key],
+                          binding,
+                          {
+                            js: true,
+                            dontDecode: true,
+                            type: BindingType.RUNTIME,
+                          }
+                        )}
+                      mode="javascript"
+                    />
+                  </div>
+                {/if}
+              </div>
+            </CodeEditorModal>
+          {:else if value.customType === "loopOption"}
+            <Select
+              on:change={e => onChange(e, key)}
+              autoWidth
+              value={inputData[key]}
+              options={["Array", "String"]}
+              defaultValue={"Array"}
+            />
+          {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
+            {#if isTestModal}
+              <ModalBindableInput
+                title={value.title || label}
+                value={inputData[key]}
+                panel={AutomationBindingPanel}
+                type={value.customType}
+                on:change={e => onChange(e, key)}
+                {bindings}
+                updateOnChange={false}
+              />
+            {:else}
+              <div class="test">
+                <DrawerBindableInput
+                  title={value.title ?? label}
+                  panel={AutomationBindingPanel}
+                  type={value.customType}
+                  value={inputData[key]}
+                  on:change={e => onChange(e, key)}
+                  {bindings}
+                  updateOnChange={false}
+                  placeholder={value.customType === "queryLimit"
+                    ? queryLimit
+                    : ""}
+                  drawerLeft="260px"
+                />
+              </div>
+            {/if}
           {/if}
-        {/if}
+        </div>
       </div>
     {/if}
   {/each}
@@ -541,11 +636,10 @@
 {/if}
 
 <style>
-  .messaging {
-    display: flex;
-    align-items: center;
-    margin-top: var(--spacing-xl);
+  .field-width {
+    width: 320px;
   }
+
   .fields {
     display: flex;
     flex-direction: column;
@@ -555,11 +649,31 @@
   }
 
   .block-field {
-    display: grid;
-    grid-gap: 5px;
+    display: flex; /* Use Flexbox */
+    justify-content: space-between;
+    flex-direction: row; /* Arrange label and field side by side */
+    align-items: center; /* Align vertically in the center */
+    gap: 10px; /* Add some space between label and field */
+    flex: 1;
   }
 
   .test :global(.drawer) {
     width: 10000px !important;
+  }
+
+  .js-editor {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    width: 100%;
+  }
+
+  .js-code {
+    flex: 7;
+  }
+
+  .js-binding-picker {
+    flex: 3;
+    margin-top: calc((var(--spacing-xl) * -1) + 1px);
   }
 </style>

@@ -16,24 +16,22 @@ import {
   queue,
   env as coreEnv,
   timers,
+  redis,
+  cache,
 } from "@budibase/backend-core"
+
 db.init()
-import Koa from "koa"
 import koaBody from "koa-body"
 import http from "http"
 import api from "./api"
-import * as redis from "./utilities/redis"
 
 const koaSession = require("koa-session")
+
 import { userAgent } from "koa-useragent"
 
 import destroyable from "server-destroy"
 import { initPro } from "./initPro"
 import { handleScimBody } from "./middleware/handleScimBody"
-
-// configure events to use the pro audit log write
-// can't integrate directly into backend-core due to cyclic issues
-events.processors.init(proSdk.auditLogs.write)
 
 if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
   console.warn(
@@ -44,7 +42,7 @@ if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
 // this will setup http and https proxies form env variables
 bootstrap()
 
-const app: Application = new Koa()
+const app: Application = new Application()
 
 app.keys = ["secret", "key"]
 
@@ -76,8 +74,8 @@ server.on("close", async () => {
   shuttingDown = true
   console.log("Server Closed")
   timers.cleanup()
-  await redis.shutdown()
-  await events.shutdown()
+  events.shutdown()
+  await redis.clients.shutdown()
   await queue.shutdown()
   if (!env.isTest()) {
     process.exit(errCode)
@@ -92,7 +90,11 @@ const shutdown = () => {
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await initPro()
-  await redis.init()
+  await redis.clients.init()
+  cache.docWritethrough.init()
+  // configure events to use the pro audit log write
+  // can't integrate directly into backend-core due to cyclic issues
+  await events.processors.init(proSdk.auditLogs.write)
 })
 
 process.on("uncaughtException", err => {

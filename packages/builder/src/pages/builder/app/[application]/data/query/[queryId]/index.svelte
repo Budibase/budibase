@@ -1,5 +1,5 @@
 <script>
-  import { database, queries, datasources } from "stores/backend"
+  import { queries, datasources } from "stores/builder"
   import QueryViewer from "components/integration/QueryViewer.svelte"
   import RestQueryViewer from "components/integration/RestQueryViewer.svelte"
   import { IntegrationTypes } from "constants/backend"
@@ -11,7 +11,7 @@
   $: isRestQuery = datasource?.source === IntegrationTypes.REST
 </script>
 
-{#if $database._id && query}
+{#if query}
   {#if isRestQuery}
     <RestQueryViewer queryId={$queries.selectedQueryId} />
   {:else}

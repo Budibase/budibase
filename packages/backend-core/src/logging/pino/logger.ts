@@ -5,8 +5,22 @@ import { IdentityType } from "@budibase/types"
 import env from "../../environment"
 import * as context from "../../context"
 import * as correlation from "../correlation"
+import tracer from "dd-trace"
+import { formats } from "dd-trace/ext"
 
 import { localFileDestination } from "../system"
+
+function isPlainObject(obj: any) {
+  return typeof obj === "object" && obj !== null && !(obj instanceof Error)
+}
+
+function isError(obj: any) {
+  return obj instanceof Error
+}
+
+function isMessage(obj: any) {
+  return typeof obj === "string"
+}
 
 // LOGGER
 
@@ -69,23 +83,11 @@ if (!env.DISABLE_PINO_LOGGER) {
     err?: Error
   }
 
-  function isPlainObject(obj: any) {
-    return typeof obj === "object" && obj !== null && !(obj instanceof Error)
-  }
-
-  function isError(obj: any) {
-    return obj instanceof Error
-  }
-
-  function isMessage(obj: any) {
-    return typeof obj === "string"
-  }
-
   /**
    * Backwards compatibility between console logging statements
    * and pino logging requirements.
    */
-  function getLogParams(args: any[]): [MergingObject, string] {
+  const getLogParams = (args: any[]): [MergingObject, string] => {
     let error = undefined
     let objects: any[] = []
     let message = ""
@@ -113,6 +115,11 @@ if (!env.DISABLE_PINO_LOGGER) {
       identityId: identity?._id,
       identityType: identity?.type,
       correlationId: correlation.getId(),
+    }
+
+    const span = tracer.scope().active()
+    if (span) {
+      tracer.inject(span.context(), formats.LOG, contextObject)
     }
 
     const mergingObject: any = {

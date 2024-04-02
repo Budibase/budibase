@@ -7,6 +7,7 @@ import NestedProviderFetch from "@budibase/frontend-core/src/fetch/NestedProvide
 import FieldFetch from "@budibase/frontend-core/src/fetch/FieldFetch.js"
 import JSONArrayFetch from "@budibase/frontend-core/src/fetch/JSONArrayFetch.js"
 import ViewV2Fetch from "@budibase/frontend-core/src/fetch/ViewV2Fetch.js"
+import QueryArrayFetch from "@budibase/frontend-core/src/fetch/QueryArrayFetch"
 
 /**
  * Fetches the schema of any kind of datasource.
@@ -28,6 +29,7 @@ export const fetchDatasourceSchema = async (
     provider: NestedProviderFetch,
     field: FieldFetch,
     jsonarray: JSONArrayFetch,
+    queryarray: QueryArrayFetch,
   }[datasource?.type]
   if (!handler) {
     return null

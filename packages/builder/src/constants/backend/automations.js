@@ -21,11 +21,13 @@ export const ActionStepID = {
   QUERY_ROWS: "QUERY_ROWS",
   LOOP: "LOOP",
   COLLECT: "COLLECT",
+  TRIGGER_AUTOMATION_RUN: "TRIGGER_AUTOMATION_RUN",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: "discord",
   slack: "slack",
   zapier: "zapier",
   integromat: "integromat",
+  n8n: "n8n",
 }
 
 export const Features = {

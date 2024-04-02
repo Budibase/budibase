@@ -15,6 +15,7 @@
   export let min = null
   export let max = null
   export let step = 1
+  export let helpText = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -23,7 +24,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <Stepper
     {updateOnChange}
     {error}

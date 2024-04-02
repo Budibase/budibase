@@ -2,7 +2,7 @@
   import { Select, Label, Combobox, Checkbox, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { getAllStateVariables } from "builderStore/dataBinding"
+  import { getAllStateVariables } from "dataBinding"
 
   export let parameters
   export let bindings = []
@@ -38,6 +38,7 @@
   {#if parameters.type === "set"}
     <Label small>Value</Label>
     <DrawerBindableInput
+      title="State value"
       {bindings}
       value={parameters.value}
       on:change={e => (parameters.value = e.detail)}

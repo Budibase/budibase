@@ -11,7 +11,7 @@ describe("test the outgoing webhook action", () => {
     await config.init()
     inputs = {
       requestMethod: "POST",
-      url: "www.test.com",
+      url: "www.example.com",
       requestBody: JSON.stringify({
         a: 1,
       }),
@@ -21,9 +21,12 @@ describe("test the outgoing webhook action", () => {
   afterAll(setup.afterAll)
 
   it("should be able to run the action", async () => {
-    const res = await setup.runStep(setup.actions.OUTGOING_WEBHOOK.stepId, inputs)
+    const res = await setup.runStep(
+      setup.actions.OUTGOING_WEBHOOK.stepId,
+      inputs
+    )
     expect(res.success).toEqual(true)
-    expect(res.response.url).toEqual("http://www.test.com")
+    expect(res.response.url).toEqual("http://www.example.com")
     expect(res.response.method).toEqual("POST")
     expect(JSON.parse(res.response.body).a).toEqual(1)
   })
@@ -31,9 +34,8 @@ describe("test the outgoing webhook action", () => {
   it("should return an error if something goes wrong in fetch", async () => {
     const res = await setup.runStep(setup.actions.OUTGOING_WEBHOOK.stepId, {
       requestMethod: "GET",
-      url: "www.invalid.com"
+      url: "www.invalid.com",
     })
     expect(res.success).toEqual(false)
   })
-
 })

@@ -15,7 +15,7 @@ const PATH_PREFIX = "/bulladmin"
 
 export async function init() {
   // Set up queues for bull board admin
-  const backupQueue = await backups.getBackupQueue()
+  const backupQueue = backups.getBackupQueue()
   const queues = [automationQueue]
   if (backupQueue) {
     queues.push(backupQueue)

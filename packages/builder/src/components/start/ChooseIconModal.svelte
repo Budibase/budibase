@@ -6,7 +6,7 @@
     Label,
     notifications,
   } from "@budibase/bbui"
-  import { apps } from "stores/portal"
+  import { appsStore } from "stores/portal"
   import { createEventDispatcher } from "svelte"
 
   export let app
@@ -49,7 +49,7 @@
       return
     }
     try {
-      await apps.update(app.instance._id, {
+      await appsStore.save(app.instance._id, {
         icon: { name, color },
       })
     } catch (error) {
@@ -58,6 +58,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <ModalContent title="Edit Icon" confirmText="Save" onConfirm={save}>
   <div class="scrollable-icons">
     <div class="title-spacing">

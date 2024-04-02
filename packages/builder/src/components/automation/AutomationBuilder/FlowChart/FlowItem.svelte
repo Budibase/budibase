@@ -1,5 +1,9 @@
 <script>
-  import { automationStore, selectedAutomation } from "builderStore"
+  import {
+    automationStore,
+    selectedAutomation,
+    permissions,
+  } from "stores/builder"
   import {
     Icon,
     Divider,
@@ -7,21 +11,16 @@
     Detail,
     Modal,
     Button,
-    ActionButton,
     notifications,
     Label,
+    AbsTooltip,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import ActionModal from "./ActionModal.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import {
-    ActionStepID,
-    TriggerStepID,
-    Features,
-  } from "constants/backend/automations"
-  import { permissions } from "stores/backend"
+  import { ActionStepID, TriggerStepID } from "constants/backend/automations"
 
   export let block
   export let testDataModal
@@ -86,7 +85,7 @@
       if (loopBlock) {
         await automationStore.actions.deleteAutomationBlock(loopBlock)
       }
-      await automationStore.actions.deleteAutomationBlock(block)
+      await automationStore.actions.deleteAutomationBlock(block, blockIdx)
     } catch (error) {
       notifications.error("Error saving automation")
     }
@@ -104,6 +103,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class={`block ${block.type} hoverable`} class:selected on:click={() => {}}>
   {#if loopBlock}
     <div class="blockSection">
@@ -129,6 +130,10 @@
         </div>
 
         <div class="blockTitle">
+          <AbsTooltip type="negative" text="Remove looping">
+            <Icon on:click={removeLooping} hoverable name="DeleteOutline" />
+          </AbsTooltip>
+
           <div style="margin-left: 10px;" on:click={() => {}}>
             <Icon hoverable name={showLooping ? "ChevronDown" : "ChevronUp"} />
           </div>
@@ -139,9 +144,6 @@
     <Divider noMargin />
     {#if !showLooping}
       <div class="blockSection">
-        <div class="block-options">
-          <ActionButton on:click={() => removeLooping()} icon="DeleteOutline" />
-        </div>
         <Layout noPadding gap="S">
           <AutomationBlockSetup
             schemaProperties={Object.entries(
@@ -162,31 +164,19 @@
     {block}
     {testDataModal}
     {idx}
+    {addLooping}
+    {deleteStep}
     on:toggle={() => (open = !open)}
   />
   {#if open}
     <Divider noMargin />
     <div class="blockSection">
       <Layout noPadding gap="S">
-        {#if !isTrigger}
-          <div>
-            <div class="block-options">
-              {#if !loopBlock && (block?.features?.[Features.LOOPING] || !block.features)}
-                <ActionButton on:click={() => addLooping()} icon="Reuse">
-                  Add Looping
-                </ActionButton>
-              {/if}
-              <ActionButton
-                on:click={() => deleteStep()}
-                icon="DeleteOutline"
-              />
-            </div>
-          </div>
-        {/if}
-
         {#if isAppAction}
-          <Label>Role</Label>
-          <RoleSelect bind:value={role} />
+          <div>
+            <Label>Role</Label>
+            <RoleSelect bind:value={role} />
+          </div>
         {/if}
         <AutomationBlockSetup
           schemaProperties={Object.entries(block.schema.inputs.properties)}
@@ -270,5 +260,6 @@
   .blockTitle {
     display: flex;
     align-items: center;
+    gap: var(--spacing-s);
   }
 </style>

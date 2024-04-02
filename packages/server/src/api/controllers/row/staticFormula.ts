@@ -4,9 +4,15 @@ import {
   processAutoColumn,
   processFormulas,
 } from "../../../utilities/rowProcessor"
-import { FieldTypes, FormulaTypes } from "../../../constants"
-import { context } from "@budibase/backend-core"
-import { Table, Row } from "@budibase/types"
+import { context, locks } from "@budibase/backend-core"
+import {
+  Table,
+  Row,
+  LockType,
+  LockName,
+  FormulaType,
+  FieldType,
+} from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
 import sdk from "../../../sdk"
 import isEqual from "lodash/isEqual"
@@ -35,7 +41,7 @@ export async function updateRelatedFormula(
     let relatedRows: Record<string, Row[]> = {}
     for (let [key, field] of Object.entries(enrichedRow)) {
       const columnDefinition = table.schema[key]
-      if (columnDefinition && columnDefinition.type === FieldTypes.LINK) {
+      if (columnDefinition && columnDefinition.type === FieldType.LINK) {
         const relatedTableId = columnDefinition.tableId!
         if (!relatedRows[relatedTableId]) {
           relatedRows[relatedTableId] = []
@@ -63,8 +69,8 @@ export async function updateRelatedFormula(
       for (let column of Object.values(relatedTable!.schema)) {
         // needs updated in related rows
         if (
-          column.type === FieldTypes.FORMULA &&
-          column.formulaType === FormulaTypes.STATIC
+          column.type === FieldType.FORMULA &&
+          column.formulaType === FormulaType.STATIC
         ) {
           // re-enrich rows for all the related, don't update the related formula for them
           promises = promises.concat(
@@ -86,12 +92,12 @@ export async function updateAllFormulasInTable(table: Table) {
   const db = context.getAppDB()
   // start by getting the raw rows (which will be written back to DB after update)
   let rows = (
-    await db.allDocs(
+    await db.allDocs<Row>(
       getRowParams(table._id, null, {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map(row => row.doc!)
   // now enrich the rows, note the clone so that we have the base state of the
   // rows so that we don't write any of the enriched information back
   let enrichedRows = await outputProcessing(table, cloneDeep(rows), {
@@ -101,12 +107,12 @@ export async function updateAllFormulasInTable(table: Table) {
   for (let row of rows) {
     // find the enriched row, if found process the formulas
     const enrichedRow = enrichedRows.find(
-      (enriched: any) => enriched._id === row._id
+      (enriched: Row) => enriched._id === row._id
     )
     if (enrichedRow) {
-      const processed = processFormulas(table, cloneDeep(row), {
+      const processed = await processFormulas(table, cloneDeep(row), {
         dynamic: false,
-        contextRows: enrichedRow,
+        contextRows: [enrichedRow],
       })
       // values have changed, need to add to bulk docs to update
       if (!isEqual(processed, row)) {
@@ -137,9 +143,9 @@ export async function finaliseRow(
     squash: false,
   })) as Row
   // use enriched row to generate formulas for saving, specifically only use as context
-  row = processFormulas(table, row, {
+  row = await processFormulas(table, row, {
     dynamic: false,
-    contextRows: enrichedRow,
+    contextRows: [enrichedRow],
   })
   // don't worry about rev, tables handle rev/lastID updates
   // if another row has been written since processing this will
@@ -149,12 +155,22 @@ export async function finaliseRow(
       await db.put(table)
     } catch (err: any) {
       if (err.status === 409) {
-        const updatedTable = await sdk.tables.getTable(table._id!)
-        let response = processAutoColumn(null, updatedTable, row, {
-          reprocessing: true,
-        })
-        await db.put(response.table)
-        row = response.row
+        // Some conflicts with the autocolumns occurred, we need to refetch the table and recalculate
+        await locks.doWithLock(
+          {
+            type: LockType.AUTO_EXTEND,
+            name: LockName.PROCESS_AUTO_COLUMNS,
+            resource: table._id,
+          },
+          async () => {
+            const latestTable = await sdk.tables.getTable(table._id!)
+            let response = processAutoColumn(null, latestTable, row, {
+              reprocessing: true,
+            })
+            await db.put(response.table)
+            row = response.row
+          }
+        )
       } else {
         throw err
       }
@@ -163,7 +179,9 @@ export async function finaliseRow(
   const response = await db.put(row)
   // for response, calculate the formulas for the enriched row
   enrichedRow._rev = response.rev
-  enrichedRow = await processFormulas(table, enrichedRow, { dynamic: false })
+  enrichedRow = await processFormulas(table, enrichedRow, {
+    dynamic: false,
+  })
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
     await updateRelatedFormula(table, enrichedRow)

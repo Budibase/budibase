@@ -16,10 +16,9 @@
 
   const dispatch = createEventDispatcher()
 
-  const onClick = e => {
+  const onClick = () => {
     if (!disabled) {
       dispatch("click")
-      e.stopPropagation()
     }
   }
 </script>

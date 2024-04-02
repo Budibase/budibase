@@ -3,9 +3,9 @@
   import Block from "../Block.svelte"
 
   export let buttons = []
-  export let direction
-  export let hAlign
-  export let vAlign
+  export let direction = "row"
+  export let hAlign = "left"
+  export let vAlign = "top"
   export let gap = "S"
 </script>
 
@@ -20,7 +20,7 @@
       wrap: true,
     }}
   >
-    {#each buttons as { text, type, quiet, disabled, onClick, size }}
+    {#each buttons as { text, type, quiet, disabled, onClick, size, icon, gap }}
       <BlockComponent
         type="button"
         props={{
@@ -29,7 +29,9 @@
           type,
           quiet,
           disabled,
-          size,
+          icon,
+          gap,
+          size: size || "M",
         }}
       />
     {/each}

@@ -15,6 +15,7 @@ import {
   PasswordResetRequest,
   PasswordResetUpdateRequest,
   GoogleInnerConfig,
+  DatasourceAuthCookie,
 } from "@budibase/types"
 import env from "../../../environment"
 
@@ -121,10 +122,10 @@ export const resetUpdate = async (ctx: Ctx<PasswordResetUpdateRequest>) => {
     ctx.body = {
       message: "password reset successfully.",
     }
-  } catch (err) {
+  } catch (err: any) {
     console.warn(err)
     // hide any details of the error for security
-    ctx.throw(400, "Cannot reset password.")
+    ctx.throw(400, err.message || "Cannot reset password.")
   }
 }
 
@@ -148,7 +149,13 @@ export const datasourcePreAuth = async (ctx: any, next: any) => {
 }
 
 export const datasourceAuth = async (ctx: any, next: any) => {
-  const authStateCookie = getCookie(ctx, Cookie.DatasourceAuth)
+  const authStateCookie = getCookie<DatasourceAuthCookie>(
+    ctx,
+    Cookie.DatasourceAuth
+  )
+  if (!authStateCookie) {
+    throw new Error("Unable to retrieve datasource authentication cookie")
+  }
   const provider = authStateCookie.provider
   const { middleware } = require(`@budibase/backend-core`)
   const handler = middleware.datasource[provider]
@@ -218,7 +225,7 @@ export async function oidcCallbackUrl() {
   return ssoCallbackUrl(ConfigType.OIDC)
 }
 
-export const oidcStrategyFactory = async (ctx: any, configId: any) => {
+export const oidcStrategyFactory = async (ctx: any) => {
   const config = await configs.getOIDCConfig()
   if (!config) {
     return ctx.throw(400, "OIDC config not found")
@@ -240,7 +247,7 @@ export const oidcPreAuth = async (ctx: Ctx, next: any) => {
   if (!configId) {
     ctx.throw(400, "OIDC config id is required")
   }
-  const strategy = await oidcStrategyFactory(ctx, configId)
+  const strategy = await oidcStrategyFactory(ctx)
 
   setCookie(ctx, configId, Cookie.OIDC_CONFIG)
 
@@ -261,8 +268,7 @@ export const oidcPreAuth = async (ctx: Ctx, next: any) => {
 }
 
 export const oidcCallback = async (ctx: any, next: any) => {
-  const configId = getCookie(ctx, Cookie.OIDC_CONFIG)
-  const strategy = await oidcStrategyFactory(ctx, configId)
+  const strategy = await oidcStrategyFactory(ctx)
 
   return passport.authenticate(
     strategy,

@@ -1,16 +1,26 @@
 <script>
-  import { ModalContent, Modal, Icon, ActionButton } from "@budibase/bbui"
-  import { Input, Button, StatusLight } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Modal,
+    Icon,
+    ActionButton,
+    Input,
+    Button,
+    StatusLight,
+  } from "@budibase/bbui"
   import { Html5Qrcode } from "html5-qrcode"
   import { createEventDispatcher } from "svelte"
 
   export let value
   export let disabled = false
   export let allowManualEntry = false
+  export let autoConfirm = false
   export let scanButtonText = "Scan code"
   export let beepOnScan = false
   export let beepFrequency = 2637
   export let customFrequency = 1046
+  export let preferredCamera = "environment"
+  export let validator
 
   const dispatch = createEventDispatcher()
 
@@ -20,7 +30,7 @@
   let cameraEnabled
   let cameraStarted = false
   let html5QrCode
-  let cameraSetting = { facingMode: "environment" }
+  let cameraSetting = { facingMode: preferredCamera }
   let cameraConfig = {
     fps: 25,
     qrbox: { width: 250, height: 250 },
@@ -33,6 +43,9 @@
         beep()
       }
       dispatch("change", decodedText)
+      if (autoConfirm && !validator?.(decodedText)) {
+        camModal?.hide()
+      }
     }
   }
 
@@ -48,7 +61,7 @@
           resolve({ initialised: true })
         })
         .catch(err => {
-          console.log("There was a problem scanning the image", err)
+          console.error("There was a problem scanning the image", err)
           resolve({ initialised: false })
         })
     })
@@ -119,7 +132,11 @@
 <div class="scanner-video-wrapper">
   {#if value && !manualMode}
     <div class="scanner-value field-display">
-      <StatusLight positive />
+      {#if validator?.(value)}
+        <StatusLight negative />
+      {:else}
+        <StatusLight positive />
+      {/if}
       {value}
     </div>
   {/if}
@@ -175,9 +192,14 @@
       </div>
       {#if cameraEnabled === true}
         <div class="code-wrap">
-          {#if value}
+          {#if value && !validator?.(value)}
             <div class="scanner-value">
               <StatusLight positive />
+              {value}
+            </div>
+          {:else if value && validator?.(value)}
+            <div class="scanner-value">
+              <StatusLight negative />
               {value}
             </div>
           {:else}

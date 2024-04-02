@@ -1,6 +1,7 @@
 <script>
   import { getContext, onMount, createEventDispatcher } from "svelte"
   import Portal from "svelte-portal"
+
   export let title
   export let icon = ""
   export let id
@@ -47,6 +48,9 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <div
   {id}
   bind:this={tab_internal}

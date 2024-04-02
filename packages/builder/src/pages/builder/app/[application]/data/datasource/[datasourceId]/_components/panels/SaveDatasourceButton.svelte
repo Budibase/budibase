@@ -2,7 +2,7 @@
   import { get } from "svelte/store"
   import { isEqual } from "lodash"
   import { integrationForDatasource } from "stores/selectors"
-  import { integrations, datasources } from "stores/backend"
+  import { integrations, datasources } from "stores/builder"
   import { notifications, Button } from "@budibase/bbui"
 
   export let datasource

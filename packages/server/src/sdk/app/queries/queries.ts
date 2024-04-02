@@ -3,6 +3,27 @@ import { processStringSync } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
 import { getQueryParams, isProdAppID } from "../../../db/utils"
 import { BaseQueryVerbs } from "../../../constants"
+import { Query, QuerySchema } from "@budibase/types"
+
+function updateSchema(query: Query): Query {
+  if (!query.schema) {
+    return query
+  }
+  const schema: Record<string, QuerySchema> = {}
+  for (let key of Object.keys(query.schema)) {
+    if (typeof query.schema[key] === "string") {
+      schema[key] = { type: query.schema[key] as string, name: key }
+    } else {
+      schema[key] = query.schema[key] as QuerySchema
+    }
+  }
+  query.schema = schema
+  return query
+}
+
+function updateSchemas(queries: Query[]): Query[] {
+  return queries.map(query => updateSchema(query))
+}
 
 // simple function to append "readable" to all read queries
 function enrichQueries(input: any) {
@@ -25,7 +46,7 @@ export async function find(queryId: string) {
     delete query.fields
     delete query.parameters
   }
-  return query
+  return updateSchema(query)
 }
 
 export async function fetch(opts: { enrich: boolean } = { enrich: true }) {
@@ -37,21 +58,39 @@ export async function fetch(opts: { enrich: boolean } = { enrich: true }) {
     })
   )
 
-  const queries = body.rows.map((row: any) => row.doc)
+  let queries = body.rows.map((row: any) => row.doc)
   if (opts.enrich) {
-    return enrichQueries(queries)
-  } else {
-    return queries
+    queries = await enrichQueries(queries)
   }
+  return updateSchemas(queries)
+}
+
+export async function enrichArrayContext(
+  fields: any[],
+  inputs = {}
+): Promise<any[]> {
+  const map: Record<string, any> = {}
+  for (let index in fields) {
+    map[index] = fields[index]
+  }
+  const output = await enrichContext(map, inputs)
+  const outputArray: any[] = []
+  for (let [key, value] of Object.entries(output)) {
+    outputArray[parseInt(key)] = value
+  }
+  return outputArray
 }
 
 export async function enrichContext(
   fields: Record<string, any>,
   inputs = {}
 ): Promise<Record<string, any>> {
-  const enrichedQuery: Record<string, any> = Array.isArray(fields) ? [] : {}
+  const enrichedQuery: Record<string, any> = {}
   if (!fields || !inputs) {
     return enrichedQuery
+  }
+  if (Array.isArray(fields)) {
+    return enrichArrayContext(fields, inputs)
   }
   const env = await getEnvironmentVariables()
   const parameters = { ...inputs, env }

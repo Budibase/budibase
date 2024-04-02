@@ -33,7 +33,7 @@ export default class UserFetch extends DataFetch {
     let finalQuery
     // convert old format to new one - we now allow use of the lucene format
     const { appId, paginated, ...rest } = query
-    if (!LuceneUtils.hasFilters(query) && rest.email) {
+    if (!LuceneUtils.hasFilters(query) && rest.email != null) {
       finalQuery = { string: { email: rest.email } }
     } else {
       finalQuery = rest
