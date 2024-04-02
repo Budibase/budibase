@@ -8,6 +8,7 @@ import {
 import { DocumentType, SEPARATOR } from "../db/utils"
 import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../constants"
 import { helpers } from "@budibase/shared-core"
+import env from "../environment"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -87,6 +88,14 @@ export enum SqlClient {
   ORACLE = "oracledb",
   SQL_LITE = "sqlite3",
 }
+
+const isCloud = env.isProd() && !env.SELF_HOSTED
+const isSelfHost = env.isProd() && env.SELF_HOSTED
+export const HOST_ADDRESS = isSelfHost
+  ? "host.docker.internal"
+  : isCloud
+  ? ""
+  : "localhost"
 
 export function isExternalTableID(tableId: string) {
   return tableId.includes(DocumentType.DATASOURCE)

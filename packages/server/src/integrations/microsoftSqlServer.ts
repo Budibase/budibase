@@ -22,6 +22,7 @@ import {
   finaliseExternalTables,
   SqlClient,
   checkExternalTables,
+  HOST_ADDRESS,
 } from "./utils"
 import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
@@ -88,7 +89,6 @@ const SCHEMA: Integration = {
     user: {
       type: DatasourceFieldType.STRING,
       required: true,
-      default: "localhost",
     },
     password: {
       type: DatasourceFieldType.PASSWORD,
@@ -96,7 +96,7 @@ const SCHEMA: Integration = {
     },
     server: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
     },
     port: {
       type: DatasourceFieldType.NUMBER,
