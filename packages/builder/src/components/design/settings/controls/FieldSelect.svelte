@@ -10,10 +10,6 @@
   export let placeholder
   export let fieldValidator
 
-  $: {
-    console.log(fieldValidator);
-  }
-
   const getFieldSupport = (schema, fieldValidator) => {
     if (fieldValidator == null) {
       return {}

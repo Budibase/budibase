@@ -17,7 +17,8 @@
     TooltipType,
   } from "../../Tooltip/AbsTooltip.svelte"
   import ContextTooltip from "../../Tooltip/Context.svelte"
-  import { fade } from 'svelte/transition';
+  import { Heading } from "@budibase/bbui"
+
 
 
   export let id = null
@@ -119,7 +120,7 @@
     component?.removeEventListener("scroll", null)
   })
 
-  const handleMouseenter = (e, option) => {
+  const handleMouseenter = (e, option, idx) => {
     contextTooltipId += 1;
     const invokedContextTooltipId = contextTooltipId
 
@@ -230,8 +231,8 @@
         {#if filteredOptions.length}
           {#each filteredOptions as option, idx}
               <li
-                on:mouseenter={(e) => handleMouseenter(e, option)}
-                on:mouseleave={(e) => handleMouseleave(e, option)}
+                on:mouseenter={(e) => handleMouseenter(e, option, idx)}
+                on:mouseleave={(e) => handleMouseleave(e, option, idx)}
                 class="spectrum-Menu-item"
                 class:is-selected={isOptionSelected(getOptionValue(option, idx))}
                 role="option"
@@ -303,25 +304,40 @@
     visible={contextTooltipVisible}
     anchor={contextTooltipAnchor}
   >
-  <div
-    class="tooltipContents"
-  >
-  {contextTooltipOption}
-  </div>
-  <div slot="previous"
-    class="tooltipContents"
-  >
-  {previousContextTooltipOption}
-  </div>
+    <div
+      class="tooltipContents"
+    >
+      {#if contextTooltipOption}
+          <Icon name={getOptionIcon(contextTooltipOption)} />
+        <Heading>{contextTooltipOption}</Heading>
+      {/if}
+    </div>
+    <div slot="previous"
+      class="tooltipContents"
+    >
+      {#if previousContextTooltipOption}
+          <Icon name={getOptionIcon(previousContextTooltipOption)} />
+        <Heading>{previousContextTooltipOption}</Heading>
+      {/if}
+    </div>
   </ContextTooltip>
 
 <style>
   .tooltipContents {
-    background-color: red;
     max-width: 200px;
-    text-wrap: wrap;
+    background-color: var(--spectrum-global-color-gray-200);
     display: inline-block;
+  }
+
+  .tooltipContents :global(h1) {
+    font-size: 15px;
+    text-wrap: wrap;
     word-break: break-all;
+  }
+
+  .tooltipContents :global(svg) {
+    color: var(--background);
+    fill: var(--background);
   }
 
   .spectrum-Menu {
