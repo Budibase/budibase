@@ -2,7 +2,8 @@
   import Portal from "svelte-portal"
   import { fade } from 'svelte/transition';
 
-  export let tooltip
+  export let currentTooltip
+  export let previousTooltip
   export let anchor
   export let visible = false
   export let hovering = false
@@ -12,37 +13,63 @@
   let endX = 0
   let endY = 0
 
+  let currentTooltipWidth = 0
+  let currentTooltipHeight = 0
+
+  let previousTooltipWidth = 0
+  let previousTooltipHeight = 0
+
   let x = 0;
   let y = 0;
+  let w = 0;
+  let h = 0;
+
   let animationStartTime = 0;
 
   const updatePositionOnVisibilityChange = (visible, hovering) => {
     if (!visible && !hovering) {
       x = 0;
       y = 0;
-    }
-  }
 
-  const updatePosition = (anchor, tooltip) => {
-    if (anchor == null) {
-      return;
-    }
+      previousTooltipWidth = 0
+      previousTooltipHeight = 0
+    } }
 
-    const rect = anchor.getBoundingClientRect();
-    const tooltipWidth = tooltip?.getBoundingClientRect()?.width ?? 0;
+  const updatePosition = (anchor, currentTooltip, previousTooltip) => {
+    requestAnimationFrame(() => {
+      if (anchor == null || currentTooltip == null || previousTooltip == null) {
+        return;
+      }
 
-    startX = x
-    startY = y
+      const rect = anchor.getBoundingClientRect();
 
-    endX = rect.x - tooltipWidth
-    endY = rect.y
+      currentTooltipWidth = currentTooltip.clientWidth
+      currentTooltipHeight = currentTooltip.clientHeight
 
-    animationStartTime = document.timeline.currentTime
+      previousTooltipWidth = previousTooltip.clientWidth
+      previousTooltipHeight = previousTooltip.clientHeight
 
-    if (x === 0 && y === 0) {
-      startX = endX
-      startY = endY
-    }
+      if (previousTooltipWidth === 0) {
+        previousTooltipWidth = currentTooltipWidth;
+      }
+
+      if (previousTooltipHeight === 0) {
+        previousTooltipHeight = currentTooltipHeight;
+      }
+
+      startX = x
+      startY = y
+
+      endX = rect.x - currentTooltipWidth
+      endY = rect.y
+
+      animationStartTime = document.timeline.currentTime
+
+      if (x === 0 && y === 0) {
+        startX = endX
+        startY = endY
+      }
+    })
   }
 
   const getNormalizedTime = (startTime, endTime, currentTime) => {
@@ -52,11 +79,13 @@
     return distanceFromStart / timeDiff;
   }
 
-  const cubicBezierInterpolation = (p1, p2, p3, p4, t) => {
-    return Math.pow(1 - t, 3) * p1 +
-    3 * Math.pow(1 - t, 2) * t * p2 +
-    3 * (1 - t) * Math.pow(t, 2) * p3 +
-    Math.pow(t, 3) * p4;
+  const cubicBezierInterpolation = (p1, p2, p3, p4, currentTime) => {
+    return (
+      (Math.pow(1 - currentTime, 3) * p1) +
+      (3 * Math.pow(1 - currentTime, 2) * currentTime * p2) +
+      (3 * (1 - currentTime) * Math.pow(currentTime, 2) * p3) +
+      (Math.pow(currentTime, 3) * p4)
+    )
   }
 
   // Made to match the interface of the css bezier curve function
@@ -83,7 +112,7 @@
       return;
     }
 
-    const animationDuration = 200
+    const animationDuration = 300
     const normalizedTime = getNormalizedTime(invokedAnimationStartTime, invokedAnimationStartTime + animationDuration, frameTime)
 
     if (normalizedTime >= 1) {
@@ -95,11 +124,16 @@
 
     x = linearInterpolation(startX, endX, easing.x)
     y = linearInterpolation(startY, endY, easing.y)
+    w = linearInterpolation(previousTooltipWidth, currentTooltipWidth, easing.x)
+    console.log(currentTooltipWidth);
+    console.log(previousTooltipWidth);
+    console.log(w);
+    console.log("")
 
     requestAnimationFrame((newFrameTime) => animate(invokedAnimationStartTime, newFrameTime))
   }
 
-  $: updatePosition(anchor, tooltip)
+  $: updatePosition(anchor, currentTooltip, previousTooltip)
   $: updatePositionOnVisibilityChange(visible, hovering)
   $: requestAnimationFrame((frameTime) => animate(animationStartTime, frameTime))
 
@@ -114,29 +148,66 @@
 
 <Portal target=".spectrum">
   <div
-    bind:this={tooltip} 
     on:mouseenter={handleMouseenter}
     on:mouseleave={handleMouseleave}
-    style:top={`${y}px`}
+    style:width={`${w}px`}
+    style:height={`${currentTooltipHeight}px`}
     style:left={`${x}px`}
+    style:top={`${y}px`}
     class="tooltip"
     class:visible={visible || hovering}
   >
-    <slot />
+    <div class="screenSize">
+      <div
+        bind:this={currentTooltip}
+        class="currentContent"
+        style:left={`${endX - x}px`}
+        style:top={`${endY - y}px`}
+      >
+        <slot />
+      </div>
+    </div>
+    <div class="screenSize">
+      <div
+        bind:this={previousTooltip}
+        class="previousContent"
+        style:left={`${startX - x}px`}
+        style:top={`${startY - y}px`}
+      >
+        <slot name="previous"/>
+      </div>
+    </div>
   </div>
-  <slot name="previous" />
 </Portal>
 
 <style>
+  .screenSize {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+  }
+
   .tooltip {
     position: absolute;
     z-index: 9999;
-    opacity: 0;
     pointer-events: none;
+    background-color: red;
+    opacity: 0;
+    overflow: hidden;
   }
 
   .visible {
     opacity: 1;
     pointer-events: auto;
+  }
+
+  .currentContent {
+    position: absolute;
+    z-index: 10000;
+  }
+
+  .previousContent {
+    position: absolute;
+    z-index: 10000;
   }
 </style>

@@ -317,8 +317,11 @@
 
 <style>
   .tooltipContents {
-    width: 300px;
     background-color: red;
+    max-width: 200px;
+    text-wrap: wrap;
+    display: inline-block;
+    word-break: break-all;
   }
 
   .spectrum-Menu {
