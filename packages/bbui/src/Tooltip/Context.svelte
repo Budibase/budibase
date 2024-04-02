@@ -2,12 +2,15 @@
   import Portal from "svelte-portal"
   import { fade } from 'svelte/transition';
 
-  export let wrapper
-  export let resetWrapper
-  export let currentTooltip
   export let anchor
   export let visible = false
-  export let hovering = false
+  export let offset = 0;
+
+  let hovering = false
+  let wrapper
+  let resetWrapper
+  let currentTooltip
+  let previousTooltip
 
   let initialShow = true;
   let previousX = 0
@@ -24,9 +27,9 @@
     }
   }
 
-  const updatePosition = (anchor, currentTooltip, wrapper, resetWrapper) => {
+  const updatePosition = (anchor, currentTooltip, previousTooltip, wrapper, resetWrapper) => {
     requestAnimationFrame(() => {
-      if (anchor == null || currentTooltip == null || wrapper == null || resetWrapper == null) {
+      if (anchor == null || currentTooltip == null || previousTooltip == null || wrapper == null || resetWrapper == null) {
         return;
       }
 
@@ -39,8 +42,19 @@
       previousY = currentY
 
       // - width to align to left side of anchor
-      currentX = rect.x - currentTooltipWidth
+      currentX = rect.x - currentTooltipWidth - offset
       currentY = rect.y
+      const fadeIn = [{ opacity: "0" }, { opacity: "1" }];
+      const fadeOut = [{ opacity: "1" }, { opacity: "0" }];
+
+      const fadeTiming = {
+        duration: 300,
+        iterations: 1,
+        easing: "ease-in"
+      };
+
+      currentTooltip.animate(fadeIn, fadeTiming);
+      previousTooltip.animate(fadeOut, fadeTiming);
 
       // Bypass animations if the tooltip has only just been opened
       if (initialShow) {
@@ -64,7 +78,7 @@
     })
   }
 
-  $: updatePosition(anchor, currentTooltip, wrapper, resetWrapper)
+  $: updatePosition(anchor, currentTooltip, previousTooltip, wrapper, resetWrapper)
   $: handleVisibilityChange(visible, hovering)
 
   const handleMouseenter = (e) => {
@@ -73,14 +87,6 @@
 
   const handleMouseleave = (e) => {
     hovering = false;
-  }
-
-  $: {
-    console.log(currentX)
-    console.log(currentY)
-    console.log(currentTooltipWidth)
-    console.log(currentTooltipHeight)
-    console.log();
   }
 </script>
 
@@ -116,6 +122,7 @@
         class="previousContent"
         style:left={`${previousX}px`}
         style:top={`${previousY}px`}
+        bind:this={previousTooltip}
       >
         <slot name="previous"/>
       </div>
@@ -129,6 +136,8 @@
     z-index: 9999;
     pointer-events: none;
     background-color: var(--spectrum-global-color-gray-200);
+    border-radius: 5px;
+    box-sizing: border-box;
 
     opacity: 0;
     overflow: hidden;
@@ -149,7 +158,7 @@
 
   .currentContent {
     position: absolute;
-    z-index: 10000;
+    z-index: 10001;
   }
 
   .previousContent {

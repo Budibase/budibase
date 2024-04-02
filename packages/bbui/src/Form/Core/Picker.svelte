@@ -303,21 +303,28 @@
   <ContextTooltip
     visible={contextTooltipVisible}
     anchor={contextTooltipAnchor}
+    offset={20}
   >
     <div
       class="tooltipContents"
     >
       {#if contextTooltipOption}
+        <div class="contextTooltipHeader">
           <Icon name={getOptionIcon(contextTooltipOption)} />
-        <Heading>{contextTooltipOption}</Heading>
+          <Heading>{contextTooltipOption}</Heading>
+        </div>
+        <p>{getOptionTooltip(contextTooltipOption)}</p>
       {/if}
     </div>
     <div slot="previous"
       class="tooltipContents"
     >
       {#if previousContextTooltipOption}
+        <div class="contextTooltipHeader">
           <Icon name={getOptionIcon(previousContextTooltipOption)} />
-        <Heading>{previousContextTooltipOption}</Heading>
+          <Heading>{previousContextTooltipOption}</Heading>
+        </div>
+        <p>{getOptionTooltip(previousContextTooltipOption)}</p>
       {/if}
     </div>
   </ContextTooltip>
@@ -327,18 +334,29 @@
     max-width: 200px;
     background-color: var(--spectrum-global-color-gray-200);
     display: inline-block;
+    padding: 12px;
+    border-radius: 5px;
+    box-sizing: border-box;
   }
 
-  .tooltipContents :global(h1) {
+  .contextTooltipHeader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .contextTooltipHeader :global(svg) {
+    color: var(--background);
+    margin-right: 5px;
+  }
+
+  .contextTooltipHeader :global(h1) {
+    flex-grow: 1;
     font-size: 15px;
     text-wrap: wrap;
     word-break: break-all;
   }
 
-  .tooltipContents :global(svg) {
-    color: var(--background);
-    fill: var(--background);
-  }
 
   .spectrum-Menu {
     display: block;
