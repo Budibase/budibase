@@ -88,5 +88,18 @@ export const buildAttachmentEndpoints = API => {
         },
       })
     },
+
+    /**
+     * Download an attachment from a row given its column name.
+     * @param tableId
+     * @param rowId
+     * @param columnName the attachments to delete
+     */
+    downloadAttachment: async (tableId, rowId, columnName) => {
+      return await API.get({
+        url: `/api/${tableId}/rows/${rowId}/attachment/${columnName}`,
+        parseResponse: response => response,
+      })
+    },
   }
 }
