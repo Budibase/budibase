@@ -520,9 +520,50 @@ describe("/api/global/users", () => {
         })
       }
 
+      function createPasswordUser() {
+        return config.doInTenant(() => {
+          const user = structures.users.user()
+          return userSdk.db.save(user)
+        })
+      }
+
       it("should be able to update an sso user that has no password", async () => {
         const user = await createSSOUser()
         await config.api.users.saveUser(user)
+      })
+
+      it("sso support couldn't be used by admin. It is cloud restricted and needs internal key", async () => {
+        const user = await config.createUser()
+        const ssoId = "fake-ssoId"
+        await config.api.users
+          .addSsoSupportDefaultAuth(ssoId, user.email)
+          .expect("Content-Type", /json/)
+          .expect(403)
+      })
+
+      it("if user email doesn't exist, SSO support couldn't be added. Not found error returned", async () => {
+        const ssoId = "fake-ssoId"
+        const email = "fake-email@budibase.com"
+        await config.api.users
+          .addSsoSupportInternalAPIAuth(ssoId, email)
+          .expect("Content-Type", /json/)
+          .expect(404)
+      })
+
+      it("if user email exist, SSO support is added", async () => {
+        const user = await createPasswordUser()
+        const ssoId = "fakessoId"
+        await config.api.users
+          .addSsoSupportInternalAPIAuth(ssoId, user.email)
+          .expect(200)
+      })
+
+      it("if user ssoId is already assigned, no change will be applied", async () => {
+        const user = await createSSOUser()
+        user.ssoId = "testssoId"
+        await config.api.users
+          .addSsoSupportInternalAPIAuth(user.ssoId, user.email)
+          .expect(200)
       })
     })
   })
