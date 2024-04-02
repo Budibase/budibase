@@ -3,7 +3,6 @@
   import { fade } from 'svelte/transition';
 
   export let currentTooltip
-  export let previousTooltip
   export let anchor
   export let visible = false
   export let hovering = false
@@ -16,21 +15,15 @@
   let currentTooltipWidth = 0
   let currentTooltipHeight = 0
 
-  let previousTooltipWidth = 0
-  let previousTooltipHeight = 0
-
   const updatePositionOnVisibilityChange = (visible, hovering) => {
     if (!visible && !hovering) {
       previousX = 0;
       previousY = 0;
-
-      previousTooltipWidth = 0
-      previousTooltipHeight = 0
     } }
 
-  const updatePosition = (anchor, currentTooltip, previousTooltip) => {
+  const updatePosition = (anchor, currentTooltip) => {
     requestAnimationFrame(() => {
-      if (anchor == null || currentTooltip == null || previousTooltip == null) {
+      if (anchor == null || currentTooltip == null) {
         return;
       }
 
@@ -38,17 +31,6 @@
 
       currentTooltipWidth = currentTooltip.clientWidth
       currentTooltipHeight = currentTooltip.clientHeight
-
-      previousTooltipWidth = previousTooltip.clientWidth
-      previousTooltipHeight = previousTooltip.clientHeight
-
-      if (previousTooltipWidth === 0) {
-        previousTooltipWidth = currentTooltipWidth;
-      }
-
-      if (previousTooltipHeight === 0) {
-        previousTooltipHeight = currentTooltipHeight;
-      }
 
       previousX = currentX
       previousY = currentY
@@ -125,7 +107,7 @@
     requestAnimationFrame((newFrameTime) => animate(invokedAnimationStartTime, newFrameTime))
   }*/
 
-  $: updatePosition(anchor, currentTooltip, previousTooltip)
+  $: updatePosition(anchor, currentTooltip)
   $: updatePositionOnVisibilityChange(visible, hovering)
   /*$: requestAnimationFrame((frameTime) => animate(animationStartTime, frameTime))*/
 
@@ -162,7 +144,6 @@
         <slot />
       </div>
       <div
-        bind:this={previousTooltip}
         class="previousContent"
         style:left={`${previousX}px`}
         style:top={`${previousY}px`}
