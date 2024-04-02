@@ -377,7 +377,7 @@
     let params = {}
     if (keyValuObj.length) {
       for (let param of keyValuObj) {
-        params[param.name] = param.value
+        params[param.url] = param.filename
       }
     }
     return params

@@ -679,7 +679,7 @@ describe("REST Integration", () => {
       })
     })
 
-    it("uploads file with non ascii filename to object store and returns signed URL ", async () => {
+    it("uploads file with non ascii filename to object store and returns signed URL", async () => {
       const responseData = Buffer.from("teest file contnt")
       const contentType = "text/plain"
       const mockReadable = new Readable()

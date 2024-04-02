@@ -1,4 +1,3 @@
-import { string } from "joi"
 import { sendSmtpEmail } from "../../utilities/workerRequests"
 import * as automationUtils from "../automationUtils"
 import {
@@ -8,7 +7,6 @@ import {
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
-  EmailAttachment,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
