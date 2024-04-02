@@ -125,7 +125,6 @@
   </div>
   <div
     class="spectrum-Calendar-body"
-    tabindex="0"
     aria-readonly="true"
     aria-disabled="false"
   >
@@ -194,11 +193,13 @@
     visibility: visible;
     color: var(--spectrum-global-color-gray-400);
   }
-  .spectrum-Calendar-date.is-today:before {
+  .spectrum-Calendar-date.is-today,
+  .spectrum-Calendar-date.is-today::before {
     border-color: var(--spectrum-global-color-gray-400);
   }
-  .spectrum-Calendar-date.is-today {
-    border-color: var(--spectrum-global-color-gray-400);
+  .spectrum-Calendar-date.is-today.is-selected,
+  .spectrum-Calendar-date.is-today.is-selected::before {
+    border-color: var(--spectrum-global-color-blue-700);
   }
   .spectrum-Calendar-date.is-selected:not(.is-range-selection) {
     background: var(--spectrum-global-color-blue-400);
