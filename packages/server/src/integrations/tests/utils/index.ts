@@ -67,12 +67,6 @@ export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
 }
 
 export async function startContainer(container: GenericContainer) {
-  if (process.env.CONTAINER_NAMESPACE) {
-    container = container.withLabels({
-      "org.testcontainers.namespace": process.env.CONTAINER_NAMESPACE,
-    })
-  }
-
   if (process.env.REUSE_CONTAINERS) {
     container = container.withReuse()
   }
