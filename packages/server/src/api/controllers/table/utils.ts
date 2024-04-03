@@ -30,8 +30,6 @@ import {
   View,
   RelationshipFieldMetadata,
   FieldType,
-  FieldTypeSubtypes,
-  AttachmentFieldMetadata,
 } from "@budibase/types"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
