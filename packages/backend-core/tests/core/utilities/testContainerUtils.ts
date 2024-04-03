@@ -44,7 +44,11 @@ function getTestcontainers(): ContainerInfo[] {
 export function getContainerByImage(image: string) {
   const containers = getTestcontainers().filter(x => x.Image.startsWith(image))
   if (containers.length > 1) {
-    throw new Error(`Multiple containers found with image: ${image}`)
+    let errorMessage = `Multiple containers found starting with image: "${image}"\n\n`
+    for (const container of containers) {
+      errorMessage += JSON.stringify(container, null, 2)
+    }
+    throw new Error(errorMessage)
   }
   return containers[0]
 }
