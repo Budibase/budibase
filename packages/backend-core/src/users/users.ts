@@ -14,16 +14,16 @@ import {
 } from "../db"
 import {
   BulkDocsResponse,
+  ContextUser,
+  CouchFindOptions,
+  DatabaseQueryOpts,
   SearchQuery,
   SearchQueryOperators,
   SearchUsersRequest,
   User,
-  ContextUser,
-  DatabaseQueryOpts,
-  CouchFindOptions,
 } from "@budibase/types"
-import { getGlobalDB } from "../context"
 import * as context from "../context"
+import { getGlobalDB } from "../context"
 import { isCreator } from "./utils"
 import { UserDB } from "./db"
 
@@ -48,6 +48,7 @@ export function isSupportedUserSearch(query: SearchQuery) {
   const allowed = [
     { op: SearchQueryOperators.STRING, key: "email" },
     { op: SearchQueryOperators.EQUAL, key: "_id" },
+    { op: SearchQueryOperators.ONE_OF, key: "_id" },
   ]
   for (let [key, operation] of Object.entries(query)) {
     if (typeof operation !== "object") {
@@ -285,6 +286,10 @@ export async function paginatedUsers({
   } else if (query?.string?.email) {
     userList = await searchGlobalUsersByEmail(query?.string?.email, opts)
     property = "email"
+  } else if (query?.oneOf?._id) {
+    userList = await bulkGetGlobalUsersById(query?.oneOf?._id, {
+      cleanup: true,
+    })
   } else {
     // no search, query allDocs
     const response = await db.allDocs(getGlobalUserParams(null, opts))
