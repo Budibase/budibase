@@ -34,7 +34,7 @@ export class AttachmentCleanup {
       let files: string[] = []
       const tableSchema = opts.oldTable?.schema || table.schema
       for (let [key, schema] of Object.entries(tableSchema)) {
-        if (schema.type !== FieldType.ATTACHMENT) {
+        if (schema.type !== FieldType.ATTACHMENTS) {
           continue
         }
         const columnRemoved = opts.oldTable && !table.schema[key]
@@ -68,7 +68,7 @@ export class AttachmentCleanup {
     return AttachmentCleanup.coreCleanup(() => {
       let files: string[] = []
       for (let [key, schema] of Object.entries(table.schema)) {
-        if (schema.type !== FieldType.ATTACHMENT) {
+        if (schema.type !== FieldType.ATTACHMENTS) {
           continue
         }
         rows.forEach(row => {
@@ -88,7 +88,7 @@ export class AttachmentCleanup {
     return AttachmentCleanup.coreCleanup(() => {
       let files: string[] = []
       for (let [key, schema] of Object.entries(table.schema)) {
-        if (schema.type !== FieldType.ATTACHMENT) {
+        if (schema.type !== FieldType.ATTACHMENTS) {
           continue
         }
         const oldKeys =
