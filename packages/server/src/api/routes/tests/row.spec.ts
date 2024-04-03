@@ -1,4 +1,4 @@
-import { databaseTestProviders } from "../../../integrations/tests/utils"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
 import { outputProcessing } from "../../../utilities/rowProcessor"
@@ -34,10 +34,10 @@ jest.unmock("pg")
 
 describe.each([
   ["internal", undefined],
-  ["postgres", databaseTestProviders.postgres],
-  ["mysql", databaseTestProviders.mysql],
-  ["mssql", databaseTestProviders.mssql],
-  ["mariadb", databaseTestProviders.mariadb],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/rows (%s)", (__, dsProvider) => {
   const isInternal = dsProvider === undefined
   const config = setup.getConfig()
@@ -49,23 +49,23 @@ describe.each([
     await config.init()
     if (dsProvider) {
       datasource = await config.createDatasource({
-        datasource: await dsProvider.datasource(),
+        datasource: await dsProvider,
       })
     }
   })
 
   afterAll(async () => {
-    if (dsProvider) {
-      await dsProvider.stop()
-    }
     setup.afterAll()
   })
 
   function saveTableRequest(
-    ...overrides: Partial<SaveTableRequest>[]
+    // We omit the name field here because it's generated in the function with a
+    // high likelihood to be unique. Tests should not have any reason to control
+    // the table name they're writing to.
+    ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
   ): SaveTableRequest {
     const req: SaveTableRequest = {
-      name: uuid.v4().substring(0, 16),
+      name: uuid.v4().substring(0, 10),
       type: "table",
       sourceType: datasource
         ? TableSourceType.EXTERNAL
@@ -87,7 +87,10 @@ describe.each([
   }
 
   function defaultTable(
-    ...overrides: Partial<SaveTableRequest>[]
+    // We omit the name field here because it's generated in the function with a
+    // high likelihood to be unique. Tests should not have any reason to control
+    // the table name they're writing to.
+    ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
   ): SaveTableRequest {
     return saveTableRequest(
       {
@@ -194,7 +197,6 @@ describe.each([
 
       const newTable = await config.api.table.save(
         saveTableRequest({
-          name: "TestTableAuto",
           schema: {
             "Row ID": {
               name: "Row ID",
@@ -383,11 +385,9 @@ describe.each([
 
     isInternal &&
       it("doesn't allow creating in user table", async () => {
-        const userTableId = InternalTable.USER_METADATA
         const response = await config.api.row.save(
-          userTableId,
+          InternalTable.USER_METADATA,
           {
-            tableId: userTableId,
             firstName: "Joe",
             lastName: "Joe",
             email: "joe@joe.com",
@@ -462,7 +462,6 @@ describe.each([
       table = await config.api.table.save(defaultTable())
       otherTable = await config.api.table.save(
         defaultTable({
-          name: "a",
           schema: {
             relationship: {
               name: "relationship",
@@ -898,8 +897,8 @@ describe.each([
   let o2mTable: Table
   let m2mTable: Table
   beforeAll(async () => {
-    o2mTable = await config.api.table.save(defaultTable({ name: "o2m" }))
-    m2mTable = await config.api.table.save(defaultTable({ name: "m2m" }))
+    o2mTable = await config.api.table.save(defaultTable())
+    m2mTable = await config.api.table.save(defaultTable())
   })
 
   describe.each([
@@ -1256,7 +1255,6 @@ describe.each([
       otherTable = await config.api.table.save(defaultTable())
       table = await config.api.table.save(
         saveTableRequest({
-          name: "b",
           schema: {
             links: {
               name: "links",
@@ -1354,7 +1352,6 @@ describe.each([
 
           const table = await config.api.table.save(
             saveTableRequest({
-              name: "table",
               schema: {
                 text: {
                   name: "text",
