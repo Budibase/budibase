@@ -1,6 +1,7 @@
 import {
   context,
   db,
+  HTTPError,
   SearchParams as InternalSearchParams,
 } from "@budibase/backend-core"
 import env from "../../../../environment"
@@ -31,6 +32,7 @@ import sdk from "../../../../sdk"
 import { ExportRowsParams, ExportRowsResult } from "../search"
 import { searchInputMapping } from "./utils"
 import pick from "lodash/pick"
+import { breakRowIdField } from "../../../../integrations/utils"
 
 export async function search(options: SearchParams) {
   const { tableId } = options
@@ -103,7 +105,16 @@ export async function exportRows(
     let response = (
       await db.allDocs({
         include_docs: true,
-        keys: rowIds,
+        keys: rowIds.map((row: string) => {
+          const ids = breakRowIdField(row)
+          if (ids.length > 1) {
+            throw new HTTPError(
+              "Export data does not support composite keys.",
+              400
+            )
+          }
+          return ids[0]
+        }),
       })
     ).rows.map(row => row.doc)
 

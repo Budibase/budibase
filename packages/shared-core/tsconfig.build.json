@@ -18,13 +18,6 @@
     },
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
-  "include": ["**/*.js", "**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.spec.ts",
-    "**/*.spec.js",
-    "__mocks__",
-    "src/tests"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["**/*.spec.ts", "**/*.spec.js", "__mocks__", "src/tests"]
 }

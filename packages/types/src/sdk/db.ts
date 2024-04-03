@@ -7,6 +7,7 @@ import {
   ViewTemplateOpts,
 } from "../"
 import { Writable } from "stream"
+import type PouchDB from "pouchdb-find"
 
 export enum SearchIndex {
   ROWS = "rows",
@@ -128,6 +129,7 @@ export interface Database {
 
   exists(): Promise<boolean>
   get<T extends Document>(id?: string): Promise<T>
+  exists(docId: string): Promise<boolean>
   getMultiple<T extends Document>(
     ids: string[],
     opts?: { allowMissing?: boolean }

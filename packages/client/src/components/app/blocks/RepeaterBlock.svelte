@@ -4,6 +4,7 @@
   import Placeholder from "components/app/Placeholder.svelte"
   import { getContext } from "svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
+  import { get } from "svelte/store"
 
   export let dataSource
   export let filter
@@ -19,8 +20,20 @@
   export let autoRefresh
 
   const component = getContext("component")
+  const context = getContext("context")
+  const { generateGoldenSample } = getContext("sdk")
 
   let providerId
+
+  // Provide additional data context for live binding eval
+  export const getAdditionalDataContext = () => {
+    const rows = get(context)[providerId]?.rows || []
+    const goldenRow = generateGoldenSample(rows)
+    const id = get(component).id
+    return {
+      [`${id}-repeater`]: goldenRow,
+    }
+  }
 </script>
 
 <Block>

@@ -23,6 +23,18 @@ export default class BaseCache {
     return client.keys(pattern)
   }
 
+  async exists(key: string, opts = { useTenancy: true }) {
+    key = opts.useTenancy ? generateTenantKey(key) : key
+    const client = await this.getClient()
+    return client.exists(key)
+  }
+
+  async scan(key: string, opts = { useTenancy: true }) {
+    key = opts.useTenancy ? generateTenantKey(key) : key
+    const client = await this.getClient()
+    return client.scan(key)
+  }
+
   /**
    * Read only from the cache.
    */
@@ -30,6 +42,15 @@ export default class BaseCache {
     key = opts.useTenancy ? generateTenantKey(key) : key
     const client = await this.getClient()
     return client.get(key)
+  }
+
+  /**
+   * Read only from the cache.
+   */
+  async bulkGet<T>(keys: string[], opts = { useTenancy: true }) {
+    keys = opts.useTenancy ? keys.map(key => generateTenantKey(key)) : keys
+    const client = await this.getClient()
+    return client.bulkGet<T>(keys)
   }
 
   /**
@@ -47,6 +68,25 @@ export default class BaseCache {
   }
 
   /**
+   * Bulk write to the cache.
+   */
+  async bulkStore(
+    data: Record<string, any>,
+    ttl: number | null = null,
+    opts = { useTenancy: true }
+  ) {
+    if (opts.useTenancy) {
+      data = Object.entries(data).reduce((acc, [key, value]) => {
+        acc[generateTenantKey(key)] = value
+        return acc
+      }, {} as Record<string, any>)
+    }
+
+    const client = await this.getClient()
+    await client.bulkStore(data, ttl)
+  }
+
+  /**
    * Remove from cache.
    */
   async delete(key: string, opts = { useTenancy: true }) {
@@ -56,14 +96,23 @@ export default class BaseCache {
   }
 
   /**
+   * Remove from cache.
+   */
+  async bulkDelete(keys: string[], opts = { useTenancy: true }) {
+    keys = opts.useTenancy ? keys.map(key => generateTenantKey(key)) : keys
+    const client = await this.getClient()
+    return client.bulkDelete(keys)
+  }
+
+  /**
    * Read from the cache. Write to the cache if not exists.
    */
-  async withCache(
+  async withCache<T>(
     key: string,
-    ttl: number,
-    fetchFn: any,
+    ttl: number | null = null,
+    fetchFn: () => Promise<T> | T,
     opts = { useTenancy: true }
-  ) {
+  ): Promise<T> {
     const cachedValue = await this.get(key, opts)
     if (cachedValue) {
       return cachedValue
@@ -80,7 +129,7 @@ export default class BaseCache {
     }
   }
 
-  async bustCache(key: string, opts = { client: null }) {
+  async bustCache(key: string) {
     const client = await this.getClient()
     try {
       await client.delete(generateTenantKey(key))
@@ -88,5 +137,14 @@ export default class BaseCache {
       console.error("Error busting cache - ", err)
       throw err
     }
+  }
+
+  /**
+   * Delete the entry if the provided value matches the stored one.
+   */
+  async deleteIfValue(key: string, value: any, opts = { useTenancy: true }) {
+    key = opts.useTenancy ? generateTenantKey(key) : key
+    const client = await this.getClient()
+    await client.deleteIfValue(key, value)
   }
 }

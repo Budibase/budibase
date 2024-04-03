@@ -24,7 +24,7 @@ import tar from "tar"
 
 type TemplateType = {
   file?: {
-    type: string
+    type?: string
     path: string
     password?: string
   }

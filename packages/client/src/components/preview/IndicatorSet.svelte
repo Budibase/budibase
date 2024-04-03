@@ -4,27 +4,39 @@
   import { domDebounce } from "utils/domDebounce"
   import { builderStore } from "stores"
 
-  export let componentId
-  export let color
-  export let transition
-  export let zIndex
+  export let componentId = null
+  export let color = null
+  export let zIndex = 900
   export let prefix = null
   export let allowResizeAnchors = false
 
-  let indicators = []
+  const errorColor = "var(--spectrum-global-color-static-red-600)"
+  const defaultState = () => ({
+    // Cached props
+    componentId,
+    color,
+    zIndex,
+    prefix,
+    allowResizeAnchors,
+
+    // Computed state
+    indicators: [],
+    text: null,
+    icon: null,
+    insideGrid: false,
+    error: false,
+  })
+
   let interval
-  let text
-  let icon
-  let insideGrid = false
-  let errorState = false
-
-  $: visibleIndicators = indicators.filter(x => x.visible)
-  $: offset = $builderStore.inBuilder ? 0 : 2
-
+  let state = defaultState()
+  let nextState = null
   let updating = false
   let observers = []
   let callbackCount = 0
-  let nextIndicators = []
+
+  $: visibleIndicators = state.indicators.filter(x => x.visible)
+  $: offset = $builderStore.inBuilder ? 0 : 2
+  $: $$props, debouncedUpdate()
 
   const checkInsideGrid = id => {
     const component = document.getElementsByClassName(id)[0]
@@ -44,10 +56,10 @@
     if (callbackCount >= observers.length) {
       return
     }
-    nextIndicators[idx].visible =
-      nextIndicators[idx].insideSidePanel || entries[0].isIntersecting
+    nextState.indicators[idx].visible =
+      nextState.indicators[idx].insideSidePanel || entries[0].isIntersecting
     if (++callbackCount === observers.length) {
-      indicators = nextIndicators
+      state = nextState
       updating = false
     }
   }
@@ -59,7 +71,7 @@
 
     // Sanity check
     if (!componentId) {
-      indicators = []
+      state = defaultState()
       return
     }
 
@@ -68,25 +80,25 @@
     callbackCount = 0
     observers.forEach(o => o.disconnect())
     observers = []
-    nextIndicators = []
+    nextState = defaultState()
 
     // Check if we're inside a grid
     if (allowResizeAnchors) {
-      insideGrid = checkInsideGrid(componentId)
+      nextState.insideGrid = checkInsideGrid(componentId)
     }
 
     // Determine next set of indicators
     const parents = document.getElementsByClassName(componentId)
     if (parents.length) {
-      text = parents[0].dataset.name
-      if (prefix) {
-        text = `${prefix} ${text}`
+      nextState.text = parents[0].dataset.name
+      if (nextState.prefix) {
+        nextState.text = `${nextState.prefix} ${nextState.text}`
       }
       if (parents[0].dataset.icon) {
-        icon = parents[0].dataset.icon
+        nextState.icon = parents[0].dataset.icon
       }
     }
-    errorState = parents?.[0]?.classList.contains("error")
+    nextState.error = parents?.[0]?.classList.contains("error")
 
     // Batch reads to minimize reflow
     const scrollX = window.scrollX
@@ -102,8 +114,9 @@
 
     // If there aren't any nodes then reset
     if (!children.length) {
-      indicators = []
+      state = defaultState()
       updating = false
+      return
     }
 
     const device = document.getElementById("app-root")
@@ -119,7 +132,7 @@
       observers.push(observer)
 
       const elBounds = child.getBoundingClientRect()
-      nextIndicators.push({
+      nextState.indicators.push({
         top: elBounds.top + scrollY - deviceBounds.top - offset,
         left: elBounds.left + scrollX - deviceBounds.left - offset,
         width: elBounds.width + 4,
@@ -144,20 +157,17 @@
   })
 </script>
 
-{#key componentId}
-  {#each visibleIndicators as indicator, idx}
-    <Indicator
-      top={indicator.top}
-      left={indicator.left}
-      width={indicator.width}
-      height={indicator.height}
-      text={idx === 0 ? text : null}
-      icon={idx === 0 ? icon : null}
-      showResizeAnchors={allowResizeAnchors && insideGrid}
-      color={errorState ? "var(--spectrum-global-color-static-red-600)" : color}
-      {componentId}
-      {transition}
-      {zIndex}
-    />
-  {/each}
-{/key}
+{#each visibleIndicators as indicator, idx}
+  <Indicator
+    top={indicator.top}
+    left={indicator.left}
+    width={indicator.width}
+    height={indicator.height}
+    text={idx === 0 ? state.text : null}
+    icon={idx === 0 ? state.icon : null}
+    showResizeAnchors={state.allowResizeAnchors && state.insideGrid}
+    color={state.error ? errorColor : state.color}
+    componentId={state.componentId}
+    zIndex={state.zIndex}
+  />
+{/each}

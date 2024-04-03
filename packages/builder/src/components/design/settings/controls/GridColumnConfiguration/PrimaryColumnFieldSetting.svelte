@@ -1,5 +1,5 @@
 <script>
-  import EditComponentPopover from "../EditComponentPopover.svelte"
+  import EditComponentPopover from "../EditComponentPopover/EditComponentPopover.svelte"
   import { Icon } from "@budibase/bbui"
   import { setContext } from "svelte"
   import { writable } from "svelte/store"

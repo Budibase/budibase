@@ -52,7 +52,6 @@
           on:change={e => onChange(e, field)}
           type="string"
           {bindings}
-          fillWidth={true}
           updateOnChange={false}
         />
       </div>

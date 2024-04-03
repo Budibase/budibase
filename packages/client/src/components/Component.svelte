@@ -246,15 +246,18 @@
       return
     }
 
+    const cacheId = `${definition.name}${
+      definition?.deprecated === true ? "_deprecated" : ""
+    }`
     // Get the settings definition for this component, and cache it
-    if (SettingsDefinitionCache[definition.name]) {
-      settingsDefinition = SettingsDefinitionCache[definition.name]
-      settingsDefinitionMap = SettingsDefinitionMapCache[definition.name]
+    if (SettingsDefinitionCache[cacheId]) {
+      settingsDefinition = SettingsDefinitionCache[cacheId]
+      settingsDefinitionMap = SettingsDefinitionMapCache[cacheId]
     } else {
       settingsDefinition = getSettingsDefinition(definition)
       settingsDefinitionMap = getSettingsDefinitionMap(settingsDefinition)
-      SettingsDefinitionCache[definition.name] = settingsDefinition
-      SettingsDefinitionMapCache[definition.name] = settingsDefinitionMap
+      SettingsDefinitionCache[cacheId] = settingsDefinition
+      SettingsDefinitionMapCache[cacheId] = settingsDefinitionMap
     }
 
     // Parse the instance settings, and cache them
@@ -565,13 +568,23 @@
 
     // If we don't know, check and cache
     if (used == null) {
-      used = bindingString.indexOf(`[${key}]`) !== -1
+      const searchString = key === "snippets" ? key : `[${key}]`
+      used = bindingString.indexOf(searchString) !== -1
       knownContextKeyMap[key] = used
     }
 
     // Enrich settings if we use this key
     if (used) {
       enrichComponentSettings($context, settingsDefinitionMap)
+    }
+  }
+
+  const getDataContext = () => {
+    const normalContext = get(context)
+    const additionalContext = ref?.getAdditionalDataContext?.()
+    return {
+      ...normalContext,
+      ...additionalContext,
     }
   }
 
@@ -583,7 +596,7 @@
           component: instance._component,
           getSettings: () => cachedSettings,
           getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
-          getDataContext: () => get(context),
+          getDataContext,
           reload: () => initialise(instance, true),
           setEphemeralStyles: styles => (ephemeralStyles = styles),
           state: store,

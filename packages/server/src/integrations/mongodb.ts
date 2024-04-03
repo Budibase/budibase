@@ -22,8 +22,9 @@ import {
   InsertManyResult,
 } from "mongodb"
 import environment from "../environment"
+import { HOST_ADDRESS } from "./utils"
 
-interface MongoDBConfig {
+export interface MongoDBConfig {
   connectionString: string
   db: string
   tlsCertificateKeyFile: string
@@ -51,7 +52,7 @@ const getSchema = () => {
       connectionString: {
         type: DatasourceFieldType.STRING,
         required: true,
-        default: "mongodb://localhost:27017",
+        default: `mongodb://${HOST_ADDRESS}:27017`,
         display: "Connection string",
       },
       db: {
@@ -348,7 +349,7 @@ const getSchema = () => {
 
 const SCHEMA: Integration = getSchema()
 
-class MongoIntegration implements IntegrationBase {
+export class MongoIntegration implements IntegrationBase {
   private config: MongoDBConfig
   private client: MongoClient
 

@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
 import { API } from "api"
 import { appStore } from "stores/builder"
-import BudiStore from "./BudiStore"
+import BudiStore from "../BudiStore"
 
 export const INITIAL_NAVIGATION_STATE = {
   navigation: "Top",
@@ -11,6 +11,7 @@ export const INITIAL_NAVIGATION_STATE = {
   hideLogo: null,
   logoUrl: null,
   hideTitle: null,
+  textAlign: "Left",
   navBackground: null,
   navWidth: null,
   navTextColor: null,

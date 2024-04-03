@@ -12,7 +12,6 @@
     Drawer,
     Modal,
     notifications,
-    Icon,
     Checkbox,
     DatePicker,
   } from "@budibase/bbui"
@@ -31,8 +30,8 @@
   import Editor from "components/integration/QueryEditor.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import BindingPicker from "components/common/bindings/BindingPicker.svelte"
-  import { BindingHelpers } from "components/common/bindings/utils"
+  import BindingSidePanel from "components/common/bindings/BindingSidePanel.svelte"
+  import { BindingHelpers, BindingType } from "components/common/bindings/utils"
   import {
     bindingsToCompletions,
     hbAutocomplete,
@@ -52,11 +51,12 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
+
   let webhookModal
   let drawer
-  let fillWidth = true
   let inputData
   let insertAtPos, getCaretPosition
+
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
   $: stepId = block.stepId
@@ -80,7 +80,6 @@
   })
   $: editingJs = codeMode === EditorModes.JS
   $: requiredProperties = block.schema.inputs.required || []
-
   $: stepCompletions =
     codeMode === EditorModes.Handlebars
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
@@ -377,12 +376,13 @@
 <div class="fields">
   {#each schemaProperties as [key, value]}
     {#if canShowField(key, value)}
+      {@const label = getFieldLabel(key, value)}
       <div class:block-field={shouldRenderField(value)}>
         {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
           <Label
             tooltip={value.title === "Binding / Value"
               ? "If using the String input type, please use a comma or newline separated string"
-              : null}>{getFieldLabel(key, value)}</Label
+              : null}>{label}</Label
           >
         {/if}
         <div class:field-width={shouldRenderField(value)}>
@@ -415,8 +415,7 @@
             </div>
           {:else if value.type === "date"}
             <DrawerBindableSlot
-              fillWidth
-              title={value.title}
+              title={value.title ?? label}
               panel={AutomationBindingPanel}
               type={"date"}
               value={inputData[key]}
@@ -439,7 +438,7 @@
             />
           {:else if value.customType === "filters"}
             <ActionButton on:click={drawer.show}>Define filters</ActionButton>
-            <Drawer bind:this={drawer} {fillWidth} title="Filtering">
+            <Drawer bind:this={drawer} title="Filtering">
               <Button cta slot="buttons" on:click={() => saveFilters(key)}>
                 Save
               </Button>
@@ -450,7 +449,6 @@
                 {schemaFields}
                 datasource={{ type: "table", tableId }}
                 panel={AutomationBindingPanel}
-                fillWidth
                 on:change={e => (tempFilters = e.detail)}
               />
             </Drawer>
@@ -463,19 +461,17 @@
           {:else if value.customType === "email"}
             {#if isTestModal}
               <ModalBindableInput
-                title={value.title}
+                title={value.title ?? label}
                 value={inputData[key]}
                 panel={AutomationBindingPanel}
                 type="email"
                 on:change={e => onChange(e, key)}
                 {bindings}
-                fillWidth
                 updateOnChange={false}
               />
             {:else}
               <DrawerBindableInput
-                fillWidth
-                title={value.title}
+                title={value.title ?? label}
                 panel={AutomationBindingPanel}
                 type="email"
                 value={inputData[key]}
@@ -550,7 +546,7 @@
           {:else if value.customType === "code"}
             <CodeEditorModal>
               <div class:js-editor={editingJs}>
-                <div class:js-code={editingJs} style="width: 100%">
+                <div class:js-code={editingJs} style="width:100%;height:500px;">
                   <CodeEditor
                     value={inputData[key]}
                     on:change={e => {
@@ -563,24 +559,14 @@
                     autocompleteEnabled={codeMode !== EditorModes.JS}
                     bind:getCaretPosition
                     bind:insertAtPos
-                    height={500}
+                    placeholder={codeMode === EditorModes.Handlebars
+                      ? "Add bindings by typing {{"
+                      : null}
                   />
-                  <div class="messaging">
-                    {#if codeMode === EditorModes.Handlebars}
-                      <Icon name="FlashOn" />
-                      <div class="messaging-wrap">
-                        <div>
-                          Add available bindings by typing <strong>
-                            &#125;&#125;
-                          </strong>
-                        </div>
-                      </div>
-                    {/if}
-                  </div>
                 </div>
                 {#if editingJs}
                   <div class="js-binding-picker">
-                    <BindingPicker
+                    <BindingSidePanel
                       {bindings}
                       allowHelpers={false}
                       addBinding={binding =>
@@ -590,6 +576,7 @@
                           {
                             js: true,
                             dontDecode: true,
+                            type: BindingType.RUNTIME,
                           }
                         )}
                       mode="javascript"
@@ -609,7 +596,7 @@
           {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
             {#if isTestModal}
               <ModalBindableInput
-                title={value.title}
+                title={value.title || label}
                 value={inputData[key]}
                 panel={AutomationBindingPanel}
                 type={value.customType}
@@ -620,8 +607,7 @@
             {:else}
               <div class="test">
                 <DrawerBindableInput
-                  fillWidth={true}
-                  title={value.title}
+                  title={value.title ?? label}
                   panel={AutomationBindingPanel}
                   type={value.customType}
                   value={inputData[key]}
@@ -654,11 +640,6 @@
     width: 320px;
   }
 
-  .messaging {
-    display: flex;
-    align-items: center;
-    margin-top: var(--spacing-xl);
-  }
   .fields {
     display: flex;
     flex-direction: column;
@@ -670,7 +651,6 @@
   .block-field {
     display: flex; /* Use Flexbox */
     justify-content: space-between;
-    align-items: center;
     flex-direction: row; /* Arrange label and field side by side */
     align-items: center; /* Align vertically in the center */
     gap: 10px; /* Add some space between label and field */

@@ -55,13 +55,23 @@ router
   )
   .delete(
     "/api/applications/:appId",
-    authorized(permissions.GLOBAL_BUILDER),
+    authorized(permissions.BUILDER),
     controller.destroy
+  )
+  .post(
+    "/api/applications/:appId/duplicate",
+    authorized(permissions.BUILDER),
+    controller.duplicateApp
   )
   .post(
     "/api/applications/:appId/import",
     authorized(permissions.BUILDER),
     controller.importToApp
+  )
+  .post(
+    "/api/applications/:appId/setRevertableVersion",
+    authorized(permissions.BUILDER),
+    controller.setRevertableVersion
   )
 
 export default router
