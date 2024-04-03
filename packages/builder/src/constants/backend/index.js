@@ -110,9 +110,17 @@ export const FIELDS = {
   ATTACHMENTS: {
     name: "Attachment List",
     type: FieldType.ATTACHMENTS,
-    icon: "Folder",
+    icon: "AppleFiles",
     constraints: {
       type: "array",
+      presence: false,
+    },
+  },
+  ATTACHMENT_SINGLE: {
+    name: "Attachment",
+    type: FieldType.ATTACHMENT_SINGLE,
+    icon: "Document",
+    constraints: {
       presence: false,
     },
   },
