@@ -1,10 +1,13 @@
 <script>
   import Portal from "svelte-portal"
-  import { fade } from 'svelte/transition';
+  import { getContext } from "svelte"
+  import Context from "../context"
 
   export let anchor
   export let visible = false
   export let offset = 0;
+
+  $: target = getContext(Context.PopoverRoot) || ".spectrum"
 
   let hovering = false
   let wrapper
@@ -95,7 +98,7 @@
   }
 </script>
 
-<Portal target=".spectrum">
+<Portal {target}>
   <div
     bind:this={wrapper}
     on:mouseenter={handleMouseenter}

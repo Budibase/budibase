@@ -43,6 +43,7 @@ export {
   TooltipType,
 } from "./Tooltip/AbsTooltip.svelte"
 export { default as TooltipWrapper } from "./Tooltip/TooltipWrapper.svelte"
+export { default as ContextTooltip } from "./Tooltip/Context.svelte"
 export { default as Menu } from "./Menu/Menu.svelte"
 export { default as MenuSection } from "./Menu/Section.svelte"
 export { default as MenuSeparator } from "./Menu/Separator.svelte"
