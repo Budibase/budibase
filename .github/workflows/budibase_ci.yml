@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REUSE_CONTAINERS: true
-      CONTAINER_NAMESPACE: test-server
+      CONTAINER_NAMESPACE: test-libraries
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
