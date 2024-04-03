@@ -125,7 +125,7 @@
       // Catch any app errors
       loading = false
       error = event.error || "An unknown error occurred"
-    } else if (type === "select-component" && "id" in data) {
+    } else if (type === "select-component" && data.id) {
       componentStore.select(data.id)
       componentTreeNodesStore.makeNodeVisible(data.id)
     } else if (type === "hover-component") {
