@@ -520,9 +520,50 @@ describe("/api/global/users", () => {
         })
       }
 
+      function createPasswordUser() {
+        return config.doInTenant(() => {
+          const user = structures.users.user()
+          return userSdk.db.save(user)
+        })
+      }
+
       it("should be able to update an sso user that has no password", async () => {
         const user = await createSSOUser()
         await config.api.users.saveUser(user)
+      })
+
+      it("sso support couldn't be used by admin. It is cloud restricted and needs internal key", async () => {
+        const user = await config.createUser()
+        const ssoId = "fake-ssoId"
+        await config.api.users
+          .addSsoSupportDefaultAuth(ssoId, user.email)
+          .expect("Content-Type", /json/)
+          .expect(403)
+      })
+
+      it("if user email doesn't exist, SSO support couldn't be added. Not found error returned", async () => {
+        const ssoId = "fake-ssoId"
+        const email = "fake-email@budibase.com"
+        await config.api.users
+          .addSsoSupportInternalAPIAuth(ssoId, email)
+          .expect("Content-Type", /json/)
+          .expect(404)
+      })
+
+      it("if user email exist, SSO support is added", async () => {
+        const user = await createPasswordUser()
+        const ssoId = "fakessoId"
+        await config.api.users
+          .addSsoSupportInternalAPIAuth(ssoId, user.email)
+          .expect(200)
+      })
+
+      it("if user ssoId is already assigned, no change will be applied", async () => {
+        const user = await createSSOUser()
+        user.ssoId = "testssoId"
+        await config.api.users
+          .addSsoSupportInternalAPIAuth(user.ssoId, user.email)
+          .expect(200)
       })
     })
   })
@@ -606,6 +647,24 @@ describe("/api/global/users", () => {
       })
       expect(response.body.data.length).toBe(1)
       expect(response.body.data[0]._id).toBe(user._id)
+    })
+
+    it("should be able to search by oneOf _id", async () => {
+      const [user, user2, user3] = await Promise.all([
+        config.createUser(),
+        config.createUser(),
+        config.createUser(),
+      ])
+      const response = await config.api.users.searchUsers({
+        query: { oneOf: { _id: [user._id, user2._id] } },
+      })
+      expect(response.body.data.length).toBe(2)
+      const foundUserIds = response.body.data.map((user: User) => user._id)
+      expect(foundUserIds).toContain(user._id)
+      expect(foundUserIds).toContain(user2._id)
+      expect(
+        response.body.data.find((user: User) => user._id === user3._id)
+      ).toBeUndefined()
     })
 
     it("should be able to search by _id with numeric prefixing", async () => {

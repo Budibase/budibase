@@ -65,7 +65,9 @@ jobs:
 
       # Run build all the projects
       - name: Build
-        run: yarn build
+        run: |
+          yarn build:oss
+          yarn build:account-portal
       # Check the types of the projects built via esbuild
       - name: Check types
         run: |
@@ -173,35 +175,6 @@ jobs:
           else
             yarn test --scope=@budibase/server
           fi
-
-  integration-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: yarn
-      - run: yarn --frozen-lockfile
-      - name: Build packages
-        run: yarn build --scope @budibase/server --scope @budibase/worker
-      - name: Build backend-core for OSS contributor (required for pro)
-        if: ${{ env.IS_OSS_CONTRIBUTOR == 'true' }}
-        run: yarn build --scope @budibase/backend-core
-      - name: Run tests
-        run: |
-          cd qa-core
-          yarn setup
-          yarn serve:test:self:ci
-        env:
-          BB_ADMIN_USER_EMAIL: admin
-          BB_ADMIN_USER_PASSWORD: admin
 
   check-pro-submodule:
     runs-on: ubuntu-latest

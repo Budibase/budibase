@@ -34,7 +34,6 @@
     },
     {
       "files": ["**/*.ts"],
-      "excludedFiles": ["qa-core/**"],
       "parser": "@typescript-eslint/parser",
       "plugins": ["@typescript-eslint"],
       "extends": ["eslint:recommended"],
@@ -49,7 +48,6 @@
     },
     {
       "files": ["**/*.spec.ts"],
-      "excludedFiles": ["qa-core/**"],
       "parser": "@typescript-eslint/parser",
       "plugins": ["jest", "@typescript-eslint"],
       "extends": ["eslint:recommended", "plugin:jest/recommended"],
