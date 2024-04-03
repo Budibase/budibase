@@ -148,7 +148,7 @@ export async function inputProcessing(
     }
 
     // remove any attachment urls, they are generated on read
-    if (field.type === FieldType.ATTACHMENTS) {
+    if (field.type === FieldType.ATTACHMENT) {
       const attachments = clonedRow[key]
       if (attachments?.length) {
         attachments.forEach((attachment: RowAttachment) => {
@@ -216,7 +216,7 @@ export async function outputProcessing<T extends Row[] | Row>(
 
   // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
-    if (column.type === FieldType.ATTACHMENTS) {
+    if (column.type === FieldType.ATTACHMENT) {
       for (let row of enriched) {
         if (row[property] == null || !Array.isArray(row[property])) {
           continue

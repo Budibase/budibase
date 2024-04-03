@@ -8,8 +8,7 @@ export enum FieldType {
   BOOLEAN = "boolean",
   ARRAY = "array",
   DATETIME = "datetime",
-  ATTACHMENTS = "attachment",
-  ATTACHMENT_SINGLE = "attachment_single",
+  ATTACHMENT = "attachment",
   LINK = "link",
   FORMULA = "formula",
   AUTO = "auto",
@@ -39,6 +38,7 @@ export interface Row extends Document {
 export enum FieldSubtype {
   USER = "user",
   USERS = "users",
+  SINGLE = "single",
 }
 
 // The 'as' are required for typescript not to type the outputs as generic FieldSubtype
@@ -46,5 +46,8 @@ export const FieldTypeSubtypes = {
   BB_REFERENCE: {
     USER: FieldSubtype.USER as FieldSubtype.USER,
     USERS: FieldSubtype.USERS as FieldSubtype.USERS,
+  },
+  ATTACHMENT: {
+    SINGLE: FieldSubtype.SINGLE as FieldSubtype.SINGLE,
   },
 }
