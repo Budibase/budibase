@@ -107,7 +107,7 @@ export const FIELDS = {
       },
     },
   },
-  ATTACHMENT: {
+  ATTACHMENTS: {
     name: "Attachment List",
     type: FieldType.ATTACHMENTS,
     icon: "Folder",
