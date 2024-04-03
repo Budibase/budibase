@@ -1,6 +1,6 @@
 import { Datasource, Query, SourceName } from "@budibase/types"
 import * as setup from "./utilities"
-import { databaseTestProviders } from "../../integrations/tests/utils"
+import { DatabaseName, getDatasource } from "../../integrations/tests/utils"
 import knex, { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -16,12 +16,14 @@ function getKnexClientName(source: SourceName) {
   throw new Error(`Unsupported source: ${source}`)
 }
 
-describe.each([
-  ["postgres", databaseTestProviders.postgres],
-  ["mysql", databaseTestProviders.mysql],
-  ["mssql", databaseTestProviders.mssql],
-  ["mariadb", databaseTestProviders.mariadb],
-])("execute query action (%s)", (__, dsProvider) => {
+describe.each(
+  [
+    DatabaseName.POSTGRES,
+    DatabaseName.MYSQL,
+    DatabaseName.SQL_SERVER,
+    DatabaseName.MARIADB,
+  ].map(name => [name, getDatasource(name)])
+)("execute query action (%s)", (_, dsProvider) => {
   let tableName: string
   let client: Knex
   let datasource: Datasource
@@ -31,7 +33,7 @@ describe.each([
   beforeAll(async () => {
     await config.init()
 
-    const ds = await dsProvider.datasource()
+    const ds = await dsProvider
     datasource = await config.api.datasource.create(ds)
     client = knex({
       client: getKnexClientName(ds.source),
