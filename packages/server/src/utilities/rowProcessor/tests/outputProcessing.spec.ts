@@ -82,7 +82,7 @@ describe("rowProcessor - outputProcessing", () => {
       sourceType: TableSourceType.INTERNAL,
       schema: {
         attach: {
-          type: FieldType.ATTACHMENTS,
+          type: FieldType.ATTACHMENT,
           name: "attach",
           constraints: {},
         },
