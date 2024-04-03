@@ -23,6 +23,6 @@
     label="Components"
     value={$componentStore.mountedComponentCount}
   />
-  <DevToolsStat label="User" value={$authStore.email} />
-  <DevToolsStat label="Role" value={$authStore.roleId} />
+  <DevToolsStat label="User" value={$authStore?.email} />
+  <DevToolsStat label="Role" value={$authStore?.roleId} />
 </Layout>
