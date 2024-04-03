@@ -649,6 +649,24 @@ describe("/api/global/users", () => {
       expect(response.body.data[0]._id).toBe(user._id)
     })
 
+    it("should be able to search by oneOf _id", async () => {
+      const [user, user2, user3] = await Promise.all([
+        config.createUser(),
+        config.createUser(),
+        config.createUser(),
+      ])
+      const response = await config.api.users.searchUsers({
+        query: { oneOf: { _id: [user._id, user2._id] } },
+      })
+      expect(response.body.data.length).toBe(2)
+      const foundUserIds = response.body.data.map((user: User) => user._id)
+      expect(foundUserIds).toContain(user._id)
+      expect(foundUserIds).toContain(user2._id)
+      expect(
+        response.body.data.find((user: User) => user._id === user3._id)
+      ).toBeUndefined()
+    })
+
     it("should be able to search by _id with numeric prefixing", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({
