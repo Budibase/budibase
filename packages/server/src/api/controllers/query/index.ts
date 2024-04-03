@@ -281,48 +281,44 @@ export async function preview(
     return { previewSchema, nestedSchemaFields }
   }
 
-  try {
-    const inputs: QueryEvent = {
-      appId: ctx.appId,
-      queryVerb: query.queryVerb,
-      fields: query.fields,
-      parameters: enrichParameters(query),
-      transformer: query.transformer,
-      schema: query.schema,
-      nullDefaultSupport: query.nullDefaultSupport,
-      queryId,
-      datasource,
-      // have to pass down to the thread runner - can't put into context now
-      environmentVariables: envVars,
-      ctx: {
-        user: ctx.user,
-        auth: { ...authConfigCtx },
-      },
-    }
+  const inputs: QueryEvent = {
+    appId: ctx.appId,
+    queryVerb: query.queryVerb,
+    fields: query.fields,
+    parameters: enrichParameters(query),
+    transformer: query.transformer,
+    schema: query.schema,
+    nullDefaultSupport: query.nullDefaultSupport,
+    queryId,
+    datasource,
+    // have to pass down to the thread runner - can't put into context now
+    environmentVariables: envVars,
+    ctx: {
+      user: ctx.user,
+      auth: { ...authConfigCtx },
+    },
+  }
 
-    const { rows, keys, info, extra } = await Runner.run<QueryResponse>(inputs)
-    const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
+  const { rows, keys, info, extra } = await Runner.run<QueryResponse>(inputs)
+  const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
 
-    // if existing schema, update to include any previous schema keys
-    if (existingSchema) {
-      for (let key of Object.keys(previewSchema)) {
-        if (existingSchema[key]) {
-          previewSchema[key] = existingSchema[key]
-        }
+  // if existing schema, update to include any previous schema keys
+  if (existingSchema) {
+    for (let key of Object.keys(previewSchema)) {
+      if (existingSchema[key]) {
+        previewSchema[key] = existingSchema[key]
       }
     }
-    // remove configuration before sending event
-    delete datasource.config
-    await events.query.previewed(datasource, ctx.request.body)
-    ctx.body = {
-      rows,
-      nestedSchemaFields,
-      schema: previewSchema,
-      info,
-      extra,
-    }
-  } catch (err: any) {
-    ctx.throw(400, err)
+  }
+  // remove configuration before sending event
+  delete datasource.config
+  await events.query.previewed(datasource, ctx.request.body)
+  ctx.body = {
+    rows,
+    nestedSchemaFields,
+    schema: previewSchema,
+    info,
+    extra,
   }
 }
 
