@@ -1,4 +1,4 @@
-import { testContainerUtils } from "@budibase/backend-core/tests"
+import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { startContainer } from "."
@@ -33,7 +33,7 @@ export async function getDatasource(): Promise<Datasource> {
     plus: false,
     config: {
       connectionString: `mongodb://mongo:password@127.0.0.1:${port.host}`,
-      db: "mongo",
+      db: generator.guid(),
     },
   }
 }

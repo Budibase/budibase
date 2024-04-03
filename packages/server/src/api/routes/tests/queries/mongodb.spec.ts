@@ -4,7 +4,7 @@ import {
   DatabaseName,
   getDatasource,
 } from "../../../../integrations/tests/utils"
-import { MongoClient, type Collection, BSON } from "mongodb"
+import { MongoClient, type Collection, BSON, Db } from "mongodb"
 import { generator } from "@budibase/backend-core/tests"
 
 const expectValidId = expect.stringMatching(/^\w{24}$/)
@@ -40,8 +40,7 @@ describe("/queries", () => {
   async function withClient<T>(
     callback: (client: MongoClient) => Promise<T>
   ): Promise<T> {
-    const ds = await getDatasource(DatabaseName.MONGODB)
-    const client = new MongoClient(ds.config!.connectionString)
+    const client = new MongoClient(datasource.config!.connectionString)
     await client.connect()
     try {
       return await callback(client)
@@ -50,13 +49,16 @@ describe("/queries", () => {
     }
   }
 
+  async function withDb<T>(callback: (db: Db) => Promise<T>): Promise<T> {
+    return await withClient(async client => {
+      return await callback(client.db(datasource.config!.db))
+    })
+  }
+
   async function withCollection<T>(
     callback: (collection: Collection) => Promise<T>
   ): Promise<T> {
-    return await withClient(async client => {
-      const db = client.db(
-        (await getDatasource(DatabaseName.MONGODB)).config!.db
-      )
+    return await withDb(async db => {
       return await callback(db.collection(collection))
     })
   }
