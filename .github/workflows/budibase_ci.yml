@@ -108,6 +108,10 @@ jobs:
         with:
           node-version: 20.x
           cache: yarn
+      - name: Pull testcontainers images
+        run: |
+          docker pull budibase/couchdb
+
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
@@ -163,13 +167,15 @@ jobs:
 
       - name: Pull testcontainers images
         run: |
-          docker pull mcr.microsoft.com/mssql/server:2022-latest
-          docker pull mysql:8.3
-          docker pull postgres:16.1-bullseye
-          docker pull mongo:7.0-jammy
-          docker pull mariadb:lts
-          docker pull testcontainers/ryuk:0.5.1
-          docker pull budibase/couchdb
+          docker pull mcr.microsoft.com/mssql/server:2022-latest &
+          docker pull mysql:8.3 &
+          docker pull postgres:16.1-bullseye &
+          docker pull mongo:7.0-jammy &
+          docker pull mariadb:lts &
+          docker pull testcontainers/ryuk:0.5.1 &
+          docker pull budibase/couchdb &
+
+          wait $(jobs -p)
 
       - run: yarn --frozen-lockfile
 
