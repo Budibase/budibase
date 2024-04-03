@@ -85,7 +85,7 @@ export default {
   hasExtraData,
   formatResponse,
   storeDynamicVariable,
-  invalidateDynamicVariables: invalidateCachedVariable,
-  checkCacheForDynamicVariable: getCachedVariable,
+  invalidateCachedVariable,
+  getCachedVariable,
   threadSetup,
 }
