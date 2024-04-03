@@ -6,6 +6,7 @@ import {
   BulkImportRequest,
   BulkImportResponse,
   Operation,
+  RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
   Table,
@@ -25,9 +26,12 @@ function getDatasourceId(table: Table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
-export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+export async function save(
+  ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
+  renaming?: RenameColumn
+) {
   const inputs = ctx.request.body
-  const renaming = inputs?._rename
+  const adding = inputs?._add
   // can't do this right now
   delete inputs.rows
   const tableId = ctx.request.body._id
@@ -40,7 +44,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     const { datasource, table } = await sdk.tables.external.save(
       datasourceId!,
       inputs,
-      { tableId, renaming }
+      { tableId, renaming, adding }
     )
     builderSocket?.emitDatasourceUpdate(ctx, datasource)
     return table
@@ -57,9 +61,6 @@ export async function destroy(ctx: UserCtx) {
   const tableToDelete: TableRequest = await sdk.tables.getTable(
     ctx.params.tableId
   )
-  if (!tableToDelete || !tableToDelete.created) {
-    ctx.throw(400, "Cannot delete tables which weren't created in Budibase.")
-  }
   const datasourceId = getDatasourceId(tableToDelete)
   try {
     const { datasource, table } = await sdk.tables.external.destroy(

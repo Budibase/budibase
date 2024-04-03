@@ -18,7 +18,7 @@
   import { createPaginationStore } from "helpers/pagination"
   import { getContext, onDestroy, onMount } from "svelte"
   import dayjs from "dayjs"
-  import { auth, licensing, admin, apps } from "stores/portal"
+  import { auth, licensing, admin, appsStore } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import Portal from "svelte-portal"
 
@@ -36,7 +36,7 @@
   let status = null
   let timeRange = null
   let loaded = false
-  $: app = $apps.find(app => $appStore.appId?.includes(app.appId))
+  $: app = $appsStore.apps.find(app => $appStore.appId?.includes(app.appId))
   $: licensePlan = $auth.user?.license?.plan
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
@@ -129,7 +129,7 @@
 
   async function save({ detail }) {
     try {
-      await apps.update($appStore.appId, {
+      await appsStore.save($appStore.appId, {
         automations: {
           chainAutomations: detail,
         },

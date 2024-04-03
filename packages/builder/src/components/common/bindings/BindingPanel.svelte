@@ -1,74 +1,194 @@
 <script>
   import {
     DrawerContent,
-    Tabs,
-    Tab,
+    ActionButton,
+    Icon,
+    Heading,
     Body,
     Button,
-    ActionButton,
-    Heading,
-    Icon,
   } from "@budibase/bbui"
-  import { createEventDispatcher, onMount, getContext } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import {
-    isValid,
     decodeJSBinding,
     encodeJSBinding,
-    convertToJS,
+    processStringSync,
   } from "@budibase/string-templates"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "dataBinding"
-
-  import { admin } from "stores/portal"
+  import { readableToRuntimeBinding } from "dataBinding"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
   import {
     getHelperCompletions,
     jsAutocomplete,
     hbAutocomplete,
+    snippetAutoComplete,
     EditorModes,
     bindingsToCompletions,
   } from "../CodeEditor"
-  import BindingPicker from "./BindingPicker.svelte"
+  import BindingSidePanel from "./BindingSidePanel.svelte"
+  import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
+  import SnippetSidePanel from "./SnippetSidePanel.svelte"
   import { BindingHelpers } from "./utils"
+  import formatHighlight from "json-format-highlight"
+  import { capitalise } from "helpers"
+  import { Utils } from "@budibase/frontend-core"
+  import { licensing } from "stores/portal"
 
   const dispatch = createEventDispatcher()
 
-  export let bindings
-  // jsValue/hbsValue are the state of the value that is being built
-  // within this binding panel - the value should not be updated until
-  // the binding panel is saved. This is the default value of the
-  // expression when the binding panel is opened, but shouldn't be updated.
+  export let bindings = []
   export let value = ""
-  export let valid
+  export let allowHBS = true
   export let allowJS = false
   export let allowHelpers = true
+  export let allowSnippets = true
+  export let context = null
+  export let snippets = null
   export let autofocusEditor = false
+  export let placeholder = null
+  export let showTabBar = true
 
-  const drawerActions = getContext("drawer-actions")
-  const bindingDrawerActions = getContext("binding-drawer-actions")
+  const Modes = {
+    Text: "Text",
+    JavaScript: "JavaScript",
+  }
+  const SidePanels = {
+    Bindings: "FlashOn",
+    Evaluation: "Play",
+    Snippets: "Code",
+  }
 
-  let getCaretPosition
-  let insertAtPos
-  let initialValueJS = typeof value === "string" && value?.startsWith("{{ js ")
-  let mode = initialValueJS ? "JavaScript" : "Text"
+  let mode
+  let sidePanel
+  let initialValueJS = value?.startsWith?.("{{ js ")
   let jsValue = initialValueJS ? value : null
   let hbsValue = initialValueJS ? null : value
-  let sidebar = true
+  let getCaretPosition
+  let insertAtPos
   let targetMode = null
+  let expressionResult
+  let evaluating = false
 
-  $: usingJS = mode === "JavaScript"
+  $: useSnippets = allowSnippets && !$licensing.isFreePlan
+  $: editorModeOptions = getModeOptions(allowHBS, allowJS)
+  $: sidePanelOptions = getSidePanelOptions(
+    bindings,
+    context,
+    allowSnippets,
+    mode
+  )
+  $: enrichedBindings = enrichBindings(bindings, context, snippets)
+  $: usingJS = mode === Modes.JavaScript
   $: editorMode =
-    mode === "JavaScript" ? EditorModes.JS : EditorModes.Handlebars
-  $: bindingCompletions = bindingsToCompletions(bindings, editorMode)
+    mode === Modes.JavaScript ? EditorModes.JS : EditorModes.Handlebars
+  $: editorValue = editorMode === EditorModes.JS ? jsValue : hbsValue
+  $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
+  $: requestEval(runtimeExpression, context, snippets)
+  $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
+  $: hbsCompletions = getHBSCompletions(bindingCompletions)
+  $: jsCompletions = getJSCompletions(bindingCompletions, snippets, useSnippets)
+  $: {
+    // Ensure a valid side panel option is always selected
+    if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
+      sidePanel = sidePanelOptions[0]
+    }
+  }
+
+  const getHBSCompletions = bindingCompletions => {
+    return [
+      hbAutocomplete([
+        ...bindingCompletions,
+        ...getHelperCompletions(EditorModes.Handlebars),
+      ]),
+    ]
+  }
+
+  const getJSCompletions = (bindingCompletions, snippets, useSnippets) => {
+    const completions = [
+      jsAutocomplete([
+        ...bindingCompletions,
+        ...getHelperCompletions(EditorModes.JS),
+      ]),
+    ]
+    if (useSnippets) {
+      completions.push(snippetAutoComplete(snippets))
+    }
+    return completions
+  }
+
+  const getModeOptions = (allowHBS, allowJS) => {
+    let options = []
+    if (allowHBS) {
+      options.push(Modes.Text)
+    }
+    if (allowJS) {
+      options.push(Modes.JavaScript)
+    }
+    return options
+  }
+
+  const getSidePanelOptions = (bindings, context, useSnippets, mode) => {
+    let options = []
+    if (bindings?.length) {
+      options.push(SidePanels.Bindings)
+    }
+    if (context) {
+      options.push(SidePanels.Evaluation)
+    }
+    if (useSnippets && mode === Modes.JavaScript) {
+      options.push(SidePanels.Snippets)
+    }
+    return options
+  }
+
+  const debouncedEval = Utils.debounce((expression, context, snippets) => {
+    expressionResult = processStringSync(expression || "", {
+      ...context,
+      snippets,
+    })
+    evaluating = false
+  }, 260)
+
+  const requestEval = (expression, context, snippets) => {
+    evaluating = true
+    debouncedEval(expression, context, snippets)
+  }
+
+  const getBindingValue = (binding, context, snippets) => {
+    const js = `return $("${binding.runtimeBinding}")`
+    const hbs = encodeJSBinding(js)
+    const res = processStringSync(hbs, { ...context, snippets })
+    return JSON.stringify(res, null, 2)
+  }
+
+  const highlightJSON = json => {
+    return formatHighlight(json, {
+      keyColor: "#e06c75",
+      numberColor: "#e5c07b",
+      stringColor: "#98c379",
+      trueColor: "#d19a66",
+      falseColor: "#d19a66",
+      nullColor: "#c678dd",
+    })
+  }
+
+  const enrichBindings = (bindings, context, snippets) => {
+    return bindings.map(binding => {
+      if (!context) {
+        return binding
+      }
+      const value = getBindingValue(binding, context, snippets)
+      return {
+        ...binding,
+        value,
+        valueHTML: highlightJSON(value),
+      }
+    })
+  }
 
   const updateValue = val => {
-    valid = isValid(readableToRuntimeBinding(bindings, val))
-    if (valid) {
-      dispatch("change", val)
-    }
+    const runtimeExpression = readableToRuntimeBinding(enrichedBindings, val)
+    dispatch("change", val)
+    requestEval(runtimeExpression, context, snippets)
   }
 
   const onSelectHelper = (helper, js) => {
@@ -80,9 +200,34 @@
     bindingHelpers.onSelectBinding(js ? jsValue : hbsValue, binding, { js })
   }
 
-  const onChangeMode = e => {
-    mode = e.detail
-    updateValue(mode === "JavaScript" ? jsValue : hbsValue)
+  const changeMode = newMode => {
+    if (targetMode || newMode === mode) {
+      return
+    }
+
+    // Get the raw editor value to see if we are abandoning changes
+    let rawValue = editorValue
+    if (mode === Modes.JavaScript) {
+      rawValue = decodeJSBinding(rawValue)
+    }
+
+    if (rawValue?.length) {
+      targetMode = newMode
+    } else {
+      mode = newMode
+    }
+  }
+
+  const confirmChangeMode = () => {
+    jsValue = null
+    hbsValue = null
+    updateValue(null)
+    mode = targetMode
+    targetMode = null
+  }
+
+  const changeSidePanel = newSidePanel => {
+    sidePanel = newSidePanel === sidePanel ? null : newSidePanel
   }
 
   const onChangeHBSValue = e => {
@@ -95,374 +240,189 @@
     updateValue(jsValue)
   }
 
-  const switchMode = () => {
-    if (targetMode == "Text") {
-      jsValue = null
-      updateValue(jsValue)
-    } else {
-      hbsValue = null
-      updateValue(hbsValue)
-    }
-    mode = targetMode + ""
-    targetMode = null
-  }
-
-  const convert = () => {
-    const runtime = readableToRuntimeBinding(bindings, hbsValue)
-    const runtimeJs = encodeJSBinding(convertToJS(runtime))
-    jsValue = runtimeToReadableBinding(bindings, runtimeJs)
-    hbsValue = null
-    mode = "JavaScript"
-    onSelectBinding("", { forceJS: true })
-  }
-
   onMount(() => {
-    valid = isValid(readableToRuntimeBinding(bindings, value))
+    // Set the initial mode appropriately
+    const initialValueMode = initialValueJS ? Modes.JavaScript : Modes.Text
+    if (editorModeOptions.includes(initialValueMode)) {
+      mode = initialValueMode
+    } else {
+      mode = editorModeOptions[0]
+    }
+
+    // Set the initial side panel
+    sidePanel = sidePanelOptions[0]
   })
 </script>
 
-<span class="binding-drawer">
-  <DrawerContent>
+<DrawerContent padding={false}>
+  <div class="binding-panel">
     <div class="main">
-      <Tabs
-        selected={mode}
-        on:select={onChangeMode}
-        beforeSwitch={selectedMode => {
-          if (selectedMode == mode) {
-            return true
-          }
-
-          //Get the current mode value
-          const editorValue = usingJS ? decodeJSBinding(jsValue) : hbsValue
-
-          if (editorValue) {
-            targetMode = selectedMode
-            return false
-          }
-          return true
-        }}
-      >
-        <Tab title="Text">
-          <div class="main-content" class:binding-panel={sidebar}>
-            <div class="editor">
-              <div class="overlay-wrap">
-                {#if targetMode}
-                  <div class="mode-overlay">
-                    <div class="prompt-body">
-                      <Heading size="S">
-                        {`Switch to ${targetMode}?`}
-                      </Heading>
-                      <Body>This will discard anything in your binding</Body>
-                      <div class="switch-actions">
-                        <Button
-                          secondary
-                          size="S"
-                          on:click={() => {
-                            targetMode = null
-                          }}
-                        >
-                          No - keep text
-                        </Button>
-                        <Button cta size="S" on:click={switchMode}>
-                          Yes - discard text
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                {/if}
-                <CodeEditor
-                  value={hbsValue}
-                  on:change={onChangeHBSValue}
-                  bind:getCaretPosition
-                  bind:insertAtPos
-                  completions={[
-                    hbAutocomplete([
-                      ...bindingCompletions,
-                      ...getHelperCompletions(editorMode),
-                    ]),
-                  ]}
-                  placeholder=""
-                  height="100%"
-                  autofocus={autofocusEditor}
-                />
-              </div>
-              <div class="binding-footer">
-                <div class="messaging">
-                  {#if !valid}
-                    <div class="syntax-error">
-                      Current Handlebars syntax is invalid, please check the
-                      guide
-                      <a href="https://handlebarsjs.com/guide/" target="_blank"
-                        >here</a
-                      >
-                      for more details.
-                    </div>
-                  {:else}
-                    <Icon name="FlashOn" />
-                    <div class="messaging-wrap">
-                      <div>
-                        Add available bindings by typing &#123;&#123; or use the
-                        menu on the right
-                      </div>
-                    </div>
-                  {/if}
-                </div>
-                <div class="actions">
-                  {#if $admin.isDev && allowJS}
-                    <ActionButton
-                      secondary
-                      on:click={() => {
-                        convert()
-                        targetMode = null
-                      }}
-                    >
-                      Convert To JS
-                    </ActionButton>
-                  {/if}
-                  <ActionButton
-                    secondary
-                    icon={sidebar ? "RailRightClose" : "RailRightOpen"}
-                    on:click={() => {
-                      sidebar = !sidebar
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {#if sidebar}
-              <div class="binding-picker">
-                <BindingPicker
-                  {bindings}
-                  {allowHelpers}
-                  addHelper={onSelectHelper}
-                  addBinding={onSelectBinding}
-                  mode={editorMode}
-                />
-              </div>
-            {/if}
+      {#if showTabBar}
+        <div class="tabs">
+          <div class="editor-tabs">
+            {#each editorModeOptions as editorMode}
+              <ActionButton
+                size="M"
+                quiet
+                selected={mode === editorMode}
+                on:click={() => changeMode(editorMode)}
+              >
+                {capitalise(editorMode)}
+              </ActionButton>
+            {/each}
           </div>
-        </Tab>
-        {#if allowJS}
-          <Tab title="JavaScript">
-            <div class="main-content" class:binding-panel={sidebar}>
-              <div class="editor">
-                <div class="overlay-wrap">
-                  {#if targetMode}
-                    <div class="mode-overlay">
-                      <div class="prompt-body">
-                        <Heading size="S">
-                          {`Switch to ${targetMode}?`}
-                        </Heading>
-                        <Body>This will discard anything in your binding</Body>
-                        <div class="switch-actions">
-                          <Button
-                            secondary
-                            size="S"
-                            on:click={() => {
-                              targetMode = null
-                            }}
-                          >
-                            No - keep javascript
-                          </Button>
-                          <Button cta size="S" on:click={switchMode}>
-                            Yes - discard javascript
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  {/if}
-
-                  <CodeEditor
-                    value={decodeJSBinding(jsValue)}
-                    on:change={onChangeJSValue}
-                    completions={[
-                      jsAutocomplete([
-                        ...bindingCompletions,
-                        ...getHelperCompletions(editorMode),
-                      ]),
-                    ]}
-                    mode={EditorModes.JS}
-                    bind:getCaretPosition
-                    bind:insertAtPos
-                    height="100%"
-                    autofocus={autofocusEditor}
-                  />
-                </div>
-                <div class="binding-footer">
-                  <div class="messaging">
-                    <Icon name="FlashOn" />
-                    <div class="messaging-wrap">
-                      <div>
-                        Add available bindings by typing $ or use the menu on
-                        the right
-                      </div>
-                    </div>
-                  </div>
-                  <div class="actions">
-                    <ActionButton
-                      secondary
-                      icon={sidebar ? "RailRightClose" : "RailRightOpen"}
-                      on:click={() => {
-                        sidebar = !sidebar
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {#if sidebar}
-                <div class="binding-picker">
-                  <BindingPicker
-                    {bindings}
-                    {allowHelpers}
-                    addHelper={onSelectHelper}
-                    addBinding={onSelectBinding}
-                    mode={editorMode}
-                  />
-                </div>
-              {/if}
-            </div>
-          </Tab>
-        {/if}
-        <div class="drawer-actions">
-          {#if typeof drawerActions?.hide === "function" && drawerActions?.headless}
-            <Button
-              secondary
-              quiet
-              on:click={() => {
-                drawerActions.hide()
-              }}
-            >
-              Cancel
-            </Button>
-          {/if}
-          {#if typeof bindingDrawerActions?.save === "function" && drawerActions?.headless}
-            <Button
-              cta
-              disabled={!valid}
-              on:click={() => {
-                bindingDrawerActions.save()
-              }}
-            >
-              Save
-            </Button>
-          {/if}
+          <div class="side-tabs">
+            {#each sidePanelOptions as panel}
+              <ActionButton
+                size="M"
+                quiet
+                selected={sidePanel === panel}
+                on:click={() => changeSidePanel(panel)}
+              >
+                <Icon name={panel} size="S" />
+              </ActionButton>
+            {/each}
+          </div>
         </div>
-      </Tabs>
+      {/if}
+      <div class="editor">
+        {#if mode === Modes.Text}
+          {#key hbsCompletions}
+            <CodeEditor
+              value={hbsValue}
+              on:change={onChangeHBSValue}
+              bind:getCaretPosition
+              bind:insertAtPos
+              completions={hbsCompletions}
+              autofocus={autofocusEditor}
+              placeholder={placeholder ||
+                "Add bindings by typing {{ or use the menu on the right"}
+              jsBindingWrapping={false}
+            />
+          {/key}
+        {:else if mode === Modes.JavaScript}
+          {#key jsCompletions}
+            <CodeEditor
+              value={decodeJSBinding(jsValue)}
+              on:change={onChangeJSValue}
+              completions={jsCompletions}
+              mode={EditorModes.JS}
+              bind:getCaretPosition
+              bind:insertAtPos
+              autofocus={autofocusEditor}
+              placeholder={placeholder ||
+                "Add bindings by typing $ or use the menu on the right"}
+              jsBindingWrapping
+            />
+          {/key}
+        {/if}
+        {#if targetMode}
+          <div class="mode-overlay">
+            <div class="prompt-body">
+              <Heading size="S">
+                Switch to {targetMode}?
+              </Heading>
+              <Body>This will discard anything in your binding</Body>
+              <div class="switch-actions">
+                <Button
+                  secondary
+                  size="S"
+                  on:click={() => {
+                    targetMode = null
+                  }}
+                >
+                  No - keep {mode}
+                </Button>
+                <Button cta size="S" on:click={confirmChangeMode}>
+                  Yes - discard {mode}
+                </Button>
+              </div>
+            </div>
+          </div>
+        {/if}
+      </div>
     </div>
-  </DrawerContent>
-</span>
+    <div class="side" class:visible={!!sidePanel}>
+      {#if sidePanel === SidePanels.Bindings}
+        <BindingSidePanel
+          bindings={enrichedBindings}
+          {allowHelpers}
+          {context}
+          addHelper={onSelectHelper}
+          addBinding={onSelectBinding}
+          mode={editorMode}
+        />
+      {:else if sidePanel === SidePanels.Evaluation}
+        <EvaluationSidePanel
+          {expressionResult}
+          {evaluating}
+          expression={editorValue}
+        />
+      {:else if sidePanel === SidePanels.Snippets}
+        <SnippetSidePanel
+          addSnippet={snippet => bindingHelpers.onSelectSnippet(snippet)}
+          {snippets}
+        />
+      {/if}
+    </div>
+  </div>
+</DrawerContent>
 
 <style>
-  .binding-drawer :global(.container > .main) {
-    overflow: hidden;
+  .binding-panel {
     height: 100%;
-    padding: 0px;
-  }
-
-  .binding-drawer :global(.container > .main > .main) {
-    overflow: hidden;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .binding-drawer :global(.spectrum-Tabs-content) {
-    flex: 1;
     overflow: hidden;
   }
-
-  .binding-drawer :global(.spectrum-Tabs-content > div),
-  .binding-drawer :global(.spectrum-Tabs-content > div > div),
-  .binding-drawer :global(.spectrum-Tabs-content .main-content) {
-    height: 100%;
-  }
-
-  .binding-drawer .main-content {
-    grid-template-rows: unset;
-  }
-
-  .messaging {
+  .binding-panel,
+  .tabs {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-m);
-    min-width: 0;
-    flex: 1;
-  }
-  .messaging-wrap {
-    overflow: hidden;
-  }
-  .messaging-wrap > div {
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-  .main :global(textarea) {
-    min-height: 202px !important;
-  }
-
-  .main-content {
-    padding: var(--spacing-s) var(--spacing-xl);
-  }
-
-  .main :global(.spectrum-Tabs div.drawer-actions) {
-    display: flex;
-    gap: var(--spacing-m);
-    margin-left: auto;
-  }
-
-  .main :global(.spectrum-Tabs-content),
-  .main :global(.spectrum-Tabs-content .main-content) {
-    margin-top: 0px;
-    padding: 0px;
-  }
-
-  .main :global(.spectrum-Tabs) {
-    display: flex;
-  }
-
-  .syntax-error {
-    color: var(--red);
-    font-size: 12px;
-  }
-  .syntax-error a {
-    color: var(--red);
-    text-decoration: underline;
-  }
-
-  .binding-footer {
-    width: 100%;
-    display: flex;
+    flex-direction: row;
     justify-content: space-between;
+    align-items: stretch;
   }
-  .main-content {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 380px;
-  }
-  .main-content.binding-panel {
-    grid-template-columns: 1fr 320px;
-  }
-  .binding-picker {
-    border-left: 2px solid var(--border-light);
-    border-left: var(--border-light);
-    overflow: scroll;
-    height: 100%;
-  }
-  .editor {
-    padding: var(--spacing-xl);
-    min-width: 0;
+  .main {
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
-    overflow: hidden;
+    justify-content: flex-start;
+    align-items: stretch;
   }
-  .overlay-wrap {
+  .side {
+    overflow: hidden;
+    flex: 0 0 360px;
+    margin-right: -360px;
+    transition: margin-right 130ms ease-out;
+  }
+  .side.visible {
+    margin-right: 0;
+  }
+
+  /* Tabs */
+  .tabs {
+    padding: var(--spacing-m);
+    border-bottom: var(--border-light);
+  }
+  .editor-tabs,
+  .side-tabs {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .side-tabs :global(.icon) {
+    width: 16px;
+    display: flex;
+  }
+
+  /* Editor */
+  .editor {
+    flex: 1 1 auto;
+    height: 0;
     position: relative;
-    flex: 1;
-    overflow: hidden;
   }
+
+  /* Overlay */
   .mode-overlay {
     position: absolute;
     top: 0;
@@ -471,6 +431,7 @@
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     background-color: var(
@@ -489,10 +450,5 @@
   .prompt-body .switch-actions {
     display: flex;
     gap: var(--spacing-l);
-  }
-
-  .binding-drawer :global(.code-editor),
-  .binding-drawer :global(.code-editor > div) {
-    height: 100%;
   }
 </style>

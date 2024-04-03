@@ -68,7 +68,7 @@
       "primary": [
         "personid"
       ],
-      "name": "a",
+      "name": "persons",
       "schema": {
         "year": {
           "type": "number",

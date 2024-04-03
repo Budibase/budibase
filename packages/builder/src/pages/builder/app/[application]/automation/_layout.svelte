@@ -40,7 +40,7 @@
 <!-- routify:options index=3 -->
 <div class="root">
   <AutomationPanel {modal} {webhookModal} />
-  <div class="content">
+  <div class="content drawer-container">
     {#if $automationStore.automations?.length}
       <slot />
     {:else}

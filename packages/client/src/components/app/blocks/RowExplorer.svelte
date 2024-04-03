@@ -3,6 +3,8 @@
   import BlockComponent from "components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { generate } from "shortid"
+  import { get } from "svelte/store"
+  import { getContext } from "svelte"
 
   export let dataSource
   export let height
@@ -17,9 +19,20 @@
   export let autoRefresh
 
   const stateKey = generate()
+  const context = getContext("context")
+  const { generateGoldenSample } = getContext("sdk")
 
   let listDataProviderId
   let listRepeaterId
+
+  // Provide additional data context for live binding eval
+  export const getAdditionalDataContext = () => {
+    const rows = get(context)[listDataProviderId]?.rows || []
+    const goldenRow = generateGoldenSample(rows)
+    return {
+      [listRepeaterId]: goldenRow,
+    }
+  }
 </script>
 
 <Block>

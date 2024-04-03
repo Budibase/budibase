@@ -42,6 +42,7 @@ const loadBudibase = async () => {
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
     location: window["##BUDIBASE_LOCATION##"],
+    snippets: window["##BUDIBASE_SNIPPETS##"],
   })
 
   // Set app ID - this window flag is set by both the preview and the real
@@ -84,8 +85,20 @@ const loadBudibase = async () => {
       } else {
         dndStore.actions.reset()
       }
+    } else if (type === "request-context") {
+      const { selectedComponentInstance } = get(componentStore)
+      const context = selectedComponentInstance?.getDataContext()
+      let stringifiedContext = null
+      try {
+        stringifiedContext = JSON.stringify(context)
+      } catch (error) {
+        // Ignore - invalid context
+      }
+      eventStore.actions.dispatchEvent("provide-context", {
+        context: stringifiedContext,
+      })
     } else if (type === "hover-component") {
-      hoverStore.actions.hoverComponent(data)
+      hoverStore.actions.hoverComponent(data, false)
     } else if (type === "builder-meta") {
       builderStore.actions.setMetadata(data)
     }

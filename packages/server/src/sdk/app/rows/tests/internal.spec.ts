@@ -98,7 +98,10 @@ describe("sdk >> rows >> internal", () => {
           },
         })
 
-        const persistedRow = await config.getRow(table._id!, response.row._id!)
+        const persistedRow = await config.api.row.get(
+          table._id!,
+          response.row._id!
+        )
         expect(persistedRow).toEqual({
           ...row,
           type: "row",
@@ -157,7 +160,10 @@ describe("sdk >> rows >> internal", () => {
           },
         })
 
-        const persistedRow = await config.getRow(table._id!, response.row._id!)
+        const persistedRow = await config.api.row.get(
+          table._id!,
+          response.row._id!
+        )
         expect(persistedRow).toEqual({
           ...row,
           type: "row",

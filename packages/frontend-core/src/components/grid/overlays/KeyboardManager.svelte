@@ -40,16 +40,18 @@
       }
     }
 
+    // Handle certain key presses regardless of selection state
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && $config.canAddRows) {
+      e.preventDefault()
+      dispatch("add-row-inline")
+      return
+    }
+
     // If nothing selected avoid processing further key presses
     if (!$focusedCellId) {
       if (e.key === "Tab" || e.key?.startsWith("Arrow")) {
         e.preventDefault()
         focusFirstCell()
-      } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        if ($config.canAddRows) {
-          e.preventDefault()
-          dispatch("add-row-inline")
-        }
       } else if (e.key === "Delete" || e.key === "Backspace") {
         if (Object.keys($selectedRows).length && $config.canDeleteRows) {
           dispatch("request-bulk-delete")
@@ -217,14 +219,14 @@
       const type = $focusedCellAPI.getType()
       if (type === "number" && keyCodeIsNumber(keyCode)) {
         // Update the value locally but don't save it yet
-        $focusedCellAPI.setValue(parseInt(key), { save: false })
+        $focusedCellAPI.setValue(parseInt(key), { apply: false })
         $focusedCellAPI.focus()
       } else if (
         ["string", "barcodeqr", "longform"].includes(type) &&
         (keyCodeIsLetter(keyCode) || keyCodeIsNumber(keyCode))
       ) {
         // Update the value locally but don't save it yet
-        $focusedCellAPI.setValue(key, { save: false })
+        $focusedCellAPI.setValue(key, { apply: false })
         $focusedCellAPI.focus()
       }
     }

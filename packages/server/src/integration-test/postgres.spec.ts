@@ -319,6 +319,7 @@ describe("postgres integrations", () => {
       },
       plus: true,
       source: "POSTGRES",
+      isSQL: true,
       type: "datasource_plus",
       _id: expect.any(String),
       _rev: expect.any(String),
@@ -398,7 +399,7 @@ describe("postgres integrations", () => {
         expect(res.status).toBe(200)
         expect(res.body).toEqual(updatedRow)
 
-        const persistedRow = await config.getRow(
+        const persistedRow = await config.api.row.get(
           primaryPostgresTable._id!,
           row.id
         )
@@ -1040,28 +1041,37 @@ describe("postgres integrations", () => {
 
   describe("POST /api/datasources/verify", () => {
     it("should be able to verify the connection", async () => {
-      const response = await config.api.datasource.verify({
-        datasource: await databaseTestProviders.postgres.datasource(),
-      })
-      expect(response.status).toBe(200)
-      expect(response.body.connected).toBe(true)
+      await config.api.datasource.verify(
+        {
+          datasource: await databaseTestProviders.postgres.datasource(),
+        },
+        {
+          body: {
+            connected: true,
+          },
+        }
+      )
     })
 
     it("should state an invalid datasource cannot connect", async () => {
       const dbConfig = await databaseTestProviders.postgres.datasource()
-      const response = await config.api.datasource.verify({
-        datasource: {
-          ...dbConfig,
-          config: {
-            ...dbConfig.config,
-            password: "wrongpassword",
+      await config.api.datasource.verify(
+        {
+          datasource: {
+            ...dbConfig,
+            config: {
+              ...dbConfig.config,
+              password: "wrongpassword",
+            },
           },
         },
-      })
-
-      expect(response.status).toBe(200)
-      expect(response.body.connected).toBe(false)
-      expect(response.body.error).toBeDefined()
+        {
+          body: {
+            connected: false,
+            error: 'password authentication failed for user "postgres"',
+          },
+        }
+      )
     })
   })
 

@@ -70,7 +70,7 @@ describe("REST Integration", () => {
         Accept: "text/html",
       },
     }
-    const response = await config.integration.read(query)
+    await config.integration.read(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       headers: {
         Accept: "text/html",
@@ -91,7 +91,7 @@ describe("REST Integration", () => {
         name: "test",
       }),
     }
-    const response = await config.integration.update(query)
+    await config.integration.update(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "PUT",
       body: '{"name":"test"}',
@@ -111,7 +111,7 @@ describe("REST Integration", () => {
         name: "test",
       }),
     }
-    const response = await config.integration.delete(query)
+    await config.integration.delete(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "DELETE",
       headers: HEADERS,
@@ -418,9 +418,9 @@ describe("REST Integration", () => {
       })
       // @ts-ignore
       const sentData = fetch.mock.calls[0][1].body
-      expect(sentData.has(pageParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(pageParam)).toEqual(pageValue.toString())
-      expect(sentData.has(sizeParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
     })
   })
@@ -551,9 +551,9 @@ describe("REST Integration", () => {
       })
       // @ts-ignore
       const sentData = fetch.mock.calls[0][1].body
-      expect(sentData.has(pageParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(pageParam)).toEqual(pageValue.toString())
-      expect(sentData.has(sizeParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
       expect(res.pagination.cursor).toEqual(123)
     })

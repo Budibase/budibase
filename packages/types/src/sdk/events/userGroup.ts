@@ -48,7 +48,7 @@ export interface GroupAddedOnboardingEvent extends BaseEvent {
 }
 
 export interface GroupPermissionsEditedEvent extends BaseEvent {
-  permissions: Record<string, string>
+  permissions: Record<string, string | undefined>
   groupId: string
   audited: {
     name: string

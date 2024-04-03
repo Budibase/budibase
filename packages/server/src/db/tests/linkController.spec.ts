@@ -100,7 +100,7 @@ describe("test the link controller", () => {
     const { _id } = await config.createRow(
       basicLinkedRow(t1._id!, row._id!, linkField)
     )
-    return config.getRow(t1._id!, _id!)
+    return config.api.row.get(t1._id!, _id!)
   }
 
   it("should be able to confirm if two table schemas are equal", async () => {

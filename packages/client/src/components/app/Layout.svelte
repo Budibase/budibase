@@ -36,6 +36,7 @@
   export let pageWidth
   export let logoLinkUrl
   export let openLogoLinkInNewTab
+  export let textAlign
 
   export let embedded = false
 
@@ -226,7 +227,7 @@
                   {/if}
                 {/if}
                 {#if !hideTitle && title}
-                  <Heading size="S">{title}</Heading>
+                  <Heading size="S" {textAlign}>{title}</Heading>
                 {/if}
               </div>
               {#if !embedded}
@@ -290,7 +291,10 @@
   <div
     id="side-panel-container"
     class:open={$sidePanelStore.open}
-    use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
+    use:clickOutside={{
+      callback: autoCloseSidePanel ? sidePanelStore.actions.close : null,
+      allowedType: "mousedown",
+    }}
     class:builder={$builderStore.inBuilder}
   >
     <div class="side-panel-header">

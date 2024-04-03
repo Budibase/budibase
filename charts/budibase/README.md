@@ -140,7 +140,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | ingress.className | string | `""` | What ingress class to use. |
 | ingress.enabled | bool | `true` | Whether to create an Ingress resource pointing to the Budibase proxy. |
 | ingress.hosts | list | `[]` | Standard hosts block for the Ingress resource. Defaults to pointing to the Budibase proxy. |
-| nameOverride | string | `""` | Override the name of the deploymen. Defaults to {{ .Chart.Name }}. |
+| nameOverride | string | `""` | Override the name of the deployment. Defaults to {{ .Chart.Name }}. |
 | service.port | int | `10000` | Port to expose on the service. |
 | service.type | string | `"ClusterIP"` | Service type for the service that points to the main Budibase proxy pod. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |

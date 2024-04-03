@@ -58,13 +58,13 @@
     }
     let clonedSchema = {}
     if (!allowedFields?.length) {
-      clonedSchema = schema
+      clonedSchema = schema || {}
     } else {
       allowedFields?.forEach(field => {
-        if (schema[field.name]) {
+        if (schema?.[field.name]) {
           clonedSchema[field.name] = schema[field.name]
           clonedSchema[field.name].displayName = field.displayName
-        } else if (schema[field]) {
+        } else if (schema?.[field]) {
           clonedSchema[field] = schema[field]
         }
       })
@@ -92,9 +92,9 @@
 {#if schemaLoaded}
   <Button
     onClick={openEditor}
-    icon="Properties"
+    icon="ri-filter-3-line"
     text="Filter"
-    {size}
+    size="XL"
     type="secondary"
     quiet
     active={filters?.length > 0}

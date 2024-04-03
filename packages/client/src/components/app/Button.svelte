@@ -13,9 +13,10 @@
   export let size = "M"
   export let type = "cta"
   export let quiet = false
+  export let icon = null
+  export let gap = "M"
 
   // For internal use only for now - not defined in the manifest
-  export let icon = null
   export let active = false
 
   const handleOnClick = async () => {
@@ -47,7 +48,7 @@
 
 {#key $component.editing}
   <button
-    class={`spectrum-Button spectrum-Button--size${size} spectrum-Button--${type}`}
+    class={`spectrum-Button spectrum-Button--size${size} spectrum-Button--${type} gap-${gap}`}
     class:spectrum-Button--quiet={quiet}
     disabled={disabled || handlingOnClick}
     use:styleable={$component.styles}
@@ -58,15 +59,7 @@
     class:active
   >
     {#if icon}
-      <svg
-        class:hasText={componentText?.length > 0}
-        class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
-        focusable="false"
-        aria-hidden="true"
-        aria-label={icon}
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
+      <i class="{icon} {size}" />
     {/if}
     {componentText}
   </button>
@@ -91,5 +84,14 @@
   }
   .active {
     color: var(--spectrum-global-color-blue-600);
+  }
+  .gap-S {
+    gap: 8px;
+  }
+  .gap-M {
+    gap: 16px;
+  }
+  .gap-L {
+    gap: 32px;
   }
 </style>

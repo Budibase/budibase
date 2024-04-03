@@ -1146,7 +1146,7 @@ export const getAllStateVariables = () => {
         "@budibase/standard-components/multistepformblockstep"
       )
 
-      steps.forEach(step => {
+      steps?.forEach(step => {
         parseComponentSettings(stepDefinition, step)
       })
     })

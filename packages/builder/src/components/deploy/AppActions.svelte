@@ -19,7 +19,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import analytics, { Events, EventSource } from "analytics"
   import { API } from "api"
-  import { apps } from "stores/portal"
+  import { appsStore } from "stores/portal"
   import {
     previewStore,
     builderStore,
@@ -32,9 +32,13 @@
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
+  import { onMount } from "svelte"
+  import PosthogClient from "../../analytics/PosthogClient"
 
   export let application
   export let loaded
+
+  const posthog = new PosthogClient(process.env.POSTHOG_TOKEN)
 
   let unpublishModal
   let updateAppModal
@@ -44,8 +48,10 @@
   let appActionPopoverOpen = false
   let appActionPopoverAnchor
   let publishing = false
+  let showNpsSurvey = false
+  let lastOpened
 
-  $: filteredApps = $apps.filter(app => app.devId === application)
+  $: filteredApps = $appsStore.apps.filter(app => app.devId === application)
   $: selectedApp = filteredApps?.length ? filteredApps[0] : null
   $: latestDeployments = $deploymentStore
     .filter(deployment => deployment.status === "SUCCESS")
@@ -57,7 +63,7 @@
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
   $: canPublish = !publishing && loaded && $sortedScreens.length > 0
-  $: lastDeployed = getLastDeployedString($deploymentStore)
+  $: lastDeployed = getLastDeployedString($deploymentStore, lastOpened)
 
   const initialiseApp = async () => {
     const applicationPkg = await API.fetchAppPackage($appStore.devId)
@@ -97,6 +103,7 @@
         type: "success",
         icon: "GlobeCheck",
       })
+      showNpsSurvey = true
       await completePublish()
     } catch (error) {
       console.error(error)
@@ -129,7 +136,7 @@
     }
     try {
       await API.unpublishApp(selectedApp.prodId)
-      await apps.load()
+      await appsStore.load()
       notifications.send("App unpublished", {
         type: "success",
         icon: "GlobeStrike",
@@ -141,12 +148,16 @@
 
   const completePublish = async () => {
     try {
-      await apps.load()
+      await appsStore.load()
       await deploymentStore.load()
     } catch (err) {
       notifications.error("Error refreshing app")
     }
   }
+
+  onMount(() => {
+    posthog.init()
+  })
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -164,9 +175,10 @@
       </div>
     {/if}
     <TourWrap
-      tourStepKey={$builderStore.onboarding
-        ? TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT
-        : TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT}
+      stepKeys={[
+        TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT,
+        TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT,
+      ]}
     >
       <div class="app-action-button users">
         <div class="app-action" id="builder-app-users-button">
@@ -200,6 +212,7 @@
       class="app-action-button publish app-action-popover"
       on:click={() => {
         if (!appActionPopoverOpen) {
+          lastOpened = new Date()
           appActionPopover.show()
         } else {
           appActionPopover.hide()
@@ -209,7 +222,7 @@
       <div bind:this={appActionPopoverAnchor}>
         <div class="app-action">
           <Icon name={isPublished ? "GlobeCheck" : "GlobeStrike"} />
-          <TourWrap tourStepKey={TOUR_STEP_KEYS.BUILDER_APP_PUBLISH}>
+          <TourWrap stepKeys={[TOUR_STEP_KEYS.BUILDER_APP_PUBLISH]}>
             <span class="publish-open" id="builder-app-publish-button">
               Publish
               <Icon
@@ -341,6 +354,10 @@
 
 <RevertModal bind:this={revertModal} />
 <VersionModal hideIcon bind:this={versionModal} />
+
+{#if showNpsSurvey}
+  <div class="nps-survey" />
+{/if}
 
 <style>
   .app-action-popover-content {

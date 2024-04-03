@@ -1,5 +1,5 @@
 import * as utils from "../utils"
-import { Duration, DurationType } from "../utils"
+import { Duration } from "../utils"
 import env from "../environment"
 import { getTenantId } from "../context"
 import * as redis from "../redis/init"
