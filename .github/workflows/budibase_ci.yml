@@ -92,6 +92,7 @@ jobs:
   test-libraries:
     runs-on: ubuntu-latest
     env:
+      DEBUG: testcontainers,testcontainers:exec,testcontainers:build,testcontainers:pull
       REUSE_CONTAINERS: true
       CONTAINER_NAMESPACE: test-libraries
     steps:
