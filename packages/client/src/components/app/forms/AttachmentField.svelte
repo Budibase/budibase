@@ -1,6 +1,7 @@
 <script>
   import Field from "./Field.svelte"
   import { CoreDropzone } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
   import { getContext } from "svelte"
 
   export let field
@@ -14,6 +15,11 @@
   export let maximum = undefined
   export let span
   export let helpText = null
+  export let type = FieldType.ATTACHMENTS
+  export let fieldApiMapper = {
+    get: value => value,
+    set: value => value,
+  }
 
   let fieldState
   let fieldApi
@@ -63,9 +69,10 @@
   }
 
   const handleChange = e => {
-    const changed = fieldApi.setValue(e.detail)
+    const value = fieldApiMapper.set(e.detail)
+    const changed = fieldApi.setValue(value)
     if (onChange && changed) {
-      onChange({ value: e.detail })
+      onChange({ value })
     }
   }
 </script>
@@ -78,14 +85,14 @@
   {validation}
   {span}
   {helpText}
-  type="attachment"
+  {type}
   bind:fieldState
   bind:fieldApi
   defaultValue={[]}
 >
   {#if fieldState}
     <CoreDropzone
-      value={fieldState.value}
+      value={fieldApiMapper.get(fieldState.value)}
       disabled={fieldState.disabled || fieldState.readonly}
       error={fieldState.error}
       on:change={handleChange}
