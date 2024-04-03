@@ -155,6 +155,11 @@ export async function inputProcessing(
           delete attachment.url
         })
       }
+    } else if (field.type === FieldType.ATTACHMENT_SINGLE) {
+      const attachment = clonedRow[key]
+      if (attachment?.url) {
+        delete clonedRow[key].url
+      }
     }
 
     if (field.type === FieldType.BB_REFERENCE && value) {
@@ -226,6 +231,16 @@ export async function outputProcessing<T extends Row[] | Row>(
             attachment.url = objectStore.getAppFileUrl(attachment.key)
           }
         })
+      }
+    } else if (column.type === FieldType.ATTACHMENT_SINGLE) {
+      for (let row of enriched) {
+        if (!row[property]) {
+          continue
+        }
+
+        if (!row[property].url) {
+          row[property].url = objectStore.getAppFileUrl(row[property].key)
+        }
       }
     } else if (
       !opts.skipBBReferences &&
