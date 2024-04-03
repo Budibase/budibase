@@ -5,7 +5,7 @@
   import { licensing } from "stores/portal"
   import { isPremiumOrAbove } from "helpers/planTitle"
 
-  $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license.plan.type)
+  $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license?.plan?.type)
 
   let show
   let hide
