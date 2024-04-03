@@ -112,8 +112,7 @@ export interface BBReferenceFieldMetadata
   relationshipType?: RelationshipType
 }
 
-export interface AttachmentFieldMetadata
-  extends Omit<BaseFieldSchema, "subtype"> {
+export interface AttachmentFieldMetadata extends BaseFieldSchema {
   type: FieldType.ATTACHMENTS
 }
 
