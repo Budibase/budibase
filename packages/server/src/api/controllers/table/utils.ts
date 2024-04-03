@@ -95,7 +95,7 @@ export async function checkForColumnUpdates(
     updatedTable.schema
   ).filter(
     (column): column is AttachmentFieldMetadata =>
-      column.type === FieldType.ATTACHMENT &&
+      column.type === FieldType.ATTACHMENTS &&
       column.subtype !== oldTable?.schema[column.name]?.subtype
   )
   for (const attachmentColumn of changedAttachmentSubtypeColumns) {

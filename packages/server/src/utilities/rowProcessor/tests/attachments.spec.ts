@@ -34,7 +34,7 @@ function table(): Table {
     schema: {
       attach: {
         name: "attach",
-        type: FieldType.ATTACHMENT,
+        type: FieldType.ATTACHMENTS,
         constraints: {},
       },
     },

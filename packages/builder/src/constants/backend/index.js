@@ -109,7 +109,7 @@ export const FIELDS = {
   },
   ATTACHMENT: {
     name: "Attachment List",
-    type: FieldType.ATTACHMENT,
+    type: FieldType.ATTACHMENTS,
     icon: "Folder",
     constraints: {
       type: "array",
@@ -299,7 +299,7 @@ export const PaginationLocations = [
 
 export const BannedSearchTypes = [
   FieldType.LINK,
-  FieldType.ATTACHMENT,
+  FieldType.ATTACHMENTS,
   FieldType.FORMULA,
   FieldType.JSON,
   "jsonarray",

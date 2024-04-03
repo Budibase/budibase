@@ -13,7 +13,7 @@ const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.BIGINT]: true,
   [FieldType.BOOLEAN]: false,
   [FieldType.ARRAY]: false,
-  [FieldType.ATTACHMENT]: false,
+  [FieldType.ATTACHMENTS]: false,
   [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.LINK]: false,
   [FieldType.JSON]: false,
@@ -34,7 +34,7 @@ const allowSortColumnByType: Record<FieldType, boolean> = {
   [FieldType.JSON]: true,
 
   [FieldType.FORMULA]: false,
-  [FieldType.ATTACHMENT]: false,
+  [FieldType.ATTACHMENTS]: false,
   [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.ARRAY]: false,
   [FieldType.LINK]: false,

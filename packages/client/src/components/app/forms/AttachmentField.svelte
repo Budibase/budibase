@@ -15,7 +15,7 @@
   export let maximum = undefined
   export let span
   export let helpText = null
-  export let type = FieldType.ATTACHMENT
+  export let type = FieldType.ATTACHMENTS
   export let fieldApiMapper = {
     get: value => value,
     set: value => value,

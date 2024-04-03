@@ -30,7 +30,7 @@ export async function getRowsWithAttachments(appId: string, table: Table) {
   const db = dbCore.getDB(appId)
   const attachmentCols: string[] = []
   for (let [key, column] of Object.entries(table.schema)) {
-    if (column.type === FieldType.ATTACHMENT) {
+    if (column.type === FieldType.ATTACHMENTS) {
       attachmentCols.push(key)
     }
   }
