@@ -115,14 +115,6 @@ export const FIELDS = {
       presence: false,
     },
   },
-  ATTACHMENT_SINGLE: {
-    name: "Attachment",
-    type: FieldType.ATTACHMENT_SINGLE,
-    icon: "Folder",
-    constraints: {
-      presence: false,
-    },
-  },
   LINK: {
     name: "Relationship",
     type: FieldType.LINK,
