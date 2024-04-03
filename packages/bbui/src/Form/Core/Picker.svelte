@@ -19,8 +19,6 @@
   import ContextTooltip from "../../Tooltip/Context.svelte"
   import { Heading } from "@budibase/bbui"
 
-
-
   export let id = null
   export let disabled = false
   export let fieldText = ""
@@ -52,17 +50,13 @@
   export let footer = null
   export let customAnchor = null
   export let loading
+  export let onOptionMouseenter = () => {}
+  export let onOptionMouseleave = () => {}
 
   const dispatch = createEventDispatcher()
 
   let button
   let component
-
-  let contextTooltipId = 0;
-  let contextTooltipAnchor = null
-  let contextTooltipOption = null
-  let previousContextTooltipOption = null
-  let contextTooltipVisible = false
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -119,28 +113,6 @@
   onDestroy(() => {
     component?.removeEventListener("scroll", null)
   })
-
-  const handleMouseenter = (e, option, idx) => {
-    contextTooltipId += 1;
-    const invokedContextTooltipId = contextTooltipId
-
-    setTimeout(() => {
-      if (contextTooltipId === invokedContextTooltipId) {
-        contextTooltipAnchor = e.target;
-        previousContextTooltipOption = contextTooltipOption;
-        contextTooltipOption = option;
-        contextTooltipVisible = true;
-      }
-    }, 200)
-  }
-
-  const handleMouseleave = (e, option) => {
-    setTimeout(() => {
-      if (option === contextTooltipOption) {
-        contextTooltipVisible = false;
-      }
-    }, 600)
-  }
 </script>
 
 <button
@@ -231,8 +203,8 @@
         {#if filteredOptions.length}
           {#each filteredOptions as option, idx}
               <li
-                on:mouseenter={(e) => handleMouseenter(e, option, idx)}
-                on:mouseleave={(e) => handleMouseleave(e, option, idx)}
+                on:mouseenter={(e) => onOptionMouseenter(e, option)}
+                on:mouseleave={(e) => onOptionMouseleave(e, option)}
                 class="spectrum-Menu-item"
                 class:is-selected={isOptionSelected(getOptionValue(option, idx))}
                 role="option"
@@ -300,64 +272,7 @@
       {/if}
     </div>
   </Popover>
-  <ContextTooltip
-    visible={contextTooltipVisible}
-    anchor={contextTooltipAnchor}
-    offset={20}
-  >
-    <div
-      class="tooltipContents"
-    >
-      {#if contextTooltipOption}
-        <div class="contextTooltipHeader">
-          <Icon name={getOptionIcon(contextTooltipOption)} />
-          <Heading>{contextTooltipOption}</Heading>
-        </div>
-        <p>{getOptionTooltip(contextTooltipOption)}</p>
-      {/if}
-    </div>
-    <div slot="previous"
-      class="tooltipContents"
-    >
-      {#if previousContextTooltipOption}
-        <div class="contextTooltipHeader">
-          <Icon name={getOptionIcon(previousContextTooltipOption)} />
-          <Heading>{previousContextTooltipOption}</Heading>
-        </div>
-        <p>{getOptionTooltip(previousContextTooltipOption)}</p>
-      {/if}
-    </div>
-  </ContextTooltip>
-
 <style>
-  .tooltipContents {
-    max-width: 200px;
-    background-color: var(--spectrum-global-color-gray-200);
-    display: inline-block;
-    padding: 12px;
-    border-radius: 5px;
-    box-sizing: border-box;
-  }
-
-  .contextTooltipHeader {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .contextTooltipHeader :global(svg) {
-    color: var(--background);
-    margin-right: 5px;
-  }
-
-  .contextTooltipHeader :global(h1) {
-    flex-grow: 1;
-    font-size: 15px;
-    text-wrap: wrap;
-    word-break: break-all;
-  }
-
-
   .spectrum-Menu {
     display: block;
   }

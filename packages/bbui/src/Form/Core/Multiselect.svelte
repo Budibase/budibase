@@ -22,6 +22,8 @@
   export let open = false
   export let loading
   export let align
+  export let onOptionMouseenter = () => {}
+  export let onOptionMouseleave = () => {}
 
   const dispatch = createEventDispatcher()
 
@@ -107,4 +109,6 @@
   {customPopoverHeight}
   {loading}
   {align}
+  {onOptionMouseenter}
+  {onOptionMouseleave}
 />
