@@ -60,7 +60,7 @@ const coreFields = {
   },
 }
 
-const { parseStringPromise: xmlParser, Builder: XmlBuilder } = require("xml2js")
+const { Builder: XmlBuilder } = require("xml2js")
 
 const SCHEMA: Integration = {
   docs: "https://github.com/node-fetch/node-fetch",

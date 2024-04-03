@@ -464,7 +464,7 @@
                       },
                       key
                     )}
-                  object={handleAttachmentParams(inputData[key] || {})}
+                  object={handleAttachmentParams(inputData[key])}
                   allowJS
                   {bindings}
                   keyBindings

@@ -7,6 +7,7 @@ import {
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  AutomationCustomIOType,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -74,6 +75,7 @@ export const definition: AutomationStepSchema = {
         },
         attachments: {
           type: AutomationIOType.ATTACHMENT,
+          customType: AutomationCustomIOType.MULTI_ATTACHMENTS,
           title: "Attachments",
         },
       },

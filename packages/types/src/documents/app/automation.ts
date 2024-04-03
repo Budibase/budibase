@@ -31,6 +31,7 @@ export enum AutomationCustomIOType {
   WEBHOOK_URL = "webhookUrl",
   AUTOMATION = "automation",
   AUTOMATION_FIELDS = "automationFields",
+  MULTI_ATTACHMENTS = "multi_attachments",
 }
 
 export enum AutomationTriggerStepId {

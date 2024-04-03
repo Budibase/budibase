@@ -691,13 +691,15 @@ describe("REST Integration", () => {
             raw: () => ({
               "content-type": [contentType],
               "content-disposition": [
-                `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
+                // eslint-disable-next-line no-useless-escape
+                `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
               ],
             }),
             get: (header: any) => {
               if (header === "content-type") return contentType
               if (header === "content-disposition")
-                return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
+                // eslint-disable-next-line no-useless-escape
+                return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
             },
           },
           body: mockReadable,
