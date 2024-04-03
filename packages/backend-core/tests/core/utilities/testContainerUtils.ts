@@ -1,4 +1,3 @@
-import { DatabaseImpl } from "../../../src/db"
 import { execSync } from "child_process"
 
 const IPV4_PORT_REGEX = new RegExp(`0\\.0\\.0\\.0:(\\d+)->(\\d+)/tcp`, "g")
