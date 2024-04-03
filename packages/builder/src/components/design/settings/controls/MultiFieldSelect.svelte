@@ -3,7 +3,7 @@
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { validators, supported, partialSupport, unsupported } from "../fieldValidator";
+  import { validators, constants as validatorConstants } from "../fieldValidator";
 
   export let componentInstance = {}
   export let value = ""
@@ -77,6 +77,7 @@
   }
 
   const foo = () => {
+    /*
     const support = fieldSupport[option]?.support;
 
     if (support == null) return null;
@@ -84,6 +85,7 @@
 
     if (support === partialSupport) return "AlertCircleFilled"
     if (support === unsupported) return "AlertCircleFilled"
+    */
   }
 
   const getOptionIcon = optionKey => {
@@ -115,6 +117,7 @@
   }
 
   const isOptionEnabled = optionKey => {
+    return true;
     // Remain enabled if already selected, so it can be deselected
     if (value?.includes(optionKey)) return true
     const support = fieldSupport[optionKey]?.support;

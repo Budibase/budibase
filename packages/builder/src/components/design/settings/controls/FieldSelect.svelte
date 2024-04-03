@@ -3,7 +3,7 @@
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { validators, supported, partialSupport, unsupported } from "../fieldValidator";
+  import { validators, constants as validatorConstants } from "../fieldValidator";
 
   export let componentInstance = {}
   export let value = ""
@@ -52,6 +52,7 @@
   }
 
   const getOptionIcon = option => {
+    /*
     const support = fieldSupport[option]?.support;
 
     if (support == null) return null;
@@ -59,12 +60,14 @@
 
     if (support === partialSupport) return "Warning"
     if (support === unsupported) return "Error"
+*/
   }
 
   const getOptionIconTooltip = option => {
   }
 
   const isOptionEnabled = option => {
+    return true
     const support = fieldSupport[option]?.support;
 
     if (support == null) return true
