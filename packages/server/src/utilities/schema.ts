@@ -54,7 +54,7 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
         type: columnType,
         subtype: columnSubtype,
         autocolumn: isAutoColumn,
-      } = schema[columnName]
+      } = schema[columnName] || {}
 
       // If the column had an invalid value we don't want to override it
       if (results.schemaValidation[columnName] === false) {
@@ -147,6 +147,12 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
               utils.unreachable(columnSubtype)
           }
         }
+      } else if (
+        (columnType === FieldType.ATTACHMENTS ||
+          columnType === FieldType.ATTACHMENT_SINGLE) &&
+        typeof columnData === "string"
+      ) {
+        parsedRow[columnName] = parseCsvExport(columnData)
       } else {
         parsedRow[columnName] = columnData
       }
