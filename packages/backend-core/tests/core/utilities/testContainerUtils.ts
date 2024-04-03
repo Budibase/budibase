@@ -23,22 +23,12 @@ function getTestcontainers(): ContainerInfo[] {
   // We use --format json to make sure the output is nice and machine-readable,
   // and we use --no-trunc so that the command returns full container IDs so we
   // can filter on them correctly.
-  let containers = execSync("docker ps --format json --no-trunc")
+  return execSync("docker ps --format json --no-trunc")
     .toString()
     .split("\n")
     .filter(x => x.length > 0)
     .map(x => JSON.parse(x) as ContainerInfo)
     .filter(x => x.Labels.includes("org.testcontainers=true"))
-
-  if (process.env.CONTAINER_NAMESPACE) {
-    containers = containers.filter(x =>
-      x.Labels.includes(
-        `org.testcontainers.namespace=${process.env.CONTAINER_NAMESPACE}`
-      )
-    )
-  }
-
-  return containers
 }
 
 export function getContainerByImage(image: string) {
