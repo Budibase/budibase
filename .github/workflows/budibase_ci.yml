@@ -138,8 +138,7 @@ jobs:
           fi
 
   test-server:
-    runs-on:
-      group: hosted-runners
+    runs-on: budi-tubby-tornado-quad-core-150gb
     env:
       DEBUG: testcontainers,testcontainers:exec,testcontainers:build,testcontainers:pull
     steps:
