@@ -1,40 +1,64 @@
-export const unsupported = Symbol("values-validator-unsupported")
-export const partialSupport = Symbol("values-validator-partial-support")
-export const supported = Symbol("values-validator-supported")
+export const constants = {
+  warning: Symbol("values-validator-warning"),
+  error: Symbol("values-validator-error"),
+  unsupported: Symbol("values-validator-unsupported"),
+  partialSupport: Symbol("values-validator-partialSupport"),
+  supported: Symbol("values-validator-supported")
+}
 
 export const validators = {
   chart: (fieldSchema) => {
-    if (
-      fieldSchema.type === "json" ||
-      fieldSchema.type === "array" ||
-      fieldSchema.type === "attachment" ||
-      fieldSchema.type === "barcodeqr" ||
-      fieldSchema.type === "link" ||
-      fieldSchema.type === "bb_reference"
-    ) {
-      return {
-        support: unsupported,
-        message: `"${fieldSchema.type}" columns cannot be used as a chart value long long long long long long long long long`
+    try {
+      const response = {
+        support: null,
+        message: null,
+        warnings: [],
+        errors: []
       }
-    }
-
-    if (fieldSchema.type === "string") {
-      return {
-        support: partialSupport,
-        message: "This field can be used as a chart value, but non-numeric values will not be parsed correctly"
+      const generalUnsupportedFields = ["array", "attachment", "barcodeqr", "link", "bb_reference"]
+      if (generalUnsupportedFields.includes(fieldSchema.type)) {
+        response.errors.push(`${fieldSchema.type} columns can not be used as chart inputs.`)
       }
-    }
 
-    if (fieldSchema.type === "number") {
-      return {
-        support: supported,
-        message: "This field can be used for chart values"
+      if (fieldSchema.type === "json") {
+          response.errors.push(`JSON columns can not be used as chart inputs, but individual properties of this JSON field can be be used if supported.`)
       }
-    }
 
-    return {
-      support: partialSupport,
-      message: "This field can be used as a chart value, but it may not be parsed correctly"
+      if (fieldSchema.type === "string") {
+        response.warnings.push(
+          "This column can be used as input for a chart, but non-numeric values may cause unexpected behavior.")
+      }
+      if (fieldSchema.type === "date") {
+        response.warnings.push(
+          "This column can be used as input for a chart, but it is parsed differently for various charts.")
+      }
+
+      const isRequired = fieldSchema?.constraints?.presence?.allowEmpty === false
+      if (!isRequired) {
+        response.warnings.push(
+          "This column is optional, and some rows may not have a value.")
+      }
+
+      if (response.errors.length > 0) {
+        response.support = constants.unsupported
+        response.message = "This column can not be used as a chart input."
+      } else if (response.warnings.length > 0) {
+        response.support = constants.partialSupport
+        response.message = "This column can be used as a chart input, but certain values may cause issues."
+      } else {
+        response.support = constants.supported
+        response.message = "This column can be used as a chart input."
+      }
+
+      return response
+    } catch (e) {
+      console.log(e)
+      return {
+        support: constants.partialSupport,
+        message: "There was an issue validating this field, it may not be fully supported for use with charts.",
+        warnings: [],
+        errors: []
+      }
     }
   }
 };
