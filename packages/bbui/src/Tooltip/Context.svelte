@@ -50,15 +50,22 @@
       const fadeIn = [{ opacity: "0" }, { opacity: "1" }];
       const fadeOut = [{ opacity: "1" }, { opacity: "0" }];
 
-      const fadeTiming = {
-        duration: 200,
+      const fadeInTiming = {
+        duration: 150,
+        delay: 150,
+        iterations: 1,
+        easing: "ease-in",
+        fill: "both"
+      };
+      const fadeOutTiming = {
+        duration: 150,
         iterations: 1,
         easing: "ease-in",
         fill: "forwards"
       };
 
-      currentTooltip.animate(fadeIn, fadeTiming);
-      previousTooltip.animate(fadeOut, fadeTiming);
+      currentTooltip.animate(fadeIn, fadeInTiming);
+      previousTooltip.animate(fadeOut, fadeOutTiming);
 
       // Bypass animations if the tooltip has only just been opened
       if (initialShow) {
