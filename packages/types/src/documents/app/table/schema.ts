@@ -115,7 +115,6 @@ export interface BBReferenceFieldMetadata
 export interface AttachmentFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.ATTACHMENTS
-  subtype?: FieldSubtype.SINGLE
 }
 
 export interface FieldConstraints {
