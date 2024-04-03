@@ -99,7 +99,7 @@ export async function checkForColumnUpdates(
       column.subtype !== oldTable?.schema[column.name]?.subtype
   )
   for (const attachmentColumn of changedAttachmentSubtypeColumns) {
-    if (attachmentColumn.subtype === FieldTypeSubtypes.ATTACHMENT.SINGLE) {
+    if (attachmentColumn.subtype === FieldTypeSubtypes.ATTACHMENTS.SINGLE) {
       attachmentColumn.constraints ??= { length: {} }
       attachmentColumn.constraints.length ??= {}
       attachmentColumn.constraints.length.maximum = 1

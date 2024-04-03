@@ -48,7 +48,7 @@ export const FieldTypeSubtypes = {
     USER: FieldSubtype.USER as FieldSubtype.USER,
     USERS: FieldSubtype.USERS as FieldSubtype.USERS,
   },
-  ATTACHMENT: {
+  ATTACHMENTS: {
     SINGLE: FieldSubtype.SINGLE as FieldSubtype.SINGLE,
   },
 }
