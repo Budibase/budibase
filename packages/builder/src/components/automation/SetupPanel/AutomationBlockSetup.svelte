@@ -32,7 +32,7 @@
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import BindingSidePanel from "components/common/bindings/BindingSidePanel.svelte"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import { BindingHelpers } from "components/common/bindings/utils"
+  import { BindingHelpers, BindingType } from "components/common/bindings/utils"
   import {
     bindingsToCompletions,
     hbAutocomplete,
@@ -614,6 +614,7 @@
                           {
                             js: true,
                             dontDecode: true,
+                            type: BindingType.RUNTIME,
                           }
                         )}
                       mode="javascript"
