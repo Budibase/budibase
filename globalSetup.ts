@@ -26,5 +26,11 @@ export default async function setup() {
     couchdb = couchdb.withReuse()
   }
 
+  if (process.env.CONTAINER_NAMESPACE) {
+    couchdb = couchdb.withLabels({
+      "org.testcontainers.namespace": process.env.CONTAINER_NAMESPACE,
+    })
+  }
+
   await couchdb.start()
 }
