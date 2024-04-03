@@ -8,7 +8,7 @@ export const getColor = (idx, opacity = 0.3) => {
 }
 
 const TypeIconMap = {
-  text: "Text",
+  [FieldType.STRING]: "Text",
   [FieldType.OPTIONS]: "Dropdown",
   [FieldType.DATETIME]: "Date",
   [FieldType.BARCODEQR]: "Camera",
