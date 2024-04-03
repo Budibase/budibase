@@ -110,7 +110,7 @@ export const FIELDS = {
   ATTACHMENT: {
     name: "Attachment",
     type: FieldType.ATTACHMENT,
-    icon: "Multiple",
+    icon: "Folder",
     constraints: {
       type: "array",
       presence: false,
