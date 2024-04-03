@@ -23,7 +23,7 @@ const TypeComponentMap = {
   [FieldType.ARRAY]: MultiSelectCell,
   [FieldType.NUMBER]: NumberCell,
   [FieldType.BOOLEAN]: BooleanCell,
-  [FieldType.ATTACHMENT]: AttachmentCell,
+  [FieldType.ATTACHMENTS]: AttachmentCell,
   [FieldType.ATTACHMENT_SINGLE]: AttachmentSingleCell,
   [FieldType.LINK]: RelationshipCell,
   [FieldType.FORMULA]: FormulaCell,

@@ -114,7 +114,7 @@ export interface BBReferenceFieldMetadata
 
 export interface AttachmentFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
-  type: FieldType.ATTACHMENT
+  type: FieldType.ATTACHMENTS
   subtype?: FieldSubtype.SINGLE
 }
 
@@ -164,7 +164,7 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.NUMBER
     | FieldType.LONGFORM
     | FieldType.BB_REFERENCE
-    | FieldType.ATTACHMENT
+    | FieldType.ATTACHMENTS
   >
 }
 
@@ -217,5 +217,5 @@ export function isBBReferenceField(
 export function isAttachmentField(
   field: FieldSchema
 ): field is AttachmentFieldMetadata {
-  return field.type === FieldType.ATTACHMENT
+  return field.type === FieldType.ATTACHMENTS
 }
