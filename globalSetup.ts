@@ -1,13 +1,15 @@
 import { GenericContainer, Wait } from "testcontainers"
+import path from "path"
 import lockfile from "proper-lockfile"
 
 export default async function setup() {
+  const lockPath = path.resolve(__dirname, "globalSetup.ts")
   if (process.env.REUSE_CONTAINERS) {
     // If you run multiple tests at the same time, it's possible for the CouchDB
     // shared container to get started multiple times despite having an
     // identical reuse hash. To avoid that, we do a filesystem-based lock so
     // that only one globalSetup.ts is running at a time.
-    lockfile.lockSync("globalSetup.lock")
+    lockfile.lockSync(lockPath)
   }
 
   try {
@@ -45,7 +47,7 @@ export default async function setup() {
     await couchdb.start()
   } finally {
     if (process.env.REUSE_CONTAINERS) {
-      lockfile.unlockSync("globalSetup.lock")
+      lockfile.unlockSync(lockPath)
     }
   }
 }
