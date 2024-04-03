@@ -107,18 +107,10 @@ export const FIELDS = {
       },
     },
   },
-  ATTACHMENT_SINGLE: {
+  ATTACHMENT: {
     name: "Attachment",
-    type: FieldType.ATTACHMENT_SINGLE,
-    icon: "Document",
-    constraints: {
-      presence: false,
-    },
-  },
-  ATTACHMENTS: {
-    name: "Attachment List",
-    type: FieldType.ATTACHMENTS,
-    icon: "AppleFiles",
+    type: FieldType.ATTACHMENT,
+    icon: "Folder",
     constraints: {
       type: "array",
       presence: false,
@@ -307,7 +299,7 @@ export const PaginationLocations = [
 
 export const BannedSearchTypes = [
   FieldType.LINK,
-  FieldType.ATTACHMENTS,
+  FieldType.ATTACHMENT,
   FieldType.FORMULA,
   FieldType.JSON,
   "jsonarray",
