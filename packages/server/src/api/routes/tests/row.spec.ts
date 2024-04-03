@@ -234,7 +234,7 @@ describe.each([
           constraints: { type: "string", presence: false },
         }
         const attachment: FieldSchema = {
-          type: FieldType.ATTACHMENTS,
+          type: FieldType.ATTACHMENT,
           name: "attachment",
           constraints: { type: "array", presence: false },
         }
@@ -790,7 +790,7 @@ describe.each([
           defaultTable({
             schema: {
               attachment: {
-                type: FieldType.ATTACHMENTS,
+                type: FieldType.ATTACHMENT,
                 name: "attachment",
                 constraints: { type: "array", presence: false },
               },

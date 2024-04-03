@@ -15,8 +15,7 @@
     [FieldType.BOOLEAN]: "booleanfield",
     [FieldType.LONGFORM]: "longformfield",
     [FieldType.DATETIME]: "datetimefield",
-    [FieldType.ATTACHMENTS]: "attachmentfield",
-    [FieldType.ATTACHMENT_SINGLE]: "attachmentsinglefield",
+    [FieldType.ATTACHMENT]: "attachmentfield",
     [FieldType.LINK]: "relationshipfield",
     [FieldType.JSON]: "jsonfield",
     [FieldType.BARCODEQR]: "codescanner",
@@ -61,7 +60,7 @@
 
   function getPropsByType(field) {
     const propsMapByType = {
-      [FieldType.ATTACHMENTS]: (_field, schema) => {
+      [FieldType.ATTACHMENT]: (_field, schema) => {
         return {
           maximum: schema?.constraints?.length?.maximum,
         }
