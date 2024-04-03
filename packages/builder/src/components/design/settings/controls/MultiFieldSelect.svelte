@@ -76,18 +76,6 @@
     dispatch("change", boundValue)
   }
 
-  const foo = () => {
-    /*
-    const support = fieldSupport[option]?.support;
-
-    if (support == null) return null;
-    if (support === supported) return null
-
-    if (support === partialSupport) return "AlertCircleFilled"
-    if (support === unsupported) return "AlertCircleFilled"
-    */
-  }
-
   const getOptionIcon = optionKey => {
     const option = schema[optionKey]
     if (option.autocolumn) {
@@ -204,7 +192,6 @@
   .contextTooltipHeader {
     display: flex;
     align-items: center;
-    justify-content: center;
     height: var(--spectrum-alias-item-height-m);
     padding: 0px var(--spectrum-alias-item-padding-m);
     border-width: var(--spectrum-actionbutton-border-size);
