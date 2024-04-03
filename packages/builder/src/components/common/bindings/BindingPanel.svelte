@@ -371,6 +371,7 @@
 <style>
   .binding-panel {
     height: 100%;
+    overflow: hidden;
   }
   .binding-panel,
   .tabs {

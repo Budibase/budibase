@@ -6,10 +6,11 @@ import {
   SourceName,
 } from "@budibase/types"
 import * as setup from "../utilities"
-import { databaseTestProviders } from "../../../../integrations/tests/utils"
-import pg from "pg"
-import mysql from "mysql2/promise"
-import mssql from "mssql"
+import {
+  DatabaseName,
+  getDatasource,
+  rawQuery,
+} from "../../../../integrations/tests/utils"
 import { Expectations } from "src/tests/utilities/api/base"
 import { events } from "@budibase/backend-core"
 
@@ -40,13 +41,16 @@ const createTableSQL: Record<string, string> = {
 const insertSQL = `INSERT INTO test_table (name) VALUES ('one'), ('two'), ('three'), ('four'), ('five')`
 const dropTableSQL = `DROP TABLE test_table;`
 
-describe.each([
-  ["postgres", databaseTestProviders.postgres],
-  ["mysql", databaseTestProviders.mysql],
-  ["mssql", databaseTestProviders.mssql],
-  ["mariadb", databaseTestProviders.mariadb],
-])("queries (%s)", (dbName, dsProvider) => {
+describe.each(
+  [
+    DatabaseName.POSTGRES,
+    DatabaseName.MYSQL,
+    DatabaseName.SQL_SERVER,
+    DatabaseName.MARIADB,
+  ].map(name => [name, getDatasource(name)])
+)("queries (%s)", (dbName, dsProvider) => {
   const config = setup.getConfig()
+  let rawDatasource: Datasource
   let datasource: Datasource
 
   async function createQuery(
@@ -69,57 +73,21 @@ describe.each([
     )
   }
 
-  async function rawQuery(sql: string): Promise<any> {
-    switch (datasource.source) {
-      case SourceName.POSTGRES: {
-        const client = new pg.Client(datasource.config!)
-        await client.connect()
-        try {
-          const { rows } = await client.query(sql)
-          return rows
-        } finally {
-          await client.end()
-        }
-      }
-      case SourceName.MYSQL: {
-        const con = await mysql.createConnection(datasource.config!)
-        try {
-          const [rows] = await con.query(sql)
-          return rows
-        } finally {
-          con.end()
-        }
-      }
-      case SourceName.SQL_SERVER: {
-        const pool = new mssql.ConnectionPool(
-          datasource.config! as mssql.config
-        )
-        const client = await pool.connect()
-        try {
-          const { recordset } = await client.query(sql)
-          return recordset
-        } finally {
-          await pool.close()
-        }
-      }
-    }
-  }
-
   beforeAll(async () => {
     await config.init()
   })
 
   beforeEach(async () => {
-    const datasourceRequest = await dsProvider.datasource()
-    datasource = await config.api.datasource.create(datasourceRequest)
+    rawDatasource = await dsProvider
+    datasource = await config.api.datasource.create(rawDatasource)
 
     // The Datasource API does not return the password, but we need
     // it later to connect to the underlying database, so we fill it
     // back in here.
-    datasource.config!.password = datasourceRequest.config!.password
+    datasource.config!.password = rawDatasource.config!.password
 
-    await rawQuery(createTableSQL[datasource.source])
-    await rawQuery(insertSQL)
+    await rawQuery(datasource, createTableSQL[datasource.source])
+    await rawQuery(datasource, insertSQL)
 
     jest.clearAllMocks()
   })
@@ -127,11 +95,10 @@ describe.each([
   afterEach(async () => {
     const ds = await config.api.datasource.get(datasource._id!)
     config.api.datasource.delete(ds)
-    await rawQuery(dropTableSQL)
+    await rawQuery(datasource, dropTableSQL)
   })
 
   afterAll(async () => {
-    await dsProvider.stop()
     setup.afterAll()
   })
 
@@ -462,6 +429,7 @@ describe.each([
         ])
 
         const rows = await rawQuery(
+          datasource,
           "SELECT * FROM test_table WHERE name = 'baz'"
         )
         expect(rows).toHaveLength(1)
@@ -522,6 +490,7 @@ describe.each([
           expect(result.data).toEqual([{ created: true }])
 
           const rows = await rawQuery(
+            datasource,
             `SELECT * FROM test_table WHERE birthday = '${date.toISOString()}'`
           )
           expect(rows).toHaveLength(1)
@@ -553,6 +522,7 @@ describe.each([
           expect(result.data).toEqual([{ created: true }])
 
           const rows = await rawQuery(
+            datasource,
             `SELECT * FROM test_table WHERE name = '${notDateStr}'`
           )
           expect(rows).toHaveLength(1)
@@ -689,7 +659,10 @@ describe.each([
           },
         ])
 
-        const rows = await rawQuery("SELECT * FROM test_table WHERE id = 1")
+        const rows = await rawQuery(
+          datasource,
+          "SELECT * FROM test_table WHERE id = 1"
+        )
         expect(rows).toEqual([
           { id: 1, name: "foo", birthday: null, number: null },
         ])
@@ -757,7 +730,10 @@ describe.each([
           },
         ])
 
-        const rows = await rawQuery("SELECT * FROM test_table WHERE id = 1")
+        const rows = await rawQuery(
+          datasource,
+          "SELECT * FROM test_table WHERE id = 1"
+        )
         expect(rows).toHaveLength(0)
       })
     })
