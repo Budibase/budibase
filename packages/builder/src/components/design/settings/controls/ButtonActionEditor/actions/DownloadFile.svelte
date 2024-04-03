@@ -35,8 +35,8 @@
     parameters.tableId && options.find(t => t.resourceId === parameters.tableId)
   $: attachmentColumns =
     selectedTable &&
-    Object.values(selectedTable.schema).filter(
-      c => c.type === FieldType.ATTACHMENT
+    Object.values(selectedTable.schema).filter(c =>
+      [FieldType.ATTACHMENTS, FieldType.ATTACHMENT_SINGLE].includes(c.type)
     )
 
   onMount(() => {

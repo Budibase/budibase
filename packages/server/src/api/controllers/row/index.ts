@@ -13,6 +13,7 @@ import {
   DeleteRows,
   ExportRowsRequest,
   ExportRowsResponse,
+  FieldType,
   GetRowResponse,
   PatchRowRequest,
   PatchRowResponse,
@@ -264,11 +265,22 @@ export async function downloadAttachment(ctx: UserCtx) {
   const row = await pickApi(tableId).find(ctx)
 
   const table = await sdk.tables.getTable(tableId)
-  if (!table.schema[columnName]) {
+  const columnSchema = table.schema[columnName]
+  if (!columnSchema) {
     ctx.throw(400, `'${columnName}' is not valid`)
   }
 
-  const attachments: RowAttachment[] = row[columnName]
+  const columnType = columnSchema.type
+
+  if (
+    columnType !== FieldType.ATTACHMENTS &&
+    columnType !== FieldType.ATTACHMENT_SINGLE
+  ) {
+    ctx.throw(404, `'${columnName}' is not valid attachment column`)
+  }
+
+  const attachments: RowAttachment[] =
+    columnType === FieldType.ATTACHMENTS ? row[columnName] : [row[columnName]]
 
   if (!attachments?.length) {
     ctx.throw(404)
