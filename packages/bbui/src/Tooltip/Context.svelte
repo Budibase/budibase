@@ -48,9 +48,10 @@
       const fadeOut = [{ opacity: "1" }, { opacity: "0" }];
 
       const fadeTiming = {
-        duration: 300,
+        duration: 200,
         iterations: 1,
-        easing: "ease-in"
+        easing: "ease-in",
+        fill: "forwards"
       };
 
       currentTooltip.animate(fadeIn, fadeTiming);
@@ -59,6 +60,8 @@
       // Bypass animations if the tooltip has only just been opened
       if (initialShow) {
         initialShow = false;
+
+        previousTooltip.style.visibility = "hidden"
 
         wrapper.style.transition = "none";
         wrapper.style.width = `${currentTooltipWidth}px`
@@ -74,6 +77,8 @@
           wrapper.style.removeProperty("transition");
           resetWrapper.style.removeProperty("transition");
         })
+      } else {
+        previousTooltip.style.removeProperty("visibility");
       }
     })
   }
