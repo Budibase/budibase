@@ -107,20 +107,20 @@ export const FIELDS = {
       },
     },
   },
+  ATTACHMENT_SINGLE: {
+    name: "Attachment",
+    type: FieldType.ATTACHMENT_SINGLE,
+    icon: "Document",
+    constraints: {
+      presence: false,
+    },
+  },
   ATTACHMENTS: {
     name: "Attachment List",
     type: FieldType.ATTACHMENTS,
     icon: "AppleFiles",
     constraints: {
       type: "array",
-      presence: false,
-    },
-  },
-  ATTACHMENT_SINGLE: {
-    name: "Attachment",
-    type: FieldType.ATTACHMENT_SINGLE,
-    icon: "Document",
-    constraints: {
       presence: false,
     },
   },
