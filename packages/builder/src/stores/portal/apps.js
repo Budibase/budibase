@@ -148,7 +148,7 @@ export const enrichedApps = derived([appsStore, auth], ([$store, $auth]) => {
         deployed: app.status === AppStatus.DEPLOYED,
         lockedYou: app.lockedBy && app.lockedBy.email === $auth.user?.email,
         lockedOther: app.lockedBy && app.lockedBy.email !== $auth.user?.email,
-        favourite: $auth?.user.appFavourites?.includes(app.appId),
+        favourite: $auth.user?.appFavourites?.includes(app.appId),
       }))
     : []
 
