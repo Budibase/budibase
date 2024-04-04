@@ -49,7 +49,10 @@
       label: "Long Form Text",
       value: FIELDS.LONGFORM.type,
     },
-
+    {
+      label: "Attachment",
+      value: FIELDS.ATTACHMENT.type,
+    },
     {
       label: "User",
       value: `${FIELDS.USER.type}${FIELDS.USER.subtype}`,
