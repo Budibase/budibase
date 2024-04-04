@@ -110,7 +110,6 @@
     "snowflake-promise": "^4.5.0",
     "socket.io": "4.6.1",
     "sqlite3": "5.1.6",
-    "svelte": "3.49.0",
     "swagger-parser": "10.0.3",
     "tar": "6.1.15",
     "to-json-schema": "0.2.5",
