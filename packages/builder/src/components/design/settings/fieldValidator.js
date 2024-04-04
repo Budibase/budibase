@@ -10,7 +10,6 @@ export const constants = {
 
 export const validators = {
   chart: (fieldSchema) => {
-    console.log(fieldSchema);
     try {
       const response = {
         level: null,
@@ -28,8 +27,9 @@ export const validators = {
       }
 
       if (fieldSchema.type === "string") {
+
         response.warnings.push(
-          "This column can be used as an input for a chart, but non-numeric values may cause unexpected behavior.")
+          "string number warning")
       }
       if (fieldSchema.type === "datetime") {
         response.warnings.push(
