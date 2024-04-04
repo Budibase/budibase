@@ -29,11 +29,11 @@ export const validators = {
 
       if (fieldSchema.type === "string") {
         response.warnings.push(
-          "This column can be used as input for a chart, but non-numeric values may cause unexpected behavior.")
+          "This column can be used as an input for a chart, but non-numeric values may cause unexpected behavior.")
       }
       if (fieldSchema.type === "datetime") {
         response.warnings.push(
-          "This column can be used as input for a chart, but it may be parsed differently depending on the which is used.")
+          "This column can be used as an input for a chart, but it may be parsed differently depending on which is used.")
       }
 
       const isRequired = fieldSchema?.constraints?.presence?.allowEmpty === false

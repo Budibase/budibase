@@ -26,6 +26,9 @@
     if (columnType === "attachment") {
       return "https://docs.budibase.com/docs/attachments"
     }
+    if (columnType === "array") {
+      return "https://docs.budibase.com/docs/multi-select"
+    }
 
     return ""
   }
@@ -94,7 +97,7 @@
 
   .contextTooltipHeader {
     row-gap: 6px;
-    column-gap: 5px;
+    column-gap: 8px;
     background-color: var(--background-alt);
     color: var(--ink);
     display: flex;
@@ -117,9 +120,24 @@
   }
 
   .contextTooltipContent > p {
+    row-gap: 6px;
+    column-gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 6px 8px;
+    border-width: var(--spectrum-actionbutton-border-size);
+    border-radius: var(--spectrum-alias-border-radius-regular);
+    border: 1px solid
+      var(
+        --spectrum-actionbutton-m-border-color,
+        var(--spectrum-alias-border-color)
+      );
   }
 
   .columnName {
+
+    font-style: italic;
     padding: 3px 6px;
     border-radius: 5px;
     background-color: var(--grey-3);
