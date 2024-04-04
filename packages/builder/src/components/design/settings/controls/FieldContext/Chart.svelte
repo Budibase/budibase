@@ -41,100 +41,106 @@
   class={`tooltipContents ${supportLevelClass}`}
 >
 
-  <div class="topLine">
+  <div class="line topLine">
+    <span class="bullet">•</span>
     <div class="chip columnName">
+      <span>
       {columnName}
+      </span>
     </div>
+    <span class="space" />
     <span class="text"> is a </span>
+    <span class="space" />
     <a target=”_blank” href={docLink} class="chip link topLink">
       <Icon size="S" name={columnIcon} />
       <span class="text">{columnType} column</span>
     </a>
     <span class="period">.</span>
   </div>
-  <div class="divider"></div>
   <div class={`line ${supportLevelClass}`}>
     <span class="bullet">•</span>
     <div class={`chip supportChip ${supportLevelClass}`}>
       <Icon size="S" tooltip={supportLevelIconTooltip} name={supportLevelIcon} />
       <span class="text">{supportLevelText}</span>
     </div>
+    <span class="space" />
     <span class="text">with</span>
+    <span class="space" />
     <div class="chip link">
       <Icon size="S" name={"GraphPie"} />
       <span class="text">Chart components</span>
     </div>
+    <span class="period">.</span>
   </div>
   {#if warnings.includes("string number warning")}
     <div class={`line`}>
       <span class="bullet">•</span>
-      <div class="chip link">
+      <span class="text">Any</span>
+    <span class="space" />
+      <div class="chip info">
         <Icon size="S" name={"123"} />
         <span class="text">
-        Non-numeric values 
+        Non-number values
         </span>
       </div>
+    <span class="space" />
       <span class="text">
-        will not be displayed
+        will be ignored
       </span>
+      <span class="period">.</span>
     </div>
   {/if}
   {#if warnings.includes("optional warning")}
     <div class={`line`}>
       <span class="bullet">•</span>
-      <span class="text">No</span>
+      <span class="text">No required</span>
+    <span class="space" />
       <div class="chip link">
         <Icon size="S" name={"DataUnavailable"} />
         <span class="text">
-          Required constraint
+          Constraint
         </span>
       </div>
+      <span class="comma">,</span>
       <span class="text">
-        so rows may be missing values
+        so values may be missing
       </span>
+      <span class="period">.</span>
     </div>
   {/if}
-
-  <!--
-  {#if errors.length > 0}
-    {#each errors as datum}
-      <p>{datum}</p>
-    {/each}
-  {:else if warnings.length > 0}
-    {#each warnings as datum}
-      <p>{datum}</p>
-    {/each}
-  {:else}
-      <p>{supportLevelIconTooltip}</p>
-  {/if}
-  -->
 </div>
 
 <style>
   .chip {
+    box-sizing: border-box;
     display: inline-flex;
     padding: 3px 6px;
     border-radius: 5px;
     vertical-align: sub;
-    margin-right: 5px;
-    filter: brightness(90%);
+    filter: brightness(100%);
   }
 
   .chip:hover {
-    filter: brightness(110%);
+    filter: brightness(120%);
     transition: filter 300ms
   }
 
+  .chip :global(svg) {
+    color:  var(--grey-6);
+  }
+
   .columnName {
-    font-style: italic;
+    vertical-align: baseline;
     background-color: var(--grey-3);
+    display: block;
+    font-style: italic;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
-    display: block;
+    flex-grow: 0;
+    flex-shrink: 1;
     min-width: 0;
-    margin-right: 0;
   }
 
   .bullet {
@@ -144,8 +150,27 @@
     margin-right: 10px;
   }
 
-  .topLink {
-    flex-shrink: 0;
+  .period {
+    color: var(--grey-5);
+    font-size: 20px;
+    display: inline block;
+  }
+
+  .comma {
+    color: var(--grey-5);
+    font-size: 20px;
+    display: inline block;
+    margin-right: 4px;
+  }
+
+  .semiColon {
+    color: var(--grey-5);
+    font-size: 16px;
+    display: inline block;
+  }
+
+  .space {
+    margin-right: 5px;
   }
 
   .divider {
@@ -157,7 +182,7 @@
     max-width: 400px;
     background-color: var(--background-alt);
     display: block;
-    padding: 12px;
+    padding: 20px 16px;
     border-radius: 5px;
     box-sizing: border-box;
   }
@@ -167,9 +192,26 @@
     align-items: center;
   }
 
-  .topLine > .text{
+  .topLine .space {
+    margin-right: 7px;
     flex-shrink: 0;
-    margin: 0 5px;
+  }
+
+  .topLine .text {
+    flex-shrink: 0;
+  }
+
+  .topLine .period {
+    flex-shrink: 0;
+  }
+
+  .topLine .bullet {
+    flex-shrink: 0;
+  }
+
+  .topLink {
+    flex-shrink: 0;
+    margin-right: 2px;
   }
 
   .line {
@@ -185,12 +227,23 @@
 
   .line > .text {
     display: inline;
-    margin-right: 5px;
   }
 
   .link {
-    background-color: var(--bb-indigo);
+    background-color: var(--grey-3);
+    border: 1px solid red;
+    box-sizing: border-box;
+    border-color: var(--blue);
     color: white;
+  }
+
+  .info {
+    background-color: var(--grey-3);
+    color: white;
+  }
+
+  .info :global(svg) {
+    margin-right: 3px;
   }
 
   .link:hover {
@@ -199,10 +252,14 @@
 
   .link :global(svg) {
     margin-right: 3px;
+    color: var(--blue);
   }
 
   .supportChip {
-    color: black;
+    background-color: var(--grey-3);
+    color: var(--ink);
+    border: 1px solid red;
+    box-sizing: border-box;
   }
 
   .supportChip :global(svg) {
@@ -210,14 +267,26 @@
   }
 
   .supportChip.supportLevelUnsupported {
-    background-color: var(--red);
+    border-color: var(--red);
+  }
+
+  .supportChip.supportLevelUnsupported :global(svg) {
+    color: var(--red);
   }
 
   .supportChip.supportLevelPartialSupport {
-    background-color: var(--yellow);
+    border-color: var(--yellow);
+  }
+
+  .supportChip.supportLevelPartialSupport :global(svg) {
+    color: var(--yellow);
   }
 
   .supportChip.supportLevelSupported {
-    background-color: var(--green);
+    border-color: var(--green);
+  }
+
+  .supportChip.supportLevelSupported :global(svg) {
+    color: var(--green);
   }
 </style>
