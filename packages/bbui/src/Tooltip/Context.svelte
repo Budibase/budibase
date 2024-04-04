@@ -39,6 +39,9 @@
       const previousStyles = window.getComputedStyle(previousTooltip?.firstChild)
       const currentStyles = window.getComputedStyle(currentTooltip?.firstChild)
 
+
+      const windowOffset = (window.innerHeight - offset) - (currentTooltip.clientHeight + rect.y)
+
       currentTooltipWidth = currentTooltip.clientWidth
       currentTooltipHeight = currentTooltip.clientHeight
 
@@ -47,7 +50,7 @@
 
       // - width to align to left side of anchor
       currentX = rect.x - currentTooltipWidth - offset
-      currentY = rect.y
+      currentY = windowOffset < 0 ? rect.y + windowOffset : rect.y
       const fadeIn = [{ opacity: "0" }, { opacity: "1" }];
       const fadeOut = [{ opacity: "1" }, { opacity: "0" }];
       const color = [{ backgroundColor: previousStyles.backgroundColor }, { backgroundColor: currentStyles.backgroundColor }];
@@ -166,7 +169,7 @@
 
   .screenSizeAbsoluteWrapper {
     width: 200vw;
-    height: 200vh;
+    height: 100vh;
     position: absolute;
     transition: top 300ms ease-in, left 300ms ease-in;
   }
