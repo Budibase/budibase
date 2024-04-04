@@ -20,20 +20,20 @@ export const validators = {
       }
       const generalUnsupportedFields = ["array", "attachment", "barcodeqr", "link", "bb_reference"]
       if (generalUnsupportedFields.includes(fieldSchema.type)) {
-        response.errors.push(`${capitalize(fieldSchema.type)} columns are unsupported.`)
+        response.errors.push('This column can not be used a chart input.')
       }
 
       if (fieldSchema.type === "json") {
-          response.errors.push(`JSON columns can not be used as chart inputs, but individual properties of this JSON field can be be used if supported.`)
+          response.errors.push(`This column can not be used as a chart input, but individual properties of a JSON object can be be used if supported.`)
       }
 
       if (fieldSchema.type === "string") {
         response.warnings.push(
-          "String columns can be used as input for a chart, but non-numeric values may cause unexpected behavior.")
+          "This column can be used as input for a chart, but non-numeric values may cause unexpected behavior.")
       }
       if (fieldSchema.type === "datetime") {
         response.warnings.push(
-          "This column can be used as input for a chart, but it is parsed differently for various charts.")
+          "This column can be used as input for a chart, but it may be parsed differently depending on the which is used.")
       }
 
       const isRequired = fieldSchema?.constraints?.presence?.allowEmpty === false

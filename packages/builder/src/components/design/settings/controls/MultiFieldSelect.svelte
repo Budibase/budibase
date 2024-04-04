@@ -5,6 +5,7 @@
   import { createEventDispatcher } from "svelte"
   import { validators, constants as validatorConstants } from "../fieldValidator";
   import ChartFieldContext from './FieldContext/Chart.svelte'
+  import { FIELDS } from 'constants/backend'
 
   export let componentInstance = {}
   export let value = ""
@@ -63,9 +64,6 @@
   $: fieldSupport = getFieldSupport(schema, fieldValidator);
   $: boundValue = getValidOptions(value, options)
 
-  $: {
-    console.log(schema)
-  }
 
   const getValidOptions = (selectedOptions, allOptions) => {
     // Fix the hardcoded default string value
@@ -100,7 +98,14 @@
   const getOptionIconTooltip = optionKey => {
     const option = schema[optionKey]
 
-    return option?.type;
+    const type = option?.type;
+    const field = Object.values(FIELDS).find(f => f.type === type)
+
+    if (field) {
+      return field.name
+    }
+
+    return ""
   }
 
   const isOptionEnabled = optionKey => {
@@ -157,7 +162,6 @@
   $: previousOptionSupport = getSupportLevel(previousOption)
 
   const onOptionMouseenter = (e, option, idx) => {
-    console.log(option)
     contextTooltipId += 1;
     const invokedContextTooltipId = contextTooltipId
 

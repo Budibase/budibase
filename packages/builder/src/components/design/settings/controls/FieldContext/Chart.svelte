@@ -16,6 +16,22 @@
   export let errors = []
   export let warnings = []
 
+  const getDocLink = (columnType) => {
+    if (columnType === "number") {
+      return "https://docs.budibase.com/docs/number"
+    }
+    if (columnType === "string") {
+      return "https://docs.budibase.com/docs/text"
+    }
+    if (columnType === "attachment") {
+      return "https://docs.budibase.com/docs/attachments"
+    }
+
+    return ""
+  }
+
+  $: docLink = getDocLink(columnType);
+
 </script>
 
 <div
@@ -28,12 +44,12 @@
   <div class="contextTooltipContent">
     <div class="contextTooltipHeader">
       <span class="columnName">
-        {columnName} 
+        {columnName}
       </span><span> is a </span>
-      <div class="link">
+      <a target=”_blank” href={docLink} class="link">
         <Icon name={columnIcon} />
         <span>{columnType}</span>
-      </div>
+      </a>
       <span>column.</span>
     </div>
 
@@ -45,6 +61,8 @@
       {#each warnings as datum}
         <p>{datum}</p>
       {/each}
+    {:else}
+        <p>{supportLevelIconTooltip}</p>
     {/if}
   </div>
 </div>
@@ -75,13 +93,14 @@
   }
 
   .contextTooltipHeader {
-    row-gap: 4px;
+    row-gap: 6px;
+    column-gap: 5px;
     background-color: var(--background-alt);
     color: var(--ink);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    padding: 4px 4px;
+    padding: 6px 8px;
     border-width: var(--spectrum-actionbutton-border-size);
     border-radius: var(--spectrum-alias-border-radius-regular);
     border: 1px solid
@@ -107,7 +126,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-right: 5px;
   }
 
   .link {
@@ -116,7 +134,12 @@
     border-radius: 5px;
     background-color: var(--spectrum-global-color-blue-500);
     color: white;
-    margin: 0 8px;
+    transition: background-color 300ms
+  }
+
+  .link:hover {
+    background-color: var(--spectrum-global-color-blue-700);
+    cursor: pointer;
   }
 
   .link :global(svg) {
