@@ -10,13 +10,11 @@
   const {
     routeStore,
     roleStore,
-    styleable,
     linkable,
     builderStore,
     sidePanelStore,
     appStore,
   } = sdk
-  const component = getContext("component")
   const context = getContext("context")
 
   // Legacy props which must remain unchanged for backwards compatibility
@@ -170,7 +168,6 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="component layout layout--{typeClass}"
-  use:styleable={$component.styles}
   class:desktop={!mobile}
   class:mobile={!!mobile}
   data-id={screenId}
@@ -286,7 +283,7 @@
       class="main-wrapper"
       on:click={() => {
         if ($builderStore.inBuilder) {
-          builderStore.actions.selectComponent($builderStore.screen._id)
+          builderStore.actions.selectComponent(screenId)
         }
       }}
     >
