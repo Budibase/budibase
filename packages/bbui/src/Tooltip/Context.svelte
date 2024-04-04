@@ -11,7 +11,6 @@
 
   let hovering = false
   let wrapper
-  let resetWrapper
   let currentTooltip
   let previousTooltip
 
@@ -30,13 +29,19 @@
     }
   }
 
-  const updatePosition = (anchor, currentTooltip, previousTooltip, wrapper, resetWrapper) => {
+  const updatePosition = (anchor, currentTooltip, previousTooltip, wrapper) => {
     requestAnimationFrame(() => {
-      if (anchor == null || currentTooltip == null || previousTooltip == null || wrapper == null || resetWrapper == null) {
+      if (anchor == null || currentTooltip == null || previousTooltip == null || wrapper == null) {
         return;
       }
 
       const rect = anchor.getBoundingClientRect();
+      const previousStyles = window.getComputedStyle(previousTooltip?.firstChild)
+      const currentStyles = window.getComputedStyle(currentTooltip?.firstChild)
+
+      console.log(previousStyles.backgroundColor);
+      console.log(currentStyles.backgroundColor);
+      console.log("")
 
       currentTooltipWidth = currentTooltip.clientWidth
       currentTooltipHeight = currentTooltip.clientHeight
@@ -49,23 +54,32 @@
       currentY = rect.y
       const fadeIn = [{ opacity: "0" }, { opacity: "1" }];
       const fadeOut = [{ opacity: "1" }, { opacity: "0" }];
+      const color = [{ offset: 0, backgroundColor: previousStyles.backgroundColor }, { offset: 0.85, backgroundColor: currentStyles.backgroundColor }, { offset: 1, backgroundColor: "black" }];
 
       const fadeInTiming = {
-        duration: 150,
-        delay: 150,
+        duration: 100,
+        delay: 100,
         iterations: 1,
         easing: "ease-in",
         fill: "both"
       };
       const fadeOutTiming = {
-        duration: 150,
+        duration: 100,
         iterations: 1,
         easing: "ease-in",
         fill: "forwards"
       };
 
+      const colorTiming = {
+        duration: 300,
+        iterations: 1,
+        easing: "ease-in",
+        fill: "both"
+      };
+
       currentTooltip.animate(fadeIn, fadeInTiming);
       previousTooltip.animate(fadeOut, fadeOutTiming);
+      wrapper.animate(color, colorTiming);
 
       // Bypass animations if the tooltip has only just been opened
       if (initialShow) {
@@ -74,18 +88,14 @@
         previousTooltip.style.visibility = "hidden"
 
         wrapper.style.transition = "none";
-        wrapper.style.width = `${currentTooltipWidth}px`
-        wrapper.style.height = `${currentTooltipHeight}px`
+        //wrapper.style.width = `${currentTooltipWidth}px`
+        //wrapper.style.height = `${currentTooltipHeight}px`
         wrapper.style.top = `${currentY}px`
         wrapper.style.left = `${currentX}px`
 
-        resetWrapper.style.transition = "none";
-        resetWrapper.style.top = `${-currentY}px`
-        resetWrapper.style.left = `${-currentX}px`
 
         requestAnimationFrame(() => {
           wrapper.style.removeProperty("transition");
-          resetWrapper.style.removeProperty("transition");
         })
       } else {
         previousTooltip.style.removeProperty("visibility");
@@ -93,7 +103,7 @@
     })
   }
 
-  $: updatePosition(anchor, currentTooltip, previousTooltip, wrapper, resetWrapper)
+  $: updatePosition(anchor, currentTooltip, previousTooltip, wrapper)
   $: handleVisibilityChange(visible, hovering)
 
   const handleMouseenter = (e) => {
@@ -110,26 +120,25 @@
     bind:this={wrapper}
     on:mouseenter={handleMouseenter}
     on:mouseleave={handleMouseleave}
-    style:width={`${currentTooltipWidth}px`}
-    style:height={`${currentTooltipHeight}px`}
     style:left={`${currentX}px`}
     style:top={`${currentY}px`}
+    style:width={`${currentTooltipWidth}px`}
+    style:height={`${currentTooltipHeight}px`}
     class="tooltip"
     class:visible={visible || hovering}
   >
   <!-- absolutely position element with the opposite positioning, so that the tooltip elements can be positioned
     using the same values as the root wrapper, while still being occluded by it.
   -->
-  <div class="screenSizeAbsoluteWrapper"
-    bind:this={resetWrapper}
-    style:left={`${-currentX}px`}
-    style:top={`${-currentY}px`}
-    >
+    <div class="screenSizeAbsoluteWrapper"
+      style:left={`${-currentX}px`}
+      style:top={`${-currentY}px`}
+      >
       <div
-        style:left={`${currentX}px`}
-        style:top={`${currentY}px`}
         bind:this={currentTooltip}
         class="currentContent"
+        style:left={`${currentX}px`}
+        style:top={`${currentY}px`}
       >
         <slot />
       </div>
@@ -153,16 +162,16 @@
     background-color: var(--spectrum-global-color-gray-200);
     border-radius: 5px;
     box-sizing: border-box;
-
     opacity: 0;
     overflow: hidden;
+
     transition: width 300ms ease-in, height 300ms ease-in, top 300ms ease-in, left 300ms ease-in;
   }
 
   .screenSizeAbsoluteWrapper {
+    width: 200vw;
+    height: 200vh;
     position: absolute;
-    width: 100vw;
-    height: 100vh;
     transition: top 300ms ease-in, left 300ms ease-in;
   }
 

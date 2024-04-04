@@ -12,9 +12,12 @@
 
   let contextTooltipId = 0;
   let contextTooltipAnchor = null
-  let contextTooltipOption = null
-  let previousContextTooltipOption = null
+  let currentOption = null
+  let previousOption = null
   let contextTooltipVisible = false
+  let currentOptionSupport = {}
+  let previousOptionSupport = {}
+
 
   const TypeIconMap = {
     text: "Text",
@@ -78,6 +81,8 @@
 
   const getOptionIcon = optionKey => {
     const option = schema[optionKey]
+    if (!option) return ""
+
     if (option.autocolumn) {
       return "MagicWand"
     }
@@ -94,14 +99,7 @@
   const getOptionIconTooltip = optionKey => {
     const option = schema[optionKey]
 
-    return option.type;
-  }
-
-  const getOptionTooltip = optionKey => {
-    const support = fieldSupport[optionKey]?.support;
-    const message = fieldSupport[optionKey]?.message;
-
-    return message
+    return option?.type;
   }
 
   const isOptionEnabled = optionKey => {
@@ -116,23 +114,67 @@
     return true
   }
 
+  const getSupportLevel = (optionKey) => {
+    const level = fieldSupport[optionKey]?.level;
+
+    if (level === validatorConstants.unsupported) {
+      return {
+        class: "supportLevelUnsupported",
+        icon: "Alert",
+        iconTooltip: fieldSupport[optionKey]?.message,
+        text: "Unsupported"
+      }
+    }
+
+    if (level === validatorConstants.partialSupport) {
+      return {
+        class: "supportLevelPartialSupport",
+        icon: "AlertCheck",
+        iconTooltip: fieldSupport[optionKey]?.message,
+        text: "Partial Support"
+      }
+    }
+
+    if (level === validatorConstants.supported) {
+      return {
+        class: "supportLevelSupported",
+        icon: "CheckmarkCircle",
+        iconTooltip: fieldSupport[optionKey]?.message,
+        text: "Supported"
+      }
+    }
+
+    return {
+      class: "supportLevelUnsupported",
+      icon: "Alert",
+      iconTooltip: "",
+      text: "Unsupported"
+    }
+  }
+
+  $: currentOptionSupport = getSupportLevel(currentOption)
+  $: previousOptionSupport = getSupportLevel(previousOption)
+
   const onOptionMouseenter = (e, option, idx) => {
+    console.log(option)
     contextTooltipId += 1;
     const invokedContextTooltipId = contextTooltipId
 
     setTimeout(() => {
       if (contextTooltipId === invokedContextTooltipId) {
         contextTooltipAnchor = e.target;
-        previousContextTooltipOption = contextTooltipOption;
-        contextTooltipOption = option;
+        previousOption = currentOption;
+        currentOption = option;
         contextTooltipVisible = true;
+        currentOptionSupport = getSupportLevel(currentOption)
+        previousOptionSupport = getSupportLevel(previousOption)
       }
     }, 200)
   }
 
   const onOptionMouseleave = (e, option) => {
     setTimeout(() => {
-      if (option === contextTooltipOption) {
+      if (option === currentOption) {
         contextTooltipVisible = false;
       }
     }, 600)
@@ -156,37 +198,78 @@
   offset={20}
 >
   <div
-    class="tooltipContents"
+    class={`tooltipContents ${currentOptionSupport.class}`}
   >
-    {#if contextTooltipOption}
+    <div class={`supportLevel ${currentOptionSupport.class}`}>
+      <Icon tooltip={currentOptionSupport.iconTooltip} name={currentOptionSupport.icon} />
+      <p>{currentOptionSupport.text}</p>
+    </div>
+    <div class="contextTooltipContent">
       <div class="contextTooltipHeader">
-        <Icon name={getOptionIcon(contextTooltipOption)} />
-        <span>{contextTooltipOption}</span>
+        <Icon name={getOptionIcon(currentOption)} />
+        <span>{currentOption}</span>
       </div>
-      <p>{getOptionTooltip(contextTooltipOption)}</p>
-    {/if}
+
+      {#if fieldSupport[currentOption]?.errors?.length > 0}
+        {#each (fieldSupport[currentOption].errors) as datum}
+          <p>{datum}</p>
+        {/each}
+      {:else if fieldSupport[currentOption]?.warnings?.length > 0}
+        {#each (fieldSupport[currentOption].warnings) as datum}
+          <p>{datum}</p>
+        {/each}
+      {/if}
+    </div>
   </div>
   <div slot="previous"
-    class="tooltipContents"
+    class={`tooltipContents ${previousOptionSupport.class}`}
   >
-    {#if previousContextTooltipOption}
+    <div class={`supportLevel ${previousOptionSupport.class}`}>
+      <Icon tooltip={previousOptionSupport.iconTooltip} name={previousOptionSupport.icon} />
+      <p>{previousOptionSupport.text}</p>
+    </div>
+    <div class="contextTooltipContent">
       <div class="contextTooltipHeader">
-        <Icon name={getOptionIcon(previousContextTooltipOption)} />
-        <span>{previousContextTooltipOption}</span>
+        <Icon name={getOptionIcon(previousOption)} />
+        <span>{previousOption}</span>
       </div>
-      <p>{getOptionTooltip(previousContextTooltipOption)}</p>
-    {/if}
+
+      {#if fieldSupport[previousOption]?.errors?.length > 0}
+        {#each (fieldSupport[previousOption].errors) as datum}
+          <p>{datum}</p>
+        {/each}
+      {:else if fieldSupport[previousOption]?.warnings?.length > 0}
+        {#each (fieldSupport[previousOption].warnings) as datum}
+          <p>{datum}</p>
+        {/each}
+      {/if}
+    </div>
   </div>
 </ContextTooltip>
 
 <style>
   .tooltipContents {
-    max-width: 200px;
+    max-width: 400px;
     background-color: var(--spectrum-global-color-gray-200);
-    display: inline-block;
-    padding: 12px;
+    display: block;
+    padding: 0 0 12px 0 ;
     border-radius: 5px;
     box-sizing: border-box;
+  }
+
+  .tooltipContents.supportLevelUnsupported {
+    background-color: var(--red);
+    color: var(--ink)
+  }
+
+  .tooltipContents.supportLevelPartialSupport {
+    background-color: var(--yellow);
+    color: var(--ink)
+  }
+
+  .tooltipContents.supportLevelSupported {
+    background-color: var(--green);
+    color: var(--ink)
   }
 
   .contextTooltipHeader {
@@ -203,14 +286,41 @@
       );
   }
 
+  .contextTooltipContent {
+    padding: 0px 12px;
+  }
+
   .contextTooltipHeader :global(svg) {
-    color: var(--background);
+    color: var(--ink);
     margin-right: 5px;
   }
 
   .contextTooltipHeader :global(span) {
- white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .supportLevel {
+    display: flex;
+    align-items: center;
+    height: var(--spectrum-alias-item-height-m);
+    padding: 0px var(--spectrum-alias-item-padding-m);
+    margin-bottom: 12px;
+  }
+  .supportLevel :global(svg) {
+    margin-right: 5px;
+  }
+
+  .supportLevel.supportLevelUnsupported {
+    background-color: var(--red-light)
+  }
+
+  .supportLevel.supportLevelPartialSupport {
+    background-color: var(--yellow-light)
+  }
+
+  .supportLevel.supportLevelSupported {
+    background-color: var(--green-light)
   }
 </style>
