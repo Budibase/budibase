@@ -40,16 +40,18 @@
 <div
   class={`tooltipContents ${supportLevelClass}`}
 >
-  <div class="columnName">
-    {columnName}
-  </div>
-  <div class="divider"></div>
-  <div class="line">
-    <a target=”_blank” href={docLink} class="chip link">
+
+  <div class="topLine">
+    <div class="chip columnName">
+      {columnName}
+    </div>
+    <span> is a </span>
+    <a target=”_blank” href={docLink} class="chip link topLink">
       <Icon size="S" name={columnIcon} />
       <span>{columnType} Column</span>
     </a>
   </div>
+  <div class="divider"></div>
   <div class={`line ${supportLevelClass}`}>
     <div class={`chip supportChip ${supportLevelClass}`}>
       <Icon size="S" tooltip={supportLevelIconTooltip} name={supportLevelIcon} />
@@ -85,17 +87,28 @@
 </div>
 
 <style>
-  .columnName {
-    font-style: italic;
+  .chip {
+    display: inline-flex;
     padding: 3px 6px;
     border-radius: 5px;
+    vertical-align: sub;
+    margin-right: 5px;
+  }
+
+  .columnName {
+    font-style: italic;
     background-color: var(--grey-2);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    display: inline-block;
-    max-width: 100%;
     box-sizing: border-box;
+    display: block;
+    min-width: 0;
+    margin-right: 0;
+  }
+
+  .topLink {
+    flex-shrink: 0;
   }
 
   .divider {
@@ -112,6 +125,16 @@
     box-sizing: border-box;
   }
 
+  .topLine {
+    display: flex;
+    align-items: center;
+  }
+
+  .topLine > span {
+    flex-shrink: 0;
+    margin: 0 5px;
+  }
+
   .line {
     background-color: var(--background-alt);
     color: var(--ink);
@@ -121,14 +144,6 @@
 
   .line > span {
     display: inline;
-    margin-right: 5px;
-  }
-
-  .chip {
-    display: inline-flex;
-    padding: 3px 6px;
-    border-radius: 5px;
-    vertical-align: sub;
     margin-right: 5px;
   }
 
