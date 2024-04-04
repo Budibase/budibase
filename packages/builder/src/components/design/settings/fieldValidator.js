@@ -1,3 +1,5 @@
+import { capitalize } from 'lodash';
+
 export const constants = {
   warning: Symbol("values-validator-warning"),
   error: Symbol("values-validator-error"),
@@ -8,16 +10,17 @@ export const constants = {
 
 export const validators = {
   chart: (fieldSchema) => {
+    console.log(fieldSchema);
     try {
       const response = {
-        support: null,
+        level: null,
         message: null,
         warnings: [],
         errors: []
       }
       const generalUnsupportedFields = ["array", "attachment", "barcodeqr", "link", "bb_reference"]
       if (generalUnsupportedFields.includes(fieldSchema.type)) {
-        response.errors.push(`${fieldSchema.type} columns can not be used as chart inputs.`)
+        response.errors.push(`${capitalize(fieldSchema.type)} columns are unsupported.`)
       }
 
       if (fieldSchema.type === "json") {
@@ -26,7 +29,7 @@ export const validators = {
 
       if (fieldSchema.type === "string") {
         response.warnings.push(
-          "This column can be used as input for a chart, but non-numeric values may cause unexpected behavior.")
+          "String columns can be used as input for a chart, but non-numeric values may cause unexpected behavior.")
       }
       if (fieldSchema.type === "date") {
         response.warnings.push(
@@ -40,13 +43,13 @@ export const validators = {
       }
 
       if (response.errors.length > 0) {
-        response.support = constants.unsupported
+        response.level = constants.unsupported
         response.message = "This column can not be used as a chart input."
       } else if (response.warnings.length > 0) {
-        response.support = constants.partialSupport
+        response.level = constants.partialSupport
         response.message = "This column can be used as a chart input, but certain values may cause issues."
       } else {
-        response.support = constants.supported
+        response.level = constants.supported
         response.message = "This column can be used as a chart input."
       }
 
@@ -54,7 +57,7 @@ export const validators = {
     } catch (e) {
       console.log(e)
       return {
-        support: constants.partialSupport,
+        level: constants.partialSupport,
         message: "There was an issue validating this field, it may not be fully supported for use with charts.",
         warnings: [],
         errors: []
