@@ -1,14 +1,17 @@
 import { Datasource, Query } from "@budibase/types"
 import * as setup from "../utilities"
-import { databaseTestProviders } from "../../../../integrations/tests/utils"
-import { MongoClient, type Collection, BSON } from "mongodb"
-
-const collection = "test_collection"
+import {
+  DatabaseName,
+  getDatasource,
+} from "../../../../integrations/tests/utils"
+import { MongoClient, type Collection, BSON, Db } from "mongodb"
+import { generator } from "@budibase/backend-core/tests"
 
 const expectValidId = expect.stringMatching(/^\w{24}$/)
 const expectValidBsonObjectId = expect.any(BSON.ObjectId)
 
 describe("/queries", () => {
+  let collection: string
   let config = setup.getConfig()
   let datasource: Datasource
 
@@ -37,8 +40,7 @@ describe("/queries", () => {
   async function withClient<T>(
     callback: (client: MongoClient) => Promise<T>
   ): Promise<T> {
-    const ds = await databaseTestProviders.mongodb.datasource()
-    const client = new MongoClient(ds.config!.connectionString)
+    const client = new MongoClient(datasource.config!.connectionString)
     await client.connect()
     try {
       return await callback(client)
@@ -47,30 +49,33 @@ describe("/queries", () => {
     }
   }
 
+  async function withDb<T>(callback: (db: Db) => Promise<T>): Promise<T> {
+    return await withClient(async client => {
+      return await callback(client.db(datasource.config!.db))
+    })
+  }
+
   async function withCollection<T>(
     callback: (collection: Collection) => Promise<T>
   ): Promise<T> {
-    return await withClient(async client => {
-      const db = client.db(
-        (await databaseTestProviders.mongodb.datasource()).config!.db
-      )
+    return await withDb(async db => {
       return await callback(db.collection(collection))
     })
   }
 
   afterAll(async () => {
-    await databaseTestProviders.mongodb.stop()
     setup.afterAll()
   })
 
   beforeAll(async () => {
     await config.init()
     datasource = await config.api.datasource.create(
-      await databaseTestProviders.mongodb.datasource()
+      await getDatasource(DatabaseName.MONGODB)
     )
   })
 
   beforeEach(async () => {
+    collection = generator.guid()
     await withCollection(async collection => {
       await collection.insertMany([
         { name: "one" },
