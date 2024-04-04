@@ -25,7 +25,6 @@ import { quotas } from "@budibase/pro"
 import { roles } from "@budibase/backend-core"
 
 jest.unmock("mssql")
-jest.unmock("pg")
 
 describe.each([
   ["internal", undefined],
