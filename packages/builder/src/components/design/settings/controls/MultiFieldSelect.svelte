@@ -207,7 +207,7 @@
     <div class="contextTooltipContent">
       <div class="contextTooltipHeader">
         <Icon name={getOptionIcon(currentOption)} />
-        <span>{currentOption}</span>
+        <span>{getOptionIconTooltip(currentOption)}</span>
       </div>
 
       {#if fieldSupport[currentOption]?.errors?.length > 0}
@@ -231,7 +231,7 @@
     <div class="contextTooltipContent">
       <div class="contextTooltipHeader">
         <Icon name={getOptionIcon(previousOption)} />
-        <span>{previousOption}</span>
+        <span>{getOptionIconTooltip(previousOption)}</span>
       </div>
 
       {#if fieldSupport[previousOption]?.errors?.length > 0}
@@ -273,6 +273,8 @@
   }
 
   .contextTooltipHeader {
+    background-color: var(--background-alt);
+    color: var(--ink);
     display: flex;
     align-items: center;
     height: var(--spectrum-alias-item-height-m);
@@ -288,10 +290,10 @@
 
   .contextTooltipContent {
     padding: 0px 12px;
+    color: black;
   }
 
   .contextTooltipHeader :global(svg) {
-    color: var(--ink);
     margin-right: 5px;
   }
 
@@ -307,6 +309,7 @@
     height: var(--spectrum-alias-item-height-m);
     padding: 0px var(--spectrum-alias-item-padding-m);
     margin-bottom: 12px;
+    color: black;
   }
   .supportLevel :global(svg) {
     margin-right: 5px;
