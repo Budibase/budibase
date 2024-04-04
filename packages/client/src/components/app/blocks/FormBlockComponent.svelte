@@ -7,19 +7,19 @@
   export let order
 
   const FieldTypeToComponentMap = {
-    string: "stringfield",
-    number: "numberfield",
-    bigint: "bigintfield",
-    options: "optionsfield",
-    array: "multifieldselect",
-    boolean: "booleanfield",
-    longform: "longformfield",
-    datetime: "datetimefield",
-    attachment: "attachmentfield",
-    link: "relationshipfield",
-    json: "jsonfield",
-    barcodeqr: "codescanner",
-    bb_reference: "bbreferencefield",
+    [FieldType.STRING]: "stringfield",
+    [FieldType.NUMBER]: "numberfield",
+    [FieldType.BIGINT]: "bigintfield",
+    [FieldType.OPTIONS]: "optionsfield",
+    [FieldType.ARRAY]: "multifieldselect",
+    [FieldType.BOOLEAN]: "booleanfield",
+    [FieldType.LONGFORM]: "longformfield",
+    [FieldType.DATETIME]: "datetimefield",
+    [FieldType.ATTACHMENT]: "attachmentfield",
+    [FieldType.LINK]: "relationshipfield",
+    [FieldType.JSON]: "jsonfield",
+    [FieldType.BARCODEQR]: "codescanner",
+    [FieldType.BB_REFERENCE]: "bbreferencefield",
   }
 
   const getFieldSchema = field => {

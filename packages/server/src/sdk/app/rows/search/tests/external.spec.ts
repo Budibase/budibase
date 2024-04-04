@@ -17,8 +17,6 @@ import {
   generator,
 } from "@budibase/backend-core/tests"
 
-jest.setTimeout(30000)
-
 describe("external search", () => {
   const config = new TestConfiguration()
 
