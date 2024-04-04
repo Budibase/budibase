@@ -3,7 +3,6 @@ import {
   generateMakeRequest,
   MakeRequestResponse,
 } from "../api/routes/public/tests/utils"
-import { v4 as uuidv4 } from "uuid"
 import * as setup from "../api/routes/tests/utilities"
 import {
   Datasource,
@@ -12,11 +11,22 @@ import {
   TableRequest,
   TableSourceType,
 } from "@budibase/types"
-import { databaseTestProviders } from "../integrations/tests/utils"
-import mysql from "mysql2/promise"
+import {
+  DatabaseName,
+  getDatasource,
+  rawQuery,
+} from "../integrations/tests/utils"
 import { builderSocket } from "../websockets"
+import { generator } from "@budibase/backend-core/tests"
 // @ts-ignore
 fetch.mockSearch()
+
+function uniqueTableName(length?: number): string {
+  return generator
+    .guid()
+    .replaceAll("-", "_")
+    .substring(0, length || 10)
+}
 
 const config = setup.getConfig()!
 
@@ -37,7 +47,8 @@ jest.mock("../websockets", () => ({
 
 describe("mysql integrations", () => {
   let makeRequest: MakeRequestResponse,
-    mysqlDatasource: Datasource,
+    rawDatasource: Datasource,
+    datasource: Datasource,
     primaryMySqlTable: Table
 
   beforeAll(async () => {
@@ -46,18 +57,13 @@ describe("mysql integrations", () => {
 
     makeRequest = generateMakeRequest(apiKey, true)
 
-    mysqlDatasource = await config.api.datasource.create(
-      await databaseTestProviders.mysql.datasource()
-    )
-  })
-
-  afterAll(async () => {
-    await databaseTestProviders.mysql.stop()
+    rawDatasource = await getDatasource(DatabaseName.MYSQL)
+    datasource = await config.api.datasource.create(rawDatasource)
   })
 
   beforeEach(async () => {
     primaryMySqlTable = await config.createTable({
-      name: uuidv4(),
+      name: uniqueTableName(),
       type: "table",
       primary: ["id"],
       schema: {
@@ -79,7 +85,7 @@ describe("mysql integrations", () => {
           type: FieldType.NUMBER,
         },
       },
-      sourceId: mysqlDatasource._id,
+      sourceId: datasource._id,
       sourceType: TableSourceType.EXTERNAL,
     })
   })
@@ -87,18 +93,15 @@ describe("mysql integrations", () => {
   afterAll(config.end)
 
   it("validate table schema", async () => {
-    const res = await makeRequest(
-      "get",
-      `/api/datasources/${mysqlDatasource._id}`
-    )
+    const res = await makeRequest("get", `/api/datasources/${datasource._id}`)
 
     expect(res.status).toBe(200)
     expect(res.body).toEqual({
       config: {
-        database: "mysql",
-        host: mysqlDatasource.config!.host,
+        database: expect.any(String),
+        host: datasource.config!.host,
         password: "--secret-value--",
-        port: mysqlDatasource.config!.port,
+        port: datasource.config!.port,
         user: "root",
       },
       plus: true,
@@ -117,7 +120,7 @@ describe("mysql integrations", () => {
     it("should be able to verify the connection", async () => {
       await config.api.datasource.verify(
         {
-          datasource: await databaseTestProviders.mysql.datasource(),
+          datasource: rawDatasource,
         },
         {
           body: {
@@ -128,13 +131,12 @@ describe("mysql integrations", () => {
     })
 
     it("should state an invalid datasource cannot connect", async () => {
-      const dbConfig = await databaseTestProviders.mysql.datasource()
       await config.api.datasource.verify(
         {
           datasource: {
-            ...dbConfig,
+            ...rawDatasource,
             config: {
-              ...dbConfig.config,
+              ...rawDatasource.config,
               password: "wrongpassword",
             },
           },
@@ -154,7 +156,7 @@ describe("mysql integrations", () => {
     it("should fetch information about mysql datasource", async () => {
       const primaryName = primaryMySqlTable.name
       const response = await makeRequest("post", "/api/datasources/info", {
-        datasource: mysqlDatasource,
+        datasource: datasource,
       })
       expect(response.status).toBe(200)
       expect(response.body.tableNames).toBeDefined()
@@ -163,40 +165,38 @@ describe("mysql integrations", () => {
   })
 
   describe("Integration compatibility with mysql search_path", () => {
-    let client: mysql.Connection, pathDatasource: Datasource
-    const database = "test1"
-    const database2 = "test-2"
+    let datasource: Datasource, rawDatasource: Datasource
+    const database = generator.guid()
+    const database2 = generator.guid()
 
     beforeAll(async () => {
-      const dsConfig = await databaseTestProviders.mysql.datasource()
-      const dbConfig = dsConfig.config!
+      rawDatasource = await getDatasource(DatabaseName.MYSQL)
 
-      client = await mysql.createConnection(dbConfig)
-      await client.query(`CREATE DATABASE \`${database}\`;`)
-      await client.query(`CREATE DATABASE \`${database2}\`;`)
+      await rawQuery(rawDatasource, `CREATE DATABASE \`${database}\`;`)
+      await rawQuery(rawDatasource, `CREATE DATABASE \`${database2}\`;`)
 
       const pathConfig: any = {
-        ...dsConfig,
+        ...rawDatasource,
         config: {
-          ...dbConfig,
+          ...rawDatasource.config!,
           database,
         },
       }
-      pathDatasource = await config.api.datasource.create(pathConfig)
+      datasource = await config.api.datasource.create(pathConfig)
     })
 
     afterAll(async () => {
-      await client.query(`DROP DATABASE \`${database}\`;`)
-      await client.query(`DROP DATABASE \`${database2}\`;`)
-      await client.end()
+      await rawQuery(rawDatasource, `DROP DATABASE \`${database}\`;`)
+      await rawQuery(rawDatasource, `DROP DATABASE \`${database2}\`;`)
     })
 
     it("discovers tables from any schema in search path", async () => {
-      await client.query(
+      await rawQuery(
+        rawDatasource,
         `CREATE TABLE \`${database}\`.table1 (id1 SERIAL PRIMARY KEY);`
       )
       const response = await makeRequest("post", "/api/datasources/info", {
-        datasource: pathDatasource,
+        datasource: datasource,
       })
       expect(response.status).toBe(200)
       expect(response.body.tableNames).toBeDefined()
@@ -207,15 +207,17 @@ describe("mysql integrations", () => {
 
     it("does not mix columns from different tables", async () => {
       const repeated_table_name = "table_same_name"
-      await client.query(
+      await rawQuery(
+        rawDatasource,
         `CREATE TABLE \`${database}\`.${repeated_table_name} (id SERIAL PRIMARY KEY, val1 TEXT);`
       )
-      await client.query(
+      await rawQuery(
+        rawDatasource,
         `CREATE TABLE \`${database2}\`.${repeated_table_name} (id2 SERIAL PRIMARY KEY, val2 TEXT);`
       )
       const response = await makeRequest(
         "post",
-        `/api/datasources/${pathDatasource._id}/schema`,
+        `/api/datasources/${datasource._id}/schema`,
         {
           tablesFilter: [repeated_table_name],
         }
@@ -231,30 +233,14 @@ describe("mysql integrations", () => {
   })
 
   describe("POST /api/tables/", () => {
-    let client: mysql.Connection
     const emitDatasourceUpdateMock = jest.fn()
-
-    beforeEach(async () => {
-      client = await mysql.createConnection(
-        (
-          await databaseTestProviders.mysql.datasource()
-        ).config!
-      )
-      mysqlDatasource = await config.api.datasource.create(
-        await databaseTestProviders.mysql.datasource()
-      )
-    })
-
-    afterEach(async () => {
-      await client.end()
-    })
 
     it("will emit the datasource entity schema with externalType to the front-end when adding a new column", async () => {
       const addColumnToTable: TableRequest = {
         type: "table",
         sourceType: TableSourceType.EXTERNAL,
-        name: "table",
-        sourceId: mysqlDatasource._id!,
+        name: uniqueTableName(),
+        sourceId: datasource._id!,
         primary: ["id"],
         schema: {
           id: {
@@ -301,14 +287,16 @@ describe("mysql integrations", () => {
           },
         },
         created: true,
-        _id: `${mysqlDatasource._id}__table`,
+        _id: `${datasource._id}__${addColumnToTable.name}`,
       }
       delete expectedTable._add
 
       expect(emitDatasourceUpdateMock).toHaveBeenCalledTimes(1)
       const emittedDatasource: Datasource =
         emitDatasourceUpdateMock.mock.calls[0][1]
-      expect(emittedDatasource.entities!["table"]).toEqual(expectedTable)
+      expect(emittedDatasource.entities![expectedTable.name]).toEqual(
+        expectedTable
+      )
     })
 
     it("will rename a column", async () => {
@@ -346,17 +334,18 @@ describe("mysql integrations", () => {
         "/api/tables/",
         renameColumnOnTable
       )
-      mysqlDatasource = (
-        await makeRequest(
-          "post",
-          `/api/datasources/${mysqlDatasource._id}/schema`
-        )
+
+      const ds = (
+        await makeRequest("post", `/api/datasources/${datasource._id}/schema`)
       ).body.datasource
 
       expect(response.status).toEqual(200)
-      expect(
-        Object.keys(mysqlDatasource.entities![primaryMySqlTable.name].schema)
-      ).toEqual(["id", "name", "description", "age"])
+      expect(Object.keys(ds.entities![primaryMySqlTable.name].schema)).toEqual([
+        "id",
+        "name",
+        "description",
+        "age",
+      ])
     })
   })
 })
