@@ -10,6 +10,7 @@
   export let supportLevelText = ""
 
   export let columnIcon
+  export let columnType
   export let columnName
 
   export let errors = []
@@ -26,8 +27,14 @@
   </div>
   <div class="contextTooltipContent">
     <div class="contextTooltipHeader">
-      <Icon name={columnIcon} />
-      <span>{columnName}</span>
+      <span class="columnName">
+        {columnName} 
+      </span><span> is a </span>
+      <div class="link">
+        <Icon name={columnIcon} />
+        <span>{columnType}</span>
+      </div>
+      <span>column.</span>
     </div>
 
     {#if errors.length > 0}
@@ -68,12 +75,13 @@
   }
 
   .contextTooltipHeader {
+    row-gap: 4px;
     background-color: var(--background-alt);
     color: var(--ink);
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    height: var(--spectrum-alias-item-height-m);
-    padding: 0px var(--spectrum-alias-item-padding-m);
+    padding: 4px 4px;
     border-width: var(--spectrum-actionbutton-border-size);
     border-radius: var(--spectrum-alias-border-radius-regular);
     border: 1px solid
@@ -84,15 +92,38 @@
   }
 
   .contextTooltipContent {
-    padding: 0px 12px;
+    color: var(--ink);
+    margin: 0px 12px;
     color: black;
   }
 
-  .contextTooltipHeader :global(svg) {
+  .contextTooltipContent > p {
+  }
+
+  .columnName {
+    padding: 3px 6px;
+    border-radius: 5px;
+    background-color: var(--grey-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     margin-right: 5px;
   }
 
-  .contextTooltipHeader :global(span) {
+  .link {
+    display: inline-flex;
+    padding: 3px 6px;
+    border-radius: 5px;
+    background-color: var(--spectrum-global-color-blue-500);
+    color: white;
+    margin: 0 8px;
+  }
+
+  .link :global(svg) {
+    margin-right: 3px;
+  }
+
+  .link :global(span) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -204,7 +204,8 @@
     supportLevelIconTooltip={currentOptionSupport.iconTooltip}
     supportLevelText={currentOptionSupport.text}
     columnIcon={getOptionIcon(currentOption)}
-    columnName={getOptionIconTooltip(currentOption)}
+    columnName={currentOption}
+    columnType={getOptionIconTooltip(currentOption)}
     errors={fieldSupport[currentOption]?.errors}
     warnings={fieldSupport[currentOption]?.warnings}
   />
@@ -215,7 +216,8 @@
     supportLevelIconTooltip={previousOptionSupport.iconTooltip}
     supportLevelText={previousOptionSupport.text}
     columnIcon={getOptionIcon(previousOption)}
-    columnName={getOptionIconTooltip(previousOption)}
+    columnName={previousOption}
+    columnType={getOptionIconTooltip(previousOption)}
     errors={fieldSupport[previousOption]?.errors}
     warnings={fieldSupport[previousOption]?.warnings}
   />
