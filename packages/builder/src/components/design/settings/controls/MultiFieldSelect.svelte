@@ -4,6 +4,7 @@
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import { validators, constants as validatorConstants } from "../fieldValidator";
+  import ChartFieldContext from './FieldContext/Chart.svelte'
 
   export let componentInstance = {}
   export let value = ""
@@ -197,54 +198,27 @@
   anchor={contextTooltipAnchor}
   offset={20}
 >
-  <div
-    class={`tooltipContents ${currentOptionSupport.class}`}
-  >
-    <div class={`supportLevel ${currentOptionSupport.class}`}>
-      <Icon tooltip={currentOptionSupport.iconTooltip} name={currentOptionSupport.icon} />
-      <p>{currentOptionSupport.text}</p>
-    </div>
-    <div class="contextTooltipContent">
-      <div class="contextTooltipHeader">
-        <Icon name={getOptionIcon(currentOption)} />
-        <span>{getOptionIconTooltip(currentOption)}</span>
-      </div>
-
-      {#if fieldSupport[currentOption]?.errors?.length > 0}
-        {#each (fieldSupport[currentOption].errors) as datum}
-          <p>{datum}</p>
-        {/each}
-      {:else if fieldSupport[currentOption]?.warnings?.length > 0}
-        {#each (fieldSupport[currentOption].warnings) as datum}
-          <p>{datum}</p>
-        {/each}
-      {/if}
-    </div>
-  </div>
-  <div slot="previous"
-    class={`tooltipContents ${previousOptionSupport.class}`}
-  >
-    <div class={`supportLevel ${previousOptionSupport.class}`}>
-      <Icon tooltip={previousOptionSupport.iconTooltip} name={previousOptionSupport.icon} />
-      <p>{previousOptionSupport.text}</p>
-    </div>
-    <div class="contextTooltipContent">
-      <div class="contextTooltipHeader">
-        <Icon name={getOptionIcon(previousOption)} />
-        <span>{getOptionIconTooltip(previousOption)}</span>
-      </div>
-
-      {#if fieldSupport[previousOption]?.errors?.length > 0}
-        {#each (fieldSupport[previousOption].errors) as datum}
-          <p>{datum}</p>
-        {/each}
-      {:else if fieldSupport[previousOption]?.warnings?.length > 0}
-        {#each (fieldSupport[previousOption].warnings) as datum}
-          <p>{datum}</p>
-        {/each}
-      {/if}
-    </div>
-  </div>
+  <ChartFieldContext
+    supportLevelClass={currentOptionSupport.class}
+    supportLevelIcon={currentOptionSupport.icon}
+    supportLevelIconTooltip={currentOptionSupport.iconTooltip}
+    supportLevelText={currentOptionSupport.text}
+    columnIcon={getOptionIcon(currentOption)}
+    columnName={getOptionIconTooltip(currentOption)}
+    errors={fieldSupport[currentOption]?.errors}
+    warnings={fieldSupport[currentOption]?.warnings}
+  />
+  <ChartFieldContext
+    slot="previous"
+    supportLevelClass={previousOptionSupport.class}
+    supportLevelIcon={previousOptionSupport.icon}
+    supportLevelIconTooltip={previousOptionSupport.iconTooltip}
+    supportLevelText={previousOptionSupport.text}
+    columnIcon={getOptionIcon(previousOption)}
+    columnName={getOptionIconTooltip(previousOption)}
+    errors={fieldSupport[previousOption]?.errors}
+    warnings={fieldSupport[previousOption]?.warnings}
+  />
 </ContextTooltip>
 
 <style>
