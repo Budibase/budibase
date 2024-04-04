@@ -28,7 +28,7 @@ jest.mock("uuid", () => ({ v4: () => "00000000-0000-0000-0000-000000000000" }))
 import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
 import fetch from "node-fetch"
-import { objectStoreTestProviders } from "./utils"
+import { objectStoreTestProviders } from "@budibase/backend-core/tests"
 import { Readable } from "stream"
 
 const FormData = require("form-data")
@@ -628,6 +628,7 @@ describe("REST Integration", () => {
 
   describe("File Handling", () => {
     beforeAll(async () => {
+      jest.unmock("aws-sdk")
       await objectStoreTestProviders.minio.start()
     })
 
@@ -668,7 +669,9 @@ describe("REST Integration", () => {
       expect(response.data).toEqual({
         size: responseData.byteLength,
         name: "00000000-0000-0000-0000-000000000000.tar.gz",
-        url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.tar.gz",
+        url: expect.stringContaining(
+          "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.tar.gz"
+        ),
         extension: "tar.gz",
         key: expect.stringContaining(
           "app-id/00000000-0000-0000-0000-000000000000.tar.gz"
@@ -676,7 +679,7 @@ describe("REST Integration", () => {
       })
     })
 
-    it("uploads file with non ascii filename to object store and returns signed URL ", async () => {
+    it("uploads file with non ascii filename to object store and returns signed URL", async () => {
       const responseData = Buffer.from("teest file contnt")
       const contentType = "text/plain"
       const mockReadable = new Readable()
@@ -688,13 +691,15 @@ describe("REST Integration", () => {
             raw: () => ({
               "content-type": [contentType],
               "content-disposition": [
-                `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
+                // eslint-disable-next-line no-useless-escape
+                `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
               ],
             }),
             get: (header: any) => {
               if (header === "content-type") return contentType
               if (header === "content-disposition")
-                return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
+                // eslint-disable-next-line no-useless-escape
+                return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
             },
           },
           body: mockReadable,
@@ -710,7 +715,9 @@ describe("REST Integration", () => {
       expect(response.data).toEqual({
         size: responseData.byteLength,
         name: "00000000-0000-0000-0000-000000000000.pdf",
-        url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.pdf",
+        url: expect.stringContaining(
+          "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.pdf"
+        ),
         extension: "pdf",
         key: expect.stringContaining(
           "app-id/00000000-0000-0000-0000-000000000000.pdf"
