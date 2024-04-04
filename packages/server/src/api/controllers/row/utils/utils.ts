@@ -14,10 +14,7 @@ import {
   processDates,
   processFormulas,
 } from "../../../../utilities/rowProcessor"
-import {
-  squashRelationshipColumns,
-  updateRelationshipColumns,
-} from "./sqlUtils"
+import { updateRelationshipColumns } from "./sqlUtils"
 import { basicProcessing, generateIdForRow, fixArrayTypes } from "./basic"
 import sdk from "../../../../sdk"
 
