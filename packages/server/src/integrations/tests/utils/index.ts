@@ -1,5 +1,3 @@
-jest.unmock("pg")
-
 import { Datasource, SourceName } from "@budibase/types"
 import * as postgres from "./postgres"
 import * as mongodb from "./mongodb"
