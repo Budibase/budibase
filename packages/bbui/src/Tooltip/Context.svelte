@@ -54,17 +54,17 @@
       currentY = rect.y
       const fadeIn = [{ opacity: "0" }, { opacity: "1" }];
       const fadeOut = [{ opacity: "1" }, { opacity: "0" }];
-      const color = [{ offset: 0, backgroundColor: previousStyles.backgroundColor }, { offset: 0.85, backgroundColor: currentStyles.backgroundColor }, { offset: 1, backgroundColor: "black" }];
+      const color = [{ backgroundColor: previousStyles.backgroundColor }, { backgroundColor: currentStyles.backgroundColor }];
 
       const fadeInTiming = {
-        duration: 100,
-        delay: 100,
+        duration: 150,
+        delay: 150,
         iterations: 1,
         easing: "ease-in",
         fill: "both"
       };
       const fadeOutTiming = {
-        duration: 100,
+        duration: 150,
         iterations: 1,
         easing: "ease-in",
         fill: "forwards"
@@ -73,8 +73,7 @@
       const colorTiming = {
         duration: 300,
         iterations: 1,
-        easing: "ease-in",
-        fill: "both"
+        easing: "ease-in"
       };
 
       currentTooltip.animate(fadeIn, fadeInTiming);
