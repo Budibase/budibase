@@ -146,7 +146,7 @@
     "jest": "29.7.0",
     "jest-openapi": "0.14.2",
     "jest-runner": "29.7.0",
-    "jest-serial-runner": "1.2.1",
+    "nock": "13.5.4",
     "nodemon": "2.0.15",
     "openapi-typescript": "5.2.0",
     "path-to-regexp": "6.2.0",
