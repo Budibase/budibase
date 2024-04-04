@@ -27,7 +27,6 @@ fetch.mockSearch()
 
 const config = setup.getConfig()!
 
-jest.unmock("pg")
 jest.mock("../websockets")
 
 describe("postgres integrations", () => {
