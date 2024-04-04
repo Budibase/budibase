@@ -1,7 +1,12 @@
 import { Knex, knex } from "knex"
 import { db as dbCore } from "@budibase/backend-core"
 import { QueryOptions } from "../../definitions/datasource"
-import { isIsoDateString, SqlClient, isValidFilter } from "../utils"
+import {
+  isIsoDateString,
+  SqlClient,
+  isValidFilter,
+  getNativeSql,
+} from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
   BBReferenceFieldMetadata,
@@ -20,7 +25,7 @@ import {
 } from "@budibase/types"
 import environment from "../../environment"
 
-type QueryFunction = (query: SqlQuery, operation: Operation) => any
+type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -592,7 +597,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
    * @return the query ready to be passed to the driver.
    */
-  _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery {
+  _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery | SqlQuery[] {
     const sqlClient = this.getSqlClient()
     const config: { client: string; useNullAsDefault?: boolean } = {
       client: sqlClient,
@@ -630,7 +635,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     if (opts?.disableBindings) {
       return { sql: query.toString() }
     } else {
-      return query.toSQL().toNative() as SqlQuery
+      return getNativeSql(query)
     }
   }
 

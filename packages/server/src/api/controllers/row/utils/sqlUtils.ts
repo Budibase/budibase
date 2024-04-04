@@ -64,7 +64,7 @@ export function squashRelationshipColumns(
  * will be separate rows, with all of the data in each row. We have to decipher what comes
  * from where (which tables) and how to convert that into budibase columns.
  */
-export function updateRelationshipColumns(
+export async function updateRelationshipColumns(
   table: Table,
   tables: TableMap,
   row: Row,
@@ -89,7 +89,7 @@ export function updateRelationshipColumns(
       continue
     }
 
-    let linked = basicProcessing({
+    let linked = await basicProcessing({
       row,
       table: linkedTable,
       isLinked: true,

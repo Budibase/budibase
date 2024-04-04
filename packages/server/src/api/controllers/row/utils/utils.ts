@@ -131,7 +131,7 @@ export async function sqlOutputProcessing(
     }
     // this is a relationship of some sort
     if (finalRows[rowId]) {
-      finalRows = updateRelationshipColumns(
+      finalRows = await updateRelationshipColumns(
         table,
         tables,
         row,
@@ -142,7 +142,7 @@ export async function sqlOutputProcessing(
       continue
     }
     const thisRow = fixArrayTypes(
-      basicProcessing({
+      await basicProcessing({
         row,
         table,
         isLinked: false,
@@ -155,7 +155,7 @@ export async function sqlOutputProcessing(
     }
     finalRows[thisRow._id] = thisRow
     // do this at end once its been added to the final rows
-    finalRows = updateRelationshipColumns(
+    finalRows = await updateRelationshipColumns(
       table,
       tables,
       row,

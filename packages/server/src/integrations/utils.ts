@@ -9,6 +9,7 @@ import { DocumentType, SEPARATOR } from "../db/utils"
 import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../constants"
 import { helpers } from "@budibase/shared-core"
 import env from "../environment"
+import { Knex } from "knex"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -103,6 +104,23 @@ export function isExternalTableID(tableId: string) {
 
 export function isInternalTableID(tableId: string) {
   return !isExternalTableID(tableId)
+}
+
+export function getNativeSql(
+  query: Knex.SchemaBuilder | Knex.QueryBuilder
+): SqlQuery | SqlQuery[] {
+  let sql = query.toSQL()
+  if (Array.isArray(sql)) {
+    return sql as SqlQuery[]
+  }
+  let native: Knex.SqlNative | undefined
+  if (sql.toNative) {
+    native = sql.toNative()
+  }
+  return {
+    sql: native?.sql || sql.sql,
+    bindings: native?.bindings || sql.bindings,
+  } as SqlQuery
 }
 
 export function isExternalTable(table: Table) {

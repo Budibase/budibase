@@ -50,7 +50,7 @@ export function generateIdForRow(
   return generateRowIdField(idParts)
 }
 
-export function basicProcessing({
+export async function basicProcessing({
   row,
   table,
   isLinked,
@@ -60,7 +60,7 @@ export function basicProcessing({
   table: Table
   isLinked: boolean
   internal?: boolean
-}): Row {
+}): Promise<Row> {
   let thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
   let toIterate = Object.keys(table.schema)
