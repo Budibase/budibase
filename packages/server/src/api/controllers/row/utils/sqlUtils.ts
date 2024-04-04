@@ -1,7 +1,6 @@
 import {
   FieldType,
   ManyToManyRelationshipFieldMetadata,
-  OneToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
   Row,
