@@ -128,7 +128,7 @@
         class: "supportLevelUnsupported",
         icon: "Alert",
         iconTooltip: fieldSupport[optionKey]?.message,
-        text: "Unsupported"
+        text: "Not Compatible"
       }
     }
 
@@ -137,7 +137,7 @@
         class: "supportLevelPartialSupport",
         icon: "AlertCheck",
         iconTooltip: fieldSupport[optionKey]?.message,
-        text: "Partial Support"
+        text: "Partially Compatible"
       }
     }
 
@@ -146,7 +146,7 @@
         class: "supportLevelSupported",
         icon: "CheckmarkCircle",
         iconTooltip: fieldSupport[optionKey]?.message,
-        text: "Supported"
+        text: "Compatible"
       }
     }
 
@@ -154,7 +154,7 @@
       class: "supportLevelUnsupported",
       icon: "Alert",
       iconTooltip: "",
-      text: "Unsupported"
+      text: "No Support"
     }
   }
 
@@ -203,6 +203,7 @@
   offset={20}
 >
   <ChartFieldContext
+    support={fieldSupport[previousOption]}
     supportLevelClass={currentOptionSupport.class}
     supportLevelIcon={currentOptionSupport.icon}
     supportLevelIconTooltip={currentOptionSupport.iconTooltip}
@@ -215,6 +216,7 @@
   />
   <ChartFieldContext
     slot="previous"
+    support={fieldSupport[previousOption]}
     supportLevelClass={previousOptionSupport.class}
     supportLevelIcon={previousOptionSupport.icon}
     supportLevelIconTooltip={previousOptionSupport.iconTooltip}

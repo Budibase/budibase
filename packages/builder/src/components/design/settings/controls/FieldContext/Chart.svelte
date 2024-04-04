@@ -40,116 +40,99 @@
 <div
   class={`tooltipContents ${supportLevelClass}`}
 >
-  <div class={`supportLevel ${supportLevelClass}`}>
-    <Icon tooltip={supportLevelIconTooltip} name={supportLevelIcon} />
-    <p>{supportLevelText}</p>
+  <div class="columnName">
+    {columnName}
   </div>
-  <div class="contextTooltipContent">
-    <div class="contextTooltipHeader">
-      <span class="columnName">
-        {columnName}
-      </span><span> is a </span>
-      <a target=”_blank” href={docLink} class="link">
-        <Icon name={columnIcon} />
-        <span>{columnType}</span>
-      </a>
-      <span>column.</span>
+  <div class="divider"></div>
+  <div class="line">
+    <a target=”_blank” href={docLink} class="chip link">
+      <Icon size="S" name={columnIcon} />
+      <span>{columnType} Column</span>
+    </a>
+  </div>
+  <div class={`line ${supportLevelClass}`}>
+    <div class={`chip supportChip ${supportLevelClass}`}>
+      <Icon size="S" tooltip={supportLevelIconTooltip} name={supportLevelIcon} />
+      <span>{supportLevelText}</span>
     </div>
-
-    {#if errors.length > 0}
-      {#each errors as datum}
-        <p>{datum}</p>
-      {/each}
-    {:else if warnings.length > 0}
-      {#each warnings as datum}
-        <p>{datum}</p>
-      {/each}
-    {:else}
-        <p>{supportLevelIconTooltip}</p>
-    {/if}
+    <span>with</span>
+    <div class="chip link">
+      <Icon size="S" name={"GraphPie"} />
+      <span>Chart Components</span>
+    </div>
   </div>
+      {#if warnings.includes("string number warning")}
+  <div class={`line ${supportLevelClass}`}>
+    <span>
+        Non-numeric values will not be displayed
+    </span>
+  </div>
+      {/if}
+
+  <!--
+  {#if errors.length > 0}
+    {#each errors as datum}
+      <p>{datum}</p>
+    {/each}
+  {:else if warnings.length > 0}
+    {#each warnings as datum}
+      <p>{datum}</p>
+    {/each}
+  {:else}
+      <p>{supportLevelIconTooltip}</p>
+  {/if}
+  -->
 </div>
 
 <style>
+  .columnName {
+    font-style: italic;
+    padding: 3px 6px;
+    border-radius: 5px;
+    background-color: var(--grey-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .divider {
+    border-bottom: 1px solid var(--grey-4);
+    margin: 6px 0 16px;
+  }
+
   .tooltipContents {
     max-width: 400px;
-    background-color: var(--spectrum-global-color-gray-200);
+    background-color: var(--background-alt);
     display: block;
-    padding: 0 0 12px 0 ;
+    padding: 12px;
     border-radius: 5px;
     box-sizing: border-box;
   }
 
-  .tooltipContents.supportLevelUnsupported {
-    background-color: var(--red);
-    color: var(--ink)
-  }
-
-  .tooltipContents.supportLevelPartialSupport {
-    background-color: var(--yellow);
-    color: var(--ink)
-  }
-
-  .tooltipContents.supportLevelSupported {
-    background-color: var(--green);
-    color: var(--ink)
-  }
-
-  .contextTooltipHeader {
-    row-gap: 6px;
-    column-gap: 8px;
+  .line {
     background-color: var(--background-alt);
     color: var(--ink);
-    display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    padding: 6px 8px;
-    border-width: var(--spectrum-actionbutton-border-size);
-    border-radius: var(--spectrum-alias-border-radius-regular);
-    border: 1px solid
-      var(
-        --spectrum-actionbutton-m-border-color,
-        var(--spectrum-alias-border-color)
-      );
+    margin-bottom: 10px;
   }
 
-  .contextTooltipContent {
-    color: var(--ink);
-    margin: 0px 12px;
-    color: black;
+  .line > span {
+    display: inline;
+    margin-right: 5px;
   }
 
-  .contextTooltipContent > p {
-    row-gap: 6px;
-    column-gap: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    padding: 6px 8px;
-    border-width: var(--spectrum-actionbutton-border-size);
-    border-radius: var(--spectrum-alias-border-radius-regular);
-    border: 1px solid
-      var(
-        --spectrum-actionbutton-m-border-color,
-        var(--spectrum-alias-border-color)
-      );
-  }
-
-  .columnName {
-
-    font-style: italic;
-    padding: 3px 6px;
-    border-radius: 5px;
-    background-color: var(--grey-3);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .link {
+  .chip {
     display: inline-flex;
     padding: 3px 6px;
     border-radius: 5px;
+    vertical-align: sub;
+    margin-right: 5px;
+  }
+
+  .link {
     background-color: var(--spectrum-global-color-blue-500);
     color: white;
     transition: background-color 300ms
@@ -164,33 +147,23 @@
     margin-right: 3px;
   }
 
-  .link :global(span) {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .supportLevel {
-    display: flex;
-    align-items: center;
-    height: var(--spectrum-alias-item-height-m);
-    padding: 0px var(--spectrum-alias-item-padding-m);
-    margin-bottom: 12px;
+  .supportChip {
     color: black;
   }
-  .supportLevel :global(svg) {
+
+  .supportChip :global(svg) {
     margin-right: 5px;
   }
 
-  .supportLevel.supportLevelUnsupported {
-    background-color: var(--red-light)
+  .supportChip.supportLevelUnsupported {
+    background-color: var(--red)
   }
 
-  .supportLevel.supportLevelPartialSupport {
-    background-color: var(--yellow-light)
+  .supportChip.supportLevelPartialSupport {
+    background-color: var(--yellow)
   }
 
-  .supportLevel.supportLevelSupported {
-    background-color: var(--green-light)
+  .supportChip.supportLevelSupported {
+    background-color: var(--green)
   }
 </style>
