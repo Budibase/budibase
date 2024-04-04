@@ -299,7 +299,14 @@ export async function preview(
     },
   }
 
-  const { rows, keys, info, extra } = await Runner.run<QueryResponse>(inputs)
+  let queryResponse: QueryResponse
+  try {
+    queryResponse = await Runner.run<QueryResponse>(inputs)
+  } catch (err: any) {
+    ctx.throw(400, err)
+  }
+
+  const { rows, keys, info, extra } = queryResponse
   const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
 
   // if existing schema, update to include any previous schema keys
