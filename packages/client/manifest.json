@@ -5010,6 +5010,7 @@
         "type": "select",
         "label": "Auto-refresh",
         "key": "autoRefresh",
+        "license": "premium",
         "placeholder": "Never",
         "options": [
           {
@@ -5506,6 +5507,7 @@
             "type": "select",
             "label": "Auto-refresh",
             "key": "autoRefresh",
+            "license": "premium",
             "placeholder": "Never",
             "options": [
               {
@@ -5820,6 +5822,7 @@
         "type": "select",
         "label": "Auto-refresh",
         "key": "autoRefresh",
+        "license": "premium",
         "placeholder": "Never",
         "options": [
           {
@@ -6025,6 +6028,7 @@
         "type": "select",
         "label": "Auto-refresh",
         "key": "autoRefresh",
+        "license": "premium",
         "placeholder": "Never",
         "options": [
           {
@@ -6649,6 +6653,7 @@
         "type": "select",
         "label": "Auto-refresh",
         "key": "autoRefresh",
+        "license": "premium",
         "placeholder": "Never",
         "options": [
           {
