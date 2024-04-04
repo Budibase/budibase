@@ -31,7 +31,7 @@ describe("should be able to re-write attachment URLs", () => {
       sourceType: TableSourceType.INTERNAL,
       schema: {
         photo: {
-          type: FieldType.ATTACHMENT,
+          type: FieldType.ATTACHMENTS,
           name: "photo",
         },
         otherCol: {
