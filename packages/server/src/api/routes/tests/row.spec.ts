@@ -1332,7 +1332,7 @@ describe.each([
       })
     })
 
-    it.only("should time out JS execution if a multiple cells take too long", async () => {
+    it("should time out JS execution if a multiple cells take too long", async () => {
       await config.withEnv(
         {
           JS_PER_INVOCATION_TIMEOUT_MS: 40,
