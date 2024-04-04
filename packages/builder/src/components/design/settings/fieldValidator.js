@@ -39,7 +39,7 @@ export const validators = {
       const isRequired = fieldSchema?.constraints?.presence?.allowEmpty === false
       if (!isRequired) {
         response.warnings.push(
-          "This column is optional, and some rows may not have a value.")
+          "optional warning")
       }
 
       if (response.errors.length > 0) {
