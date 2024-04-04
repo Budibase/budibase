@@ -7,7 +7,7 @@
   export let visible = false
   export let offset = 0;
 
-  $: target = getContext(Context.PopoverRoot) || ".spectrum"
+  $: target = getContext(Context.PopoverRoot) || "#app"
 
   let hovering = false
   let wrapper
@@ -38,10 +38,6 @@
       const rect = anchor.getBoundingClientRect();
       const previousStyles = window.getComputedStyle(previousTooltip?.firstChild)
       const currentStyles = window.getComputedStyle(currentTooltip?.firstChild)
-
-      console.log(previousStyles.backgroundColor);
-      console.log(currentStyles.backgroundColor);
-      console.log("")
 
       currentTooltipWidth = currentTooltip.clientWidth
       currentTooltipHeight = currentTooltip.clientHeight

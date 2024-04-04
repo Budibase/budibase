@@ -31,7 +31,7 @@ export const validators = {
         response.warnings.push(
           "String columns can be used as input for a chart, but non-numeric values may cause unexpected behavior.")
       }
-      if (fieldSchema.type === "date") {
+      if (fieldSchema.type === "datetime") {
         response.warnings.push(
           "This column can be used as input for a chart, but it is parsed differently for various charts.")
       }
