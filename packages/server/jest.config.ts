@@ -54,12 +54,9 @@ const config: Config.InitialOptions = {
     "!src/db/views/staticViews.*",
     "!src/**/*.spec.{js,ts}",
     "!src/tests/**/*.{js,ts}",
-    // The use of coverage in the JS runner bundles breaks tests
-    "!src/jsRunner/bundles/**/*.{js,ts}",
-    // We have a polyfill for the TextDecoder class in here that gets
-    // injected into the vm for deserializing BSON. If it gets coveraged
-    // it breaks the tests.
-    "!src/jsRunner/vm/isolated-vm.ts",
+    // The use of coverage in the JS runner breaks tests by inserting
+    // coverage functions into code that will run inside of the isolate.
+    "!src/jsRunner/**/*.{js,ts}",
   ],
   coverageReporters: ["lcov", "json", "clover"],
 }
