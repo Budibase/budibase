@@ -652,7 +652,6 @@ describe.each([
             ? {}
             : {
                 hasNextPage: false,
-                bookmark: null,
               }),
         })
       })
@@ -705,7 +704,6 @@ describe.each([
             ? {}
             : {
                 hasNextPage: false,
-                bookmark: null,
               }),
         })
       })

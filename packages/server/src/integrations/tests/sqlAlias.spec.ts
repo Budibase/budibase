@@ -177,8 +177,8 @@ describe("Captures of real examples", () => {
       })
 
       // now check returning
-      let returningQuery: SqlQuery = { sql: "", bindings: [] }
-      SQL.getReturningRow((input: SqlQuery) => {
+      let returningQuery: SqlQuery | SqlQuery[] = { sql: "", bindings: [] }
+      SQL.getReturningRow((input: SqlQuery | SqlQuery[]) => {
         returningQuery = input
       }, queryJson)
       expect(returningQuery).toEqual({

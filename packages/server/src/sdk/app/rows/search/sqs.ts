@@ -154,10 +154,16 @@ export async function search(
     }
   }
   try {
-    let { sql } = builder._query(request, {
+    const query = builder._query(request, {
       disableReturning: true,
       disableBindings: true,
     })
+
+    if (Array.isArray(query)) {
+      throw new Error("SQS cannot currently handle multiple queries")
+    }
+
+    let sql = query.sql
 
     // quick hack for docIds
     sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
