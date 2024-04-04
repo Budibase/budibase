@@ -128,7 +128,7 @@
         class: "supportLevelUnsupported",
         icon: "Alert",
         iconTooltip: fieldSupport[optionKey]?.message,
-        text: "Not Compatible"
+        text: "Not compatible"
       }
     }
 
@@ -137,7 +137,7 @@
         class: "supportLevelPartialSupport",
         icon: "AlertCheck",
         iconTooltip: fieldSupport[optionKey]?.message,
-        text: "Partially Compatible"
+        text: "Partially compatible"
       }
     }
 
