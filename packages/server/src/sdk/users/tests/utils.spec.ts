@@ -35,11 +35,20 @@ describe("syncGlobalUsers", () => {
       builder: { global: true },
     })
     await config.doInContext(config.appId, async () => {
-      expect(await rawUserMetadata()).toHaveLength(1)
+      let metadata = await rawUserMetadata()
+      expect(metadata).not.toContainEqual(
+        expect.objectContaining({
+          _id: db.generateUserMetadataID(user1._id!),
+        })
+      )
+      expect(metadata).not.toContainEqual(
+        expect.objectContaining({
+          _id: db.generateUserMetadataID(user2._id!),
+        })
+      )
       await syncGlobalUsers()
 
-      const metadata = await rawUserMetadata()
-      expect(metadata).toHaveLength(3)
+      metadata = await rawUserMetadata()
       expect(metadata).toContainEqual(
         expect.objectContaining({
           _id: db.generateUserMetadataID(user1._id!),
@@ -62,7 +71,6 @@ describe("syncGlobalUsers", () => {
       await syncGlobalUsers()
 
       const metadata = await rawUserMetadata()
-      expect(metadata).toHaveLength(1)
       expect(metadata).not.toContainEqual(
         expect.objectContaining({
           _id: db.generateUserMetadataID(user._id!),

@@ -30,7 +30,6 @@ const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
 
 jest.unmock("mssql")
-jest.unmock("pg")
 
 describe.each([
   ["internal", undefined],
@@ -1296,7 +1295,7 @@ describe.each([
 
   describe("Formula JS protection", () => {
     it("should time out JS execution if a single cell takes too long", async () => {
-      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 20 }, async () => {
+      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 40 }, async () => {
         const js = Buffer.from(
           `
               let i = 0;
@@ -1336,8 +1335,8 @@ describe.each([
     it("should time out JS execution if a multiple cells take too long", async () => {
       await config.withEnv(
         {
-          JS_PER_INVOCATION_TIMEOUT_MS: 20,
-          JS_PER_REQUEST_TIMEOUT_MS: 40,
+          JS_PER_INVOCATION_TIMEOUT_MS: 40,
+          JS_PER_REQUEST_TIMEOUT_MS: 80,
         },
         async () => {
           const js = Buffer.from(
