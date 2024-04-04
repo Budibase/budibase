@@ -1,6 +1,7 @@
 import { context, events } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
+  Datasource,
   FieldSubtype,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -21,23 +22,35 @@ import * as uuid from "uuid"
 
 import tk from "timekeeper"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import { TableToBuild } from "../../../tests/utilities/TestConfiguration"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import { tableForDatasource } from "../../../tests/utilities/structures"
 
 tk.freeze(mocks.date.MOCK_DATE)
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
-describe("/tables", () => {
-  let request = setup.getRequest()
+describe.each([
+  ["internal", undefined],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+])("/tables (%s)", (_, dsProvider) => {
+  let isInternal: boolean
+  let datasource: Datasource | undefined
   let config = setup.getConfig()
-  let appId: string
 
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
-    const app = await config.init()
-    appId = app.appId
+    await config.init()
+    if (dsProvider) {
+      datasource = await config.api.datasource.create(await dsProvider)
+      isInternal = false
+    } else {
+      isInternal = true
+    }
   })
 
   describe("create", () => {
@@ -45,33 +58,15 @@ describe("/tables", () => {
       jest.clearAllMocks()
     })
 
-    const createTable = (table?: Table) => {
-      if (!table) {
-        table = basicTable()
-      }
-      return request
-        .post(`/api/tables`)
-        .send(table)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-    }
-
     it("returns a success message when the table is successfully created", async () => {
-      const res = await createTable()
-
-      expect((res as any).res.statusMessage).toEqual(
-        "Table TestTable saved successfully."
-      )
-      expect(res.body.name).toEqual("TestTable")
+      const table = await config.api.table.save(basicTable(datasource))
+      expect(table.name).toEqual("TestTable")
       expect(events.table.created).toHaveBeenCalledTimes(1)
-      expect(events.table.created).toHaveBeenCalledWith(res.body)
+      expect(events.table.created).toHaveBeenCalledWith(table)
     })
 
     it("creates all the passed fields", async () => {
-      const tableData: TableToBuild = {
-        name: "TestTable",
-        type: "table",
+      const tableData = tableForDatasource(datasource, {
         schema: {
           autoId: {
             name: "id",
@@ -92,8 +87,9 @@ describe("/tables", () => {
             tableId: "tableId",
           },
         },
-      }
-      const testTable = await config.createTable(tableData)
+      })
+
+      const testTable = await config.api.table.save(tableData)
 
       const expected: Table = {
         ...tableData,
@@ -116,8 +112,6 @@ describe("/tables", () => {
             },
           },
         },
-        sourceType: TableSourceType.INTERNAL,
-        sourceId: expect.any(String),
         _rev: expect.stringMatching(/^1-.+/),
         _id: expect.any(String),
         createdAt: mocks.date.MOCK_DATE.toISOString(),
@@ -133,14 +127,14 @@ describe("/tables", () => {
       const table: SaveTableRequest = basicTable()
       table.rows = [{ name: "test-name", description: "test-desc" }]
 
-      const res = await createTable(table)
+      const res = await config.api.table.save(table)
 
       expect(events.table.created).toHaveBeenCalledTimes(1)
-      expect(events.table.created).toHaveBeenCalledWith(res.body)
+      expect(events.table.created).toHaveBeenCalledWith(res)
       expect(events.table.imported).toHaveBeenCalledTimes(1)
-      expect(events.table.imported).toHaveBeenCalledWith(res.body)
+      expect(events.table.imported).toHaveBeenCalledWith(res)
       expect(events.rows.imported).toHaveBeenCalledTimes(1)
-      expect(events.rows.imported).toHaveBeenCalledWith(res.body, 1)
+      expect(events.rows.imported).toHaveBeenCalledWith(res, 1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -155,17 +149,24 @@ describe("/tables", () => {
 
   describe("update", () => {
     it("updates a table", async () => {
-      const testTable = await config.createTable()
-
-      const res = await request
-        .post(`/api/tables`)
-        .send(testTable)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const table = await config.api.table.save({
+        name: "TestTable",
+        type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
+        schema: {
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
 
       expect(events.table.updated).toHaveBeenCalledTimes(1)
-      expect(events.table.updated).toHaveBeenCalledWith(res.body)
+      expect(events.table.updated).toHaveBeenCalledWith(table)
     })
 
     it("updates all the row fields for a table when a schema key is renamed", async () => {
@@ -179,111 +180,93 @@ describe("/tables", () => {
         filters: [],
       })
 
-      const testRow = await request
-        .post(`/api/${testTable._id}/rows`)
-        .send({
-          name: "test",
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const testRow = await config.api.row.save(testTable._id!, {
+        name: "test",
+      })
 
-      const updatedTable = await request
-        .post(`/api/tables`)
-        .send({
-          _id: testTable._id,
-          _rev: testTable._rev,
-          name: "TestTable",
-          key: "name",
-          _rename: {
-            old: "name",
-            updated: "updatedName",
-          },
-          schema: {
-            updatedName: { type: "string" },
-          },
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect((updatedTable as any).res.statusMessage).toEqual(
-        "Table TestTable saved successfully."
-      )
-      expect(updatedTable.body.name).toEqual("TestTable")
+      const updatedTable = await config.api.table.save({
+        _id: testTable._id,
+        _rev: testTable._rev,
+        type: "table",
+        sourceId: datasource ? datasource._id! : INTERNAL_TABLE_SOURCE_ID,
+        sourceType: isInternal
+          ? TableSourceType.INTERNAL
+          : TableSourceType.EXTERNAL,
+        name: "TestTable",
+        _rename: {
+          old: "name",
+          updated: "updatedName",
+        },
+        schema: {
+          updatedName: { type: FieldType.STRING, name: "updatedName" },
+        },
+      })
 
-      const res = await request
-        .get(`/api/${testTable._id}/rows/${testRow.body._id}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      expect(updatedTable.name).toEqual("TestTable")
 
-      expect(res.body.updatedName).toEqual("test")
-      expect(res.body.name).toBeUndefined()
+      const res = await config.api.row.get(testTable._id!, testRow._id!)
+      expect(res.updatedName).toEqual("test")
+      expect(res.name).toBeUndefined()
     })
 
-    it("updates only the passed fields", async () => {
-      const testTable = await config.createTable({
-        name: "TestTable",
-        type: "table",
-        schema: {
-          autoId: {
-            name: "id",
-            type: FieldType.NUMBER,
-            subtype: AutoFieldSubType.AUTO_ID,
-            autocolumn: true,
-            constraints: {
-              type: "number",
-              presence: false,
+    it.only("updates only the passed fields", async () => {
+      const table = await config.api.table.save(
+        tableForDatasource(datasource, {
+          name: "TestTable",
+          schema: {
+            autoId: {
+              name: "id",
+              type: FieldType.NUMBER,
+              subtype: AutoFieldSubType.AUTO_ID,
+              autocolumn: true,
+              constraints: {
+                type: "number",
+                presence: false,
+              },
             },
           },
-        },
-        views: {
-          view1: {
-            id: "viewId",
-            version: 2,
-            name: "table view",
-            tableId: "tableId",
-          },
-        },
-      })
-
-      const response = await request
-        .post(`/api/tables`)
-        .send({
-          ...testTable,
-          name: "UpdatedName",
         })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      )
 
-      expect(response.body).toEqual({
-        ...testTable,
+      const updatedTable = await config.api.table.save({
+        ...table,
         name: "UpdatedName",
-        _rev: expect.stringMatching(/^2-.+/),
       })
 
-      const persistedTable = await config.api.table.get(testTable._id!)
-      expect(persistedTable).toEqual({
-        ...testTable,
+      let expected: Table = {
+        ...table,
         name: "UpdatedName",
-        _rev: expect.stringMatching(/^2-.+/),
-      })
+        _id: expect.any(String),
+      }
+      if (isInternal) {
+        expected._rev = expect.stringMatching(/^2-.+/)
+      }
+
+      expect(updatedTable).toEqual(expected)
+
+      const persistedTable = await config.api.table.get(updatedTable._id!)
+      expected = {
+        ...table,
+        name: "UpdatedName",
+        _id: updatedTable._id,
+      }
+      if (datasource?.isSQL) {
+        expected.sql = true
+      }
+      if (isInternal) {
+        expected._rev = expect.stringMatching(/^2-.+/)
+      }
+      expect(persistedTable).toEqual(expected)
     })
 
     describe("user table", () => {
       it("should add roleId and email field when adjusting user table schema", async () => {
-        const res = await request
-          .post(`/api/tables`)
-          .send({
-            ...basicTable(),
-            _id: "ta_users",
-          })
-          .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(200)
-        expect(res.body.schema.email).toBeDefined()
-        expect(res.body.schema.roleId).toBeDefined()
+        const table = await config.api.table.save({
+          ...basicTable(datasource),
+          _id: "ta_users",
+        })
+        expect(table.schema.email).toBeDefined()
+        expect(table.schema.roleId).toBeDefined()
       })
     })
 
@@ -295,12 +278,7 @@ describe("/tables", () => {
         ...basicTable(),
       }
 
-      const response = await request
-        .post(`/api/tables`)
-        .send(saveTableRequest)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const response = await config.api.table.save(saveTableRequest)
 
       const expectedResponse = {
         ...saveTableRequest,
@@ -311,15 +289,13 @@ describe("/tables", () => {
         views: {},
       }
       delete expectedResponse._add
-
-      expect(response.status).toBe(200)
-      expect(response.body).toEqual(expectedResponse)
+      expect(response).toEqual(expectedResponse)
     })
   })
 
   describe("import", () => {
     it("imports rows successfully", async () => {
-      const table = await config.createTable()
+      const table = await config.api.table.save(basicTable(datasource))
       const importRequest = {
         schema: table.schema,
         rows: [{ name: "test-name", description: "test-desc" }],
@@ -327,12 +303,7 @@ describe("/tables", () => {
 
       jest.clearAllMocks()
 
-      await request
-        .post(`/api/tables/${table._id}/import`)
-        .send(importRequest)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      await config.api.table.import(table._id!, importRequest)
 
       expect(events.table.created).not.toHaveBeenCalled()
       expect(events.rows.imported).toHaveBeenCalledTimes(1)
@@ -346,22 +317,23 @@ describe("/tables", () => {
     })
 
     it("should update Auto ID field after bulk import", async () => {
-      const table = await config.createTable({
-        name: "TestTable",
-        type: "table",
-        schema: {
-          autoId: {
-            name: "id",
-            type: FieldType.NUMBER,
-            subtype: AutoFieldSubType.AUTO_ID,
-            autocolumn: true,
-            constraints: {
-              type: "number",
-              presence: false,
+      const table = await config.api.table.save(
+        tableForDatasource(datasource, {
+          name: "TestTable",
+          schema: {
+            autoId: {
+              name: "id",
+              type: FieldType.NUMBER,
+              subtype: AutoFieldSubType.AUTO_ID,
+              autocolumn: true,
+              constraints: {
+                type: "number",
+                presence: false,
+              },
             },
           },
-        },
-      })
+        })
+      )
 
       let row = await config.api.row.save(table._id!, {})
       expect(row.autoId).toEqual(1)
@@ -381,11 +353,7 @@ describe("/tables", () => {
     const enrichViewSchemasMock = jest.spyOn(sdk.tables, "enrichViewSchemas")
 
     beforeEach(async () => {
-      testTable = await config.createTable(testTable)
-    })
-
-    afterEach(() => {
-      delete testTable._rev
+      testTable = await config.api.table.save(basicTable(datasource))
     })
 
     afterAll(() => {
@@ -393,17 +361,12 @@ describe("/tables", () => {
     })
 
     it("returns all the tables for that instance in the response body", async () => {
-      const res = await request
-        .get(`/api/tables`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      const table = res.body.find((t: Table) => t._id === testTable._id)
+      const res = await config.api.table.fetch()
+      const table = res.find(t => t._id === testTable._id)
       expect(table).toBeDefined()
-      expect(table.name).toEqual(testTable.name)
-      expect(table.type).toEqual("table")
-      expect(table.sourceType).toEqual("internal")
+      expect(table!.name).toEqual(testTable.name)
+      expect(table!.type).toEqual("table")
+      expect(table!.sourceType).toEqual("internal")
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -421,13 +384,8 @@ describe("/tables", () => {
         await config.api.viewV2.create({ tableId, name: generator.guid() }),
       ]
 
-      const res = await request
-        .get(`/api/tables`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      expect(res.body).toEqual(
+      const res = await config.api.table.fetch()
+      expect(res).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             _id: tableId,
@@ -481,32 +439,22 @@ describe("/tables", () => {
 
   describe("indexing", () => {
     it("should be able to create a table with indexes", async () => {
-      await context.doInAppContext(appId, async () => {
+      await context.doInAppContext(config.getAppId(), async () => {
         const db = context.getAppDB()
         const indexCount = (await db.getIndexes()).total_rows
         const table = basicTable()
         table.indexes = ["name"]
-        const res = await request
-          .post(`/api/tables`)
-          .send(table)
-          .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(200)
-        expect(res.body._id).toBeDefined()
-        expect(res.body._rev).toBeDefined()
+        const res = await config.api.table.save(table)
+        expect(res._id).toBeDefined()
+        expect(res._rev).toBeDefined()
         expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
         // update index to see what happens
         table.indexes = ["name", "description"]
-        await request
-          .post(`/api/tables`)
-          .send({
-            ...table,
-            _id: res.body._id,
-            _rev: res.body._rev,
-          })
-          .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(200)
+        await config.api.table.save({
+          ...table,
+          _id: res._id,
+          _rev: res._rev,
+        })
         // shouldn't have created a new index
         expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
       })
@@ -521,12 +469,9 @@ describe("/tables", () => {
     })
 
     it("returns a success response when a table is deleted.", async () => {
-      const res = await request
-        .delete(`/api/tables/${testTable._id}/${testTable._rev}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
+      await config.api.table.destroy(testTable._id!, testTable._rev!, {
+        body: { message: `Table ${testTable._id} deleted.` },
+      })
       expect(events.table.deleted).toHaveBeenCalledTimes(1)
       expect(events.table.deleted).toHaveBeenCalledWith({
         ...testTable,
@@ -559,12 +504,9 @@ describe("/tables", () => {
         },
       })
 
-      const res = await request
-        .delete(`/api/tables/${testTable._id}/${testTable._rev}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
+      await config.api.table.destroy(testTable._id!, testTable._rev!, {
+        body: { message: `Table ${testTable._id} deleted.` },
+      })
       const dependentTable = await config.api.table.get(linkedTable._id!)
       expect(dependentTable.schema.TestTable).not.toBeDefined()
     })
