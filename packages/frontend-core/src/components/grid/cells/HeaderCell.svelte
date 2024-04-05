@@ -102,6 +102,7 @@
 
   const editColumn = async () => {
     editIsOpen = true
+    console.log(column.schema);
     await tick()
     dispatch("edit-column", column.schema)
   }

@@ -204,7 +204,8 @@
 >
   <ChartFieldContext
     sidecar
-    support={fieldSupport[previousOption]}
+    schema={schema[currentOption]}
+    support={fieldSupport[currentOption]}
     supportLevelClass={currentOptionSupport.class}
     supportLevelIcon={currentOptionSupport.icon}
     supportLevelIconTooltip={currentOptionSupport.iconTooltip}
