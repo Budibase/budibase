@@ -6,11 +6,16 @@
   import { validators, constants as validatorConstants } from "../fieldValidator";
   import ChartFieldContext from './FieldContext/Chart.svelte'
   import { FIELDS } from 'constants/backend'
+  import { goto, params } from "@roxi/routify"
 
   export let componentInstance = {}
   export let value = ""
   export let placeholder
   export let fieldValidator
+
+  $: {
+    console.log($params)
+  }
 
   let contextTooltipId = 0;
   let contextTooltipAnchor = null
@@ -59,6 +64,7 @@
 
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
+  $: console.log(datasource)
   $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
   $: options = Object.keys(schema || {})
   $: fieldSupport = getFieldSupport(schema, fieldValidator);
@@ -204,6 +210,7 @@
 >
   <ChartFieldContext
     sidecar
+    tableHref={`/builder/app/${$params.application}/data/table/${datasource.tableId}`}
     schema={schema[currentOption]}
     support={fieldSupport[currentOption]}
     supportLevelClass={currentOptionSupport.class}
