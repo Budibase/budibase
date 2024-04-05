@@ -56,14 +56,14 @@
       const color = [{ backgroundColor: previousStyles.backgroundColor }, { backgroundColor: currentStyles.backgroundColor }];
 
       const fadeInTiming = {
-        duration: 150,
-        delay: 150,
+        duration: 200,
+        delay: 100,
         iterations: 1,
         easing: "ease-in",
         fill: "both"
       };
       const fadeOutTiming = {
-        duration: 150,
+        duration: 200,
         iterations: 1,
         easing: "ease-in",
         fill: "forwards"
