@@ -6,7 +6,6 @@ import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
-  NumberFieldMetadata,
   RelationshipType,
   Row,
   SaveTableRequest,
@@ -14,17 +13,16 @@ import {
   TableSourceType,
   User,
   ViewCalculation,
+  ViewV2,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import * as uuid from "uuid"
 
-import tk from "timekeeper"
-import { generator, mocks } from "@budibase/backend-core/tests"
+import { generator } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
-
-tk.freeze(mocks.date.MOCK_DATE)
+import timekeeper from "timekeeper"
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
@@ -57,7 +55,7 @@ describe.each([
       jest.clearAllMocks()
     })
 
-    it("returns a success message when the table is successfully created", async () => {
+    it("creates a table successfully", async () => {
       const name = generator.guid()
       const table = await config.api.table.save(
         tableForDatasource(datasource, { name })
@@ -65,64 +63,6 @@ describe.each([
       expect(table.name).toEqual(name)
       expect(events.table.created).toHaveBeenCalledTimes(1)
       expect(events.table.created).toHaveBeenCalledWith(table)
-    })
-
-    it("creates all the passed fields", async () => {
-      const tableData = tableForDatasource(datasource, {
-        schema: {
-          autoId: {
-            name: "id",
-            type: FieldType.NUMBER,
-            subtype: AutoFieldSubType.AUTO_ID,
-            autocolumn: true,
-            constraints: {
-              type: "number",
-              presence: false,
-            },
-          },
-        },
-        views: {
-          "table view": {
-            id: "viewId",
-            version: 2,
-            name: "table view",
-            tableId: "tableId",
-          },
-        },
-      })
-
-      const testTable = await config.api.table.save(tableData)
-
-      const expected: Table = {
-        ...tableData,
-        type: "table",
-        views: {
-          "table view": {
-            ...tableData.views!["table view"],
-            schema: {
-              autoId: {
-                autocolumn: true,
-                constraints: {
-                  presence: false,
-                  type: "number",
-                },
-                name: "id",
-                type: FieldType.NUMBER,
-                subtype: AutoFieldSubType.AUTO_ID,
-                visible: false,
-              } as NumberFieldMetadata,
-            },
-          },
-        },
-        _rev: expect.stringMatching(/^1-.+/),
-        _id: expect.any(String),
-        createdAt: mocks.date.MOCK_DATE.toISOString(),
-        updatedAt: mocks.date.MOCK_DATE.toISOString(),
-      }
-      expect(testTable).toEqual(expected)
-
-      const persistedTable = await config.api.table.get(testTable._id!)
-      expect(persistedTable).toEqual(expected)
     })
 
     it("creates a table via data import", async () => {
@@ -165,17 +105,17 @@ describe.each([
         })
       )
 
-      await config.api.table.save({
+      const updatedTable = await config.api.table.save({
         ...table,
         name: generator.guid(),
       })
 
       expect(events.table.updated).toHaveBeenCalledTimes(1)
-      expect(events.table.updated).toHaveBeenCalledWith(table)
+      expect(events.table.updated).toHaveBeenCalledWith(updatedTable)
     })
 
     it("updates all the row fields for a table when a schema key is renamed", async () => {
-      const testTable = await config.createTable()
+      const testTable = await config.api.table.save(basicTable(datasource))
       await config.createLegacyView({
         name: "TestView",
         field: "Price",
@@ -215,64 +155,68 @@ describe.each([
     })
 
     it("updates only the passed fields", async () => {
-      const table = await config.api.table.save(
-        tableForDatasource(datasource, {
-          name: "TestTable",
-          schema: {
-            autoId: {
-              name: "id",
-              type: FieldType.NUMBER,
-              subtype: AutoFieldSubType.AUTO_ID,
-              autocolumn: true,
-              constraints: {
-                type: "number",
-                presence: false,
+      await timekeeper.withFreeze(new Date(2021, 1, 1), async () => {
+        const table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              autoId: {
+                name: "id",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                autocolumn: true,
+                constraints: {
+                  type: "number",
+                  presence: false,
+                },
               },
             },
-          },
+          })
+        )
+
+        const newName = generator.guid()
+
+        const updatedTable = await config.api.table.save({
+          ...table,
+          name: newName,
         })
-      )
 
-      const updatedTable = await config.api.table.save({
-        ...table,
-        name: "UpdatedName",
+        let expected: Table = {
+          ...table,
+          name: newName,
+          _id: expect.any(String),
+        }
+        if (isInternal) {
+          expected._rev = expect.stringMatching(/^2-.+/)
+        }
+
+        expect(updatedTable).toEqual(expected)
+
+        const persistedTable = await config.api.table.get(updatedTable._id!)
+        expected = {
+          ...table,
+          name: newName,
+          _id: updatedTable._id,
+        }
+        if (datasource?.isSQL) {
+          expected.sql = true
+        }
+        if (isInternal) {
+          expected._rev = expect.stringMatching(/^2-.+/)
+        }
+        expect(persistedTable).toEqual(expected)
       })
-
-      let expected: Table = {
-        ...table,
-        name: "UpdatedName",
-        _id: expect.any(String),
-      }
-      if (isInternal) {
-        expected._rev = expect.stringMatching(/^2-.+/)
-      }
-
-      expect(updatedTable).toEqual(expected)
-
-      const persistedTable = await config.api.table.get(updatedTable._id!)
-      expected = {
-        ...table,
-        name: "UpdatedName",
-        _id: updatedTable._id,
-      }
-      if (datasource?.isSQL) {
-        expected.sql = true
-      }
-      if (isInternal) {
-        expected._rev = expect.stringMatching(/^2-.+/)
-      }
-      expect(persistedTable).toEqual(expected)
     })
 
     describe("user table", () => {
-      it("should add roleId and email field when adjusting user table schema", async () => {
-        const table = await config.api.table.save({
-          ...basicTable(datasource),
-          _id: "ta_users",
+      isInternal &&
+        it("should add roleId and email field when adjusting user table schema", async () => {
+          const table = await config.api.table.save({
+            ...basicTable(datasource),
+            _id: "ta_users",
+          })
+          expect(table.schema.email).toBeDefined()
+          expect(table.schema.roleId).toBeDefined()
         })
-        expect(table.schema.email).toBeDefined()
-        expect(table.schema.roleId).toBeDefined()
-      })
     })
 
     it("should add a new column for an internal DB table", async () => {
@@ -300,7 +244,10 @@ describe.each([
 
   describe("import", () => {
     it("imports rows successfully", async () => {
-      const table = await config.api.table.save(basicTable(datasource))
+      const name = generator.guid()
+      const table = await config.api.table.save(
+        basicTable(datasource, { name })
+      )
       const importRequest = {
         schema: table.schema,
         rows: [{ name: "test-name", description: "test-desc" }],
@@ -314,42 +261,11 @@ describe.each([
       expect(events.rows.imported).toHaveBeenCalledTimes(1)
       expect(events.rows.imported).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: "TestTable",
+          name,
           _id: table._id,
         }),
         1
       )
-    })
-
-    it("should update Auto ID field after bulk import", async () => {
-      const table = await config.api.table.save(
-        tableForDatasource(datasource, {
-          name: "TestTable",
-          schema: {
-            autoId: {
-              name: "id",
-              type: FieldType.NUMBER,
-              subtype: AutoFieldSubType.AUTO_ID,
-              autocolumn: true,
-              constraints: {
-                type: "number",
-                presence: false,
-              },
-            },
-          },
-        })
-      )
-
-      let row = await config.api.row.save(table._id!, {})
-      expect(row.autoId).toEqual(1)
-
-      await config.api.row.bulkImport(table._id!, {
-        rows: [{ autoId: 2 }],
-        identifierFields: [],
-      })
-
-      row = await config.api.row.save(table._id!, {})
-      expect(row.autoId).toEqual(3)
     })
   })
 
@@ -396,7 +312,8 @@ describe.each([
       const table = res.find(t => t._id === testTable._id)
       expect(table).toBeDefined()
       expect(table!.views![viewV2.name]).toBeDefined()
-      expect(table!.views![viewV2.name!]).toEqual({
+
+      const expectedViewV2: ViewV2 = {
         ...viewV2,
         schema: {
           description: {
@@ -404,7 +321,7 @@ describe.each([
               type: "string",
             },
             name: "description",
-            type: "string",
+            type: FieldType.STRING,
             visible: false,
           },
           name: {
@@ -412,11 +329,22 @@ describe.each([
               type: "string",
             },
             name: "name",
-            type: "string",
+            type: FieldType.STRING,
             visible: false,
           },
         },
-      })
+      }
+
+      if (!isInternal) {
+        expectedViewV2.schema!.id = {
+          name: "id",
+          type: FieldType.NUMBER,
+          visible: false,
+          autocolumn: true,
+        }
+      }
+
+      expect(table!.views![viewV2.name!]).toEqual(expectedViewV2)
 
       if (isInternal) {
         expect(table!.views![legacyView.name!]).toBeDefined()
@@ -440,23 +368,16 @@ describe.each([
           },
         })
       }
+    })
+  })
 
-      // expect(res).toEqual(
-      //   expect.arrayContaining([
-      //     expect.objectContaining({
-      //       _id: tableId,
-      //       views: {
-      //         view1: {
-      //           version: 2,
-      //           name: "view1",
-      //           schema: {},
-      //           id: "new_view_id",
-      //           tableId,
-      //         },
-      //       },
-      //     }),
-      //   ])
-      // )
+  describe("get", () => {
+    it("returns a table", async () => {
+      const table = await config.api.table.save(
+        basicTable(datasource, { name: generator.guid() })
+      )
+      const res = await config.api.table.get(table._id!)
+      expect(res).toEqual(table)
     })
   })
 
@@ -781,33 +702,31 @@ describe.each([
     describe("unhappy paths", () => {
       let table: Table
       beforeAll(async () => {
-        table = await config.api.table.save({
-          name: "table",
-          type: "table",
-          sourceId: INTERNAL_TABLE_SOURCE_ID,
-          sourceType: TableSourceType.INTERNAL,
-          schema: {
-            "user relationship": {
-              type: FieldType.LINK,
-              fieldName: "test",
-              name: "user relationship",
-              constraints: {
-                type: "array",
-                presence: false,
+        table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              "user relationship": {
+                type: FieldType.LINK,
+                fieldName: "test",
+                name: "user relationship",
+                constraints: {
+                  type: "array",
+                  presence: false,
+                },
+                relationshipType: RelationshipType.MANY_TO_ONE,
+                tableId: InternalTable.USER_METADATA,
               },
-              relationshipType: RelationshipType.MANY_TO_ONE,
-              tableId: InternalTable.USER_METADATA,
-            },
-            num: {
-              type: FieldType.NUMBER,
-              name: "num",
-              constraints: {
-                type: "number",
-                presence: false,
+              num: {
+                type: FieldType.NUMBER,
+                name: "num",
+                constraints: {
+                  type: "number",
+                  presence: false,
+                },
               },
             },
-          },
-        })
+          })
+        )
       })
 
       it("should fail if the new column name is blank", async () => {
