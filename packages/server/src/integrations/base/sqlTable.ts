@@ -224,9 +224,8 @@ class SqlTableQueryBuilder {
           const tableName = schemaName
             ? `\`${schemaName}\`.\`${json.table.name}\``
             : `\`${json.table.name}\``
-          const externalType = json.table.schema[updatedColumn].externalType!
           return {
-            sql: `alter table ${tableName} change column \`${json.meta.renamed.old}\` \`${updatedColumn}\` ${externalType};`,
+            sql: `alter table ${tableName} rename column \`${json.meta.renamed.old}\` to \`${updatedColumn}\``,
             bindings: [],
           }
         }
