@@ -148,9 +148,7 @@
   on:close={onClose}
   {anchor}
   portalTarget={appendTo}
-  maxHeight={374}
-  maxWidth={296}
-  align="left"
+  {align}
 >
   {#if isOpen}
     <div class="date-time-popover">

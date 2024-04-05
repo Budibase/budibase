@@ -61,9 +61,7 @@
 
 <div class="container">
   <div class="value">
-    {#if value}
-      {displayValue}
-    {/if}
+    {displayValue}
   </div>
   {#if editable}
     <Icon name="Calendar" />
@@ -103,6 +101,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     line-height: 20px;
+    height: 20px;
   }
   .picker {
     position: absolute;
