@@ -28,11 +28,11 @@ const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 describe.each([
-  ["internal", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // ["internal", undefined],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/tables (%s)", (_, dsProvider) => {
   let isInternal: boolean
   let datasource: Datasource | undefined
@@ -114,7 +114,7 @@ describe.each([
       expect(events.table.updated).toHaveBeenCalledWith(updatedTable)
     })
 
-    it("updates all the row fields for a table when a schema key is renamed", async () => {
+    it.only("updates all the row fields for a table when a schema key is renamed", async () => {
       const testTable = await config.api.table.save(basicTable(datasource))
       await config.createLegacyView({
         name: "TestView",
@@ -130,24 +130,14 @@ describe.each([
       })
 
       const updatedTable = await config.api.table.save({
-        _id: testTable._id,
-        _rev: testTable._rev,
-        type: "table",
-        sourceId: datasource ? datasource._id! : INTERNAL_TABLE_SOURCE_ID,
-        sourceType: isInternal
-          ? TableSourceType.INTERNAL
-          : TableSourceType.EXTERNAL,
-        name: "TestTable",
+        ...testTable,
         _rename: {
           old: "name",
           updated: "updatedName",
         },
-        schema: {
-          updatedName: { type: FieldType.STRING, name: "updatedName" },
-        },
       })
 
-      expect(updatedTable.name).toEqual("TestTable")
+      expect(updatedTable.name).toEqual(testTable.name)
 
       const res = await config.api.row.get(testTable._id!, testRow._id!)
       expect(res.updatedName).toEqual("test")

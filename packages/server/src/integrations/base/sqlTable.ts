@@ -229,6 +229,7 @@ class SqlTableQueryBuilder {
             bindings: [],
           }
         }
+
         query = buildUpdateTable(
           client,
           json.table,
@@ -236,6 +237,27 @@ class SqlTableQueryBuilder {
           json.meta.table,
           json.meta.renamed!
         )
+
+        // renameColumn for SQL Server returns a parameterised `sp_rename` query,
+        // which is not supported by SQL Server and gives a syntax error.
+        if (this.sqlClient === SqlClient.MS_SQL && json.meta.renamed) {
+          const oldColumn = json.meta.renamed.old
+          const updatedColumn = json.meta.renamed.updated
+          const tableName = schemaName
+            ? `${schemaName}.${json.table.name}`
+            : `${json.table.name}`
+          const sql = query.toSQL()
+          if (Array.isArray(sql)) {
+            for (const query of sql) {
+              if (query.sql.startsWith("exec sp_rename")) {
+                query.sql = `exec sp_rename '${tableName}.${oldColumn}', '${updatedColumn}', 'COLUMN'`
+                query.bindings = []
+              }
+            }
+          }
+
+          return sql
+        }
         break
       case Operation.DELETE_TABLE:
         query = buildDeleteTable(client, json.table)
