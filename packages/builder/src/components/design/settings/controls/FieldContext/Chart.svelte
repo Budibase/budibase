@@ -3,6 +3,7 @@
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
+  import Property from './Property.svelte'
 
   export let supportLevelClass = ''
   export let supportLevelIcon = ""
@@ -17,6 +18,12 @@
   export let errors = []
   export let warnings = []
 
+  export let schema
+
+  $: {
+    console.log(schema)
+  }
+
   let root = null;
 
   const getDocLink = (columnType) => {
@@ -26,11 +33,20 @@
     if (columnType === "Text") {
       return "https://docs.budibase.com/docs/text"
     }
-    if (columnType === "attachment") {
+    if (columnType === "Attachment") {
       return "https://docs.budibase.com/docs/attachments"
     }
-    if (columnType === "array") {
+    if (columnType === "Multi-select") {
       return "https://docs.budibase.com/docs/multi-select"
+    }
+    if (columnType === "JSON") {
+      return "https://docs.budibase.com/docs/json"
+    }
+    if (columnType === "Date/Time") {
+      return "https://docs.budibase.com/docs/datetime"
+    }
+    if (columnType === "User") {
+      return "https://docs.budibase.com/docs/user"
     }
 
     return ""
@@ -146,13 +162,61 @@
 
 {#if sidecar}
   <ContextTooltip
-    arbitrary="foo"
+    noAnimation
     visible={sidecarSubject !== null}
     anchor={root}
     offset={20}
   >
   <div class="sidecarContent">
     {#if sidecarSubject === "column"}
+      <div class="heading wrapper">
+      <span class="heading">{columnName}</span>
+      </div>
+      <div class="divider" />
+      <div class="section">
+        {#if schema.type === "string"}
+          <Property
+            name="Max Length"
+            value={schema?.constraints?.length?.maximum ?? "None"}
+          />
+        {:else if schema.type === "datetime"}
+          <Property
+            name="Earliest"
+            value={schema?.constraints?.datetime?.earliest === "" ? "None" : schema?.constraints?.datetime?.earliest}
+          />
+          <Property
+            name="Latest"
+            value={schema?.constraints?.datetime?.latest === "" ? "None" : schema?.constraints?.datetime?.latest}
+          />
+          <Property
+            name="Ignore time zones"
+            value={schema?.ignoreTimeZones === true ? "Yes" : "No"}
+          />
+          <Property
+            name="Date only"
+            value={schema?.dateOnly === true ? "Yes" : "No"}
+          />
+        {:else if schema.type === "number"}
+          <Property
+            name="Min Value"
+            value={schema?.constraints?.numericality?.greaterThanOrEqualTo === "" ? "None" : schema?.constraints?.numericality?.greaterThanOrEqualTo}
+          />
+          <Property
+            name="Max Value"
+            value={schema?.constraints?.numericality?.lessThanOrEqualTo === "" ? "None" : schema?.constraints?.numericality?.lessThanOrEqualTo}
+          />
+        {:else if schema.type === "json"}
+          <Property
+            pre
+            name="Schema"
+            value={JSON.stringify(schema?.schema ?? {}, null, 2)}
+          />
+        {/if}
+        <Property
+          name="Required"
+          value={schema?.constraints?.presence?.allowEmpty === false ? "Yes" : "No"}
+        />
+      </div>
     {:else if sidecarSubject === "support"}
         <span class="heading">Data/Component Compatibility</span>
         <div class="divider" />
@@ -195,7 +259,7 @@
       <span class="heading">'Required' Constraint</span>
       <div class="divider" />
       <div class="section">
-        <span class="body">A 'required' contraint can be applied to columns to ensure a value is always present. If a column doesn't have this constraint, then rows may be missing values.</span>
+        <span class="body">A 'required' contraint can be applied to columns to ensure a value is always present. If a column doesn't have this constraint, then its value for a particular row could he missing.</span>
       </div>
     {/if}
   </div>
@@ -210,6 +274,9 @@
 
   .heading {
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .section {
