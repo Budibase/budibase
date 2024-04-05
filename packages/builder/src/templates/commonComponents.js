@@ -1,21 +1,6 @@
+import { FieldTypeToComponentMap } from "components/design/settings/controls/FieldConfiguration/utils"
 import { Component } from "./Component"
 import { getSchemaForDatasource } from "dataBinding"
-
-const fieldTypeToComponentMap = {
-  string: "stringfield",
-  number: "numberfield",
-  bigint: "bigintfield",
-  options: "optionsfield",
-  array: "multifieldselect",
-  boolean: "booleanfield",
-  longform: "longformfield",
-  datetime: "datetimefield",
-  attachment: "attachmentfield",
-  link: "relationshipfield",
-  json: "jsonfield",
-  signature: "signaturefield",
-  barcodeqr: "codescanner",
-}
 
 export function makeDatasourceFormComponents(datasource) {
   const { schema } = getSchemaForDatasource(null, datasource, {
@@ -31,7 +16,7 @@ export function makeDatasourceFormComponents(datasource) {
     }
     const fieldType =
       typeof fieldSchema === "object" ? fieldSchema.type : fieldSchema
-    const componentType = fieldTypeToComponentMap[fieldType]
+    const componentType = FieldTypeToComponentMap[fieldType]
     const fullComponentType = `@budibase/standard-components/${componentType}`
     if (componentType) {
       const component = new Component(fullComponentType)

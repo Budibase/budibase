@@ -1,3 +1,5 @@
+import { FieldType } from "@budibase/types"
+
 import OptionsCell from "../cells/OptionsCell.svelte"
 import DateCell from "../cells/DateCell.svelte"
 import MultiSelectCell from "../cells/MultiSelectCell.svelte"
@@ -13,20 +15,20 @@ import BBReferenceCell from "../cells/BBReferenceCell.svelte"
 import SignatureCell from "../cells/SignatureCell.svelte"
 
 const TypeComponentMap = {
-  text: TextCell,
-  options: OptionsCell,
-  datetime: DateCell,
-  barcodeqr: TextCell,
-  signature: SignatureCell,
-  longform: LongFormCell,
-  array: MultiSelectCell,
-  number: NumberCell,
-  boolean: BooleanCell,
-  attachment: AttachmentCell,
-  link: RelationshipCell,
-  formula: FormulaCell,
-  json: JSONCell,
-  bb_reference: BBReferenceCell,
+  [FieldType.STRING]: TextCell,
+  [FieldType.OPTIONS]: OptionsCell,
+  [FieldType.DATETIME]: DateCell,
+  [FieldType.BARCODEQR]: TextCell,
+  [FieldType.SIGNATURE]: SignatureCell,
+  [FieldType.LONGFORM]: LongFormCell,
+  [FieldType.ARRAY]: MultiSelectCell,
+  [FieldType.NUMBER]: NumberCell,
+  [FieldType.BOOLEAN]: BooleanCell,
+  [FieldType.ATTACHMENT]: AttachmentCell,
+  [FieldType.LINK]: RelationshipCell,
+  [FieldType.FORMULA]: FormulaCell,
+  [FieldType.JSON]: JSONCell,
+  [FieldType.BB_REFERENCE]: BBReferenceCell,
 }
 export const getCellRenderer = column => {
   return TypeComponentMap[column?.schema?.type] || TextCell
