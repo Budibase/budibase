@@ -23,8 +23,6 @@ let {
   collectAutomation,
 } = setup.structures
 
-jest.setTimeout(30000)
-
 describe("/automations", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
