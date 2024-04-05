@@ -35,7 +35,8 @@
 
   let grid
 
-  $: isDark = $component.isDark
+  $: currentTheme = $context?.device?.theme
+  $: darkMode = !currentTheme?.includes("light")
   $: columnWhitelist = parsedColumns
     ?.filter(col => col.active)
     ?.map(col => col.field)
@@ -115,7 +116,7 @@
     <Grid
       bind:this={grid}
       datasource={table}
-      {isDark}
+      {darkMode}
       {API}
       {stripeRows}
       {initialFilter}

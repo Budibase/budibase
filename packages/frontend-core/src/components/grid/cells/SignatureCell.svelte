@@ -31,7 +31,7 @@
   }
 
   const onKeyDown = () => {
-    return isOpen
+    return false
   }
 
   const open = () => {
@@ -81,7 +81,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="signature-cell"
-  class:light={!($props?.isDark || undefined)}
+  class:light={!$props?.darkMode}
   class:editable
   on:click={editable ? open : null}
 >
@@ -95,7 +95,7 @@
   onConfirm={saveSignature}
   title={schema?.name}
   {value}
-  isDark={$props.isDark}
+  darkMode={$props.darkMode}
   bind:this={modal}
 />
 
@@ -104,7 +104,7 @@
     {#if signature?.key}
       <div class="signature-wrap">
         <CoreSignature
-          isDark={$props.isDark}
+          darkMode={$props.darkMode}
           editable={false}
           {value}
           on:change={saveSignature}

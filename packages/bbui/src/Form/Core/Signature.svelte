@@ -10,7 +10,7 @@
   export let width = 400
   export let height = 220
   export let saveIcon = false
-  export let isDark
+  export let darkMode
 
   export function toDataUrl() {
     // PNG to preserve transparency
@@ -146,7 +146,7 @@
   })
 </script>
 
-<div class="signature" class:light={!isDark} class:image-error={urlFailed}>
+<div class="signature" class:light={!darkMode} class:image-error={urlFailed}>
   {#if !disabled}
     <div class="overlay">
       {#if updated && saveIcon}
