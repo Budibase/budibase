@@ -1,3 +1,4 @@
+import { FieldType } from "@budibase/types"
 import { FIELDS } from "constants/backend"
 import { tables } from "stores/builder"
 import { get as svelteGet } from "svelte/store"
@@ -5,15 +6,13 @@ import { get as svelteGet } from "svelte/store"
 // currently supported level of relationship depth (server side)
 const MAX_DEPTH = 1
 
-//https://github.com/Budibase/budibase/issues/3030
-const internalType = "internal"
-
 const TYPES_TO_SKIP = [
-  FIELDS.FORMULA.type,
-  FIELDS.LONGFORM.type,
-  FIELDS.ATTACHMENT.type,
-  FIELDS.SIGNATURE.type,
-  internalType,
+  FieldType.FORMULA,
+  FieldType.LONGFORM,
+  FieldType.ATTACHMENT,
+  FieldType.SIGNATURE,
+  //https://github.com/Budibase/budibase/issues/3030
+  FieldType.INTERNAL,
 ]
 
 export function getBindings({
@@ -27,7 +26,7 @@ export function getBindings({
     return bindings
   }
   for (let [column, schema] of Object.entries(table.schema)) {
-    const isRelationship = schema.type === FIELDS.LINK.type
+    const isRelationship = schema.type === FieldType.LINK
     // skip relationships after a certain depth and types which
     // can't bind to
     if (
