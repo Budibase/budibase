@@ -286,7 +286,7 @@
     color: var(--grey-5);
     font-size: 20px;
     display: inline block;
-    margin-right: 4px;
+    margin-right: 5px;
   }
 
   .semiColon {
@@ -311,8 +311,6 @@
   }
 
   .topLine .space {
-    margin-right: 7px;
-    flex-shrink: 0;
   }
 
   .topLine .text {
@@ -336,6 +334,8 @@
     background-color: var(--background-alt);
     color: var(--ink);
     align-items: center;
+    display: flex;
+
     margin-bottom: 10px;
   }
 
