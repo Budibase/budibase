@@ -9,6 +9,7 @@
 
   $: target = getContext(Context.PopoverRoot) || "#app"
 
+  export let arbitrary = ""
   let hovering = false
   let wrapper
   let currentTooltip
@@ -30,10 +31,18 @@
   }
 
   const updatePosition = (anchor, currentTooltip, previousTooltip, wrapper) => {
+      if (arbitrary === "foo") {
+        console.log(currentTooltip, previousTooltip);
+      }
+
     requestAnimationFrame(() => {
       if (anchor == null || currentTooltip == null || previousTooltip == null || wrapper == null) {
         return;
       }
+      if (arbitrary === "foo") {
+        console.log("past here");
+      }
+
 
       const rect = anchor.getBoundingClientRect();
 

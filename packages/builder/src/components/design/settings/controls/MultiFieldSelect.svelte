@@ -151,10 +151,10 @@
     }
 
     return {
-      class: "supportLevelUnsupported",
-      icon: "Alert",
+      class: "supportLevelPartialSupport",
+      icon: "AlertCheck",
       iconTooltip: "",
-      text: "No Support"
+      text: "Partially Compatible"
     }
   }
 
@@ -203,6 +203,7 @@
   offset={20}
 >
   <ChartFieldContext
+    sidecar
     support={fieldSupport[previousOption]}
     supportLevelClass={currentOptionSupport.class}
     supportLevelIcon={currentOptionSupport.icon}

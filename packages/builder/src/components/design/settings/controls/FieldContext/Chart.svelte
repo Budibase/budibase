@@ -12,15 +12,18 @@
   export let columnIcon
   export let columnType
   export let columnName
+  export let sidecar = false
 
   export let errors = []
   export let warnings = []
 
+  let root = null;
+
   const getDocLink = (columnType) => {
-    if (columnType === "number") {
+    if (columnType === "Number") {
       return "https://docs.budibase.com/docs/number"
     }
-    if (columnType === "string") {
+    if (columnType === "Text") {
       return "https://docs.budibase.com/docs/text"
     }
     if (columnType === "attachment") {
@@ -35,15 +38,31 @@
 
   $: docLink = getDocLink(columnType);
 
+  let sidecarSubject = null
+
+  const handleMouseenter = (option, idx) => {
+    sidecarSubject = option;
+    root = root
+  }
+
+  const handleMouseleave = (option) => {
+    sidecarSubject = null;
+  }
+
 </script>
 
 <div
+  bind:this={root}
   class={`tooltipContents ${supportLevelClass}`}
 >
 
   <div class="line topLine">
     <span class="bullet">•</span>
-    <div class="chip columnName">
+    <div
+      on:mouseenter={() => handleMouseenter("column")}
+      on:mouseleave={() => handleMouseleave("column")}
+      class="chip columnName"
+    >
       <span>
       {columnName}
       </span>
@@ -51,7 +70,7 @@
     <span class="space" />
     <span class="text"> is a </span>
     <span class="space" />
-    <a target=”_blank” href={docLink} class="chip link topLink">
+    <a target="_blank" rel="noopener noreferrer" href={docLink} class="chip link topLink">
       <Icon size="S" name={columnIcon} />
       <span class="text">{columnType} column</span>
     </a>
@@ -59,17 +78,21 @@
   </div>
   <div class={`line ${supportLevelClass}`}>
     <span class="bullet">•</span>
-    <div class={`chip supportChip ${supportLevelClass}`}>
+    <div 
+      class={`chip supportChip ${supportLevelClass}`}
+      on:mouseenter={() => handleMouseenter("support")}
+      on:mouseleave={() => handleMouseleave("support")}
+      >
       <Icon size="S" tooltip={supportLevelIconTooltip} name={supportLevelIcon} />
       <span class="text">{supportLevelText}</span>
     </div>
     <span class="space" />
     <span class="text">with</span>
     <span class="space" />
-    <div class="chip link">
+    <a target="_blank" rel="noopener noreferrer" href={"https://docs.budibase.com/docs/chart"} class="chip link topLink">
       <Icon size="S" name={"GraphPie"} />
       <span class="text">Chart components</span>
-    </div>
+    </a>
     <span class="period">.</span>
   </div>
   {#if warnings.includes("string number warning")}
@@ -77,10 +100,13 @@
       <span class="bullet">•</span>
       <span class="text">Any</span>
     <span class="space" />
-      <div class="chip info">
-        <Icon size="S" name={"123"} />
+    <div 
+      class="chip info"
+      on:mouseenter={() => handleMouseenter("stringsAndNumbers")}
+      on:mouseleave={() => handleMouseleave("stringsAndNumbers")}
+      >
         <span class="text">
-        Non-number values
+        non-number values
         </span>
       </div>
     <span class="space" />
@@ -93,15 +119,23 @@
   {#if warnings.includes("optional warning")}
     <div class={`line`}>
       <span class="bullet">•</span>
-      <span class="text">No required</span>
+      <span class="text">No</span>
     <span class="space" />
-      <div class="chip link">
+      <div 
+        class="chip info"
+        on:mouseenter={() => handleMouseenter("required")}
+        on:mouseleave={() => handleMouseleave("required")}
+        >
+          <span class="text">
+            required
+          </span>
+        </div>
+    <span class="space" />
+      <a target="_blank" rel="noopener noreferrer" href={"https://docs.budibase.com/docs/budibasedb#constraints"} class="chip link topLink">
         <Icon size="S" name={"DataUnavailable"} />
         <span class="text">
           Constraint
-        </span>
-      </div>
-      <span class="comma">,</span>
+        </span></a><span class="comma">,</span>
       <span class="text">
         so values may be missing
       </span>
@@ -110,7 +144,99 @@
   {/if}
 </div>
 
+{#if sidecar}
+  <ContextTooltip
+    arbitrary="foo"
+    visible={sidecarSubject !== null}
+    anchor={root}
+    offset={20}
+  >
+  <div class="sidecarContent">
+    {#if sidecarSubject === "column"}
+    {:else if sidecarSubject === "support"}
+        <span class="heading">Data/Component Compatibility</span>
+        <div class="divider" />
+        <div class="section">
+          <div
+            class={`chip supportChip supportLevelSupported`}
+            >
+            <Icon size="S" name={"CheckmarkCircle"} />
+            <span class="text">Compatible</span>
+          </div>
+          <span class="body">Fully compatible with the component as long as the data is present.</span>
+        </div>
+        <div class="section">
+          <div
+            class={`chip supportChip supportLevelPartialSupport`}
+            >
+            <Icon size="S" name={"AlertCheck"} />
+            <span class="text">Partially compatible</span>
+          </div>
+          <span class="body">Potentionally compatible with the component, but beware of other caveats mentioned in the context tooltip.</span>
+        </div>
+        <div class="section">
+          <div
+            class={`chip supportChip supportLevelUnsupported`}
+            >
+            <Icon size="S" name={"Alert"} />
+            <span class="text">Not compatible</span>
+          </div>
+          <span class="body">Imcompatible with the component.</span>
+        </div>
+
+
+    {:else if sidecarSubject === "stringsAndNumbers"}
+      <span class="heading">Text as Numbers</span>
+      <div class="divider" />
+      <div class="section">
+        Text can be used in place of numbers in certain scenarios, but care needs to be taken to ensure that non-numerical values aren't also present, otherwise they may be parsed incorrectly and lead to unexpected behavior.
+      </div>
+    {:else if sidecarSubject === "required"}
+      <span class="heading">'Required' Constraint</span>
+      <div class="divider" />
+      <div class="section">
+        <span class="body">A 'required' contraint can be applied to columns to ensure a value is always present. If a column doesn't have this constraint, then rows may be missing values.</span>
+      </div>
+    {/if}
+  </div>
+  </ContextTooltip>
+{/if}
+
 <style>
+  .sidecarContent {
+    max-width: 300px;
+    padding: 16px 12px 18px;
+  }
+
+  .heading {
+    font-weight: 600;
+  }
+
+  .section {
+    margin-bottom: 16px;
+  }
+  .section:last-child {
+    margin-bottom: 16px;
+  }
+
+  .section .body {
+    display: block;
+    margin-top: 5px;
+  }
+
+  /* BETWEEN STUFF */
+  /* BETWEEN STUFF */
+  /* BETWEEN STUFF */
+
+  .tooltipContents {
+    max-width: 450px;
+    background-color: var(--background-alt);
+    display: block;
+    padding: 20px 16px;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+
   .chip {
     box-sizing: border-box;
     display: inline-flex;
@@ -178,14 +304,6 @@
     margin: 12px 0 12px;
   }
 
-  .tooltipContents {
-    max-width: 400px;
-    background-color: var(--background-alt);
-    display: block;
-    padding: 20px 16px;
-    border-radius: 5px;
-    box-sizing: border-box;
-  }
 
   .topLine {
     display: flex;
@@ -218,7 +336,7 @@
     background-color: var(--background-alt);
     color: var(--ink);
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .line:last-child {
@@ -237,8 +355,8 @@
     box-sizing: border-box;
     border-color: var(--blue);
     color: white;
-    padding-left: 2px;
-    padding-right: 2px;
+    padding-left: 0px;
+    padding-right: 0px;
     transition: background-color 200ms;
   }
 
@@ -248,6 +366,8 @@
   }
 
   .info {
+
+    vertical-align: baseline;
     background-color: var(--grey-3);
     color: white;
   }
