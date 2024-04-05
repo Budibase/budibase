@@ -15,7 +15,6 @@
   const { API, notifications, props } = getContext("grid")
 
   let isOpen = false
-  let editing = false
   let signature
   let modal
 
@@ -48,7 +47,7 @@
     const deleteRequest = value.map(item => item.key)
     try {
       await API.deleteBuilderAttachments(deleteRequest)
-    } catch (e) {
+    } catch (error) {
       $notifications.error(error.message || "Failed to delete signature")
     }
   }
@@ -63,7 +62,7 @@
       const uploadReq = await API.uploadBuilderAttachment(attachRequest)
       onChange(uploadReq)
     } catch (error) {
-      $notifications.error(error.message || "Failed to upload attachment")
+      $notifications.error(error.message || "Failed to save signature")
       return []
     }
   }
@@ -117,7 +116,6 @@
         <ActionButton
           fullWidth
           on:click={() => {
-            editing = true
             modal.show()
           }}
         >

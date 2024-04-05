@@ -1,7 +1,6 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, createEventDispatcher } from "svelte"
   import Icon from "../../Icon/Icon.svelte"
-  import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
 
