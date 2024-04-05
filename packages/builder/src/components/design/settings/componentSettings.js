@@ -82,6 +82,7 @@ const componentMap = {
   "validation/boolean": ValidationEditor,
   "validation/datetime": ValidationEditor,
   "validation/attachment": ValidationEditor,
+  "validation/signature": ValidationEditor,
   "validation/link": ValidationEditor,
   "validation/bb_reference": ValidationEditor,
 }

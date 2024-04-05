@@ -4156,7 +4156,7 @@
         ]
       },
       {
-        "type": "validation/string",
+        "type": "validation/signature",
         "label": "Validation",
         "key": "validation"
       }

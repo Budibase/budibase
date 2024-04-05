@@ -1,5 +1,6 @@
 <script>
   import { datasources, tables, integrations, appStore } from "stores/builder"
+  import { themeStore } from "stores/portal"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
@@ -37,6 +38,9 @@
   })
   $: relationshipsEnabled = relationshipSupport(tableDatasource)
 
+  $: currentTheme = $themeStore?.theme
+  $: isDark = !currentTheme.includes("light")
+
   const relationshipSupport = datasource => {
     const integration = $integrations[datasource?.source]
     return !isInternal && integration?.relationships !== false
@@ -55,6 +59,7 @@
 <div class="wrapper">
   <Grid
     {API}
+    {isDark}
     datasource={gridDatasource}
     canAddRows={!isUsersTable}
     canDeleteRows={!isUsersTable}

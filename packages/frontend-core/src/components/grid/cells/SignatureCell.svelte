@@ -1,7 +1,9 @@
 <script>
   import { onMount, getContext } from "svelte"
-  import { CoreSignature } from "@budibase/bbui"
+  import { SignatureModal } from "@budibase/frontend-core/src/components"
+  import { CoreSignature, ActionButton } from "@budibase/bbui"
 
+  export let schema
   export let value
   export let focused = false
   export let onChange
@@ -9,12 +11,18 @@
   export let api
   export let invertX = false
   export let invertY = false
-  // export let schema
 
-  const { API, notifications } = getContext("grid")
+  const { API, notifications, props } = getContext("grid")
 
   let isOpen = false
-  let sigCanvas
+  let editing = false
+  let signature
+  let modal
+
+  $: if (value) {
+    const [attachment] = value
+    signature = attachment
+  }
 
   $: editable = focused && !readonly
   $: {
@@ -35,6 +43,31 @@
     isOpen = false
   }
 
+  const deleteSignature = async () => {
+    onChange([])
+    const deleteRequest = value.map(item => item.key)
+    try {
+      await API.deleteBuilderAttachments(deleteRequest)
+    } catch (e) {
+      $notifications.error(error.message || "Failed to delete signature")
+    }
+  }
+
+  const saveSignature = async sigCanvas => {
+    const signatureFile = sigCanvas.toFile()
+
+    let attachRequest = new FormData()
+    attachRequest.append("file", signatureFile)
+
+    try {
+      const uploadReq = await API.uploadBuilderAttachment(attachRequest)
+      onChange(uploadReq)
+    } catch (error) {
+      $notifications.error(error.message || "Failed to upload attachment")
+      return []
+    }
+  }
+
   onMount(() => {
     api = {
       focus: () => open(),
@@ -47,44 +80,75 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="signature-cell" class:editable on:click={editable ? open : null}>
-  signature cell: open {isOpen}
+<div
+  class="signature-cell"
+  class:light={!($props?.isDark || undefined)}
+  class:editable
+  on:click={editable ? open : null}
+>
+  {#if signature?.url}
+    <!-- svelte-ignore a11y-missing-attribute -->
+    <img src={signature?.url} />
+  {/if}
 </div>
 
+<SignatureModal
+  onConfirm={saveSignature}
+  title={schema?.name}
+  {value}
+  isDark={$props.isDark}
+  bind:this={modal}
+/>
+
 {#if isOpen}
-  <div class="signature" class:invertX class:invertY>
-    <button
-      on:click={() => {
-        console.log(sigCanvas.toDataUrl())
-      }}
-    >
-      check
-    </button>
-    <div class="field-wrap">
-      <CoreSignature
-        bind:this={sigCanvas}
-        on:change={() => {
-          console.log("cell change")
-        }}
-      />
-    </div>
+  <div class="signature" class:invertX class:invertY class:empty={!signature}>
+    {#if signature?.key}
+      <div class="signature-wrap">
+        <CoreSignature
+          isDark={$props.isDark}
+          editable={false}
+          {value}
+          on:change={saveSignature}
+          on:clear={deleteSignature}
+        />
+      </div>
+    {:else}
+      <div class="add-signature">
+        <ActionButton
+          fullWidth
+          on:click={() => {
+            editing = true
+            modal.show()
+          }}
+        >
+          Add signature
+        </ActionButton>
+      </div>
+    {/if}
   </div>
 {/if}
 
 <style>
+  .signature {
+    min-width: 320px;
+  }
+  .signature.empty {
+    width: 100%;
+    min-width: unset;
+  }
+  .signature-cell.light img {
+    -webkit-filter: invert(100%);
+    filter: invert(100%);
+  }
   .signature-cell {
-    /* display: flex;
-    padding: var(--cell-padding);
-    overflow: hidden;
-    user-select: none;
-    position: relative; */
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    padding: var(--cell-padding);
+    max-width: 320px;
+    padding-left: var(--cell-padding);
+    padding-right: var(--cell-padding);
     flex-wrap: nowrap;
-    gap: var(--cell-spacing);
     align-self: stretch;
     overflow: hidden;
     user-select: none;
@@ -96,29 +160,20 @@
     position: absolute;
     top: 100%;
     left: 0;
-    width: 320px;
     background: var(--grid-background-alt);
     border: var(--cell-border);
     padding: var(--cell-padding);
-    box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
   }
-  .field-wrap {
+  .signature-wrap {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     background-color: var(--spectrum-global-color-gray-50);
     color: var(--spectrum-alias-text-color);
-    /* font-size: var(--spectrum-alias-item-text-size-m); */
     box-sizing: border-box;
-    border: var(--spectrum-alias-border-size-thin)
-      var(--spectrum-alias-border-color) solid;
-    border-radius: var(--spectrum-alias-border-radius-regular);
     position: relative;
   }
-
   .signature.invertX {
     left: auto;
     right: 0;
@@ -127,17 +182,4 @@
     transform: translateY(-100%);
     top: 0;
   }
-  /* .attachment-cell {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    padding: var(--cell-padding);
-    flex-wrap: nowrap;
-    gap: var(--cell-spacing);
-    align-self: stretch;
-    overflow: hidden;
-    user-select: none;
-  }
- */
 </style>

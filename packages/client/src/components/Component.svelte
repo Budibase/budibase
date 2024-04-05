@@ -23,6 +23,7 @@
     appStore,
     dndComponentPath,
     dndIsDragging,
+    themeStore,
   } from "stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
@@ -192,6 +193,7 @@
   let pad = false
   $: pad = pad || (interactive && hasChildren && inDndPath)
   $: $dndIsDragging, (pad = false)
+  $: isDark = !$themeStore.theme?.includes("light")
 
   // Update component context
   $: store.set({
@@ -222,6 +224,7 @@
     parent: id,
     ancestors: [...($component?.ancestors ?? []), instance._component],
     path: [...($component?.path ?? []), id],
+    isDark,
   })
 
   const initialise = (instance, force = false) => {

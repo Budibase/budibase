@@ -175,13 +175,15 @@ export async function validate({
         errors[fieldName] = [`${fieldName} is required`]
       }
     } else if (
-      (type === FieldType.ATTACHMENT || type === FieldType.JSON) &&
+      (type === FieldType.ATTACHMENT ||
+        type === FieldType.SIGNATURE ||
+        type === FieldType.JSON) &&
       typeof row[fieldName] === "string"
     ) {
       // this should only happen if there is an error
       try {
         const json = JSON.parse(row[fieldName])
-        if (type === FieldType.ATTACHMENT) {
+        if (type === FieldType.ATTACHMENT || type === FieldType.SIGNATURE) {
           if (Array.isArray(json)) {
             row[fieldName] = json
           } else {

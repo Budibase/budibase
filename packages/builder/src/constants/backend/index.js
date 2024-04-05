@@ -114,7 +114,6 @@ export const FIELDS = {
       presence: false,
     },
   },
-  // USE the single approach like Adrias update
   SIGNATURE: {
     name: "Signature",
     type: FieldType.SIGNATURE,

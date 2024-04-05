@@ -147,8 +147,11 @@ export async function inputProcessing(
       clonedRow[key] = coerce(value, field.type)
     }
 
-    // remove any attachment urls, they are generated on read
-    if (field.type === FieldType.ATTACHMENT) {
+    // remove any attachment/signature urls, they are generated on read
+    if (
+      field.type === FieldType.ATTACHMENT ||
+      field.type === FieldType.SIGNATURE
+    ) {
       const attachments = clonedRow[key]
       if (attachments?.length) {
         attachments.forEach((attachment: RowAttachment) => {
@@ -216,7 +219,10 @@ export async function outputProcessing<T extends Row[] | Row>(
 
   // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
-    if (column.type === FieldType.ATTACHMENT) {
+    if (
+      column.type === FieldType.ATTACHMENT ||
+      column.type === FieldType.SIGNATURE
+    ) {
       for (let row of enriched) {
         if (row[property] == null || !Array.isArray(row[property])) {
           continue

@@ -1,65 +1,80 @@
-<!--
-
-  Should this just be Canvas.svelte?
-  A drawing zone?
-  Shift it somewhere else?
-
-  width, height, toBase64, toFileObj
--->
 <script>
   import { onMount } from "svelte"
+  import Icon from "../../Icon/Icon.svelte"
+  import { createEventDispatcher } from "svelte"
 
-  export let canvasWidth
-  export let canvasHeight
+  const dispatch = createEventDispatcher()
 
-  let canvasRef
-  let canvas
-  let mouseDown = false
-  let lastOffsetX, lastOffsetY
-
-  let touching = false
-  let touchmove = false
-
-  let debug = true
-  let debugData
+  export let value
+  export let disabled = false
+  export let editable = true
+  export let width = 400
+  export let height = 220
+  export let saveIcon = false
+  export let isDark
 
   export function toDataUrl() {
-    return canvasRef.toDataURL()
+    // PNG to preserve transparency
+    return canvasRef.toDataURL("image/png")
   }
 
-  export function clear() {
-    return canvas.clearRect(0, 0, canvas.width, canvas.height)
+  export function toFile() {
+    const data = canvas
+      .getImageData(0, 0, width, height)
+      .data.some(channel => channel !== 0)
+
+    if (!data) {
+      return
+    }
+
+    let dataURIParts = toDataUrl().split(",")
+    if (!dataURIParts.length) {
+      console.error("Could not retrieve signature data")
+    }
+
+    // Pull out the base64 encoded byte data
+    let binaryVal = atob(dataURIParts[1])
+    let blobArray = new Uint8Array(binaryVal.length)
+    let pos = 0
+    while (pos < binaryVal.length) {
+      blobArray[pos] = binaryVal.charCodeAt(pos)
+      pos++
+    }
+
+    const signatureBlob = new Blob([blobArray], {
+      type: "image/png",
+    })
+
+    return new File([signatureBlob], "signature.png", {
+      type: signatureBlob.type,
+    })
   }
 
-  const updated = (x, y) => {
+  export function clearCanvas() {
+    return canvas.clearRect(0, 0, canvasWidth, canvasHeight)
+  }
+
+  const updatedPos = (x, y) => {
     return lastOffsetX != x || lastOffsetY != y
   }
 
-  // Needs touch handling
   const handleDraw = e => {
-    // e.touches[0] there should ol
-
     e.preventDefault()
-
+    if (disabled || !editable) {
+      return
+    }
     var rect = canvasRef.getBoundingClientRect()
     const canvasX = e.offsetX || e.targetTouches?.[0].pageX - rect.left
     const canvasY = e.offsetY || e.targetTouches?.[0].pageY - rect.top
 
     const coords = { x: Math.round(canvasX), y: Math.round(canvasY) }
     draw(coords.x, coords.y)
-    debugData = {
-      coords,
-      t0x: Math.round(e.touches?.[0].clientX),
-      t0y: Math.round(e.touches?.[0].clientY),
-      mouseOffx: e.offsetX,
-      mouseOffy: e.offsetY,
-    }
   }
 
   const draw = (xPos, yPos) => {
-    if (mouseDown && updated(xPos, yPos)) {
-      canvas.miterLimit = 3
-      canvas.lineWidth = 3
+    if (drawing && updatedPos(xPos, yPos)) {
+      canvas.miterLimit = 2
+      canvas.lineWidth = 2
       canvas.lineJoin = "round"
       canvas.lineCap = "round"
       canvas.strokeStyle = "white"
@@ -72,69 +87,199 @@
   }
 
   const stopTracking = () => {
-    mouseDown = false
+    if (!canvas) {
+      return
+    }
+    canvas.closePath()
+    drawing = false
     lastOffsetX = null
     lastOffsetY = null
   }
 
-  const canvasMouseDown = e => {
-    // if (e.button != 0) {
-    //   return
-    // }
-    mouseDown = true
-    canvas.moveTo(e.offsetX, e.offsetY)
+  const canvasContact = e => {
+    if (disabled || !editable || (!e.targetTouches && e.button != 0)) {
+      return
+    } else if (!updated) {
+      updated = true
+      clearCanvas()
+    }
+    drawing = true
     canvas.beginPath()
+    canvas.moveTo(e.offsetX, e.offsetY)
+  }
+
+  let canvasRef
+  let canvas
+  let canvasWrap
+  let drawing = false
+  let updated = false
+  let lastOffsetX, lastOffsetY
+  let canvasWidth
+  let canvasHeight
+  let signature
+  let urlFailed
+
+  $: if (value) {
+    const [attachment] = value || []
+    signature = attachment
+  }
+
+  $: if (signature?.url) {
+    updated = false
   }
 
   onMount(() => {
+    if (!editable) {
+      return
+    }
+
+    canvasWrap.style.width = `${width}px`
+    canvasWrap.style.height = `${height}px`
+
+    const { width: wrapWidth, height: wrapHeight } =
+      canvasWrap.getBoundingClientRect()
+
+    canvasHeight = wrapHeight
+    canvasWidth = wrapWidth
+
     canvas = canvasRef.getContext("2d")
     canvas.imageSmoothingEnabled = true
-    canvas.imageSmoothingQuality = "high"
   })
 </script>
 
-<div>
-  <div>{JSON.stringify(debugData, null, 2)}</div>
-  <canvas
-    id="canvas"
-    width={200}
-    height={220}
-    bind:this={canvasRef}
-    on:mousemove={handleDraw}
-    on:mousedown={canvasMouseDown}
-    on:mouseup={stopTracking}
-    on:mouseleave={stopTracking}
-    on:touchstart={e => {
-      touching = true
-      canvasMouseDown(e)
-    }}
-    on:touchend={e => {
-      touching = false
-      touchmove = false
-      stopTracking(e)
-    }}
-    on:touchmove={e => {
-      touchmove = true
-      handleDraw(e)
-    }}
-    on:touchleave={e => {
-      touching = false
-      touchmove = false
-      stopTracking(e)
-    }}
-    class:touching={touching && debug}
-    class:touchmove={touchmove && debug}
-  />
+<div class="signature" class:light={!isDark} class:image-error={urlFailed}>
+  {#if !disabled}
+    <div class="overlay">
+      {#if updated && saveIcon}
+        <span class="save">
+          <Icon
+            name="Checkmark"
+            hoverable
+            tooltip={"Save"}
+            tooltipPosition={"top"}
+            tooltipType={"info"}
+            on:click={() => {
+              dispatch("change", toDataUrl())
+            }}
+          />
+        </span>
+      {/if}
+      {#if signature?.url && !updated}
+        <span class="delete">
+          <Icon
+            name="DeleteOutline"
+            hoverable
+            tooltip={"Delete"}
+            tooltipPosition={"top"}
+            tooltipType={"info"}
+            on:click={() => {
+              if (editable) {
+                clearCanvas()
+              }
+              dispatch("clear")
+            }}
+          />
+        </span>
+      {/if}
+    </div>
+  {/if}
+  {#if !editable && signature?.url}
+    <!-- svelte-ignore a11y-missing-attribute -->
+    {#if !urlFailed}
+      <img
+        src={signature?.url}
+        on:error={() => {
+          urlFailed = true
+        }}
+      />
+    {:else}
+      Could not load signature
+    {/if}
+  {:else}
+    <div bind:this={canvasWrap} class="canvas-wrap">
+      <canvas
+        id="canvas"
+        width={canvasWidth}
+        height={canvasHeight}
+        bind:this={canvasRef}
+        on:mousemove={handleDraw}
+        on:mousedown={canvasContact}
+        on:mouseup={stopTracking}
+        on:mouseleave={stopTracking}
+        on:touchstart={canvasContact}
+        on:touchend={stopTracking}
+        on:touchmove={handleDraw}
+        on:touchleave={stopTracking}
+      />
+      {#if editable}
+        <div class="indicator-overlay">
+          <div class="sign-here">
+            <Icon name="Close" />
+            <hr />
+          </div>
+        </div>
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style>
-  #canvas {
-    border: 1px solid blueviolet;
+  .indicator-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    padding: var(--spectrum-global-dimension-size-150);
+    box-sizing: border-box;
+    pointer-events: none;
   }
-  #canvas.touching {
-    border-color: aquamarine;
+  .sign-here {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spectrum-global-dimension-size-150);
   }
-  #canvas.touchmove {
-    border-color: rgb(227, 102, 68);
+  .sign-here hr {
+    border: 0;
+    border-top: 2px solid var(--spectrum-global-color-gray-200);
+    width: 100%;
+  }
+  .canvas-wrap {
+    position: relative;
+    margin: auto;
+  }
+  .signature img {
+    max-width: 100%;
+  }
+  .signature.light img,
+  .signature.light #canvas {
+    -webkit-filter: invert(100%);
+    filter: invert(100%);
+  }
+  .signature.image-error .overlay {
+    padding-top: 0px;
+  }
+  .signature {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    text-align: center;
+  }
+  .overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    padding: var(--spectrum-global-dimension-size-150);
+    text-align: right;
+    z-index: 2;
+    box-sizing: border-box;
+  }
+  .save,
+  .delete {
+    display: inline-block;
   }
 </style>
