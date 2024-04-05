@@ -18,7 +18,7 @@
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
-  export let offset = 5
+  export let offset = 4
   export let customHeight
   export let animate = true
   export let customZindex
