@@ -36,8 +36,6 @@
       }
 
       const rect = anchor.getBoundingClientRect();
-      const previousStyles = window.getComputedStyle(previousTooltip?.firstChild)
-      const currentStyles = window.getComputedStyle(currentTooltip?.firstChild)
 
 
       const windowOffset = (window.innerHeight - offset) - (currentTooltip.clientHeight + rect.y)
@@ -53,7 +51,6 @@
       currentY = windowOffset < 0 ? rect.y + windowOffset : rect.y
       const fadeIn = [{ opacity: "0" }, { opacity: "1" }];
       const fadeOut = [{ opacity: "1" }, { opacity: "0" }];
-      const color = [{ backgroundColor: previousStyles.backgroundColor }, { backgroundColor: currentStyles.backgroundColor }];
 
       const fadeInTiming = {
         duration: 200,
@@ -69,15 +66,8 @@
         fill: "forwards"
       };
 
-      const colorTiming = {
-        duration: 300,
-        iterations: 1,
-        easing: "ease-in"
-      };
-
       currentTooltip.animate(fadeIn, fadeInTiming);
       previousTooltip.animate(fadeOut, fadeOutTiming);
-      wrapper.animate(color, colorTiming);
 
       // Bypass animations if the tooltip has only just been opened
       if (initialShow) {
@@ -157,7 +147,9 @@
     position: absolute;
     z-index: 9999;
     pointer-events: none;
-    background-color: var(--spectrum-global-color-gray-200);
+    background-color: var(--background-alt);
+    box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.42);
+
     border-radius: 5px;
     box-sizing: border-box;
     opacity: 0;
