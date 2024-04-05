@@ -75,14 +75,14 @@
   }
 
   $: currentTheme = $context?.device?.theme
-  $: isDark = !currentTheme?.includes("light")
+  $: darkMode = !currentTheme?.includes("light")
 </script>
 
 <SignatureModal
   onConfirm={saveSignature}
   title={fieldSchema?.name}
   value={fieldState?.value}
-  {isDark}
+  {darkMode}
   bind:this={modal}
 />
 
@@ -113,7 +113,7 @@
     {:else}
       <div class="signature-field">
         <CoreSignature
-          {isDark}
+          {darkMode}
           disabled={$builderStore.inBuilder || disabled}
           editable={false}
           value={fieldState?.value}

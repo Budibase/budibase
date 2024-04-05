@@ -39,7 +39,7 @@
   $: relationshipsEnabled = relationshipSupport(tableDatasource)
 
   $: currentTheme = $themeStore?.theme
-  $: isDark = !currentTheme.includes("light")
+  $: darkMode = !currentTheme.includes("light")
 
   const relationshipSupport = datasource => {
     const integration = $integrations[datasource?.source]
@@ -59,7 +59,7 @@
 <div class="wrapper">
   <Grid
     {API}
-    {isDark}
+    {darkMode}
     datasource={gridDatasource}
     canAddRows={!isUsersTable}
     canDeleteRows={!isUsersTable}

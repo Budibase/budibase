@@ -4,7 +4,7 @@
   export let onConfirm = () => {}
   export let value
   export let title
-  export let isDark
+  export let darkMode
 
   export const show = () => {
     modal.show()
@@ -19,7 +19,7 @@
     showConfirmButton
     showCancelButton={false}
     showCloseIcon={false}
-    enableGrid={false}
+    custom
     showDivider={false}
     onConfirm={() => {
       onConfirm(canvas)
@@ -29,7 +29,7 @@
       <Body>{title}</Body>
     </div>
     <div class="signature-wrap modal">
-      <CoreSignature {isDark} {value} saveIcon={false} bind:this={canvas} />
+      <CoreSignature {darkMode} {value} saveIcon={false} bind:this={canvas} />
     </div>
   </ModalContent>
 </Modal>

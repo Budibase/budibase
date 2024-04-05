@@ -27,7 +27,7 @@
   export let secondaryButtonText = undefined
   export let secondaryAction = undefined
   export let secondaryButtonWarning = false
-  export let enableGrid = true
+  export let custom = false
 
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
@@ -64,13 +64,13 @@
   class:spectrum-Dialog--medium={size === "M"}
   class:spectrum-Dialog--large={size === "L"}
   class:spectrum-Dialog--extraLarge={size === "XL"}
-  class:no-grid={!enableGrid}
+  class:no-grid={custom}
   style="position: relative;"
   role="dialog"
   tabindex="-1"
   aria-modal="true"
 >
-  <div class="modal-core" class:spectrum-Dialog-grid={enableGrid}>
+  <div class="modal-core" class:spectrum-Dialog-grid={!custom}>
     {#if title || $$slots.header}
       <h1
         class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
