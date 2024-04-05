@@ -17,7 +17,6 @@ import {
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
-import sdk from "../../../sdk"
 import * as uuid from "uuid"
 
 import tk from "timekeeper"
@@ -59,8 +58,11 @@ describe.each([
     })
 
     it("returns a success message when the table is successfully created", async () => {
-      const table = await config.api.table.save(basicTable(datasource))
-      expect(table.name).toEqual("TestTable")
+      const name = generator.guid()
+      const table = await config.api.table.save(
+        tableForDatasource(datasource, { name })
+      )
+      expect(table.name).toEqual(name)
       expect(events.table.created).toHaveBeenCalledTimes(1)
       expect(events.table.created).toHaveBeenCalledWith(table)
     })
@@ -149,20 +151,23 @@ describe.each([
 
   describe("update", () => {
     it("updates a table", async () => {
-      const table = await config.api.table.save({
-        name: "TestTable",
-        type: "table",
-        sourceId: INTERNAL_TABLE_SOURCE_ID,
-        sourceType: TableSourceType.INTERNAL,
-        schema: {
-          name: {
-            type: FieldType.STRING,
-            name: "name",
-            constraints: {
-              type: "string",
+      const table = await config.api.table.save(
+        tableForDatasource(datasource, {
+          schema: {
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+              constraints: {
+                type: "string",
+              },
             },
           },
-        },
+        })
+      )
+
+      await config.api.table.save({
+        ...table,
+        name: generator.guid(),
       })
 
       expect(events.table.updated).toHaveBeenCalledTimes(1)
@@ -209,7 +214,7 @@ describe.each([
       expect(res.name).toBeUndefined()
     })
 
-    it.only("updates only the passed fields", async () => {
+    it("updates only the passed fields", async () => {
       const table = await config.api.table.save(
         tableForDatasource(datasource, {
           name: "TestTable",
@@ -350,23 +355,20 @@ describe.each([
 
   describe("fetch", () => {
     let testTable: Table
-    const enrichViewSchemasMock = jest.spyOn(sdk.tables, "enrichViewSchemas")
 
     beforeEach(async () => {
-      testTable = await config.api.table.save(basicTable(datasource))
+      testTable = await config.api.table.save(
+        basicTable(datasource, { name: generator.guid() })
+      )
     })
 
-    afterAll(() => {
-      enrichViewSchemasMock.mockRestore()
-    })
-
-    it("returns all the tables for that instance in the response body", async () => {
+    it("returns all tables", async () => {
       const res = await config.api.table.fetch()
       const table = res.find(t => t._id === testTable._id)
       expect(table).toBeDefined()
       expect(table!.name).toEqual(testTable.name)
       expect(table!.type).toEqual("table")
-      expect(table!.sourceType).toEqual("internal")
+      expect(table!.sourceType).toEqual(testTable.sourceType)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -377,63 +379,84 @@ describe.each([
       })
     })
 
-    it("should fetch views", async () => {
-      const tableId = config.table!._id!
-      const views = [
-        await config.api.viewV2.create({ tableId, name: generator.guid() }),
-        await config.api.viewV2.create({ tableId, name: generator.guid() }),
-      ]
+    it("should enrich the view schemas", async () => {
+      const viewV2 = await config.api.viewV2.create({
+        tableId: testTable._id!,
+        name: generator.guid(),
+      })
+      const legacyView = await config.api.legacyView.save({
+        tableId: testTable._id!,
+        name: generator.guid(),
+        filters: [],
+        schema: {},
+      })
 
       const res = await config.api.table.fetch()
-      expect(res).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            _id: tableId,
-            views: views.reduce((p, c) => {
-              p[c.name] = { ...c, schema: expect.anything() }
-              return p
-            }, {} as any),
-          }),
-        ])
-      )
-    })
 
-    it("should enrich the view schemas for viewsV2", async () => {
-      const tableId = config.table!._id!
-      enrichViewSchemasMock.mockImplementation(t => ({
-        ...t,
-        views: {
-          view1: {
-            version: 2,
-            name: "view1",
-            schema: {},
-            id: "new_view_id",
-            tableId: t._id!,
+      const table = res.find(t => t._id === testTable._id)
+      expect(table).toBeDefined()
+      expect(table!.views![viewV2.name]).toBeDefined()
+      expect(table!.views![viewV2.name!]).toEqual({
+        ...viewV2,
+        schema: {
+          description: {
+            constraints: {
+              type: "string",
+            },
+            name: "description",
+            type: "string",
+            visible: false,
+          },
+          name: {
+            constraints: {
+              type: "string",
+            },
+            name: "name",
+            type: "string",
+            visible: false,
           },
         },
-      }))
+      })
 
-      await config.api.viewV2.create({ tableId, name: generator.guid() })
-      await config.createLegacyView()
-
-      const res = await config.api.table.fetch()
-
-      expect(res).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            _id: tableId,
-            views: {
-              view1: {
-                version: 2,
-                name: "view1",
-                schema: {},
-                id: "new_view_id",
-                tableId,
+      if (isInternal) {
+        expect(table!.views![legacyView.name!]).toBeDefined()
+        expect(table!.views![legacyView.name!]).toEqual({
+          ...legacyView,
+          schema: {
+            description: {
+              constraints: {
+                type: "string",
               },
+              name: "description",
+              type: "string",
             },
-          }),
-        ])
-      )
+            name: {
+              constraints: {
+                type: "string",
+              },
+              name: "name",
+              type: "string",
+            },
+          },
+        })
+      }
+
+      // expect(res).toEqual(
+      //   expect.arrayContaining([
+      //     expect.objectContaining({
+      //       _id: tableId,
+      //       views: {
+      //         view1: {
+      //           version: 2,
+      //           name: "view1",
+      //           schema: {},
+      //           id: "new_view_id",
+      //           tableId,
+      //         },
+      //       },
+      //     }),
+      //   ])
+      // )
     })
   })
 
