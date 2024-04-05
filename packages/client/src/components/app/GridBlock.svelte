@@ -35,6 +35,7 @@
 
   let grid
 
+  $: isDark = $component.isDark
   $: columnWhitelist = parsedColumns
     ?.filter(col => col.active)
     ?.map(col => col.field)
@@ -114,6 +115,7 @@
     <Grid
       bind:this={grid}
       datasource={table}
+      {isDark}
       {API}
       {stripeRows}
       {initialFilter}

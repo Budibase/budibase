@@ -12,6 +12,7 @@ const TYPES_TO_SKIP = [
   FIELDS.FORMULA.type,
   FIELDS.LONGFORM.type,
   FIELDS.ATTACHMENT.type,
+  FIELDS.SIGNATURE.type,
   internalType,
 ]
 

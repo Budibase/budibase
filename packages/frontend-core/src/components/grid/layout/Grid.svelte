@@ -49,6 +49,7 @@
   export let notifySuccess = null
   export let notifyError = null
   export let buttons = null
+  export let isDark
 
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
@@ -101,6 +102,7 @@
     notifySuccess,
     notifyError,
     buttons,
+    isDark,
   })
 
   // Set context for children to consume

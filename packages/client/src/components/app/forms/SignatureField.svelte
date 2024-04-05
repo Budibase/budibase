@@ -1,6 +1,140 @@
 <script>
-  import { CoreSignature } from "@budibase/bbui"
+  import { CoreSignature, ActionButton } from "@budibase/bbui"
+  import { getContext } from "svelte"
+  import Field from "./Field.svelte"
+  import { SignatureModal } from "@budibase/frontend-core/src/components"
+
+  export let field
+  export let label
+  export let disabled = false
+  export let readonly = false
+  export let validation
+  export let onChange
+  export let span
+  export let helpText = null
+
+  let fieldState
+  let fieldApi
+  let fieldSchema
+  let modal
+
+  const { API, notificationStore, builderStore } = getContext("sdk")
+  const context = getContext("context")
+  const formContext = getContext("form")
+
+  const saveSignature = async canvas => {
+    try {
+      const signatureFile = canvas.toFile()
+      let updateValue
+
+      if (signatureFile) {
+        let attachRequest = new FormData()
+        attachRequest.append("file", signatureFile)
+
+        const resp = await API.uploadAttachment({
+          data: attachRequest,
+          tableId: formContext?.dataSource?.tableId,
+        })
+
+        updateValue = resp
+      } else {
+        updateValue = []
+      }
+
+      const changed = fieldApi.setValue(updateValue)
+      if (onChange && changed) {
+        onChange({ value: updateValue })
+      }
+    } catch (error) {
+      notificationStore.actions.error(
+        `There was a problem saving your signature`
+      )
+      console.error(error)
+    }
+  }
+
+  const deleteSignature = async () => {
+    const deleteRequest = fieldState?.value.map(item => item.key)
+
+    const changed = fieldApi.setValue([])
+    if (onChange && changed) {
+      onChange({ value: [] })
+    }
+
+    try {
+      await API.deleteAttachments({
+        keys: deleteRequest,
+        tableId: formContext?.dataSource?.tableId,
+      })
+    } catch (error) {
+      notificationStore.actions.error(
+        `There was a problem deleting your signature`
+      )
+      console.error(error)
+    }
+  }
+
+  $: currentTheme = $context?.device?.theme
+  $: isDark = !currentTheme?.includes("light")
 </script>
 
-<div>SignatureField</div>
-<CoreSignature />
+<SignatureModal
+  onConfirm={saveSignature}
+  title={fieldSchema?.name}
+  value={fieldState?.value}
+  {isDark}
+  bind:this={modal}
+/>
+
+<Field
+  {label}
+  {field}
+  disabled={$builderStore.inBuilder || disabled}
+  {readonly}
+  {validation}
+  {span}
+  {helpText}
+  type="signature"
+  bind:fieldState
+  bind:fieldApi
+  bind:fieldSchema
+  defaultValue={[]}
+>
+  {#if fieldState}
+    {#if (Array.isArray(fieldState?.value) && !fieldState?.value?.length) || !fieldState?.value}
+      <ActionButton
+        fullWidth
+        on:click={() => {
+          modal.show()
+        }}
+      >
+        Add signature
+      </ActionButton>
+    {:else}
+      <div class="signature-field">
+        <CoreSignature
+          {isDark}
+          disabled={$builderStore.inBuilder || disabled}
+          editable={false}
+          value={fieldState?.value}
+          on:clear={deleteSignature}
+        />
+      </div>
+    {/if}
+  {/if}
+</Field>
+
+<style>
+  .signature-field {
+    min-height: 50px;
+    justify-content: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--spectrum-global-color-gray-50);
+    box-sizing: border-box;
+    border: var(--spectrum-alias-border-size-thin)
+      var(--spectrum-alias-border-color) solid;
+    border-radius: var(--spectrum-alias-border-radius-regular);
+  }
+</style>
