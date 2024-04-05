@@ -17,6 +17,7 @@
 
   export let errors = []
   export let warnings = []
+  export let tableHref = () => {}
 
   export let schema
 
@@ -74,15 +75,17 @@
 
   <div class="line topLine">
     <span class="bullet">•</span>
-    <div
+    <a
+      target="_blank" rel="noopener noreferrer"
       on:mouseenter={() => handleMouseenter("column")}
       on:mouseleave={() => handleMouseleave("column")}
+      href={tableHref}
       class="chip columnName"
     >
       <span>
       {columnName}
       </span>
-    </div>
+    </a>
     <span class="space" />
     <span class="text"> is a </span>
     <span class="space" />
@@ -334,6 +337,7 @@
     flex-grow: 0;
     flex-shrink: 1;
     min-width: 0;
+    color: var(--grey-8);
   }
 
   .bullet {
@@ -436,7 +440,6 @@
 
     vertical-align: baseline;
     background-color: var(--grey-3);
-    color: white;
   }
 
   .info :global(svg) {
