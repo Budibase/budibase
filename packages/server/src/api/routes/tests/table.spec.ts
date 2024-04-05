@@ -129,11 +129,19 @@ describe.each([
         name: "test",
       })
 
+      const { name, ...otherColumns } = testTable.schema
       const updatedTable = await config.api.table.save({
         ...testTable,
         _rename: {
           old: "name",
           updated: "updatedName",
+        },
+        schema: {
+          ...otherColumns,
+          updatedName: {
+            ...name,
+            name: "updatedName",
+          },
         },
       })
 
