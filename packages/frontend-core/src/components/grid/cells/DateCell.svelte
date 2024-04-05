@@ -46,7 +46,7 @@
   }
 
   const onKeyDown = () => {
-    return isOpen
+    return false
   }
 
   onMount(() => {

@@ -2,7 +2,6 @@
   export let value
   export let min
   export let max
-  export let onChange
   export let hideArrows = false
   export let width
 
