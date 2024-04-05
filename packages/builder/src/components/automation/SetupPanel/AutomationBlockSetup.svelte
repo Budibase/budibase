@@ -375,7 +375,7 @@
   })
   const handleAttachmentParams = keyValuObj => {
     let params = {}
-    if (keyValuObj.length) {
+    if (keyValuObj?.length) {
       for (let param of keyValuObj) {
         params[param.url] = param.filename
       }
