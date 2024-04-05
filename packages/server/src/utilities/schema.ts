@@ -54,7 +54,7 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
         type: columnType,
         subtype: columnSubtype,
         autocolumn: isAutoColumn,
-      } = schema[columnName]
+      } = schema[columnName] || {}
 
       // If the column had an invalid value we don't want to override it
       if (results.schemaValidation[columnName] === false) {
