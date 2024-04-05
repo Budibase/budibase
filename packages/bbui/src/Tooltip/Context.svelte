@@ -6,6 +6,7 @@
   export let anchor
   export let visible = false
   export let offset = 0;
+  export let noAnimation = false
 
   $: target = getContext(Context.PopoverRoot) || "#app"
 
@@ -67,8 +68,10 @@
         fill: "forwards"
       };
 
+      if (!noAnimation) {
       currentTooltip.animate(fadeIn, fadeInTiming);
       previousTooltip.animate(fadeOut, fadeOutTiming);
+      }
 
       // Bypass animations if the tooltip has only just been opened
       if (initialShow) {
@@ -115,6 +118,7 @@
     style:height={`${currentTooltipHeight}px`}
     class="tooltip"
     class:visible={visible || hovering}
+    class:noAnimation
   >
   <!-- absolutely position element with the opposite positioning, so that the tooltip elements can be positioned
     using the same values as the root wrapper, while still being occluded by it.
@@ -122,6 +126,7 @@
     <div class="screenSizeAbsoluteWrapper"
       style:left={`${-currentX}px`}
       style:top={`${-currentY}px`}
+    class:noAnimation
       >
       <div
         bind:this={currentTooltip}
@@ -165,6 +170,10 @@
     height: 100vh;
     position: absolute;
     transition: top 300ms ease-in, left 300ms ease-in;
+  }
+
+  .noAnimation {
+    transition: none;
   }
 
   .visible {
