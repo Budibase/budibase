@@ -230,11 +230,21 @@
   }
 
   .link {
-    background-color: var(--grey-3);
+    border-radius: 0;
+    background-color: transparent;
     border: 1px solid red;
+    border-width: 0 0 1px 0;
     box-sizing: border-box;
     border-color: var(--blue);
     color: white;
+    padding-left: 2px;
+    padding-right: 2px;
+    transition: background-color 200ms;
+  }
+
+  .link:hover {
+    cursor: pointer;
+    background-color: #ffffff0a;
   }
 
   .info {
@@ -246,9 +256,6 @@
     margin-right: 3px;
   }
 
-  .link:hover {
-    cursor: pointer;
-  }
 
   .link :global(svg) {
     margin-right: 3px;
