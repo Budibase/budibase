@@ -104,7 +104,7 @@ const environment = {
   JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK,
-  ENCRYPTION_KEY: "wgeBLcM6sXQTmaH0UtjpO+hCQhCBDn/c7GQHlnqgPCc=",
+  ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
   COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || "http://localhost:4984",
