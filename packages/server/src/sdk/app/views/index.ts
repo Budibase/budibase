@@ -1,8 +1,13 @@
-import { RenameColumn, TableSchema, View, ViewV2 } from "@budibase/types"
+import {
+  RenameColumn,
+  TableSchema,
+  View,
+  ViewV2,
+  ViewV2Enriched,
+} from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
 import { cloneDeep } from "lodash"
 
-import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
 
@@ -16,12 +21,14 @@ function pickApi(tableId: any) {
   return internal
 }
 
-export async function get(
-  viewId: string,
-  opts?: { enriched: boolean }
-): Promise<ViewV2> {
+export async function get(viewId: string): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
-  return pickApi(tableId).get(viewId, opts)
+  return pickApi(tableId).get(viewId)
+}
+
+export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
+  const { tableId } = utils.extractViewInfoFromID(viewId)
+  return pickApi(tableId).getEnriched(viewId)
 }
 
 export async function create(
@@ -52,11 +59,10 @@ export function allowedFields(view: View | ViewV2) {
   ]
 }
 
-export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
-  if (!sdk.views.isV2(view)) {
-    return view
-  }
-
+export function enrichSchema(
+  view: ViewV2,
+  tableSchema: TableSchema
+): ViewV2Enriched {
   let schema = cloneDeep(tableSchema)
   const anyViewOrder = Object.values(view.schema || {}).some(
     ui => ui.order != null
