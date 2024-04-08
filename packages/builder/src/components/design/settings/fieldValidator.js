@@ -1,8 +1,18 @@
 import { capitalize } from 'lodash';
 
+export const errors = {
+  // fail without explanation
+  general: Symbol("values-validator-general"),
+  jsonPrimitivesOnly: Symbol("values-validator-json-primitives-only"),
+}
+
+export const warnings = {
+  stringAsNumber: Symbol("values-validator-string-as-number"),
+  chartDatetime: Symbol("values-validator-chart-datetime"),
+  notRequired: Symbol("values-validator-not-required"),
+}
+
 export const constants = {
-  warning: Symbol("values-validator-warning"),
-  error: Symbol("values-validator-error"),
   unsupported: Symbol("values-validator-unsupported"),
   partialSupport: Symbol("values-validator-partialSupport"),
   supported: Symbol("values-validator-supported")
@@ -13,54 +23,60 @@ export const validators = {
     try {
       const response = {
         level: null,
-        message: null,
         warnings: [],
-        errors: []
+        errors: [],
+        text: "",
+        icon: "",
+        iconColor: ""
       }
       const generalUnsupportedFields = ["array", "attachment", "barcodeqr", "link", "bb_reference"]
       if (generalUnsupportedFields.includes(fieldSchema.type)) {
-        response.errors.push('This column can not be used a chart input.')
+        response.errors.push(errors.general)
       }
 
       if (fieldSchema.type === "json") {
-          response.errors.push(`This column can not be used as a chart input, but individual properties of a JSON object can be be used if supported.`)
+          response.errors.push(errors.jsonPrimitivesOnly)
       }
 
       if (fieldSchema.type === "string") {
-
-        response.warnings.push(
-          "string number warning")
+        response.warnings.push(warnings.stringAsNumber)
       }
       if (fieldSchema.type === "datetime") {
-        response.warnings.push(
-          "This column can be used as an input for a chart, but it may be parsed differently depending on which is used.")
+        response.warnings.push(warnings.chartDatetime);
+          //"This column can be used as an input for a chart, but it may be parsed differently depending on which is used.
       }
 
       const isRequired = fieldSchema?.constraints?.presence?.allowEmpty === false
       if (!isRequired) {
-        response.warnings.push(
-          "optional warning")
+        response.warnings.push(warnings.notRequired);
       }
 
       if (response.errors.length > 0) {
         response.level = constants.unsupported
-        response.message = "This column can not be used as a chart input."
+        response.text = "Not compatible"
+        response.icon = "Alert"
+        response.iconColor = "var(--red)"
       } else if (response.warnings.length > 0) {
         response.level = constants.partialSupport
-        response.message = "This column can be used as a chart input, but certain values may cause issues."
+        response.text = "Partially compatible"
+        response.icon = "AlertCheck"
+        response.iconColor = "var(--yellow)"
       } else {
         response.level = constants.supported
-        response.message = "This column can be used as a chart input."
+        response.text = "Compatible"
+        response.icon = "CheckmarkCircle"
+        response.iconColor = "var(--green)"
       }
 
       return response
     } catch (e) {
-      console.log(e)
       return {
         level: constants.partialSupport,
-        message: "There was an issue validating this field, it may not be fully supported for use with charts.",
         warnings: [],
-        errors: []
+        errors: [],
+        text: "Partially compatible",
+        icon: "AlertCheck",
+        iconColor: "var(--yellow)"
       }
     }
   }

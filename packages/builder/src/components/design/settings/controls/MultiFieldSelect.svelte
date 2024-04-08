@@ -14,11 +14,6 @@
   export let placeholder
   export let fieldValidator
 
-  $: {
-    console.log($params)
-  }
-
-  let contextTooltipId = 0;
   let contextTooltipAnchor = null
   let currentOption = null
   let previousOption = null
@@ -127,51 +122,6 @@
     return true
   }
 
-  const getSupportLevel = (optionKey) => {
-    const level = fieldSupport[optionKey]?.level;
-
-    if (level === validatorConstants.unsupported) {
-      return {
-        class: "supportLevelUnsupported",
-        iconColor: "var(--red)",
-        icon: "Alert",
-        iconTooltip: fieldSupport[optionKey]?.message,
-        text: "Not compatible"
-      }
-    }
-
-    if (level === validatorConstants.partialSupport) {
-      return {
-        class: "supportLevelPartialSupport",
-        iconColor: "var(--yellow)",
-        icon: "AlertCheck",
-        iconTooltip: fieldSupport[optionKey]?.message,
-        text: "Partially compatible"
-      }
-    }
-
-    if (level === validatorConstants.supported) {
-      return {
-        class: "supportLevelSupported",
-        iconColor: "var(--green)",
-        icon: "CheckmarkCircle",
-        iconTooltip: fieldSupport[optionKey]?.message,
-        text: "Compatible"
-      }
-    }
-
-    return {
-      class: "supportLevelPartialSupport",
-      iconColor: "var(--yellow)",
-      icon: "AlertCheck",
-      iconTooltip: "",
-      text: "Partially Compatible"
-    }
-  }
-
-  $: currentOptionSupport = getSupportLevel(currentOption)
-  $: previousOptionSupport = getSupportLevel(previousOption)
-
   const updateTooltip = debounce((e, option) => {
     if (option == null) {
         contextTooltipVisible = false;
@@ -180,8 +130,6 @@
     previousOption = currentOption;
     currentOption = option;
     contextTooltipVisible = true;
-    currentOptionSupport = getSupportLevel(currentOption)
-    previousOptionSupport = getSupportLevel(previousOption)
     }
   }, 200);
 
@@ -211,114 +159,23 @@
   offset={20}
 >
   <ChartFieldContext
-    sidecar
-    tableHref={`/builder/app/${$params.application}/data/table/${datasource.tableId}`}
+    explanationModal
+    tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
     schema={schema[currentOption]}
     support={fieldSupport[currentOption]}
-    supportLevelClass={currentOptionSupport.class}
-    supportLevelIcon={currentOptionSupport.icon}
-    supportLevelIconColor={currentOptionSupport.iconColor}
-    supportLevelIconTooltip={currentOptionSupport.iconTooltip}
-    supportLevelText={currentOptionSupport.text}
     columnIcon={getOptionIcon(currentOption)}
     columnName={currentOption}
     columnType={getOptionIconTooltip(currentOption)}
-    errors={fieldSupport[currentOption]?.errors}
-    warnings={fieldSupport[currentOption]?.warnings}
   />
   <ChartFieldContext
     slot="previous"
+    schema={schema[previousOption]}
     support={fieldSupport[previousOption]}
-    supportLevelClass={previousOptionSupport.class}
-    supportLevelIcon={previousOptionSupport.icon}
-    supportLevelIconColor={previousOptionSupport.iconColor}
-    supportLevelIconTooltip={previousOptionSupport.iconTooltip}
-    supportLevelText={previousOptionSupport.text}
     columnIcon={getOptionIcon(previousOption)}
     columnName={previousOption}
     columnType={getOptionIconTooltip(previousOption)}
-    errors={fieldSupport[previousOption]?.errors}
-    warnings={fieldSupport[previousOption]?.warnings}
   />
 </ContextTooltip>
 
 <style>
-  .tooltipContents {
-    max-width: 400px;
-    background-color: var(--spectrum-global-color-gray-200);
-    display: block;
-    padding: 0 0 12px 0 ;
-    border-radius: 5px;
-    box-sizing: border-box;
-  }
-
-  .tooltipContents.supportLevelUnsupported {
-    background-color: var(--red);
-    color: var(--ink)
-  }
-
-  .tooltipContents.supportLevelPartialSupport {
-    background-color: var(--yellow);
-    color: var(--ink)
-  }
-
-  .tooltipContents.supportLevelSupported {
-    background-color: var(--green);
-    color: var(--ink)
-  }
-
-  .contextTooltipHeader {
-    background-color: var(--background-alt);
-    color: var(--ink);
-    display: flex;
-    align-items: center;
-    height: var(--spectrum-alias-item-height-m);
-    padding: 0px var(--spectrum-alias-item-padding-m);
-    border-width: var(--spectrum-actionbutton-border-size);
-    border-radius: var(--spectrum-alias-border-radius-regular);
-    border: 1px solid
-      var(
-        --spectrum-actionbutton-m-border-color,
-        var(--spectrum-alias-border-color)
-      );
-  }
-
-  .contextTooltipContent {
-    padding: 0px 12px;
-    color: black;
-  }
-
-  .contextTooltipHeader :global(svg) {
-    margin-right: 5px;
-  }
-
-  .contextTooltipHeader :global(span) {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .supportLevel {
-    display: flex;
-    align-items: center;
-    height: var(--spectrum-alias-item-height-m);
-    padding: 0px var(--spectrum-alias-item-padding-m);
-    margin-bottom: 12px;
-    color: black;
-  }
-  .supportLevel :global(svg) {
-    margin-right: 5px;
-  }
-
-  .supportLevel.supportLevelUnsupported {
-    background-color: var(--red-light)
-  }
-
-  .supportLevel.supportLevelPartialSupport {
-    background-color: var(--yellow-light)
-  }
-
-  .supportLevel.supportLevelSupported {
-    background-color: var(--green-light)
-  }
 </style>
