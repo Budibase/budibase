@@ -225,7 +225,7 @@ class SqlTableQueryBuilder {
             ? `\`${schemaName}\`.\`${json.table.name}\``
             : `\`${json.table.name}\``
           return {
-            sql: `alter table ${tableName} rename column \`${json.meta.renamed.old}\` to \`${updatedColumn}\``,
+            sql: `alter table ${tableName} rename column \`${json.meta.renamed.old}\` to \`${updatedColumn}\`;`,
             bindings: [],
           }
         }
