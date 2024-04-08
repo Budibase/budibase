@@ -113,9 +113,9 @@ export const createActions = context => {
 
   // Callback when leaving the grid, deselecting all focussed or selected items
   const blur = () => {
-    focusedCellId.set(null)
-    selectedRows.set({})
-    hoveredRowId.set(null)
+    // focusedCellId.set(null)
+    // selectedRows.set({})
+    // hoveredRowId.set(null)
   }
 
   return {

@@ -332,31 +332,49 @@ const s3UploadHandler = async action => {
 }
 
 const exportDataHandler = async action => {
-  let selection = rowSelectionStore.actions.getSelection(
-    action.parameters.tableComponentId
-  )
-  console.log(selection)
-  if (selection.selectedRows && selection.selectedRows.length > 0) {
+  let { tableComponentId, rows, type, columns, delimiter, customHeaders } =
+    action.parameters
+
+  // Handle legacy configs using the row selection store
+  if (!rows?.length) {
+    const selection = rowSelectionStore.actions.getSelection(tableComponentId)
+    if (selection?.rows?.length) {
+      rows = selection.selectedRows
+    }
+  }
+
+  // Get table ID from first row
+  const tableId = rows?.[0]?.tableId
+
+  // Handle no rows selected
+  if (!rows?.length) {
+    notificationStore.actions.error("Please select at least one row")
+  }
+  // Handle case where we're not using a DS+
+  else if (!tableId) {
+    notificationStore.actions.error(
+      "Exporting data only works for tables and views"
+    )
+  }
+  // Happy path when we have both rows and table ID
+  else {
     try {
+      // Flatten rows if required
+      if (typeof rows[0] !== "string") {
+        rows = rows.map(row => row._id)
+      }
       const data = await API.exportRows({
-        tableId: selection.tableId,
-        rows: selection.selectedRows,
-        format: action.parameters.type,
-        columns: action.parameters.columns?.map(
-          column => column.name || column
-        ),
-        delimiter: action.parameters.delimiter,
-        customHeaders: action.parameters.customHeaders,
+        tableId,
+        rows,
+        format: type,
+        columns: columns?.map(column => column.name || column),
+        delimiter,
+        customHeaders,
       })
-      download(
-        new Blob([data], { type: "text/plain" }),
-        `${selection.tableId}.${action.parameters.type}`
-      )
+      download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
     } catch (error) {
       notificationStore.actions.error("There was an error exporting the data")
     }
-  } else {
-    notificationStore.actions.error("Please select at least one row")
   }
 }
 

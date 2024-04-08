@@ -49,26 +49,34 @@
     },
   ]
 
-  $: tables = findAllMatchingComponents($selectedScreen?.props, component =>
-    component._component.endsWith("table")
-  )
-  $: tableBlocks = findAllMatchingComponents(
+  $: components = findAllMatchingComponents(
     $selectedScreen?.props,
-    component => component._component.endsWith("tableblock")
+    component => {
+      const type = component._component
+      return (
+        type.endsWith("/table") ||
+        type.endsWith("/tableblock") ||
+        type.endsWith("/gridblock")
+      )
+    }
   )
-  $: components = tables.concat(tableBlocks)
-  $: componentOptions = components.map(table => ({
-    label: table._instanceName,
-    value: table._component.includes("tableblock")
-      ? `${table._id}-table`
-      : table._id,
-  }))
+  $: componentOptions = components.map(component => {
+    let value = component._id
+    if (component._component.endsWith("/tableblock")) {
+      value = `${component._id}-table`
+    }
+    return {
+      label: component._instanceName,
+      value,
+    }
+  })
   $: selectedTableId = parameters.tableComponentId?.includes("-")
     ? parameters.tableComponentId.split("-")[0]
     : parameters.tableComponentId
   $: selectedTable = components.find(
     component => component._id === selectedTableId
   )
+  $: parameters.rows = `{{ literal [${parameters.tableComponentId}].[selectedRows] }}`
 
   onMount(() => {
     if (!parameters.type) {
