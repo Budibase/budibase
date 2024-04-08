@@ -4,9 +4,9 @@ import {
   ViewV2,
   SearchViewRowRequest,
   PaginatedSearchRowResponse,
-  ViewV2Enriched,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
+import sdk from "../../../sdk"
 
 export class ViewV2API extends TestAPI {
   create = async (
@@ -44,10 +44,10 @@ export class ViewV2API extends TestAPI {
     return await this._delete(`/api/v2/views/${viewId}`, { expectations: exp })
   }
 
-  get = async (viewId: string, expectations?: Expectations) => {
-    return await this._get<ViewV2Enriched>(`/api/v2/views/${viewId}`, {
-      expectations,
-    })
+  get = async (viewId: string) => {
+    return await this.config.doInContext(this.config.getAppId(), () =>
+      sdk.views.get(viewId)
+    )
   }
 
   search = async (
