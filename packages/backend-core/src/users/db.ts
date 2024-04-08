@@ -45,6 +45,7 @@ type GroupFns = {
   getGroupBuilderAppIds: GroupBuildersFn
 }
 type CreateAdminUserOpts = {
+  password?: string
   ssoId?: string
   hashPassword?: boolean
   requirePassword?: boolean
@@ -501,9 +502,9 @@ export class UserDB {
   static async createAdminUser(
     email: string,
     tenantId: string,
-    password?: string,
     opts?: CreateAdminUserOpts
   ) {
+    const password = opts?.password
     const user: User = {
       email: email,
       password,
