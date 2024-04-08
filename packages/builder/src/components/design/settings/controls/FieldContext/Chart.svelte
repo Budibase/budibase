@@ -159,41 +159,6 @@
 />
 
 <style>
-
-  .explanationModalContent {
-    max-width: 300px;
-    padding: 16px 12px 18px;
-  }
-
-  .heading {
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .divider {
-    border-bottom: 1px solid var(--grey-4);
-    margin: 12px 0 12px;
-  }
-
-
-  .section {
-    margin-bottom: 16px;
-  }
-  .section:last-child {
-    margin-bottom: 16px;
-  }
-
-  .section .body {
-    display: block;
-    margin-top: 5px;
-  }
-
-  /* BETWEEN STUFF */
-  /* BETWEEN STUFF */
-  /* BETWEEN STUFF */
-
   .text {
     flex-shrink: 0;
   }
@@ -205,21 +170,6 @@
     padding: 20px 16px;
     border-radius: 5px;
     box-sizing: border-box;
-  }
-
-  .columnName {
-    vertical-align: baseline;
-    background-color: var(--grey-3);
-    display: block;
-    font-style: italic;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    box-sizing: border-box;
-    flex-grow: 0;
-    flex-shrink: 1;
-    min-width: 0;
-    color: var(--grey-8);
   }
 
   .bullet {
@@ -239,7 +189,7 @@
   .comma {
     margin-left: 2px;
     color: var(--grey-6);
-    font-size: 20px;
+    font-size: 17px;
     display: inline block;
     margin-right: 5px;
   }
