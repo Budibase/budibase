@@ -1,8 +1,6 @@
 // need to handle table name + field or just field, depending on if relationships used
 import { FieldType, Row, Table } from "@budibase/types"
 import { generateRowIdField } from "../../../../integrations/utils"
-import { processFormulas } from "../../../../utilities/rowProcessor"
-import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 
 function extractFieldValue({
   row,
