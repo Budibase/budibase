@@ -114,7 +114,7 @@ describe.each([
       expect(events.table.updated).toHaveBeenCalledWith(updatedTable)
     })
 
-    it.only("updates all the row fields for a table when a schema key is renamed", async () => {
+    it("updates all the row fields for a table when a schema key is renamed", async () => {
       const testTable = await config.api.table.save(basicTable(datasource))
       await config.createLegacyView({
         name: "TestView",
