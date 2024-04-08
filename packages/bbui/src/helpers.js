@@ -1,4 +1,5 @@
 import { helpers } from "@budibase/shared-core"
+import dayjs from "dayjs"
 
 export const deepGet = helpers.deepGet
 
@@ -114,4 +115,34 @@ export const copyToClipboard = value => {
       res()
     }
   })
+}
+
+export const parseDate = (value, { timeOnly, dateOnly } = {}) => {
+  // If empty then invalid
+  if (!value) {
+    return null
+  }
+
+  // Certain string values need transformed
+  if (typeof value !== "string") {
+    if (timeOnly || !isNaN(new Date(`0-${value}`))) {
+      value = `0-${value}`
+    }
+
+    // If date only, check for cases where we received a UTC string
+    else if (dateOnly && value.endsWith("Z")) {
+      value = value.split("Z")[0]
+    }
+  }
+
+  // Parse value and check for validity
+  const parsedDate = dayjs(value)
+  if (!parsedDate.isValid()) {
+    return null
+  }
+
+  // By rounding to the nearest second we avoid locking up in an endless
+  // loop in the builder, caused by potentially enriching {{ now }} to every
+  // millisecond.
+  return dayjs(Math.floor(parsedDate.valueOf() / 1000) * 1000)
 }

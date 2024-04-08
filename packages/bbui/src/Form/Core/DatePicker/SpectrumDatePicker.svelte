@@ -9,6 +9,7 @@
   import Calendar from "./Calendar.svelte"
   import DateTimeInput from "./DateInput.svelte"
   import ActionButton from "../../../ActionButton/ActionButton.svelte"
+  import { parseDate } from "../../../helpers"
 
   export let id = null
   export let disabled = false
@@ -30,7 +31,7 @@
   let popover
   let calendar
 
-  $: parsedValue = parseValue(value)
+  $: parsedValue = parseDate(value)
   $: showCalendar = !timeOnly
   $: showTime = enableTime || timeOnly
 
@@ -57,28 +58,6 @@
     if (useKeyboardShortcuts) {
       document.removeEventListener("keyup", clearDateOnBackspace)
     }
-  }
-
-  const parseValue = value => {
-    let parsedDate
-
-    // Attempt to parse as a time-only string if required
-    if (typeof value === "string" && timeOnly) {
-      parsedDate = dayjs(`0-${value}`)
-    }
-
-    // Attempt to parse as normal if required
-    if (!parsedDate?.isValid()) {
-      parsedDate = dayjs(value)
-    }
-    if (!parsedDate?.isValid()) {
-      return null
-    }
-
-    // By rounding to the nearest second we avoid locking up in an endless
-    // loop in the builder, caused by potentially enriching {{ now }} to every
-    // millisecond.
-    return dayjs(Math.floor(parsedDate.valueOf() / 1000) * 1000)
   }
 
   const handleChange = date => {
