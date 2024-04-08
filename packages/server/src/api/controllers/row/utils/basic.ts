@@ -50,7 +50,7 @@ export function generateIdForRow(
   return generateRowIdField(idParts)
 }
 
-export async function basicProcessing({
+export function basicProcessing({
   row,
   table,
   isLinked,
@@ -60,21 +60,17 @@ export async function basicProcessing({
   table: Table
   isLinked: boolean
   internal?: boolean
-}): Promise<Row> {
-  let thisRow: Row = {}
+}): Row {
+  const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
-  let toIterate = Object.keys(table.schema)
-  if (internal) {
-    toIterate = toIterate.concat(CONSTANT_INTERNAL_ROW_COLS)
-  }
-  for (let fieldName of toIterate) {
+  for (let field of Object.values(table.schema)) {
+    const fieldName = field.name
     const value = extractFieldValue({
       row,
-      tableName: internal ? table._id! : table.name,
+      tableName: table.name,
       fieldName,
       isLinked,
     })
-
     // all responses include "select col as table.col" so that overlaps are handled
     if (value != null) {
       thisRow[fieldName] = value
@@ -85,7 +81,7 @@ export async function basicProcessing({
     thisRow.tableId = table._id
     thisRow._rev = "rev"
   }
-  return processFormulas(table, thisRow)
+  return thisRow
 }
 
 export function fixArrayTypes(row: Row, table: Table) {

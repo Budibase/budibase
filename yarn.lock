@@ -18063,10 +18063,10 @@ postgres-interval@^1.1.0:
   dependencies:
     xtend "^4.0.0"
 
-posthog-js@^1.116.6:
-  version "1.117.0"
-  resolved "https://registry.yarnpkg.com/posthog-js/-/posthog-js-1.117.0.tgz#59c3e520f6269f76ea82dce8760fbc33cdd7f48f"
-  integrity sha512-+I8q5G9YG6r6wOLKPT+C+AV7MRhyVFJMTJS7dfwLmmT+mkVxQ5bfC59hBkJUObOR+YRn5jn2JT/sgIslU94EZg==
+posthog-js@^1.118.0:
+  version "1.120.0"
+  resolved "https://registry.yarnpkg.com/posthog-js/-/posthog-js-1.120.0.tgz#43a364a930d200e14ddf217ed340e5085fb8afcd"
+  integrity sha512-A1FOJabDjt0mFg2ePfgqeZPUQl8WY6L+fNNfN/89gqvPoI7HmHta2hY/9tDQ+mBRHjj4nah5KK/EWqJHq69fGw==
   dependencies:
     fflate "^0.4.8"
     preact "^10.19.3"
