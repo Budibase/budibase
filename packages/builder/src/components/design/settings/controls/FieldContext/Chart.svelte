@@ -6,6 +6,7 @@
   import Property from './Property.svelte'
   import InfoWord from './InfoWord.svelte'
   import DocumentationLink from './DocumentationLink.svelte'
+  import ExplanationModal from './ExplanationModal/index.svelte'
 
   export let supportLevelClass = ''
   export let supportLevelIconColor = ""
@@ -16,7 +17,7 @@
   export let columnIcon
   export let columnType
   export let columnName
-  export let sidecar = false
+  export let explanationModal = false
 
   export let errors = []
   export let warnings = []
@@ -54,15 +55,15 @@
 
   $: docLink = getDocLink(columnType);
 
-  let sidecarSubject = null
+  let explanationModalSubject = null
 
   const handleMouseenter = (option, idx) => {
-    sidecarSubject = option;
+    explanationModalSubject = option;
     root = root
   }
 
   const handleMouseleave = (option) => {
-    sidecarSubject = null;
+    explanationModalSubject = null;
   }
 
 </script>
@@ -151,112 +152,15 @@
   {/if}
 </div>
 
-{#if sidecar}
-  <ContextTooltip
-    noAnimation
-    visible={sidecarSubject !== null}
-    anchor={root}
-    offset={20}
-  >
-  <div class="sidecarContent">
-    {#if sidecarSubject === "column"}
-      <div class="heading wrapper">
-      <span class="heading">{columnName}</span>
-      </div>
-      <div class="divider" />
-      <div class="section">
-        {#if schema.type === "string"}
-          <Property
-            name="Max Length"
-            value={schema?.constraints?.length?.maximum ?? "None"}
-          />
-        {:else if schema.type === "datetime"}
-          <Property
-            name="Earliest"
-            value={schema?.constraints?.datetime?.earliest === "" ? "None" : schema?.constraints?.datetime?.earliest}
-          />
-          <Property
-            name="Latest"
-            value={schema?.constraints?.datetime?.latest === "" ? "None" : schema?.constraints?.datetime?.latest}
-          />
-          <Property
-            name="Ignore time zones"
-            value={schema?.ignoreTimeZones === true ? "Yes" : "No"}
-          />
-          <Property
-            name="Date only"
-            value={schema?.dateOnly === true ? "Yes" : "No"}
-          />
-        {:else if schema.type === "number"}
-          <Property
-            name="Min Value"
-            value={schema?.constraints?.numericality?.greaterThanOrEqualTo === "" ? "None" : schema?.constraints?.numericality?.greaterThanOrEqualTo}
-          />
-          <Property
-            name="Max Value"
-            value={schema?.constraints?.numericality?.lessThanOrEqualTo === "" ? "None" : schema?.constraints?.numericality?.lessThanOrEqualTo}
-          />
-        {:else if schema.type === "json"}
-          <Property
-            pre
-            name="Schema"
-            value={JSON.stringify(schema?.schema ?? {}, null, 2)}
-          />
-        {/if}
-        <Property
-          name="Required"
-          value={schema?.constraints?.presence?.allowEmpty === false ? "Yes" : "No"}
-        />
-      </div>
-    {:else if sidecarSubject === "support"}
-        <span class="heading">Data/Component Compatibility</span>
-        <div class="divider" />
-        <div class="section">
-          <InfoWord
-            icon="CheckmarkCircle"
-            color="var(--green)"
-            text="Compatible"
-          />
-          <span class="body">Fully compatible with the component as long as the data is present.</span>
-        </div>
-        <div class="section">
-          <InfoWord
-            icon="AlertCheck"
-            color="var(--yellow)"
-            text="Possibly compatible"
-          />
-          <span class="body">Possibly compatible with the component, but beware of other caveats mentioned in the context tooltip.</span>
-        </div>
-        <div class="section">
-          <InfoWord
-            icon="Alert"
-            color="var(--red)"
-            text="Not compatible"
-          />
-          <span class="body">Imcompatible with the component.</span>
-        </div>
-
-
-    {:else if sidecarSubject === "stringsAndNumbers"}
-      <span class="heading">Text as Numbers</span>
-      <div class="divider" />
-      <div class="section">
-        Text can be used in place of numbers in certain scenarios, but care needs to be taken to ensure that non-numerical values aren't also present, otherwise they may be parsed incorrectly and lead to unexpected behavior.
-      </div>
-    {:else if sidecarSubject === "required"}
-      <span class="heading">'Required' Constraint</span>
-      <div class="divider" />
-      <div class="section">
-        <span class="body">A 'required' contraint can be applied to columns to ensure a value is always present. If a column doesn't have this constraint, then its value for a particular row could he missing.</span>
-      </div>
-    {/if}
-  </div>
-  </ContextTooltip>
-{/if}
+<ExplanationModal
+  anchor={root}
+  {schema}
+  subject={explanationModalSubject}
+/>
 
 <style>
 
-  .sidecarContent {
+  .explanationModalContent {
     max-width: 300px;
     padding: 16px 12px 18px;
   }
@@ -319,14 +223,14 @@
   }
 
   .bullet {
-    color: var(--grey-5);
+    color: var(--grey-6);
     font-size: 17px;
     display: inline block;
     margin-right: 10px;
   }
 
   .period {
-    color: var(--grey-5);
+    color: var(--grey-6);
     font-size: 20px;
     display: inline block;
     margin-left: 3px;
@@ -334,7 +238,7 @@
 
   .comma {
     margin-left: 2px;
-    color: var(--grey-5);
+    color: var(--grey-6);
     font-size: 20px;
     display: inline block;
     margin-right: 5px;
