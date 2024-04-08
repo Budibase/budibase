@@ -7,20 +7,15 @@
   import InfoWord from './InfoWord.svelte'
   import DocumentationLink from './DocumentationLink.svelte'
   import ExplanationModal from './ExplanationModal/index.svelte'
+  import { warnings, errors } from "../../fieldValidator";
 
-  export let supportLevelClass = ''
-  export let supportLevelIconColor = ""
-  export let supportLevelIcon = ""
-  export let supportLevelIconTooltip = ""
-  export let supportLevelText = ""
+  export let support = {}
 
   export let columnIcon
   export let columnType
   export let columnName
   export let explanationModal = false
 
-  export let errors = []
-  export let warnings = []
   export let tableHref = () => {}
 
   export let schema
@@ -57,12 +52,12 @@
 
   let explanationModalSubject = null
 
-  const handleMouseenter = (option, idx) => {
+  const handleMouseenter = (option) => {
     explanationModalSubject = option;
     root = root
   }
 
-  const handleMouseleave = (option) => {
+  const handleMouseleave = () => {
     explanationModalSubject = null;
   }
 
@@ -70,7 +65,7 @@
 
 <div
   bind:this={root}
-  class={`tooltipContents ${supportLevelClass}`}
+  class="tooltipContents"
 >
 
   <div class="line">
@@ -91,14 +86,14 @@
     />
     <span class="period">.</span>
   </div>
-  <div class={`line ${supportLevelClass}`}>
+  <div class="line">
     <span class="bullet">•</span>
     <InfoWord
       on:mouseenter={() => handleMouseenter("support")}
       on:mouseleave={() => handleMouseleave("support")}
-      icon={supportLevelIcon}
-      color={supportLevelIconColor}
-      text={supportLevelText}
+      icon={support.icon}
+      color={support.iconColor}
+      text={support.text}
     />
     <span class="space" />
     <span class="text">with</span>
@@ -110,7 +105,7 @@
     />
     <span class="period">.</span>
   </div>
-  {#if warnings.includes("string number warning")}
+  {#if support?.warnings?.includes(warnings.stringAsNumber)}
     <div class={`line`}>
       <span class="bullet">•</span>
       <span class="text">Any</span>
@@ -118,7 +113,7 @@
     <InfoWord
       on:mouseenter={() => handleMouseenter("stringsAndNumbers")}
       on:mouseleave={() => handleMouseleave("stringsAndNumbers")}
-      text="non-number-values"
+      text="non-number values"
     />
     <span class="space" />
       <span class="text">
@@ -127,7 +122,7 @@
       <span class="period">.</span>
     </div>
   {/if}
-  {#if warnings.includes("optional warning")}
+  {#if support?.warnings?.includes(warnings.notRequired)}
     <div class={`line`}>
       <span class="bullet">•</span>
       <span class="text">No</span>
@@ -152,11 +147,14 @@
   {/if}
 </div>
 
-<ExplanationModal
-  anchor={root}
-  {schema}
-  subject={explanationModalSubject}
-/>
+
+{#if explanationModal}
+  <ExplanationModal
+    anchor={root}
+    {schema}
+    subject={explanationModalSubject}
+  />
+{/if}
 
 <style>
   .text {
