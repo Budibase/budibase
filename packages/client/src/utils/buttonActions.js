@@ -331,20 +331,29 @@ const s3UploadHandler = async action => {
   }
 }
 
+/**
+ * For new configs, "rows" is defined and enriched to be the array of rows to
+ * export. For old configs it will be undefined and we need to use the legacy
+ * row selection store in combination with the tableComponentId parameter.
+ */
 const exportDataHandler = async action => {
   let { tableComponentId, rows, type, columns, delimiter, customHeaders } =
     action.parameters
+  let tableId
 
   // Handle legacy configs using the row selection store
   if (!rows?.length) {
     const selection = rowSelectionStore.actions.getSelection(tableComponentId)
-    if (selection?.rows?.length) {
+    if (selection?.selectedRows?.length) {
       rows = selection.selectedRows
+      tableId = selection.tableId
     }
   }
 
-  // Get table ID from first row
-  const tableId = rows?.[0]?.tableId
+  // Get table ID from first row if needed
+  if (!tableId) {
+    tableId = rows?.[0]?.tableId
+  }
 
   // Handle no rows selected
   if (!rows?.length) {
