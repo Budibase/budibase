@@ -45,7 +45,7 @@ export class ViewV2API extends TestAPI {
   }
 
   get = async (viewId: string) => {
-    return await this.config.doInContext(this.config.appId, () =>
+    return await this.config.doInContext(this.config.getAppId(), () =>
       sdk.views.get(viewId)
     )
   }
