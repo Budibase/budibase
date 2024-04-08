@@ -4,7 +4,7 @@
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import Property from './Property.svelte'
-  import InfoWord from '../InfoWord.svelte'
+  import { InfoWord } from '../typography'
 
   export let anchor
   export let schema
