@@ -7,7 +7,6 @@ import {
   ViewResponseEnriched,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
-import sdk from "../../../sdk"
 
 export class ViewV2API extends TestAPI {
   create = async (
