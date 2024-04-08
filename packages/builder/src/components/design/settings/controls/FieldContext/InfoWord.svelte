@@ -1,8 +1,9 @@
 <script>
   import { Icon } from "@budibase/bbui"
+
   export let icon = null
   export let color = null
-  export let text = ""
+  export let text
   export let href = null
 </script>
 
