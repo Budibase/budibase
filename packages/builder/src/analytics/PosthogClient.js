@@ -11,8 +11,8 @@ export default class PosthogClient {
 
     // Don't run posthog locally in dev
     if (
-      !window.location.href.includes("127.0.0.1") ||
-      !window.location.href.includes("localhost")
+      window.location.href.includes("127.0.0.1") ||
+      window.location.href.includes("localhost")
     )
       return
 
