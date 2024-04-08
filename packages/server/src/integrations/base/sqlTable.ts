@@ -247,7 +247,7 @@ class SqlTableQueryBuilder {
           const tableName = schemaName
             ? `${schemaName}.${json.table.name}`
             : `${json.table.name}`
-          const sql = query.toSQL()
+          const sql = getNativeSql(query)
           if (Array.isArray(sql)) {
             for (const query of sql) {
               if (query.sql.startsWith("exec sp_rename")) {
