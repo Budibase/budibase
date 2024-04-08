@@ -10,14 +10,10 @@ import {
 } from "./constants"
 
 export interface UIFieldMetadata {
-  constraints?: FieldConstraints
-  name?: string
-  type?: FieldType
   order?: number
   width?: number
   visible?: boolean
   icon?: string
-  autocolumn?: boolean
 }
 
 interface BaseRelationshipFieldMetadata
