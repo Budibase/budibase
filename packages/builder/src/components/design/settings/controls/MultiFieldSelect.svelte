@@ -133,6 +133,7 @@
     if (level === validatorConstants.unsupported) {
       return {
         class: "supportLevelUnsupported",
+        iconColor: "var(--red)",
         icon: "Alert",
         iconTooltip: fieldSupport[optionKey]?.message,
         text: "Not compatible"
@@ -142,6 +143,7 @@
     if (level === validatorConstants.partialSupport) {
       return {
         class: "supportLevelPartialSupport",
+        iconColor: "var(--yellow)",
         icon: "AlertCheck",
         iconTooltip: fieldSupport[optionKey]?.message,
         text: "Partially compatible"
@@ -151,6 +153,7 @@
     if (level === validatorConstants.supported) {
       return {
         class: "supportLevelSupported",
+        iconColor: "var(--green)",
         icon: "CheckmarkCircle",
         iconTooltip: fieldSupport[optionKey]?.message,
         text: "Compatible"
@@ -159,6 +162,7 @@
 
     return {
       class: "supportLevelPartialSupport",
+      iconColor: "var(--yellow)",
       icon: "AlertCheck",
       iconTooltip: "",
       text: "Partially Compatible"
@@ -213,6 +217,7 @@
     support={fieldSupport[currentOption]}
     supportLevelClass={currentOptionSupport.class}
     supportLevelIcon={currentOptionSupport.icon}
+    supportLevelIconColor={currentOptionSupport.iconColor}
     supportLevelIconTooltip={currentOptionSupport.iconTooltip}
     supportLevelText={currentOptionSupport.text}
     columnIcon={getOptionIcon(currentOption)}
@@ -226,6 +231,7 @@
     support={fieldSupport[previousOption]}
     supportLevelClass={previousOptionSupport.class}
     supportLevelIcon={previousOptionSupport.icon}
+    supportLevelIconColor={previousOptionSupport.iconColor}
     supportLevelIconTooltip={previousOptionSupport.iconTooltip}
     supportLevelText={previousOptionSupport.text}
     columnIcon={getOptionIcon(previousOption)}

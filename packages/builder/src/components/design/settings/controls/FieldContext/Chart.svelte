@@ -7,6 +7,7 @@
   import InfoWord from './InfoWord.svelte'
 
   export let supportLevelClass = ''
+  export let supportLevelIconColor = ""
   export let supportLevelIcon = ""
   export let supportLevelIconTooltip = ""
   export let supportLevelText = ""
@@ -89,14 +90,13 @@
   </div>
   <div class={`line ${supportLevelClass}`}>
     <span class="bullet">•</span>
-    <div 
-      class={`chip supportChip ${supportLevelClass}`}
+    <InfoWord
       on:mouseenter={() => handleMouseenter("support")}
       on:mouseleave={() => handleMouseleave("support")}
-      >
-      <Icon size="S" tooltip={supportLevelIconTooltip} name={supportLevelIcon} />
-      <span class="text">{supportLevelText}</span>
-    </div>
+      icon={supportLevelIcon}
+      color={supportLevelIconColor}
+      text={supportLevelText}
+    />
     <span class="space" />
     <span class="text">with</span>
     <span class="space" />
@@ -111,15 +111,11 @@
       <span class="bullet">•</span>
       <span class="text">Any</span>
     <span class="space" />
-    <div 
-      class="chip info"
+    <InfoWord
       on:mouseenter={() => handleMouseenter("stringsAndNumbers")}
       on:mouseleave={() => handleMouseleave("stringsAndNumbers")}
-      >
-        <span class="text">
-        non-number values
-        </span>
-      </div>
+      text="non-number-values"
+    />
     <span class="space" />
       <span class="text">
         will be ignored
@@ -132,15 +128,11 @@
       <span class="bullet">•</span>
       <span class="text">No</span>
     <span class="space" />
-      <div 
-        class="chip info"
-        on:mouseenter={() => handleMouseenter("required")}
-        on:mouseleave={() => handleMouseleave("required")}
-        >
-          <span class="text">
-            required
-          </span>
-        </div>
+    <InfoWord
+      on:mouseenter={() => handleMouseenter("required")}
+      on:mouseleave={() => handleMouseleave("required")}
+      text="required"
+    />
     <span class="space" />
       <a target="_blank" rel="noopener noreferrer" href={"https://docs.budibase.com/docs/budibasedb#constraints"} class="chip link topLink">
         <Icon size="S" name={"DataUnavailable"} />
