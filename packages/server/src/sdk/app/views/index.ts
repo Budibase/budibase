@@ -8,7 +8,6 @@ import {
 import { db as dbCore } from "@budibase/backend-core"
 import { cloneDeep } from "lodash"
 
-import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
 
@@ -64,10 +63,6 @@ export function enrichSchema(
   view: ViewV2,
   tableSchema: TableSchema
 ): ViewV2Enriched {
-  if (!sdk.views.isV2(view)) {
-    return view
-  }
-
   let schema = cloneDeep(tableSchema)
   const anyViewOrder = Object.values(view.schema || {}).some(
     ui => ui.order != null
