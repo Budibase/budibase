@@ -41,7 +41,7 @@ async function parseSchema(view: CreateViewRequest) {
 
 export async function get(ctx: Ctx<void, ViewResponse>) {
   ctx.body = {
-    data: await sdk.views.get(ctx.params.viewId, { enriched: true }),
+    data: await sdk.views.get(ctx.params.viewId),
   }
 }
 
