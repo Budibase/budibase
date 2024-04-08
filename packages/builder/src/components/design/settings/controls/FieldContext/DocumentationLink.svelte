@@ -11,7 +11,7 @@
   {href}
   rel="noopener noreferrer"
   target="_blank"
-  class="chip link"
+  class="link"
 >
   <Icon size="S" name={icon} />
   <span class="text">
@@ -22,29 +22,6 @@
 </a>
 
 <style>
-  .chip {
-    display: inline-flex;
-    box-sizing: border-box;
-    padding: 3px 6px;
-    border-radius: 5px;
-    vertical-align: sub;
-    filter: brightness(100%);
-    background-color: var(--grey-3);
-    border: 1px solid var(--grey-3);
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-
-  .chip:hover {
-    filter: brightness(120%);
-    transition: filter 300ms
-  }
-
-  .chip :global(svg) {
-    color: inherit;
-    margin-right: 5px;
-  }
-
   .text {
     color: var(--ink);
     white-space: nowrap;
@@ -53,21 +30,21 @@
   }
 
   .link {
-    border-radius: 0;
-    background-color: transparent;
-    border: 1px solid red;
-    border-width: 0 0 1px 0;
+    display: inline-flex;
     box-sizing: border-box;
-    border-color: var(--blue);
-    color: white;
-    padding-left: 0px;
-    padding-right: 0px;
-    transition: background-color 200ms;
+    padding: 3px 0 2px;
+    vertical-align: sub;
+    filter: brightness(100%);
+
+    overflow: hidden;
+    flex-shrink: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--blue);
+    transition: filter 300ms;
   }
 
   .link:hover {
-    cursor: pointer;
-    background-color: #ffffff0a;
+    filter: brightness(120%);
   }
 
   .link :global(svg) {

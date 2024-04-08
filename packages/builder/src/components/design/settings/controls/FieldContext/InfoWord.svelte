@@ -14,7 +14,7 @@
     {href}
     rel="noopener noreferrer"
     target="_blank"
-    class="chip"
+    class="infoWord"
     style:color={color}
     style:border-color={color}
     on:mouseenter
@@ -32,7 +32,7 @@
 {:else}
   <div
     role="tooltip"
-    class="chip"
+    class="infoWord"
     style:color={color}
     style:border-color={color}
     on:mouseenter
@@ -50,7 +50,7 @@
 {/if}
 
 <style>
-  .chip {
+  .infoWord {
     display: inline-flex;
     box-sizing: border-box;
     padding: 3px 6px;
@@ -60,16 +60,16 @@
     background-color: var(--grey-3);
     border: 1px solid var(--grey-3);
     overflow: hidden;
-  }
-
-  .chip:hover {
-    filter: brightness(120%);
     transition: filter 300ms
   }
 
-  .chip :global(svg) {
+  .infoWord:hover {
+    filter: brightness(120%);
+  }
+
+  .infoWord :global(svg) {
     color: inherit;
-    margin-right: 5px;
+    margin-right: 4px;
   }
 
   .text {
