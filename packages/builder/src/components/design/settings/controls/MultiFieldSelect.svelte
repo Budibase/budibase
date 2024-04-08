@@ -18,9 +18,6 @@
   let currentOption = null
   let previousOption = null
   let contextTooltipVisible = false
-  let currentOptionSupport = {}
-  let previousOptionSupport = {}
-
 
   const TypeIconMap = {
     text: "Text",
@@ -42,7 +39,6 @@
     },
   }
 
-
   const getFieldSupport = (schema, fieldValidator) => {
     if (fieldValidator == null) {
       return {}
@@ -60,7 +56,6 @@
 
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
-  $: console.log(datasource)
   $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
   $: options = Object.keys(schema || {})
   $: fieldSupport = getFieldSupport(schema, fieldValidator);

@@ -72,7 +72,7 @@
     <span class="bullet">•</span>
     <InfoWord
       on:mouseenter={() => handleMouseenter("column")}
-      on:mouseleave={() => handleMouseleave("column")}
+      on:mouseleave={handleMouseleave}
       href={tableHref}
       text={columnName}
     />
@@ -90,7 +90,8 @@
     <span class="bullet">•</span>
     <InfoWord
       on:mouseenter={() => handleMouseenter("support")}
-      on:mouseleave={() => handleMouseleave("support")}
+      on:mouseleave={handleMouseleave}
+      href={tableHref}
       icon={support.icon}
       color={support.iconColor}
       text={support.text}
@@ -112,7 +113,7 @@
     <span class="space" />
     <InfoWord
       on:mouseenter={() => handleMouseenter("stringsAndNumbers")}
-      on:mouseleave={() => handleMouseleave("stringsAndNumbers")}
+      on:mouseleave={handleMouseleave}
       text="non-number values"
     />
     <span class="space" />
@@ -129,7 +130,7 @@
     <span class="space" />
     <InfoWord
       on:mouseenter={() => handleMouseenter("required")}
-      on:mouseleave={() => handleMouseleave("required")}
+      on:mouseleave={handleMouseleave}
       text="required"
     />
     <span class="space" />
