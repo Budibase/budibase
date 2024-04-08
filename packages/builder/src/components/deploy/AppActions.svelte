@@ -33,12 +33,9 @@
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
-  import PosthogClient from "../../analytics/PosthogClient"
 
   export let application
   export let loaded
-
-  const posthog = new PosthogClient(process.env.POSTHOG_TOKEN)
 
   let unpublishModal
   let updateAppModal
@@ -156,7 +153,7 @@
   }
 
   onMount(() => {
-    posthog.init()
+    analytics.initPosthog()
   })
 </script>
 
