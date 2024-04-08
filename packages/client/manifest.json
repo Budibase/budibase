@@ -6739,10 +6739,22 @@
         ]
       }
     ],
-    "context": {
-      "type": "schema",
-      "scope": "local"
-    },
+    "context": [
+      {
+        "type": "schema",
+        "scope": "local"
+      },
+      {
+        "type": "static",
+        "values": [
+          {
+            "label": "Selected rows",
+            "key": "selectedRows",
+            "type": "array"
+          }
+        ]
+      }
+    ],
     "actions": ["RefreshDatasource"]
   },
   "bbreferencefield": {

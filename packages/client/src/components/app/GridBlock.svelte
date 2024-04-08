@@ -1,8 +1,8 @@
 <script>
   // NOTE: this is not a block - it's just named as such to avoid confusing users,
   // because it functions similarly to one
-  import { getContext } from "svelte"
-  import { get } from "svelte/store"
+  import { getContext, onMount } from "svelte"
+  import { get, derived, readable } from "svelte/store"
   import { Grid } from "@budibase/frontend-core"
 
   // table is actually any datasource, but called table for legacy compatibility
@@ -34,6 +34,7 @@
   } = getContext("sdk")
 
   let grid
+  let gridContext
 
   $: columnWhitelist = parsedColumns
     ?.filter(col => col.active)
@@ -41,10 +42,12 @@
   $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
   $: parsedColumns = getParsedColumns(columns)
+  $: selectedRows = deriveSelectedRows(gridContext)
+  $: data = { selectedRows: $selectedRows }
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
-      callback: () => grid?.getContext()?.rows.actions.refreshData(),
+      callback: () => gridContext?.rows.actions.refreshData(),
       metadata: { dataSource: table },
     },
   ]
@@ -104,13 +107,35 @@
       },
     }))
   }
+
+  const deriveSelectedRows = gridContext => {
+    if (!gridContext) {
+      return readable([])
+    }
+    return derived(
+      [gridContext.selectedRows, gridContext.rowLookupMap, gridContext.rows],
+      ([$selectedRows, $rowLookupMap, $rows]) => {
+        const rowIds = Object.entries($selectedRows || {})
+          .filter(([_, selected]) => selected)
+          .map(([rowId]) => rowId)
+        return rowIds.map(id => {
+          const idx = $rowLookupMap[id]
+          return gridContext.rows.actions.cleanRow($rows[idx])
+        })
+      }
+    )
+  }
+
+  onMount(() => {
+    gridContext = grid.getContext()
+  })
 </script>
 
 <div
   use:styleable={$component.styles}
   class:in-builder={$builderStore.inBuilder}
 >
-  <Provider {actions}>
+  <Provider {data} {actions}>
     <Grid
       bind:this={grid}
       datasource={table}
@@ -128,6 +153,7 @@
       canEditColumns={false}
       canExpandRows={false}
       canSaveSchema={false}
+      canSelectRows={true}
       showControls={false}
       notifySuccess={notificationStore.actions.success}
       notifyError={notificationStore.actions.error}

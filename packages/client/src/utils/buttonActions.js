@@ -335,6 +335,7 @@ const exportDataHandler = async action => {
   let selection = rowSelectionStore.actions.getSelection(
     action.parameters.tableComponentId
   )
+  console.log(selection)
   if (selection.selectedRows && selection.selectedRows.length > 0) {
     try {
       const data = await API.exportRows({
