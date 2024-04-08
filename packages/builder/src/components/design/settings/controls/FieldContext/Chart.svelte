@@ -5,6 +5,7 @@
   import { createEventDispatcher } from "svelte"
   import Property from './Property.svelte'
   import InfoWord from './InfoWord.svelte'
+  import DocumentationLink from './DocumentationLink.svelte'
 
   export let supportLevelClass = ''
   export let supportLevelIconColor = ""
@@ -82,10 +83,11 @@
     <span class="space" />
     <span class="text"> is a </span>
     <span class="space" />
-    <a target="_blank" rel="noopener noreferrer" href={docLink} class="chip link topLink">
-      <Icon size="S" name={columnIcon} />
-      <span class="text">{columnType} column</span>
-    </a>
+    <DocumentationLink
+      href={docLink}
+      icon={columnIcon}
+      text={`${columnType} column`}
+    />
     <span class="period">.</span>
   </div>
   <div class={`line ${supportLevelClass}`}>
@@ -100,10 +102,11 @@
     <span class="space" />
     <span class="text">with</span>
     <span class="space" />
-    <a target="_blank" rel="noopener noreferrer" href={"https://docs.budibase.com/docs/chart"} class="chip link topLink">
-      <Icon size="S" name={"GraphPie"} />
-      <span class="text">Chart components</span>
-    </a>
+    <DocumentationLink
+      href="https://docs.budibase.com/docs/chart"
+      icon="GraphPie"
+      text="Chart components"
+    />
     <span class="period">.</span>
   </div>
   {#if warnings.includes("string number warning")}
@@ -318,6 +321,7 @@
     color: var(--grey-5);
     font-size: 20px;
     display: inline block;
+    margin-left: 3px;
   }
 
   .comma {
