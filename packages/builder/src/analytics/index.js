@@ -38,6 +38,10 @@ class AnalyticsHub {
     intercom.show(user)
   }
 
+  initPosthog() {
+    posthog.init()
+  }
+
   async logout() {
     posthog.logout()
     intercom.logout()
