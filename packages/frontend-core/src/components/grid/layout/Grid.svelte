@@ -38,6 +38,7 @@
   export let canDeleteRows = true
   export let canEditColumns = true
   export let canSaveSchema = true
+  export let canSelectRows = false
   export let stripeRows = false
   export let collaboration = true
   export let showAvatars = true
@@ -90,6 +91,7 @@
     canDeleteRows,
     canEditColumns,
     canSaveSchema,
+    canSelectRows,
     stripeRows,
     collaboration,
     showAvatars,
