@@ -10,11 +10,7 @@ export default class PosthogClient {
     if (!this.token) return
 
     // Don't run posthog locally in dev
-    if (
-      window.location.href.includes("127.0.0.1") ||
-      window.location.href.includes("localhost")
-    )
-      return
+    if (process.env.NODE_ENV !== "production") return
 
     posthog.init(this.token, {
       autocapture: false,
