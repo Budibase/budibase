@@ -22,6 +22,13 @@
 </div>
 
 <style>
+  .propertyDivider {
+    padding: 4px;
+  }
+  .propertyName {
+    font-style: italic;
+
+  }
 .pre {
   padding: 4px;
   border-radius: 3px;
