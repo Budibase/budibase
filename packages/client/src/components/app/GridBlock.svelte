@@ -36,12 +36,10 @@
   let grid
   let gridContext
 
-  $: columnWhitelist = parsedColumns
-    ?.filter(col => col.active)
-    ?.map(col => col.field)
+  $: parsedColumns = getParsedColumns(columns)
+  $: columnWhitelist = parsedColumns.filter(x => x.active).map(x => x.field)
   $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
-  $: parsedColumns = getParsedColumns(columns)
   $: selectedRows = deriveSelectedRows(gridContext)
   $: data = { selectedRows: $selectedRows }
   $: actions = [
@@ -67,12 +65,14 @@
 
   // Parses columns to fix older formats
   const getParsedColumns = columns => {
+    if (!columns?.length) {
+      return []
+    }
     // If the first element has an active key all elements should be in the new format
-    if (columns?.length && columns[0]?.active !== undefined) {
+    if (columns[0].active !== undefined) {
       return columns
     }
-
-    return columns?.map(column => ({
+    return columns.map(column => ({
       label: column.displayName || column.name,
       field: column.name,
       active: true,
@@ -81,7 +81,7 @@
 
   const getSchemaOverrides = columns => {
     let overrides = {}
-    columns?.forEach(column => {
+    columns.forEach(column => {
       overrides[column.field] = {
         displayName: column.label,
       }
@@ -115,13 +115,12 @@
     return derived(
       [gridContext.selectedRows, gridContext.rowLookupMap, gridContext.rows],
       ([$selectedRows, $rowLookupMap, $rows]) => {
-        const rowIds = Object.entries($selectedRows || {})
+        return Object.entries($selectedRows || {})
           .filter(([_, selected]) => selected)
-          .map(([rowId]) => rowId)
-        return rowIds.map(id => {
-          const idx = $rowLookupMap[id]
-          return gridContext.rows.actions.cleanRow($rows[idx])
-        })
+          .map(([rowId]) => {
+            const idx = $rowLookupMap[rowId]
+            return gridContext.rows.actions.cleanRow($rows[idx])
+          })
       }
     )
   }
