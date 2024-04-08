@@ -5,29 +5,29 @@
   import Provider from "./context/Provider.svelte"
   import { onMount, getContext } from "svelte"
   import { enrichButtonActions } from "../utils/buttonActions.js"
+  import { memo } from "@budibase/frontend-core"
 
   export let params = {}
 
   const context = getContext("context")
+  const onLoadActions = memo()
 
   // Get the screen definition for the current route
   $: screenDefinition = $screenStore.activeScreen?.props
-
-  $: runOnLoadActions(params)
+  $: onLoadActions.set($screenStore.activeScreen?.onLoad)
+  $: runOnLoadActions($onLoadActions, params)
 
   // Enrich and execute any on load actions.
   // We manually construct the full context here as this component is the
   // one that provides the url context, so it is not available in $context yet
-  const runOnLoadActions = params => {
-    const screenState = get(screenStore)
-
-    if (screenState.activeScreen?.onLoad && !get(builderStore).inBuilder) {
-      const actions = enrichButtonActions(screenState.activeScreen.onLoad, {
+  const runOnLoadActions = (actions, params) => {
+    if (actions?.length && !get(builderStore).inBuilder) {
+      const enrichedActions = enrichButtonActions(actions, {
         ...get(context),
         url: params,
       })
-      if (actions != null) {
-        actions()
+      if (enrichedActions != null) {
+        enrichedActions()
       }
     }
   }
