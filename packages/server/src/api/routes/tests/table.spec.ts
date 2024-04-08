@@ -13,7 +13,7 @@ import {
   TableSourceType,
   User,
   ViewCalculation,
-  ViewV2,
+  ViewV2Enriched,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -311,7 +311,7 @@ describe.each([
       expect(table).toBeDefined()
       expect(table!.views![viewV2.name]).toBeDefined()
 
-      const expectedViewV2: ViewV2 = {
+      const expectedViewV2: ViewV2Enriched = {
         ...viewV2,
         schema: {
           description: {
