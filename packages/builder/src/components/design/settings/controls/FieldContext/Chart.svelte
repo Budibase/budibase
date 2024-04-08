@@ -137,11 +137,12 @@
       text="required"
     />
     <span class="space" />
-      <a target="_blank" rel="noopener noreferrer" href={"https://docs.budibase.com/docs/budibasedb#constraints"} class="chip link topLink">
-        <Icon size="S" name={"DataUnavailable"} />
-        <span class="text">
-          Constraint
-        </span></a><span class="comma">,</span>
+    <DocumentationLink
+      icon="DataUnavailable"
+      href="https://docs.budibase.com/docs/budibasedb#constraints"
+      text="Constraint"
+    />
+      <span class="comma">,</span>
       <span class="text">
         so values may be missing
       </span>
@@ -325,6 +326,7 @@
   }
 
   .comma {
+    margin-left: 2px;
     color: var(--grey-5);
     font-size: 20px;
     display: inline block;
