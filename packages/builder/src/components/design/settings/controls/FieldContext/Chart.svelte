@@ -72,17 +72,12 @@
 
   <div class="line topLine">
     <span class="bullet">•</span>
-    <a
-      target="_blank" rel="noopener noreferrer"
+    <InfoWord
       on:mouseenter={() => handleMouseenter("column")}
       on:mouseleave={() => handleMouseleave("column")}
       href={tableHref}
-      class="chip columnName"
-    >
-      <span>
-      {columnName}
-      </span>
-    </a>
+      text={columnName}
+    />
     <span class="space" />
     <span class="text"> is a </span>
     <span class="space" />
@@ -264,6 +259,10 @@
 {/if}
 
 <style>
+  .text {
+    flex-shrink: 0;
+  }
+
   .sidecarContent {
     max-width: 300px;
     padding: 16px 12px 18px;
