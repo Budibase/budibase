@@ -60,16 +60,12 @@
       )
     }
   )
-  $: componentOptions = components.map(component => {
-    let value = component._id
-    if (component._component.endsWith("/tableblock")) {
-      value = `${component._id}-table`
-    }
-    return {
-      label: component._instanceName,
-      value,
-    }
-  })
+  $: componentOptions = components.map(table => ({
+    label: table._instanceName,
+    value: table._component.endsWith("/tableblock")
+      ? `${table._id}-table`
+      : table._id,
+  }))
   $: selectedTableId = parameters.tableComponentId?.includes("-")
     ? parameters.tableComponentId.split("-")[0]
     : parameters.tableComponentId
