@@ -95,7 +95,10 @@ export class AttachmentCleanup {
     return AttachmentCleanup.coreCleanup(() => {
       let files: string[] = []
       for (let [key, schema] of Object.entries(table.schema)) {
-        if (schema.type !== FieldType.ATTACHMENT) {
+        if (
+          schema.type !== FieldType.ATTACHMENT &&
+          schema.type !== FieldType.SIGNATURE
+        ) {
           continue
         }
         const oldKeys =

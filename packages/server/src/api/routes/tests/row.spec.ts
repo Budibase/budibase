@@ -237,6 +237,11 @@ describe.each([
           name: "attachment",
           constraints: { type: "array", presence: false },
         }
+        const signature: FieldSchema = {
+          type: FieldType.SIGNATURE,
+          name: "signature",
+          constraints: { type: "array", presence: false },
+        }
         const bool: FieldSchema = {
           type: FieldType.BOOLEAN,
           name: "boolean",
@@ -301,6 +306,10 @@ describe.each([
               attachmentUndefined: attachment,
               attachmentEmpty: attachment,
               attachmentEmptyArrayStr: attachment,
+              signatureNull: signature,
+              signatureUndefined: signature,
+              signatureEmpty: signature,
+              signatureEmptyArrayStr: signature,
               arrayFieldEmptyArrayStr: arrayField,
               arrayFieldArrayStrKnown: arrayField,
               arrayFieldNull: arrayField,
@@ -340,6 +349,10 @@ describe.each([
           attachmentUndefined: undefined,
           attachmentEmpty: "",
           attachmentEmptyArrayStr: "[]",
+          signatureNull: null,
+          signatureUndefined: undefined,
+          signatureEmpty: "",
+          signatureEmptyArrayStr: "[]",
           arrayFieldEmptyArrayStr: "[]",
           arrayFieldUndefined: undefined,
           arrayFieldNull: null,
@@ -372,6 +385,10 @@ describe.each([
         expect(row.attachmentUndefined).toBe(undefined)
         expect(row.attachmentEmpty).toEqual([])
         expect(row.attachmentEmptyArrayStr).toEqual([])
+        expect(row.signatureNull).toEqual([])
+        expect(row.signatureUndefined).toBe(undefined)
+        expect(row.signatureEmpty).toEqual([])
+        expect(row.signatureEmptyArrayStr).toEqual([])
         expect(row.arrayFieldEmptyArrayStr).toEqual([])
         expect(row.arrayFieldNull).toEqual([])
         expect(row.arrayFieldUndefined).toEqual(undefined)
@@ -783,24 +800,21 @@ describe.each([
   })
 
   isInternal &&
-    describe("attachments", () => {
-      it("should allow enriching attachment rows", async () => {
+    describe("attachments and signatures", () => {
+      const coreAttachmentEnrichment = async (
+        schema: any,
+        field: string,
+        attachmentId: string
+      ) => {
         const table = await config.api.table.save(
           defaultTable({
-            schema: {
-              attachment: {
-                type: FieldType.ATTACHMENT,
-                name: "attachment",
-                constraints: { type: "array", presence: false },
-              },
-            },
+            schema,
           })
         )
-        const attachmentId = `${uuid.v4()}.csv`
         const row = await config.api.row.save(table._id!, {
           name: "test",
           description: "test",
-          attachment: [
+          [field]: [
             {
               key: `${config.getAppId()}/attachments/${attachmentId}`,
             },
@@ -810,11 +824,39 @@ describe.each([
         await config.withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
             const enriched = await outputProcessing(table, [row])
-            expect((enriched as Row[])[0].attachment[0].url).toBe(
+            expect((enriched as Row[])[0]?.[field][0].url).toBe(
               `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
             )
           })
         })
+      }
+
+      it("should allow enriching attachment rows", async () => {
+        coreAttachmentEnrichment(
+          {
+            attachment: {
+              type: FieldType.ATTACHMENT,
+              name: "attachment",
+              constraints: { type: "array", presence: false },
+            },
+          },
+          "attachment",
+          `${uuid.v4()}.csv`
+        )
+      })
+
+      it("should allow enriching signature rows", async () => {
+        coreAttachmentEnrichment(
+          {
+            signature: {
+              type: FieldType.SIGNATURE,
+              name: "signature",
+              constraints: { type: "array", presence: false },
+            },
+          },
+          "signature",
+          `${uuid.v4()}.png`
+        )
       })
     })
 
