@@ -1,6 +1,5 @@
 <script>
-  import dayjs from "dayjs"
-  import { CoreDatePicker, Icon } from "@budibase/bbui"
+  import { CoreDatePicker, Icon, Helpers } from "@budibase/bbui"
   import { onMount } from "svelte"
 
   export let value
@@ -13,10 +12,7 @@
   let datePickerAPI
   let isOpen
 
-  // Adding the 0- will turn a string like 00:00:00 into a valid ISO
-  // date, but will make actual ISO dates invalid
-  $: isTimeValue = !isNaN(new Date(`0-${value}`))
-  $: timeOnly = isTimeValue || schema?.timeOnly
+  $: timeOnly = schema?.timeOnly
   $: dateOnly = schema?.dateOnly
   $: format = timeOnly
     ? "HH:mm:ss"
@@ -24,18 +20,11 @@
     ? "MMM D YYYY"
     : "MMM D YYYY, HH:mm"
   $: editable = focused && !readonly
-  $: displayValue = getDisplayValue(value, format, timeOnly, isTimeValue)
+  $: displayValue = getDisplayValue(value, timeOnly, dateOnly, format)
 
-  const getDisplayValue = (value, format, timeOnly, isTimeValue) => {
-    if (!value) {
-      return ""
-    }
-    // Parse full date strings
-    if (!timeOnly || !isTimeValue) {
-      return dayjs(value).format(format)
-    }
-    // Otherwise must be a time string
-    return dayjs(`0-${value}`).format(format)
+  const getDisplayValue = (value, timeOnly, dateOnly, format) => {
+    const parsedDate = Helpers.parseDate(value, { timeOnly, dateOnly })
+    return parsedDate?.format(format) || ""
   }
 
   // Ensure we close flatpickr when unselected
