@@ -142,7 +142,7 @@ export async function sqlOutputProcessing(
       continue
     }
     const thisRow = fixArrayTypes(
-      await basicProcessing({
+      basicProcessing({
         row,
         table,
         isLinked: false,

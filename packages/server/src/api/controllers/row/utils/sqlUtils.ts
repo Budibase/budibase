@@ -6,11 +6,7 @@ import {
   Row,
   Table,
 } from "@budibase/types"
-import { processFormulas } from "../../../../utilities/rowProcessor"
-import {
-  breakExternalTableId,
-  getPrimaryDisplay,
-} from "../../../../integrations/utils"
+import { breakExternalTableId } from "../../../../integrations/utils"
 import { basicProcessing } from "./basic"
 import { generateJunctionTableID } from "../../../../db/utils"
 
@@ -20,40 +16,6 @@ export function isManyToMany(
   field: RelationshipFieldMetadata
 ): field is ManyToManyRelationshipFieldMetadata {
   return !!(field as ManyToManyRelationshipFieldMetadata).through
-}
-
-export function squashRelationshipColumns(
-  table: Table,
-  tables: TableMap,
-  row: Row,
-  relationships: RelationshipsJson[]
-): Row {
-  for (let relationship of relationships) {
-    const linkedTable = tables[relationship.tableName]
-    if (!linkedTable || !row[relationship.column]) {
-      continue
-    }
-    const display = linkedTable.primaryDisplay
-    for (let key of Object.keys(row[relationship.column])) {
-      let relatedRow: Row = row[relationship.column][key]
-      // add this row as context for the relationship
-      for (let col of Object.values(linkedTable.schema)) {
-        if (col.type === FieldType.LINK && col.tableId === table._id) {
-          relatedRow[col.name] = [row]
-        }
-      }
-      relatedRow = processFormulas(linkedTable, relatedRow)
-      let relatedDisplay
-      if (display) {
-        relatedDisplay = getPrimaryDisplay(relatedRow[display])
-      }
-      row[relationship.column][key] = {
-        primaryDisplay: relatedDisplay || "Invalid display column",
-        _id: relatedRow._id,
-      }
-    }
-  }
-  return row
 }
 
 /**
