@@ -4,6 +4,7 @@
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import Property from './Property.svelte'
+  import InfoWord from './InfoWord.svelte'
 
   export let supportLevelClass = ''
   export let supportLevelIcon = ""
@@ -220,30 +221,27 @@
         <span class="heading">Data/Component Compatibility</span>
         <div class="divider" />
         <div class="section">
-          <div
-            class={`chip supportChip supportLevelSupported`}
-            >
-            <Icon size="S" name={"CheckmarkCircle"} />
-            <span class="text">Compatible</span>
-          </div>
+          <InfoWord
+            icon="CheckmarkCircle"
+            color="var(--green)"
+            text="Compatible"
+          />
           <span class="body">Fully compatible with the component as long as the data is present.</span>
         </div>
         <div class="section">
-          <div
-            class={`chip supportChip supportLevelPartialSupport`}
-            >
-            <Icon size="S" name={"AlertCheck"} />
-            <span class="text">Partially compatible</span>
-          </div>
-          <span class="body">Potentionally compatible with the component, but beware of other caveats mentioned in the context tooltip.</span>
+          <InfoWord
+            icon="AlertCheck"
+            color="var(--yellow)"
+            text="Possibly compatible"
+          />
+          <span class="body">Possibly compatible with the component, but beware of other caveats mentioned in the context tooltip.</span>
         </div>
         <div class="section">
-          <div
-            class={`chip supportChip supportLevelUnsupported`}
-            >
-            <Icon size="S" name={"Alert"} />
-            <span class="text">Not compatible</span>
-          </div>
+          <InfoWord
+            icon="Alert"
+            color="var(--red)"
+            text="Not compatible"
+          />
           <span class="body">Imcompatible with the component.</span>
         </div>
 
@@ -301,24 +299,6 @@
     padding: 20px 16px;
     border-radius: 5px;
     box-sizing: border-box;
-  }
-
-  .chip {
-    box-sizing: border-box;
-    display: inline-flex;
-    padding: 3px 6px;
-    border-radius: 5px;
-    vertical-align: sub;
-    filter: brightness(100%);
-  }
-
-  .chip:hover {
-    filter: brightness(120%);
-    transition: filter 300ms
-  }
-
-  .chip :global(svg) {
-    color:  var(--grey-6);
   }
 
   .columnName {
@@ -380,8 +360,22 @@
   .topLine .space {
   }
 
-  .topLine .text {
-    flex-shrink: 0;
+  .chip {
+    box-sizing: border-box;
+    display: inline-flex;
+    padding: 3px 6px;
+    border-radius: 5px;
+    vertical-align: sub;
+    filter: brightness(100%);
+  }
+
+  .chip:hover {
+    filter: brightness(120%);
+    transition: filter 300ms
+  }
+
+  .chip :global(svg) {
+    color:  var(--grey-6);
   }
 
   .topLine .period {
@@ -408,10 +402,6 @@
 
   .line:last-child {
     margin-bottom: 0px;
-  }
-
-  .line > .text {
-    display: inline;
   }
 
   .link {
