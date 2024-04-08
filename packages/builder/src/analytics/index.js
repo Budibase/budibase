@@ -1,9 +1,9 @@
 import { API } from "api"
 import PosthogClient from "./PosthogClient"
 import IntercomClient from "./IntercomClient"
-import { Events, EventSource, PosthogToken } from "./constants"
+import { Events, EventSource } from "./constants"
 
-const posthog = new PosthogClient(PosthogToken)
+const posthog = new PosthogClient(process.env.POSTHOG_TOKEN)
 const intercom = new IntercomClient(process.env.INTERCOM_TOKEN)
 
 class AnalyticsHub {
