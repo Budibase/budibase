@@ -36,7 +36,6 @@
         return;
       }
 
-
       const rect = anchor.getBoundingClientRect();
 
 

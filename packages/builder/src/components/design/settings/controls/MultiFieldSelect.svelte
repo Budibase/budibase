@@ -7,6 +7,7 @@
   import ChartFieldContext from './FieldContext/Chart.svelte'
   import { FIELDS } from 'constants/backend'
   import { goto, params } from "@roxi/routify"
+  import { debounce } from "lodash"
 
   export let componentInstance = {}
   export let value = ""
@@ -167,28 +168,25 @@
   $: currentOptionSupport = getSupportLevel(currentOption)
   $: previousOptionSupport = getSupportLevel(previousOption)
 
-  const onOptionMouseenter = (e, option, idx) => {
-    contextTooltipId += 1;
-    const invokedContextTooltipId = contextTooltipId
+  const updateTooltip = debounce((e, option) => {
+    if (option == null) {
+        contextTooltipVisible = false;
+    } else {
+    contextTooltipAnchor = e?.target;
+    previousOption = currentOption;
+    currentOption = option;
+    contextTooltipVisible = true;
+    currentOptionSupport = getSupportLevel(currentOption)
+    previousOptionSupport = getSupportLevel(previousOption)
+    }
+  }, 200);
 
-    setTimeout(() => {
-      if (contextTooltipId === invokedContextTooltipId) {
-        contextTooltipAnchor = e.target;
-        previousOption = currentOption;
-        currentOption = option;
-        contextTooltipVisible = true;
-        currentOptionSupport = getSupportLevel(currentOption)
-        previousOptionSupport = getSupportLevel(previousOption)
-      }
-    }, 200)
+  const onOptionMouseenter = (e, option, idx) => {
+    updateTooltip(e, option);
   }
 
   const onOptionMouseleave = (e, option) => {
-    setTimeout(() => {
-      if (option === currentOption) {
-        contextTooltipVisible = false;
-      }
-    }, 600)
+    updateTooltip(e, null);
   }
 </script>
 

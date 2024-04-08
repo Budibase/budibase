@@ -21,10 +21,6 @@
 
   export let schema
 
-  $: {
-    console.log(schema)
-  }
-
   let root = null;
 
   const getDocLink = (columnType) => {
