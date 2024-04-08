@@ -10,3 +10,5 @@ export const EventSource = {
   URL: "url",
   NOTIFICATION: "notification",
 }
+
+export const PosthogToken = "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
