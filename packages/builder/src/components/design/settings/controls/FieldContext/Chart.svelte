@@ -72,7 +72,7 @@
   class={`tooltipContents ${supportLevelClass}`}
 >
 
-  <div class="line topLine">
+  <div class="line">
     <span class="bullet">•</span>
     <InfoWord
       on:mouseenter={() => handleMouseenter("column")}
@@ -255,9 +255,6 @@
 {/if}
 
 <style>
-  .text {
-    flex-shrink: 0;
-  }
 
   .sidecarContent {
     max-width: 300px;
@@ -270,6 +267,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  .divider {
+    border-bottom: 1px solid var(--grey-4);
+    margin: 12px 0 12px;
+  }
+
 
   .section {
     margin-bottom: 16px;
@@ -286,6 +289,10 @@
   /* BETWEEN STUFF */
   /* BETWEEN STUFF */
   /* BETWEEN STUFF */
+
+  .text {
+    flex-shrink: 0;
+  }
 
   .tooltipContents {
     max-width: 450px;
@@ -343,51 +350,6 @@
     margin-right: 5px;
   }
 
-  .divider {
-    border-bottom: 1px solid var(--grey-4);
-    margin: 12px 0 12px;
-  }
-
-
-  .topLine {
-    display: flex;
-    align-items: center;
-  }
-
-  .topLine .space {
-  }
-
-  .chip {
-    box-sizing: border-box;
-    display: inline-flex;
-    padding: 3px 6px;
-    border-radius: 5px;
-    vertical-align: sub;
-    filter: brightness(100%);
-  }
-
-  .chip:hover {
-    filter: brightness(120%);
-    transition: filter 300ms
-  }
-
-  .chip :global(svg) {
-    color:  var(--grey-6);
-  }
-
-  .topLine .period {
-    flex-shrink: 0;
-  }
-
-  .topLine .bullet {
-    flex-shrink: 0;
-  }
-
-  .topLink {
-    flex-shrink: 0;
-    margin-right: 2px;
-  }
-
   .line {
     background-color: var(--background-alt);
     color: var(--ink);
@@ -399,74 +361,5 @@
 
   .line:last-child {
     margin-bottom: 0px;
-  }
-
-  .link {
-    border-radius: 0;
-    background-color: transparent;
-    border: 1px solid red;
-    border-width: 0 0 1px 0;
-    box-sizing: border-box;
-    border-color: var(--blue);
-    color: white;
-    padding-left: 0px;
-    padding-right: 0px;
-    transition: background-color 200ms;
-  }
-
-  .link:hover {
-    cursor: pointer;
-    background-color: #ffffff0a;
-  }
-
-  .info {
-
-    vertical-align: baseline;
-    background-color: var(--grey-3);
-  }
-
-  .info :global(svg) {
-    margin-right: 3px;
-  }
-
-
-  .link :global(svg) {
-    margin-right: 3px;
-    color: var(--blue);
-  }
-
-  .supportChip {
-    background-color: var(--grey-3);
-    color: var(--ink);
-    border: 1px solid red;
-    box-sizing: border-box;
-  }
-
-  .supportChip :global(svg) {
-    margin-right: 5px;
-  }
-
-  .supportChip.supportLevelUnsupported {
-    border-color: var(--red);
-  }
-
-  .supportChip.supportLevelUnsupported :global(svg) {
-    color: var(--red);
-  }
-
-  .supportChip.supportLevelPartialSupport {
-    border-color: var(--yellow);
-  }
-
-  .supportChip.supportLevelPartialSupport :global(svg) {
-    color: var(--yellow);
-  }
-
-  .supportChip.supportLevelSupported {
-    border-color: var(--green);
-  }
-
-  .supportChip.supportLevelSupported :global(svg) {
-    color: var(--green);
   }
 </style>
