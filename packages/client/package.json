@@ -36,6 +36,7 @@
     "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",
     "html5-qrcode": "^2.2.1",
+    "atrament": "^4.1.0",
     "leaflet": "^1.7.1",
     "sanitize-html": "^2.7.0",
     "screenfull": "^6.0.1",

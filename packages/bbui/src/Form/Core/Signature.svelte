@@ -1,5 +1,6 @@
 <script>
   import { onMount, createEventDispatcher } from "svelte"
+  import Atrament from "atrament"
   import Icon from "../../Icon/Icon.svelte"
 
   const dispatch = createEventDispatcher()
@@ -18,7 +19,7 @@
   }
 
   export function toFile() {
-    const data = canvas
+    const data = canvasContext
       .getImageData(0, 0, width, height)
       .data.some(channel => channel !== 0)
 
@@ -50,80 +51,26 @@
   }
 
   export function clearCanvas() {
-    return canvas.clearRect(0, 0, canvasWidth, canvasHeight)
-  }
-
-  const updatedPos = (x, y) => {
-    return lastOffsetX != x || lastOffsetY != y
-  }
-
-  const handleDraw = e => {
-    e.preventDefault()
-    if (disabled || !editable) {
-      return
-    }
-    var rect = canvasRef.getBoundingClientRect()
-    const canvasX = e.offsetX || e.targetTouches?.[0].pageX - rect.left
-    const canvasY = e.offsetY || e.targetTouches?.[0].pageY - rect.top
-
-    const coords = { x: Math.round(canvasX), y: Math.round(canvasY) }
-    draw(coords.x, coords.y)
-  }
-
-  const draw = (xPos, yPos) => {
-    if (drawing && updatedPos(xPos, yPos)) {
-      canvas.miterLimit = 2
-      canvas.lineWidth = 2
-      canvas.lineJoin = "round"
-      canvas.lineCap = "round"
-      canvas.strokeStyle = "white"
-      canvas.stroke()
-      canvas.lineTo(xPos, yPos)
-
-      lastOffsetX = xPos
-      lastOffsetY = yPos
-    }
-  }
-
-  const stopTracking = () => {
-    if (!canvas) {
-      return
-    }
-    canvas.closePath()
-    drawing = false
-    lastOffsetX = null
-    lastOffsetY = null
-  }
-
-  const canvasContact = e => {
-    if (disabled || !editable || (!e.targetTouches && e.button != 0)) {
-      return
-    } else if (!updated) {
-      updated = true
-      clearCanvas()
-    }
-    drawing = true
-    canvas.beginPath()
-    canvas.moveTo(e.offsetX, e.offsetY)
+    return canvasContext.clearRect(0, 0, canvasWidth, canvasHeight)
   }
 
   let canvasRef
-  let canvas
+  let canvasContext
   let canvasWrap
-  let drawing = false
-  let updated = false
-  let lastOffsetX, lastOffsetY
   let canvasWidth
   let canvasHeight
   let signature
+
+  let updated = false
+  let signatureFile
   let urlFailed
 
   $: if (value) {
     const [attachment] = value || []
-    signature = attachment
+    signatureFile = attachment
   }
 
-  $: if (signature?.url) {
+  $: if (signatureFile?.url) {
     updated = false
   }
 
@@ -131,6 +78,14 @@
     if (!editable) {
       return
     }
+
+    signature = new Atrament(canvasRef, {
+      width,
+      height,
+      color: "white",
+    })
+    signature.weight = 4
+    signature.smoothing = 2
 
     canvasWrap.style.width = `${width}px`
     canvasWrap.style.height = `${height}px`
@@ -141,8 +96,7 @@
     canvasHeight = wrapHeight
     canvasWidth = wrapWidth
 
-    canvas = canvasRef.getContext("2d")
-    canvas.imageSmoothingEnabled = true
+    canvasContext = canvasRef.getContext("2d")
   })
 </script>
 
@@ -163,7 +117,7 @@
           />
         </span>
       {/if}
-      {#if signature?.url && !updated}
+      {#if signatureFile?.url && !updated}
         <span class="delete">
           <Icon
             name="DeleteOutline"
@@ -182,11 +136,11 @@
       {/if}
     </div>
   {/if}
-  {#if !editable && signature?.url}
+  {#if !editable && signatureFile?.url}
     <!-- svelte-ignore a11y-missing-attribute -->
     {#if !urlFailed}
       <img
-        src={signature?.url}
+        src={signatureFile?.url}
         on:error={() => {
           urlFailed = true
         }}
@@ -196,20 +150,7 @@
     {/if}
   {:else}
     <div bind:this={canvasWrap} class="canvas-wrap">
-      <canvas
-        id="canvas"
-        width={canvasWidth}
-        height={canvasHeight}
-        bind:this={canvasRef}
-        on:mousemove={handleDraw}
-        on:mousedown={canvasContact}
-        on:mouseup={stopTracking}
-        on:mouseleave={stopTracking}
-        on:touchstart={canvasContact}
-        on:touchend={stopTracking}
-        on:touchmove={handleDraw}
-        on:touchleave={stopTracking}
-      />
+      <canvas id="signature-canvas" bind:this={canvasRef} />
       {#if editable}
         <div class="indicator-overlay">
           <div class="sign-here">
@@ -254,7 +195,7 @@
     max-width: 100%;
   }
   .signature.light img,
-  .signature.light #canvas {
+  .signature.light #signature-canvas {
     -webkit-filter: invert(100%);
     filter: invert(100%);
   }
