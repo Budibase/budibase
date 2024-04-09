@@ -2,7 +2,13 @@ import { tableForDatasource } from "../../../tests/utilities/structures"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 
 import * as setup from "./utilities"
-import { Datasource, FieldType, Table } from "@budibase/types"
+import {
+  Datasource,
+  FieldType,
+  SearchFilter,
+  SearchFilters,
+  Table,
+} from "@budibase/types"
 
 jest.unmock("mssql")
 
@@ -53,22 +59,41 @@ describe.each([
     )
   })
 
-  it("should return rows", async () => {
-    const rows = await Promise.all([
-      config.api.row.save(table._id!, { name: "foo" }),
-      config.api.row.save(table._id!, { name: "bar" }),
-    ])
+  describe("strings", () => {
+    interface StringSearchTest {
+      query: SearchFilters
+      expected: number[]
+    }
 
-    const result = await config.api.row.search(table._id!, {
-      tableId: table._id!,
-      query: {},
-    })
+    const stringSearchTests: StringSearchTest[] = [
+      { query: {}, expected: [0, 1] },
+      { query: { string: { name: "foo" } }, expected: [0] },
+      { query: { fuzzy: { name: "oo" } }, expected: [0] },
+      { query: { equal: { name: "foo" } }, expected: [0] },
+      { query: { notEqual: { name: "foo" } }, expected: [1] },
+      { query: { oneOf: { name: ["foo"] } }, expected: [0] },
+      // { query: { contains: { name: "f" } }, expected: [0] },
+      // { query: { notContains: { name: ["f"] } }, expected: [1] },
+      // { query: { containsAny: { name: ["f"] } }, expected: [0] },
+    ]
 
-    expect(result.rows).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ _id: rows[0]._id }),
-        expect.objectContaining({ _id: rows[1]._id }),
-      ])
+    it.each(stringSearchTests)(
+      `should be able to run query: $query`,
+      async ({ query, expected }) => {
+        const rows = await Promise.all([
+          config.api.row.save(table._id!, { name: "foo" }),
+          config.api.row.save(table._id!, { name: "bar" }),
+        ])
+
+        const result = await config.api.row.search(table._id!, {
+          tableId: table._id!,
+          query,
+        })
+
+        expect(result.rows.map(r => r._id)).toEqual(
+          expect.arrayContaining(expected.map(i => rows[i]._id))
+        )
+      }
     )
   })
 })
