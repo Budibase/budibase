@@ -66,7 +66,7 @@
     max-width: 450px;
     background-color: var(--background-alt);
     display: block;
-    padding: 20px 16px;
+    padding: 20px 16px 10px;
     border-radius: 5px;
     box-sizing: border-box;
   }
