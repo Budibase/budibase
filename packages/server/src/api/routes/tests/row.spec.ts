@@ -739,6 +739,39 @@ describe.each([
     })
   })
 
+  describe("bulkImport", () => {
+    isInternal &&
+      it("should update Auto ID field after bulk import", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            primary: ["autoId"],
+            schema: {
+              autoId: {
+                name: "autoId",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                autocolumn: true,
+                constraints: {
+                  type: "number",
+                  presence: false,
+                },
+              },
+            },
+          })
+        )
+
+        let row = await config.api.row.save(table._id!, {})
+        expect(row.autoId).toEqual(1)
+
+        await config.api.row.bulkImport(table._id!, {
+          rows: [{ autoId: 2 }],
+        })
+
+        row = await config.api.row.save(table._id!, {})
+        expect(row.autoId).toEqual(3)
+      })
+  })
+
   describe("enrich", () => {
     beforeAll(async () => {
       table = await config.api.table.save(defaultTable())
