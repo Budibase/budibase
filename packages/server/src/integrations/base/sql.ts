@@ -1,7 +1,12 @@
 import { Knex, knex } from "knex"
 import { db as dbCore } from "@budibase/backend-core"
 import { QueryOptions } from "../../definitions/datasource"
-import { isIsoDateString, SqlClient, isValidFilter } from "../utils"
+import {
+  isIsoDateString,
+  SqlClient,
+  isValidFilter,
+  getNativeSql,
+} from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
   BBReferenceFieldMetadata,
@@ -11,14 +16,16 @@ import {
   JsonFieldMetadata,
   Operation,
   QueryJson,
+  SqlQuery,
   RelationshipsJson,
   SearchFilters,
   SortDirection,
+  SqlQueryBinding,
   Table,
 } from "@budibase/types"
 import environment from "../../environment"
 
-type QueryFunction = (query: Knex.SqlNative, operation: Operation) => any
+type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -43,8 +50,11 @@ function likeKey(client: string, key: string): string {
       start = "["
       end = "]"
       break
+    case SqlClient.SQL_LITE:
+      start = end = "'"
+      break
     default:
-      throw "Unknown client"
+      throw new Error("Unknown client generating like key")
   }
   const parts = key.split(".")
   key = parts.map(part => `${start}${part}${end}`).join(".")
@@ -587,9 +597,15 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
    * @return the query ready to be passed to the driver.
    */
-  _query(json: QueryJson, opts: QueryOptions = {}): Knex.SqlNative | Knex.Sql {
+  _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery | SqlQuery[] {
     const sqlClient = this.getSqlClient()
-    const client = knex({ client: sqlClient })
+    const config: { client: string; useNullAsDefault?: boolean } = {
+      client: sqlClient,
+    }
+    if (sqlClient === SqlClient.SQL_LITE) {
+      config.useNullAsDefault = true
+    }
+    const client = knex(config)
     let query: Knex.QueryBuilder
     const builder = new InternalBuilder(sqlClient)
     switch (this._operation(json)) {
@@ -615,7 +631,12 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       default:
         throw `Operation type is not supported by SQL query builder`
     }
-    return query.toSQL().toNative()
+
+    if (opts?.disableBindings) {
+      return { sql: query.toString() }
+    } else {
+      return getNativeSql(query)
+    }
   }
 
   async getReturningRow(queryFn: QueryFunction, json: QueryJson) {
@@ -730,7 +751,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     )
   }
 
-  log(query: string, values?: any[]) {
+  log(query: string, values?: SqlQueryBinding) {
     if (!environment.SQL_LOGGING_ENABLE) {
       return
     }

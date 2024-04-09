@@ -13,7 +13,7 @@ import {
   PatchRowRequest,
   PatchRowResponse,
   Row,
-  SearchParams,
+  RowSearchParams,
   SearchRowRequest,
   SearchRowResponse,
   UserCtx,
@@ -192,7 +192,7 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const tableId = utils.getTableId(ctx)
 
-  const searchParams: SearchParams = {
+  const searchParams: RowSearchParams = {
     ...ctx.request.body,
     tableId,
   }

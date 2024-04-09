@@ -143,6 +143,7 @@ export interface Database {
     opts?: DatabasePutOpts
   ): Promise<Nano.DocumentInsertResponse>
   bulkDocs(documents: AnyDocument[]): Promise<Nano.DocumentBulkResponse[]>
+  sql<T extends Document>(sql: string): Promise<T[]>
   allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>
