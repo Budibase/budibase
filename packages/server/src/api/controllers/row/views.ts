@@ -4,8 +4,8 @@ import {
   SearchRowResponse,
   SearchViewRowRequest,
   RequiredKeys,
-  SearchParams,
   SearchFilters,
+  RowSearchParams,
 } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
@@ -57,7 +57,7 @@ export async function searchView(
   }
 
   const searchOptions: RequiredKeys<SearchViewRowRequest> &
-    RequiredKeys<Pick<SearchParams, "tableId" | "query" | "fields">> = {
+    RequiredKeys<Pick<RowSearchParams, "tableId" | "query" | "fields">> = {
     tableId: view.tableId,
     query,
     fields: viewFields,
