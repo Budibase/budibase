@@ -1,6 +1,7 @@
 // need to handle table name + field or just field, depending on if relationships used
 import { FieldType, Row, Table } from "@budibase/types"
 import { generateRowIdField } from "../../../../integrations/utils"
+import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 
 function extractFieldValue({
   row,
@@ -18,6 +19,15 @@ function extractFieldValue({
     value = row[fieldName]
   }
   return value
+}
+
+export function getInternalRowId(row: Row, table: Table): string {
+  return extractFieldValue({
+    row,
+    tableName: table._id!,
+    fieldName: "_id",
+    isLinked: false,
+  })
 }
 
 export function generateIdForRow(
@@ -78,6 +88,15 @@ export function basicProcessing({
     thisRow._id = generateIdForRow(row, table, isLinked)
     thisRow.tableId = table._id
     thisRow._rev = "rev"
+  } else {
+    for (let internalColumn of CONSTANT_INTERNAL_ROW_COLS) {
+      thisRow[internalColumn] = extractFieldValue({
+        row,
+        tableName: table._id!,
+        fieldName: internalColumn,
+        isLinked: false,
+      })
+    }
   }
   return thisRow
 }
