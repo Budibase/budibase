@@ -286,6 +286,7 @@
                     internalLink={navItem.internalLink}
                     on:clickLink={() => (mobileOpen = false)}
                     leftNav={navigation === "Left"}
+                    {mobile}
                     {navStateStore}
                   />
                 {/each}

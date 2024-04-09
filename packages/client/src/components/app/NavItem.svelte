@@ -9,6 +9,7 @@
   export let subLinks
   export let internalLink
   export let leftNav = false
+  export let mobile = false
   export let navStateStore
 
   const dispatch = createEventDispatcher()
@@ -18,7 +19,8 @@
   let renderKey
 
   $: expanded = !!$navStateStore[text]
-  $: icon = !leftNav || expanded ? "ChevronDown" : "ChevronRight"
+  $: renderLeftNav = leftNav || mobile
+  $: icon = !renderLeftNav || expanded ? "ChevronDown" : "ChevronRight"
 
   const onClickLink = () => {
     dispatch("clickLink")
@@ -26,7 +28,7 @@
   }
 
   const onClickDropdown = () => {
-    if (!leftNav) {
+    if (!renderLeftNav) {
       return
     }
     navStateStore.update(state => ({
@@ -61,7 +63,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   {#key renderKey}
-    <div class="dropdown" class:left={leftNav} class:expanded>
+    <div class="dropdown" class:left={renderLeftNav} class:expanded>
       <div class="text" on:click={onClickDropdown}>
         {text}
         <Icon name={icon} />
