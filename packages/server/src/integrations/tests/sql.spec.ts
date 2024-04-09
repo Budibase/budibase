@@ -722,7 +722,7 @@ describe("SQL query builder", () => {
     })
     expect(query).toEqual({
       bindings: [],
-      sql: `alter table \`${TABLE_NAME}\` change column \`name\` \`first_name\` varchar(45);`,
+      sql: `alter table \`${TABLE_NAME}\` rename column \`name\` to \`first_name\`;`,
     })
   })
 
