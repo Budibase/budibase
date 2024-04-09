@@ -685,7 +685,6 @@ describe("postgres integrations", () => {
 
           expect(res.body).toEqual({
             rows: [],
-            bookmark: null,
             hasNextPage: false,
           })
         })
@@ -710,7 +709,6 @@ describe("postgres integrations", () => {
             rows: expect.arrayContaining(
               rows.map(r => expect.objectContaining(r.rowData))
             ),
-            bookmark: null,
             hasNextPage: false,
           })
           expect(res.body.rows).toHaveLength(rowsCount)
@@ -772,7 +770,6 @@ describe("postgres integrations", () => {
 
       expect(res.body).toEqual({
         rows: expect.arrayContaining(rowsToFilter.map(expect.objectContaining)),
-        bookmark: null,
         hasNextPage: false,
       })
       expect(res.body.rows).toHaveLength(4)

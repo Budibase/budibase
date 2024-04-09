@@ -49,7 +49,7 @@ export function getSQLClient(datasource: Datasource): SqlClient {
 
 export async function getDatasourceAndQuery(
   json: QueryJson
-): DatasourcePlusQueryResponse {
+): Promise<DatasourcePlusQueryResponse> {
   const datasourceId = json.endpoint.datasourceId
   const datasource = await sdk.datasources.get(datasourceId)
   return makeExternalQuery(datasource, json)
