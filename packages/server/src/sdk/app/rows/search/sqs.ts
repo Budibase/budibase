@@ -179,7 +179,7 @@ export async function search(
         allTablesMap,
         relationships,
         {
-          internal: true,
+          sqs: true,
         }
       ),
     }
