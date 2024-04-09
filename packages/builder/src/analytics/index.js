@@ -1,14 +1,12 @@
 import { API } from "api"
 import PosthogClient from "./PosthogClient"
-import IntercomClient from "./IntercomClient"
 import { Events, EventSource } from "./constants"
 
 const posthog = new PosthogClient(process.env.POSTHOG_TOKEN)
-const intercom = new IntercomClient(process.env.INTERCOM_TOKEN)
 
 class AnalyticsHub {
   constructor() {
-    this.clients = [posthog, intercom]
+    this.clients = [posthog]
     this.initialised = false
   }
 
@@ -31,20 +29,10 @@ class AnalyticsHub {
 
   captureEvent(eventName, props = {}) {
     posthog.captureEvent(eventName, props)
-    intercom.captureEvent(eventName, props)
-  }
-
-  showChat(user) {
-    intercom.show(user)
-  }
-
-  initPosthog() {
-    posthog.init()
   }
 
   async logout() {
     posthog.logout()
-    intercom.logout()
   }
 }
 

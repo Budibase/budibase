@@ -92,7 +92,6 @@ jobs:
   test-libraries:
     runs-on: ubuntu-latest
     env:
-      DEBUG: testcontainers,testcontainers:exec,testcontainers:build,testcontainers:pull
       REUSE_CONTAINERS: true
     steps:
       - name: Checkout repo
@@ -151,7 +150,6 @@ jobs:
   test-server:
     runs-on: budi-tubby-tornado-quad-core-150gb
     env:
-      DEBUG: testcontainers,testcontainers:exec,testcontainers:build,testcontainers:pull
       REUSE_CONTAINERS: true
     steps:
       - name: Checkout repo
