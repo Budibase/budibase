@@ -72,7 +72,10 @@ sed -i "s#COUCHDB_ERLANG_COOKIE#${COUCHDB_ERLANG_COOKIE}#g" /opt/clouseau/clouse
 # Start CouchDB.
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
 
-# Wati for CouchDB to start up.
+# Start SQS.
+/opt/sqs/sqs --server "http://localhost:5984" --data-dir ${DATA_DIR}/sqs --bind-address=0.0.0.0 &
+
+# Wait for CouchDB to start up.
 while [[ $(curl -s -w "%{http_code}\n" http://localhost:5984/_up -o /dev/null) -ne 200 ]]; do
     echo 'Waiting for CouchDB to start...';
     sleep 5;
