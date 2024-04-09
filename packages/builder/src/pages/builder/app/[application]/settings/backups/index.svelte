@@ -1,7 +1,7 @@
 <script>
   import {
     Button,
-    DatePicker,
+    DateRangePicker,
     Divider,
     Layout,
     notifications,
@@ -236,14 +236,12 @@
               bind:value={filterOpt}
             />
           </div>
-          <DatePicker
-            range={true}
+          <DateRangePicker
+            value={[startDate, endDate]}
             label="Date Range"
             on:change={e => {
-              if (e.detail[0].length > 1) {
-                startDate = e.detail[0][0].toISOString()
-                endDate = e.detail[0][1].toISOString()
-              }
+              startDate = e.detail?.[0]
+              endDate = e.detail?.[1]
             }}
           />
         </div>
