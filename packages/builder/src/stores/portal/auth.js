@@ -2,7 +2,6 @@ import { derived, writable, get } from "svelte/store"
 import { API } from "api"
 import { admin } from "stores/portal"
 import analytics from "analytics"
-import { sdk } from "@budibase/shared-core"
 
 export function createAuthStore() {
   const auth = writable({
