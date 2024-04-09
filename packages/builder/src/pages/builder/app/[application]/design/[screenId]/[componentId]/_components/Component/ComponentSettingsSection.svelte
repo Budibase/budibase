@@ -183,6 +183,7 @@
               props={{
                 // Generic settings
                 placeholder: setting.placeholder || null,
+                license: setting.license,
 
                 // Select settings
                 options: setting.options || [],
