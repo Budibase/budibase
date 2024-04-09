@@ -32,7 +32,7 @@ export async function updateRelationshipColumns(
   row: Row,
   rows: { [key: string]: Row },
   relationships: RelationshipsJson[],
-  opts?: { internal?: boolean }
+  opts?: { sqs?: boolean }
 ) {
   const columns: { [key: string]: any } = {}
   for (let relationship of relationships) {
@@ -55,7 +55,7 @@ export async function updateRelationshipColumns(
       row,
       table: linkedTable,
       isLinked: true,
-      internal: opts?.internal,
+      internal: opts?.sqs,
     })
     if (!linked._id) {
       continue
