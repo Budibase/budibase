@@ -2,13 +2,7 @@ import { tableForDatasource } from "../../../tests/utilities/structures"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 
 import * as setup from "./utilities"
-import {
-  Datasource,
-  FieldType,
-  SearchFilter,
-  SearchFilters,
-  Table,
-} from "@budibase/types"
+import { Datasource, FieldType, SearchFilters, Table } from "@budibase/types"
 
 jest.unmock("mssql")
 
