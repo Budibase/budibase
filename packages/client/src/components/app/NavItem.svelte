@@ -65,7 +65,7 @@
   {#key renderKey}
     <div class="dropdown" class:left={renderLeftNav} class:expanded>
       <div class="text" on:click={onClickDropdown}>
-        {text}
+        <span>{text}</span>
         <Icon name={icon} />
       </div>
       <div class="sublinks-wrapper">
@@ -95,13 +95,15 @@
 <style>
   /* Generic styles */
   a,
-  .text {
+  .text span {
     opacity: 0.75;
     color: var(--navTextColor);
     font-size: var(--spectrum-global-dimension-font-size-200);
     transition: opacity 130ms ease-out;
     font-weight: 600;
     user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   a.active {
     opacity: 1;
