@@ -49,6 +49,7 @@
       metadata: { dataSource: table },
     },
   ]
+  $: customHeight = $component?.styles?.normal?.height
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
@@ -110,6 +111,7 @@
 <div
   use:styleable={$component.styles}
   class:in-builder={$builderStore.inBuilder}
+  class:base-height={!customHeight}
 >
   <Provider {actions}>
     <Grid
@@ -147,6 +149,10 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     overflow: hidden;
+    min-height: 120px;
+    height: auto;
+  }
+  div.base-height {
     min-height: 410px;
   }
   div.in-builder :global(*) {
