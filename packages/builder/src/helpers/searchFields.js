@@ -4,11 +4,11 @@ import { get } from "svelte/store"
 
 export function getTableFields(linkField) {
   const table = get(tables).list.find(table => table._id === linkField.tableId)
-  if (!table) {
+  if (!table || !table.sql) {
     return []
   }
   const linkFields = getFields(Object.values(table.schema), {
-    tableFields: true,
+    allowLinks: false,
   })
   return linkFields.map(field => ({
     ...field,
@@ -16,11 +16,11 @@ export function getTableFields(linkField) {
   }))
 }
 
-export function getFields(fields, { tableFields }) {
+export function getFields(fields, { allowLinks } = { allowLinks: true }) {
   let filteredFields = fields.filter(
     field => !BannedSearchTypes.includes(field.type)
   )
-  if (!tableFields) {
+  if (!allowLinks) {
     const linkFields = fields.filter(field => field.type === "link")
     for (let linkField of linkFields) {
       // only allow one depth of SQL relationship filtering
