@@ -110,6 +110,16 @@ export interface QueryViewOptions {
   arrayResponse?: boolean
 }
 
+export async function getDerp<T extends Document>(
+  db: Database
+): Promise<AllDocsResponse<T>> {
+  const response = await db.query<T>(
+    `database/app_dev_9e1dd5f2de6b49bcbb04409b44a83717`,
+    {}
+  )
+  return response
+}
+
 export async function queryViewRaw<T extends Document>(
   viewName: ViewName,
   params: DatabaseQueryOpts,

@@ -7,7 +7,7 @@ import env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
 import { devClientLibPath } from "../../utilities/fileSystem"
 
-const { BUILDER, PermissionType, PermissionLevel } = permissions
+const { BUILDER, GLOBAL_BUILDER, PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
 
@@ -31,6 +31,16 @@ router.param("file", async (file: any, ctx: any, next: any) => {
 router
   .get("/builder/:file*", controller.serveBuilder)
   .get("/api/assets/client", controller.serveClientLibrary)
+  .get(
+    "/api/storage/:appId", //attachments
+    authorized(GLOBAL_BUILDER),
+    controller.getAppStorage
+  )
+  .get(
+    "/api/attachments/:appId",
+    authorized(GLOBAL_BUILDER),
+    controller.getAppAttachments
+  )
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
   .post(
     "/api/attachments/delete",

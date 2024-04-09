@@ -88,5 +88,27 @@ export const buildAttachmentEndpoints = API => {
         },
       })
     },
+
+    /**
+     *
+     * @param {string} appId
+     */
+    listAppBucket: async appId => {
+      console.log("LIST FEC")
+      return await API.get({
+        url: `/api/storage/${appId}`,
+      })
+    },
+
+    /**
+     *
+     * @param {string} appId
+     */
+    getAttachmentRows: async appId => {
+      console.log("LIST ATTS")
+      return await API.get({
+        url: `/api/attachments/${appId}`,
+      })
+    },
   }
 }

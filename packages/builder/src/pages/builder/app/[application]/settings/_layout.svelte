@@ -44,6 +44,11 @@
             url={$url("./version")}
             active={$isActive("./version")}
           />
+          <SideNavItem
+            text="Media"
+            url={$url("./media")}
+            active={$isActive("./media")}
+          />
           <div class="delete-action">
             <AbsTooltip
               position={TooltipPosition.Bottom}

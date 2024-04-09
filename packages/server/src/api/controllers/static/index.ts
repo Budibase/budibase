@@ -17,6 +17,7 @@ import {
   utils,
   configs,
   BadRequestError,
+  db as dbCore,
 } from "@budibase/backend-core"
 import AWS from "aws-sdk"
 import fs from "fs"
@@ -28,6 +29,10 @@ import {
   Ctx,
   ProcessAttachmentResponse,
   Feature,
+  Datasource,
+  TableSchema,
+  FieldType,
+  Table,
 } from "@budibase/types"
 import {
   getAppMigrationVersion,
@@ -68,6 +73,87 @@ export const toggleBetaUiFeature = async function (ctx: Ctx) {
 export const serveBuilder = async function (ctx: Ctx) {
   const builderPath = join(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
+}
+
+export const getAppStorage = async function (ctx: Ctx) {
+  const appId = ctx.params.appId
+  //check real app
+  const resp = await objectStore.listAllObjects(
+    ObjectStoreBuckets.APPS,
+    `${appId}/attachments/`
+  )
+  ctx.body = resp.map(row => {
+    return {
+      ...row,
+      url: row.Key ? objectStore.getAppFileUrl(row.Key) : undefined,
+    }
+  })
+}
+
+export const getAppAttachments = async function (ctx: Ctx) {
+  const appId = ctx.params.appId
+  const datasources = await sdk.datasources.fetch()
+  const filteredSources: Datasource[] = datasources.filter(source => {
+    return (
+      source._id === "bb_internal" ||
+      source._id === "datasource_internal_bb_default"
+    )
+  })
+
+  //This needs to iterate.
+  const first: Datasource = filteredSources[0]
+  const ents = Object.entries(first?.entities || [])
+  for (const [key, value] of ents) {
+    console.log(`${key}: ${value.name}`)
+  }
+
+  //Need to know the source
+  const attachmentTables = ents.reduce(
+    (acc: Record<string, any>, [key, table]) => {
+      const tableId = table._id
+      if (!tableId) {
+        return acc
+      }
+      acc[tableId] = acc[tableId] || []
+      const schema: TableSchema = table.schema
+      Object.keys(schema).forEach(key => {
+        if (schema[key].type === FieldType.ATTACHMENT) {
+          acc[tableId] = acc[key] || []
+          acc[tableId].push(key)
+        }
+      })
+      return acc
+    },
+    {}
+  )
+
+  const rowQueries = Object.keys(attachmentTables).reduce(
+    (acc: any[], tableId) => {
+      if (attachmentTables[tableId].length) {
+        acc.push({
+          _id: {
+            $regex: `^ro_${tableId}`,
+          },
+          ...attachmentTables[tableId].reduce((acc: any, col: any) => {
+            acc[col] = { $exists: true, $not: { $size: 0 } }
+            return acc
+          }, {}),
+        })
+      }
+      return acc
+    },
+    []
+  )
+
+  const attachMents = await dbCore.directCouchFind(appId, {
+    selector: {
+      $or: rowQueries,
+    },
+  })
+
+  ctx.body = attachMents
+
+  console.log("DEAN getAppAttachments!!")
 }
 
 export const uploadFile = async function (
