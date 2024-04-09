@@ -16,7 +16,6 @@ import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
-import { addTableToSqlite } from "./sqlite"
 import {
   AutoFieldSubType,
   ContextUser,
@@ -34,6 +33,8 @@ import {
   FieldTypeSubtypes,
   AttachmentFieldMetadata,
 } from "@budibase/types"
+import sdk from "../../../sdk"
+import env from "../../../environment"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
   const db = context.getAppDB()
@@ -343,7 +344,9 @@ class TableSaveFunctions {
       importRows: this.importRows,
       user: this.user,
     })
-    await addTableToSqlite(table)
+    if (env.SQS_SEARCH_ENABLE) {
+      await sdk.tables.sqs.addTableToSqlite(table)
+    }
     return table
   }
 

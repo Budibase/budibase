@@ -1,8 +1,8 @@
 import { context, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import { FieldType, SQLiteDefinition, SQLiteType, Table } from "@budibase/types"
 import { cloneDeep } from "lodash"
-import sdk from "../../../sdk"
-import { CONSTANT_INTERNAL_ROW_COLS } from "../../../db/utils"
+import tablesSdk from "../"
+import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 
 const BASIC_SQLITE_DOC: SQLiteDefinition = {
   _id: SQLITE_DESIGN_DOC_ID,
@@ -53,7 +53,7 @@ function mapTable(table: Table): { [key: string]: SQLiteType } {
 
 // nothing exists, need to iterate though existing tables
 async function buildBaseDefinition(): Promise<SQLiteDefinition> {
-  const tables = await sdk.tables.getAllInternalTables()
+  const tables = await tablesSdk.getAllInternalTables()
   const definition = cloneDeep(BASIC_SQLITE_DOC)
   for (let table of tables) {
     definition.sql.tables[table._id!] = {
