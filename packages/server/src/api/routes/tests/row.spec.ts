@@ -1272,7 +1272,6 @@ describe.each([
           ? {}
           : {
               hasNextPage: false,
-              bookmark: null,
             }),
       })
     })

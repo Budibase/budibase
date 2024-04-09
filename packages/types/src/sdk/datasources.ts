@@ -190,16 +190,17 @@ enum DSPlusOperation {
   DELETE = "delete",
 }
 
-export type DatasourcePlusQueryResponse = Promise<
-  Row[] | Record<DSPlusOperation, boolean>[] | void
->
+export type DatasourcePlusQueryResponse =
+  | Row[]
+  | Record<DSPlusOperation, boolean>[]
+  | void
 
 export interface DatasourcePlus extends IntegrationBase {
   // if the datasource supports the use of bindings directly (to protect against SQL injection)
   // this returns the format of the identifier
   getBindingIdentifier(): string
   getStringConcat(parts: string[]): string
-  query(json: QueryJson): DatasourcePlusQueryResponse
+  query(json: QueryJson): Promise<DatasourcePlusQueryResponse>
   buildSchema(
     datasourceId: string,
     entities: Record<string, Table>

@@ -13,6 +13,7 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
+  SqlQueryBinding,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -113,7 +114,7 @@ const defaultTypeCasting = function (field: any, next: any) {
   return next()
 }
 
-export function bindingTypeCoerce(bindings: any[]) {
+export function bindingTypeCoerce(bindings: SqlQueryBinding) {
   for (let i = 0; i < bindings.length; i++) {
     const binding = bindings[i]
     if (typeof binding !== "string") {
@@ -143,7 +144,7 @@ export function bindingTypeCoerce(bindings: any[]) {
 }
 
 class MySQLIntegration extends Sql implements DatasourcePlus {
-  private config: MySQLConfig
+  private readonly config: MySQLConfig
   private client?: mysql.Connection
 
   constructor(config: MySQLConfig) {
@@ -382,7 +383,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     return results.length ? results : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     await this.connect()
     try {
       const queryFn = (query: any) =>
