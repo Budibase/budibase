@@ -38,6 +38,9 @@ const FieldTypeMap: Record<FieldType, SQLiteType> = {
 function mapTable(table: Table): { [key: string]: SQLiteType } {
   const fields: Record<string, SQLiteType> = {}
   for (let [key, column] of Object.entries(table.schema)) {
+    if (!FieldTypeMap[column.type]) {
+      throw new Error(`Unable to map type "${column.type}" to SQLite type`)
+    }
     fields[key] = FieldTypeMap[column.type]
   }
   // there are some extra columns to map - add these in

@@ -5,24 +5,34 @@ import {
   EmptyFilterOption,
   SortOrder,
   SortType,
+  DocumentType,
+  SEPARATOR,
 } from "@budibase/types"
 import { fullSearch, paginatedSearch, QueryBuilder } from "../lucene"
 
 const INDEX_NAME = "main"
-const TABLE_ID = ""
+const TABLE_ID = DocumentType.TABLE + SEPARATOR + newid()
 
 const index = `function(doc) {
-  let props = ["property", "number", "array"]
-  for (let key of props) {
-    if (Array.isArray(doc[key])) {
-      for (let val of doc[key]) {
+  if (!doc._id.startsWith("ro_")) {
+    return
+  }
+  let keys = Object.keys(doc).filter(key => !key.startsWith("_"))
+  for (let key of keys) {
+    const value = doc[key]
+    if (Array.isArray(value)) {
+      for (let val of value) {
         index(key, val)
       }
-    } else if (doc[key]) {
-      index(key, doc[key])
+    } else if (value) {
+      index(key, value)
     }
   }
 }`
+
+function rowId(id?: string) {
+  return DocumentType.ROW + SEPARATOR + (id || newid())
+}
 
 describe("lucene", () => {
   let db: Database, dbName: string
@@ -32,17 +42,20 @@ describe("lucene", () => {
     // create the DB for testing
     db = getDB(dbName)
     await db.put({
-      _id: newid(),
+      _id: rowId(),
+      tableId: TABLE_ID,
       property: "word",
       array: ["1", "4"],
     })
     await db.put({
-      _id: newid(),
+      _id: rowId(),
+      tableId: TABLE_ID,
       property: "word2",
       array: ["3", "1"],
     })
     await db.put({
-      _id: newid(),
+      _id: rowId(),
+      tableId: TABLE_ID,
       property: "word3",
       number: 1,
       array: ["1", "2"],
@@ -254,7 +267,8 @@ describe("lucene", () => {
         docs = Array(QueryBuilder.maxLimit * 2.5)
           .fill(0)
           .map((_, i) => ({
-            _id: i.toString().padStart(3, "0"),
+            _id: rowId(i.toString().padStart(3, "0")),
+            tableId: TABLE_ID,
             property: `value_${i.toString().padStart(3, "0")}`,
             array: [],
           }))
