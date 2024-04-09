@@ -1,6 +1,6 @@
-import env from "./environment"
-import * as redis from "./utilities/redis"
-import { generateApiKey, getChecklist } from "./utilities/workerRequests"
+import env from "../environment"
+import * as redis from "../utilities/redis"
+import { generateApiKey, getChecklist } from "../utilities/workerRequests"
 import {
   events,
   installation,
@@ -9,22 +9,22 @@ import {
   users,
   cache,
 } from "@budibase/backend-core"
-import fs from "fs"
-import { watch } from "./watch"
-import * as automations from "./automations"
-import * as fileSystem from "./utilities/fileSystem"
-import { default as eventEmitter, init as eventInit } from "./events"
-import * as migrations from "./migrations"
-import * as bullboard from "./automations/bullboard"
+import { watch } from "../watch"
+import * as automations from "../automations"
+import * as fileSystem from "../utilities/fileSystem"
+import { default as eventEmitter, init as eventInit } from "../events"
+import * as migrations from "../migrations"
+import * as bullboard from "../automations/bullboard"
 import * as pro from "@budibase/pro"
-import * as api from "./api"
-import sdk from "./sdk"
-import { initialise as initialiseWebsockets } from "./websockets"
-import { automationsEnabled, printFeatures } from "./features"
+import * as api from "../api"
+import sdk from "../sdk"
+import { initialise as initialiseWebsockets } from "../websockets"
+import { automationsEnabled, printFeatures } from "../features"
+import * as jsRunner from "../jsRunner"
 import Koa from "koa"
 import { Server } from "http"
 import { AddressInfo } from "net"
-import * as jsRunner from "./jsRunner"
+import fs from "fs"
 
 let STARTUP_RAN = false
 
@@ -61,8 +61,11 @@ function shutdown(server?: Server) {
   }
 }
 
-export async function startup(app?: Koa, server?: Server) {
-  if (STARTUP_RAN) {
+export async function startup(
+  opts: { app?: Koa; server?: Server; rerun?: boolean } = {}
+) {
+  const { app, server, rerun } = opts
+  if (STARTUP_RAN && !rerun) {
     return
   }
   printFeatures()
@@ -139,9 +142,9 @@ export async function startup(app?: Koa, server?: Server) {
         try {
           const user = await users.UserDB.createAdminUser(
             bbAdminEmail,
-            bbAdminPassword,
             tenantId,
             {
+              password: bbAdminPassword,
               hashPassword: true,
               requirePassword: true,
               skipPasswordValidation: true,
