@@ -20,7 +20,7 @@ export function getFields(fields, { allowLinks } = { allowLinks: true }) {
   let filteredFields = fields.filter(
     field => !BannedSearchTypes.includes(field.type)
   )
-  if (!allowLinks) {
+  if (allowLinks) {
     const linkFields = fields.filter(field => field.type === "link")
     for (let linkField of linkFields) {
       // only allow one depth of SQL relationship filtering
