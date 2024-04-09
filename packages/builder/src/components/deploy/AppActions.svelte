@@ -32,6 +32,7 @@
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
+  import { onMount } from "svelte"
 
   export let application
   export let loaded
@@ -150,6 +151,10 @@
       notifications.error("Error refreshing app")
     }
   }
+
+  onMount(() => {
+    analytics.initPosthog()
+  })
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
