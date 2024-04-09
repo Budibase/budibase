@@ -9,9 +9,6 @@ export default class PosthogClient {
   init() {
     if (!this.token) return
 
-    // Don't run posthog locally in dev
-    if (process.env.NODE_ENV === "development") return
-
     posthog.init(this.token, {
       autocapture: false,
       capture_pageview: false,

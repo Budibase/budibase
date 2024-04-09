@@ -76,11 +76,7 @@ export default defineConfig(({ mode }) => {
         "process.env.NODE_ENV": JSON.stringify(
           isProduction ? "production" : "development"
         ),
-        "process.env.POSTHOG_TOKEN": JSON.stringify(
-          isProduction
-            ? "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
-            : "phc_uDYOfnFt6wAbBAXkC6STjcrTpAFiWIhqgFcsC1UVO5F"
-        ),
+        "process.env.POSTHOG_TOKEN": JSON.stringify(process.env.POSTHOG_TOKEN),
         "process.env.INTERCOM_TOKEN": JSON.stringify(
           process.env.INTERCOM_TOKEN
         ),
