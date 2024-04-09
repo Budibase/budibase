@@ -81,6 +81,7 @@
                   placeholder="Link"
                   options={urlOptions}
                   {bindings}
+                  appendBindingsAsOptions={false}
                 />
                 <Icon
                   name="Close"
