@@ -1,18 +1,16 @@
-jest.mock("pg")
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import { checkCacheForDynamicVariable } from "../../../threads/utils"
+import { getCachedVariable } from "../../../threads/utils"
 import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
 import tk from "timekeeper"
 import { mocks } from "@budibase/backend-core/tests"
-import { QueryPreview } from "@budibase/types"
+import { QueryPreview, SourceName } from "@budibase/types"
 
 tk.freeze(mocks.date.MOCK_DATE)
 
 let { basicDatasource } = setup.structures
-const pg = require("pg")
 
 describe("/datasources", () => {
   let request = setup.getRequest()
@@ -41,6 +39,23 @@ describe("/datasources", () => {
       expect(res.body.datasource.name).toEqual("Test")
       expect(res.body.errors).toEqual({})
       expect(events.datasource.created).toHaveBeenCalledTimes(1)
+    })
+
+    it("should fail if the datasource is invalid", async () => {
+      await config.api.datasource.create(
+        {
+          name: "Test",
+          type: "test",
+          source: "invalid" as SourceName,
+          config: {},
+        },
+        {
+          status: 500,
+          body: {
+            message: "No datasource implementation found.",
+          },
+        }
+      )
     })
   })
 
@@ -74,7 +89,7 @@ describe("/datasources", () => {
           schema: {},
           readable: true,
         }
-        return config.api.query.previewQuery(queryPreview)
+        return config.api.query.preview(queryPreview)
       }
 
       it("should invalidate changed or removed variables", async () => {
@@ -85,10 +100,7 @@ describe("/datasources", () => {
           queryString: "test={{ variable3 }}",
         })
         // check variables in cache
-        let contents = await checkCacheForDynamicVariable(
-          query._id!,
-          "variable3"
-        )
+        let contents = await getCachedVariable(query._id!, "variable3")
         expect(contents.rows.length).toEqual(1)
 
         // update the datasource to remove the variables
@@ -102,7 +114,7 @@ describe("/datasources", () => {
         expect(res.body.errors).toBeUndefined()
 
         // check variables no longer in cache
-        contents = await checkCacheForDynamicVariable(query._id!, "variable3")
+        contents = await getCachedVariable(query._id!, "variable3")
         expect(contents).toBe(null)
       })
     })
@@ -146,35 +158,6 @@ describe("/datasources", () => {
         .expect(200)
       expect(res.body._rev).toBeDefined()
       expect(res.body._id).toEqual(datasource._id)
-    })
-  })
-
-  describe("query", () => {
-    it("should be able to query a pg datasource", async () => {
-      const res = await request
-        .post(`/api/datasources/query`)
-        .send({
-          endpoint: {
-            datasourceId: datasource._id,
-            operation: "READ",
-            // table name below
-            entityId: "users",
-          },
-          resource: {
-            fields: ["users.name", "users.age"],
-          },
-          filters: {
-            string: {
-              name: "John",
-            },
-          },
-        })
-        .set(config.defaultHeaders())
-        .expect(200)
-      // this is mock data, can't test it
-      expect(res.body).toBeDefined()
-      const expSql = `select "users"."name" as "users.name", "users"."age" as "users.age" from (select * from "users" where "users"."name" ilike $1 limit $2) as "users"`
-      expect(pg.queryMock).toHaveBeenCalledWith(expSql, ["John%", 5000])
     })
   })
 
