@@ -1,5 +1,7 @@
 <script>
   import { Line, InfoWord, DocumentationLink, Space, Text, Period } from "../typography"
+  import subjects from '../subjects'
+
   export let setExplanationSubject
 </script>
 
@@ -7,8 +9,8 @@
   <Text>Any</Text>
   <Space />
 <InfoWord
-    on:mouseenter={() => setExplanationSubject("stringsAndNumbers")}
-    on:mouseleave={() => setExplanationSubject(null)}
+    on:mouseenter={() => setExplanationSubject(subjects.stringsAsNumbers)}
+    on:mouseleave={() => setExplanationSubject(subjects.none)}
   text="non-number values"
 />
   <Space />

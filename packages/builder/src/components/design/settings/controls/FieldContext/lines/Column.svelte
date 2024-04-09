@@ -1,5 +1,6 @@
 <script>
   import { Line, InfoWord, DocumentationLink, Space, Text, Period } from "../typography"
+  import subjects from '../subjects'
 
   export let columnName
   export let columnIcon
@@ -36,8 +37,8 @@
 
 <Line>
   <InfoWord
-    on:mouseenter={() => setExplanationSubject("column")}
-    on:mouseleave={() => setExplanationSubject(null)}
+    on:mouseenter={() => setExplanationSubject(subjects.column)}
+    on:mouseleave={() => setExplanationSubject(subjects.none)}
     href={tableHref}
     text={columnName}
   />

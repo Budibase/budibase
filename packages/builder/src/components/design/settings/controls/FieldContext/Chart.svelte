@@ -2,6 +2,7 @@
   import ExplanationModal from './ExplanationModal/index.svelte'
   import { warnings, errors } from "../../fieldValidator";
   import { Column, Support, NotRequired, StringNumber } from "./lines"
+  import subjects from './subjects';
 
   export let support = {}
 
@@ -16,7 +17,7 @@
 
   let root = null;
 
-  let explanationModalSubject = null
+  let explanationModalSubject = subjects.none
 
   const setExplanationSubject = (option) => {
     explanationModalSubject = option;
