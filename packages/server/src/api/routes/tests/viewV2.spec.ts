@@ -19,21 +19,19 @@ import {
   ViewV2,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import * as uuid from "uuid"
-import { databaseTestProviders } from "../../../integrations/tests/utils"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { roles } from "@budibase/backend-core"
 
 jest.unmock("mssql")
-jest.unmock("pg")
 
 describe.each([
   ["internal", undefined],
-  ["postgres", databaseTestProviders.postgres],
-  ["mysql", databaseTestProviders.mysql],
-  ["mssql", databaseTestProviders.mssql],
-  ["mariadb", databaseTestProviders.mariadb],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/v2/views (%s)", (_, dsProvider) => {
   const config = setup.getConfig()
   const isInternal = !dsProvider
@@ -42,10 +40,10 @@ describe.each([
   let datasource: Datasource
 
   function saveTableRequest(
-    ...overrides: Partial<SaveTableRequest>[]
+    ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
   ): SaveTableRequest {
     const req: SaveTableRequest = {
-      name: uuid.v4().substring(0, 16),
+      name: generator.guid().replaceAll("-", "").substring(0, 16),
       type: "table",
       sourceType: datasource
         ? TableSourceType.EXTERNAL
@@ -90,16 +88,13 @@ describe.each([
 
     if (dsProvider) {
       datasource = await config.createDatasource({
-        datasource: await dsProvider.datasource(),
+        datasource: await dsProvider,
       })
     }
     table = await config.api.table.save(priceTable())
   })
 
   afterAll(async () => {
-    if (dsProvider) {
-      await dsProvider.stop()
-    }
     setup.afterAll()
   })
 
@@ -186,7 +181,7 @@ describe.each([
 
       const createdView = await config.api.viewV2.create(newView)
 
-      expect(await config.api.viewV2.get(createdView.id)).toEqual({
+      expect(createdView).toEqual({
         ...newView,
         schema: {
           Price: {
@@ -231,7 +226,7 @@ describe.each([
 
       view = await config.api.viewV2.create({
         tableId: table._id!,
-        name: "View A",
+        name: generator.guid(),
       })
     })
 
@@ -307,12 +302,13 @@ describe.each([
 
     it("can update an existing view name", async () => {
       const tableId = table._id!
-      await config.api.viewV2.update({ ...view, name: "View B" })
+      const newName = generator.guid()
+      await config.api.viewV2.update({ ...view, name: newName })
 
       expect(await config.api.table.get(tableId)).toEqual(
         expect.objectContaining({
           views: {
-            "View B": { ...view, name: "View B", schema: expect.anything() },
+            [newName]: { ...view, name: newName, schema: expect.anything() },
           },
         })
       )
@@ -402,7 +398,7 @@ describe.each([
     })
 
     it("updates only UI schema overrides", async () => {
-      await config.api.viewV2.update({
+      const updatedView = await config.api.viewV2.update({
         ...view,
         schema: {
           Price: {
@@ -421,7 +417,7 @@ describe.each([
         } as Record<string, FieldSchema>,
       })
 
-      expect(await config.api.viewV2.get(view.id)).toEqual({
+      expect(updatedView).toEqual({
         ...view,
         schema: {
           Price: {
@@ -483,17 +479,17 @@ describe.each([
 
   describe("fetch view (through table)", () => {
     it("should be able to fetch a view V2", async () => {
-      const newView: CreateViewRequest = {
+      const res = await config.api.viewV2.create({
         name: generator.name(),
         tableId: table._id!,
         schema: {
           Price: { visible: false },
           Category: { visible: true },
         },
-      }
-      const res = await config.api.viewV2.create(newView)
+      })
+      expect(res.schema?.Price).toBeUndefined()
+
       const view = await config.api.viewV2.get(res.id)
-      expect(view!.schema?.Price).toBeUndefined()
       const updatedTable = await config.api.table.get(table._id!)
       const viewSchema = updatedTable.views![view!.name!].schema as Record<
         string,
@@ -507,7 +503,6 @@ describe.each([
     it("views have extra data trimmed", async () => {
       const table = await config.api.table.save(
         saveTableRequest({
-          name: "orders",
           schema: {
             Country: {
               type: FieldType.STRING,
@@ -523,7 +518,7 @@ describe.each([
 
       const view = await config.api.viewV2.create({
         tableId: table._id!,
-        name: uuid.v4(),
+        name: generator.guid(),
         schema: {
           Country: {
             visible: true,
@@ -853,7 +848,6 @@ describe.each([
         beforeAll(async () => {
           table = await config.api.table.save(
             saveTableRequest({
-              name: `users_${uuid.v4()}`,
               type: "table",
               schema: {
                 name: {

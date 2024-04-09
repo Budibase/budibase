@@ -146,16 +146,12 @@ export const adminUser = async (
     }
 
     try {
-      const finalUser = await userSdk.db.createAdminUser(
-        email,
-        tenantId,
+      const finalUser = await userSdk.db.createAdminUser(email, tenantId, {
         password,
-        {
-          ssoId,
-          hashPassword,
-          requirePassword,
-        }
-      )
+        ssoId,
+        hashPassword,
+        requirePassword,
+      })
 
       // events
       let account: CloudAccount | undefined
@@ -229,7 +225,7 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
     }
     // Validate we aren't trying to search on any illegal fields
     if (!userSdk.core.isSupportedUserSearch(body.query)) {
-      ctx.throw(400, "Can only search by string.email or equal._id")
+      ctx.throw(400, "Can only search by string.email, equal._id or oneOf._id")
     }
   }
 
