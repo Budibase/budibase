@@ -84,8 +84,8 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   }
   let savedTable = await api.save(ctx, renaming)
   if (!table._id) {
-    await events.table.created(savedTable)
     savedTable = sdk.tables.enrichViewSchemas(savedTable)
+    await events.table.created(savedTable)
   } else {
     await events.table.updated(savedTable)
   }
