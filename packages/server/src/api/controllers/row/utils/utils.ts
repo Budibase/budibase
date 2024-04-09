@@ -117,7 +117,7 @@ export async function sqlOutputProcessing(
   table: Table,
   tables: Record<string, Table>,
   relationships: RelationshipsJson[],
-  opts?: { internal?: boolean }
+  opts?: { sqs?: boolean }
 ): Promise<Row[]> {
   if (!Array.isArray(rows) || rows.length === 0 || rows[0].read === true) {
     return []
@@ -146,7 +146,7 @@ export async function sqlOutputProcessing(
         row,
         table,
         isLinked: false,
-        internal: opts?.internal,
+        internal: opts?.sqs,
       }),
       table
     )

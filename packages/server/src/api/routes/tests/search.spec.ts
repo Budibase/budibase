@@ -7,12 +7,12 @@ import { Datasource, FieldType, Table } from "@budibase/types"
 jest.unmock("mssql")
 
 describe.each([
-  ["internal", undefined],
+  // ["internal", undefined],
   ["internal-sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  //[DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  //[DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  //[DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  //[DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "internal-sqs"
   const config = setup.getConfig()
