@@ -1,5 +1,6 @@
 <script>
   import { Line, InfoWord, DocumentationLink, Space, Text, Period } from "../typography"
+  import subjects from '../subjects'
 
   export let setExplanationSubject
   export let support
@@ -7,8 +8,8 @@
 
 <Line>
   <InfoWord
-    on:mouseenter={() => setExplanationSubject("support")}
-    on:mouseleave={() => setExplanationSubject(null)}
+    on:mouseenter={() => setExplanationSubject(subjects.support)}
+    on:mouseleave={() => setExplanationSubject(subjects.none)}
     icon={support.icon}
     color={support.iconColor}
     text={support.text}

@@ -1,27 +1,28 @@
 <script>
   import { ContextTooltip } from "@budibase/bbui"
   import { Column, Support, NotRequired, StringsAsNumbers } from './subjects'
+  import subjects from '../subjects'
 
   export let anchor
   export let schema
-  export let subject = null
+  export let subject = subjects.none
 </script>
 
 
 <ContextTooltip
   noAnimation
-  visible={subject !== null}
+  visible={subject !== subjects.none}
   {anchor}
   offset={20}
 >
   <div class="explanationModalContent">
-    {#if subject === "column"}
+    {#if subject === subjects.column}
       <Column {schema} />
-    {:else if subject === "support"}
+    {:else if subject === subjects.support}
       <Support />
-    {:else if subject === "stringsAndNumbers"}
+    {:else if subject === subjects.stringsAsNumbers}
       <StringsAsNumbers />
-    {:else if subject === "required"}
+    {:else if subject === subjects.notRequired}
       <NotRequired />
     {/if}
   </div>
