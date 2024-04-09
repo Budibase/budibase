@@ -7,7 +7,7 @@ import {
   BulkImportRequest,
   BulkImportResponse,
   SearchRowResponse,
-  SearchParams,
+  RowSearchParams,
   DeleteRows,
   DeleteRow,
 } from "@budibase/types"
@@ -135,7 +135,7 @@ export class RowAPI extends TestAPI {
 
   search = async (
     sourceId: string,
-    params?: SearchParams,
+    params?: RowSearchParams,
     expectations?: Expectations
   ): Promise<SearchRowResponse> => {
     return await this._post<SearchRowResponse>(`/api/${sourceId}/search`, {
