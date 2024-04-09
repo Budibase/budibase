@@ -13,7 +13,7 @@ export default async function setup() {
   }
 
   try {
-    let couchdb = new GenericContainer("budibase/couchdb")
+    let couchdb = new GenericContainer("budibase/couchdb:v3.2.1-sqs")
       .withExposedPorts(5984)
       .withEnvironment({
         COUCHDB_PASSWORD: "budibase",
