@@ -37,6 +37,7 @@
     "svg",
     "bmp",
     "jfif",
+    "webp",
   ]
 
   const fieldId = id || uuid()
