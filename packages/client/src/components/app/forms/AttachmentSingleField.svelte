@@ -12,5 +12,6 @@
   {...$$restProps}
   type={FieldType.ATTACHMENT_SINGLE}
   maximum={1}
+  defaultValue={null}
   {fieldApiMapper}
 />
