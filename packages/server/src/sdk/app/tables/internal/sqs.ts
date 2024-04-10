@@ -28,6 +28,7 @@ const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.INTERNAL]: SQLiteType.BLOB,
   [FieldType.BARCODEQR]: SQLiteType.BLOB,
   [FieldType.ATTACHMENT]: SQLiteType.BLOB,
+  [FieldType.SIGNATURE]: SQLiteType.BLOB,
   [FieldType.ARRAY]: SQLiteType.BLOB,
   [FieldType.LINK]: SQLiteType.BLOB,
   [FieldType.BIGINT]: SQLiteType.REAL,
