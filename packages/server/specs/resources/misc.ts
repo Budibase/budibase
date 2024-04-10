@@ -27,7 +27,8 @@ export default new Resource().setSchemas({
           },
           fuzzy: {
             type: "object",
-            description: "A fuzzy search, only supported by internal tables.",
+            description:
+              "Searches for a sub-string within a string column, e.g. searching for 'dib' will match 'Budibase'.",
           },
           range: {
             type: "object",
@@ -66,6 +67,30 @@ export default new Resource().setSchemas({
             type: "object",
             description:
               "Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2].",
+          },
+          contains: {
+            type: "object",
+            description:
+              "Searches for a value, or set of values in an array column types (such as a multi-select), if an array of search options is provided then it must match all.",
+            example: {
+              arrayColumn: ["a", "b"],
+            },
+          },
+          notContains: {
+            type: "object",
+            description:
+              "As with the contains search, only functions for array column types, but searches for columns missing the supplied values.",
+            example: {
+              arrayColumn: ["a", "b"],
+            },
+          },
+          containsAny: {
+            type: "object",
+            description:
+              "As with the contains search, only functions for array column types, but searches for any of the provided values when given an array.",
+            example: {
+              arrayColumn: ["a", "b"],
+            },
           },
         },
       },
