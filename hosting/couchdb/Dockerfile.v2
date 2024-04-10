@@ -96,6 +96,8 @@ EXPOSE 5984 4369 9100
 CMD ["/opt/couchdb/bin/couchdb"]
 
 FROM base as runner
+ARG TARGETARCH
+ENV TARGETARCH $TARGETARCH
 
 ENV COUCHDB_USER admin
 ENV COUCHDB_PASSWORD admin
@@ -126,8 +128,10 @@ ADD clouseau/log4j.properties clouseau/clouseau.ini ./
 WORKDIR /opt/couchdb
 ADD couch/vm.args couch/local.ini ./etc/
 
+# setup SQS
 WORKDIR /opt/sqs
-ADD sqs/sqs sqs/better_sqlite3.node ./
+ADD sqs ./
+RUN chmod +x ./install.sh && ./install.sh
 
 WORKDIR /
 ADD runner.v2.sh ./bbcouch-runner.sh
