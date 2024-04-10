@@ -717,17 +717,17 @@ export interface components {
         /** @description Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]. */
         oneOf?: { [key: string]: unknown };
         /**
-         * @description Searches for a value, or set of values in an array column types (such as a multi-select), if an array of search options is provided then it must match all.
+         * @description Searches for a value, or set of values in array column types (such as a multi-select). If an array of search options is provided then it must match all.
          * @example [object Object]
          */
         contains?: { [key: string]: unknown };
         /**
-         * @description As with the contains search, only functions for array column types, but searches for columns missing the supplied values.
+         * @description The logical inverse of contains. Only works on array column types. If an array of values is passed, the row must not match any of them to be returned in the response.
          * @example [object Object]
          */
         notContains?: { [key: string]: unknown };
         /**
-         * @description As with the contains search, only functions for array column types, but searches for any of the provided values when given an array.
+         * @description As with the contains search, only works on array column types and searches for any of the provided values when given an array.
          * @example [object Object]
          */
         containsAny?: { [key: string]: unknown };

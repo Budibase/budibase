@@ -71,7 +71,7 @@ export default new Resource().setSchemas({
           contains: {
             type: "object",
             description:
-              "Searches for a value, or set of values in an array column types (such as a multi-select), if an array of search options is provided then it must match all.",
+              "Searches for a value, or set of values in array column types (such as a multi-select). If an array of search options is provided then it must match all.",
             example: {
               arrayColumn: ["a", "b"],
             },
@@ -79,7 +79,7 @@ export default new Resource().setSchemas({
           notContains: {
             type: "object",
             description:
-              "As with the contains search, only functions for array column types, but searches for columns missing the supplied values.",
+              "The logical inverse of contains. Only works on array column types. If an array of values is passed, the row must not match any of them to be returned in the response.",
             example: {
               arrayColumn: ["a", "b"],
             },
@@ -87,7 +87,7 @@ export default new Resource().setSchemas({
           containsAny: {
             type: "object",
             description:
-              "As with the contains search, only functions for array column types, but searches for any of the provided values when given an array.",
+              "As with the contains search, only works on array column types and searches for any of the provided values when given an array.",
             example: {
               arrayColumn: ["a", "b"],
             },
