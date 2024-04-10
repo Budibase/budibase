@@ -1,4 +1,4 @@
-import { ViewV2 } from "@budibase/types"
+import { ViewV2, ViewV2Enriched } from "@budibase/types"
 import { context, HTTPError } from "@budibase/backend-core"
 
 import sdk from "../../../sdk"
@@ -6,26 +6,34 @@ import * as utils from "../../../db/utils"
 import { enrichSchema, isV2 } from "."
 import { breakExternalTableId } from "../../../integrations/utils"
 
-export async function get(
-  viewId: string,
-  opts?: { enriched: boolean }
-): Promise<ViewV2> {
+export async function get(viewId: string): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   const ds = await sdk.datasources.get(datasourceId!)
 
   const table = ds.entities![tableName!]
-  const views = Object.values(table.views!)
-  const found = views.find(v => isV2(v) && v.id === viewId)
+  const views = Object.values(table.views!).filter(isV2)
+  const found = views.find(v => v.id === viewId)
   if (!found) {
     throw new Error("No view found")
   }
-  if (opts?.enriched) {
-    return enrichSchema(found, table.schema) as ViewV2
-  } else {
-    return found as ViewV2
+  return found
+}
+
+export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
+  const { tableId } = utils.extractViewInfoFromID(viewId)
+
+  const { datasourceId, tableName } = breakExternalTableId(tableId)
+  const ds = await sdk.datasources.get(datasourceId!)
+
+  const table = ds.entities![tableName!]
+  const views = Object.values(table.views!).filter(isV2)
+  const found = views.find(v => v.id === viewId)
+  if (!found) {
+    throw new Error("No view found")
   }
+  return enrichSchema(found, table.schema)
 }
 
 export async function create(

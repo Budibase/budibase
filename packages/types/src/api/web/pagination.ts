@@ -5,7 +5,7 @@ export enum SortOrder {
 
 export enum SortType {
   STRING = "string",
-  number = "number",
+  NUMBER = "number",
 }
 
 export interface BasicPaginationRequest {
@@ -22,6 +22,6 @@ export interface PaginationRequest extends BasicPaginationRequest {
 }
 
 export interface PaginationResponse {
-  bookmark: string | undefined
-  hasNextPage: boolean
+  bookmark: string | number | undefined
+  hasNextPage?: boolean
 }
