@@ -11,7 +11,6 @@ import {
   SortOrder,
   SortType,
   Table,
-  SqlQuery,
 } from "@budibase/types"
 import SqlQueryBuilder from "../../../../integrations/base/sql"
 import { SqlClient } from "../../../../integrations/utils"
