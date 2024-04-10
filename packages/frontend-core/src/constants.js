@@ -129,6 +129,7 @@ export const TypeIconMap = {
   [FieldType.FORMULA]: "Calculator",
   [FieldType.JSON]: "Brackets",
   [FieldType.BIGINT]: "TagBold",
+  [FieldType.AUTO]: "MagicWand",
   [FieldType.USER]: "User",
   [FieldType.USERS]: "UserGroup",
   [FieldType.BB_REFERENCE]: {
