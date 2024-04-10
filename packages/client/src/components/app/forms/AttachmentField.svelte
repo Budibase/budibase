@@ -20,6 +20,7 @@
     get: value => value,
     set: value => value,
   }
+  export let defaultValue = []
 
   let fieldState
   let fieldApi
@@ -88,7 +89,7 @@
   {type}
   bind:fieldState
   bind:fieldApi
-  defaultValue={[]}
+  {defaultValue}
 >
   {#if fieldState}
     <CoreDropzone

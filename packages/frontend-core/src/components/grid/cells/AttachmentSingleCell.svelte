@@ -3,6 +3,7 @@
 
   export let value
   export let onChange
+  export let api
 
   $: arrayValue = (!Array.isArray(value) && value ? [value] : value) || []
 
@@ -13,6 +14,7 @@
 </script>
 
 <AttachmentCell
+  bind:api
   {...$$restProps}
   maximum={1}
   value={arrayValue}
