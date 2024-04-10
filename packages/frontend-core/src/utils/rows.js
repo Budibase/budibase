@@ -21,6 +21,8 @@ const isBetterSample = (newValue, oldValue) => {
   }
   if (
     newType === "object" &&
+    Array.isArray(newValue) &&
+    Array.isArray(oldValue) &&
     Object.keys(newValue).length > Object.keys(oldValue).length
   ) {
     return true
