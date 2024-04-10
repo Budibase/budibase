@@ -15,7 +15,12 @@ import {
   processFormulas,
 } from "../../../../utilities/rowProcessor"
 import { updateRelationshipColumns } from "./sqlUtils"
-import { basicProcessing, generateIdForRow, fixArrayTypes } from "./basic"
+import {
+  basicProcessing,
+  generateIdForRow,
+  fixArrayTypes,
+  getInternalRowId,
+} from "./basic"
 import sdk from "../../../../sdk"
 
 import validateJs from "validate.js"
@@ -117,7 +122,7 @@ export async function sqlOutputProcessing(
   table: Table,
   tables: Record<string, Table>,
   relationships: RelationshipsJson[],
-  opts?: { internal?: boolean }
+  opts?: { sqs?: boolean }
 ): Promise<Row[]> {
   if (!Array.isArray(rows) || rows.length === 0 || rows[0].read === true) {
     return []
@@ -125,7 +130,9 @@ export async function sqlOutputProcessing(
   let finalRows: { [key: string]: Row } = {}
   for (let row of rows as Row[]) {
     let rowId = row._id
-    if (!rowId) {
+    if (opts?.sqs) {
+      rowId = getInternalRowId(row, table)
+    } else if (!rowId) {
       rowId = generateIdForRow(row, table)
       row._id = rowId
     }
@@ -146,7 +153,7 @@ export async function sqlOutputProcessing(
         row,
         table,
         isLinked: false,
-        internal: opts?.internal,
+        internal: opts?.sqs,
       }),
       table
     )
