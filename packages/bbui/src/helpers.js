@@ -124,7 +124,7 @@ export const parseDate = (value, { timeOnly, dateOnly } = {}) => {
   }
 
   // Certain string values need transformed
-  if (typeof value !== "string") {
+  if (typeof value === "string") {
     if (timeOnly || !isNaN(new Date(`0-${value}`))) {
       value = `0-${value}`
     }

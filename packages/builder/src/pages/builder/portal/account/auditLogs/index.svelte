@@ -27,6 +27,7 @@
   import TimeRenderer from "./_components/TimeRenderer.svelte"
   import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
   import { cloneDeep } from "lodash"
+  import dayjs from "dayjs"
 
   const schema = {
     date: { width: "0.8fr" },
@@ -69,9 +70,8 @@
   let sidePanelVisible = false
   let wideSidePanel = false
   let timer
-  let startDate = new Date()
-  startDate.setDate(startDate.getDate() - 30)
-  let endDate = new Date()
+  let endDate = dayjs()
+  let startDate = endDate.subtract(30, "days")
 
   $: fetchUsers(userPage, userSearchTerm)
   $: fetchLogs({
@@ -155,8 +155,8 @@
       logsPageInfo.loading()
       await auditLogs.search({
         bookmark: logsPage,
-        startDate,
-        endDate,
+        startDate: startDate ? dayjs(startDate).startOf("day") : null,
+        endDate: endDate ? dayjs(endDate).endOf("day") : null,
         fullSearch: logSearchTerm,
         userIds: selectedUsers,
         appIds: selectedApps,
@@ -303,20 +303,19 @@
 
     <div class="date-picker">
       <DatePicker
-        value={[startDate, endDate]}
-        placeholder="Choose date range"
-        range={true}
+        value={startDate}
+        label="From"
+        enableTime={false}
         on:change={e => {
-          if (e.detail[0]?.length === 1) {
-            startDate = e.detail[0][0].toISOString()
-            endDate = ""
-          } else if (e.detail[0]?.length > 1) {
-            startDate = e.detail[0][0].toISOString()
-            endDate = e.detail[0][1].toISOString()
-          } else {
-            startDate = ""
-            endDate = ""
-          }
+          startDate = e.detail
+        }}
+      />
+      <DatePicker
+        value={endDate}
+        label="Until"
+        enableTime={false}
+        on:change={e => {
+          endDate = e.detail
         }}
       />
     </div>
@@ -488,7 +487,7 @@
     flex-direction: row;
     gap: var(--spacing-l);
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-end;
   }
 
   .side-panel-icons {
@@ -505,6 +504,13 @@
   .date-picker {
     flex-basis: calc(70% - 32px);
     min-width: 100px;
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-l);
+  }
+  .date-picker :global(> *) {
+    flex: 1 1 auto;
+    width: 0;
   }
 
   .freeSearch {
