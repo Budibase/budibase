@@ -4,6 +4,7 @@
 export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
 export { Feature as Features } from "@budibase/types"
 import { BpmCorrelationKey } from "@budibase/shared-core"
+import { FieldType, FieldTypeSubtypes } from "@budibase/types"
 
 // Cookie names
 export const Cookies = {
@@ -112,4 +113,27 @@ export const EventPublishType = {
 export const ContextScopes = {
   Local: "local",
   Global: "global",
+}
+
+export const TypeIconMap = {
+  [FieldType.STRING]: "Text",
+  [FieldType.OPTIONS]: "Dropdown",
+  [FieldType.DATETIME]: "Calendar",
+  [FieldType.BARCODEQR]: "Camera",
+  [FieldType.LONGFORM]: "TextAlignLeft",
+  [FieldType.ARRAY]: "Duplicate",
+  [FieldType.NUMBER]: "123",
+  [FieldType.BOOLEAN]: "Boolean",
+  [FieldType.ATTACHMENT]: "AppleFiles",
+  [FieldType.LINK]: "DataCorrelated",
+  [FieldType.FORMULA]: "Calculator",
+  [FieldType.JSON]: "Brackets",
+  [FieldType.BIGINT]: "TagBold",
+  [FieldType.AUTO]: "MagicWand",
+  [FieldType.USER]: "User",
+  [FieldType.USERS]: "UserGroup",
+  [FieldType.BB_REFERENCE]: {
+    [FieldTypeSubtypes.BB_REFERENCE.USER]: "User",
+    [FieldTypeSubtypes.BB_REFERENCE.USERS]: "UserGroup",
+  },
 }
