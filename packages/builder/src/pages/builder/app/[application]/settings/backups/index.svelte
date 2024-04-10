@@ -1,7 +1,7 @@
 <script>
   import {
     Button,
-    DateRangePicker,
+    DatePicker,
     Divider,
     Layout,
     notifications,
@@ -25,13 +25,13 @@
   import BackupsDefault from "assets/backups-default.png"
   import { BackupTrigger, BackupType } from "constants/backend/backups"
   import { onMount } from "svelte"
+  import dayjs from "dayjs"
 
   let loading = true
   let backupData = null
   let pageInfo = createPaginationStore()
   let filterOpt = null
-  let startDate = null
-  let endDate = null
+  let date = null
   let filters = [
     {
       label: "Manual backup",
@@ -52,9 +52,9 @@
   ]
 
   $: page = $pageInfo.page
-  $: fetchBackups(filterOpt, page, startDate, endDate)
+  $: fetchBackups(filterOpt, page, date)
 
-  let schema = {
+  const schema = {
     type: {
       displayName: "Type",
       width: "auto",
@@ -99,13 +99,13 @@
     })
   }
 
-  async function fetchBackups(filters, page, startDate, endDate) {
+  async function fetchBackups(filters, page, date) {
     const response = await backups.searchBackups({
       appId: $appStore.appId,
       ...filters,
       page,
-      startDate,
-      endDate,
+      startDate: date ? dayjs(date).startOf("day") : null,
+      endDate: date ? dayjs(date).endOf("day") : null,
     })
     pageInfo.fetched(response.hasNextPage, response.nextPage)
 
@@ -165,7 +165,7 @@
   }
 
   onMount(async () => {
-    await fetchBackups(filterOpt, page, startDate, endDate)
+    await fetchBackups(filterOpt, page, date)
     loading = false
   })
 </script>
@@ -207,7 +207,7 @@
         View plans
       </Button>
     </div>
-  {:else if !backupData?.length && !loading && !filterOpt && !startDate}
+  {:else if !backupData?.length && !loading && !filterOpt && !date}
     <div class="center">
       <Layout noPadding gap="S" justifyItems="center">
         <img height="130px" src={BackupsDefault} alt="BackupsDefault" />
@@ -236,19 +236,19 @@
               bind:value={filterOpt}
             />
           </div>
-          <DateRangePicker
-            value={[startDate, endDate]}
-            label="Date Range"
+          <DatePicker
+            value={date}
+            label="Date"
             on:change={e => {
-              startDate = e.detail?.[0]
-              endDate = e.detail?.[1]
+              date = e.detail
             }}
+            enableTime={false}
           />
         </div>
         <div>
-          <Button cta disabled={loading} on:click={createManualBackup}
-            >Create new backup</Button
-          >
+          <Button cta disabled={loading} on:click={createManualBackup}>
+            Create new backup
+          </Button>
         </div>
       </div>
       <div class="table">
