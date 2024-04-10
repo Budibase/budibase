@@ -13,12 +13,12 @@ import {
 jest.unmock("mssql")
 
 describe.each([
-  // ["internal", undefined],
+  ["internal", undefined],
   ["internal-sqs", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "internal-sqs"
   const config = setup.getConfig()
@@ -168,7 +168,7 @@ describe.each([
     )
   })
 
-  describe.only("dates", () => {
+  describe("dates", () => {
     beforeEach(async () => {
       table = await config.api.table.save(
         tableForDatasource(datasource, {
@@ -193,61 +193,64 @@ describe.each([
     }
 
     const dateSearchTests: DateSearchTest[] = [
-      //{ query: {}, expected: rows },
-      //{
-      //  query: { onEmptyFilter: EmptyFilterOption.RETURN_ALL },
-      //  expected: rows,
-      //},
-      //{
-      //  query: { onEmptyFilter: EmptyFilterOption.RETURN_NONE },
-      //  expected: [],
-      //},
+      { query: {}, expected: rows },
+      {
+        query: { onEmptyFilter: EmptyFilterOption.RETURN_ALL },
+        expected: rows,
+      },
+      {
+        query: { onEmptyFilter: EmptyFilterOption.RETURN_NONE },
+        expected: [],
+      },
       {
         query: { equal: { dob: new Date("2020-01-01").toISOString() } },
         expected: [rows[0]],
       },
-      // { query: { equal: { dob: new Date("2020-01-02") } }, expected: [] },
-      // {
-      //   query: { notEqual: { dob: new Date("2020-01-01") } },
-      //   expected: [rows[1]],
-      // },
-      // {
-      //   query: { oneOf: { dob: [new Date("2020-01-01")] } },
-      //   expected: [rows[0]],
-      // },
-      // {
-      //   query: {
-      //     range: {
-      //       dob: {
-      //         low: new Date("2020-01-01").toISOString(),
-      //         high: new Date("2020-01-05").toISOString(),
-      //       },
-      //     },
-      //   },
-      //   expected: [rows[0]],
-      // },
-      // {
-      //   query: {
-      //     range: {
-      //       dob: {
-      //         low: new Date("2020-01-01").toISOString(),
-      //         high: new Date("2020-01-10").toISOString(),
-      //       },
-      //     },
-      //   },
-      //   expected: rows,
-      // },
-      // {
-      //   query: {
-      //     range: {
-      //       dob: {
-      //         low: new Date("2020-01-05").toISOString(),
-      //         high: new Date("2020-01-10").toISOString(),
-      //       },
-      //     },
-      //   },
-      //   expected: [rows[1]],
-      // },
+      {
+        query: { equal: { dob: new Date("2020-01-02").toISOString() } },
+        expected: [],
+      },
+      {
+        query: { notEqual: { dob: new Date("2020-01-01").toISOString() } },
+        expected: [rows[1]],
+      },
+      {
+        query: { oneOf: { dob: [new Date("2020-01-01").toISOString()] } },
+        expected: [rows[0]],
+      },
+      {
+        query: {
+          range: {
+            dob: {
+              low: new Date("2020-01-01").toISOString(),
+              high: new Date("2020-01-05").toISOString(),
+            },
+          },
+        },
+        expected: [rows[0]],
+      },
+      {
+        query: {
+          range: {
+            dob: {
+              low: new Date("2020-01-01").toISOString(),
+              high: new Date("2020-01-10").toISOString(),
+            },
+          },
+        },
+        expected: rows,
+      },
+      {
+        query: {
+          range: {
+            dob: {
+              low: new Date("2020-01-05").toISOString(),
+              high: new Date("2020-01-10").toISOString(),
+            },
+          },
+        },
+        expected: [rows[1]],
+      },
     ]
 
     it.each(dateSearchTests)(
