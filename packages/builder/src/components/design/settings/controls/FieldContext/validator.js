@@ -17,66 +17,64 @@ export const constants = {
   supported: Symbol("values-validator-supported")
 }
 
-export const validators = {
-  chart: (fieldSchema) => {
-    try {
-      const response = {
-        level: null,
-        warnings: [],
-        errors: [],
-        text: "",
-        icon: "",
-        iconColor: ""
-      }
-      const generalUnsupportedFields = ["array", "attachment", "barcodeqr", "link", "bb_reference"]
-      if (generalUnsupportedFields.includes(fieldSchema.type)) {
-        response.errors.push(errors.general)
-      }
+export const validate = (fieldSchema) => {
+  try {
+    const response = {
+      level: null,
+      warnings: [],
+      errors: [],
+      text: "",
+      icon: "",
+      iconColor: ""
+    }
+    const generalUnsupportedFields = ["array", "attachment", "barcodeqr", "link", "bb_reference"]
+    if (generalUnsupportedFields.includes(fieldSchema.type)) {
+      response.errors.push(errors.general)
+    }
 
-      if (fieldSchema.type === "json") {
-          response.errors.push(errors.jsonPrimitivesOnly)
-      }
+    if (fieldSchema.type === "json") {
+        response.errors.push(errors.jsonPrimitivesOnly)
+    }
 
-      if (fieldSchema.type === "string") {
-        response.warnings.push(warnings.stringAsNumber)
-      }
-      if (fieldSchema.type === "datetime") {
-        response.warnings.push(warnings.chartDatetime);
-          //"This column can be used as an input for a chart, but it may be parsed differently depending on which is used.
-      }
+    if (fieldSchema.type === "string") {
+      response.warnings.push(warnings.stringAsNumber)
+    }
+    if (fieldSchema.type === "datetime") {
+      response.warnings.push(warnings.chartDatetime);
+        //"This column can be used as an input for a chart, but it may be parsed differently depending on which is used.
+    }
 
-      const isRequired = fieldSchema?.constraints?.presence?.allowEmpty === false
-      if (!isRequired) {
-        response.warnings.push(warnings.notRequired);
-      }
+    const isRequired = fieldSchema?.constraints?.presence?.allowEmpty === false
+    if (!isRequired) {
+      response.warnings.push(warnings.notRequired);
+    }
 
-      if (response.errors.length > 0) {
-        response.level = constants.unsupported
-        response.text = "Not compatible"
-        response.icon = "Alert"
-        response.iconColor = "var(--red)"
-      } else if (response.warnings.length > 0) {
-        response.level = constants.partialSupport
-        response.text = "Partially compatible"
-        response.icon = "AlertCheck"
-        response.iconColor = "var(--yellow)"
-      } else {
-        response.level = constants.supported
-        response.text = "Compatible"
-        response.icon = "CheckmarkCircle"
-        response.iconColor = "var(--green)"
-      }
+    if (response.errors.length > 0) {
+      response.level = constants.unsupported
+      response.text = "Not compatible"
+      response.icon = "Alert"
+      response.iconColor = "var(--red)"
+    } else if (response.warnings.length > 0) {
+      response.level = constants.partialSupport
+      response.text = "Partially compatible"
+      response.icon = "AlertCheck"
+      response.iconColor = "var(--yellow)"
+    } else {
+      response.level = constants.supported
+      response.text = "Compatible"
+      response.icon = "CheckmarkCircle"
+      response.iconColor = "var(--green)"
+    }
 
-      return response
-    } catch (e) {
-      return {
-        level: constants.partialSupport,
-        warnings: [],
-        errors: [],
-        text: "Partially compatible",
-        icon: "AlertCheck",
-        iconColor: "var(--yellow)"
-      }
+    return response
+  } catch (e) {
+    return {
+      level: constants.partialSupport,
+      warnings: [],
+      errors: [],
+      text: "Partially compatible",
+      icon: "AlertCheck",
+      iconColor: "var(--yellow)"
     }
   }
-};
+}

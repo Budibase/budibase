@@ -26,6 +26,8 @@
   export let tag = null
   export let searchTerm = null
   export let loading
+  export let onOptionMouseenter = () => {}
+  export let onOptionMouseleave = () => {}
 
   const dispatch = createEventDispatcher()
 
@@ -95,6 +97,8 @@
   {autocomplete}
   {sort}
   {tag}
+  {onOptionMouseenter}
+  {onOptionMouseleave}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder === false ? null : placeholder}
   isOptionSelected={option => compareOptionAndValue(option, value)}

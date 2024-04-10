@@ -1,25 +1,32 @@
 <script>
-  import { Select } from "@budibase/bbui"
+  import { Select, ContextTooltip } from "@budibase/bbui"
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { validators, constants as validatorConstants } from "../fieldValidator";
+  import { FieldContext, validate } from './FieldContext'
+  import { debounce } from "lodash"
+  import { goto, params } from "@roxi/routify"
+  import { Constants } from "@budibase/frontend-core"
+  import { FIELDS } from 'constants/backend'
 
   export let componentInstance = {}
   export let value = ""
   export let placeholder
-  export let fieldValidator
+  export let columnContext
 
-  const getFieldSupport = (schema, fieldValidator) => {
-    if (fieldValidator == null) {
+  let contextTooltipAnchor = null
+  let currentOption = null
+  let previousOption = null
+  let contextTooltipVisible = false
+
+  const getFieldSupport = (schema, columnContext) => {
+    if (!columnContext) {
       return {}
     }
 
-    const validator = validators[fieldValidator];
-
     const fieldSupport = {}
     Object.entries(schema || {}).forEach(([key, value]) => {
-      fieldSupport[key] = validator(value)
+      fieldSupport[key] = validate(value)
     })
 
     return fieldSupport
@@ -28,7 +35,7 @@
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
   $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
-  $: fieldSupport = getFieldSupport(schema, fieldValidator);
+  $: fieldSupport = getFieldSupport(schema, columnContext);
   $: options = Object.keys(schema || {})
   $: boundValue = getValidValue(value, options)
 
@@ -51,34 +58,87 @@
     dispatch("change", boundValue)
   }
 
-  const getOptionIcon = option => {
-    /*
-    const support = fieldSupport[option]?.support;
+  const updateTooltip = debounce((e, option) => {
+    if (option == null) {
+        contextTooltipVisible = false;
+    } else {
+    contextTooltipAnchor = e?.target;
+    previousOption = currentOption;
+    currentOption = option;
+    contextTooltipVisible = true;
+    }
+  }, 200);
 
-    if (support == null) return null;
-    if (support === supported) return null
-
-    if (support === partialSupport) return "Warning"
-    if (support === unsupported) return "Error"
-*/
+  const onOptionMouseenter = (e, option, idx) => {
+    updateTooltip(e, option);
   }
 
-  const getOptionIconTooltip = option => {
+  const onOptionMouseleave = (e, option) => {
+    updateTooltip(e, null);
+  }
+  const getOptionIcon = optionKey => {
+    const option = schema[optionKey]
+    if (!option) return ""
+
+    if (option.autocolumn) {
+      return "MagicWand"
+    }
+    const { type, subtype } = option
+
+    const result =
+      typeof Constants.TypeIconMap[type] === "object" && subtype
+        ? Constants.TypeIconMap[type][subtype]
+        : Constants.TypeIconMap[type]
+
+    return result || "Text"
   }
 
-  const isOptionEnabled = option => {
-    return true
-    const support = fieldSupport[option]?.support;
+  const getOptionIconTooltip = optionKey => {
+    const option = schema[optionKey]
 
-    if (support == null) return true
-    if (support == unsupported) return false
+    const type = option?.type;
+    const field = Object.values(FIELDS).find(f => f.type === type)
 
-    return true
+    if (field) {
+      return field.name
+    }
+
+    return ""
   }
+
 </script>
 
 <Select
-  {isOptionEnabled}
-  {getOptionIcon}
-  {getOptionIconTooltip}
-  {placeholder} value={boundValue} on:change={onChange} {options} />
+  {placeholder}
+  value={boundValue}
+  on:change={onChange} 
+  {options}
+  {onOptionMouseenter}
+  {onOptionMouseleave}
+/>
+
+{#if columnContext}
+  <ContextTooltip
+    visible={contextTooltipVisible}
+    anchor={contextTooltipAnchor}
+    offset={20}
+  >
+    <FieldContext
+      explanationModal
+      tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
+      schema={schema[currentOption]}
+      support={fieldSupport[currentOption]}
+      columnIcon={getOptionIcon(currentOption)}
+      columnName={currentOption}
+      columnType={getOptionIconTooltip(currentOption)}
+    />
+    <FieldContext
+      slot="previous"
+      schema={schema[previousOption]}
+      support={fieldSupport[previousOption]}
+      columnIcon={getOptionIcon(previousOption)}
+      columnName={previousOption}
+      columnType={getOptionIconTooltip(previousOption)}
+    />
+  </ContextTooltip>
+{/if}
