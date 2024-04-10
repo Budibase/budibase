@@ -1,19 +1,15 @@
 import {
   SqlQuery,
   Table,
-  SearchFilters,
   Datasource,
   FieldType,
   TableSourceType,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
-import {
-  InvalidColumns,
-  NoEmptyFilterStrings,
-  DEFAULT_BB_DATASOURCE_ID,
-} from "../constants"
+import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../constants"
 import { helpers } from "@budibase/shared-core"
 import env from "../environment"
+import { Knex } from "knex"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -91,6 +87,7 @@ export enum SqlClient {
   POSTGRES = "pg",
   MY_SQL = "mysql2",
   ORACLE = "oracledb",
+  SQL_LITE = "sqlite3",
 }
 
 const isCloud = env.isProd() && !env.SELF_HOSTED
@@ -107,6 +104,23 @@ export function isExternalTableID(tableId: string) {
 
 export function isInternalTableID(tableId: string) {
   return !isExternalTableID(tableId)
+}
+
+export function getNativeSql(
+  query: Knex.SchemaBuilder | Knex.QueryBuilder
+): SqlQuery | SqlQuery[] {
+  let sql = query.toSQL()
+  if (Array.isArray(sql)) {
+    return sql as SqlQuery[]
+  }
+  let native: Knex.SqlNative | undefined
+  if (sql.toNative) {
+    native = sql.toNative()
+  }
+  return {
+    sql: native?.sql || sql.sql,
+    bindings: native?.bindings || sql.bindings,
+  } as SqlQuery
 }
 
 export function isExternalTable(table: Table) {
@@ -419,33 +433,4 @@ export function getPrimaryDisplay(testValue: unknown): string | undefined {
 
 export function isValidFilter(value: any) {
   return value != null && value !== ""
-}
-
-// don't do a pure falsy check, as 0 is included
-// https://github.com/Budibase/budibase/issues/10118
-export function removeEmptyFilters(filters: SearchFilters) {
-  for (let filterField of NoEmptyFilterStrings) {
-    if (!filters[filterField]) {
-      continue
-    }
-
-    for (let filterType of Object.keys(filters)) {
-      if (filterType !== filterField) {
-        continue
-      }
-      // don't know which one we're checking, type could be anything
-      const value = filters[filterType] as unknown
-      if (typeof value === "object") {
-        for (let [key, value] of Object.entries(
-          filters[filterType] as object
-        )) {
-          if (value == null || value === "") {
-            // @ts-ignore
-            delete filters[filterField][key]
-          }
-        }
-      }
-    }
-  }
-  return filters
 }

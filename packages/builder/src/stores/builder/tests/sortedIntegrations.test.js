@@ -6,7 +6,10 @@ import { derived } from "svelte/store"
 import { integrations } from "stores/builder/integrations"
 
 vi.mock("svelte/store", () => ({
-  derived: vi.fn(() => {}),
+  derived: vi.fn(),
+  writable: vi.fn(() => ({
+    subscribe: vi.fn(),
+  })),
 }))
 
 vi.mock("stores/builder/integrations", () => ({ integrations: vi.fn() }))
