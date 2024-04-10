@@ -5,6 +5,9 @@ import {
   AutoFieldSubType,
   Hosting,
 } from "@budibase/types"
+import { Constants } from "@budibase/frontend-core"
+
+const { TypeIconMap } = Constants
 
 export { RelationshipType } from "@budibase/types"
 
@@ -22,7 +25,7 @@ export const FIELDS = {
   STRING: {
     name: "Text",
     type: FieldType.STRING,
-    icon: "Text",
+    icon: TypeIconMap[FieldType.STRING],
     constraints: {
       type: "string",
       length: {},
@@ -32,7 +35,7 @@ export const FIELDS = {
   BARCODEQR: {
     name: "Barcode/QR",
     type: FieldType.BARCODEQR,
-    icon: "Camera",
+    icon: TypeIconMap[FieldType.BARCODEQR],
     constraints: {
       type: "string",
       length: {},
@@ -42,7 +45,7 @@ export const FIELDS = {
   LONGFORM: {
     name: "Long Form Text",
     type: FieldType.LONGFORM,
-    icon: "TextAlignLeft",
+    icon: TypeIconMap[FieldType.LONGFORM],
     constraints: {
       type: "string",
       length: {},
@@ -52,7 +55,7 @@ export const FIELDS = {
   OPTIONS: {
     name: "Options",
     type: FieldType.OPTIONS,
-    icon: "Dropdown",
+    icon: TypeIconMap[FieldType.OPTIONS],
     constraints: {
       type: "string",
       presence: false,
@@ -62,7 +65,7 @@ export const FIELDS = {
   ARRAY: {
     name: "Multi-select",
     type: FieldType.ARRAY,
-    icon: "Duplicate",
+    icon: TypeIconMap[FieldType.ARRAY],
     constraints: {
       type: "array",
       presence: false,
@@ -72,7 +75,7 @@ export const FIELDS = {
   NUMBER: {
     name: "Number",
     type: FieldType.NUMBER,
-    icon: "123",
+    icon: TypeIconMap[FieldType.NUMBER],
     constraints: {
       type: "number",
       presence: false,
@@ -82,12 +85,12 @@ export const FIELDS = {
   BIGINT: {
     name: "BigInt",
     type: FieldType.BIGINT,
-    icon: "TagBold",
+    icon: TypeIconMap[FieldType.BIGINT],
   },
   BOOLEAN: {
     name: "Boolean",
     type: FieldType.BOOLEAN,
-    icon: "Boolean",
+    icon: TypeIconMap[FieldType.BOOLEAN],
     constraints: {
       type: "boolean",
       presence: false,
@@ -96,7 +99,7 @@ export const FIELDS = {
   DATETIME: {
     name: "Date/Time",
     type: FieldType.DATETIME,
-    icon: "Calendar",
+    icon: TypeIconMap[FieldType.DATETIME],
     constraints: {
       type: "string",
       length: {},
@@ -110,7 +113,7 @@ export const FIELDS = {
   ATTACHMENT: {
     name: "Attachment",
     type: FieldType.ATTACHMENT,
-    icon: "Folder",
+    icon: TypeIconMap[FieldType.ATTACHMENT],
     constraints: {
       type: "array",
       presence: false,
@@ -119,7 +122,7 @@ export const FIELDS = {
   LINK: {
     name: "Relationship",
     type: FieldType.LINK,
-    icon: "Link",
+    icon: TypeIconMap[FieldType.LINK],
     constraints: {
       type: "array",
       presence: false,
@@ -128,19 +131,19 @@ export const FIELDS = {
   AUTO: {
     name: "Auto Column",
     type: FieldType.AUTO,
-    icon: "MagicWand",
+    icon: TypeIconMap[FieldType.AUTO],
     constraints: {},
   },
   FORMULA: {
     name: "Formula",
     type: FieldType.FORMULA,
-    icon: "Calculator",
+    icon: TypeIconMap[FieldType.FORMULA],
     constraints: {},
   },
   JSON: {
     name: "JSON",
     type: FieldType.JSON,
-    icon: "Brackets",
+    icon: TypeIconMap[FieldType.JSON],
     constraints: {
       type: "object",
       presence: false,
@@ -150,13 +153,13 @@ export const FIELDS = {
     name: "User",
     type: FieldType.BB_REFERENCE,
     subtype: FieldSubtype.USER,
-    icon: "User",
+    icon: TypeIconMap[FieldType.USER],
   },
   USERS: {
     name: "Users",
     type: FieldType.BB_REFERENCE,
     subtype: FieldSubtype.USERS,
-    icon: "User",
+    icon: TypeIconMap[FieldType.USERS],
     constraints: {
       type: "array",
     },
