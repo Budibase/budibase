@@ -4226,7 +4226,7 @@
     ]
   },
   "attachmentfield": {
-    "name": "Attachment",
+    "name": "Attachment list",
     "icon": "Attach",
     "styles": ["size"],
     "requiredAncestors": ["form"],
@@ -4262,6 +4262,97 @@
         "label": "Max attachments",
         "key": "maximum",
         "min": 1
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Compact",
+        "key": "compact",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "validation/attachment",
+        "label": "Validation",
+        "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
+      }
+    ]
+  },
+  "attachmentsinglefield": {
+    "name": "Single Attachment",
+    "icon": "Attach",
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 200
+    },
+    "settings": [
+      {
+        "type": "field/attachment_single",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
+        "label": "Extensions",
+        "key": "extensions"
       },
       {
         "type": "event",

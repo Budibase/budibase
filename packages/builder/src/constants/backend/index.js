@@ -110,10 +110,18 @@ export const FIELDS = {
       },
     },
   },
-  ATTACHMENT: {
+  ATTACHMENT_SINGLE: {
     name: "Attachment",
-    type: FieldType.ATTACHMENT,
-    icon: TypeIconMap[FieldType.ATTACHMENT],
+    type: FieldType.ATTACHMENT_SINGLE,
+    icon: TypeIconMap[FieldType.ATTACHMENT_SINGLE],
+    constraints: {
+      presence: false,
+    },
+  },
+  ATTACHMENTS: {
+    name: "Attachment List",
+    type: FieldType.ATTACHMENTS,
+    icon: TypeIconMap[FieldType.ATTACHMENTS],
     constraints: {
       type: "array",
       presence: false,
@@ -302,7 +310,7 @@ export const PaginationLocations = [
 
 export const BannedSearchTypes = [
   FieldType.LINK,
-  FieldType.ATTACHMENT,
+  FieldType.ATTACHMENTS,
   FieldType.FORMULA,
   FieldType.JSON,
   "jsonarray",
