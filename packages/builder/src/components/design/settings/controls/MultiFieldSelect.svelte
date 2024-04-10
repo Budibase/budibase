@@ -3,7 +3,7 @@
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { validators, constants as validatorConstants } from "../fieldValidator";
+  import { validators } from "./FieldContext/Validator";
   import ChartFieldContext from './FieldContext/Chart.svelte'
   import { FIELDS } from 'constants/backend'
   import { goto, params } from "@roxi/routify"

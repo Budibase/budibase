@@ -1,6 +1,6 @@
 <script>
   import ExplanationModal from './ExplanationModal/index.svelte'
-  import { warnings, errors } from "../../fieldValidator";
+  import { warnings, errors } from "./validator";
   import { Column, Support, NotRequired, StringNumber } from "./lines"
   import subjects from './subjects';
 
