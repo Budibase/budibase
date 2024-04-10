@@ -121,7 +121,7 @@ export const TypeIconMap = {
   [FieldType.DATETIME]: "Date",
   [FieldType.BARCODEQR]: "Camera",
   [FieldType.LONGFORM]: "TextAlignLeft",
-  [FieldType.ARRAY]: "Dropdown",
+  [FieldType.ARRAY]: "Duplicate",
   [FieldType.NUMBER]: "123",
   [FieldType.BOOLEAN]: "Boolean",
   [FieldType.ATTACHMENT]: "AppleFiles",
