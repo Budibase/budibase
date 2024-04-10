@@ -49,7 +49,6 @@
       metadata: { dataSource: table },
     },
   ]
-  $: customHeight = $component?.styles?.normal?.height
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
