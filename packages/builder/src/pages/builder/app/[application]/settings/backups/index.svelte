@@ -31,7 +31,8 @@
   let backupData = null
   let pageInfo = createPaginationStore()
   let filterOpt = null
-  let date = null
+  let startDate = null
+  let endDate = null
   let filters = [
     {
       label: "Manual backup",
@@ -52,9 +53,9 @@
   ]
 
   $: page = $pageInfo.page
-  $: fetchBackups(filterOpt, page, date)
+  $: fetchBackups(filterOpt, page, startDate, endDate)
 
-  const schema = {
+  let schema = {
     type: {
       displayName: "Type",
       width: "auto",
@@ -99,13 +100,13 @@
     })
   }
 
-  async function fetchBackups(filters, page, date) {
+  async function fetchBackups(filters, page, startDate, endDate) {
     const response = await backups.searchBackups({
       appId: $appStore.appId,
       ...filters,
       page,
-      startDate: date ? dayjs(date).startOf("day") : null,
-      endDate: date ? dayjs(date).endOf("day") : null,
+      startDate: startDate ? dayjs(startDate).startOf("day") : null,
+      endDate: endDate ? dayjs(endDate).endOf("day") : null,
     })
     pageInfo.fetched(response.hasNextPage, response.nextPage)
 
@@ -165,7 +166,7 @@
   }
 
   onMount(async () => {
-    await fetchBackups(filterOpt, page, date)
+    await fetchBackups(filterOpt, page, startDate, endDate)
     loading = false
   })
 </script>
@@ -207,7 +208,7 @@
         View plans
       </Button>
     </div>
-  {:else if !backupData?.length && !loading && !filterOpt && !date}
+  {:else if !backupData?.length && !loading && !filterOpt && !startDate}
     <div class="center">
       <Layout noPadding gap="S" justifyItems="center">
         <img height="130px" src={BackupsDefault} alt="BackupsDefault" />
@@ -237,12 +238,20 @@
             />
           </div>
           <DatePicker
-            value={date}
-            label="Date"
-            on:change={e => {
-              date = e.detail
-            }}
+            value={startDate}
+            label="From"
             enableTime={false}
+            on:change={e => {
+              startDate = e.detail
+            }}
+          />
+          <DatePicker
+            value={endDate}
+            label="Until"
+            enableTime={false}
+            on:change={e => {
+              endDate = e.detail
+            }}
           />
         </div>
         <div>
