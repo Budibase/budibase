@@ -6102,7 +6102,7 @@
     "block": true,
     "name": "Repeater Block",
     "icon": "ViewList",
-    "illegalChildren": ["section"],
+    "illegalChildren": ["section", "rowexplorer"],
     "hasChildren": true,
     "size": {
       "width": 400,
