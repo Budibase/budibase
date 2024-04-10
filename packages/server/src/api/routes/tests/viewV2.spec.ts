@@ -181,7 +181,7 @@ describe.each([
 
       const createdView = await config.api.viewV2.create(newView)
 
-      expect(await config.api.viewV2.get(createdView.id)).toEqual({
+      expect(createdView).toEqual({
         ...newView,
         schema: {
           Price: {
@@ -398,7 +398,7 @@ describe.each([
     })
 
     it("updates only UI schema overrides", async () => {
-      await config.api.viewV2.update({
+      const updatedView = await config.api.viewV2.update({
         ...view,
         schema: {
           Price: {
@@ -417,7 +417,7 @@ describe.each([
         } as Record<string, FieldSchema>,
       })
 
-      expect(await config.api.viewV2.get(view.id)).toEqual({
+      expect(updatedView).toEqual({
         ...view,
         schema: {
           Price: {
@@ -479,17 +479,17 @@ describe.each([
 
   describe("fetch view (through table)", () => {
     it("should be able to fetch a view V2", async () => {
-      const newView: CreateViewRequest = {
+      const res = await config.api.viewV2.create({
         name: generator.name(),
         tableId: table._id!,
         schema: {
           Price: { visible: false },
           Category: { visible: true },
         },
-      }
-      const res = await config.api.viewV2.create(newView)
+      })
+      expect(res.schema?.Price).toBeUndefined()
+
       const view = await config.api.viewV2.get(res.id)
-      expect(view!.schema?.Price).toBeUndefined()
       const updatedTable = await config.api.table.get(table._id!)
       const viewSchema = updatedTable.views![view!.name!].schema as Record<
         string,
@@ -652,7 +652,6 @@ describe.each([
             ? {}
             : {
                 hasNextPage: false,
-                bookmark: null,
               }),
         })
       })
@@ -705,7 +704,6 @@ describe.each([
             ? {}
             : {
                 hasNextPage: false,
-                bookmark: null,
               }),
         })
       })
@@ -813,7 +811,7 @@ describe.each([
           {
             field: "age",
             order: SortOrder.ASCENDING,
-            type: SortType.number,
+            type: SortType.NUMBER,
           },
           ["Danny", "Alice", "Charly", "Bob"],
         ],
@@ -835,7 +833,7 @@ describe.each([
           {
             field: "age",
             order: SortOrder.DESCENDING,
-            type: SortType.number,
+            type: SortType.NUMBER,
           },
           ["Bob", "Charly", "Alice", "Danny"],
         ],
