@@ -58,7 +58,7 @@ import {
   RelationshipType,
   Row,
   Screen,
-  SearchParams,
+  RowSearchParams,
   SourceName,
   Table,
   TableSourceType,
@@ -733,7 +733,7 @@ export default class TestConfiguration {
     return this.api.row.fetch(tableId)
   }
 
-  async searchRows(tableId: string, searchParams?: SearchParams) {
+  async searchRows(tableId: string, searchParams?: RowSearchParams) {
     if (!tableId && this.table) {
       tableId = this.table._id!
     }
