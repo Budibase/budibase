@@ -2,7 +2,7 @@ import { tableForDatasource } from "../../../tests/utilities/structures"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 
 import * as setup from "./utilities"
-import { Datasource, FieldType, Table } from "@budibase/types"
+import { Datasource, FieldType, SearchFilters, Table } from "@budibase/types"
 
 jest.unmock("mssql")
 
@@ -53,22 +53,38 @@ describe.each([
     )
   })
 
-  it("should return rows", async () => {
-    const rows = await Promise.all([
-      config.api.row.save(table._id!, { name: "foo" }),
-      config.api.row.save(table._id!, { name: "bar" }),
-    ])
+  describe("strings", () => {
+    const rows = [{ name: "foo" }, { name: "bar" }]
 
-    const result = await config.api.row.search(table._id!, {
-      tableId: table._id!,
-      query: {},
-    })
+    interface StringSearchTest {
+      query: SearchFilters
+      expected: (typeof rows)[number][]
+    }
 
-    expect(result.rows).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ _id: rows[0]._id }),
-        expect.objectContaining({ _id: rows[1]._id }),
-      ])
+    const stringSearchTests: StringSearchTest[] = [
+      { query: {}, expected: rows },
+      { query: { string: { name: "foo" } }, expected: [rows[0]] },
+      { query: { fuzzy: { name: "oo" } }, expected: [rows[0]] },
+      { query: { equal: { name: "foo" } }, expected: [rows[0]] },
+      { query: { notEqual: { name: "foo" } }, expected: [rows[1]] },
+      { query: { oneOf: { name: ["foo"] } }, expected: [rows[0]] },
+      // { query: { contains: { name: "f" } }, expected: [0] },
+      // { query: { notContains: { name: ["f"] } }, expected: [1] },
+      // { query: { containsAny: { name: ["f"] } }, expected: [0] },
+    ]
+
+    it.each(stringSearchTests)(
+      `should be able to run query: $query`,
+      async ({ query, expected }) => {
+        await Promise.all(rows.map(r => config.api.row.save(table._id!, r)))
+        const { rows: foundRows } = await config.api.row.search(table._id!, {
+          tableId: table._id!,
+          query,
+        })
+        expect(foundRows).toEqual(
+          expect.arrayContaining(expected.map(r => expect.objectContaining(r)))
+        )
+      }
     )
   })
 })
