@@ -4324,7 +4324,7 @@
   },
   "attachmentsinglefield": {
     "name": "Single Attachment",
-    "icon": "Document",
+    "icon": "Attach",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
