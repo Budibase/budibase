@@ -7020,6 +7020,19 @@ archiver-utils@^5.0.0, archiver-utils@^5.0.2:
     normalize-path "^3.0.0"
     readable-stream "^4.0.0"
 
+archiver@7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/archiver/-/archiver-7.0.1.tgz#c9d91c350362040b8927379c7aa69c0655122f61"
+  integrity sha512-ZcbTaIqJOfCc03QwD468Unz/5Ir8ATtvAHsK+FdXbDIbGfihqh9mrvdcYunQzqn4HrvWWaFyaxJhGZagaJJpPQ==
+  dependencies:
+    archiver-utils "^5.0.2"
+    async "^3.2.4"
+    buffer-crc32 "^1.0.0"
+    readable-stream "^4.0.0"
+    readdir-glob "^1.1.2"
+    tar-stream "^3.0.0"
+    zip-stream "^6.0.1"
+
 archiver@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/archiver/-/archiver-5.3.2.tgz#99991d5957e53bd0303a392979276ac4ddccf3b0"
@@ -7032,19 +7045,6 @@ archiver@^5.3.2:
     readdir-glob "^1.1.2"
     tar-stream "^2.2.0"
     zip-stream "^4.1.0"
-
-archiver@^7.0.1:
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/archiver/-/archiver-7.0.1.tgz#c9d91c350362040b8927379c7aa69c0655122f61"
-  integrity sha512-ZcbTaIqJOfCc03QwD468Unz/5Ir8ATtvAHsK+FdXbDIbGfihqh9mrvdcYunQzqn4HrvWWaFyaxJhGZagaJJpPQ==
-  dependencies:
-    archiver-utils "^5.0.2"
-    async "^3.2.4"
-    buffer-crc32 "^1.0.0"
-    readable-stream "^4.0.0"
-    readdir-glob "^1.1.2"
-    tar-stream "^3.0.0"
-    zip-stream "^6.0.1"
 
 are-we-there-yet@^2.0.0:
   version "2.0.0"
