@@ -1,3 +1,5 @@
+const extractFileNameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+
 export function downloadText(filename, text) {
   if (typeof text === "object") {
     text = JSON.stringify(text)
@@ -17,9 +19,7 @@ export async function downloadStream(streamResponse) {
 
   const contentDisposition = streamResponse.headers.get("Content-Disposition")
 
-  const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
-    contentDisposition
-  )
+  const matches = extractFileNameRegex.exec(contentDisposition)
 
   const filename = matches[1].replace(/['"]/g, "")
 
@@ -49,9 +49,7 @@ export async function downloadFile(url, body) {
   } else {
     const contentDisposition = response.headers.get("Content-Disposition")
 
-    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
-      contentDisposition
-    )
+    const matches = extractFileNameRegex.exec(contentDisposition)
 
     const filename = matches[1].replace(/['"]/g, "")
 
