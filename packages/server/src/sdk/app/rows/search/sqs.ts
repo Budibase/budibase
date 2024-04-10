@@ -156,7 +156,7 @@ export async function search(
   try {
     const query = builder._query(request, {
       disableReturning: true,
-      disableBindings: true,
+      disableBindings: false,
     })
 
     if (Array.isArray(query)) {

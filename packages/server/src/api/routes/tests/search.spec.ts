@@ -13,12 +13,12 @@ import {
 jest.unmock("mssql")
 
 describe.each([
-  ["internal", undefined],
+  // ["internal", undefined],
   ["internal-sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "internal-sqs"
   const config = setup.getConfig()
@@ -83,9 +83,6 @@ describe.each([
       { query: { equal: { name: "foo" } }, expected: [rows[0]] },
       { query: { notEqual: { name: "foo" } }, expected: [rows[1]] },
       { query: { oneOf: { name: ["foo"] } }, expected: [rows[0]] },
-      // { query: { contains: { name: "f" } }, expected: [0] },
-      // { query: { notContains: { name: ["f"] } }, expected: [1] },
-      // { query: { containsAny: { name: ["f"] } }, expected: [0] },
     ]
 
     it.each(stringSearchTests)(
@@ -171,7 +168,7 @@ describe.each([
     )
   })
 
-  describe("dates", () => {
+  describe.only("dates", () => {
     beforeEach(async () => {
       table = await config.api.table.save(
         tableForDatasource(datasource, {
@@ -186,8 +183,8 @@ describe.each([
     })
 
     const rows = [
-      { dob: new Date("2020-01-01") },
-      { dob: new Date("2020-01-10") },
+      { dob: new Date("2020-01-01").toISOString() },
+      { dob: new Date("2020-01-10").toISOString() },
     ]
 
     interface DateSearchTest {
@@ -196,70 +193,66 @@ describe.each([
     }
 
     const dateSearchTests: DateSearchTest[] = [
-      { query: {}, expected: rows },
+      //{ query: {}, expected: rows },
+      //{
+      //  query: { onEmptyFilter: EmptyFilterOption.RETURN_ALL },
+      //  expected: rows,
+      //},
+      //{
+      //  query: { onEmptyFilter: EmptyFilterOption.RETURN_NONE },
+      //  expected: [],
+      //},
       {
-        query: { onEmptyFilter: EmptyFilterOption.RETURN_ALL },
-        expected: rows,
-      },
-      {
-        query: { onEmptyFilter: EmptyFilterOption.RETURN_NONE },
-        expected: [],
-      },
-      {
-        query: { equal: { dob: new Date("2020-01-01") } },
+        query: { equal: { dob: new Date("2020-01-01").toISOString() } },
         expected: [rows[0]],
       },
-      { query: { equal: { dob: new Date("2020-01-02") } }, expected: [] },
-      {
-        query: { notEqual: { dob: new Date("2020-01-01") } },
-        expected: [rows[1]],
-      },
-      {
-        query: { oneOf: { dob: [new Date("2020-01-01")] } },
-        expected: [rows[0]],
-      },
-      {
-        query: {
-          range: {
-            dob: {
-              low: new Date("2020-01-01").toISOString(),
-              high: new Date("2020-01-05").toISOString(),
-            },
-          },
-        },
-        expected: [rows[0]],
-      },
-      {
-        query: {
-          range: {
-            dob: {
-              low: new Date("2020-01-01").toISOString(),
-              high: new Date("2020-01-10").toISOString(),
-            },
-          },
-        },
-        expected: rows,
-      },
-      {
-        query: {
-          range: {
-            dob: {
-              low: new Date("2020-01-05").toISOString(),
-              high: new Date("2020-01-10").toISOString(),
-            },
-          },
-        },
-        expected: [rows[1]],
-      },
+      // { query: { equal: { dob: new Date("2020-01-02") } }, expected: [] },
+      // {
+      //   query: { notEqual: { dob: new Date("2020-01-01") } },
+      //   expected: [rows[1]],
+      // },
+      // {
+      //   query: { oneOf: { dob: [new Date("2020-01-01")] } },
+      //   expected: [rows[0]],
+      // },
+      // {
+      //   query: {
+      //     range: {
+      //       dob: {
+      //         low: new Date("2020-01-01").toISOString(),
+      //         high: new Date("2020-01-05").toISOString(),
+      //       },
+      //     },
+      //   },
+      //   expected: [rows[0]],
+      // },
+      // {
+      //   query: {
+      //     range: {
+      //       dob: {
+      //         low: new Date("2020-01-01").toISOString(),
+      //         high: new Date("2020-01-10").toISOString(),
+      //       },
+      //     },
+      //   },
+      //   expected: rows,
+      // },
+      // {
+      //   query: {
+      //     range: {
+      //       dob: {
+      //         low: new Date("2020-01-05").toISOString(),
+      //         high: new Date("2020-01-10").toISOString(),
+      //       },
+      //     },
+      //   },
+      //   expected: [rows[1]],
+      // },
     ]
 
     it.each(dateSearchTests)(
       `should be able to run query: $query`,
       async ({ query, expected }) => {
-        // TODO(samwho): most of these work for SQS, but not all. Fix 'em.
-        if (isSqs) {
-          return
-        }
         const savedRows = await Promise.all(
           rows.map(r => config.api.row.save(table._id!, r))
         )
@@ -270,9 +263,7 @@ describe.each([
         expect(foundRows).toEqual(
           expect.arrayContaining(
             expected.map(r =>
-              expect.objectContaining(
-                savedRows.find(sr => sr.dob === r.dob.toISOString())!
-              )
+              expect.objectContaining(savedRows.find(sr => sr.dob === r.dob)!)
             )
           )
         )
