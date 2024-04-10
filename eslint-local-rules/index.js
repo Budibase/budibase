@@ -8,6 +8,7 @@ module.exports = {
             node.callee.object.name === "console" &&
             node.callee.property.name === "error" &&
             node.arguments.length === 1 &&
+            node.arguments[0].name &&
             node.arguments[0].name.startsWith("err")
           ) {
             context.report({
