@@ -12,6 +12,7 @@ import {
   isDocument,
   RowResponse,
   RowValue,
+  SqlQueryBinding,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
@@ -248,14 +249,20 @@ export class DatabaseImpl implements Database {
     })
   }
 
-  async sql<T extends Document>(sql: string): Promise<T[]> {
+  async sql<T extends Document>(
+    sql: string,
+    parameters?: SqlQueryBinding
+  ): Promise<T[]> {
     const dbName = this.name
     const url = `/${dbName}/${SQLITE_DESIGN_DOC_ID}`
     const response = await directCouchUrlCall({
       url: `${this.couchInfo.sqlUrl}/${url}`,
       method: "POST",
       cookie: this.couchInfo.cookie,
-      body: sql,
+      body: {
+        query: sql,
+        args: parameters,
+      },
     })
     if (response.status > 300) {
       throw new Error(await response.text())
