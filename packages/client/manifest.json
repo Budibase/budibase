@@ -1602,6 +1602,7 @@
     ]
   },
   "bar": {
+    "documentationLink": "https://docs.budibase.com/docs/bar-chart",
     "name": "Bar Chart",
     "description": "Bar chart",
     "icon": "GraphBarVertical",
@@ -1633,7 +1634,8 @@
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
-        "fieldValidator": "chart",
+        "valueTypes": ["number"],
+        "columnContext": true,
         "required": true
       },
       {

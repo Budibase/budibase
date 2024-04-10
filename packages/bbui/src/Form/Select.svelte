@@ -29,6 +29,9 @@
   export let tag = null
   export let helpText = null
   export let compare
+  export let onOptionMouseenter = () => {}
+  export let onOptionMouseleave = () => {}
+
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
@@ -67,6 +70,8 @@
     {customPopoverHeight}
     {tag}
     {compare}
+    {onOptionMouseenter}
+    {onOptionMouseleave}
     on:change={onChange}
     on:click
   />
