@@ -118,7 +118,7 @@ export const ContextScopes = {
 export const TypeIconMap = {
   [FieldType.STRING]: "Text",
   [FieldType.OPTIONS]: "Dropdown",
-  [FieldType.DATETIME]: "Date",
+  [FieldType.DATETIME]: "Calendar",
   [FieldType.BARCODEQR]: "Camera",
   [FieldType.LONGFORM]: "TextAlignLeft",
   [FieldType.ARRAY]: "Duplicate",
