@@ -83,9 +83,6 @@ describe.each([
       { query: { equal: { name: "foo" } }, expected: [rows[0]] },
       { query: { notEqual: { name: "foo" } }, expected: [rows[1]] },
       { query: { oneOf: { name: ["foo"] } }, expected: [rows[0]] },
-      // { query: { contains: { name: "f" } }, expected: [0] },
-      // { query: { notContains: { name: ["f"] } }, expected: [1] },
-      // { query: { containsAny: { name: ["f"] } }, expected: [0] },
     ]
 
     it.each(stringSearchTests)(
@@ -186,8 +183,8 @@ describe.each([
     })
 
     const rows = [
-      { dob: new Date("2020-01-01") },
-      { dob: new Date("2020-01-10") },
+      { dob: new Date("2020-01-01").toISOString() },
+      { dob: new Date("2020-01-10").toISOString() },
     ]
 
     interface DateSearchTest {
@@ -206,16 +203,19 @@ describe.each([
         expected: [],
       },
       {
-        query: { equal: { dob: new Date("2020-01-01") } },
+        query: { equal: { dob: new Date("2020-01-01").toISOString() } },
         expected: [rows[0]],
       },
-      { query: { equal: { dob: new Date("2020-01-02") } }, expected: [] },
       {
-        query: { notEqual: { dob: new Date("2020-01-01") } },
+        query: { equal: { dob: new Date("2020-01-02").toISOString() } },
+        expected: [],
+      },
+      {
+        query: { notEqual: { dob: new Date("2020-01-01").toISOString() } },
         expected: [rows[1]],
       },
       {
-        query: { oneOf: { dob: [new Date("2020-01-01")] } },
+        query: { oneOf: { dob: [new Date("2020-01-01").toISOString()] } },
         expected: [rows[0]],
       },
       {
@@ -256,10 +256,6 @@ describe.each([
     it.each(dateSearchTests)(
       `should be able to run query: $query`,
       async ({ query, expected }) => {
-        // TODO(samwho): most of these work for SQS, but not all. Fix 'em.
-        if (isSqs) {
-          return
-        }
         const savedRows = await Promise.all(
           rows.map(r => config.api.row.save(table._id!, r))
         )
@@ -270,9 +266,7 @@ describe.each([
         expect(foundRows).toEqual(
           expect.arrayContaining(
             expected.map(r =>
-              expect.objectContaining(
-                savedRows.find(sr => sr.dob === r.dob.toISOString())!
-              )
+              expect.objectContaining(savedRows.find(sr => sr.dob === r.dob)!)
             )
           )
         )
