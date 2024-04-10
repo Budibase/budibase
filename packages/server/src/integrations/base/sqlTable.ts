@@ -8,8 +8,9 @@ import {
   RenameColumn,
   Table,
   FieldType,
+  SqlQuery,
 } from "@budibase/types"
-import { breakExternalTableId, SqlClient } from "../utils"
+import { breakExternalTableId, getNativeSql, SqlClient } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
 import { utils } from "@budibase/shared-core"
@@ -199,7 +200,7 @@ class SqlTableQueryBuilder {
     return json.endpoint.operation
   }
 
-  _tableQuery(json: QueryJson): Knex.Sql | Knex.SqlNative {
+  _tableQuery(json: QueryJson): SqlQuery | SqlQuery[] {
     let client = knex({ client: this.sqlClient }).schema
     let schemaName = json?.endpoint?.schema
     if (schemaName) {
@@ -224,12 +225,12 @@ class SqlTableQueryBuilder {
           const tableName = schemaName
             ? `\`${schemaName}\`.\`${json.table.name}\``
             : `\`${json.table.name}\``
-          const externalType = json.table.schema[updatedColumn].externalType!
           return {
-            sql: `alter table ${tableName} change column \`${json.meta.renamed.old}\` \`${updatedColumn}\` ${externalType};`,
+            sql: `alter table ${tableName} rename column \`${json.meta.renamed.old}\` to \`${updatedColumn}\`;`,
             bindings: [],
           }
         }
+
         query = buildUpdateTable(
           client,
           json.table,
@@ -237,6 +238,27 @@ class SqlTableQueryBuilder {
           json.meta.table,
           json.meta.renamed!
         )
+
+        // renameColumn for SQL Server returns a parameterised `sp_rename` query,
+        // which is not supported by SQL Server and gives a syntax error.
+        if (this.sqlClient === SqlClient.MS_SQL && json.meta.renamed) {
+          const oldColumn = json.meta.renamed.old
+          const updatedColumn = json.meta.renamed.updated
+          const tableName = schemaName
+            ? `${schemaName}.${json.table.name}`
+            : `${json.table.name}`
+          const sql = getNativeSql(query)
+          if (Array.isArray(sql)) {
+            for (const query of sql) {
+              if (query.sql.startsWith("exec sp_rename")) {
+                query.sql = `exec sp_rename '${tableName}.${oldColumn}', '${updatedColumn}', 'COLUMN'`
+                query.bindings = []
+              }
+            }
+          }
+
+          return sql
+        }
         break
       case Operation.DELETE_TABLE:
         query = buildDeleteTable(client, json.table)
@@ -244,7 +266,7 @@ class SqlTableQueryBuilder {
       default:
         throw "Table operation is of unknown type"
     }
-    return query.toSQL()
+    return getNativeSql(query)
   }
 }
 

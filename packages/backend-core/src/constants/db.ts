@@ -66,3 +66,4 @@ export const APP_PREFIX = prefixed(DocumentType.APP)
 export const APP_DEV = prefixed(DocumentType.APP_DEV)
 export const APP_DEV_PREFIX = APP_DEV
 export const BUDIBASE_DATASOURCE_TYPE = "budibase"
+export const SQLITE_DESIGN_DOC_ID = "_design/sqlite"
