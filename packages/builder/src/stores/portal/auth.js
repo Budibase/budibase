@@ -2,7 +2,6 @@ import { derived, writable, get } from "svelte/store"
 import { API } from "api"
 import { admin } from "stores/portal"
 import analytics from "analytics"
-import { sdk } from "@budibase/shared-core"
 
 export function createAuthStore() {
   const auth = writable({
@@ -42,20 +41,6 @@ export function createAuthStore() {
         .activate()
         .then(() => {
           analytics.identify(user._id)
-          analytics.showChat(
-            {
-              email: user.email,
-              created_at: (user.createdAt || Date.now()) / 1000,
-              name: user.account?.name,
-              user_id: user._id,
-              tenant: user.tenantId,
-              admin: sdk.users.isAdmin(user),
-              builder: sdk.users.isBuilder(user),
-              "Company size": user.account?.size,
-              "Job role": user.account?.profession,
-            },
-            !!user?.account
-          )
         })
         .catch(() => {
           // This request may fail due to browser extensions blocking requests
