@@ -127,6 +127,7 @@ describe("Navigation store", () => {
         {
           url: "/last",
           text: "Last Link",
+          type: "sublinks",
           subLinks: [
             {
               text: "Foo",
