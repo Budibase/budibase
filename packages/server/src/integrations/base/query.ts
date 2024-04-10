@@ -9,7 +9,7 @@ import sdk from "../../sdk"
 export async function makeExternalQuery(
   datasource: Datasource,
   json: QueryJson
-): DatasourcePlusQueryResponse {
+): Promise<DatasourcePlusQueryResponse> {
   datasource = await sdk.datasources.enrich(datasource)
   const Integration = await getIntegration(datasource.source)
   // query is the opinionated function

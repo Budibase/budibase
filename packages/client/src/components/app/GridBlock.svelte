@@ -18,6 +18,7 @@
   export let columns = null
   export let onRowClick = null
   export let buttons = null
+  export let repeat = null
 
   const context = getContext("context")
   const component = getContext("component")
@@ -146,6 +147,7 @@
       {fixedRowHeight}
       {columnWhitelist}
       {schemaOverrides}
+      {repeat}
       canAddRows={allowAddRows}
       canEditRows={allowEditRows}
       canDeleteRows={allowDeleteRows}

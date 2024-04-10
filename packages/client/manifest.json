@@ -4611,6 +4611,35 @@
         "required": true
       },
       {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
+      },
+      {
         "type": "filter",
         "label": "Filtering",
         "key": "filter"
@@ -4976,6 +5005,35 @@
         "label": "Data",
         "key": "dataSource",
         "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
       },
       {
         "type": "text",
@@ -5446,6 +5504,35 @@
             "required": true
           },
           {
+            "type": "select",
+            "label": "Auto-refresh",
+            "key": "autoRefresh",
+            "license": "premium",
+            "placeholder": "Never",
+            "options": [
+              {
+                "label": "10 seconds",
+                "value": 10
+              },
+              {
+                "label": "30 seconds",
+                "value": 30
+              },
+              {
+                "label": "1 minute",
+                "value": 60
+              },
+              {
+                "label": "5 minutes",
+                "value": 300
+              },
+              {
+                "label": "10 minutes",
+                "value": 600
+              }
+            ]
+          },
+          {
             "type": "columns",
             "label": "Columns",
             "key": "tableColumns",
@@ -5732,6 +5819,35 @@
         "required": true
       },
       {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
+      },
+      {
         "type": "searchfield",
         "label": "Search columns",
         "key": "searchColumns",
@@ -5907,6 +6023,35 @@
         "label": "Data",
         "key": "dataSource",
         "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
       },
       {
         "type": "filter",
@@ -6503,6 +6648,35 @@
         "label": "Data",
         "key": "dataSource",
         "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
       },
       {
         "type": "text",

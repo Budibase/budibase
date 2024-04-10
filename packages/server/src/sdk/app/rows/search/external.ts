@@ -6,28 +6,31 @@ import {
   IncludeRelationship,
   Row,
   SearchFilters,
-  SearchParams,
+  RowSearchParams,
+  SearchResponse,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
-import sdk from "../../../../sdk"
 import { handleRequest } from "../../../../api/controllers/row/external"
 import {
   breakExternalTableId,
   breakRowIdField,
 } from "../../../../integrations/utils"
-import { cleanExportRows } from "../utils"
 import { utils } from "@budibase/shared-core"
-import { ExportRowsParams, ExportRowsResult } from "../search"
+import { ExportRowsParams, ExportRowsResult } from "./types"
 import { HTTPError, db } from "@budibase/backend-core"
 import { searchInputMapping } from "./utils"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
+import sdk from "../../../"
 
-export async function search(options: SearchParams) {
+export async function search(
+  options: RowSearchParams
+): Promise<SearchResponse<Row>> {
   const { tableId } = options
   const { paginate, query, ...params } = options
   const { limit } = params
-  let bookmark = (params.bookmark && parseInt(params.bookmark)) || null
+  let bookmark =
+    (params.bookmark && parseInt(params.bookmark as string)) || undefined
   if (paginate && !bookmark) {
     bookmark = 1
   }
@@ -92,7 +95,7 @@ export async function search(options: SearchParams) {
       rows = rows.map((r: any) => pick(r, fields))
     }
 
-    rows = await outputProcessing(table, rows, {
+    rows = await outputProcessing<Row[]>(table, rows, {
       preserveLinks: true,
       squash: true,
     })
@@ -158,7 +161,6 @@ export async function exportRows(
   if (!tableName) {
     throw new HTTPError("Could not find table name.", 400)
   }
-  const schema = datasource.entities[tableName].schema
 
   // Filter data to only specified columns if required
   if (columns && columns.length) {
@@ -173,7 +175,14 @@ export async function exportRows(
     rows = result.rows
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
+  const schema = datasource.entities[tableName].schema
+  let exportRows = sdk.rows.utils.cleanExportRows(
+    rows,
+    schema,
+    format,
+    columns,
+    customHeaders
+  )
 
   let content: string
   switch (format) {
