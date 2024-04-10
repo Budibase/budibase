@@ -1,20 +1,19 @@
-import {
-  context,
-  db,
-  HTTPError,
-  SearchParams as InternalSearchParams,
-} from "@budibase/backend-core"
+import { context, db, HTTPError } from "@budibase/backend-core"
 import env from "../../../../environment"
-import { fullSearch, paginatedSearch } from "./internalSearch"
+import { fullSearch, paginatedSearch, searchInputMapping } from "./utils"
+import { getRowParams, InternalTables } from "../../../../db/utils"
 import {
+  Database,
   DocumentType,
-  getRowParams,
-  InternalTables,
-} from "../../../../db/utils"
+  Row,
+  RowSearchParams,
+  SearchResponse,
+  SortType,
+  Table,
+  User,
+} from "@budibase/types"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
-import { Database, Row, SearchParams, Table } from "@budibase/types"
-import { cleanExportRows } from "../utils"
 import {
   csv,
   Format,
@@ -29,17 +28,18 @@ import {
   migrateToInMemoryView,
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
-import { ExportRowsParams, ExportRowsResult } from "../search"
-import { searchInputMapping } from "./utils"
+import { ExportRowsParams, ExportRowsResult } from "./types"
 import pick from "lodash/pick"
 import { breakRowIdField } from "../../../../integrations/utils"
 
-export async function search(options: SearchParams) {
+export async function search(
+  options: RowSearchParams
+): Promise<SearchResponse<Row>> {
   const { tableId } = options
 
   const { paginate, query } = options
 
-  const params: InternalSearchParams<any> = {
+  const params: RowSearchParams = {
     tableId: options.tableId,
     sort: options.sort,
     sortOrder: options.sortOrder,
@@ -48,6 +48,7 @@ export async function search(options: SearchParams) {
     bookmark: options.bookmark,
     version: options.version,
     disableEscaping: options.disableEscaping,
+    query: {},
   }
 
   let table = await sdk.tables.getTable(tableId)
@@ -55,7 +56,8 @@ export async function search(options: SearchParams) {
   if (params.sort && !params.sortType) {
     const schema = table.schema
     const sortField = schema[params.sort]
-    params.sortType = sortField.type === "number" ? "number" : "string"
+    params.sortType =
+      sortField.type === "number" ? SortType.NUMBER : SortType.STRING
   }
 
   let response
@@ -69,7 +71,7 @@ export async function search(options: SearchParams) {
   if (response.rows && response.rows.length) {
     // enrich with global users if from users table
     if (tableId === InternalTables.USER_METADATA) {
-      response.rows = await getGlobalUsersFromMetadata(response.rows)
+      response.rows = await getGlobalUsersFromMetadata(response.rows as User[])
     }
 
     if (options.fields) {
@@ -100,10 +102,10 @@ export async function exportRows(
   const db = context.getAppDB()
   const table = await sdk.tables.getTable(tableId)
 
-  let result
+  let result: Row[] = []
   if (rowIds) {
     let response = (
-      await db.allDocs({
+      await db.allDocs<Row>({
         include_docs: true,
         keys: rowIds.map((row: string) => {
           const ids = breakRowIdField(row)
@@ -116,9 +118,9 @@ export async function exportRows(
           return ids[0]
         }),
       })
-    ).rows.map(row => row.doc)
+    ).rows.map(row => row.doc!)
 
-    result = await outputProcessing(table, response)
+    result = await outputProcessing<Row[]>(table, response)
   } else if (query) {
     let searchResponse = await search({
       tableId,
@@ -145,7 +147,13 @@ export async function exportRows(
     rows = result
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
+  let exportRows = sdk.rows.utils.cleanExportRows(
+    rows,
+    schema,
+    format,
+    columns,
+    customHeaders
+  )
   if (format === Format.CSV) {
     return {
       fileName: "export.csv",

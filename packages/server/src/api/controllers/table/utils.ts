@@ -33,6 +33,8 @@ import {
   FieldTypeSubtypes,
   AttachmentFieldMetadata,
 } from "@budibase/types"
+import sdk from "../../../sdk"
+import env from "../../../environment"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
   const db = context.getAppDB()
@@ -342,6 +344,9 @@ class TableSaveFunctions {
       importRows: this.importRows,
       user: this.user,
     })
+    if (env.SQS_SEARCH_ENABLE) {
+      await sdk.tables.sqs.addTableToSqlite(table)
+    }
     return table
   }
 

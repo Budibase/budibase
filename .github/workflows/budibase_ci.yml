@@ -92,7 +92,6 @@ jobs:
   test-libraries:
     runs-on: ubuntu-latest
     env:
-      DEBUG: testcontainers,testcontainers:exec,testcontainers:build,testcontainers:pull
       REUSE_CONTAINERS: true
     steps:
       - name: Checkout repo
@@ -110,7 +109,7 @@ jobs:
       - name: Pull testcontainers images
         run: |
           docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb &
+          docker pull budibase/couchdb:v3.2.1-sql &
           docker pull redis &
 
           wait $(jobs -p)
@@ -151,7 +150,6 @@ jobs:
   test-server:
     runs-on: budi-tubby-tornado-quad-core-150gb
     env:
-      DEBUG: testcontainers,testcontainers:exec,testcontainers:build,testcontainers:pull
       REUSE_CONTAINERS: true
     steps:
       - name: Checkout repo
@@ -175,7 +173,7 @@ jobs:
           docker pull mongo:7.0-jammy &
           docker pull mariadb:lts &
           docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb &
+          docker pull budibase/couchdb:v3.2.1-sql &
           docker pull redis &
 
           wait $(jobs -p)
