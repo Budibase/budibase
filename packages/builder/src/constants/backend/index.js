@@ -6,6 +6,7 @@ import {
   Hosting,
 } from "@budibase/types"
 import { Constants } from "@budibase/frontend-core"
+
 const { TypeIconMap } = Constants
 
 export { RelationshipType } from "@budibase/types"
