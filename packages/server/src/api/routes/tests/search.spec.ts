@@ -54,18 +54,20 @@ describe.each([
   })
 
   describe("strings", () => {
+    const rows = [{ name: "foo" }, { name: "bar" }]
+
     interface StringSearchTest {
       query: SearchFilters
-      expected: number[]
+      expected: (typeof rows)[number][]
     }
 
     const stringSearchTests: StringSearchTest[] = [
-      { query: {}, expected: [0, 1] },
-      { query: { string: { name: "foo" } }, expected: [0] },
-      { query: { fuzzy: { name: "oo" } }, expected: [0] },
-      { query: { equal: { name: "foo" } }, expected: [0] },
-      { query: { notEqual: { name: "foo" } }, expected: [1] },
-      { query: { oneOf: { name: ["foo"] } }, expected: [0] },
+      { query: {}, expected: rows },
+      { query: { string: { name: "foo" } }, expected: [rows[0]] },
+      { query: { fuzzy: { name: "oo" } }, expected: [rows[0]] },
+      { query: { equal: { name: "foo" } }, expected: [rows[0]] },
+      { query: { notEqual: { name: "foo" } }, expected: [rows[1]] },
+      { query: { oneOf: { name: ["foo"] } }, expected: [rows[0]] },
       // { query: { contains: { name: "f" } }, expected: [0] },
       // { query: { notContains: { name: ["f"] } }, expected: [1] },
       // { query: { containsAny: { name: ["f"] } }, expected: [0] },
@@ -74,18 +76,13 @@ describe.each([
     it.each(stringSearchTests)(
       `should be able to run query: $query`,
       async ({ query, expected }) => {
-        const rows = await Promise.all([
-          config.api.row.save(table._id!, { name: "foo" }),
-          config.api.row.save(table._id!, { name: "bar" }),
-        ])
-
-        const result = await config.api.row.search(table._id!, {
+        await Promise.all(rows.map(r => config.api.row.save(table._id!, r)))
+        const { rows: foundRows } = await config.api.row.search(table._id!, {
           tableId: table._id!,
           query,
         })
-
-        expect(result.rows.map(r => r._id)).toEqual(
-          expect.arrayContaining(expected.map(i => rows[i]._id))
+        expect(foundRows).toEqual(
+          expect.arrayContaining(expected.map(r => expect.objectContaining(r)))
         )
       }
     )
