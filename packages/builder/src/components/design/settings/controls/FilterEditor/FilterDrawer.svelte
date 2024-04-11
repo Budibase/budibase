@@ -31,7 +31,7 @@
   let matchAny = false
   let onEmptyFilter = "all"
 
-  $: parseFilters(filters)
+  $: parseFilters(rawFilters)
   $: dispatch("change", enrichFilters(rawFilters, matchAny, onEmptyFilter))
 
   // Remove field key prefixes and determine which behaviours to use
@@ -79,7 +79,12 @@
 </script>
 
 <DrawerContent padding={false}>
-  <FilterBuilder bind:filters {schemaFields} {datasource} {allowBindings}>
+  <FilterBuilder
+    bind:filters={rawFilters}
+    {schemaFields}
+    {datasource}
+    {allowBindings}
+  >
     <div slot="filteringHeroContent" class="filteringHeroContent">
       <Select
         label="Behaviour"
