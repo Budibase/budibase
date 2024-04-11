@@ -111,7 +111,7 @@
     "socket.io": "4.6.1",
     "sqlite3": "5.1.6",
     "swagger-parser": "10.0.3",
-    "tar": "6.1.15",
+    "tar": "6.2.1",
     "to-json-schema": "0.2.5",
     "undici": "^6.0.1",
     "undici-types": "^6.0.1",
