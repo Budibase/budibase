@@ -10,7 +10,11 @@
     Select,
   } from "@budibase/bbui"
   import { generate } from "shortid"
-  import { LuceneUtils, Constants } from "@budibase/frontend-core"
+  import {
+    LuceneUtils,
+    Constants,
+    FilterBuilder,
+  } from "@budibase/frontend-core"
   import { getContext } from "svelte"
 
   export let schemaFields
@@ -105,6 +109,7 @@
 
 <div class="container" class:mobile={$context.device.mobile}>
   <Layout noPadding>
+    <FilterBuilder bind:filters {schemaFields} {datasource} />
     <Body size="S">
       {#if !filters?.length}
         Add your first filter expression.

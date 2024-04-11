@@ -37,7 +37,7 @@
     hbAutocomplete,
     EditorModes,
   } from "components/common/CodeEditor"
-  import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
+  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { LuceneUtils, Utils } from "@budibase/frontend-core"
   import {
     getSchemaForDatasourcePlus,
@@ -442,7 +442,7 @@
               <Button cta slot="buttons" on:click={() => saveFilters(key)}>
                 Save
               </Button>
-              <FilterDrawer
+              <FilterBuilder
                 slot="body"
                 {filters}
                 {bindings}
