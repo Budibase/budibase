@@ -155,7 +155,9 @@ export default class AliasTables {
     return map
   }
 
-  async queryWithAliasing(json: QueryJson): DatasourcePlusQueryResponse {
+  async queryWithAliasing(
+    json: QueryJson
+  ): Promise<DatasourcePlusQueryResponse> {
     const datasourceId = json.endpoint.datasourceId
     const datasource = await sdk.datasources.get(datasourceId)
 

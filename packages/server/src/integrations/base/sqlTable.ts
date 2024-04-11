@@ -8,8 +8,9 @@ import {
   RenameColumn,
   Table,
   FieldType,
+  SqlQuery,
 } from "@budibase/types"
-import { breakExternalTableId, SqlClient } from "../utils"
+import { breakExternalTableId, getNativeSql, SqlClient } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
 import { utils } from "@budibase/shared-core"
@@ -199,7 +200,7 @@ class SqlTableQueryBuilder {
     return json.endpoint.operation
   }
 
-  _tableQuery(json: QueryJson): Knex.Sql | Knex.SqlNative {
+  _tableQuery(json: QueryJson): SqlQuery | SqlQuery[] {
     let client = knex({ client: this.sqlClient }).schema
     let schemaName = json?.endpoint?.schema
     if (schemaName) {
@@ -246,7 +247,7 @@ class SqlTableQueryBuilder {
           const tableName = schemaName
             ? `${schemaName}.${json.table.name}`
             : `${json.table.name}`
-          const sql = query.toSQL()
+          const sql = getNativeSql(query)
           if (Array.isArray(sql)) {
             for (const query of sql) {
               if (query.sql.startsWith("exec sp_rename")) {
@@ -265,7 +266,7 @@ class SqlTableQueryBuilder {
       default:
         throw "Table operation is of unknown type"
     }
-    return query.toSQL()
+    return getNativeSql(query)
   }
 }
 

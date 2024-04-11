@@ -19,6 +19,7 @@
   export let columns = null
   export let onRowClick = null
   export let buttons = null
+  export let repeat = null
 
   const context = getContext("context")
   const component = getContext("component")
@@ -124,6 +125,7 @@
       {fixedRowHeight}
       {columnWhitelist}
       {schemaOverrides}
+      {repeat}
       canAddRows={allowAddRows}
       canEditRows={allowEditRows}
       canDeleteRows={allowDeleteRows}
@@ -147,7 +149,8 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     overflow: hidden;
-    min-height: 410px;
+    min-height: 230px;
+    height: 410px;
   }
   div.in-builder :global(*) {
     pointer-events: none;
