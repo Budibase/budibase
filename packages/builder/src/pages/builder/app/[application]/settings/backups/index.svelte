@@ -1,7 +1,6 @@
 <script>
   import {
     Button,
-    DatePicker,
     Divider,
     Layout,
     notifications,
@@ -25,14 +24,13 @@
   import BackupsDefault from "assets/backups-default.png"
   import { BackupTrigger, BackupType } from "constants/backend/backups"
   import { onMount } from "svelte"
-  import dayjs from "dayjs"
+  import DateRangePicker from "components/common/DateRangePicker.svelte"
 
   let loading = true
   let backupData = null
   let pageInfo = createPaginationStore()
   let filterOpt = null
-  let startDate = null
-  let endDate = null
+  let dateRange = []
   let filters = [
     {
       label: "Manual backup",
@@ -53,7 +51,7 @@
   ]
 
   $: page = $pageInfo.page
-  $: fetchBackups(filterOpt, page, startDate, endDate)
+  $: fetchBackups(filterOpt, page, dateRange)
 
   let schema = {
     type: {
@@ -100,13 +98,13 @@
     })
   }
 
-  async function fetchBackups(filters, page, startDate, endDate) {
+  async function fetchBackups(filters, page, dateRange) {
     const response = await backups.searchBackups({
       appId: $appStore.appId,
       ...filters,
       page,
-      startDate: startDate ? dayjs(startDate).startOf("day") : null,
-      endDate: endDate ? dayjs(endDate).endOf("day") : null,
+      startDate: dateRange[0],
+      endDate: dateRange[1],
     })
     pageInfo.fetched(response.hasNextPage, response.nextPage)
 
@@ -166,7 +164,7 @@
   }
 
   onMount(async () => {
-    await fetchBackups(filterOpt, page, startDate, endDate)
+    await fetchBackups(filterOpt, page, dateRange)
     loading = false
   })
 </script>
@@ -208,7 +206,7 @@
         View plans
       </Button>
     </div>
-  {:else if !backupData?.length && !loading && !filterOpt && !startDate}
+  {:else if !backupData?.length && !loading && !filterOpt && !dateRange?.length}
     <div class="center">
       <Layout noPadding gap="S" justifyItems="center">
         <img height="130px" src={BackupsDefault} alt="BackupsDefault" />
@@ -237,21 +235,9 @@
               bind:value={filterOpt}
             />
           </div>
-          <DatePicker
-            value={startDate}
-            label="From"
-            enableTime={false}
-            on:change={e => {
-              startDate = e.detail
-            }}
-          />
-          <DatePicker
-            value={endDate}
-            label="Until"
-            enableTime={false}
-            on:change={e => {
-              endDate = e.detail
-            }}
+          <DateRangePicker
+            value={dateRange}
+            on:change={e => (dateRange = e.detail)}
           />
         </div>
         <div>
