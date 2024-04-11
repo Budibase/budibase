@@ -775,6 +775,7 @@ components:
                       - array
                       - datetime
                       - attachment
+                      - attachment_single
                       - link
                       - formula
                       - auto
@@ -940,6 +941,7 @@ components:
                           - array
                           - datetime
                           - attachment
+                          - attachment_single
                           - link
                           - formula
                           - auto
@@ -1112,6 +1114,7 @@ components:
                             - array
                             - datetime
                             - attachment
+                            - attachment_single
                             - link
                             - formula
                             - auto
@@ -1492,7 +1495,8 @@ components:
                 description: The value to search for in the column.
             fuzzy:
               type: object
-              description: A fuzzy search, only supported by internal tables.
+              description: Searches for a sub-string within a string column, e.g. searching
+                for 'dib' will match 'Budibase'.
             range:
               type: object
               description: Searches within a range, the format of this must be in the format
@@ -1524,6 +1528,32 @@ components:
               description: Searches for rows which have a column value that is any of the
                 specified values. The format of this must be columnName ->
                 [value1, value2].
+            contains:
+              type: object
+              description: Searches for a value, or set of values in array column types (such
+                as a multi-select). If an array of search options is provided
+                then it must match all.
+              example:
+                arrayColumn:
+                  - a
+                  - b
+            notContains:
+              type: object
+              description: The logical inverse of contains. Only works on array column types.
+                If an array of values is passed, the row must not match any of
+                them to be returned in the response.
+              example:
+                arrayColumn:
+                  - a
+                  - b
+            containsAny:
+              type: object
+              description: As with the contains search, only works on array column types and
+                searches for any of the provided values when given an array.
+              example:
+                arrayColumn:
+                  - a
+                  - b
         paginate:
           type: boolean
           description: Enables pagination, by default this is disabled.
