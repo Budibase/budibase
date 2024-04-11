@@ -273,6 +273,7 @@ export interface components {
                 | "array"
                 | "datetime"
                 | "attachment"
+                | "attachment_single"
                 | "link"
                 | "formula"
                 | "auto"
@@ -381,6 +382,7 @@ export interface components {
                   | "array"
                   | "datetime"
                   | "attachment"
+                  | "attachment_single"
                   | "link"
                   | "formula"
                   | "auto"
@@ -491,6 +493,7 @@ export interface components {
                   | "array"
                   | "datetime"
                   | "attachment"
+                  | "attachment_single"
                   | "link"
                   | "formula"
                   | "auto"
@@ -693,7 +696,7 @@ export interface components {
          * @example [object Object]
          */
         string?: { [key: string]: string };
-        /** @description A fuzzy search, only supported by internal tables. */
+        /** @description Searches for a sub-string within a string column, e.g. searching for 'dib' will match 'Budibase'. */
         fuzzy?: { [key: string]: unknown };
         /**
          * @description Searches within a range, the format of this must be in the format of an object with a "low" and "high" property.
@@ -713,6 +716,21 @@ export interface components {
         notEmpty?: { [key: string]: unknown };
         /** @description Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]. */
         oneOf?: { [key: string]: unknown };
+        /**
+         * @description Searches for a value, or set of values in array column types (such as a multi-select). If an array of search options is provided then it must match all.
+         * @example [object Object]
+         */
+        contains?: { [key: string]: unknown };
+        /**
+         * @description The logical inverse of contains. Only works on array column types. If an array of values is passed, the row must not match any of them to be returned in the response.
+         * @example [object Object]
+         */
+        notContains?: { [key: string]: unknown };
+        /**
+         * @description As with the contains search, only works on array column types and searches for any of the provided values when given an array.
+         * @example [object Object]
+         */
+        containsAny?: { [key: string]: unknown };
       };
       /** @description Enables pagination, by default this is disabled. */
       paginate?: boolean;
