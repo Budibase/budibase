@@ -1,5 +1,4 @@
 <script>
-  import { DrawerContent } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
 
@@ -61,35 +60,23 @@
   }
 </script>
 
-<DrawerContent padding={false}>
-  <FilterBuilder
-    bind:filters={rawFilters}
-    behaviourFilters={true}
-    {schemaFields}
-    {datasource}
-    {allowBindings}
-  >
-    <div slot="filteringHeroContent" class="filteringHeroContent" />
-    <div slot="binding" let:filter>
-      <DrawerBindableInput
-        disabled={filter.noValue}
-        title={filter.field}
-        value={filter.value}
-        placeholder="Value"
-        {panel}
-        {bindings}
-        on:change={event => (filter.value = event.detail)}
-      />
-    </div>
-  </FilterBuilder>
-</DrawerContent>
-
-<style>
-  .filteringHeroContent {
-    display: grid;
-    column-gap: var(--spacing-l);
-    row-gap: var(--spacing-s);
-    align-items: center;
-    grid-template-columns: minmax(150px, 1fr) 170px 120px minmax(150px, 1fr) 16px 16px;
-  }
-</style>
+<FilterBuilder
+  bind:filters={rawFilters}
+  behaviourFilters={true}
+  {schemaFields}
+  {datasource}
+  {allowBindings}
+>
+  <div slot="filteringHeroContent" />
+  <div slot="binding" let:filter>
+    <DrawerBindableInput
+      disabled={filter.noValue}
+      title={filter.field}
+      value={filter.value}
+      placeholder="Value"
+      {panel}
+      {bindings}
+      on:change={event => (filter.value = event.detail)}
+    />
+  </div>
+</FilterBuilder>
