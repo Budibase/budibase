@@ -6,7 +6,6 @@
   import { FilterBuilder } from "@budibase/frontend-core"
 
   import { createEventDispatcher, onMount } from "svelte"
-  // import FilterUsers from "./FilterUsers.svelte"
 
   export let schemaFields
   export let filters = []

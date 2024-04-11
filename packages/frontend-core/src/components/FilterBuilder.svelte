@@ -15,6 +15,7 @@
   import { generate } from "shortid"
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { getContext } from "svelte"
+  import FilterUsers from "./FilterUsers.svelte"
 
   const { OperatorOptions } = Constants
 
@@ -272,6 +273,15 @@
                   enableTime={!getSchema(filter)?.dateOnly}
                   timeOnly={getSchema(filter)?.timeOnly}
                   bind:value={filter.value}
+                />
+              {:else if filter.type === FieldType.BB_REFERENCE}
+                <FilterUsers
+                  bind:value={filter.value}
+                  multiselect={[
+                    OperatorOptions.In.value,
+                    OperatorOptions.ContainsAny.value,
+                  ].includes(filter.operator)}
+                  disabled={filter.noValue}
                 />
               {:else}
                 <Input disabled />
