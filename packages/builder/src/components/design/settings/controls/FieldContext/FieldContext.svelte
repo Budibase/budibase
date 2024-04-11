@@ -1,6 +1,6 @@
 <script>
   import ExplanationModal from './ExplanationModal/index.svelte'
-  import { warnings, errors } from "./validator";
+  import { messages } from "./columnInfo";
   import { Column, Support, NotRequired, StringNumber } from "./lines"
   import subjects from './subjects';
 
@@ -30,23 +30,23 @@
   class="tooltipContents"
 >
 
-<Column
-  {columnName}
-  {columnIcon}
-  {columnType}
-  {tableHref}
-  {setExplanationSubject}
-/>
-<Support
-  {support}
-  {setExplanationSubject}
-/>
-  {#if support?.warnings?.includes(warnings.stringAsNumber)}
+  <Column
+    {columnName}
+    {columnIcon}
+    {columnType}
+    {tableHref}
+    {setExplanationSubject}
+  />
+  <Support
+    support={support.support}
+    {setExplanationSubject}
+  />
+  {#if support?.messages?.includes(messages.stringAsNumber)}
     <StringNumber
       {setExplanationSubject}
     />
   {/if}
-  {#if support?.warnings?.includes(warnings.notRequired)}
+  {#if support?.messages?.includes(messages.notRequired)}
     <NotRequired
       {setExplanationSubject}
     />
