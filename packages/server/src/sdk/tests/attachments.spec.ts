@@ -23,7 +23,7 @@ describe("should be able to re-write attachment URLs", () => {
     await config.init()
   })
 
-  const coreBehaviour = async (tblSchema: any, field: string) => {
+  const coreBehaviour = async (tblSchema: any, row: any) => {
     const table = await config.api.table.save({
       name: "photos",
       type: "table",
@@ -34,41 +34,55 @@ describe("should be able to re-write attachment URLs", () => {
 
     for (let i = 0; i < FIND_LIMIT * 4; i++) {
       await config.api.row.save(table._id!, {
-        [field]: [attachment],
-        otherCol: "string",
+        ...row,
       })
     }
 
     const db = dbCore.getDB(config.getAppId())
     await sdk.backups.updateAttachmentColumns(db.name, db)
 
-    const rows = (await sdk.rows.getAllInternalRows(db.name)).filter(
-      row => row.tableId === table._id
-    )
-    for (const row of rows) {
-      expect(row.otherCol).toBe("string")
-      expect(row[field][0].url).toBe("")
-      expect(row[field][0].key).toBe(`${db.name}/attachments/a.png`)
+    return {
+      db,
+      rows: (await sdk.rows.getAllInternalRows(db.name)).filter(
+        row => row.tableId === table._id
+      ),
     }
   }
 
   it("Attachment field, should update URLs on a number of rows over the limit", async () => {
-    await coreBehaviour(
+    const { rows, db } = await coreBehaviour(
       {
         photo: {
-          type: FieldType.ATTACHMENT,
+          type: FieldType.ATTACHMENT_SINGLE,
           name: "photo",
+        },
+        gallery: {
+          type: FieldType.ATTACHMENTS,
+          name: "gallery",
         },
         otherCol: {
           type: FieldType.STRING,
           name: "otherCol",
         },
       },
-      "photo"
+      {
+        photo: { ...attachment },
+        gallery: [{ ...attachment }, { ...attachment }],
+        otherCol: "string",
+      }
     )
+    for (const row of rows) {
+      expect(row.otherCol).toBe("string")
+      expect(row.photo.url).toBe("")
+      expect(row.photo.key).toBe(`${db.name}/attachments/a.png`)
+      expect(row.gallery[0].url).toBe("")
+      expect(row.gallery[0].key).toBe(`${db.name}/attachments/a.png`)
+      expect(row.gallery[1].url).toBe("")
+      expect(row.gallery[1].key).toBe(`${db.name}/attachments/a.png`)
+    }
   })
   it("Signature field, should update URLs on a number of rows over the limit", async () => {
-    await coreBehaviour(
+    const { rows, db } = await coreBehaviour(
       {
         signature: {
           type: FieldType.SIGNATURE,
@@ -79,7 +93,15 @@ describe("should be able to re-write attachment URLs", () => {
           name: "otherCol",
         },
       },
-      "signature"
+      {
+        signature: [{ ...attachment }],
+        otherCol: "string",
+      }
     )
+    for (const row of rows) {
+      expect(row.otherCol).toBe("string")
+      expect(row.signature[0].url).toBe("")
+      expect(row.signature[0].key).toBe(`${db.name}/attachments/a.png`)
+    }
   })
 })

@@ -31,7 +31,8 @@ export async function getRowsWithAttachments(appId: string, table: Table) {
   const attachmentCols: string[] = []
   for (let [key, column] of Object.entries(table.schema)) {
     if (
-      column.type === FieldType.ATTACHMENT ||
+      column.type === FieldType.ATTACHMENTS ||
+      column.type === FieldType.ATTACHMENT_SINGLE ||
       column.type === FieldType.SIGNATURE
     ) {
       attachmentCols.push(key)

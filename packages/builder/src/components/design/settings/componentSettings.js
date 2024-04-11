@@ -70,6 +70,7 @@ const componentMap = {
   "field/longform": FormFieldSelect,
   "field/datetime": FormFieldSelect,
   "field/attachment": FormFieldSelect,
+  "field/attachment_single": FormFieldSelect,
   "field/s3": Input,
   "field/link": FormFieldSelect,
   "field/array": FormFieldSelect,

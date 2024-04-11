@@ -9,8 +9,8 @@ const MAX_DEPTH = 1
 const TYPES_TO_SKIP = [
   FieldType.FORMULA,
   FieldType.LONGFORM,
-  FieldType.ATTACHMENT,
   FieldType.SIGNATURE,
+  FieldType.ATTACHMENTS,
   //https://github.com/Budibase/budibase/issues/3030
   FieldType.INTERNAL,
 ]

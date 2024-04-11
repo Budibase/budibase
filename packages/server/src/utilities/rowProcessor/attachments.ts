@@ -1,12 +1,6 @@
 import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
-import {
-  FieldType,
-  RenameColumn,
-  Row,
-  RowAttachment,
-  Table,
-} from "@budibase/types"
+import { FieldType, RenameColumn, Row, Table } from "@budibase/types"
 
 export class AttachmentCleanup {
   static async coreCleanup(fileListFn: () => string[]): Promise<void> {
@@ -25,6 +19,28 @@ export class AttachmentCleanup {
     }
   }
 
+  private static extractAttachmentKeys(
+    type: FieldType,
+    rowData: any
+  ): string[] {
+    if (
+      type !== FieldType.ATTACHMENTS &&
+      type !== FieldType.ATTACHMENT_SINGLE &&
+      type !== FieldType.SIGNATURE
+    ) {
+      return []
+    }
+
+    if (!rowData) {
+      return []
+    }
+
+    if (type === FieldType.ATTACHMENTS || type === FieldType.SIGNATURE) {
+      return rowData.map((attachment: any) => attachment.key)
+    }
+    return [rowData.key]
+  }
+
   private static async tableChange(
     table: Table,
     rows: Row[],
@@ -35,18 +51,20 @@ export class AttachmentCleanup {
       const tableSchema = opts.oldTable?.schema || table.schema
       for (let [key, schema] of Object.entries(tableSchema)) {
         if (
-          schema.type !== FieldType.ATTACHMENT &&
+          schema.type !== FieldType.ATTACHMENTS &&
+          schema.type !== FieldType.ATTACHMENT_SINGLE &&
           schema.type !== FieldType.SIGNATURE
         ) {
           continue
         }
+
         const columnRemoved = opts.oldTable && !table.schema[key]
         const renaming = opts.rename?.old === key
         // old table had this column, new table doesn't - delete it
         if ((columnRemoved && !renaming) || opts.deleting) {
           rows.forEach(row => {
             files = files.concat(
-              (row[key] || []).map((attachment: any) => attachment.key)
+              AttachmentCleanup.extractAttachmentKeys(schema.type, row[key])
             )
           })
         }
@@ -72,18 +90,16 @@ export class AttachmentCleanup {
       let files: string[] = []
       for (let [key, schema] of Object.entries(table.schema)) {
         if (
-          schema.type !== FieldType.ATTACHMENT &&
+          schema.type !== FieldType.ATTACHMENTS &&
+          schema.type !== FieldType.ATTACHMENT_SINGLE &&
           schema.type !== FieldType.SIGNATURE
         ) {
           continue
         }
 
         rows.forEach(row => {
-          if (!Array.isArray(row[key])) {
-            return
-          }
           files = files.concat(
-            row[key].map((attachment: any) => attachment.key)
+            AttachmentCleanup.extractAttachmentKeys(schema.type, row[key])
           )
         })
       }
@@ -96,18 +112,21 @@ export class AttachmentCleanup {
       let files: string[] = []
       for (let [key, schema] of Object.entries(table.schema)) {
         if (
-          schema.type !== FieldType.ATTACHMENT &&
+          schema.type !== FieldType.ATTACHMENTS &&
+          schema.type !== FieldType.ATTACHMENT_SINGLE &&
           schema.type !== FieldType.SIGNATURE
         ) {
           continue
         }
-        const oldKeys =
-          opts.oldRow[key]?.map(
-            (attachment: RowAttachment) => attachment.key
-          ) || []
-        const newKeys =
-          opts.row[key]?.map((attachment: RowAttachment) => attachment.key) ||
-          []
+
+        const oldKeys = AttachmentCleanup.extractAttachmentKeys(
+          schema.type,
+          opts.oldRow[key]
+        )
+        const newKeys = AttachmentCleanup.extractAttachmentKeys(
+          schema.type,
+          opts.row[key]
+        )
         files = files.concat(
           oldKeys.filter((key: string) => newKeys.indexOf(key) === -1)
         )
