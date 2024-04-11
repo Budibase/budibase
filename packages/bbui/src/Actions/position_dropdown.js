@@ -41,6 +41,8 @@ export default function positionDropdown(element, opts) {
         offset: opts.offset,
       })
     } else {
+      const renderHeight = maxHeight || elementBounds.height
+
       // Determine vertical styles
       const topSpace = anchorBounds.top
       const bottomSpace = window.innerHeight - anchorBounds.bottom
@@ -52,11 +54,11 @@ export default function positionDropdown(element, opts) {
           styles.top = window.innerHeight - elementBounds.height
         }
       } else if (
-        window.innerHeight - anchorBounds.bottom < (maxHeight || 100) &&
+        window.innerHeight - anchorBounds.bottom < renderHeight + offset &&
         topSpace - bottomSpace > 100
       ) {
-        styles.top = anchorBounds.top - elementBounds.height - offset
-        styles.maxHeight = maxHeight || 240
+        styles.top = anchorBounds.top - renderHeight - offset
+        styles.maxHeight = maxHeight
       } else {
         styles.top = anchorBounds.bottom + offset
         styles.maxHeight =

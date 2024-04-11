@@ -13,6 +13,7 @@
 
   export let id = null
   export let disabled = false
+  export let readonly = false
   export let error = null
   export let enableTime = true
   export let value = null
@@ -108,6 +109,7 @@
 <DateTimeInput
   bind:anchor
   {disabled}
+  {readonly}
   {error}
   {placeholder}
   {id}
@@ -125,8 +127,9 @@
   on:close
   on:open={onOpen}
   on:close={onClose}
-  {anchor}
   portalTarget={appendTo}
+  maxHeight={null}
+  {anchor}
   {align}
 >
   {#if isOpen}

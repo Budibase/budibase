@@ -3,12 +3,13 @@
 
   export let anchor
   export let disabled
+  export let readonly
   export let error
   export let focused
   export let placeholder
   export let id
   export let value
-  export let icon = "Calendar"
+  export let icon
   export let enableTime
   export let timeOnly
 
@@ -32,11 +33,11 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   bind:this={anchor}
-  class:is-disabled={disabled}
+  class:is-disabled={disabled || readonly}
   class:is-invalid={!!error}
   class="spectrum-InputGroup spectrum-Datepicker"
   class:is-focused={focused}
-  aria-readonly="false"
+  aria-readonly={readonly}
   aria-required="false"
   aria-haspopup="true"
   on:click
@@ -57,6 +58,7 @@
     {/if}
     <input
       {disabled}
+      {readonly}
       data-input
       type="text"
       class="spectrum-Textfield-input spectrum-InputGroup-input"

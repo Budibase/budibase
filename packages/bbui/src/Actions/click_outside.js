@@ -1,5 +1,6 @@
 const ignoredClasses = [
   ".flatpickr-calendar",
+  ".spectrum-Calendar",
   ".spectrum-Popover",
   ".download-js-link",
 ]
