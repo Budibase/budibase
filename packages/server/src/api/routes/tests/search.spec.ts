@@ -6,10 +6,17 @@ import {
   Datasource,
   EmptyFilterOption,
   FieldType,
-  Row,
-  SearchFilters,
+  RowSearchParams,
+  SortOrder,
   Table,
 } from "@budibase/types"
+
+function leftContainsRight<
+  A extends Record<string, any>,
+  B extends Record<string, any>
+>(left: A, right: B) {
+  return Object.entries(right).every(([k, v]) => left[k] === v)
+}
 
 jest.unmock("mssql")
 
@@ -47,10 +54,79 @@ describe.each([
     }
   })
 
-  describe("strings", () => {
-    beforeAll(async () => {
-      table = await config.api.table.save(
-        tableForDatasource(datasource, {
+  async function testSearch<RowType extends Record<string, any>>(
+    test: SearchTest<RowType>,
+    table: Table
+  ) {
+    const expected = test.expectToFind
+    delete test.expectToFind
+    const { rows: foundRows } = await config.api.row.search(table._id!, {
+      ...test,
+      tableId: table._id!,
+    })
+    if (!expected) {
+      return
+    }
+    expect(foundRows).toHaveLength(expected.length)
+    expect(foundRows).toEqual(
+      expect.arrayContaining(
+        expected.map(expectedRow =>
+          expect.objectContaining(
+            foundRows.find(foundRow => leftContainsRight(foundRow, expectedRow))
+          )
+        )
+      )
+    )
+  }
+
+  function searchTests<T extends Record<string, any>>(
+    name: string,
+    opts: {
+      table: (ds?: Datasource) => Promise<Table>
+      rows: T[]
+      tests: SearchTest<T>[]
+    }
+  ) {
+    let table: Table
+
+    for (const test of opts.tests) {
+      test.toString = () => {
+        const queryStr = JSON.stringify({
+          query: test.query,
+          limit: test.limit,
+          sort: test.sort,
+          sortOrder: test.sortOrder,
+        })
+        const expectStr = JSON.stringify(test.expectToFind)
+        return `should run: ${queryStr} and find ${expectStr}`
+      }
+    }
+
+    // eslint-disable-next-line jest/valid-title
+    describe(name, () => {
+      beforeAll(async () => {
+        table = await opts.table(datasource)
+      })
+
+      beforeAll(async () => {
+        await Promise.all(
+          opts.rows.map(r => config.api.row.save(table._id!, r))
+        )
+      })
+
+      it.each(opts.tests)(`%s`, test => testSearch(test, table))
+    })
+  }
+
+  interface SearchTest<RowType extends Record<string, any>>
+    extends Omit<RowSearchParams, "tableId"> {
+    expectToFind?: RowType[]
+  }
+
+  searchTests("strings", {
+    table: async ds => {
+      return await config.api.table.save(
+        tableForDatasource(ds, {
           schema: {
             name: {
               name: "name",
@@ -59,66 +135,38 @@ describe.each([
           },
         })
       )
-    })
+    },
+    rows: [{ name: "foo" }, { name: "bar" }],
+    tests: [
+      // These test cases are generic and don't really need to be repeated for
+      // all data types, so we just do them here.
 
-    const rows = [{ name: "foo" }, { name: "bar" }]
-    let savedRows: Row[]
-
-    beforeAll(async () => {
-      savedRows = await Promise.all(
-        rows.map(r => config.api.row.save(table._id!, r))
-      )
-    })
-
-    interface StringSearchTest {
-      query: SearchFilters
-      expected: (typeof rows)[number][]
-    }
-
-    const stringSearchTests: StringSearchTest[] = [
-      // These three test cases are generic and don't really need
-      // to be repeated for all data types, so we just do them here.
-      { query: {}, expected: rows },
+      // @ts-expect-error - intentionally not passing a query to make sure the
+      // API can handle it.
+      { expectToFind: [{ name: "foo" }, { name: "bar" }] },
+      { query: {}, expectToFind: [{ name: "foo" }, { name: "bar" }] },
       {
         query: { onEmptyFilter: EmptyFilterOption.RETURN_ALL },
-        expected: rows,
+        expectToFind: [{ name: "foo" }, { name: "bar" }],
       },
       {
         query: { onEmptyFilter: EmptyFilterOption.RETURN_NONE },
-        expected: [],
+        expectToFind: [],
       },
       // The rest of these tests are specific to strings.
-      { query: { string: { name: "foo" } }, expected: [rows[0]] },
-      { query: { string: { name: "none" } }, expected: [] },
-      { query: { fuzzy: { name: "oo" } }, expected: [rows[0]] },
-      { query: { equal: { name: "foo" } }, expected: [rows[0]] },
-      { query: { notEqual: { name: "foo" } }, expected: [rows[1]] },
-      { query: { oneOf: { name: ["foo"] } }, expected: [rows[0]] },
-    ]
-
-    it.each(stringSearchTests)(
-      `should be able to run query: $query`,
-      async ({ query, expected }) => {
-        const { rows: foundRows } = await config.api.row.search(table._id!, {
-          tableId: table._id!,
-          query,
-        })
-        expect(foundRows).toHaveLength(expected.length)
-        expect(foundRows).toEqual(
-          expect.arrayContaining(
-            expected.map(r =>
-              expect.objectContaining(savedRows.find(sr => sr.name === r.name)!)
-            )
-          )
-        )
-      }
-    )
+      { query: { string: { name: "foo" } }, expectToFind: [{ name: "foo" }] },
+      { query: { string: { name: "none" } }, expectToFind: [] },
+      { query: { fuzzy: { name: "oo" } }, expectToFind: [{ name: "foo" }] },
+      { query: { equal: { name: "foo" } }, expectToFind: [{ name: "foo" }] },
+      { query: { notEqual: { name: "foo" } }, expectToFind: [{ name: "bar" }] },
+      { query: { oneOf: { name: ["foo"] } }, expectToFind: [{ name: "foo" }] },
+    ],
   })
 
-  describe("number", () => {
-    beforeAll(async () => {
-      table = await config.api.table.save(
-        tableForDatasource(datasource, {
+  searchTests("numbers", {
+    table: async ds => {
+      return await config.api.table.save(
+        tableForDatasource(ds, {
           schema: {
             age: {
               name: "age",
@@ -127,56 +175,33 @@ describe.each([
           },
         })
       )
-    })
-
-    const rows = [{ age: 1 }, { age: 10 }]
-    let savedRows: Row[]
-
-    beforeAll(async () => {
-      savedRows = await Promise.all(
-        rows.map(r => config.api.row.save(table._id!, r))
-      )
-    })
-
-    interface NumberSearchTest {
-      query: SearchFilters
-      expected: (typeof rows)[number][]
-    }
-
-    const numberSearchTests: NumberSearchTest[] = [
-      { query: { equal: { age: 1 } }, expected: [rows[0]] },
-      { query: { equal: { age: 2 } }, expected: [] },
-      { query: { notEqual: { age: 1 } }, expected: [rows[1]] },
-      { query: { oneOf: { age: [1] } }, expected: [rows[0]] },
-      { query: { range: { age: { low: 1, high: 5 } } }, expected: [rows[0]] },
-      { query: { range: { age: { low: 0, high: 1 } } }, expected: [rows[0]] },
-      { query: { range: { age: { low: 3, high: 4 } } }, expected: [] },
-      { query: { range: { age: { low: 0, high: 11 } } }, expected: rows },
-    ]
-
-    it.each(numberSearchTests)(
-      `should be able to run query: $query`,
-      async ({ query, expected }) => {
-        const { rows: foundRows } = await config.api.row.search(table._id!, {
-          tableId: table._id!,
-          query,
-        })
-        expect(foundRows).toHaveLength(expected.length)
-        expect(foundRows).toEqual(
-          expect.arrayContaining(
-            expected.map(r =>
-              expect.objectContaining(savedRows.find(sr => sr.age === r.age)!)
-            )
-          )
-        )
-      }
-    )
+    },
+    rows: [{ age: 1 }, { age: 10 }],
+    tests: [
+      { query: { equal: { age: 1 } }, expectToFind: [{ age: 1 }] },
+      { query: { equal: { age: 2 } }, expectToFind: [] },
+      { query: { notEqual: { age: 1 } }, expectToFind: [{ age: 10 }] },
+      { query: { oneOf: { age: [1] } }, expectToFind: [{ age: 1 }] },
+      {
+        query: { range: { age: { low: 1, high: 5 } } },
+        expectToFind: [{ age: 1 }],
+      },
+      {
+        query: { range: { age: { low: 0, high: 1 } } },
+        expectToFind: [{ age: 1 }],
+      },
+      { query: { range: { age: { low: 3, high: 4 } } }, expectToFind: [] },
+      {
+        query: { range: { age: { low: 0, high: 11 } } },
+        expectToFind: [{ age: 1 }, { age: 10 }],
+      },
+    ],
   })
 
-  describe("dates", () => {
-    beforeEach(async () => {
-      table = await config.api.table.save(
-        tableForDatasource(datasource, {
+  searchTests("dates", {
+    table: async ds => {
+      return await config.api.table.save(
+        tableForDatasource(ds, {
           schema: {
             dob: {
               name: "dob",
@@ -185,41 +210,27 @@ describe.each([
           },
         })
       )
-    })
-
-    const rows = [
+    },
+    rows: [
       { dob: new Date("2020-01-01").toISOString() },
       { dob: new Date("2020-01-10").toISOString() },
-    ]
-    let savedRows: Row[]
-
-    beforeEach(async () => {
-      savedRows = await Promise.all(
-        rows.map(r => config.api.row.save(table._id!, r))
-      )
-    })
-
-    interface DateSearchTest {
-      query: SearchFilters
-      expected: (typeof rows)[number][]
-    }
-
-    const dateSearchTests: DateSearchTest[] = [
+    ],
+    tests: [
       {
         query: { equal: { dob: new Date("2020-01-01").toISOString() } },
-        expected: [rows[0]],
+        expectToFind: [{ dob: new Date("2020-01-01").toISOString() }],
       },
       {
         query: { equal: { dob: new Date("2020-01-02").toISOString() } },
-        expected: [],
+        expectToFind: [],
       },
       {
         query: { notEqual: { dob: new Date("2020-01-01").toISOString() } },
-        expected: [rows[1]],
+        expectToFind: [{ dob: new Date("2020-01-10").toISOString() }],
       },
       {
         query: { oneOf: { dob: [new Date("2020-01-01").toISOString()] } },
-        expected: [rows[0]],
+        expectToFind: [{ dob: new Date("2020-01-01").toISOString() }],
       },
       {
         query: {
@@ -230,7 +241,7 @@ describe.each([
             },
           },
         },
-        expected: [rows[0]],
+        expectToFind: [{ dob: new Date("2020-01-01").toISOString() }],
       },
       {
         query: {
@@ -241,7 +252,10 @@ describe.each([
             },
           },
         },
-        expected: rows,
+        expectToFind: [
+          { dob: new Date("2020-01-01").toISOString() },
+          { dob: new Date("2020-01-10").toISOString() },
+        ],
       },
       {
         query: {
@@ -252,26 +266,8 @@ describe.each([
             },
           },
         },
-        expected: [rows[1]],
+        expectToFind: [{ dob: new Date("2020-01-10").toISOString() }],
       },
-    ]
-
-    it.each(dateSearchTests)(
-      `should be able to run query: $query`,
-      async ({ query, expected }) => {
-        const { rows: foundRows } = await config.api.row.search(table._id!, {
-          tableId: table._id!,
-          query,
-        })
-        expect(foundRows).toHaveLength(expected.length)
-        expect(foundRows).toEqual(
-          expect.arrayContaining(
-            expected.map(r =>
-              expect.objectContaining(savedRows.find(sr => sr.dob === r.dob)!)
-            )
-          )
-        )
-      }
-    )
+    ],
   })
 })
