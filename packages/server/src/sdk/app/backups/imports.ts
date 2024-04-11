@@ -5,6 +5,7 @@ import {
   Automation,
   AutomationTriggerStepId,
   RowAttachment,
+  FieldType,
 } from "@budibase/types"
 import { getAutomationParams } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
@@ -58,10 +59,20 @@ export async function updateAttachmentColumns(prodAppId: string, db: Database) {
     updatedRows = updatedRows.concat(
       rows.map(row => {
         for (let column of columns) {
-          if (Array.isArray(row[column])) {
+          const columnType = table.schema[column].type
+          if (
+            (columnType === FieldType.ATTACHMENTS ||
+              columnType === FieldType.SIGNATURE) &&
+            Array.isArray(row[column])
+          ) {
             row[column] = row[column].map((attachment: RowAttachment) =>
               rewriteAttachmentUrl(prodAppId, attachment)
             )
+          } else if (
+            columnType === FieldType.ATTACHMENT_SINGLE &&
+            row[column]
+          ) {
+            row[column] = rewriteAttachmentUrl(prodAppId, row[column])
           }
         }
         return row

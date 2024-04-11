@@ -11,10 +11,10 @@ const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.INTERNAL]: true,
   [FieldType.BARCODEQR]: true,
   [FieldType.BIGINT]: true,
-
   [FieldType.BOOLEAN]: false,
   [FieldType.ARRAY]: false,
-  [FieldType.ATTACHMENT]: false,
+  [FieldType.ATTACHMENTS]: false,
+  [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.SIGNATURE]: false,
   [FieldType.LINK]: false,
   [FieldType.JSON]: false,
@@ -35,7 +35,8 @@ const allowSortColumnByType: Record<FieldType, boolean> = {
   [FieldType.JSON]: true,
 
   [FieldType.FORMULA]: false,
-  [FieldType.ATTACHMENT]: false,
+  [FieldType.ATTACHMENTS]: false,
+  [FieldType.ATTACHMENT_SINGLE]: false,
   [FieldType.SIGNATURE]: false,
   [FieldType.ARRAY]: false,
   [FieldType.LINK]: false,

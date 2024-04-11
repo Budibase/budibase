@@ -6,14 +6,17 @@ import * as setup from "./utilities"
 import { context, InternalTable, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  AttachmentFieldMetadata,
   AutoFieldSubType,
   Datasource,
+  DateFieldMetadata,
   DeleteRow,
   FieldSchema,
   FieldType,
   FieldTypeSubtypes,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
+  NumberFieldMetadata,
   QuotaUsageType,
   RelationshipType,
   Row,
@@ -232,9 +235,14 @@ describe.each([
           name: "str",
           constraints: { type: "string", presence: false },
         }
-        const attachment: FieldSchema = {
-          type: FieldType.ATTACHMENT,
-          name: "attachment",
+        const singleAttachment: FieldSchema = {
+          type: FieldType.ATTACHMENT_SINGLE,
+          name: "single attachment",
+          constraints: { presence: false },
+        }
+        const attachmentList: AttachmentFieldMetadata = {
+          type: FieldType.ATTACHMENTS,
+          name: "attachments",
           constraints: { type: "array", presence: false },
         }
         const signature: FieldSchema = {
@@ -247,12 +255,12 @@ describe.each([
           name: "boolean",
           constraints: { type: "boolean", presence: false },
         }
-        const number: FieldSchema = {
+        const number: NumberFieldMetadata = {
           type: FieldType.NUMBER,
           name: "str",
           constraints: { type: "number", presence: false },
         }
-        const datetime: FieldSchema = {
+        const datetime: DateFieldMetadata = {
           type: FieldType.DATETIME,
           name: "datetime",
           constraints: {
@@ -302,10 +310,12 @@ describe.each([
               boolUndefined: bool,
               boolString: bool,
               boolBool: bool,
-              attachmentNull: attachment,
-              attachmentUndefined: attachment,
-              attachmentEmpty: attachment,
-              attachmentEmptyArrayStr: attachment,
+              singleAttachmentNull: singleAttachment,
+              singleAttachmentUndefined: singleAttachment,
+              attachmentListNull: attachmentList,
+              attachmentListUndefined: attachmentList,
+              attachmentListEmpty: attachmentList,
+              attachmentListEmptyArrayStr: attachmentList,
               signatureNull: signature,
               signatureUndefined: signature,
               signatureEmpty: signature,
@@ -345,10 +355,12 @@ describe.each([
           boolString: "true",
           boolBool: true,
           tableId: table._id,
-          attachmentNull: null,
-          attachmentUndefined: undefined,
-          attachmentEmpty: "",
-          attachmentEmptyArrayStr: "[]",
+          singleAttachmentNull: null,
+          singleAttachmentUndefined: undefined,
+          attachmentListNull: null,
+          attachmentListUndefined: undefined,
+          attachmentListEmpty: "",
+          attachmentListEmptyArrayStr: "[]",
           signatureNull: null,
           signatureUndefined: undefined,
           signatureEmpty: "",
@@ -381,10 +393,12 @@ describe.each([
         expect(row.boolUndefined).toBe(undefined)
         expect(row.boolString).toBe(true)
         expect(row.boolBool).toBe(true)
-        expect(row.attachmentNull).toEqual([])
-        expect(row.attachmentUndefined).toBe(undefined)
-        expect(row.attachmentEmpty).toEqual([])
-        expect(row.attachmentEmptyArrayStr).toEqual([])
+        expect(row.singleAttachmentNull).toEqual(null)
+        expect(row.singleAttachmentUndefined).toBe(undefined)
+        expect(row.attachmentListNull).toEqual([])
+        expect(row.attachmentListUndefined).toBe(undefined)
+        expect(row.attachmentListEmpty).toEqual([])
+        expect(row.attachmentListEmptyArrayStr).toEqual([])
         expect(row.signatureNull).toEqual([])
         expect(row.signatureUndefined).toBe(undefined)
         expect(row.signatureEmpty).toEqual([])
@@ -837,40 +851,54 @@ describe.each([
       const coreAttachmentEnrichment = async (
         schema: any,
         field: string,
-        attachmentId: string
+        attachmentCfg: string | string[]
       ) => {
-        const table = await config.api.table.save(
+        const testTable = await config.api.table.save(
           defaultTable({
             schema,
           })
         )
-        const row = await config.api.row.save(table._id!, {
+        const attachmentToStoreKey = (attachmentId: string) => {
+          return {
+            key: `${config.getAppId()}/attachments/${attachmentId}`,
+          }
+        }
+        const draftRow = {
           name: "test",
           description: "test",
-          [field]: [
-            {
-              key: `${config.getAppId()}/attachments/${attachmentId}`,
-            },
-          ],
-          tableId: table._id,
-        })
+          [field]:
+            typeof attachmentCfg === "string"
+              ? attachmentToStoreKey(attachmentCfg)
+              : attachmentCfg.map(attachmentToStoreKey),
+          tableId: testTable._id,
+        }
+        const row = await config.api.row.save(testTable._id!, draftRow)
+
         await config.withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
-            const enriched = await outputProcessing(table, [row])
-            expect((enriched as Row[])[0]?.[field][0].url).toBe(
-              `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
-            )
+            const enriched: Row[] = await outputProcessing(table, [row])
+            const [targetRow] = enriched
+            const attachmentEntries = Array.isArray(targetRow[field])
+              ? targetRow[field]
+              : [targetRow[field]]
+
+            for (const entry of attachmentEntries) {
+              const attachmentId = entry.key.split("/").pop()
+              expect(entry.url).toBe(
+                `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
+              )
+            }
           })
         })
       }
 
-      it("should allow enriching attachment rows", async () => {
-        coreAttachmentEnrichment(
+      it("should allow enriching single attachment rows", async () => {
+        await coreAttachmentEnrichment(
           {
             attachment: {
-              type: FieldType.ATTACHMENT,
+              type: FieldType.ATTACHMENT_SINGLE,
               name: "attachment",
-              constraints: { type: "array", presence: false },
+              constraints: { presence: false },
             },
           },
           "attachment",
@@ -878,8 +906,22 @@ describe.each([
         )
       })
 
+      it("should allow enriching attachment list rows", async () => {
+        await coreAttachmentEnrichment(
+          {
+            attachments: {
+              type: FieldType.ATTACHMENTS,
+              name: "attachments",
+              constraints: { type: "array", presence: false },
+            },
+          },
+          "attachments",
+          [`${uuid.v4()}.csv`]
+        )
+      })
+
       it("should allow enriching signature rows", async () => {
-        coreAttachmentEnrichment(
+        await coreAttachmentEnrichment(
           {
             signature: {
               type: FieldType.SIGNATURE,
@@ -888,7 +930,7 @@ describe.each([
             },
           },
           "signature",
-          `${uuid.v4()}.png`
+          [`${uuid.v4()}.png`]
         )
       })
     })

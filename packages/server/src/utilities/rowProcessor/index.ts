@@ -147,9 +147,9 @@ export async function inputProcessing(
       clonedRow[key] = coerce(value, field.type)
     }
 
-    // remove any attachment/signature urls, they are generated on read
+    // remove any attachment urls, they are generated on read
     if (
-      field.type === FieldType.ATTACHMENT ||
+      field.type === FieldType.ATTACHMENTS ||
       field.type === FieldType.SIGNATURE
     ) {
       const attachments = clonedRow[key]
@@ -157,6 +157,11 @@ export async function inputProcessing(
         attachments.forEach((attachment: RowAttachment) => {
           delete attachment.url
         })
+      }
+    } else if (field.type === FieldType.ATTACHMENT_SINGLE) {
+      const attachment = clonedRow[key]
+      if (attachment?.url) {
+        delete clonedRow[key].url
       }
     }
 
@@ -220,7 +225,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
     if (
-      column.type === FieldType.ATTACHMENT ||
+      column.type === FieldType.ATTACHMENTS ||
       column.type === FieldType.SIGNATURE
     ) {
       for (let row of enriched) {
@@ -232,6 +237,16 @@ export async function outputProcessing<T extends Row[] | Row>(
             attachment.url = objectStore.getAppFileUrl(attachment.key)
           }
         })
+      }
+    } else if (column.type === FieldType.ATTACHMENT_SINGLE) {
+      for (let row of enriched) {
+        if (!row[property]) {
+          continue
+        }
+
+        if (!row[property].url) {
+          row[property].url = objectStore.getAppFileUrl(row[property].key)
+        }
       }
     } else if (
       !opts.skipBBReferences &&
