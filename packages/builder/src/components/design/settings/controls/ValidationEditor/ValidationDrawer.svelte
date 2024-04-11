@@ -108,6 +108,7 @@
       Constraints.MaxFileSize,
       Constraints.MaxUploadSize,
     ],
+    ["attachment_single"]: [Constraints.Required, Constraints.MaxUploadSize],
     ["signature"]: [Constraints.Required],
     ["link"]: [
       Constraints.Required,
