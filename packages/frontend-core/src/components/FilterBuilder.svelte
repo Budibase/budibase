@@ -157,86 +157,88 @@
         {/if}
       </Body>
       {#if filters?.length}
-        <div class="filter-label">
-          <Label>Filters</Label>
-        </div>
-        <div class="fields">
-          {#each filters as filter}
-            <Select
-              bind:value={filter.field}
-              options={fieldOptions}
-              on:change={() => onFieldChange(filter)}
-              placeholder="Column"
-            />
-            <Select
-              disabled={!filter.field}
-              options={getValidOperatorsForType(filter)}
-              bind:value={filter.operator}
-              on:change={() => onOperatorChange(filter)}
-              placeholder={null}
-            />
-            {#if allowBindings}
+        <div>
+          <div class="filter-label">
+            <Label>Filters</Label>
+          </div>
+          <div class="fields">
+            {#each filters as filter}
               <Select
-                disabled={filter.noValue || !filter.field}
-                options={valueTypeOptions}
-                bind:value={filter.valueType}
-                on:change={() => onValueTypeChange(filter)}
+                bind:value={filter.field}
+                options={fieldOptions}
+                on:change={() => onFieldChange(filter)}
+                placeholder="Column"
+              />
+              <Select
+                disabled={!filter.field}
+                options={getValidOperatorsForType(filter)}
+                bind:value={filter.operator}
+                on:change={() => onOperatorChange(filter)}
                 placeholder={null}
               />
-            {/if}
-            {#if allowBindings && filter.field && filter.valueType === "Binding"}
-              <slot name="binding" {filter} />
-            {:else if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA].includes(filter.type)}
-              <Input disabled={filter.noValue} bind:value={filter.value} />
-            {:else if filter.type === FieldType.ARRAY || (filter.type === FieldType.OPTIONS && filter.operator === SearchQueryOperators.ONE_OF)}
-              <Multiselect
-                disabled={filter.noValue}
-                options={getFieldOptions(filter.field)}
-                bind:value={filter.value}
-              />
-            {:else if filter.type === FieldType.OPTIONS}
-              <Combobox
-                disabled={filter.noValue}
-                options={getFieldOptions(filter.field)}
-                bind:value={filter.value}
-              />
-            {:else if filter.type === FieldType.BOOLEAN}
-              <Combobox
-                disabled={filter.noValue}
-                options={[
-                  { label: "True", value: "true" },
-                  { label: "False", value: "false" },
-                ]}
-                bind:value={filter.value}
-              />
-            {:else if filter.type === FieldType.DATETIME}
-              <DatePicker
-                disabled={filter.noValue}
-                enableTime={!getSchema(filter)?.dateOnly}
-                timeOnly={getSchema(filter)?.timeOnly}
-                bind:value={filter.value}
-              />
-            {:else}
-              <Input disabled />
-            {/if}
-            <div class="controls">
-              <Icon
-                class
-                name="Duplicate"
-                hoverable
-                size="S"
-                on:click={() => duplicateFilter(filter.id)}
-              />
-            </div>
-            <div class="controls">
-              <Icon
-                name="Close"
-                hoverable
-                size="S"
-                on:click={() => removeFilter(filter.id)}
-              />
-            </div>
-          {/each}
+              {#if allowBindings}
+                <Select
+                  disabled={filter.noValue || !filter.field}
+                  options={valueTypeOptions}
+                  bind:value={filter.valueType}
+                  on:change={() => onValueTypeChange(filter)}
+                  placeholder={null}
+                />
+              {/if}
+              {#if allowBindings && filter.field && filter.valueType === "Binding"}
+                <slot name="binding" {filter} />
+              {:else if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA].includes(filter.type)}
+                <Input disabled={filter.noValue} bind:value={filter.value} />
+              {:else if filter.type === FieldType.ARRAY || (filter.type === FieldType.OPTIONS && filter.operator === SearchQueryOperators.ONE_OF)}
+                <Multiselect
+                  disabled={filter.noValue}
+                  options={getFieldOptions(filter.field)}
+                  bind:value={filter.value}
+                />
+              {:else if filter.type === FieldType.OPTIONS}
+                <Combobox
+                  disabled={filter.noValue}
+                  options={getFieldOptions(filter.field)}
+                  bind:value={filter.value}
+                />
+              {:else if filter.type === FieldType.BOOLEAN}
+                <Combobox
+                  disabled={filter.noValue}
+                  options={[
+                    { label: "True", value: "true" },
+                    { label: "False", value: "false" },
+                  ]}
+                  bind:value={filter.value}
+                />
+              {:else if filter.type === FieldType.DATETIME}
+                <DatePicker
+                  disabled={filter.noValue}
+                  enableTime={!getSchema(filter)?.dateOnly}
+                  timeOnly={getSchema(filter)?.timeOnly}
+                  bind:value={filter.value}
+                />
+              {:else}
+                <Input disabled />
+              {/if}
+              <div class="controls">
+                <Icon
+                  class
+                  name="Duplicate"
+                  hoverable
+                  size="S"
+                  on:click={() => duplicateFilter(filter.id)}
+                />
+              </div>
+              <div class="controls">
+                <Icon
+                  name="Close"
+                  hoverable
+                  size="S"
+                  on:click={() => removeFilter(filter.id)}
+                />
+              </div>
+            {/each}
+          </div>
         </div>
       {/if}
       <div>
