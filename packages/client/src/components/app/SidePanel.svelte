@@ -5,9 +5,6 @@
   const { styleable, sidePanelStore, builderStore, dndIsDragging } =
     getContext("sdk")
 
-  let handlingSidePanelOpen
-  let handlingSidePanelClose
-
   export let sidePanelOpen
   export let sidePanelClose
   export let clickOutsideToClose
@@ -52,19 +49,15 @@
   }
 
   const handleSidePanelOpen = async () => {
-    handlingSidePanelOpen = true
     if (sidePanelOpen) {
       await sidePanelOpen()
     }
-    handlingSidePanelOpen = false
   }
 
   const handleSidePanelClose = async () => {
-    handlingSidePanelClose = true
     if (sidePanelClose) {
       await sidePanelClose()
     }
-    handlingSidePanelOpen = false
   }
 
   const showInSidePanel = (el, visible) => {
