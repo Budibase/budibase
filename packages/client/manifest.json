@@ -4427,7 +4427,7 @@
         "defaultValue": false
       },
       {
-        "type": "validation/attachment",
+        "type": "validation/attachment_single",
         "label": "Validation",
         "key": "validation"
       },
