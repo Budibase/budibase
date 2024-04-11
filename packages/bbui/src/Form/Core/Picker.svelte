@@ -45,7 +45,6 @@
   const dispatch = createEventDispatcher()
 
   let button
-  let popover
   let component
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
@@ -146,11 +145,11 @@
     <use xlink:href="#spectrum-css-icon-Chevron100" />
   </svg>
 </button>
+
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <Popover
   anchor={customAnchor ? customAnchor : button}
   align={align || "left"}
-  bind:this={popover}
   {open}
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
@@ -266,16 +265,6 @@
     width: 100%;
     box-shadow: none;
   }
-
-  .subtitle-text {
-    font-size: 12px;
-    line-height: 15px;
-    font-weight: 500;
-    color: var(--spectrum-global-color-gray-600);
-    display: block;
-    margin-top: var(--spacing-s);
-  }
-
   .spectrum-Picker-label.auto-width {
     margin-right: var(--spacing-xs);
   }
@@ -356,11 +345,9 @@
   .option-extra.icon.field-icon {
     display: flex;
   }
-
   .option-tag {
     margin: 0 var(--spacing-m) 0 var(--spacing-m);
   }
-
   .option-tag :global(.spectrum-Tags-item > .spectrum-Icon) {
     margin-top: 2px;
   }
@@ -373,5 +360,14 @@
   }
   .loading--withAutocomplete {
     top: calc(34px + var(--spacing-m));
+  }
+
+  .subtitle-text {
+    font-size: 12px;
+    line-height: 15px;
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-600);
+    display: block;
+    margin-top: var(--spacing-s);
   }
 </style>
