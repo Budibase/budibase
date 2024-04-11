@@ -1,11 +1,10 @@
 <script>
   import ExplanationModal from './ExplanationModal/index.svelte'
-  import { messages } from "./columnInfo";
+  import { messages as messageConstants, getColumnInfoMessagesAndSupport } from "./columnInfo";
   import { Column, Support, NotRequired, StringNumber } from "./lines"
   import subjects from './subjects';
 
-  export let support = {}
-
+  export let columnInfo
   export let columnIcon
   export let columnType
   export let columnName
@@ -14,6 +13,15 @@
   export let tableHref = () => {}
 
   export let schema
+
+  let support
+  let messages = []
+
+  $: {
+    const columnInfoMessagesAndSupport = getColumnInfoMessagesAndSupport(schema, columnInfo)
+    support = columnInfoMessagesAndSupport.support
+    messages = columnInfoMessagesAndSupport.messages
+  }
 
   let root = null;
 
@@ -38,15 +46,15 @@
     {setExplanationSubject}
   />
   <Support
-    support={support.support}
+    {support}
     {setExplanationSubject}
   />
-  {#if support?.messages?.includes(messages.stringAsNumber)}
+  {#if messages.includes(messageConstants.stringAsNumber)}
     <StringNumber
       {setExplanationSubject}
     />
   {/if}
-  {#if support?.messages?.includes(messages.notRequired)}
+  {#if messages.includes(messageConstants.notRequired)}
     <NotRequired
       {setExplanationSubject}
     />

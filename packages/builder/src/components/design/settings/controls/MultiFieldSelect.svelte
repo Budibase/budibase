@@ -5,7 +5,7 @@
     componentStore,
   } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { FieldContext, getColumnInfoMessagesAndSupport } from './FieldContext'
+  import { FieldContext } from './FieldContext'
   import { FIELDS } from 'constants/backend'
   import { goto, params } from "@roxi/routify"
   import { debounce } from "lodash"
@@ -25,28 +25,11 @@
     componentInstance?._component
   )
 
-  const getFieldSupport = (schema, columnInfo) => {
-    if (columnInfo == null) {
-      return {}
-    }
-
-    const fieldSupport = {}
-    Object.entries(schema || {}).forEach(([key, value]) => {
-      // super TODO: nicer to do this at the component level jit and store each value seperately so i don't have this long ass name???
-      fieldSupport[key] = getColumnInfoMessagesAndSupport(value, columnInfo)
-    })
-
-    return fieldSupport
-  }
-
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
   $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
   $: options = Object.keys(schema || {})
-  $: fieldSupport = getFieldSupport(schema, columnInfo);
   $: boundValue = getValidOptions(value, options)
-
-  $: console.log(fieldSupport)
 
 
   const getValidOptions = (selectedOptions, allOptions) => {
@@ -92,18 +75,6 @@
     return ""
   }
 
-  const isOptionEnabled = optionKey => {
-    return true;
-    // Remain enabled if already selected, so it can be deselected
-    if (value?.includes(optionKey)) return true
-    const support = fieldSupport[optionKey]?.support;
-
-    if (support == null) return true
-    if (support === unsupported) return false
-
-    return true
-  }
-
   const updateTooltip = debounce((e, option) => {
     if (option == null) {
         contextTooltipVisible = false;
@@ -145,18 +116,18 @@
       explanationModal
       tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
       schema={schema[currentOption]}
-      support={fieldSupport[currentOption]}
       columnIcon={getOptionIcon(currentOption)}
       columnName={currentOption}
       columnType={getOptionIconTooltip(currentOption)}
+      {columnInfo}
     />
     <FieldContext
       slot="previous"
       schema={schema[previousOption]}
-      support={fieldSupport[previousOption]}
       columnIcon={getOptionIcon(previousOption)}
       columnName={previousOption}
       columnType={getOptionIconTooltip(previousOption)}
+      {columnInfo}
     />
   </ContextTooltip>
 {/if}

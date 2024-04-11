@@ -3,7 +3,7 @@
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { FieldContext, getColumnInfoMessagesAndSupport } from './FieldContext'
+  import { FieldContext } from './FieldContext'
   import { debounce } from "lodash"
   import { goto, params } from "@roxi/routify"
   import { Constants } from "@budibase/frontend-core"
@@ -19,23 +19,9 @@
   let previousOption = null
   let contextTooltipVisible = false
 
-  const getFieldSupport = (schema, columnInfo) => {
-    if (columnInfo == null) {
-      return {}
-    }
-
-    const fieldSupport = {}
-    Object.entries(schema || {}).forEach(([key, value]) => {
-      fieldSupport[key] = getColumnInfoMessagesAndSupport(value)
-    })
-
-    return fieldSupport
-  }
-
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
   $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
-  $: fieldSupport = getFieldSupport(schema, columnInfo);
   $: options = Object.keys(schema || {})
   $: boundValue = getValidValue(value, options)
 
@@ -127,18 +113,18 @@
       explanationModal
       tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
       schema={schema[currentOption]}
-      support={fieldSupport[currentOption]}
       columnIcon={getOptionIcon(currentOption)}
       columnName={currentOption}
       columnType={getOptionIconTooltip(currentOption)}
+      {columnInfo}
     />
     <FieldContext
       slot="previous"
       schema={schema[previousOption]}
-      support={fieldSupport[previousOption]}
       columnIcon={getOptionIcon(previousOption)}
       columnName={previousOption}
       columnType={getOptionIconTooltip(previousOption)}
+      {columnInfo}
     />
   </ContextTooltip>
 {/if}
