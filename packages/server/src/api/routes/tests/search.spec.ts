@@ -6,6 +6,7 @@ import {
   Datasource,
   EmptyFilterOption,
   FieldType,
+  Row,
   SearchFilters,
   Table,
 } from "@budibase/types"
@@ -47,7 +48,7 @@ describe.each([
   })
 
   describe("strings", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       table = await config.api.table.save(
         tableForDatasource(datasource, {
           schema: {
@@ -61,6 +62,13 @@ describe.each([
     })
 
     const rows = [{ name: "foo" }, { name: "bar" }]
+    let savedRows: Row[]
+
+    beforeAll(async () => {
+      savedRows = await Promise.all(
+        rows.map(r => config.api.row.save(table._id!, r))
+      )
+    })
 
     interface StringSearchTest {
       query: SearchFilters
@@ -68,6 +76,8 @@ describe.each([
     }
 
     const stringSearchTests: StringSearchTest[] = [
+      // These three test cases are generic and don't really need
+      // to be repeated for all data types, so we just do them here.
       { query: {}, expected: rows },
       {
         query: { onEmptyFilter: EmptyFilterOption.RETURN_ALL },
@@ -77,27 +87,23 @@ describe.each([
         query: { onEmptyFilter: EmptyFilterOption.RETURN_NONE },
         expected: [],
       },
+      // The rest of these tests are specific to strings.
       { query: { string: { name: "foo" } }, expected: [rows[0]] },
       { query: { string: { name: "none" } }, expected: [] },
       { query: { fuzzy: { name: "oo" } }, expected: [rows[0]] },
       { query: { equal: { name: "foo" } }, expected: [rows[0]] },
       { query: { notEqual: { name: "foo" } }, expected: [rows[1]] },
       { query: { oneOf: { name: ["foo"] } }, expected: [rows[0]] },
-      // { query: { contains: { name: "f" } }, expected: [0] },
-      // { query: { notContains: { name: ["f"] } }, expected: [1] },
-      // { query: { containsAny: { name: ["f"] } }, expected: [0] },
     ]
 
     it.each(stringSearchTests)(
       `should be able to run query: $query`,
       async ({ query, expected }) => {
-        const savedRows = await Promise.all(
-          rows.map(r => config.api.row.save(table._id!, r))
-        )
         const { rows: foundRows } = await config.api.row.search(table._id!, {
           tableId: table._id!,
           query,
         })
+        expect(foundRows).toHaveLength(expected.length)
         expect(foundRows).toEqual(
           expect.arrayContaining(
             expected.map(r =>
@@ -110,7 +116,7 @@ describe.each([
   })
 
   describe("number", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       table = await config.api.table.save(
         tableForDatasource(datasource, {
           schema: {
@@ -124,6 +130,13 @@ describe.each([
     })
 
     const rows = [{ age: 1 }, { age: 10 }]
+    let savedRows: Row[]
+
+    beforeAll(async () => {
+      savedRows = await Promise.all(
+        rows.map(r => config.api.row.save(table._id!, r))
+      )
+    })
 
     interface NumberSearchTest {
       query: SearchFilters
@@ -131,15 +144,6 @@ describe.each([
     }
 
     const numberSearchTests: NumberSearchTest[] = [
-      { query: {}, expected: rows },
-      {
-        query: { onEmptyFilter: EmptyFilterOption.RETURN_ALL },
-        expected: rows,
-      },
-      {
-        query: { onEmptyFilter: EmptyFilterOption.RETURN_NONE },
-        expected: [],
-      },
       { query: { equal: { age: 1 } }, expected: [rows[0]] },
       { query: { equal: { age: 2 } }, expected: [] },
       { query: { notEqual: { age: 1 } }, expected: [rows[1]] },
@@ -153,13 +157,11 @@ describe.each([
     it.each(numberSearchTests)(
       `should be able to run query: $query`,
       async ({ query, expected }) => {
-        const savedRows = await Promise.all(
-          rows.map(r => config.api.row.save(table._id!, r))
-        )
         const { rows: foundRows } = await config.api.row.search(table._id!, {
           tableId: table._id!,
           query,
         })
+        expect(foundRows).toHaveLength(expected.length)
         expect(foundRows).toEqual(
           expect.arrayContaining(
             expected.map(r =>
@@ -186,9 +188,16 @@ describe.each([
     })
 
     const rows = [
-      { dob: new Date("2020-01-01") },
-      { dob: new Date("2020-01-10") },
+      { dob: new Date("2020-01-01").toISOString() },
+      { dob: new Date("2020-01-10").toISOString() },
     ]
+    let savedRows: Row[]
+
+    beforeEach(async () => {
+      savedRows = await Promise.all(
+        rows.map(r => config.api.row.save(table._id!, r))
+      )
+    })
 
     interface DateSearchTest {
       query: SearchFilters
@@ -196,26 +205,20 @@ describe.each([
     }
 
     const dateSearchTests: DateSearchTest[] = [
-      { query: {}, expected: rows },
       {
-        query: { onEmptyFilter: EmptyFilterOption.RETURN_ALL },
-        expected: rows,
+        query: { equal: { dob: new Date("2020-01-01").toISOString() } },
+        expected: [rows[0]],
       },
       {
-        query: { onEmptyFilter: EmptyFilterOption.RETURN_NONE },
+        query: { equal: { dob: new Date("2020-01-02").toISOString() } },
         expected: [],
       },
       {
-        query: { equal: { dob: new Date("2020-01-01") } },
-        expected: [rows[0]],
-      },
-      { query: { equal: { dob: new Date("2020-01-02") } }, expected: [] },
-      {
-        query: { notEqual: { dob: new Date("2020-01-01") } },
+        query: { notEqual: { dob: new Date("2020-01-01").toISOString() } },
         expected: [rows[1]],
       },
       {
-        query: { oneOf: { dob: [new Date("2020-01-01")] } },
+        query: { oneOf: { dob: [new Date("2020-01-01").toISOString()] } },
         expected: [rows[0]],
       },
       {
@@ -256,23 +259,15 @@ describe.each([
     it.each(dateSearchTests)(
       `should be able to run query: $query`,
       async ({ query, expected }) => {
-        // TODO(samwho): most of these work for SQS, but not all. Fix 'em.
-        if (isSqs) {
-          return
-        }
-        const savedRows = await Promise.all(
-          rows.map(r => config.api.row.save(table._id!, r))
-        )
         const { rows: foundRows } = await config.api.row.search(table._id!, {
           tableId: table._id!,
           query,
         })
+        expect(foundRows).toHaveLength(expected.length)
         expect(foundRows).toEqual(
           expect.arrayContaining(
             expected.map(r =>
-              expect.objectContaining(
-                savedRows.find(sr => sr.dob === r.dob.toISOString())!
-              )
+              expect.objectContaining(savedRows.find(sr => sr.dob === r.dob)!)
             )
           )
         )
