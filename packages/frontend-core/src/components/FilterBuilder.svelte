@@ -21,7 +21,23 @@
   export let schemaFields
   export let filters = []
   export let datasource
+  export let behaviourFilters = false
   export let allowBindings = false
+
+  $: matchAny = filters?.find(filter => filter.operator === "allOr") != null
+  $: onEmptyFilter =
+    filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
+
+  $: console.warn(filters)
+
+  const behaviourOptions = [
+    { value: "and", label: "Match all filters" },
+    { value: "or", label: "Match any filter" },
+  ]
+  const onEmptyOptions = [
+    { value: "all", label: "Return all table rows" },
+    { value: "none", label: "Return no rows" },
+  ]
 
   const context = getContext("context")
 
@@ -144,6 +160,22 @@
       filter.value = filter.type === FieldType.ARRAY ? [] : null
     }
   }
+
+  function handleAllOr(option) {
+    filters = filters.filter(f => f.operator !== "allOr")
+    if (option === "or") {
+      filters.push({ operator: "allOr" })
+    }
+  }
+
+  function handleOnEmptyFilter(value) {
+    const existingFilter = filters?.find(filter => filter.onEmptyFilter)
+    if (existingFilter) {
+      existingFilter.onEmptyFilter = value
+    } else {
+      filters.push({ onEmptyFilter: value })
+    }
+  }
 </script>
 
 <div class="container" class:mobile={$context?.device?.mobile}>
@@ -154,6 +186,30 @@
           Add your first filter expression.
         {:else}
           <slot name="filteringHeroContent" />
+          {#if behaviourFilters}
+            <div class="behaviour-filters">
+              <Select
+                label="Behaviour"
+                value={matchAny ? "or" : "and"}
+                options={behaviourOptions}
+                getOptionLabel={opt => opt.label}
+                getOptionValue={opt => opt.value}
+                on:change={e => handleAllOr(e.detail)}
+                placeholder={null}
+              />
+              {#if datasource?.type === "table"}
+                <Select
+                  label="When filter empty"
+                  value={onEmptyFilter}
+                  options={onEmptyOptions}
+                  getOptionLabel={opt => opt.label}
+                  getOptionValue={opt => opt.value}
+                  on:change={e => handleOnEmptyFilter(e.detail)}
+                  placeholder={null}
+                />
+              {/if}
+            </div>
+          {/if}
         {/if}
       </Body>
       {#if filters?.length}
@@ -162,7 +218,7 @@
             <Label>Filters</Label>
           </div>
           <div class="fields">
-            {#each filters as filter}
+            {#each filters.filter(filter => filter.operator !== "allOr" && !filter.onEmptyFilter) as filter}
               <Select
                 bind:value={filter.field}
                 options={fieldOptions}
@@ -283,5 +339,13 @@
 
   .filter-label {
     margin-bottom: var(--spacing-s);
+  }
+
+  .behaviour-filters {
+    display: grid;
+    column-gap: var(--spacing-l);
+    row-gap: var(--spacing-s);
+    align-items: center;
+    grid-template-columns: minmax(150px, 1fr) 170px 120px minmax(150px, 1fr) 16px 16px;
   }
 </style>

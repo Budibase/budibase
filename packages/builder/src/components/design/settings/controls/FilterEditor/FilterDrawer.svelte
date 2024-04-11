@@ -1,5 +1,5 @@
 <script>
-  import { DrawerContent, Select } from "@budibase/bbui"
+  import { DrawerContent } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
 
@@ -18,40 +18,25 @@
   const dispatch = createEventDispatcher()
 
   const KeyedFieldRegex = /\d[0-9]*:/g
-  const behaviourOptions = [
-    { value: "and", label: "Match all filters" },
-    { value: "or", label: "Match any filter" },
-  ]
-  const onEmptyOptions = [
-    { value: "all", label: "Return all table rows" },
-    { value: "none", label: "Return no rows" },
-  ]
 
   let rawFilters
-  let matchAny = false
-  let onEmptyFilter = "all"
 
   $: parseFilters(rawFilters)
-  $: dispatch("change", enrichFilters(rawFilters, matchAny, onEmptyFilter))
+  $: dispatch("change", enrichFilters(rawFilters))
 
   // Remove field key prefixes and determine which behaviours to use
   const parseFilters = filters => {
-    matchAny = filters?.find(filter => filter.operator === "allOr") != null
-    onEmptyFilter =
-      filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
-    rawFilters = (filters || [])
-      .filter(filter => filter.operator !== "allOr" && !filter.onEmptyFilter)
-      .map(filter => {
-        const { field } = filter
-        let newFilter = { ...filter }
-        delete newFilter.allOr
-        if (typeof field === "string" && field.match(KeyedFieldRegex) != null) {
-          const parts = field.split(":")
-          parts.shift()
-          newFilter.field = parts.join(":")
-        }
-        return newFilter
-      })
+    rawFilters = (filters || []).map(filter => {
+      const { field } = filter
+      let newFilter = { ...filter }
+      delete newFilter.allOr
+      if (typeof field === "string" && field.match(KeyedFieldRegex) != null) {
+        const parts = field.split(":")
+        parts.shift()
+        newFilter.field = parts.join(":")
+      }
+      return newFilter
+    })
   }
 
   onMount(() => {
@@ -65,7 +50,7 @@
 
   // Add field key prefixes and a special metadata filter object to indicate
   // how to handle filter behaviour
-  const enrichFilters = (rawFilters, matchAny, onEmptyFilter) => {
+  const enrichFilters = rawFilters => {
     let count = 1
     return rawFilters
       .filter(filter => filter.field)
@@ -73,40 +58,19 @@
         ...filter,
         field: `${count++}:${filter.field}`,
       }))
-      .concat(matchAny ? [{ operator: "allOr" }] : [])
-      .concat([{ onEmptyFilter }])
+      .concat(...rawFilters.filter(filter => !filter.field))
   }
 </script>
 
 <DrawerContent padding={false}>
   <FilterBuilder
     bind:filters={rawFilters}
+    behaviourFilters={true}
     {schemaFields}
     {datasource}
     {allowBindings}
   >
-    <div slot="filteringHeroContent" class="filteringHeroContent">
-      <Select
-        label="Behaviour"
-        value={matchAny ? "or" : "and"}
-        options={behaviourOptions}
-        getOptionLabel={opt => opt.label}
-        getOptionValue={opt => opt.value}
-        on:change={e => (matchAny = e.detail === "or")}
-        placeholder={null}
-      />
-      {#if datasource?.type === "table"}
-        <Select
-          label="When filter empty"
-          value={onEmptyFilter}
-          options={onEmptyOptions}
-          getOptionLabel={opt => opt.label}
-          getOptionValue={opt => opt.value}
-          on:change={e => (onEmptyFilter = e.detail)}
-          placeholder={null}
-        />
-      {/if}
-    </div>
+    <div slot="filteringHeroContent" class="filteringHeroContent" />
     <div slot="binding" let:filter>
       <DrawerBindableInput
         disabled={filter.noValue}
