@@ -218,7 +218,7 @@
           <div class="filter-label">
             <Label>Filters</Label>
           </div>
-          <div class="fields">
+          <div class="fields" class:with-bindings={allowBindings}>
             {#each filters.filter(filter => filter.operator !== "allOr" && !filter.onEmptyFilter) as filter}
               <Select
                 bind:value={filter.field}
@@ -288,14 +288,11 @@
               {/if}
               <div class="controls">
                 <Icon
-                  class
                   name="Duplicate"
                   hoverable
                   size="S"
                   on:click={() => duplicateFilter(filter.id)}
                 />
-              </div>
-              <div class="controls">
                 <Icon
                   name="Close"
                   hoverable
@@ -331,8 +328,12 @@
     align-items: center;
     grid-template-columns: 1fr 120px 1fr auto auto;
   }
+  .fields.with-bindings {
+    grid-template-columns: 1fr 120px 1fr auto auto auto;
+  }
+
   .controls {
-    display: content;
+    display: contents;
   }
 
   .container.mobile .fields {
