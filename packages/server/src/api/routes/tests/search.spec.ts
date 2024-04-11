@@ -7,7 +7,6 @@ import {
   EmptyFilterOption,
   FieldType,
   RowSearchParams,
-  SortOrder,
   Table,
 } from "@budibase/types"
 
@@ -32,7 +31,6 @@ describe.each([
   const config = setup.getConfig()
 
   let envCleanup: (() => void) | undefined
-  let table: Table
   let datasource: Datasource | undefined
 
   beforeAll(async () => {
