@@ -2,6 +2,7 @@ import {
   Datasource,
   FieldSubtype,
   FieldType,
+  FormulaType,
   SearchFilter,
   SearchQuery,
   SearchQueryFields,
@@ -19,7 +20,11 @@ const HBS_REGEX = /{{([^{].*?)}}/g
  * Returns the valid operator options for a certain data type
  */
 export const getValidOperatorsForType = (
-  fieldType: { type: FieldType; subtype?: FieldSubtype },
+  fieldType: {
+    type: FieldType
+    subtype?: FieldSubtype
+    formulaType?: FormulaType
+  },
   field: string,
   datasource: Datasource & { tableId: any }
 ) => {
@@ -46,7 +51,7 @@ export const getValidOperatorsForType = (
     value: string
     label: string
   }[] = []
-  const { type, subtype } = fieldType
+  const { type, subtype, formulaType } = fieldType
   if (type === FieldType.STRING) {
     ops = stringOps
   } else if (type === FieldType.NUMBER || type === FieldType.BIGINT) {
@@ -61,7 +66,7 @@ export const getValidOperatorsForType = (
     ops = stringOps
   } else if (type === FieldType.DATETIME) {
     ops = numOps
-  } else if (type === FieldType.FORMULA) {
+  } else if (type === FieldType.FORMULA && formulaType === FormulaType.STATIC) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
   } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USER) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
