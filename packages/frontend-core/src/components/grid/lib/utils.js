@@ -1,28 +1,10 @@
+import { TypeIconMap } from "../../../constants"
+
 export const getColor = (idx, opacity = 0.3) => {
   if (idx == null || idx === -1) {
     idx = 0
   }
   return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, ${opacity})`
-}
-
-const TypeIconMap = {
-  text: "Text",
-  options: "Dropdown",
-  datetime: "Date",
-  barcodeqr: "Camera",
-  longform: "TextAlignLeft",
-  array: "Dropdown",
-  number: "123",
-  boolean: "Boolean",
-  attachment: "AppleFiles",
-  link: "DataCorrelated",
-  formula: "Calculator",
-  json: "Brackets",
-  bigint: "TagBold",
-  bb_reference: {
-    user: "User",
-    users: "UserGroup",
-  },
 }
 
 export const getColumnIcon = column => {

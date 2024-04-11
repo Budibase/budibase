@@ -12,12 +12,14 @@ import {
   isDocument,
   RowResponse,
   RowValue,
+  SqlQueryBinding,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { WriteStream, ReadStream } from "fs"
 import { newid } from "../../docIds/newid"
+import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
@@ -245,6 +247,27 @@ export class DatabaseImpl implements Database {
     return this.performCall(db => {
       return () => db.list(params)
     })
+  }
+
+  async sql<T extends Document>(
+    sql: string,
+    parameters?: SqlQueryBinding
+  ): Promise<T[]> {
+    const dbName = this.name
+    const url = `/${dbName}/${SQLITE_DESIGN_DOC_ID}`
+    const response = await directCouchUrlCall({
+      url: `${this.couchInfo.sqlUrl}/${url}`,
+      method: "POST",
+      cookie: this.couchInfo.cookie,
+      body: {
+        query: sql,
+        args: parameters,
+      },
+    })
+    if (response.status > 300) {
+      throw new Error(await response.text())
+    }
+    return (await response.json()) as T[]
   }
 
   async query<T extends Document>(

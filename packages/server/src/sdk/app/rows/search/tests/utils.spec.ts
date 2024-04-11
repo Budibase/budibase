@@ -4,7 +4,7 @@ import {
   FieldType,
   FieldTypeSubtypes,
   INTERNAL_TABLE_SOURCE_ID,
-  SearchParams,
+  RowSearchParams,
   Table,
   TableSourceType,
 } from "@budibase/types"
@@ -47,7 +47,7 @@ describe.each([tableWithUserCol, tableWithUsersCol])(
     const userMedataId = dbCore.generateUserMetadataID(globalUserId)
 
     it("should be able to map ro_ to global user IDs", () => {
-      const params: SearchParams = {
+      const params: RowSearchParams = {
         tableId,
         query: {
           equal: {
@@ -60,7 +60,7 @@ describe.each([tableWithUserCol, tableWithUsersCol])(
     })
 
     it("should handle array of user IDs", () => {
-      const params: SearchParams = {
+      const params: RowSearchParams = {
         tableId,
         query: {
           oneOf: {
@@ -77,7 +77,7 @@ describe.each([tableWithUserCol, tableWithUsersCol])(
 
     it("shouldn't change any other input", () => {
       const email = "test@example.com"
-      const params: SearchParams = {
+      const params: RowSearchParams = {
         tableId,
         query: {
           equal: {

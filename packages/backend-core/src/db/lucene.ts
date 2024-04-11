@@ -1,27 +1,15 @@
 import fetch from "node-fetch"
 import { getCouchInfo } from "./couch"
-import { SearchFilters, Row, EmptyFilterOption } from "@budibase/types"
+import {
+  SearchFilters,
+  Row,
+  EmptyFilterOption,
+  SearchResponse,
+  SearchParams,
+  WithRequired,
+} from "@budibase/types"
 
 const QUERY_START_REGEX = /\d[0-9]*:/g
-
-interface SearchResponse<T> {
-  rows: T[] | any[]
-  bookmark?: string
-  totalRows: number
-}
-
-export type SearchParams<T> = {
-  tableId?: string
-  sort?: string
-  sortOrder?: string
-  sortType?: string
-  limit?: number
-  bookmark?: string
-  version?: string
-  indexer?: () => Promise<any>
-  disableEscaping?: boolean
-  rows?: T | Row[]
-}
 
 export function removeKeyNumbering(key: any): string {
   if (typeof key === "string" && key.match(QUERY_START_REGEX) != null) {
@@ -44,7 +32,7 @@ export class QueryBuilder<T> {
   #query: SearchFilters
   #limit: number
   #sort?: string
-  #bookmark?: string
+  #bookmark?: string | number
   #sortOrder: string
   #sortType: string
   #includeDocs: boolean
@@ -130,7 +118,7 @@ export class QueryBuilder<T> {
     return this
   }
 
-  setBookmark(bookmark?: string) {
+  setBookmark(bookmark?: string | number) {
     if (bookmark != null) {
       this.#bookmark = bookmark
     }
@@ -226,14 +214,20 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Preprocesses a value before going into a lucene search.
-   * Transforms strings to lowercase and wraps strings and bools in quotes.
-   * @param value The value to process
-   * @param options The preprocess options
-   * @returns {string|*}
-   */
-  preprocess(value: any, { escape, lowercase, wrap, type }: any = {}) {
+  preprocess(
+    value: any,
+    {
+      escape,
+      lowercase,
+      wrap,
+      type,
+    }: {
+      escape?: boolean
+      lowercase?: boolean
+      wrap?: boolean
+      type?: string
+    } = {}
+  ): string | any {
     const hasVersion = !!this.#version
     // Determine if type needs wrapped
     const originalType = typeof value
@@ -561,7 +555,7 @@ async function runQuery<T>(
   url: string,
   body: any,
   cookie: string
-): Promise<SearchResponse<T>> {
+): Promise<WithRequired<SearchResponse<T>, "totalRows">> {
   const response = await fetch(url, {
     body: JSON.stringify(body),
     method: "POST",
@@ -575,7 +569,7 @@ async function runQuery<T>(
   }
   const json = await response.json()
 
-  let output: SearchResponse<T> = {
+  let output: WithRequired<SearchResponse<T>, "totalRows"> = {
     rows: [],
     totalRows: 0,
   }
@@ -613,63 +607,51 @@ async function recursiveSearch<T>(
   dbName: string,
   index: string,
   query: any,
-  params: any
+  params: SearchParams
 ): Promise<any> {
   const bookmark = params.bookmark
   const rows = params.rows || []
-  if (rows.length >= params.limit) {
+  if (params.limit && rows.length >= params.limit) {
     return rows
   }
   let pageSize = QueryBuilder.maxLimit
-  if (rows.length > params.limit - QueryBuilder.maxLimit) {
+  if (params.limit && rows.length > params.limit - QueryBuilder.maxLimit) {
     pageSize = params.limit - rows.length
   }
-  const page = await new QueryBuilder<T>(dbName, index, query)
+  const queryBuilder = new QueryBuilder<T>(dbName, index, query)
+  queryBuilder
     .setVersion(params.version)
-    .setTable(params.tableId)
     .setBookmark(bookmark)
     .setLimit(pageSize)
     .setSort(params.sort)
     .setSortOrder(params.sortOrder)
     .setSortType(params.sortType)
-    .run()
+
+  if (params.tableId) {
+    queryBuilder.setTable(params.tableId)
+  }
+
+  const page = await queryBuilder.run()
   if (!page.rows.length) {
     return rows
   }
   if (page.rows.length < QueryBuilder.maxLimit) {
     return [...rows, ...page.rows]
   }
-  const newParams = {
+  const newParams: SearchParams = {
     ...params,
     bookmark: page.bookmark,
-    rows: [...rows, ...page.rows],
+    rows: [...rows, ...page.rows] as Row[],
   }
   return await recursiveSearch(dbName, index, query, newParams)
 }
 
-/**
- * Performs a paginated search. A bookmark will be returned to allow the next
- * page to be fetched. There is a max limit off 200 results per page in a
- * paginated search.
- * @param dbName Which database to run a lucene query on
- * @param index Which search index to utilise
- * @param query The JSON query structure
- * @param params The search params including:
- *   tableId {string} The table ID to search
- *   sort {string} The sort column
- *   sortOrder {string} The sort order ("ascending" or "descending")
- *   sortType {string} Whether to treat sortable values as strings or
- *     numbers. ("string" or "number")
- *   limit {number} The desired page size
- *   bookmark {string} The bookmark to resume from
- * @returns {Promise<{hasNextPage: boolean, rows: *[]}>}
- */
 export async function paginatedSearch<T>(
   dbName: string,
   index: string,
   query: SearchFilters,
-  params: SearchParams<T>
-) {
+  params: SearchParams
+): Promise<SearchResponse<T>> {
   let limit = params.limit
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 50
@@ -713,29 +695,12 @@ export async function paginatedSearch<T>(
   }
 }
 
-/**
- * Performs a full search, fetching multiple pages if required to return the
- * desired amount of results. There is a limit of 1000 results to avoid
- * heavy performance hits, and to avoid client components breaking from
- * handling too much data.
- * @param dbName Which database to run a lucene query on
- * @param index Which search index to utilise
- * @param query The JSON query structure
- * @param params The search params including:
- *   tableId {string} The table ID to search
- *   sort {string} The sort column
- *   sortOrder {string} The sort order ("ascending" or "descending")
- *   sortType {string} Whether to treat sortable values as strings or
- *     numbers. ("string" or "number")
- *   limit {number} The desired number of results
- * @returns {Promise<{rows: *}>}
- */
 export async function fullSearch<T>(
   dbName: string,
   index: string,
   query: SearchFilters,
-  params: SearchParams<T>
-) {
+  params: SearchParams
+): Promise<{ rows: Row[] }> {
   let limit = params.limit
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 1000
