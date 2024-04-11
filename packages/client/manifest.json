@@ -6487,7 +6487,27 @@
     "illegalChildren": ["section", "sidepanel"],
     "showEmptyState": false,
     "draggable": false,
-    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action."
+    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
+    "sendEvents": true,
+    "settings": [
+      {
+        "type": "boolean",
+        "key": "clickOutsideToClose",
+        "label": "Click away to close",
+        "defaultValue": true
+      },
+      {
+        "type": "event",
+        "key": "sidePanelOpen",
+        "label": "Side Panel Open"
+      },
+      {
+        "type": "event",
+        "key": "sidePanelClose",
+        "label": "Side Panel Close",
+        "info": "Side panel actions configured here will run after the 'Open side panel' action runs, and are not capable of preventing or stopping it. Any form validation should therefore be done before that action if invoked, and not here."
+      }
+    ]
   },
   "rowexplorer": {
     "block": true,
