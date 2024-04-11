@@ -22,6 +22,7 @@ import {
   SortDirection,
   SqlQueryBinding,
   Table,
+  EmptyFilterOption,
 } from "@budibase/types"
 import environment from "../../environment"
 
@@ -243,6 +244,7 @@ class InternalBuilder {
       return query
     }
     filters = parseFilters(filters)
+    let noFilters = true
     // if all or specified in filters, then everything is an or
     const allOr = filters.allOr
     if (filters.oneOf) {
@@ -250,6 +252,7 @@ class InternalBuilder {
         const fnc = allOr ? "orWhereIn" : "whereIn"
         query = query[fnc](key, Array.isArray(array) ? array : [array])
       })
+      noFilters = false
     }
     if (filters.string) {
       iterate(filters.string, (key, value) => {
@@ -265,9 +268,11 @@ class InternalBuilder {
           ])
         }
       })
+      noFilters = false
     }
     if (filters.fuzzy) {
       iterate(filters.fuzzy, like)
+      noFilters = false
     }
     if (filters.range) {
       iterate(filters.range, (key, value) => {
@@ -300,40 +305,61 @@ class InternalBuilder {
           query = query[fnc](key, "<", value.high)
         }
       })
+      noFilters = false
     }
     if (filters.equal) {
       iterate(filters.equal, (key, value) => {
         const fnc = allOr ? "orWhere" : "where"
         query = query[fnc]({ [key]: value })
       })
+
+      // Somewhere above us in the stack adds `{ type: "row" }` to the `equal`
+      // key before we get here, so we need to still consider it empty when
+      // that's the case.
+      const equalEmpty =
+        Object.keys(filters.equal).length === 1 && filters.equal.type === "row"
+      if (!equalEmpty) {
+        noFilters = false
+      }
     }
     if (filters.notEqual) {
       iterate(filters.notEqual, (key, value) => {
         const fnc = allOr ? "orWhereNot" : "whereNot"
         query = query[fnc]({ [key]: value })
       })
+      noFilters = false
     }
     if (filters.empty) {
       iterate(filters.empty, key => {
         const fnc = allOr ? "orWhereNull" : "whereNull"
         query = query[fnc](key)
       })
+      noFilters = false
     }
     if (filters.notEmpty) {
       iterate(filters.notEmpty, key => {
         const fnc = allOr ? "orWhereNotNull" : "whereNotNull"
         query = query[fnc](key)
       })
+      noFilters = false
     }
     if (filters.contains) {
       contains(filters.contains)
+      noFilters = false
     }
     if (filters.notContains) {
       contains(filters.notContains)
+      noFilters = false
     }
     if (filters.containsAny) {
       contains(filters.containsAny, true)
+      noFilters = false
     }
+
+    if (noFilters && filters.onEmptyFilter === EmptyFilterOption.RETURN_NONE) {
+      query = query.whereRaw("1=0")
+    }
+
     return query
   }
 
