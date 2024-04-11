@@ -2,7 +2,7 @@ import { InvalidFileExtensions } from "@budibase/shared-core"
 import AppComponent from "./templates/BudibaseApp.svelte"
 import { join } from "../../../utilities/centralPath"
 import * as uuid from "uuid"
-import { ObjectStoreBuckets, devClientVersion } from "../../../constants"
+import { devClientVersion, ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
   loadHandlebarsFile,
@@ -10,24 +10,24 @@ import {
   TOP_LEVEL_PATH,
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
-import { DocumentType } from "../../../db/utils"
 import {
+  BadRequestError,
+  configs,
   context,
   objectStore,
   utils,
-  configs,
-  BadRequestError,
 } from "@budibase/backend-core"
 import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
 import {
-  UserCtx,
   App,
   Ctx,
-  ProcessAttachmentResponse,
+  DocumentType,
   Feature,
+  ProcessAttachmentResponse,
+  UserCtx,
 } from "@budibase/types"
 import {
   getAppMigrationVersion,
@@ -147,8 +147,7 @@ const requiresMigration = async (ctx: Ctx) => {
 
   const latestMigrationApplied = await getAppMigrationVersion(appId)
 
-  const requiresMigrations = latestMigrationApplied !== latestMigration
-  return requiresMigrations
+  return latestMigrationApplied !== latestMigration
 }
 
 export const serveApp = async function (ctx: UserCtx) {
