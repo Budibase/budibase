@@ -170,12 +170,8 @@
   }
 
   function handleOnEmptyFilter(value) {
-    const existingFilter = filters?.find(filter => filter.onEmptyFilter)
-    if (existingFilter) {
-      existingFilter.onEmptyFilter = value
-    } else {
-      filters.push({ onEmptyFilter: value })
-    }
+    filters = filters?.filter(filter => !filter.onEmptyFilter)
+    filters.push({ onEmptyFilter: value })
   }
 </script>
 
