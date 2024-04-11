@@ -207,130 +207,136 @@
 <DrawerContent>
   <div class="container">
     <Layout noPadding>
-      {#if !rawFilters?.length}
-        <Body size="S">Add your first filter expression.</Body>
-      {:else}
-        <div class="fields">
-          <Select
-            label="Behaviour"
-            value={matchAny ? "or" : "and"}
-            options={behaviourOptions}
-            getOptionLabel={opt => opt.label}
-            getOptionValue={opt => opt.value}
-            on:change={e => (matchAny = e.detail === "or")}
-            placeholder={null}
-          />
-          {#if datasource?.type === "table"}
+      {#if fieldOptions?.length}
+        {#if !rawFilters?.length}
+          <Body size="S">Add your first filter expression.</Body>
+        {:else}
+          <div class="fields">
             <Select
-              label="When filter empty"
-              value={onEmptyFilter}
-              options={onEmptyOptions}
+              label="Behaviour"
+              value={matchAny ? "or" : "and"}
+              options={behaviourOptions}
               getOptionLabel={opt => opt.label}
               getOptionValue={opt => opt.value}
-              on:change={e => (onEmptyFilter = e.detail)}
+              on:change={e => (matchAny = e.detail === "or")}
               placeholder={null}
             />
-          {/if}
-        </div>
-        <div>
-          <div class="filter-label">
-            <Label>Filters</Label>
-          </div>
-          <div class="fields">
-            {#each rawFilters as filter}
+            {#if datasource?.type === "table"}
               <Select
-                bind:value={filter.field}
-                options={fieldOptions}
-                on:change={() => onFieldChange(filter)}
-                placeholder="Column"
-              />
-              <Select
-                disabled={!filter.field}
-                options={getValidOperatorsForType(filter)}
-                bind:value={filter.operator}
-                on:change={() => onOperatorChange(filter)}
+                label="When filter empty"
+                value={onEmptyFilter}
+                options={onEmptyOptions}
+                getOptionLabel={opt => opt.label}
+                getOptionValue={opt => opt.value}
+                on:change={e => (onEmptyFilter = e.detail)}
                 placeholder={null}
               />
-              <Select
-                disabled={filter.noValue || !filter.field}
-                options={valueTypeOptions}
-                bind:value={filter.valueType}
-                on:change={() => onValueTypeChange(filter)}
-                placeholder={null}
-              />
-              {#if filter.field && filter.valueType === "Binding"}
-                <DrawerBindableInput
-                  disabled={filter.noValue}
-                  title={filter.field}
-                  value={filter.value}
-                  placeholder="Value"
-                  {panel}
-                  {bindings}
-                  on:change={event => (filter.value = event.detail)}
-                />
-              {:else if ["string", "longform", "number", "bigint", "formula"].includes(filter.type)}
-                <Input disabled={filter.noValue} bind:value={filter.value} />
-              {:else if filter.type === "array" || (filter.type === "options" && filter.operator === "oneOf")}
-                <Multiselect
-                  disabled={filter.noValue}
-                  options={getFieldOptions(filter.field)}
-                  bind:value={filter.value}
-                />
-              {:else if filter.type === "options"}
-                <Combobox
-                  disabled={filter.noValue}
-                  options={getFieldOptions(filter.field)}
-                  bind:value={filter.value}
-                />
-              {:else if filter.type === "boolean"}
-                <Combobox
-                  disabled={filter.noValue}
-                  options={[
-                    { label: "True", value: "true" },
-                    { label: "False", value: "false" },
-                  ]}
-                  bind:value={filter.value}
-                />
-              {:else if filter.type === "datetime"}
-                <DatePicker
-                  disabled={filter.noValue}
-                  enableTime={!getSchema(filter)?.dateOnly}
-                  timeOnly={getSchema(filter)?.timeOnly}
-                  bind:value={filter.value}
-                />
-              {:else if filter.type === FieldType.BB_REFERENCE}
-                <FilterUsers
-                  bind:value={filter.value}
-                  multiselect={[
-                    OperatorOptions.In.value,
-                    OperatorOptions.ContainsAny.value,
-                  ].includes(filter.operator)}
-                  disabled={filter.noValue}
-                />
-              {:else}
-                <DrawerBindableInput disabled />
-              {/if}
-              <Icon
-                name="Duplicate"
-                hoverable
-                size="S"
-                on:click={() => duplicateFilter(filter.id)}
-              />
-              <Icon
-                name="Close"
-                hoverable
-                size="S"
-                on:click={() => removeFilter(filter.id)}
-              />
-            {/each}
+            {/if}
           </div>
+          <div>
+            <div class="filter-label">
+              <Label>Filters</Label>
+            </div>
+            <div class="fields">
+              {#each rawFilters as filter}
+                <Select
+                  bind:value={filter.field}
+                  options={fieldOptions}
+                  on:change={() => onFieldChange(filter)}
+                  placeholder="Column"
+                />
+                <Select
+                  disabled={!filter.field}
+                  options={getValidOperatorsForType(filter)}
+                  bind:value={filter.operator}
+                  on:change={() => onOperatorChange(filter)}
+                  placeholder={null}
+                />
+                <Select
+                  disabled={filter.noValue || !filter.field}
+                  options={valueTypeOptions}
+                  bind:value={filter.valueType}
+                  on:change={() => onValueTypeChange(filter)}
+                  placeholder={null}
+                />
+                {#if filter.field && filter.valueType === "Binding"}
+                  <DrawerBindableInput
+                    disabled={filter.noValue}
+                    title={filter.field}
+                    value={filter.value}
+                    placeholder="Value"
+                    {panel}
+                    {bindings}
+                    on:change={event => (filter.value = event.detail)}
+                  />
+                {:else if ["string", "longform", "number", "bigint", "formula"].includes(filter.type)}
+                  <Input disabled={filter.noValue} bind:value={filter.value} />
+                {:else if filter.type === "array" || (filter.type === "options" && filter.operator === "oneOf")}
+                  <Multiselect
+                    disabled={filter.noValue}
+                    options={getFieldOptions(filter.field)}
+                    bind:value={filter.value}
+                  />
+                {:else if filter.type === "options"}
+                  <Combobox
+                    disabled={filter.noValue}
+                    options={getFieldOptions(filter.field)}
+                    bind:value={filter.value}
+                  />
+                {:else if filter.type === "boolean"}
+                  <Combobox
+                    disabled={filter.noValue}
+                    options={[
+                      { label: "True", value: "true" },
+                      { label: "False", value: "false" },
+                    ]}
+                    bind:value={filter.value}
+                  />
+                {:else if filter.type === "datetime"}
+                  <DatePicker
+                    disabled={filter.noValue}
+                    enableTime={!getSchema(filter)?.dateOnly}
+                    timeOnly={getSchema(filter)?.timeOnly}
+                    bind:value={filter.value}
+                  />
+                {:else if filter.type === FieldType.BB_REFERENCE}
+                  <FilterUsers
+                    bind:value={filter.value}
+                    multiselect={[
+                      OperatorOptions.In.value,
+                      OperatorOptions.ContainsAny.value,
+                    ].includes(filter.operator)}
+                    disabled={filter.noValue}
+                  />
+                {:else}
+                  <DrawerBindableInput disabled />
+                {/if}
+                <Icon
+                  name="Duplicate"
+                  hoverable
+                  size="S"
+                  on:click={() => duplicateFilter(filter.id)}
+                />
+                <Icon
+                  name="Close"
+                  hoverable
+                  size="S"
+                  on:click={() => removeFilter(filter.id)}
+                />
+              {/each}
+            </div>
+          </div>
+        {/if}
+        <div class="bottom">
+          <Button icon="AddCircle" size="M" secondary on:click={addFilter}>
+            Add filter
+          </Button>
         </div>
+      {:else}
+        <Body size="S">
+          None of the table column can be used for filtering.
+        </Body>
       {/if}
-      <div class="bottom">
-        <Button icon="AddCircle" size="M" secondary on:click={addFilter}>
-          Add filter
-        </Button>
-      </div>
     </Layout>
   </div>
 </DrawerContent>
