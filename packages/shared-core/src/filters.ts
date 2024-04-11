@@ -21,7 +21,7 @@ const HBS_REGEX = /{{([^{].*?)}}/g
 export const getValidOperatorsForType = (
   fieldType: { type: FieldType; subtype?: FieldSubtype },
   field: string,
-  datasource: Datasource & { tableId: any } // TODO: is this table id ever populated?
+  datasource: Datasource & { tableId: any }
 ) => {
   const Op = OperatorOptions
   const stringOps = [
