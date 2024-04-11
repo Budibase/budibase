@@ -210,61 +210,61 @@ describe.each([
       )
     },
     rows: [
-      { dob: new Date("2020-01-01").toISOString() },
-      { dob: new Date("2020-01-10").toISOString() },
+      { dob: "2020-01-01T00:00:00.000Z" },
+      { dob: "2020-01-10T00:00:00.000Z" },
     ],
     tests: [
       {
-        query: { equal: { dob: new Date("2020-01-01").toISOString() } },
-        expectToFind: [{ dob: new Date("2020-01-01").toISOString() }],
+        query: { equal: { dob: "2020-01-01T00:00:00.000Z" } },
+        expectToFind: [{ dob: "2020-01-01T00:00:00.000Z" }],
       },
       {
-        query: { equal: { dob: new Date("2020-01-02").toISOString() } },
+        query: { equal: { dob: "2020-01-02T00:00:00.000Z" } },
         expectToFind: [],
       },
       {
-        query: { notEqual: { dob: new Date("2020-01-01").toISOString() } },
-        expectToFind: [{ dob: new Date("2020-01-10").toISOString() }],
+        query: { notEqual: { dob: "2020-01-01T00:00:00.000Z" } },
+        expectToFind: [{ dob: "2020-01-10T00:00:00.000Z" }],
       },
       {
-        query: { oneOf: { dob: [new Date("2020-01-01").toISOString()] } },
-        expectToFind: [{ dob: new Date("2020-01-01").toISOString() }],
+        query: { oneOf: { dob: ["2020-01-01T00:00:00.000Z"] } },
+        expectToFind: [{ dob: "2020-01-01T00:00:00.000Z" }],
       },
       {
         query: {
           range: {
             dob: {
-              low: new Date("2020-01-01").toISOString(),
-              high: new Date("2020-01-05").toISOString(),
+              low: "2020-01-01T00:00:00.000Z",
+              high: "2020-01-05T00:00:00.000Z",
             },
           },
         },
-        expectToFind: [{ dob: new Date("2020-01-01").toISOString() }],
+        expectToFind: [{ dob: "2020-01-01T00:00:00.000Z" }],
       },
       {
         query: {
           range: {
             dob: {
-              low: new Date("2020-01-01").toISOString(),
-              high: new Date("2020-01-10").toISOString(),
+              low: "2020-01-01T00:00:00.000Z",
+              high: "2020-01-10T00:00:00.000Z",
             },
           },
         },
         expectToFind: [
-          { dob: new Date("2020-01-01").toISOString() },
-          { dob: new Date("2020-01-10").toISOString() },
+          { dob: "2020-01-01T00:00:00.000Z" },
+          { dob: "2020-01-10T00:00:00.000Z" },
         ],
       },
       {
         query: {
           range: {
             dob: {
-              low: new Date("2020-01-05").toISOString(),
-              high: new Date("2020-01-10").toISOString(),
+              low: "2020-01-05T00:00:00.000Z",
+              high: "2020-01-10T00:00:00.000Z",
             },
           },
         },
-        expectToFind: [{ dob: new Date("2020-01-10").toISOString() }],
+        expectToFind: [{ dob: "2020-01-10T00:00:00.000Z" }],
       },
     ],
   })
