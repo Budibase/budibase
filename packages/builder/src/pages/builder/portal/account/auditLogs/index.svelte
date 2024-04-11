@@ -12,7 +12,6 @@
     Icon,
     clickOutside,
     CoreTextArea,
-    DatePicker,
     Pagination,
     Helpers,
     Divider,

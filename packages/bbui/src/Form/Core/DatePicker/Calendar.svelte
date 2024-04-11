@@ -72,7 +72,6 @@
   <div class="spectrum-Calendar-header">
     <div
       class="spectrum-Calendar-title"
-      role="heading"
       aria-live="assertive"
       aria-atomic="true"
     >
