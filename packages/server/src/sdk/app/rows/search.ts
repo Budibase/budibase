@@ -62,7 +62,7 @@ export async function search(
   options: RowSearchParams
 ): Promise<SearchResponse<Row>> {
   const isExternalTable = isExternalTableID(options.tableId)
-  options.query = removeEmptyFilters(options.query)
+  options.query = removeEmptyFilters(options.query || {})
   if (
     !dataFilters.hasFilters(options.query) &&
     options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
