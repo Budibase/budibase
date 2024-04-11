@@ -5,6 +5,13 @@
   const { styleable, sidePanelStore, builderStore, dndIsDragging } =
     getContext("sdk")
 
+  let handlingSidePanelOpen
+  let handlingSidePanelClose
+
+  export let sidePanelOpen
+  export let sidePanelClose
+  export let clickOutsideToClose
+
   // Automatically show and hide the side panel when inside the builder.
   // For some unknown reason, svelte reactivity breaks if we reference the
   // reactive variable "open" inside the following expression, or if we define
@@ -26,6 +33,10 @@
     }
   }
 
+  $: {
+    sidePanelStore.actions.setSidepanelState(clickOutsideToClose)
+  }
+
   // Derive visibility
   $: open = $sidePanelStore.contentId === $component.id
 
@@ -40,6 +51,22 @@
     }
   }
 
+  const handleSidePanelOpen = async () => {
+    handlingSidePanelOpen = true
+    if (sidePanelOpen) {
+      await sidePanelOpen()
+    }
+    handlingSidePanelOpen = false
+  }
+
+  const handleSidePanelClose = async () => {
+    handlingSidePanelClose = true
+    if (sidePanelClose) {
+      await sidePanelClose()
+    }
+    handlingSidePanelOpen = false
+  }
+
   const showInSidePanel = (el, visible) => {
     const update = visible => {
       const target = document.getElementById("side-panel-container")
@@ -47,10 +74,12 @@
       if (visible) {
         if (!target.contains(node)) {
           target.appendChild(node)
+          handleSidePanelOpen()
         }
       } else {
         if (target.contains(node)) {
           target.removeChild(node)
+          handleSidePanelClose()
         }
       }
     }
