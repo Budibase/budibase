@@ -271,58 +271,40 @@ describe.each([
         expectQuery({
           range: { age: { low: 5, high: 10 } },
         }).toContain([{ age: 10 }]))
+    })
 
-      describe("sort", () => {
-        it("sorts ascending", () =>
-          expectSearch({
-            query: {},
-            sort: "age",
-            sortOrder: SortOrder.ASCENDING,
-          }).toMatch([{ age: 1 }, { age: 10 }]))
+    describe("sort", () => {
+      it("sorts ascending", () =>
+        expectSearch({
+          query: {},
+          sort: "age",
+          sortOrder: SortOrder.ASCENDING,
+        }).toMatch([{ age: 1 }, { age: 10 }]))
 
-        it("sorts descending", () =>
-          expectSearch({
-            query: {},
-            sort: "age",
-            sortOrder: SortOrder.DESCENDING,
-          }).toMatch([{ age: 10 }, { age: 1 }]))
-      })
+      it("sorts descending", () =>
+        expectSearch({
+          query: {},
+          sort: "age",
+          sortOrder: SortOrder.DESCENDING,
+        }).toMatch([{ age: 10 }, { age: 1 }]))
+    })
 
-      describe("sortType NUMBER", () => {
-        it("sorts ascending", () =>
-          expectSearch({
-            query: {},
-            sort: "age",
-            sortType: SortType.NUMBER,
-            sortOrder: SortOrder.ASCENDING,
-          }).toMatch([{ age: 1 }, { age: 10 }]))
+    describe("sortType NUMBER", () => {
+      it("sorts ascending", () =>
+        expectSearch({
+          query: {},
+          sort: "age",
+          sortType: SortType.NUMBER,
+          sortOrder: SortOrder.ASCENDING,
+        }).toMatch([{ age: 1 }, { age: 10 }]))
 
-        it("sorts descending", () =>
-          expectSearch({
-            query: {},
-            sort: "age",
-            sortType: SortType.NUMBER,
-            sortOrder: SortOrder.DESCENDING,
-          }).toMatch([{ age: 10 }, { age: 1 }]))
-      })
-
-      describe("sortType STRING", () => {
-        it("sorts ascending", () =>
-          expectSearch({
-            query: {},
-            sort: "age",
-            sortType: SortType.STRING,
-            sortOrder: SortOrder.ASCENDING,
-          }).toMatch([{ age: 1 }, { age: 10 }]))
-
-        it("sorts descending", () =>
-          expectSearch({
-            query: {},
-            sort: "age",
-            sortType: SortType.STRING,
-            sortOrder: SortOrder.DESCENDING,
-          }).toMatch([{ age: 10 }, { age: 1 }]))
-      })
+      it("sorts descending", () =>
+        expectSearch({
+          query: {},
+          sort: "age",
+          sortType: SortType.NUMBER,
+          sortOrder: SortOrder.DESCENDING,
+        }).toMatch([{ age: 10 }, { age: 1 }]))
     })
   })
 
