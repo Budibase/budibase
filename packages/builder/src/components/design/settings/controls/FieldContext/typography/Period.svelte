@@ -5,6 +5,7 @@
     color: var(--grey-6);
     font-size: 20px;
     display: inline block;
-    margin-left: 3px;
+    line-height: 26px;
+    margin-left: 2px;
   }
 </style>

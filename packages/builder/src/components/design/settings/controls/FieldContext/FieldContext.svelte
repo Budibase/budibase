@@ -1,7 +1,7 @@
 <script>
   import ExplanationModal from './ExplanationModal/index.svelte'
   import { messages as messageConstants, getColumnInfoMessagesAndSupport } from "./columnInfo";
-  import { Column, Support, NotRequired, StringNumber } from "./lines"
+  import { Column, Support, NotRequired, StringNumber, JSONPrimitivesOnly } from "./lines"
   import subjects from './subjects';
 
   export let columnInfo
@@ -56,6 +56,11 @@
   {/if}
   {#if messages.includes(messageConstants.notRequired)}
     <NotRequired
+      {setExplanationSubject}
+    />
+  {/if}
+  {#if messages.includes(messageConstants.jsonPrimitivesOnly)}
+    <JSONPrimitivesOnly
       {setExplanationSubject}
     />
   {/if}

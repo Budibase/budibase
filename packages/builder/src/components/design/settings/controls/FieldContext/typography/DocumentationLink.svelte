@@ -41,6 +41,7 @@
     border-radius: 0;
     border-bottom: 1px solid var(--blue);
     transition: filter 300ms;
+    margin-right: 0px;
   }
 
   .link:hover {
