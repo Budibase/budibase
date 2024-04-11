@@ -64,10 +64,11 @@ jobs:
       - run: yarn --frozen-lockfile
 
       # Run build all the projects
-      - name: Build
-        run: |
-          yarn build:oss
-          yarn build:account-portal
+      - name: Build OSS
+        run: yarn build:oss
+      - name: Build account portal
+        run: yarn build:account-portal
+        if: inputs.run_as_oss != true
       # Check the types of the projects built via esbuild
       - name: Check types
         run: |
