@@ -79,7 +79,8 @@
         // for autoscreens, so it's always safe to do this.
         await navigationStore.saveLink(
           screen.routing.route,
-          capitalise(screen.routing.route.split("/")[1])
+          capitalise(screen.routing.route.split("/")[1]),
+          screenAccessRole
         )
       }
 
