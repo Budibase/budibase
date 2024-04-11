@@ -6505,7 +6505,7 @@
         "type": "event",
         "key": "sidePanelClose",
         "label": "Side Panel Close",
-        "info": "Side panel actions configured here will run after the 'Open side panel' action runs, and are not capable of preventing or stopping it. Any form validation should therefore be done before that action if invoked, and not here."
+        "info": "Side panel actions configured here will run after the 'Open side panel' action runs, and are not capable of preventing or stopping it. Any form validation should therefore be done before that action is invoked, and not here."
       }
     ]
   },
