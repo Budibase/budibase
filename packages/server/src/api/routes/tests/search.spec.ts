@@ -7,15 +7,11 @@ import {
   EmptyFilterOption,
   FieldType,
   RowSearchParams,
+  SearchFilters,
   Table,
+  TableSchema,
 } from "@budibase/types"
-
-function leftContainsRight<
-  A extends Record<string, any>,
-  B extends Record<string, any>
->(left: A, right: B) {
-  return Object.entries(right).every(([k, v]) => left[k] === v)
-}
+import _ from "lodash"
 
 jest.unmock("mssql")
 
@@ -32,6 +28,7 @@ describe.each([
 
   let envCleanup: (() => void) | undefined
   let datasource: Datasource | undefined
+  let table: Table
 
   beforeAll(async () => {
     if (isSqs) {
@@ -52,220 +49,217 @@ describe.each([
     }
   })
 
-  async function testSearch<RowType extends Record<string, any>>(
-    test: SearchTest<RowType>,
-    table: Table
-  ) {
-    const expected = test.expectToFind
-    delete test.expectToFind
-    const { rows: foundRows } = await config.api.row.search(table._id!, {
-      ...test,
-      tableId: table._id!,
-    })
-    if (!expected) {
-      return
-    }
-    expect(foundRows).toHaveLength(expected.length)
-    expect(foundRows).toEqual(
-      expect.arrayContaining(
-        expected.map(expectedRow =>
-          expect.objectContaining(
-            foundRows.find(foundRow => leftContainsRight(foundRow, expectedRow))
-          )
-        )
-      )
+  async function createTable(schema: TableSchema) {
+    table = await config.api.table.save(
+      tableForDatasource(datasource, { schema })
     )
   }
 
-  function searchTests<T extends Record<string, any>>(
-    name: string,
-    opts: {
-      table: (ds?: Datasource) => Promise<Table>
-      rows: T[]
-      tests: SearchTest<T>[]
-    }
-  ) {
-    let table: Table
+  async function createRows(rows: Record<string, any>[]) {
+    await Promise.all(rows.map(r => config.api.row.save(table._id!, r)))
+  }
 
-    for (const test of opts.tests) {
-      test.toString = () => {
-        const queryStr = JSON.stringify({
-          query: test.query,
-          limit: test.limit,
-          sort: test.sort,
-          sortOrder: test.sortOrder,
-        })
-        const expectStr = JSON.stringify(test.expectToFind)
-        return `should run: ${queryStr} and find ${expectStr}`
-      }
-    }
+  class SearchAssertion {
+    constructor(private readonly query: RowSearchParams) {}
 
-    // eslint-disable-next-line jest/valid-title
-    describe(name, () => {
-      beforeAll(async () => {
-        table = await opts.table(datasource)
+    async toFind(expectedRows: any[]) {
+      const { rows: foundRows } = await config.api.row.search(table._id!, {
+        ...this.query,
+        tableId: table._id!,
       })
 
-      beforeAll(async () => {
-        await Promise.all(
-          opts.rows.map(r => config.api.row.save(table._id!, r))
+      // eslint-disable-next-line jest/no-standalone-expect
+      expect(foundRows).toHaveLength(expectedRows.length)
+      // eslint-disable-next-line jest/no-standalone-expect
+      expect(foundRows).toEqual(
+        expect.arrayContaining(
+          expectedRows.map((expectedRow: any) =>
+            expect.objectContaining(
+              foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
+            )
+          )
         )
+      )
+    }
+
+    async toFindNothing() {
+      await this.toFind([])
+    }
+  }
+
+  function expectSearch(query: Omit<RowSearchParams, "tableId">) {
+    return new SearchAssertion({ ...query, tableId: table._id! })
+  }
+
+  function expectQuery(query: SearchFilters) {
+    return expectSearch({ query })
+  }
+
+  describe("strings", () => {
+    beforeAll(async () => {
+      await createTable({
+        name: { name: "name", type: FieldType.STRING },
+      })
+      await createRows([{ name: "foo" }, { name: "bar" }])
+    })
+
+    describe("misc", () => {
+      it("should return all if no query is passed", () =>
+        expectSearch({} as RowSearchParams).toFind([
+          { name: "foo" },
+          { name: "bar" },
+        ]))
+
+      it("should return all if empty query is passed", () =>
+        expectQuery({}).toFind([{ name: "foo" }, { name: "bar" }]))
+
+      it("should return all if onEmptyFilter is RETURN_ALL", () =>
+        expectQuery({
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+        }).toFind([{ name: "foo" }, { name: "bar" }]))
+
+      it("should return nothing if onEmptyFilter is RETURN_NONE", () =>
+        expectQuery({
+          onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+        }).toFindNothing())
+    })
+
+    describe("equal", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ equal: { name: "foo" } }).toFind([{ name: "foo" }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ equal: { name: "none" } }).toFindNothing())
+    })
+
+    describe("notEqual", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ notEqual: { name: "foo" } }).toFind([{ name: "bar" }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ notEqual: { name: "bar" } }).toFind([{ name: "foo" }]))
+    })
+
+    describe("oneOf", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ oneOf: { name: ["foo"] } }).toFind([{ name: "foo" }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ oneOf: { name: ["none"] } }).toFindNothing())
+    })
+
+    describe("fuzzy", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ fuzzy: { name: "oo" } }).toFind([{ name: "foo" }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ fuzzy: { name: "none" } }).toFindNothing())
+    })
+  })
+
+  describe("numbers", () => {
+    beforeAll(async () => {
+      await createTable({
+        age: { name: "age", type: FieldType.NUMBER },
+      })
+      await createRows([{ age: 1 }, { age: 10 }])
+    })
+
+    describe("equal", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ equal: { age: 1 } }).toFind([{ age: 1 }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ equal: { age: 2 } }).toFindNothing())
+    })
+
+    describe("notEqual", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ notEqual: { age: 1 } }).toFind([{ age: 10 }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ notEqual: { age: 10 } }).toFind([{ age: 1 }]))
+    })
+
+    describe("oneOf", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ oneOf: { age: [1] } }).toFind([{ age: 1 }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ oneOf: { age: [2] } }).toFindNothing())
+    })
+
+    describe("range", () => {
+      it("successfully finds a row", () =>
+        expectQuery({
+          range: { age: { low: 1, high: 5 } },
+        }).toFind([{ age: 1 }]))
+
+      it("successfully finds multiple rows", () =>
+        expectQuery({
+          range: { age: { low: 1, high: 10 } },
+        }).toFind([{ age: 1 }, { age: 10 }]))
+
+      it("successfully finds a row with a high bound", () =>
+        expectQuery({
+          range: { age: { low: 5, high: 10 } },
+        }).toFind([{ age: 10 }]))
+    })
+  })
+
+  describe("dates", () => {
+    const JAN_1ST = "2020-01-01T00:00:00.000Z"
+    const JAN_2ND = "2020-01-02T00:00:00.000Z"
+    const JAN_5TH = "2020-01-05T00:00:00.000Z"
+    const JAN_10TH = "2020-01-10T00:00:00.000Z"
+
+    beforeAll(async () => {
+      await createTable({
+        dob: { name: "dob", type: FieldType.DATETIME },
       })
 
-      it.each(opts.tests)(`%s`, test => testSearch(test, table))
+      await createRows([{ dob: JAN_1ST }, { dob: JAN_10TH }])
     })
-  }
 
-  interface SearchTest<RowType extends Record<string, any>>
-    extends Omit<RowSearchParams, "tableId"> {
-    expectToFind?: RowType[]
-  }
+    describe("equal", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ equal: { dob: JAN_1ST } }).toFind([{ dob: JAN_1ST }]))
 
-  searchTests("strings", {
-    table: async ds => {
-      return await config.api.table.save(
-        tableForDatasource(ds, {
-          schema: {
-            name: {
-              name: "name",
-              type: FieldType.STRING,
-            },
-          },
-        })
-      )
-    },
-    rows: [{ name: "foo" }, { name: "bar" }],
-    tests: [
-      // These test cases are generic and don't really need to be repeated for
-      // all data types, so we just do them here.
+      it("fails to find nonexistent row", () =>
+        expectQuery({ equal: { dob: JAN_2ND } }).toFindNothing())
+    })
 
-      // @ts-expect-error - intentionally not passing a query to make sure the
-      // API can handle it.
-      { expectToFind: [{ name: "foo" }, { name: "bar" }] },
-      { query: {}, expectToFind: [{ name: "foo" }, { name: "bar" }] },
-      {
-        query: { onEmptyFilter: EmptyFilterOption.RETURN_ALL },
-        expectToFind: [{ name: "foo" }, { name: "bar" }],
-      },
-      {
-        query: { onEmptyFilter: EmptyFilterOption.RETURN_NONE },
-        expectToFind: [],
-      },
-      // The rest of these tests are specific to strings.
-      { query: { string: { name: "foo" } }, expectToFind: [{ name: "foo" }] },
-      { query: { string: { name: "none" } }, expectToFind: [] },
-      { query: { fuzzy: { name: "oo" } }, expectToFind: [{ name: "foo" }] },
-      { query: { equal: { name: "foo" } }, expectToFind: [{ name: "foo" }] },
-      { query: { notEqual: { name: "foo" } }, expectToFind: [{ name: "bar" }] },
-      { query: { oneOf: { name: ["foo"] } }, expectToFind: [{ name: "foo" }] },
-    ],
-  })
+    describe("notEqual", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ notEqual: { dob: JAN_1ST } }).toFind([{ dob: JAN_10TH }]))
 
-  searchTests("numbers", {
-    table: async ds => {
-      return await config.api.table.save(
-        tableForDatasource(ds, {
-          schema: {
-            age: {
-              name: "age",
-              type: FieldType.NUMBER,
-            },
-          },
-        })
-      )
-    },
-    rows: [{ age: 1 }, { age: 10 }],
-    tests: [
-      { query: { equal: { age: 1 } }, expectToFind: [{ age: 1 }] },
-      { query: { equal: { age: 2 } }, expectToFind: [] },
-      { query: { notEqual: { age: 1 } }, expectToFind: [{ age: 10 }] },
-      { query: { oneOf: { age: [1] } }, expectToFind: [{ age: 1 }] },
-      {
-        query: { range: { age: { low: 1, high: 5 } } },
-        expectToFind: [{ age: 1 }],
-      },
-      {
-        query: { range: { age: { low: 0, high: 1 } } },
-        expectToFind: [{ age: 1 }],
-      },
-      { query: { range: { age: { low: 3, high: 4 } } }, expectToFind: [] },
-      {
-        query: { range: { age: { low: 0, high: 11 } } },
-        expectToFind: [{ age: 1 }, { age: 10 }],
-      },
-    ],
-  })
+      it("fails to find nonexistent row", () =>
+        expectQuery({ notEqual: { dob: JAN_10TH } }).toFind([{ dob: JAN_1ST }]))
+    })
 
-  searchTests("dates", {
-    table: async ds => {
-      return await config.api.table.save(
-        tableForDatasource(ds, {
-          schema: {
-            dob: {
-              name: "dob",
-              type: FieldType.DATETIME,
-            },
-          },
-        })
-      )
-    },
-    rows: [
-      { dob: "2020-01-01T00:00:00.000Z" },
-      { dob: "2020-01-10T00:00:00.000Z" },
-    ],
-    tests: [
-      {
-        query: { equal: { dob: "2020-01-01T00:00:00.000Z" } },
-        expectToFind: [{ dob: "2020-01-01T00:00:00.000Z" }],
-      },
-      {
-        query: { equal: { dob: "2020-01-02T00:00:00.000Z" } },
-        expectToFind: [],
-      },
-      {
-        query: { notEqual: { dob: "2020-01-01T00:00:00.000Z" } },
-        expectToFind: [{ dob: "2020-01-10T00:00:00.000Z" }],
-      },
-      {
-        query: { oneOf: { dob: ["2020-01-01T00:00:00.000Z"] } },
-        expectToFind: [{ dob: "2020-01-01T00:00:00.000Z" }],
-      },
-      {
-        query: {
-          range: {
-            dob: {
-              low: "2020-01-01T00:00:00.000Z",
-              high: "2020-01-05T00:00:00.000Z",
-            },
-          },
-        },
-        expectToFind: [{ dob: "2020-01-01T00:00:00.000Z" }],
-      },
-      {
-        query: {
-          range: {
-            dob: {
-              low: "2020-01-01T00:00:00.000Z",
-              high: "2020-01-10T00:00:00.000Z",
-            },
-          },
-        },
-        expectToFind: [
-          { dob: "2020-01-01T00:00:00.000Z" },
-          { dob: "2020-01-10T00:00:00.000Z" },
-        ],
-      },
-      {
-        query: {
-          range: {
-            dob: {
-              low: "2020-01-05T00:00:00.000Z",
-              high: "2020-01-10T00:00:00.000Z",
-            },
-          },
-        },
-        expectToFind: [{ dob: "2020-01-10T00:00:00.000Z" }],
-      },
-    ],
+    describe("oneOf", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ oneOf: { dob: [JAN_1ST] } }).toFind([{ dob: JAN_1ST }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ oneOf: { dob: [JAN_2ND] } }).toFindNothing())
+    })
+
+    describe("range", () => {
+      it("successfully finds a row", () =>
+        expectQuery({
+          range: { dob: { low: JAN_1ST, high: JAN_5TH } },
+        }).toFind([{ dob: JAN_1ST }]))
+
+      it("successfully finds multiple rows", () =>
+        expectQuery({
+          range: { dob: { low: JAN_1ST, high: JAN_10TH } },
+        }).toFind([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
+
+      it("successfully finds a row with a high bound", () =>
+        expectQuery({
+          range: { dob: { low: JAN_5TH, high: JAN_10TH } },
+        }).toFind([{ dob: JAN_10TH }]))
+    })
   })
 })
