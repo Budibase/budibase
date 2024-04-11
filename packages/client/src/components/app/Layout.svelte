@@ -2,9 +2,8 @@
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
   import { Heading, Icon, clickOutside } from "@budibase/bbui"
-  import { FieldTypes } from "constants"
   import { Constants } from "@budibase/frontend-core"
-  import active from "svelte-spa-router/active"
+  import NavItem from "./NavItem.svelte"
 
   const sdk = getContext("sdk")
   const {
@@ -16,6 +15,7 @@
     appStore,
   } = sdk
   const context = getContext("context")
+  const navStateStore = writable({})
 
   // Legacy props which must remain unchanged for backwards compatibility
   export let title
@@ -63,7 +63,7 @@
   })
   setContext("layout", store)
 
-  $: validLinks = getValidLinks(links, $roleStore)
+  $: enrichedNavItems = enrichNavItems(links, $roleStore)
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
   $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
   $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
@@ -101,26 +101,55 @@
     }
   }
 
-  const getValidLinks = (allLinks, userRoleHierarchy) => {
-    // Strip links missing required info
-    let validLinks = (allLinks || []).filter(link => link.text && link.url)
-    // Filter to only links allowed by the current role
-    return validLinks.filter(link => {
-      const role = link.roleId || Constants.Roles.BASIC
-      return userRoleHierarchy?.find(roleId => roleId === role)
-    })
+  const enrichNavItem = navItem => {
+    const internalLink = isInternal(navItem.url)
+    return {
+      ...navItem,
+      internalLink,
+      url: internalLink ? navItem.url : ensureExternal(navItem.url),
+    }
+  }
+
+  const enrichNavItems = (navItems, userRoleHierarchy) => {
+    if (!navItems?.length) {
+      return []
+    }
+    return navItems
+      .filter(navItem => {
+        // Strip nav items without text
+        if (!navItem.text) {
+          return false
+        }
+
+        // Strip out links without URLs
+        if (navItem.type !== "sublinks" && !navItem.url) {
+          return false
+        }
+
+        // Filter to only links allowed by the current role
+        const role = navItem.roleId || Constants.Roles.BASIC
+        return userRoleHierarchy?.find(roleId => roleId === role)
+      })
+      .map(navItem => {
+        const enrichedNavItem = enrichNavItem(navItem)
+        if (navItem.type === "sublinks" && navItem.subLinks?.length) {
+          enrichedNavItem.subLinks = navItem.subLinks
+            .filter(subLink => subLink.text && subLink.url)
+            .map(enrichNavItem)
+        }
+        return enrichedNavItem
+      })
   }
 
   const isInternal = url => {
-    return url.startsWith("/")
+    return url?.startsWith("/")
   }
 
   const ensureExternal = url => {
+    if (!url?.length) {
+      return url
+    }
     return !url.startsWith("http") ? `http://${url}` : url
-  }
-
-  const close = () => {
-    mobileOpen = false
   }
 
   const navigateToPortal = () => {
@@ -194,7 +223,7 @@
         >
           <div class="nav nav--{typeClass} size--{navWidthClass}">
             <div class="nav-header">
-              {#if validLinks?.length}
+              {#if enrichedNavItems.length}
                 <div class="burger">
                   <Icon
                     hoverable
@@ -243,28 +272,20 @@
               class:visible={mobileOpen}
               on:click={() => (mobileOpen = false)}
             />
-            {#if validLinks?.length}
+            {#if enrichedNavItems.length}
               <div class="links" class:visible={mobileOpen}>
-                {#each validLinks as { text, url }}
-                  {#if isInternal(url)}
-                    <a
-                      class={FieldTypes.LINK}
-                      href={url}
-                      use:linkable
-                      on:click={close}
-                      use:active={url}
-                    >
-                      {text}
-                    </a>
-                  {:else}
-                    <a
-                      class={FieldTypes.LINK}
-                      href={ensureExternal(url)}
-                      on:click={close}
-                    >
-                      {text}
-                    </a>
-                  {/if}
+                {#each enrichedNavItems as navItem}
+                  <NavItem
+                    type={navItem.type}
+                    text={navItem.text}
+                    url={navItem.url}
+                    subLinks={navItem.subLinks}
+                    internalLink={navItem.internalLink}
+                    on:clickLink={() => (mobileOpen = false)}
+                    leftNav={navigation === "Left"}
+                    {mobile}
+                    {navStateStore}
+                  />
                 {/each}
                 <div class="close">
                   <Icon
@@ -508,21 +529,6 @@
     align-items: center;
     gap: var(--spacing-xl);
     margin-top: var(--spacing-xl);
-  }
-  .link {
-    opacity: 0.75;
-    color: var(--navTextColor);
-    font-size: var(--spectrum-global-dimension-font-size-200);
-    font-weight: 600;
-    transition: color 130ms ease-out;
-  }
-  .link.active {
-    opacity: 1;
-  }
-  .link:hover {
-    opacity: 1;
-    text-decoration: underline;
-    text-underline-position: under;
   }
   .close {
     display: none;
