@@ -3,7 +3,7 @@
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { FieldContext, validate } from './FieldContext'
+  import { FieldContext, getColumnInfoMessagesAndSupport } from './FieldContext'
   import { debounce } from "lodash"
   import { goto, params } from "@roxi/routify"
   import { Constants } from "@budibase/frontend-core"
@@ -12,21 +12,21 @@
   export let componentInstance = {}
   export let value = ""
   export let placeholder
-  export let columnContext
+  export let columnInfo
 
   let contextTooltipAnchor = null
   let currentOption = null
   let previousOption = null
   let contextTooltipVisible = false
 
-  const getFieldSupport = (schema, columnContext) => {
-    if (!columnContext) {
+  const getFieldSupport = (schema, columnInfo) => {
+    if (columnInfo == null) {
       return {}
     }
 
     const fieldSupport = {}
     Object.entries(schema || {}).forEach(([key, value]) => {
-      fieldSupport[key] = validate(value)
+      fieldSupport[key] = getColumnInfoMessagesAndSupport(value)
     })
 
     return fieldSupport
@@ -35,7 +35,7 @@
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
   $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
-  $: fieldSupport = getFieldSupport(schema, columnContext);
+  $: fieldSupport = getFieldSupport(schema, columnInfo);
   $: options = Object.keys(schema || {})
   $: boundValue = getValidValue(value, options)
 
@@ -117,7 +117,7 @@
   {onOptionMouseleave}
 />
 
-{#if columnContext}
+{#if columnInfo}
   <ContextTooltip
     visible={contextTooltipVisible}
     anchor={contextTooltipAnchor}

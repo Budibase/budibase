@@ -1,2 +1,2 @@
 export { default as FieldContext } from "./FieldContext.svelte"
-export * from "./validator"
+export * from "./columnInfo"

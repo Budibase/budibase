@@ -1634,8 +1634,18 @@
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
-        "valueTypes": ["number"],
-        "columnContext": true,
+        "columnInfo": {
+          "typeSupport": {
+            "supported": ["number", "boolean"],
+            "partialSupport": [
+              { "type": "string", "message": "stringAsNumber" },
+              { "type": "datetime", "message": "datetimeChart"}
+            ],
+            "unsupported": [
+              { "type": "json", "message": "jsonPrimitivesOnly" }
+            ]
+          }
+        },
         "required": true
       },
       {

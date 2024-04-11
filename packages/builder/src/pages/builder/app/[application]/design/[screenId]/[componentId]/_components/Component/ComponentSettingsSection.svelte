@@ -193,7 +193,7 @@
                 max: setting.max ?? null,
 
                 // Field select settings
-                columnContext: setting.columnContext,
+                columnInfo: setting.columnInfo,
                 valueTypes: setting.valueTypes
               }}
               {bindings}

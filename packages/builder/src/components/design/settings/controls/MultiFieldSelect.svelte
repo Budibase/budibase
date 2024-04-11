@@ -5,7 +5,7 @@
     componentStore,
   } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { FieldContext, validate } from './FieldContext'
+  import { FieldContext, getColumnInfoMessagesAndSupport } from './FieldContext'
   import { FIELDS } from 'constants/backend'
   import { goto, params } from "@roxi/routify"
   import { debounce } from "lodash"
@@ -14,8 +14,7 @@
   export let componentInstance = {}
   export let value = ""
   export let placeholder
-  export let columnContext
-  export let valueTypes
+  export let columnInfo
 
   let contextTooltipAnchor = null
   let currentOption = null
@@ -26,14 +25,15 @@
     componentInstance?._component
   )
 
-  const getFieldSupport = (schema, columnContext) => {
-    if (!columnContext) {
+  const getFieldSupport = (schema, columnInfo) => {
+    if (columnInfo == null) {
       return {}
     }
 
     const fieldSupport = {}
     Object.entries(schema || {}).forEach(([key, value]) => {
-      fieldSupport[key] = validate(value)
+      // super TODO: nicer to do this at the component level jit and store each value seperately so i don't have this long ass name???
+      fieldSupport[key] = getColumnInfoMessagesAndSupport(value, columnInfo)
     })
 
     return fieldSupport
@@ -43,8 +43,10 @@
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
   $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
   $: options = Object.keys(schema || {})
-  $: fieldSupport = getFieldSupport(schema, columnContext);
+  $: fieldSupport = getFieldSupport(schema, columnInfo);
   $: boundValue = getValidOptions(value, options)
+
+  $: console.log(fieldSupport)
 
 
   const getValidOptions = (selectedOptions, allOptions) => {
@@ -133,7 +135,7 @@
   {onOptionMouseleave}
 />
 
-{#if columnContext}
+{#if columnInfo}
   <ContextTooltip
     visible={contextTooltipVisible}
     anchor={contextTooltipAnchor}
