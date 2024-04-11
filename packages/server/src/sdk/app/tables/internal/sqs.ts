@@ -59,8 +59,12 @@ function buildRelationshipDefinitions(
   return {
     tableId: generateJunctionTableID(tableId, relatedTableId),
     definition: {
-      doc1: SQLiteType.BLOB,
-      doc2: SQLiteType.BLOB,
+      ["doc1.rowId"]: SQLiteType.TEXT,
+      ["doc1.tableId"]: SQLiteType.TEXT,
+      ["doc1.fieldName"]: SQLiteType.TEXT,
+      ["doc2.rowId"]: SQLiteType.TEXT,
+      ["doc2.tableId"]: SQLiteType.TEXT,
+      ["doc2.fieldName"]: SQLiteType.TEXT,
       tableId: SQLiteType.TEXT,
     },
   }
