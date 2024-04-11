@@ -21,6 +21,7 @@ import {
   finaliseExternalTables,
   SqlClient,
   checkExternalTables,
+  HOST_ADDRESS,
 } from "./utils"
 import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
@@ -72,7 +73,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
@@ -420,7 +421,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     return response.rows.length ? response.rows : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json).toLowerCase()
     const input = this._query(json) as SqlQuery
     if (Array.isArray(input)) {

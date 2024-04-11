@@ -4226,7 +4226,7 @@
     ]
   },
   "attachmentfield": {
-    "name": "Attachment",
+    "name": "Attachment list",
     "icon": "Attach",
     "styles": ["size"],
     "requiredAncestors": ["form"],
@@ -4262,6 +4262,97 @@
         "label": "Max attachments",
         "key": "maximum",
         "min": 1
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Compact",
+        "key": "compact",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "validation/attachment",
+        "label": "Validation",
+        "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
+      }
+    ]
+  },
+  "attachmentsinglefield": {
+    "name": "Single Attachment",
+    "icon": "Attach",
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 200
+    },
+    "settings": [
+      {
+        "type": "field/attachment_single",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
+        "label": "Extensions",
+        "key": "extensions"
       },
       {
         "type": "event",
@@ -4609,6 +4700,35 @@
         "label": "Data",
         "key": "dataSource",
         "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
       },
       {
         "type": "filter",
@@ -4976,6 +5096,35 @@
         "label": "Data",
         "key": "dataSource",
         "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
       },
       {
         "type": "text",
@@ -5446,6 +5595,35 @@
             "required": true
           },
           {
+            "type": "select",
+            "label": "Auto-refresh",
+            "key": "autoRefresh",
+            "license": "premium",
+            "placeholder": "Never",
+            "options": [
+              {
+                "label": "10 seconds",
+                "value": 10
+              },
+              {
+                "label": "30 seconds",
+                "value": 30
+              },
+              {
+                "label": "1 minute",
+                "value": 60
+              },
+              {
+                "label": "5 minutes",
+                "value": 300
+              },
+              {
+                "label": "10 minutes",
+                "value": 600
+              }
+            ]
+          },
+          {
             "type": "columns",
             "label": "Columns",
             "key": "tableColumns",
@@ -5732,6 +5910,35 @@
         "required": true
       },
       {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
+      },
+      {
         "type": "searchfield",
         "label": "Search columns",
         "key": "searchColumns",
@@ -5895,7 +6102,7 @@
     "block": true,
     "name": "Repeater Block",
     "icon": "ViewList",
-    "illegalChildren": ["section"],
+    "illegalChildren": ["section", "rowexplorer"],
     "hasChildren": true,
     "size": {
       "width": 400,
@@ -5907,6 +6114,35 @@
         "label": "Data",
         "key": "dataSource",
         "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
       },
       {
         "type": "filter",
@@ -6523,6 +6759,35 @@
         "label": "Data",
         "key": "dataSource",
         "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
       },
       {
         "type": "text",

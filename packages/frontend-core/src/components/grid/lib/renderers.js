@@ -1,3 +1,5 @@
+import { FieldType } from "@budibase/types"
+
 import OptionsCell from "../cells/OptionsCell.svelte"
 import DateCell from "../cells/DateCell.svelte"
 import MultiSelectCell from "../cells/MultiSelectCell.svelte"
@@ -9,22 +11,24 @@ import BooleanCell from "../cells/BooleanCell.svelte"
 import FormulaCell from "../cells/FormulaCell.svelte"
 import JSONCell from "../cells/JSONCell.svelte"
 import AttachmentCell from "../cells/AttachmentCell.svelte"
+import AttachmentSingleCell from "../cells/AttachmentSingleCell.svelte"
 import BBReferenceCell from "../cells/BBReferenceCell.svelte"
 
 const TypeComponentMap = {
-  text: TextCell,
-  options: OptionsCell,
-  datetime: DateCell,
-  barcodeqr: TextCell,
-  longform: LongFormCell,
-  array: MultiSelectCell,
-  number: NumberCell,
-  boolean: BooleanCell,
-  attachment: AttachmentCell,
-  link: RelationshipCell,
-  formula: FormulaCell,
-  json: JSONCell,
-  bb_reference: BBReferenceCell,
+  [FieldType.STRING]: TextCell,
+  [FieldType.OPTIONS]: OptionsCell,
+  [FieldType.DATETIME]: DateCell,
+  [FieldType.BARCODEQR]: TextCell,
+  [FieldType.LONGFORM]: LongFormCell,
+  [FieldType.ARRAY]: MultiSelectCell,
+  [FieldType.NUMBER]: NumberCell,
+  [FieldType.BOOLEAN]: BooleanCell,
+  [FieldType.ATTACHMENTS]: AttachmentCell,
+  [FieldType.ATTACHMENT_SINGLE]: AttachmentSingleCell,
+  [FieldType.LINK]: RelationshipCell,
+  [FieldType.FORMULA]: FormulaCell,
+  [FieldType.JSON]: JSONCell,
+  [FieldType.BB_REFERENCE]: BBReferenceCell,
 }
 export const getCellRenderer = column => {
   return TypeComponentMap[column?.schema?.type] || TextCell

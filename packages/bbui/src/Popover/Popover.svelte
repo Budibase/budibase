@@ -99,10 +99,10 @@
       on:keydown={handleEscape}
       class="spectrum-Popover is-open"
       class:customZindex
-      class:hide-popover={open && !showPopover}
+      class:hidden={!showPopover}
       role="presentation"
       style="height: {customHeight}; --customZindex: {customZindex};"
-      transition:fly|local={{ y: -20, duration: animate ? 200 : 0 }}
+      transition:fly|local={{ y: -20, duration: animate ? 260 : 0 }}
       on:mouseenter
       on:mouseleave
     >
@@ -112,16 +112,17 @@
 {/if}
 
 <style>
-  .hide-popover {
-    display: contents;
-  }
-
   .spectrum-Popover {
     min-width: var(--spectrum-global-dimension-size-2000);
     border-color: var(--spectrum-global-color-gray-300);
     overflow: auto;
+    transition: opacity 260ms ease-out, transform 260ms ease-out;
   }
-
+  .hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-20px);
+  }
   .customZindex {
     z-index: var(--customZindex) !important;
   }

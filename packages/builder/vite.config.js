@@ -77,9 +77,6 @@ export default defineConfig(({ mode }) => {
           isProduction ? "production" : "development"
         ),
         "process.env.POSTHOG_TOKEN": JSON.stringify(process.env.POSTHOG_TOKEN),
-        "process.env.INTERCOM_TOKEN": JSON.stringify(
-          process.env.INTERCOM_TOKEN
-        ),
       }),
       copyFonts("fonts"),
       ...(isProduction ? [] : devOnlyPlugins),

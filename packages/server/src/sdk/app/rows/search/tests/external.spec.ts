@@ -6,7 +6,7 @@ import {
   Row,
   SourceName,
   Table,
-  SearchParams,
+  RowSearchParams,
   TableSourceType,
 } from "@budibase/types"
 
@@ -16,8 +16,6 @@ import {
   expectAnyExternalColsAttributes,
   generator,
 } from "@budibase/backend-core/tests"
-
-jest.setTimeout(30000)
 
 describe("external search", () => {
   const config = new TestConfiguration()
@@ -110,7 +108,7 @@ describe("external search", () => {
     await config.doInContext(config.appId, async () => {
       const tableId = config.table!._id!
 
-      const searchParams: SearchParams = {
+      const searchParams: RowSearchParams = {
         tableId,
         query: {},
       }
@@ -127,7 +125,7 @@ describe("external search", () => {
     await config.doInContext(config.appId, async () => {
       const tableId = config.table!._id!
 
-      const searchParams: SearchParams = {
+      const searchParams: RowSearchParams = {
         tableId,
         query: {},
         fields: ["name", "age"],
@@ -151,7 +149,7 @@ describe("external search", () => {
     await config.doInContext(config.appId, async () => {
       const tableId = config.table!._id!
 
-      const searchParams: SearchParams = {
+      const searchParams: RowSearchParams = {
         tableId,
         query: {
           oneOf: {

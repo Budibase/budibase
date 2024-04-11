@@ -127,6 +127,20 @@ export class UserAPI extends TestAPI {
       .expect(status ? status : 200)
   }
 
+  addSsoSupportInternalAPIAuth = (ssoId: string, email: string) => {
+    return this.request
+      .post(`/api/global/users/sso`)
+      .send({ ssoId, email })
+      .set(this.config.internalAPIHeaders())
+  }
+
+  addSsoSupportDefaultAuth = (ssoId: string, email: string) => {
+    return this.request
+      .post(`/api/global/users/sso`)
+      .send({ ssoId, email })
+      .set(this.config.defaultHeaders())
+  }
+
   deleteUser = (userId: string, status?: number) => {
     return this.request
       .delete(`/api/global/users/${userId}`)

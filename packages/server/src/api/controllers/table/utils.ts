@@ -30,9 +30,9 @@ import {
   View,
   RelationshipFieldMetadata,
   FieldType,
-  FieldTypeSubtypes,
-  AttachmentFieldMetadata,
 } from "@budibase/types"
+import sdk from "../../../sdk"
+import env from "../../../environment"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
   const db = context.getAppDB()
@@ -89,26 +89,6 @@ export async function checkForColumnUpdates(
     })
     // Update views
     await checkForViewUpdates(updatedTable, deletedColumns, columnRename)
-  }
-
-  const changedAttachmentSubtypeColumns = Object.values(
-    updatedTable.schema
-  ).filter(
-    (column): column is AttachmentFieldMetadata =>
-      column.type === FieldType.ATTACHMENT &&
-      column.subtype !== oldTable?.schema[column.name]?.subtype
-  )
-  for (const attachmentColumn of changedAttachmentSubtypeColumns) {
-    if (attachmentColumn.subtype === FieldTypeSubtypes.ATTACHMENT.SINGLE) {
-      attachmentColumn.constraints ??= { length: {} }
-      attachmentColumn.constraints.length ??= {}
-      attachmentColumn.constraints.length.maximum = 1
-      attachmentColumn.constraints.length.message =
-        "cannot contain multiple files"
-    } else {
-      delete attachmentColumn.constraints?.length?.maximum
-      delete attachmentColumn.constraints?.length?.message
-    }
   }
 
   return { rows: updatedRows, table: updatedTable }
@@ -342,6 +322,9 @@ class TableSaveFunctions {
       importRows: this.importRows,
       user: this.user,
     })
+    if (env.SQS_SEARCH_ENABLE) {
+      await sdk.tables.sqs.addTableToSqlite(table)
+    }
     return table
   }
 

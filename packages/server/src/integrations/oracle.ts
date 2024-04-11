@@ -22,6 +22,7 @@ import {
   finaliseExternalTables,
   getSqlQuery,
   SqlClient,
+  HOST_ADDRESS,
 } from "./utils"
 import Sql from "./base/sql"
 import {
@@ -63,7 +64,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
@@ -422,7 +423,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json)
     const input = this._query(json, { disableReturning: true }) as SqlQuery
     if (Array.isArray(input)) {

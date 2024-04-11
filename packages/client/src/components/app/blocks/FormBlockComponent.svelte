@@ -7,19 +7,20 @@
   export let order
 
   const FieldTypeToComponentMap = {
-    string: "stringfield",
-    number: "numberfield",
-    bigint: "bigintfield",
-    options: "optionsfield",
-    array: "multifieldselect",
-    boolean: "booleanfield",
-    longform: "longformfield",
-    datetime: "datetimefield",
-    attachment: "attachmentfield",
-    link: "relationshipfield",
-    json: "jsonfield",
-    barcodeqr: "codescanner",
-    bb_reference: "bbreferencefield",
+    [FieldType.STRING]: "stringfield",
+    [FieldType.NUMBER]: "numberfield",
+    [FieldType.BIGINT]: "bigintfield",
+    [FieldType.OPTIONS]: "optionsfield",
+    [FieldType.ARRAY]: "multifieldselect",
+    [FieldType.BOOLEAN]: "booleanfield",
+    [FieldType.LONGFORM]: "longformfield",
+    [FieldType.DATETIME]: "datetimefield",
+    [FieldType.ATTACHMENTS]: "attachmentfield",
+    [FieldType.ATTACHMENT_SINGLE]: "attachmentsinglefield",
+    [FieldType.LINK]: "relationshipfield",
+    [FieldType.JSON]: "jsonfield",
+    [FieldType.BARCODEQR]: "codescanner",
+    [FieldType.BB_REFERENCE]: "bbreferencefield",
   }
 
   const getFieldSchema = field => {
@@ -60,7 +61,7 @@
 
   function getPropsByType(field) {
     const propsMapByType = {
-      [FieldType.ATTACHMENT]: (_field, schema) => {
+      [FieldType.ATTACHMENTS]: (_field, schema) => {
         return {
           maximum: schema?.constraints?.length?.maximum,
         }
