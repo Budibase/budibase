@@ -1,9 +1,9 @@
 <script>
-  export let wrap = false
+  export let noWrap = false
 </script>
 <div class="line">
   <span class="bullet">•</span>
-  <div class="content" class:wrap>
+  <div class="content" class:noWrap>
     <slot />
   </div>
 </div>
@@ -27,12 +27,14 @@
   }
 
   .content {
-    display: flex;
     min-width: 0;
     align-items: center;
+    display: flex;
+    flex-wrap: wrap;
   }
 
-  .wrap {
-    display: block;
+  .noWrap {
+    display: flex;
+    flex-wrap: nowrap;
   }
 </style>

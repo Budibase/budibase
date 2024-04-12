@@ -49,9 +49,7 @@
     {color}
     {text}
   />
-  <Space />
-  <Text>with</Text>
-  <Space />
+  <Text value=" with " />
   <DocumentationLink
     href="https://docs.budibase.com/docs/chart"
     icon="GraphPie"

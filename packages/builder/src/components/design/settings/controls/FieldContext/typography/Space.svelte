@@ -1,8 +1,10 @@
-<span class="space" />
+<span class="space">{" "}</span>
 
 <style>
   .space {
-    margin-right: 5px;
+    white-space: pre;
     line-height: 26px;
+    width: 5px;
+    flex-shrink: 0;
   }
 </style>

@@ -157,8 +157,6 @@
 
     border-radius: 5px;
     box-sizing: border-box;
-    opacity: 0;
-    overflow: hidden;
     border: 1px solid var(--grey-4);
 
     transition: width 300ms ease-in, height 300ms ease-in, top 300ms ease-in, left 300ms ease-in;

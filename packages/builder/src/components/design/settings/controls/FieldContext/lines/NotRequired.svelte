@@ -7,8 +7,7 @@
 
 
 <Line>
-  <Text>No</Text>
-  <Space />
+  <Text value="No " />
   <InfoWord
   on:mouseenter={() => setExplanationSubject(subjects.notRequired)}
   on:mouseleave={() => setExplanationSubject(subjects.none)}
@@ -20,11 +19,7 @@
     href="https://docs.budibase.com/docs/budibasedb#constraints"
     text="Constraint"
   />
-  <Comma />
-  <Text>
-    so values may be missing
-  </Text>
-  <Period />
+  <Text value=", so values may be missing." />
 </Line>
 
 <style>

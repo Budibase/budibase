@@ -7,5 +7,6 @@
     display: inline block;
     line-height: 26px;
     margin-left: 2px;
+    flex-shrink: 0;
   }
 </style>
