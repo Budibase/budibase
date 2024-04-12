@@ -1,7 +1,7 @@
 <script>
   import ExplanationModal from './ExplanationModal/index.svelte'
   import { messages as messageConstants, getColumnInfoMessagesAndSupport } from "./columnInfo";
-  import { Column, Support, NotRequired, StringNumber, JSONPrimitivesOnly } from "./lines"
+  import { Column, Support, NotRequired, StringNumber, JSONPrimitivesOnly, DateAsNumber } from "./lines"
   import subjects from './subjects';
 
   export let columnInfo
@@ -30,6 +30,10 @@
   const setExplanationSubject = (option) => {
     explanationModalSubject = option;
     root = root
+  }
+
+  $: {
+    console.log(messages);
   }
 </script>
 
@@ -64,8 +68,8 @@
       {setExplanationSubject}
     />
   {/if}
-  {#if messages.includes(messageConstants.chartDatetime)}
-    <JSONPrimitivesOnly
+  {#if messages.includes(messageConstants.dateAsNumber)}
+    <DateAsNumber
       {setExplanationSubject}
     />
   {/if}

@@ -97,23 +97,23 @@
     // Add data
     let useDates = false
     if (schema[labelColumn]) {
-      console.log("in here?");
       const labelFieldType = schema[labelColumn].type
       if (horizontal) {
         builder = builder.yType(labelFieldType).xUnits(yAxisUnits)
       } else {
         builder = builder.xType(labelFieldType).yUnits(yAxisUnits)
       }
-      console.log(labelFieldType);
       useDates = labelFieldType === "datetime"
     }
     const series = (valueColumns ?? []).map(column => ({
       name: column,
       data: data.map(row => {
         if (!useDates) {
-          const value = get(row, column); 
-          console.log("one");
-          console.log(value);
+          const value = get(row, column);
+
+          if (schema[column].type === 'datetime') {
+            return Date.parse(value)
+          }
 
           if (Array.isArray(value)) {
             return null;
@@ -125,8 +125,7 @@
 
           return value;
         } else {
-          console.log("two");
-          console.log([row[labelColumn], row[column]]);
+          // TODO datetimes as labels are passed in this way, but this only updates on value change, so it's broken until you also change the value
           return [row[labelColumn], row[column]]
         }
       }),
