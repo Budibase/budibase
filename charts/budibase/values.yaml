@@ -206,6 +206,10 @@ services:
       # for autoscaling to work, you will need to have metrics-server
       # configured, and resources set for the proxy pods.
       targetCPUUtilizationPercentage: 80
+      # -- Additional containers to be added to the proxy pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
 
   apps:
     # @ignore (you shouldn't need to change this)
@@ -274,6 +278,10 @@ services:
       # autoscaling to work, you will need to have metrics-server configured,
       # and resources set for the apps pods.
       targetCPUUtilizationPercentage: 80
+    # -- Additional containers to be added to the apps pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
 
   automationWorkers:
     # -- Whether or not to enable the automation worker service. If you disable this,
@@ -346,6 +354,10 @@ services:
       # Note that for autoscaling to work, you will need to have metrics-server
       # configured, and resources set for the automation worker pods.
       targetCPUUtilizationPercentage: 80
+    # -- Additional containers to be added to the automationWorkers pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
 
   worker:
     # @ignore (you shouldn't need to change this)
@@ -414,6 +426,10 @@ services:
       # for autoscaling to work, you will need to have metrics-server
       # configured, and resources set for the worker pods.
       targetCPUUtilizationPercentage: 80
+    # -- Additional containers to be added to the worker pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
 
   couchdb:
     # -- Whether or not to spin up a CouchDB instance in your cluster. True by
@@ -463,6 +479,10 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- Additional containers to be added to the redis pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
 
   objectStore:
     # -- Set to false if using another object store, such as S3. You will need
@@ -505,6 +525,10 @@ services:
       publicKeyId: ""
       # -- Base64 encoded private key for the above public key.
       privateKey64: ""
+    # -- Additional containers to be added to the objectStore pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
 
 # Override values in couchDB subchart. We're only specifying the values we're changing.
 # If you want to see all of the available values, see:

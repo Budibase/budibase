@@ -54,6 +54,9 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: minio-data
+      {{- if .Values.services.objectStore.extraContainers }}
+        {{- toYaml .Values.services.objectStore.extraContainers | nindent 6 }}
+      {{- end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
