@@ -235,6 +235,9 @@ spec:
         args:
         {{- toYaml .Values.services.apps.args | nindent 10 }}
         {{ end }}
+      {{- if .Values.services.apps.extraContainers }}
+        {{- toYaml .Values.services.apps.extraContainers | nindent 6 }}
+      {{- end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
