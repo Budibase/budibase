@@ -29,6 +29,10 @@
   $: onEmptyFilter =
     filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
 
+  $: fieldFilters = filters.filter(
+    filter => filter.operator !== "allOr" && !filter.onEmptyFilter
+  )
+
   const behaviourOptions = [
     { value: "and", label: "Match all filters" },
     { value: "or", label: "Match any filter" },
@@ -177,7 +181,7 @@
   <Layout noPadding>
     {#if fieldOptions?.length}
       <Body size="S">
-        {#if !filters?.length}
+        {#if !fieldFilters?.length}
           Add your first filter expression.
         {:else}
           <slot name="filteringHeroContent" />
@@ -207,13 +211,13 @@
           {/if}
         {/if}
       </Body>
-      {#if filters?.length}
+      {#if fieldFilters?.length}
         <div>
           <div class="filter-label">
             <Label>Filters</Label>
           </div>
           <div class="fields" class:with-bindings={allowBindings}>
-            {#each filters.filter(filter => filter.operator !== "allOr" && !filter.onEmptyFilter) as filter}
+            {#each fieldFilters as filter}
               <Select
                 bind:value={filter.field}
                 options={fieldOptions}
