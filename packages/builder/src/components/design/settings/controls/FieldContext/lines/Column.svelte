@@ -35,16 +35,16 @@
   }
 </script>
 
-<Line>
+<Line noWrap>
   <InfoWord
     on:mouseenter={() => setExplanationSubject(subjects.column)}
     on:mouseleave={() => setExplanationSubject(subjects.none)}
     href={tableHref}
     text={columnName}
   />
-  <Space />
-  <Text>is a</Text>
-  <Space />
+  <Text
+    value=" is a "
+  />
   <DocumentationLink
     href={getDocLink(columnType)}
     icon={columnIcon}

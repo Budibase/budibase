@@ -6,14 +6,11 @@
 </script>
 
 <Line>
-  <Text>Any</Text>
-  <Space />
-<InfoWord
-    on:mouseenter={() => setExplanationSubject(subjects.stringsAsNumbers)}
-    on:mouseleave={() => setExplanationSubject(subjects.none)}
-  text="non-number values"
-/>
-  <Space />
-  <Text>will be ignored</Text>
-  <Period />
+  <Text value="Any " />
+  <InfoWord
+      on:mouseenter={() => setExplanationSubject(subjects.stringsAsNumbers)}
+      on:mouseleave={() => setExplanationSubject(subjects.none)}
+    text="non-number values"
+  />
+  <Text value=" will be ignored." />
 </Line>
