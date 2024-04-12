@@ -1,5 +1,6 @@
 <script>
   import Icon from "../../../Icon/Icon.svelte"
+  import { getDateDisplayValue } from "../../../helpers"
 
   export let anchor
   export let disabled
@@ -13,20 +14,7 @@
   export let enableTime
   export let timeOnly
 
-  $: displayValue = getDisplayValue(value, enableTime, timeOnly)
-
-  const getDisplayValue = (value, enableTime, timeOnly) => {
-    if (!value?.isValid()) {
-      return ""
-    }
-    if (timeOnly) {
-      return value.format("HH:mm")
-    } else if (!enableTime) {
-      return value.format("MMMM D YYYY")
-    } else {
-      return value.format("MMMM D YYYY, HH:mm")
-    }
-  }
+  $: displayValue = getDateDisplayValue(value, { enableTime, timeOnly })
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
