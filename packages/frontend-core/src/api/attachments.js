@@ -61,5 +61,18 @@ export const buildAttachmentEndpoints = API => {
       })
       return { publicUrl }
     },
+    /**
+     * Download an attachment from a row given its column name.
+     * @param datasourceId the ID of the datasource to download from
+     * @param rowId the ID of the row to download from
+     * @param columnName the column name to download
+     */
+    downloadAttachment: async (datasourceId, rowId, columnName, options) => {
+      return await API.get({
+        url: `/api/${datasourceId}/rows/${rowId}/attachment/${columnName}`,
+        parseResponse: response => response,
+        suppressErrors: options?.suppressErrors,
+      })
+    },
   }
 }
