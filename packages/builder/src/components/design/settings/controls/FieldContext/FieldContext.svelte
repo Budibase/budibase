@@ -64,6 +64,11 @@
       {setExplanationSubject}
     />
   {/if}
+  {#if messages.includes(messageConstants.chartDatetime)}
+    <JSONPrimitivesOnly
+      {setExplanationSubject}
+    />
+  {/if}
 </div>
 
 

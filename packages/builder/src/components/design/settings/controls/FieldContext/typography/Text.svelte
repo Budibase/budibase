@@ -7,6 +7,7 @@
 
   const punctuation = [" ", ",", "."]
 
+  // TODO regex might work here now
   const getWords = (value) => {
     if (typeof value !== "string") {
       return [];
@@ -37,7 +38,6 @@
   }
 
   $: words = getWords(value)
-  $: console.log(words);
 </script>
 
 {#if words.length}
