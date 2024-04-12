@@ -6,4 +6,9 @@
   export let datasource
 </script>
 
-<FilterBuilder bind:filters {schemaFields} {datasource} />
+<FilterBuilder bind:filters {schemaFields} {datasource} filtersLabel={null}>
+  <div slot="filtering-hero-content">
+    Results are filtered to only those which match all of the following
+    constraints.
+  </div>
+</FilterBuilder>
