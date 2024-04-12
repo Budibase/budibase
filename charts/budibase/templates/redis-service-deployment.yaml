@@ -34,6 +34,9 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: redis-data
+    {{- if .Values.services.redis.extraContainers }}
+      {{- toYaml .Values.services.redis.extraContainers | nindent 6 }}
+    {{- end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
