@@ -402,6 +402,7 @@ const closeSidePanelHandler = () => {
 }
 
 const downloadFileHandler = async action => {
+  const { url, fileName } = action.parameters
   try {
     const { type } = action.parameters
     if (type === "attachment") {
@@ -416,12 +417,13 @@ const downloadFileHandler = async action => {
       return
     }
 
-    const { url, fileName } = action.parameters
-
     const response = await fetch(url)
 
     if (!response.ok) {
-      throw `Url is not valid: ${url}`
+      notificationStore.actions.error(
+        `Failed to download from '${url}'. Server returned status code: ${response.status}`
+      )
+      return
     }
 
     const objectUrl = URL.createObjectURL(await response.blob())
@@ -434,10 +436,12 @@ const downloadFileHandler = async action => {
     URL.revokeObjectURL(objectUrl)
   } catch (e) {
     console.error(e)
-    if (e.status === 404) {
-      notificationStore.actions.error("File is empty")
+    if (e.status) {
+      notificationStore.actions.error(
+        `Failed to download from '${url}'. Server returned status code: ${e.status}`
+      )
     } else {
-      notificationStore.actions.error("File cannot be downloaded")
+      notificationStore.actions.error(`Failed to download from '${url}'.`)
     }
   }
 }
