@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "strict": true,
+    "outDir": "dist",
+    "paths": {
+      "@budibase/*": [
+        "../*/src/index.ts",
+        "../*/src/index.js",
+        "../*",
+        "../../node_modules/@budibase/*"
+      ],
+      "*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}
