@@ -227,6 +227,28 @@ describe.each([
         expectQuery({ fuzzy: { name: "none" } }).toFindNothing())
     })
 
+    describe("range", () => {
+      it("successfully finds multiple rows", () =>
+        expectQuery({
+          range: { name: { low: "a", high: "z" } },
+        }).toContainExactly([{ name: "bar" }, { name: "foo" }]))
+
+      it("successfully finds a row with a high bound", () =>
+        expectQuery({
+          range: { name: { low: "a", high: "c" } },
+        }).toContainExactly([{ name: "bar" }]))
+
+      it("successfully finds a row with a low bound", () =>
+        expectQuery({
+          range: { name: { low: "f", high: "z" } },
+        }).toContainExactly([{ name: "foo" }]))
+
+      it("successfully finds no rows", () =>
+        expectQuery({
+          range: { name: { low: "g", high: "h" } },
+        }).toFindNothing())
+    })
+
     describe("sort", () => {
       it("sorts ascending", () =>
         expectSearch({
@@ -309,6 +331,11 @@ describe.each([
         expectQuery({
           range: { age: { low: 5, high: 10 } },
         }).toContainExactly([{ age: 10 }]))
+
+      it("successfully finds no rows", () =>
+        expectQuery({
+          range: { age: { low: 5, high: 9 } },
+        }).toFindNothing())
     })
 
     describe("sort", () => {
@@ -350,6 +377,7 @@ describe.each([
     const JAN_1ST = "2020-01-01T00:00:00.000Z"
     const JAN_2ND = "2020-01-02T00:00:00.000Z"
     const JAN_5TH = "2020-01-05T00:00:00.000Z"
+    const JAN_9TH = "2020-01-09T00:00:00.000Z"
     const JAN_10TH = "2020-01-10T00:00:00.000Z"
 
     beforeAll(async () => {
@@ -407,6 +435,11 @@ describe.each([
         expectQuery({
           range: { dob: { low: JAN_5TH, high: JAN_10TH } },
         }).toContainExactly([{ dob: JAN_10TH }]))
+
+      it("successfully finds no rows", () =>
+        expectQuery({
+          range: { dob: { low: JAN_5TH, high: JAN_9TH } },
+        }).toFindNothing())
     })
 
     describe("sort", () => {
