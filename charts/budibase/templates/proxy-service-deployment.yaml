@@ -82,7 +82,9 @@ spec:
         resources:
         {{- toYaml . | nindent 10 }}
         {{ end }}
-        volumeMounts:
+      {{- if .Values.services.proxy.extraContainers }}
+        {{- toYaml .Values.services.proxy.extraContainers | nindent 6 }}
+      {{- end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
