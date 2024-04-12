@@ -82,6 +82,10 @@ spec:
         resources:
         {{- toYaml . | nindent 10 }}
         {{ end }}
+        {{ if .Values.services.proxy.extraVolumeMounts }}
+        volumeMounts:
+        {{- toYaml .Values.services.proxy.extraVolumeMounts | nindent 8 }}
+        {{- end }}
       {{- if .Values.services.proxy.extraContainers }}
         {{- toYaml .Values.services.proxy.extraContainers | nindent 6 }}
       {{- end }}
@@ -110,7 +114,10 @@ spec:
       args:
       {{- toYaml .Values.services.proxy.args | nindent 8 }}
       {{ end }}
+      {{ if .Values.services.proxy.extraVolumes }}
       volumes:
+      {{- toYaml .Values.services.proxy.extraVolumes | nindent 6 }}
+      {{ end }}
       {{ if .Values.services.proxy.ndots }}
       dnsConfig:
         options:
