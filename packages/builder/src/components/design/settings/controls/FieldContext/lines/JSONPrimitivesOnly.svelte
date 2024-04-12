@@ -7,11 +7,12 @@
 
 
 <Line>
+  <InfoWord
+  on:mouseenter={() => setExplanationSubject(subjects.scalarJsonOnly)}
+  on:mouseleave={() => setExplanationSubject(subjects.none)}
+>Scalar JSON values</InfoWord>
   <Text
-    value="JSON Objects cannot be used, but scalar"
-  />
-  <Text
-    value=" child values can be if their individual types are supported"
+    value=" can be used with this component if their individual types are supported"
   />
   <Period />
 </Line>

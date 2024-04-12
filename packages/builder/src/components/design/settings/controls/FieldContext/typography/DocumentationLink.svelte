@@ -32,8 +32,7 @@
   .link {
     display: inline-flex;
     box-sizing: border-box;
-    padding: 3px 0 2px;
-    vertical-align: sub;
+    padding: 1px 0;
     filter: brightness(100%);
 
     overflow: hidden;

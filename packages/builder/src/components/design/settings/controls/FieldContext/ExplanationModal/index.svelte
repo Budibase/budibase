@@ -1,10 +1,11 @@
 <script>
   import { ContextTooltip } from "@budibase/bbui"
-  import { Column, Support, NotRequired, StringsAsNumbers, DatesAsNumbers } from './subjects'
+  import { ScalarJsonOnly, Column, Support, NotRequired, StringsAsNumbers, DatesAsNumbers } from './subjects'
   import subjects from '../subjects'
 
   export let anchor
   export let schema
+  export let columnName
   export let subject = subjects.none
 </script>
 
@@ -26,6 +27,8 @@
       <NotRequired />
     {:else if subject === subjects.datesAsNumbers}
       <DatesAsNumbers />
+    {:else if subject === subjects.scalarJsonOnly}
+      <ScalarJsonOnly {columnName} {schema} />
     {/if}
   </div>
 </ContextTooltip>

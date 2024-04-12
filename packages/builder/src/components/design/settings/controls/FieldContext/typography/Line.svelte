@@ -23,14 +23,15 @@
     font-size: 17px;
     display: inline block;
     margin-right: 10px;
-    line-height: 26px;
   }
 
   .content {
+    line-height: 17px;
     min-width: 0;
     align-items: center;
     display: flex;
     flex-wrap: wrap;
+    row-gap: 6px;
   }
 
   .noWrap {

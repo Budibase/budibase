@@ -40,37 +40,25 @@
   $: words = getWords(value)
 </script>
 
-{#if words.length}
-  {#each words as word}
-    {#if word === " "}
-      <Space />
-    {:else if word === ","}
-      <Comma />
-    {:else if word === "."}
-      <Period />
-    {:else}
-      <span class="text">
-        {word}
-      </span>
-    {/if}
-  {/each}
-{:else}
-  <span class="text"><slot /></span>
-{/if}
+{#each words as word}
+  {#if word === " "}
+    <Space />
+  {:else if word === ","}
+    <Comma />
+  {:else if word === "."}
+    <Period />
+  {:else}
+    <span class="text">
+      {word}
+    </span>
+  {/if}
+{/each}
 
 <style>
   .text {
-    flex-shrink: 0;
-    line-height: 26px;
-    vertical-align: middle;
-  }
-
-  .space {
-    margin-right: 5px;
-  }
-
-  .punctuation {
-    color: red;
-    font-size: 20px;
+    /* invisible properties to match other inline text elements that do have borders. If we don't match here we run into subpixel issues */
+    box-sizing: border-box;
+    border-bottom: 1px solid transparent;
+    padding: 1px 0;
   }
 </style>

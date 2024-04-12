@@ -6,11 +6,11 @@
 </script>
 
 <Line>
-  <Text value="Any " />
+  <Text value="The component will ignore any " />
   <InfoWord
       on:mouseenter={() => setExplanationSubject(subjects.stringsAsNumbers)}
       on:mouseleave={() => setExplanationSubject(subjects.none)}
     text="non-number values"
   />
-  <Text value=" will be ignored." />
+  <Period />
 </Line>
