@@ -235,6 +235,10 @@ spec:
         args:
         {{- toYaml .Values.services.apps.args | nindent 10 }}
         {{ end }}
+        {{ if .Values.services.apps.extraVolumeMounts }}
+        volumeMounts:
+        {{- toYaml .Values.services.apps.extraVolumeMounts | nindent 10 }}
+        {{- end }}
       {{- if .Values.services.apps.extraContainers }}
         {{- toYaml .Values.services.apps.extraContainers | nindent 6 }}
       {{- end }}
@@ -261,4 +265,8 @@ spec:
           - name: ndots
             value: {{ .Values.services.apps.ndots | quote }}
       {{ end }}
+      {{ if .Values.services.apps.extraVolumes }}
+      volumes:
+      {{- toYaml .Values.services.apps.extraVolumes | nindent 6 }}
+      {{- end }}
 status: {}
