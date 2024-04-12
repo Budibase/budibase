@@ -77,6 +77,12 @@ router
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.exportRows
   )
+  .get(
+    "/api/:sourceId/rows/:rowId/attachment/:columnName",
+    paramSubResource("sourceId", "rowId"),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
+    rowController.downloadAttachment
+  )
 
 router.post(
   "/api/v2/views/:viewId/search",
