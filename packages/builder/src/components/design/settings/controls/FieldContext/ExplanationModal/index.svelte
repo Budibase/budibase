@@ -1,6 +1,6 @@
 <script>
   import { ContextTooltip } from "@budibase/bbui"
-  import { Column, Support, NotRequired, StringsAsNumbers } from './subjects'
+  import { Column, Support, NotRequired, StringsAsNumbers, DatesAsNumbers } from './subjects'
   import subjects from '../subjects'
 
   export let anchor
@@ -24,6 +24,8 @@
       <StringsAsNumbers />
     {:else if subject === subjects.notRequired}
       <NotRequired />
+    {:else if subject === subjects.datesAsNumbers}
+      <DatesAsNumbers />
     {/if}
   </div>
 </ContextTooltip>

@@ -3,7 +3,7 @@ import { capitalize } from 'lodash';
 export const messages = {
   jsonPrimitivesOnly: Symbol("column-info-json-primitives-only"),
   stringAsNumber: Symbol("column-info-string-as-number"),
-  chartDatetime: Symbol("column-info-chart-datetime"),
+  dateAsNumber: Symbol("column-info-date-as-number"),
   notRequired: Symbol("column-info-not-required"),
   contextError: Symbol("column-info-context-error"),
 }
@@ -55,7 +55,6 @@ const getSupportMessage = (type, columnInfo) => {
 }
 
 export const getColumnInfoMessagesAndSupport = (fieldSchema, columnInfo) => {
-
   try {
     const columnInfoMessagesAndSupport = {
       support: getSupport(fieldSchema.type, columnInfo),

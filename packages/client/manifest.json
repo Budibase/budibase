@@ -1639,7 +1639,7 @@
             "supported": ["number", "boolean"],
             "partialSupport": [
               { "type": "string", "message": "stringAsNumber" },
-              { "type": "datetime", "message": "datetimeChart"}
+              { "type": "datetime", "message": "dateAsNumber"}
             ],
             "unsupported": [
               { "type": "json", "message": "jsonPrimitivesOnly" }
