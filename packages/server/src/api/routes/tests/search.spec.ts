@@ -8,6 +8,8 @@ import {
   FieldType,
   RowSearchParams,
   SearchFilters,
+  SortOrder,
+  SortType,
   Table,
   TableSchema,
 } from "@budibase/types"
@@ -62,7 +64,25 @@ describe.each([
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
 
-    async toFind(expectedRows: any[]) {
+    async toMatch(expectedRows: any[]) {
+      const { rows: foundRows } = await config.api.row.search(table._id!, {
+        ...this.query,
+        tableId: table._id!,
+      })
+
+      // eslint-disable-next-line jest/no-standalone-expect
+      expect(foundRows).toHaveLength(expectedRows.length)
+      // eslint-disable-next-line jest/no-standalone-expect
+      expect(foundRows).toEqual(
+        expectedRows.map((expectedRow: any) =>
+          expect.objectContaining(
+            foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
+          )
+        )
+      )
+    }
+
+    async toContain(expectedRows: any[]) {
       const { rows: foundRows } = await config.api.row.search(table._id!, {
         ...this.query,
         tableId: table._id!,
@@ -83,7 +103,17 @@ describe.each([
     }
 
     async toFindNothing() {
-      await this.toFind([])
+      await this.toContain([])
+    }
+
+    async toHaveLength(length: number) {
+      const { rows: foundRows } = await config.api.row.search(table._id!, {
+        ...this.query,
+        tableId: table._id!,
+      })
+
+      // eslint-disable-next-line jest/no-standalone-expect
+      expect(foundRows).toHaveLength(length)
     }
   }
 
@@ -105,28 +135,31 @@ describe.each([
 
     describe("misc", () => {
       it("should return all if no query is passed", () =>
-        expectSearch({} as RowSearchParams).toFind([
+        expectSearch({} as RowSearchParams).toContain([
           { name: "foo" },
           { name: "bar" },
         ]))
 
       it("should return all if empty query is passed", () =>
-        expectQuery({}).toFind([{ name: "foo" }, { name: "bar" }]))
+        expectQuery({}).toContain([{ name: "foo" }, { name: "bar" }]))
 
       it("should return all if onEmptyFilter is RETURN_ALL", () =>
         expectQuery({
           onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-        }).toFind([{ name: "foo" }, { name: "bar" }]))
+        }).toContain([{ name: "foo" }, { name: "bar" }]))
 
       it("should return nothing if onEmptyFilter is RETURN_NONE", () =>
         expectQuery({
           onEmptyFilter: EmptyFilterOption.RETURN_NONE,
         }).toFindNothing())
+
+      it("should respect limit", () =>
+        expectSearch({ limit: 1, paginate: true, query: {} }).toHaveLength(1))
     })
 
     describe("equal", () => {
       it("successfully finds a row", () =>
-        expectQuery({ equal: { name: "foo" } }).toFind([{ name: "foo" }]))
+        expectQuery({ equal: { name: "foo" } }).toContain([{ name: "foo" }]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ equal: { name: "none" } }).toFindNothing())
@@ -134,15 +167,15 @@ describe.each([
 
     describe("notEqual", () => {
       it("successfully finds a row", () =>
-        expectQuery({ notEqual: { name: "foo" } }).toFind([{ name: "bar" }]))
+        expectQuery({ notEqual: { name: "foo" } }).toContain([{ name: "bar" }]))
 
       it("fails to find nonexistent row", () =>
-        expectQuery({ notEqual: { name: "bar" } }).toFind([{ name: "foo" }]))
+        expectQuery({ notEqual: { name: "bar" } }).toContain([{ name: "foo" }]))
     })
 
     describe("oneOf", () => {
       it("successfully finds a row", () =>
-        expectQuery({ oneOf: { name: ["foo"] } }).toFind([{ name: "foo" }]))
+        expectQuery({ oneOf: { name: ["foo"] } }).toContain([{ name: "foo" }]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ oneOf: { name: ["none"] } }).toFindNothing())
@@ -150,10 +183,44 @@ describe.each([
 
     describe("fuzzy", () => {
       it("successfully finds a row", () =>
-        expectQuery({ fuzzy: { name: "oo" } }).toFind([{ name: "foo" }]))
+        expectQuery({ fuzzy: { name: "oo" } }).toContain([{ name: "foo" }]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ fuzzy: { name: "none" } }).toFindNothing())
+    })
+
+    describe("sort", () => {
+      it("sorts ascending", () =>
+        expectSearch({
+          query: {},
+          sort: "name",
+          sortOrder: SortOrder.ASCENDING,
+        }).toMatch([{ name: "bar" }, { name: "foo" }]))
+
+      it("sorts descending", () =>
+        expectSearch({
+          query: {},
+          sort: "name",
+          sortOrder: SortOrder.DESCENDING,
+        }).toMatch([{ name: "foo" }, { name: "bar" }]))
+
+      describe("sortType STRING", () => {
+        it("sorts ascending", () =>
+          expectSearch({
+            query: {},
+            sort: "name",
+            sortType: SortType.STRING,
+            sortOrder: SortOrder.ASCENDING,
+          }).toMatch([{ name: "bar" }, { name: "foo" }]))
+
+        it("sorts descending", () =>
+          expectSearch({
+            query: {},
+            sort: "name",
+            sortType: SortType.STRING,
+            sortOrder: SortOrder.DESCENDING,
+          }).toMatch([{ name: "foo" }, { name: "bar" }]))
+      })
     })
   })
 
@@ -167,7 +234,7 @@ describe.each([
 
     describe("equal", () => {
       it("successfully finds a row", () =>
-        expectQuery({ equal: { age: 1 } }).toFind([{ age: 1 }]))
+        expectQuery({ equal: { age: 1 } }).toContain([{ age: 1 }]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ equal: { age: 2 } }).toFindNothing())
@@ -175,15 +242,15 @@ describe.each([
 
     describe("notEqual", () => {
       it("successfully finds a row", () =>
-        expectQuery({ notEqual: { age: 1 } }).toFind([{ age: 10 }]))
+        expectQuery({ notEqual: { age: 1 } }).toContain([{ age: 10 }]))
 
       it("fails to find nonexistent row", () =>
-        expectQuery({ notEqual: { age: 10 } }).toFind([{ age: 1 }]))
+        expectQuery({ notEqual: { age: 10 } }).toContain([{ age: 1 }]))
     })
 
     describe("oneOf", () => {
       it("successfully finds a row", () =>
-        expectQuery({ oneOf: { age: [1] } }).toFind([{ age: 1 }]))
+        expectQuery({ oneOf: { age: [1] } }).toContain([{ age: 1 }]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ oneOf: { age: [2] } }).toFindNothing())
@@ -193,17 +260,51 @@ describe.each([
       it("successfully finds a row", () =>
         expectQuery({
           range: { age: { low: 1, high: 5 } },
-        }).toFind([{ age: 1 }]))
+        }).toContain([{ age: 1 }]))
 
       it("successfully finds multiple rows", () =>
         expectQuery({
           range: { age: { low: 1, high: 10 } },
-        }).toFind([{ age: 1 }, { age: 10 }]))
+        }).toContain([{ age: 1 }, { age: 10 }]))
 
       it("successfully finds a row with a high bound", () =>
         expectQuery({
           range: { age: { low: 5, high: 10 } },
-        }).toFind([{ age: 10 }]))
+        }).toContain([{ age: 10 }]))
+    })
+
+    describe("sort", () => {
+      it("sorts ascending", () =>
+        expectSearch({
+          query: {},
+          sort: "age",
+          sortOrder: SortOrder.ASCENDING,
+        }).toMatch([{ age: 1 }, { age: 10 }]))
+
+      it("sorts descending", () =>
+        expectSearch({
+          query: {},
+          sort: "age",
+          sortOrder: SortOrder.DESCENDING,
+        }).toMatch([{ age: 10 }, { age: 1 }]))
+    })
+
+    describe("sortType NUMBER", () => {
+      it("sorts ascending", () =>
+        expectSearch({
+          query: {},
+          sort: "age",
+          sortType: SortType.NUMBER,
+          sortOrder: SortOrder.ASCENDING,
+        }).toMatch([{ age: 1 }, { age: 10 }]))
+
+      it("sorts descending", () =>
+        expectSearch({
+          query: {},
+          sort: "age",
+          sortType: SortType.NUMBER,
+          sortOrder: SortOrder.DESCENDING,
+        }).toMatch([{ age: 10 }, { age: 1 }]))
     })
   })
 
@@ -223,7 +324,7 @@ describe.each([
 
     describe("equal", () => {
       it("successfully finds a row", () =>
-        expectQuery({ equal: { dob: JAN_1ST } }).toFind([{ dob: JAN_1ST }]))
+        expectQuery({ equal: { dob: JAN_1ST } }).toContain([{ dob: JAN_1ST }]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ equal: { dob: JAN_2ND } }).toFindNothing())
@@ -231,15 +332,21 @@ describe.each([
 
     describe("notEqual", () => {
       it("successfully finds a row", () =>
-        expectQuery({ notEqual: { dob: JAN_1ST } }).toFind([{ dob: JAN_10TH }]))
+        expectQuery({ notEqual: { dob: JAN_1ST } }).toContain([
+          { dob: JAN_10TH },
+        ]))
 
       it("fails to find nonexistent row", () =>
-        expectQuery({ notEqual: { dob: JAN_10TH } }).toFind([{ dob: JAN_1ST }]))
+        expectQuery({ notEqual: { dob: JAN_10TH } }).toContain([
+          { dob: JAN_1ST },
+        ]))
     })
 
     describe("oneOf", () => {
       it("successfully finds a row", () =>
-        expectQuery({ oneOf: { dob: [JAN_1ST] } }).toFind([{ dob: JAN_1ST }]))
+        expectQuery({ oneOf: { dob: [JAN_1ST] } }).toContain([
+          { dob: JAN_1ST },
+        ]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ oneOf: { dob: [JAN_2ND] } }).toFindNothing())
@@ -249,17 +356,51 @@ describe.each([
       it("successfully finds a row", () =>
         expectQuery({
           range: { dob: { low: JAN_1ST, high: JAN_5TH } },
-        }).toFind([{ dob: JAN_1ST }]))
+        }).toContain([{ dob: JAN_1ST }]))
 
       it("successfully finds multiple rows", () =>
         expectQuery({
           range: { dob: { low: JAN_1ST, high: JAN_10TH } },
-        }).toFind([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
+        }).toContain([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
 
       it("successfully finds a row with a high bound", () =>
         expectQuery({
           range: { dob: { low: JAN_5TH, high: JAN_10TH } },
-        }).toFind([{ dob: JAN_10TH }]))
+        }).toContain([{ dob: JAN_10TH }]))
+    })
+
+    describe("sort", () => {
+      it("sorts ascending", () =>
+        expectSearch({
+          query: {},
+          sort: "dob",
+          sortOrder: SortOrder.ASCENDING,
+        }).toMatch([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
+
+      it("sorts descending", () =>
+        expectSearch({
+          query: {},
+          sort: "dob",
+          sortOrder: SortOrder.DESCENDING,
+        }).toMatch([{ dob: JAN_10TH }, { dob: JAN_1ST }]))
+
+      describe("sortType STRING", () => {
+        it("sorts ascending", () =>
+          expectSearch({
+            query: {},
+            sort: "dob",
+            sortType: SortType.STRING,
+            sortOrder: SortOrder.ASCENDING,
+          }).toMatch([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
+
+        it("sorts descending", () =>
+          expectSearch({
+            query: {},
+            sort: "dob",
+            sortType: SortType.STRING,
+            sortOrder: SortOrder.DESCENDING,
+          }).toMatch([{ dob: JAN_10TH }, { dob: JAN_1ST }]))
+      })
     })
   })
 })
