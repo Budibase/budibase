@@ -150,6 +150,8 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.apps.autoscaling.maxReplicas | int | `10` |  |
 | services.apps.autoscaling.minReplicas | int | `1` |  |
 | services.apps.autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage for the apps service. Note that for autoscaling to work, you will need to have metrics-server configured, and resources set for the apps pods. |
+| services.apps.extraContainers | list | `[]` | Additional containers to be added to the apps pod. |
+| services.apps.extraEnv | list | `[]` | Extra environment variables to set for apps pods. Takes a list of name=value pairs. |
 | services.apps.httpLogging | int | `1` | Whether or not to log HTTP requests to the apps service. |
 | services.apps.livenessProbe | object | HTTP health checks. | Liveness probe configuration for apps pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.apps.logLevel | string | `"info"` | The log level for the apps service. |
@@ -162,6 +164,8 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.automationWorkers.autoscaling.minReplicas | int | `1` |  |
 | services.automationWorkers.autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage for the automation worker service. Note that for autoscaling to work, you will need to have metrics-server configured, and resources set for the automation worker pods. |
 | services.automationWorkers.enabled | bool | `true` | Whether or not to enable the automation worker service. If you disable this, automations will be processed by the apps service. |
+| services.automationWorkers.extraContainers | list | `[]` | Additional containers to be added to the automationWorkers pod. |
+| services.automationWorkers.extraEnv | list | `[]` | Extra environment variables to set for automation worker pods. Takes a list of name=value pairs. |
 | services.automationWorkers.livenessProbe | object | HTTP health checks. | Liveness probe configuration for automation worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.automationWorkers.logLevel | string | `"info"` | The log level for the automation worker service. |
 | services.automationWorkers.readinessProbe | object | HTTP health checks. | Readiness probe configuration for automation worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
@@ -180,6 +184,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.objectStore.cloudfront.cdn | string | `""` | Set the url of a distribution to enable cloudfront. |
 | services.objectStore.cloudfront.privateKey64 | string | `""` | Base64 encoded private key for the above public key. |
 | services.objectStore.cloudfront.publicKeyId | string | `""` | ID of public key stored in cloudfront. |
+| services.objectStore.extraContainers | list | `[]` | Additional containers to be added to the objectStore pod. |
 | services.objectStore.minio | bool | `true` | Set to false if using another object store, such as S3. You will need to set `services.objectStore.url` to point to your bucket if you do this. |
 | services.objectStore.region | string | `""` | AWS_REGION if using S3 |
 | services.objectStore.resources | object | `{}` | The resources to use for Minio pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
@@ -191,12 +196,14 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.proxy.autoscaling.maxReplicas | int | `10` |  |
 | services.proxy.autoscaling.minReplicas | int | `1` |  |
 | services.proxy.autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage for the proxy service. Note that for autoscaling to work, you will need to have metrics-server configured, and resources set for the proxy pods. |
+| services.proxy.extraContainers | list | `[]` |  |
 | services.proxy.livenessProbe | object | HTTP health checks. | Liveness probe configuration for proxy pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.proxy.readinessProbe | object | HTTP health checks. | Readiness probe configuration for proxy pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.proxy.replicaCount | int | `1` | The number of proxy replicas to run. |
 | services.proxy.resources | object | `{}` | The resources to use for proxy pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
 | services.proxy.startupProbe | object | HTTP health checks. | Startup probe configuration for proxy pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.redis.enabled | bool | `true` | Whether or not to deploy a Redis pod into your cluster. |
+| services.redis.extraContainers | list | `[]` | Additional containers to be added to the redis pod. |
 | services.redis.password | string | `"budibase"` | The password to use when connecting to Redis. It's recommended that you change this from the default if you're running Redis in-cluster. |
 | services.redis.port | int | `6379` | Port to expose Redis on. |
 | services.redis.resources | object | `{}` | The resources to use for Redis pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
@@ -207,6 +214,8 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.worker.autoscaling.maxReplicas | int | `10` |  |
 | services.worker.autoscaling.minReplicas | int | `1` |  |
 | services.worker.autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage for the worker service. Note that for autoscaling to work, you will need to have metrics-server configured, and resources set for the worker pods. |
+| services.worker.extraContainers | list | `[]` | Additional containers to be added to the worker pod. |
+| services.worker.extraEnv | list | `[]` | Extra environment variables to set for worker pods. Takes a list of name=value pairs. |
 | services.worker.httpLogging | int | `1` | Whether or not to log HTTP requests to the worker service. |
 | services.worker.livenessProbe | object | HTTP health checks. | Liveness probe configuration for worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.worker.logLevel | string | `"info"` | The log level for the worker service. |
@@ -225,4 +234,4 @@ $ helm uninstall --namespace budibase budibase
 ```
 
 ----------------------------------------------
-Autogenerated from chart metadata using [helm-docs v1.11.3](https://github.com/norwoodj/helm-docs/releases/v1.11.3)
+Autogenerated from chart metadata using [helm-docs v1.13.1](https://github.com/norwoodj/helm-docs/releases/v1.13.1)
