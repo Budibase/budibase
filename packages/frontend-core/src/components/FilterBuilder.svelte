@@ -29,8 +29,6 @@
   $: onEmptyFilter =
     filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
 
-  $: console.warn(filters)
-
   const behaviourOptions = [
     { value: "and", label: "Match all filters" },
     { value: "or", label: "Match any filter" },
