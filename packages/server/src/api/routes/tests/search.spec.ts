@@ -64,7 +64,11 @@ describe.each([
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
 
-    async toMatch(expectedRows: any[]) {
+    // Asserts that the query returns rows matching exactly the set of rows
+    // passed in. The order of the rows matters. Rows returned in an order
+    // different to the one passed in will cause the assertion to fail.  Extra
+    // rows returned by the query will also cause the assertion to fail.
+    async toMatchExactly(expectedRows: any[]) {
       const { rows: foundRows } = await config.api.row.search(table._id!, {
         ...this.query,
         tableId: table._id!,
@@ -82,7 +86,10 @@ describe.each([
       )
     }
 
-    async toContain(expectedRows: any[]) {
+    // Asserts that the query returns rows matching exactly the set of rows
+    // passed in. The order of the rows is not important, but extra rows will
+    // cause the assertion to fail.
+    async toContainExactly(expectedRows: any[]) {
       const { rows: foundRows } = await config.api.row.search(table._id!, {
         ...this.query,
         tableId: table._id!,
@@ -102,8 +109,29 @@ describe.each([
       )
     }
 
+    // Asserts that the query returns rows matching the set of rows passed in.
+    // The order of the rows is not important. Extra rows will not cause the
+    // assertion to fail.
+    async toContain(expectedRows: any[]) {
+      const { rows: foundRows } = await config.api.row.search(table._id!, {
+        ...this.query,
+        tableId: table._id!,
+      })
+
+      // eslint-disable-next-line jest/no-standalone-expect
+      expect(foundRows).toEqual(
+        expect.arrayContaining(
+          expectedRows.map((expectedRow: any) =>
+            expect.objectContaining(
+              foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
+            )
+          )
+        )
+      )
+    }
+
     async toFindNothing() {
-      await this.toContain([])
+      await this.toContainExactly([])
     }
 
     async toHaveLength(length: number) {
@@ -135,18 +163,18 @@ describe.each([
 
     describe("misc", () => {
       it("should return all if no query is passed", () =>
-        expectSearch({} as RowSearchParams).toContain([
+        expectSearch({} as RowSearchParams).toContainExactly([
           { name: "foo" },
           { name: "bar" },
         ]))
 
       it("should return all if empty query is passed", () =>
-        expectQuery({}).toContain([{ name: "foo" }, { name: "bar" }]))
+        expectQuery({}).toContainExactly([{ name: "foo" }, { name: "bar" }]))
 
       it("should return all if onEmptyFilter is RETURN_ALL", () =>
         expectQuery({
           onEmptyFilter: EmptyFilterOption.RETURN_ALL,
-        }).toContain([{ name: "foo" }, { name: "bar" }]))
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
 
       it("should return nothing if onEmptyFilter is RETURN_NONE", () =>
         expectQuery({
@@ -159,7 +187,9 @@ describe.each([
 
     describe("equal", () => {
       it("successfully finds a row", () =>
-        expectQuery({ equal: { name: "foo" } }).toContain([{ name: "foo" }]))
+        expectQuery({ equal: { name: "foo" } }).toContainExactly([
+          { name: "foo" },
+        ]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ equal: { name: "none" } }).toFindNothing())
@@ -167,15 +197,21 @@ describe.each([
 
     describe("notEqual", () => {
       it("successfully finds a row", () =>
-        expectQuery({ notEqual: { name: "foo" } }).toContain([{ name: "bar" }]))
+        expectQuery({ notEqual: { name: "foo" } }).toContainExactly([
+          { name: "bar" },
+        ]))
 
       it("fails to find nonexistent row", () =>
-        expectQuery({ notEqual: { name: "bar" } }).toContain([{ name: "foo" }]))
+        expectQuery({ notEqual: { name: "bar" } }).toContainExactly([
+          { name: "foo" },
+        ]))
     })
 
     describe("oneOf", () => {
       it("successfully finds a row", () =>
-        expectQuery({ oneOf: { name: ["foo"] } }).toContain([{ name: "foo" }]))
+        expectQuery({ oneOf: { name: ["foo"] } }).toContainExactly([
+          { name: "foo" },
+        ]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ oneOf: { name: ["none"] } }).toFindNothing())
@@ -183,7 +219,9 @@ describe.each([
 
     describe("fuzzy", () => {
       it("successfully finds a row", () =>
-        expectQuery({ fuzzy: { name: "oo" } }).toContain([{ name: "foo" }]))
+        expectQuery({ fuzzy: { name: "oo" } }).toContainExactly([
+          { name: "foo" },
+        ]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ fuzzy: { name: "none" } }).toFindNothing())
@@ -195,14 +233,14 @@ describe.each([
           query: {},
           sort: "name",
           sortOrder: SortOrder.ASCENDING,
-        }).toMatch([{ name: "bar" }, { name: "foo" }]))
+        }).toMatchExactly([{ name: "bar" }, { name: "foo" }]))
 
       it("sorts descending", () =>
         expectSearch({
           query: {},
           sort: "name",
           sortOrder: SortOrder.DESCENDING,
-        }).toMatch([{ name: "foo" }, { name: "bar" }]))
+        }).toMatchExactly([{ name: "foo" }, { name: "bar" }]))
 
       describe("sortType STRING", () => {
         it("sorts ascending", () =>
@@ -211,7 +249,7 @@ describe.each([
             sort: "name",
             sortType: SortType.STRING,
             sortOrder: SortOrder.ASCENDING,
-          }).toMatch([{ name: "bar" }, { name: "foo" }]))
+          }).toMatchExactly([{ name: "bar" }, { name: "foo" }]))
 
         it("sorts descending", () =>
           expectSearch({
@@ -219,7 +257,7 @@ describe.each([
             sort: "name",
             sortType: SortType.STRING,
             sortOrder: SortOrder.DESCENDING,
-          }).toMatch([{ name: "foo" }, { name: "bar" }]))
+          }).toMatchExactly([{ name: "foo" }, { name: "bar" }]))
       })
     })
   })
@@ -234,7 +272,7 @@ describe.each([
 
     describe("equal", () => {
       it("successfully finds a row", () =>
-        expectQuery({ equal: { age: 1 } }).toContain([{ age: 1 }]))
+        expectQuery({ equal: { age: 1 } }).toContainExactly([{ age: 1 }]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ equal: { age: 2 } }).toFindNothing())
@@ -242,15 +280,15 @@ describe.each([
 
     describe("notEqual", () => {
       it("successfully finds a row", () =>
-        expectQuery({ notEqual: { age: 1 } }).toContain([{ age: 10 }]))
+        expectQuery({ notEqual: { age: 1 } }).toContainExactly([{ age: 10 }]))
 
       it("fails to find nonexistent row", () =>
-        expectQuery({ notEqual: { age: 10 } }).toContain([{ age: 1 }]))
+        expectQuery({ notEqual: { age: 10 } }).toContainExactly([{ age: 1 }]))
     })
 
     describe("oneOf", () => {
       it("successfully finds a row", () =>
-        expectQuery({ oneOf: { age: [1] } }).toContain([{ age: 1 }]))
+        expectQuery({ oneOf: { age: [1] } }).toContainExactly([{ age: 1 }]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ oneOf: { age: [2] } }).toFindNothing())
@@ -260,17 +298,17 @@ describe.each([
       it("successfully finds a row", () =>
         expectQuery({
           range: { age: { low: 1, high: 5 } },
-        }).toContain([{ age: 1 }]))
+        }).toContainExactly([{ age: 1 }]))
 
       it("successfully finds multiple rows", () =>
         expectQuery({
           range: { age: { low: 1, high: 10 } },
-        }).toContain([{ age: 1 }, { age: 10 }]))
+        }).toContainExactly([{ age: 1 }, { age: 10 }]))
 
       it("successfully finds a row with a high bound", () =>
         expectQuery({
           range: { age: { low: 5, high: 10 } },
-        }).toContain([{ age: 10 }]))
+        }).toContainExactly([{ age: 10 }]))
     })
 
     describe("sort", () => {
@@ -279,14 +317,14 @@ describe.each([
           query: {},
           sort: "age",
           sortOrder: SortOrder.ASCENDING,
-        }).toMatch([{ age: 1 }, { age: 10 }]))
+        }).toMatchExactly([{ age: 1 }, { age: 10 }]))
 
       it("sorts descending", () =>
         expectSearch({
           query: {},
           sort: "age",
           sortOrder: SortOrder.DESCENDING,
-        }).toMatch([{ age: 10 }, { age: 1 }]))
+        }).toMatchExactly([{ age: 10 }, { age: 1 }]))
     })
 
     describe("sortType NUMBER", () => {
@@ -296,7 +334,7 @@ describe.each([
           sort: "age",
           sortType: SortType.NUMBER,
           sortOrder: SortOrder.ASCENDING,
-        }).toMatch([{ age: 1 }, { age: 10 }]))
+        }).toMatchExactly([{ age: 1 }, { age: 10 }]))
 
       it("sorts descending", () =>
         expectSearch({
@@ -304,7 +342,7 @@ describe.each([
           sort: "age",
           sortType: SortType.NUMBER,
           sortOrder: SortOrder.DESCENDING,
-        }).toMatch([{ age: 10 }, { age: 1 }]))
+        }).toMatchExactly([{ age: 10 }, { age: 1 }]))
     })
   })
 
@@ -324,7 +362,9 @@ describe.each([
 
     describe("equal", () => {
       it("successfully finds a row", () =>
-        expectQuery({ equal: { dob: JAN_1ST } }).toContain([{ dob: JAN_1ST }]))
+        expectQuery({ equal: { dob: JAN_1ST } }).toContainExactly([
+          { dob: JAN_1ST },
+        ]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ equal: { dob: JAN_2ND } }).toFindNothing())
@@ -332,19 +372,19 @@ describe.each([
 
     describe("notEqual", () => {
       it("successfully finds a row", () =>
-        expectQuery({ notEqual: { dob: JAN_1ST } }).toContain([
+        expectQuery({ notEqual: { dob: JAN_1ST } }).toContainExactly([
           { dob: JAN_10TH },
         ]))
 
       it("fails to find nonexistent row", () =>
-        expectQuery({ notEqual: { dob: JAN_10TH } }).toContain([
+        expectQuery({ notEqual: { dob: JAN_10TH } }).toContainExactly([
           { dob: JAN_1ST },
         ]))
     })
 
     describe("oneOf", () => {
       it("successfully finds a row", () =>
-        expectQuery({ oneOf: { dob: [JAN_1ST] } }).toContain([
+        expectQuery({ oneOf: { dob: [JAN_1ST] } }).toContainExactly([
           { dob: JAN_1ST },
         ]))
 
@@ -356,17 +396,17 @@ describe.each([
       it("successfully finds a row", () =>
         expectQuery({
           range: { dob: { low: JAN_1ST, high: JAN_5TH } },
-        }).toContain([{ dob: JAN_1ST }]))
+        }).toContainExactly([{ dob: JAN_1ST }]))
 
       it("successfully finds multiple rows", () =>
         expectQuery({
           range: { dob: { low: JAN_1ST, high: JAN_10TH } },
-        }).toContain([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
+        }).toContainExactly([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
 
       it("successfully finds a row with a high bound", () =>
         expectQuery({
           range: { dob: { low: JAN_5TH, high: JAN_10TH } },
-        }).toContain([{ dob: JAN_10TH }]))
+        }).toContainExactly([{ dob: JAN_10TH }]))
     })
 
     describe("sort", () => {
@@ -375,14 +415,14 @@ describe.each([
           query: {},
           sort: "dob",
           sortOrder: SortOrder.ASCENDING,
-        }).toMatch([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
+        }).toMatchExactly([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
 
       it("sorts descending", () =>
         expectSearch({
           query: {},
           sort: "dob",
           sortOrder: SortOrder.DESCENDING,
-        }).toMatch([{ dob: JAN_10TH }, { dob: JAN_1ST }]))
+        }).toMatchExactly([{ dob: JAN_10TH }, { dob: JAN_1ST }]))
 
       describe("sortType STRING", () => {
         it("sorts ascending", () =>
@@ -391,7 +431,7 @@ describe.each([
             sort: "dob",
             sortType: SortType.STRING,
             sortOrder: SortOrder.ASCENDING,
-          }).toMatch([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
+          }).toMatchExactly([{ dob: JAN_1ST }, { dob: JAN_10TH }]))
 
         it("sorts descending", () =>
           expectSearch({
@@ -399,7 +439,7 @@ describe.each([
             sort: "dob",
             sortType: SortType.STRING,
             sortOrder: SortOrder.DESCENDING,
-          }).toMatch([{ dob: JAN_10TH }, { dob: JAN_1ST }]))
+          }).toMatchExactly([{ dob: JAN_10TH }, { dob: JAN_1ST }]))
       })
     })
   })
