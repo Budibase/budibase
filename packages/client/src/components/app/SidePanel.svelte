@@ -5,7 +5,6 @@
   const { styleable, sidePanelStore, builderStore, dndIsDragging } =
     getContext("sdk")
 
-  export let sidePanelOpen
   export let sidePanelClose
   export let clickOutsideToClose
 
@@ -67,7 +66,6 @@
       if (visible) {
         if (!target.contains(node)) {
           target.appendChild(node)
-          handleSidePanelOpen()
         }
       } else {
         if (target.contains(node)) {
