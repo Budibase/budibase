@@ -68,15 +68,22 @@
   {allowBindings}
 >
   <div slot="filteringHeroContent" />
-  <div slot="binding" let:filter>
-    <DrawerBindableInput
-      disabled={filter.noValue}
-      title={filter.field}
-      value={filter.value}
-      placeholder="Value"
-      {panel}
-      {bindings}
-      on:change={event => (filter.value = event.detail)}
-    />
-  </div>
+
+  <DrawerBindableInput
+    let:filter
+    slot="binding"
+    disabled={filter.noValue}
+    title={filter.field}
+    value={filter.value}
+    placeholder="Value"
+    {panel}
+    {bindings}
+    on:change={event => {
+      const indexToUpdate = rawFilters.findIndex(f => f.id === filter.id)
+      rawFilters[indexToUpdate] = {
+        ...rawFilters[indexToUpdate],
+        value: event.detail,
+      }
+    }}
+  />
 </FilterBuilder>
