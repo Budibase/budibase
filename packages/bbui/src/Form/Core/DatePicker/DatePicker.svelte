@@ -7,7 +7,7 @@
   import { createEventDispatcher, onMount } from "svelte"
   import TimePicker from "./TimePicker.svelte"
   import Calendar from "./Calendar.svelte"
-  import DateTimeInput from "./DateInput.svelte"
+  import DateInput from "./DateInput.svelte"
   import ActionButton from "../../../ActionButton/ActionButton.svelte"
   import { parseDate } from "../../../helpers"
 
@@ -68,9 +68,13 @@
     }
     let newValue = date.toISOString()
 
-    // If time only set date component to 2000-01-01
-    if (timeOnly) {
-      newValue = `2000-01-01T${newValue.split("T")[1]}`
+    // Time only fields always ignore timezones, otherwise they make no sense.
+    // For non-timezone-aware fields, create an ISO 8601 timestamp of the exact
+    // time picked, without timezone
+    const offsetForTimezone = (enableTime && ignoreTimezones) || timeOnly
+    if (offsetForTimezone) {
+      const offset = new Date().getTimezoneOffset() * 60000
+      newValue = new Date(date.valueOf() - offset).toISOString().slice(0, -1)
     }
 
     // For date-only fields, construct a manual timestamp string without a time
@@ -80,13 +84,6 @@
       const month = `${date.month() + 1}`.padStart(2, "0")
       const day = `${date.date()}`.padStart(2, "0")
       newValue = `${year}-${month}-${day}T00:00:00.000`
-    }
-
-    // For non-timezone-aware fields, create an ISO 8601 timestamp of the exact
-    // time picked, without timezone
-    else if (enableTime && ignoreTimezones) {
-      const offset = new Date().getTimezoneOffset() * 60000
-      newValue = new Date(date.valueOf() - offset).toISOString().slice(0, -1)
     }
 
     dispatch("change", newValue)
@@ -106,7 +103,7 @@
   })
 </script>
 
-<DateTimeInput
+<DateInput
   bind:anchor
   {disabled}
   {readonly}

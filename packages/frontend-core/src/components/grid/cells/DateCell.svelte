@@ -14,17 +14,15 @@
 
   $: timeOnly = schema?.timeOnly
   $: dateOnly = schema?.dateOnly
-  $: format = timeOnly
-    ? "HH:mm:ss"
-    : dateOnly
-    ? "MMM D YYYY"
-    : "MMM D YYYY, HH:mm"
   $: editable = focused && !readonly
-  $: displayValue = getDisplayValue(value, timeOnly, dateOnly, format)
+  $: displayValue = getDisplayValue(value, timeOnly, dateOnly)
 
-  const getDisplayValue = (value, timeOnly, dateOnly, format) => {
-    const parsedDate = Helpers.parseDate(value, { timeOnly, dateOnly })
-    return parsedDate?.format(format) || ""
+  const getDisplayValue = (value, timeOnly, dateOnly) => {
+    const parsedDate = Helpers.parseDate(value, { dateOnly })
+    return Helpers.getDateDisplayValue(parsedDate, {
+      enableTime: !dateOnly,
+      timeOnly,
+    })
   }
 
   // Ensure we close flatpickr when unselected

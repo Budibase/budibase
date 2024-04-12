@@ -117,7 +117,7 @@ export const copyToClipboard = value => {
   })
 }
 
-export const parseDate = (value, { timeOnly, dateOnly } = {}) => {
+export const parseDate = (value, { dateOnly } = {}) => {
   // If empty then invalid
   if (!value) {
     return null
@@ -125,7 +125,8 @@ export const parseDate = (value, { timeOnly, dateOnly } = {}) => {
 
   // Certain string values need transformed
   if (typeof value === "string") {
-    if (timeOnly || !isNaN(new Date(`0-${value}`))) {
+    // Check for time only values
+    if (!isNaN(new Date(`0-${value}`))) {
       value = `0-${value}`
     }
 
@@ -145,4 +146,17 @@ export const parseDate = (value, { timeOnly, dateOnly } = {}) => {
   // loop in the builder, caused by potentially enriching {{ now }} to every
   // millisecond.
   return dayjs(Math.floor(parsedDate.valueOf() / 1000) * 1000)
+}
+
+export const getDateDisplayValue = (value, { enableTime, timeOnly }) => {
+  if (!value?.isValid()) {
+    return ""
+  }
+  if (timeOnly) {
+    return value.format("HH:mm")
+  } else if (!enableTime) {
+    return value.format("MMMM D YYYY")
+  } else {
+    return value.format("MMMM D YYYY, HH:mm")
+  }
 }
