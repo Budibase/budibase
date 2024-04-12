@@ -1,6 +1,6 @@
 import { context, db, HTTPError } from "@budibase/backend-core"
 import env from "../../../../environment"
-import { fullSearch, paginatedSearch, searchInputMapping } from "./utils"
+import { fullSearch, paginatedSearch } from "./utils"
 import { getRowParams, InternalTables } from "../../../../db/utils"
 import {
   Database,
