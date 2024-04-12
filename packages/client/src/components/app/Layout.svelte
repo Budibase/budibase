@@ -73,7 +73,10 @@
     $context.device.width,
     $context.device.height
   )
-  $: autoCloseSidePanel = !$builderStore.inBuilder && $sidePanelStore.open
+  $: autoCloseSidePanel =
+    !$builderStore.inBuilder &&
+    $sidePanelStore.open &&
+    $sidePanelStore.clickOutsideToClose
   $: screenId = $builderStore.inBuilder
     ? `${$builderStore.screen?._id}-screen`
     : "screen"
@@ -317,11 +320,7 @@
     id="side-panel-container"
     class:open={$sidePanelStore.open}
     use:clickOutside={{
-      callback:
-        $sidePanelStore.clickOutsideToClose && autoCloseSidePanel
-          ? sidePanelStore.actions.close
-          : null,
-
+      callback: autoCloseSidePanel ? sidePanelStore.actions.close : null,
       allowedType: "mousedown",
     }}
     class:builder={$builderStore.inBuilder}

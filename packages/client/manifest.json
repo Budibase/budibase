@@ -6729,7 +6729,7 @@
       {
         "type": "boolean",
         "key": "clickOutsideToClose",
-        "label": "Click away to close",
+        "label": "Click outside to close",
         "defaultValue": true
       },
       {
