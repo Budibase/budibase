@@ -330,7 +330,7 @@
     grid-template-columns: 1fr 120px 1fr auto auto;
   }
   .fields.with-bindings {
-    grid-template-columns: 1fr 120px 1fr auto auto auto;
+    grid-template-columns: minmax(150px, 1fr) 170px 120px minmax(150px, 1fr) 16px 16px;
   }
 
   .controls {
