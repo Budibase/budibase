@@ -47,12 +47,6 @@
     }
   }
 
-  const handleSidePanelOpen = async () => {
-    if (sidePanelOpen) {
-      await sidePanelOpen()
-    }
-  }
-
   const handleSidePanelClose = async () => {
     if (sidePanelClose) {
       await sidePanelClose()
