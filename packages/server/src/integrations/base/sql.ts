@@ -334,6 +334,7 @@ class InternalBuilder {
     if (filters.containsAny) {
       contains(filters.containsAny, true)
     }
+
     return query
   }
 
