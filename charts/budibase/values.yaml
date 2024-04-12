@@ -560,7 +560,7 @@ services:
     # do this.
     url: "http://minio-service:9000"
     # -- How much storage to give Minio in its PersistentVolumeClaim.
-    storage: 100Mi
+    storage: 2Gi
     # -- If defined, storageClassName: <storageClass> If set to "-",
     # storageClassName: "", which disables dynamic provisioning If undefined
     # (the default) or set to null, no storageClassName spec is set, choosing
