@@ -23,8 +23,8 @@
   bind:this={anchor}
   class:is-disabled={disabled || readonly}
   class:is-invalid={!!error}
-  class="spectrum-InputGroup spectrum-Datepicker"
   class:is-focused={focused}
+  class="spectrum-InputGroup spectrum-Datepicker"
   aria-readonly={readonly}
   aria-required="false"
   aria-haspopup="true"
@@ -56,15 +56,16 @@
       value={displayValue}
     />
   </div>
-  <button
-    type="button"
-    class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
-    tabindex="-1"
-    class:is-disabled={disabled}
-    class:is-invalid={!!error}
-  >
-    <Icon name={icon} />
-  </button>
+  {#if !disabled && !readonly}
+    <button
+      type="button"
+      class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
+      tabindex="-1"
+      class:is-invalid={!!error}
+    >
+      <Icon name={icon} />
+    </button>
+  {/if}
 </div>
 
 <style>
@@ -84,5 +85,10 @@
   }
   .is-disabled {
     pointer-events: none !important;
+  }
+  input:read-only {
+    border-right-width: 1px;
+    border-top-right-radius: var(--spectrum-textfield-border-radius);
+    border-bottom-right-radius: var(--spectrum-textfield-border-radius);
   }
 </style>
