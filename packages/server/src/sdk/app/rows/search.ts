@@ -1,4 +1,5 @@
 import {
+  EmptyFilterOption,
   Row,
   RowSearchParams,
   SearchFilters,
@@ -11,6 +12,7 @@ import { NoEmptyFilterStrings } from "../../../constants"
 import * as sqs from "./search/sqs"
 import env from "../../../environment"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
+import { dataFilters } from "@budibase/shared-core"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -60,6 +62,16 @@ export async function search(
   options: RowSearchParams
 ): Promise<SearchResponse<Row>> {
   const isExternalTable = isExternalTableID(options.tableId)
+  options.query = removeEmptyFilters(options.query || {})
+  if (
+    !dataFilters.hasFilters(options.query) &&
+    options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
+  ) {
+    return {
+      rows: [],
+    }
+  }
+
   if (isExternalTable) {
     return external.search(options)
   } else if (env.SQS_SEARCH_ENABLE) {
