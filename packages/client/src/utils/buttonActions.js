@@ -1,5 +1,6 @@
 import { get } from "svelte/store"
 import download from "downloadjs"
+import { downloadStream } from "@budibase/frontend-core"
 import {
   routeStore,
   builderStore,
@@ -400,6 +401,51 @@ const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
+const downloadFileHandler = async action => {
+  const { url, fileName } = action.parameters
+  try {
+    const { type } = action.parameters
+    if (type === "attachment") {
+      const { tableId, rowId, attachmentColumn } = action.parameters
+      const res = await API.downloadAttachment(
+        tableId,
+        rowId,
+        attachmentColumn,
+        { suppressErrors: true }
+      )
+      await downloadStream(res)
+      return
+    }
+
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      notificationStore.actions.error(
+        `Failed to download from '${url}'. Server returned status code: ${response.status}`
+      )
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(await response.blob())
+
+    const link = document.createElement("a")
+    link.href = objectUrl
+    link.download = fileName
+    link.click()
+
+    URL.revokeObjectURL(objectUrl)
+  } catch (e) {
+    console.error(e)
+    if (e.status) {
+      notificationStore.actions.error(
+        `Failed to download from '${url}'. Server returned status code: ${e.status}`
+      )
+    } else {
+      notificationStore.actions.error(`Failed to download from '${url}'.`)
+    }
+  }
+}
+
 const handlerMap = {
   ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
@@ -418,6 +464,7 @@ const handlerMap = {
   ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: openSidePanelHandler,
   ["Close Side Panel"]: closeSidePanelHandler,
+  ["Download File"]: downloadFileHandler,
 }
 
 const confirmTextMap = {
