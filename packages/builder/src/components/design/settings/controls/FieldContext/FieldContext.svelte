@@ -78,6 +78,7 @@
 
 {#if explanationModal}
   <ExplanationModal
+    {columnName}
     anchor={root}
     {schema}
     subject={explanationModalSubject}

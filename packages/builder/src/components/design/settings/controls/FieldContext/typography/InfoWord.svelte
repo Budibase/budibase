@@ -51,17 +51,14 @@
 
 <style>
   .infoWord {
-    vertical-align: bottom;
     display: inline-flex;
     box-sizing: border-box;
-    padding: 3px 6px;
-    border-radius: 5px;
+    padding: 1px 0;
     filter: brightness(100%);
-    background-color: var(--grey-3);
-    border: 1px solid var(--grey-3);
     overflow: hidden;
     transition: filter 300ms;
     align-items: center;
+    border-bottom: 1px solid var(--grey-6);
   }
 
   .infoWord:hover {

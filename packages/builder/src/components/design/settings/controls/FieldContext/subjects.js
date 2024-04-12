@@ -4,6 +4,7 @@ const subjects = {
   stringsAsNumbers: Symbol("explanation-modal-strings-as-numbers"),
   datesAsNumbers: Symbol("explanation-modal-dates-as-numbers"),
   notRequired: Symbol("explanation-modal-not-required"),
+  scalarJsonOnly: Symbol("explanation-scalar-json-only"),
   none: Symbol("explanation-modal-none")
 }
 
