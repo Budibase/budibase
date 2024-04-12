@@ -97,12 +97,14 @@
     // Add data
     let useDates = false
     if (schema[labelColumn]) {
+      console.log("in here?");
       const labelFieldType = schema[labelColumn].type
       if (horizontal) {
         builder = builder.yType(labelFieldType).xUnits(yAxisUnits)
       } else {
         builder = builder.xType(labelFieldType).yUnits(yAxisUnits)
       }
+      console.log(labelFieldType);
       useDates = labelFieldType === "datetime"
     }
     const series = (valueColumns ?? []).map(column => ({
@@ -110,6 +112,8 @@
       data: data.map(row => {
         if (!useDates) {
           const value = get(row, column); 
+          console.log("one");
+          console.log(value);
 
           if (Array.isArray(value)) {
             return null;
@@ -121,6 +125,8 @@
 
           return value;
         } else {
+          console.log("two");
+          console.log([row[labelColumn], row[column]]);
           return [row[labelColumn], row[column]]
         }
       }),
