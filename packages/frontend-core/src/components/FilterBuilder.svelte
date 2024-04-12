@@ -24,6 +24,7 @@
   export let datasource
   export let behaviourFilters = false
   export let allowBindings = false
+  export let filtersLabel = "Filters"
 
   $: matchAny = filters?.find(filter => filter.operator === "allOr") != null
   $: onEmptyFilter =
@@ -184,7 +185,7 @@
         {#if !fieldFilters?.length}
           Add your first filter expression.
         {:else}
-          <slot name="filteringHeroContent" />
+          <slot name="filtering-hero-content" />
           {#if behaviourFilters}
             <div class="behaviour-filters">
               <Select
@@ -213,9 +214,11 @@
       </Body>
       {#if fieldFilters?.length}
         <div>
-          <div class="filter-label">
-            <Label>Filters</Label>
-          </div>
+          {#if filtersLabel}
+            <div class="filter-label">
+              <Label>{filtersLabel}</Label>
+            </div>
+          {/if}
           <div class="fields" class:with-bindings={allowBindings}>
             {#each fieldFilters as filter}
               <Select

@@ -67,7 +67,7 @@
   {datasource}
   {allowBindings}
 >
-  <div slot="filteringHeroContent" />
+  <div slot="filtering-hero-content" />
 
   <DrawerBindableInput
     let:filter
