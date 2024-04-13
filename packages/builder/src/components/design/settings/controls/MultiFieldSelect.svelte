@@ -70,6 +70,10 @@
 
     if (field) {
       return field.name
+    } else if (type === "jsonarray") {
+      // `jsonarray` isn't present in the above FIELDS constant
+
+      return "JSON Array"
     }
 
     return ""
@@ -93,6 +97,8 @@
   const onOptionMouseleave = (e, option) => {
     updateTooltip(e, null);
   }
+
+  $: console.log(schema)
 </script>
 
 <Multiselect

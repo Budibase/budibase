@@ -13,7 +13,7 @@
   target="_blank"
   class="link"
 >
-  <Icon size="S" name={icon} />
+  <Icon size="XS" name={icon} />
   <span class="text">
     <slot>
       {text}
@@ -32,8 +32,9 @@
   .link {
     display: inline-flex;
     box-sizing: border-box;
-    padding: 1px 0;
+    padding: 1px 0 2px;
     filter: brightness(100%);
+    align-items: center;
 
     overflow: hidden;
     flex-shrink: 0;

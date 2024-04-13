@@ -21,7 +21,7 @@
     on:mouseleave
   >
     {#if icon}
-      <Icon size="S" name={icon} />
+      <Icon size="XS" name={icon} />
     {/if}
     <span class="text">
       <slot>
@@ -39,7 +39,7 @@
     on:mouseleave
   >
     {#if icon}
-      <Icon size="S" name={icon} />
+      <Icon size="XS" name={icon} />
     {/if}
     <span class="text">
       <slot>
@@ -53,7 +53,7 @@
   .infoWord {
     display: inline-flex;
     box-sizing: border-box;
-    padding: 1px 0;
+    padding: 1px 0 2px;
     filter: brightness(100%);
     overflow: hidden;
     transition: filter 300ms;

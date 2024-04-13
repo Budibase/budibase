@@ -36,11 +36,11 @@
   {:else if schema.type === "number"}
     <Property
       name="Min Value"
-      value={schema?.constraints?.numericality?.greaterThanOrEqualTo === "" ? "None" : schema?.constraints?.numericality?.greaterThanOrEqualTo}
+      value={[null, undefined, ""].includes(schema?.constraints?.numericality?.greaterThanOrEqualTo) ? "None" : schema?.constraints?.numericality?.greaterThanOrEqualTo}
     />
     <Property
       name="Max Value"
-      value={schema?.constraints?.numericality?.lessThanOrEqualTo === "" ? "None" : schema?.constraints?.numericality?.lessThanOrEqualTo}
+      value={[null, undefined, ""].includes(schema?.constraints?.numericality?.lessThanOrEqualTo)? "None" : schema?.constraints?.numericality?.lessThanOrEqualTo}
     />
   {:else if schema.type === "json"}
     <Property

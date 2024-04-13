@@ -5,10 +5,10 @@
 <style>
   .block {
     font-style: italic;
-    padding: 0px 3px;
+    padding: 0px 5px 0px 3px;
     border-radius: 1px;
     background-color: var(--grey-3);
     color: var(--ink);
-    word-break: break-all;
+    word-break: break-word;
   }
 </style>
