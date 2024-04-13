@@ -30,8 +30,6 @@
   }
 
   $: scalarDescendants = getScalarDescendants(schema)
-  $: console.log(scalarDescendants);
-  $: console.log(schema);
 </script>
 
 <Subject heading="Using Scalar JSON Values">
