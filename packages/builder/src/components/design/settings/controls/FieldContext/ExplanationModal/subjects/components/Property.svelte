@@ -7,6 +7,10 @@
 <div class="property">
   
 {#if pre}
+<span class="propertyName">
+  {name}
+</span>
+  <span class="propertyDivider">-</span>
 <pre class="pre propertyValue">
 {value}
 </pre>
@@ -27,12 +31,15 @@
   }
   .propertyName {
     font-style: italic;
-
   }
-.pre {
-  padding: 4px;
-  border-radius: 3px;
-  width: 250px;
-  background-color: black;
-}
+
+  .pre {
+    margin: 0;
+    margin-top: 3px;
+    padding: 4px;
+    border-radius: 3px;
+    width: 250px;
+    box-sizing: border-box;
+    background-color: black;
+  }
 </style>

@@ -18,7 +18,7 @@
 >
   <div class="explanationModalContent">
     {#if subject === subjects.column}
-      <Column {schema} />
+      <Column {columnName} {schema} />
     {:else if subject === subjects.support}
       <Support />
     {:else if subject === subjects.stringsAsNumbers}

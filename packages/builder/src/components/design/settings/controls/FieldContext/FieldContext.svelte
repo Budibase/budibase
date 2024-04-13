@@ -31,17 +31,12 @@
     explanationModalSubject = option;
     root = root
   }
-
-  $: {
-    console.log(messages);
-  }
 </script>
 
 <div
   bind:this={root}
   class="tooltipContents"
 >
-
   <Column
     {columnName}
     {columnIcon}

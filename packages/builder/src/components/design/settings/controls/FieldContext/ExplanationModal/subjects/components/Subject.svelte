@@ -1,5 +1,23 @@
 <script>
+  import { onMount } from "svelte"
+
   export let heading = ""
+  let body;
+
+  const handleScroll = (e) => {
+    console.log("scroll");
+    if (!body) return;
+
+    body.scrollTo({ top: body.scrollTop + e.deltaY, behavior: "smooth" })
+  }
+
+  onMount(() => {
+    window.addEventListener("wheel", handleScroll)
+
+    return () => {
+      window.removeEventListener("wheel", handleScroll)
+    }
+  });
 </script>
 
 <div class="heading">
@@ -10,7 +28,9 @@
   </span>
 </div>
 <div class="divider" />
-<slot />
+<div bind:this={body} class="body">
+  <slot />
+</div>
 
 <style>
   .heading {
@@ -23,5 +43,10 @@
   .divider {
     border-bottom: 1px solid var(--grey-4);
     margin: 12px 0 12px;
+  }
+
+  .body {
+    max-height: 300px;
+    overflow-y: auto;
   }
 </style>

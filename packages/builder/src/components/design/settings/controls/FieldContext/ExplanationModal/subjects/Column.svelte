@@ -1,11 +1,15 @@
 <script>
-  import { Subject, Property, Section }  from './components'
+  import { Block, Subject, Property, Section }  from './components'
 
   export let schema
+  export let columnName
 </script>
 
 
-<Subject heading="Column Overview">
+<Subject>
+  <div class="heading" slot="heading">
+    Column Overview for <Block>{columnName}</Block>
+  </div>
   <Section>
   {#if schema.type === "string"}
     <Property
@@ -51,3 +55,20 @@
    />
    </Section>
 </Subject>
+
+<style>
+  .heading {
+    display: flex;
+    align-items: center;
+  }
+
+  .heading > :global(.block) {
+    margin-left: 4px;
+    flex-grow: 0;
+    flex-shrink: 1;
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
