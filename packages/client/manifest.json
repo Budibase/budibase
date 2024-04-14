@@ -1639,6 +1639,7 @@
             "supported": ["number", "boolean"],
             "partialSupport": [
               { "type": "string", "message": "stringAsNumber" },
+              { "type": "options", "message": "stringAsNumber" },
               { "type": "datetime", "message": "dateAsNumber"}
             ],
             "unsupported": [
