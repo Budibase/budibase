@@ -3,7 +3,7 @@
 <style>
   .space {
     white-space: pre;
-    width: 5px;
+    width: 3px;
     flex-shrink: 0;
   }
 </style>
