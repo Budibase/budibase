@@ -52,6 +52,15 @@
       <span style:background-color={schema?.optionColors?.[option]} class="optionCircle" />{option}
       </Property>
     {/each}
+  {:else if schema.type === "options"}
+    {#each (schema?.constraints?.inclusion ?? []) as option, index}
+      <Property
+        name={`Option ${index + 1}`}
+        truncate
+      >
+      <span style:background-color={schema?.optionColors?.[option]} class="optionCircle" />{option}
+      </Property>
+    {/each}
   {:else if schema.type === "json"}
     <JSONProperty
       name="Schema"
