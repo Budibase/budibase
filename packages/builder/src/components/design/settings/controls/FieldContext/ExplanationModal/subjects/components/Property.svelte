@@ -1,45 +1,49 @@
 <script>
   export let name;
   export let value;
-  export let pre;
+  export let truncate = false;
 </script>
 
-<div class="property">
-  
-{#if pre}
-<span class="propertyName">
-  {name}
-</span>
-  <span class="propertyDivider">-</span>
-<pre class="pre propertyValue">
-{value}
-</pre>
-{:else}
+<div class:truncate class="property">
   <span class="propertyName">
-    {name}
+    <slot name="name">
+      {name}
+    </slot>
   </span>
   <span class="propertyDivider">-</span>
   <span class="propertyValue">
-    {value}
+    <slot>
+      {value}
+    </slot>
   </span>
-{/if}
 </div>
 
 <style>
-  .propertyDivider {
-    padding: 4px;
-  }
-  .propertyName {
-    font-style: italic;
+  .property {
+    max-width: 100%;
   }
 
-  .pre {
-    margin: 0;
-    margin-top: 3px;
-    padding: 4px;
-    border-radius: 3px;
-    width: 250px;
-    box-sizing: border-box;
-    background-color: black;
+  .truncate {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .propertyName {
+    font-style: italic;
+    flex-shrink: 0;
+  }
+
+
+  .propertyDivider {
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  .propertyValue {
+    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>

@@ -1,5 +1,5 @@
 <script>
-  import { Block, Subject, Property, Section }  from './components'
+  import { Block, Subject, JSONProperty, Property, Section }  from './components'
 
   export let schema
   export let columnName
@@ -42,9 +42,18 @@
       name="Max Value"
       value={[null, undefined, ""].includes(schema?.constraints?.numericality?.lessThanOrEqualTo)? "None" : schema?.constraints?.numericality?.lessThanOrEqualTo}
     />
+  {:else if schema.type === "array"}
+
+    {#each (schema?.constraints?.inclusion ?? []) as option, index}
+      <Property
+        name={`Option ${index + 1}`}
+        truncate
+      >
+      <span style:background-color={schema?.optionColors?.[option]} class="optionCircle" />{option}
+      </Property>
+    {/each}
   {:else if schema.type === "json"}
-    <Property
-      pre
+    <JSONProperty
       name="Schema"
       value={JSON.stringify(schema?.schema ?? {}, null, 2)}
     />
@@ -70,5 +79,15 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .optionCircle {
+    display: inline-block;
+    background-color: hsla(0, 1%, 50%, 0.3);
+    border-radius: 100%;
+    width: 10px;
+    height: 10px;
+    vertical-align: middle;
+    margin-right: 5px;
   }
 </style>

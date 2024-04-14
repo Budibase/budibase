@@ -4,8 +4,8 @@
 
 <style>
   .section {
-    line-height: 22px;
-    margin-bottom: 16px;
+    line-height: 20px;
+    margin-bottom: 13px;
     overflow: hidden;
   }
 </style>
