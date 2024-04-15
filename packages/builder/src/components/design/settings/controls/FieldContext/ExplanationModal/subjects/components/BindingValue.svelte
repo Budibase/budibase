@@ -26,6 +26,7 @@
   $: isJs = value?.startsWith?.("{{ js ")
 </script>
 
+<div class="editor">
 <CodeEditor
   readonly
   readonlyLineNumbers
@@ -33,6 +34,12 @@
   jsBindingWrapping={isJs}
   mode={isJs ? EditorModes.JS :EditorModes.Handlebars}
 />
+</div>
 
 <style>
+  .editor {
+    border: 1px solid var(--grey-2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
 </style>

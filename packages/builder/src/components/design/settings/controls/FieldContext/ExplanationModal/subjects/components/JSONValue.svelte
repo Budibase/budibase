@@ -8,6 +8,9 @@
 
 <style>
   .pre {
+    border: 1px solid var(--grey-2);
+    border-radius: 2px;
+    overflow: hidden;
     margin: 0;
     margin-top: 3px;
     padding: 4px;
