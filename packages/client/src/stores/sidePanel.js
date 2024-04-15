@@ -3,6 +3,7 @@ import { writable, derived } from "svelte/store"
 export const createSidePanelStore = () => {
   const initialState = {
     contentId: null,
+    clickOutsideToClose: true,
   }
   const store = writable(initialState)
   const derivedStore = derived(store, $store => {
@@ -32,11 +33,19 @@ export const createSidePanelStore = () => {
     }, 50)
   }
 
+  const setSidepanelState = bool => {
+    clearTimeout(timeout)
+    store.update(state => {
+      state.clickOutsideToClose = bool
+      return state
+    })
+  }
   return {
     subscribe: derivedStore.subscribe,
     actions: {
       open,
       close,
+      setSidepanelState,
     },
   }
 }
