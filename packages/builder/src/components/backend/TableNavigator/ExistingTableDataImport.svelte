@@ -1,6 +1,7 @@
 <script>
+  import { FieldType, FieldSubtype } from "@budibase/types"
   import { Select, Toggle, Multiselect } from "@budibase/bbui"
-  import { DB_TYPE_INTERNAL, FIELDS } from "constants/backend"
+  import { DB_TYPE_INTERNAL } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
 
@@ -23,43 +24,47 @@
   const typeOptions = [
     {
       label: "Text",
-      value: FIELDS.STRING.type,
+      value: FieldType.STRING,
     },
     {
       label: "Number",
-      value: FIELDS.NUMBER.type,
+      value: FieldType.NUMBER,
     },
     {
       label: "Date",
-      value: FIELDS.DATETIME.type,
+      value: FieldType.DATETIME,
     },
     {
       label: "Options",
-      value: FIELDS.OPTIONS.type,
+      value: FieldType.OPTIONS,
     },
     {
       label: "Multi-select",
-      value: FIELDS.ARRAY.type,
+      value: FieldType.ARRAY.type,
     },
     {
       label: "Barcode/QR",
-      value: FIELDS.BARCODEQR.type,
+      value: FieldType.BARCODEQR,
     },
     {
       label: "Long Form Text",
-      value: FIELDS.LONGFORM.type,
+      value: FieldType.LONGFORM,
     },
     {
       label: "Attachment",
-      value: FIELDS.ATTACHMENT.type,
+      value: FieldType.ATTACHMENT_SINGLE,
+    },
+    {
+      label: "Attachment list",
+      value: FieldType.ATTACHMENTS,
     },
     {
       label: "User",
-      value: `${FIELDS.USER.type}${FIELDS.USER.subtype}`,
+      value: `${FieldType.BB_REFERENCE}${FieldSubtype.USER}`,
     },
     {
       label: "Users",
-      value: `${FIELDS.USERS.type}${FIELDS.USERS.subtype}`,
+      value: `${FieldType.BB_REFERENCE}${FieldSubtype.USERS}`,
     },
   ]
 
