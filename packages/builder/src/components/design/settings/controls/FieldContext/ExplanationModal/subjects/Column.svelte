@@ -7,6 +7,17 @@
   }
   export let schema
   export let columnName
+
+  const parseDate = (isoString) => {
+    if ([null, undefined, ""].includes(isoString)) {
+      return "None"
+    }
+
+    const epoch = Date.parse(isoString);
+    const date = new Date(epoch);
+
+    return date.toLocaleString();
+  }
 </script>
 
 
@@ -23,11 +34,11 @@
   {:else if schema.type === "datetime"}
     <Property
       name="Earliest"
-      value={schema?.constraints?.datetime?.earliest === "" ? "None" : schema?.constraints?.datetime?.earliest}
+      value={parseDate(schema?.constraints?.datetime?.earliest)}
     />
     <Property
       name="Latest"
-      value={schema?.constraints?.datetime?.latest === "" ? "None" : schema?.constraints?.datetime?.latest}
+      value={parseDate(schema?.constraints?.datetime?.latest)}
     />
     <Property
       name="Ignore time zones"
