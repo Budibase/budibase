@@ -1638,8 +1638,11 @@
           "typeSupport": {
             "supported": ["number", "boolean"],
             "partialSupport": [
+              { "type": "longform", "message": "stringAsNumber" },
               { "type": "string", "message": "stringAsNumber" },
+              { "type": "bigint", "message": "stringAsNumber" },
               { "type": "options", "message": "stringAsNumber" },
+              { "type": "formula", "message": "stringAsNumber" },
               { "type": "datetime", "message": "dateAsNumber"}
             ],
             "unsupported": [

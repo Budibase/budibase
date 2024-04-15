@@ -1,5 +1,5 @@
 <script>
-  import { Block, Subject, JSONProperty, Property, Section }  from './components'
+  import { BindingProperty, Block, Subject, JSONProperty, Property, Section }  from './components'
 
   export let schema
   export let columnName
@@ -62,10 +62,21 @@
       </Property>
     {/each}
   {:else if schema.type === "json"}
-    <JSONProperty
-      name="Schema"
-      value={JSON.stringify(schema?.schema ?? {}, null, 2)}
+    <Property name="Schema">
+      <JSONProperty
+        value={JSON.stringify(schema?.schema ?? {}, null, 2)}
+      />
+    </Property>
+  {:else if schema.type === "formula"}
+    <Property
+      name="Formula type"
+      value={schema?.formulaType === "dynamic" ? "Dynamic" : "Static"}
     />
+    <Property name="Formula">
+    <BindingProperty
+      value={schema?.formula}
+    />
+    </Property>
   {/if}
   <Property
     name="Required"

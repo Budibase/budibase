@@ -1,35 +1,12 @@
 <script>
-  export let name;
   export let value;
 </script>
 
-<div class="property">
-  <span class="propertyName">
-    <slot name="name">
-      {name}
-    </slot>
-  </span>
-  <span class="propertyDivider">-</span>
-  <pre class="pre propertyValue">
-    <slot>
-      {value}
-    </slot>
-  </pre>
-</div>
+<pre class="pre">
+  {value}
+</pre>
 
 <style>
-  .property {
-    margin-bottom: 12px;
-  }
-
-  .propertyName {
-    font-style: italic;
-  }
-
-  .propertyDivider {
-    padding: 4px;
-  }
-
   .pre {
     margin: 0;
     margin-top: 3px;

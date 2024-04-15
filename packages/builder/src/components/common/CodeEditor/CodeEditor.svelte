@@ -54,6 +54,7 @@
   export let autofocus = false
   export let jsBindingWrapping = true
   export let readonly = false
+  export let readonlyLineNumbers = false
 
   const dispatch = createEventDispatcher()
 
@@ -240,6 +241,9 @@
 
     if (readonly) {
       complete.push(EditorState.readOnly.of(true))
+      if (readonlyLineNumbers) {
+        complete.push(lineNumbers())
+      }
     } else {
       complete = [
         ...complete,
