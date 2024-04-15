@@ -71,8 +71,9 @@ export enum FieldType {
   /**
    * a complex type, called Auto Column within Budibase. This type has a few variants, with options such as a
    * date for created at/updated at, an auto ID column with auto-increments as rows are saved and a user
-   * relationship type which stores the created by/updated by user details. This sub-types all depend on the
-   * date, number of link types respectively.
+   * relationship type which stores the created by/updated by user details. These subtypes all depend on the
+   * date, number of link types respectively. There is one case where these will be executed in the browser,
+   * that is part of the initial formula definition, the formula will be live evaluated in the browser.
    */
   AUTO = "auto",
   /**
