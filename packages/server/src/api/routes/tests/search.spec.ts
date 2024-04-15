@@ -476,4 +476,78 @@ describe.each([
       })
     })
   })
+
+  describe("array of strings", () => {
+    beforeAll(async () => {
+      await createTable({
+        numbers: {
+          name: "numbers",
+          type: FieldType.ARRAY,
+          constraints: { inclusion: ["one", "two", "three"] },
+        },
+      })
+      await createRows([{ numbers: ["one", "two"] }, { numbers: ["three"] }])
+    })
+
+    describe("contains", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ contains: { numbers: ["one"] } }).toContainExactly([
+          { numbers: ["one", "two"] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ contains: { numbers: ["none"] } }).toFindNothing())
+
+      it("fails to find row containing all", () =>
+        expectQuery({
+          contains: { numbers: ["one", "two", "three"] },
+        }).toFindNothing())
+
+      it("finds all with empty list", () =>
+        expectQuery({ contains: { numbers: [] } }).toContainExactly([
+          { numbers: ["one", "two"] },
+          { numbers: ["three"] },
+        ]))
+    })
+
+    describe("notContains", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ notContains: { numbers: ["one"] } }).toContainExactly([
+          { numbers: ["three"] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({
+          notContains: { numbers: ["one", "two", "three"] },
+        }).toContainExactly([
+          { numbers: ["one", "two"] },
+          { numbers: ["three"] },
+        ]))
+
+      it("finds all with empty list", () =>
+        expectQuery({ notContains: { numbers: [] } }).toContainExactly([
+          { numbers: ["one", "two"] },
+          { numbers: ["three"] },
+        ]))
+    })
+
+    describe("containsAny", () => {
+      it("successfully finds rows", () =>
+        expectQuery({
+          containsAny: { numbers: ["one", "two", "three"] },
+        }).toContainExactly([
+          { numbers: ["one", "two"] },
+          { numbers: ["three"] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ containsAny: { numbers: ["none"] } }).toFindNothing())
+
+      it("finds all with empty list", () =>
+        expectQuery({ containsAny: { numbers: [] } }).toContainExactly([
+          { numbers: ["one", "two"] },
+          { numbers: ["three"] },
+        ]))
+    })
+  })
 })
