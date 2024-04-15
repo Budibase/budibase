@@ -77,9 +77,15 @@ export function setupEnv(...envs: any[]) {
     throw new Error("CouchDB port not found")
   }
 
+  const couchSqlPort = getExposedV4Port(couch, 4984)
+  if (!couchSqlPort) {
+    throw new Error("CouchDB SQL port not found")
+  }
+
   const configs = [
     { key: "COUCH_DB_PORT", value: `${couchPort}` },
     { key: "COUCH_DB_URL", value: `http://127.0.0.1:${couchPort}` },
+    { key: "COUCH_DB_SQL_URL", value: `http://127.0.0.1:${couchSqlPort}` },
   ]
 
   for (const config of configs.filter(x => !!x.value)) {

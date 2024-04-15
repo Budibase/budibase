@@ -336,7 +336,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return { tables: externalTables, errors }
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     const sheet = json.endpoint.entityId
     switch (json.endpoint.operation) {
       case Operation.CREATE:
