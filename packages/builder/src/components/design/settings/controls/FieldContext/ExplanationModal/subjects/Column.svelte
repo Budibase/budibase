@@ -68,15 +68,15 @@
       />
     </Property>
   {:else if schema.type === "formula"}
+    <Property name="Formula">
+      <BindingValue
+        value={schema?.formula}
+      />
+    </Property>
     <Property
       name="Formula type"
       value={schema?.formulaType === "dynamic" ? "Dynamic" : "Static"}
     />
-    <Property name="Formula">
-    <BindingValue
-      value={schema?.formula}
-    />
-    </Property>
   {/if}
   <Property
     name="Required"

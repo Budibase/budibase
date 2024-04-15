@@ -21,7 +21,7 @@
 <style>
   .property {
     max-width: 100%;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
   }
 
   .truncate {
@@ -31,13 +31,13 @@
   }
 
   .propertyName {
-    font-style: italic;
+    font-weight: 600;
     flex-shrink: 0;
   }
 
 
   .propertyDivider {
-    padding: 0 6px;
+    padding: 0 2px;
     flex-shrink: 0;
   }
 

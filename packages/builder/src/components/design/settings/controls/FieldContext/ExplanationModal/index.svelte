@@ -36,6 +36,6 @@
 <style>
   .explanationModalContent {
     max-width: 300px;
-    padding: 16px 12px 6px;
+    padding: 16px 12px 0px;
   }
 </style>
