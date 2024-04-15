@@ -524,3 +524,20 @@ export async function getReadStream(
   }
   return client.getObject(params).createReadStream()
 }
+
+/*
+Given a signed url like 'files/signed/tmp-files-attachments/app_123456/myfile.txt' extract
+the bucket and the path from it
+*/
+export function extractBucketAndPath(url: string): {
+  bucket: string
+  path: string
+} {
+  const baseUrl = url.split("?")[0]
+  const parts = baseUrl.split("/")
+  parts.shift()
+  const bucket = parts[2]
+  const path = parts.slice(3).join("/")
+
+  return { bucket, path }
+}
