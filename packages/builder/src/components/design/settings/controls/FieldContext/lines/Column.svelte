@@ -38,6 +38,7 @@
 <Line noWrap>
   <InfoWord
     on:mouseenter={() => setExplanationSubject(subjects.column)}
+    on:mouseleave={() => setExplanationSubject(subjects.none)}
     href={tableHref}
     text={columnName}
   />
