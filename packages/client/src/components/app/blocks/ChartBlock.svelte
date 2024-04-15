@@ -24,7 +24,7 @@
   export let width
 
   // Pie/Donut
-  export let valueColumn
+  // export let valueColumn
 
   // Bar
   export let stacked
@@ -78,7 +78,7 @@
           width,
           title: chartTitle,
           labelColumn,
-          valueColumn,
+          valueColumn: valueColumns,
           valueColumns,
           palette,
           dataLabels,
