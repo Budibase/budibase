@@ -73,10 +73,7 @@
     $context.device.width,
     $context.device.height
   )
-  $: autoCloseSidePanel =
-    !$builderStore.inBuilder &&
-    $sidePanelStore.open &&
-    $sidePanelStore.clickOutsideToClose
+  $: autoCloseSidePanel = !$builderStore.inBuilder && $sidePanelStore.open
   $: screenId = $builderStore.inBuilder
     ? `${$builderStore.screen?._id}-screen`
     : "screen"
