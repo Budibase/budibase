@@ -4,6 +4,7 @@ import {
   Datasource,
   FieldType,
   TableSourceType,
+  FieldSchema,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
 import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../constants"
@@ -239,14 +240,15 @@ export function generateColumnDefinition(config: {
     constraints.inclusion = options
   }
 
-  const schema: any = {
+  const schema = {
     type: foundType,
     externalType,
     autocolumn,
     name,
     constraints,
-  }
-  if (foundType === FieldType.DATETIME) {
+  } as FieldSchema
+
+  if (schema.type === FieldType.DATETIME) {
     schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lowerCaseType)
     schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lowerCaseType)
   }
