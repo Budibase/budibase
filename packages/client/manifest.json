@@ -6723,21 +6723,7 @@
     "illegalChildren": ["section", "sidepanel"],
     "showEmptyState": false,
     "draggable": false,
-    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
-    "sendEvents": true,
-    "settings": [
-      {
-        "type": "boolean",
-        "key": "clickOutsideToClose",
-        "label": "Click outside to close",
-        "defaultValue": true
-      },
-      {
-        "type": "event",
-        "key": "onSidePanelClose",
-        "label": "On side panel close"
-      }
-    ]
+    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action."
   },
   "rowexplorer": {
     "block": true,
