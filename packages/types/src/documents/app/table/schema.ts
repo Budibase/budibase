@@ -90,6 +90,7 @@ export interface JsonFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
 export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.DATETIME
   ignoreTimezones?: boolean
+  dateOnly?: boolean
   timeOnly?: boolean
   subtype?: AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT
 }
@@ -114,6 +115,11 @@ export interface BBReferenceFieldMetadata
 
 export interface AttachmentFieldMetadata extends BaseFieldSchema {
   type: FieldType.ATTACHMENTS
+  constraints: FieldConstraints & { type: "array" }
+}
+
+export interface AttachmentSingleFieldMetadata extends BaseFieldSchema {
+  type: FieldType.ATTACHMENT_SINGLE
 }
 
 export interface FieldConstraints {
@@ -177,6 +183,7 @@ export type FieldSchema =
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
   | AttachmentFieldMetadata
+  | AttachmentSingleFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
@@ -210,10 +217,4 @@ export function isBBReferenceField(
   field: FieldSchema
 ): field is BBReferenceFieldMetadata {
   return field.type === FieldType.BB_REFERENCE
-}
-
-export function isAttachmentField(
-  field: FieldSchema
-): field is AttachmentFieldMetadata {
-  return field.type === FieldType.ATTACHMENTS
 }
