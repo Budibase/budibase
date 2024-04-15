@@ -31,6 +31,10 @@ function pickApi(tableId: any) {
   return internal
 }
 
+function isEmptyArray(value: any) {
+  return Array.isArray(value) && value.length === 0
+}
+
 // don't do a pure falsy check, as 0 is included
 // https://github.com/Budibase/budibase/issues/10118
 export function removeEmptyFilters(filters: SearchFilters) {
@@ -49,7 +53,7 @@ export function removeEmptyFilters(filters: SearchFilters) {
         for (let [key, value] of Object.entries(
           filters[filterType] as object
         )) {
-          if (value == null || value === "") {
+          if (value == null || value === "" || isEmptyArray(value)) {
             // @ts-ignore
             delete filters[filterField][key]
           }
