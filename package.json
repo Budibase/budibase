@@ -56,6 +56,7 @@
     "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up --ignore @budibase/account-portal-server && lerna run --stream dev --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
     "dev:server": "yarn run kill-server && lerna run --stream dev --scope @budibase/worker --scope @budibase/server",
     "dev:accountportal": "yarn kill-accountportal && lerna run dev --stream --scope @budibase/account-portal-ui --scope @budibase/account-portal-server",
+    "dev:camunda": "./scripts/deploy-camunda.sh",
     "dev:all": "yarn run kill-all && lerna run --stream dev",
     "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
     "dev:docker": "yarn build --scope @budibase/server --scope @budibase/worker && docker-compose -f hosting/docker-compose.build.yaml -f hosting/docker-compose.dev.yaml --env-file hosting/.env up --build --scale proxy-service=0",
