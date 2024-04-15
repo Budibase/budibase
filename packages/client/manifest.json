@@ -5284,7 +5284,7 @@
           {
             "type": "field",
             "label": "Data column",
-            "key": "valueColumn",
+            "key": "valueColumns",
             "dependsOn": "dataSource",
             "required": true
           }
@@ -5309,7 +5309,7 @@
           {
             "type": "field",
             "label": "Data column",
-            "key": "valueColumn",
+            "key": "valueColumns",
             "dependsOn": "dataSource",
             "required": true
           }
@@ -5381,7 +5381,7 @@
           {
             "type": "field",
             "label": "Value column",
-            "key": "valueColumn",
+            "key": "valueColumns",
             "dependsOn": "dataSource",
             "required": true
           },
@@ -5533,8 +5533,7 @@
             "type": "field",
             "label": "Date column",
             "key": "dateColumn",
-            "dependsOn": "dataSource",
-            "required": true
+            "dependsOn": "dataSource"
           },
           {
             "type": "field",
