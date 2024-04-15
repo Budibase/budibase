@@ -104,8 +104,11 @@
     {#if (Array.isArray(fieldState?.value) && !fieldState?.value?.length) || !fieldState?.value}
       <ActionButton
         fullWidth
+        {disabled}
         on:click={() => {
-          modal.show()
+          if (!$builderStore.inBuilder) {
+            modal.show()
+          }
         }}
       >
         Add signature
