@@ -233,6 +233,11 @@ class InternalBuilder {
               (statement ? andOr : "") +
               `LOWER(${likeKey(this.client, key)}) LIKE ?`
           }
+
+          if (statement === "") {
+            return
+          }
+
           // @ts-ignore
           query = query[rawFnc](`${not}(${statement})`, value)
         })
