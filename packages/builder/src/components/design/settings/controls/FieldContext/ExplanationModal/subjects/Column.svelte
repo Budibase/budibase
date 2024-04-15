@@ -1,6 +1,10 @@
 <script>
+  import { tables } from "stores/builder"
   import { BindingValue, Block, Subject, JSONValue, Property, Section }  from './components'
 
+  $: {
+    console.log($tables)
+  }
   export let schema
   export let columnName
 </script>
@@ -76,6 +80,24 @@
     <Property
       name="Formula type"
       value={schema?.formulaType === "dynamic" ? "Dynamic" : "Static"}
+    />
+  {:else if schema.type === "link"}
+    <Property
+      name="Type"
+      value={schema?.relationshipType}
+    />
+    <Property
+      name="Related Table"
+      value={$tables?.list?.find(table => table._id === schema?.tableId)?.name}
+    />
+    <Property
+      name="Column in Related Table"
+      value={schema?.fieldName}
+    />
+  {:else if schema.type === "bb_reference"}
+    <Property
+      name="Allow multiple users"
+      value={schema?.relationshipType === "many-to-many" ? "Yes" : "No"}
     />
   {/if}
   <Property
