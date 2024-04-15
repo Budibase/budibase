@@ -31,7 +31,6 @@
   $: options = Object.keys(schema || {})
   $: boundValue = getValidOptions(value, options)
 
-
   const getValidOptions = (selectedOptions, allOptions) => {
     // Fix the hardcoded default string value
     if (!Array.isArray(selectedOptions)) {
