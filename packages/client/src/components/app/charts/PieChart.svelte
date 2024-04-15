@@ -80,7 +80,13 @@
       .colors(customColor ? colors : null)
 
     // Add data if valid datasource
-    const series = data.map(row => parseFloat(row[valueColumn]))
+    const series = data.map(row => {
+      if (schema[valueColumn].type === 'datetime') {
+        return Date.parse(row[valueColumn])
+      }
+
+      return parseFloat(row[valueColumn])
+    })
     const labels = data.map(row => row[labelColumn])
     builder = builder.series(series).labels(labels)
 
