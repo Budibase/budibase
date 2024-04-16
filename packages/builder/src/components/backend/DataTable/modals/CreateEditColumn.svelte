@@ -13,7 +13,7 @@
     Layout,
     AbsTooltip,
   } from "@budibase/bbui"
-  import { SWITCHABLE_TYPES } from "@budibase/shared-core"
+  import { SWITCHABLE_TYPES, ValidColumnNameRegex } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
@@ -29,7 +29,6 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
-  import { ValidColumnNameRegex } from "@budibase/shared-core"
   import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
