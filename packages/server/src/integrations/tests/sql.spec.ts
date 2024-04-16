@@ -66,7 +66,15 @@ function generateUpdateJson({
   body = {},
   filters = {},
   meta = {},
+}: {
+  table: string
+  body?: any
+  filters?: any
+  meta?: any
 }): QueryJson {
+  if (!meta.table) {
+    meta.table = table
+  }
   return {
     endpoint: endpoint(table, "UPDATE"),
     filters,

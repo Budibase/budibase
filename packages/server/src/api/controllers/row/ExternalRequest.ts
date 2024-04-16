@@ -437,7 +437,7 @@ export class ExternalRequest<T extends Operation> {
     // if we're creating (in a through table) need to wipe the existing ones first
     const promises = []
     const related = await this.lookupRelations(mainTableId, row)
-    const table = this.getTable(mainTableId)
+    const table = this.getTable(mainTableId)!
     for (let relationship of relationships) {
       const { key, tableId, isUpdate, id, ...rest } = relationship
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
