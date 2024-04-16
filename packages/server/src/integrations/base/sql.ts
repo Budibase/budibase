@@ -146,7 +146,7 @@ class InternalBuilder {
   addFilters(
     query: Knex.QueryBuilder,
     filters: SearchFilters | undefined,
-    tableName: string,
+    table: Table,
     opts: { aliases?: Record<string, string>; relationship?: boolean }
   ): Knex.QueryBuilder {
     function getTableName(name: string) {
@@ -161,7 +161,7 @@ class InternalBuilder {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
-          fn(`${getTableName(tableName)}.${updatedKey}`, value)
+          fn(`${getTableName(table.name)}.${updatedKey}`, value)
         }
         if (opts.relationship && isRelationshipField) {
           const [filterTableName, property] = updatedKey.split(".")
@@ -276,6 +276,9 @@ class InternalBuilder {
     }
     if (filters.range) {
       iterate(filters.range, (key, value) => {
+        const fieldName = key.split(".")[1]
+        const field = table.schema[fieldName]
+
         const isEmptyObject = (val: any) => {
           return (
             val &&
@@ -293,16 +296,46 @@ class InternalBuilder {
           highValid = isValidFilter(value.high)
         if (lowValid && highValid) {
           // Use a between operator if we have 2 valid range values
-          const fnc = allOr ? "orWhereBetween" : "whereBetween"
-          query = query[fnc](key, [value.low, value.high])
+          if (
+            field.type === FieldType.BIGINT &&
+            this.client === SqlClient.SQL_LITE
+          ) {
+            query = query.whereRaw(
+              `CAST(${key} AS INTEGER) BETWEEN CAST(? AS INTEGER) AND CAST(? AS INTEGER)`,
+              [value.low, value.high]
+            )
+          } else {
+            const fnc = allOr ? "orWhereBetween" : "whereBetween"
+            query = query[fnc](key, [value.low, value.high])
+          }
         } else if (lowValid) {
           // Use just a single greater than operator if we only have a low
-          const fnc = allOr ? "orWhere" : "where"
-          query = query[fnc](key, ">", value.low)
+          if (
+            field.type === FieldType.BIGINT &&
+            this.client === SqlClient.SQL_LITE
+          ) {
+            query = query.whereRaw(
+              `CAST(${key} AS INTEGER) >= CAST(? AS INTEGER)`,
+              [value.low]
+            )
+          } else {
+            const fnc = allOr ? "orWhere" : "where"
+            query = query[fnc](key, ">=", value.low)
+          }
         } else if (highValid) {
           // Use just a single less than operator if we only have a high
-          const fnc = allOr ? "orWhere" : "where"
-          query = query[fnc](key, "<", value.high)
+          if (
+            field.type === FieldType.BIGINT &&
+            this.client === SqlClient.SQL_LITE
+          ) {
+            query = query.whereRaw(
+              `CAST(${key} AS INTEGER) <= CAST(? AS INTEGER)`,
+              [value.high]
+            )
+          } else {
+            const fnc = allOr ? "orWhere" : "where"
+            query = query[fnc](key, "<=", value.high)
+          }
         }
       })
     }
@@ -532,7 +565,7 @@ class InternalBuilder {
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
-    query = this.addFilters(query, filters, tableName, {
+    query = this.addFilters(query, filters, json.meta?.table!, {
       aliases: tableAliases,
     })
     // add sorting to pre-query
@@ -553,7 +586,7 @@ class InternalBuilder {
       endpoint.schema,
       tableAliases
     )
-    return this.addFilters(query, filters, tableName, {
+    return this.addFilters(query, filters, json.meta?.table!, {
       relationship: true,
       aliases: tableAliases,
     })
@@ -563,7 +596,7 @@ class InternalBuilder {
     const { endpoint, body, filters, tableAliases } = json
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
     const parsedBody = parseBody(body)
-    query = this.addFilters(query, filters, endpoint.entityId, {
+    query = this.addFilters(query, filters, json.meta?.table!, {
       aliases: tableAliases,
     })
     // mysql can't use returning
@@ -577,7 +610,7 @@ class InternalBuilder {
   delete(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, filters, tableAliases } = json
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
-    query = this.addFilters(query, filters, endpoint.entityId, {
+    query = this.addFilters(query, filters, json.meta?.table!, {
       aliases: tableAliases,
     })
     // mysql can't use returning

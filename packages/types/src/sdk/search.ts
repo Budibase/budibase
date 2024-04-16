@@ -13,10 +13,13 @@ export interface SearchFilters {
     [key: string]: string
   }
   range?: {
-    [key: string]: {
-      high: number | string
-      low: number | string
-    }
+    [key: string]:
+      | {
+          high: number | string
+          low: number | string
+        }
+      | { high: number | string }
+      | { low: number | string }
   }
   equal?: {
     [key: string]: any
