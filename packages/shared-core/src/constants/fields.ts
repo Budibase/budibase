@@ -4,7 +4,7 @@ type SwitchableTypes = Partial<{
   [K in FieldType]: [K, ...FieldType[]]
 }>
 
-export const SWITCHABLE_TYPES: Partial<SwitchableTypes> = {
+export const SWITCHABLE_TYPES: SwitchableTypes = {
   [FieldType.STRING]: [
     FieldType.STRING,
     FieldType.OPTIONS,

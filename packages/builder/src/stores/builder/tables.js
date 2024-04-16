@@ -1,8 +1,8 @@
 import { FieldType } from "@budibase/types"
+import { SWITCHABLE_TYPES } from "@budibase/shared-core"
 import { get, writable, derived } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { API } from "api"
-import { SWITCHABLE_TYPES } from "constants/backend"
 
 export function createTablesStore() {
   const store = writable({
@@ -64,7 +64,7 @@ export function createTablesStore() {
       if (
         oldField != null &&
         oldField?.type !== field.type &&
-        SWITCHABLE_TYPES.indexOf(oldField?.type) === -1
+        SWITCHABLE_TYPES[oldField?.type]
       ) {
         updatedTable.schema[key] = oldField
       }

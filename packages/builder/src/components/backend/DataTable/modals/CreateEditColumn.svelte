@@ -13,6 +13,7 @@
     Layout,
     AbsTooltip,
   } from "@budibase/bbui"
+  import { SWITCHABLE_TYPES } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
@@ -20,11 +21,6 @@
   import {
     FIELDS,
     RelationshipType,
-    ALLOWABLE_STRING_OPTIONS,
-    ALLOWABLE_NUMBER_OPTIONS,
-    ALLOWABLE_STRING_TYPES,
-    ALLOWABLE_NUMBER_TYPES,
-    SWITCHABLE_TYPES,
     PrettyRelationshipDefinitions,
     DB_TYPE_EXTERNAL,
   } from "constants/backend"
@@ -175,7 +171,7 @@
   $: typeEnabled =
     !originalName ||
     (originalName &&
-      SWITCHABLE_TYPES.indexOf(editableColumn.type) !== -1 &&
+      SWITCHABLE_TYPES[editableColumn.type] &&
       !editableColumn?.autocolumn)
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
@@ -367,16 +363,10 @@
   }
 
   function getAllowedTypes() {
-    if (
-      originalName &&
-      ALLOWABLE_STRING_TYPES.indexOf(editableColumn.type) !== -1
-    ) {
-      return ALLOWABLE_STRING_OPTIONS
-    } else if (
-      originalName &&
-      ALLOWABLE_NUMBER_TYPES.indexOf(editableColumn.type) !== -1
-    ) {
-      return ALLOWABLE_NUMBER_OPTIONS
+    if (originalName) {
+      return (
+        SWITCHABLE_TYPES[editableColumn.type] || [editableColumn.type]
+      ).map(f => FIELDS[f.toUpperCase()])
     }
 
     const isUsers =
