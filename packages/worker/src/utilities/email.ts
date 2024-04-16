@@ -4,12 +4,7 @@ import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
-import {
-  configs,
-  cache,
-  context as appContext,
-  objectStore,
-} from "@budibase/backend-core"
+import { configs, cache, objectStore } from "@budibase/backend-core"
 import ical from "ical-generator"
 import fetch from "node-fetch"
 import path from "path"
@@ -190,7 +185,11 @@ export async function sendEmail(
           }
         } else {
           const url = attachment.url
-          const { bucket, path } = objectStore.extractBucketAndPath(url)
+          const result = objectStore.extractBucketAndPath(url)
+          if (result === null) {
+            throw new Error("Invalid signed URL")
+          }
+          const { bucket, path } = result
           const readStream = await objectStore.getReadStream(bucket, path)
           const fallbackFilename = path.split("/").pop() || ""
           return {
