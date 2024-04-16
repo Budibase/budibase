@@ -132,6 +132,7 @@ export async function sqlOutputProcessing(
     let rowId = row._id
     if (opts?.sqs) {
       rowId = getInternalRowId(row, table)
+      row._id = rowId
     } else if (!rowId) {
       rowId = generateIdForRow(row, table)
       row._id = rowId
@@ -153,7 +154,7 @@ export async function sqlOutputProcessing(
         row,
         table,
         isLinked: false,
-        internal: opts?.sqs,
+        sqs: opts?.sqs,
       }),
       table
     )
@@ -167,7 +168,8 @@ export async function sqlOutputProcessing(
       tables,
       row,
       finalRows,
-      relationships
+      relationships,
+      opts
     )
   }
 

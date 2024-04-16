@@ -13,6 +13,8 @@ import * as sqs from "./search/sqs"
 import env from "../../../environment"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
+import sdk from "../../index"
+import { searchInputMapping } from "./search/utils"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -76,12 +78,15 @@ export async function search(
     }
   }
 
+  const table = await sdk.tables.getTable(options.tableId)
+  options = searchInputMapping(table, options)
+
   if (isExternalTable) {
-    return external.search(options)
+    return external.search(options, table)
   } else if (env.SQS_SEARCH_ENABLE) {
-    return sqs.search(options)
+    return sqs.search(options, table)
   } else {
-    return internal.search(options)
+    return internal.search(options, table)
   }
 }
 
