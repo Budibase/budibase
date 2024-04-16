@@ -111,7 +111,7 @@
         if (!useDates) {
           const value = get(row, column);
 
-          if (schema[column].type === 'datetime') {
+          if (schema?.[column]?.type === 'datetime') {
             return Date.parse(value)
           }
 

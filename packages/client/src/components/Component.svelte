@@ -273,8 +273,9 @@
     staticSettings = instanceSettings.staticSettings
     dynamicSettings = instanceSettings.dynamicSettings
 
+    console.log(settingsDefinition, settingsDefinitionMap);
     // Check if we have any missing required settings
-    missingRequiredSettings = settingsDefinition.filter(setting => {
+    missingRequiredSettings = Object.values(settingsDefinitionMap).filter(setting => {
       let empty = instance[setting.key] == null || instance[setting.key] === ""
       let missing = setting.required && empty
 
@@ -283,13 +284,21 @@
         const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
         const dependsOnValue = setting.dependsOn.value
         const realDependentValue = instance[dependsOnKey]
+        let foo = false && instance._component === "@budibase/standard-components/chartblock" && setting.type === "multifield"
+        if (foo) {
+          console.log(setting)
+          console.log(instance);
+        }
         if (dependsOnValue === undefined && realDependentValue) {
+          if (foo) console.log("in 0");
           return missing
         }
         if (dependsOnValue == null && realDependentValue == null) {
+          if (foo) console.log("in 1");
           return false
         }
         if (dependsOnValue !== realDependentValue) {
+          if (foo) console.log("in 2");
           return false
         }
       }
