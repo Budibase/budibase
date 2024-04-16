@@ -1,4 +1,5 @@
 import {
+  EmptyFilterOption,
   Row,
   RowSearchParams,
   SearchFilters,
@@ -11,6 +12,7 @@ import { NoEmptyFilterStrings } from "../../../constants"
 import * as sqs from "./search/sqs"
 import env from "../../../environment"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
+import { dataFilters } from "@budibase/shared-core"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -25,6 +27,10 @@ function pickApi(tableId: any) {
     return external
   }
   return internal
+}
+
+function isEmptyArray(value: any) {
+  return Array.isArray(value) && value.length === 0
 }
 
 // don't do a pure falsy check, as 0 is included
@@ -45,7 +51,7 @@ export function removeEmptyFilters(filters: SearchFilters) {
         for (let [key, value] of Object.entries(
           filters[filterType] as object
         )) {
-          if (value == null || value === "") {
+          if (value == null || value === "" || isEmptyArray(value)) {
             // @ts-ignore
             delete filters[filterField][key]
           }
@@ -60,6 +66,16 @@ export async function search(
   options: RowSearchParams
 ): Promise<SearchResponse<Row>> {
   const isExternalTable = isExternalTableID(options.tableId)
+  options.query = removeEmptyFilters(options.query || {})
+  if (
+    !dataFilters.hasFilters(options.query) &&
+    options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
+  ) {
+    return {
+      rows: [],
+    }
+  }
+
   if (isExternalTable) {
     return external.search(options)
   } else if (env.SQS_SEARCH_ENABLE) {

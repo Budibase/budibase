@@ -126,6 +126,63 @@ describe("Test that the object processing works correctly", () => {
   })
 })
 
+describe("check arrays", () => {
+  describe("index with square brackets", () => {
+    it.each([
+      [0, "1"],
+      [1, "2"],
+    ])("should handle an array of primitive types", async (index, expected) => {
+      const json = [1, 2, 3]
+      const output = await processString(`{{ testing.[${index}] }}`, {
+        testing: json,
+      })
+      expect(output).toEqual(expected)
+    })
+
+    it("should handle an array of objects", async () => {
+      const json = [{ value: 1 }, { value: 2 }, { value: 3 }]
+      const output = await processString("{{ testing.[1] }}", {
+        testing: json,
+      })
+      expect(output).toEqual('{"value":2}')
+    })
+
+    it("should handle nesting properties in an array of objects", async () => {
+      const json = [{ value: 1 }, { value: 2 }, { value: 3 }]
+      const output = await processString("{{ testing.[1].value }}", {
+        testing: json,
+      })
+      expect(output).toEqual("2")
+    })
+  })
+
+  describe("index without square brackets", () => {
+    it("should not handle an array of primitive types", async () => {
+      const json = [1, 2, 3]
+      const output = await processString(`{{ testing.1 }}`, {
+        testing: json,
+      })
+      expect(output).toEqual("{{ testing.1 }}")
+    })
+
+    it("should not handle an array of objects", async () => {
+      const json = [{ value: 1 }, { value: 2 }, { value: 3 }]
+      const output = await processString("{{ testing.1 }}", {
+        testing: json,
+      })
+      expect(output).toEqual("{{ testing.1 }}")
+    })
+
+    it("should handle nesting properties in an array of object types", async () => {
+      const json = [{ value: 1 }, { value: 2 }, { value: 3 }]
+      const output = await processString("{{ testing.1.value }}", {
+        testing: json,
+      })
+      expect(output).toEqual("2")
+    })
+  })
+})
+
 describe("check returning objects", () => {
   it("should handle an array of objects", async () => {
     const json = [{ a: 1 }, { a: 2 }]
