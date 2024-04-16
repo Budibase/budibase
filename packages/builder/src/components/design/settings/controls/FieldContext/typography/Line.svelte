@@ -31,7 +31,7 @@
     align-items: center;
     display: flex;
     flex-wrap: wrap;
-    row-gap: 4px;
+    row-gap: 3px;
   }
 
   .noWrap {
