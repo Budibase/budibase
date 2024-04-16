@@ -18,12 +18,12 @@ import _ from "lodash"
 jest.unmock("mssql")
 
 describe.each([
-  // ["internal", undefined],
+  ["internal", undefined],
   ["internal-sqs", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "internal-sqs"
   const isInternal = name === "internal"
@@ -337,6 +337,20 @@ describe.each([
         expectQuery({
           range: { age: { low: 5, high: 9 } },
         }).toFindNothing())
+
+      // We never implemented half-open ranges in Lucene.
+      !isInternal &&
+        it("can search using just a low value", () =>
+          expectQuery({
+            range: { age: { low: 5 } },
+          }).toContainExactly([{ age: 10 }]))
+
+      // We never implemented half-open ranges in Lucene.
+      !isInternal &&
+        it("can search using just a high value", () =>
+          expectQuery({
+            range: { age: { high: 5 } },
+          }).toContainExactly([{ age: 1 }]))
     })
 
     describe("sort", () => {
@@ -441,6 +455,20 @@ describe.each([
         expectQuery({
           range: { dob: { low: JAN_5TH, high: JAN_9TH } },
         }).toFindNothing())
+
+      // We never implemented half-open ranges in Lucene.
+      !isInternal &&
+        it("can search using just a low value", () =>
+          expectQuery({
+            range: { dob: { low: JAN_5TH } },
+          }).toContainExactly([{ dob: JAN_10TH }]))
+
+      // We never implemented half-open ranges in Lucene.
+      !isInternal &&
+        it("can search using just a high value", () =>
+          expectQuery({
+            range: { dob: { high: JAN_5TH } },
+          }).toContainExactly([{ dob: JAN_1ST }]))
     })
 
     describe("sort", () => {
@@ -616,7 +644,7 @@ describe.each([
     // we've decided not to spend time on it.
     !isInternal &&
       describe("range", () => {
-        it.only("successfully finds a row", () =>
+        it("successfully finds a row", () =>
           expectQuery({
             range: { num: { low: SMALL, high: "5" } },
           }).toContainExactly([{ num: SMALL }]))
@@ -635,6 +663,16 @@ describe.each([
           expectQuery({
             range: { num: { low: "5", high: "5" } },
           }).toFindNothing())
+
+        it("can search using just a low value", () =>
+          expectQuery({
+            range: { num: { low: MEDIUM } },
+          }).toContainExactly([{ num: MEDIUM }, { num: BIG }]))
+
+        it("can search using just a high value", () =>
+          expectQuery({
+            range: { num: { high: MEDIUM } },
+          }).toContainExactly([{ num: SMALL }, { num: MEDIUM }]))
       })
   })
 })
