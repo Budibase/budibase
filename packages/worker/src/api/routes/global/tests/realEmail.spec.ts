@@ -114,7 +114,7 @@ describe("/api/global/email", () => {
     )
 
     let attachmentObject = {
-      url: env.MINIO_URL + presignedUrl.split("files/signed")[1],
+      url: presignedUrl,
       filename,
     }
     tk.freeze(mocks.date.MOCK_DATE)
