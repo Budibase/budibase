@@ -53,21 +53,22 @@ function generateSchema(
     ) {
       continue
     }
+    let columnBuilder: Knex.ColumnBuilder | undefined
     switch (column.type) {
       case FieldType.STRING:
       case FieldType.OPTIONS:
       case FieldType.LONGFORM:
       case FieldType.BARCODEQR:
-        schema.text(key)
+        columnBuilder = schema.text(key)
         break
       case FieldType.BB_REFERENCE: {
         const subtype = column.subtype
         switch (subtype) {
           case FieldSubtype.USER:
-            schema.text(key)
+            columnBuilder = schema.text(key)
             break
           case FieldSubtype.USERS:
-            schema.json(key)
+            columnBuilder = schema.json(key)
             break
           default:
             throw utils.unreachable(subtype)
@@ -81,22 +82,22 @@ function generateSchema(
           schema.integer(key).unsigned()
           schema.foreign(key).references(`${toTable}.${toKey}`)
         } else if (foreignKeys.indexOf(key) === -1) {
-          schema.float(key)
+          columnBuilder = schema.float(key)
         }
         break
       case FieldType.BIGINT:
-        schema.bigint(key)
+        columnBuilder = schema.bigint(key)
         break
       case FieldType.BOOLEAN:
-        schema.boolean(key)
+        columnBuilder = schema.boolean(key)
         break
       case FieldType.DATETIME:
-        schema.datetime(key, {
+        columnBuilder = schema.datetime(key, {
           useTz: !column.ignoreTimezones,
         })
         break
       case FieldType.ARRAY:
-        schema.json(key)
+        columnBuilder = schema.json(key)
         break
       case FieldType.LINK:
         // this side of the relationship doesn't need any SQL work
@@ -116,9 +117,9 @@ function generateSchema(
           const relatedPrimary = relatedTable.primary[0]
           const externalType = relatedTable.schema[relatedPrimary].externalType
           if (externalType) {
-            schema.specificType(column.foreignKey, externalType)
+            columnBuilder = schema.specificType(column.foreignKey, externalType)
           } else {
-            schema.integer(column.foreignKey).unsigned()
+            columnBuilder = schema.integer(column.foreignKey).unsigned()
           }
 
           schema
@@ -126,6 +127,10 @@ function generateSchema(
             .references(`${tableName}.${relatedPrimary}`)
         }
         break
+    }
+
+    if (columnBuilder && column.constraints?.presence) {
+      columnBuilder.notNullable()
     }
   }
 
