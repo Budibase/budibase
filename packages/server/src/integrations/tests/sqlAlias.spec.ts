@@ -8,8 +8,10 @@ import {
 import { join } from "path"
 import Sql from "../base/sql"
 import { SqlClient } from "../utils"
-import AliasTables from "../../api/controllers/row/alias"
 import { generator } from "@budibase/backend-core/tests"
+import sdk from "../../sdk"
+
+const AliasTables = sdk.rows.AliasTables
 
 function multiline(sql: string) {
   return sql.replace(/\n/g, "").replace(/ +/g, " ")
