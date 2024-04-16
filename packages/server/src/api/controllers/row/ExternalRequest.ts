@@ -121,7 +121,7 @@ async function removeManyToManyRelationships(
       filters,
       meta: {
         table,
-      }
+      },
     })
   } else {
     return []
@@ -138,7 +138,7 @@ async function removeOneToManyRelationships(rowId: string, table: Table) {
       filters,
       meta: {
         table,
-      }
+      },
     })
   } else {
     return []
@@ -256,7 +256,7 @@ export class ExternalRequest<T extends Operation> {
       filters: buildFilters(rowId, {}, table),
       meta: {
         table,
-      }
+      },
     })
     if (Array.isArray(response) && response.length > 0) {
       return response[0]
@@ -406,7 +406,7 @@ export class ExternalRequest<T extends Operation> {
         },
         meta: {
           table,
-        }
+        },
       })
       // this is the response from knex if no rows found
       const rows: Row[] =
@@ -485,7 +485,7 @@ export class ExternalRequest<T extends Operation> {
             filters: buildFilters(id, {}, linkTable),
             meta: {
               table,
-            }
+            },
           })
         )
       } else {
