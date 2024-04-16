@@ -163,6 +163,9 @@ class InternalBuilder {
     table: Table,
     opts: { aliases?: Record<string, string>; relationship?: boolean }
   ): Knex.QueryBuilder {
+    const tableName =
+      this.client === SqlClient.SQL_LITE ? table._id! : table.name
+
     function getTableAlias(name: string) {
       const alias = opts.aliases?.[name]
       return alias || name
@@ -175,7 +178,7 @@ class InternalBuilder {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
-          fn(`${getTableAlias(table.name)}.${updatedKey}`, value)
+          fn(`${getTableAlias(tableName)}.${updatedKey}`, value)
         }
         if (opts.relationship && isRelationshipField) {
           const [filterTableName, property] = updatedKey.split(".")
