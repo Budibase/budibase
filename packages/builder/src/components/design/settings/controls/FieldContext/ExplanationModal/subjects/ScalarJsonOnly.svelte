@@ -16,7 +16,7 @@
       }
 
       if (["string", "number", "boolean"].includes(schema.type)) {
-        newScalarDescendants.push(path.join("."))
+        newScalarDescendants.push({ name: path.join("."), type: schema.type })
       } else if (schema.type === "json") {
         Object.entries(schema.schema ?? {}).forEach(([childName, childSchema]) => 
         getScalarDescendantFromSchema([...path, childName], childSchema))
@@ -39,24 +39,26 @@
 
   {#if scalarDescendants.length > 0}
     <Section>
-      Examples of scalar descendants of this object are:
-      {#if scalarDescendants[0]}
-        <Block>{scalarDescendants[0]}</Block>
-      {/if}
-      {#if scalarDescendants.length === 2}
-        {" and "}
-      {:else if scalarDescendants.length === 3}
-        {", "}
-      {/if}
-      {#if scalarDescendants[1]}
-        <Block>{scalarDescendants[1]}</Block>
-      {/if}
-      {#if scalarDescendants.length === 3}
-        {" and "}
-      {/if}
-      {#if scalarDescendants[2]}
-        <Block>{scalarDescendants[2]}</Block>
-      {/if}
+      Examples scalar descendants of this object:
+      <br />
+
+      {#each scalarDescendants as descendant}
+        <div class="example">
+          <Block truncate>{descendant.name}</Block><span class="separator">-</span><Block truncate noShrink>{descendant.type}</Block>
+          </div>
+      {/each}
     </Section>
   {/if}
 </Subject>
+
+<style>
+  .example {
+    display: flex;
+    margin-bottom: 2px;
+  }
+
+  .separator {
+    margin: 0 4px;
+    flex-shrink: 0;
+  }
+</style>
