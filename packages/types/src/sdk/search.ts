@@ -93,8 +93,8 @@ export interface QueryJson {
   paginate?: PaginationJson
   body?: Row | Row[]
   table?: Table
-  meta?: {
-    table?: Table
+  meta: {
+    table: Table
     tables?: Record<string, Table>
     renamed?: RenameColumn
   }
