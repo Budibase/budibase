@@ -304,8 +304,8 @@ function shouldCopyRelationship(
  * @param fetchedColumn The fetched column to check for the type in the external database.
  */
 function shouldCopySpecialColumn(
-  column: { type: string },
-  fetchedColumn: { type: string } | undefined
+  column: { type: FieldType },
+  fetchedColumn: { type: FieldType } | undefined
 ) {
   const isFormula = column.type === FieldType.FORMULA
   // column has been deleted, remove - formulas will never exist, always copy
@@ -348,12 +348,13 @@ function copyExistingPropsOver(
       }
       const column = existingTableSchema[key]
 
+      const existingColumnType = column?.type
+      const updatedColumnType = table.schema[key]?.type
+
       // If the db column type changed to a non-compatible one, we want to re-fetch it
       if (
-        table.schema[key].type !== existingTableSchema[key].type &&
-        !SWITCHABLE_TYPES[existingTableSchema[key].type]?.includes(
-          table.schema[key].type
-        )
+        updatedColumnType !== existingColumnType &&
+        !SWITCHABLE_TYPES[existingColumnType]?.includes(updatedColumnType)
       ) {
         continue
       }
