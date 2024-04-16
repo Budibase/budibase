@@ -236,6 +236,7 @@ describe("mysql integrations", () => {
     const emitDatasourceUpdateMock = jest.fn()
 
     // TODO: This is not actually required, will fix after cleaning the `_add` logic
+    // eslint-disable-next-line jest/no-disabled-tests
     it.skip("will emit the datasource entity schema with externalType to the front-end when adding a new column", async () => {
       const addColumnToTable: TableRequest = {
         type: "table",
