@@ -36,7 +36,6 @@ import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { db as dbCore } from "@budibase/backend-core"
-import AliasTables from "./alias"
 import sdk from "../../../sdk"
 import env from "../../../environment"
 
@@ -618,7 +617,7 @@ export class ExternalRequest<T extends Operation> {
     if (env.SQL_ALIASING_DISABLE) {
       response = await getDatasourceAndQuery(json)
     } else {
-      const aliasing = new AliasTables(Object.keys(this.tables))
+      const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
       response = await aliasing.queryWithAliasing(json)
     }
 
