@@ -755,9 +755,6 @@ describe.each(
             name: "two",
           },
         },
-        meta: {
-          table: config.table!,
-        },
       })
       expect(res).toHaveLength(1)
       expect(res[0]).toEqual({
