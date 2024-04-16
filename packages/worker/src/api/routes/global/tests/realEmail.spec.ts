@@ -3,7 +3,7 @@ jest.unmock("aws-sdk")
 import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
 import { objectStoreTestProviders, mocks } from "@budibase/backend-core/tests"
-import { objectStore, env } from "@budibase/backend-core"
+import { objectStore } from "@budibase/backend-core"
 import tk from "timekeeper"
 import { EmailAttachment } from "@budibase/types"
 

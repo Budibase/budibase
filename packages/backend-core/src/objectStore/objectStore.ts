@@ -533,13 +533,11 @@ export function extractBucketAndPath(
   url: string
 ): { bucket: string; path: string } | null {
   const baseUrl = url.split("?")[0]
-
   if (!baseUrl.startsWith("/files/signed/")) {
     return null
   }
 
   const parts = baseUrl.split("/")
-
   if (parts.length < 5) {
     return null
   }
