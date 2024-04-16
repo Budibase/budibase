@@ -137,18 +137,15 @@ function generateSelectStatement(
   })
 }
 
-function getTableName(table?: Table): string {
-  if (!table) {
-    throw new Error("No table name available.")
-  }
+function getTableName(table?: Table): string | undefined {
   // SQS uses the table ID rather than the table name
   if (
-    table.sourceType === TableSourceType.INTERNAL ||
-    table.sourceId === INTERNAL_TABLE_SOURCE_ID
+    table?.sourceType === TableSourceType.INTERNAL ||
+    table?.sourceId === INTERNAL_TABLE_SOURCE_ID
   ) {
-    return table._id!
+    return table?._id
   } else {
-    return table.name
+    return table?.name
   }
 }
 
@@ -366,7 +363,7 @@ class InternalBuilder {
     const tableName = getTableName(table)
     const aliases = json.tableAliases
     const aliased =
-      table?.name && aliases?.[tableName] ? aliases[tableName] : table?.name
+      tableName && aliases?.[tableName] ? aliases[tableName] : table?.name
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
@@ -752,7 +749,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       if (!this._isJsonColumn(field)) {
         continue
       }
-      const aliasedTableName = aliases?.[tableName] || tableName
+      const aliasedTableName = (tableName && aliases?.[tableName]) || tableName
       const fullName = `${aliasedTableName}.${name}`
       for (let row of results) {
         if (typeof row[fullName] === "string") {
