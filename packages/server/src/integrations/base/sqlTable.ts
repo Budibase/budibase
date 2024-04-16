@@ -129,7 +129,12 @@ function generateSchema(
         break
     }
 
-    if (columnBuilder && column.constraints?.presence) {
+    const { presence } = column.constraints || {}
+    const isRequired =
+      typeof presence === "boolean"
+        ? presence
+        : !!presence?.allowEmpty === false
+    if (columnBuilder && isRequired) {
       columnBuilder.notNullable()
     }
   }
