@@ -284,8 +284,8 @@ export function isIsoDateString(str: string) {
  * @param column The column to check, to see if it is a valid relationship.
  * @param tableIds The IDs of the tables which currently exist.
  */
-export function shouldCopyRelationship(
-  column: { type: string; tableId?: string },
+function shouldCopyRelationship(
+  column: { type: FieldType.LINK; tableId?: string },
   tableIds: string[]
 ) {
   return (
@@ -303,28 +303,18 @@ export function shouldCopyRelationship(
  * @param column The column to check for options or boolean type.
  * @param fetchedColumn The fetched column to check for the type in the external database.
  */
-export function shouldCopySpecialColumn(
+function shouldCopySpecialColumn(
   column: { type: string },
   fetchedColumn: { type: string } | undefined
 ) {
   const isFormula = column.type === FieldType.FORMULA
-  const specialTypes = [
-    FieldType.OPTIONS,
-    FieldType.LONGFORM,
-    FieldType.ARRAY,
-    FieldType.FORMULA,
-    FieldType.BB_REFERENCE,
-  ]
   // column has been deleted, remove - formulas will never exist, always copy
   if (!isFormula && column && !fetchedColumn) {
     return false
   }
   const fetchedIsNumber =
     !fetchedColumn || fetchedColumn.type === FieldType.NUMBER
-  return (
-    specialTypes.indexOf(column.type as FieldType) !== -1 ||
-    (fetchedIsNumber && column.type === FieldType.BOOLEAN)
-  )
+  return fetchedIsNumber && column.type === FieldType.BOOLEAN
 }
 
 /**
@@ -357,12 +347,29 @@ function copyExistingPropsOver(
         continue
       }
       const column = existingTableSchema[key]
+
       if (
-        shouldCopyRelationship(column, tableIds) ||
-        shouldCopySpecialColumn(column, table.schema[key])
+        column.type === FieldType.LINK &&
+        !shouldCopyRelationship(column, tableIds)
       ) {
-        table.schema[key] = existingTableSchema[key]
+        continue
       }
+
+      const specialTypes = [
+        FieldType.OPTIONS,
+        FieldType.LONGFORM,
+        FieldType.ARRAY,
+        FieldType.FORMULA,
+        FieldType.BB_REFERENCE,
+      ]
+      if (
+        specialTypes.includes(column.type) &&
+        !shouldCopySpecialColumn(column, table.schema[key])
+      ) {
+        continue
+      }
+
+      table.schema[key] = existingTableSchema[key]
     }
   }
   return table
