@@ -119,6 +119,9 @@ async function removeManyToManyRelationships(
       endpoint: getEndpoint(tableId, Operation.DELETE),
       body: { [colName]: null },
       filters,
+      meta: {
+        table,
+      },
     })
   } else {
     return []
@@ -133,6 +136,9 @@ async function removeOneToManyRelationships(rowId: string, table: Table) {
     return getDatasourceAndQuery({
       endpoint: getEndpoint(tableId, Operation.UPDATE),
       filters,
+      meta: {
+        table,
+      },
     })
   } else {
     return []
@@ -248,6 +254,9 @@ export class ExternalRequest<T extends Operation> {
     const response = await getDatasourceAndQuery({
       endpoint: getEndpoint(table._id!, Operation.READ),
       filters: buildFilters(rowId, {}, table),
+      meta: {
+        table,
+      },
     })
     if (Array.isArray(response) && response.length > 0) {
       return response[0]
@@ -395,6 +404,9 @@ export class ExternalRequest<T extends Operation> {
             [fieldName]: row[lookupField],
           },
         },
+        meta: {
+          table,
+        },
       })
       // this is the response from knex if no rows found
       const rows: Row[] =
@@ -425,6 +437,7 @@ export class ExternalRequest<T extends Operation> {
     // if we're creating (in a through table) need to wipe the existing ones first
     const promises = []
     const related = await this.lookupRelations(mainTableId, row)
+    const table = this.getTable(mainTableId)!
     for (let relationship of relationships) {
       const { key, tableId, isUpdate, id, ...rest } = relationship
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
@@ -470,6 +483,9 @@ export class ExternalRequest<T extends Operation> {
             // if we're doing many relationships then we're writing, only one response
             body,
             filters: buildFilters(id, {}, linkTable),
+            meta: {
+              table,
+            },
           })
         )
       } else {

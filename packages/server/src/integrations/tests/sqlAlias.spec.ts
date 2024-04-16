@@ -4,12 +4,24 @@ import {
   QueryJson,
   SourceName,
   SqlQuery,
+  Table,
+  TableSourceType,
 } from "@budibase/types"
 import { join } from "path"
 import Sql from "../base/sql"
 import { SqlClient } from "../utils"
 import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../sdk"
+
+// this doesn't exist strictly
+const TABLE: Table = {
+  type: "table",
+  sourceType: TableSourceType.EXTERNAL,
+  sourceId: "SOURCE_ID",
+  schema: {},
+  name: "tableName",
+  primary: ["id"],
+}
 
 const AliasTables = sdk.rows.AliasTables
 
@@ -221,6 +233,9 @@ describe("Captures of real examples", () => {
         endpoint: { datasourceId: "", entityId: "", operation: op },
         resource: {
           fields,
+        },
+        meta: {
+          table: TABLE,
         },
       }
     }
