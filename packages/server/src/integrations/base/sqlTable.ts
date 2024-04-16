@@ -1,19 +1,20 @@
 import { Knex, knex } from "knex"
 import {
-  RelationshipType,
   FieldSubtype,
+  FieldType,
   NumberFieldMetadata,
   Operation,
   QueryJson,
+  RelationshipType,
   RenameColumn,
-  Table,
-  FieldType,
   SqlQuery,
+  Table,
+  TableSourceType,
 } from "@budibase/types"
 import { breakExternalTableId, getNativeSql, SqlClient } from "../utils"
+import { utils } from "@budibase/shared-core"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
-import { utils } from "@budibase/shared-core"
 
 function isIgnoredType(type: FieldType) {
   const ignored = [FieldType.LINK, FieldType.FORMULA]
@@ -105,13 +106,13 @@ function generateSchema(
           column.relationshipType !== RelationshipType.MANY_TO_MANY
         ) {
           if (!column.foreignKey || !column.tableId) {
-            throw "Invalid relationship schema"
+            throw new Error("Invalid relationship schema")
           }
           const { tableName } = breakExternalTableId(column.tableId)
           // @ts-ignore
           const relatedTable = tables[tableName]
           if (!relatedTable) {
-            throw "Referenced table doesn't exist"
+            throw new Error("Referenced table doesn't exist")
           }
           const relatedPrimary = relatedTable.primary[0]
           const externalType = relatedTable.schema[relatedPrimary].externalType
@@ -209,15 +210,19 @@ class SqlTableQueryBuilder {
 
     let query: Knex.SchemaBuilder
     if (!json.table || !json.meta || !json.meta.tables) {
-      throw "Cannot execute without table being specified"
+      throw new Error("Cannot execute without table being specified")
     }
+    if (json.table.sourceType === TableSourceType.INTERNAL) {
+      throw new Error("Cannot perform table actions for SQS.")
+    }
+
     switch (this._operation(json)) {
       case Operation.CREATE_TABLE:
         query = buildCreateTable(client, json.table, json.meta.tables)
         break
       case Operation.UPDATE_TABLE:
         if (!json.meta || !json.meta.table) {
-          throw "Must specify old table for update"
+          throw new Error("Must specify old table for update")
         }
         // renameColumn does not work for MySQL, so return a raw query
         if (this.sqlClient === SqlClient.MY_SQL && json.meta.renamed) {
@@ -264,7 +269,7 @@ class SqlTableQueryBuilder {
         query = buildDeleteTable(client, json.table)
         break
       default:
-        throw "Table operation is of unknown type"
+        throw new Error("Table operation is of unknown type")
     }
     return getNativeSql(query)
   }
