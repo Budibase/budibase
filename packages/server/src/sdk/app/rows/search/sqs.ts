@@ -132,7 +132,7 @@ export async function search(
     type: "row",
   }
 
-  if (params.sort && !params.sortType) {
+  if (params.sort) {
     const sortField = table.schema[params.sort]
     const sortType =
       sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
@@ -156,21 +156,21 @@ export async function search(
   try {
     const query = builder._query(request, {
       disableReturning: true,
-      disableBindings: true,
     })
 
     if (Array.isArray(query)) {
       throw new Error("SQS cannot currently handle multiple queries")
     }
 
-    let sql = query.sql
+    let sql = query.sql,
+      bindings = query.bindings
 
     // quick hack for docIds
     sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
     sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
 
     const db = context.getAppDB()
-    const rows = await db.sql<Row>(sql)
+    const rows = await db.sql<Row>(sql, bindings)
 
     return {
       rows: await sqlOutputProcessing(
