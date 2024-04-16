@@ -7,7 +7,7 @@ import {
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
 import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../constants"
-import { helpers } from "@budibase/shared-core"
+import { SWITCHABLE_TYPES, helpers } from "@budibase/shared-core"
 import env from "../environment"
 import { Knex } from "knex"
 
@@ -347,6 +347,16 @@ function copyExistingPropsOver(
         continue
       }
       const column = existingTableSchema[key]
+
+      // If the db column type changed to a non-compatible one, we want to re-fetch it
+      if (
+        table.schema[key].type !== existingTableSchema[key].type &&
+        !SWITCHABLE_TYPES[existingTableSchema[key].type]?.includes(
+          table.schema[key].type
+        )
+      ) {
+        continue
+      }
 
       if (
         column.type === FieldType.LINK &&
