@@ -175,7 +175,7 @@ class InternalBuilder {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
-          fn(`${getTableName(table)}.${updatedKey}`, value)
+          fn(`${getTableAlias(table.name)}.${updatedKey}`, value)
         }
         if (opts.relationship && isRelationshipField) {
           const [filterTableName, property] = updatedKey.split(".")
