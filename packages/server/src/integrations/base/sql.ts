@@ -392,7 +392,7 @@ class InternalBuilder {
 
   addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
     let { sort, paginate } = json
-    const table = json.meta?.table
+    const table = json.meta.table
     const tableName = getTableName(table)
     const aliases = json.tableAliases
     const aliased =
@@ -580,7 +580,7 @@ class InternalBuilder {
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
-    query = this.addFilters(query, filters, json.meta?.table!, {
+    query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
     })
     // add sorting to pre-query
@@ -601,7 +601,7 @@ class InternalBuilder {
       endpoint.schema,
       tableAliases
     )
-    return this.addFilters(query, filters, json.meta?.table!, {
+    return this.addFilters(query, filters, json.meta.table, {
       relationship: true,
       aliases: tableAliases,
     })
@@ -611,7 +611,7 @@ class InternalBuilder {
     const { endpoint, body, filters, tableAliases } = json
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
     const parsedBody = parseBody(body)
-    query = this.addFilters(query, filters, json.meta?.table!, {
+    query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
     })
     // mysql can't use returning
@@ -625,7 +625,7 @@ class InternalBuilder {
   delete(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, filters, tableAliases } = json
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
-    query = this.addFilters(query, filters, json.meta?.table!, {
+    query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
     })
     // mysql can't use returning
@@ -717,7 +717,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   // when creating if an ID has been inserted need to make sure
   // the id filter is enriched with it before trying to retrieve the row
   checkLookupKeys(id: any, json: QueryJson) {
-    if (!id || !json.meta?.table || !json.meta.table.primary) {
+    if (!id || !json.meta.table || !json.meta.table.primary) {
       return json
     }
     const primaryKey = json.meta.table.primary?.[0]
