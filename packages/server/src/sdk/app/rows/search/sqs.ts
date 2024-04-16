@@ -132,7 +132,7 @@ export async function search(
     type: "row",
   }
 
-  if (params.sort && !params.sortType) {
+  if (params.sort) {
     const sortField = table.schema[params.sort]
     const sortType =
       sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
