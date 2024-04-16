@@ -79,7 +79,6 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const api = pickApi({ table })
   // do not pass _rename or _add if saving to CouchDB
   if (api === internal) {
-    delete ctx.request.body._add
     delete ctx.request.body._rename
   }
   let savedTable = await api.save(ctx, renaming)
