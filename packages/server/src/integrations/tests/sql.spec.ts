@@ -9,6 +9,14 @@ import {
 } from "@budibase/types"
 
 const TABLE_NAME = "test"
+const TABLE: Table = {
+  type: "table",
+  sourceType: TableSourceType.EXTERNAL,
+  sourceId: "SOURCE_ID",
+  schema: {},
+  name: TABLE_NAME,
+  primary: ["id"],
+}
 
 function endpoint(table: any, operation: any) {
   return {
@@ -25,6 +33,10 @@ function generateReadJson({
   sort,
   paginate,
 }: any = {}): QueryJson {
+  const tableObj = { ...TABLE }
+  if (table) {
+    tableObj.name = table
+  }
   return {
     endpoint: endpoint(table || TABLE_NAME, "READ"),
     resource: {
@@ -34,14 +46,7 @@ function generateReadJson({
     sort: sort || {},
     paginate: paginate || {},
     meta: {
-      table: {
-        type: "table",
-        sourceType: TableSourceType.EXTERNAL,
-        sourceId: "SOURCE_ID",
-        schema: {},
-        name: table || TABLE_NAME,
-        primary: ["id"],
-      } as any,
+      table: tableObj,
     },
   }
 }
@@ -49,6 +54,9 @@ function generateReadJson({
 function generateCreateJson(table = TABLE_NAME, body = {}): QueryJson {
   return {
     endpoint: endpoint(table, "CREATE"),
+    meta: {
+      table: TABLE,
+    },
     body,
   }
 }
@@ -70,6 +78,9 @@ function generateUpdateJson({
 function generateDeleteJson(table = TABLE_NAME, filters = {}): QueryJson {
   return {
     endpoint: endpoint(table, "DELETE"),
+    meta: {
+      table: TABLE,
+    },
     filters,
   }
 }
@@ -102,6 +113,9 @@ function generateRelationshipJson(config: { schema?: string } = {}): QueryJson {
       },
     ],
     extra: { idFilter: {} },
+    meta: {
+      table: TABLE,
+    },
   }
 }
 
