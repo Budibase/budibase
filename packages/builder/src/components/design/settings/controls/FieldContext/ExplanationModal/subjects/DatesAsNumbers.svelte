@@ -25,7 +25,7 @@
 
 <Subject heading="Dates as Numbers">
   <Section>
-    A date can be used in place of a numeric value, but it will be parsed as a UNIX epoch timestamp, which is the number of milliseconds since Jan 1st 1970. A more recent Date/Time will be a higher number.
+    A date can be used in place of a numeric value, but it will be parsed as a <Block>UNIX epoch</Block> timestamp, which is the number of milliseconds since Jan 1st 1970. A more recent moment in time will be a higher number.
   </Section>
 
   <Section>
