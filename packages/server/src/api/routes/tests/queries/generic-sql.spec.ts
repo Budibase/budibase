@@ -756,7 +756,7 @@ describe.each(
           },
         },
         meta: {
-          table: config.table,
+          table: config.table!,
         },
       })
       expect(res).toHaveLength(1)

@@ -91,7 +91,7 @@ export interface QueryJson {
   body?: Row | Row[]
   table?: Table
   meta: {
-    table?: Table
+    table: Table
     tables?: Record<string, Table>
     renamed?: RenameColumn
   }
