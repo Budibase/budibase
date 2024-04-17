@@ -56,8 +56,8 @@
   let primaryDisplay
   let indexes = [...($tables.selected.indexes || [])]
   let isCreating = undefined
-  let relationshipPart1 = PrettyRelationshipDefinitions.Many
-  let relationshipPart2 = PrettyRelationshipDefinitions.One
+  let relationshipPart1 = PrettyRelationshipDefinitions.MANY
+  let relationshipPart2 = PrettyRelationshipDefinitions.ONE
   let relationshipTableIdPrimary = null
   let relationshipTableIdSecondary = null
   let table = $tables.selected
@@ -170,7 +170,7 @@
   $: typeEnabled =
     !originalName ||
     (originalName &&
-      SWITCHABLE_TYPES[editableColumn.type] &&
+      SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
@@ -363,9 +363,14 @@
 
   function getAllowedTypes() {
     if (originalName) {
-      return (
-        SWITCHABLE_TYPES[editableColumn.type] || [editableColumn.type]
-      ).map(f => FIELDS[f.toUpperCase()])
+      const possibleTypes = (
+        SWITCHABLE_TYPES[field.type] || [editableColumn.type]
+      ).map(t => t.toLowerCase())
+      return Object.entries(FIELDS)
+        .filter(([fieldType]) =>
+          possibleTypes.includes(fieldType.toLowerCase())
+        )
+        .map(([_, fieldDefinition]) => fieldDefinition)
     }
 
     const isUsers =
