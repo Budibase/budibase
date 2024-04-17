@@ -255,9 +255,6 @@ describe("mysql integrations", () => {
             name: "new_column",
           },
         },
-        _add: {
-          name: "new_column",
-        },
       }
 
       jest
@@ -273,25 +270,18 @@ describe("mysql integrations", () => {
             type: FieldType.NUMBER,
             name: "id",
             autocolumn: true,
-            constraints: {
-              presence: false,
-            },
             externalType: "int unsigned",
           },
           new_column: {
             type: FieldType.NUMBER,
             name: "new_column",
             autocolumn: false,
-            constraints: {
-              presence: false,
-            },
             externalType: "float(8,2)",
           },
         },
         created: true,
         _id: `${datasource._id}__${addColumnToTable.name}`,
       }
-      delete expectedTable._add
 
       expect(emitDatasourceUpdateMock).toHaveBeenCalledTimes(1)
       const emittedDatasource: Datasource =
