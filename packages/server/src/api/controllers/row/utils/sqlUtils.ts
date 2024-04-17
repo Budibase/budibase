@@ -51,11 +51,11 @@ export async function updateRelationshipColumns(
       continue
     }
 
-    let linked = await basicProcessing({
+    let linked = basicProcessing({
       row,
       table: linkedTable,
       isLinked: true,
-      internal: opts?.sqs,
+      sqs: opts?.sqs,
     })
     if (!linked._id) {
       continue
