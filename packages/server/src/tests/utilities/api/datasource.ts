@@ -60,7 +60,10 @@ export class DatasourceAPI extends TestAPI {
     })
   }
 
-  query = async (query: QueryJson, expectations?: Expectations) => {
+  query = async (
+    query: Omit<QueryJson, "meta">,
+    expectations?: Expectations
+  ) => {
     return await this._post<any>(`/api/datasources/query`, {
       body: query,
       expectations,
