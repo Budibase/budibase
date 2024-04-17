@@ -1,7 +1,7 @@
 export class ApexOptionsBuilder {
   constructor() {
     this.formatters = {
-      ["Default"]: val => (isNaN(val) ? val : Math.round(val * 100) / 100),
+      ["Default"]: val => val,
       ["Thousands"]: val => `${Math.round(val / 1000)}K`,
       ["Millions"]: val => `${Math.round(val / 1000000)}M`,
     }
@@ -166,7 +166,6 @@ export class ApexOptionsBuilder {
   }
 
   candleStick() {
-    //this.options.xaxis.convertedCatToNumeric = false;
     this.options.xaxis.labels.formatter = (epoch) => {
       return (new Date(epoch)).toDateString();
     }

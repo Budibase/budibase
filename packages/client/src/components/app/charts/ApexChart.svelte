@@ -8,6 +8,9 @@
   const component = getContext("component")
 
   export let options
+  $: {
+    console.log(options);
+  }
   /*
   export let invalid = false
 
