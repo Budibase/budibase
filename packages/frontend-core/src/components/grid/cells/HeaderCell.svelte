@@ -119,9 +119,10 @@
     }
   }
 
-  const onMouseUp = e => {
-    if ((e.touches?.length || e.button === 0) && orderable) {
+  const onMouseUp = () => {
+    if (timeout) {
       clearTimeout(timeout)
+      timeout = null
     }
   }
 
