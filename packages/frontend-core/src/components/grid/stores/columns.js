@@ -48,22 +48,28 @@ export const createStores = () => {
 export const deriveStores = context => {
   const { columns, stickyColumn } = context
 
-  // Derive if we have any normal columns
-  const hasNonAutoColumn = derived(
+  // Quick access to all columns
+  const allColumns = derived(
     [columns, stickyColumn],
     ([$columns, $stickyColumn]) => {
       let allCols = $columns || []
       if ($stickyColumn) {
         allCols = [...allCols, $stickyColumn]
       }
-      const normalCols = allCols.filter(column => {
-        return !column.schema?.autocolumn
-      })
-      return normalCols.length > 0
+      return allCols
     }
   )
 
+  // Derive if we have any normal columns
+  const hasNonAutoColumn = derived(allColumns, $allColumns => {
+    const normalCols = $allColumns.filter(column => {
+      return !column.schema?.autocolumn
+    })
+    return normalCols.length > 0
+  })
+
   return {
+    allColumns,
     hasNonAutoColumn,
   }
 }
