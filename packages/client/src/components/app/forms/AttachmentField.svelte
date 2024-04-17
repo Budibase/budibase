@@ -58,17 +58,6 @@
     }
   }
 
-  const deleteAttachments = async fileList => {
-    try {
-      return await API.deleteAttachments({
-        keys: fileList,
-        tableId: formContext?.dataSource?.tableId,
-      })
-    } catch (error) {
-      return []
-    }
-  }
-
   const handleChange = e => {
     const value = fieldApiMapper.set(e.detail)
     const changed = fieldApi.setValue(value)
@@ -98,7 +87,6 @@
       error={fieldState.error}
       on:change={handleChange}
       {processFiles}
-      {deleteAttachments}
       {handleFileTooLarge}
       {handleTooManyFiles}
       {maximum}
