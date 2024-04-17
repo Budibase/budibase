@@ -95,52 +95,47 @@
       .colors(customColor ? colors : null)
 
     // Add data
-    let useDates = false
     if (schema[labelColumn]) {
       const labelFieldType = schema[labelColumn].type
       if (horizontal) {
-        builder = builder.yType(labelFieldType).xUnits(yAxisUnits)
+        builder = builder.xUnits(yAxisUnits)
       } else {
-        builder = builder.xType(labelFieldType).yUnits(yAxisUnits)
+        builder = builder.yUnits(yAxisUnits)
       }
-      useDates = labelFieldType === "datetime"
     }
     const series = (valueColumns ?? []).map(column => ({
       name: column,
       data: data.map(row => {
-        if (!useDates) {
-          const value = get(row, column);
+        const value = get(row, column);
 
-          if (schema?.[column]?.type === 'datetime') {
-            return Date.parse(value)
-          }
-
-          if (Array.isArray(value)) {
-            return null;
-          }
-
-          if (Number.isNaN(parseInt(value, 10))) {
-            return null;
-          }
-
-          return value;
-        } else {
-          // TODO datetimes as labels are passed in this way, but this only updates on value change, so it's broken until you also change the value
-          return [row[labelColumn], row[column]]
+        if (schema?.[column]?.type === 'datetime') {
+          return Date.parse(value)
         }
+
+        if (Array.isArray(value)) {
+          return null;
+        }
+
+        if (Number.isNaN(parseInt(value, 10))) {
+          return null;
+        }
+
+        return value;
       }),
     }))
     builder = builder.series(series)
-    if (!useDates) {
-      builder = builder.xCategories(data.map(row => row[labelColumn]))
-    } else {
-      // Horizontal dates don't work anyway, but this is the correct logic
-      if (horizontal) {
-        builder = builder.clearYFormatter()
-      } else {
-        builder = builder.clearXFormatter()
+    builder = builder.xCategories(data.map(row => {
+      const value = row[labelColumn]
+      if (schema[labelColumn]?.type === 'datetime') {
+        const dateString = (new Date(Date.parse(value))).toLocaleDateString()
+        console.log(value)
+        console.log(dateString)
+        console.log()
+        return dateString
       }
-    }
+
+      return value ?? ""
+    }))
 
     // Build chart options
     return builder.getOptions()

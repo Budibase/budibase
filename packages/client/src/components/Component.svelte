@@ -289,7 +289,6 @@
         const sectionRealDependentValue = instance[sectionDependsOnKey]
 
 
-        let foo =  instance._component === "@budibase/standard-components/chartblock" && setting.type === "multifield"
         if (dependsOnValue == null && realDependentValue == null) {
           return false
         }
@@ -302,13 +301,6 @@
         }
         if (sectionDependsOnValue != null && sectionDependsOnValue !== sectionRealDependentValue) {
           return false
-        }
-        if (foo) {
-          console.log(setting)
-          console.log(instance);
-          console.log(dependsOnValue);
-          console.log(realDependentValue);
-          console.log("")
         }
       }
 
