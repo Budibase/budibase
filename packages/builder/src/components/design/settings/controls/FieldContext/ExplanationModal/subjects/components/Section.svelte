@@ -8,8 +8,4 @@
     margin-bottom: 13px;
     overflow: hidden;
   }
-
-  .section :global(ul) {
-    padding-left: 24px;
-  }
 </style>

@@ -2,6 +2,7 @@
   export let truncate = false
   export let noShrink = false
 </script>
+
 <span class:truncate class:noShrink class="block">
   <slot />
 </span>

@@ -1,5 +1,5 @@
 <script>
-  import { Block, Subject, Section } from './components'
+  import { ExampleSection, ExampleLine, Block, Subject, Section } from './components'
 </script>
 
 <Subject heading="Text as Numbers">
@@ -7,19 +7,33 @@
     Text can be used in place of numbers in certain scenarios, but care needs to be taken, as text that doesn't contain a strictly base-ten integer or decimal value may lead to unexpected behavior.
   </Section>
 
-  <Section>
-    Examples:
-    <br />
-    <Block>"100"</Block>{" -> "}<Block>100</Block>
-    <br />
-    <Block>"100k"</Block>{" -> "}<Block>100</Block>
-    <br />
-    <Block>"100,000"</Block>{" -> "}<Block>100</Block>
-    <br />
-    <Block>"100 million"</Block>{" -> "}<Block>100</Block>
-    <br />
-    <Block>"100.9"</Block>{" -> "}<Block>100.9</Block>
-    <br />
-    <Block>"One hundred"</Block>{" -> "}<Block>Error</Block>
-  </Section>
+  <ExampleSection
+    heading="Examples:"
+  >
+    <ExampleLine>
+      <Block>"100"</Block><span class="separator">{"->"}</span><Block>100</Block>
+    </ExampleLine>
+    <ExampleLine>
+      <Block>"100k"</Block><span class="separator">{"->"}</span><Block>100</Block>
+    </ExampleLine>
+    <ExampleLine>
+      <Block>"100,000"</Block><span class="separator">{"->"}</span><Block>100</Block>
+    </ExampleLine>
+    <ExampleLine>
+      <Block>"100 million"</Block><span class="separator">{"->"}</span><Block>100</Block>
+    </ExampleLine>
+    <ExampleLine>
+      <Block>"100.9"</Block><span class="separator">{"->"}</span><Block>100.9</Block>
+    </ExampleLine>
+    <ExampleLine>
+      <Block>"One hundred"</Block><span class="separator">{"->"}</span><Block>Error</Block>
+    </ExampleLine>
+  </ExampleSection>
 </Subject>
+
+<style>
+  .separator {
+    margin: 0 4px;
+    flex-shrink: 0;
+  }
+</style>

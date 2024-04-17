@@ -1,6 +1,6 @@
 <script>
   import { Body } from "@budibase/bbui"
-  import { Block, Subject, Section } from './components'
+  import { ExampleSection, ExampleLine, Block, Subject, Section } from './components'
 
   export let schema
   export let columnName
@@ -38,25 +38,19 @@
   </Section>
 
   {#if scalarDescendants.length > 0}
-    <Section>
-      Examples scalar descendants of this object:
-      <br />
-
+    <ExampleSection
+      heading="Examples scalar descendants of this object:"
+    >
       {#each scalarDescendants as descendant}
-        <div class="example">
+        <ExampleLine>
           <Block truncate>{descendant.name}</Block><span class="separator">-</span><Block truncate noShrink>{descendant.type}</Block>
-          </div>
+        </ExampleLine>
       {/each}
-    </Section>
+    </ExampleSection>
   {/if}
 </Subject>
 
 <style>
-  .example {
-    display: flex;
-    margin-bottom: 2px;
-  }
-
   .separator {
     margin: 0 4px;
     flex-shrink: 0;
