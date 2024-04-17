@@ -120,9 +120,10 @@ const cleanupQuery = (query: SearchQuery) => {
 /**
  * Removes a numeric prefix on field names designed to give fields uniqueness
  */
-const removeKeyNumbering = (key: string) => {
+export const removeKeyNumbering = (key: string): string => {
   if (typeof key === "string" && key.match(/\d[0-9]*:/g) != null) {
     const parts = key.split(":")
+    // remove the number
     parts.shift()
     return parts.join(":")
   } else {

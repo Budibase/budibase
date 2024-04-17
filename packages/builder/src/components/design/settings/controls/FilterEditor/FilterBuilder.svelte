@@ -2,6 +2,7 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
 
+  import { dataFilters } from "@budibase/shared-core"
   import { FilterBuilder } from "@budibase/frontend-core"
 
   import { createEventDispatcher, onMount } from "svelte"
@@ -15,8 +16,6 @@
 
   const dispatch = createEventDispatcher()
 
-  const KeyedFieldRegex = /\d[0-9]*:/g
-
   let rawFilters
 
   $: parseFilters(rawFilters)
@@ -28,11 +27,7 @@
       const { field } = filter
       let newFilter = { ...filter }
       delete newFilter.allOr
-      if (typeof field === "string" && field.match(KeyedFieldRegex) != null) {
-        const parts = field.split(":")
-        parts.shift()
-        newFilter.field = parts.join(":")
-      }
+      newFilter.field = dataFilters.removeKeyNumbering(field)
       return newFilter
     })
   }
