@@ -262,13 +262,11 @@ export class BaseSocket {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async onConnect(socket: Socket) {
+  async onConnect(_socket: Socket) {
     // Override
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async onDisconnect(socket: Socket) {
+  async onDisconnect(_socket: Socket) {
     // Override
   }
 
