@@ -14,6 +14,7 @@
     notifications,
     Checkbox,
     DatePicker,
+    DrawerContent,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation, tables } from "stores/builder"
@@ -37,7 +38,7 @@
     hbAutocomplete,
     EditorModes,
   } from "components/common/CodeEditor"
-  import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
+  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { LuceneUtils, Utils } from "@budibase/frontend-core"
   import {
     getSchemaForDatasourcePlus,
@@ -442,15 +443,16 @@
               <Button cta slot="buttons" on:click={() => saveFilters(key)}>
                 Save
               </Button>
-              <FilterDrawer
-                slot="body"
-                {filters}
-                {bindings}
-                {schemaFields}
-                datasource={{ type: "table", tableId }}
-                panel={AutomationBindingPanel}
-                on:change={e => (tempFilters = e.detail)}
-              />
+              <DrawerContent slot="body">
+                <FilterBuilder
+                  {filters}
+                  {bindings}
+                  {schemaFields}
+                  datasource={{ type: "table", tableId }}
+                  panel={AutomationBindingPanel}
+                  on:change={e => (tempFilters = e.detail)}
+                />
+              </DrawerContent>
             </Drawer>
           {:else if value.customType === "password"}
             <Input
