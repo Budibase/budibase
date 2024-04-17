@@ -6,6 +6,7 @@ import {
   SqlClient,
   isValidFilter,
   getNativeSql,
+  SqlStatements,
 } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
@@ -163,6 +164,13 @@ class InternalBuilder {
     table: Table,
     opts: { aliases?: Record<string, string>; relationship?: boolean }
   ): Knex.QueryBuilder {
+    if (!filters) {
+      return query
+    }
+    filters = parseFilters(filters)
+    // if all or specified in filters, then everything is an or
+    const allOr = filters.allOr
+    const sqlStatements = new SqlStatements(this.client, table, { allOr })
     const tableName =
       this.client === SqlClient.SQL_LITE ? table._id! : table.name
 
@@ -261,12 +269,6 @@ class InternalBuilder {
       }
     }
 
-    if (!filters) {
-      return query
-    }
-    filters = parseFilters(filters)
-    // if all or specified in filters, then everything is an or
-    const allOr = filters.allOr
     if (filters.oneOf) {
       iterate(filters.oneOf, (key, array) => {
         const fnc = allOr ? "orWhereIn" : "whereIn"
@@ -293,9 +295,6 @@ class InternalBuilder {
     }
     if (filters.range) {
       iterate(filters.range, (key, value) => {
-        const fieldName = key.split(".")[1]
-        const field = table.schema[fieldName]
-
         const isEmptyObject = (val: any) => {
           return (
             val &&
@@ -312,47 +311,11 @@ class InternalBuilder {
         const lowValid = isValidFilter(value.low),
           highValid = isValidFilter(value.high)
         if (lowValid && highValid) {
-          // Use a between operator if we have 2 valid range values
-          if (
-            field.type === FieldType.BIGINT &&
-            this.client === SqlClient.SQL_LITE
-          ) {
-            query = query.whereRaw(
-              `CAST(${key} AS INTEGER) BETWEEN CAST(? AS INTEGER) AND CAST(? AS INTEGER)`,
-              [value.low, value.high]
-            )
-          } else {
-            const fnc = allOr ? "orWhereBetween" : "whereBetween"
-            query = query[fnc](key, [value.low, value.high])
-          }
+          query = sqlStatements.between(query, key, value.low, value.high)
         } else if (lowValid) {
-          // Use just a single greater than operator if we only have a low
-          if (
-            field.type === FieldType.BIGINT &&
-            this.client === SqlClient.SQL_LITE
-          ) {
-            query = query.whereRaw(
-              `CAST(${key} AS INTEGER) >= CAST(? AS INTEGER)`,
-              [value.low]
-            )
-          } else {
-            const fnc = allOr ? "orWhere" : "where"
-            query = query[fnc](key, ">=", value.low)
-          }
+          query = sqlStatements.lower(query, key, value.low)
         } else if (highValid) {
-          // Use just a single less than operator if we only have a high
-          if (
-            field.type === FieldType.BIGINT &&
-            this.client === SqlClient.SQL_LITE
-          ) {
-            query = query.whereRaw(
-              `CAST(${key} AS INTEGER) <= CAST(? AS INTEGER)`,
-              [value.high]
-            )
-          } else {
-            const fnc = allOr ? "orWhere" : "where"
-            query = query[fnc](key, "<=", value.high)
-          }
+          query = sqlStatements.higher(query, key, value.high)
         }
       })
     }
