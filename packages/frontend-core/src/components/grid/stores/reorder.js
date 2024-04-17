@@ -40,7 +40,6 @@ export const createActions = context => {
 
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (column, e) => {
-    console.log("start", column)
     const $visibleColumns = get(visibleColumns)
     const $bounds = get(bounds)
     const $stickyColumn = get(stickyColumn)
@@ -167,13 +166,6 @@ export const createActions = context => {
     // Ensure auto-scrolling is stopped
     stopAutoScroll()
 
-    // Swap position of columns
-    let { sourceColumn, targetColumn } = get(reorder)
-    moveColumn(sourceColumn, targetColumn)
-
-    // Reset state
-    reorder.set(reorderInitialState)
-
     // Remove event handlers
     document.removeEventListener("mousemove", onReorderMouseMove)
     document.removeEventListener("mouseup", stopReordering)
@@ -181,8 +173,15 @@ export const createActions = context => {
     document.removeEventListener("touchend", stopReordering)
     document.removeEventListener("touchcancel", stopReordering)
 
-    // Save column changes
-    await columns.actions.saveChanges()
+    // Ensure there's actually a change
+    let { sourceColumn, targetColumn } = get(reorder)
+    if (sourceColumn !== targetColumn) {
+      moveColumn(sourceColumn, targetColumn)
+      await columns.actions.saveChanges()
+    }
+
+    // Reset state
+    reorder.set(reorderInitialState)
   }
 
   // Moves a column after another columns.
