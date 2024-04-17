@@ -22,6 +22,8 @@ import {
   SortDirection,
   SqlQueryBinding,
   Table,
+  TableSourceType,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import environment from "../../environment"
 
@@ -135,6 +137,18 @@ function generateSelectStatement(
   })
 }
 
+function getTableName(table?: Table): string | undefined {
+  // SQS uses the table ID rather than the table name
+  if (
+    table?.sourceType === TableSourceType.INTERNAL ||
+    table?.sourceId === INTERNAL_TABLE_SOURCE_ID
+  ) {
+    return table?._id
+  } else {
+    return table?.name
+  }
+}
+
 class InternalBuilder {
   private readonly client: string
 
@@ -149,7 +163,7 @@ class InternalBuilder {
     tableName: string,
     opts: { aliases?: Record<string, string>; relationship?: boolean }
   ): Knex.QueryBuilder {
-    function getTableName(name: string) {
+    function getTableAlias(name: string) {
       const alias = opts.aliases?.[name]
       return alias || name
     }
@@ -161,11 +175,11 @@ class InternalBuilder {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
-          fn(`${getTableName(tableName)}.${updatedKey}`, value)
+          fn(`${getTableAlias(tableName)}.${updatedKey}`, value)
         }
         if (opts.relationship && isRelationshipField) {
           const [filterTableName, property] = updatedKey.split(".")
-          fn(`${getTableName(filterTableName)}.${property}`, value)
+          fn(`${getTableAlias(filterTableName)}.${property}`, value)
         }
       }
     }
@@ -233,6 +247,11 @@ class InternalBuilder {
               (statement ? andOr : "") +
               `LOWER(${likeKey(this.client, key)}) LIKE ?`
           }
+
+          if (statement === "") {
+            return
+          }
+
           // @ts-ignore
           query = query[rawFnc](`${not}(${statement})`, value)
         })
@@ -341,9 +360,10 @@ class InternalBuilder {
   addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
     let { sort, paginate } = json
     const table = json.meta?.table
+    const tableName = getTableName(table)
     const aliases = json.tableAliases
     const aliased =
-      table?.name && aliases?.[table.name] ? aliases[table.name] : table?.name
+      tableName && aliases?.[tableName] ? aliases[tableName] : table?.name
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
@@ -724,12 +744,13 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     results: Record<string, any>[],
     aliases?: Record<string, string>
   ): Record<string, any>[] {
+    const tableName = getTableName(table)
     for (const [name, field] of Object.entries(table.schema)) {
       if (!this._isJsonColumn(field)) {
         continue
       }
-      const tableName = aliases?.[table.name] || table.name
-      const fullName = `${tableName}.${name}`
+      const aliasedTableName = (tableName && aliases?.[tableName]) || tableName
+      const fullName = `${aliasedTableName}.${name}`
       for (let row of results) {
         if (typeof row[fullName] === "string") {
           row[fullName] = JSON.parse(row[fullName])
