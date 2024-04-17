@@ -76,7 +76,7 @@
   $: autoCloseSidePanel =
     !$builderStore.inBuilder &&
     $sidePanelStore.open &&
-    $sidePanelStore.clickOutsideToClose
+    $sidePanelStore.ignoreClicksOutside
   $: screenId = $builderStore.inBuilder
     ? `${$builderStore.screen?._id}-screen`
     : "screen"

@@ -6,7 +6,7 @@
     getContext("sdk")
 
   export let sidePanelClose
-  export let clickOutsideToClose
+  export let ignoreClicksOutside
 
   // Automatically show and hide the side panel when inside the builder.
   // For some unknown reason, svelte reactivity breaks if we reference the
@@ -30,7 +30,7 @@
   }
 
   $: {
-    sidePanelStore.actions.setSidepanelState(clickOutsideToClose)
+    sidePanelStore.actions.setIgnoreClicksOutside(ignoreClicksOutside)
   }
 
   // Derive visibility

@@ -3,7 +3,7 @@ import { writable, derived } from "svelte/store"
 export const createSidePanelStore = () => {
   const initialState = {
     contentId: null,
-    clickOutsideToClose: true,
+    ignoreClicksOutside: true,
   }
   const store = writable(initialState)
   const derivedStore = derived(store, $store => {
@@ -33,10 +33,9 @@ export const createSidePanelStore = () => {
     }, 50)
   }
 
-  const setSidepanelState = bool => {
-    clearTimeout(timeout)
+  const setIgnoreClicksOutside = bool => {
     store.update(state => {
-      state.clickOutsideToClose = bool
+      state.ignoreClicksOutside = bool
       return state
     })
   }
@@ -45,7 +44,7 @@ export const createSidePanelStore = () => {
     actions: {
       open,
       close,
-      setSidepanelState,
+      setIgnoreClicksOutside,
     },
   }
 }
