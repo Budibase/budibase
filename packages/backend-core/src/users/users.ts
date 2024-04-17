@@ -17,8 +17,8 @@ import {
   ContextUser,
   CouchFindOptions,
   DatabaseQueryOpts,
-  SearchQuery,
-  SearchQueryOperators,
+  SearchFilters,
+  SearchFilterOperator,
   SearchUsersRequest,
   User,
 } from "@budibase/types"
@@ -44,11 +44,11 @@ function removeUserPassword(users: User | User[]) {
   return users
 }
 
-export function isSupportedUserSearch(query: SearchQuery) {
+export function isSupportedUserSearch(query: SearchFilters) {
   const allowed = [
-    { op: SearchQueryOperators.STRING, key: "email" },
-    { op: SearchQueryOperators.EQUAL, key: "_id" },
-    { op: SearchQueryOperators.ONE_OF, key: "_id" },
+    { op: SearchFilterOperator.STRING, key: "email" },
+    { op: SearchFilterOperator.EQUAL, key: "_id" },
+    { op: SearchFilterOperator.ONE_OF, key: "_id" },
   ]
   for (let [key, operation] of Object.entries(query)) {
     if (typeof operation !== "object") {
