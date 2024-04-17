@@ -374,11 +374,13 @@ class Orchestrator {
                         for (let [innerObject, innerValue] of Object.entries(
                           originalStepInput[key][innerKey]
                         )) {
-                          originalStepInput[key][innerKey][innerObject] =
-                            automationUtils.substituteLoopStep(
-                              innerValue as string,
-                              `steps.${loopStepNumber}`
-                            )
+                          if (typeof innerValue === "string") {
+                            originalStepInput[key][innerKey][innerObject] =
+                              automationUtils.substituteLoopStep(
+                                innerValue,
+                                `steps.${loopStepNumber}`
+                              )
+                          }
                         }
                       }
                     }
@@ -458,7 +460,6 @@ class Orchestrator {
                 inputs,
                 step.schema.inputs
               )
-
               try {
                 // appId is always passed
                 const outputs = await stepFn({
