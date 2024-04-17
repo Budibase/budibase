@@ -160,7 +160,7 @@ describe("internal search", () => {
     const response = await search.paginatedSearch(
       {
         contains: {
-          column: "a",
+          column: ["a"],
           colArr: [1, 2, 3],
         },
       },
@@ -168,7 +168,7 @@ describe("internal search", () => {
     )
     checkLucene(
       response,
-      `(*:* AND column:a AND colArr:(1 AND 2 AND 3))`,
+      `(*:* AND column:(a) AND colArr:(1 AND 2 AND 3))`,
       PARAMS
     )
   })

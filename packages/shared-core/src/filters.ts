@@ -4,9 +4,9 @@ import {
   FieldType,
   FormulaType,
   SearchFilter,
-  SearchQuery,
+  SearchFilters,
   SearchQueryFields,
-  SearchQueryOperators,
+  SearchFilterOperator,
   SortDirection,
   SortType,
 } from "@budibase/types"
@@ -99,18 +99,19 @@ export const NoEmptyFilterStrings = [
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
  */
-const cleanupQuery = (query: SearchQuery) => {
+const cleanupQuery = (query: SearchFilters) => {
   if (!query) {
     return query
   }
   for (let filterField of NoEmptyFilterStrings) {
-    if (!query[filterField]) {
+    const operator = filterField as SearchFilterOperator
+    if (!query[operator]) {
       continue
     }
 
-    for (let [key, value] of Object.entries(query[filterField]!)) {
+    for (let [key, value] of Object.entries(query[operator]!)) {
       if (value == null || value === "") {
-        delete query[filterField]![key]
+        delete query[operator]![key]
       }
     }
   }
@@ -136,7 +137,7 @@ export const removeKeyNumbering = (key: string): string => {
  * @param filter the builder filter structure
  */
 export const buildLuceneQuery = (filter: SearchFilter[]) => {
-  let query: SearchQuery = {
+  let query: SearchFilters = {
     string: {},
     fuzzy: {},
     range: {},
@@ -157,6 +158,7 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
   filter.forEach(expression => {
     let { operator, field, type, value, externalType, onEmptyFilter } =
       expression
+    const queryOperator = operator as SearchFilterOperator
     const isHbs =
       typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
     // Parse all values into correct types
@@ -171,8 +173,8 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
     if (
       type === "datetime" &&
       !isHbs &&
-      operator !== "empty" &&
-      operator !== "notEmpty"
+      queryOperator !== "empty" &&
+      queryOperator !== "notEmpty"
     ) {
       // Ensure date value is a valid date and parse into correct format
       if (!value) {
@@ -185,7 +187,7 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
       }
     }
     if (type === "number" && typeof value === "string" && !isHbs) {
-      if (operator === "oneOf") {
+      if (queryOperator === "oneOf") {
         value = value.split(",").map(item => parseFloat(item))
       } else {
         value = parseFloat(value)
@@ -225,24 +227,24 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
       ) {
         query.range[field].high = value
       }
-    } else if (query[operator] && operator !== "onEmptyFilter") {
+    } else if (query[queryOperator] && operator !== "onEmptyFilter") {
       if (type === "boolean") {
         // Transform boolean filters to cope with null.
         // "equals false" needs to be "not equals true"
         // "not equals false" needs to be "equals true"
-        if (operator === "equal" && value === false) {
+        if (queryOperator === "equal" && value === false) {
           query.notEqual = query.notEqual || {}
           query.notEqual[field] = true
-        } else if (operator === "notEqual" && value === false) {
+        } else if (queryOperator === "notEqual" && value === false) {
           query.equal = query.equal || {}
           query.equal[field] = true
         } else {
-          query[operator] = query[operator] || {}
-          query[operator]![field] = value
+          query[queryOperator] = query[queryOperator] || {}
+          query[queryOperator]![field] = value
         }
       } else {
-        query[operator] = query[operator] || {}
-        query[operator]![field] = value
+        query[queryOperator] = query[queryOperator] || {}
+        query[queryOperator]![field] = value
       }
     }
   })
@@ -255,7 +257,7 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
  * @param docs the data
  * @param query the JSON lucene query
  */
-export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
+export const runLuceneQuery = (docs: any[], query?: SearchFilters) => {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -269,7 +271,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
   // Iterates over a set of filters and evaluates a fail function against a doc
   const match =
     (
-      type: keyof SearchQueryFields,
+      type: SearchFilterOperator,
       failFn: (docValue: any, testValue: any) => boolean
     ) =>
     (doc: any) => {
@@ -286,7 +288,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
 
   // Process a string match (fails if the value does not start with the string)
   const stringMatch = match(
-    SearchQueryOperators.STRING,
+    SearchFilterOperator.STRING,
     (docValue: string, testValue: string) => {
       return (
         !docValue ||
@@ -297,7 +299,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
 
   // Process a fuzzy match (treat the same as starts with when running locally)
   const fuzzyMatch = match(
-    SearchQueryOperators.FUZZY,
+    SearchFilterOperator.FUZZY,
     (docValue: string, testValue: string) => {
       return (
         !docValue ||
@@ -308,7 +310,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
 
   // Process a range match
   const rangeMatch = match(
-    SearchQueryOperators.RANGE,
+    SearchFilterOperator.RANGE,
     (
       docValue: string | number | null,
       testValue: { low: number; high: number }
@@ -331,7 +333,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
 
   // Process an equal match (fails if the value is different)
   const equalMatch = match(
-    SearchQueryOperators.EQUAL,
+    SearchFilterOperator.EQUAL,
     (docValue: any, testValue: string | null) => {
       return testValue != null && testValue !== "" && docValue !== testValue
     }
@@ -339,7 +341,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
 
   // Process a not-equal match (fails if the value is the same)
   const notEqualMatch = match(
-    SearchQueryOperators.NOT_EQUAL,
+    SearchFilterOperator.NOT_EQUAL,
     (docValue: any, testValue: string | null) => {
       return testValue != null && testValue !== "" && docValue === testValue
     }
@@ -347,7 +349,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
 
   // Process an empty match (fails if the value is not empty)
   const emptyMatch = match(
-    SearchQueryOperators.EMPTY,
+    SearchFilterOperator.EMPTY,
     (docValue: string | null) => {
       return docValue != null && docValue !== ""
     }
@@ -355,7 +357,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
 
   // Process a not-empty match (fails is the value is empty)
   const notEmptyMatch = match(
-    SearchQueryOperators.NOT_EMPTY,
+    SearchFilterOperator.NOT_EMPTY,
     (docValue: string | null) => {
       return docValue == null || docValue === ""
     }
@@ -363,7 +365,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
 
   // Process an includes match (fails if the value is not included)
   const oneOf = match(
-    SearchQueryOperators.ONE_OF,
+    SearchFilterOperator.ONE_OF,
     (docValue: any, testValue: any) => {
       if (typeof testValue === "string") {
         testValue = testValue.split(",")
@@ -376,28 +378,28 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
   )
 
   const containsAny = match(
-    SearchQueryOperators.CONTAINS_ANY,
+    SearchFilterOperator.CONTAINS_ANY,
     (docValue: any, testValue: any) => {
       return !docValue?.includes(...testValue)
     }
   )
 
   const contains = match(
-    SearchQueryOperators.CONTAINS,
+    SearchFilterOperator.CONTAINS,
     (docValue: string | any[], testValue: any[]) => {
       return !testValue?.every((item: any) => docValue?.includes(item))
     }
   )
 
   const notContains = match(
-    SearchQueryOperators.NOT_CONTAINS,
+    SearchFilterOperator.NOT_CONTAINS,
     (docValue: string | any[], testValue: any[]) => {
       return testValue?.every((item: any) => docValue?.includes(item))
     }
   )
 
   const docMatch = (doc: any) => {
-    const filterFunctions: Record<SearchQueryOperators, (doc: any) => boolean> =
+    const filterFunctions: Record<SearchFilterOperator, (doc: any) => boolean> =
       {
         string: stringMatch,
         fuzzy: fuzzyMatch,
@@ -412,7 +414,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
         notContains: notContains,
       }
 
-    const activeFilterKeys: SearchQueryOperators[] = Object.entries(query || {})
+    const activeFilterKeys: SearchFilterOperator[] = Object.entries(query || {})
       .filter(
         ([key, value]: [string, any]) =>
           !["allOr", "onEmptyFilter"].includes(key) &&
@@ -480,7 +482,7 @@ export const luceneLimit = (docs: any[], limit: string) => {
   return docs.slice(0, numLimit)
 }
 
-export const hasFilters = (query?: SearchQuery) => {
+export const hasFilters = (query?: SearchFilters) => {
   if (!query) {
     return false
   }
