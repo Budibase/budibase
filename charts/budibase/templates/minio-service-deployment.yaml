@@ -54,6 +54,9 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: minio-data
+        {{ if .Values.services.objectStore.extraVolumeMounts }}
+          {{- toYaml .Values.services.objectStore.extraVolumeMounts | nindent 8 }}
+        {{- end }}
       {{- if .Values.services.objectStore.extraContainers }}
         {{- toYaml .Values.services.objectStore.extraContainers | nindent 6 }}
       {{- end }}
@@ -78,5 +81,8 @@ spec:
       - name: minio-data
         persistentVolumeClaim:
           claimName: minio-data
+      {{ if .Values.services.objectStore.extraVolumes }}
+        {{- toYaml .Values.services.objectStore.extraVolumes | nindent 6 }}
+      {{- end }}
 status: {}
 {{- end }}

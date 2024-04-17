@@ -127,13 +127,6 @@ export const uploadFile = async function (
   )
 }
 
-export const deleteObjects = async function (ctx: Ctx) {
-  ctx.body = await objectStore.deleteFiles(
-    ObjectStoreBuckets.APPS,
-    ctx.request.body.keys
-  )
-}
-
 const requiresMigration = async (ctx: Ctx) => {
   const appId = context.getAppId()
   if (!appId) {

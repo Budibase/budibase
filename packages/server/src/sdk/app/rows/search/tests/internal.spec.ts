@@ -81,7 +81,7 @@ describe("internal", () => {
           tableId,
           query: {},
         }
-        const result = await search(searchParams)
+        const result = await search(searchParams, config.table!)
 
         expect(result.rows).toHaveLength(10)
         expect(result.rows).toEqual(
@@ -99,7 +99,7 @@ describe("internal", () => {
           query: {},
           fields: ["name", "age"],
         }
-        const result = await search(searchParams)
+        const result = await search(searchParams, config.table!)
 
         expect(result.rows).toHaveLength(10)
         expect(result.rows).toEqual(

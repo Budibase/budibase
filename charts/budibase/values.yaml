@@ -211,6 +211,16 @@ services:
     #  - name: my-sidecar
     #    image: myimage:latest
 
+    # -- Additional volumeMounts to the main proxy container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the proxy pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
+
   apps:
     # @ignore (you shouldn't need to change this)
     port: 4002
@@ -282,6 +292,16 @@ services:
     extraContainers: []
     #  - name: my-sidecar
     #    image: myimage:latest
+
+    # -- Additional volumeMounts to the main apps container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the apps pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
 
   automationWorkers:
     # -- Whether or not to enable the automation worker service. If you disable this,
@@ -359,6 +379,16 @@ services:
     #  - name: my-sidecar
     #    image: myimage:latest
 
+    # -- Additional volumeMounts to the main automationWorkers container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the automationWorkers pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
+
   worker:
     # @ignore (you shouldn't need to change this)
     port: 4003
@@ -431,6 +461,16 @@ services:
     #  - name: my-sidecar
     #    image: myimage:latest
 
+    # -- Additional volumeMounts to the main worker container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the worker pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
+
   couchdb:
     # -- Whether or not to spin up a CouchDB instance in your cluster. True by
     # default, and the configuration for the CouchDB instance is under the
@@ -456,6 +496,8 @@ services:
       resources: {}
 
   redis:
+    # -- The Redis image to use.
+    image: redis
     # -- Whether or not to deploy a Redis pod into your cluster.
     enabled: true
     # -- Port to expose Redis on.
@@ -483,6 +525,16 @@ services:
     extraContainers: []
     #  - name: my-sidecar
     #    image: myimage:latest
+
+    # -- Additional volumeMounts to the main redis container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the redis pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
 
   objectStore:
     # -- Set to false if using another object store, such as S3. You will need
@@ -529,6 +581,16 @@ services:
     extraContainers: []
     #  - name: my-sidecar
     #    image: myimage:latest
+
+    # -- Additional volumeMounts to the main objectStore container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the objectStore pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
 
 # Override values in couchDB subchart. We're only specifying the values we're changing.
 # If you want to see all of the available values, see:

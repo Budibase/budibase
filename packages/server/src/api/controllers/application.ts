@@ -320,6 +320,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         "theme",
         "customTheme",
         "icon",
+        "snippets",
       ]
       keys.forEach(key => {
         if (existing[key]) {
