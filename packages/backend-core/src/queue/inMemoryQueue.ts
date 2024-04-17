@@ -166,8 +166,7 @@ class InMemoryQueue implements Partial<Queue> {
     return []
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async removeJobs(pattern: string) {
+  async removeJobs(_pattern: string) {
     // no-op
   }
 
