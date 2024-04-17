@@ -1,8 +1,19 @@
 import { context, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
-import { FieldType, SQLiteDefinition, SQLiteType, Table } from "@budibase/types"
+import {
+  FieldType,
+  RelationshipFieldMetadata,
+  SQLiteDefinition,
+  SQLiteTable,
+  SQLiteTables,
+  SQLiteType,
+  Table,
+} from "@budibase/types"
 import { cloneDeep } from "lodash"
 import tablesSdk from "../"
-import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
+import {
+  CONSTANT_INTERNAL_ROW_COLS,
+  generateJunctionTableID,
+} from "../../../../db/utils"
 
 const BASIC_SQLITE_DOC: SQLiteDefinition = {
   _id: SQLITE_DESIGN_DOC_ID,
@@ -37,9 +48,42 @@ const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BB_REFERENCE]: SQLiteType.TEXT,
 }
 
-function mapTable(table: Table): { [key: string]: SQLiteType } {
+function buildRelationshipDefinitions(
+  table: Table,
+  relationshipColumn: RelationshipFieldMetadata
+): {
+  tableId: string
+  definition: SQLiteTable
+} {
+  const tableId = table._id!,
+    relatedTableId = relationshipColumn.tableId
+  return {
+    tableId: generateJunctionTableID(tableId, relatedTableId),
+    definition: {
+      ["doc1.rowId"]: SQLiteType.TEXT,
+      ["doc1.tableId"]: SQLiteType.TEXT,
+      ["doc1.fieldName"]: SQLiteType.TEXT,
+      ["doc2.rowId"]: SQLiteType.TEXT,
+      ["doc2.tableId"]: SQLiteType.TEXT,
+      ["doc2.fieldName"]: SQLiteType.TEXT,
+      tableId: SQLiteType.TEXT,
+    },
+  }
+}
+
+// this can generate relationship tables as part of the mapping
+function mapTable(table: Table): SQLiteTables {
+  const tables: SQLiteTables = {}
   const fields: Record<string, SQLiteType> = {}
   for (let [key, column] of Object.entries(table.schema)) {
+    // relationships should be handled differently
+    if (column.type === FieldType.LINK) {
+      const { tableId, definition } = buildRelationshipDefinitions(
+        table,
+        column
+      )
+      tables[tableId] = { fields: definition }
+    }
     if (!FieldTypeMap[column.type]) {
       throw new Error(`Unable to map type "${column.type}" to SQLite type`)
     }
@@ -50,10 +94,12 @@ function mapTable(table: Table): { [key: string]: SQLiteType } {
   CONSTANT_INTERNAL_ROW_COLS.forEach(col => {
     constantMap[col] = SQLiteType.TEXT
   })
-  return {
+  const thisTable: SQLiteTable = {
     ...constantMap,
     ...fields,
   }
+  tables[table._id!] = { fields: thisTable }
+  return tables
 }
 
 // nothing exists, need to iterate though existing tables
@@ -61,8 +107,9 @@ async function buildBaseDefinition(): Promise<SQLiteDefinition> {
   const tables = await tablesSdk.getAllInternalTables()
   const definition = cloneDeep(BASIC_SQLITE_DOC)
   for (let table of tables) {
-    definition.sql.tables[table._id!] = {
-      fields: mapTable(table),
+    definition.sql.tables = {
+      ...definition.sql.tables,
+      ...mapTable(table),
     }
   }
   return definition
@@ -76,8 +123,9 @@ export async function addTableToSqlite(table: Table) {
   } catch (err) {
     definition = await buildBaseDefinition()
   }
-  definition.sql.tables[table._id!] = {
-    fields: mapTable(table),
+  definition.sql.tables = {
+    ...definition.sql.tables,
+    ...mapTable(table),
   }
   await db.put(definition)
 }

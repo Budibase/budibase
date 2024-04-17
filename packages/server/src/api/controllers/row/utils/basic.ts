@@ -62,12 +62,12 @@ export function basicProcessing({
   row,
   table,
   isLinked,
-  internal,
+  sqs,
 }: {
   row: Row
   table: Table
   isLinked: boolean
-  internal?: boolean
+  sqs?: boolean
 }): Row {
   const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
@@ -84,12 +84,13 @@ export function basicProcessing({
       thisRow[fieldName] = value
     }
   }
-  if (!internal) {
+  if (!sqs) {
     thisRow._id = generateIdForRow(row, table, isLinked)
     thisRow.tableId = table._id
     thisRow._rev = "rev"
   } else {
-    for (let internalColumn of CONSTANT_INTERNAL_ROW_COLS) {
+    const columns = Object.keys(table.schema)
+    for (let internalColumn of [...CONSTANT_INTERNAL_ROW_COLS, ...columns]) {
       thisRow[internalColumn] = extractFieldValue({
         row,
         tableName: table._id!,
