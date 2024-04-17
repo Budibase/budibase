@@ -1,4 +1,5 @@
 import { get, writable, derived } from "svelte/store"
+import { parseEventLocation } from "../lib/utils"
 
 const reorderInitialState = {
   sourceColumn: null,
@@ -85,7 +86,7 @@ export const createActions = context => {
   // Callback when moving the mouse when reordering columns
   const onReorderMouseMove = e => {
     // Immediately handle the current position
-    const x = e.clientX ?? e.touches?.[0]?.clientX
+    const { x } = parseEventLocation(e)
     reorder.update(state => ({
       ...state,
       latestX: x,
