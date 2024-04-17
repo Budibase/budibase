@@ -96,8 +96,6 @@
   const onOptionMouseleave = (e, option) => {
     updateTooltip(e, null);
   }
-
-  $: console.log(schema)
 </script>
 
 <Multiselect
