@@ -8,7 +8,7 @@ import {
   PermissionLevel,
   QuotaUsageType,
   SaveTableRequest,
-  SearchQueryOperators,
+  SearchFilterOperator,
   SortOrder,
   SortType,
   StaticQuotaName,
@@ -132,7 +132,7 @@ describe.each([
         primaryDisplay: generator.word(),
         query: [
           {
-            operator: SearchQueryOperators.EQUAL,
+            operator: SearchFilterOperator.EQUAL,
             field: "field",
             value: "value",
           },
@@ -236,7 +236,7 @@ describe.each([
         ...view,
         query: [
           {
-            operator: SearchQueryOperators.EQUAL,
+            operator: SearchFilterOperator.EQUAL,
             field: "newField",
             value: "thatValue",
           },
@@ -263,7 +263,7 @@ describe.each([
         primaryDisplay: generator.word(),
         query: [
           {
-            operator: SearchQueryOperators.EQUAL,
+            operator: SearchFilterOperator.EQUAL,
             field: generator.word(),
             value: generator.word(),
           },
@@ -341,7 +341,7 @@ describe.each([
           tableId: generator.guid(),
           query: [
             {
-              operator: SearchQueryOperators.EQUAL,
+              operator: SearchFilterOperator.EQUAL,
               field: "newField",
               value: "thatValue",
             },
@@ -671,7 +671,7 @@ describe.each([
           name: generator.guid(),
           query: [
             {
-              operator: SearchQueryOperators.EQUAL,
+              operator: SearchFilterOperator.EQUAL,
               field: "two",
               value: "bar2",
             },
