@@ -34,6 +34,7 @@ export const createActions = context => {
     stickyColumn,
     ui,
     maxScrollLeft,
+    width,
   } = context
 
   let autoScrollInterval
@@ -95,7 +96,7 @@ export const createActions = context => {
 
     // Check if we need to start auto-scrolling
     const $reorder = get(reorder)
-    const proximityCutoff = 140
+    const proximityCutoff = Math.min(140, get(width) / 6)
     const speedFactor = 8
     const rightProximity = Math.max(0, $reorder.gridLeft + $reorder.width - x)
     const leftProximity = Math.max(0, x - $reorder.gridLeft)

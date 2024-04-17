@@ -29,6 +29,7 @@ export const createActions = context => {
 
     // Prevent propagation to stop reordering triggering
     e.stopPropagation()
+    e.preventDefault()
     ui.actions.blur()
 
     // Find and cache index
