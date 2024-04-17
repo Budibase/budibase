@@ -40,6 +40,7 @@ export const createActions = context => {
 
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (column, e) => {
+    console.log("start", column)
     const $visibleColumns = get(visibleColumns)
     const $bounds = get(bounds)
     const $stickyColumn = get(stickyColumn)
@@ -55,6 +56,11 @@ export const createActions = context => {
         x: 0,
         column: $stickyColumn.name,
       })
+    } else if (!$visibleColumns[0].primaryDisplay) {
+      breakpoints.unshift({
+        x: 0,
+        column: null,
+      })
     }
 
     // Update state
@@ -69,6 +75,9 @@ export const createActions = context => {
     // Add listeners to handle mouse movement
     document.addEventListener("mousemove", onReorderMouseMove)
     document.addEventListener("mouseup", stopReordering)
+    document.addEventListener("touchmove", onReorderMouseMove)
+    document.addEventListener("touchend", stopReordering)
+    document.addEventListener("touchcancel", stopReordering)
 
     // Trigger a move event immediately so ensure a candidate column is chosen
     onReorderMouseMove(e)
@@ -77,7 +86,7 @@ export const createActions = context => {
   // Callback when moving the mouse when reordering columns
   const onReorderMouseMove = e => {
     // Immediately handle the current position
-    const x = e.clientX
+    const x = e.clientX ?? e.touches?.[0]?.clientX
     reorder.update(state => ({
       ...state,
       latestX: x,
@@ -168,6 +177,9 @@ export const createActions = context => {
     // Remove event handlers
     document.removeEventListener("mousemove", onReorderMouseMove)
     document.removeEventListener("mouseup", stopReordering)
+    document.removeEventListener("touchmove", onReorderMouseMove)
+    document.removeEventListener("touchend", stopReordering)
+    document.removeEventListener("touchcancel", stopReordering)
 
     // Save column changes
     await columns.actions.saveChanges()
@@ -185,8 +197,7 @@ export const createActions = context => {
       if (--targetIdx < sourceIdx) {
         targetIdx++
       }
-      state.splice(targetIdx, 0, removed[0])
-      return state.slice()
+      return state.toSpliced(targetIdx, 0, removed[0])
     })
   }
 

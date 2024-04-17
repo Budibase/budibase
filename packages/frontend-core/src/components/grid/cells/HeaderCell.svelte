@@ -18,7 +18,6 @@
 
   export let column
   export let idx
-  export let orderable = true
 
   const {
     reorder,
@@ -66,6 +65,7 @@
   $: resetSearchValue(column.name)
   $: searching = searchValue != null
   $: debouncedUpdateFilter(searchValue)
+  $: orderable = !column.primaryDisplay
 
   const getSortingLabels = type => {
     switch (type) {
@@ -112,7 +112,7 @@
   }
 
   const onMouseDown = e => {
-    if (e.button === 0 && orderable) {
+    if ((e.touches?.length || e.button === 0) && orderable) {
       timeout = setTimeout(() => {
         reorder.actions.startReordering(column.name, e)
       }, 200)
@@ -120,7 +120,7 @@
   }
 
   const onMouseUp = e => {
-    if (e.button === 0 && orderable) {
+    if ((e.touches?.length || e.button === 0) && orderable) {
       clearTimeout(timeout)
     }
   }
@@ -258,6 +258,9 @@
   <GridCell
     on:mousedown={onMouseDown}
     on:mouseup={onMouseUp}
+    on:touchstart={onMouseDown}
+    on:touchend={onMouseUp}
+    on:touchcancel={onMouseUp}
     on:contextmenu={onContextMenu}
     width={column.width}
     left={column.left}
@@ -347,7 +350,8 @@
       <MenuItem
         icon="Label"
         on:click={makeDisplayColumn}
-        disabled={idx === "sticky" || !canBeDisplayColumn(column.schema.type)}
+        disabled={column.primaryDisplay ||
+          !canBeDisplayColumn(column.schema.type)}
       >
         Use as display column
       </MenuItem>
@@ -378,7 +382,7 @@
         Move right
       </MenuItem>
       <MenuItem
-        disabled={idx === "sticky" || !$config.showControls}
+        disabled={column.primaryDisplay || !$config.showControls}
         icon="VisibilityOff"
         on:click={hideColumn}
       >
