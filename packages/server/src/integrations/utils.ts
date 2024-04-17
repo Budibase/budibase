@@ -354,7 +354,7 @@ function copyExistingPropsOver(
       // If the db column type changed to a non-compatible one, we want to re-fetch it
       if (
         updatedColumnType !== existingColumnType &&
-        !SWITCHABLE_TYPES[existingColumnType]?.includes(updatedColumnType)
+        !SWITCHABLE_TYPES[updatedColumnType]?.includes(existingColumnType)
       ) {
         continue
       }
