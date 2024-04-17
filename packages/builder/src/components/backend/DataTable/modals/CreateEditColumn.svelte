@@ -170,7 +170,7 @@
   $: typeEnabled =
     !originalName ||
     (originalName &&
-      SWITCHABLE_TYPES[editableColumn.type] &&
+      SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
@@ -363,9 +363,9 @@
 
   function getAllowedTypes() {
     if (originalName) {
-      return (
-        SWITCHABLE_TYPES[editableColumn.type] || [editableColumn.type]
-      ).map(f => FIELDS[f.toUpperCase()])
+      return (SWITCHABLE_TYPES[field.type] || [editableColumn.type]).map(
+        f => FIELDS[f.toUpperCase()]
+      )
     }
 
     const isUsers =
