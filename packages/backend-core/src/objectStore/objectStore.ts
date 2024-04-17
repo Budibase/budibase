@@ -19,6 +19,7 @@ const streamPipeline = promisify(stream.pipeline)
 const STATE = {
   bucketCreationPromises: {},
 }
+const signedFilePrefix = "/files/signed"
 
 type ListParams = {
   ContinuationToken?: string
@@ -337,7 +338,7 @@ export function getPresignedUrl(
     const signedUrl = new URL(url)
     const path = signedUrl.pathname
     const query = signedUrl.search
-    return `/files/signed${path}${query}`
+    return `${signedFilePrefix}${path}${query}`
   }
 }
 
@@ -533,7 +534,7 @@ export function extractBucketAndPath(
   url: string
 ): { bucket: string; path: string } | null {
   const baseUrl = url.split("?")[0]
-  if (!baseUrl.startsWith("/files/signed/")) {
+  if (!baseUrl.startsWith(signedFilePrefix)) {
     return null
   }
 

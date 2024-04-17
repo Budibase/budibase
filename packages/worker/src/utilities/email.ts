@@ -170,7 +170,6 @@ export async function sendEmail(
         const isFullyFormedUrl =
           attachment.url.startsWith("http://") ||
           attachment.url.startsWith("https://")
-
         if (isFullyFormedUrl) {
           const response = await fetch(attachment.url)
           if (!response.ok) {
