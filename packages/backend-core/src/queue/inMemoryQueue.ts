@@ -115,7 +115,6 @@ class InMemoryQueue implements Partial<Queue> {
    * a JSON message as this is required by Bull.
    * @param repeat serves no purpose for the import queue.
    */
-  // eslint-disable-next-line no-unused-vars
   async add(data: any, opts?: JobOptions) {
     const jobId = opts?.jobId?.toString()
     if (jobId && this._queuedJobIds.has(jobId)) {
