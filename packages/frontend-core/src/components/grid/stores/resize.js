@@ -1,5 +1,6 @@
 import { writable, get, derived } from "svelte/store"
 import { MinColumnWidth, DefaultColumnWidth } from "../lib/constants"
+import { parseEventLocation } from "../lib/utils"
 
 const initialState = {
   initialMouseX: null,
@@ -24,6 +25,8 @@ export const createActions = context => {
 
   // Starts resizing a certain column
   const startResizing = (column, e) => {
+    const { x } = parseEventLocation(e)
+
     // Prevent propagation to stop reordering triggering
     e.stopPropagation()
     ui.actions.blur()
@@ -39,7 +42,7 @@ export const createActions = context => {
       width: column.width,
       left: column.left,
       initialWidth: column.width,
-      initialMouseX: e.clientX,
+      initialMouseX: x,
       column: column.name,
       columnIdx,
     })
@@ -47,12 +50,16 @@ export const createActions = context => {
     // Add mouse event listeners to handle resizing
     document.addEventListener("mousemove", onResizeMouseMove)
     document.addEventListener("mouseup", stopResizing)
+    document.addEventListener("touchmove", onResizeMouseMove)
+    document.addEventListener("touchend", stopResizing)
+    document.addEventListener("touchcancel", stopResizing)
   }
 
   // Handler for moving the mouse to resize columns
   const onResizeMouseMove = e => {
     const { initialMouseX, initialWidth, width, columnIdx } = get(resize)
-    const dx = e.clientX - initialMouseX
+    const { x } = parseEventLocation(e)
+    const dx = x - initialMouseX
     const newWidth = Math.round(Math.max(MinColumnWidth, initialWidth + dx))
 
     // Ignore small changes
@@ -87,6 +94,9 @@ export const createActions = context => {
     resize.set(initialState)
     document.removeEventListener("mousemove", onResizeMouseMove)
     document.removeEventListener("mouseup", stopResizing)
+    document.removeEventListener("touchmove", onResizeMouseMove)
+    document.removeEventListener("touchend", stopResizing)
+    document.removeEventListener("touchcancel", stopResizing)
 
     // Persist width if it changed
     if ($resize.width !== $resize.initialWidth) {
