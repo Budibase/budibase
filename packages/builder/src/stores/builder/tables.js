@@ -64,7 +64,7 @@ export function createTablesStore() {
       if (
         oldField != null &&
         oldField?.type !== field.type &&
-        SWITCHABLE_TYPES[oldField?.type]
+        !SWITCHABLE_TYPES[oldField?.type]?.includes(field.type)
       ) {
         updatedTable.schema[key] = oldField
       }
