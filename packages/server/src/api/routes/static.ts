@@ -32,23 +32,12 @@ router
   .get("/builder/:file*", controller.serveBuilder)
   .get("/api/assets/client", controller.serveClientLibrary)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
-  .post(
-    "/api/attachments/delete",
-    authorized(BUILDER),
-    controller.deleteObjects
-  )
   .post("/api/beta/:feature", controller.toggleBetaUiFeature)
   .post(
     "/api/attachments/:tableId/upload",
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     controller.uploadFile
-  )
-  .post(
-    "/api/attachments/:tableId/delete",
-    paramResource("tableId"),
-    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
-    controller.deleteObjects
   )
   .get("/app/preview", authorized(BUILDER), controller.serveBuilderPreview)
   .get("/app/:appUrl/:path*", controller.serveApp)
