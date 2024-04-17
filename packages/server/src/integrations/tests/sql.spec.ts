@@ -1,11 +1,11 @@
 import { SqlClient } from "../utils"
 import Sql from "../base/sql"
 import {
+  FieldType,
   Operation,
   QueryJson,
-  TableSourceType,
   Table,
-  FieldType,
+  TableSourceType,
 } from "@budibase/types"
 
 const TABLE_NAME = "test"
@@ -13,7 +13,12 @@ const TABLE: Table = {
   type: "table",
   sourceType: TableSourceType.EXTERNAL,
   sourceId: "SOURCE_ID",
-  schema: {},
+  schema: {
+    id: {
+      name: "id",
+      type: FieldType.NUMBER,
+    },
+  },
   name: TABLE_NAME,
   primary: ["id"],
 }
@@ -73,7 +78,7 @@ function generateUpdateJson({
   meta?: any
 }): QueryJson {
   if (!meta.table) {
-    meta.table = table
+    meta.table = TABLE
   }
   return {
     endpoint: endpoint(table, "UPDATE"),
@@ -158,6 +163,9 @@ function generateManyRelationshipJson(config: { schema?: string } = {}) {
       },
     ],
     extra: { idFilter: {} },
+    meta: {
+      table: TABLE,
+    },
   }
 }
 
@@ -341,7 +349,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [date, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" > $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" >= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -360,7 +368,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [date, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" < $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" <= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -594,7 +602,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["2000-01-01 00:00:00", 500],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" > $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" >= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -613,7 +621,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["2010-01-01 00:00:00", 500],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" < $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" <= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
