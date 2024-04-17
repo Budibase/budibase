@@ -380,7 +380,12 @@ function copyExistingPropsOver(
         continue
       }
 
-      table.schema[key] = existingTableSchema[key]
+      table.schema[key] = {
+        ...existingTableSchema[key],
+        externalType:
+          existingTableSchema[key].externalType ||
+          table.schema[key].externalType,
+      }
     }
   }
   return table

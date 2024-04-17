@@ -3,7 +3,6 @@ import {
   Operation,
   RelationshipType,
   RenameColumn,
-  AddColumn,
   Table,
   TableRequest,
   ViewV2,
@@ -33,7 +32,7 @@ import * as viewSdk from "../../views"
 export async function save(
   datasourceId: string,
   update: Table,
-  opts?: { tableId?: string; renaming?: RenameColumn; adding?: AddColumn }
+  opts?: { tableId?: string; renaming?: RenameColumn }
 ) {
   let tableToSave: TableRequest = {
     ...update,
@@ -179,14 +178,7 @@ export async function save(
   // remove the rename prop
   delete tableToSave._rename
 
-  // if adding a new column, we need to rebuild the schema for that table to get the 'externalType' of the column
-  if (opts?.adding) {
-    datasource.entities[tableToSave.name] = (
-      await datasourceSdk.buildFilteredSchema(datasource, [tableToSave.name])
-    ).tables[tableToSave.name]
-  } else {
-    datasource.entities[tableToSave.name] = tableToSave
-  }
+  datasource.entities[tableToSave.name] = tableToSave
 
   // store it into couch now for budibase reference
   await db.put(populateExternalTableSchemas(datasource))
