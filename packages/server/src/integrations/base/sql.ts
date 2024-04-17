@@ -313,9 +313,9 @@ class InternalBuilder {
         if (lowValid && highValid) {
           query = sqlStatements.between(query, key, value.low, value.high)
         } else if (lowValid) {
-          query = sqlStatements.lower(query, key, value.low)
+          query = sqlStatements.lte(query, key, value.low)
         } else if (highValid) {
-          query = sqlStatements.higher(query, key, value.high)
+          query = sqlStatements.gte(query, key, value.high)
         }
       })
     }
