@@ -44,7 +44,7 @@ export class SqlStatements {
     return query
   }
 
-  lower(query: Knex.QueryBuilder, key: string, low: number | string) {
+  lte(query: Knex.QueryBuilder, key: string, low: number | string) {
     // Use just a single greater than operator if we only have a low
     const field = this.getField(key)
     if (
@@ -61,7 +61,7 @@ export class SqlStatements {
     return query
   }
 
-  higher(query: Knex.QueryBuilder, key: string, high: number | string) {
+  gte(query: Knex.QueryBuilder, key: string, high: number | string) {
     const field = this.getField(key)
     // Use just a single less than operator if we only have a high
     if (
