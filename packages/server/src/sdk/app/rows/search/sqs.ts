@@ -20,7 +20,12 @@ import {
 } from "../../../../api/controllers/row/utils"
 import sdk from "../../../index"
 import { context } from "@budibase/backend-core"
-import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
+import {
+  CONSTANT_INTERNAL_ROW_COLS,
+  SQS_DATASOURCE_INTERNAL,
+} from "../../../../db/utils"
+import AliasTables from "../sqlAlias"
+import { outputProcessing } from "../../../../utilities/rowProcessor"
 
 function buildInternalFieldList(
   table: Table,
@@ -31,19 +36,19 @@ function buildInternalFieldList(
   fieldList = fieldList.concat(
     CONSTANT_INTERNAL_ROW_COLS.map(col => `${table._id}.${col}`)
   )
-  if (opts.relationships) {
-    for (let col of Object.values(table.schema)) {
-      if (col.type === FieldType.LINK) {
-        const linkCol = col as RelationshipFieldMetadata
-        const relatedTable = tables.find(
-          table => table._id === linkCol.tableId
-        )!
-        fieldList = fieldList.concat(
-          buildInternalFieldList(relatedTable, tables, { relationships: false })
-        )
-      } else {
-        fieldList.push(`${table._id}.${col.name}`)
-      }
+  for (let col of Object.values(table.schema)) {
+    const isRelationship = col.type === FieldType.LINK
+    if (!opts.relationships && isRelationship) {
+      continue
+    }
+    if (isRelationship) {
+      const linkCol = col as RelationshipFieldMetadata
+      const relatedTable = tables.find(table => table._id === linkCol.tableId)!
+      fieldList = fieldList.concat(
+        buildInternalFieldList(relatedTable, tables, { relationships: false })
+      )
+    } else {
+      fieldList.push(`${table._id}.${col.name}`)
     }
   }
   return fieldList
@@ -94,14 +99,14 @@ function buildTableMap(tables: Table[]) {
 }
 
 export async function search(
-  options: RowSearchParams
+  options: RowSearchParams,
+  table: Table
 ): Promise<SearchResponse<Row>> {
-  const { tableId, paginate, query, ...params } = options
+  const { paginate, query, ...params } = options
 
   const builder = new SqlQueryBuilder(SqlClient.SQL_LITE)
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
-  const table = allTables.find(table => table._id === tableId)
   if (!table) {
     throw new Error("Unable to find table")
   }
@@ -111,7 +116,7 @@ export async function search(
   const request: QueryJson = {
     endpoint: {
       // not important, we query ourselves
-      datasourceId: "internal",
+      datasourceId: SQS_DATASOURCE_INTERNAL,
       entityId: table._id!,
       operation: Operation.READ,
     },
@@ -132,7 +137,7 @@ export async function search(
     type: "row",
   }
 
-  if (params.sort && !params.sortType) {
+  if (params.sort) {
     const sortField = table.schema[params.sort]
     const sortType =
       sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
@@ -154,34 +159,44 @@ export async function search(
     }
   }
   try {
-    const query = builder._query(request, {
-      disableReturning: true,
+    const alias = new AliasTables(allTables.map(table => table.name))
+    const rows = await alias.queryWithAliasing(request, async json => {
+      const query = builder._query(json, {
+        disableReturning: true,
+      })
+
+      if (Array.isArray(query)) {
+        throw new Error("SQS cannot currently handle multiple queries")
+      }
+
+      let sql = query.sql,
+        bindings = query.bindings
+
+      // quick hack for docIds
+      sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
+      sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
+
+      const db = context.getAppDB()
+      return await db.sql<Row>(sql, bindings)
     })
 
-    if (Array.isArray(query)) {
-      throw new Error("SQS cannot currently handle multiple queries")
-    }
-
-    let sql = query.sql,
-      bindings = query.bindings
-
-    // quick hack for docIds
-    sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
-    sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
-
-    const db = context.getAppDB()
-    const rows = await db.sql<Row>(sql, bindings)
+    // process from the format of tableId.column to expected format
+    const processed = await sqlOutputProcessing(
+      rows,
+      table!,
+      allTablesMap,
+      relationships,
+      {
+        sqs: true,
+      }
+    )
 
     return {
-      rows: await sqlOutputProcessing(
-        rows,
-        table!,
-        allTablesMap,
-        relationships,
-        {
-          sqs: true,
-        }
-      ),
+      // final row processing for response
+      rows: await outputProcessing<Row[]>(table, processed, {
+        preserveLinks: true,
+        squash: true,
+      }),
     }
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
