@@ -16,7 +16,6 @@ import {
   getDatasource,
   rawQuery,
 } from "../integrations/tests/utils"
-import { builderSocket } from "../websockets"
 import { generator } from "@budibase/backend-core/tests"
 // @ts-ignore
 fetch.mockSearch()
