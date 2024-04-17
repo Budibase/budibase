@@ -233,64 +233,6 @@ describe("mysql integrations", () => {
   })
 
   describe("POST /api/tables/", () => {
-    const emitDatasourceUpdateMock = jest.fn()
-
-    // TODO: This is not actually required, will fix after cleaning the `_add` logic
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip("will emit the datasource entity schema with externalType to the front-end when adding a new column", async () => {
-      const addColumnToTable: TableRequest = {
-        type: "table",
-        sourceType: TableSourceType.EXTERNAL,
-        name: uniqueTableName(),
-        sourceId: datasource._id!,
-        primary: ["id"],
-        schema: {
-          id: {
-            type: FieldType.AUTO,
-            name: "id",
-            autocolumn: true,
-          },
-          new_column: {
-            type: FieldType.NUMBER,
-            name: "new_column",
-          },
-        },
-      }
-
-      jest
-        .spyOn(builderSocket!, "emitDatasourceUpdate")
-        .mockImplementation(emitDatasourceUpdateMock)
-
-      await makeRequest("post", "/api/tables/", addColumnToTable)
-
-      const expectedTable: TableRequest = {
-        ...addColumnToTable,
-        schema: {
-          id: {
-            type: FieldType.NUMBER,
-            name: "id",
-            autocolumn: true,
-            externalType: "int unsigned",
-          },
-          new_column: {
-            type: FieldType.NUMBER,
-            name: "new_column",
-            autocolumn: false,
-            externalType: "float(8,2)",
-          },
-        },
-        created: true,
-        _id: `${datasource._id}__${addColumnToTable.name}`,
-      }
-
-      expect(emitDatasourceUpdateMock).toHaveBeenCalledTimes(1)
-      const emittedDatasource: Datasource =
-        emitDatasourceUpdateMock.mock.calls[0][1]
-      expect(emittedDatasource.entities![expectedTable.name]).toEqual(
-        expectedTable
-      )
-    })
-
     it("will rename a column", async () => {
       await makeRequest("post", "/api/tables/", primaryMySqlTable)
 
