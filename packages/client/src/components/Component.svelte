@@ -273,9 +273,8 @@
     staticSettings = instanceSettings.staticSettings
     dynamicSettings = instanceSettings.dynamicSettings
 
-    console.log(settingsDefinition, settingsDefinitionMap);
     // Check if we have any missing required settings
-    missingRequiredSettings = Object.values(settingsDefinitionMap).filter(setting => {
+    missingRequiredSettings = settingsDefinition.filter(setting => {
       let empty = instance[setting.key] == null || instance[setting.key] === ""
       let missing = setting.required && empty
 
@@ -284,22 +283,32 @@
         const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
         const dependsOnValue = setting.dependsOn.value
         const realDependentValue = instance[dependsOnKey]
-        let foo = false && instance._component === "@budibase/standard-components/chartblock" && setting.type === "multifield"
+
+        const sectionDependsOnKey = setting.sectionDependsOn?.setting || setting.sectionDependsOn
+        const sectionDependsOnValue = setting.sectionDependsOn?.value
+        const sectionRealDependentValue = instance[sectionDependsOnKey]
+
+
+        let foo =  instance._component === "@budibase/standard-components/chartblock" && setting.type === "multifield"
+        if (dependsOnValue == null && realDependentValue == null) {
+          return false
+        }
+        if (dependsOnValue != null && dependsOnValue !== realDependentValue) {
+          return false
+        }
+
+        if (sectionDependsOnValue == null && sectionRealDependentValue == null) {
+          return false
+        }
+        if (sectionDependsOnValue != null && sectionDependsOnValue !== sectionRealDependentValue) {
+          return false
+        }
         if (foo) {
           console.log(setting)
           console.log(instance);
-        }
-        if (dependsOnValue === undefined && realDependentValue) {
-          if (foo) console.log("in 0");
-          return missing
-        }
-        if (dependsOnValue == null && realDependentValue == null) {
-          if (foo) console.log("in 1");
-          return false
-        }
-        if (dependsOnValue !== realDependentValue) {
-          if (foo) console.log("in 2");
-          return false
+          console.log(dependsOnValue);
+          console.log(realDependentValue);
+          console.log("")
         }
       }
 
