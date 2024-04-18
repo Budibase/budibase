@@ -3,7 +3,6 @@
   import ApexChart from "./ApexChart.svelte"
   import { get } from "lodash";
 
-  // Common props
   export let title
   export let dataProvider
   export let labelColumn
