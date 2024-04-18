@@ -1,4 +1,4 @@
-import { get, derived } from "svelte/store"
+import { get, derived, readable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { API } from "api"
 import { Helpers } from "@budibase/bbui"
@@ -20,7 +20,7 @@ import {
   previewStore,
   tables,
   componentTreeNodesStore,
-} from "stores/builder/index"
+} from "stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
@@ -30,6 +30,7 @@ import {
 } from "constants/backend"
 import BudiStore from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
+import { FieldType } from "@budibase/types"
 
 export const INITIAL_COMPONENTS_STATE = {
   components: {},
@@ -295,6 +296,44 @@ export class ComponentStore extends BudiStore {
         }
       }
     })
+
+    // Add default bindings to card blocks
+    if (component._component.endsWith("/cardsblock")) {
+      const { _id, dataSource } = component
+      if (dataSource) {
+        const { schema, table } = getSchemaForDatasource(screen, dataSource)
+        const readableTypes = [
+          FieldType.STRING,
+          FieldType.OPTIONS,
+          FieldType.DATETIME,
+          FieldType.NUMBER,
+        ]
+
+        // Extract good field candidates to prefil our cards with
+        const fields = Object.entries(schema || {})
+          .filter(([name, fieldSchema]) => {
+            return (
+              readableTypes.includes(fieldSchema.type) &&
+              !fieldSchema.autoColumn &&
+              name !== table?.primaryDisplay
+            )
+          })
+          .map(([name]) => name)
+
+        // Use the primary display as the best field, if it exists
+        if (schema?.[table?.primaryDisplay]) {
+          fields.unshift(table.primaryDisplay)
+        }
+
+        // Fill our cards with as many bindings as we can
+        const cardKeys = ["cardTitle", "cardSubtitle", "cardDescription"]
+        cardKeys.forEach(key => {
+          if (!fields[0] || component[key]) return
+          component[key] = `{{ ${safe(`${_id}-repeater`)}.${safe(fields[0])} }}`
+          fields.shift()
+        })
+      }
+    }
   }
 
   /**
@@ -323,21 +362,21 @@ export class ComponentStore extends BudiStore {
       ...presetProps,
     }
 
-    // Enrich empty settings
+    // Standard post processing
     this.enrichEmptySettings(instance, {
       parent,
       screen: get(selectedScreen),
       useDefaultValues: true,
     })
-
-    // Migrate nested component settings
     this.migrateSettings(instance)
 
-    // Add any extra properties the component needs
+    // Custom post processing for creation only
     let extras = {}
     if (definition.hasChildren) {
       extras._children = []
     }
+
+    // Add step name to form steps
     if (componentName.endsWith("/formstep")) {
       const parentForm = findClosestMatchingComponent(
         get(selectedScreen).props,
@@ -350,6 +389,7 @@ export class ComponentStore extends BudiStore {
       extras.step = formSteps.length + 1
       extras._instanceName = `Step ${formSteps.length + 1}`
     }
+
     return {
       ...cloneDeep(instance),
       ...extras,
@@ -460,7 +500,6 @@ export class ComponentStore extends BudiStore {
     if (!componentId || !screenId) {
       const state = get(this.store)
       componentId = componentId || state.selectedComponentId
-
       const screenState = get(screenStore)
       screenId = screenId || screenState.selectedScreenId
     }
@@ -468,7 +507,6 @@ export class ComponentStore extends BudiStore {
       return
     }
     const patchScreen = screen => {
-      // findComponent looks in the tree not comp.settings[0]
       let component = findComponent(screen.props, componentId)
       if (!component) {
         return false
@@ -477,7 +515,8 @@ export class ComponentStore extends BudiStore {
       // Mutates the fetched component with updates
       const patchResult = patchFn(component, screen)
 
-      // Mutates the component with any required settings updates
+      // Post processing
+      this.enrichEmptySettings(component, { screen, useDefaultValues: false })
       const migrated = this.migrateSettings(component)
 
       // Returning an explicit false signifies that we should skip this
