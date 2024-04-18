@@ -80,7 +80,7 @@
 
 <SignatureModal
   onConfirm={saveSignature}
-  title={fieldSchema?.name}
+  title={label || fieldSchema?.name || ""}
   value={fieldState?.value}
   {darkMode}
   bind:this={modal}
@@ -89,7 +89,7 @@
 <Field
   {label}
   {field}
-  disabled={$builderStore.inBuilder || disabled}
+  {disabled}
   {readonly}
   {validation}
   {span}
@@ -104,7 +104,7 @@
     {#if (Array.isArray(fieldState?.value) && !fieldState?.value?.length) || !fieldState?.value}
       <ActionButton
         fullWidth
-        {disabled}
+        disabled={fieldState.disabled}
         on:click={() => {
           if (!$builderStore.inBuilder) {
             modal.show()
@@ -117,7 +117,7 @@
       <div class="signature-field">
         <CoreSignature
           {darkMode}
-          disabled={$builderStore.inBuilder || disabled}
+          disabled={$builderStore.inBuilder || fieldState.disabled}
           editable={false}
           value={fieldState?.value}
           on:clear={deleteSignature}
