@@ -157,6 +157,11 @@
     width: 100%;
   }
 
+  /* Use normal theme colors for links when using a top nav */
+  .dropdown:not(.left) .sublinks a {
+    color: var(--spectrum-alias-text-color);
+  }
+
   /* Left dropdowns */
   .dropdown.left .sublinks-wrapper {
     display: none;
