@@ -34,15 +34,15 @@
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
 
-  const AUTO_TYPE = FIELDS.AUTO.type
-  const FORMULA_TYPE = FIELDS.FORMULA.type
-  const LINK_TYPE = FIELDS.LINK.type
-  const STRING_TYPE = FIELDS.STRING.type
-  const NUMBER_TYPE = FIELDS.NUMBER.type
-  const JSON_TYPE = FIELDS.JSON.type
-  const DATE_TYPE = FIELDS.DATETIME.type
-  const USER_TYPE = FIELDS.USER.subtype
-  const USERS_TYPE = FIELDS.USERS.subtype
+  const AUTO_TYPE = FieldType.AUTO
+  const FORMULA_TYPE = FieldType.FORMULA
+  const LINK_TYPE = FieldType.LINK
+  const STRING_TYPE = FieldType.STRING
+  const NUMBER_TYPE = FieldType.NUMBER
+  const JSON_TYPE = FieldType.JSON
+  const DATE_TYPE = FieldType.DATETIME
+  const USER_TYPE = FieldSubtype.USER
+  const USERS_TYPE = FieldSubtype.USERS
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -627,7 +627,7 @@
         />
       </div>
     </div>
-  {:else if editableColumn.type === FieldType.LINK}
+  {:else if editableColumn.type === FieldType.LINK && !editableColumn.autocolumn}
     <RelationshipSelector
       bind:relationshipPart1
       bind:relationshipPart2
