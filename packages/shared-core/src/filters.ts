@@ -218,14 +218,16 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
           high: type === "number" ? maxint : "9999-00-00T00:00:00.000Z",
         }
       }
-      if ((operator as any) === "rangeLow" && value != null && value !== "") {
-        query.range[field].low = value
-      } else if (
-        (operator as any) === "rangeHigh" &&
-        value != null &&
-        value !== ""
-      ) {
-        query.range[field].high = value
+      if (operator === "rangeLow" && value != null && value !== "") {
+        query.range[field] = {
+          ...query.range[field],
+          low: value,
+        }
+      } else if (operator === "rangeHigh" && value != null && value !== "") {
+        query.range[field] = {
+          ...query.range[field],
+          high: value,
+        }
       }
     } else if (query[queryOperator] && operator !== "onEmptyFilter") {
       if (type === "boolean") {

@@ -27,10 +27,13 @@ export interface SearchFilters {
     [key: string]: string
   }
   [SearchFilterOperator.RANGE]?: {
-    [key: string]: {
-      high: number | string
-      low: number | string
-    }
+    [key: string]:
+      | {
+          high: number | string
+          low: number | string
+        }
+      | { high: number | string }
+      | { low: number | string }
   }
   [SearchFilterOperator.EQUAL]?: {
     [key: string]: any
@@ -75,10 +78,6 @@ export interface PaginationJson {
 export interface RenameColumn {
   old: string
   updated: string
-}
-
-export interface AddColumn {
-  name: string
 }
 
 export interface RelationshipsJson {
