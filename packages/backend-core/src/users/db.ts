@@ -519,6 +519,8 @@ export class UserDB {
         global: true,
       },
       tenantId,
+      firstName: opts?.firstName,
+      lastName: opts?.lastName,
     }
     if (opts?.ssoId) {
       user.ssoId = opts.ssoId
