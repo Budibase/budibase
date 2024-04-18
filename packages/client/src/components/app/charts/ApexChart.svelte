@@ -14,17 +14,26 @@
 
   let chartElement;
   let chart;
+  let currentType = null
 
   const updateChart = async (newOptions) => {
+    console.log('update')
     // Line charts won't transition from category to datetime types properly without
     // calling this with an empty object first; I don't know why this works.
-    await chart?.updateOptions({})
-    await chart?.updateOptions(newOptions)
+    if (newOptions?.xaxis?.type && newOptions.xaxis.type !== currentType ) {
+      console.log('calling render')
+      await renderChart(chartElement);
+
+    } else {
+      await chart?.updateOptions(newOptions)
+    }
   }
 
   const renderChart = async (newChartElement) => {
+    console.log('render')
     await chart?.destroy()
     chart = new ApexCharts(newChartElement, optionsCopy)
+    currentType = optionsCopy?.xaxis?.type
     await chart.render()
   }
 

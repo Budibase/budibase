@@ -153,7 +153,7 @@
       }
     }
 
-    return {}
+    return { type: 'solid' }
   }
 
   $: console.log("opt", options);
