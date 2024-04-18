@@ -88,7 +88,7 @@
         text: xAxisLabel
       }
     },
-    // bar charts in horizontal mode don't have a default setting for parsing the labels of dates, and will just spit out the unix epoch value. It also doesn't seem to respect any date based formatting properties passed in. So we'll just manualy format the labels, the chart still sorts the dates correctly in any case
+    // Providing `type: "datetime"` normally makes Apex Charts parse epochs nicely with no additonal config, but bar charts in horizontal mode don't have a default setting for parsing the labels of dates, and will just spit out the unix epoch value. It also doesn't seem to respect any date based formatting properties passed in. So we'll just manualy format the labels, the chart still sorts the dates correctly in any case
     yaxis: {
       labels: {
         formatter: yAxisFormatter
@@ -129,6 +129,10 @@
     const isLabelAxis = (axis === "y" && horizontal) || axis === "x" && !horizontal
     if (labelType === "datetime" && isLabelAxis) {
       return formatters["Datetime"]
+    }
+
+    if (isLabelAxis) {
+      return formatters["Default"]
     }
 
     return formatters[valueUnits]
