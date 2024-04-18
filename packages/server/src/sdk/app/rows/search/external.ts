@@ -8,6 +8,7 @@ import {
   SearchFilters,
   RowSearchParams,
   SearchResponse,
+  Table,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import { handleRequest } from "../../../../api/controllers/row/external"
@@ -18,13 +19,13 @@ import {
 import { utils } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "./types"
 import { HTTPError, db } from "@budibase/backend-core"
-import { searchInputMapping } from "./utils"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
 
 export async function search(
-  options: RowSearchParams
+  options: RowSearchParams,
+  table: Table
 ): Promise<SearchResponse<Row>> {
   const { tableId } = options
   const { paginate, query, ...params } = options
@@ -68,8 +69,6 @@ export async function search(
   }
 
   try {
-    const table = await sdk.tables.getTable(tableId)
-    options = searchInputMapping(table, options)
     let rows = await handleRequest(Operation.READ, tableId, {
       filters: query,
       sort,
@@ -150,11 +149,15 @@ export async function exportRows(
   }
 
   const datasource = await sdk.datasources.get(datasourceId!)
+  const table = await sdk.tables.getTable(tableId)
   if (!datasource || !datasource.entities) {
     throw new HTTPError("Datasource has not been configured for plus API.", 400)
   }
 
-  let result = await search({ tableId, query: requestQuery, sort, sortOrder })
+  let result = await search(
+    { tableId, query: requestQuery, sort, sortOrder },
+    table
+  )
   let rows: Row[] = []
   let headers
 

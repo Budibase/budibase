@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { ActionButton, Drawer, Button } from "@budibase/bbui"
-  import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
+  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { getUserBindings } from "dataBinding"
   import { makePropSafe } from "@budibase/string-templates"
 
@@ -64,7 +64,7 @@
   >
     Save
   </Button>
-  <FilterDrawer
+  <FilterBuilder
     slot="body"
     {filters}
     {schemaFields}
