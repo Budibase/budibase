@@ -130,8 +130,6 @@
 
     return formatters[valueUnits]
   }
-
-  $: console.log("opt", options);
 </script>
 
 <ApexChart {options} />
