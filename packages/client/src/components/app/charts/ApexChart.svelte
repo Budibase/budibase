@@ -11,75 +11,27 @@
 
   // Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone this here to provide a buffer.
   $: optionsCopy = cloneDeep(options);
-  /*
-  export let invalid = false
-
-  const parseValue = (value) => {
-    // A value like [10, 11, 12] actually would be output by parseInt as `10`, but this behaviour is odd and not something a
-    // reasonable user would expect.
-    if (Array.isArray(value)) {
-      return null;
-    }
-
-    const parsedValue = parseInt(value, 10);
-
-    if (Number.isNaN(parsedValue)) {
-      return null;
-    }
-
-    return parsedValue
-  }
-
-  const parseOptions = (optionsCopy) => {
-    const parsedOptions = { series: [], ...cloneDeep(optionsCopy)}
-
-    // Object form of series, used by most charts
-    if (parsedOptions.series.some(entry => Array.isArray(entry?.data))) {
-      parsedOptions.series = parsedOptions.series.map(entry => ({ ...entry, data: parseValue})parseValue);
-    } else {
-      // Scalar form of series, used by non-axis charts like pie and donut
-      parsedOptions.series = parsedOptions.series.map(parseValue);
-    }
-
-    return parsedOptions;
-  }
-
-  $: parsedOptions = parseOptions(optionsCopy);
-  */
 
   let chartElement;
   let chart;
 
   const updateChart = async (newOptions) => {
-    try {
-      await chart?.updateOptions(newOptions)
-    } catch(e) {
-      //console.log(e)
-    }
+    await chart?.updateOptions(newOptions)
   }
 
   const renderChart = async (newChartElement) => {
-    try {
-      await chart?.destroy()
-      chart = new ApexCharts(newChartElement, optionsCopy)
-      await chart.render()
-    } catch(e) {
-      //console.log(e)
-    }
-  }
-
-  const isSeriesValid = (series) => {
-    return true
+    await chart?.destroy()
+    chart = new ApexCharts(newChartElement, optionsCopy)
+    await chart.render()
   }
 
   $: noData = optionsCopy == null || optionsCopy?.series?.length === 0
-  $: hide = noData || !seriesValid
+  $: hide = noData
 
   // Call render chart upon changes to hide, as apex charts has issues with rendering upon changes automatically
   // if the chart is hidden.
   $: renderChart(chartElement, hide)
   $: updateChart(optionsCopy)
-  $: seriesValid = isSeriesValid(optionsCopy?.series || [])
 </script>
 
 {#key optionsCopy?.customColor}
@@ -89,13 +41,7 @@
       <Icon name="Alert" color="var(--spectrum-global-color-static-red-600)" />
       Add rows to your data source to start using your component
     </div>
-  {:else if $builderStore.inBuilder && !seriesValid}
-    <div class="component-placeholder" use:styleable={{ ...$component.styles, normal: {}, custom: null, empty: true }}>
-      <Icon name="Alert" color="var(--spectrum-global-color-static-red-600)" />
-      Your selected data cannot be displayed in this chart
-    </div>
   {/if}
-
 {/key}
 
 <style>
