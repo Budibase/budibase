@@ -8,6 +8,9 @@
   const component = getContext("component")
 
   export let options
+
+  // Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone this here to provide a buffer.
+  $: optionsCopy = cloneDeep(options);
   /*
   export let invalid = false
 
@@ -27,8 +30,8 @@
     return parsedValue
   }
 
-  const parseOptions = (options) => {
-    const parsedOptions = { series: [], ...cloneDeep(options)}
+  const parseOptions = (optionsCopy) => {
+    const parsedOptions = { series: [], ...cloneDeep(optionsCopy)}
 
     // Object form of series, used by most charts
     if (parsedOptions.series.some(entry => Array.isArray(entry?.data))) {
@@ -41,7 +44,7 @@
     return parsedOptions;
   }
 
-  $: parsedOptions = parseOptions(options);
+  $: parsedOptions = parseOptions(optionsCopy);
   */
 
   let chartElement;
@@ -58,7 +61,7 @@
   const renderChart = async (newChartElement) => {
     try {
       await chart?.destroy()
-      chart = new ApexCharts(newChartElement, options)
+      chart = new ApexCharts(newChartElement, optionsCopy)
       await chart.render()
     } catch(e) {
       //console.log(e)
@@ -69,17 +72,17 @@
     return true
   }
 
-  $: noData = options == null || options?.series?.length === 0
+  $: noData = optionsCopy == null || optionsCopy?.series?.length === 0
   $: hide = noData || !seriesValid
 
   // Call render chart upon changes to hide, as apex charts has issues with rendering upon changes automatically
   // if the chart is hidden.
   $: renderChart(chartElement, hide)
-  $: updateChart(options)
-  $: seriesValid = isSeriesValid(options?.series || [])
+  $: updateChart(optionsCopy)
+  $: seriesValid = isSeriesValid(optionsCopy?.series || [])
 </script>
 
-{#key options?.customColor}
+{#key optionsCopy?.customColor}
   <div class:hide use:styleable={$component.styles} bind:this={chartElement} />
   {#if $builderStore.inBuilder && noData }
     <div class="component-placeholder" use:styleable={{ ...$component.styles, normal: {}, custom: null, empty: true }}>

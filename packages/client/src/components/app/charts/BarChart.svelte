@@ -16,7 +16,7 @@
   export let animate
   export let legend
   export let stacked
-  export let yAxisUnits
+  export let valueUnits
   export let palette
   export let c1, c2, c3, c4, c5
   export let horizontal
@@ -25,13 +25,17 @@
     ["Default"]: val => val,
     ["Thousands"]: val => `${Math.round(val / 1000)}K`,
     ["Millions"]: val => `${Math.round(val / 1000000)}M`,
+    ["Datetime"]: val => (new Date(val)).toLocaleString()
   }
 
   $: series = getSeries(dataProvider, valueColumns)
   $: categories = getCategories(dataProvider, labelColumn);
 
-  $: dataType = dataProvider?.schema?.[labelColumn]?.type === 'datetime' ? 
+  $: labelType = dataProvider?.schema?.[labelColumn]?.type === 'datetime' ? 
     "datetime" : "category"
+  $: formatter = getFormatter(labelType, valueUnits)
+  $: xAxisFormatter = getFormatter(labelType, valueUnits, horizontal, "x")
+  $: yAxisFormatter = getFormatter(labelType, valueUnits, horizontal, "y")
 
   $: options = {
     series,
@@ -68,19 +72,29 @@
         enabled: false,
       },
     },
+    plotOptions: {
+      bar: {
+        horizontal
+      }
+    },
+    // We can just always provide the categories to the xaxis and horizontal mode automatically handles "tranposing" the categories to the yaxis, but certain things like labels need to be manually put on a certain axis based on the selected mode. Titles do not need to be handled this way, they are exposed to the user as "X axis" and Y Axis" so flipping them would be confusing.
     xaxis: {
-      type: dataType,
+      type: labelType,
       categories,
+      labels: {
+        formatter: xAxisFormatter
+      },
       title: {
         text: xAxisLabel
       }
     },
+    // bar charts in horizontal mode don't have a default setting for parsing the labels of dates, and will just spit out the unix epoch value. It also doesn't seem to respect any date based formatting properties passed in. So we'll just manualy format the labels, the chart still sorts the dates correctly in any case
     yaxis: {
+      labels: {
+        formatter: yAxisFormatter
+      },
       title: {
         text: yAxisLabel
-      },
-      labels: {
-        formatter: formatters[yAxisUnits]
       }
     }
   }
@@ -109,6 +123,15 @@
 
       return value;
     })
+  }
+
+  const getFormatter = (labelType, valueUnits, horizontal, axis) => {
+    const isLabelAxis = (axis === "y" && horizontal) || axis === "x" && !horizontal
+    if (labelType === "datetime" && isLabelAxis) {
+      return formatters["Datetime"]
+    }
+
+    return formatters[valueUnits]
   }
 
   $: console.log("opt", options);

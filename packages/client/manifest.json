@@ -1655,7 +1655,7 @@
       {
         "type": "select",
         "label": "Format",
-        "key": "yAxisUnits",
+        "key": "valueUnits",
         "options": ["Default", "Thousands", "Millions"],
         "defaultValue": "Default"
       },
@@ -1813,7 +1813,7 @@
       {
         "type": "select",
         "label": "Format",
-        "key": "yAxisUnits",
+        "key": "valueUnits",
         "options": ["Default", "Thousands", "Millions"],
         "defaultValue": "Default"
       },
@@ -1966,7 +1966,7 @@
       {
         "type": "select",
         "label": "Format",
-        "key": "yAxisUnits",
+        "key": "valueUnits",
         "options": ["Default", "Thousands", "Millions"],
         "defaultValue": "Default"
       },
@@ -2410,7 +2410,7 @@
       {
         "type": "select",
         "label": "Format",
-        "key": "yAxisUnits",
+        "key": "valueUnits",
         "options": ["Default", "Thousands", "Millions"],
         "defaultValue": "Default"
       },
@@ -5341,7 +5341,7 @@
           {
             "type": "select",
             "label": "Format",
-            "key": "yAxisUnits",
+            "key": "valueUnits",
             "options": ["Default", "Thousands", "Millions"],
             "defaultValue": "Default"
           },
@@ -5436,7 +5436,7 @@
           {
             "type": "select",
             "label": "Format",
-            "key": "yAxisUnits",
+            "key": "valueUnits",
             "options": ["Default", "Thousands", "Millions"],
             "defaultValue": "Default"
           },
@@ -5485,7 +5485,7 @@
           {
             "type": "select",
             "label": "Format",
-            "key": "yAxisUnits",
+            "key": "valueUnits",
             "options": ["Default", "Thousands", "Millions"],
             "defaultValue": "Default"
           },
@@ -5567,7 +5567,7 @@
           {
             "type": "select",
             "label": "Format",
-            "key": "yAxisUnits",
+            "key": "valueUnits",
             "options": ["Default", "Thousands", "Millions"],
             "defaultValue": "Default"
           },
