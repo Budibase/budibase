@@ -535,8 +535,7 @@ export function extractBucketAndPath(
 ): { bucket: string; path: string } | null {
   const baseUrl = url.split("?")[0]
 
-  // eslint-disable-next-line no-useless-escape
-  const regex = /^\/files\/signed\/(?<bucket>[^/]+)\/(?<path>.+)$/
+  const regex = new RegExp(`^${signedFilePrefix}/(?<bucket>[^/]+)/(?<path>.+)$`)
   const match = baseUrl.match(regex)
 
   if (match && match.groups) {
