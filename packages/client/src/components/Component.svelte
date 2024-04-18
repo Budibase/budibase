@@ -296,9 +296,6 @@
           return false
         }
 
-        if (sectionDependsOnValue == null && sectionRealDependentValue == null) {
-          return false
-        }
         if (sectionDependsOnValue != null && sectionDependsOnValue !== sectionRealDependentValue) {
           return false
         }
