@@ -50,6 +50,8 @@ type CreateAdminUserOpts = {
   hashPassword?: boolean
   requirePassword?: boolean
   skipPasswordValidation?: boolean
+  firstName?: string
+  lastName?: string
 }
 type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
 

@@ -116,7 +116,7 @@ const parseBooleanParam = (param: any) => {
 export const adminUser = async (
   ctx: Ctx<CreateAdminUserRequest, CreateAdminUserResponse>
 ) => {
-  const { email, password, tenantId, ssoId } = ctx.request.body
+  const { email, password, tenantId, ssoId, displayName } = ctx.request.body
 
   if (await platform.tenants.exists(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
@@ -145,12 +145,19 @@ export const adminUser = async (
       )
     }
 
+    // Get the first and last names from the SSO display name if available
+    const nameParts = (displayName ?? "").split(" ").filter((p: string) => !!p)
+    const firstName = nameParts.length > 0 ? nameParts[0] : ""
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : ""
+
     try {
       const finalUser = await userSdk.db.createAdminUser(email, tenantId, {
         password,
         ssoId,
         hashPassword,
         requirePassword,
+        firstName,
+        lastName,
       })
 
       // events
