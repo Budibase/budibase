@@ -9,7 +9,8 @@ import {
 } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
-import { db } from "@budibase/backend-core"
+import { db, context } from "@budibase/backend-core"
+import { enrichSearchContext, userSearchFromContext } from "./utils"
 
 export async function searchView(
   ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
@@ -56,10 +57,19 @@ export async function searchView(
     })
   }
 
+  // Current user search context.
+  const { _id, _rev, firstName, lastName, email, status, roleId } = ctx.user
+
+  await context.ensureSnippetContext()
+
+  const enrichedQuery = await enrichSearchContext(query, {
+    user: { _id, _rev, firstName, lastName, email, status, roleId },
+  })
+
   const searchOptions: RequiredKeys<SearchViewRowRequest> &
     RequiredKeys<Pick<RowSearchParams, "tableId" | "query" | "fields">> = {
     tableId: view.tableId,
-    query,
+    query: enrichedQuery,
     fields: viewFields,
     ...getSortOptions(body, view),
     limit: body.limit,

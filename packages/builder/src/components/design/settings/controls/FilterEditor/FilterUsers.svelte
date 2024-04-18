@@ -1,7 +1,6 @@
 <script>
   import { Select, Multiselect } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
-
   import { API } from "api"
 
   export let value = null
@@ -23,12 +22,14 @@
   $: component = multiselect ? Multiselect : Select
 </script>
 
-<svelte:component
-  this={component}
-  bind:value
-  autocomplete
-  {options}
-  getOptionLabel={option => option.email}
-  getOptionValue={option => option._id}
-  {disabled}
-/>
+<div class="user-control">
+  <svelte:component
+    this={component}
+    bind:value
+    autocomplete
+    {options}
+    getOptionLabel={option => option.email}
+    getOptionValue={option => option._id}
+    {disabled}
+  />
+</div>
