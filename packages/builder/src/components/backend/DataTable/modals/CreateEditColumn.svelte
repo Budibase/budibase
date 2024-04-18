@@ -626,7 +626,7 @@
         />
       </div>
     </div>
-  {:else if editableColumn.type === FieldType.LINK}
+  {:else if editableColumn.type === FieldType.LINK && !editableColumn.autocolumn}
     <RelationshipSelector
       bind:relationshipPart1
       bind:relationshipPart2
