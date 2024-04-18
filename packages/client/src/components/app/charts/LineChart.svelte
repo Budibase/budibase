@@ -20,15 +20,6 @@
   export let palette
   export let c1, c2, c3, c4, c5
 
-  // Area specific props
-  export let area
-  export let stacked
-  export let gradient
-
-  $: {
-    console.log(palette);
-  }
-
   const formatters = {
     ["Default"]: val => val,
     ["Thousands"]: val => `${Math.round(val / 1000)}K`,
@@ -71,7 +62,6 @@
       height: height == null || height === "" ? "auto" : height,
       width: width == null || width === "" ? "100%" : width,
       type: "line",
-      stacked,
       animations: {
         enabled: animate
       },
