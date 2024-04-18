@@ -29,9 +29,9 @@
     }
   }
 
-  $: {
-    sidePanelStore.actions.setIgnoreClicksOutside(ignoreClicksOutside)
-  }
+  // $: {
+
+  // }
 
   // Derive visibility
   $: open = $sidePanelStore.contentId === $component.id
@@ -43,6 +43,7 @@
   let renderKey = null
   $: {
     if (open) {
+      sidePanelStore.actions.setIgnoreClicksOutside(ignoreClicksOutside)
       renderKey = Math.random()
     }
   }
