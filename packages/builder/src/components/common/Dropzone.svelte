@@ -35,4 +35,5 @@
   {...$$restProps}
   {processFiles}
   {handleFileTooLarge}
+  on:change
 />
