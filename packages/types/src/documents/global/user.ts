@@ -22,6 +22,13 @@ export interface UserSSO {
   providerType: SSOProviderType
   oauth2?: OAuth2
   thirdPartyProfile?: SSOProfileJson
+  profile?: {
+    displayName?: string
+    name?: {
+      givenName?: string
+      familyName?: string
+    }
+  }
 }
 
 export type SSOUser = User & UserSSO
