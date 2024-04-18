@@ -51,6 +51,12 @@ export async function save(
     !oldTable &&
     (tableToSave.primary == null || tableToSave.primary.length === 0)
   ) {
+    if (tableToSave.schema.id) {
+      throw new Error(
+        "External tables with no `primary` column set will define an `id` column, but we found an `id` column in the supplied schema. Either set a `primary` column or remove the `id` column."
+      )
+    }
+
     tableToSave.primary = ["id"]
     tableToSave.schema.id = {
       type: FieldType.NUMBER,
