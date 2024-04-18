@@ -4,6 +4,7 @@ import {
   Query,
   QueryPreview,
   SourceName,
+  TableSourceType,
 } from "@budibase/types"
 import * as setup from "../utilities"
 import {
@@ -740,12 +741,25 @@ describe.each(
   })
 
   describe("query through datasource", () => {
-    it("should be able to query a pg datasource", async () => {
+    it("should be able to query the datasource", async () => {
+      const entityId = "test_table"
+      await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          [entityId]: {
+            name: entityId,
+            schema: {},
+            type: "table",
+            sourceId: datasource._id!,
+            sourceType: TableSourceType.EXTERNAL,
+          },
+        },
+      })
       const res = await config.api.datasource.query({
         endpoint: {
           datasourceId: datasource._id!,
           operation: Operation.READ,
-          entityId: "test_table",
+          entityId,
         },
         resource: {
           fields: ["id", "name"],

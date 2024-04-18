@@ -9,10 +9,7 @@
   },
   "targetDefaults": {
     "build": {
-      "inputs": [
-        "{workspaceRoot}/scripts/build.js",
-        "{workspaceRoot}/lerna.json"
-      ]
+      "inputs": ["{workspaceRoot}/scripts/*", "{workspaceRoot}/lerna.json"]
     }
   }
 }
