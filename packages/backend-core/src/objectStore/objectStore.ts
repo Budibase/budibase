@@ -527,24 +527,22 @@ export async function getReadStream(
 }
 
 /*
-Given a signed url like 'files/signed/tmp-files-attachments/app_123456/myfile.txt' extract
+Given a signed url like '/files/signed/tmp-files-attachments/app_123456/myfile.txt' extract
 the bucket and the path from it
 */
 export function extractBucketAndPath(
   url: string
 ): { bucket: string; path: string } | null {
   const baseUrl = url.split("?")[0]
-  if (!baseUrl.startsWith(signedFilePrefix)) {
-    return null
+
+  // eslint-disable-next-line no-useless-escape
+  const regex = /^\/files\/signed\/(?<bucket>[^/]+)\/(?<path>.+)$/
+  const match = baseUrl.match(regex)
+
+  if (match && match.groups) {
+    const { bucket, path } = match.groups
+    return { bucket, path }
   }
 
-  const parts = baseUrl.split("/")
-  if (parts.length < 5) {
-    return null
-  }
-
-  const bucket = parts[3]
-  const path = parts.slice(4).join("/")
-
-  return { bucket, path }
+  return null
 }
