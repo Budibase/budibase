@@ -16,7 +16,8 @@ function buildAdminInitValidation() {
       password: OPTIONAL_STRING,
       tenantId: Joi.string().required(),
       ssoId: Joi.string(),
-      displayName: OPTIONAL_STRING,
+      familyName: OPTIONAL_STRING,
+      givenName: OPTIONAL_STRING,
     })
       .required()
       .unknown(false)
