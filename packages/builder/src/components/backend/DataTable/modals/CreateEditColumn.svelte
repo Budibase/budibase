@@ -13,6 +13,7 @@
     Layout,
     AbsTooltip,
   } from "@budibase/bbui"
+  import { SWITCHABLE_TYPES, ValidColumnNameRegex } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
@@ -20,11 +21,6 @@
   import {
     FIELDS,
     RelationshipType,
-    ALLOWABLE_STRING_OPTIONS,
-    ALLOWABLE_NUMBER_OPTIONS,
-    ALLOWABLE_STRING_TYPES,
-    ALLOWABLE_NUMBER_TYPES,
-    SWITCHABLE_TYPES,
     PrettyRelationshipDefinitions,
     DB_TYPE_EXTERNAL,
   } from "constants/backend"
@@ -33,7 +29,6 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
-  import { ValidColumnNameRegex } from "@budibase/shared-core"
   import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
@@ -61,8 +56,8 @@
   let primaryDisplay
   let indexes = [...($tables.selected.indexes || [])]
   let isCreating = undefined
-  let relationshipPart1 = PrettyRelationshipDefinitions.Many
-  let relationshipPart2 = PrettyRelationshipDefinitions.One
+  let relationshipPart1 = PrettyRelationshipDefinitions.MANY
+  let relationshipPart2 = PrettyRelationshipDefinitions.ONE
   let relationshipTableIdPrimary = null
   let relationshipTableIdSecondary = null
   let table = $tables.selected
@@ -175,7 +170,7 @@
   $: typeEnabled =
     !originalName ||
     (originalName &&
-      SWITCHABLE_TYPES.indexOf(editableColumn.type) !== -1 &&
+      SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
@@ -367,16 +362,15 @@
   }
 
   function getAllowedTypes() {
-    if (
-      originalName &&
-      ALLOWABLE_STRING_TYPES.indexOf(editableColumn.type) !== -1
-    ) {
-      return ALLOWABLE_STRING_OPTIONS
-    } else if (
-      originalName &&
-      ALLOWABLE_NUMBER_TYPES.indexOf(editableColumn.type) !== -1
-    ) {
-      return ALLOWABLE_NUMBER_OPTIONS
+    if (originalName) {
+      const possibleTypes = (
+        SWITCHABLE_TYPES[field.type] || [editableColumn.type]
+      ).map(t => t.toLowerCase())
+      return Object.entries(FIELDS)
+        .filter(([fieldType]) =>
+          possibleTypes.includes(fieldType.toLowerCase())
+        )
+        .map(([_, fieldDefinition]) => fieldDefinition)
     }
 
     const isUsers =

@@ -211,26 +211,6 @@ export const PrettyRelationshipDefinitions = {
   ONE: "One row",
 }
 
-export const ALLOWABLE_STRING_OPTIONS = [
-  FIELDS.STRING,
-  FIELDS.OPTIONS,
-  FIELDS.LONGFORM,
-  FIELDS.BARCODEQR,
-]
-export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
-  opt => opt.type
-)
-
-export const ALLOWABLE_NUMBER_OPTIONS = [FIELDS.NUMBER, FIELDS.BOOLEAN]
-export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
-  opt => opt.type
-)
-
-export const SWITCHABLE_TYPES = [
-  ...ALLOWABLE_STRING_TYPES,
-  ...ALLOWABLE_NUMBER_TYPES,
-]
-
 export const BUDIBASE_INTERNAL_DB_ID = INTERNAL_TABLE_SOURCE_ID
 export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
 export const BUDIBASE_DATASOURCE_TYPE = "budibase"
