@@ -159,7 +159,7 @@
     box-sizing: border-box;
     border: 1px solid var(--grey-4);
     opacity: 0;
-    pointer-events: none;
+    overflow: hidden;
 
     transition: width 300ms ease-in, height 300ms ease-in, top 300ms ease-in, left 300ms ease-in;
   }
