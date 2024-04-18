@@ -5,7 +5,7 @@
   const { styleable, sidePanelStore, builderStore, dndIsDragging } =
     getContext("sdk")
 
-  export let sidePanelClose
+  export let onClose
   export let ignoreClicksOutside
 
   // Automatically show and hide the side panel when inside the builder.
@@ -48,8 +48,8 @@
   }
 
   const handleSidePanelClose = async () => {
-    if (sidePanelClose) {
-      await sidePanelClose()
+    if (onClose) {
+      await onClose()
     }
   }
 
