@@ -54,23 +54,9 @@
   }
 
   const deleteSignature = async () => {
-    const deleteRequest = fieldState?.value.map(item => item.key)
-
     const changed = fieldApi.setValue([])
     if (onChange && changed) {
       onChange({ value: [] })
-    }
-
-    try {
-      await API.deleteAttachments({
-        keys: deleteRequest,
-        tableId: formContext?.dataSource?.tableId,
-      })
-    } catch (error) {
-      notificationStore.actions.error(
-        `There was a problem deleting your signature`
-      )
-      console.error(error)
     }
   }
 
