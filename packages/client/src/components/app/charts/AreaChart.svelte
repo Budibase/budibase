@@ -2,6 +2,7 @@
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
   import { get } from "lodash";
+  import formatters from "./formatters"
 
   export let title
   export let dataProvider
@@ -23,13 +24,6 @@
   export let area
   export let stacked
   export let gradient
-
-  const formatters = {
-    ["Default"]: val => val,
-    ["Thousands"]: val => `${Math.round(val / 1000)}K`,
-    ["Millions"]: val => `${Math.round(val / 1000000)}M`,
-    ["Datetime"]: val => (new Date(val)).toLocaleString()
-  }
 
   $: series = getSeries(dataProvider, valueColumns)
   $: categories = getCategories(dataProvider, labelColumn);
