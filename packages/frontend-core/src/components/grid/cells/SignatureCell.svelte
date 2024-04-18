@@ -44,12 +44,6 @@
 
   const deleteSignature = async () => {
     onChange([])
-    const deleteRequest = value.map(item => item.key)
-    try {
-      await API.deleteBuilderAttachments(deleteRequest)
-    } catch (error) {
-      $notifications.error(error.message || "Failed to delete signature")
-    }
   }
 
   const saveSignature = async sigCanvas => {
