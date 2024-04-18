@@ -56,8 +56,8 @@
     },
   }
 
-  const getSeries = (datasource, valueColumn) => {
-    const rows = datasource.rows ?? [];
+  const getSeries = (dataProvider, valueColumn) => {
+    const rows = dataProvider.rows ?? [];
 
     return rows.map(row => {
       const value = row?.[valueColumn]
@@ -70,8 +70,8 @@
     })
   }
 
-  const getLabels = (datasource, labelColumn, labelType) => {
-    const rows = datasource.rows ?? [];
+  const getLabels = (dataProvider, labelColumn, labelType) => {
+    const rows = dataProvider.rows ?? [];
 
     return rows.map(row => {
       const value = row?.[labelColumn]
