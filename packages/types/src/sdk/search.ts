@@ -27,10 +27,13 @@ export interface SearchFilters {
     [key: string]: string
   }
   [SearchFilterOperator.RANGE]?: {
-    [key: string]: {
-      high: number | string
-      low: number | string
-    }
+    [key: string]:
+      | {
+          high: number | string
+          low: number | string
+        }
+      | { high: number | string }
+      | { low: number | string }
   }
   [SearchFilterOperator.EQUAL]?: {
     [key: string]: any

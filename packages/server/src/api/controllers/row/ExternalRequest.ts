@@ -374,38 +374,44 @@ export class ExternalRequest<T extends Operation> {
       ) {
         continue
       }
-      let tableId: string | undefined,
+      let relatedTableId: string | undefined,
         lookupField: string | undefined,
         fieldName: string | undefined
       if (isManyToMany(field)) {
-        tableId = field.through
+        relatedTableId = field.through
         lookupField = primaryKey
         fieldName = field.throughTo || primaryKey
       } else if (isManyToOne(field)) {
-        tableId = field.tableId
+        relatedTableId = field.tableId
         lookupField = field.foreignKey
         fieldName = field.fieldName
       }
-      if (!tableId || !lookupField || !fieldName) {
+      if (!relatedTableId || !lookupField || !fieldName) {
         throw new Error(
           "Unable to lookup relationships - undefined column properties."
         )
       }
-      const { tableName: relatedTableName } = breakExternalTableId(tableId)
+      const { tableName: relatedTableName } =
+        breakExternalTableId(relatedTableId)
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
       if (!lookupField || !row[lookupField]) {
         continue
       }
+      const endpoint = getEndpoint(relatedTableId, Operation.READ)
+      const relatedTable = this.tables[endpoint.entityId]
+      if (!relatedTable) {
+        throw new Error("unable to find related table")
+      }
       const response = await getDatasourceAndQuery({
-        endpoint: getEndpoint(tableId, Operation.READ),
+        endpoint: endpoint,
         filters: {
           equal: {
             [fieldName]: row[lookupField],
           },
         },
         meta: {
-          table,
+          table: relatedTable,
         },
       })
       // this is the response from knex if no rows found
@@ -414,7 +420,11 @@ export class ExternalRequest<T extends Operation> {
       const storeTo = isManyToMany(field)
         ? field.throughFrom || linkPrimaryKey
         : fieldName
-      related[storeTo] = { rows, isMany: isManyToMany(field), tableId }
+      related[storeTo] = {
+        rows,
+        isMany: isManyToMany(field),
+        tableId: relatedTableId,
+      }
     }
     return related
   }
@@ -437,7 +447,6 @@ export class ExternalRequest<T extends Operation> {
     // if we're creating (in a through table) need to wipe the existing ones first
     const promises = []
     const related = await this.lookupRelations(mainTableId, row)
-    const table = this.getTable(mainTableId)!
     for (let relationship of relationships) {
       const { key, tableId, isUpdate, id, ...rest } = relationship
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
@@ -484,7 +493,7 @@ export class ExternalRequest<T extends Operation> {
             body,
             filters: buildFilters(id, {}, linkTable),
             meta: {
-              table,
+              table: linkTable,
             },
           })
         )
