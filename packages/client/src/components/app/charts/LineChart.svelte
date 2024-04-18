@@ -91,8 +91,8 @@
     }
   }
 
-  const getSeries = (datasource, valueColumns = []) => {
-    const rows = datasource.rows ?? [];
+  const getSeries = (dataProvider, valueColumns = []) => {
+    const rows = dataProvider.rows ?? [];
 
     return valueColumns.map(column => ({
       name: column,
@@ -102,8 +102,8 @@
     }))
   }
 
-  const getCategories = (datasource, labelColumn) => {
-    const rows = datasource.rows ?? [];
+  const getCategories = (dataProvider, labelColumn) => {
+    const rows = dataProvider.rows ?? [];
 
     return rows.map(row => {
       const value = row?.[labelColumn]
