@@ -2,7 +2,7 @@
 
 # Check if the pro submodule is loaded
 if [ ! -d "./packages/pro/src" ]; then
-  echo "Submodule is not loaded. This is only allowed with loaded submodules."
+  echo "[ERROR] Submodule is not loaded. This is only allowed with loaded submodules."
   exit 1
 fi
 
