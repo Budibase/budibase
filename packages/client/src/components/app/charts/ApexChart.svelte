@@ -16,6 +16,9 @@
   let chart;
 
   const updateChart = async (newOptions) => {
+    // Line charts won't transition from category to datetime types properly without
+    // calling this with an empty object first; I don't know why this works.
+    await chart?.updateOptions({})
     await chart?.updateOptions(newOptions)
   }
 
