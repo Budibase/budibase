@@ -154,8 +154,6 @@
 
     return { type: 'solid' }
   }
-
-  $: console.log("opt", options);
 </script>
 
 <ApexChart {options} />
