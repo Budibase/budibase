@@ -66,6 +66,8 @@ export interface CreateAdminUserRequest {
   password?: string
   tenantId: string
   ssoId?: string
+  familyName?: string
+  givenName?: string
 }
 
 export interface AddSSoUserRequest {
