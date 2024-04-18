@@ -4,7 +4,7 @@ import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
-import { configs, cache, context as appContext } from "@budibase/backend-core"
+import { configs, cache, objectStore } from "@budibase/backend-core"
 import ical from "ical-generator"
 import fetch from "node-fetch"
 import path from "path"
@@ -165,45 +165,40 @@ export async function sendEmail(
     }),
   }
   if (opts?.attachments) {
-    const baseUrl = appContext.getPlatformURL()
     const attachments = await Promise.all(
       opts.attachments?.map(async attachment => {
         const isFullyFormedUrl =
           attachment.url.startsWith("http://") ||
           attachment.url.startsWith("https://")
-
-        const url = isFullyFormedUrl ? attachment.url : baseUrl + attachment.url
-        let headers
-
-        if (env.isTest()) {
-          headers = {
-            Host: "minio-service",
+        if (isFullyFormedUrl) {
+          const response = await fetch(attachment.url)
+          if (!response.ok) {
+            throw new Error(`unexpected response ${response.statusText}`)
           }
-        }
-
-        let response
-        if (headers) {
-          response = await fetch(url, {
-            headers,
-          })
+          const fallbackFilename = path.basename(
+            new URL(attachment.url).pathname
+          )
+          return {
+            filename: attachment.filename || fallbackFilename,
+            content: response?.body,
+          }
         } else {
-          response = await fetch(url)
-        }
-        if (!response.ok) {
-          throw new Error(`unexpected response ${response.statusText}`)
-        }
-        const fallbackFilename = path.basename(new URL(url).pathname)
-
-        return {
-          filename: attachment.filename || fallbackFilename,
-          content: response?.body,
+          const url = attachment.url
+          const result = objectStore.extractBucketAndPath(url)
+          if (result === null) {
+            throw new Error("Invalid signed URL")
+          }
+          const { bucket, path } = result
+          const readStream = await objectStore.getReadStream(bucket, path)
+          const fallbackFilename = path.split("/").pop() || ""
+          return {
+            filename: attachment.filename || fallbackFilename,
+            content: readStream,
+          }
         }
       })
     )
-    message = {
-      ...message,
-      attachments,
-    }
+    message = { ...message, attachments }
   }
 
   message = {

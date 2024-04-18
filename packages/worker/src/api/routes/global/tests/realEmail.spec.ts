@@ -2,8 +2,8 @@ jest.unmock("node-fetch")
 jest.unmock("aws-sdk")
 import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
-import { objectStoreTestProviders, mocks } from "@budibase/backend-core/tests"
-import { objectStore, env } from "@budibase/backend-core"
+import { objectStoreTestProviders } from "@budibase/backend-core/tests"
+import { objectStore } from "@budibase/backend-core"
 import tk from "timekeeper"
 import { EmailAttachment } from "@budibase/types"
 
@@ -18,6 +18,7 @@ describe("/api/global/email", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
+    tk.reset()
     await objectStoreTestProviders.minio.start()
     await config.beforeAll()
   })
@@ -99,7 +100,6 @@ describe("/api/global/email", () => {
   })
 
   it("should be able to send an email with attachments", async () => {
-    tk.reset()
     let bucket = "testbucket"
     let filename = "test.txt"
     await objectStore.upload({
@@ -114,10 +114,9 @@ describe("/api/global/email", () => {
     )
 
     let attachmentObject = {
-      url: env.MINIO_URL + presignedUrl.split("files/signed")[1],
+      url: presignedUrl,
       filename,
     }
-    tk.freeze(mocks.date.MOCK_DATE)
     await sendRealEmail(EmailTemplatePurpose.WELCOME, [attachmentObject])
   })
 })

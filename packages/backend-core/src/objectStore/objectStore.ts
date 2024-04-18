@@ -19,6 +19,7 @@ const streamPipeline = promisify(stream.pipeline)
 const STATE = {
   bucketCreationPromises: {},
 }
+const signedFilePrefix = "/files/signed"
 
 type ListParams = {
   ContinuationToken?: string
@@ -337,7 +338,7 @@ export function getPresignedUrl(
     const signedUrl = new URL(url)
     const path = signedUrl.pathname
     const query = signedUrl.search
-    return `/files/signed${path}${query}`
+    return `${signedFilePrefix}${path}${query}`
   }
 }
 
@@ -523,4 +524,24 @@ export async function getReadStream(
     Key: path,
   }
   return client.getObject(params).createReadStream()
+}
+
+/*
+Given a signed url like '/files/signed/tmp-files-attachments/app_123456/myfile.txt' extract
+the bucket and the path from it
+*/
+export function extractBucketAndPath(
+  url: string
+): { bucket: string; path: string } | null {
+  const baseUrl = url.split("?")[0]
+
+  const regex = new RegExp(`^${signedFilePrefix}/(?<bucket>[^/]+)/(?<path>.+)$`)
+  const match = baseUrl.match(regex)
+
+  if (match && match.groups) {
+    const { bucket, path } = match.groups
+    return { bucket, path }
+  }
+
+  return null
 }
