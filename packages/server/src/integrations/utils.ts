@@ -7,7 +7,7 @@ import {
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
 import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../constants"
-import { helpers } from "@budibase/shared-core"
+import { SWITCHABLE_TYPES, helpers } from "@budibase/shared-core"
 import env from "../environment"
 import { Knex } from "knex"
 
@@ -284,8 +284,8 @@ export function isIsoDateString(str: string) {
  * @param column The column to check, to see if it is a valid relationship.
  * @param tableIds The IDs of the tables which currently exist.
  */
-export function shouldCopyRelationship(
-  column: { type: string; tableId?: string },
+function shouldCopyRelationship(
+  column: { type: FieldType.LINK; tableId?: string },
   tableIds: string[]
 ) {
   return (
@@ -303,28 +303,18 @@ export function shouldCopyRelationship(
  * @param column The column to check for options or boolean type.
  * @param fetchedColumn The fetched column to check for the type in the external database.
  */
-export function shouldCopySpecialColumn(
-  column: { type: string },
-  fetchedColumn: { type: string } | undefined
+function shouldCopySpecialColumn(
+  column: { type: FieldType },
+  fetchedColumn: { type: FieldType } | undefined
 ) {
   const isFormula = column.type === FieldType.FORMULA
-  const specialTypes = [
-    FieldType.OPTIONS,
-    FieldType.LONGFORM,
-    FieldType.ARRAY,
-    FieldType.FORMULA,
-    FieldType.BB_REFERENCE,
-  ]
   // column has been deleted, remove - formulas will never exist, always copy
   if (!isFormula && column && !fetchedColumn) {
     return false
   }
   const fetchedIsNumber =
     !fetchedColumn || fetchedColumn.type === FieldType.NUMBER
-  return (
-    specialTypes.indexOf(column.type as FieldType) !== -1 ||
-    (fetchedIsNumber && column.type === FieldType.BOOLEAN)
-  )
+  return fetchedIsNumber && column.type === FieldType.BOOLEAN
 }
 
 /**
@@ -357,11 +347,44 @@ function copyExistingPropsOver(
         continue
       }
       const column = existingTableSchema[key]
+
+      const existingColumnType = column?.type
+      const updatedColumnType = table.schema[key]?.type
+
+      // If the db column type changed to a non-compatible one, we want to re-fetch it
       if (
-        shouldCopyRelationship(column, tableIds) ||
-        shouldCopySpecialColumn(column, table.schema[key])
+        updatedColumnType !== existingColumnType &&
+        !SWITCHABLE_TYPES[updatedColumnType]?.includes(existingColumnType)
       ) {
-        table.schema[key] = existingTableSchema[key]
+        continue
+      }
+
+      if (
+        column.type === FieldType.LINK &&
+        !shouldCopyRelationship(column, tableIds)
+      ) {
+        continue
+      }
+
+      const specialTypes = [
+        FieldType.OPTIONS,
+        FieldType.LONGFORM,
+        FieldType.ARRAY,
+        FieldType.FORMULA,
+        FieldType.BB_REFERENCE,
+      ]
+      if (
+        specialTypes.includes(column.type) &&
+        !shouldCopySpecialColumn(column, table.schema[key])
+      ) {
+        continue
+      }
+
+      table.schema[key] = {
+        ...existingTableSchema[key],
+        externalType:
+          existingTableSchema[key].externalType ||
+          table.schema[key].externalType,
       }
     }
   }
