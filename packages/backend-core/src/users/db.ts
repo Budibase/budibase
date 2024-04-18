@@ -50,6 +50,8 @@ type CreateAdminUserOpts = {
   hashPassword?: boolean
   requirePassword?: boolean
   skipPasswordValidation?: boolean
+  firstName?: string
+  lastName?: string
 }
 type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
 
@@ -517,6 +519,8 @@ export class UserDB {
         global: true,
       },
       tenantId,
+      firstName: opts?.firstName,
+      lastName: opts?.lastName,
     }
     if (opts?.ssoId) {
       user.ssoId = opts.ssoId
