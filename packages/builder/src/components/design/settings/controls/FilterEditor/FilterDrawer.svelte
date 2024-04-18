@@ -304,6 +304,7 @@
                     OperatorOptions.ContainsAny.value,
                   ].includes(filter.operator)}
                   disabled={filter.noValue}
+                  type={filter.valueType}
                 />
               {:else}
                 <DrawerBindableInput disabled />

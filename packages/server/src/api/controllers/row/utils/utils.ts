@@ -7,6 +7,8 @@ import {
   FieldType,
   RelationshipsJson,
   Row,
+  SearchRowRequest,
+  SearchRowResponse,
   Table,
   UserCtx,
 } from "@budibase/types"
@@ -22,7 +24,7 @@ import {
   getInternalRowId,
 } from "./basic"
 import sdk from "../../../../sdk"
-
+import { processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
 
 validateJs.extend(validateJs.validators.datetime, {
@@ -186,4 +188,41 @@ export async function sqlOutputProcessing(
 
 export function isUserMetadataTable(tableId: string) {
   return tableId === InternalTables.USER_METADATA
+}
+
+export async function enrichSearchContext(
+  fields: Record<string, any>,
+  inputs = {},
+  helpers = true
+): Promise<Record<string, any>> {
+  const enrichedQuery: Record<string, any> = {}
+  if (!fields || !inputs) {
+    return enrichedQuery
+  }
+  const parameters = { ...inputs }
+  // enrich the fields with dynamic parameters
+  for (let key of Object.keys(fields)) {
+    if (fields[key] == null) {
+      continue
+    }
+    if (typeof fields[key] === "object") {
+      // enrich nested fields object
+      enrichedQuery[key] = await enrichSearchContext(
+        fields[key],
+        parameters,
+        helpers
+      )
+    } else if (typeof fields[key] === "string") {
+      // enrich string value as normal
+      enrichedQuery[key] = processStringSync(fields[key], parameters, {
+        noEscaping: true,
+        noHelpers: !helpers,
+        escapeNewlines: true,
+      })
+    } else {
+      enrichedQuery[key] = fields[key]
+    }
+  }
+
+  return enrichedQuery
 }
