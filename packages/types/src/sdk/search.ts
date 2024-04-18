@@ -80,10 +80,6 @@ export interface RenameColumn {
   updated: string
 }
 
-export interface AddColumn {
-  name: string
-}
-
 export interface RelationshipsJson {
   through?: string
   from?: string
