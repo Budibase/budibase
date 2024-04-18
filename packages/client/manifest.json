@@ -1859,7 +1859,7 @@
         "type": "select",
         "label": "Colors",
         "key": "palette",
-        "defaultValue": "Palette 1",
+        "defaultValue": "palette1",
         "options": [
           { "label": "Custom", "value": "Custom" },
           { "label": "Palette 1", "value": "palette1" },

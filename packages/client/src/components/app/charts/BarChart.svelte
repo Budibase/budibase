@@ -33,7 +33,6 @@
 
   $: labelType = dataProvider?.schema?.[labelColumn]?.type === 'datetime' ? 
     "datetime" : "category"
-  $: formatter = getFormatter(labelType, valueUnits)
   $: xAxisFormatter = getFormatter(labelType, valueUnits, horizontal, "x")
   $: yAxisFormatter = getFormatter(labelType, valueUnits, horizontal, "y")
 
