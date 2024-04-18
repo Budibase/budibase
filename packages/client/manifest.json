@@ -1777,6 +1777,7 @@
     ]
   },
   "line": {
+    "documentationLink": "https://docs.budibase.com/docs/line-chart",
     "name": "Line Chart",
     "description": "Line chart",
     "icon": "GraphTrend",
@@ -1808,6 +1809,22 @@
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
+        "columnInfo": {
+          "typeSupport": {
+            "supported": ["number", "boolean"],
+            "partialSupport": [
+              { "type": "longform", "message": "stringAsNumber" },
+              { "type": "string", "message": "stringAsNumber" },
+              { "type": "bigint", "message": "stringAsNumber" },
+              { "type": "options", "message": "stringAsNumber" },
+              { "type": "formula", "message": "stringAsNumber" },
+              { "type": "datetime", "message": "dateAsNumber"}
+            ],
+            "unsupported": [
+              { "type": "json", "message": "jsonPrimitivesOnly" }
+            ]
+          }
+        },
         "required": true
       },
       {
@@ -1930,6 +1947,7 @@
     ]
   },
   "area": {
+    "documentationLink": "https://docs.budibase.com/docs/area-chart",
     "name": "Area Chart",
     "description": "Line chart",
     "icon": "GraphAreaStacked",
@@ -1961,6 +1979,22 @@
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
+        "columnInfo": {
+          "typeSupport": {
+            "supported": ["number", "boolean"],
+            "partialSupport": [
+              { "type": "longform", "message": "stringAsNumber" },
+              { "type": "string", "message": "stringAsNumber" },
+              { "type": "bigint", "message": "stringAsNumber" },
+              { "type": "options", "message": "stringAsNumber" },
+              { "type": "formula", "message": "stringAsNumber" },
+              { "type": "datetime", "message": "dateAsNumber"}
+            ],
+            "unsupported": [
+              { "type": "json", "message": "jsonPrimitivesOnly" }
+            ]
+          }
+        },
         "required": true
       },
       {
@@ -2095,6 +2129,7 @@
     ]
   },
   "pie": {
+    "documentationLink": "https://docs.budibase.com/docs/pie-donut-chart",
     "name": "Pie Chart",
     "description": "Pie chart",
     "icon": "GraphPie",
@@ -2224,6 +2259,7 @@
     ]
   },
   "donut": {
+    "documentationLink": "https://docs.budibase.com/docs/pie-donut-chart",
     "name": "Donut Chart",
     "description": "Donut chart",
     "icon": "GraphDonut",
@@ -2353,6 +2389,7 @@
     ]
   },
   "candlestick": {
+    "documentationLink": "https://docs.budibase.com/docs/candlestick-chart",
     "name": "Candlestick Chart",
     "description": "Candlestick chart",
     "icon": "GraphBarVerticalStacked",
@@ -2444,6 +2481,7 @@
     ]
   },
   "histogram": {
+    "documentationLink": "https://docs.budibase.com/docs/histogram-chart",
     "name": "Histogram Chart",
     "description": "Histogram chart",
     "icon": "Histogram",
