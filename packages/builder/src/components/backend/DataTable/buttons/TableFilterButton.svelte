@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { ActionButton, Drawer, Button } from "@budibase/bbui"
+  import { ActionButton, Drawer, DrawerContent, Button } from "@budibase/bbui"
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { getUserBindings } from "dataBinding"
   import { makePropSafe } from "@budibase/string-templates"
@@ -64,12 +64,13 @@
   >
     Save
   </Button>
-  <FilterBuilder
-    slot="body"
-    {filters}
-    {schemaFields}
-    datasource={{ type: "table", tableId }}
-    on:change={e => (tempValue = e.detail)}
-    {bindings}
-  />
+  <DrawerContent slot="body">
+    <FilterBuilder
+      {filters}
+      {schemaFields}
+      datasource={{ type: "table", tableId }}
+      on:change={e => (tempValue = e.detail)}
+      {bindings}
+    />
+  </DrawerContent>
 </Drawer>
