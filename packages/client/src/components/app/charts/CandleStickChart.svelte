@@ -1,5 +1,4 @@
 <script>
-  import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
   import formatters from './formatters';
 

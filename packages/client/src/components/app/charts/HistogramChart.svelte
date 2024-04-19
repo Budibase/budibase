@@ -1,8 +1,5 @@
 <script>
-  import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
-  import { get } from "lodash";
-  import formatters from "./formatters"
 
   export let dataProvider
   export let valueColumn
