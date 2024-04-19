@@ -3,7 +3,7 @@
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { FieldContext } from './FieldContext'
+  import { Explanation } from './Explanation'
   import { debounce } from "lodash"
   import { goto, params } from "@roxi/routify"
   import { Constants } from "@budibase/frontend-core"
@@ -109,7 +109,7 @@
     anchor={contextTooltipAnchor}
     offset={20}
   >
-    <FieldContext
+    <Explanation
       explanationModal
       tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
       schema={schema[currentOption]}
@@ -118,7 +118,7 @@
       columnType={getOptionIconTooltip(currentOption)}
       {explanation}
     />
-    <FieldContext
+    <Explanation
       slot="previous"
       schema={schema[previousOption]}
       columnIcon={getOptionIcon(previousOption)}
