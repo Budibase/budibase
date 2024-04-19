@@ -29,7 +29,6 @@ import { JSONUtils, Constants } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
 import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
-import { helpersToCompletion } from "components/common/CodeEditor"
 
 const { ContextScopes } = Constants
 
