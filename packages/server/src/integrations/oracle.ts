@@ -378,7 +378,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         try {
           await connection.close()
         } catch (err) {
-          console.error(err)
+          console.error("Error connecting to Oracle", err)
         }
       }
     }
