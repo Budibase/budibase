@@ -296,49 +296,6 @@ export function isIsoDateString(str: string) {
   return d.toISOString() === trimmedValue
 }
 
-/**
- * This function will determine whether a column is a relationship and whether it
- * is currently valid. The reason for the validity check is that tables can be deleted
- * outside of Budibase control and if this is the case it will break Budibase relationships.
- * The tableIds is a list passed down from the main finalise tables function, which is
- * based on the tables that have just been fetched. This will only really be used on subsequent
- * fetches to the first one - if the user is periodically refreshing Budibase knowledge of tables.
- * @param column The column to check, to see if it is a valid relationship.
- * @param tableIds The IDs of the tables which currently exist.
- */
-function shouldCopyRelationship(
-  column: { type: FieldType.LINK; tableId?: string },
-  tableIds: string[]
-) {
-  return (
-    column.type === FieldType.LINK &&
-    column.tableId &&
-    tableIds.includes(column.tableId)
-  )
-}
-
-/**
- * Similar function to the shouldCopyRelationship function, but instead this looks for options and boolean
- * types. It is possible to switch a string -> options and a number -> boolean (and vice versus) need to make
- * sure that these get copied over when tables are fetched. Also checks whether they are still valid, if a
- * column has changed type in the external database then copying it over may not be possible.
- * @param column The column to check for options or boolean type.
- * @param fetchedColumn The fetched column to check for the type in the external database.
- */
-function shouldCopySpecialColumn(
-  column: { type: FieldType },
-  fetchedColumn: { type: FieldType } | undefined
-) {
-  const isFormula = column.type === FieldType.FORMULA
-  // column has been deleted, remove - formulas will never exist, always copy
-  if (!isFormula && column && !fetchedColumn) {
-    return false
-  }
-  const fetchedIsNumber =
-    !fetchedColumn || fetchedColumn.type === FieldType.NUMBER
-  return fetchedIsNumber && column.type === FieldType.BOOLEAN
-}
-
 enum CopyAction {
   ALWAYS_KEEP = "alwaysKeep",
   COPY_IF_TYPE = "copyIfType",
@@ -454,10 +411,15 @@ function copyExistingPropsOver(
 
       let keepExistingSchema = map.action === CopyAction.ALWAYS_KEEP
       if (map.action === CopyAction.COPY_IF_TYPE) {
+        const shouldDropLink =
+          existingColumnType === FieldType.LINK &&
+          !tableIds.includes(column.tableId)
+
         keepExistingSchema =
           isPrimitiveType(updatedColumnType) &&
           table.schema[key] &&
-          map.types?.includes(updatedColumnType)
+          map.types?.includes(updatedColumnType) &&
+          !shouldDropLink
       }
 
       if (keepExistingSchema) {
