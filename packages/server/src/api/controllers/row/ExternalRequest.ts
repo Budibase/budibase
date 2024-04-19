@@ -119,6 +119,9 @@ async function removeManyToManyRelationships(
       endpoint: getEndpoint(tableId, Operation.DELETE),
       body: { [colName]: null },
       filters,
+      meta: {
+        table,
+      },
     })
   } else {
     return []
@@ -133,6 +136,9 @@ async function removeOneToManyRelationships(rowId: string, table: Table) {
     return getDatasourceAndQuery({
       endpoint: getEndpoint(tableId, Operation.UPDATE),
       filters,
+      meta: {
+        table,
+      },
     })
   } else {
     return []
@@ -248,6 +254,9 @@ export class ExternalRequest<T extends Operation> {
     const response = await getDatasourceAndQuery({
       endpoint: getEndpoint(table._id!, Operation.READ),
       filters: buildFilters(rowId, {}, table),
+      meta: {
+        table,
+      },
     })
     if (Array.isArray(response) && response.length > 0) {
       return response[0]
@@ -365,35 +374,44 @@ export class ExternalRequest<T extends Operation> {
       ) {
         continue
       }
-      let tableId: string | undefined,
+      let relatedTableId: string | undefined,
         lookupField: string | undefined,
         fieldName: string | undefined
       if (isManyToMany(field)) {
-        tableId = field.through
+        relatedTableId = field.through
         lookupField = primaryKey
         fieldName = field.throughTo || primaryKey
       } else if (isManyToOne(field)) {
-        tableId = field.tableId
+        relatedTableId = field.tableId
         lookupField = field.foreignKey
         fieldName = field.fieldName
       }
-      if (!tableId || !lookupField || !fieldName) {
+      if (!relatedTableId || !lookupField || !fieldName) {
         throw new Error(
           "Unable to lookup relationships - undefined column properties."
         )
       }
-      const { tableName: relatedTableName } = breakExternalTableId(tableId)
+      const { tableName: relatedTableName } =
+        breakExternalTableId(relatedTableId)
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
       if (!lookupField || !row[lookupField]) {
         continue
       }
+      const endpoint = getEndpoint(relatedTableId, Operation.READ)
+      const relatedTable = this.tables[endpoint.entityId]
+      if (!relatedTable) {
+        throw new Error("unable to find related table")
+      }
       const response = await getDatasourceAndQuery({
-        endpoint: getEndpoint(tableId, Operation.READ),
+        endpoint: endpoint,
         filters: {
           equal: {
             [fieldName]: row[lookupField],
           },
+        },
+        meta: {
+          table: relatedTable,
         },
       })
       // this is the response from knex if no rows found
@@ -402,7 +420,11 @@ export class ExternalRequest<T extends Operation> {
       const storeTo = isManyToMany(field)
         ? field.throughFrom || linkPrimaryKey
         : fieldName
-      related[storeTo] = { rows, isMany: isManyToMany(field), tableId }
+      related[storeTo] = {
+        rows,
+        isMany: isManyToMany(field),
+        tableId: relatedTableId,
+      }
     }
     return related
   }
@@ -470,6 +492,9 @@ export class ExternalRequest<T extends Operation> {
             // if we're doing many relationships then we're writing, only one response
             body,
             filters: buildFilters(id, {}, linkTable),
+            meta: {
+              table: linkTable,
+            },
           })
         )
       } else {

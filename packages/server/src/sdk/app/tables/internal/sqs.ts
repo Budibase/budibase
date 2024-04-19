@@ -42,7 +42,7 @@ const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.ATTACHMENT_SINGLE]: SQLiteType.BLOB,
   [FieldType.ARRAY]: SQLiteType.BLOB,
   [FieldType.LINK]: SQLiteType.BLOB,
-  [FieldType.BIGINT]: SQLiteType.REAL,
+  [FieldType.BIGINT]: SQLiteType.TEXT,
   // TODO: consider the difference between multi-user and single user types (subtyping)
   [FieldType.BB_REFERENCE]: SQLiteType.TEXT,
 }
