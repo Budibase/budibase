@@ -13,6 +13,22 @@
     "sidePanel": true,
     "skeletonLoader": true
   },
+  "typeSupportPresets": {
+    "chartValue": {
+      "supported": ["number", "boolean"],
+      "partialSupport": [
+        { "type": "longform", "message": "stringAsNumber" },
+        { "type": "string", "message": "stringAsNumber" },
+        { "type": "bigint", "message": "stringAsNumber" },
+        { "type": "options", "message": "stringAsNumber" },
+        { "type": "formula", "message": "stringAsNumber" },
+        { "type": "datetime", "message": "dateAsNumber"}
+      ],
+      "unsupported": [
+        { "type": "json", "message": "jsonPrimitivesOnly" }
+      ]
+    }
+  },
   "layout": {
     "name": "Layout",
     "description": "This component is specific only to layouts",
@@ -1634,20 +1650,9 @@
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
-        "columnInfo": {
+        "explanation": {
           "typeSupport": {
-            "supported": ["number", "boolean"],
-            "partialSupport": [
-              { "type": "longform", "message": "stringAsNumber" },
-              { "type": "string", "message": "stringAsNumber" },
-              { "type": "bigint", "message": "stringAsNumber" },
-              { "type": "options", "message": "stringAsNumber" },
-              { "type": "formula", "message": "stringAsNumber" },
-              { "type": "datetime", "message": "dateAsNumber"}
-            ],
-            "unsupported": [
-              { "type": "json", "message": "jsonPrimitivesOnly" }
-            ]
+            "preset": "chartValue"
           }
         },
         "required": true
@@ -1809,20 +1814,9 @@
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
-        "columnInfo": {
+        "explanation": {
           "typeSupport": {
-            "supported": ["number", "boolean"],
-            "partialSupport": [
-              { "type": "longform", "message": "stringAsNumber" },
-              { "type": "string", "message": "stringAsNumber" },
-              { "type": "bigint", "message": "stringAsNumber" },
-              { "type": "options", "message": "stringAsNumber" },
-              { "type": "formula", "message": "stringAsNumber" },
-              { "type": "datetime", "message": "dateAsNumber"}
-            ],
-            "unsupported": [
-              { "type": "json", "message": "jsonPrimitivesOnly" }
-            ]
+            "preset": "chartValue"
           }
         },
         "required": true
@@ -1979,20 +1973,9 @@
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
-        "columnInfo": {
+        "explanation": {
           "typeSupport": {
-            "supported": ["number", "boolean"],
-            "partialSupport": [
-              { "type": "longform", "message": "stringAsNumber" },
-              { "type": "string", "message": "stringAsNumber" },
-              { "type": "bigint", "message": "stringAsNumber" },
-              { "type": "options", "message": "stringAsNumber" },
-              { "type": "formula", "message": "stringAsNumber" },
-              { "type": "datetime", "message": "dateAsNumber"}
-            ],
-            "unsupported": [
-              { "type": "json", "message": "jsonPrimitivesOnly" }
-            ]
+            "preset": "chartValue"
           }
         },
         "required": true
