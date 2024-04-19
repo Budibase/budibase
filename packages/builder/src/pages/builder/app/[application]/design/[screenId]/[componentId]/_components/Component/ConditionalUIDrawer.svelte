@@ -189,6 +189,7 @@
                 <Select
                   options={settingOptions}
                   bind:value={condition.setting}
+                  on:change={() => delete condition.settingValue}
                 />
                 <div>TO</div>
                 {#if definition}
