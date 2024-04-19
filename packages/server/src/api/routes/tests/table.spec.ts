@@ -219,9 +219,6 @@ describe.each([
 
     it("should add a new column for an internal DB table", async () => {
       const saveTableRequest: SaveTableRequest = {
-        _add: {
-          name: "NEW_COLUMN",
-        },
         ...basicTable(),
       }
 
@@ -235,7 +232,6 @@ describe.each([
         updatedAt: expect.stringMatching(ISO_REGEX_PATTERN),
         views: {},
       }
-      delete expectedResponse._add
       expect(response).toEqual(expectedResponse)
     })
   })

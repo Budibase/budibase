@@ -117,7 +117,8 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       const filters = queryJson.filters
       const notEqualsValue = Object.values(filters?.notEqual!)[0]
-      const rangeValue = Object.values(filters?.range!)[0]
+      const rangeValue: { high?: string | number; low?: string | number } =
+        Object.values(filters?.range!)[0]
       const equalValue = Object.values(filters?.equal!)[0]
 
       expect(query).toEqual({

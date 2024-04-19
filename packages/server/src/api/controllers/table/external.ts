@@ -31,7 +31,6 @@ export async function save(
   renaming?: RenameColumn
 ) {
   const inputs = ctx.request.body
-  const adding = inputs?._add
   // can't do this right now
   delete inputs.rows
   const tableId = ctx.request.body._id
@@ -44,7 +43,7 @@ export async function save(
     const { datasource, table } = await sdk.tables.external.save(
       datasourceId!,
       inputs,
-      { tableId, renaming, adding }
+      { tableId, renaming }
     )
     builderSocket?.emitDatasourceUpdate(ctx, datasource)
     return table

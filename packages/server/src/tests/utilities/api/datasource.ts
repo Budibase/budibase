@@ -61,7 +61,7 @@ export class DatasourceAPI extends TestAPI {
   }
 
   query = async (
-    query: Omit<QueryJson, "meta">,
+    query: Omit<QueryJson, "meta"> & Partial<Pick<QueryJson, "meta">>,
     expectations?: Expectations
   ) => {
     return await this._post<any>(`/api/datasources/query`, {
