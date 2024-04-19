@@ -5,9 +5,19 @@ import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
 import tk from "timekeeper"
-import { mocks } from "@budibase/backend-core/tests"
-import { QueryPreview, SourceName } from "@budibase/types"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import {
+  Datasource,
+  FieldSchema,
+  FieldType,
+  QueryPreview,
+  RelationshipType,
+  SourceName,
+  Table,
+  TableSchema,
+} from "@budibase/types"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import { tableForDatasource } from "../../../tests/utilities/structures"
 
 tk.freeze(mocks.date.MOCK_DATE)
 
@@ -225,7 +235,7 @@ describe("/datasources", () => {
     })
   })
 
-  describe.only.each([
+  describe.each([
     [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
     [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
     [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
@@ -235,13 +245,140 @@ describe("/datasources", () => {
       datasource = await config.api.datasource.create(await dsProvider)
     })
 
-    it("aa", async () => {
+    it("fetching schema will not drop tables or columns", async () => {
       const datasourceId = datasource!._id!
+
+      const simpleTable = await config.api.table.save(
+        tableForDatasource(datasource, {
+          name: generator.guid(),
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+          },
+        })
+      )
+      const fullSchema: { [type in FieldType]: FieldSchema & { type: type } } =
+        {
+          [FieldType.STRING]: {
+            name: "string",
+            type: FieldType.STRING,
+          },
+          // [FieldType.LONGFORM]: {
+          //   name: "longform",
+          //   type: FieldType.LONGFORM,
+          // },
+          // [FieldType.OPTIONS]: {
+          //   name: "options",
+          //   type: FieldType.OPTIONS,
+          // },
+          [FieldType.NUMBER]: {
+            name: "number",
+            type: FieldType.NUMBER,
+          },
+          // [FieldType.BOOLEAN]: {
+          //   name: "boolean",
+          //   type: FieldType.BOOLEAN,
+          // },
+          // [FieldType.ARRAY]: {
+          //   name: "array",
+          //   type: FieldType.ARRAY,
+          // },
+          // [FieldType.DATETIME]: {
+          //   name: "datetime",
+          //   type: FieldType.DATETIME,
+          // },
+          // [FieldType.ATTACHMENTS]: {
+          //   name: "attachments",
+          //   type: FieldType.ATTACHMENTS,
+          // },
+          // [FieldType.ATTACHMENT_SINGLE]: {
+          //   name: "attachment_single",
+          //   type: FieldType.ATTACHMENT_SINGLE,
+          // },
+          // [FieldType.LINK]: {
+          //   name: "link",
+          //   type: FieldType.LINK,
+          //   tableId: simpleTable._id!,
+          //   relationshipType: RelationshipType.ONE_TO_MANY,
+          //   fieldName: "link",
+          //   foreignKey: "fk",
+          // },
+          // [FieldType.FORMULA]: {
+          //   name: "formula",
+          //   type: FieldType.FORMULA,
+          //   formula: "any formula",
+          // },
+          // [FieldType.AUTO]: {
+          //   name: "auto",
+          //   type: FieldType.AUTO,
+          // },
+          // [FieldType.JSON]: {
+          //   name: "json",
+          //   type: FieldType.JSON,
+          // },
+          // [FieldType.INTERNAL]: {
+          //   name: "internal",
+          //   type: FieldType.INTERNAL,
+          // },
+          // [FieldType.BARCODEQR]: {
+          //   name: "barcodeqr",
+          //   type: FieldType.BARCODEQR,
+          // },
+          // [FieldType.BIGINT]: {
+          //   name: "bigint",
+          //   type: FieldType.BIGINT,
+          // },
+          // [FieldType.BB_REFERENCE]: {
+          //   name: "bb_reference",
+          //   type: FieldType.BB_REFERENCE,
+          // },
+        }
+
+      const fullTable = await config.api.table.save(
+        tableForDatasource(datasource, {
+          name: generator.guid(),
+          schema: fullSchema,
+        })
+      )
+
       const persisted = await config.api.datasource.get(datasourceId)
       await config.api.datasource.fetchSchema(datasourceId)
 
       const updated = await config.api.datasource.get(datasourceId)
-      expect(updated).toEqual(persisted)
+      const expected: Datasource = {
+        ...persisted,
+        entities:
+          persisted?.entities &&
+          Object.entries(persisted.entities).reduce<Record<string, Table>>(
+            (acc, [tableName, table]) => {
+              acc[tableName] = {
+                ...table,
+                primaryDisplay: expect.not.stringMatching(
+                  new RegExp(`^${table.primaryDisplay || ""}$`)
+                ),
+                schema: Object.entries(table.schema).reduce<TableSchema>(
+                  (acc, [fieldName, field]) => {
+                    acc[fieldName] = expect.objectContaining({
+                      ...field,
+                      externalType: expect.not.stringMatching(
+                        new RegExp(`^${field.externalType || ""}$`)
+                      ),
+                    })
+                    return acc
+                  },
+                  {}
+                ),
+              }
+              return acc
+            },
+            {}
+          ),
+
+        _rev: expect.any(String),
+      }
+      expect(updated).toEqual(expected)
     })
   })
 })
