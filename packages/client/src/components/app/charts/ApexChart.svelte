@@ -11,27 +11,23 @@
 
   // Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone options here to provide a buffer.
   $: optionsCopy = cloneDeep(options);
-  $: console.log(cloneDeep(options));
 
   let chartElement;
   let chart;
   let currentType = null
 
   const updateChart = async (newOptions) => {
-    console.log('update')
-    // Line charts won't transition from category to datetime types properly without
-    // calling this with an empty object first; I don't know why this works.
+    // Line charts have issues transitioning between "datetime" and "category" types, and will ignore the provided formatters
+    // in certain scenarios. Rerendering the chart when the user changes label type fixes this, but unfortunately it does
+    // cause a little bit of jankiness with animations.
     if (newOptions?.xaxis?.type && newOptions.xaxis.type !== currentType ) {
-      console.log('calling render')
       await renderChart(chartElement);
-
     } else {
       await chart?.updateOptions(newOptions)
     }
   }
 
   const renderChart = async (newChartElement) => {
-    console.log('render')
     await chart?.destroy()
     chart = new ApexCharts(newChartElement, optionsCopy)
     currentType = optionsCopy?.xaxis?.type
