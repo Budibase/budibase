@@ -281,6 +281,9 @@ describe("/datasources", () => {
         [FieldType.STRING]: {
           name: "string",
           type: FieldType.STRING,
+          constraints: {
+            presence: true,
+          },
         },
         [FieldType.LONGFORM]: {
           name: "longform",
@@ -289,6 +292,9 @@ describe("/datasources", () => {
         [FieldType.OPTIONS]: {
           name: "options",
           type: FieldType.OPTIONS,
+          constraints: {
+            presence: { allowEmpty: false },
+          },
         },
         [FieldType.NUMBER]: {
           name: "number",
@@ -305,6 +311,8 @@ describe("/datasources", () => {
         [FieldType.DATETIME]: {
           name: "datetime",
           type: FieldType.DATETIME,
+          dateOnly: true,
+          timeOnly: false,
         },
         [FieldType.LINK]: {
           name: "link",
