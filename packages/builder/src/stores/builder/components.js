@@ -340,7 +340,6 @@ export class ComponentStore extends BudiStore {
             ...findFieldTypes(FieldType.STRING),
             ...findFieldTypes(FieldType.OPTIONS),
             ...findFieldTypes(FieldType.ARRAY),
-            ...findFieldTypes(FieldType.DATETIME),
             ...findFieldTypes(FieldType.NUMBER),
           ]
           const longFields = findFieldTypes(FieldType.LONGFORM)
