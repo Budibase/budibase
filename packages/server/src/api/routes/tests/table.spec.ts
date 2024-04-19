@@ -34,7 +34,7 @@ describe.each([
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/tables (%s)", (_, dsProvider) => {
-  let isInternal: boolean
+  const isInternal: boolean = !dsProvider
   let datasource: Datasource | undefined
   let config = setup.getConfig()
 
@@ -44,9 +44,6 @@ describe.each([
     await config.init()
     if (dsProvider) {
       datasource = await config.api.datasource.create(await dsProvider)
-      isInternal = false
-    } else {
-      isInternal = true
     }
   })
 
@@ -219,9 +216,6 @@ describe.each([
 
     it("should add a new column for an internal DB table", async () => {
       const saveTableRequest: SaveTableRequest = {
-        _add: {
-          name: "NEW_COLUMN",
-        },
         ...basicTable(),
       }
 
@@ -235,7 +229,6 @@ describe.each([
         updatedAt: expect.stringMatching(ISO_REGEX_PATTERN),
         views: {},
       }
-      delete expectedResponse._add
       expect(response).toEqual(expectedResponse)
     })
   })

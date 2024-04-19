@@ -26,6 +26,7 @@ describe.each([
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "internal-sqs"
+  const isInternal = name === "internal"
   const config = setup.getConfig()
 
   let envCleanup: (() => void) | undefined
@@ -336,6 +337,20 @@ describe.each([
         expectQuery({
           range: { age: { low: 5, high: 9 } },
         }).toFindNothing())
+
+      // We never implemented half-open ranges in Lucene.
+      !isInternal &&
+        it("can search using just a low value", () =>
+          expectQuery({
+            range: { age: { low: 5 } },
+          }).toContainExactly([{ age: 10 }]))
+
+      // We never implemented half-open ranges in Lucene.
+      !isInternal &&
+        it("can search using just a high value", () =>
+          expectQuery({
+            range: { age: { high: 5 } },
+          }).toContainExactly([{ age: 1 }]))
     })
 
     describe("sort", () => {
@@ -440,6 +455,20 @@ describe.each([
         expectQuery({
           range: { dob: { low: JAN_5TH, high: JAN_9TH } },
         }).toFindNothing())
+
+      // We never implemented half-open ranges in Lucene.
+      !isInternal &&
+        it("can search using just a low value", () =>
+          expectQuery({
+            range: { dob: { low: JAN_5TH } },
+          }).toContainExactly([{ dob: JAN_10TH }]))
+
+      // We never implemented half-open ranges in Lucene.
+      !isInternal &&
+        it("can search using just a high value", () =>
+          expectQuery({
+            range: { dob: { high: JAN_5TH } },
+          }).toContainExactly([{ dob: JAN_1ST }]))
     })
 
     describe("sort", () => {
@@ -475,5 +504,175 @@ describe.each([
           }).toMatchExactly([{ dob: JAN_10TH }, { dob: JAN_1ST }]))
       })
     })
+  })
+
+  describe("array of strings", () => {
+    beforeAll(async () => {
+      await createTable({
+        numbers: {
+          name: "numbers",
+          type: FieldType.ARRAY,
+          constraints: { inclusion: ["one", "two", "three"] },
+        },
+      })
+      await createRows([{ numbers: ["one", "two"] }, { numbers: ["three"] }])
+    })
+
+    describe("contains", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ contains: { numbers: ["one"] } }).toContainExactly([
+          { numbers: ["one", "two"] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ contains: { numbers: ["none"] } }).toFindNothing())
+
+      it("fails to find row containing all", () =>
+        expectQuery({
+          contains: { numbers: ["one", "two", "three"] },
+        }).toFindNothing())
+
+      it("finds all with empty list", () =>
+        expectQuery({ contains: { numbers: [] } }).toContainExactly([
+          { numbers: ["one", "two"] },
+          { numbers: ["three"] },
+        ]))
+    })
+
+    describe("notContains", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ notContains: { numbers: ["one"] } }).toContainExactly([
+          { numbers: ["three"] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({
+          notContains: { numbers: ["one", "two", "three"] },
+        }).toContainExactly([
+          { numbers: ["one", "two"] },
+          { numbers: ["three"] },
+        ]))
+
+      it("finds all with empty list", () =>
+        expectQuery({ notContains: { numbers: [] } }).toContainExactly([
+          { numbers: ["one", "two"] },
+          { numbers: ["three"] },
+        ]))
+    })
+
+    describe("containsAny", () => {
+      it("successfully finds rows", () =>
+        expectQuery({
+          containsAny: { numbers: ["one", "two", "three"] },
+        }).toContainExactly([
+          { numbers: ["one", "two"] },
+          { numbers: ["three"] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ containsAny: { numbers: ["none"] } }).toFindNothing())
+
+      it("finds all with empty list", () =>
+        expectQuery({ containsAny: { numbers: [] } }).toContainExactly([
+          { numbers: ["one", "two"] },
+          { numbers: ["three"] },
+        ]))
+    })
+  })
+
+  describe("bigints", () => {
+    const SMALL = "1"
+    const MEDIUM = "10000000"
+
+    // Our bigints are int64s in most datasources.
+    const BIG = "9223372036854775807"
+
+    beforeAll(async () => {
+      await createTable({
+        num: { name: "num", type: FieldType.BIGINT },
+      })
+      await createRows([{ num: SMALL }, { num: MEDIUM }, { num: BIG }])
+    })
+
+    describe("equal", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ equal: { num: SMALL } }).toContainExactly([
+          { num: SMALL },
+        ]))
+
+      it("successfully finds a big value", () =>
+        expectQuery({ equal: { num: BIG } }).toContainExactly([{ num: BIG }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ equal: { num: "2" } }).toFindNothing())
+    })
+
+    describe("notEqual", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ notEqual: { num: SMALL } }).toContainExactly([
+          { num: MEDIUM },
+          { num: BIG },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ notEqual: { num: 10 } }).toContainExactly([
+          { num: SMALL },
+          { num: MEDIUM },
+          { num: BIG },
+        ]))
+    })
+
+    describe("oneOf", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ oneOf: { num: [SMALL] } }).toContainExactly([
+          { num: SMALL },
+        ]))
+
+      it("successfully finds all rows", () =>
+        expectQuery({ oneOf: { num: [SMALL, MEDIUM, BIG] } }).toContainExactly([
+          { num: SMALL },
+          { num: MEDIUM },
+          { num: BIG },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ oneOf: { num: [2] } }).toFindNothing())
+    })
+
+    // Range searches against bigints don't seem to work at all in Lucene, and I
+    // couldn't figure out why. Given that we're replacing Lucene with SQS,
+    // we've decided not to spend time on it.
+    !isInternal &&
+      describe("range", () => {
+        it("successfully finds a row", () =>
+          expectQuery({
+            range: { num: { low: SMALL, high: "5" } },
+          }).toContainExactly([{ num: SMALL }]))
+
+        it("successfully finds multiple rows", () =>
+          expectQuery({
+            range: { num: { low: SMALL, high: MEDIUM } },
+          }).toContainExactly([{ num: SMALL }, { num: MEDIUM }]))
+
+        it("successfully finds a row with a high bound", () =>
+          expectQuery({
+            range: { num: { low: MEDIUM, high: BIG } },
+          }).toContainExactly([{ num: MEDIUM }, { num: BIG }]))
+
+        it("successfully finds no rows", () =>
+          expectQuery({
+            range: { num: { low: "5", high: "5" } },
+          }).toFindNothing())
+
+        it("can search using just a low value", () =>
+          expectQuery({
+            range: { num: { low: MEDIUM } },
+          }).toContainExactly([{ num: MEDIUM }, { num: BIG }]))
+
+        it("can search using just a high value", () =>
+          expectQuery({
+            range: { num: { high: MEDIUM } },
+          }).toContainExactly([{ num: SMALL }, { num: MEDIUM }]))
+      })
   })
 })

@@ -5174,7 +5174,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/archiver@^6.0.2":
+"@types/archiver@6.0.2":
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/@types/archiver/-/archiver-6.0.2.tgz#0daf8c83359cbde69de1e4b33dcade6a48a929e2"
   integrity sha512-KmROQqbQzKGuaAbmK+ZcytkJ51+YqDa7NmbXjmtC5YBLSyQYo21YaUnQ3HbaPFKL1ooo6RQ6OPYPIDyxfpDDXw==
