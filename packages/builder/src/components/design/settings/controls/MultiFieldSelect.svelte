@@ -5,7 +5,7 @@
     componentStore,
   } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { FieldContext } from './FieldContext'
+  import { Explanation } from './Explanation'
   import { FIELDS } from 'constants/backend'
   import { goto, params } from "@roxi/routify"
   import { debounce } from "lodash"
@@ -119,7 +119,7 @@
     anchor={contextTooltipAnchor}
     offset={20}
   >
-    <FieldContext
+    <Explanation
       explanationModal
       tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
       schema={schema[currentOption]}
@@ -128,7 +128,7 @@
       columnType={getOptionIconTooltip(currentOption)}
       {explanation}
     />
-    <FieldContext
+    <Explanation
       slot="previous"
       schema={schema[previousOption]}
       columnIcon={getOptionIcon(previousOption)}
