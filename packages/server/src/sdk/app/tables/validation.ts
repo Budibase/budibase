@@ -40,14 +40,14 @@ function checkForeignKeysAreAutoColumns(datasource: Datasource) {
       const shouldBeForeign = foreignKeys.find(
         options => options.tableId === table._id && options.key === column.name
       )
-      if (column.autocolumn) {
-        continue
-      }
       // don't change already auto-columns to it, e.g. primary keys that are foreign
-      if (shouldBeForeign) {
+      if (shouldBeForeign && !column.autocolumn) {
         column.autocolumn = true
         column.autoReason = AutoReason.FOREIGN_KEY
-      } else if (column.autoReason === AutoReason.FOREIGN_KEY) {
+      } else if (
+        !shouldBeForeign &&
+        column.autoReason === AutoReason.FOREIGN_KEY
+      ) {
         delete column.autocolumn
         delete column.autoReason
       }
