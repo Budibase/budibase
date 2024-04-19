@@ -160,4 +160,18 @@ export class DDInstrumentedDatabase implements Database {
       return this.db.sql(sql, parameters)
     })
   }
+
+  sqlPurge(docIds: string[] | string): Promise<void> {
+    return tracer.trace("db.sqlPurge", span => {
+      span?.addTags({ db_name: this.name })
+      return this.db.sqlPurge(docIds)
+    })
+  }
+
+  sqlCleanup(): Promise<void> {
+    return tracer.trace("db.sqlCleanup", span => {
+      span?.addTags({ db_name: this.name })
+      return this.db.sqlCleanup()
+    })
+  }
 }
