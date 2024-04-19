@@ -353,6 +353,7 @@ function copyExistingPropsOver(
 
       // If the db column type changed to a non-compatible one, we want to re-fetch it
       if (
+        updatedColumnType &&
         updatedColumnType !== existingColumnType &&
         !SWITCHABLE_TYPES[updatedColumnType]?.includes(existingColumnType)
       ) {
@@ -384,7 +385,7 @@ function copyExistingPropsOver(
         ...existingTableSchema[key],
         externalType:
           existingTableSchema[key].externalType ||
-          table.schema[key].externalType,
+          table.schema[key]?.externalType,
       }
     }
   }
