@@ -30,7 +30,7 @@ import {
 } from "constants/backend"
 import BudiStore from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
-import { FieldType } from "@budibase/types"
+import { FieldSubtype, FieldType } from "@budibase/types"
 
 export const INITIAL_COMPONENTS_STATE = {
   components: {},
@@ -306,6 +306,8 @@ export class ComponentStore extends BudiStore {
         const { _id, dataSource } = component
         if (dataSource) {
           const { schema, table } = getSchemaForDatasource(screen, dataSource)
+
+          // Finds fields by types from the schema of the configured datasource
           const findFieldTypes = fieldTypes => {
             if (!Array.isArray(fieldTypes)) {
               fieldTypes = [fieldTypes]
@@ -315,48 +317,55 @@ export class ComponentStore extends BudiStore {
                 return (
                   fieldTypes.includes(fieldSchema.type) &&
                   !fieldSchema.autoColumn &&
-                  name !== table?.primaryDisplay
+                  name !== table?.primaryDisplay &&
+                  !name.startsWith("_")
                 )
               })
               .map(([name]) => name)
           }
 
           // Inserts a card binding for a certain setting
-          const addBinding = (key, ...parts) => {
-            parts.unshift(`${_id}-repeater`)
-            component[key] = `{{ ${parts.map(safe).join(".")} }}`
-          }
-
-          // Extract good field candidates to prefil our cards with.
-          // Use the primary display as the best field, if it exists.
-          const fields = findFieldTypes([
-            FieldType.STRING,
-            FieldType.OPTIONS,
-            FieldType.DATETIME,
-            FieldType.NUMBER,
-          ])
-          if (schema?.[table?.primaryDisplay]) {
-            fields.unshift(table.primaryDisplay)
-          }
-
-          // Fill our cards with as many bindings as we can
-          cardKeys.forEach(key => {
-            if (fields[0]) {
-              addBinding(key, fields[0])
-              fields.shift()
+          const addBinding = (key, fallback, ...parts) => {
+            if (parts.some(x => x == null)) {
+              component[key] = fallback
+            } else {
+              parts.unshift(`${_id}-repeater`)
+              component[key] = `{{ ${parts.map(safe).join(".")} }}`
             }
-          })
+          }
+
+          // Extract good field candidates to prefill our cards with.
+          // Use the primary display as the best field, if it exists.
+          const shortFields = [
+            ...findFieldTypes(FieldType.STRING),
+            ...findFieldTypes(FieldType.OPTIONS),
+            ...findFieldTypes(FieldType.ARRAY),
+            ...findFieldTypes(FieldType.DATETIME),
+            ...findFieldTypes(FieldType.NUMBER),
+          ]
+          const longFields = findFieldTypes(FieldType.LONGFORM)
+          if (schema?.[table?.primaryDisplay]) {
+            shortFields.unshift(table.primaryDisplay)
+          }
+
+          // Fill title and subtitle with short fields
+          addBinding("cardTitle", "Title", shortFields[0])
+          addBinding("cardSubtitle", "Subtitle", shortFields[1])
+
+          // Fill description with a long field if possible
+          const longField = longFields[0] ?? shortFields[2]
+          addBinding("cardDescription", "Description", longField)
 
           // Attempt to fill the image setting.
           // Check single attachment fields first.
           let imgField = findFieldTypes(FieldType.ATTACHMENT_SINGLE)[0]
           if (imgField) {
-            addBinding("cardImageURL", imgField, "url")
+            addBinding("cardImageURL", null, imgField, "url")
           } else {
             // Then try multi-attachment fields if no single ones exist
             imgField = findFieldTypes(FieldType.ATTACHMENTS)[0]
             if (imgField) {
-              addBinding("cardImageURL", imgField, 0, "url")
+              addBinding("cardImageURL", null, imgField, 0, "url")
             }
           }
         }
