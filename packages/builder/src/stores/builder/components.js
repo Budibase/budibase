@@ -299,39 +299,64 @@ export class ComponentStore extends BudiStore {
 
     // Add default bindings to card blocks
     if (component._component.endsWith("/cardsblock")) {
-      const { _id, dataSource } = component
-      if (dataSource) {
-        const { schema, table } = getSchemaForDatasource(screen, dataSource)
-        const readableTypes = [
-          FieldType.STRING,
-          FieldType.OPTIONS,
-          FieldType.DATETIME,
-          FieldType.NUMBER,
-        ]
+      // Only proceed if the card is empty, i.e. we just changed datasource or
+      // just created the card
+      const cardKeys = ["cardTitle", "cardSubtitle", "cardDescription"]
+      if (cardKeys.every(key => !component[key]) && !component.cardImageURL) {
+        const { _id, dataSource } = component
+        if (dataSource) {
+          const { schema, table } = getSchemaForDatasource(screen, dataSource)
+          const findFieldTypes = fieldTypes => {
+            if (!Array.isArray(fieldTypes)) {
+              fieldTypes = [fieldTypes]
+            }
+            return Object.entries(schema || {})
+              .filter(([name, fieldSchema]) => {
+                return (
+                  fieldTypes.includes(fieldSchema.type) &&
+                  !fieldSchema.autoColumn &&
+                  name !== table?.primaryDisplay
+                )
+              })
+              .map(([name]) => name)
+          }
 
-        // Extract good field candidates to prefil our cards with
-        const fields = Object.entries(schema || {})
-          .filter(([name, fieldSchema]) => {
-            return (
-              readableTypes.includes(fieldSchema.type) &&
-              !fieldSchema.autoColumn &&
-              name !== table?.primaryDisplay
-            )
+          // Extract good field candidates to prefil our cards with
+          const fields = findFieldTypes([
+            FieldType.STRING,
+            FieldType.OPTIONS,
+            FieldType.DATETIME,
+            FieldType.NUMBER,
+          ])
+
+          // Use the primary display as the best field, if it exists
+          if (schema?.[table?.primaryDisplay]) {
+            fields.unshift(table.primaryDisplay)
+          }
+
+          // Fill our cards with as many bindings as we can
+          const prefix = safe(`${_id}-repeater`)
+          cardKeys.forEach(key => {
+            if (!fields[0]) return
+            component[key] = `{{ ${prefix}.${safe(fields[0])} }}`
+            fields.shift()
           })
-          .map(([name]) => name)
 
-        // Use the primary display as the best field, if it exists
-        if (schema?.[table?.primaryDisplay]) {
-          fields.unshift(table.primaryDisplay)
+          // Attempt to fill the image setting
+          let imgFields = findFieldTypes([FieldType.ATTACHMENT_SINGLE])
+          if (imgFields[0]) {
+            component.cardImageURL = `{{ ${prefix}.${safe(
+              imgFields[0]
+            )}.[url] }}`
+          } else {
+            imgFields = findFieldTypes([FieldType.ATTACHMENTS])
+            if (imgFields[0]) {
+              component.cardImageURL = `{{ ${prefix}.${safe(
+                imgFields[0]
+              )}.[0].[url] }}`
+            }
+          }
         }
-
-        // Fill our cards with as many bindings as we can
-        const cardKeys = ["cardTitle", "cardSubtitle", "cardDescription"]
-        cardKeys.forEach(key => {
-          if (!fields[0] || component[key]) return
-          component[key] = `{{ ${safe(`${_id}-repeater`)}.${safe(fields[0])} }}`
-          fields.shift()
-        })
       }
     }
   }
