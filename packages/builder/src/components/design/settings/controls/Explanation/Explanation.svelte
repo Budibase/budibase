@@ -1,6 +1,6 @@
 <script>
   import ExplanationModal from './ExplanationModal/index.svelte'
-  import { messages as messageConstants, getExplanationMessagesAndSupport, getExplanationWithPresets } from "./columnInfo";
+  import { messages as messageConstants, getExplanationMessagesAndSupport, getExplanationWithPresets } from "./explanation";
   import { Column, Support, NotRequired, StringNumber, JSONPrimitivesOnly, DateAsNumber } from "./lines"
   import subjects from './subjects';
   import {
