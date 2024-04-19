@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../../db/utils"
 import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
-import { helpers } from "@budibase/shared-core"
+import { helpers, utils } from "@budibase/shared-core"
 import env from "../../environment"
 import { Knex } from "knex"
 
@@ -342,44 +342,53 @@ function copyExistingPropsOver(
         )
       }
 
-      const SqlCopyTypeByFieldMapping: Record<FieldType, () => boolean> = {
-        [FieldType.LINK]: () => {
-          const shouldKeepLink =
+      let shouldKeepSchema = false
+      switch (existingColumnType) {
+        case FieldType.FORMULA:
+        case FieldType.AUTO:
+        case FieldType.INTERNAL:
+          shouldKeepSchema = true
+          break
+
+        case FieldType.LINK:
+          shouldKeepSchema =
             existingColumnType === FieldType.LINK &&
             tableIds.includes(column.tableId)
-          return shouldKeepLink
-        },
-        [FieldType.FORMULA]: () => true,
-        [FieldType.AUTO]: () => true,
-        [FieldType.INTERNAL]: () => true,
-        [FieldType.STRING]: () => keepIfType(FieldType.STRING),
-        [FieldType.OPTIONS]: () => keepIfType(FieldType.STRING),
-        [FieldType.LONGFORM]: () => keepIfType(FieldType.STRING),
-        [FieldType.NUMBER]: () =>
-          keepIfType(FieldType.BOOLEAN, FieldType.NUMBER),
+          break
 
-        [FieldType.BOOLEAN]: () =>
-          keepIfType(FieldType.BOOLEAN, FieldType.NUMBER),
-        [FieldType.ARRAY]: () => keepIfType(FieldType.JSON, FieldType.STRING),
-        [FieldType.DATETIME]: () =>
-          keepIfType(FieldType.DATETIME, FieldType.STRING),
+        case FieldType.STRING:
+        case FieldType.OPTIONS:
+        case FieldType.LONGFORM:
+        case FieldType.BARCODEQR:
+          shouldKeepSchema = keepIfType(FieldType.STRING)
+          break
 
-        [FieldType.ATTACHMENTS]: () =>
-          keepIfType(FieldType.JSON, FieldType.STRING),
-        [FieldType.ATTACHMENT_SINGLE]: () =>
-          keepIfType(FieldType.JSON, FieldType.STRING),
+        case FieldType.NUMBER:
+        case FieldType.BOOLEAN:
+          shouldKeepSchema = keepIfType(FieldType.BOOLEAN, FieldType.NUMBER)
+          break
 
-        [FieldType.JSON]: () => keepIfType(FieldType.JSON, FieldType.STRING),
-        [FieldType.BARCODEQR]: () => keepIfType(FieldType.STRING),
+        case FieldType.ARRAY:
+        case FieldType.ATTACHMENTS:
+        case FieldType.ATTACHMENT_SINGLE:
+        case FieldType.JSON:
+        case FieldType.BB_REFERENCE:
+          shouldKeepSchema = keepIfType(FieldType.JSON, FieldType.STRING)
+          break
 
-        [FieldType.BIGINT]: () =>
-          keepIfType(FieldType.BIGINT, FieldType.NUMBER),
-        [FieldType.BB_REFERENCE]: () =>
-          keepIfType(FieldType.JSON, FieldType.STRING),
+        case FieldType.DATETIME:
+          shouldKeepSchema = keepIfType(FieldType.DATETIME, FieldType.STRING)
+          break
+
+        case FieldType.BIGINT:
+          shouldKeepSchema = keepIfType(FieldType.BIGINT, FieldType.NUMBER)
+          break
+
+        default:
+          utils.unreachable(existingColumnType)
       }
 
-      const shouldCopyDelegate = SqlCopyTypeByFieldMapping[existingColumnType]
-      if (shouldCopyDelegate()) {
+      if (shouldKeepSchema) {
         table.schema[key] = {
           ...existingTableSchema[key],
           externalType:
