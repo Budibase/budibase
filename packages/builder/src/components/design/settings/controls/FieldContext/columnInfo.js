@@ -1,52 +1,52 @@
 import { capitalize } from 'lodash';
 
 export const messages = {
-  jsonPrimitivesOnly: Symbol("column-info-json-primitives-only"),
-  stringAsNumber: Symbol("column-info-string-as-number"),
-  dateAsNumber: Symbol("column-info-date-as-number"),
-  notRequired: Symbol("column-info-not-required"),
-  contextError: Symbol("column-info-context-error"),
+  jsonPrimitivesOnly: Symbol("explanation-json-primitives-only"),
+  stringAsNumber: Symbol("explanation-string-as-number"),
+  dateAsNumber: Symbol("explanation-date-as-number"),
+  notRequired: Symbol("explanation-not-required"),
+  contextError: Symbol("explanation-context-error"),
 }
 
 export const support = {
-  unsupported: Symbol("column-info-unsupported"),
-  partialSupport: Symbol("column-info-partialSupport"),
-  supported: Symbol("column-info-supported")
+  unsupported: Symbol("explanation-unsupported"),
+  partialSupport: Symbol("explanation-partialSupport"),
+  supported: Symbol("explanation-supported")
 }
 
 
-const getSupport = (type, columnInfo) => {
-  if (!columnInfo?.typeSupport) {
+const getSupport = (type, explanation) => {
+  if (!explanation?.typeSupport) {
     return support.supported
   }
 
-  if (columnInfo?.typeSupport?.supported?.find(mapping => mapping === type || mapping?.type === type)) {
+  if (explanation?.typeSupport?.supported?.find(mapping => mapping === type || mapping?.type === type)) {
     return support.supported;
   }
 
-  if (columnInfo?.typeSupport?.partialSupport?.find(mapping => mapping === type || mapping?.type === type)) {
+  if (explanation?.typeSupport?.partialSupport?.find(mapping => mapping === type || mapping?.type === type)) {
     return support.partialSupport;
   }
 
   return support.unsupported
 }
 
-const getSupportMessage = (type, columnInfo) => {
-  if (!columnInfo?.typeSupport) {
+const getSupportMessage = (type, explanation) => {
+  if (!explanation?.typeSupport) {
     return null
   }
 
-  const supported = columnInfo?.typeSupport?.supported?.find(mapping => mapping?.type === type)
+  const supported = explanation?.typeSupport?.supported?.find(mapping => mapping?.type === type)
   if (supported) {
     return messages[supported?.message]
   }
 
-  const partialSupport = columnInfo?.typeSupport?.partialSupport?.find(mapping => mapping?.type === type)
+  const partialSupport = explanation?.typeSupport?.partialSupport?.find(mapping => mapping?.type === type)
   if (partialSupport) {
     return messages[partialSupport?.message]
   }
 
-  const unsupported = columnInfo?.typeSupport?.unsupported?.find(mapping => mapping?.type === type)
+  const unsupported = explanation?.typeSupport?.unsupported?.find(mapping => mapping?.type === type)
   if (unsupported) {
     return messages[unsupported?.message]
   }
@@ -54,19 +54,19 @@ const getSupportMessage = (type, columnInfo) => {
   return null
 }
 
-export const getColumnInfoMessagesAndSupport = (fieldSchema, columnInfo, typeSupportPresets) => {
+export const getExplanationMessagesAndSupport = (fieldSchema, explanation, typeSupportPresets) => {
   try {
-    const columnInfoMessagesAndSupport = {
-      support: getSupport(fieldSchema.type, columnInfo),
-      messages: [getSupportMessage(fieldSchema.type, columnInfo)],
+    const explanationMessagesAndSupport = {
+      support: getSupport(fieldSchema.type, explanation),
+      messages: [getSupportMessage(fieldSchema.type, explanation)],
     }
 
     const isRequired = fieldSchema?.constraints?.presence?.allowEmpty === false
     if (!isRequired) {
-      columnInfoMessagesAndSupport.messages.push(messages.notRequired);
+      explanationMessagesAndSupport.messages.push(messages.notRequired);
     }
 
-    return columnInfoMessagesAndSupport;
+    return explanationMessagesAndSupport;
   } catch (e) {
     return {
       support: support.partialSupport,
