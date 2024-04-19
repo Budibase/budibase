@@ -64,7 +64,6 @@ async function refreshOIDCAccessToken(
     }
     strategy = await oidc.strategyFactory(enrichedConfig, ssoSaveUserNoOp)
   } catch (err) {
-    console.error(err)
     throw new Error("Could not refresh OAuth Token")
   }
 
@@ -99,7 +98,6 @@ async function refreshGoogleAccessToken(
       ssoSaveUserNoOp
     )
   } catch (err: any) {
-    console.error(err)
     throw new Error(
       `Error constructing OIDC refresh strategy: message=${err.message}`
     )
