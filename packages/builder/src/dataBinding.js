@@ -22,12 +22,14 @@ import {
   isJSBinding,
   decodeJSBinding,
   encodeJSBinding,
+  getJsHelperList,
 } from "@budibase/string-templates"
 import { TableNames } from "./constants"
 import { JSONUtils, Constants } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
 import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
+import { helpersToCompletion } from "components/common/CodeEditor"
 
 const { ContextScopes } = Constants
 
@@ -1210,6 +1212,23 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
   if (!currentValue?.includes(from)) {
     return false
   }
+  const helperNames = Object.keys(getJsHelperList())
+  const matchedHelperNames = helperNames.filter(
+    name => name.includes(from) && currentValue.includes(name)
+  )
+  // edge case - if the binding is part of a helper it may accidentally replace it
+  if (matchedHelperNames.length > 0) {
+    const indexStart = currentValue.indexOf(from),
+      indexEnd = indexStart + from.length
+    for (let helperName of matchedHelperNames) {
+      const helperIndexStart = currentValue.indexOf(helperName),
+        helperIndexEnd = helperIndexStart + helperName.length
+      if (indexStart >= helperIndexStart && indexEnd <= helperIndexEnd) {
+        return false
+      }
+    }
+  }
+
   if (convertTo === "readableBinding") {
     // Dont replace if the value already matches the readable binding
     return currentValue.indexOf(binding.readableBinding) === -1
