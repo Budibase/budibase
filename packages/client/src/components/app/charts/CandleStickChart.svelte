@@ -55,6 +55,9 @@
       }
     },
     yaxis: {
+      labels: {
+        formatter: formatters[valueUnits]
+      },
       title: {
         text: yAxisLabel
       }

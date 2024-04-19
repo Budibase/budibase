@@ -13,7 +13,6 @@
   export let width
   export let dataLabels
   export let animate
-  export let legend
   export let stacked
   export let palette
   export let c1, c2, c3, c4, c5
@@ -30,14 +29,6 @@
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
     theme: {
       palette: palette === "Custom" ? null : palette
-    },
-    legend: {
-      show: legend,
-      position: "top",
-      horizontalAlign: "right",
-      showForSingleSeries: true,
-      showForNullSeries: true,
-      showForZeroSeries: true,
     },
     title: {
       text: title,
@@ -141,8 +132,17 @@
   }
 
   const getFormatter = (horizontal, axis) => {
+    // Don't display decimals in between integers on the value axis
     if ((horizontal && axis === "x") || (!horizontal && axis === "y")) {
-      return (value) => value.toFixed(0)
+      return (value) => {
+        if (Math.floor(value) === value) {
+          return value;
+        }
+
+        // Returning an empty string or even a normal space here causes Apex Charts to push the value axis label of the screen
+        // This is an `em space`, `U+2003`
+        return " ";
+      }
     }
 
     return (value) => value

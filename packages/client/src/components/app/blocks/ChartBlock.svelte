@@ -32,7 +32,7 @@
 
   // Bar/Line/Area
   export let valueColumns
-  export let yAxisUnits
+  export let valueUnits
   export let yAxisLabel
   export let xAxisLabel
   export let curve
@@ -85,7 +85,7 @@
           legend,
           animate,
           ...colors,
-          yAxisUnits,
+          valueUnits,
           yAxisLabel,
           xAxisLabel,
           stacked,
