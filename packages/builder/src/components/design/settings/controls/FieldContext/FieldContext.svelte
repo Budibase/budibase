@@ -1,6 +1,6 @@
 <script>
   import ExplanationModal from './ExplanationModal/index.svelte'
-  import { messages as messageConstants, getColumnInfoMessagesAndSupport, getExplanationWithPresets } from "./columnInfo";
+  import { messages as messageConstants, getExplanationMessagesAndSupport, getExplanationWithPresets } from "./columnInfo";
   import { Column, Support, NotRequired, StringNumber, JSONPrimitivesOnly, DateAsNumber } from "./lines"
   import subjects from './subjects';
   import {
@@ -22,7 +22,7 @@
   let messages = []
 
   $: {
-    const columnInfoMessagesAndSupport = getColumnInfoMessagesAndSupport(schema, explanationWithPresets)
+    const columnInfoMessagesAndSupport = getExplanationMessagesAndSupport(schema, explanationWithPresets)
     support = columnInfoMessagesAndSupport.support
     messages = columnInfoMessagesAndSupport.messages
   }
