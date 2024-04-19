@@ -148,6 +148,8 @@ export interface Database {
     sql: string,
     parameters?: SqlQueryBinding
   ): Promise<T[]>
+  sqlPurge(docIds: string[] | string): Promise<void>
+  sqlCleanup(): Promise<void>
   allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>

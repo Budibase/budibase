@@ -249,25 +249,53 @@ export class DatabaseImpl implements Database {
     })
   }
 
+  async _sqlQuery<T>(
+    url: string,
+    method: "POST" | "GET",
+    body?: any
+  ): Promise<T> {
+    const args: { url: string; method: string; cookie: string; body?: any } = {
+      url: `${this.couchInfo.sqlUrl}/${url}`,
+      method,
+      cookie: this.couchInfo.cookie,
+    }
+    if (body) {
+      args.body = body
+    }
+    const response = await directCouchUrlCall(body)
+    if (response.status > 300) {
+      throw new Error(await response.text())
+    }
+    return (await response.json()) as T
+  }
+
   async sql<T extends Document>(
     sql: string,
     parameters?: SqlQueryBinding
   ): Promise<T[]> {
     const dbName = this.name
     const url = `/${dbName}/${SQLITE_DESIGN_DOC_ID}`
-    const response = await directCouchUrlCall({
-      url: `${this.couchInfo.sqlUrl}/${url}`,
-      method: "POST",
-      cookie: this.couchInfo.cookie,
-      body: {
-        query: sql,
-        args: parameters,
-      },
+    return await this._sqlQuery<T[]>(url, "POST", {
+      query: sql,
+      args: parameters,
     })
-    if (response.status > 300) {
-      throw new Error(await response.text())
+  }
+
+  // checks design document is accurate (cleans up tables)
+  async sqlCleanup(): Promise<void> {
+    const dbName = this.name
+    const url = `/${dbName}/_cleanup`
+    return await this._sqlQuery<void>(url, "POST")
+  }
+
+  // removes a document from sqlite
+  async sqlPurge(docIds: string[] | string): Promise<void> {
+    if (!Array.isArray(docIds)) {
+      docIds = [docIds]
     }
-    return (await response.json()) as T[]
+    const dbName = this.name
+    const url = `/${dbName}/_purge`
+    return await this._sqlQuery<void>(url, "POST", { docs: docIds })
   }
 
   async query<T extends Document>(
