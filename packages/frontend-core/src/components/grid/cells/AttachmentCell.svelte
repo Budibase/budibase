@@ -61,14 +61,6 @@
     }
   }
 
-  const deleteAttachments = async fileList => {
-    try {
-      return await API.deleteBuilderAttachments(fileList)
-    } catch (error) {
-      return []
-    }
-  }
-
   onMount(() => {
     api = {
       focus: () => open(),
@@ -101,7 +93,6 @@
       on:change={e => onChange(e.detail)}
       maximum={maximum || schema.constraints?.length?.maximum}
       {processFiles}
-      {deleteAttachments}
       {handleFileTooLarge}
     />
   </div>

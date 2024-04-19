@@ -62,7 +62,6 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { automationId, ...fieldParams } = inputs.automation
 
   if (await features.isTriggerAutomationRunEnabled()) {
