@@ -4,10 +4,11 @@ import {
   Datasource,
   FieldType,
   TableSourceType,
+  FieldSchema,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../../db/utils"
 import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
-import { SWITCHABLE_TYPES, helpers } from "@budibase/shared-core"
+import { helpers, utils } from "@budibase/shared-core"
 import env from "../../environment"
 import { Knex } from "knex"
 
@@ -15,7 +16,28 @@ const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
 const ENCODED_SPACE = encodeURIComponent(" ")
 
-const SQL_NUMBER_TYPE_MAP = {
+type PrimitiveTypes =
+  | FieldType.STRING
+  | FieldType.NUMBER
+  | FieldType.BOOLEAN
+  | FieldType.DATETIME
+  | FieldType.JSON
+  | FieldType.BIGINT
+  | FieldType.OPTIONS
+
+function isPrimitiveType(type: FieldType): type is PrimitiveTypes {
+  return [
+    FieldType.STRING,
+    FieldType.NUMBER,
+    FieldType.BOOLEAN,
+    FieldType.DATETIME,
+    FieldType.JSON,
+    FieldType.BIGINT,
+    FieldType.OPTIONS,
+  ].includes(type)
+}
+
+const SQL_NUMBER_TYPE_MAP: Record<string, PrimitiveTypes> = {
   integer: FieldType.NUMBER,
   int: FieldType.NUMBER,
   decimal: FieldType.NUMBER,
@@ -35,7 +57,7 @@ const SQL_NUMBER_TYPE_MAP = {
   smallmoney: FieldType.NUMBER,
 }
 
-const SQL_DATE_TYPE_MAP = {
+const SQL_DATE_TYPE_MAP: Record<string, PrimitiveTypes> = {
   timestamp: FieldType.DATETIME,
   time: FieldType.DATETIME,
   datetime: FieldType.DATETIME,
@@ -46,7 +68,7 @@ const SQL_DATE_TYPE_MAP = {
 const SQL_DATE_ONLY_TYPES = ["date"]
 const SQL_TIME_ONLY_TYPES = ["time"]
 
-const SQL_STRING_TYPE_MAP = {
+const SQL_STRING_TYPE_MAP: Record<string, PrimitiveTypes> = {
   varchar: FieldType.STRING,
   char: FieldType.STRING,
   nchar: FieldType.STRING,
@@ -58,22 +80,22 @@ const SQL_STRING_TYPE_MAP = {
   text: FieldType.STRING,
 }
 
-const SQL_BOOLEAN_TYPE_MAP = {
+const SQL_BOOLEAN_TYPE_MAP: Record<string, PrimitiveTypes> = {
   boolean: FieldType.BOOLEAN,
   bit: FieldType.BOOLEAN,
   tinyint: FieldType.BOOLEAN,
 }
 
-const SQL_OPTIONS_TYPE_MAP = {
+const SQL_OPTIONS_TYPE_MAP: Record<string, PrimitiveTypes> = {
   "user-defined": FieldType.OPTIONS,
 }
 
-const SQL_MISC_TYPE_MAP = {
+const SQL_MISC_TYPE_MAP: Record<string, PrimitiveTypes> = {
   json: FieldType.JSON,
   bigint: FieldType.BIGINT,
 }
 
-const SQL_TYPE_MAP = {
+const SQL_TYPE_MAP: Record<string, PrimitiveTypes> = {
   ...SQL_NUMBER_TYPE_MAP,
   ...SQL_DATE_TYPE_MAP,
   ...SQL_STRING_TYPE_MAP,
@@ -239,14 +261,14 @@ export function generateColumnDefinition(config: {
     constraints.inclusion = options
   }
 
-  const schema: any = {
+  const schema: FieldSchema = {
     type: foundType,
     externalType,
     autocolumn,
     name,
     constraints,
   }
-  if (foundType === FieldType.DATETIME) {
+  if (schema.type === FieldType.DATETIME) {
     schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lowerCaseType)
     schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lowerCaseType)
   }
@@ -275,49 +297,6 @@ export function isIsoDateString(str: string) {
 }
 
 /**
- * This function will determine whether a column is a relationship and whether it
- * is currently valid. The reason for the validity check is that tables can be deleted
- * outside of Budibase control and if this is the case it will break Budibase relationships.
- * The tableIds is a list passed down from the main finalise tables function, which is
- * based on the tables that have just been fetched. This will only really be used on subsequent
- * fetches to the first one - if the user is periodically refreshing Budibase knowledge of tables.
- * @param column The column to check, to see if it is a valid relationship.
- * @param tableIds The IDs of the tables which currently exist.
- */
-function shouldCopyRelationship(
-  column: { type: FieldType.LINK; tableId?: string },
-  tableIds: string[]
-) {
-  return (
-    column.type === FieldType.LINK &&
-    column.tableId &&
-    tableIds.includes(column.tableId)
-  )
-}
-
-/**
- * Similar function to the shouldCopyRelationship function, but instead this looks for options and boolean
- * types. It is possible to switch a string -> options and a number -> boolean (and vice versus) need to make
- * sure that these get copied over when tables are fetched. Also checks whether they are still valid, if a
- * column has changed type in the external database then copying it over may not be possible.
- * @param column The column to check for options or boolean type.
- * @param fetchedColumn The fetched column to check for the type in the external database.
- */
-function shouldCopySpecialColumn(
-  column: { type: FieldType },
-  fetchedColumn: { type: FieldType } | undefined
-) {
-  const isFormula = column.type === FieldType.FORMULA
-  // column has been deleted, remove - formulas will never exist, always copy
-  if (!isFormula && column && !fetchedColumn) {
-    return false
-  }
-  const fetchedIsNumber =
-    !fetchedColumn || fetchedColumn.type === FieldType.NUMBER
-  return fetchedIsNumber && column.type === FieldType.BOOLEAN
-}
-
-/**
  * Looks for columns which need to be copied over into the new table definitions, like relationships,
  * options types and views.
  * @param tableName The name of the table which is being checked.
@@ -338,6 +317,9 @@ function copyExistingPropsOver(
     if (entities[tableName]?.created) {
       table.created = entities[tableName]?.created
     }
+    if (entities[tableName]?.constrained) {
+      table.constrained = entities[tableName]?.constrained
+    }
 
     table.views = entities[tableName].views
 
@@ -346,45 +328,73 @@ function copyExistingPropsOver(
       if (!Object.prototype.hasOwnProperty.call(existingTableSchema, key)) {
         continue
       }
+
       const column = existingTableSchema[key]
 
       const existingColumnType = column?.type
       const updatedColumnType = table.schema[key]?.type
 
-      // If the db column type changed to a non-compatible one, we want to re-fetch it
-      if (
-        updatedColumnType !== existingColumnType &&
-        !SWITCHABLE_TYPES[updatedColumnType]?.includes(existingColumnType)
-      ) {
-        continue
+      const keepIfType = (...validTypes: PrimitiveTypes[]) => {
+        return (
+          isPrimitiveType(updatedColumnType) &&
+          table.schema[key] &&
+          validTypes.includes(updatedColumnType)
+        )
       }
 
-      if (
-        column.type === FieldType.LINK &&
-        !shouldCopyRelationship(column, tableIds)
-      ) {
-        continue
+      let shouldKeepSchema = false
+      switch (existingColumnType) {
+        case FieldType.FORMULA:
+        case FieldType.AUTO:
+        case FieldType.INTERNAL:
+          shouldKeepSchema = true
+          break
+
+        case FieldType.LINK:
+          shouldKeepSchema =
+            existingColumnType === FieldType.LINK &&
+            tableIds.includes(column.tableId)
+          break
+
+        case FieldType.STRING:
+        case FieldType.OPTIONS:
+        case FieldType.LONGFORM:
+        case FieldType.BARCODEQR:
+          shouldKeepSchema = keepIfType(FieldType.STRING)
+          break
+
+        case FieldType.NUMBER:
+        case FieldType.BOOLEAN:
+          shouldKeepSchema = keepIfType(FieldType.BOOLEAN, FieldType.NUMBER)
+          break
+
+        case FieldType.ARRAY:
+        case FieldType.ATTACHMENTS:
+        case FieldType.ATTACHMENT_SINGLE:
+        case FieldType.JSON:
+        case FieldType.BB_REFERENCE:
+          shouldKeepSchema = keepIfType(FieldType.JSON, FieldType.STRING)
+          break
+
+        case FieldType.DATETIME:
+          shouldKeepSchema = keepIfType(FieldType.DATETIME, FieldType.STRING)
+          break
+
+        case FieldType.BIGINT:
+          shouldKeepSchema = keepIfType(FieldType.BIGINT, FieldType.NUMBER)
+          break
+
+        default:
+          utils.unreachable(existingColumnType)
       }
 
-      const specialTypes = [
-        FieldType.OPTIONS,
-        FieldType.LONGFORM,
-        FieldType.ARRAY,
-        FieldType.FORMULA,
-        FieldType.BB_REFERENCE,
-      ]
-      if (
-        specialTypes.includes(column.type) &&
-        !shouldCopySpecialColumn(column, table.schema[key])
-      ) {
-        continue
-      }
-
-      table.schema[key] = {
-        ...existingTableSchema[key],
-        externalType:
-          existingTableSchema[key].externalType ||
-          table.schema[key].externalType,
+      if (shouldKeepSchema) {
+        table.schema[key] = {
+          ...existingTableSchema[key],
+          externalType:
+            existingTableSchema[key].externalType ||
+            table.schema[key]?.externalType,
+        }
       }
     }
   }
