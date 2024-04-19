@@ -277,18 +277,18 @@ describe("/datasources", () => {
             name: "number",
             type: FieldType.NUMBER,
           },
-          // [FieldType.BOOLEAN]: {
-          //   name: "boolean",
-          //   type: FieldType.BOOLEAN,
-          // },
+          [FieldType.BOOLEAN]: {
+            name: "boolean",
+            type: FieldType.BOOLEAN,
+          },
           // [FieldType.ARRAY]: {
           //   name: "array",
           //   type: FieldType.ARRAY,
           // },
-          // [FieldType.DATETIME]: {
-          //   name: "datetime",
-          //   type: FieldType.DATETIME,
-          // },
+          [FieldType.DATETIME]: {
+            name: "datetime",
+            type: FieldType.DATETIME,
+          },
           // [FieldType.ATTACHMENTS]: {
           //   name: "attachments",
           //   type: FieldType.ATTACHMENTS,
@@ -322,10 +322,10 @@ describe("/datasources", () => {
           //   name: "internal",
           //   type: FieldType.INTERNAL,
           // },
-          // [FieldType.BARCODEQR]: {
-          //   name: "barcodeqr",
-          //   type: FieldType.BARCODEQR,
-          // },
+          [FieldType.BARCODEQR]: {
+            name: "barcodeqr",
+            type: FieldType.BARCODEQR,
+          },
           // [FieldType.BIGINT]: {
           //   name: "bigint",
           //   type: FieldType.BIGINT,
