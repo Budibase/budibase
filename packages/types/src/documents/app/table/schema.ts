@@ -91,6 +91,7 @@ export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.DATETIME
   ignoreTimezones?: boolean
   timeOnly?: boolean
+  dateOnly?: boolean
   subtype?: AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT
 }
 

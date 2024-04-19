@@ -103,7 +103,6 @@ export async function strategyFactory(
     strategy.name = "oidc"
     return strategy
   } catch (err: any) {
-    console.error(err)
     throw new Error(`Error constructing OIDC authentication strategy - ${err}`)
   }
 }
@@ -142,7 +141,6 @@ export async function fetchStrategyConfig(
       callbackURL: callbackUrl,
     }
   } catch (err) {
-    console.error(err)
     throw new Error(
       `Error constructing OIDC authentication configuration - ${err}`
     )
