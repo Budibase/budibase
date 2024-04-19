@@ -1211,6 +1211,9 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
   if (!currentValue?.includes(from)) {
     return false
   }
+  // some cases we have the same binding for readable/runtime, specific logic for this
+  const sameBindings = binding.runtimeBinding.includes(binding.readableBinding)
+  const convertingToReadable = convertTo === "readableBinding"
   const helperNames = Object.keys(getJsHelperList())
   const matchedHelperNames = helperNames.filter(
     name => name.includes(from) && currentValue.includes(name)
@@ -1228,9 +1231,12 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
     }
   }
 
-  if (convertTo === "readableBinding") {
-    // Dont replace if the value already matches the readable binding
+  if (convertingToReadable && !sameBindings) {
+    // Don't replace if the value already matches the readable binding
     return currentValue.indexOf(binding.readableBinding) === -1
+  } else if (convertingToReadable) {
+    // if the runtime and readable bindings are very similar, all we can do is check runtime is there
+    return currentValue.indexOf(binding.runtimeBinding) !== -1
   }
   // remove all the spaces, if the input is surrounded by spaces e.g. [ Auto ID ] then
   // this makes sure it is detected
