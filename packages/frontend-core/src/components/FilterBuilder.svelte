@@ -67,6 +67,12 @@
 
   const removeFilter = id => {
     filters = filters.filter(field => field.id !== id)
+
+    // Clear all filters when no fields are specified
+    let [first] = filters
+    if (filters.length == 1 && first?.onEmptyFilter) {
+      filters = []
+    }
   }
 
   const duplicateFilter = id => {
