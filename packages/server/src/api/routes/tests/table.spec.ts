@@ -44,7 +44,6 @@ describe.each([
     await config.init()
     if (dsProvider) {
       datasource = await config.api.datasource.create(await dsProvider)
-    } else {
     }
   })
 
