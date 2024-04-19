@@ -116,7 +116,8 @@ const parseBooleanParam = (param: any) => {
 export const adminUser = async (
   ctx: Ctx<CreateAdminUserRequest, CreateAdminUserResponse>
 ) => {
-  const { email, password, tenantId, ssoId } = ctx.request.body
+  const { email, password, tenantId, ssoId, givenName, familyName } =
+    ctx.request.body
 
   if (await platform.tenants.exists(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
@@ -151,6 +152,8 @@ export const adminUser = async (
         ssoId,
         hashPassword,
         requirePassword,
+        firstName: givenName,
+        lastName: familyName,
       })
 
       // events
