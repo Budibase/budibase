@@ -1,15 +1,15 @@
 <script>
   import { Line, InfoWord, DocumentationLink, Space, Text, Period } from "../typography"
   import subjects from '../subjects'
-  import * as columnInfo from '../columnInfo'
+  import * as explanation from '../explanation'
 
   export let setExplanationSubject
   export let support
 
   const getIcon = (support) => {
-    if (support === columnInfo.support.unsupported) {
+    if (support === explanation.support.unsupported) {
       return "Alert"
-    } else if (support === columnInfo.support.supported) {
+    } else if (support === explanation.support.supported) {
       return "CheckmarkCircle"
     }
 
@@ -17,9 +17,9 @@
   }
 
   const getColor = (support) => {
-    if (support === columnInfo.support.unsupported) {
+    if (support === explanation.support.unsupported) {
       return "var(--red)"
-    } else if (support === columnInfo.support.supported) {
+    } else if (support === explanation.support.supported) {
       return "var(--green)"
     }
 
@@ -27,9 +27,9 @@
   }
 
   const getText = (support) => {
-    if (support === columnInfo.support.unsupported) {
+    if (support === explanation.support.unsupported) {
       return "Not compatible"
-    } else if (support === columnInfo.support.supported) {
+    } else if (support === explanation.support.supported) {
       return "Compatible"
     }
 
