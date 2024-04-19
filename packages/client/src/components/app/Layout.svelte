@@ -194,6 +194,11 @@
     }
     return url
   }
+
+  const handleClickLink = () => {
+    mobileOpen = false
+    sidePanelStore.actions.close()
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -284,8 +289,7 @@
                     url={navItem.url}
                     subLinks={navItem.subLinks}
                     internalLink={navItem.internalLink}
-                    on:clickLink={(() => (mobileOpen = false),
-                    sidePanelStore.actions.close)}
+                    on:clickLink={handleClickLink}
                     leftNav={navigation === "Left"}
                     {mobile}
                     {navStateStore}
