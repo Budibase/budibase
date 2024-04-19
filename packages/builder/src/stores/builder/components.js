@@ -321,39 +321,42 @@ export class ComponentStore extends BudiStore {
               .map(([name]) => name)
           }
 
-          // Extract good field candidates to prefil our cards with
+          // Inserts a card binding for a certain setting
+          const addBinding = (key, ...parts) => {
+            parts.unshift(`${_id}-repeater`)
+            component[key] = `{{ ${parts.map(safe).join(".")} }}`
+          }
+
+          // Extract good field candidates to prefil our cards with.
+          // Use the primary display as the best field, if it exists.
           const fields = findFieldTypes([
             FieldType.STRING,
             FieldType.OPTIONS,
             FieldType.DATETIME,
             FieldType.NUMBER,
           ])
-
-          // Use the primary display as the best field, if it exists
           if (schema?.[table?.primaryDisplay]) {
             fields.unshift(table.primaryDisplay)
           }
 
           // Fill our cards with as many bindings as we can
-          const prefix = safe(`${_id}-repeater`)
           cardKeys.forEach(key => {
-            if (!fields[0]) return
-            component[key] = `{{ ${prefix}.${safe(fields[0])} }}`
-            fields.shift()
+            if (fields[0]) {
+              addBinding(key, fields[0])
+              fields.shift()
+            }
           })
 
-          // Attempt to fill the image setting
-          let imgFields = findFieldTypes([FieldType.ATTACHMENT_SINGLE])
-          if (imgFields[0]) {
-            component.cardImageURL = `{{ ${prefix}.${safe(
-              imgFields[0]
-            )}.[url] }}`
+          // Attempt to fill the image setting.
+          // Check single attachment fields first.
+          let imgField = findFieldTypes(FieldType.ATTACHMENT_SINGLE)[0]
+          if (imgField) {
+            addBinding("cardImageURL", imgField, "url")
           } else {
-            imgFields = findFieldTypes([FieldType.ATTACHMENTS])
-            if (imgFields[0]) {
-              component.cardImageURL = `{{ ${prefix}.${safe(
-                imgFields[0]
-              )}.[0].[url] }}`
+            // Then try multi-attachment fields if no single ones exist
+            imgField = findFieldTypes(FieldType.ATTACHMENTS)[0]
+            if (imgField) {
+              addBinding("cardImageURL", imgField, 0, "url")
             }
           }
         }
