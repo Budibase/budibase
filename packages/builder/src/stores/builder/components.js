@@ -1,4 +1,4 @@
-import { get, derived, readable } from "svelte/store"
+import { get, derived } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { API } from "api"
 import { Helpers } from "@budibase/bbui"
@@ -30,7 +30,7 @@ import {
 } from "constants/backend"
 import BudiStore from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
-import { FieldSubtype, FieldType } from "@budibase/types"
+import { FieldType } from "@budibase/types"
 
 export const INITIAL_COMPONENTS_STATE = {
   components: {},
