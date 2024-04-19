@@ -5,10 +5,11 @@ import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
 import tk from "timekeeper"
-import { generator, mocks } from "@budibase/backend-core/tests"
+import { mocks } from "@budibase/backend-core/tests"
 import {
   Datasource,
   FieldSchema,
+  FieldSubtype,
   FieldType,
   QueryPreview,
   RelationshipType,
@@ -250,7 +251,7 @@ describe("/datasources", () => {
 
       const simpleTable = await config.api.table.save(
         tableForDatasource(datasource, {
-          name: generator.guid(),
+          name: "simple",
           schema: {
             name: {
               name: "name",
@@ -259,86 +260,82 @@ describe("/datasources", () => {
           },
         })
       )
-      const fullSchema: { [type in FieldType]: FieldSchema & { type: type } } =
-        {
-          [FieldType.STRING]: {
-            name: "string",
-            type: FieldType.STRING,
-          },
-          // [FieldType.LONGFORM]: {
-          //   name: "longform",
-          //   type: FieldType.LONGFORM,
-          // },
-          // [FieldType.OPTIONS]: {
-          //   name: "options",
-          //   type: FieldType.OPTIONS,
-          // },
-          [FieldType.NUMBER]: {
-            name: "number",
-            type: FieldType.NUMBER,
-          },
-          [FieldType.BOOLEAN]: {
-            name: "boolean",
-            type: FieldType.BOOLEAN,
-          },
-          // [FieldType.ARRAY]: {
-          //   name: "array",
-          //   type: FieldType.ARRAY,
-          // },
-          [FieldType.DATETIME]: {
-            name: "datetime",
-            type: FieldType.DATETIME,
-          },
-          // [FieldType.ATTACHMENTS]: {
-          //   name: "attachments",
-          //   type: FieldType.ATTACHMENTS,
-          // },
-          // [FieldType.ATTACHMENT_SINGLE]: {
-          //   name: "attachment_single",
-          //   type: FieldType.ATTACHMENT_SINGLE,
-          // },
-          // [FieldType.LINK]: {
-          //   name: "link",
-          //   type: FieldType.LINK,
-          //   tableId: simpleTable._id!,
-          //   relationshipType: RelationshipType.ONE_TO_MANY,
-          //   fieldName: "link",
-          //   foreignKey: "fk",
-          // },
-          // [FieldType.FORMULA]: {
-          //   name: "formula",
-          //   type: FieldType.FORMULA,
-          //   formula: "any formula",
-          // },
-          // [FieldType.AUTO]: {
-          //   name: "auto",
-          //   type: FieldType.AUTO,
-          // },
-          // [FieldType.JSON]: {
-          //   name: "json",
-          //   type: FieldType.JSON,
-          // },
-          // [FieldType.INTERNAL]: {
-          //   name: "internal",
-          //   type: FieldType.INTERNAL,
-          // },
-          [FieldType.BARCODEQR]: {
-            name: "barcodeqr",
-            type: FieldType.BARCODEQR,
-          },
-          // [FieldType.BIGINT]: {
-          //   name: "bigint",
-          //   type: FieldType.BIGINT,
-          // },
-          // [FieldType.BB_REFERENCE]: {
-          //   name: "bb_reference",
-          //   type: FieldType.BB_REFERENCE,
-          // },
-        }
 
-      const fullTable = await config.api.table.save(
+      type SupportedTypes =
+        | FieldType.STRING
+        | FieldType.BARCODEQR
+        | FieldType.LONGFORM
+        | FieldType.OPTIONS
+        | FieldType.DATETIME
+        | FieldType.NUMBER
+        | FieldType.BOOLEAN
+        | FieldType.FORMULA
+        | FieldType.BIGINT
+        | FieldType.BB_REFERENCE
+        | FieldType.LINK
+        | FieldType.ARRAY
+
+      const fullSchema: {
+        [type in SupportedTypes]: FieldSchema & { type: type }
+      } = {
+        [FieldType.STRING]: {
+          name: "string",
+          type: FieldType.STRING,
+        },
+        [FieldType.LONGFORM]: {
+          name: "longform",
+          type: FieldType.LONGFORM,
+        },
+        [FieldType.OPTIONS]: {
+          name: "options",
+          type: FieldType.OPTIONS,
+        },
+        [FieldType.NUMBER]: {
+          name: "number",
+          type: FieldType.NUMBER,
+        },
+        [FieldType.BOOLEAN]: {
+          name: "boolean",
+          type: FieldType.BOOLEAN,
+        },
+        [FieldType.ARRAY]: {
+          name: "array",
+          type: FieldType.ARRAY,
+        },
+        [FieldType.DATETIME]: {
+          name: "datetime",
+          type: FieldType.DATETIME,
+        },
+        [FieldType.LINK]: {
+          name: "link",
+          type: FieldType.LINK,
+          tableId: simpleTable._id!,
+          relationshipType: RelationshipType.ONE_TO_MANY,
+          fieldName: "link",
+        },
+        [FieldType.FORMULA]: {
+          name: "formula",
+          type: FieldType.FORMULA,
+          formula: "any formula",
+        },
+        [FieldType.BARCODEQR]: {
+          name: "barcodeqr",
+          type: FieldType.BARCODEQR,
+        },
+        [FieldType.BIGINT]: {
+          name: "bigint",
+          type: FieldType.BIGINT,
+        },
+        [FieldType.BB_REFERENCE]: {
+          name: "bb_reference",
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldSubtype.USERS,
+        },
+      }
+
+      await config.api.table.save(
         tableForDatasource(datasource, {
-          name: generator.guid(),
+          name: "full",
           schema: fullSchema,
         })
       )
@@ -362,9 +359,6 @@ describe("/datasources", () => {
                   (acc, [fieldName, field]) => {
                     acc[fieldName] = expect.objectContaining({
                       ...field,
-                      externalType: expect.not.stringMatching(
-                        new RegExp(`^${field.externalType || ""}$`)
-                      ),
                     })
                     return acc
                   },

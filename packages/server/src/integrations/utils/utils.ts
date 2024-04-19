@@ -15,7 +15,28 @@ const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
 const ENCODED_SPACE = encodeURIComponent(" ")
 
-const SQL_NUMBER_TYPE_MAP = {
+type PrimitiveTypes =
+  | FieldType.STRING
+  | FieldType.NUMBER
+  | FieldType.BOOLEAN
+  | FieldType.DATETIME
+  | FieldType.JSON
+  | FieldType.BIGINT
+  | FieldType.OPTIONS
+
+function isPrimitiveType(type: FieldType): type is PrimitiveTypes {
+  return [
+    FieldType.STRING,
+    FieldType.NUMBER,
+    FieldType.BOOLEAN,
+    FieldType.DATETIME,
+    FieldType.JSON,
+    FieldType.BIGINT,
+    FieldType.OPTIONS,
+  ].includes(type)
+}
+
+const SQL_NUMBER_TYPE_MAP: Record<string, PrimitiveTypes> = {
   integer: FieldType.NUMBER,
   int: FieldType.NUMBER,
   decimal: FieldType.NUMBER,
@@ -35,7 +56,7 @@ const SQL_NUMBER_TYPE_MAP = {
   smallmoney: FieldType.NUMBER,
 }
 
-const SQL_DATE_TYPE_MAP = {
+const SQL_DATE_TYPE_MAP: Record<string, PrimitiveTypes> = {
   timestamp: FieldType.DATETIME,
   time: FieldType.DATETIME,
   datetime: FieldType.DATETIME,
@@ -46,7 +67,7 @@ const SQL_DATE_TYPE_MAP = {
 const SQL_DATE_ONLY_TYPES = ["date"]
 const SQL_TIME_ONLY_TYPES = ["time"]
 
-const SQL_STRING_TYPE_MAP = {
+const SQL_STRING_TYPE_MAP: Record<string, PrimitiveTypes> = {
   varchar: FieldType.STRING,
   char: FieldType.STRING,
   nchar: FieldType.STRING,
@@ -58,22 +79,22 @@ const SQL_STRING_TYPE_MAP = {
   text: FieldType.STRING,
 }
 
-const SQL_BOOLEAN_TYPE_MAP = {
+const SQL_BOOLEAN_TYPE_MAP: Record<string, PrimitiveTypes> = {
   boolean: FieldType.BOOLEAN,
   bit: FieldType.BOOLEAN,
   tinyint: FieldType.BOOLEAN,
 }
 
-const SQL_OPTIONS_TYPE_MAP = {
+const SQL_OPTIONS_TYPE_MAP: Record<string, PrimitiveTypes> = {
   "user-defined": FieldType.OPTIONS,
 }
 
-const SQL_MISC_TYPE_MAP = {
+const SQL_MISC_TYPE_MAP: Record<string, PrimitiveTypes> = {
   json: FieldType.JSON,
   bigint: FieldType.BIGINT,
 }
 
-const SQL_TYPE_MAP = {
+const SQL_TYPE_MAP: Record<string, PrimitiveTypes> = {
   ...SQL_NUMBER_TYPE_MAP,
   ...SQL_DATE_TYPE_MAP,
   ...SQL_STRING_TYPE_MAP,
@@ -317,6 +338,80 @@ function shouldCopySpecialColumn(
   return fetchedIsNumber && column.type === FieldType.BOOLEAN
 }
 
+enum CopyAction {
+  ALWAYS_KEEP = "alwaysKeep",
+  COPY_IF_TYPE = "copyIfType",
+}
+
+SQL_TYPE_MAP
+
+const SqlCopyTypeByFieldMapping: Record<
+  FieldType,
+  | { action: CopyAction.ALWAYS_KEEP }
+  | { action: CopyAction.COPY_IF_TYPE; types: PrimitiveTypes[] }
+> = {
+  [FieldType.LINK]: { action: CopyAction.ALWAYS_KEEP },
+  [FieldType.FORMULA]: { action: CopyAction.ALWAYS_KEEP },
+  [FieldType.STRING]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.STRING],
+  },
+  [FieldType.OPTIONS]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.STRING],
+  },
+  [FieldType.LONGFORM]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.STRING],
+  },
+  [FieldType.NUMBER]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.BOOLEAN, FieldType.NUMBER],
+  },
+  [FieldType.BOOLEAN]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.BOOLEAN, FieldType.NUMBER],
+  },
+  [FieldType.ARRAY]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.JSON, FieldType.STRING],
+  },
+  [FieldType.DATETIME]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.DATETIME, FieldType.STRING],
+  },
+  [FieldType.ATTACHMENTS]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.JSON, FieldType.STRING],
+  },
+  [FieldType.ATTACHMENT_SINGLE]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.JSON, FieldType.STRING],
+  },
+  [FieldType.AUTO]: {
+    action: CopyAction.ALWAYS_KEEP,
+  },
+  [FieldType.JSON]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.JSON, FieldType.STRING],
+  },
+  [FieldType.INTERNAL]: {
+    action: CopyAction.ALWAYS_KEEP,
+  },
+  [FieldType.BARCODEQR]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.STRING],
+  },
+  [FieldType.BIGINT]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.BIGINT, FieldType.NUMBER],
+  },
+  [FieldType.BB_REFERENCE]: {
+    action: CopyAction.COPY_IF_TYPE,
+    types: [FieldType.JSON, FieldType.STRING],
+  },
+}
+
 /**
  * Looks for columns which need to be copied over into the new table definitions, like relationships,
  * options types and views.
@@ -338,6 +433,9 @@ function copyExistingPropsOver(
     if (entities[tableName]?.created) {
       table.created = entities[tableName]?.created
     }
+    if (entities[tableName]?.constrained) {
+      table.constrained = entities[tableName]?.constrained
+    }
 
     table.views = entities[tableName].views
 
@@ -351,41 +449,23 @@ function copyExistingPropsOver(
       const existingColumnType = column?.type
       const updatedColumnType = table.schema[key]?.type
 
-      // If the db column type changed to a non-compatible one, we want to re-fetch it
-      if (
-        updatedColumnType &&
-        updatedColumnType !== existingColumnType &&
-        !SWITCHABLE_TYPES[updatedColumnType]?.includes(existingColumnType)
-      ) {
-        continue
+      const map = SqlCopyTypeByFieldMapping[existingColumnType]
+
+      let keepExistingSchema = map.action === CopyAction.ALWAYS_KEEP
+      if (map.action === CopyAction.COPY_IF_TYPE) {
+        keepExistingSchema =
+          isPrimitiveType(updatedColumnType) &&
+          table.schema[key] &&
+          map.types?.includes(updatedColumnType)
       }
 
-      if (
-        column.type === FieldType.LINK &&
-        !shouldCopyRelationship(column, tableIds)
-      ) {
-        continue
-      }
-
-      const specialTypes = [
-        FieldType.OPTIONS,
-        FieldType.LONGFORM,
-        FieldType.ARRAY,
-        FieldType.FORMULA,
-        FieldType.BB_REFERENCE,
-      ]
-      if (
-        specialTypes.includes(column.type) &&
-        !shouldCopySpecialColumn(column, table.schema[key])
-      ) {
-        continue
-      }
-
-      table.schema[key] = {
-        ...existingTableSchema[key],
-        externalType:
-          existingTableSchema[key].externalType ||
-          table.schema[key]?.externalType,
+      if (keepExistingSchema) {
+        table.schema[key] = {
+          ...existingTableSchema[key],
+          externalType:
+            existingTableSchema[key].externalType ||
+            table.schema[key]?.externalType,
+        }
       }
     }
   }
