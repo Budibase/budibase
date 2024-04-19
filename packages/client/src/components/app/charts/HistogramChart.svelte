@@ -22,8 +22,10 @@
 
   $: series = getSeries(dataProvider, valueColumn, bucketCount)
 
+  $: xAxisFormatter = getFormatter(horizontal, "x")
+  $: yAxisFormatter = getFormatter(horizontal, "y")
+
   $: options = {
-    /*
     series,
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
     theme: {
@@ -63,36 +65,45 @@
         horizontal
       }
     },
-    // We can just always provide the categories to the xaxis and horizontal mode automatically handles "tranposing" the categories to the yaxis, but certain things like labels need to be manually put on a certain axis based on the selected mode. Titles do not need to be handled this way, they are exposed to the user as "X axis" and Y Axis" so flipping them would be confusing.
     xaxis: {
-      type: labelType,
-      categories,
+      type: 'category',
+      title: {
+        text: xAxisLabel
+      },
       labels: {
         formatter: xAxisFormatter
       },
-      title: {
-        text: xAxisLabel
-      }
     },
-    // Providing `type: "datetime"` normally makes Apex Charts parse epochs nicely with no additonal config, but bar charts in horizontal mode don't have a default setting for parsing the labels of dates, and will just spit out the unix epoch value. It also doesn't seem to respect any date based formatting properties passed in. So we'll just manualy format the labels, the chart still sorts the dates correctly in any case
     yaxis: {
+      decimalsInFloat: 0,
+      title: {
+        text: yAxisLabel
+      },
       labels: {
         formatter: yAxisFormatter
       },
-      title: {
-        text: yAxisLabel
-      }
     }
-*/
   }
 
   const getSeries = (dataProvider, valueColumn, bucketCount) => {
     const rows = dataProvider.rows ?? [];
 
-    const values = rows.map(row => parseFloat(row[valueColumn]))
+    const values = rows.map(row => parseFloat(row[valueColumn])).filter(value => !isNaN(value))
     const [min, max] = getValuesRange(values)
-    console.log(min, max);
     const buckets = getBuckets(min, max, bucketCount)
+    const counts = Array(bucketCount).fill(0);
+
+    values.forEach(value => {
+      const bucketIndex = buckets.findIndex(bucket => bucket.min <= value && value <= bucket.max)
+
+      counts[bucketIndex]++
+    });
+
+    const series = buckets.map((bucket, index) => ({ x: `${bucket.min} – ${bucket.max}`, y: counts[index] }))
+
+    return [
+      { data: series }
+    ]
   }
 
   const getValuesRange = (values) => {
@@ -111,12 +122,13 @@
     const range = max - min
     // Assure bucketSize is never a decimal value, we'll redistribute any size truncated here later
     const bucketSize = Math.floor(range / bucketCount)
-    let bucketRemainder = range - (bucketSize * bucketCount)
+    const bucketRemainder = range - (bucketSize * bucketCount)
 
     const buckets = []
 
     for (let i = 0; i < bucketCount; i++) {
       const lastBucketMax = buckets?.[buckets.length - 1]?.max ?? min
+      // Distribute any remaining size, the remainder will never be larger than the number of buckets
       const remainderPadding = i < bucketRemainder ? 1 : 0
 
       buckets.push({
@@ -125,13 +137,15 @@
       })
     }
 
-    console.log(range);
-    console.log(bucketSize);
-    console.log(bucketRemainder)
-    console.log(buckets);
-
     return buckets;
+  }
 
+  const getFormatter = (horizontal, axis) => {
+    if ((horizontal && axis === "x") || (!horizontal && axis === "y")) {
+      return (value) => value.toFixed(0)
+    }
+
+    return (value) => value
   }
 </script>
 
