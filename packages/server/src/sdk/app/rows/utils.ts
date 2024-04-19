@@ -52,6 +52,12 @@ export async function getDatasourceAndQuery(
 ): Promise<DatasourcePlusQueryResponse> {
   const datasourceId = json.endpoint.datasourceId
   const datasource = await sdk.datasources.get(datasourceId)
+  const table = datasource.entities?.[json.endpoint.entityId]
+  if (!json.meta && table) {
+    json.meta = {
+      table,
+    }
+  }
   return makeExternalQuery(datasource, json)
 }
 
