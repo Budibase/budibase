@@ -76,7 +76,7 @@ function writeFile(output: any, filename: string) {
     console.log(`Wrote spec to ${path}`)
     return path
   } catch (err) {
-    console.error(err)
+    console.error("Error writing spec file", err)
   }
 }
 
