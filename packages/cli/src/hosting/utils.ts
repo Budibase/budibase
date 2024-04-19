@@ -105,7 +105,6 @@ export function getAppService(path: string) {
 }
 
 export function updateDockerComposeService(
-  // eslint-disable-next-line no-unused-vars
   updateFn: (service: DockerCompose) => void
 ) {
   const opts = ["docker-compose.yaml", "docker-compose.yml"]

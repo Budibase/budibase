@@ -1,14 +1,27 @@
 import { SqlClient } from "../utils"
 import Sql from "../base/sql"
 import {
+  FieldType,
   Operation,
   QueryJson,
-  TableSourceType,
   Table,
-  FieldType,
+  TableSourceType,
 } from "@budibase/types"
 
 const TABLE_NAME = "test"
+const TABLE: Table = {
+  type: "table",
+  sourceType: TableSourceType.EXTERNAL,
+  sourceId: "SOURCE_ID",
+  schema: {
+    id: {
+      name: "id",
+      type: FieldType.NUMBER,
+    },
+  },
+  name: TABLE_NAME,
+  primary: ["id"],
+}
 
 function endpoint(table: any, operation: any) {
   return {
@@ -25,6 +38,10 @@ function generateReadJson({
   sort,
   paginate,
 }: any = {}): QueryJson {
+  const tableObj = { ...TABLE }
+  if (table) {
+    tableObj.name = table
+  }
   return {
     endpoint: endpoint(table || TABLE_NAME, "READ"),
     resource: {
@@ -34,14 +51,7 @@ function generateReadJson({
     sort: sort || {},
     paginate: paginate || {},
     meta: {
-      table: {
-        type: "table",
-        sourceType: TableSourceType.EXTERNAL,
-        sourceId: "SOURCE_ID",
-        schema: {},
-        name: table || TABLE_NAME,
-        primary: ["id"],
-      } as any,
+      table: tableObj,
     },
   }
 }
@@ -49,6 +59,9 @@ function generateReadJson({
 function generateCreateJson(table = TABLE_NAME, body = {}): QueryJson {
   return {
     endpoint: endpoint(table, "CREATE"),
+    meta: {
+      table: TABLE,
+    },
     body,
   }
 }
@@ -58,7 +71,15 @@ function generateUpdateJson({
   body = {},
   filters = {},
   meta = {},
+}: {
+  table: string
+  body?: any
+  filters?: any
+  meta?: any
 }): QueryJson {
+  if (!meta.table) {
+    meta.table = TABLE
+  }
   return {
     endpoint: endpoint(table, "UPDATE"),
     filters,
@@ -70,6 +91,9 @@ function generateUpdateJson({
 function generateDeleteJson(table = TABLE_NAME, filters = {}): QueryJson {
   return {
     endpoint: endpoint(table, "DELETE"),
+    meta: {
+      table: TABLE,
+    },
     filters,
   }
 }
@@ -102,6 +126,9 @@ function generateRelationshipJson(config: { schema?: string } = {}): QueryJson {
       },
     ],
     extra: { idFilter: {} },
+    meta: {
+      table: TABLE,
+    },
   }
 }
 
@@ -136,6 +163,9 @@ function generateManyRelationshipJson(config: { schema?: string } = {}) {
       },
     ],
     extra: { idFilter: {} },
+    meta: {
+      table: TABLE,
+    },
   }
 }
 
@@ -319,7 +349,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [date, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" > $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" >= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -338,7 +368,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [date, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" < $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" <= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -572,7 +602,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["2000-01-01 00:00:00", 500],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" > $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" >= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -591,7 +621,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["2010-01-01 00:00:00", 500],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" < $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" <= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -722,7 +752,7 @@ describe("SQL query builder", () => {
     })
     expect(query).toEqual({
       bindings: [],
-      sql: `alter table \`${TABLE_NAME}\` change column \`name\` \`first_name\` varchar(45);`,
+      sql: `alter table \`${TABLE_NAME}\` rename column \`name\` to \`first_name\`;`,
     })
   })
 

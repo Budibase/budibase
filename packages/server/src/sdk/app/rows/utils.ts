@@ -49,9 +49,15 @@ export function getSQLClient(datasource: Datasource): SqlClient {
 
 export async function getDatasourceAndQuery(
   json: QueryJson
-): DatasourcePlusQueryResponse {
+): Promise<DatasourcePlusQueryResponse> {
   const datasourceId = json.endpoint.datasourceId
   const datasource = await sdk.datasources.get(datasourceId)
+  const table = datasource.entities?.[json.endpoint.entityId]
+  if (!json.meta && table) {
+    json.meta = {
+      table,
+    }
+  }
   return makeExternalQuery(datasource, json)
 }
 
@@ -175,13 +181,13 @@ export async function validate({
         errors[fieldName] = [`${fieldName} is required`]
       }
     } else if (
-      (type === FieldType.ATTACHMENT || type === FieldType.JSON) &&
+      (type === FieldType.ATTACHMENTS || type === FieldType.JSON) &&
       typeof row[fieldName] === "string"
     ) {
       // this should only happen if there is an error
       try {
         const json = JSON.parse(row[fieldName])
-        if (type === FieldType.ATTACHMENT) {
+        if (type === FieldType.ATTACHMENTS) {
           if (Array.isArray(json)) {
             row[fieldName] = json
           } else {

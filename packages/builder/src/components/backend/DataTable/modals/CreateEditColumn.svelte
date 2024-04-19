@@ -13,6 +13,7 @@
     Layout,
     AbsTooltip,
   } from "@budibase/bbui"
+  import { SWITCHABLE_TYPES, ValidColumnNameRegex } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
@@ -20,11 +21,6 @@
   import {
     FIELDS,
     RelationshipType,
-    ALLOWABLE_STRING_OPTIONS,
-    ALLOWABLE_NUMBER_OPTIONS,
-    ALLOWABLE_STRING_TYPES,
-    ALLOWABLE_NUMBER_TYPES,
-    SWITCHABLE_TYPES,
     PrettyRelationshipDefinitions,
     DB_TYPE_EXTERNAL,
   } from "constants/backend"
@@ -33,21 +29,20 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
-  import { ValidColumnNameRegex } from "@budibase/shared-core"
   import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
 
-  const AUTO_TYPE = FIELDS.AUTO.type
-  const FORMULA_TYPE = FIELDS.FORMULA.type
-  const LINK_TYPE = FIELDS.LINK.type
-  const STRING_TYPE = FIELDS.STRING.type
-  const NUMBER_TYPE = FIELDS.NUMBER.type
-  const JSON_TYPE = FIELDS.JSON.type
-  const DATE_TYPE = FIELDS.DATETIME.type
-  const USER_TYPE = FIELDS.USER.subtype
-  const USERS_TYPE = FIELDS.USERS.subtype
+  const AUTO_TYPE = FieldType.AUTO
+  const FORMULA_TYPE = FieldType.FORMULA
+  const LINK_TYPE = FieldType.LINK
+  const STRING_TYPE = FieldType.STRING
+  const NUMBER_TYPE = FieldType.NUMBER
+  const JSON_TYPE = FieldType.JSON
+  const DATE_TYPE = FieldType.DATETIME
+  const USER_TYPE = FieldSubtype.USER
+  const USERS_TYPE = FieldSubtype.USERS
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -61,8 +56,8 @@
   let primaryDisplay
   let indexes = [...($tables.selected.indexes || [])]
   let isCreating = undefined
-  let relationshipPart1 = PrettyRelationshipDefinitions.Many
-  let relationshipPart2 = PrettyRelationshipDefinitions.One
+  let relationshipPart1 = PrettyRelationshipDefinitions.MANY
+  let relationshipPart2 = PrettyRelationshipDefinitions.ONE
   let relationshipTableIdPrimary = null
   let relationshipTableIdSecondary = null
   let table = $tables.selected
@@ -175,7 +170,7 @@
   $: typeEnabled =
     !originalName ||
     (originalName &&
-      SWITCHABLE_TYPES.indexOf(editableColumn.type) !== -1 &&
+      SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
@@ -367,16 +362,15 @@
   }
 
   function getAllowedTypes() {
-    if (
-      originalName &&
-      ALLOWABLE_STRING_TYPES.indexOf(editableColumn.type) !== -1
-    ) {
-      return ALLOWABLE_STRING_OPTIONS
-    } else if (
-      originalName &&
-      ALLOWABLE_NUMBER_TYPES.indexOf(editableColumn.type) !== -1
-    ) {
-      return ALLOWABLE_NUMBER_OPTIONS
+    if (originalName) {
+      const possibleTypes = (
+        SWITCHABLE_TYPES[field.type] || [editableColumn.type]
+      ).map(t => t.toLowerCase())
+      return Object.entries(FIELDS)
+        .filter(([fieldType]) =>
+          possibleTypes.includes(fieldType.toLowerCase())
+        )
+        .map(([_, fieldDefinition]) => fieldDefinition)
     }
 
     const isUsers =
@@ -394,7 +388,8 @@
         FIELDS.BIGINT,
         FIELDS.BOOLEAN,
         FIELDS.DATETIME,
-        FIELDS.ATTACHMENT,
+        FIELDS.ATTACHMENT_SINGLE,
+        FIELDS.ATTACHMENTS,
         FIELDS.LINK,
         FIELDS.FORMULA,
         FIELDS.JSON,
@@ -631,7 +626,7 @@
         />
       </div>
     </div>
-  {:else if editableColumn.type === FieldType.LINK}
+  {:else if editableColumn.type === FieldType.LINK && !editableColumn.autocolumn}
     <RelationshipSelector
       bind:relationshipPart1
       bind:relationshipPart2

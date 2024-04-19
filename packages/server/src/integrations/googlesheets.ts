@@ -168,8 +168,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return ""
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getStringConcat(parts: string[]) {
+  getStringConcat(_parts: string[]) {
     return ""
   }
 
@@ -336,7 +335,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return { tables: externalTables, errors }
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     const sheet = json.endpoint.entityId
     switch (json.endpoint.operation) {
       case Operation.CREATE:

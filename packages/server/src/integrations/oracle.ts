@@ -378,7 +378,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         try {
           await connection.close()
         } catch (err) {
-          console.error(err)
+          console.error("Error connecting to Oracle", err)
         }
       }
     }
@@ -423,7 +423,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json)
     const input = this._query(json, { disableReturning: true }) as SqlQuery
     if (Array.isArray(input)) {

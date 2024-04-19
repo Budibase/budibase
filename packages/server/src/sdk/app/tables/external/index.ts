@@ -3,7 +3,6 @@ import {
   Operation,
   RelationshipType,
   RenameColumn,
-  AddColumn,
   Table,
   TableRequest,
   ViewV2,
@@ -33,7 +32,7 @@ import * as viewSdk from "../../views"
 export async function save(
   datasourceId: string,
   update: Table,
-  opts?: { tableId?: string; renaming?: RenameColumn; adding?: AddColumn }
+  opts?: { tableId?: string; renaming?: RenameColumn }
 ) {
   let tableToSave: TableRequest = {
     ...update,
@@ -46,6 +45,24 @@ export async function save(
   let oldTable: Table | undefined
   if (tableId) {
     oldTable = await getTable(tableId)
+  }
+
+  if (
+    !oldTable &&
+    (tableToSave.primary == null || tableToSave.primary.length === 0)
+  ) {
+    if (tableToSave.schema.id) {
+      throw new Error(
+        "External tables with no `primary` column set will define an `id` column, but we found an `id` column in the supplied schema. Either set a `primary` column or remove the `id` column."
+      )
+    }
+
+    tableToSave.primary = ["id"]
+    tableToSave.schema.id = {
+      type: FieldType.NUMBER,
+      autocolumn: true,
+      name: "id",
+    }
   }
 
   if (hasTypeChanged(tableToSave, oldTable)) {
@@ -167,14 +184,7 @@ export async function save(
   // remove the rename prop
   delete tableToSave._rename
 
-  // if adding a new column, we need to rebuild the schema for that table to get the 'externalType' of the column
-  if (opts?.adding) {
-    datasource.entities[tableToSave.name] = (
-      await datasourceSdk.buildFilteredSchema(datasource, [tableToSave.name])
-    ).tables[tableToSave.name]
-  } else {
-    datasource.entities[tableToSave.name] = tableToSave
-  }
+  datasource.entities[tableToSave.name] = tableToSave
 
   // store it into couch now for budibase reference
   await db.put(populateExternalTableSchemas(datasource))
@@ -182,6 +192,10 @@ export async function save(
   // Since tables are stored inside datasources, we need to notify clients
   // that the datasource definition changed
   const updatedDatasource = await datasourceSdk.get(datasource._id!)
+
+  if (updatedDatasource.isSQL) {
+    tableToSave.sql = true
+  }
 
   return { datasource: updatedDatasource, table: tableToSave }
 }

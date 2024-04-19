@@ -10,6 +10,7 @@
   export let invertX = false
   export let invertY = false
   export let schema
+  export let maximum
 
   const { API, notifications } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
@@ -60,14 +61,6 @@
     }
   }
 
-  const deleteAttachments = async fileList => {
-    try {
-      return await API.deleteBuilderAttachments(fileList)
-    } catch (error) {
-      return []
-    }
-  }
-
   onMount(() => {
     api = {
       focus: () => open(),
@@ -98,9 +91,8 @@
       {value}
       compact
       on:change={e => onChange(e.detail)}
-      maximum={schema.constraints?.length?.maximum}
+      maximum={maximum || schema.constraints?.length?.maximum}
       {processFiles}
-      {deleteAttachments}
       {handleFileTooLarge}
     />
   </div>
