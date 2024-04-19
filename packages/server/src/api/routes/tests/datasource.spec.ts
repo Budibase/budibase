@@ -261,7 +261,7 @@ describe("/datasources", () => {
         })
       )
 
-      type SupportedTypes =
+      type SupportedSqlTypes =
         | FieldType.STRING
         | FieldType.BARCODEQR
         | FieldType.LONGFORM
@@ -276,7 +276,7 @@ describe("/datasources", () => {
         | FieldType.ARRAY
 
       const fullSchema: {
-        [type in SupportedTypes]: FieldSchema & { type: type }
+        [type in SupportedSqlTypes]: FieldSchema & { type: type }
       } = {
         [FieldType.STRING]: {
           name: "string",
