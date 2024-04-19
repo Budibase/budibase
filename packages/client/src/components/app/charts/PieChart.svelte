@@ -61,6 +61,12 @@
 
     return rows.map(row => {
       const value = row?.[valueColumn]
+
+      if (dataProvider?.schema?.[valueColumn]?.type === "datetime" && value) {
+        return Date.parse(value);
+      }
+
+      // This chart doesn't automatically parse strings into numbers
       const numValue = parseFloat(value);
       if (isNaN(numValue)) {
         return 0;

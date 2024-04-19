@@ -99,7 +99,13 @@
     return valueColumns.map(column => ({
       name: column,
       data: rows.map(row => {
-        return row?.[column]
+        const value = row?.[column]
+
+        if (dataProvider?.schema?.[column]?.type === "datetime" && value) {
+          return Date.parse(value);
+        }
+
+        return value
       }),
     }))
   }
