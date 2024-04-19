@@ -7,6 +7,7 @@ import sdk from "../../../sdk"
 import tk from "timekeeper"
 import { mocks } from "@budibase/backend-core/tests"
 import { QueryPreview, SourceName } from "@budibase/types"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 
 tk.freeze(mocks.date.MOCK_DATE)
 
@@ -221,6 +222,26 @@ describe("/datasources", () => {
         const dbDatasource: any = await sdk.datasources.get(datasource._id)
         expect(dbDatasource.config.password).toBe("testing")
       })
+    })
+  })
+
+  describe.only.each([
+    [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+    [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+    [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+    [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  ])("fetch schema (%s)", (_, dsProvider) => {
+    beforeAll(async () => {
+      datasource = await config.api.datasource.create(await dsProvider)
+    })
+
+    it("aa", async () => {
+      const datasourceId = datasource!._id!
+      const persisted = await config.api.datasource.get(datasourceId)
+      await config.api.datasource.fetchSchema(datasourceId)
+
+      const updated = await config.api.datasource.get(datasourceId)
+      expect(updated).toEqual(persisted)
     })
   })
 })

@@ -34,7 +34,7 @@ describe.each([
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/tables (%s)", (_, dsProvider) => {
-  let isInternal: boolean
+  const isInternal: boolean = !dsProvider
   let datasource: Datasource | undefined
   let config = setup.getConfig()
 
@@ -44,9 +44,7 @@ describe.each([
     await config.init()
     if (dsProvider) {
       datasource = await config.api.datasource.create(await dsProvider)
-      isInternal = false
     } else {
-      isInternal = true
     }
   })
 
