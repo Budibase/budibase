@@ -1,5 +1,5 @@
 <script>
-  import ExplanationModal from './ExplanationModal/index.svelte'
+  import DetailsModal from './DetailsModal/index.svelte'
   import { messages as messageConstants, getExplanationMessagesAndSupport, getExplanationWithPresets } from "./explanation";
   import { Column, Support, NotRequired, StringNumber, JSONPrimitivesOnly, DateAsNumber } from "./lines"
   import subjects from './subjects';
@@ -11,7 +11,7 @@
   export let columnIcon
   export let columnType
   export let columnName
-  export let explanationModal = false
+  export let showDetails = false
 
   export let tableHref = () => {}
 
@@ -22,17 +22,17 @@
   let messages = []
 
   $: {
-    const columnInfoMessagesAndSupport = getExplanationMessagesAndSupport(schema, explanationWithPresets)
-    support = columnInfoMessagesAndSupport.support
-    messages = columnInfoMessagesAndSupport.messages
+    const explanationMessagesAndSupport = getExplanationMessagesAndSupport(schema, explanationWithPresets)
+    support = explanationMessagesAndSupport.support
+    messages = explanationMessagesAndSupport.messages
   }
 
   let root = null;
 
-  let explanationModalSubject = subjects.none
+  let detailsModalSubject = subjects.none
 
   const setExplanationSubject = (option) => {
-    explanationModalSubject = option;
+    detailsModalSubject = option;
     root = root
   }
 </script>
@@ -74,13 +74,12 @@
   {/if}
 </div>
 
-
-{#if explanationModal}
-  <ExplanationModal
+{#if showDetails}
+  <DetailsModal
     {columnName}
     anchor={root}
     {schema}
-    subject={explanationModalSubject}
+    subject={detailsModalSubject}
   />
 {/if}
 

@@ -120,7 +120,7 @@
     offset={20}
   >
     <Explanation
-      explanationModal
+      showDetails
       tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
       schema={schema[currentOption]}
       columnIcon={getOptionIcon(currentOption)}
