@@ -54,7 +54,7 @@ const getSupportMessage = (type, columnInfo) => {
   return null
 }
 
-export const getColumnInfoMessagesAndSupport = (fieldSchema, columnInfo) => {
+export const getColumnInfoMessagesAndSupport = (fieldSchema, columnInfo, typeSupportPresets) => {
   try {
     const columnInfoMessagesAndSupport = {
       support: getSupport(fieldSchema.type, columnInfo),
@@ -73,4 +73,15 @@ export const getColumnInfoMessagesAndSupport = (fieldSchema, columnInfo) => {
       messages: [messages.contextError]
     }
   }
+}
+
+export const getExplanationWithPresets = (explanation, presets) => {
+  if (explanation?.typeSupport?.preset) {
+    return {
+      ...explanation,
+      typeSupport: presets[explanation?.typeSupport?.preset]
+    }
+  }
+
+  return explanation
 }

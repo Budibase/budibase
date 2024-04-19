@@ -1,10 +1,13 @@
 <script>
   import ExplanationModal from './ExplanationModal/index.svelte'
-  import { messages as messageConstants, getColumnInfoMessagesAndSupport } from "./columnInfo";
+  import { messages as messageConstants, getColumnInfoMessagesAndSupport, getExplanationWithPresets } from "./columnInfo";
   import { Column, Support, NotRequired, StringNumber, JSONPrimitivesOnly, DateAsNumber } from "./lines"
   import subjects from './subjects';
+  import {
+    componentStore,
+  } from "stores/builder"
 
-  export let columnInfo
+  export let explanation
   export let columnIcon
   export let columnType
   export let columnName
@@ -14,11 +17,12 @@
 
   export let schema
 
+  $: explanationWithPresets = getExplanationWithPresets(explanation, $componentStore.typeSupportPresets)
   let support
   let messages = []
 
   $: {
-    const columnInfoMessagesAndSupport = getColumnInfoMessagesAndSupport(schema, columnInfo)
+    const columnInfoMessagesAndSupport = getColumnInfoMessagesAndSupport(schema, explanationWithPresets)
     support = columnInfoMessagesAndSupport.support
     messages = columnInfoMessagesAndSupport.messages
   }

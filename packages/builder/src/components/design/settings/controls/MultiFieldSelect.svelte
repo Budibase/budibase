@@ -14,7 +14,11 @@
   export let componentInstance = {}
   export let value = ""
   export let placeholder
-  export let columnInfo
+  export let explanation
+
+  $: {
+    console.log($componentStore);
+  }
 
   let contextTooltipAnchor = null
   let currentOption = null
@@ -109,7 +113,7 @@
   {onOptionMouseleave}
 />
 
-{#if columnInfo}
+{#if explanation}
   <ContextTooltip
     visible={contextTooltipVisible}
     anchor={contextTooltipAnchor}
@@ -122,7 +126,7 @@
       columnIcon={getOptionIcon(currentOption)}
       columnName={currentOption}
       columnType={getOptionIconTooltip(currentOption)}
-      {columnInfo}
+      {explanation}
     />
     <FieldContext
       slot="previous"
@@ -130,7 +134,7 @@
       columnIcon={getOptionIcon(previousOption)}
       columnName={previousOption}
       columnType={getOptionIconTooltip(previousOption)}
-      {columnInfo}
+      {explanation}
     />
   </ContextTooltip>
 {/if}
