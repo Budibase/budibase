@@ -285,7 +285,6 @@
                     subLinks={navItem.subLinks}
                     internalLink={navItem.internalLink}
                     on:clickLink={(() => (mobileOpen = false),
-                    console.log("287"),
                     sidePanelStore.actions.close)}
                     leftNav={navigation === "Left"}
                     {mobile}
