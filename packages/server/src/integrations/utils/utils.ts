@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../../db/utils"
 import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
-import { SWITCHABLE_TYPES, helpers } from "@budibase/shared-core"
+import { helpers } from "@budibase/shared-core"
 import env from "../../environment"
 import { Knex } from "knex"
 
