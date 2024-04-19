@@ -200,6 +200,6 @@ export async function search(
     }
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
-    throw new Error(`Unable to search by SQL - ${msg}`)
+    throw new Error(`Unable to search by SQL - ${msg}`, { cause: err })
   }
 }
