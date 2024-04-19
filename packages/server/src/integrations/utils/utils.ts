@@ -296,80 +296,6 @@ export function isIsoDateString(str: string) {
   return d.toISOString() === trimmedValue
 }
 
-enum CopyAction {
-  ALWAYS_KEEP = "alwaysKeep",
-  COPY_IF_TYPE = "copyIfType",
-}
-
-SQL_TYPE_MAP
-
-const SqlCopyTypeByFieldMapping: Record<
-  FieldType,
-  | { action: CopyAction.ALWAYS_KEEP }
-  | { action: CopyAction.COPY_IF_TYPE; types: PrimitiveTypes[] }
-> = {
-  [FieldType.LINK]: { action: CopyAction.ALWAYS_KEEP },
-  [FieldType.FORMULA]: { action: CopyAction.ALWAYS_KEEP },
-  [FieldType.STRING]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.STRING],
-  },
-  [FieldType.OPTIONS]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.STRING],
-  },
-  [FieldType.LONGFORM]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.STRING],
-  },
-  [FieldType.NUMBER]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.BOOLEAN, FieldType.NUMBER],
-  },
-  [FieldType.BOOLEAN]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.BOOLEAN, FieldType.NUMBER],
-  },
-  [FieldType.ARRAY]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.JSON, FieldType.STRING],
-  },
-  [FieldType.DATETIME]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.DATETIME, FieldType.STRING],
-  },
-  [FieldType.ATTACHMENTS]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.JSON, FieldType.STRING],
-  },
-  [FieldType.ATTACHMENT_SINGLE]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.JSON, FieldType.STRING],
-  },
-  [FieldType.AUTO]: {
-    action: CopyAction.ALWAYS_KEEP,
-  },
-  [FieldType.JSON]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.JSON, FieldType.STRING],
-  },
-  [FieldType.INTERNAL]: {
-    action: CopyAction.ALWAYS_KEEP,
-  },
-  [FieldType.BARCODEQR]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.STRING],
-  },
-  [FieldType.BIGINT]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.BIGINT, FieldType.NUMBER],
-  },
-  [FieldType.BB_REFERENCE]: {
-    action: CopyAction.COPY_IF_TYPE,
-    types: [FieldType.JSON, FieldType.STRING],
-  },
-}
-
 /**
  * Looks for columns which need to be copied over into the new table definitions, like relationships,
  * options types and views.
@@ -402,27 +328,58 @@ function copyExistingPropsOver(
       if (!Object.prototype.hasOwnProperty.call(existingTableSchema, key)) {
         continue
       }
+
       const column = existingTableSchema[key]
 
       const existingColumnType = column?.type
       const updatedColumnType = table.schema[key]?.type
 
-      const map = SqlCopyTypeByFieldMapping[existingColumnType]
-
-      let keepExistingSchema = map.action === CopyAction.ALWAYS_KEEP
-      if (map.action === CopyAction.COPY_IF_TYPE) {
-        const shouldDropLink =
-          existingColumnType === FieldType.LINK &&
-          !tableIds.includes(column.tableId)
-
-        keepExistingSchema =
+      const keepIfType = (...validTypes: PrimitiveTypes[]) => {
+        return (
           isPrimitiveType(updatedColumnType) &&
           table.schema[key] &&
-          map.types?.includes(updatedColumnType) &&
-          !shouldDropLink
+          validTypes.includes(updatedColumnType)
+        )
       }
 
-      if (keepExistingSchema) {
+      const SqlCopyTypeByFieldMapping: Record<FieldType, () => boolean> = {
+        [FieldType.LINK]: () => {
+          const shouldKeepLink =
+            existingColumnType === FieldType.LINK &&
+            tableIds.includes(column.tableId)
+          return shouldKeepLink
+        },
+        [FieldType.FORMULA]: () => true,
+        [FieldType.AUTO]: () => true,
+        [FieldType.INTERNAL]: () => true,
+        [FieldType.STRING]: () => keepIfType(FieldType.STRING),
+        [FieldType.OPTIONS]: () => keepIfType(FieldType.STRING),
+        [FieldType.LONGFORM]: () => keepIfType(FieldType.STRING),
+        [FieldType.NUMBER]: () =>
+          keepIfType(FieldType.BOOLEAN, FieldType.NUMBER),
+
+        [FieldType.BOOLEAN]: () =>
+          keepIfType(FieldType.BOOLEAN, FieldType.NUMBER),
+        [FieldType.ARRAY]: () => keepIfType(FieldType.JSON, FieldType.STRING),
+        [FieldType.DATETIME]: () =>
+          keepIfType(FieldType.DATETIME, FieldType.STRING),
+
+        [FieldType.ATTACHMENTS]: () =>
+          keepIfType(FieldType.JSON, FieldType.STRING),
+        [FieldType.ATTACHMENT_SINGLE]: () =>
+          keepIfType(FieldType.JSON, FieldType.STRING),
+
+        [FieldType.JSON]: () => keepIfType(FieldType.JSON, FieldType.STRING),
+        [FieldType.BARCODEQR]: () => keepIfType(FieldType.STRING),
+
+        [FieldType.BIGINT]: () =>
+          keepIfType(FieldType.BIGINT, FieldType.NUMBER),
+        [FieldType.BB_REFERENCE]: () =>
+          keepIfType(FieldType.JSON, FieldType.STRING),
+      }
+
+      const shouldCopyDelegate = SqlCopyTypeByFieldMapping[existingColumnType]
+      if (shouldCopyDelegate()) {
         table.schema[key] = {
           ...existingTableSchema[key],
           externalType:
