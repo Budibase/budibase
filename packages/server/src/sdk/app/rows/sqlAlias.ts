@@ -6,11 +6,12 @@ import {
   Row,
   SearchFilters,
 } from "@budibase/types"
-import { getSQLClient } from "../../../sdk/app/rows/utils"
+import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
-import sdk from "../../../sdk"
+import datasources from "../datasources"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { SqlClient } from "../../../integrations/utils"
+import { SQS_DATASOURCE_INTERNAL } from "../../../db/utils"
 
 const WRITE_OPERATIONS: Operation[] = [
   Operation.CREATE,
@@ -156,12 +157,19 @@ export default class AliasTables {
   }
 
   async queryWithAliasing(
-    json: QueryJson
+    json: QueryJson,
+    queryFn?: (json: QueryJson) => Promise<DatasourcePlusQueryResponse>
   ): Promise<DatasourcePlusQueryResponse> {
     const datasourceId = json.endpoint.datasourceId
-    const datasource = await sdk.datasources.get(datasourceId)
+    const isSqs = datasourceId === SQS_DATASOURCE_INTERNAL
+    let aliasingEnabled: boolean, datasource: Datasource | undefined
+    if (isSqs) {
+      aliasingEnabled = true
+    } else {
+      datasource = await datasources.get(datasourceId)
+      aliasingEnabled = this.isAliasingEnabled(json, datasource)
+    }
 
-    const aliasingEnabled = this.isAliasingEnabled(json, datasource)
     if (aliasingEnabled) {
       json = cloneDeep(json)
       // run through the query json to update anywhere a table may be used
@@ -207,7 +215,15 @@ export default class AliasTables {
       }
       json.tableAliases = invertedTableAliases
     }
-    const response = await makeExternalQuery(datasource, json)
+
+    let response: DatasourcePlusQueryResponse
+    if (datasource && !isSqs) {
+      response = await makeExternalQuery(datasource, json)
+    } else if (queryFn) {
+      response = await queryFn(json)
+    } else {
+      throw new Error("No supplied method to perform aliased query")
+    }
     if (Array.isArray(response) && aliasingEnabled) {
       return this.reverse(response)
     } else {

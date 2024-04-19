@@ -4,12 +4,26 @@ import {
   QueryJson,
   SourceName,
   SqlQuery,
+  Table,
+  TableSourceType,
 } from "@budibase/types"
 import { join } from "path"
 import Sql from "../base/sql"
 import { SqlClient } from "../utils"
-import AliasTables from "../../api/controllers/row/alias"
 import { generator } from "@budibase/backend-core/tests"
+import sdk from "../../sdk"
+
+// this doesn't exist strictly
+const TABLE: Table = {
+  type: "table",
+  sourceType: TableSourceType.EXTERNAL,
+  sourceId: "SOURCE_ID",
+  schema: {},
+  name: "tableName",
+  primary: ["id"],
+}
+
+const AliasTables = sdk.rows.AliasTables
 
 function multiline(sql: string) {
   return sql.replace(/\n/g, "").replace(/ +/g, " ")
@@ -103,7 +117,8 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       const filters = queryJson.filters
       const notEqualsValue = Object.values(filters?.notEqual!)[0]
-      const rangeValue = Object.values(filters?.range!)[0]
+      const rangeValue: { high?: string | number; low?: string | number } =
+        Object.values(filters?.range!)[0]
       const equalValue = Object.values(filters?.equal!)[0]
 
       expect(query).toEqual({
@@ -219,6 +234,9 @@ describe("Captures of real examples", () => {
         endpoint: { datasourceId: "", entityId: "", operation: op },
         resource: {
           fields,
+        },
+        meta: {
+          table: TABLE,
         },
       }
     }
