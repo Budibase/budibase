@@ -9,6 +9,7 @@
 
     const updateTimeStamp = () => {
       timestamp = Date.now();
+      console.log(timestamp);
       if (run) {
         setTimeout(updateTimeStamp, 200)
       }
@@ -24,7 +25,7 @@
 
 <Subject heading="Dates as Numbers">
   <Section>
-    A date can be used in place of a numeric value, but it will be parsed as a <Block>UNIX time</Block> timestamp, which is the number of milliseconds since Jan 1st 1970. A more recent moment in time will be a higher number.
+    A date can be used in place of a numeric value, but it will be parsed as a <Block>UNIX epoch</Block> timestamp, which is the number of milliseconds since Jan 1st 1970. A more recent moment in time will be a higher number.
   </Section>
 
     <ExampleSection

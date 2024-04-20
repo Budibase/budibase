@@ -63,6 +63,47 @@
     }
   }
 
+  const getValueAsUnixEpoch = (dataprovider, dateColumn, row) => {
+    const value = row[dateColumn]
+
+    if (dataProvider?.schema?.[dateColumn]?.type === 'datetime') {
+      return Date.parse(value);
+    }
+
+    // Unix epoch
+    if (typeof value === "number") {
+      return value;
+    }
+
+    const isString = typeof value === "string";
+    // "2025" could be either an ISO 8601 date time string or Unix time.
+    // There's no way to tell the user's intent without providing more
+    // granular controls.
+    // We'll just assume any string without dashes is Unix time.
+
+    if (isString && value.includes("-")) {
+      const unixTime = Date.parse(value);
+
+      if (isNaN(unixTime)) {
+        return null
+      }
+
+      return unixTime
+    }
+
+    if (isString) {
+      const unixTime = parseInt(value, 10);
+
+      if (isNaN(unixTime)) {
+        return null
+      }
+
+      return unixTime
+    }
+
+    return null;
+  }
+
   const getSeries = (
     dataProvider,
     dateColumn,
@@ -81,7 +122,7 @@
         const close = parseFloat(row[closeColumn])
 
         return [
-          Date.parse(row[dateColumn]),
+          getValueAsUnixEpoch(dataProvider, dateColumn, row),
           isNaN(open) ? 0 : open,
           isNaN(high) ? 0 : high,
           isNaN(low) ? 0 : low,
