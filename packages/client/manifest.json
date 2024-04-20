@@ -14,7 +14,7 @@
     "skeletonLoader": true
   },
   "typeSupportPresets": {
-    "chartValue": {
+    "numberLike": {
       "supported": ["number", "boolean"],
       "partialSupport": [
         { "type": "longform", "message": "stringAsNumber" },
@@ -24,6 +24,26 @@
         { "type": "formula", "message": "stringAsNumber" },
         { "type": "datetime", "message": "dateAsNumber"}
       ],
+      "unsupported": [
+        { "type": "json", "message": "jsonPrimitivesOnly" }
+      ]
+    },
+    "datetimeLike": {
+      "supported": ["datetime"],
+      "partialSupport": [
+        { "type": "longform", "message": "stringAsDate" },
+        { "type": "string", "message": "stringAsDate" },
+        { "type": "options", "message": "stringAsDate" },
+        { "type": "formula", "message": "stringAsDate" },
+        { "type": "bigint", "message": "stringAsDate" },
+        { "type": "number", "message": "numberAsDate"}
+      ],
+      "unsupported": [
+        { "type": "json", "message": "jsonPrimitivesOnly" }
+      ]
+    },
+    "stringLike": {
+      "supported": ["string", "number", "bigint", "options", "longform", "boolean", "datetime"],
       "unsupported": [
         { "type": "json", "message": "jsonPrimitivesOnly" }
       ]
@@ -1652,7 +1672,7 @@
         "dependsOn": "dataProvider",
         "explanation": {
           "typeSupport": {
-            "preset": "chartValue"
+            "preset": "numberLike"
           }
         },
         "required": true
@@ -1816,7 +1836,7 @@
         "dependsOn": "dataProvider",
         "explanation": {
           "typeSupport": {
-            "preset": "chartValue"
+            "preset": "numberLike"
           }
         },
         "required": true
@@ -1975,7 +1995,7 @@
         "dependsOn": "dataProvider",
         "explanation": {
           "typeSupport": {
-            "preset": "chartValue"
+            "preset": "numberLike"
           }
         },
         "required": true
@@ -2144,6 +2164,11 @@
         "label": "Data column",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2274,6 +2299,11 @@
         "label": "Data columns",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2472,7 +2502,6 @@
       "width": 600,
       "height": 400
     },
-    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -2490,6 +2519,11 @@
         "label": "Data column",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
