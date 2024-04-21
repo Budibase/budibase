@@ -4,6 +4,8 @@ export const messages = {
   jsonPrimitivesOnly: Symbol("explanation-json-primitives-only"),
   stringAsNumber: Symbol("explanation-string-as-number"),
   dateAsNumber: Symbol("explanation-date-as-number"),
+  numberAsDate: Symbol("explanation-number-as-date"),
+  stringAsDate: Symbol("explanation-string-as-date"),
   notRequired: Symbol("explanation-not-required"),
   contextError: Symbol("explanation-context-error"),
 }

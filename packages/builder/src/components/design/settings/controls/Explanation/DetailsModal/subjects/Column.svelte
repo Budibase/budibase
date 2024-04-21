@@ -2,9 +2,6 @@
   import { tables } from "stores/builder"
   import { BindingValue, Block, Subject, JSONValue, Property, Section }  from './components'
 
-  $: {
-    console.log($tables)
-  }
   export let schema
   export let columnName
 
