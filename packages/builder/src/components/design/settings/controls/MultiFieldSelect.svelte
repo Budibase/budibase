@@ -16,10 +16,6 @@
   export let placeholder
   export let explanation
 
-  $: {
-    console.log($componentStore);
-  }
-
   let contextTooltipAnchor = null
   let currentOption = null
   let previousOption = null

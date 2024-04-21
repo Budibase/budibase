@@ -49,11 +49,11 @@
     {color}
     {text}
   />
-  <Text value=" with " />
+  <Text value=" with this " />
   <DocumentationLink
     href="https://docs.budibase.com/docs/chart"
     icon="GraphPie"
-    text="Chart components"
+    text="Chart component"
   />
-  <Period />
+  <Text value=" input." />
 </Line>

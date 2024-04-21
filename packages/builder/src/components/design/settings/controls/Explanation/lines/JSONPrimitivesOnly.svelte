@@ -12,7 +12,7 @@
   on:mouseleave={() => setExplanationSubject(subjects.none)}
 >Scalar JSON values</InfoWord>
   <Text
-    value=" can be used with this component if their individual types are supported"
+    value=" can be used with this input if their individual types are supported"
   />
   <Period />
 </Line>

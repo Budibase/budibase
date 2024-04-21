@@ -34,7 +34,7 @@
 
 <Subject heading="Using Scalar JSON Values">
   <Section>
-    <Block>JSON objects</Block> can't be used here, but any <Block>number</Block>, <Block>string</Block> or <Block>boolean</Block> values nested within said object can be if they are otherwise compatible with the component. These scalar values can be selected from the same menu as this parent and take the form <Block>parent.child</Block>.
+    <Block>JSON objects</Block> can't be used here, but any <Block>number</Block>, <Block>string</Block> or <Block>boolean</Block> values nested within said object can be if they are otherwise compatible with the input. These scalar values can be selected from the same menu as this parent and take the form <Block>parent.child</Block>.
   </Section>
 
   {#if scalarDescendants.length > 0}

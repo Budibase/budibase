@@ -1,7 +1,7 @@
 <script>
   import DetailsModal from './DetailsModal/index.svelte'
   import { messages as messageConstants, getExplanationMessagesAndSupport, getExplanationWithPresets } from "./explanation";
-  import { Column, Support, NotRequired, StringNumber, JSONPrimitivesOnly, DateAsNumber } from "./lines"
+  import { StringAsDate, NumberAsDate, Column, Support, NotRequired, StringAsNumber, JSONPrimitivesOnly, DateAsNumber } from "./lines"
   import subjects from './subjects';
   import {
     componentStore,
@@ -53,7 +53,7 @@
     {setExplanationSubject}
   />
   {#if messages.includes(messageConstants.stringAsNumber)}
-    <StringNumber
+    <StringAsNumber
       {setExplanationSubject}
     />
   {/if}
@@ -69,6 +69,16 @@
   {/if}
   {#if messages.includes(messageConstants.dateAsNumber)}
     <DateAsNumber
+      {setExplanationSubject}
+    />
+  {/if}
+  {#if messages.includes(messageConstants.numberAsDate)}
+    <NumberAsDate
+      {setExplanationSubject}
+    />
+  {/if}
+  {#if messages.includes(messageConstants.stringAsDate)}
+    <StringAsDate
       {setExplanationSubject}
     />
   {/if}

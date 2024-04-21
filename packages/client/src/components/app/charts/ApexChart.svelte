@@ -28,10 +28,19 @@
   }
 
   const renderChart = async (newChartElement) => {
-    await chart?.destroy()
-    chart = new ApexCharts(newChartElement, optionsCopy)
-    currentType = optionsCopy?.xaxis?.type
-    await chart.render()
+    try {
+      await chart?.destroy()
+      chart = new ApexCharts(newChartElement, optionsCopy)
+      currentType = optionsCopy?.xaxis?.type
+      await chart.render()
+    } catch (e) {
+      // Apex for some reason throws this error when creating a new chart.
+      // It doesn't actually cause any issues with the function of the chart, so
+      // just suppress it so the console doesn't get spammed
+      if (e.message !== "Cannot read properties of undefined (reading 'parentNode')") {
+        throw e
+      }
+    }
   }
 
   $: noData = optionsCopy == null || optionsCopy?.series?.length === 0

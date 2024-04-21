@@ -28,20 +28,6 @@
         { "type": "json", "message": "jsonPrimitivesOnly" }
       ]
     },
-    "datetimeLike": {
-      "supported": ["datetime"],
-      "partialSupport": [
-        { "type": "longform", "message": "stringAsDate" },
-        { "type": "string", "message": "stringAsDate" },
-        { "type": "options", "message": "stringAsDate" },
-        { "type": "formula", "message": "stringAsDate" },
-        { "type": "bigint", "message": "stringAsDate" },
-        { "type": "number", "message": "numberAsDate"}
-      ],
-      "unsupported": [
-        { "type": "json", "message": "jsonPrimitivesOnly" }
-      ]
-    },
     "stringLike": {
       "supported": ["string", "number", "bigint", "options", "longform", "boolean", "datetime"],
       "unsupported": [
@@ -2427,6 +2413,22 @@
         "label": "Date column",
         "key": "dateColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "supported": ["datetime"],
+            "partialSupport": [
+              { "type": "longform", "message": "stringAsDate" },
+              { "type": "string", "message": "stringAsDate" },
+              { "type": "options", "message": "stringAsDate" },
+              { "type": "formula", "message": "stringAsDate" },
+              { "type": "bigint", "message": "stringAsDate" },
+              { "type": "number", "message": "numberAsDate"}
+            ],
+            "unsupported": [
+              { "type": "json", "message": "jsonPrimitivesOnly" }
+            ]
+          }
+        },
         "required": true
       },
       {

@@ -10,15 +10,15 @@
       color="var(--green)"
       text="Compatible"
     />
-    <span class="body">Fully compatible with the component as long as the data is present.</span>
+    <span class="body">Fully compatible with the input as long as the data is present.</span>
   </Section>
   <Section>
     <InfoWord
       icon="AlertCheck"
       color="var(--yellow)"
-      text="Possibly compatible"
+      text="Partially compatible"
     />
-    <span class="body">Possibly compatible with the component, but beware of other caveats mentioned in the context tooltip.</span>
+    <span class="body">Partially compatible with the input, but beware of other caveats mentioned.</span>
   </Section>
   <Section>
     <InfoWord

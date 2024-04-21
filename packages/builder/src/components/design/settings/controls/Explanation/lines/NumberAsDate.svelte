@@ -6,11 +6,11 @@
 </script>
 
 <Line>
-  <Text value="The component will ignore any " />
+  <Text value="Will be treated as a " />
   <InfoWord
-      on:mouseenter={() => setExplanationSubject(subjects.stringsAsNumbers)}
+      on:mouseenter={() => setExplanationSubject(subjects.numbersAsDates)}
       on:mouseleave={() => setExplanationSubject(subjects.none)}
-    text="non-number values"
+    text="UNIX time value"
   />
   <Period />
 </Line>
