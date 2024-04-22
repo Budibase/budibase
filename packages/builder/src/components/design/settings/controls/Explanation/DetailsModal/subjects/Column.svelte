@@ -10,8 +10,8 @@
       return "None"
     }
 
-    const epoch = Date.parse(isoString);
-    const date = new Date(epoch);
+    const unixTime = Date.parse(isoString);
+    const date = new Date(unixTime);
 
     return date.toLocaleString();
   }

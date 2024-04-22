@@ -63,14 +63,13 @@
     }
   }
 
-  const getValueAsUnixEpoch = (dataprovider, dateColumn, row) => {
+  const getValueAsUnixTime = (dataprovider, dateColumn, row) => {
     const value = row[dateColumn]
 
     if (dataProvider?.schema?.[dateColumn]?.type === 'datetime') {
       return Date.parse(value);
     }
 
-    // Unix epoch
     if (typeof value === "number") {
       return value;
     }
@@ -122,7 +121,7 @@
         const close = parseFloat(row[closeColumn])
 
         return [
-          getValueAsUnixEpoch(dataProvider, dateColumn, row),
+          getValueAsUnixTime(dataProvider, dateColumn, row),
           isNaN(open) ? 0 : open,
           isNaN(high) ? 0 : high,
           isNaN(low) ? 0 : low,
