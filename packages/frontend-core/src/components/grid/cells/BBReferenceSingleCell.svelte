@@ -18,4 +18,5 @@
   {...$$restProps}
   value={arrayValue}
   onChange={onValueChange}
+  hideCounter={true}
 />

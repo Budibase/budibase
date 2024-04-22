@@ -17,6 +17,7 @@
   export let contentLines = 1
   export let searchFunction = API.searchTable
   export let primaryDisplay
+  export let hideCounter = false
 
   const color = getColor(0)
 
@@ -276,7 +277,7 @@
         </div>
       {/if}
     </div>
-    {#if value?.length}
+    {#if !hideCounter && value?.length}
       <div class="count">
         {value?.length || 0}
       </div>
