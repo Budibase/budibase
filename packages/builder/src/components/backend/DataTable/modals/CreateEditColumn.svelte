@@ -41,8 +41,6 @@
   const NUMBER_TYPE = FieldType.NUMBER
   const JSON_TYPE = FieldType.JSON
   const DATE_TYPE = FieldType.DATETIME
-  const USER_TYPE = FieldSubtype.USER
-  const USERS_TYPE = FieldSubtype.USERS
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -264,13 +262,6 @@
     }
     if (saveColumn.type !== LINK_TYPE) {
       delete saveColumn.fieldName
-    }
-    if (isUsersColumn(saveColumn)) {
-      if (saveColumn.subtype === USER_TYPE) {
-        saveColumn.relationshipType = RelationshipType.ONE_TO_MANY
-      } else if (saveColumn.subtype === USERS_TYPE) {
-        saveColumn.relationshipType = RelationshipType.MANY_TO_MANY
-      }
     }
 
     try {
