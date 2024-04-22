@@ -5,7 +5,6 @@ import {
   FieldSubtype,
   DocumentType,
   SEPARATOR,
-  User,
 } from "@budibase/types"
 import { InvalidBBRefError } from "./errors"
 
