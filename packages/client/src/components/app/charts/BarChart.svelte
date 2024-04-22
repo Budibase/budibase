@@ -79,7 +79,7 @@
         text: xAxisLabel
       }
     },
-    // Providing `type: "datetime"` normally makes Apex Charts parse unix time nicely with no additonal config, but bar charts in horizontal mode don't have a default setting for parsing the labels of dates, and will just spit out the unix time value. It also doesn't seem to respect any date based formatting properties passed in. So we'll just manualy format the labels, the chart still sorts the dates correctly in any case
+    // Providing `type: "datetime"` normally makes Apex Charts parse unix time nicely with no additonal config, but bar charts in horizontal mode don't have a default setting for parsing the labels of dates, and will just spit out the unix time value. It also doesn't seem to respect any date based formatting properties passed in. So we'll just manually format the labels, the chart still sorts the dates correctly in any case
     yaxis: {
       labels: {
         formatter: yAxisFormatter
