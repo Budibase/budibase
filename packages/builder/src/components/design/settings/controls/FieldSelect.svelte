@@ -16,7 +16,6 @@
 
   let contextTooltipAnchor = null
   let currentOption = null
-  let previousOption = null
   let contextTooltipVisible = false
 
   const dispatch = createEventDispatcher()
@@ -49,7 +48,6 @@
         contextTooltipVisible = false;
     } else {
     contextTooltipAnchor = e?.target;
-    previousOption = currentOption;
     currentOption = option;
     contextTooltipVisible = true;
     }
@@ -110,20 +108,11 @@
     offset={20}
   >
     <Explanation
-      showDetails
       tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
       schema={schema[currentOption]}
       columnIcon={getOptionIcon(currentOption)}
       columnName={currentOption}
       columnType={getOptionIconTooltip(currentOption)}
-      {explanation}
-    />
-    <Explanation
-      slot="previous"
-      schema={schema[previousOption]}
-      columnIcon={getOptionIcon(previousOption)}
-      columnName={previousOption}
-      columnType={getOptionIconTooltip(previousOption)}
       {explanation}
     />
   </ContextTooltip>

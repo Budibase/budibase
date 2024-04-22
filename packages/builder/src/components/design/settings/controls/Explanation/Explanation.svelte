@@ -11,7 +11,6 @@
   export let columnIcon
   export let columnType
   export let columnName
-  export let showDetails = false
 
   export let tableHref = () => {}
 
@@ -84,7 +83,7 @@
   {/if}
 </div>
 
-{#if showDetails}
+{#if detailsModalSubject !== subjects.none}
   <DetailsModal
     {columnName}
     anchor={root}
