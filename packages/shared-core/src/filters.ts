@@ -68,7 +68,11 @@ export const getValidOperatorsForType = (
     ops = numOps
   } else if (type === FieldType.FORMULA && formulaType === FormulaType.STATIC) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
-  } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USER) {
+  } else if (
+    (type === FieldType.BB_REFERENCE_SINGLE ||
+      type === FieldType.BB_REFERENCE) &&
+    subtype == FieldSubtype.USER
+  ) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USERS) {
     ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]

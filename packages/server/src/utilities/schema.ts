@@ -92,7 +92,8 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
       ) {
         results.schemaValidation[columnName] = false
       } else if (
-        columnType === FieldType.BB_REFERENCE &&
+        (columnType === FieldType.BB_REFERENCE ||
+          columnType === FieldType.BB_REFERENCE_SINGLE) &&
         !isValidBBReference(columnData, columnSubtype)
       ) {
         results.schemaValidation[columnName] = false

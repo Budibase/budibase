@@ -112,6 +112,11 @@ export interface BBReferenceFieldMetadata
   subtype: FieldSubtype.USER | FieldSubtype.USERS
   relationshipType?: RelationshipType
 }
+export interface BBReferenceSingleFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.BB_REFERENCE_SINGLE
+  subtype: FieldSubtype.USER | FieldSubtype.USERS
+}
 
 export interface AttachmentFieldMetadata extends BaseFieldSchema {
   type: FieldType.ATTACHMENTS
@@ -163,6 +168,7 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.NUMBER
     | FieldType.LONGFORM
     | FieldType.BB_REFERENCE
+    | FieldType.BB_REFERENCE_SINGLE
     | FieldType.ATTACHMENTS
   >
 }
@@ -178,6 +184,7 @@ export type FieldSchema =
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
   | AttachmentFieldMetadata
+  | BBReferenceSingleFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
