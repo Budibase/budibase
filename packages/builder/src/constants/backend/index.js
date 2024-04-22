@@ -166,6 +166,15 @@ export const FIELDS = {
       FieldTypeSubtypes.BB_REFERENCE.USER
     ],
   },
+  // Used for display of editing existing columns
+  OLD_USER: {
+    name: "User",
+    type: FieldType.BB_REFERENCE,
+    subtype: FieldSubtype.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
+      FieldTypeSubtypes.BB_REFERENCE.USER
+    ],
+  },
   USERS: {
     name: "Users",
     type: FieldType.BB_REFERENCE,
