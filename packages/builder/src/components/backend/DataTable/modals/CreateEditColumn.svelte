@@ -186,7 +186,10 @@
     // don't make field IDs for auto types
     if (type === AUTO_TYPE || autocolumn) {
       return type.toUpperCase()
-    } else if (type === FieldType.BB_REFERENCE) {
+    } else if (
+      type === FieldType.BB_REFERENCE ||
+      type === FieldType.BB_REFERENCE_SINGLE
+    ) {
       return `${type}${subtype || ""}`.toUpperCase()
     } else {
       return type.toUpperCase()
@@ -363,13 +366,11 @@
 
   function getAllowedTypes() {
     if (originalName) {
-      const possibleTypes = (
-        SWITCHABLE_TYPES[field.type] || [editableColumn.type]
-      ).map(t => t.toLowerCase())
+      const possibleTypes = SWITCHABLE_TYPES[field.type] || [
+        editableColumn.type,
+      ]
       return Object.entries(FIELDS)
-        .filter(([fieldType]) =>
-          possibleTypes.includes(fieldType.toLowerCase())
-        )
+        .filter(([_, field]) => possibleTypes.includes(field.type))
         .map(([_, fieldDefinition]) => fieldDefinition)
     }
 
