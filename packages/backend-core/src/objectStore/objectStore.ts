@@ -25,32 +25,23 @@ type ListParams = {
   ContinuationToken?: string
 }
 
-type UploadParams = {
+type BaseUploadParams = {
   bucket: string
   filename: string
-  path?: string | PathLike
   type?: string | null
-  // can be undefined, we will remove it
-  metadata?: {
-    [key: string]: string | undefined
-  }
+  metadata?: { [key: string]: string | undefined }
   body?: ReadableStream | Buffer
-  ttl?: number // ttl in days
+  ttl?: number
+  addTTL?: boolean
   extra?: any
 }
 
-type StreamUploadParams = {
-  bucket: string
-  filename: string
+type UploadParams = BaseUploadParams & {
+  path?: string | PathLike
+}
+
+type StreamUploadParams = BaseUploadParams & {
   stream: ReadStream
-  type?: string | null
-  // can be undefined, we will remove it
-  metadata?: {
-    [key: string]: string | undefined
-  }
-  body?: ReadableStream | Buffer
-  ttl?: number // ttl in days
-  extra?: any
 }
 
 const CONTENT_TYPE_MAP: any = {
@@ -183,7 +174,7 @@ export async function upload({
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (ttl && bucketCreated.created) {
+  if (ttl && (bucketCreated.created || bucketCreated.exists)) {
     let ttlConfig = bucketTTLConfig(bucketName, ttl)
     await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
@@ -229,7 +220,7 @@ export async function streamUpload({
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (ttl && bucketCreated.created) {
+  if (ttl && (bucketCreated.created || bucketCreated.exists)) {
     let ttlConfig = bucketTTLConfig(bucketName, ttl)
     await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
