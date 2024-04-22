@@ -75,7 +75,7 @@
     }
 
     const isString = typeof value === "string";
-    // "2025" could be either an ISO 8601 date time string or Unix time.
+    // "2025" could be either an ISO 8601 datetime string or Unix time.
     // There's no way to tell the user's intent without providing more
     // granular controls.
     // We'll just assume any string without dashes is Unix time.
