@@ -9,7 +9,7 @@ const {
   ObjectStore,
   retrieve,
   uploadDirectory,
-  makeSureBucketExists,
+  createBucketIfNotExists,
 } = objectStore
 
 const bucketList = Object.values(ObjectStoreBuckets)
@@ -61,7 +61,7 @@ export async function importObjects() {
   let count = 0
   for (let bucket of buckets) {
     const client = ObjectStore(bucket)
-    await makeSureBucketExists(client, bucket)
+    await createBucketIfNotExists(client, bucket)
     const files = await uploadDirectory(bucket, join(path, bucket), "/")
     count += files.length
     bar.update(count)

@@ -1,9 +1,15 @@
 jest.unmock("node-fetch")
+jest.unmock("aws-sdk")
 import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
+import { objectStoreTestProviders } from "@budibase/backend-core/tests"
+import { objectStore } from "@budibase/backend-core"
+import tk from "timekeeper"
+import { EmailAttachment } from "@budibase/types"
+
+const fetch = require("node-fetch")
 
 const nodemailer = require("nodemailer")
-const fetch = require("node-fetch")
 
 // for the real email tests give them a long time to try complete/fail
 jest.setTimeout(30000)
@@ -12,14 +18,20 @@ describe("/api/global/email", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
+    tk.reset()
+    await objectStoreTestProviders.minio.start()
     await config.beforeAll()
   })
 
   afterAll(async () => {
+    await objectStoreTestProviders.minio.stop()
     await config.afterAll()
   })
 
-  async function sendRealEmail(purpose: string) {
+  async function sendRealEmail(
+    purpose: string,
+    attachments?: EmailAttachment[]
+  ) {
     let response, text
     try {
       const timeout = () =>
@@ -35,8 +47,14 @@ describe("/api/global/email", () => {
         )
       await Promise.race([config.saveEtherealSmtpConfig(), timeout()])
       await Promise.race([config.saveSettingsConfig(), timeout()])
-
-      const res = await config.api.emails.sendEmail(purpose).timeout(20000)
+      let res
+      if (attachments) {
+        res = await config.api.emails
+          .sendEmail(purpose, attachments)
+          .timeout(20000)
+      } else {
+        res = await config.api.emails.sendEmail(purpose).timeout(20000)
+      }
       // ethereal hiccup, can't test right now
       if (res.status >= 300) {
         return
@@ -79,5 +97,26 @@ describe("/api/global/email", () => {
 
   it("should be able to send a password recovery email", async () => {
     await sendRealEmail(EmailTemplatePurpose.PASSWORD_RECOVERY)
+  })
+
+  it("should be able to send an email with attachments", async () => {
+    let bucket = "testbucket"
+    let filename = "test.txt"
+    await objectStore.upload({
+      bucket,
+      filename,
+      body: Buffer.from("test data"),
+    })
+    let presignedUrl = await objectStore.getPresignedUrl(
+      bucket,
+      filename,
+      60000
+    )
+
+    let attachmentObject = {
+      url: presignedUrl,
+      filename,
+    }
+    await sendRealEmail(EmailTemplatePurpose.WELCOME, [attachmentObject])
   })
 })
