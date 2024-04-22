@@ -35,7 +35,7 @@ type UploadParams = {
     [key: string]: string | undefined
   }
   body?: ReadableStream | Buffer
-  addTTL?: boolean
+  ttl?: number
   extra?: any
 }
 
@@ -49,7 +49,7 @@ type StreamUploadParams = {
     [key: string]: string | undefined
   }
   body?: ReadableStream | Buffer
-  addTTL?: boolean
+  ttl?: number
   extra?: any
 }
 
@@ -174,7 +174,7 @@ export async function upload({
   type,
   metadata,
   body,
-  addTTL,
+  ttl,
 }: UploadParams) {
   const extension = filename.split(".").pop()
 
@@ -183,8 +183,8 @@ export async function upload({
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (addTTL && bucketCreated.created) {
-    let ttlConfig = bucketTTLConfig(bucketName, 1)
+  if (ttl && bucketCreated.created) {
+    let ttlConfig = bucketTTLConfig(bucketName, ttl)
     await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
 
@@ -223,14 +223,14 @@ export async function streamUpload({
   filename,
   type,
   extra,
-  addTTL,
+  ttl,
 }: StreamUploadParams) {
   const extension = filename.split(".").pop()
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (addTTL && bucketCreated.created) {
-    let ttlConfig = bucketTTLConfig(bucketName, 1)
+  if (ttl && bucketCreated.created) {
+    let ttlConfig = bucketTTLConfig(bucketName, ttl)
     await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
 
