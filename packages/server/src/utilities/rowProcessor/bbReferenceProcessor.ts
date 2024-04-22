@@ -10,10 +10,11 @@ import { InvalidBBRefError } from "./errors"
 
 const ROW_PREFIX = DocumentType.ROW + SEPARATOR
 
-export async function processInputBBReferences<
-  T = FieldType.BB_REFERENCE_SINGLE
->(value: string, type: T): Promise<string | null>
-export async function processInputBBReferences<
+export function processInputBBReferences<T = FieldType.BB_REFERENCE_SINGLE>(
+  value: string,
+  type: T
+): Promise<string | null>
+export function processInputBBReferences<
   T = FieldType.BB_REFERENCE,
   TS = FieldSubtype.USER
 >(
@@ -21,7 +22,7 @@ export async function processInputBBReferences<
   type: T,
   subtype: TS
 ): Promise<string | null>
-export async function processInputBBReferences<
+export function processInputBBReferences<
   T = FieldType.BB_REFERENCE,
   TS = FieldSubtype.USERS
 >(
@@ -74,7 +75,7 @@ export async function processInputBBReferences<
         case undefined:
           throw "Subtype must be defined"
         case FieldSubtype.USER:
-        case FieldSubtype.USERS:
+        case FieldSubtype.USERS: {
           const { notFoundIds } = await cache.user.getUsers(referenceIds)
 
           if (notFoundIds?.length) {
@@ -86,11 +87,12 @@ export async function processInputBBReferences<
           }
 
           return referenceIds.join(",") || null
+        }
         default:
           throw utils.unreachable(subtype)
       }
 
-    case FieldType.BB_REFERENCE_SINGLE:
+    case FieldType.BB_REFERENCE_SINGLE: {
       const user = await cache.user.getUser(referenceIds[0])
 
       if (!user) {
@@ -98,6 +100,7 @@ export async function processInputBBReferences<
       }
 
       return referenceIds[0] || null
+    }
 
     default:
       throw utils.unreachable(type)
@@ -112,14 +115,15 @@ interface UserReferenceInfo {
   lastName: string
 }
 
-export async function processOutputBBReferences<
-  T = FieldType.BB_REFERENCE_SINGLE
->(value: string, type: T): Promise<UserReferenceInfo>
-export async function processOutputBBReferences<
+export function processOutputBBReferences<T = FieldType.BB_REFERENCE_SINGLE>(
+  value: string,
+  type: T
+): Promise<UserReferenceInfo>
+export function processOutputBBReferences<
   T = FieldType.BB_REFERENCE,
   TS = FieldSubtype.USER
 >(value: string, type: T, subtype: TS): Promise<UserReferenceInfo[]>
-export async function processOutputBBReferences<
+export function processOutputBBReferences<
   T = FieldType.BB_REFERENCE,
   TS = FieldSubtype.USERS
 >(value: string[], type: T, subtype: TS): Promise<UserReferenceInfo[]>
@@ -143,7 +147,7 @@ export async function processOutputBBReferences(
         case undefined:
           throw "Subtype must be defined"
         case FieldSubtype.USER:
-        case FieldSubtype.USERS:
+        case FieldSubtype.USERS: {
           const { users } = await cache.user.getUsers(ids)
           if (!users.length) {
             return undefined
@@ -156,6 +160,7 @@ export async function processOutputBBReferences(
             firstName: u.firstName,
             lastName: u.lastName,
           }))
+        }
         default:
           throw utils.unreachable(subtype)
       }
