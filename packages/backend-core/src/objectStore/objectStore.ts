@@ -25,32 +25,23 @@ type ListParams = {
   ContinuationToken?: string
 }
 
-type UploadParams = {
+type BaseUploadParams = {
   bucket: string
   filename: string
-  path?: string | PathLike
   type?: string | null
-  // can be undefined, we will remove it
-  metadata?: {
-    [key: string]: string | undefined
-  }
+  metadata?: { [key: string]: string | undefined }
   body?: ReadableStream | Buffer
+  ttl?: number
   addTTL?: boolean
   extra?: any
 }
 
-type StreamUploadParams = {
-  bucket: string
-  filename: string
+type UploadParams = BaseUploadParams & {
+  path?: string | PathLike
+}
+
+type StreamUploadParams = BaseUploadParams & {
   stream: ReadStream
-  type?: string | null
-  // can be undefined, we will remove it
-  metadata?: {
-    [key: string]: string | undefined
-  }
-  body?: ReadableStream | Buffer
-  addTTL?: boolean
-  extra?: any
 }
 
 const CONTENT_TYPE_MAP: any = {
@@ -174,7 +165,7 @@ export async function upload({
   type,
   metadata,
   body,
-  addTTL,
+  ttl,
 }: UploadParams) {
   const extension = filename.split(".").pop()
 
@@ -183,9 +174,11 @@ export async function upload({
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (addTTL && bucketCreated.created) {
-    let ttlConfig = bucketTTLConfig(bucketName, 1)
-    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+  if (ttl && (bucketCreated.created || bucketCreated.exists)) {
+    let ttlConfig = bucketTTLConfig(bucketName, ttl)
+    if (objectStore.putBucketLifecycleConfiguration) {
+      await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+    }
   }
 
   let contentType = type
@@ -223,15 +216,17 @@ export async function streamUpload({
   filename,
   type,
   extra,
-  addTTL,
+  ttl,
 }: StreamUploadParams) {
   const extension = filename.split(".").pop()
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (addTTL && bucketCreated.created) {
-    let ttlConfig = bucketTTLConfig(bucketName, 1)
-    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+  if (ttl && (bucketCreated.created || bucketCreated.exists)) {
+    let ttlConfig = bucketTTLConfig(bucketName, ttl)
+    if (objectStore.putBucketLifecycleConfiguration) {
+      await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+    }
   }
 
   // Set content type for certain known extensions

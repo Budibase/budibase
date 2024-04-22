@@ -523,7 +523,7 @@ export async function handleFileResponse(
       bucket,
       filename: key,
       stream,
-      addTTL: true,
+      ttl: 1,
       type: response.headers["content-type"],
     })
   }

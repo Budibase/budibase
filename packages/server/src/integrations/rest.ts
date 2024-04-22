@@ -24,6 +24,7 @@ import { blacklist } from "@budibase/backend-core"
 import { handleFileResponse, handleXml } from "./utils"
 import { parse } from "content-disposition"
 import path from "path"
+import { Builder as XmlBuilder } from "xml2js"
 
 const BodyTypes = {
   NONE: "none",
@@ -59,8 +60,6 @@ const coreFields = {
     type: DatasourceFieldType.OBJECT,
   },
 }
-
-const { Builder: XmlBuilder } = require("xml2js")
 
 const SCHEMA: Integration = {
   docs: "https://github.com/node-fetch/node-fetch",
