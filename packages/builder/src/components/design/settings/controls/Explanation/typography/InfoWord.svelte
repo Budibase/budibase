@@ -7,7 +7,6 @@
   export let href = null
 </script>
 
-
 {#if href !== null}
   <a
     tabindex="0"
@@ -15,7 +14,7 @@
     rel="noopener noreferrer"
     target="_blank"
     class="infoWord"
-    style:color={color}
+    style:color
     style:border-color={color}
     on:mouseenter
     on:mouseleave
@@ -33,7 +32,7 @@
   <div
     role="tooltip"
     class="infoWord"
-    style:color={color}
+    style:color
     style:border-color={color}
     on:mouseenter
     on:mouseleave

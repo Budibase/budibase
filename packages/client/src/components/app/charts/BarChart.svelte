@@ -21,10 +21,12 @@
   export let horizontal
 
   $: series = getSeries(dataProvider, valueColumns)
-  $: categories = getCategories(dataProvider, labelColumn);
+  $: categories = getCategories(dataProvider, labelColumn)
 
-  $: labelType = dataProvider?.schema?.[labelColumn]?.type === 'datetime' ? 
-    "datetime" : "category"
+  $: labelType =
+    dataProvider?.schema?.[labelColumn]?.type === "datetime"
+      ? "datetime"
+      : "category"
   $: xAxisFormatter = getFormatter(labelType, valueUnits, horizontal, "x")
   $: yAxisFormatter = getFormatter(labelType, valueUnits, horizontal, "y")
 
@@ -32,7 +34,7 @@
     series,
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
     theme: {
-      palette: palette === "Custom" ? null : palette
+      palette: palette === "Custom" ? null : palette,
     },
     legend: {
       show: legend,
@@ -46,7 +48,7 @@
       text: title,
     },
     dataLabels: {
-      enabled: dataLabels
+      enabled: dataLabels,
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,
@@ -54,7 +56,7 @@
       type: "bar",
       stacked,
       animations: {
-        enabled: animate
+        enabled: animate,
       },
       toolbar: {
         show: false,
@@ -65,33 +67,33 @@
     },
     plotOptions: {
       bar: {
-        horizontal
-      }
+        horizontal,
+      },
     },
     // We can just always provide the categories to the xaxis and horizontal mode automatically handles "tranposing" the categories to the yaxis, but certain things like labels need to be manually put on a certain axis based on the selected mode. Titles do not need to be handled this way, they are exposed to the user as "X axis" and Y Axis" so flipping them would be confusing.
     xaxis: {
       type: labelType,
       categories,
       labels: {
-        formatter: xAxisFormatter
+        formatter: xAxisFormatter,
       },
       title: {
-        text: xAxisLabel
-      }
+        text: xAxisLabel,
+      },
     },
     // Providing `type: "datetime"` normally makes Apex Charts parse unix time nicely with no additonal config, but bar charts in horizontal mode don't have a default setting for parsing the labels of dates, and will just spit out the unix time value. It also doesn't seem to respect any date based formatting properties passed in. So we'll just manually format the labels, the chart still sorts the dates correctly in any case
     yaxis: {
       labels: {
-        formatter: yAxisFormatter
+        formatter: yAxisFormatter,
       },
       title: {
-        text: yAxisLabel
-      }
-    }
+        text: yAxisLabel,
+      },
+    },
   }
 
   const getSeries = (dataProvider, valueColumns = []) => {
-    const rows = dataProvider.rows ?? [];
+    const rows = dataProvider.rows ?? []
 
     return valueColumns.map(column => ({
       name: column,
@@ -99,7 +101,7 @@
         const value = row?.[column]
 
         if (dataProvider?.schema?.[column]?.type === "datetime" && value) {
-          return Date.parse(value);
+          return Date.parse(value)
         }
 
         return value
@@ -108,7 +110,7 @@
   }
 
   const getCategories = (dataProvider, labelColumn) => {
-    const rows = dataProvider.rows ?? [];
+    const rows = dataProvider.rows ?? []
 
     return rows.map(row => {
       const value = row?.[labelColumn]
@@ -118,12 +120,13 @@
         return ""
       }
 
-      return value;
+      return value
     })
   }
 
   const getFormatter = (labelType, valueUnits, horizontal, axis) => {
-    const isLabelAxis = (axis === "y" && horizontal) || axis === "x" && !horizontal
+    const isLabelAxis =
+      (axis === "y" && horizontal) || (axis === "x" && !horizontal)
     if (labelType === "datetime" && isLabelAxis) {
       return formatters["Datetime"]
     }

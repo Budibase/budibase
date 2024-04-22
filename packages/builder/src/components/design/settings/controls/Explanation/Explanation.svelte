@@ -1,11 +1,22 @@
 <script>
-  import DetailsModal from './DetailsModal/index.svelte'
-  import { messages as messageConstants, getExplanationMessagesAndSupport, getExplanationWithPresets } from "./explanation";
-  import { StringAsDate, NumberAsDate, Column, Support, NotRequired, StringAsNumber, JSONPrimitivesOnly, DateAsNumber } from "./lines"
-  import subjects from './subjects';
+  import DetailsModal from "./DetailsModal/index.svelte"
   import {
-    componentStore,
-  } from "stores/builder"
+    messages as messageConstants,
+    getExplanationMessagesAndSupport,
+    getExplanationWithPresets,
+  } from "./explanation"
+  import {
+    StringAsDate,
+    NumberAsDate,
+    Column,
+    Support,
+    NotRequired,
+    StringAsNumber,
+    JSONPrimitivesOnly,
+    DateAsNumber,
+  } from "./lines"
+  import subjects from "./subjects"
+  import { componentStore } from "stores/builder"
 
   export let explanation
   export let columnIcon
@@ -16,30 +27,33 @@
 
   export let schema
 
-  $: explanationWithPresets = getExplanationWithPresets(explanation, $componentStore.typeSupportPresets)
+  $: explanationWithPresets = getExplanationWithPresets(
+    explanation,
+    $componentStore.typeSupportPresets
+  )
   let support
   let messages = []
 
   $: {
-    const explanationMessagesAndSupport = getExplanationMessagesAndSupport(schema, explanationWithPresets)
+    const explanationMessagesAndSupport = getExplanationMessagesAndSupport(
+      schema,
+      explanationWithPresets
+    )
     support = explanationMessagesAndSupport.support
     messages = explanationMessagesAndSupport.messages
   }
 
-  let root = null;
+  let root = null
 
   let detailsModalSubject = subjects.none
 
-  const setExplanationSubject = (option) => {
-    detailsModalSubject = option;
+  const setExplanationSubject = option => {
+    detailsModalSubject = option
     root = root
   }
 </script>
 
-<div
-  bind:this={root}
-  class="tooltipContents"
->
+<div bind:this={root} class="tooltipContents">
   <Column
     {columnName}
     {columnIcon}
@@ -47,39 +61,24 @@
     {tableHref}
     {setExplanationSubject}
   />
-  <Support
-    {support}
-    {setExplanationSubject}
-  />
+  <Support {support} {setExplanationSubject} />
   {#if messages.includes(messageConstants.stringAsNumber)}
-    <StringAsNumber
-      {setExplanationSubject}
-    />
+    <StringAsNumber {setExplanationSubject} />
   {/if}
   {#if messages.includes(messageConstants.notRequired)}
-    <NotRequired
-      {setExplanationSubject}
-    />
+    <NotRequired {setExplanationSubject} />
   {/if}
   {#if messages.includes(messageConstants.jsonPrimitivesOnly)}
-    <JSONPrimitivesOnly
-      {setExplanationSubject}
-    />
+    <JSONPrimitivesOnly {setExplanationSubject} />
   {/if}
   {#if messages.includes(messageConstants.dateAsNumber)}
-    <DateAsNumber
-      {setExplanationSubject}
-    />
+    <DateAsNumber {setExplanationSubject} />
   {/if}
   {#if messages.includes(messageConstants.numberAsDate)}
-    <NumberAsDate
-      {setExplanationSubject}
-    />
+    <NumberAsDate {setExplanationSubject} />
   {/if}
   {#if messages.includes(messageConstants.stringAsDate)}
-    <StringAsDate
-      {setExplanationSubject}
-    />
+    <StringAsDate {setExplanationSubject} />
   {/if}
 </div>
 

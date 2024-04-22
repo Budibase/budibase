@@ -104,7 +104,7 @@ export class ComponentStore extends BudiStore {
       ...state,
       components,
       customComponents,
-      typeSupportPresets: components?.typeSupportPresets ?? {}
+      typeSupportPresets: components?.typeSupportPresets ?? {},
     }))
 
     // Sync client features to app store

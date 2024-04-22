@@ -1,7 +1,16 @@
 <script>
   import { ContextTooltip } from "@budibase/bbui"
-  import { StringsAsDates, NumbersAsDates, ScalarJsonOnly, Column, Support, NotRequired, StringsAsNumbers, DatesAsNumbers } from './subjects'
-  import subjects from '../subjects'
+  import {
+    StringsAsDates,
+    NumbersAsDates,
+    ScalarJsonOnly,
+    Column,
+    Support,
+    NotRequired,
+    StringsAsNumbers,
+    DatesAsNumbers,
+  } from "./subjects"
+  import subjects from "../subjects"
 
   export let anchor
   export let schema
@@ -9,12 +18,7 @@
   export let subject = subjects.none
 </script>
 
-
-<ContextTooltip
-  visible={subject !== subjects.none}
-  {anchor}
-  offset={20}
->
+<ContextTooltip visible={subject !== subjects.none} {anchor} offset={20}>
   <div class="explanationModalContent">
     {#if subject === subjects.column}
       <Column {columnName} {schema} />

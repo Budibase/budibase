@@ -3,11 +3,11 @@
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { Explanation } from './Explanation'
+  import { Explanation } from "./Explanation"
   import { debounce } from "lodash"
   import { params } from "@roxi/routify"
   import { Constants } from "@budibase/frontend-core"
-  import { FIELDS } from 'constants/backend'
+  import { FIELDS } from "constants/backend"
 
   export let componentInstance = {}
   export let value = ""
@@ -45,20 +45,20 @@
 
   const updateTooltip = debounce((e, option) => {
     if (option == null) {
-        contextTooltipVisible = false;
+      contextTooltipVisible = false
     } else {
-    contextTooltipAnchor = e?.target;
-    currentOption = option;
-    contextTooltipVisible = true;
+      contextTooltipAnchor = e?.target
+      currentOption = option
+      contextTooltipVisible = true
     }
-  }, 200);
+  }, 200)
 
   const onOptionMouseenter = (e, option) => {
-    updateTooltip(e, option);
+    updateTooltip(e, option)
   }
 
-  const onOptionMouseleave = (e) => {
-    updateTooltip(e, null);
+  const onOptionMouseleave = e => {
+    updateTooltip(e, null)
   }
   const getOptionIcon = optionKey => {
     const option = schema[optionKey]
@@ -80,7 +80,7 @@
   const getOptionIconTooltip = optionKey => {
     const option = schema[optionKey]
 
-    const type = option?.type;
+    const type = option?.type
     const field = Object.values(FIELDS).find(f => f.type === type)
 
     if (field) {
@@ -89,13 +89,12 @@
 
     return ""
   }
-
 </script>
 
 <Select
   {placeholder}
   value={boundValue}
-  on:change={onChange} 
+  on:change={onChange}
   {options}
   {onOptionMouseenter}
   {onOptionMouseleave}

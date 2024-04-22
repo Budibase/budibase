@@ -1,12 +1,10 @@
 <script>
   import { Multiselect, ContextTooltip } from "@budibase/bbui"
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { selectedScreen,
-    componentStore,
-  } from "stores/builder"
+  import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
-  import { Explanation } from './Explanation'
-  import { FIELDS } from 'constants/backend'
+  import { Explanation } from "./Explanation"
+  import { FIELDS } from "constants/backend"
   import { params } from "@roxi/routify"
   import { debounce } from "lodash"
   import { Constants } from "@budibase/frontend-core"
@@ -59,7 +57,7 @@
   const getOptionIconTooltip = optionKey => {
     const option = schema[optionKey]
 
-    const type = option?.type;
+    const type = option?.type
     const field = Object.values(FIELDS).find(f => f.type === type)
 
     if (field) {
@@ -75,20 +73,20 @@
 
   const updateTooltip = debounce((e, option) => {
     if (option == null) {
-      contextTooltipVisible = false;
+      contextTooltipVisible = false
     } else {
-      contextTooltipAnchor = e?.target;
-      currentOption = option;
-      contextTooltipVisible = true;
+      contextTooltipAnchor = e?.target
+      currentOption = option
+      contextTooltipVisible = true
     }
-  }, 200);
+  }, 200)
 
   const onOptionMouseenter = (e, option) => {
-    updateTooltip(e, option);
+    updateTooltip(e, option)
   }
 
-  const onOptionMouseleave = (e) => {
-    updateTooltip(e, null);
+  const onOptionMouseleave = e => {
+    updateTooltip(e, null)
   }
 </script>
 

@@ -1,6 +1,6 @@
 <script>
   import ApexChart from "./ApexChart.svelte"
-  import formatters from './formatters';
+  import formatters from "./formatters"
 
   export let title
   export let dataProvider
@@ -35,7 +35,7 @@
       width: width == null || width === "" ? "100%" : width,
       type: "candlestick",
       animations: {
-        enabled: animate
+        enabled: animate,
       },
       toolbar: {
         show: false,
@@ -46,42 +46,42 @@
     },
     xaxis: {
       tooltip: {
-        formatter: formatters["Datetime"]
+        formatter: formatters["Datetime"],
       },
       type: "datetime",
       title: {
-        text: xAxisLabel
-      }
+        text: xAxisLabel,
+      },
     },
     yaxis: {
       labels: {
-        formatter: formatters[valueUnits]
+        formatter: formatters[valueUnits],
       },
       title: {
-        text: yAxisLabel
-      }
-    }
+        text: yAxisLabel,
+      },
+    },
   }
 
   const getValueAsUnixTime = (dataprovider, dateColumn, row) => {
     const value = row[dateColumn]
 
-    if (dataProvider?.schema?.[dateColumn]?.type === 'datetime') {
-      return Date.parse(value);
+    if (dataProvider?.schema?.[dateColumn]?.type === "datetime") {
+      return Date.parse(value)
     }
 
     if (typeof value === "number") {
-      return value;
+      return value
     }
 
-    const isString = typeof value === "string";
+    const isString = typeof value === "string"
     // "2025" could be either an ISO 8601 datetime string or Unix time.
     // There's no way to tell the user's intent without providing more
     // granular controls.
     // We'll just assume any string without dashes is Unix time.
 
     if (isString && value.includes("-")) {
-      const unixTime = Date.parse(value);
+      const unixTime = Date.parse(value)
 
       if (isNaN(unixTime)) {
         return null
@@ -91,7 +91,7 @@
     }
 
     if (isString) {
-      const unixTime = parseInt(value, 10);
+      const unixTime = parseInt(value, 10)
 
       if (isNaN(unixTime)) {
         return null
@@ -100,7 +100,7 @@
       return unixTime
     }
 
-    return null;
+    return null
   }
 
   const getSeries = (
@@ -111,24 +111,26 @@
     lowColumn,
     closeColumn
   ) => {
-    const rows = dataProvider.rows ?? [];
+    const rows = dataProvider.rows ?? []
 
-    return [{
-      data: rows.map(row => {
-        const open = parseFloat(row[openColumn])
-        const high = parseFloat(row[highColumn])
-        const low = parseFloat(row[lowColumn])
-        const close = parseFloat(row[closeColumn])
+    return [
+      {
+        data: rows.map(row => {
+          const open = parseFloat(row[openColumn])
+          const high = parseFloat(row[highColumn])
+          const low = parseFloat(row[lowColumn])
+          const close = parseFloat(row[closeColumn])
 
-        return [
-          getValueAsUnixTime(dataProvider, dateColumn, row),
-          isNaN(open) ? 0 : open,
-          isNaN(high) ? 0 : high,
-          isNaN(low) ? 0 : low,
-          isNaN(close) ? 0 : close,
-        ]
-      })
-    }]
+          return [
+            getValueAsUnixTime(dataProvider, dateColumn, row),
+            isNaN(open) ? 0 : open,
+            isNaN(high) ? 0 : high,
+            isNaN(low) ? 0 : low,
+            isNaN(close) ? 0 : close,
+          ]
+        }),
+      },
+    ]
   }
 </script>
 

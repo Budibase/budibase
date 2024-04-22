@@ -6,13 +6,7 @@
   export let href
 </script>
 
-<a
-  tabindex="0"
-  {href}
-  rel="noopener noreferrer"
-  target="_blank"
-  class="link"
->
+<a tabindex="0" {href} rel="noopener noreferrer" target="_blank" class="link">
   <Icon size="XS" name={icon} />
   <span class="text">
     <slot>

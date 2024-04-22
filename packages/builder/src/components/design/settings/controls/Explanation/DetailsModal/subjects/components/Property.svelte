@@ -1,7 +1,7 @@
 <script>
-  export let name;
-  export let value;
-  export let truncate = false;
+  export let name
+  export let value
+  export let truncate = false
 </script>
 
 <div class:truncate class="property">
@@ -34,7 +34,6 @@
     font-weight: 600;
     flex-shrink: 0;
   }
-
 
   .propertyDivider {
     padding: 0 4px;
