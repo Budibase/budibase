@@ -162,8 +162,16 @@ export async function inputProcessing(
       }
     }
 
-    if (field.type === FieldType.BB_REFERENCE && value) {
-      clonedRow[key] = await processInputBBReferences(value, field.subtype)
+    if (
+      (field.type === FieldType.BB_REFERENCE ||
+        field.type === FieldType.BB_REFERENCE_SINGLE) &&
+      value
+    ) {
+      clonedRow[key] = await processInputBBReferences(
+        value,
+        field.type,
+        field.subtype
+      )
     }
   }
 
@@ -250,6 +258,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
           row[property],
+          column.type,
           column.subtype
         )
       }

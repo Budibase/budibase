@@ -1,13 +1,43 @@
 import { cache, db as dbCore } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import { FieldSubtype, DocumentType, SEPARATOR } from "@budibase/types"
+import {
+  FieldType,
+  FieldSubtype,
+  DocumentType,
+  SEPARATOR,
+  User,
+} from "@budibase/types"
 import { InvalidBBRefError } from "./errors"
 
 const ROW_PREFIX = DocumentType.ROW + SEPARATOR
 
-export async function processInputBBReferences(
+export async function processInputBBReferences<
+  T = FieldType.BB_REFERENCE_SINGLE
+>(value: string, type: T): Promise<string | null>
+export async function processInputBBReferences<
+  T = FieldType.BB_REFERENCE,
+  TS = FieldSubtype.USER
+>(
   value: string | string[] | { _id: string } | { _id: string }[],
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+  type: T,
+  subtype: TS
+): Promise<string | null>
+export async function processInputBBReferences<
+  T = FieldType.BB_REFERENCE,
+  TS = FieldSubtype.USERS
+>(
+  value: string | string[] | { _id: string } | { _id: string }[],
+  type: T,
+  subtype: TS
+): Promise<string[] | null>
+
+export async function processInputBBReferences<
+  T extends FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
+  TS extends FieldSubtype.USER | FieldSubtype.USERS
+>(
+  value: string | string[] | { _id: string } | { _id: string }[],
+  type: T,
+  subtype?: TS
 ): Promise<string | string[] | null> {
   let referenceIds: string[] = []
 
@@ -39,55 +69,113 @@ export async function processInputBBReferences(
     }
   })
 
-  switch (subtype) {
-    case FieldSubtype.USER:
-    case FieldSubtype.USERS: {
-      const { notFoundIds } = await cache.user.getUsers(referenceIds)
+  switch (type) {
+    case FieldType.BB_REFERENCE:
+      switch (subtype) {
+        case undefined:
+          throw "Subtype must be defined"
+        case FieldSubtype.USER:
+        case FieldSubtype.USERS:
+          const { notFoundIds } = await cache.user.getUsers(referenceIds)
 
-      if (notFoundIds?.length) {
-        throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
+          if (notFoundIds?.length) {
+            throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
+          }
+
+          if (subtype === FieldSubtype.USERS) {
+            return referenceIds
+          }
+
+          return referenceIds.join(",") || null
+        default:
+          throw utils.unreachable(subtype)
       }
 
-      if (subtype === FieldSubtype.USERS) {
-        return referenceIds
+    case FieldType.BB_REFERENCE_SINGLE:
+      const user = await cache.user.getUser(referenceIds[0])
+
+      if (!user) {
+        throw new InvalidBBRefError(referenceIds[0], FieldSubtype.USER)
       }
 
-      return referenceIds.join(",") || null
-    }
+      return referenceIds[0] || null
+
     default:
-      throw utils.unreachable(subtype)
+      throw utils.unreachable(type)
   }
 }
 
+interface UserReferenceInfo {
+  _id: string
+  primaryDisplay: string
+  email: string
+  firstName: string
+  lastName: string
+}
+
+export async function processOutputBBReferences<
+  T = FieldType.BB_REFERENCE_SINGLE
+>(value: string, type: T): Promise<UserReferenceInfo>
+export async function processOutputBBReferences<
+  T = FieldType.BB_REFERENCE,
+  TS = FieldSubtype.USER
+>(value: string, type: T, subtype: TS): Promise<UserReferenceInfo[]>
+export async function processOutputBBReferences<
+  T = FieldType.BB_REFERENCE,
+  TS = FieldSubtype.USERS
+>(value: string[], type: T, subtype: TS): Promise<UserReferenceInfo[]>
+
 export async function processOutputBBReferences(
   value: string | string[],
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+  type: FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
+  subtype?: FieldSubtype.USER | FieldSubtype.USERS
 ) {
   if (value === null || value === undefined) {
     // Already processed or nothing to process
     return value || undefined
   }
 
-  const ids =
-    typeof value === "string" ? value.split(",").filter(id => !!id) : value
+  switch (type) {
+    case FieldType.BB_REFERENCE:
+      const ids =
+        typeof value === "string" ? value.split(",").filter(id => !!id) : value
 
-  switch (subtype) {
-    case FieldSubtype.USER:
-    case FieldSubtype.USERS: {
-      const { users } = await cache.user.getUsers(ids)
-      if (!users.length) {
+      switch (subtype) {
+        case undefined:
+          throw "Subtype must be defined"
+        case FieldSubtype.USER:
+        case FieldSubtype.USERS:
+          const { users } = await cache.user.getUsers(ids)
+          if (!users.length) {
+            return undefined
+          }
+
+          return users.map(u => ({
+            _id: u._id,
+            primaryDisplay: u.email,
+            email: u.email,
+            firstName: u.firstName,
+            lastName: u.lastName,
+          }))
+        default:
+          throw utils.unreachable(subtype)
+      }
+
+    case FieldType.BB_REFERENCE_SINGLE:
+      const user = await cache.user.getUser(value as string)
+      if (!user) {
         return undefined
       }
 
-      return users.map(u => ({
-        _id: u._id,
-        primaryDisplay: u.email,
-        email: u.email,
-        firstName: u.firstName,
-        lastName: u.lastName,
-      }))
-    }
+      return {
+        _id: user._id,
+        primaryDisplay: user.email,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      }
+
     default:
-      throw utils.unreachable(subtype)
+      throw utils.unreachable(type)
   }
 }
