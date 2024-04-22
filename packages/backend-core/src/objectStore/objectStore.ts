@@ -176,7 +176,9 @@ export async function upload({
 
   if (ttl && (bucketCreated.created || bucketCreated.exists)) {
     let ttlConfig = bucketTTLConfig(bucketName, ttl)
-    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+    if (objectStore.putBucketLifecycleConfiguration) {
+      await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+    }
   }
 
   let contentType = type
@@ -222,7 +224,9 @@ export async function streamUpload({
 
   if (ttl && (bucketCreated.created || bucketCreated.exists)) {
     let ttlConfig = bucketTTLConfig(bucketName, ttl)
-    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+    if (objectStore.putBucketLifecycleConfiguration) {
+      await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+    }
   }
 
   // Set content type for certain known extensions
