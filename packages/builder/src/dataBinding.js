@@ -22,6 +22,7 @@ import {
   isJSBinding,
   decodeJSBinding,
   encodeJSBinding,
+  getJsHelperList,
 } from "@budibase/string-templates"
 import { TableNames } from "./constants"
 import { JSONUtils, Constants } from "@budibase/frontend-core"
@@ -1210,9 +1211,32 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
   if (!currentValue?.includes(from)) {
     return false
   }
-  if (convertTo === "readableBinding") {
-    // Dont replace if the value already matches the readable binding
+  // some cases we have the same binding for readable/runtime, specific logic for this
+  const sameBindings = binding.runtimeBinding.includes(binding.readableBinding)
+  const convertingToReadable = convertTo === "readableBinding"
+  const helperNames = Object.keys(getJsHelperList())
+  const matchedHelperNames = helperNames.filter(
+    name => name.includes(from) && currentValue.includes(name)
+  )
+  // edge case - if the binding is part of a helper it may accidentally replace it
+  if (matchedHelperNames.length > 0) {
+    const indexStart = currentValue.indexOf(from),
+      indexEnd = indexStart + from.length
+    for (let helperName of matchedHelperNames) {
+      const helperIndexStart = currentValue.indexOf(helperName),
+        helperIndexEnd = helperIndexStart + helperName.length
+      if (indexStart >= helperIndexStart && indexEnd <= helperIndexEnd) {
+        return false
+      }
+    }
+  }
+
+  if (convertingToReadable && !sameBindings) {
+    // Don't replace if the value already matches the readable binding
     return currentValue.indexOf(binding.readableBinding) === -1
+  } else if (convertingToReadable) {
+    // if the runtime and readable bindings are very similar we have to assume it should be replaced
+    return true
   }
   // remove all the spaces, if the input is surrounded by spaces e.g. [ Auto ID ] then
   // this makes sure it is detected
