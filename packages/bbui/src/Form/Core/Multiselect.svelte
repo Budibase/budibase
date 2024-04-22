@@ -9,10 +9,6 @@
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
-  export let getOptionIcon = () => null
-  export let getOptionIconTooltip = () => null
-  export let getOptionTooltip = () => null
-  export let isOptionEnabled = () => true
   export let readonly = false
   export let autocomplete = false
   export let sort = false
@@ -21,7 +17,6 @@
   export let customPopoverHeight
   export let open = false
   export let loading
-  export let align
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
 
@@ -87,10 +82,6 @@
 
 <Picker
   on:loadMore
-  {isOptionEnabled}
-  {getOptionIcon}
-  {getOptionIconTooltip}
-  {getOptionTooltip}
   {id}
   {disabled}
   {readonly}
@@ -108,7 +99,6 @@
   {autoWidth}
   {customPopoverHeight}
   {loading}
-  {align}
   {onOptionMouseenter}
   {onOptionMouseleave}
 />
