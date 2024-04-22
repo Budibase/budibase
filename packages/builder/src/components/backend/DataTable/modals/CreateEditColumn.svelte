@@ -373,10 +373,6 @@
         .map(([_, fieldDefinition]) => fieldDefinition)
     }
 
-    const isUsers =
-      editableColumn.type === FieldType.BB_REFERENCE &&
-      editableColumn.subtype === FieldSubtype.USERS
-
     if (!externalTable) {
       return [
         FIELDS.STRING,
@@ -393,7 +389,8 @@
         FIELDS.LINK,
         FIELDS.FORMULA,
         FIELDS.JSON,
-        isUsers ? FIELDS.USERS : FIELDS.USER,
+        FIELDS.USER,
+        FIELDS.USERS,
         FIELDS.AUTO,
       ]
     } else {
@@ -407,7 +404,8 @@
         FIELDS.BOOLEAN,
         FIELDS.FORMULA,
         FIELDS.BIGINT,
-        isUsers ? FIELDS.USERS : FIELDS.USER,
+        FIELDS.USER,
+        FIELDS.USERS,
       ]
       // no-sql or a spreadsheet
       if (!externalTable || table.sql) {
