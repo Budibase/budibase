@@ -472,13 +472,6 @@
     return newError
   }
 
-  function isUsersColumn(column) {
-    return (
-      column.type === FieldType.BB_REFERENCE &&
-      [FieldSubtype.USER, FieldSubtype.USERS].includes(column.subtype)
-    )
-  }
-
   onMount(() => {
     mounted = true
   })
