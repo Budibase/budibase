@@ -684,20 +684,6 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
-  {:else if isUsersColumn(editableColumn) && datasource?.source !== SourceName.GOOGLE_SHEETS}
-    <Toggle
-      value={editableColumn.subtype === FieldSubtype.USERS}
-      on:change={e =>
-        handleTypeChange(
-          makeFieldId(
-            FieldType.BB_REFERENCE,
-            e.detail ? FieldSubtype.USERS : FieldSubtype.USER
-          )
-        )}
-      disabled={!isCreating}
-      thin
-      text="Allow multiple users"
-    />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
     <Select
