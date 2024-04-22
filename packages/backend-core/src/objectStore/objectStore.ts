@@ -35,7 +35,7 @@ type UploadParams = {
     [key: string]: string | undefined
   }
   body?: ReadableStream | Buffer
-  ttl?: number
+  ttl?: number // ttl in days
   extra?: any
 }
 
@@ -49,7 +49,7 @@ type StreamUploadParams = {
     [key: string]: string | undefined
   }
   body?: ReadableStream | Buffer
-  ttl?: number
+  ttl?: number // ttl in days
   extra?: any
 }
 
