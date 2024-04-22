@@ -1,5 +1,5 @@
 <script>
-  import { Line, InfoWord, DocumentationLink, Space, Text, Period, Comma } from "../typography"
+  import { Line, InfoWord, Text, Period } from "../typography"
   import subjects from '../subjects'
 
   export let setExplanationSubject

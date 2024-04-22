@@ -1,5 +1,6 @@
 <script>
   import Section from "./Section.svelte"
+
   export let heading
 </script>
 

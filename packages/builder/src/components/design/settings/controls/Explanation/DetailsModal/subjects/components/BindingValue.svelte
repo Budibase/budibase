@@ -1,4 +1,3 @@
-
 <script>
   import {
     decodeJSBinding,
@@ -8,11 +7,10 @@
     EditorModes,
   } from "components/common/CodeEditor"
   import {
-    readableToRuntimeBinding,
     runtimeToReadableBinding,
     getDatasourceForProvider
   } from "dataBinding"
-  import { tables, datasources, selectedScreen, selectedComponent } from "stores/builder"
+  import { tables, selectedScreen, selectedComponent } from "stores/builder"
   import { getBindings } from "components/backend/DataTable/formula"
 
   export let value

@@ -1,5 +1,5 @@
 <script>
-  import { Line, InfoWord, DocumentationLink, Space, Text, Period } from "../typography"
+  import { Line, InfoWord, DocumentationLink, Text } from "../typography"
   import subjects from '../subjects'
   import * as explanation from '../explanation'
 

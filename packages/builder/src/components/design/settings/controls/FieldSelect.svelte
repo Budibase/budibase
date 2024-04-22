@@ -5,7 +5,7 @@
   import { createEventDispatcher } from "svelte"
   import { Explanation } from './Explanation'
   import { debounce } from "lodash"
-  import { goto, params } from "@roxi/routify"
+  import { params } from "@roxi/routify"
   import { Constants } from "@budibase/frontend-core"
   import { FIELDS } from 'constants/backend'
 
@@ -53,11 +53,11 @@
     }
   }, 200);
 
-  const onOptionMouseenter = (e, option, idx) => {
+  const onOptionMouseenter = (e, option) => {
     updateTooltip(e, option);
   }
 
-  const onOptionMouseleave = (e, option) => {
+  const onOptionMouseleave = (e) => {
     updateTooltip(e, null);
   }
   const getOptionIcon = optionKey => {
