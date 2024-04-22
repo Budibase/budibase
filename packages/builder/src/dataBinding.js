@@ -1235,8 +1235,8 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
     // Don't replace if the value already matches the readable binding
     return currentValue.indexOf(binding.readableBinding) === -1
   } else if (convertingToReadable) {
-    // if the runtime and readable bindings are very similar, all we can do is check runtime is there
-    return currentValue.indexOf(binding.runtimeBinding) !== -1
+    // if the runtime and readable bindings are very similar we have to assume it should be replaced
+    return true
   }
   // remove all the spaces, if the input is surrounded by spaces e.g. [ Auto ID ] then
   // this makes sure it is detected
