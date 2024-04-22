@@ -11,7 +11,6 @@
 
 
 <ContextTooltip
-  noAnimation
   visible={subject !== subjects.none}
   {anchor}
   offset={20}
