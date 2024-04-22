@@ -6,11 +6,11 @@
 </script>
 
 <Line>
-  <Text value="The input will ignore any " />
+  <Text value="Will be converted to a number, ignoring any " />
   <InfoWord
       on:mouseenter={() => setExplanationSubject(subjects.stringsAsNumbers)}
       on:mouseleave={() => setExplanationSubject(subjects.none)}
-    text="non-number values"
+    text="non-numerical values"
   />
   <Period />
 </Line>
