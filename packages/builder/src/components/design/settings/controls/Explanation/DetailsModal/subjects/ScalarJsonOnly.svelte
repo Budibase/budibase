@@ -1,5 +1,4 @@
 <script>
-  import { Body } from "@budibase/bbui"
   import { ExampleSection, ExampleLine, Block, Subject, Section } from './components'
 
   export let schema

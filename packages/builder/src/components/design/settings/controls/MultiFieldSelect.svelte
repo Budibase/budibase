@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Heading, Multiselect, ContextTooltip } from "@budibase/bbui"
+  import { Multiselect, ContextTooltip } from "@budibase/bbui"
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen,
     componentStore,
@@ -7,7 +7,7 @@
   import { createEventDispatcher } from "svelte"
   import { Explanation } from './Explanation'
   import { FIELDS } from 'constants/backend'
-  import { goto, params } from "@roxi/routify"
+  import { params } from "@roxi/routify"
   import { debounce } from "lodash"
   import { Constants } from "@budibase/frontend-core"
 
@@ -19,10 +19,6 @@
   let contextTooltipAnchor = null
   let currentOption = null
   let contextTooltipVisible = false
-
-  $: componentDefinition = componentStore.getDefinition(
-    componentInstance?._component
-  )
 
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
@@ -87,11 +83,11 @@
     }
   }, 200);
 
-  const onOptionMouseenter = (e, option, idx) => {
+  const onOptionMouseenter = (e, option) => {
     updateTooltip(e, option);
   }
 
-  const onOptionMouseleave = (e, option) => {
+  const onOptionMouseleave = (e) => {
     updateTooltip(e, null);
   }
 </script>

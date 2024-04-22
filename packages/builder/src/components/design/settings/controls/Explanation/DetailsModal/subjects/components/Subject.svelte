@@ -5,7 +5,6 @@
   let body;
 
   const handleScroll = (e) => {
-    console.log("scroll");
     if (!body) return;
 
     body.scrollTo({ top: body.scrollTop + e.deltaY, behavior: "smooth" })

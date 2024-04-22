@@ -9,7 +9,6 @@
 
     const updateTimeStamp = () => {
       timestamp = Date.now();
-      console.log(timestamp);
       if (run) {
         setTimeout(updateTimeStamp, 200)
       }

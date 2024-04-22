@@ -31,17 +31,18 @@
 
   $: updatePosition(anchor, tooltip)
 
-  const handleMouseenter = (e) => {
+  const handleMouseenter = () => {
     hovering = true;
   }
 
-  const handleMouseleave = (e) => {
+  const handleMouseleave = () => {
     hovering = false;
   }
 </script>
 
 <Portal {target}>
   <div
+    role="tooltip"
     on:mouseenter={handleMouseenter}
     on:mouseleave={handleMouseleave}
     style:left={`${x}px`}

@@ -1,5 +1,3 @@
-import { capitalize } from 'lodash';
-
 export const messages = {
   jsonPrimitivesOnly: Symbol("explanation-json-primitives-only"),
   stringAsNumber: Symbol("explanation-string-as-number"),
@@ -56,7 +54,7 @@ const getSupportMessage = (type, explanation) => {
   return null
 }
 
-export const getExplanationMessagesAndSupport = (fieldSchema, explanation, typeSupportPresets) => {
+export const getExplanationMessagesAndSupport = (fieldSchema, explanation) => {
   try {
     const explanationMessagesAndSupport = {
       support: getSupport(fieldSchema.type, explanation),
