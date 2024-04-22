@@ -3,13 +3,13 @@
   import { ExampleSection, ExampleLine, Block, Subject, Section } from './components'
 
   let timestamp = Date.now();
+  $: iso = (new Date(timestamp)).toISOString();
 
   onMount(() => {
     let run = true;
 
     const updateTimeStamp = () => {
       timestamp = Date.now();
-      console.log(timestamp);
       if (run) {
         setTimeout(updateTimeStamp, 200)
       }
@@ -23,28 +23,79 @@
   })
 </script>
 
-<Subject heading="Dates as Numbers">
+<Subject heading="Strings as Dates">
   <Section>
-    A date can be used in place of a numeric value, but it will be parsed as a <Block>UNIX epoch</Block> timestamp, which is the number of milliseconds since Jan 1st 1970. A more recent moment in time will be a higher number.
+    A string value can be used in place of a datetime value, but it will be parsed as:
+  </Section>
+  <Section>
+    A <Block>UNIX time</Block> timestamp, which is the number of milliseconds since Jan 1st 1970. A more recent moment in time will be a higher number.
   </Section>
 
     <ExampleSection
       heading="Examples:"
     >
       <ExampleLine>
-        1st Jan 2000<span class="separator">: </span><Block>946684800000</Block>
+        <Block>946684800000</Block>
+        <span class="separator">{"->"}</span>
+        <Block>
+          {(new Date(946684800000).toLocaleString())}
+        </Block>
       </ExampleLine>
       <ExampleLine>
-        1st Jan 2020<span class="separator">: </span><Block>1577836800000</Block>
+        <Block>1577836800000</Block>
+        <span class="separator">{"->"}</span>
+        <Block>
+          {(new Date(1577836800000).toLocaleString())}
+        </Block>
       </ExampleLine>
       <ExampleLine>
-        Now<span class="separator">:</span> <Block>{timestamp}</Block>
+      <Block>{timestamp}</Block>
+      <span class="separator">{"->"}</span>
+        <Block>Now</Block>
       </ExampleLine>
     </ExampleSection>
+  <Section>
+    An <Block>ISO 8601</Block> datetime string. which is the number of milliseconds since Jan 1st 1970. A more recent moment in time will be a higher number.
+  </Section>
+    <div class="isoExamples">
+      <ExampleSection
+        heading="Examples:"
+      >
+        <ExampleLine>
+          <Block>2000-01-01T00:00:00.000Z</Block>
+          <span class="separator">{"->"}</span>
+          <Block>
+            {(new Date(946684800000).toLocaleString())}
+          </Block>
+        </ExampleLine>
+        <ExampleLine>
+          <Block>2000-01-01T00:00:00.000Z</Block>
+          <span class="separator">{"->"}</span>
+          <Block>
+            {(new Date(1577836800000).toLocaleString())}
+          </Block>
+        </ExampleLine>
+        <ExampleLine>
+        <Block>{iso}</Block>
+        <span class="separator">{"->"}</span>
+          <Block>Now</Block>
+        </ExampleLine>
+      </ExampleSection>
+    </div>
+
 </Subject>
 
 <style>
   .separator {
-    margin-right: 5px;
+    flex-shrink: 0;
+    margin: 0 5px;
+  }
+
+  .isoExamples :global(.block) {
+    word-break: break-all;
+  }
+
+  .isoExamples :global(.exampleLine) {
+    align-items: center;
   }
 </style>
