@@ -4,7 +4,7 @@
 
 <Subject heading="Text as Numbers">
   <Section>
-    Text can be used in place of numbers in certain scenarios, but care needs to be taken, as text that doesn't contain a strictly base-ten integer or decimal value may lead to unexpected behavior.
+    Text can be used in place of numbers in certain scenarios, but care needs to be taken; if the value isn't purely numerical it may be converted in an unexpected way.
   </Section>
 
   <ExampleSection

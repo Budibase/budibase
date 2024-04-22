@@ -33,6 +33,20 @@
       "unsupported": [
         { "type": "json", "message": "jsonPrimitivesOnly" }
       ]
+    },
+    "datetimeLike": {
+      "supported": ["datetime"],
+      "partialSupport": [
+        { "type": "longform", "message": "stringAsDate" },
+        { "type": "string", "message": "stringAsDate" },
+        { "type": "options", "message": "stringAsDate" },
+        { "type": "formula", "message": "stringAsDate" },
+        { "type": "bigint", "message": "stringAsDate" },
+        { "type": "number", "message": "numberAsDate"}
+      ],
+      "unsupported": [
+        { "type": "json", "message": "jsonPrimitivesOnly" }
+      ]
     }
   },
   "layout": {
@@ -1649,6 +1663,11 @@
         "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
         "required": true
       },
       {
@@ -1813,6 +1832,11 @@
         "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
         "required": true
       },
       {
@@ -1972,6 +1996,11 @@
         "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
         "required": true
       },
       {
@@ -2143,6 +2172,11 @@
         "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
         "required": true
       },
       {
@@ -2278,6 +2312,11 @@
         "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
         "required": true
       },
       {
@@ -2415,18 +2454,7 @@
         "dependsOn": "dataProvider",
         "explanation": {
           "typeSupport": {
-            "supported": ["datetime"],
-            "partialSupport": [
-              { "type": "longform", "message": "stringAsDate" },
-              { "type": "string", "message": "stringAsDate" },
-              { "type": "options", "message": "stringAsDate" },
-              { "type": "formula", "message": "stringAsDate" },
-              { "type": "bigint", "message": "stringAsDate" },
-              { "type": "number", "message": "numberAsDate"}
-            ],
-            "unsupported": [
-              { "type": "json", "message": "jsonPrimitivesOnly" }
-            ]
+            "preset": "datetimeLike"
           }
         },
         "required": true
@@ -2436,6 +2464,11 @@
         "label": "Open column",
         "key": "openColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2443,6 +2476,11 @@
         "label": "Close column",
         "key": "closeColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2450,6 +2488,11 @@
         "label": "High column",
         "key": "highColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2457,6 +2500,11 @@
         "label": "Low column",
         "key": "lowColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -5336,6 +5384,11 @@
             "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
             "required": true
           },
           {
@@ -5343,6 +5396,11 @@
             "label": "Data column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           }
         ]
@@ -5361,6 +5419,11 @@
             "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
             "required": true
           },
           {
@@ -5368,6 +5431,11 @@
             "label": "Data column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           }
         ]
@@ -5386,6 +5454,11 @@
             "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
             "required": true
           },
           {
@@ -5393,6 +5466,11 @@
             "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5440,6 +5518,11 @@
             "label": "Value column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5481,6 +5564,11 @@
             "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
             "required": true
           },
           {
@@ -5488,6 +5576,11 @@
             "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5530,6 +5623,11 @@
             "label": "Label columns",
             "key": "labelColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
             "required": true
           },
           {
@@ -5537,6 +5635,11 @@
             "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5591,6 +5694,11 @@
             "label": "Date column",
             "key": "dateColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "datetimeLike"
+              }
+            },
             "required": true
           },
           {
@@ -5598,6 +5706,11 @@
             "label": "Open column",
             "key": "openColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5605,6 +5718,11 @@
             "label": "Close column",
             "key": "closeColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5612,6 +5730,11 @@
             "label": "High column",
             "key": "highColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5619,6 +5742,11 @@
             "label": "Low column",
             "key": "lowColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
