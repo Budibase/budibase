@@ -69,6 +69,7 @@
     box-sizing: border-box;
     border: 1px solid var(--grey-4);
     position: absolute;
+    pointer-events: none;
     z-index: 1000;
   }
 
