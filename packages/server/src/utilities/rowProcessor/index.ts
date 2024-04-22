@@ -244,7 +244,8 @@ export async function outputProcessing<T extends Row[] | Row>(
       }
     } else if (
       !opts.skipBBReferences &&
-      column.type == FieldType.BB_REFERENCE
+      (column.type == FieldType.BB_REFERENCE ||
+        column.type == FieldType.BB_REFERENCE_SINGLE)
     ) {
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(

@@ -61,7 +61,8 @@ function generateSchema(
       case FieldType.BARCODEQR:
         schema.text(key)
         break
-      case FieldType.BB_REFERENCE: {
+      case FieldType.BB_REFERENCE:
+      case FieldType.BB_REFERENCE_SINGLE: {
         const subtype = column.subtype
         switch (subtype) {
           case FieldSubtype.USER:
@@ -127,6 +128,8 @@ function generateSchema(
             .references(`${tableName}.${relatedPrimary}`)
         }
         break
+      default:
+        utils.unreachable(column.type)
     }
   }
 

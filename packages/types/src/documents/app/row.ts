@@ -107,6 +107,8 @@ export enum FieldType {
    * an array of resource IDs, the API will squash these down and validate them before saving the row.
    */
   BB_REFERENCE = "bb_reference",
+  // TODO
+  BB_REFERENCE_SINGLE = "bb_reference_single",
 }
 
 export interface RowAttachment {
