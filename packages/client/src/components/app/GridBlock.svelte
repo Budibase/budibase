@@ -11,6 +11,7 @@
   export let allowEditRows = true
   export let allowDeleteRows = true
   export let stripeRows = false
+  export let quiet = false
   export let initialFilter = null
   export let initialSortColumn = null
   export let initialSortOrder = null
@@ -117,6 +118,7 @@
       datasource={table}
       {API}
       {stripeRows}
+      {quiet}
       {initialFilter}
       {initialSortColumn}
       {initialSortOrder}
