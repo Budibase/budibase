@@ -1,7 +1,7 @@
 <li>
-<div class="exampleLine">
-  <slot />
-</div>
+  <div class="exampleLine">
+    <slot />
+  </div>
 </li>
 
 <style>

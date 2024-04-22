@@ -101,14 +101,19 @@ export const propsUseBinding = (props, bindingKey) => {
 /**
  * Gets the definition of this component's settings from the manifest
  */
-export const getSettingsDefinition = (definition) => {
+export const getSettingsDefinition = definition => {
   if (!definition) {
     return []
   }
   let settings = []
   definition.settings?.forEach(setting => {
     if (setting.section) {
-      settings = settings.concat((setting.settings || [])?.map(childSetting => ({ ...childSetting, sectionDependsOn: setting.dependsOn })))
+      settings = settings.concat(
+        (setting.settings || [])?.map(childSetting => ({
+          ...childSetting,
+          sectionDependsOn: setting.dependsOn,
+        }))
+      )
     } else {
       settings.push(setting)
     }

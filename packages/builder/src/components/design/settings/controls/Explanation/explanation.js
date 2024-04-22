@@ -11,21 +11,28 @@ export const messages = {
 export const support = {
   unsupported: Symbol("explanation-unsupported"),
   partialSupport: Symbol("explanation-partialSupport"),
-  supported: Symbol("explanation-supported")
+  supported: Symbol("explanation-supported"),
 }
-
 
 const getSupport = (type, explanation) => {
   if (!explanation?.typeSupport) {
     return support.supported
   }
 
-  if (explanation?.typeSupport?.supported?.find(mapping => mapping === type || mapping?.type === type)) {
-    return support.supported;
+  if (
+    explanation?.typeSupport?.supported?.find(
+      mapping => mapping === type || mapping?.type === type
+    )
+  ) {
+    return support.supported
   }
 
-  if (explanation?.typeSupport?.partialSupport?.find(mapping => mapping === type || mapping?.type === type)) {
-    return support.partialSupport;
+  if (
+    explanation?.typeSupport?.partialSupport?.find(
+      mapping => mapping === type || mapping?.type === type
+    )
+  ) {
+    return support.partialSupport
   }
 
   return support.unsupported
@@ -36,17 +43,23 @@ const getSupportMessage = (type, explanation) => {
     return null
   }
 
-  const supported = explanation?.typeSupport?.supported?.find(mapping => mapping?.type === type)
+  const supported = explanation?.typeSupport?.supported?.find(
+    mapping => mapping?.type === type
+  )
   if (supported) {
     return messages[supported?.message]
   }
 
-  const partialSupport = explanation?.typeSupport?.partialSupport?.find(mapping => mapping?.type === type)
+  const partialSupport = explanation?.typeSupport?.partialSupport?.find(
+    mapping => mapping?.type === type
+  )
   if (partialSupport) {
     return messages[partialSupport?.message]
   }
 
-  const unsupported = explanation?.typeSupport?.unsupported?.find(mapping => mapping?.type === type)
+  const unsupported = explanation?.typeSupport?.unsupported?.find(
+    mapping => mapping?.type === type
+  )
   if (unsupported) {
     return messages[unsupported?.message]
   }
@@ -63,14 +76,14 @@ export const getExplanationMessagesAndSupport = (fieldSchema, explanation) => {
 
     const isRequired = fieldSchema?.constraints?.presence?.allowEmpty === false
     if (!isRequired) {
-      explanationMessagesAndSupport.messages.push(messages.notRequired);
+      explanationMessagesAndSupport.messages.push(messages.notRequired)
     }
 
-    return explanationMessagesAndSupport;
+    return explanationMessagesAndSupport
   } catch (e) {
     return {
       support: support.partialSupport,
-      messages: [messages.contextError]
+      messages: [messages.contextError],
     }
   }
 }
@@ -79,7 +92,7 @@ export const getExplanationWithPresets = (explanation, presets) => {
   if (explanation?.typeSupport?.preset) {
     return {
       ...explanation,
-      typeSupport: presets[explanation?.typeSupport?.preset]
+      typeSupport: presets[explanation?.typeSupport?.preset],
     }
   }
 

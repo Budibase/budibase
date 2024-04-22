@@ -1,16 +1,15 @@
 <script>
   import { Line, InfoWord, DocumentationLink, Space, Text } from "../typography"
-  import subjects from '../subjects'
+  import subjects from "../subjects"
 
   export let setExplanationSubject
 </script>
 
-
 <Line>
   <Text value="No " />
   <InfoWord
-  on:mouseenter={() => setExplanationSubject(subjects.notRequired)}
-  on:mouseleave={() => setExplanationSubject(subjects.none)}
+    on:mouseenter={() => setExplanationSubject(subjects.notRequired)}
+    on:mouseleave={() => setExplanationSubject(subjects.none)}
     text="required"
   />
   <Space />

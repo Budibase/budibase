@@ -24,10 +24,12 @@
   export let gradient
 
   $: series = getSeries(dataProvider, valueColumns)
-  $: categories = getCategories(dataProvider, labelColumn);
+  $: categories = getCategories(dataProvider, labelColumn)
 
-  $: labelType = dataProvider?.schema?.[labelColumn]?.type === 'datetime' ? 
-    "datetime" : "category"
+  $: labelType =
+    dataProvider?.schema?.[labelColumn]?.type === "datetime"
+      ? "datetime"
+      : "category"
   $: xAxisFormatter = getFormatter(labelType, valueUnits, "x")
   $: yAxisFormatter = getFormatter(labelType, valueUnits, "y")
   $: fill = getFill(gradient)
@@ -35,11 +37,11 @@
   $: options = {
     series,
     stroke: {
-      curve: curve.toLowerCase()
+      curve: curve.toLowerCase(),
     },
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
     theme: {
-      palette: palette === "Custom" ? null : palette
+      palette: palette === "Custom" ? null : palette,
     },
     fill,
     legend: {
@@ -54,7 +56,7 @@
       text: title,
     },
     dataLabels: {
-      enabled: dataLabels
+      enabled: dataLabels,
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,
@@ -62,7 +64,7 @@
       type: "area",
       stacked,
       animations: {
-        enabled: animate
+        enabled: animate,
       },
       toolbar: {
         show: false,
@@ -75,24 +77,24 @@
       type: labelType,
       categories,
       labels: {
-        formatter: xAxisFormatter
+        formatter: xAxisFormatter,
       },
       title: {
-        text: xAxisLabel
-      }
+        text: xAxisLabel,
+      },
     },
     yaxis: {
       labels: {
-        formatter: yAxisFormatter
+        formatter: yAxisFormatter,
       },
       title: {
-        text: yAxisLabel
-      }
-    }
+        text: yAxisLabel,
+      },
+    },
   }
 
   const getSeries = (dataProvider, valueColumns = []) => {
-    const rows = dataProvider.rows ?? [];
+    const rows = dataProvider.rows ?? []
 
     return valueColumns.map(column => ({
       name: column,
@@ -100,7 +102,7 @@
         const value = row?.[column]
 
         if (dataProvider?.schema?.[column]?.type === "datetime" && value) {
-          return Date.parse(value);
+          return Date.parse(value)
         }
 
         return value
@@ -109,7 +111,7 @@
   }
 
   const getCategories = (dataProvider, labelColumn) => {
-    const rows = dataProvider.rows ?? [];
+    const rows = dataProvider.rows ?? []
 
     return rows.map(row => {
       const value = row?.[labelColumn]
@@ -119,7 +121,7 @@
         return ""
       }
 
-      return value;
+      return value
     })
   }
 
@@ -137,7 +139,7 @@
     return formatters[valueUnits]
   }
 
-  const getFill = (gradient) => {
+  const getFill = gradient => {
     if (gradient) {
       return {
         type: "gradient",
@@ -146,11 +148,11 @@
           opacityFrom: 0.7,
           opacityTo: 0.9,
           stops: [0, 90, 100],
-        }
+        },
       }
     }
 
-    return { type: 'solid' }
+    return { type: "solid" }
   }
 </script>
 

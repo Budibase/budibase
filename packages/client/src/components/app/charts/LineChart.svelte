@@ -19,21 +19,23 @@
   export let c1, c2, c3, c4, c5
 
   $: series = getSeries(dataProvider, valueColumns)
-  $: categories = getCategories(dataProvider, labelColumn);
+  $: categories = getCategories(dataProvider, labelColumn)
 
-  $: labelType = dataProvider?.schema?.[labelColumn]?.type === 'datetime' ? 
-    "datetime" : "category"
+  $: labelType =
+    dataProvider?.schema?.[labelColumn]?.type === "datetime"
+      ? "datetime"
+      : "category"
   $: xAxisFormatter = getFormatter(labelType, valueUnits, "x")
   $: yAxisFormatter = getFormatter(labelType, valueUnits, "y")
 
   $: options = {
     series,
     stroke: {
-      curve: curve.toLowerCase()
+      curve: curve.toLowerCase(),
     },
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
     theme: {
-      palette: palette === "Custom" ? null : palette
+      palette: palette === "Custom" ? null : palette,
     },
     legend: {
       show: legend,
@@ -47,14 +49,14 @@
       text: title,
     },
     dataLabels: {
-      enabled: dataLabels
+      enabled: dataLabels,
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,
       width: width == null || width === "" ? "100%" : width,
       type: "line",
       animations: {
-        enabled: animate
+        enabled: animate,
       },
       toolbar: {
         show: false,
@@ -67,24 +69,24 @@
       type: labelType,
       categories,
       labels: {
-        formatter: xAxisFormatter
+        formatter: xAxisFormatter,
       },
       title: {
-        text: xAxisLabel
-      }
+        text: xAxisLabel,
+      },
     },
     yaxis: {
       labels: {
-        formatter: yAxisFormatter
+        formatter: yAxisFormatter,
       },
       title: {
-        text: yAxisLabel
-      }
-    }
+        text: yAxisLabel,
+      },
+    },
   }
 
   const getSeries = (dataProvider, valueColumns = []) => {
-    const rows = dataProvider.rows ?? [];
+    const rows = dataProvider.rows ?? []
 
     return valueColumns.map(column => ({
       name: column,
@@ -92,7 +94,7 @@
         const value = row?.[column]
 
         if (dataProvider?.schema?.[column]?.type === "datetime" && value) {
-          return Date.parse(value);
+          return Date.parse(value)
         }
 
         return value
@@ -101,7 +103,7 @@
   }
 
   const getCategories = (dataProvider, labelColumn) => {
-    const rows = dataProvider.rows ?? [];
+    const rows = dataProvider.rows ?? []
 
     return rows.map(row => {
       const value = row?.[labelColumn]
@@ -111,7 +113,7 @@
         return ""
       }
 
-      return value;
+      return value
     })
   }
 

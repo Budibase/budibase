@@ -202,8 +202,8 @@
             aria-selected="true"
             tabindex="0"
             on:click={() => onSelectOption(getOptionValue(option, idx))}
-            on:mouseenter={(e) => onOptionMouseenter(e, option)}
-            on:mouseleave={(e) => onOptionMouseleave(e, option)}
+            on:mouseenter={e => onOptionMouseenter(e, option)}
+            on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
           >
             {#if getOptionIcon(option, idx)}

@@ -1,14 +1,10 @@
 <script>
-  import {
-    decodeJSBinding,
-  } from "@budibase/string-templates"
+  import { decodeJSBinding } from "@budibase/string-templates"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import {
-    EditorModes,
-  } from "components/common/CodeEditor"
+  import { EditorModes } from "components/common/CodeEditor"
   import {
     runtimeToReadableBinding,
-    getDatasourceForProvider
+    getDatasourceForProvider,
   } from "dataBinding"
   import { tables, selectedScreen, selectedComponent } from "stores/builder"
   import { getBindings } from "components/backend/DataTable/formula"
@@ -17,7 +13,7 @@
   $: datasource = getDatasourceForProvider($selectedScreen, $selectedComponent)
   $: tableId = datasource.tableId
   $: table = $tables?.list?.find(table => table._id === tableId)
-  $: bindings = getBindings({ table });
+  $: bindings = getBindings({ table })
 
   $: readableBinding = runtimeToReadableBinding(bindings, value)
 
@@ -25,13 +21,13 @@
 </script>
 
 <div class="editor">
-<CodeEditor
-  readonly
-  readonlyLineNumbers
-  value={isJs ? decodeJSBinding(readableBinding) : readableBinding}
-  jsBindingWrapping={isJs}
-  mode={isJs ? EditorModes.JS :EditorModes.Handlebars}
-/>
+  <CodeEditor
+    readonly
+    readonlyLineNumbers
+    value={isJs ? decodeJSBinding(readableBinding) : readableBinding}
+    jsBindingWrapping={isJs}
+    mode={isJs ? EditorModes.JS : EditorModes.Handlebars}
+  />
 </div>
 
 <style>

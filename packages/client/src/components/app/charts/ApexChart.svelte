@@ -1,8 +1,8 @@
 <script>
   import { getContext } from "svelte"
-  import ApexCharts from 'apexcharts'
+  import ApexCharts from "apexcharts"
   import { Icon } from "@budibase/bbui"
-  import { cloneDeep } from "lodash";
+  import { cloneDeep } from "lodash"
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -10,24 +10,24 @@
   export let options
 
   // Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone options here to provide a buffer.
-  $: optionsCopy = cloneDeep(options);
+  $: optionsCopy = cloneDeep(options)
 
-  let chartElement;
-  let chart;
+  let chartElement
+  let chart
   let currentType = null
 
-  const updateChart = async (newOptions) => {
+  const updateChart = async newOptions => {
     // Line charts have issues transitioning between "datetime" and "category" types, and will ignore the provided formatters
     // in certain scenarios. Rerendering the chart when the user changes label type fixes this, but unfortunately it does
     // cause a little bit of jankiness with animations.
-    if (newOptions?.xaxis?.type && newOptions.xaxis.type !== currentType ) {
-      await renderChart(chartElement);
+    if (newOptions?.xaxis?.type && newOptions.xaxis.type !== currentType) {
+      await renderChart(chartElement)
     } else {
       await chart?.updateOptions(newOptions)
     }
   }
 
-  const renderChart = async (newChartElement) => {
+  const renderChart = async newChartElement => {
     try {
       await chart?.destroy()
       chart = new ApexCharts(newChartElement, optionsCopy)
@@ -37,7 +37,10 @@
       // Apex for some reason throws this error when creating a new chart.
       // It doesn't actually cause any issues with the function of the chart, so
       // just suppress it so the console doesn't get spammed
-      if (e.message !== "Cannot read properties of undefined (reading 'parentNode')") {
+      if (
+        e.message !==
+        "Cannot read properties of undefined (reading 'parentNode')"
+      ) {
         throw e
       }
     }
@@ -54,8 +57,16 @@
 
 {#key optionsCopy?.customColor}
   <div class:hide use:styleable={$component.styles} bind:this={chartElement} />
-  {#if $builderStore.inBuilder && noData }
-    <div class="component-placeholder" use:styleable={{ ...$component.styles, normal: {}, custom: null, empty: true }}>
+  {#if $builderStore.inBuilder && noData}
+    <div
+      class="component-placeholder"
+      use:styleable={{
+        ...$component.styles,
+        normal: {},
+        custom: null,
+        empty: true,
+      }}
+    >
       <Icon name="Alert" color="var(--spectrum-global-color-static-red-600)" />
       Add rows to your data source to start using your component
     </div>

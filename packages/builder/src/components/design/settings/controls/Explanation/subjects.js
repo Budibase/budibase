@@ -7,7 +7,7 @@ const subjects = {
   stringsAsDates: Symbol("explanation-strings-as-dates"),
   notRequired: Symbol("details-modal-not-required"),
   scalarJsonOnly: Symbol("explanation-scalar-json-only"),
-  none: Symbol("details-modal-none")
+  none: Symbol("details-modal-none"),
 }
 
-export default subjects;
+export default subjects

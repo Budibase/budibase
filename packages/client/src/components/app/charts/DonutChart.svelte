@@ -1,6 +1,6 @@
 <script>
   import ApexChart from "./ApexChart.svelte"
-  import formatters from "./formatters";
+  import formatters from "./formatters"
 
   export let title
   export let dataProvider
@@ -14,17 +14,19 @@
   export let palette
   export let c1, c2, c3, c4, c5
 
-  $: labelType = dataProvider?.schema?.[labelColumn]?.type === 'datetime' ? 
-    "datetime" : "category"
+  $: labelType =
+    dataProvider?.schema?.[labelColumn]?.type === "datetime"
+      ? "datetime"
+      : "category"
   $: series = getSeries(dataProvider, valueColumn)
-  $: labels = getLabels(dataProvider, labelColumn, labelType);
+  $: labels = getLabels(dataProvider, labelColumn, labelType)
 
   $: options = {
     series,
     labels,
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
     theme: {
-      palette: palette === "Custom" ? null : palette
+      palette: palette === "Custom" ? null : palette,
     },
     legend: {
       show: legend,
@@ -38,14 +40,14 @@
       text: title,
     },
     dataLabels: {
-      enabled: dataLabels
+      enabled: dataLabels,
     },
     chart: {
       height: height == null || height === "" ? "auto" : height,
       width: width == null || width === "" ? "100%" : width,
       type: "donut",
       animations: {
-        enabled: animate
+        enabled: animate,
       },
       toolbar: {
         show: false,
@@ -57,27 +59,27 @@
   }
 
   const getSeries = (dataProvider, valueColumn) => {
-    const rows = dataProvider.rows ?? [];
+    const rows = dataProvider.rows ?? []
 
     return rows.map(row => {
       const value = row?.[valueColumn]
 
       if (dataProvider?.schema?.[valueColumn]?.type === "datetime" && value) {
-        return Date.parse(value);
+        return Date.parse(value)
       }
 
       // This chart doesn't automatically parse strings into numbers
-      const numValue = parseFloat(value);
+      const numValue = parseFloat(value)
       if (isNaN(numValue)) {
-        return 0;
+        return 0
       }
 
-      return numValue;
+      return numValue
     })
   }
 
   const getLabels = (dataProvider, labelColumn, labelType) => {
-    const rows = dataProvider.rows ?? [];
+    const rows = dataProvider.rows ?? []
 
     return rows.map(row => {
       const value = row?.[labelColumn]
@@ -89,7 +91,7 @@
         return formatters["Datetime"](value)
       }
 
-      return value;
+      return value
     })
   }
 </script>

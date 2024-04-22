@@ -1,6 +1,7 @@
 <script>
   export let noWrap = false
 </script>
+
 <div class="line">
   <span class="bullet">•</span>
   <div class="content" class:noWrap>

@@ -1,6 +1,12 @@
 <script>
-  import { Line, InfoWord, DocumentationLink, Text, Period } from "../typography"
-  import subjects from '../subjects'
+  import {
+    Line,
+    InfoWord,
+    DocumentationLink,
+    Text,
+    Period,
+  } from "../typography"
+  import subjects from "../subjects"
 
   export let columnName
   export let columnIcon
@@ -8,7 +14,7 @@
   export let tableHref
   export let setExplanationSubject
 
-  const getDocLink = (columnType) => {
+  const getDocLink = columnType => {
     if (columnType === "Number") {
       return "https://docs.budibase.com/docs/number"
     }
@@ -42,9 +48,7 @@
     href={tableHref}
     text={columnName}
   />
-  <Text
-    value=" is a "
-  />
+  <Text value=" is a " />
   <DocumentationLink
     href={getDocLink(columnType)}
     icon={columnIcon}

@@ -2,10 +2,10 @@
   import { onMount } from "svelte"
 
   export let heading = ""
-  let body;
+  let body
 
-  const handleScroll = (e) => {
-    if (!body) return;
+  const handleScroll = e => {
+    if (!body) return
 
     body.scrollTo({ top: body.scrollTop + e.deltaY, behavior: "smooth" })
   }
@@ -16,7 +16,7 @@
     return () => {
       window.removeEventListener("wheel", handleScroll)
     }
-  });
+  })
 </script>
 
 <div class="heading">

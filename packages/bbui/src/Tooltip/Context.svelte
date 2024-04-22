@@ -5,7 +5,7 @@
 
   export let anchor
   export let visible = false
-  export let offset = 0;
+  export let offset = 0
 
   $: target = getContext(Context.PopoverRoot) || "#app"
 
@@ -16,12 +16,13 @@
 
   const updatePosition = (anchor, tooltip) => {
     if (anchor == null || tooltip == null) {
-      return;
+      return
     }
 
     requestAnimationFrame(() => {
-      const rect = anchor.getBoundingClientRect();
-      const windowOffset = (window.innerHeight - offset) - (tooltip.clientHeight + rect.y)
+      const rect = anchor.getBoundingClientRect()
+      const windowOffset =
+        window.innerHeight - offset - (tooltip.clientHeight + rect.y)
       const tooltipWidth = tooltip.clientWidth
 
       x = rect.x - tooltipWidth - offset
@@ -32,11 +33,11 @@
   $: updatePosition(anchor, tooltip)
 
   const handleMouseenter = () => {
-    hovering = true;
+    hovering = true
   }
 
   const handleMouseleave = () => {
-    hovering = false;
+    hovering = false
   }
 </script>
 
@@ -50,10 +51,7 @@
     class="wrapper"
     class:visible={visible || hovering}
   >
-    <div
-      bind:this={tooltip}
-      class="tooltip"
-    >
+    <div bind:this={tooltip} class="tooltip">
       <slot />
     </div>
   </div>
@@ -62,7 +60,7 @@
 <style>
   .wrapper {
     background-color: var(--background-alt);
-    box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.42);
+    box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.42);
     opacity: 0;
     overflow: hidden;
 

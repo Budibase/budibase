@@ -1,12 +1,12 @@
 <script>
   import { Line, InfoWord, DocumentationLink, Text } from "../typography"
-  import subjects from '../subjects'
-  import * as explanation from '../explanation'
+  import subjects from "../subjects"
+  import * as explanation from "../explanation"
 
   export let setExplanationSubject
   export let support
 
-  const getIcon = (support) => {
+  const getIcon = support => {
     if (support === explanation.support.unsupported) {
       return "Alert"
     } else if (support === explanation.support.supported) {
@@ -16,7 +16,7 @@
     return "AlertCheck"
   }
 
-  const getColor = (support) => {
+  const getColor = support => {
     if (support === explanation.support.unsupported) {
       return "var(--red)"
     } else if (support === explanation.support.supported) {
@@ -26,7 +26,7 @@
     return "var(--yellow)"
   }
 
-  const getText = (support) => {
+  const getText = support => {
     if (support === explanation.support.unsupported) {
       return "Not compatible"
     } else if (support === explanation.support.supported) {
@@ -36,9 +36,9 @@
     return "Partially compatible"
   }
 
-  $: icon = getIcon(support);
-  $: color = getColor(support);
-  $: text = getText(support);
+  $: icon = getIcon(support)
+  $: color = getColor(support)
+  $: text = getText(support)
 </script>
 
 <Line>
