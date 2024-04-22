@@ -11,13 +11,6 @@
   import Tags from "../../Tags/Tags.svelte"
   import Tag from "../../Tags/Tag.svelte"
   import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
-  import {
-    default as AbsTooltip,
-    TooltipPosition,
-    TooltipType,
-  } from "../../Tooltip/AbsTooltip.svelte"
-  import ContextTooltip from "../../Tooltip/Context.svelte"
-  import { Heading } from "@budibase/bbui"
 
   export let id = null
   export let disabled = false
@@ -33,8 +26,6 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
-  export let getOptionIconTooltip = () => null
-  export let getOptionTooltip = () => null
   export let useOptionIconImage = false
   export let getOptionColour = () => null
   export let getOptionSubtitle = () => null
@@ -56,6 +47,7 @@
   const dispatch = createEventDispatcher()
 
   let button
+  let popover
   let component
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
@@ -161,6 +153,7 @@
 <Popover
   anchor={customAnchor ? customAnchor : button}
   align={align || "left"}
+  bind:this={popover}
   {open}
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
@@ -168,29 +161,85 @@
   customHeight={customPopoverHeight}
 >
   <div
-      class="popover-content"
-      class:auto-width={autoWidth}
-      use:clickOutside={() => (open = false)}
-    >
-      {#if autocomplete}
-        <Search
-          value={searchTerm}
-          on:change={event => (searchTerm = event.detail)}
-          {disabled}
-          placeholder="Search"
-        />
+    class="popover-content"
+    class:auto-width={autoWidth}
+    use:clickOutside={() => (open = false)}
+  >
+    {#if autocomplete}
+      <Search
+        value={searchTerm}
+        on:change={event => (searchTerm = event.detail)}
+        {disabled}
+        placeholder="Search"
+      />
+    {/if}
+    <ul class="spectrum-Menu" role="listbox" bind:this={component}>
+      {#if placeholderOption}
+        <li
+          class="spectrum-Menu-item placeholder"
+          class:is-selected={isPlaceholder}
+          role="option"
+          aria-selected="true"
+          tabindex="0"
+          on:click={() => onSelectOption(null)}
+        >
+          <span class="spectrum-Menu-itemLabel">{placeholderOption}</span>
+          <svg
+            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+            focusable="false"
+            aria-hidden="true"
+          >
+            <use xlink:href="#spectrum-css-icon-Checkmark100" />
+          </svg>
+        </li>
       {/if}
-      <ul class="spectrum-Menu" role="listbox" bind:this={component}>
-        {#if placeholderOption}
+      {#if filteredOptions.length}
+        {#each filteredOptions as option, idx}
           <li
-            class="spectrum-Menu-item placeholder"
-            class:is-selected={isPlaceholder}
+            class="spectrum-Menu-item"
+            class:is-selected={isOptionSelected(getOptionValue(option, idx))}
             role="option"
             aria-selected="true"
             tabindex="0"
-            on:click={() => onSelectOption(null)}
+            on:click={() => onSelectOption(getOptionValue(option, idx))}
+            on:mouseenter={(e) => onOptionMouseenter(e, option)}
+            on:mouseleave={(e) => onOptionMouseleave(e, option)}
+            class:is-disabled={!isOptionEnabled(option)}
           >
-            <span class="spectrum-Menu-itemLabel">{placeholderOption}</span>
+            {#if getOptionIcon(option, idx)}
+              <span class="option-extra icon">
+                {#if useOptionIconImage}
+                  <img
+                    src={getOptionIcon(option, idx)}
+                    alt="icon"
+                    width="15"
+                    height="15"
+                  />
+                {:else}
+                  <Icon size="S" name={getOptionIcon(option, idx)} />
+                {/if}
+              </span>
+            {/if}
+            {#if getOptionColour(option, idx)}
+              <span class="option-extra">
+                <StatusLight square color={getOptionColour(option, idx)} />
+              </span>
+            {/if}
+            <span class="spectrum-Menu-itemLabel">
+              {getOptionLabel(option, idx)}
+              {#if getOptionSubtitle(option, idx)}
+                <span class="subtitle-text">
+                  {getOptionSubtitle(option, idx)}
+                </span>
+              {/if}
+            </span>
+            {#if option.tag}
+              <span class="option-tag">
+                <Tags>
+                  <Tag icon="LockClosed">{option.tag}</Tag>
+                </Tags>
+              </span>
+            {/if}
             <svg
               class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
               focusable="false"
@@ -199,88 +248,25 @@
               <use xlink:href="#spectrum-css-icon-Checkmark100" />
             </svg>
           </li>
-        {/if}
-        {#if filteredOptions.length}
-          {#each filteredOptions as option, idx}
-              <li
-                on:mouseenter={(e) => onOptionMouseenter(e, option)}
-                on:mouseleave={(e) => onOptionMouseleave(e, option)}
-                class="spectrum-Menu-item"
-                class:is-selected={isOptionSelected(getOptionValue(option, idx))}
-                role="option"
-                aria-selected="true"
-                tabindex="0"
-                on:click={() => onSelectOption(getOptionValue(option, idx))}
-                class:is-disabled={!isOptionEnabled(option)}
-              >
-                {#if getOptionIcon(option, idx)}
-                  <span class="option-extra icon">
-                    {#if useOptionIconImage}
-                      <img
-                        src={getOptionIcon(option, idx)}
-                        alt="icon"
-                        width="15"
-                        height="15"
-                      />
-                    {:else}
-                      <Icon tooltip={getOptionIconTooltip(option)} size="S" name={getOptionIcon(option, idx)} />
-                    {/if}
-                  </span>
-                {/if}
-                {#if getOptionColour(option, idx)}
-                  <span class="option-extra">
-                    <StatusLight square color={getOptionColour(option, idx)} />
-                  </span>
-                {/if}
-                <span class="spectrum-Menu-itemLabel">
-                  {getOptionLabel(option, idx)}
-                  {#if getOptionSubtitle(option, idx)}
-                    <span class="subtitle-text">
-                      {getOptionSubtitle(option, idx)}
-                    </span>
-                  {/if}
-                </span>
-                {#if option.tag}
-                  <span class="option-tag">
-                    <Tags>
-                      <Tag icon="LockClosed">{option.tag}</Tag>
-                    </Tags>
-                  </span>
-                {/if}
-                <svg
-                  class="selectedIcon spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-                  focusable="false"
-                  aria-hidden="true"
-                >
-                  <use xlink:href="#spectrum-css-icon-Checkmark100" />
-                </svg>
-              </li>
-          {/each}
-        {/if}
-      </ul>
-
-      {#if loading}
-        <div class="loading" class:loading--withAutocomplete={autocomplete}>
-          <ProgressCircle size="S" />
-        </div>
+        {/each}
       {/if}
+    </ul>
 
-      {#if footer}
-        <div class="footer">
-          {footer}
-        </div>
-      {/if}
-    </div>
-  </Popover>
+    {#if loading}
+      <div class="loading" class:loading--withAutocomplete={autocomplete}>
+        <ProgressCircle size="S" />
+      </div>
+    {/if}
+
+    {#if footer}
+      <div class="footer">
+        {footer}
+      </div>
+    {/if}
+  </div>
+</Popover>
+
 <style>
-  .spectrum-Menu {
-    display: block;
-  }
-
-  .spectrum-Menu:hover .context {
-    display: block;
-  }
-
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
@@ -351,7 +337,7 @@
     right: 2px;
     top: 2px;
   }
-    .popover-content :global(.spectrum-Search .spectrum-Textfield-icon) {
+  .popover-content :global(.spectrum-Search .spectrum-Textfield-icon) {
     top: 9px;
   }
 
