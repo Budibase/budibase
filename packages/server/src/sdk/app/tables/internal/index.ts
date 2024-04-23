@@ -10,6 +10,7 @@ import {
 import {
   hasTypeChanged,
   TableSaveFunctions,
+  internalTableCleanup,
 } from "../../../../api/controllers/table/utils"
 import { EventType, updateLinks } from "../../../../db/linkedRows"
 import { cloneDeep } from "lodash/fp"
@@ -128,16 +129,20 @@ export async function destroy(table: Table) {
   const db = context.getAppDB()
   const tableId = table._id!
 
-  // Delete all rows for that table
-  const rowsData = await db.allDocs(
-    getRowParams(tableId, null, {
-      include_docs: true,
-    })
-  )
-  await db.bulkDocs(
-    rowsData.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
-  )
-  await quotas.removeRows(rowsData.rows.length, {
+  // Delete all rows for that table - we have to retrieve the full rows for
+  // attachment cleanup, this may be worth investigating if there is a better
+  // way - we could delete all rows without the `include_docs` which would be faster
+  const rows = (
+    await db.allDocs<Row>(
+      getRowParams(tableId, null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(data => data.doc!)
+  await db.bulkDocs(rows.map((row: Row) => ({ ...row, _deleted: true })))
+
+  // remove rows from quota
+  await quotas.removeRows(rows.length, {
     tableId,
   })
 
@@ -150,25 +155,8 @@ export async function destroy(table: Table) {
   // don't remove the table itself until very end
   await db.remove(tableId, table._rev)
 
-  // remove table search index
-  if (!env.isTest() || env.COUCH_DB_URL) {
-    const currentIndexes = await db.getIndexes()
-    const existingIndex = currentIndexes.indexes.find(
-      (existing: any) => existing.name === `search:${tableId}`
-    )
-    if (existingIndex) {
-      await db.deleteIndex(existingIndex)
-    }
-  }
-
-  // has to run after, make sure it has _id
-  await runStaticFormulaChecks(table, {
-    deletion: true,
-  })
-  await AttachmentCleanup.tableDelete(
-    table,
-    rowsData.rows.map((row: any) => row.doc)
-  )
+  // final cleanup, attachments, indexes, SQS
+  await internalTableCleanup(table, rows)
 
   return { table }
 }
