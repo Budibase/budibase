@@ -154,7 +154,7 @@ spec:
         - name: ENCRYPTION_KEY
           value: {{ .Values.globals.bbEncryptionKey | quote }}
         - name: TEMP_BUCKET_NAME
-          value: {{ .Values.global.tempBucketName | quote }}
+          value: {{ .Values.globals.tempBucketName | quote }}
         {{ if .Values.globals.bbAdminUserEmail }}
         - name: BB_ADMIN_USER_EMAIL
           value: {{ .Values.globals.bbAdminUserEmail | quote }}

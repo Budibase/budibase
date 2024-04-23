@@ -159,7 +159,7 @@ spec:
         - name: ENCRYPTION_KEY
           value: {{ .Values.globals.bbEncryptionKey | quote }}
         - name: TEMP_BUCKET_NAME
-          value: {{ .Values.global.tempBucketName | quote }}
+          value: {{ .Values.globals.tempBucketName | quote }}
         {{ if .Values.globals.datadogApmEnabled }}
         - name: DD_LOGS_INJECTION
           value: {{ .Values.globals.datadogApmEnabled | quote }}
