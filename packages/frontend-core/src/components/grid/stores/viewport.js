@@ -1,7 +1,6 @@
 import { derived } from "svelte/store"
 import {
-  MaxCellRenderHeight,
-  MaxCellRenderWidthOverflow,
+  MaxCellRenderOverflow,
   MinColumnWidth,
   ScrollBarSize,
 } from "../lib/constants"
@@ -95,11 +94,11 @@ export const deriveStores = context => {
 
       // Compute the last row index with space to render popovers below it
       const minBottom =
-        $height - ScrollBarSize * 3 - MaxCellRenderHeight + offset
+        $height - ScrollBarSize * 3 - MaxCellRenderOverflow + offset
       const lastIdx = Math.floor(minBottom / $rowHeight)
 
       // Compute the first row index with space to render popovers above it
-      const minTop = MaxCellRenderHeight + offset
+      const minTop = MaxCellRenderOverflow + offset
       const firstIdx = Math.ceil(minTop / $rowHeight)
 
       // Use the greater of the two indices so that we prefer content below,
@@ -117,7 +116,7 @@ export const deriveStores = context => {
       let inversionIdx = $visibleColumns.length
       for (let i = $visibleColumns.length - 1; i >= 0; i--, inversionIdx--) {
         const rightEdge = $visibleColumns[i].left + $visibleColumns[i].width
-        if (rightEdge + MaxCellRenderWidthOverflow <= cutoff) {
+        if (rightEdge + MaxCellRenderOverflow <= cutoff) {
           break
         }
       }

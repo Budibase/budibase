@@ -103,8 +103,8 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: calc(100% + var(--max-cell-render-width-overflow));
-    height: calc(var(--row-height) + var(--max-cell-render-height));
+    width: calc(100% + var(--max-cell-render-verflow));
+    height: calc(var(--row-height) + var(--max-cell-render-overflow));
     z-index: 1;
     border-radius: 2px;
     resize: none;

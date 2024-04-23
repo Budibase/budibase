@@ -35,7 +35,7 @@
   $: lookupMap = buildLookupMap(value, isOpen)
   $: debouncedSearch(searchString)
   $: {
-    if (!focused) {
+    if (!focused && isOpen) {
       close()
     }
   }
@@ -451,7 +451,7 @@
     left: 0;
     width: 100%;
     max-height: calc(
-      var(--max-cell-render-height) + var(--row-height) - var(--values-height)
+      var(--max-cell-render-overflow) + var(--row-height) - var(--values-height)
     );
     background: var(--grid-background-alt);
     border: var(--cell-border);

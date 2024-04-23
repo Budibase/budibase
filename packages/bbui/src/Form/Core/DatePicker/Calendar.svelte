@@ -3,10 +3,11 @@
   import Select from "../../Select.svelte"
   import dayjs from "dayjs"
   import NumberInput from "./NumberInput.svelte"
+  import { createEventDispatcher } from "svelte"
 
   export let value
-  export let onChange
 
+  const dispatch = createEventDispatcher()
   const DaysOfWeek = [
     "Monday",
     "Tuesday",
@@ -58,7 +59,10 @@
 
   const handleDateChange = date => {
     const base = value || now
-    onChange(base.year(date.year()).month(date.month()).date(date.date()))
+    dispatch(
+      "change",
+      base.year(date.year()).month(date.month()).date(date.date())
+    )
   }
 
   export const setDate = date => {
@@ -223,6 +227,9 @@
   }
   .spectrum-Calendar-date.is-selected {
     color: white;
+  }
+  .spectrum-Calendar-dayOfWeek {
+    color: var(--spectrum-global-color-gray-600);
   }
 
   /* Style select */

@@ -22,8 +22,7 @@
   import NewRow from "./NewRow.svelte"
   import { createGridWebsocket } from "../lib/websocket"
   import {
-    MaxCellRenderHeight,
-    MaxCellRenderWidthOverflow,
+    MaxCellRenderOverflow,
     GutterWidth,
     DefaultRowHeight,
   } from "../lib/constants"
@@ -78,6 +77,7 @@
     contentLines,
     gridFocused,
     error,
+    focusedCellId,
   } = context
 
   // Keep config store up to date with props
@@ -129,7 +129,7 @@
   class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
+  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines};"
 >
   {#if showControls}
     <div class="controls">
