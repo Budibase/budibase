@@ -20,7 +20,7 @@
 
   const ignoredOriginSelectors = [
     ".spectrum-Modal",
-    ".spectrum-Calendar",
+    ".date-time-popover",
     "#builder-side-panel-container",
     "[data-grid-ignore]",
   ]
