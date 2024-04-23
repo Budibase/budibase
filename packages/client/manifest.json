@@ -6974,6 +6974,12 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Quiet",
+        "key": "quiet",
+        "defaultValue": false
+      },
+      {
         "section": true,
         "name": "Columns",
         "settings": [
