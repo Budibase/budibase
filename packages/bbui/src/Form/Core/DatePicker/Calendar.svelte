@@ -198,10 +198,13 @@
   }
   .spectrum-Calendar-date.is-today.is-selected,
   .spectrum-Calendar-date.is-today.is-selected::before {
-    border-color: var(--spectrum-global-color-blue-700);
+    border-color: var(
+      --primaryColorHover,
+      var(--spectrum-global-color-blue-700)
+    );
   }
   .spectrum-Calendar-date.is-selected:not(.is-range-selection) {
-    background: var(--spectrum-global-color-blue-400);
+    background: var(--primaryColor, var(--spectrum-global-color-blue-400));
   }
   .spectrum-Calendar tr {
     box-sizing: content-box;
