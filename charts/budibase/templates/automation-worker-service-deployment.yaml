@@ -107,6 +107,8 @@ spec:
           value: {{ .Values.services.objectStore.globalBucketName | quote }}
         - name: BACKUPS_BUCKET_NAME
           value: {{ .Values.services.objectStore.backupsBucketName | quote }}
+        - name: TEMP_BUCKET_NAME
+          value: {{ .Values.globals.tempBucketName | quote }}
         - name: PORT
           value: {{ .Values.services.automationWorkers.port | quote }}
         {{ if .Values.services.worker.publicApiRateLimitPerSecond }}
@@ -153,8 +155,6 @@ spec:
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
         - name: ENCRYPTION_KEY
           value: {{ .Values.globals.bbEncryptionKey | quote }}
-        - name: TEMP_BUCKET_NAME
-          value: {{ .Values.globals.tempBucketName | quote }}
         {{ if .Values.globals.bbAdminUserEmail }}
         - name: BB_ADMIN_USER_EMAIL
           value: {{ .Values.globals.bbAdminUserEmail | quote }}
