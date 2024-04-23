@@ -35,7 +35,7 @@
         name: "Server date",
       },
     },
-    ...getUserBindings(true),
+    ...getUserBindings(),
   ]
   const getText = filters => {
     const count = filters?.filter(filter => filter.field)?.length
