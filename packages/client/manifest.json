@@ -3871,12 +3871,6 @@
       },
       {
         "type": "boolean",
-        "label": "24-hour time",
-        "key": "time24hr",
-        "defaultValue": false
-      },
-      {
-        "type": "boolean",
         "label": "Ignore time zones",
         "key": "ignoreTimezones",
         "defaultValue": false
