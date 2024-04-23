@@ -7,8 +7,6 @@ import {
   FieldType,
   RelationshipsJson,
   Row,
-  SearchRowRequest,
-  SearchRowResponse,
   Table,
   UserCtx,
 } from "@budibase/types"

@@ -10,7 +10,7 @@ import {
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import { db, context } from "@budibase/backend-core"
-import { enrichSearchContext, userSearchFromContext } from "./utils"
+import { enrichSearchContext } from "./utils"
 
 export async function searchView(
   ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
