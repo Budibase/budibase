@@ -1,6 +1,6 @@
 import { context, db, HTTPError } from "@budibase/backend-core"
 import env from "../../../../environment"
-import { fullSearch, paginatedSearch, searchInputMapping } from "./utils"
+import { fullSearch, paginatedSearch } from "./utils"
 import { getRowParams, InternalTables } from "../../../../db/utils"
 import {
   Database,
@@ -33,7 +33,8 @@ import pick from "lodash/pick"
 import { breakRowIdField } from "../../../../integrations/utils"
 
 export async function search(
-  options: RowSearchParams
+  options: RowSearchParams,
+  table: Table
 ): Promise<SearchResponse<Row>> {
   const { tableId } = options
 
@@ -51,8 +52,6 @@ export async function search(
     query: {},
   }
 
-  let table = await sdk.tables.getTable(tableId)
-  options = searchInputMapping(table, options)
   if (params.sort && !params.sortType) {
     const schema = table.schema
     const sortField = schema[params.sort]
@@ -122,12 +121,15 @@ export async function exportRows(
 
     result = await outputProcessing<Row[]>(table, response)
   } else if (query) {
-    let searchResponse = await search({
-      tableId,
-      query,
-      sort,
-      sortOrder,
-    })
+    let searchResponse = await search(
+      {
+        tableId,
+        query,
+        sort,
+        sortOrder,
+      },
+      table
+    )
     result = searchResponse.rows
   }
 

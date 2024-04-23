@@ -1,9 +1,9 @@
 <script>
   import { Select, Multiselect } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
+  import { createAPIClient } from "../api"
 
-  import { API } from "api"
-
+  export let API = createAPIClient()
   export let value = null
   export let disabled
   export let multiselect = false

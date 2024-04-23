@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { ActionButton, Modal, ModalContent } from "@budibase/bbui"
-  import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
+  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
 
   export let schema
   export let filters
@@ -40,7 +40,7 @@
     onConfirm={() => dispatch("change", tempValue)}
   >
     <div class="wrapper">
-      <FilterDrawer
+      <FilterBuilder
         allowBindings={false}
         {filters}
         {schemaFields}
