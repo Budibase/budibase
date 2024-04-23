@@ -153,6 +153,8 @@ spec:
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
         - name: ENCRYPTION_KEY
           value: {{ .Values.globals.bbEncryptionKey | quote }}
+        - name: TEMP_BUCKET_NAME
+          value: {{ .Values.global.tempBucketName | quote }}
         {{ if .Values.globals.bbAdminUserEmail }}
         - name: BB_ADMIN_USER_EMAIL
           value: {{ .Values.globals.bbAdminUserEmail | quote }}
