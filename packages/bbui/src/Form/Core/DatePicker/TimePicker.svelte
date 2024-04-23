@@ -2,18 +2,20 @@
   import { cleanInput } from "./utils"
   import dayjs from "dayjs"
   import NumberInput from "./NumberInput.svelte"
+  import { createEventDispatcher } from "svelte"
 
   export let value
-  export let onChange
+
+  const dispatch = createEventDispatcher()
 
   $: displayValue = value || dayjs()
 
   const handleHourChange = e => {
-    onChange(displayValue.hour(parseInt(e.target.value)))
+    dispatch("change", displayValue.hour(parseInt(e.target.value)))
   }
 
   const handleMinuteChange = e => {
-    onChange(displayValue.minute(parseInt(e.target.value)))
+    dispatch("change", displayValue.minute(parseInt(e.target.value)))
   }
 
   const cleanHour = cleanInput({ max: 23, pad: 2, fallback: "00" })
@@ -51,7 +53,7 @@
   .time-picker span {
     font-weight: bold;
     font-size: 18px;
-    z-index: -1;
+    z-index: 0;
     margin-bottom: 1px;
   }
 </style>

@@ -117,7 +117,9 @@ export const copyToClipboard = value => {
   })
 }
 
-export const parseDate = (value, { dateOnly } = {}) => {
+// Parsed a date value. This is usually an ISO string, but can be a
+// bunch of different formats and shapes depending on schema flags.
+export const parseDate = (value, { enableTime = true }) => {
   // If empty then invalid
   if (!value) {
     return null
@@ -131,7 +133,7 @@ export const parseDate = (value, { dateOnly } = {}) => {
     }
 
     // If date only, check for cases where we received a UTC string
-    else if (dateOnly && value.endsWith("Z")) {
+    else if (!enableTime && value.endsWith("Z")) {
       value = value.split("Z")[0]
     }
   }
@@ -148,7 +150,42 @@ export const parseDate = (value, { dateOnly } = {}) => {
   return dayjs(Math.floor(parsedDate.valueOf() / 1000) * 1000)
 }
 
-export const getDateDisplayValue = (value, { enableTime, timeOnly }) => {
+// Stringifies a dayjs object to create an ISO string that respects the various
+// schema flags
+export const stringifyDate = (
+  value,
+  { enableTime = true, timeOnly = false, ignoreTimezones = false }
+) => {
+  if (!value) {
+    return null
+  }
+
+  // Time only fields always ignore timezones, otherwise they make no sense.
+  // For non-timezone-aware fields, create an ISO 8601 timestamp of the exact
+  // time picked, without timezone
+  const offsetForTimezone = (enableTime && ignoreTimezones) || timeOnly
+  if (offsetForTimezone) {
+    // Ensure we use the correct offset for the date
+    const referenceDate = timeOnly ? new Date() : value.toDate()
+    const offset = referenceDate.getTimezoneOffset() * 60000
+    return new Date(value.valueOf() - offset).toISOString().slice(0, -1)
+  }
+
+  // For date-only fields, construct a manual timestamp string without a time
+  // or time zone
+  else if (!enableTime) {
+    const year = value.year()
+    const month = `${value.month() + 1}`.padStart(2, "0")
+    const day = `${value.date()}`.padStart(2, "0")
+    return `${year}-${month}-${day}T00:00:00.000`
+  }
+}
+
+// Formats a dayjs date according to schema flags
+export const getDateDisplayValue = (
+  value,
+  { enableTime = true, timeOnly = false }
+) => {
   if (!value?.isValid()) {
     return ""
   }

@@ -23,7 +23,7 @@
   $: values = Array.isArray(value) ? value : [value].filter(x => x != null)
   $: {
     // Close when deselected
-    if (!focused) {
+    if (!focused && isOpen) {
       close()
     }
   }
@@ -219,7 +219,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    max-height: var(--max-cell-render-height);
+    max-height: var(--max-cell-render-overflow);
     overflow-y: auto;
     border: var(--cell-border);
     box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);

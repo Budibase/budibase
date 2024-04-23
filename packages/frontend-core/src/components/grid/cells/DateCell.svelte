@@ -1,6 +1,13 @@
 <script>
-  import { CoreDatePicker, Icon, Helpers } from "@budibase/bbui"
+  import {
+    CoreDatePickerPopoverContents,
+    Icon,
+    Helpers,
+    clickOutside,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import dayjs from "dayjs"
+  import { debounce } from "../../../utils/utils"
 
   export let value
   export let schema
@@ -9,44 +16,89 @@
   export let readonly = false
   export let api
 
-  let datePickerAPI
   let isOpen
 
   $: timeOnly = schema?.timeOnly
-  $: dateOnly = schema?.dateOnly
+  $: enableTime = !schema?.dateOnly
+  $: ignoreTimezones = schema?.ignoreTimezones
   $: editable = focused && !readonly
-  $: displayValue = getDisplayValue(value, timeOnly, dateOnly)
+  $: parsedValue = Helpers.parseDate(value, {
+    timeOnly,
+    enableTime,
+    ignoreTimezones,
+  })
+  $: displayValue = getDisplayValue(parsedValue, timeOnly, enableTime)
+  // Ensure open state matches desired state
+  $: {
+    if (!focused && isOpen) {
+      close()
+    }
+  }
 
-  const getDisplayValue = (value, timeOnly, dateOnly) => {
-    const parsedDate = Helpers.parseDate(value, { dateOnly })
-    return Helpers.getDateDisplayValue(parsedDate, {
-      enableTime: !dateOnly,
+  const getDisplayValue = (value, timeOnly, enableTime) => {
+    return Helpers.getDateDisplayValue(value, {
+      enableTime,
       timeOnly,
     })
   }
 
-  // Ensure we close flatpickr when unselected
-  $: {
-    if (!focused) {
-      datePickerAPI?.close()
-    }
+  const open = () => {
+    isOpen = true
   }
 
-  const onKeyDown = () => {
-    return false
+  const close = () => {
+    isOpen = false
   }
+
+  const onKeyDown = e => {
+    if (!isOpen) {
+      return false
+    }
+    e.preventDefault()
+    if (e.key === "ArrowUp") {
+      changeDate(-1, "week")
+    } else if (e.key === "ArrowDown") {
+      changeDate(1, "week")
+    } else if (e.key === "ArrowLeft") {
+      changeDate(-1, "day")
+    } else if (e.key === "ArrowRight") {
+      changeDate(1, "day")
+    } else if (e.key === "Enter") {
+      close()
+    }
+    return true
+  }
+
+  const changeDate = (quantity, unit) => {
+    if (!value) {
+      value = dayjs()
+    } else {
+      value = dayjs(value).add(quantity, unit)
+    }
+    debouncedOnChange(
+      Helpers.stringifyDate(value, {
+        enableTime,
+        timeOnly,
+        ignoreTimezones,
+      })
+    )
+  }
+
+  const debouncedOnChange = debounce(onChange, 250)
 
   onMount(() => {
     api = {
       onKeyDown,
-      focus: () => datePickerAPI?.open(),
-      blur: () => datePickerAPI?.close(),
+      focus: open,
+      blur: close,
       isActive: () => isOpen,
     }
   })
 </script>
 
-<div class="container">
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class="container" class:editable on:click={editable ? open : null}>
   <div class="value">
     {displayValue}
   </div>
@@ -55,17 +107,14 @@
   {/if}
 </div>
 
-{#if editable}
-  <div class="picker">
-    <CoreDatePicker
-      {value}
+{#if isOpen}
+  <div class="picker" use:clickOutside={close}>
+    <CoreDatePickerPopoverContents
+      value={parsedValue}
       on:change={e => onChange(e.detail)}
-      enableTime={!dateOnly}
+      {enableTime}
       {timeOnly}
-      ignoreTimezones={schema.ignoreTimezones}
-      bind:api={datePickerAPI}
-      on:open={() => (isOpen = true)}
-      on:close={() => (isOpen = false)}
+      {ignoreTimezones}
       useKeyboardShortcuts={false}
     />
   </div>
@@ -80,6 +129,10 @@
     align-items: center;
     flex: 1 1 auto;
     gap: var(--cell-spacing);
+    user-select: none;
+  }
+  .container.editable:hover {
+    cursor: pointer;
   }
   .value {
     flex: 1 1 auto;
@@ -92,9 +145,10 @@
   }
   .picker {
     position: absolute;
-    opacity: 0;
-  }
-  .picker :global(.spectrum-Textfield-input) {
-    width: 100%;
+    top: 100%;
+    left: -1px;
+    background: var(--grid-background-alt);
+    border: var(--cell-border);
+    border-radius: 2px;
   }
 </style>

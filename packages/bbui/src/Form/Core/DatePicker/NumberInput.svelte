@@ -33,7 +33,7 @@
     font-weight: bold;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    box-sizing: content-box;
+    box-sizing: content-box !important;
   }
   input:focus,
   input:hover {
