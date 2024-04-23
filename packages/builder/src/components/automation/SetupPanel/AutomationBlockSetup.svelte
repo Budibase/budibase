@@ -14,6 +14,7 @@
     notifications,
     Checkbox,
     DatePicker,
+    DrawerContent,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation, tables } from "stores/builder"
@@ -31,13 +32,14 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import BindingSidePanel from "components/common/bindings/BindingSidePanel.svelte"
+  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { BindingHelpers, BindingType } from "components/common/bindings/utils"
   import {
     bindingsToCompletions,
     hbAutocomplete,
     EditorModes,
   } from "components/common/CodeEditor"
-  import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
+  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { LuceneUtils, Utils } from "@budibase/frontend-core"
   import {
     getSchemaForDatasourcePlus,
@@ -355,7 +357,8 @@
       value.customType !== "queryParams" &&
       value.customType !== "cron" &&
       value.customType !== "triggerSchema" &&
-      value.customType !== "automationFields"
+      value.customType !== "automationFields" &&
+      value.type !== "attachment"
     )
   }
 
@@ -371,6 +374,15 @@
       console.error(error)
     }
   })
+  const handleAttachmentParams = keyValuObj => {
+    let params = {}
+    if (keyValuObj?.length) {
+      for (let param of keyValuObj) {
+        params[param.url] = param.filename
+      }
+    }
+    return params
+  }
 </script>
 
 <div class="fields">
@@ -436,21 +448,49 @@
               value={inputData[key]}
               options={Object.keys(table?.schema || {})}
             />
+          {:else if value.type === "attachment"}
+            <div class="attachment-field-wrapper">
+              <div class="label-wrapper">
+                <Label>{label}</Label>
+              </div>
+              <div class="attachment-field-width">
+                <KeyValueBuilder
+                  on:change={e =>
+                    onChange(
+                      {
+                        detail: e.detail.map(({ name, value }) => ({
+                          url: name,
+                          filename: value,
+                        })),
+                      },
+                      key
+                    )}
+                  object={handleAttachmentParams(inputData[key])}
+                  allowJS
+                  {bindings}
+                  keyBindings
+                  customButtonText={"Add attachment"}
+                  keyPlaceholder={"URL"}
+                  valuePlaceholder={"Filename"}
+                />
+              </div>
+            </div>
           {:else if value.customType === "filters"}
             <ActionButton on:click={drawer.show}>Define filters</ActionButton>
             <Drawer bind:this={drawer} title="Filtering">
               <Button cta slot="buttons" on:click={() => saveFilters(key)}>
                 Save
               </Button>
-              <FilterDrawer
-                slot="body"
-                {filters}
-                {bindings}
-                {schemaFields}
-                datasource={{ type: "table", tableId }}
-                panel={AutomationBindingPanel}
-                on:change={e => (tempFilters = e.detail)}
-              />
+              <DrawerContent slot="body">
+                <FilterBuilder
+                  {filters}
+                  {bindings}
+                  {schemaFields}
+                  datasource={{ type: "table", tableId }}
+                  panel={AutomationBindingPanel}
+                  on:change={e => (tempFilters = e.detail)}
+                />
+              </DrawerContent>
             </Drawer>
           {:else if value.customType === "password"}
             <Input
@@ -649,12 +689,20 @@
   }
 
   .block-field {
-    display: flex; /* Use Flexbox */
+    display: flex;
     justify-content: space-between;
-    flex-direction: row; /* Arrange label and field side by side */
-    align-items: center; /* Align vertically in the center */
-    gap: 10px; /* Add some space between label and field */
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
     flex: 1;
+  }
+
+  .attachment-field-width {
+    margin-top: var(--spacing-xs);
+  }
+
+  .label-wrapper {
+    margin-top: var(--spacing-s);
   }
 
   .test :global(.drawer) {

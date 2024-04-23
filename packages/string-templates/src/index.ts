@@ -16,7 +16,7 @@ import { setJSRunner, removeJSRunner } from "./helpers/javascript"
 import manifest from "./manifest.json"
 import { ProcessOptions } from "./types"
 
-export { helpersToRemoveForJs } from "./helpers/list"
+export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
 export { FIND_ANY_HBS_REGEX } from "./utilities"
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
 export { iifeWrapper } from "./iife"
