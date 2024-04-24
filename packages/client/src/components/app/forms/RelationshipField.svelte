@@ -1,9 +1,9 @@
 <script>
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext, onMount } from "svelte"
   import Field from "./Field.svelte"
-  import { FieldTypes } from "../../../constants"
 
   const { API } = getContext("sdk")
 
@@ -21,6 +21,7 @@
   export let primaryDisplay
   export let span
   export let helpText = null
+  export let type = FieldType.LINK
 
   let fieldState
   let fieldApi
@@ -30,10 +31,9 @@
   let open
   let initialValue
 
-  $: type =
-    datasourceType === "table" ? FieldTypes.LINK : FieldTypes.BB_REFERENCE
-
-  $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
+  $: multiselect =
+    [FieldType.LINK, FieldType.BB_REFERENCE].includes(type) &&
+    fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
   $: fetch = fetchData({
     API,
