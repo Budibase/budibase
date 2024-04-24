@@ -1,8 +1,9 @@
 <script>
   import { getColor } from "../lib/utils"
   import { onMount, getContext } from "svelte"
-  import { Icon, Input, ProgressCircle, clickOutside } from "@budibase/bbui"
+  import { Icon, Input, ProgressCircle } from "@budibase/bbui"
   import { debounce } from "../../../utils/utils"
+  import GridPopover from "../overlays/GridPopover.svelte"
 
   const { API, dispatch, cache } = getContext("grid")
 
@@ -17,6 +18,7 @@
   export let contentLines = 1
   export let searchFunction = API.searchTable
   export let primaryDisplay
+  export let gridID
 
   const color = getColor(0)
 
@@ -27,8 +29,8 @@
   let candidateIndex
   let lastSearchId
   let searching = false
-  let valuesHeight = 0
   let container
+  let anchor
 
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
@@ -125,7 +127,6 @@
 
   const open = async () => {
     isOpen = true
-    valuesHeight = container.getBoundingClientRect().height
 
     // Find the primary display for the related table
     if (!primaryDisplay) {
@@ -240,6 +241,7 @@
   class:focused
   class:invertY
   style="--color:{color};"
+  bind:this={anchor}
 >
   <div class="container" bind:this={container}>
     <div
@@ -250,11 +252,7 @@
       {#each value || [] as relationship}
         {#if relationship[primaryDisplay] || relationship.primaryDisplay}
           <div class="badge">
-            <span
-              on:click={editable
-                ? () => showRelationship(relationship._id)
-                : null}
-            >
+            <span>
               {readable(
                 relationship[primaryDisplay] || relationship.primaryDisplay
               )}
@@ -282,16 +280,11 @@
       </div>
     {/if}
   </div>
+</div>
 
-  {#if isOpen}
-    <div
-      class="dropdown"
-      class:invertX
-      class:invertY
-      on:wheel|stopPropagation
-      use:clickOutside={close}
-      style="--values-height:{valuesHeight}px;"
-    >
+{#if isOpen}
+  <GridPopover open={isOpen} {anchor} {gridID} {invertX} on:close={close}>
+    <div class="dropdown" on:wheel|stopPropagation>
       <div class="search">
         <Input
           autofocus
@@ -327,8 +320,8 @@
         </div>
       {/if}
     </div>
-  {/if}
-</div>
+  </GridPopover>
+{/if}
 
 <style>
   .wrapper {
@@ -426,10 +419,6 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .editable .values .badge span:hover {
-    cursor: pointer;
-    text-decoration: underline;
-  }
 
   .add {
     background: var(--spectrum-global-color-gray-200);
@@ -446,30 +435,9 @@
   }
 
   .dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    max-height: calc(
-      var(--max-cell-render-overflow) + var(--row-height) - var(--values-height)
-    );
-    background: var(--grid-background-alt);
-    border: var(--cell-border);
-    box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    padding: 0 0 8px 0;
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
-  }
-  .dropdown.invertY {
-    transform: translateY(-100%);
-    top: -1px;
-  }
-  .dropdown.invertX {
-    left: auto;
-    right: 0;
   }
 
   .searching {
@@ -497,7 +465,8 @@
     cursor: pointer;
   }
   .result .badge {
-    max-width: calc(100% - 30px);
+    flex: 1 1 auto;
+    overflow: hidden;
   }
 
   .search {
@@ -505,7 +474,6 @@
     display: flex;
     align-items: center;
     margin: 4px var(--cell-padding);
-    width: calc(100% - 2 * var(--cell-padding));
   }
   .search :global(.spectrum-Textfield) {
     min-width: 0;

@@ -121,8 +121,8 @@
 </div>
 
 {#if isOpen}
-  <GridPopover open={isOpen} {anchor} {gridID} {invertX} on:close={close}>
-    <div class="options" on:wheel={e => e.stopPropagation()}>
+  <GridPopover {anchor} {invertX} on:close={close}>
+    <div class="options">
       {#each options as option, idx}
         {@const color = optionColors[option] || getOptionColor(option)}
         <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -219,10 +219,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    max-height: var(--max-cell-render-overflow);
-    overflow-y: auto;
-    min-width: 200px;
-    max-width: 400px;
   }
   .option {
     flex: 0 0 var(--default-row-height);
