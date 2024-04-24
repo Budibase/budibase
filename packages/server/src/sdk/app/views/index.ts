@@ -103,11 +103,6 @@ export function syncSchema(
         delete view.schema[fieldName]
       }
     }
-    for (const fieldName of Object.keys(schema)) {
-      if (!view.schema[fieldName]) {
-        view.schema[fieldName] = { visible: false }
-      }
-    }
   }
 
   return view
