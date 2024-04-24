@@ -13,7 +13,7 @@ export function clientLibraryPath(appId: string) {
  * due to issues with the domain we were unable to continue doing this - keeping
  * incase we are able to switch back to CDN path again in future.
  */
-export function cloudClientLibraryUrl(appId: string, version: string) {
+function cloudClientLibraryUrl(appId: string) {
   let file = clientLibraryPath(appId)
   return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
 }
@@ -21,7 +21,7 @@ export function cloudClientLibraryUrl(appId: string, version: string) {
 export function clientLibraryUrl(appId: string, version: string) {
   let tenantId, qsParams: { appId: string; version: string; tenantId?: string }
   if (env.isProd() && !env.SELF_HOSTED) {
-    return cloudClientLibraryUrl(appId, version)
+    return cloudClientLibraryUrl(appId)
   }
   try {
     tenantId = getTenantId()
