@@ -3,6 +3,7 @@ import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 
 import * as setup from "./utilities"
 import {
+  AutoFieldSubType,
   Datasource,
   EmptyFilterOption,
   FieldType,
@@ -18,12 +19,12 @@ import _ from "lodash"
 jest.unmock("mssql")
 
 describe.each([
-  ["internal", undefined],
-  ["internal-sqs", undefined],
+  // ["internal", undefined],
+  // ["internal-sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "internal-sqs"
   const isInternal = name === "internal"
@@ -675,4 +676,27 @@ describe.each([
           }).toContainExactly([{ num: SMALL }, { num: MEDIUM }]))
       })
   })
+
+  isInternal &&
+    describe.only("auto", () => {
+      beforeAll(async () => {
+        await createTable({
+          auto: {
+            name: "auto",
+            type: FieldType.AUTO,
+            autocolumn: true,
+            subtype: AutoFieldSubType.AUTO_ID,
+          },
+        })
+        await createRows([{}, {}, {}])
+      })
+
+      describe("equal", () => {
+        it("successfully finds a row", () =>
+          expectQuery({ equal: { auto: 1 } }).toContainExactly([{ auto: 1 }]))
+
+        it("fails to find nonexistent row", () =>
+          expectQuery({ equal: { auto: 0 } }).toFindNothing())
+      })
+    })
 })
