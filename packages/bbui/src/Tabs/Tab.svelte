@@ -5,7 +5,7 @@
   export let title
   export let icon = ""
   export let id
-  export let href="#"
+  export let href = "#"
   export let link = false
 
   const dispatch = createEventDispatcher()
@@ -40,8 +40,8 @@
     }
   }
 
-  const onClick = (e) => {
-    e.preventDefault();
+  const onClick = e => {
+    e.preventDefault()
 
     $selected = {
       ...$selected,
