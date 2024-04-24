@@ -440,10 +440,13 @@ export class ComponentStore extends BudiStore {
       return state
     })
 
+    componentTreeNodesStore.makeNodeVisible(componentInstance._id)
+
     // Log event
     analytics.captureEvent(Events.COMPONENT_CREATED, {
       name: componentInstance._component,
     })
+
 
     return componentInstance
   }
