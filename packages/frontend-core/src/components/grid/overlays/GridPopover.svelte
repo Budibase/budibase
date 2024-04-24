@@ -36,7 +36,7 @@
 <Popover
   open
   {anchor}
-  align={invertX ? "right" : "left"}
+  align="left"
   portalTarget="#{gridID} .grid-popover-container"
   offset={1}
 >
