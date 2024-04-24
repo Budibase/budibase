@@ -1,10 +1,5 @@
 <script>
-  import {
-    CoreDatePickerPopoverContents,
-    Icon,
-    Helpers,
-    clickOutside,
-  } from "@budibase/bbui"
+  import { CoreDatePickerPopoverContents, Icon, Helpers } from "@budibase/bbui"
   import { onMount } from "svelte"
   import dayjs from "dayjs"
   import GridPopover from "../overlays/GridPopover.svelte"
@@ -16,7 +11,6 @@
   export let readonly = false
   export let api
   export let invertX = false
-  export let invertY = false
   export let rand
 
   let isOpen
@@ -118,17 +112,15 @@
 </div>
 
 {#if isOpen}
-  <GridPopover bind:open={isOpen} {anchor} {invertX} {rand}>
-    <div class="picker" use:clickOutside={close}>
-      <CoreDatePickerPopoverContents
-        value={parsedValue}
-        on:change={e => (value = e.detail)}
-        {enableTime}
-        {timeOnly}
-        {ignoreTimezones}
-        useKeyboardShortcuts={false}
-      />
-    </div>
+  <GridPopover open={isOpen} {anchor} {invertX} {rand} on:close={close}>
+    <CoreDatePickerPopoverContents
+      value={parsedValue}
+      useKeyboardShortcuts={false}
+      on:change={e => (value = e.detail)}
+      {enableTime}
+      {timeOnly}
+      {ignoreTimezones}
+    />
   </GridPopover>
 {/if}
 
@@ -154,10 +146,5 @@
     white-space: nowrap;
     line-height: 20px;
     height: 20px;
-  }
-  .picker {
-    background: var(--grid-background-alt);
-    border: var(--cell-border);
-    border-radius: 2px;
   }
 </style>
