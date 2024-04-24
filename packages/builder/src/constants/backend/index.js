@@ -176,7 +176,7 @@ export const FIELDS = {
     ],
   },
   USERS: {
-    name: "Users",
+    name: "User List",
     type: FieldType.BB_REFERENCE,
     subtype: FieldSubtype.USERS,
     icon: TypeIconMap[FieldType.BB_REFERENCE][
