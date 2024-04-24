@@ -5,7 +5,7 @@
   import { debounce } from "../../../utils/utils"
   import GridPopover from "../overlays/GridPopover.svelte"
 
-  const { API, dispatch, cache } = getContext("grid")
+  const { API, cache } = getContext("grid")
 
   export let value
   export let api
@@ -205,14 +205,6 @@
     close()
   }
 
-  const showRelationship = async id => {
-    const relatedRow = await API.fetchRow({
-      tableId: schema.tableId,
-      rowId: id,
-    })
-    dispatch("edit-row", relatedRow)
-  }
-
   const readable = value => {
     if (value == null) {
       return ""
@@ -282,6 +274,8 @@
   </div>
 </div>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if isOpen}
   <GridPopover open={isOpen} {anchor} {gridID} {invertX} on:close={close}>
     <div class="dropdown" on:wheel|stopPropagation>
