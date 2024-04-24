@@ -20,7 +20,6 @@
     dispatch,
     rows,
     columnRenderMap,
-    gridID,
   } = getContext("grid")
 
   $: rowSelected = !!$selectedRows[row._id]
@@ -46,7 +45,6 @@
       {row}
       {invertY}
       {rowFocused}
-      {gridID}
       invertX={columnIdx >= $columnHorizontalInversionIndex}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
       selected={rowSelected}

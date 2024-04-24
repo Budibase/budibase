@@ -13,7 +13,6 @@
   export let api
   export let invertX
   export let contentLines = 1
-  export let gridID
 
   let isOpen = false
   let focusedOptionIdx = null
