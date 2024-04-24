@@ -11,7 +11,7 @@
   export let readonly = false
   export let api
   export let invertX = false
-  export let rand
+  export let gridID
 
   let isOpen
   let anchor
@@ -112,7 +112,7 @@
 </div>
 
 {#if isOpen}
-  <GridPopover open={isOpen} {anchor} {invertX} {rand} on:close={close}>
+  <GridPopover open={isOpen} {anchor} {invertX} {gridID} on:close={close}>
     <CoreDatePickerPopoverContents
       value={parsedValue}
       useKeyboardShortcuts={false}

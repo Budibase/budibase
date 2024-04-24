@@ -52,7 +52,7 @@
   export let buttons = null
 
   // Unique identifier for DOM nodes inside this instance
-  const rand = Math.random().toString().slice(2)
+  const gridID = `grid-${Math.random().toString().slice(2)}`
 
   // Store props in a store for reference in other stores
   const props = writable($$props)
@@ -60,7 +60,7 @@
   // Build up context
   let context = {
     API: API || createAPIClient(),
-    rand,
+    gridID,
     props,
   }
   context = { ...context, ...createEventManagers() }
@@ -122,7 +122,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="grid"
-  id="grid-{rand}"
+  id={gridID}
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
   class:stripe={stripeRows}

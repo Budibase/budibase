@@ -2,10 +2,10 @@
   import { Popover, clickOutside } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
-  export let rand
-  export let invertX
   export let open
   export let anchor
+  export let invertX
+  export let gridID
 
   const dispatch = createEventDispatcher()
 </script>
@@ -14,7 +14,7 @@
   bind:open
   {anchor}
   align={invertX ? "right" : "left"}
-  portalTarget="#grid-{rand} .grid-popover-container"
+  portalTarget="#{gridID} .grid-popover-container"
   offset={1}
 >
   <div use:clickOutside={() => dispatch("close")}>
