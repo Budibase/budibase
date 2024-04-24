@@ -228,11 +228,10 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--cell-spacing);
-    background-color: var(--grid-background-alt);
   }
   .option:hover,
   .option.focused {
-    background-color: var(--spectrum-global-color-gray-200);
+    background-color: var(--grid-background-alt);
     cursor: pointer;
   }
 </style>

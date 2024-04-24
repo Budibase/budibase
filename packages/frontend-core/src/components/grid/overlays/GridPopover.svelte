@@ -52,8 +52,7 @@
 
 <style>
   :global(.grid-popover-container .spectrum-Popover) {
-    background: var(--grid-background-alt);
-    border: var(--cell-border);
+    background: var(--grid-background);
     min-width: none;
     max-width: none;
     overflow: hidden;

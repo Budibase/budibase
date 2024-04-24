@@ -231,7 +231,6 @@
   class="wrapper"
   class:editable
   class:focused
-  class:invertY
   style="--color:{color};"
   bind:this={anchor}
 >
@@ -324,7 +323,6 @@
     min-height: var(--row-height);
     max-height: var(--row-height);
     overflow: hidden;
-    --max-relationship-height: 96px;
   }
   .wrapper.focused {
     position: absolute;
@@ -336,10 +334,6 @@
     max-height: none;
     overflow: visible;
   }
-  .wrapper.invertY {
-    top: auto;
-    bottom: 0;
-  }
 
   .container {
     min-height: var(--row-height);
@@ -350,7 +344,6 @@
   .focused .container {
     overflow-y: auto;
     border-radius: 2px;
-    max-height: var(--max-relationship-height);
   }
   .focused .container:after {
     content: " ";
