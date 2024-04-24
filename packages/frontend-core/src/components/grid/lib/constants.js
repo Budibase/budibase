@@ -11,4 +11,9 @@ export const NewRowID = "new"
 export const BlankRowID = "blank"
 export const RowPageSize = 100
 export const FocusedCellMinOffset = 48
+
+// Popovers
+export const PopoverMinWidth = 200
+export const PopoverMaxWidth = 400
+export const PopoverMaxHeight = 236
 export const MaxCellRenderOverflow = 222

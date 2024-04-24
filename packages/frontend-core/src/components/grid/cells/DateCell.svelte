@@ -112,7 +112,7 @@
 </div>
 
 {#if isOpen}
-  <GridPopover open={isOpen} {anchor} {invertX} {gridID} on:close={close}>
+  <GridPopover {anchor} {invertX} maxHeight={null} on:close={close}>
     <CoreDatePickerPopoverContents
       value={parsedValue}
       useKeyboardShortcuts={false}

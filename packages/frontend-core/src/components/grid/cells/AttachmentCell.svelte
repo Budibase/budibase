@@ -93,7 +93,14 @@
 </div>
 
 {#if isOpen}
-  <GridPopover open={isOpen} {anchor} {gridID} {invertX} on:close={close}>
+  <GridPopover
+    open={isOpen}
+    {anchor}
+    {gridID}
+    {invertX}
+    maxHeight={null}
+    on:close={close}
+  >
     <div class="dropzone">
       <Dropzone
         {value}
