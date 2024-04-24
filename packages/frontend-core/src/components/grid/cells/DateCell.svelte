@@ -7,7 +7,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import dayjs from "dayjs"
-  import { debounce } from "../../../utils/utils"
+  import GridPopover from "../overlays/GridPopover.svelte"
 
   export let value
   export let schema
@@ -15,8 +15,12 @@
   export let focused = false
   export let readonly = false
   export let api
+  export let invertX = false
+  export let invertY = false
+  export let rand
 
   let isOpen
+  let anchor
 
   $: timeOnly = schema?.timeOnly
   $: enableTime = !schema?.dateOnly
@@ -99,7 +103,12 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="container" class:editable on:click={editable ? open : null}>
+<div
+  class="container"
+  class:editable
+  on:click={editable ? open : null}
+  bind:this={anchor}
+>
   <div class="value">
     {displayValue}
   </div>
@@ -109,16 +118,18 @@
 </div>
 
 {#if isOpen}
-  <div class="picker" use:clickOutside={close}>
-    <CoreDatePickerPopoverContents
-      value={parsedValue}
-      on:change={e => (value = e.detail)}
-      {enableTime}
-      {timeOnly}
-      {ignoreTimezones}
-      useKeyboardShortcuts={false}
-    />
-  </div>
+  <GridPopover bind:open={isOpen} {anchor} {invertX} {rand}>
+    <div class="picker" use:clickOutside={close}>
+      <CoreDatePickerPopoverContents
+        value={parsedValue}
+        on:change={e => (value = e.detail)}
+        {enableTime}
+        {timeOnly}
+        {ignoreTimezones}
+        useKeyboardShortcuts={false}
+      />
+    </div>
+  </GridPopover>
 {/if}
 
 <style>
@@ -145,9 +156,6 @@
     height: 20px;
   }
   .picker {
-    position: absolute;
-    top: 100%;
-    left: -1px;
     background: var(--grid-background-alt);
     border: var(--cell-border);
     border-radius: 2px;

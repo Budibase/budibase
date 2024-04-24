@@ -10,6 +10,7 @@
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
+  import PopoverOverlay from "../overlays/PopoverOverlay.svelte"
   import HeaderRow from "./HeaderRow.svelte"
   import ScrollOverlay from "../overlays/ScrollOverlay.svelte"
   import MenuOverlay from "../overlays/MenuOverlay.svelte"
@@ -25,7 +26,6 @@
     MaxCellRenderOverflow,
     GutterWidth,
     DefaultRowHeight,
-    MinHeight,
   } from "../lib/constants"
 
   export let API = null
@@ -52,7 +52,7 @@
   export let buttons = null
 
   // Unique identifier for DOM nodes inside this instance
-  const rand = Math.random()
+  const rand = Math.random().toString().slice(2)
 
   // Store props in a store for reference in other stores
   const props = writable($$props)
@@ -78,7 +78,6 @@
     contentLines,
     gridFocused,
     error,
-    focusedCellId,
   } = context
 
   // Keep config store up to date with props
@@ -130,8 +129,7 @@
   class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{MinHeight +
-    $rowHeight}px;"
+  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines};"
 >
   {#if showControls}
     <div class="controls">
@@ -183,6 +181,7 @@
           <ReorderOverlay />
           <ScrollOverlay />
           <MenuOverlay />
+          <PopoverOverlay />
         </div>
       </div>
     </div>
@@ -221,7 +220,6 @@
     position: relative;
     overflow: hidden;
     background: var(--grid-background);
-    min-height: var(--min-height);
   }
   .grid,
   .grid :global(*) {

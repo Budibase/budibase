@@ -116,12 +116,11 @@
     min-width: var(--spectrum-global-dimension-size-2000);
     border-color: var(--spectrum-global-color-gray-300);
     overflow: auto;
-    transition: opacity 260ms ease-out, transform 260ms ease-out;
+    transition: opacity 260ms ease-out;
   }
   .hidden {
     opacity: 0;
     pointer-events: none;
-    transform: translateY(-20px);
   }
   .customZindex {
     z-index: var(--customZindex) !important;

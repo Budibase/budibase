@@ -127,6 +127,7 @@
     on:mousedown={startVDragging}
     on:touchstart={startVDragging}
     class:dragging={isDraggingV}
+    data-ignore-click-outside="true"
   />
 {/if}
 {#if $showHScrollbar}
@@ -137,6 +138,7 @@
     on:mousedown={startHDragging}
     on:touchstart={startHDragging}
     class:dragging={isDraggingH}
+    data-ignore-click-outside="true"
   />
 {/if}
 
