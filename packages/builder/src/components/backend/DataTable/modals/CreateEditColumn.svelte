@@ -29,7 +29,7 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
-  import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
+  import { FieldType, SourceName } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
