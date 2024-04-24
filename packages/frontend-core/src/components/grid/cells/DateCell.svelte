@@ -48,6 +48,10 @@
 
   const close = () => {
     isOpen = false
+
+    // Only save the changed value when closing. If the value is unchanged then
+    // this is handled upstream and no action is taken.
+    onChange(value)
   }
 
   const onKeyDown = e => {
@@ -70,21 +74,18 @@
   }
 
   const changeDate = (quantity, unit) => {
+    let newValue
     if (!value) {
-      value = dayjs()
+      newValue = dayjs()
     } else {
-      value = dayjs(value).add(quantity, unit)
+      newValue = dayjs(value).add(quantity, unit)
     }
-    debouncedOnChange(
-      Helpers.stringifyDate(value, {
-        enableTime,
-        timeOnly,
-        ignoreTimezones,
-      })
-    )
+    value = Helpers.stringifyDate(newValue, {
+      enableTime,
+      timeOnly,
+      ignoreTimezones,
+    })
   }
-
-  const debouncedOnChange = debounce(onChange, 250)
 
   onMount(() => {
     api = {
@@ -111,7 +112,7 @@
   <div class="picker" use:clickOutside={close}>
     <CoreDatePickerPopoverContents
       value={parsedValue}
-      on:change={e => onChange(e.detail)}
+      on:change={e => (value = e.detail)}
       {enableTime}
       {timeOnly}
       {ignoreTimezones}
