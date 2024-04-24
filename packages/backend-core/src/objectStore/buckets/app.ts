@@ -13,16 +13,23 @@ export function clientLibraryPath(appId: string) {
  * due to issues with the domain we were unable to continue doing this - keeping
  * incase we are able to switch back to CDN path again in future.
  */
-function cloudClientLibraryUrl(appId: string) {
+export function clientLibraryCDNUrl(appId: string, version: string) {
   let file = clientLibraryPath(appId)
-  return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
+  if (env.CLOUDFRONT_CDN) {
+    // append app version to bust the cache
+    if (version) {
+      file += `?v=${version}`
+    }
+    // don't need to use presigned for client with cloudfront
+    // file is public
+    return cloudfront.getUrl(file)
+  } else {
+    return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
+  }
 }
 
 export function clientLibraryUrl(appId: string, version: string) {
   let tenantId, qsParams: { appId: string; version: string; tenantId?: string }
-  if (env.isProd() && !env.SELF_HOSTED) {
-    return cloudClientLibraryUrl(appId)
-  }
   try {
     tenantId = getTenantId()
   } finally {
