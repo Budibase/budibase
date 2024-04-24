@@ -87,7 +87,7 @@ export const createActions = context => {
     // Check if we need to start auto-scrolling
     const $reorder = get(reorder)
     const proximityCutoff = 140
-    const speedFactor = 8
+    const speedFactor = 16
     const rightProximity = Math.max(0, $reorder.gridLeft + $reorder.width - x)
     const leftProximity = Math.max(0, x - $reorder.gridLeft)
     if (rightProximity < proximityCutoff) {

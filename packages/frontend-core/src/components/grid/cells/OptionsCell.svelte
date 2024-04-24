@@ -1,7 +1,8 @@
 <script>
-  import { Icon, clickOutside } from "@budibase/bbui"
+  import { Icon } from "@budibase/bbui"
   import { getColor } from "../lib/utils"
   import { onMount } from "svelte"
+  import GridPopover from "../overlays/GridPopover.svelte"
 
   export let value
   export let schema
@@ -10,12 +11,13 @@
   export let multi = false
   export let readonly = false
   export let api
-  export let invertX = false
-  export let invertY = false
+  export let invertX
   export let contentLines = 1
+  export let rand
 
   let isOpen = false
   let focusedOptionIdx = null
+  let anchor
 
   $: options = schema?.constraints?.inclusion || []
   $: optionColors = schema?.optionColors || {}
@@ -89,6 +91,7 @@
   class:editable
   class:open
   on:click|self={editable ? open : null}
+  bind:this={anchor}
 >
   <div
     class="values"
@@ -115,16 +118,15 @@
       <Icon name="ChevronDown" />
     </div>
   {/if}
-  {#if isOpen}
-    <div
-      class="options"
-      class:invertX
-      class:invertY
-      on:wheel={e => e.stopPropagation()}
-      use:clickOutside={close}
-    >
+</div>
+
+{#if isOpen}
+  <GridPopover open={isOpen} {anchor} {rand} {invertX} on:close={close}>
+    <div class="options" on:wheel={e => e.stopPropagation()}>
       {#each options as option, idx}
         {@const color = optionColors[option] || getOptionColor(option)}
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
           class="option"
           on:click={() => toggleOption(option)}
@@ -132,7 +134,9 @@
           on:mouseenter={() => (focusedOptionIdx = idx)}
         >
           <div class="badge text" style="--color: {color}">
-            {option}
+            <span>
+              {option}
+            </span>
           </div>
           {#if values.includes(option)}
             <Icon name="Checkmark" color="var(--accent-color)" />
@@ -140,8 +144,8 @@
         </div>
       {/each}
     </div>
-  {/if}
-</div>
+  </GridPopover>
+{/if}
 
 <style>
   .container {
@@ -211,28 +215,14 @@
     );
   }
   .options {
-    min-width: calc(100% + 2px);
-    position: absolute;
-    top: 100%;
-    left: -1px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     max-height: var(--max-cell-render-overflow);
     overflow-y: auto;
-    border: var(--cell-border);
-    box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
-  }
-  .options.invertX {
-    left: auto;
-    right: 0;
-  }
-  .options.invertY {
-    transform: translateY(-100%);
-    top: 0;
+    min-width: 200px;
+    max-width: 400px;
   }
   .option {
     flex: 0 0 var(--default-row-height);
@@ -247,5 +237,6 @@
   .option:hover,
   .option.focused {
     background-color: var(--spectrum-global-color-gray-200);
+    cursor: pointer;
   }
 </style>
