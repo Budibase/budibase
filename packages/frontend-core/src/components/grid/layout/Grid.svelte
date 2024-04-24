@@ -26,6 +26,9 @@
     MaxCellRenderOverflow,
     GutterWidth,
     DefaultRowHeight,
+    Padding,
+    SmallRowHeight,
+    ControlsHeight,
   } from "../lib/constants"
 
   export let API = null
@@ -104,6 +107,8 @@
     notifyError,
     buttons,
   })
+  $: minHeight =
+    Padding + SmallRowHeight + $rowHeight + (showControls ? ControlsHeight : 0)
 
   // Set context for children to consume
   setContext("grid", context)
@@ -129,7 +134,7 @@
   class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines};"
+  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{minHeight}px; --controls-height:{ControlsHeight}px;"
 >
   {#if showControls}
     <div class="controls">
@@ -211,7 +216,6 @@
     --cell-spacing: 4px;
     --cell-border: 1px solid var(--spectrum-global-color-gray-200);
     --cell-font-size: 14px;
-    --controls-height: 50px;
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
@@ -220,6 +224,7 @@
     position: relative;
     overflow: hidden;
     background: var(--grid-background);
+    min-height: var(--min-height);
   }
   .grid,
   .grid :global(*) {
