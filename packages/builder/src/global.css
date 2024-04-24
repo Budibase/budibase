@@ -74,3 +74,8 @@ html * {
   scrollbar-color: var(--spectrum-global-color-gray-400)
     var(--spectrum-alias-background-color-default);
 }
+
+.linkWrapper {
+  text-decoration: none;
+  color: inherit;
+}
