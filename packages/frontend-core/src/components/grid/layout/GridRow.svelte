@@ -20,6 +20,7 @@
     dispatch,
     rows,
     columnRenderMap,
+    rand,
   } = getContext("grid")
 
   $: rowSelected = !!$selectedRows[row._id]
@@ -45,6 +46,7 @@
       {row}
       {invertY}
       {rowFocused}
+      {rand}
       invertX={columnIdx >= $columnHorizontalInversionIndex}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
       selected={rowSelected}

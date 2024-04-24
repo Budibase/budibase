@@ -1,4 +1,4 @@
-export const Padding = 400
+export const Padding = 100
 export const ScrollBarSize = 8
 export const GutterWidth = 72
 export const DefaultColumnWidth = 200
@@ -12,4 +12,3 @@ export const BlankRowID = "blank"
 export const RowPageSize = 100
 export const FocusedCellMinOffset = 48
 export const MaxCellRenderOverflow = 222
-export const MinHeight = Padding + SmallRowHeight
