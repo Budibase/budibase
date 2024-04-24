@@ -145,6 +145,7 @@
     user-select: none;
   }
   .dropzone {
+    background: var(--grid-background-alt);
     width: 320px;
     padding: var(--cell-padding);
   }
