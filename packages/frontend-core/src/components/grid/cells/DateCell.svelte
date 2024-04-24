@@ -11,7 +11,6 @@
   export let readonly = false
   export let api
   export let invertX = false
-  export let gridID
 
   let isOpen
   let anchor

@@ -12,6 +12,7 @@
   export let minWidth = PopoverMinWidth
   export let maxWidth = PopoverMaxWidth
   export let maxHeight = PopoverMaxHeight
+  export let align = "left"
 
   const { gridID } = getContext("grid")
   const dispatch = createEventDispatcher()
@@ -36,9 +37,9 @@
 <Popover
   open
   {anchor}
-  align="left"
+  {align}
   portalTarget="#{gridID} .grid-popover-container"
-  offset={1}
+  offset={0}
 >
   <div
     class="grid-popover-contents"

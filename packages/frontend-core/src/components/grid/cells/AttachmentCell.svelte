@@ -11,7 +11,6 @@
   export let invertX = false
   export let schema
   export let maximum
-  export let gridID
 
   const { API, notifications } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
@@ -96,7 +95,6 @@
   <GridPopover
     open={isOpen}
     {anchor}
-    {gridID}
     {invertX}
     maxHeight={null}
     on:close={close}

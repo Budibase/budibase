@@ -19,7 +19,6 @@
     focusedRowId,
     notifications,
     isDatasourcePlus,
-    gridID,
   } = getContext("grid")
 
   let anchor
@@ -56,12 +55,7 @@
 
 {#if $menu.visible}
   {#key style}
-    <GridPopover
-      {anchor}
-      {gridID}
-      on:close={menu.actions.close}
-      maxHeight={null}
-    >
+    <GridPopover {anchor} on:close={menu.actions.close} maxHeight={null}>
       <Menu>
         <MenuItem
           icon="Copy"
