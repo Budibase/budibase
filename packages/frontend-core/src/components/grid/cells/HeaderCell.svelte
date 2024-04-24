@@ -24,7 +24,7 @@
     reorder,
     isReordering,
     isResizing,
-    rand,
+    gridID,
     sort,
     visibleColumns,
     dispatch,
@@ -316,7 +316,7 @@
   {anchor}
   align="right"
   offset={0}
-  popoverTarget={document.getElementById(`grid-${rand}`)}
+  popoverTarget={document.getElementById(gridID)}
   customZindex={50}
 >
   {#if editIsOpen}

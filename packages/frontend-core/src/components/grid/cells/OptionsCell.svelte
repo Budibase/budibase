@@ -13,7 +13,7 @@
   export let api
   export let invertX
   export let contentLines = 1
-  export let rand
+  export let gridID
 
   let isOpen = false
   let focusedOptionIdx = null
@@ -121,7 +121,7 @@
 </div>
 
 {#if isOpen}
-  <GridPopover open={isOpen} {anchor} {rand} {invertX} on:close={close}>
+  <GridPopover open={isOpen} {anchor} {gridID} {invertX} on:close={close}>
     <div class="options" on:wheel={e => e.stopPropagation()}>
       {#each options as option, idx}
         {@const color = optionColors[option] || getOptionColor(option)}

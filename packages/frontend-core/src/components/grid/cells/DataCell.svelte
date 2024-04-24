@@ -22,7 +22,7 @@
   export let invertY = false
   export let contentLines = 1
   export let hidden = false
-  export let rand
+  export let gridID
 
   const emptyError = writable(null)
 
@@ -97,7 +97,7 @@
     {invertY}
     {invertX}
     {contentLines}
-    {rand}
+    {gridID}
   />
   <slot />
 </GridCell>
