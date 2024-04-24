@@ -190,6 +190,23 @@ export function isUserMetadataTable(tableId: string) {
   return tableId === InternalTables.USER_METADATA
 }
 
+export async function enrichArrayContext(
+  fields: any[],
+  inputs = {},
+  helpers = true
+): Promise<any[]> {
+  const map: Record<string, any> = {}
+  for (let index in fields) {
+    map[index] = fields[index]
+  }
+  const output = await enrichSearchContext(map, inputs, helpers)
+  const outputArray: any[] = []
+  for (let [key, value] of Object.entries(output)) {
+    outputArray[parseInt(key)] = value
+  }
+  return outputArray
+}
+
 export async function enrichSearchContext(
   fields: Record<string, any>,
   inputs = {},
@@ -200,6 +217,11 @@ export async function enrichSearchContext(
     return enrichedQuery
   }
   const parameters = { ...inputs }
+
+  if (Array.isArray(fields)) {
+    return enrichArrayContext(fields, inputs, helpers)
+  }
+
   // enrich the fields with dynamic parameters
   for (let key of Object.keys(fields)) {
     if (fields[key] == null) {
