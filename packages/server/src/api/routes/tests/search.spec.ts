@@ -61,7 +61,10 @@ describe.each([
   }
 
   async function createRows(rows: Record<string, any>[]) {
-    await config.api.row.bulkImport(table._id!, { rows })
+    // await config.api.row.bulkImport(table._id!, { rows })
+    for (const row of rows) {
+      await config.api.row.save(table._id!, row)
+    }
   }
 
   class SearchAssertion {
@@ -689,7 +692,7 @@ describe.each([
             subtype: AutoFieldSubType.AUTO_ID,
           },
         })
-        await createRows([{}, {}, {}])
+        await createRows(new Array(10).fill({}))
       })
 
       describe("equal", () => {
@@ -705,6 +708,13 @@ describe.each([
           expectQuery({ notEqual: { auto: 1 } }).toContainExactly([
             { auto: 2 },
             { auto: 3 },
+            { auto: 4 },
+            { auto: 5 },
+            { auto: 6 },
+            { auto: 7 },
+            { auto: 8 },
+            { auto: 9 },
+            { auto: 10 },
           ]))
 
         it("fails to find nonexistent row", () =>
@@ -712,6 +722,13 @@ describe.each([
             { auto: 1 },
             { auto: 2 },
             { auto: 3 },
+            { auto: 4 },
+            { auto: 5 },
+            { auto: 6 },
+            { auto: 7 },
+            { auto: 8 },
+            { auto: 9 },
+            { auto: 10 },
           ]))
       })
 
@@ -747,14 +764,52 @@ describe.each([
         isSqs &&
           it("can search using just a low value", () =>
             expectQuery({
-              range: { auto: { low: 2 } },
-            }).toContainExactly([{ auto: 2 }, { auto: 3 }]))
+              range: { auto: { low: 9 } },
+            }).toContainExactly([{ auto: 9 }, { auto: 10 }]))
 
         isSqs &&
           it("can search using just a high value", () =>
             expectQuery({
               range: { auto: { high: 2 } },
             }).toContainExactly([{ auto: 1 }, { auto: 2 }]))
+      })
+
+      describe("sort", () => {
+        it("sorts ascending", () =>
+          expectSearch({
+            query: {},
+            sort: "auto",
+            sortOrder: SortOrder.ASCENDING,
+          }).toMatchExactly([
+            { auto: 1 },
+            { auto: 2 },
+            { auto: 3 },
+            { auto: 4 },
+            { auto: 5 },
+            { auto: 6 },
+            { auto: 7 },
+            { auto: 8 },
+            { auto: 9 },
+            { auto: 10 },
+          ]))
+
+        it("sorts descending", () =>
+          expectSearch({
+            query: {},
+            sort: "auto",
+            sortOrder: SortOrder.DESCENDING,
+          }).toMatchExactly([
+            { auto: 10 },
+            { auto: 9 },
+            { auto: 8 },
+            { auto: 7 },
+            { auto: 6 },
+            { auto: 5 },
+            { auto: 4 },
+            { auto: 3 },
+            { auto: 2 },
+            { auto: 1 },
+          ]))
       })
     })
 })
