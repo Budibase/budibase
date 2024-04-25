@@ -109,7 +109,7 @@ export async function processInputBBReferences<
         throw new InvalidBBRefError(id, FieldSubtype.USER)
       }
 
-      return user._id || null
+      return user._id!
     }
 
     default:
