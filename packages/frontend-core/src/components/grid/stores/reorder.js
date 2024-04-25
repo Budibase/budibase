@@ -32,7 +32,6 @@ export const createActions = context => {
     scroll,
     bounds,
     stickyColumn,
-    ui,
     maxScrollLeft,
     width,
   } = context
@@ -45,7 +44,6 @@ export const createActions = context => {
     const $visibleColumns = get(visibleColumns)
     const $bounds = get(bounds)
     const $stickyColumn = get(stickyColumn)
-    ui.actions.blur()
 
     // Generate new breakpoints for the current columns
     let breakpoints = $visibleColumns.map(col => ({

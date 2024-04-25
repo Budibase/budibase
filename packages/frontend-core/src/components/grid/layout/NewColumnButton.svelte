@@ -3,10 +3,10 @@
   import { Icon } from "@budibase/bbui"
   import GridPopover from "../overlays/GridPopover.svelte"
 
-  const { visibleColumns, scroll, width, subscribe } = getContext("grid")
+  const { visibleColumns, scroll, width, subscribe, ui } = getContext("grid")
 
   let anchor
-  let open = false
+  let isOpen = false
 
   $: columnsWidth = $visibleColumns.reduce(
     (total, col) => (total += col.width),
@@ -15,8 +15,13 @@
   $: end = columnsWidth - 1 - $scroll.left
   $: left = Math.min($width - 40, end)
 
+  const open = () => {
+    ui.actions.blur()
+    isOpen = true
+  }
+
   const close = () => {
-    open = false
+    isOpen = false
   }
 
   onMount(() => subscribe("close-edit-column", close))
@@ -29,11 +34,11 @@
   bind:this={anchor}
   class="add"
   style="left:{left}px"
-  on:click={() => (open = true)}
+  on:click={open}
 >
   <Icon name="Add" />
 </div>
-{#if open}
+{#if isOpen}
   <GridPopover
     {anchor}
     align={$visibleColumns.length ? "right" : "left"}
