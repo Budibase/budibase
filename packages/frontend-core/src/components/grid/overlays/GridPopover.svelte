@@ -20,7 +20,7 @@
   $: style = buildStyles(minWidth, maxWidth, maxHeight)
 
   const buildStyles = (minWidth, maxWidth, maxHeight) => {
-    let style = "min-height: 100px;"
+    let style = ""
     if (minWidth != null) {
       style += `min-width: ${minWidth}px;`
     }
