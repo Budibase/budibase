@@ -176,7 +176,18 @@ export async function processOutputBBReferences(
       }
 
     case FieldType.BB_REFERENCE_SINGLE:
-      const user = await cache.user.getUser(value as string)
+      if (!value) {
+        return undefined
+      }
+
+      let user
+      try {
+        user = await cache.user.getUser(value as string)
+      } catch (err: any) {
+        if (err.code !== 404) {
+          throw err
+        }
+      }
       if (!user) {
         return undefined
       }
