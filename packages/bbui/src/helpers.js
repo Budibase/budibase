@@ -179,6 +179,11 @@ export const stringifyDate = (
     const day = `${value.date()}`.padStart(2, "0")
     return `${year}-${month}-${day}T00:00:00.000`
   }
+
+  // Otherwise use a normal ISO string with time and timezone
+  else {
+    return value.toISOString()
+  }
 }
 
 // Formats a dayjs date according to schema flags

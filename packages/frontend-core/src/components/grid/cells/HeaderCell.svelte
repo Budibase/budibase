@@ -104,6 +104,7 @@
   }
 
   const onMouseDown = e => {
+    ui.actions.blur()
     if ((e.touches?.length || e.button === 0) && orderable) {
       timeout = setTimeout(() => {
         reorder.actions.startReordering(column.name, e)
