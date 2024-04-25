@@ -30,6 +30,7 @@
     refreshing,
     config,
     filter,
+    inlineFilters,
     columnRenderMap,
   } = getContext("grid")
 
@@ -157,7 +158,11 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <TempTooltip
   text="Click here to create your first row"
-  condition={hasNoRows && $loaded && !$filter?.length && !$refreshing}
+  condition={hasNoRows &&
+    $loaded &&
+    !$filter?.length &&
+    !$inlineFilters?.length &&
+    !$refreshing}
   type={TooltipType.Info}
 >
   {#if !visible && !selectedRowCount && $config.canAddRows}
