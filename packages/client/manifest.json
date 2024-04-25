@@ -4226,7 +4226,7 @@
     ]
   },
   "attachmentfield": {
-    "name": "Attachment list",
+    "name": "Attachment List",
     "icon": "Attach",
     "styles": ["size"],
     "requiredAncestors": ["form"],
@@ -7018,8 +7018,8 @@
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
-    "name": "User Field",
-    "icon": "User",
+    "name": "User List Field",
+    "icon": "UserGroup",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
