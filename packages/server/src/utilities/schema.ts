@@ -148,6 +148,10 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
               utils.unreachable(columnSubtype)
           }
         }
+      } else if (columnType === FieldType.BB_REFERENCE_SINGLE) {
+        const parsedValue =
+          columnData && parseCsvExport<{ _id: string }>(columnData)
+        parsedRow[columnName] = parsedValue?._id
       } else if (
         (columnType === FieldType.ATTACHMENTS ||
           columnType === FieldType.ATTACHMENT_SINGLE) &&
