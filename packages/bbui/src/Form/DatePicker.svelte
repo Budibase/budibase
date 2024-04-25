@@ -11,7 +11,6 @@
   export let error = null
   export let enableTime = true
   export let timeOnly = false
-  export let time24hr = false
   export let placeholder = null
   export let appendTo = undefined
   export let ignoreTimezones = false
@@ -34,7 +33,6 @@
     {placeholder}
     {enableTime}
     {timeOnly}
-    {time24hr}
     {appendTo}
     {ignoreTimezones}
     on:change={onChange}
