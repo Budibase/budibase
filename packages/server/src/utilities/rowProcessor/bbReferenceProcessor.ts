@@ -82,11 +82,15 @@ export async function processInputBBReferences<
             throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
           }
 
+          if (!referenceIds?.length) {
+            return null
+          }
+
           if (subtype === FieldSubtype.USERS) {
             return referenceIds
           }
 
-          return referenceIds.join(",") || null
+          return referenceIds.join(",")
         }
         default:
           throw utils.unreachable(subtype)
