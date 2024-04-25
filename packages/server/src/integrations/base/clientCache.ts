@@ -35,14 +35,7 @@ export class ClientCache<T> {
       .digest("base64")
   }
 
-  has(configHash: string): boolean {
-    return clientCache.has(configHash)
-  }
-
-  get(configHash: string): T {
-    if (!this.has(configHash)) {
-      throw new Error("Cannot get client - missing a has check")
-    }
+  get(configHash: string): T | undefined {
     return clientCache.get(configHash) as T
   }
 

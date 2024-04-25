@@ -229,10 +229,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   }
 
   async getClient(): Promise<Pool> {
-    let client: Pool
-    if (this.clientCache.has(this.configHash)) {
-      client = this.clientCache.get(this.configHash)
-    } else {
+    let client: Pool | undefined = this.clientCache.get(this.configHash)
+    if (!client) {
       client = new Pool(this.pgConfig)
       await client.connect()
       if (!this.config.schema) {
