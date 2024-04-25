@@ -25,6 +25,7 @@
   export let handlePostionUpdate
   export let showPopover = true
   export let clickOutsideOverride = false
+  export let noShrink = false
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
@@ -91,6 +92,7 @@
         useAnchorWidth,
         offset,
         customUpdate: handlePostionUpdate,
+        noShrink,
       }}
       use:clickOutside={{
         callback: dismissible ? handleOutsideClick : () => {},
