@@ -19,6 +19,7 @@ export default function positionDropdown(element, opts) {
       useAnchorWidth,
       offset = 5,
       customUpdate,
+      noShrink,
     } = opts
     if (!anchor) {
       return
@@ -81,6 +82,11 @@ export default function positionDropdown(element, opts) {
         styles.left = anchorBounds.left - elementBounds.width - offset
       } else {
         styles.left = anchorBounds.left
+      }
+
+      // Remove max height restriction if we don't want to shrink
+      if (noShrink) {
+        delete styles.maxHeight
       }
     }
 

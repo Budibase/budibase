@@ -101,7 +101,8 @@
 
 <style>
   .wrapper {
-    flex: 0 0 100px;
+    padding-top: 400px;
+    flex: 0 0 400px;
     margin: -28px -40px -40px -40px;
     display: flex;
     flex-direction: column;

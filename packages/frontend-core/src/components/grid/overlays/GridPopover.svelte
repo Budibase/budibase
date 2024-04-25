@@ -8,7 +8,6 @@
   } from "../lib/constants"
 
   export let anchor
-  export let invertX
   export let minWidth = PopoverMinWidth
   export let maxWidth = PopoverMaxWidth
   export let maxHeight = PopoverMaxHeight
@@ -21,7 +20,7 @@
   $: style = buildStyles(minWidth, maxWidth, maxHeight)
 
   const buildStyles = (minWidth, maxWidth, maxHeight) => {
-    let style = ""
+    let style = "min-height: 100px;"
     if (minWidth != null) {
       style += `min-width: ${minWidth}px;`
     }
@@ -39,6 +38,7 @@
   {open}
   {anchor}
   {align}
+  noShrink
   portalTarget="#{gridID} .grid-popover-container"
   offset={0}
 >
