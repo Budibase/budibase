@@ -13,6 +13,8 @@
   export let maxHeight = PopoverMaxHeight
   export let align = "left"
   export let open = true
+  export let fitToScreen = false
+  export let wrap = true
 
   const { gridID } = getContext("grid")
   const dispatch = createEventDispatcher()
@@ -38,7 +40,8 @@
   {open}
   {anchor}
   {align}
-  noShrink
+  {fitToScreen}
+  {wrap}
   portalTarget="#{gridID} .grid-popover-container"
   offset={0}
 >

@@ -303,7 +303,13 @@
 </div>
 
 {#if open}
-  <GridPopover {anchor} align="right" on:close={close} maxHeight={null}>
+  <GridPopover
+    {anchor}
+    align="right"
+    on:close={close}
+    maxHeight={null}
+    fitToScreen
+  >
     {#if editIsOpen}
       <div class="content">
         <slot />
