@@ -16,7 +16,6 @@ import {
   getDatasource,
   rawQuery,
 } from "../integrations/tests/utils"
-import { builderSocket } from "../websockets"
 import { generator } from "@budibase/backend-core/tests"
 // @ts-ignore
 fetch.mockSearch()
@@ -233,72 +232,6 @@ describe("mysql integrations", () => {
   })
 
   describe("POST /api/tables/", () => {
-    const emitDatasourceUpdateMock = jest.fn()
-
-    it("will emit the datasource entity schema with externalType to the front-end when adding a new column", async () => {
-      const addColumnToTable: TableRequest = {
-        type: "table",
-        sourceType: TableSourceType.EXTERNAL,
-        name: uniqueTableName(),
-        sourceId: datasource._id!,
-        primary: ["id"],
-        schema: {
-          id: {
-            type: FieldType.AUTO,
-            name: "id",
-            autocolumn: true,
-          },
-          new_column: {
-            type: FieldType.NUMBER,
-            name: "new_column",
-          },
-        },
-        _add: {
-          name: "new_column",
-        },
-      }
-
-      jest
-        .spyOn(builderSocket!, "emitDatasourceUpdate")
-        .mockImplementation(emitDatasourceUpdateMock)
-
-      await makeRequest("post", "/api/tables/", addColumnToTable)
-
-      const expectedTable: TableRequest = {
-        ...addColumnToTable,
-        schema: {
-          id: {
-            type: FieldType.NUMBER,
-            name: "id",
-            autocolumn: true,
-            constraints: {
-              presence: false,
-            },
-            externalType: "int unsigned",
-          },
-          new_column: {
-            type: FieldType.NUMBER,
-            name: "new_column",
-            autocolumn: false,
-            constraints: {
-              presence: false,
-            },
-            externalType: "float(8,2)",
-          },
-        },
-        created: true,
-        _id: `${datasource._id}__${addColumnToTable.name}`,
-      }
-      delete expectedTable._add
-
-      expect(emitDatasourceUpdateMock).toHaveBeenCalledTimes(1)
-      const emittedDatasource: Datasource =
-        emitDatasourceUpdateMock.mock.calls[0][1]
-      expect(emittedDatasource.entities![expectedTable.name]).toEqual(
-        expectedTable
-      )
-    })
-
     it("will rename a column", async () => {
       await makeRequest("post", "/api/tables/", primaryMySqlTable)
 

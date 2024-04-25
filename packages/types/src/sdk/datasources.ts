@@ -14,6 +14,14 @@ export enum Operation {
   DELETE_TABLE = "DELETE_TABLE",
 }
 
+export const RowOperations = [
+  Operation.CREATE,
+  Operation.READ,
+  Operation.UPDATE,
+  Operation.DELETE,
+  Operation.BULK_CREATE,
+]
+
 export enum SortDirection {
   ASCENDING = "ASCENDING",
   DESCENDING = "DESCENDING",
