@@ -40,7 +40,7 @@ export async function processInputBBReferences<
   subtype?: TS
 ): Promise<string | string[] | null> {
   switch (type) {
-    case FieldType.BB_REFERENCE:
+    case FieldType.BB_REFERENCE: {
       let referenceIds: string[] = []
 
       if (Array.isArray(value)) {
@@ -95,7 +95,7 @@ export async function processInputBBReferences<
         default:
           throw utils.unreachable(subtype)
       }
-
+    }
     case FieldType.BB_REFERENCE_SINGLE: {
       if (value && Array.isArray(value)) {
         throw "BB_REFERENCE_SINGLE cannot be an array"
@@ -149,7 +149,7 @@ export async function processOutputBBReferences(
   }
 
   switch (type) {
-    case FieldType.BB_REFERENCE:
+    case FieldType.BB_REFERENCE: {
       const ids =
         typeof value === "string" ? value.split(",").filter(id => !!id) : value
 
@@ -174,8 +174,8 @@ export async function processOutputBBReferences(
         default:
           throw utils.unreachable(subtype)
       }
-
-    case FieldType.BB_REFERENCE_SINGLE:
+    }
+    case FieldType.BB_REFERENCE_SINGLE: {
       if (!value) {
         return undefined
       }
@@ -199,6 +199,7 @@ export async function processOutputBBReferences(
         firstName: user.firstName,
         lastName: user.lastName,
       }
+    }
 
     default:
       throw utils.unreachable(type)
