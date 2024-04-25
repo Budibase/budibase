@@ -226,7 +226,7 @@
         editableColumn.autocolumn
       )
 
-      allowedTypes = getAllowedTypes().map(t => ({
+      allowedTypes = getAllowedTypes(datasource).map(t => ({
         fieldId: makeFieldId(t.type, t.subtype),
         ...t,
       }))
@@ -355,7 +355,7 @@
     deleteColName = ""
   }
 
-  function getAllowedTypes() {
+  function getAllowedTypes(datasource) {
     if (originalName) {
       const possibleTypes = SWITCHABLE_TYPES[field.type] || [
         editableColumn.type,
@@ -397,8 +397,11 @@
         FIELDS.FORMULA,
         FIELDS.BIGINT,
         FIELDS.USER,
-        FIELDS.USERS,
       ]
+
+      if (datasource && datasource.source !== SourceName.GOOGLE_SHEETS) {
+        fields.push(FIELDS.USERS)
+      }
       // no-sql or a spreadsheet
       if (!externalTable || table.sql) {
         fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
