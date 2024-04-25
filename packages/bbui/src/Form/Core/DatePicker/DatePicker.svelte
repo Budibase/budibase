@@ -68,7 +68,7 @@
   portalTarget={appendTo}
   {anchor}
   {align}
-  fitToScreen={false}
+  resizable={false}
 >
   {#if isOpen}
     <DatePickerPopoverContents

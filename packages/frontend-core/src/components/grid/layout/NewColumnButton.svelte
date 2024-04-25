@@ -44,7 +44,7 @@
     align={$visibleColumns.length ? "right" : "left"}
     on:close={close}
     maxHeight={null}
-    fitToScreen
+    resizable
   >
     <div class="content">
       <slot />
