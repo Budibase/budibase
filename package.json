@@ -32,7 +32,6 @@
     "yargs": "^17.7.2"
   },
   "scripts": {
-    "preinstall": "node scripts/syncProPackage.js",
     "get-past-client-version": "node scripts/getPastClientVersion.js",
     "setup": "git config submodule.recurse true && git submodule update && node ./hosting/scripts/setup.js && yarn && yarn build && yarn dev",
     "build": "NODE_OPTIONS=--max-old-space-size=1500 lerna run build --stream",
