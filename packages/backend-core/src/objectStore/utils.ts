@@ -1,9 +1,9 @@
-import { join } from "path"
+import path, { join } from "path"
 import { tmpdir } from "os"
-import fs from "fs"
+import fs, { ReadStream } from "fs"
 import env from "../environment"
 import { PutBucketLifecycleConfigurationRequest } from "aws-sdk/clients/s3"
-
+import * as objectStore from "./objectStore"
 /****************************************************
  *      NOTE: When adding a new bucket - name       *
  *     sure that S3 usages (like budibase-infra)    *
@@ -54,4 +54,45 @@ export const bucketTTLConfig = (
   }
 
   return params
+}
+
+export const processAutomationAttachment = async (attachment: {
+  url: string
+  filename: string
+}): Promise<{
+  filename: string
+  content:
+    | ReadStream
+    | NodeJS.ReadableStream
+    | ReadableStream<Uint8Array>
+    | null
+}> => {
+  const isFullyFormedUrl =
+    attachment.url.startsWith("http://") ||
+    attachment.url.startsWith("https://")
+
+  if (isFullyFormedUrl) {
+    const response = await fetch(attachment.url)
+    if (!response.ok) {
+      throw new Error(`unexpected response ${response.statusText}`)
+    }
+    const fallbackFilename = path.basename(new URL(attachment.url).pathname)
+    return {
+      filename: attachment.filename || fallbackFilename,
+      content: response?.body,
+    }
+  } else {
+    const url = attachment.url
+    const result = objectStore.extractBucketAndPath(url)
+    if (result === null) {
+      throw new Error("Invalid signed URL")
+    }
+    const { bucket, path } = result
+    const readStream = await objectStore.getReadStream(bucket, path)
+    const fallbackFilename = path.split("/").pop() || ""
+    return {
+      filename: attachment.filename || fallbackFilename,
+      content: readStream,
+    }
+  }
 }

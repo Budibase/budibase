@@ -5,6 +5,7 @@
   import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
+  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
 
   export let onChange
   export let field
@@ -21,6 +22,16 @@
 
   function schemaHasOptions(schema) {
     return !!schema.constraints?.inclusion?.length
+  }
+
+  const handleAttachmentParams = keyValuObj => {
+    let params = {}
+    if (keyValuObj?.length) {
+      for (let param of keyValuObj) {
+        params[param.url] = param.filename
+      }
+    }
+    return params
   }
 </script>
 
@@ -77,7 +88,29 @@
     on:change={e => onChange(e, field)}
     useLabel={false}
   />
-{:else if ["string", "number", "bigint", "barcodeqr", "array"].includes(schema.type)}
+{:else if schema.type === "attachment"}
+  <div class="attachment-field-width">
+    <KeyValueBuilder
+      on:change={e =>
+        onChange(
+          {
+            detail: e.detail.map(({ name, value }) => ({
+              url: name,
+              filename: value,
+            })),
+          },
+          field
+        )}
+      object={handleAttachmentParams(value[field])}
+      allowJS
+      {bindings}
+      keyBindings
+      customButtonText={"Add attachment"}
+      keyPlaceholder={"URL"}
+      valuePlaceholder={"Filename"}
+    />
+  </div>
+{:else if ["string", "number", "bigint", "barcodeqr", "array", "attachment"].includes(schema.type)}
   <svelte:component
     this={isTestModal ? ModalBindableInput : DrawerBindableInput}
     panel={AutomationBindingPanel}
@@ -90,3 +123,9 @@
     title={schema.name}
   />
 {/if}
+
+<style>
+  .attachment-field-width {
+    margin-top: var(--spacing-xs);
+  }
+</style>

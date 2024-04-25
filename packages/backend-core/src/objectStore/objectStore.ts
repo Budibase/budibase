@@ -41,7 +41,7 @@ type UploadParams = BaseUploadParams & {
 }
 
 type StreamUploadParams = BaseUploadParams & {
-  stream: ReadStream
+  stream: ReadStream | NodeJS.ReadableStream | ReadableStream<Uint8Array> | null
 }
 
 const CONTENT_TYPE_MAP: any = {
@@ -222,11 +222,9 @@ export async function streamUpload({
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (ttl && (bucketCreated.created || bucketCreated.exists)) {
+  if (ttl && bucketCreated.created) {
     let ttlConfig = bucketTTLConfig(bucketName, ttl)
-    if (objectStore.putBucketLifecycleConfiguration) {
-      await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
-    }
+    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
 
   // Set content type for certain known extensions

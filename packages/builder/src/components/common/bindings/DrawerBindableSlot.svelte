@@ -102,6 +102,7 @@
     longform: value => !isJSBinding(value),
     json: value => !isJSBinding(value),
     boolean: isValidBoolean,
+    attachment: false,
   }
 
   const isValid = value => {
@@ -116,7 +117,9 @@
     if (type === "json" && !isJSBinding(value)) {
       return "json-slot-icon"
     }
-    if (!["string", "number", "bigint", "barcodeqr"].includes(type)) {
+    if (
+      !["string", "number", "bigint", "barcodeqr", "attachment"].includes(type)
+    ) {
       return "slot-icon"
     }
     return ""
@@ -157,7 +160,7 @@
       {updateOnChange}
     />
   {/if}
-  {#if !disabled && type !== "formula"}
+  {#if !disabled && type !== "formula" && !disabled && type !== "attachment"}
     <div
       class={`icon ${getIconClass(value, type)}`}
       on:click={() => {

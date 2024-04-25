@@ -1,5 +1,9 @@
 import { save } from "../../api/controllers/row"
-import { cleanUpRow, getError } from "../automationUtils"
+import {
+  cleanUpRow,
+  getError,
+  sendAutomationAttachmentsToStorage,
+} from "../automationUtils"
 import { buildCtx } from "./utils"
 import {
   AutomationActionStepId,
@@ -89,6 +93,11 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
 
   try {
     inputs.row = await cleanUpRow(inputs.row.tableId, inputs.row)
+
+    inputs.row = await sendAutomationAttachmentsToStorage(
+      inputs.row.tableId,
+      inputs.row
+    )
     await save(ctx)
     return {
       row: inputs.row,
