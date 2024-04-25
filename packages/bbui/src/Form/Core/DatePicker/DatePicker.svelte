@@ -66,9 +66,9 @@
   on:open={onOpen}
   on:close={onClose}
   portalTarget={appendTo}
-  maxHeight={null}
   {anchor}
   {align}
+  fitToScreen={false}
 >
   {#if isOpen}
     <DatePickerPopoverContents
