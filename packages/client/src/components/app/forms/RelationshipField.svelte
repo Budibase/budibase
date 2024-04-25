@@ -180,7 +180,7 @@
       value &&
       Array.isArray(value)
     ) {
-      value = value[0]
+      value = value[0] || null
     }
 
     const changed = fieldApi.setValue(value)
