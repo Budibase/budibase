@@ -131,7 +131,8 @@ export default function (
           } else {
             user = await getUser(userId, session.tenantId)
           }
-          ;(user as any).csrfToken = session.csrfToken
+          // @ts-ignore
+          user.csrfToken = session.csrfToken
 
           if (session?.lastAccessedAt < timeMinusOneMinute()) {
             // make sure we denote that the session is still in use
