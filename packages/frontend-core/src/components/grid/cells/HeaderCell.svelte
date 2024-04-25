@@ -46,7 +46,6 @@
   let open = false
   let editIsOpen = false
   let timeout
-  let popover
   let migrationModal
   let searchValue
   let input
@@ -102,11 +101,6 @@
     editIsOpen = true
     await tick()
     dispatch("edit-column", column.schema)
-  }
-
-  const cancelEdit = () => {
-    popover.hide()
-    editIsOpen = false
   }
 
   const onMouseDown = e => {
@@ -234,7 +228,7 @@
   }
   const debouncedUpdateFilter = debounce(updateFilter, 250)
 
-  onMount(() => subscribe("close-edit-column", cancelEdit))
+  onMount(() => subscribe("close-edit-column", close))
 </script>
 
 <Modal bind:this={migrationModal}>
@@ -476,7 +470,7 @@
   }
 
   .content {
-    width: 300px;
+    width: 360px;
     padding: 20px;
     display: flex;
     flex-direction: column;
