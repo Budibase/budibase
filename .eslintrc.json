@@ -53,7 +53,8 @@
             "ignoreRestSiblings": true
           }
         ],
-        "local-rules/no-budibase-imports": "error"
+        "no-redeclare": "off",
+        "@typescript-eslint/no-redeclare": "error"
       }
     },
     {
