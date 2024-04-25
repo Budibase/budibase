@@ -19,12 +19,12 @@ import _ from "lodash"
 jest.unmock("mssql")
 
 describe.each([
-  // ["lucene", undefined],
+  ["lucene", undefined],
   ["sqs", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -774,42 +774,43 @@ describe.each([
             }).toContainExactly([{ auto: 1 }, { auto: 2 }]))
       })
 
-      describe("sort", () => {
-        it("sorts ascending", () =>
-          expectSearch({
-            query: {},
-            sort: "auto",
-            sortOrder: SortOrder.ASCENDING,
-          }).toMatchExactly([
-            { auto: 1 },
-            { auto: 2 },
-            { auto: 3 },
-            { auto: 4 },
-            { auto: 5 },
-            { auto: 6 },
-            { auto: 7 },
-            { auto: 8 },
-            { auto: 9 },
-            { auto: 10 },
-          ]))
+      isSqs &&
+        describe("sort", () => {
+          it("sorts ascending", () =>
+            expectSearch({
+              query: {},
+              sort: "auto",
+              sortOrder: SortOrder.ASCENDING,
+            }).toMatchExactly([
+              { auto: 1 },
+              { auto: 2 },
+              { auto: 3 },
+              { auto: 4 },
+              { auto: 5 },
+              { auto: 6 },
+              { auto: 7 },
+              { auto: 8 },
+              { auto: 9 },
+              { auto: 10 },
+            ]))
 
-        it("sorts descending", () =>
-          expectSearch({
-            query: {},
-            sort: "auto",
-            sortOrder: SortOrder.DESCENDING,
-          }).toMatchExactly([
-            { auto: 10 },
-            { auto: 9 },
-            { auto: 8 },
-            { auto: 7 },
-            { auto: 6 },
-            { auto: 5 },
-            { auto: 4 },
-            { auto: 3 },
-            { auto: 2 },
-            { auto: 1 },
-          ]))
-      })
+          it("sorts descending", () =>
+            expectSearch({
+              query: {},
+              sort: "auto",
+              sortOrder: SortOrder.DESCENDING,
+            }).toMatchExactly([
+              { auto: 10 },
+              { auto: 9 },
+              { auto: 8 },
+              { auto: 7 },
+              { auto: 6 },
+              { auto: 5 },
+              { auto: 4 },
+              { auto: 3 },
+              { auto: 2 },
+              { auto: 1 },
+            ]))
+        })
     })
 })
