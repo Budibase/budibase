@@ -240,6 +240,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         .split(",")
         .map(item => `"${item.trim()}"`)
       await client.query(`SET search_path TO ${search_path.join(",")};`)
+      this.clientCache.set(this.configHash, client)
     }
     return client
   }

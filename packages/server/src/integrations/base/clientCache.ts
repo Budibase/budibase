@@ -36,7 +36,10 @@ export class ClientCache<T> {
   }
 
   get(configHash: string): T | undefined {
-    return clientCache.get(configHash) as T
+    const value = clientCache.get(configHash) as ClientCacheValue<T>
+    if (value && value.client) {
+      return value.client
+    }
   }
 
   set(configHash: string, client: T) {
