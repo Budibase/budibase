@@ -28,6 +28,7 @@ export default function positionDropdown(element, opts) {
     // Compute bounds
     const anchorBounds = anchor.getBoundingClientRect()
     const elementBounds = element.getBoundingClientRect()
+    const padding = 8
     let styles = {
       maxHeight: null,
       minWidth,
@@ -42,51 +43,71 @@ export default function positionDropdown(element, opts) {
         offset: opts.offset,
       })
     } else {
-      const renderHeight = maxHeight || elementBounds.height
-
-      // Determine vertical styles
-      const topSpace = anchorBounds.top
-      const bottomSpace = window.innerHeight - anchorBounds.bottom
+      // "outside" alignment (popover vertical center = anchor vertical center)
       if (align === "right-outside" || align === "left-outside") {
         styles.top =
           anchorBounds.top + anchorBounds.height / 2 - elementBounds.height / 2
         styles.maxHeight = maxHeight
-        if (styles.top + elementBounds.height > window.innerHeight) {
-          styles.top = window.innerHeight - elementBounds.height
-        }
-      } else if (
-        window.innerHeight - anchorBounds.bottom < renderHeight + offset &&
-        topSpace - bottomSpace > 100
-      ) {
-        styles.top = anchorBounds.top - renderHeight - offset
-        styles.maxHeight = maxHeight
-      } else {
+      }
+
+      // Normal left/right alignment (top popover edge = botom anchor edge)
+      else {
         styles.top = anchorBounds.bottom + offset
-        styles.maxHeight =
-          maxHeight || window.innerHeight - anchorBounds.bottom - 20
+        styles.maxHeight = maxHeight || window.innerHeight - styles.top
       }
 
       // Determine horizontal styles
+      // Use anchor width if required
       if (!maxWidth && useAnchorWidth) {
         styles.maxWidth = anchorBounds.width
       }
       if (useAnchorWidth) {
         styles.minWidth = anchorBounds.width
       }
+
+      // Right alignment (right popover edge = right anchor edge)
       if (align === "right") {
         styles.left =
           anchorBounds.left + anchorBounds.width - elementBounds.width
-      } else if (align === "right-outside") {
+      }
+
+      // Right outside alignment (left popover edge = right anchor edge)
+      else if (align === "right-outside") {
         styles.left = anchorBounds.right + offset
-      } else if (align === "left-outside") {
+      }
+
+      // Left outside alignment (right popover edge = left anchor edge)
+      else if (align === "left-outside") {
         styles.left = anchorBounds.left - elementBounds.width - offset
-      } else {
+      }
+
+      // Left alignment by default (left popover edge = left anchor edge)
+      else {
         styles.left = anchorBounds.left
       }
 
       // Remove max height restriction if we don't want to shrink
       if (noShrink) {
         delete styles.maxHeight
+      }
+
+      // Handle screen overflow
+      // Check right overflow
+      if (styles.left + elementBounds.width > window.innerWidth) {
+        styles.left = window.innerWidth - elementBounds.width - padding
+      }
+      // Check bottom overflow
+      if (styles.top + elementBounds.height > window.innerHeight) {
+        styles.top = window.innerHeight - elementBounds.height - padding
+
+        // If we overflowed off the bottom and therefore locked to the bottom
+        // edge, we might now be covering the anchor. Therefore we can try
+        // moving left or right to reveal the full anchor again.
+        if (anchorBounds.right + elementBounds.width < window.innerWidth) {
+          styles.left = anchorBounds.right
+        } else if (anchorBounds.left - elementBounds.width > 0) {
+          styles.left = anchorBounds.left - elementBounds.width
+        }
       }
     }
 
