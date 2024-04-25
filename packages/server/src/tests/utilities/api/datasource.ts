@@ -5,6 +5,7 @@ import {
   UpdateDatasourceResponse,
   UpdateDatasourceRequest,
   QueryJson,
+  BuildSchemaFromSourceResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -61,12 +62,21 @@ export class DatasourceAPI extends TestAPI {
   }
 
   query = async (
-    query: Omit<QueryJson, "meta">,
+    query: Omit<QueryJson, "meta"> & Partial<Pick<QueryJson, "meta">>,
     expectations?: Expectations
   ) => {
     return await this._post<any>(`/api/datasources/query`, {
       body: query,
       expectations,
     })
+  }
+
+  fetchSchema = async (id: string, expectations?: Expectations) => {
+    return await this._post<BuildSchemaFromSourceResponse>(
+      `/api/datasources/${id}/schema`,
+      {
+        expectations,
+      }
+    )
   }
 }
