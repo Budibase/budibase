@@ -472,14 +472,13 @@ class InternalBuilder {
   ): Knex.QueryBuilder {
     const tableName = endpoint.entityId
     const tableAlias = aliases?.[tableName]
-    let table: string | Record<string, string> = tableName
-    if (tableAlias) {
-      table = { [tableAlias]: tableName }
-    }
-    let query = knex(table)
-    if (endpoint.schema) {
-      query = query.withSchema(endpoint.schema)
-    }
+
+    const query = knex(
+      this.tableNameWithSchema(tableName, {
+        alias: tableAlias,
+        schema: endpoint.schema,
+      })
+    )
     return query
   }
 

@@ -121,6 +121,9 @@ globals:
   # to the old value for the duration of the rotation.
   jwtSecretFallback: ""
 
+  ## -- If using S3 the bucket name to be used for storing temporary files
+  tempBucketName: ""
+
   smtp:
     # -- Whether to enable SMTP or not.
     enabled: false
