@@ -313,7 +313,7 @@
     align="right"
     on:close={close}
     maxHeight={null}
-    fitToScreen
+    resizable
   >
     {#if editIsOpen}
       <div class="content">

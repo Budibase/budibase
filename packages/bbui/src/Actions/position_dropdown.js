@@ -38,7 +38,7 @@ export default function positionDropdown(element, opts) {
       useAnchorWidth,
       offset = 5,
       customUpdate,
-      fitToScreen,
+      resizable,
       wrap,
     } = opts
     if (!anchor) {
@@ -82,7 +82,7 @@ export default function positionDropdown(element, opts) {
 
       // Applies a dynamic max height constraint if appropriate
       const applyMaxHeight = height => {
-        if (!styles.maxHeight && fitToScreen) {
+        if (!styles.maxHeight && resizable) {
           styles.maxHeight = height
         }
       }
