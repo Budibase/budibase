@@ -27,7 +27,7 @@ import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
-import { Client, ClientConfig, types } from "pg"
+import { ClientConfig, types, Pool } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import { exec } from "child_process"
 import { storeTempFile } from "../utilities/fileSystem"
@@ -152,7 +152,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   private readonly pgConfig: ClientConfig
   private readonly configHash: string
   private index: number = 1
-  private clientCache: ClientCache<Client>
+  private clientCache: ClientCache<Pool>
 
   PRIMARY_KEYS_SQL = () => `
   SELECT pg_namespace.nspname table_schema
@@ -194,7 +194,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           }
         : undefined,
     }
-    this.clientCache = new ClientCache<Client>(async client => {
+    this.clientCache = new ClientCache<Pool>(async client => {
       await this.closeConnection(client)
     })
     this.configHash = this.clientCache.hash(this.config)
@@ -228,12 +228,12 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     return parts.join(" || ")
   }
 
-  async getClient(): Promise<Client> {
-    let client: Client
+  async getClient(): Promise<Pool> {
+    let client: Pool
     if (this.clientCache.has(this.configHash)) {
       client = this.clientCache.get(this.configHash)
     } else {
-      client = new Client(this.pgConfig)
+      client = new Pool(this.pgConfig)
       await client.connect()
       if (!this.config.schema) {
         this.config.schema = "public"
@@ -246,14 +246,10 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     return client
   }
 
-  closeConnection(client: Client) {
-    return new Promise<void>((resolve, reject) => {
-      client.end((err: any) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve()
-        }
+  closeConnection(client: Pool) {
+    return new Promise<void>(resolve => {
+      client.end(() => {
+        resolve()
       })
     })
   }

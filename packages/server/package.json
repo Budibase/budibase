@@ -96,7 +96,6 @@
     "koa2-ratelimit": "1.1.1",
     "lodash": "4.17.21",
     "memorystream": "0.3.1",
-    "merkle-json": "^2.6.0",
     "mongodb": "^6.3.0",
     "mssql": "10.0.1",
     "mysql2": "3.9.7",

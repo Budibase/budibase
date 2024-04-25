@@ -1,21 +1,6 @@
-import { Duration } from "@budibase/backend-core"
+import { Duration, context } from "@budibase/backend-core"
 import LRUCache from "lru-cache"
-
-interface Merkle {
-  hash: (json: Record<string, any>) => string
-  stringify: (json: Record<string, any>) => string
-}
-
-interface MerkleConstructor {
-  new (): Merkle
-}
-
-// no typescript definition - fill it in
-const { MerkleJson } = require("merkle-json") as {
-  MerkleJson: MerkleConstructor
-}
-
-const jsonHash = new MerkleJson()
+import crypto from "crypto"
 
 type ClientCacheValue<T> = {
   destroy: (client: T) => Promise<void>
@@ -42,7 +27,12 @@ export class ClientCache<T> {
   }
 
   hash(config: Record<string, any>) {
-    return jsonHash.hash(config)
+    const tenantId = context.getTenantId()
+    const json = JSON.stringify(config)
+    return crypto
+      .createHash("sha256")
+      .update(tenantId + json)
+      .digest("base64")
   }
 
   has(configHash: string): boolean {
