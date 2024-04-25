@@ -2,6 +2,7 @@
   import { getContext } from "svelte"
   import { domDebounce } from "../../../utils/utils"
   import { DefaultRowHeight, ScrollBarSize } from "../lib/constants"
+  import { parseEventLocation } from "../lib/utils"
 
   const {
     scroll,
@@ -55,17 +56,10 @@
     $focusedCellAPI?.blur()
   }
 
-  const getLocation = e => {
-    return {
-      y: e.touches?.[0]?.clientY ?? e.clientY,
-      x: e.touches?.[0]?.clientX ?? e.clientX,
-    }
-  }
-
   // V scrollbar drag handlers
   const startVDragging = e => {
     e.preventDefault()
-    initialMouse = getLocation(e).y
+    initialMouse = parseEventLocation(e).y
     initialScroll = $scrollTop
     document.addEventListener("mousemove", moveVDragging)
     document.addEventListener("touchmove", moveVDragging)
@@ -75,7 +69,7 @@
     closePopovers()
   }
   const moveVDragging = domDebounce(e => {
-    const delta = getLocation(e).y - initialMouse
+    const delta = parseEventLocation(e).y - initialMouse
     const weight = delta / availHeight
     const newScrollTop = initialScroll + weight * $maxScrollTop
     scroll.update(state => ({
@@ -94,7 +88,7 @@
   // H scrollbar drag handlers
   const startHDragging = e => {
     e.preventDefault()
-    initialMouse = getLocation(e).x
+    initialMouse = parseEventLocation(e).x
     initialScroll = $scrollLeft
     document.addEventListener("mousemove", moveHDragging)
     document.addEventListener("touchmove", moveHDragging)
@@ -104,7 +98,7 @@
     closePopovers()
   }
   const moveHDragging = domDebounce(e => {
-    const delta = getLocation(e).x - initialMouse
+    const delta = parseEventLocation(e).x - initialMouse
     const weight = delta / availWidth
     const newScrollLeft = initialScroll + weight * $maxScrollLeft
     scroll.update(state => ({

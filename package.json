@@ -32,7 +32,6 @@
     "yargs": "^17.7.2"
   },
   "scripts": {
-    "preinstall": "node scripts/syncProPackage.js",
     "get-past-client-version": "node scripts/getPastClientVersion.js",
     "setup": "git config submodule.recurse true && git submodule update && node ./hosting/scripts/setup.js && yarn && yarn build && yarn dev",
     "build": "NODE_OPTIONS=--max-old-space-size=1500 lerna run build --stream",
@@ -107,6 +106,7 @@
     "@budibase/shared-core": "0.0.0",
     "@budibase/string-templates": "0.0.0",
     "@budibase/types": "0.0.0",
+    "@budibase/pro": "npm:@budibase/pro@latest",
     "tough-cookie": "4.1.3",
     "node-fetch": "2.6.7",
     "semver": "7.5.3",
