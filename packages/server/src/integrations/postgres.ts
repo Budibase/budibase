@@ -32,6 +32,7 @@ import { getReadableErrorMessage } from "./base/errorMapping"
 import { exec } from "child_process"
 import { storeTempFile } from "../utilities/fileSystem"
 import { env } from "@budibase/backend-core"
+import { ClientCache } from "./base/clientCache"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -147,10 +148,11 @@ const SCHEMA: Integration = {
 }
 
 class PostgresIntegration extends Sql implements DatasourcePlus {
-  private readonly client: Client
   private readonly config: PostgresConfig
+  private readonly pgConfig: ClientConfig
+  private readonly configHash: string
   private index: number = 1
-  private open: boolean
+  private clientCache: ClientCache<Client>
 
   PRIMARY_KEYS_SQL = () => `
   SELECT pg_namespace.nspname table_schema
@@ -181,7 +183,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     super(SqlClient.POSTGRES)
     this.config = config
 
-    let newConfig: ClientConfig = {
+    this.pgConfig = {
       ...this.config,
       ssl: this.config.ssl
         ? {
@@ -192,8 +194,10 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           }
         : undefined,
     }
-    this.client = new Client(newConfig)
-    this.open = false
+    this.clientCache = new ClientCache<Client>(async client => {
+      await this.closeConnection(client)
+    })
+    this.configHash = this.clientCache.hash(this.config)
   }
 
   async testConnection() {
@@ -202,7 +206,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
 
     try {
-      await this.openConnection()
+      await this.getClient()
       response.connected = true
     } catch (e: any) {
       if (typeof e.message === "string" && e.message !== "") {
@@ -212,8 +216,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       } else {
         response.error = "Unknown error"
       }
-    } finally {
-      await this.closeConnection()
     }
     return response
   }
@@ -226,23 +228,27 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     return parts.join(" || ")
   }
 
-  async openConnection() {
-    await this.client.connect()
-    if (!this.config.schema) {
-      this.config.schema = "public"
+  async getClient(): Promise<Client> {
+    let client: Client
+    if (this.clientCache.has(this.configHash)) {
+      client = this.clientCache.get(this.configHash)
+    } else {
+      client = new Client(this.pgConfig)
+      await client.connect()
+      if (!this.config.schema) {
+        this.config.schema = "public"
+      }
+      const search_path = this.config.schema
+        .split(",")
+        .map(item => `"${item.trim()}"`)
+      await client.query(`SET search_path TO ${search_path.join(",")};`)
     }
-    const search_path = this.config.schema
-      .split(",")
-      .map(item => `"${item.trim()}"`)
-    await this.client.query(`SET search_path TO ${search_path.join(",")};`)
-    this.open = true
+    return client
   }
 
-  closeConnection() {
-    const pg = this
+  closeConnection(client: Client) {
     return new Promise<void>((resolve, reject) => {
-      this.client.end((err: any) => {
-        pg.open = false
+      client.end((err: any) => {
         if (err) {
           reject(err)
         } else {
@@ -252,11 +258,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     })
   }
 
-  async internalQuery(query: SqlQuery, close: boolean = true) {
-    if (!this.open) {
-      await this.openConnection()
-    }
-    const client = this.client
+  async internalQuery(query: SqlQuery) {
+    const client = await this.getClient()
     this.index = 1
     // need to handle a specific issue with json data types in postgres,
     // new lines inside the JSON data will break it
@@ -274,7 +277,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       this.log(query.sql, bindings)
       return await client.query(query.sql, bindings)
     } catch (err: any) {
-      await this.closeConnection()
       let readableMessage = getReadableErrorMessage(
         SourceName.POSTGRES,
         err.code
@@ -283,10 +285,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         throw new Error(readableMessage)
       } else {
         throw new Error(err.message as string)
-      }
-    } finally {
-      if (close) {
-        await this.closeConnection()
       }
     }
   }
@@ -301,11 +299,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     entities: Record<string, Table>
   ): Promise<Schema> {
     let tableKeys: { [key: string]: string[] } = {}
-    await this.openConnection()
+    const client = await this.getClient()
     try {
-      const primaryKeysResponse = await this.client.query(
-        this.PRIMARY_KEYS_SQL()
-      )
+      const primaryKeysResponse = await client.query(this.PRIMARY_KEYS_SQL())
       for (let table of primaryKeysResponse.rows) {
         const tableName = table.table_name
         if (!tableKeys[tableName]) {
@@ -322,13 +318,14 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
 
     try {
-      const columnsResponse: { rows: PostgresColumn[] } =
-        await this.client.query(this.COLUMNS_SQL())
+      const columnsResponse: { rows: PostgresColumn[] } = await client.query(
+        this.COLUMNS_SQL()
+      )
 
       const tables: { [key: string]: Table } = {}
 
       // Fetch enum values
-      const enumsResponse = await this.client.query(this.ENUM_VALUES())
+      const enumsResponse = await client.query(this.ENUM_VALUES())
       const enumValues = enumsResponse.rows?.reduce((acc, row) => {
         if (!acc[row.typname]) {
           return {
@@ -384,20 +381,19 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     } catch (err) {
       // @ts-ignore
       throw new Error(err)
-    } finally {
-      await this.closeConnection()
     }
   }
 
   async getTableNames() {
     try {
-      await this.openConnection()
-      const columnsResponse: { rows: PostgresColumn[] } =
-        await this.client.query(this.COLUMNS_SQL())
+      const client = await this.getClient()
+      const columnsResponse: { rows: PostgresColumn[] } = await client.query(
+        this.COLUMNS_SQL()
+      )
       const names = columnsResponse.rows.map(row => row.table_name)
       return [...new Set(names)]
-    } finally {
-      await this.closeConnection()
+    } catch (err: any) {
+      throw new Error(`Unable to fetch table names, ${err.message}`)
     }
   }
 
@@ -427,9 +423,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     if (Array.isArray(input)) {
       const responses = []
       for (let query of input) {
-        responses.push(await this.internalQuery(query, false))
+        responses.push(await this.internalQuery(query))
       }
-      await this.closeConnection()
       return responses
     } else {
       const response = await this.internalQuery(input)
