@@ -51,7 +51,6 @@
     ? flatten(fieldState?.value) ?? []
     : flatten(fieldState?.value)?.[0]
   $: component = multiselect ? CoreMultiselect : CoreSelect
-  $: expandedDefaultValue = expand(defaultValue)
   $: primaryDisplay = primaryDisplay || tableDefinition?.primaryDisplay
 
   let optionsObj
@@ -115,7 +114,6 @@
 
   const forceFetchRows = async () => {
     fieldApi?.setValue([])
-    selectedValue = []
     debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
   }
   const fetchRows = async (searchTerm, primaryDisplay, defaultVal) => {
@@ -157,6 +155,7 @@
     if (!values) {
       return []
     }
+
     if (!Array.isArray(values)) {
       values = [values]
     }
@@ -170,20 +169,18 @@
     return row?.[primaryDisplay] || "-"
   }
 
-  const expand = values => {
-    if (!values) {
-      return []
-    }
-    if (Array.isArray(values)) {
-      return values
-    }
-    return values.split(",").map(value => value.trim())
-  }
-
   const handleChange = e => {
     let value = e.detail
-    if (!multiselect && type !== FieldType.BB_REFERENCE_SINGLE) {
+    if (!multiselect) {
       value = value == null ? [] : [value]
+    }
+
+    if (
+      type === FieldType.BB_REFERENCE_SINGLE &&
+      value &&
+      Array.isArray(value)
+    ) {
+      value = value[0]
     }
 
     const changed = fieldApi.setValue(value)
@@ -207,7 +204,7 @@
   {disabled}
   {readonly}
   {validation}
-  defaultValue={expandedDefaultValue}
+  {defaultValue}
   {type}
   {span}
   {helpText}
