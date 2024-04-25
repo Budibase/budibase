@@ -11,7 +11,9 @@ interface MerkleConstructor {
 }
 
 // no typescript definition - fill it in
-const MerkleJson = require("merkle-json") as MerkleConstructor
+const { MerkleJson } = require("merkle-json") as {
+  MerkleJson: MerkleConstructor
+}
 
 const jsonHash = new MerkleJson()
 
