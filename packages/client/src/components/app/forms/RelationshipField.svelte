@@ -2,7 +2,7 @@
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
   import { fetchData, Utils } from "@budibase/frontend-core"
-  import { getContext, onMount } from "svelte"
+  import { getContext } from "svelte"
   import Field from "./Field.svelte"
 
   const { API } = getContext("sdk")
@@ -29,7 +29,6 @@
   let tableDefinition
   let searchTerm
   let open
-  let initialValue
 
   $: multiselect =
     [FieldType.LINK, FieldType.BB_REFERENCE].includes(type) &&
@@ -55,15 +54,17 @@
   $: expandedDefaultValue = expand(defaultValue)
   $: primaryDisplay = primaryDisplay || tableDefinition?.primaryDisplay
 
-  let optionsObj = {}
-  let initialValuesProcessed
+  let optionsObj
 
   $: {
-    if (!initialValuesProcessed && primaryDisplay) {
+    if (primaryDisplay && fieldState && !optionsObj) {
       // Persist the initial values as options, allowing them to be present in the dropdown,
       // even if they are not in the inital fetch results
-      initialValuesProcessed = true
-      optionsObj = (fieldState?.value || []).reduce((accumulator, value) => {
+      const valueAsSafeArray =
+        (!fieldState.value || Array.isArray(fieldState.value)
+          ? fieldState.value
+          : [fieldState.value]) || []
+      optionsObj = valueAsSafeArray.reduce((accumulator, value) => {
         // fieldState has to be an array of strings to be valid for an update
         // therefore we cannot guarantee value will be an object
         // https://linear.app/budibase/issue/BUDI-7577/refactor-the-relationshipfield-component-to-have-better-support-for
@@ -75,7 +76,7 @@
           [primaryDisplay]: value.primaryDisplay,
         }
         return accumulator
-      }, optionsObj)
+      }, {})
     }
   }
 
@@ -86,7 +87,7 @@
         accumulator[row._id] = row
       }
       return accumulator
-    }, optionsObj)
+    }, optionsObj || {})
 
     return Object.values(result)
   }
@@ -110,15 +111,9 @@
   }
 
   $: forceFetchRows(filter)
-  $: debouncedFetchRows(
-    searchTerm,
-    primaryDisplay,
-    initialValue || defaultValue
-  )
+  $: debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
 
   const forceFetchRows = async () => {
-    // if the filter has changed, then we need to reset the options, clear the selection, and re-fetch
-    optionsObj = {}
     fieldApi?.setValue([])
     selectedValue = []
     debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
@@ -136,7 +131,7 @@
     if (defaultVal && !Array.isArray(defaultVal)) {
       defaultVal = defaultVal.split(",")
     }
-    if (defaultVal && defaultVal.some(val => !optionsObj[val])) {
+    if (defaultVal && optionsObj && defaultVal.some(val => !optionsObj[val])) {
       await fetch.update({
         query: { oneOf: { _id: defaultVal } },
       })
@@ -168,23 +163,11 @@
     values = values.map(value =>
       typeof value === "object" ? value._id : value
     )
-    // Make sure field state is valid
-    if (values?.length > 0) {
-      fieldApi.setValue(values)
-    }
     return values
   }
 
   const getDisplayName = row => {
     return row?.[primaryDisplay] || "-"
-  }
-
-  const singleHandler = e => {
-    handleChange(e.detail == null ? [] : [e.detail])
-  }
-
-  const multiHandler = e => {
-    handleChange(e.detail)
   }
 
   const expand = values => {
@@ -197,7 +180,12 @@
     return values.split(",").map(value => value.trim())
   }
 
-  const handleChange = value => {
+  const handleChange = e => {
+    let value = e.detail
+    if (!multiselect && type !== FieldType.BB_REFERENCE_SINGLE) {
+      value = value == null ? [] : [value]
+    }
+
     const changed = fieldApi.setValue(value)
     if (onChange && changed) {
       onChange({
@@ -211,16 +199,6 @@
       fetch.nextPage()
     }
   }
-
-  onMount(() => {
-    // if the form is in 'Update' mode, then we need to fetch the matching row so that the value is correctly set
-    if (fieldState?.value) {
-      initialValue =
-        fieldSchema?.relationshipType !== "one-to-many"
-          ? flatten(fieldState?.value) ?? []
-          : flatten(fieldState?.value)?.[0]
-    }
-  })
 </script>
 
 <Field
@@ -243,7 +221,7 @@
       options={enrichedOptions}
       {autocomplete}
       value={selectedValue}
-      on:change={multiselect ? multiHandler : singleHandler}
+      on:change={handleChange}
       on:loadMore={loadMore}
       id={fieldState.fieldId}
       disabled={fieldState.disabled}
