@@ -1,6 +1,7 @@
 <script>
   import { getContext, onMount } from "svelte"
-  import { Icon, Popover, clickOutside } from "@budibase/bbui"
+  import { Icon } from "@budibase/bbui"
+  import GridPopover from "../overlays/GridPopover.svelte"
 
   const { visibleColumns, scroll, width, subscribe } = getContext("grid")
 
@@ -32,23 +33,18 @@
 >
   <Icon name="Add" />
 </div>
-<Popover
-  bind:open
-  {anchor}
-  align={$visibleColumns.length ? "right" : "left"}
-  offset={0}
-  popoverTarget={document.getElementById(`add-column-button`)}
-  customZindex={50}
->
-  <div
-    use:clickOutside={() => {
-      open = false
-    }}
-    class="content"
+{#if open}
+  <GridPopover
+    {anchor}
+    align={$visibleColumns.length ? "right" : "left"}
+    on:close={close}
+    maxHeight={null}
   >
-    <slot />
-  </div>
-</Popover>
+    <div class="content">
+      <slot />
+    </div>
+  </GridPopover>
+{/if}
 
 <style>
   .add {

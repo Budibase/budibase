@@ -15,6 +15,9 @@ let clickHandlers = []
  * Handle a body click event
  */
 const handleClick = event => {
+  // Treat right clicks (context menu events) as normal clicks
+  const eventType = event.type === "contextmenu" ? "click" : event.type
+
   // Ignore click if this is an ignored class
   if (event.target.closest('[data-ignore-click-outside="true"]')) {
     return
@@ -28,7 +31,7 @@ const handleClick = event => {
   // Process handlers
   clickHandlers.forEach(handler => {
     // Check that we're the right kind of click event
-    if (handler.allowedType && event.type !== handler.allowedType) {
+    if (handler.allowedType && eventType !== handler.allowedType) {
       return
     }
 
@@ -51,6 +54,7 @@ const handleClick = event => {
 }
 document.documentElement.addEventListener("click", handleClick, true)
 document.documentElement.addEventListener("mousedown", handleClick, true)
+document.documentElement.addEventListener("contextmenu", handleClick, true)
 
 /**
  * Adds or updates a click handler
