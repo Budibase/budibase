@@ -10,7 +10,7 @@ export const DefaultRowHeight = SmallRowHeight
 export const NewRowID = "new"
 export const BlankRowID = "blank"
 export const RowPageSize = 100
-export const FocusedCellMinOffset = 48
+export const FocusedCellMinOffset = ScrollBarSize * 3
 export const ControlsHeight = 50
 
 // Popovers
