@@ -61,7 +61,6 @@ describe.each([
   }
 
   async function createRows(rows: Record<string, any>[]) {
-    // await config.api.row.bulkImport(table._id!, { rows })
     for (const row of rows) {
       await config.api.row.save(table._id!, row)
     }
