@@ -6,8 +6,6 @@
  * - right-outside
  **/
 
-import { off } from "process"
-
 // Strategies are defined as [Popover]To[Anchor].
 // They can apply for both horizontal and vertical alignment.
 const Strategies = {
