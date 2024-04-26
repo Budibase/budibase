@@ -116,7 +116,7 @@ export interface BBReferenceFieldMetadata
 export interface BBReferenceSingleFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE_SINGLE
-  subtype: BBReferenceFieldSubType
+  subtype: Exclude<BBReferenceFieldSubType, BBReferenceFieldSubType.USERS>
 }
 
 export interface AttachmentFieldMetadata extends BaseFieldSchema {
