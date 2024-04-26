@@ -1,9 +1,10 @@
 // all added by grid/table when defining the
 // column size, position and whether it can be viewed
-import { FieldSubtype, FieldType } from "../row"
+import { FieldType } from "../row"
 import {
   AutoFieldSubType,
   AutoReason,
+  BBReferenceFieldSubType,
   FormulaType,
   JsonFieldSubType,
   RelationshipType,
@@ -91,6 +92,7 @@ export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.DATETIME
   ignoreTimezones?: boolean
   timeOnly?: boolean
+  dateOnly?: boolean
   subtype?: AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT
 }
 
@@ -108,7 +110,7 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
 export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
   relationshipType?: RelationshipType
 }
 
