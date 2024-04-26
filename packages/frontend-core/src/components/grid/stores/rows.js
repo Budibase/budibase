@@ -523,6 +523,7 @@ export const initialise = context => {
     previousFocusedCellId,
     rows,
     validation,
+    focusedCellId,
   } = context
 
   // Wipe the row change cache when changing row
@@ -537,12 +538,22 @@ export const initialise = context => {
 
   // Ensure any unsaved changes are saved when changing cell
   previousFocusedCellId.subscribe(async id => {
-    const rowId = id?.split("-")[0]
-    const hasErrors = validation.actions.rowHasErrors(rowId)
-    const hasChanges = Object.keys(get(rowChangeCache)[rowId] || {}).length > 0
-    const isSavingChanges = get(inProgressChanges)[rowId]
-    if (rowId && !hasErrors && hasChanges && !isSavingChanges) {
-      await rows.actions.applyRowChanges(rowId)
+    if (!id) {
+      return
+    }
+    // Stop if we changed row
+    const oldRowId = id.split("-")[0]
+    const oldColumn = id.split("-")[1]
+    const newRowId = get(focusedCellId)?.split("-")[0]
+    if (oldRowId !== newRowId) {
+      return
+    }
+    // Otherwise we just changed cell in the same row
+    const hasChanges = oldColumn in (get(rowChangeCache)[oldRowId] || {})
+    const hasErrors = validation.actions.rowHasErrors(oldRowId)
+    const isSavingChanges = get(inProgressChanges)[oldRowId]
+    if (oldRowId && !hasErrors && hasChanges && !isSavingChanges) {
+      await rows.actions.applyRowChanges(oldRowId)
     }
   })
 }
