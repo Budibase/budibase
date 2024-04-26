@@ -496,7 +496,7 @@ describe.each([
         oldColumn: table.schema["user relationship"],
         newColumn: {
           name: "user column",
-          type: FieldType.BB_REFERENCE,
+          type: FieldType.BB_REFERENCE_SINGLE,
           subtype: BBReferenceFieldSubType.USER,
         },
       })
@@ -515,7 +515,7 @@ describe.each([
         expect(migratedRow["user column"]).toBeDefined()
         expect(migratedRow["user relationship"]).not.toBeDefined()
         expect(row["user relationship"][0]._id).toEqual(
-          migratedRow["user column"][0]._id
+          migratedRow["user column"]._id
         )
       }
     })
@@ -562,7 +562,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USERS,
+          subtype: BBReferenceFieldSubType.USER,
         },
       })
 
@@ -614,7 +614,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USERS,
+          subtype: BBReferenceFieldSubType.USER,
         },
       })
 
@@ -669,7 +669,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USERS,
+          subtype: BBReferenceFieldSubType.USER,
         },
       })
 
@@ -728,7 +728,7 @@ describe.each([
             newColumn: {
               name: "",
               type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USERS,
+              subtype: BBReferenceFieldSubType.USER,
             },
           },
           { status: 400 }
@@ -743,7 +743,7 @@ describe.each([
             newColumn: {
               name: "_id",
               type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USERS,
+              subtype: BBReferenceFieldSubType.USER,
             },
           },
           { status: 400 }
@@ -758,7 +758,7 @@ describe.each([
             newColumn: {
               name: "num",
               type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USERS,
+              subtype: BBReferenceFieldSubType.USER,
             },
           },
           { status: 400 }
@@ -772,12 +772,12 @@ describe.each([
             oldColumn: {
               name: "not a column",
               type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USERS,
+              subtype: BBReferenceFieldSubType.USER,
             },
             newColumn: {
               name: "new column",
               type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USERS,
+              subtype: BBReferenceFieldSubType.USER,
             },
           },
           { status: 400 }
