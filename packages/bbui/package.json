@@ -83,7 +83,6 @@
     "dayjs": "^1.10.8",
     "easymde": "^2.16.1",
     "svelte-dnd-action": "^0.9.8",
-    "svelte-flatpickr": "3.2.3",
     "svelte-portal": "^1.0.0"
   },
   "resolutions": {
