@@ -13,7 +13,7 @@ import {
   DeleteRow,
   FieldSchema,
   FieldType,
-  FieldTypeSubtypes,
+  FieldSubtype,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
   NumberFieldMetadata,
@@ -1015,12 +1015,12 @@ describe.each([
         user: {
           name: "user",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          subtype: FieldSubtype.USER,
         },
         users: {
           name: "users",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USERS,
+          subtype: FieldSubtype.USERS,
         },
       }),
       () => config.createUser(),
