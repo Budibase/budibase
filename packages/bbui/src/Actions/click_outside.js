@@ -1,7 +1,13 @@
 const ignoredClasses = [
-  ".flatpickr-calendar",
-  ".spectrum-Popover",
   ".download-js-link",
+  ".flatpickr-calendar",
+  ".spectrum-Menu",
+  ".date-time-popover",
+]
+const conditionallyIgnoredClasses = [
+  ".spectrum-Underlay",
+  ".drawer-wrapper",
+  ".spectrum-Popover",
 ]
 let clickHandlers = []
 
@@ -9,6 +15,9 @@ let clickHandlers = []
  * Handle a body click event
  */
 const handleClick = event => {
+  // Treat right clicks (context menu events) as normal clicks
+  const eventType = event.type === "contextmenu" ? "click" : event.type
+
   // Ignore click if this is an ignored class
   if (event.target.closest('[data-ignore-click-outside="true"]')) {
     return
@@ -21,26 +30,23 @@ const handleClick = event => {
 
   // Process handlers
   clickHandlers.forEach(handler => {
+    // Check that we're the right kind of click event
+    if (handler.allowedType && eventType !== handler.allowedType) {
+      return
+    }
+
+    // Check that the click isn't inside the target
     if (handler.element.contains(event.target)) {
       return
     }
 
-    // Ignore clicks for modals, unless the handler is registered from a modal
-    const sourceInModal = handler.anchor.closest(".spectrum-Underlay") != null
-    const clickInModal = event.target.closest(".spectrum-Underlay") != null
-    if (clickInModal && !sourceInModal) {
-      return
-    }
-
-    // Ignore clicks for drawers, unless the handler is registered from a drawer
-    const sourceInDrawer = handler.anchor.closest(".drawer-wrapper") != null
-    const clickInDrawer = event.target.closest(".drawer-wrapper") != null
-    if (clickInDrawer && !sourceInDrawer) {
-      return
-    }
-
-    if (handler.allowedType && event.type !== handler.allowedType) {
-      return
+    // Ignore clicks for certain classes unless we're nested inside them
+    for (let className of conditionallyIgnoredClasses) {
+      const sourceInside = handler.anchor.closest(className) != null
+      const clickInside = event.target.closest(className) != null
+      if (clickInside && !sourceInside) {
+        return
+      }
     }
 
     handler.callback?.(event)
@@ -48,6 +54,7 @@ const handleClick = event => {
 }
 document.documentElement.addEventListener("click", handleClick, true)
 document.documentElement.addEventListener("mousedown", handleClick, true)
+document.documentElement.addEventListener("contextmenu", handleClick, true)
 
 /**
  * Adds or updates a click handler

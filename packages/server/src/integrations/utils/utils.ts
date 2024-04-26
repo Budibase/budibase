@@ -6,10 +6,15 @@ import {
   TableSourceType,
   FieldSchema,
 } from "@budibase/types"
+import { context, objectStore } from "@budibase/backend-core"
+import { v4 } from "uuid"
+import { parseStringPromise as xmlParser } from "xml2js"
+import { formatBytes } from "../../utilities"
+import bl from "bl"
+import env from "../../environment"
 import { DocumentType, SEPARATOR } from "../../db/utils"
 import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
 import { helpers, utils } from "@budibase/shared-core"
-import env from "../../environment"
 import { Knex } from "knex"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
@@ -466,4 +471,75 @@ export function getPrimaryDisplay(testValue: unknown): string | undefined {
 
 export function isValidFilter(value: any) {
   return value != null && value !== ""
+}
+
+export async function handleXml(response: any) {
+  let data,
+    rawXml = await response.text()
+  data =
+    (await xmlParser(rawXml, {
+      explicitArray: false,
+      trim: true,
+      explicitRoot: false,
+    })) || {}
+  // there is only one structure, its an array, return the array so it appears as rows
+  const keys = Object.keys(data)
+  if (keys.length === 1 && Array.isArray(data[keys[0]])) {
+    data = data[keys[0]]
+  }
+  return { data, rawXml }
+}
+
+export async function handleFileResponse(
+  response: any,
+  filename: string,
+  startTime: number
+) {
+  let presignedUrl,
+    size = 0
+  const fileExtension = filename.includes(".")
+    ? filename.split(".").slice(1).join(".")
+    : ""
+
+  const processedFileName = `${v4()}.${fileExtension}`
+  const key = `${context.getProdAppId()}/${processedFileName}`
+  const bucket = objectStore.ObjectStoreBuckets.TEMP
+
+  const stream = response.body.pipe(bl((error, data) => data))
+
+  if (response.body) {
+    const contentLength = response.headers.get("content-length")
+    if (contentLength) {
+      size = parseInt(contentLength, 10)
+    } else {
+      const chunks: Buffer[] = []
+      for await (const chunk of response.body) {
+        chunks.push(chunk)
+        size += chunk.length
+      }
+    }
+
+    await objectStore.streamUpload({
+      bucket,
+      filename: key,
+      stream,
+      ttl: 1,
+      type: response.headers["content-type"],
+    })
+  }
+  presignedUrl = await objectStore.getPresignedUrl(bucket, key)
+  return {
+    data: {
+      size,
+      name: processedFileName,
+      url: presignedUrl,
+      extension: fileExtension,
+      key: key,
+    },
+    info: {
+      code: response.status,
+      size: formatBytes(size.toString()),
+      time: `${Math.round(performance.now() - startTime)}ms`,
+    },
+  }
 }

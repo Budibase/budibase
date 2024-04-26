@@ -196,6 +196,20 @@ export const createActions = context => {
   // Handles validation errors from the rows API and updates local validation
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
+    // If the server doesn't reply with a valid error, assume that the source
+    // of the error is the focused cell's column
+    if (!error?.json?.validationErrors && error?.message) {
+      const focusedColumn = get(focusedCellId)?.split("-")[1]
+      if (focusedColumn) {
+        error = {
+          json: {
+            validationErrors: {
+              [focusedColumn]: error.message,
+            },
+          },
+        }
+      }
+    }
     if (error?.json?.validationErrors) {
       // Normal validation errors
       const keys = Object.keys(error.json.validationErrors)
@@ -214,11 +228,19 @@ export const createActions = context => {
 
       // Process errors for columns that we have
       for (let column of erroredColumns) {
+        // Ensure we have a valid error to display
+        let err = error.json.validationErrors[column]
+        if (Array.isArray(err)) {
+          err = err[0]
+        }
+        if (typeof err !== "string" || !err.length) {
+          error = "Something went wrong"
+        }
+        // Set error against the cell
         validation.actions.setError(
           `${rowId}-${column}`,
-          `${column} ${error.json.validationErrors[column]}`
+          Helpers.capitalise(err)
         )
-
         // Ensure the column is visible
         const index = $columns.findIndex(x => x.name === column)
         if (index !== -1 && !$columns[index].visible) {
@@ -523,6 +545,7 @@ export const initialise = context => {
     previousFocusedCellId,
     rows,
     validation,
+    focusedCellId,
   } = context
 
   // Wipe the row change cache when changing row
@@ -537,12 +560,22 @@ export const initialise = context => {
 
   // Ensure any unsaved changes are saved when changing cell
   previousFocusedCellId.subscribe(async id => {
-    const rowId = id?.split("-")[0]
-    const hasErrors = validation.actions.rowHasErrors(rowId)
-    const hasChanges = Object.keys(get(rowChangeCache)[rowId] || {}).length > 0
-    const isSavingChanges = get(inProgressChanges)[rowId]
-    if (rowId && !hasErrors && hasChanges && !isSavingChanges) {
-      await rows.actions.applyRowChanges(rowId)
+    if (!id) {
+      return
+    }
+    // Stop if we changed row
+    const oldRowId = id.split("-")[0]
+    const oldColumn = id.split("-")[1]
+    const newRowId = get(focusedCellId)?.split("-")[0]
+    if (oldRowId !== newRowId) {
+      return
+    }
+    // Otherwise we just changed cell in the same row
+    const hasChanges = oldColumn in (get(rowChangeCache)[oldRowId] || {})
+    const hasErrors = validation.actions.rowHasErrors(oldRowId)
+    const isSavingChanges = get(inProgressChanges)[oldRowId]
+    if (oldRowId && !hasErrors && hasChanges && !isSavingChanges) {
+      await rows.actions.applyRowChanges(oldRowId)
     }
   })
 }

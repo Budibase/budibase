@@ -35,6 +35,8 @@
   export let bindingDrawerLeft
   export let allowHelpers = true
   export let customButtonText = null
+  export let keyBindings = false
+  export let allowJS = false
   export let compare = (option, value) => option === value
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
@@ -116,12 +118,23 @@
     class:readOnly-menu={readOnly && showMenu}
   >
     {#each fields as field, idx}
-      <Input
-        placeholder={keyPlaceholder}
-        readonly={readOnly}
-        bind:value={field.name}
-        on:blur={changed}
-      />
+      {#if keyBindings}
+        <DrawerBindableInput
+          {bindings}
+          placeholder={keyPlaceholder}
+          on:blur={e => {
+            field.name = e.detail
+            changed()
+          }}
+          disabled={readOnly}
+          value={field.name}
+          {allowJS}
+          {allowHelpers}
+          drawerLeft={bindingDrawerLeft}
+        />
+      {:else}
+        <Input readonly={readOnly} bind:value={field.name} on:blur={changed} />
+      {/if}
       {#if isJsonArray(field.value)}
         <Select readonly={true} value="Array" options={["Array"]} />
       {:else if options}
@@ -134,14 +147,14 @@
       {:else if bindings && bindings.length}
         <DrawerBindableInput
           {bindings}
-          placeholder="Value"
+          placeholder={valuePlaceholder}
           on:blur={e => {
             field.value = e.detail
             changed()
           }}
           disabled={readOnly}
           value={field.value}
-          allowJS={false}
+          {allowJS}
           {allowHelpers}
           drawerLeft={bindingDrawerLeft}
         />
