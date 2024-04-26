@@ -12,7 +12,7 @@ import SqlTableQueryBuilder from "./sqlTable"
 import {
   BBReferenceFieldMetadata,
   FieldSchema,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   FieldType,
   JsonFieldMetadata,
   Operation,
@@ -767,7 +767,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return (
       field.type === FieldType.JSON ||
       (field.type === FieldType.BB_REFERENCE &&
-        field.subtype === FieldSubtype.USERS)
+        field.subtype === BBReferenceFieldSubType.USERS)
     )
   }
 

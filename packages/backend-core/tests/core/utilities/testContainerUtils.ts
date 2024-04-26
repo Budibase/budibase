@@ -28,7 +28,11 @@ function getTestcontainers(): ContainerInfo[] {
     .split("\n")
     .filter(x => x.length > 0)
     .map(x => JSON.parse(x) as ContainerInfo)
-    .filter(x => x.Labels.includes("org.testcontainers=true"))
+    .filter(
+      x =>
+        x.Labels.includes("org.testcontainers=true") &&
+        x.Labels.includes("com.budibase=true")
+    )
 }
 
 export function getContainerByImage(image: string) {

@@ -11,6 +11,7 @@ export enum PlanType {
   /** @deprecated */
   BUSINESS = "business",
   ENTERPRISE_BASIC = "enterprise_basic",
+  ENTERPRISE_BASIC_TRIAL = "enterprise_basic_trial",
   ENTERPRISE = "enterprise",
 }
 
