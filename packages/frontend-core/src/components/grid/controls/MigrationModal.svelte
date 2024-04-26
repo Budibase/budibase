@@ -33,10 +33,10 @@
   }
 
   const migrateUserColumn = async () => {
-    let subtype = BBReferenceFieldSubType.USERS
-    if (column.schema.relationshipType === RelationshipType.ONE_TO_MANY) {
-      subtype = BBReferenceFieldSubType.USER
-    }
+    const type =
+      column.schema.relationshipType === RelationshipType.ONE_TO_MANY
+        ? FieldType.BB_REFERENCE_SINGLE
+        : FieldType.BB_REFERENCE
 
     try {
       await API.migrateColumn({
@@ -44,8 +44,8 @@
         oldColumn: column.schema,
         newColumn: {
           name: newColumnName,
-          type: FieldType.BB_REFERENCE,
-          subtype,
+          type,
+          subtype: BBReferenceFieldSubType.USER,
         },
       })
       notifications.success("Column migrated")
