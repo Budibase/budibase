@@ -54,7 +54,8 @@ function generateSchema(
     ) {
       continue
     }
-    switch (column.type) {
+    const columnType = column.type
+    switch (columnType) {
       case FieldType.STRING:
       case FieldType.OPTIONS:
       case FieldType.LONGFORM:
@@ -128,8 +129,18 @@ function generateSchema(
             .references(`${tableName}.${relatedPrimary}`)
         }
         break
+      case FieldType.FORMULA:
+        // This is allowed, but nothing to do on the external datasource
+        break
+      case FieldType.ATTACHMENTS:
+      case FieldType.ATTACHMENT_SINGLE:
+      case FieldType.AUTO:
+      case FieldType.JSON:
+      case FieldType.INTERNAL:
+        throw `${column.type} is not a valid SQL type`
+
       default:
-        utils.unreachable(column.type)
+        utils.unreachable(columnType)
     }
   }
 
