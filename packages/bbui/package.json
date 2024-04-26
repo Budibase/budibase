@@ -21,7 +21,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
     "postcss": "^8.2.9",
-    "rollup": "^4.9.6",
+    "rollup": "^2.45.2",
     "rollup-plugin-postcss": "^4.0.0",
     "rollup-plugin-svelte": "^7.1.0",
     "rollup-plugin-terser": "^7.0.2"
@@ -43,6 +43,7 @@
     "@spectrum-css/avatar": "3.0.2",
     "@spectrum-css/button": "3.0.1",
     "@spectrum-css/buttongroup": "3.0.2",
+    "@spectrum-css/calendar": "3.2.7",
     "@spectrum-css/checkbox": "3.0.2",
     "@spectrum-css/dialog": "3.0.1",
     "@spectrum-css/divider": "1.0.3",
