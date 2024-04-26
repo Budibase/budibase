@@ -63,7 +63,6 @@
   let savingColumn
   let deleteColName
   let jsonSchemaModal
-  let allowedTypes = []
   let editableColumn = {
     type: FIELDS.STRING.type,
     constraints: FIELDS.STRING.constraints,
@@ -171,6 +170,11 @@
       SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
 
+  $: allowedTypes = getAllowedTypes(datasource).map(t => ({
+    fieldId: makeFieldId(t.type, t.subtype),
+    ...t,
+  }))
+
   const fieldDefinitions = Object.values(FIELDS).reduce(
     // Storing the fields by complex field id
     (acc, field) => ({
@@ -225,11 +229,6 @@
         editableColumn.subtype,
         editableColumn.autocolumn
       )
-
-      allowedTypes = getAllowedTypes(datasource).map(t => ({
-        fieldId: makeFieldId(t.type, t.subtype),
-        ...t,
-      }))
     }
   }
 
