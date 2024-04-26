@@ -1,6 +1,6 @@
 import {
   FieldType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
   AutoFieldSubType,
   Hosting,
@@ -160,21 +160,25 @@ export const FIELDS = {
   USER: {
     name: "User",
     type: FieldType.BB_REFERENCE_SINGLE,
-    subtype: FieldSubtype.USER,
-    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][FieldSubtype.USER],
+    subtype: BBReferenceFieldSubType.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
+      BBReferenceFieldSubType.USER
+    ],
   },
   // Used for display of editing existing columns
   OLD_USER: {
     name: "User",
     type: FieldType.BB_REFERENCE,
-    subtype: FieldSubtype.USER,
-    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][FieldSubtype.USER],
+    subtype: BBReferenceFieldSubType.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
+      BBReferenceFieldSubType.USER
+    ],
   },
   USERS: {
     name: "User List",
     type: FieldType.BB_REFERENCE,
-    subtype: FieldSubtype.USERS,
-    icon: TypeIconMap[FieldType.BB_REFERENCE][FieldSubtype.USERS],
+    subtype: BBReferenceFieldSubType.USERS,
+    icon: TypeIconMap[FieldType.BB_REFERENCE][BBReferenceFieldSubType.USERS],
     constraints: {
       type: "array",
     },

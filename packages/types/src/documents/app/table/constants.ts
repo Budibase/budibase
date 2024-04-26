@@ -24,3 +24,9 @@ export enum FormulaType {
   STATIC = "static",
   DYNAMIC = "dynamic",
 }
+
+export enum BBReferenceFieldSubType {
+  USER = "user",
+  /** @deprecated this should not be used anymore, left here in order to support the existing usages */
+  USERS = "users",
+}

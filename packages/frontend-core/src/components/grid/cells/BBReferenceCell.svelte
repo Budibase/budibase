@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import RelationshipCell from "./RelationshipCell.svelte"
-  import { FieldSubtype, RelationshipType } from "@budibase/types"
+  import { BBReferenceFieldSubType, RelationshipType } from "@budibase/types"
 
   export let api
   export let hideCounter = false
@@ -14,13 +14,16 @@
     // This is not really used, just adding some content to be able to render the relationship cell
     tableId: "external",
     relationshipType:
-      subtype === FieldSubtype.USER
+      subtype === BBReferenceFieldSubType.USER
         ? RelationshipType.ONE_TO_MANY
         : RelationshipType.MANY_TO_MANY,
   }
 
   async function searchFunction(searchParams) {
-    if (subtype !== FieldSubtype.USER && subtype !== FieldSubtype.USERS) {
+    if (
+      subtype !== BBReferenceFieldSubType.USER &&
+      subtype !== BBReferenceFieldSubType.USERS
+    ) {
       throw `Search for '${subtype}' not implemented`
     }
 

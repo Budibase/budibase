@@ -1,6 +1,6 @@
 import _ from "lodash"
 import * as backendCore from "@budibase/backend-core"
-import { FieldSubtype, FieldType, User } from "@budibase/types"
+import { BBReferenceFieldSubType, FieldType, User } from "@budibase/types"
 import {
   processInputBBReferences,
   processOutputBBReferences,
@@ -66,7 +66,7 @@ describe("bbReferenceProcessor", () => {
           processInputBBReferences(
             userId,
             FieldType.BB_REFERENCE,
-            FieldSubtype.USER
+            BBReferenceFieldSubType.USER
           )
         )
 
@@ -83,10 +83,12 @@ describe("bbReferenceProcessor", () => {
             processInputBBReferences(
               userId,
               FieldType.BB_REFERENCE,
-              FieldSubtype.USER
+              BBReferenceFieldSubType.USER
             )
           )
-        ).rejects.toThrow(new InvalidBBRefError(userId, FieldSubtype.USER))
+        ).rejects.toThrow(
+          new InvalidBBRefError(userId, BBReferenceFieldSubType.USER)
+        )
         expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
         expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
@@ -99,7 +101,7 @@ describe("bbReferenceProcessor", () => {
           processInputBBReferences(
             userIdCsv,
             FieldType.BB_REFERENCE,
-            FieldSubtype.USER
+            BBReferenceFieldSubType.USER
           )
         )
 
@@ -123,10 +125,12 @@ describe("bbReferenceProcessor", () => {
             processInputBBReferences(
               userIdCsv,
               FieldType.BB_REFERENCE,
-              FieldSubtype.USER
+              BBReferenceFieldSubType.USER
             )
           )
-        ).rejects.toThrow(new InvalidBBRefError(wrongId, FieldSubtype.USER))
+        ).rejects.toThrow(
+          new InvalidBBRefError(wrongId, BBReferenceFieldSubType.USER)
+        )
       })
 
       it("validate valid user object", async () => {
@@ -136,7 +140,7 @@ describe("bbReferenceProcessor", () => {
           processInputBBReferences(
             { _id: userId },
             FieldType.BB_REFERENCE,
-            FieldSubtype.USER
+            BBReferenceFieldSubType.USER
           )
         )
 
@@ -152,7 +156,7 @@ describe("bbReferenceProcessor", () => {
           processInputBBReferences(
             userIds,
             FieldType.BB_REFERENCE,
-            FieldSubtype.USER
+            BBReferenceFieldSubType.USER
           )
         )
 
@@ -166,7 +170,7 @@ describe("bbReferenceProcessor", () => {
           processInputBBReferences(
             "",
             FieldType.BB_REFERENCE,
-            FieldSubtype.USER
+            BBReferenceFieldSubType.USER
           )
         )
 
@@ -178,7 +182,7 @@ describe("bbReferenceProcessor", () => {
           processInputBBReferences(
             [],
             FieldType.BB_REFERENCE,
-            FieldSubtype.USER
+            BBReferenceFieldSubType.USER
           )
         )
 
@@ -192,7 +196,7 @@ describe("bbReferenceProcessor", () => {
           processInputBBReferences(
             userMetadataId,
             FieldType.BB_REFERENCE,
-            FieldSubtype.USER
+            BBReferenceFieldSubType.USER
           )
         )
         expect(result).toBe(userId)
@@ -210,7 +214,7 @@ describe("bbReferenceProcessor", () => {
           processOutputBBReferences(
             userId,
             FieldType.BB_REFERENCE,
-            FieldSubtype.USER
+            BBReferenceFieldSubType.USER
           )
         )
 
@@ -236,7 +240,7 @@ describe("bbReferenceProcessor", () => {
           processOutputBBReferences(
             [userId1, userId2].join(","),
             FieldType.BB_REFERENCE,
-            FieldSubtype.USER
+            BBReferenceFieldSubType.USER
           )
         )
 

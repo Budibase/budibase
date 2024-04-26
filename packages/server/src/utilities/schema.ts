@@ -1,6 +1,6 @@
 import {
   FieldType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   TableSchema,
   FieldSchema,
   Row,
@@ -138,10 +138,10 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
           parsedRow[columnName] = undefined
         } else {
           switch (columnSubtype) {
-            case FieldSubtype.USER:
+            case BBReferenceFieldSubType.USER:
               parsedRow[columnName] = parsedValues[0]?._id
               break
-            case FieldSubtype.USERS:
+            case BBReferenceFieldSubType.USERS:
               parsedRow[columnName] = parsedValues.map(u => u._id)
               break
             default:
@@ -170,7 +170,7 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
 function isValidBBReference(
   data: any,
   type: FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
 ): boolean {
   if (typeof data !== "string") {
     return false
@@ -185,14 +185,14 @@ function isValidBBReference(
   }
 
   switch (subtype) {
-    case FieldSubtype.USER:
-    case FieldSubtype.USERS: {
+    case BBReferenceFieldSubType.USER:
+    case BBReferenceFieldSubType.USERS: {
       const userArray = parseCsvExport<{ _id: string }[]>(data)
       if (!Array.isArray(userArray)) {
         return false
       }
 
-      if (subtype === FieldSubtype.USER && userArray.length > 1) {
+      if (subtype === BBReferenceFieldSubType.USER && userArray.length > 1) {
         return false
       }
 

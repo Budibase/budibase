@@ -9,7 +9,7 @@ import { mocks } from "@budibase/backend-core/tests"
 import {
   Datasource,
   FieldSchema,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   FieldType,
   QueryPreview,
   RelationshipType,
@@ -337,7 +337,7 @@ describe("/datasources", () => {
         [FieldType.BB_REFERENCE]: {
           name: "bb_reference",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       }
 
