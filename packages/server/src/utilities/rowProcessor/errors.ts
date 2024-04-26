@@ -1,7 +1,7 @@
-import { BBReferenceFieldSubTypeieldSubType } from "@budibase/types"
+import { BBReferenceFieldSubType } from "@budibase/types"
 
 export class InvalidBBRefError extends Error {
-  constructor(id: string, subtype: BBReferenceFieldSubTypeieldSubType) {
+  constructor(id: string, subtype: BBReferenceFieldSubType) {
     super(`Id "${id}" is not valid for the subtype "${subtype}"`)
   }
 }
