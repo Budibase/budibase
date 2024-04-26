@@ -48,6 +48,7 @@
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
+  import { FIELDS } from "constants/backend"
 
   export let block
   export let testData
@@ -228,6 +229,10 @@
       categoryName,
       bindingName
     ) => {
+      const field = Object.values(FIELDS).find(
+        field => field.type === value.type && field.subtype === value.subtype
+      )
+
       return {
         readableBinding: bindingName
           ? `${bindingName}.${name}`
@@ -238,7 +243,7 @@
         icon,
         category: categoryName,
         display: {
-          type: value.type,
+          type: field?.name || value.type,
           name,
           rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
         },
@@ -282,6 +287,7 @@
         for (const key in table?.schema) {
           schema[key] = {
             type: table.schema[key].type,
+            subtype: table.schema[key].subtype,
           }
         }
         // remove the original binding
