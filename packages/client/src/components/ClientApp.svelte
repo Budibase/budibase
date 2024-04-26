@@ -206,13 +206,6 @@
                               />
                             {/key}
 
-                            <!--
-                        Flatpickr needs to be inside the theme wrapper.
-                        It also needs its own container because otherwise it hijacks
-                        key events on the whole page. It is painful to work with.
-                      -->
-                            <div id="flatpickr-root" />
-
                             <!-- Modal container to ensure they sit on top -->
                             <div class="modal-container" />
 
