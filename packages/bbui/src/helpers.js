@@ -186,30 +186,26 @@ export const stringifyDate = (
   }
 }
 
-// Gets the correct format for a date in a specific locale
-const getDateFormatPattern = locale => {
-  const getPatternForPart = part => {
-    switch (part.type) {
-      case "day":
-        return "D".repeat(part.value.length)
-      case "month":
-        return "M".repeat(part.value.length)
-      case "year":
-        return "Y".repeat(part.value.length)
-      case "literal":
-        return part.value
-      default:
-        console.log("Unsupported date part", part)
-        return ""
-    }
+// Determine the dayjs-compatible format of the browser's default locale
+const getPatternForPart = part => {
+  switch (part.type) {
+    case "day":
+      return "D".repeat(part.value.length)
+    case "month":
+      return "M".repeat(part.value.length)
+    case "year":
+      return "Y".repeat(part.value.length)
+    case "literal":
+      return part.value
+    default:
+      console.log("Unsupported date part", part)
+      return ""
   }
-  return new Intl.DateTimeFormat(locale)
-    .formatToParts(new Date("2021-01-01"))
-    .map(getPatternForPart)
-    .join("")
 }
-
-const localeDateFormat = getDateFormatPattern(navigator.language || "en-US")
+const localeDateFormat = new Intl.DateTimeFormat()
+  .formatToParts(new Date("2021-01-01"))
+  .map(getPatternForPart)
+  .join("")
 
 // Formats a dayjs date according to schema flags
 export const getDateDisplayValue = (
@@ -224,6 +220,6 @@ export const getDateDisplayValue = (
   } else if (!enableTime) {
     return value.format(localeDateFormat)
   } else {
-    return value.format(`${localeDateFormat}, HH:mm`)
+    return value.format(`${localeDateFormat} HH:mm`)
   }
 }
