@@ -4,7 +4,7 @@
 export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
 export { Feature as Features } from "@budibase/types"
 import { BpmCorrelationKey } from "@budibase/shared-core"
-import { FieldType, FieldSubtype } from "@budibase/types"
+import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
 
 // Cookie names
 export const Cookies = {
@@ -134,7 +134,7 @@ export const TypeIconMap = {
   [FieldType.USER]: "User",
   [FieldType.USERS]: "UserGroup",
   [FieldType.BB_REFERENCE]: {
-    [FieldSubtype.USER]: "User",
-    [FieldSubtype.USERS]: "UserGroup",
+    [BBReferenceFieldSubType.USER]: "User",
+    [BBReferenceFieldSubType.USERS]: "UserGroup",
   },
 }

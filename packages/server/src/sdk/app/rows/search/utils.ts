@@ -3,7 +3,7 @@ import {
   Table,
   DocumentType,
   SEPARATOR,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   SearchFilters,
   SearchIndex,
   SearchResponse,
@@ -89,8 +89,8 @@ export function searchInputMapping(table: Table, options: RowSearchParams) {
       case FieldType.BB_REFERENCE: {
         const subtype = column.subtype
         switch (subtype) {
-          case FieldSubtype.USER:
-          case FieldSubtype.USERS:
+          case BBReferenceFieldSubType.USER:
+          case BBReferenceFieldSubType.USERS:
             userColumnMapping(key, options)
             break
           default:

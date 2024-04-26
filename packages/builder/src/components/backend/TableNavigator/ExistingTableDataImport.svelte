@@ -1,5 +1,5 @@
 <script>
-  import { FieldType, FieldSubtype } from "@budibase/types"
+  import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
   import { Select, Toggle, Multiselect } from "@budibase/bbui"
   import { DB_TYPE_INTERNAL } from "constants/backend"
   import { API } from "api"
@@ -60,11 +60,11 @@
     },
     {
       label: "User",
-      value: `${FieldType.BB_REFERENCE}${FieldSubtype.USER}`,
+      value: `${FieldType.BB_REFERENCE}${BBReferenceFieldSubType.USER}`,
     },
     {
       label: "Users",
-      value: `${FieldType.BB_REFERENCE}${FieldSubtype.USERS}`,
+      value: `${FieldType.BB_REFERENCE}${BBReferenceFieldSubType.USERS}`,
     },
   ]
 

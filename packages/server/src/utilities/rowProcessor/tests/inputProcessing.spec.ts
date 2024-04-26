@@ -2,7 +2,7 @@ import { inputProcessing } from ".."
 import { generator, structures } from "@budibase/backend-core/tests"
 import {
   FieldType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
   TableSourceType,
@@ -39,7 +39,7 @@ describe("rowProcessor - inputProcessing", () => {
         },
         user: {
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USER,
+          subtype: BBReferenceFieldSubType.USER,
           name: "user",
           constraints: {
             presence: true,
@@ -93,7 +93,7 @@ describe("rowProcessor - inputProcessing", () => {
         },
         user: {
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USER,
+          subtype: BBReferenceFieldSubType.USER,
           name: "user",
           constraints: {
             presence: false,
@@ -135,7 +135,7 @@ describe("rowProcessor - inputProcessing", () => {
           },
           user: {
             type: FieldType.BB_REFERENCE,
-            subtype: FieldSubtype.USER,
+            subtype: BBReferenceFieldSubType.USER,
             name: "user",
             constraints: {
               presence: false,
