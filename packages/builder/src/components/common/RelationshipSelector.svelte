@@ -75,14 +75,12 @@
   .relationship-container {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: var(--spacing-m);
   }
-
   .relationship-part {
-    flex-basis: 70%;
+    flex: 1 1 auto;
   }
-
   .relationship-type {
-    flex-basis: 30%;
+    flex: 0 0 128px;
   }
 </style>
