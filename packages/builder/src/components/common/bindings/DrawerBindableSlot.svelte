@@ -4,6 +4,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "dataBinding"
+  import { FieldType } from "@budibase/types"
 
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
@@ -168,7 +169,7 @@
       {updateOnChange}
     />
   {/if}
-  {#if !disabled && type !== "formula" && !disabled && type !== "attachment" && !disabled && type !== "attachment_single"}
+  {#if !disabled && type !== "formula" && !disabled && type !== FieldType.ATTACHMENTS && !disabled && type !== FieldType.ATTACHMENT_SINGLE}
     <div
       class={`icon ${getIconClass(value, type)}`}
       on:click={() => {
