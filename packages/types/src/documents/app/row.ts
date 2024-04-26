@@ -129,11 +129,3 @@ export enum FieldSubtype {
   USER = "user",
   USERS = "users",
 }
-
-// The 'as' are required for typescript not to type the outputs as generic FieldSubtype
-export const FieldTypeSubtypes = {
-  BB_REFERENCE: {
-    USER: FieldSubtype.USER as FieldSubtype.USER,
-    USERS: FieldSubtype.USERS as FieldSubtype.USERS,
-  },
-}

@@ -1,7 +1,6 @@
 import {
-  FieldSubtype,
   FieldType,
-  FieldTypeSubtypes,
+  FieldSubtype,
   INTERNAL_TABLE_SOURCE_ID,
   RowAttachment,
   Table,
@@ -42,7 +41,7 @@ describe("rowProcessor - outputProcessing", () => {
         },
         user: {
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          subtype: FieldSubtype.USER,
           name: "user",
           constraints: {
             presence: false,
@@ -175,7 +174,7 @@ describe("rowProcessor - outputProcessing", () => {
         },
         user: {
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          subtype: FieldSubtype.USER,
           name: "user",
           constraints: {
             presence: false,
