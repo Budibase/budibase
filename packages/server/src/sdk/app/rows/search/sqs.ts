@@ -131,11 +131,6 @@ export async function search(
     },
     relationships,
   }
-  // make sure only rows returned
-  request.filters!.equal = {
-    ...request.filters?.equal,
-    type: "row",
-  }
 
   if (params.sort) {
     const sortField = table.schema[params.sort]
