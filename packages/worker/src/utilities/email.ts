@@ -4,8 +4,10 @@ import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
-import { configs, cache } from "@budibase/backend-core"
+import { configs, cache, objectStore } from "@budibase/backend-core"
 import ical from "ical-generator"
+import fetch from "node-fetch"
+import path from "path"
 
 const nodemailer = require("nodemailer")
 
@@ -161,6 +163,42 @@ export async function sendEmail(
       user: opts?.user,
       contents: opts?.contents,
     }),
+  }
+  if (opts?.attachments) {
+    const attachments = await Promise.all(
+      opts.attachments?.map(async attachment => {
+        const isFullyFormedUrl =
+          attachment.url.startsWith("http://") ||
+          attachment.url.startsWith("https://")
+        if (isFullyFormedUrl) {
+          const response = await fetch(attachment.url)
+          if (!response.ok) {
+            throw new Error(`unexpected response ${response.statusText}`)
+          }
+          const fallbackFilename = path.basename(
+            new URL(attachment.url).pathname
+          )
+          return {
+            filename: attachment.filename || fallbackFilename,
+            content: response?.body,
+          }
+        } else {
+          const url = attachment.url
+          const result = objectStore.extractBucketAndPath(url)
+          if (result === null) {
+            throw new Error("Invalid signed URL")
+          }
+          const { bucket, path } = result
+          const readStream = await objectStore.getReadStream(bucket, path)
+          const fallbackFilename = path.split("/").pop() || ""
+          return {
+            filename: attachment.filename || fallbackFilename,
+            content: readStream,
+          }
+        }
+      })
+    )
+    message = { ...message, attachments }
   }
 
   message = {

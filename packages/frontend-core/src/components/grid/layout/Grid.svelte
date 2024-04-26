@@ -40,6 +40,7 @@
   export let canSaveSchema = true
   export let canSelectRows = false
   export let stripeRows = false
+  export let quiet = false
   export let collaboration = true
   export let showAvatars = true
   export let showControls = true
@@ -93,6 +94,7 @@
     canSaveSchema,
     canSelectRows,
     stripeRows,
+    quiet,
     collaboration,
     showAvatars,
     showControls,
@@ -126,6 +128,7 @@
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
   class:stripe={stripeRows}
+  class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
   style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
@@ -332,5 +335,10 @@
   .grid-data-outer :global(.spectrum-Checkbox-checkmark),
   .grid-data-outer :global(.spectrum-Checkbox-partialCheckmark) {
     transition: none;
+  }
+
+  /* Overrides */
+  .grid.quiet :global(.grid-data-content .row > .cell:not(:last-child)) {
+    border-right: none;
   }
 </style>
