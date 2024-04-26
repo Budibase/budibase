@@ -67,6 +67,7 @@ describe("rowProcessor - inputProcessing", () => {
     )
     expect(bbReferenceProcessor.processInputBBReferences).toHaveBeenCalledWith(
       "123",
+      "bb_reference",
       "user"
     )
 
