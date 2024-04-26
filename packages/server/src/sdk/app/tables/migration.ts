@@ -4,7 +4,6 @@ import {
   FieldSchema,
   BBReferenceFieldSubType,
   InternalTable,
-  isBBReferenceField,
   isRelationshipField,
   LinkDocument,
   LinkInfo,
@@ -12,6 +11,8 @@ import {
   RelationshipType,
   Row,
   Table,
+  FieldType,
+  BBReferenceSingleFieldMetadata,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { isExternalTableID } from "../../../integrations/utils"
@@ -75,11 +76,14 @@ function getColumnMigrator(
     throw new BadRequestError(`Column "${oldColumn.name}" does not exist`)
   }
 
-  if (!isBBReferenceField(newColumn)) {
+  if (
+    newColumn.type !== FieldType.BB_REFERENCE_SINGLE &&
+    newColumn.type !== FieldType.BB_REFERENCE
+  ) {
     throw new BadRequestError(`Column "${newColumn.name}" is not a user column`)
   }
 
-  if (newColumn.subtype !== "user" && newColumn.subtype !== "users") {
+  if (newColumn.subtype !== BBReferenceFieldSubType.USER) {
     throw new BadRequestError(`Column "${newColumn.name}" is not a user column`)
   }
 
@@ -96,7 +100,7 @@ function getColumnMigrator(
   }
 
   if (oldColumn.relationshipType === RelationshipType.ONE_TO_MANY) {
-    if (newColumn.subtype !== BBReferenceFieldSubType.USER) {
+    if (newColumn.type !== FieldType.BB_REFERENCE_SINGLE) {
       throw new BadRequestError(
         `Column "${oldColumn.name}" is a one-to-many column but "${newColumn.name}" is not a single user column`
       )
@@ -107,22 +111,23 @@ function getColumnMigrator(
     oldColumn.relationshipType === RelationshipType.MANY_TO_MANY ||
     oldColumn.relationshipType === RelationshipType.MANY_TO_ONE
   ) {
-    if (newColumn.subtype !== BBReferenceFieldSubType.USERS) {
+    if (newColumn.type !== FieldType.BB_REFERENCE) {
       throw new BadRequestError(
         `Column "${oldColumn.name}" is a ${oldColumn.relationshipType} column but "${newColumn.name}" is not a multi user column`
       )
     }
+
     return new MultiUserColumnMigrator(table, oldColumn, newColumn)
   }
 
   throw new BadRequestError(`Unknown migration type`)
 }
 
-abstract class UserColumnMigrator implements ColumnMigrator {
+abstract class UserColumnMigrator<T> implements ColumnMigrator {
   constructor(
     protected table: Table,
     protected oldColumn: RelationshipFieldMetadata,
-    protected newColumn: BBReferenceFieldMetadata
+    protected newColumn: T
   ) {}
 
   abstract updateRow(row: Row, linkInfo: LinkInfo): void
@@ -192,7 +197,7 @@ abstract class UserColumnMigrator implements ColumnMigrator {
   }
 }
 
-class SingleUserColumnMigrator extends UserColumnMigrator {
+class SingleUserColumnMigrator extends UserColumnMigrator<BBReferenceSingleFieldMetadata> {
   updateRow(row: Row, linkInfo: LinkInfo): void {
     row[this.newColumn.name] = dbCore.getGlobalIDFromUserMetadataID(
       linkInfo.rowId
@@ -200,7 +205,7 @@ class SingleUserColumnMigrator extends UserColumnMigrator {
   }
 }
 
-class MultiUserColumnMigrator extends UserColumnMigrator {
+class MultiUserColumnMigrator extends UserColumnMigrator<BBReferenceFieldMetadata> {
   updateRow(row: Row, linkInfo: LinkInfo): void {
     if (!row[this.newColumn.name]) {
       row[this.newColumn.name] = []

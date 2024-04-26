@@ -214,15 +214,3 @@ export function isManyToOne(
 ): field is ManyToOneRelationshipFieldMetadata {
   return field.relationshipType === RelationshipType.MANY_TO_ONE
 }
-
-export function isBBReferenceField(
-  field: FieldSchema
-): field is BBReferenceFieldMetadata {
-  return field.type === FieldType.BB_REFERENCE
-}
-
-export function isAttachmentField(
-  field: FieldSchema
-): field is AttachmentFieldMetadata {
-  return field.type === FieldType.ATTACHMENTS
-}
