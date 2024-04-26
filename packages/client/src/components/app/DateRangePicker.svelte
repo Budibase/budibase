@@ -38,10 +38,8 @@
     if (!field || !value) {
       return null
     }
-
     let low = dayjs.utc().subtract(1, "year")
     let high = dayjs.utc().add(1, "day")
-
     if (value === "Last 1 day") {
       low = dayjs.utc().subtract(1, "day")
     } else if (value === "Last 7 days") {
@@ -53,7 +51,6 @@
     } else if (value === "Last 6 months") {
       low = dayjs.utc().subtract(6, "months")
     }
-
     return {
       range: {
         [field]: {

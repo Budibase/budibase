@@ -13,13 +13,13 @@ export const createStores = () => {
 }
 
 export const createActions = context => {
-  const { menu, focusedCellId, rand } = context
+  const { menu, focusedCellId, gridID } = context
 
   const open = (cellId, e) => {
     e.preventDefault()
 
     // Get DOM node for grid data wrapper to compute relative position to
-    const gridNode = document.getElementById(`grid-${rand}`)
+    const gridNode = document.getElementById(gridID)
     const dataNode = gridNode?.getElementsByClassName("grid-data-outer")?.[0]
     if (!dataNode) {
       return
