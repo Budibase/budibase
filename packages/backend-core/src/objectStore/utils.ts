@@ -61,6 +61,7 @@ export const processAutomationAttachment = async (
   attachment: AutomationAttachment
 ): Promise<{
   filename: string
+  path?: string
   content:
     | ReadStream
     | NodeJS.ReadableStream
@@ -91,6 +92,7 @@ export const processAutomationAttachment = async (
     const readStream = await objectStore.getReadStream(bucket, path)
     const fallbackFilename = path.split("/").pop() || ""
     return {
+      path,
       filename: attachment.filename || fallbackFilename,
       content: readStream,
     }
