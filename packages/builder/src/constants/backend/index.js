@@ -4,7 +4,6 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
   AutoFieldSubType,
   Hosting,
-  FieldTypeSubtypes,
 } from "@budibase/types"
 import { Constants } from "@budibase/frontend-core"
 
@@ -162,26 +161,20 @@ export const FIELDS = {
     name: "User",
     type: FieldType.BB_REFERENCE_SINGLE,
     subtype: FieldSubtype.USER,
-    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
-      FieldTypeSubtypes.BB_REFERENCE.USER
-    ],
+    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][FieldSubtype.USER],
   },
   // Used for display of editing existing columns
   OLD_USER: {
     name: "User",
     type: FieldType.BB_REFERENCE,
     subtype: FieldSubtype.USER,
-    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
-      FieldTypeSubtypes.BB_REFERENCE.USER
-    ],
+    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][FieldSubtype.USER],
   },
   USERS: {
     name: "User List",
     type: FieldType.BB_REFERENCE,
     subtype: FieldSubtype.USERS,
-    icon: TypeIconMap[FieldType.BB_REFERENCE][
-      FieldTypeSubtypes.BB_REFERENCE.USERS
-    ],
+    icon: TypeIconMap[FieldType.BB_REFERENCE][FieldSubtype.USERS],
     constraints: {
       type: "array",
     },
