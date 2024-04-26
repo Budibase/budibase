@@ -1,6 +1,6 @@
 import {
   FieldType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
   AutoFieldSubType,
   Hosting,
@@ -160,13 +160,13 @@ export const FIELDS = {
   USER: {
     name: "User",
     type: FieldType.BB_REFERENCE,
-    subtype: FieldSubtype.USER,
+    subtype: BBReferenceFieldSubType.USER,
     icon: TypeIconMap[FieldType.USER],
   },
   USERS: {
     name: "Users",
     type: FieldType.BB_REFERENCE,
-    subtype: FieldSubtype.USERS,
+    subtype: BBReferenceFieldSubType.USERS,
     icon: TypeIconMap[FieldType.USERS],
     constraints: {
       type: "array",
