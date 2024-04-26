@@ -33,7 +33,7 @@ const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.LONGFORM]: SQLiteType.TEXT,
   [FieldType.NUMBER]: SQLiteType.REAL,
   [FieldType.STRING]: SQLiteType.TEXT,
-  [FieldType.AUTO]: SQLiteType.TEXT,
+  [FieldType.AUTO]: SQLiteType.REAL,
   [FieldType.OPTIONS]: SQLiteType.TEXT,
   [FieldType.JSON]: SQLiteType.BLOB,
   [FieldType.INTERNAL]: SQLiteType.BLOB,
