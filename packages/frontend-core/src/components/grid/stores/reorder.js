@@ -32,7 +32,6 @@ export const createActions = context => {
     scroll,
     bounds,
     stickyColumn,
-    ui,
     maxScrollLeft,
     width,
   } = context
@@ -45,7 +44,6 @@ export const createActions = context => {
     const $visibleColumns = get(visibleColumns)
     const $bounds = get(bounds)
     const $stickyColumn = get(stickyColumn)
-    ui.actions.blur()
 
     // Generate new breakpoints for the current columns
     let breakpoints = $visibleColumns.map(col => ({
@@ -97,7 +95,7 @@ export const createActions = context => {
     // Check if we need to start auto-scrolling
     const $reorder = get(reorder)
     const proximityCutoff = Math.min(140, get(width) / 6)
-    const speedFactor = 8
+    const speedFactor = 16
     const rightProximity = Math.max(0, $reorder.gridLeft + $reorder.width - x)
     const leftProximity = Math.max(0, x - $reorder.gridLeft)
     if (rightProximity < proximityCutoff) {

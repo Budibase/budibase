@@ -18,6 +18,7 @@
     height,
     isDragging,
     menu,
+    focusedCellAPI,
   } = getContext("grid")
 
   // State for dragging bars
@@ -48,10 +49,11 @@
   $: barLeft = ScrollBarSize + availWidth * ($scrollLeft / $maxScrollLeft)
 
   // Helper to close the context menu if it's open
-  const closeMenu = () => {
+  const closePopovers = () => {
     if ($menu.visible) {
       menu.actions.close()
     }
+    $focusedCellAPI?.blur()
   }
 
   // V scrollbar drag handlers
@@ -64,7 +66,7 @@
     document.addEventListener("mouseup", stopVDragging)
     document.addEventListener("touchend", stopVDragging)
     isDraggingV = true
-    closeMenu()
+    closePopovers()
   }
   const moveVDragging = domDebounce(e => {
     const delta = parseEventLocation(e).y - initialMouse
@@ -93,7 +95,7 @@
     document.addEventListener("mouseup", stopHDragging)
     document.addEventListener("touchend", stopHDragging)
     isDraggingH = true
-    closeMenu()
+    closePopovers()
   }
   const moveHDragging = domDebounce(e => {
     const delta = parseEventLocation(e).x - initialMouse
