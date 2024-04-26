@@ -125,7 +125,6 @@ export async function sendAutomationAttachmentsToStorage(
             attachment
           )
           const extension = attachment.filename.split(".").pop() || ""
-
           // If the path is an attachment that already exists, we don't want to stream it again,
           // just use the existing s3 key else it doesn't exist and we need to upload
           if (path?.includes(`${context.getProdAppId()}/attachments/`)) {

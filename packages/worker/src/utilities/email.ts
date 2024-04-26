@@ -163,9 +163,10 @@ export async function sendEmail(
     }),
   }
   if (opts?.attachments) {
-    const attachments = await Promise.all(
+    let attachments = await Promise.all(
       opts.attachments?.map(objectStore.processAutomationAttachment)
     )
+    attachments = attachments.map(({ path, ...rest }) => rest)
     message = { ...message, attachments }
   }
 
