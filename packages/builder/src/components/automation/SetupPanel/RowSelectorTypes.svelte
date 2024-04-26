@@ -1,5 +1,6 @@
 <script>
   import { Select, DatePicker, Multiselect, TextArea } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
@@ -88,8 +89,8 @@
     on:change={e => onChange(e, field)}
     useLabel={false}
   />
-{:else if schema.type === "attachment"}
-  <div class="attachment-field-width">
+{:else if schema.type === FieldType.ATTACHMENTS || schema.type === FieldType.ATTACHMENT_SINGLE}
+  <div class="attachment-field-spacinng">
     <KeyValueBuilder
       on:change={e =>
         onChange(
@@ -108,6 +109,8 @@
       customButtonText={"Add attachment"}
       keyPlaceholder={"URL"}
       valuePlaceholder={"Filename"}
+      noAddButton={schema.type === FieldType.ATTACHMENT_SINGLE &&
+        value[field].length >= 1}
     />
   </div>
 {:else if ["string", "number", "bigint", "barcodeqr", "array", "attachment"].includes(schema.type)}
@@ -125,7 +128,8 @@
 {/if}
 
 <style>
-  .attachment-field-width {
-    margin-top: var(--spacing-xs);
+  .attachment-field-spacinng {
+    margin-top: var(--spacing-s);
+    margin-bottom: var(--spacing-l);
   }
 </style>

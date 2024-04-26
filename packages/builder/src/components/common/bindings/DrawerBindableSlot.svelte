@@ -103,6 +103,7 @@
     json: value => !isJSBinding(value),
     boolean: isValidBoolean,
     attachment: false,
+    attachment_single: false,
   }
 
   const isValid = value => {
@@ -118,7 +119,14 @@
       return "json-slot-icon"
     }
     if (
-      !["string", "number", "bigint", "barcodeqr", "attachment"].includes(type)
+      ![
+        "string",
+        "number",
+        "bigint",
+        "barcodeqr",
+        "attachment",
+        "attachment_single",
+      ].includes(type)
     ) {
       return "slot-icon"
     }
@@ -160,7 +168,7 @@
       {updateOnChange}
     />
   {/if}
-  {#if !disabled && type !== "formula" && !disabled && type !== "attachment"}
+  {#if !disabled && type !== "formula" && !disabled && type !== "attachment" && !disabled && type !== "attachment_single"}
     <div
       class={`icon ${getIconClass(value, type)}`}
       on:click={() => {

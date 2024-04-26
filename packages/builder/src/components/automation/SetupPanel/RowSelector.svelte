@@ -2,6 +2,8 @@
   import { tables } from "stores/builder"
   import { Select, Checkbox, Label } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
+  import { FieldType } from "@budibase/types"
+
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
@@ -118,9 +120,15 @@
 {#if schemaFields.length}
   {#each schemaFields as [field, schema]}
     {#if !schema.autocolumn}
-      <div class:schema-fields={schema.type !== "attachment"}>
+      <div
+        class:schema-fields={schema.type !== FieldType.ATTACHMENTS &&
+          schema.type !== FieldType.ATTACHMENT_SINGLE}
+      >
         <Label>{field}</Label>
-        <div class:field-width={schema.type !== "attachment"}>
+        <div
+          class:field-width={schema.type !== FieldType.ATTACHMENTS &&
+            schema.type !== FieldType.ATTACHMENT_SINGLE}
+        >
           {#if isTestModal}
             <RowSelectorTypes
               {isTestModal}

@@ -4,7 +4,7 @@ import {
   encodeJSBinding,
 } from "@budibase/string-templates"
 import sdk from "../sdk"
-import { Row } from "@budibase/types"
+import { AutomationAttachment, Row } from "@budibase/types"
 import { LoopInput, LoopStepType } from "../definitions/automations"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
@@ -115,10 +115,11 @@ export async function sendAutomationAttachmentsToStorage(
   for (const prop in attachmentRows) {
     const attachments = attachmentRows[prop]
     const updatedAttachments = await Promise.all(
-      attachments.map(async (attachment: any) => {
-        let { filename, content } =
-          await objectStore.processAutomationAttachment(attachment)
-        const extension = filename.split(".").pop() || ""
+      attachments.map(async (attachment: AutomationAttachment) => {
+        let { content } = await objectStore.processAutomationAttachment(
+          attachment
+        )
+        const extension = attachment.filename.split(".").pop() || ""
         const processedFileName = `${uuid.v4()}.${extension}`
         const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
 
@@ -131,7 +132,7 @@ export async function sendAutomationAttachmentsToStorage(
 
           return {
             size: 10,
-            name: filename,
+            name: attachment.filename,
             extension,
             key: s3Key,
           }

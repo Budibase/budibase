@@ -235,3 +235,8 @@ export interface AutomationMetadata extends Document {
   errorCount?: number
   automationChainCount?: number
 }
+
+export type AutomationAttachment = {
+  url: string
+  filename: string
+}

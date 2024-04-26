@@ -4,6 +4,7 @@ import fs, { ReadStream } from "fs"
 import env from "../environment"
 import { PutBucketLifecycleConfigurationRequest } from "aws-sdk/clients/s3"
 import * as objectStore from "./objectStore"
+import { AutomationAttachment } from "@budibase/types"
 /****************************************************
  *      NOTE: When adding a new bucket - name       *
  *     sure that S3 usages (like budibase-infra)    *
@@ -56,10 +57,9 @@ export const bucketTTLConfig = (
   return params
 }
 
-export const processAutomationAttachment = async (attachment: {
-  url: string
-  filename: string
-}): Promise<{
+export const processAutomationAttachment = async (
+  attachment: AutomationAttachment
+): Promise<{
   filename: string
   content:
     | ReadStream
