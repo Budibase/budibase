@@ -17,7 +17,7 @@ export function processInputBBReferences(
 export function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
   type: FieldType.BB_REFERENCE,
-  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
+  subtype: BBReferenceFieldSubType
 ): Promise<string | null>
 
 export async function processInputBBReferences(
@@ -121,7 +121,7 @@ export function processOutputBBReferences(
 export function processOutputBBReferences(
   value: string,
   type: FieldType.BB_REFERENCE,
-  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
+  subtype: BBReferenceFieldSubType
 ): Promise<UserReferenceInfo[]>
 
 export async function processOutputBBReferences(
