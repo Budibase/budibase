@@ -29,6 +29,7 @@ import { JSONUtils, Constants } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
 import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
+import { FIELDS } from "constants/backend"
 
 const { ContextScopes } = Constants
 
@@ -1019,6 +1020,12 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     // are objects
     let fixedSchema = {}
     Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+      const field = Object.values(FIELDS).find(
+        field =>
+          field.type === fieldSchema.type &&
+          field.subtype === fieldSchema.subtype
+      )
+
       if (typeof fieldSchema === "string") {
         fixedSchema[fieldName] = {
           type: fieldSchema,
@@ -1027,6 +1034,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
       } else {
         fixedSchema[fieldName] = {
           ...fieldSchema,
+          type: field?.name || fieldSchema.name,
           name: fieldName,
         }
       }
