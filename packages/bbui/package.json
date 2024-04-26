@@ -21,7 +21,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
     "postcss": "^8.2.9",
-    "rollup": "^2.45.2",
+    "rollup": "^4.9.6",
     "rollup-plugin-postcss": "^4.0.0",
     "rollup-plugin-svelte": "^7.1.0",
     "rollup-plugin-terser": "^7.0.2"
