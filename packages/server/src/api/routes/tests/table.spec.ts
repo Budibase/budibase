@@ -2,7 +2,7 @@ import { context, events } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   Datasource,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
@@ -497,7 +497,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USER,
+          subtype: BBReferenceFieldSubType.USER,
         },
       })
 
@@ -562,7 +562,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       })
 
@@ -614,7 +614,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       })
 
@@ -669,7 +669,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       })
 
@@ -728,7 +728,7 @@ describe.each([
             newColumn: {
               name: "",
               type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
+              subtype: BBReferenceFieldSubType.USERS,
             },
           },
           { status: 400 }
@@ -743,7 +743,7 @@ describe.each([
             newColumn: {
               name: "_id",
               type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
+              subtype: BBReferenceFieldSubType.USERS,
             },
           },
           { status: 400 }
@@ -758,7 +758,7 @@ describe.each([
             newColumn: {
               name: "num",
               type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
+              subtype: BBReferenceFieldSubType.USERS,
             },
           },
           { status: 400 }
@@ -772,12 +772,12 @@ describe.each([
             oldColumn: {
               name: "not a column",
               type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
+              subtype: BBReferenceFieldSubType.USERS,
             },
             newColumn: {
               name: "new column",
               type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
+              subtype: BBReferenceFieldSubType.USERS,
             },
           },
           { status: 400 }
