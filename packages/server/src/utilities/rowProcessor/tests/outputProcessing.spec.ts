@@ -1,6 +1,6 @@
 import {
   FieldType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
   RowAttachment,
   Table,
@@ -41,7 +41,7 @@ describe("rowProcessor - outputProcessing", () => {
         },
         user: {
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USER,
+          subtype: BBReferenceFieldSubType.USER,
           name: "user",
           constraints: {
             presence: false,
@@ -69,7 +69,7 @@ describe("rowProcessor - outputProcessing", () => {
     expect(bbReferenceProcessor.processOutputBBReferences).toHaveBeenCalledWith(
       "123",
       FieldType.BB_REFERENCE,
-      FieldSubtype.USER
+      BBReferenceFieldSubType.USER
     )
   })
 
@@ -175,7 +175,7 @@ describe("rowProcessor - outputProcessing", () => {
         },
         user: {
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USER,
+          subtype: BBReferenceFieldSubType.USER,
           name: "user",
           constraints: {
             presence: false,

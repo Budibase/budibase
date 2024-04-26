@@ -128,9 +128,3 @@ export interface Row extends Document {
   _viewId?: string
   [key: string]: any
 }
-
-export enum FieldSubtype {
-  USER = "user",
-  /** @deprecated this should not be used anymore */
-  USERS = "users",
-}

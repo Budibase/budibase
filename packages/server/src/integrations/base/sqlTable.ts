@@ -1,6 +1,6 @@
 import { Knex, knex } from "knex"
 import {
-  FieldSubtype,
+  BBReferenceFieldSubType,
   FieldType,
   NumberFieldMetadata,
   Operation,
@@ -66,10 +66,10 @@ function generateSchema(
       case FieldType.BB_REFERENCE_SINGLE: {
         const subtype = column.subtype
         switch (subtype) {
-          case FieldSubtype.USER:
+          case BBReferenceFieldSubType.USER:
             schema.text(key)
             break
-          case FieldSubtype.USERS:
+          case BBReferenceFieldSubType.USERS:
             schema.json(key)
             break
           default:

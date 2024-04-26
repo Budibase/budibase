@@ -2,7 +2,7 @@ import { cache, db as dbCore } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
 import {
   FieldType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   DocumentType,
   SEPARATOR,
 } from "@budibase/types"
@@ -17,13 +17,13 @@ export function processInputBBReferences(
 export function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
   type: FieldType.BB_REFERENCE,
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
 ): Promise<string | null>
 
 export async function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
   type: FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
-  subtype?: FieldSubtype
+  subtype?: BBReferenceFieldSubType
 ): Promise<string | string[] | null> {
   switch (type) {
     case FieldType.BB_REFERENCE: {
@@ -60,19 +60,22 @@ export async function processInputBBReferences(
       switch (subtype) {
         case undefined:
           throw "Subtype must be defined"
-        case FieldSubtype.USER:
-        case FieldSubtype.USERS: {
+        case BBReferenceFieldSubType.USER:
+        case BBReferenceFieldSubType.USERS: {
           const { notFoundIds } = await cache.user.getUsers(referenceIds)
 
           if (notFoundIds?.length) {
-            throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
+            throw new InvalidBBRefError(
+              notFoundIds[0],
+              BBReferenceFieldSubType.USER
+            )
           }
 
           if (!referenceIds?.length) {
             return null
           }
 
-          if (subtype === FieldSubtype.USERS) {
+          if (subtype === BBReferenceFieldSubType.USERS) {
             return referenceIds
           }
 
@@ -92,7 +95,7 @@ export async function processInputBBReferences(
       const user = await cache.user.getUser(id)
 
       if (!user) {
-        throw new InvalidBBRefError(id, FieldSubtype.USER)
+        throw new InvalidBBRefError(id, BBReferenceFieldSubType.USER)
       }
 
       return user._id!
@@ -118,13 +121,13 @@ export function processOutputBBReferences(
 export function processOutputBBReferences(
   value: string,
   type: FieldType.BB_REFERENCE,
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
 ): Promise<UserReferenceInfo[]>
 
 export async function processOutputBBReferences(
   value: string | string[],
   type: FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
-  subtype?: FieldSubtype
+  subtype?: BBReferenceFieldSubType
 ) {
   if (value === null || value === undefined) {
     // Already processed or nothing to process
@@ -139,8 +142,8 @@ export async function processOutputBBReferences(
       switch (subtype) {
         case undefined:
           throw "Subtype must be defined"
-        case FieldSubtype.USER:
-        case FieldSubtype.USERS: {
+        case BBReferenceFieldSubType.USER:
+        case BBReferenceFieldSubType.USERS: {
           const { users } = await cache.user.getUsers(ids)
           if (!users.length) {
             return undefined

@@ -1,6 +1,6 @@
 import {
   Datasource,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   FieldType,
   FormulaType,
   SearchFilter,
@@ -22,7 +22,7 @@ const HBS_REGEX = /{{([^{].*?)}}/g
 export const getValidOperatorsForType = (
   fieldType: {
     type: FieldType
-    subtype?: FieldSubtype
+    subtype?: BBReferenceFieldSubType
     formulaType?: FormulaType
   },
   field: string,
@@ -71,10 +71,13 @@ export const getValidOperatorsForType = (
   } else if (
     (type === FieldType.BB_REFERENCE_SINGLE ||
       type === FieldType.BB_REFERENCE) &&
-    subtype == FieldSubtype.USER
+    subtype == BBReferenceFieldSubType.USER
   ) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
-  } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USERS) {
+  } else if (
+    type === FieldType.BB_REFERENCE &&
+    subtype == BBReferenceFieldSubType.USERS
+  ) {
     ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
   }
 
