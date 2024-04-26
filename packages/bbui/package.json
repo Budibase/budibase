@@ -43,6 +43,7 @@
     "@spectrum-css/avatar": "3.0.2",
     "@spectrum-css/button": "3.0.1",
     "@spectrum-css/buttongroup": "3.0.2",
+    "@spectrum-css/calendar": "3.2.7",
     "@spectrum-css/checkbox": "3.0.2",
     "@spectrum-css/dialog": "3.0.1",
     "@spectrum-css/divider": "1.0.3",
