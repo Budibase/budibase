@@ -25,8 +25,8 @@ export const getValidOperatorsForType = (
     subtype?: BBReferenceFieldSubType
     formulaType?: FormulaType
   },
-  field: string,
-  datasource: Datasource & { tableId: any }
+  field?: string,
+  datasource?: Datasource & { tableId: any }
 ) => {
   const Op = OperatorOptions
   const stringOps = [

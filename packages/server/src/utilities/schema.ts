@@ -170,7 +170,7 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
 function isValidBBReference(
   data: any,
   type: FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
-  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
+  subtype: BBReferenceFieldSubType
 ): boolean {
   if (typeof data !== "string") {
     return false

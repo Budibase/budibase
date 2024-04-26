@@ -60,10 +60,10 @@ function generateSchema(
       case FieldType.OPTIONS:
       case FieldType.LONGFORM:
       case FieldType.BARCODEQR:
+      case FieldType.BB_REFERENCE_SINGLE:
         schema.text(key)
         break
-      case FieldType.BB_REFERENCE:
-      case FieldType.BB_REFERENCE_SINGLE: {
+      case FieldType.BB_REFERENCE: {
         const subtype = column.subtype
         switch (subtype) {
           case BBReferenceFieldSubType.USER:

@@ -110,13 +110,13 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
 export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
-  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
+  subtype: BBReferenceFieldSubType
   relationshipType?: RelationshipType
 }
 export interface BBReferenceSingleFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE_SINGLE
-  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
+  subtype: BBReferenceFieldSubType
 }
 
 export interface AttachmentFieldMetadata extends BaseFieldSchema {
