@@ -57,6 +57,7 @@ export const PlanType = {
   PRO: "pro",
   BUSINESS: "business",
   ENTERPRISE: "enterprise",
+  ENTERPRISE_BASIC_TRIAL: "enterprise_basic_trial",
 }
 
 /**

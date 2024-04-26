@@ -8,7 +8,7 @@
     userStore,
     deploymentStore,
   } from "stores/builder"
-  import { auth, appsStore } from "stores/portal"
+  import { auth, appsStore, licensing } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
     Icon,
@@ -32,12 +32,14 @@
   import { UserAvatars } from "@budibase/frontend-core"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
+  import FreeTrialModal from "components/portal/onboarding/FreeTrialModal.svelte"
 
   export let application
 
   let promise = getPackage()
   let hasSynced = false
   let commandPaletteModal
+  let freeTrialModal
   let loaded = false
 
   $: loaded && initTour()
@@ -114,6 +116,8 @@
       }
       hasSynced = true
     }
+    freeTrialModal.show()
+    console.log("LICENSE ", $licensing)
   })
 
   onDestroy(() => {
@@ -190,6 +194,14 @@
 <svelte:window on:keydown={handleKeyDown} />
 <Modal bind:this={commandPaletteModal} zIndex={999999}>
   <CommandPalette />
+</Modal>
+
+<Modal bind:this={freeTrialModal} disableCancel={true}>
+  <FreeTrialModal
+    onConfirm={() => {
+      freeTrialModal.hide()
+    }}
+  />
 </Modal>
 
 <style>
