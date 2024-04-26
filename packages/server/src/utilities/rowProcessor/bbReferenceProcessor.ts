@@ -10,34 +10,20 @@ import { InvalidBBRefError } from "./errors"
 
 const ROW_PREFIX = DocumentType.ROW + SEPARATOR
 
-export function processInputBBReferences<T = FieldType.BB_REFERENCE_SINGLE>(
-  value: string,
-  type: T
+export function processInputBBReferences(
+  value: string | { _id: string },
+  type: FieldType.BB_REFERENCE_SINGLE
 ): Promise<string | null>
-export function processInputBBReferences<
-  T = FieldType.BB_REFERENCE,
-  TS = FieldSubtype.USER
->(
+export function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
-  type: T,
-  subtype: TS
+  type: FieldType.BB_REFERENCE,
+  subtype: FieldSubtype.USER | FieldSubtype.USERS
 ): Promise<string | null>
-export function processInputBBReferences<
-  T = FieldType.BB_REFERENCE,
-  TS = FieldSubtype.USERS
->(
-  value: string | string[] | { _id: string } | { _id: string }[],
-  type: T,
-  subtype: TS
-): Promise<string[] | null>
 
-export async function processInputBBReferences<
-  T extends FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
-  TS extends FieldSubtype.USER | FieldSubtype.USERS
->(
+export async function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
-  type: T,
-  subtype?: TS
+  type: FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
+  subtype?: FieldSubtype
 ): Promise<string | string[] | null> {
   switch (type) {
     case FieldType.BB_REFERENCE: {
@@ -125,23 +111,20 @@ interface UserReferenceInfo {
   lastName: string
 }
 
-export function processOutputBBReferences<T = FieldType.BB_REFERENCE_SINGLE>(
+export function processOutputBBReferences(
   value: string,
-  type: T
+  type: FieldType.BB_REFERENCE_SINGLE
 ): Promise<UserReferenceInfo>
-export function processOutputBBReferences<
-  T = FieldType.BB_REFERENCE,
-  TS = FieldSubtype.USER
->(value: string, type: T, subtype: TS): Promise<UserReferenceInfo[]>
-export function processOutputBBReferences<
-  T = FieldType.BB_REFERENCE,
-  TS = FieldSubtype.USERS
->(value: string[], type: T, subtype: TS): Promise<UserReferenceInfo[]>
+export function processOutputBBReferences(
+  value: string,
+  type: FieldType.BB_REFERENCE,
+  subtype: FieldSubtype.USER | FieldSubtype.USERS
+): Promise<UserReferenceInfo[]>
 
 export async function processOutputBBReferences(
   value: string | string[],
   type: FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
-  subtype?: FieldSubtype.USER | FieldSubtype.USERS
+  subtype?: FieldSubtype
 ) {
   if (value === null || value === undefined) {
     // Already processed or nothing to process
