@@ -2,7 +2,7 @@ import { context, events } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   Datasource,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
@@ -34,7 +34,7 @@ describe.each([
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/tables (%s)", (_, dsProvider) => {
-  let isInternal: boolean
+  const isInternal: boolean = !dsProvider
   let datasource: Datasource | undefined
   let config = setup.getConfig()
 
@@ -44,9 +44,6 @@ describe.each([
     await config.init()
     if (dsProvider) {
       datasource = await config.api.datasource.create(await dsProvider)
-      isInternal = false
-    } else {
-      isInternal = true
     }
   })
 
@@ -500,7 +497,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USER,
+          subtype: BBReferenceFieldSubType.USER,
         },
       })
 
@@ -565,7 +562,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       })
 
@@ -617,7 +614,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       })
 
@@ -672,7 +669,7 @@ describe.each([
         newColumn: {
           name: "user column",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       })
 
@@ -731,7 +728,7 @@ describe.each([
             newColumn: {
               name: "",
               type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
+              subtype: BBReferenceFieldSubType.USERS,
             },
           },
           { status: 400 }
@@ -746,7 +743,7 @@ describe.each([
             newColumn: {
               name: "_id",
               type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
+              subtype: BBReferenceFieldSubType.USERS,
             },
           },
           { status: 400 }
@@ -761,7 +758,7 @@ describe.each([
             newColumn: {
               name: "num",
               type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
+              subtype: BBReferenceFieldSubType.USERS,
             },
           },
           { status: 400 }
@@ -775,12 +772,12 @@ describe.each([
             oldColumn: {
               name: "not a column",
               type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
+              subtype: BBReferenceFieldSubType.USERS,
             },
             newColumn: {
               name: "new column",
               type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
+              subtype: BBReferenceFieldSubType.USERS,
             },
           },
           { status: 400 }

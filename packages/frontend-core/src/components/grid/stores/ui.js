@@ -98,7 +98,7 @@ export const deriveStores = context => {
 
   // Derive whether we should use the compact UI, depending on width
   const compact = derived([stickyColumn, width], ([$stickyColumn, $width]) => {
-    return ($stickyColumn?.width || 0) + $width + GutterWidth < 1100
+    return ($stickyColumn?.width || 0) + $width + GutterWidth < 800
   })
 
   return {
