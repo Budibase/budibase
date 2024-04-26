@@ -196,6 +196,20 @@ export const createActions = context => {
   // Handles validation errors from the rows API and updates local validation
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
+    // If the server doesn't reply with a valid error, assume that the source
+    // of the error is the focused cell's column
+    if (!error?.json?.validationErrors && error?.message) {
+      const focusedColumn = get(focusedCellId)?.split("-")[1]
+      if (focusedColumn) {
+        error = {
+          json: {
+            validationErrors: {
+              [focusedColumn]: error.message,
+            },
+          },
+        }
+      }
+    }
     if (error?.json?.validationErrors) {
       // Normal validation errors
       const keys = Object.keys(error.json.validationErrors)
@@ -214,11 +228,19 @@ export const createActions = context => {
 
       // Process errors for columns that we have
       for (let column of erroredColumns) {
+        // Ensure we have a valid error to display
+        let err = error.json.validationErrors[column]
+        if (Array.isArray(err)) {
+          err = err[0]
+        }
+        if (typeof err !== "string" || !err.length) {
+          error = "Something went wrong"
+        }
+        // Set error against the cell
         validation.actions.setError(
           `${rowId}-${column}`,
-          `${column} ${error.json.validationErrors[column]}`
+          Helpers.capitalise(err)
         )
-
         // Ensure the column is visible
         const index = $columns.findIndex(x => x.name === column)
         if (index !== -1 && !$columns[index].visible) {
