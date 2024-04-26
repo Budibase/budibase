@@ -65,7 +65,7 @@ export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
 }
 
 export async function startContainer(container: GenericContainer) {
-  container = container.withReuse()
+  container = container.withReuse().withLabels({ "com.budibase": "true" })
 
   const startedContainer = await container.start()
 

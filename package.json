@@ -60,6 +60,7 @@
     "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
     "dev:docker": "./scripts/devDocker.sh",
     "test": "lerna run --concurrency 1 --stream test --stream",
+    "test:containers:kill": "./scripts/killTestcontainers.sh",
     "lint:eslint": "eslint packages --max-warnings=0",
     "lint:prettier": "prettier --check \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\"",
     "lint": "yarn run lint:eslint && yarn run lint:prettier",
