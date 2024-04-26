@@ -1,7 +1,8 @@
 <script>
-  import { clickOutside, Menu, MenuItem, Helpers } from "@budibase/bbui"
+  import { Menu, MenuItem, Helpers } from "@budibase/bbui"
   import { getContext } from "svelte"
   import { NewRowID } from "../lib/constants"
+  import GridPopover from "./GridPopover.svelte"
 
   const {
     focusedRow,
@@ -19,6 +20,8 @@
     notifications,
     isDatasourcePlus,
   } = getContext("grid")
+
+  let anchor
 
   $: style = makeStyle($menu)
   $: isNewRow = $focusedRowId === NewRowID
@@ -48,75 +51,74 @@
   }
 </script>
 
+<div bind:this={anchor} {style} class="menu-anchor" />
+
 {#if $menu.visible}
-  <div class="menu" {style} use:clickOutside={() => menu.actions.close()}>
-    <Menu>
-      <MenuItem
-        icon="Copy"
-        on:click={clipboard.actions.copy}
-        on:click={menu.actions.close}
-      >
-        Copy
-      </MenuItem>
-      <MenuItem
-        icon="Paste"
-        disabled={$copiedCell == null || $focusedCellAPI?.isReadonly()}
-        on:click={clipboard.actions.paste}
-        on:click={menu.actions.close}
-      >
-        Paste
-      </MenuItem>
-      <MenuItem
-        icon="Maximize"
-        disabled={isNewRow || !$config.canEditRows || !$config.canExpandRows}
-        on:click={() => dispatch("edit-row", $focusedRow)}
-        on:click={menu.actions.close}
-      >
-        Edit row in modal
-      </MenuItem>
-      <MenuItem
-        icon="Copy"
-        disabled={isNewRow || !$focusedRow?._id || !$isDatasourcePlus}
-        on:click={() => copyToClipboard($focusedRow?._id)}
-        on:click={menu.actions.close}
-      >
-        Copy row _id
-      </MenuItem>
-      <MenuItem
-        icon="Copy"
-        disabled={isNewRow || !$focusedRow?._rev}
-        on:click={() => copyToClipboard($focusedRow?._rev)}
-        on:click={menu.actions.close}
-      >
-        Copy row _rev
-      </MenuItem>
-      <MenuItem
-        icon="Duplicate"
-        disabled={isNewRow || !$config.canAddRows}
-        on:click={duplicate}
-      >
-        Duplicate row
-      </MenuItem>
-      <MenuItem
-        icon="Delete"
-        disabled={isNewRow || !$config.canDeleteRows}
-        on:click={deleteRow}
-      >
-        Delete row
-      </MenuItem>
-    </Menu>
-  </div>
+  {#key style}
+    <GridPopover {anchor} on:close={menu.actions.close} maxHeight={null}>
+      <Menu>
+        <MenuItem
+          icon="Copy"
+          on:click={clipboard.actions.copy}
+          on:click={menu.actions.close}
+        >
+          Copy
+        </MenuItem>
+        <MenuItem
+          icon="Paste"
+          disabled={$copiedCell == null || $focusedCellAPI?.isReadonly()}
+          on:click={clipboard.actions.paste}
+          on:click={menu.actions.close}
+        >
+          Paste
+        </MenuItem>
+        <MenuItem
+          icon="Maximize"
+          disabled={isNewRow || !$config.canEditRows || !$config.canExpandRows}
+          on:click={() => dispatch("edit-row", $focusedRow)}
+          on:click={menu.actions.close}
+        >
+          Edit row in modal
+        </MenuItem>
+        <MenuItem
+          icon="Copy"
+          disabled={isNewRow || !$focusedRow?._id || !$isDatasourcePlus}
+          on:click={() => copyToClipboard($focusedRow?._id)}
+          on:click={menu.actions.close}
+        >
+          Copy row _id
+        </MenuItem>
+        <MenuItem
+          icon="Copy"
+          disabled={isNewRow || !$focusedRow?._rev}
+          on:click={() => copyToClipboard($focusedRow?._rev)}
+          on:click={menu.actions.close}
+        >
+          Copy row _rev
+        </MenuItem>
+        <MenuItem
+          icon="Duplicate"
+          disabled={isNewRow || !$config.canAddRows}
+          on:click={duplicate}
+        >
+          Duplicate row
+        </MenuItem>
+        <MenuItem
+          icon="Delete"
+          disabled={isNewRow || !$config.canDeleteRows}
+          on:click={deleteRow}
+        >
+          Delete row
+        </MenuItem>
+      </Menu>
+    </GridPopover>
+  {/key}
 {/if}
 
 <style>
-  .menu {
+  .menu-anchor {
+    opacity: 0;
+    pointer-events: none;
     position: absolute;
-    background: var(--cell-background);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    width: 180px;
-    border-radius: 4px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
   }
 </style>
