@@ -174,11 +174,9 @@ export async function upload({
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (ttl && (bucketCreated.created || bucketCreated.exists)) {
+  if (ttl && bucketCreated.created) {
     let ttlConfig = bucketTTLConfig(bucketName, ttl)
-    if (objectStore.putBucketLifecycleConfiguration) {
-      await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
-    }
+    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
 
   let contentType = type
