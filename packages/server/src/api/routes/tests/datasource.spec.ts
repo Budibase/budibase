@@ -16,6 +16,7 @@ import {
   SourceName,
   Table,
   TableSchema,
+  SupportedSqlTypes,
 } from "@budibase/types"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
@@ -261,20 +262,6 @@ describe("/datasources", () => {
         })
       )
 
-      type SupportedSqlTypes =
-        | FieldType.STRING
-        | FieldType.BARCODEQR
-        | FieldType.LONGFORM
-        | FieldType.OPTIONS
-        | FieldType.DATETIME
-        | FieldType.NUMBER
-        | FieldType.BOOLEAN
-        | FieldType.FORMULA
-        | FieldType.BIGINT
-        | FieldType.BB_REFERENCE
-        | FieldType.LINK
-        | FieldType.ARRAY
-
       const fullSchema: {
         [type in SupportedSqlTypes]: FieldSchema & { type: type }
       } = {
@@ -337,7 +324,12 @@ describe("/datasources", () => {
         [FieldType.BB_REFERENCE]: {
           name: "bb_reference",
           type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USERS,
+          subtype: BBReferenceFieldSubType.USER,
+        },
+        [FieldType.BB_REFERENCE_SINGLE]: {
+          name: "bb_reference_single",
+          type: FieldType.BB_REFERENCE_SINGLE,
+          subtype: BBReferenceFieldSubType.USER,
         },
       }
 
