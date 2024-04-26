@@ -7,7 +7,11 @@
   } from "@budibase/bbui"
   import { getContext } from "svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
-  import { FieldSubtype, FieldType, RelationshipType } from "@budibase/types"
+  import {
+    BBReferenceFieldSubType,
+    FieldType,
+    RelationshipType,
+  } from "@budibase/types"
 
   const { API, definition, rows } = getContext("grid")
 
@@ -29,9 +33,9 @@
   }
 
   const migrateUserColumn = async () => {
-    let subtype = FieldSubtype.USERS
+    let subtype = BBReferenceFieldSubType.USERS
     if (column.schema.relationshipType === RelationshipType.ONE_TO_MANY) {
-      subtype = FieldSubtype.USER
+      subtype = BBReferenceFieldSubType.USER
     }
 
     try {
