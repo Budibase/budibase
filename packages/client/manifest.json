@@ -2112,6 +2112,14 @@
         "required": true
       },
       {
+        "type": "field",
+        "label": "Colour column",
+        "key": "colourColumn",
+        "dependsOn": "dataProvider",
+        "defaultValue": "",
+        "required": false
+      },
+      {
         "type": "text",
         "label": "Width",
         "key": "width"
@@ -2239,6 +2247,14 @@
         "key": "valueColumn",
         "dependsOn": "dataProvider",
         "required": true
+      },
+      {
+        "type": "field",
+        "label": "Colour column",
+        "key": "colourColumn",
+        "dependsOn": "dataProvider",
+        "defaultValue": "",
+        "required": false
       },
       {
         "type": "text",
