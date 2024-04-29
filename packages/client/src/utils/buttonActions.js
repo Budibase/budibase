@@ -240,6 +240,7 @@ const triggerAutomationHandler = async action => {
 const navigationHandler = action => {
   const { url, peek, externalNewTab } = action.parameters
   routeStore.actions.navigate(url, peek, externalNewTab)
+  closeSidePanelHandler()
 }
 
 const queryExecutionHandler = async action => {
