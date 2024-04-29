@@ -16,6 +16,7 @@ import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
 import Custom from "./Custom.svelte"
+import Weaviate from "./Weaviate.svelte"
 import { integrations } from "stores/builder"
 import { get } from "svelte/store"
 
@@ -38,6 +39,7 @@ const ICONS = {
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
   CUSTOM: Custom,
+  WEAVIATE: Weaviate,
 }
 
 export default ICONS

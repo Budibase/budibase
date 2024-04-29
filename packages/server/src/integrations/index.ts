@@ -14,6 +14,7 @@ import firebase from "./firebase"
 import redis from "./redis"
 import snowflake from "./snowflake"
 import oracle from "./oracle"
+import weaviate from "./weaviate"
 import {
   SourceName,
   Integration,
@@ -43,6 +44,7 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.SNOWFLAKE]: snowflake.schema,
   [SourceName.ORACLE]: undefined,
   [SourceName.BUDIBASE]: undefined,
+  [SourceName.WEAVIATE]: weaviate.schema,
 }
 
 type IntegrationBaseConstructor = new (...args: any[]) => IntegrationBase
@@ -66,6 +68,7 @@ const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
     [SourceName.SNOWFLAKE]: snowflake.integration,
     [SourceName.ORACLE]: undefined,
     [SourceName.BUDIBASE]: undefined,
+    [SourceName.WEAVIATE]: weaviate.integration,
   }
 
 // optionally add oracle integration if the oracle binary can be installed

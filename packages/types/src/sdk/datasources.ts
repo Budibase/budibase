@@ -66,6 +66,7 @@ export enum SourceName {
   REDIS = "REDIS",
   SNOWFLAKE = "SNOWFLAKE",
   BUDIBASE = "BUDIBASE",
+  WEAVIATE = "WEAVIATE",
 }
 
 export enum IncludeRelationship {
