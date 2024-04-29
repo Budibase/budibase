@@ -18,6 +18,7 @@ interface WeaviateQuery {
   collection: string
   commaSeparatedReturnProperties?: string
   commaSeparatedReturnMetadata?: string
+  distance?: number
 }
 
 const SCHEMA: Integration = {
@@ -55,6 +56,10 @@ const SCHEMA: Integration = {
         },
         collection: {
           type: DatasourceFieldType.STRING,
+        },
+        distance: {
+          type: DatasourceFieldType.NUMBER,
+          display: "Max distance",
         },
         commaSeparatedReturnProperties: {
           type: DatasourceFieldType.LIST,
@@ -127,7 +132,7 @@ class WeaviateIntegration {
     const result = await questions.query.nearVector(vector, {
       returnProperties,
       returnMetadata,
-      distance: 0.25,
+      distance: opts.distance,
     })
 
     return result
