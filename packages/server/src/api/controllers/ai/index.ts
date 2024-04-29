@@ -35,7 +35,21 @@ export async function parseReceipt(ctx: Ctx): Promise<any> {
     Please provide your response as a single JSON object with the keys above.
   `)
 
-  ctx.body = extractJSON(resp)
+  let json = extractJSON(resp)
+  console.log(`Parsed JSON: ${JSON.stringify(json)}`)
+
+  if (!json) {
+    json = {
+      company_name: null,
+      company_address: null,
+      company_postcode: null,
+      total_cost: null,
+      date_of_expense: null,
+      category: null,
+    }
+  }
+
+  ctx.body = json
 }
 
 async function ocr(path: string): Promise<string> {
