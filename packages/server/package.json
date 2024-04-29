@@ -102,7 +102,7 @@
     "node-fetch": "2.6.7",
     "object-sizeof": "2.6.1",
     "open": "8.4.0",
-    "openai": "^3.2.1",
+    "openai": "^4.38.5",
     "openapi-types": "9.3.1",
     "pg": "8.10.0",
     "pouchdb": "7.3.0",
