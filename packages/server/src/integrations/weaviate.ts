@@ -15,6 +15,7 @@ interface WeaviateConfig {
 
 interface WeaviateQuery {
   term: string
+  collection: string
 }
 
 const SCHEMA: Integration = {
@@ -48,6 +49,9 @@ const SCHEMA: Integration = {
       type: QueryType.FIELDS,
       fields: {
         term: {
+          type: DatasourceFieldType.STRING,
+        },
+        collection: {
           type: DatasourceFieldType.STRING,
         },
       },
@@ -94,7 +98,7 @@ class WeaviateIntegration {
 
     const vector = embeddings![0].embedding
 
-    const questions = client.collections.get("Discussions")
+    const questions = client.collections.get(opts.collection)
     const result = await questions.query.nearVector(vector, {
       returnProperties: ["title", "body"],
       returnMetadata: ["distance"],
