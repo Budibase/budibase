@@ -6,26 +6,25 @@ import openai from "openai"
 jest.mock(
   "openai",
   jest.fn(() => ({
-    Configuration: jest.fn(),
-    OpenAIApi: jest.fn(() => ({
-      createChatCompletion: jest.fn(() => ({
-        data: {
-          choices: [
-            {
-              message: {
-                content: "This is a test",
+    OpenAI: jest.fn(() => ({
+      chat: {
+        completions: {
+          create: jest.fn(() => ({
+            choices: [
+              {
+                message: {
+                  content: "This is a test",
+                },
               },
-            },
-          ],
+            ],
+          })),
         },
-      })),
+      },
     })),
   }))
 )
 
-const mockedOpenAIApi = openai.OpenAIApi as jest.MockedClass<
-  typeof openai.OpenAIApi
->
+const mockedOpenAIApi = openai.OpenAI as jest.MockedClass<typeof openai.OpenAI>
 
 const OPENAI_PROMPT = "What is the meaning of life?"
 
@@ -76,11 +75,15 @@ describe("test the openai action", () => {
     mockedOpenAIApi.mockImplementation(
       () =>
         ({
-          createChatCompletion: jest.fn(() => {
-            throw new Error(
-              "An error occurred while calling createChatCompletion"
-            )
-          }),
+          chat: {
+            completions: {
+              create: jest.fn(() => {
+                throw new Error(
+                  "An error occurred while calling createChatCompletion"
+                )
+              }),
+            },
+          },
         } as any)
     )
 
