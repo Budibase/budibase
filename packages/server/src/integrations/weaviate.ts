@@ -4,7 +4,7 @@ import {
   QueryType,
   HttpMethod,
 } from "@budibase/types"
-import weaviate, { WeaviateClient } from "weaviate-client"
+import weaviate, { QueryMetadata, WeaviateClient } from "weaviate-client"
 import { OpenAI } from "openai"
 
 interface WeaviateConfig {
@@ -16,6 +16,8 @@ interface WeaviateConfig {
 interface WeaviateQuery {
   term: string
   collection: string
+  commaSeparatedReturnProperties?: string
+  commaSeparatedReturnMetadata?: string
 }
 
 const SCHEMA: Integration = {
@@ -53,6 +55,14 @@ const SCHEMA: Integration = {
         },
         collection: {
           type: DatasourceFieldType.STRING,
+        },
+        commaSeparatedReturnProperties: {
+          type: DatasourceFieldType.LIST,
+          display: "Return properties (comma separated)",
+        },
+        commaSeparatedReturnMetadata: {
+          type: DatasourceFieldType.LIST,
+          display: "Return metadata (comma separated)",
         },
       },
     },
@@ -99,9 +109,24 @@ class WeaviateIntegration {
     const vector = embeddings![0].embedding
 
     const questions = client.collections.get(opts.collection)
+
+    let returnProperties
+    if (opts.commaSeparatedReturnProperties) {
+      returnProperties = opts.commaSeparatedReturnProperties
+        .split(",")
+        .map(x => x.trim())
+    }
+
+    let returnMetadata
+    if (opts.commaSeparatedReturnMetadata) {
+      returnMetadata = opts.commaSeparatedReturnMetadata
+        .split(",")
+        .map(x => x.trim()) as QueryMetadata
+    }
+
     const result = await questions.query.nearVector(vector, {
-      returnProperties: ["title", "body"],
-      returnMetadata: ["distance"],
+      returnProperties,
+      returnMetadata,
       distance: 0.25,
     })
 
