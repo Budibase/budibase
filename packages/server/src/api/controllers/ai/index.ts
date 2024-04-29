@@ -1,6 +1,8 @@
 import { BadRequestError } from "@budibase/backend-core"
 import { Ctx } from "@budibase/types"
-import * as tessaract from "node-tesseract-ocr"
+import fetch from "node-fetch"
+import fs from "fs"
+import FormData from "form-data"
 
 export async function parseReceipt(ctx: Ctx): Promise<any> {
   const file = ctx.request?.files?.file
@@ -12,9 +14,74 @@ export async function parseReceipt(ctx: Ctx): Promise<any> {
     throw new BadRequestError("Only one file can be uploaded")
   }
 
-  const data = await tessaract.recognize(file.path, {
-    lang: "engbest",
-  })
+  const text = await ocr(file.path)
 
-  ctx.body = data
+  const resp = await prompt(`
+    I have extracted the following text from a receipt. 
+
+    "${text}"
+
+    I would like to extract the following information from the receipt:
+
+    - company_name
+    - company_address
+    - company_postcode
+    - total_cost
+    - date_of_expense
+    - category
+
+    Where "category" is one of: "travel", "meals", "accommodation", "equipment", "miscellaneous".
+
+    Please provide your response as a single JSON object with the keys above.
+  `)
+
+  ctx.body = extractJSON(resp)
+}
+
+async function ocr(path: string): Promise<string> {
+  const form = new FormData()
+  form.append("file", fs.createReadStream(path))
+  const resp = await fetch("http://localhost:11343/ocr", {
+    method: "POST",
+    body: form,
+  })
+  const json = await resp.json()
+  console.log(`Extracted text: ${JSON.stringify(json)}`)
+  return json.text
+}
+
+async function prompt(text: string): Promise<string> {
+  const resp = await fetch("http://localhost:11434/api/chat", {
+    method: "POST",
+    body: JSON.stringify({
+      model: "llama3",
+      messages: [
+        {
+          role: "user",
+          content: text,
+        },
+      ],
+      stream: false,
+    }),
+    headers: { "Content-Type": "application/json" },
+  })
+  const out = await resp.json()
+  console.log(`Prompt response: ${JSON.stringify(out)}`)
+  return out.message.content
+}
+
+function extractJSON(text: string): any {
+  const regex = /{[^{}]*(?:{[^{}]*}[^{}]*)*}/g
+  let match: RegExpExecArray | null
+
+  while ((match = regex.exec(text)) !== null) {
+    try {
+      const jsonObject = JSON.parse(match[0])
+      return jsonObject
+    } catch (e) {
+      console.error("Failed to parse JSON:", e)
+    }
+  }
+
+  return null
 }
