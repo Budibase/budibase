@@ -30,9 +30,15 @@ export async function parseReceipt(ctx: Ctx): Promise<any> {
     - date_of_expense
     - category
 
-    Where "category" is one of: "travel", "meals", "accommodation", "equipment", "miscellaneous".
+    Please provide your response as a single JSON object with the keys above. Here are some rules
+    about each key:
 
-    Please provide your response as a single JSON object with the keys above.
+    - company_name: The name of the company where the expense was incurred. Null if not present.
+    - company_address: The address of the company where the expense was incurred. Null if not present.
+    - company_postcode: The postcode of the company where the expense was incurred. Null if not present.
+    - total_cost: The total cost of the expense. This should be a string in the format "£X.XX".
+    - date_of_expense: The date the expense was incurred. This should be a string in the format "YYYY-MM-DD".
+    - category: The category of the expense, one of: "travel", "meals", "accommodation", "equipment", "miscellaneous".
   `)
 
   let json = extractJSON(resp)
