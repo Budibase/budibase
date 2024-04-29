@@ -100,6 +100,7 @@
     "mssql": "10.0.1",
     "mysql2": "3.9.7",
     "node-fetch": "2.6.7",
+    "node-tesseract-ocr": "2.2.1",
     "object-sizeof": "2.6.1",
     "open": "8.4.0",
     "openai": "^3.2.1",
