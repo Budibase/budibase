@@ -3,6 +3,7 @@ import { Ctx } from "@budibase/types"
 import fetch from "node-fetch"
 import fs from "fs"
 import FormData from "form-data"
+import env from "../../../environment"
 
 export async function parseReceipt(ctx: Ctx): Promise<any> {
   const file = ctx.request?.files?.file
@@ -61,7 +62,7 @@ export async function parseReceipt(ctx: Ctx): Promise<any> {
 async function ocr(path: string): Promise<string> {
   const form = new FormData()
   form.append("file", fs.createReadStream(path))
-  const resp = await fetch("http://localhost:11343/ocr", {
+  const resp = await fetch(env.OCR_URL || "http://localhost:11343/ocr", {
     method: "POST",
     body: form,
   })
@@ -71,7 +72,7 @@ async function ocr(path: string): Promise<string> {
 }
 
 async function prompt(text: string): Promise<string> {
-  const resp = await fetch("http://localhost:11434/api/chat", {
+  const resp = await fetch(env.LLAMA_URL || "http://localhost:11434/api/chat", {
     method: "POST",
     body: JSON.stringify({
       model: "llama3",
@@ -96,8 +97,7 @@ function extractJSON(text: string): any {
 
   while ((match = regex.exec(text)) !== null) {
     try {
-      const jsonObject = JSON.parse(match[0])
-      return jsonObject
+      return JSON.parse(match[0])
     } catch (e) {
       console.error("Failed to parse JSON:", e)
     }

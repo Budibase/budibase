@@ -115,6 +115,9 @@ const environment = {
   LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
+  // BUDI-DAY
+  OCR_URL: process.env.OCR_URL,
+  LLAMA_URL: process.env.LLAMA_URL,
   _set(key: string, value: any) {
     process.env[key] = value
     // @ts-ignore
