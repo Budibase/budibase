@@ -15574,11 +15574,6 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-ncp@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/ncp/-/ncp-2.0.0.tgz#195a21d6c46e361d2fb1281ba38b91e9df7bdbb3"
-  integrity sha512-zIdGUrPRFTUELUvr3Gmc7KZ2Sw/h1PiVM0Af/oHB6zgnV1ikqSfRk+TOufi79aHYCW3NiOXmr1BP5nWbzojLaA==
-
 ndjson@^1.4.3:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/ndjson/-/ndjson-1.5.0.tgz#ae603b36b134bcec347b452422b0bf98d5832ec8"
