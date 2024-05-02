@@ -81,6 +81,12 @@ mocks.licenses.useUnlimited()
 
 dbInit()
 
+export interface CreateAppRequest {
+  appName: string
+  url?: string
+  snippets?: any[]
+}
+
 export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
   sourceType?: TableSourceType
@@ -218,11 +224,14 @@ export default class TestConfiguration {
   // SETUP /  TEARDOWN
 
   // use a new id as the name to avoid name collisions
-  async init(appName = newid()) {
+  async init(opts = {}) {
     if (!this.started) {
       await startup()
     }
-    return this.newTenant(appName)
+    return this.newTenant({
+      appName: newid(),
+      ...opts,
+    })
   }
 
   end() {
@@ -542,14 +551,14 @@ export default class TestConfiguration {
     return this.tenantId
   }
 
-  async newTenant(appName = newid()): Promise<App> {
+  async newTenant(opts: {}): Promise<App> {
     this.csrfToken = generator.hash()
 
     this.tenantId = structures.tenant.id()
     this.user = await this.globalUser()
     this.userMetadataId = generateUserMetadataID(this.user._id!)
 
-    return this.createApp(appName)
+    return this.createApp({ appName: newid(), ...opts })
   }
 
   doInTenant<T>(task: () => T) {
@@ -579,9 +588,9 @@ export default class TestConfiguration {
   }
 
   // APP
-  async createApp(appName: string, url?: string): Promise<App> {
-    // create dev app
-    // clear any old app
+  async createApp(opts: CreateAppRequest): Promise<App> {
+    const { appName, url, snippets } = opts
+
     this.appId = undefined
     this.app = await context.doInTenant(
       this.tenantId!,
@@ -592,6 +601,20 @@ export default class TestConfiguration {
         })) as App
     )
     this.appId = this.app.appId
+
+    if (snippets) {
+      this.app = await this._req(
+        appController.update,
+        {
+          ...this.app,
+          snippets,
+        },
+        {
+          appId: this.appId,
+        }
+      )
+    }
+
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
       this.prodApp = await this.publish()

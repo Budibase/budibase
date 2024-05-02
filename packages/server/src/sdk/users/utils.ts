@@ -12,6 +12,7 @@ import {
   UserMetadata,
   Database,
   ContextUserMetadata,
+  UserCtx,
 } from "@budibase/types"
 
 export function combineMetadataAndUser(
@@ -123,4 +124,13 @@ export async function syncGlobalUsers() {
     }
     await db.bulkDocs(toWrite)
   }
+}
+
+export function getUserContextBindings(user: ContextUser) {
+  if (!user) {
+    return {}
+  }
+  // Current user context for bindable search
+  const { _id, _rev, firstName, lastName, email, status, roleId } = user
+  return { _id, _rev, firstName, lastName, email, status, roleId }
 }

@@ -57,13 +57,10 @@ export async function searchView(
     })
   }
 
-  // Current user search context.
-  const { _id, _rev, firstName, lastName, email, status, roleId } = ctx.user
-
   await context.ensureSnippetContext()
 
   const enrichedQuery = await enrichSearchContext(query, {
-    user: { _id, _rev, firstName, lastName, email, status, roleId },
+    user: sdk.users.getUserContextBindings(ctx.user),
   })
 
   const searchOptions: RequiredKeys<SearchViewRowRequest> &

@@ -325,7 +325,6 @@
 <style>
   .container {
     width: 100%;
-    max-width: 1000px;
   }
   .fields {
     display: grid;
