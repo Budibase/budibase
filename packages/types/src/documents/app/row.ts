@@ -100,7 +100,7 @@ export enum FieldType {
    */
   BIGINT = "bigint",
   /**
-   * an JSON type, called Users within Budibase. It will hold an array of strings. This type is used to represent a link to an internal Budibase
+   * a JSON type, called Users within Budibase. It will hold an array of strings. This type is used to represent a link to an internal Budibase
    * resource, like a user or group, today only users are supported. This type will be represented as an
    * array of internal resource IDs (e.g. user IDs) within the row - this ID list will be enriched with
    * the full resources when rows are returned from the API. The full resources can be input to the API, or
