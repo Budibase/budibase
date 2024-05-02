@@ -121,6 +121,10 @@
 
   const onContextMenu = e => {
     e.preventDefault()
+
+    // The timeout allows time for clickoutside to close other open popvers
+    // before we show this one. Without the timeout, this popover closes again
+    // before it's even visible as clickoutside closes it.
     setTimeout(() => {
       ui.actions.blur()
       open = !open
