@@ -12,6 +12,7 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
+  processInputBBReference,
   processInputBBReferences,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
@@ -161,13 +162,9 @@ export async function inputProcessing(
         delete clonedRow[key].url
       }
     } else if (field.type === FieldType.BB_REFERENCE && value) {
-      clonedRow[key] = await processInputBBReferences(
-        value,
-        field.type,
-        field.subtype
-      )
+      clonedRow[key] = await processInputBBReferences(value, field.subtype)
     } else if (field.type === FieldType.BB_REFERENCE_SINGLE && value) {
-      clonedRow[key] = await processInputBBReferences(value, field.type)
+      clonedRow[key] = await processInputBBReference(value, field.subtype)
     }
   }
 
