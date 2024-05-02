@@ -174,29 +174,28 @@ describe.each([
   // Ensure all bindings resolve and perform as expected
   describe("bindings", () => {
     let globalUsers: any = []
-    let globalUserIds: any = []
 
     const future = new Date(serverTime.getTime())
     future.setDate(future.getDate() + 30)
 
     const rows = (currentUser: User) => {
-      globalUserIds = globalUsers.map((user: any) => {
-        return user._id
-      })
       return [
         { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
         { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
         { name: currentUser.firstName, appointment: future.toISOString() },
-        { name: "pivot", appointment: serverTime.toISOString() },
-        { name: "single user, session user", single_user: currentUser._id },
-        { name: "single user", single_user: globalUserIds[0] },
+        { name: "serverDate", appointment: serverTime.toISOString() },
+        {
+          name: "single user, session user",
+          single_user: JSON.stringify([currentUser]),
+        },
+        { name: "single user", single_user: JSON.stringify([globalUsers[0]]) },
         {
           name: "multi user",
-          multi_user: globalUserIds,
+          multi_user: JSON.stringify(globalUsers),
         },
         {
           name: "multi user with session user",
-          multi_user: [...globalUserIds, currentUser._id],
+          multi_user: JSON.stringify([...globalUsers, currentUser]),
         },
       ]
     }
@@ -257,7 +256,7 @@ describe.each([
           name: config.getUser().firstName,
           appointment: future.toISOString(),
         },
-        { name: "pivot", appointment: serverTime.toISOString() },
+        { name: "serverDate", appointment: serverTime.toISOString() },
       ])
     })
 
@@ -272,11 +271,11 @@ describe.each([
       }).toContainExactly([
         { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
         { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
-        { name: "pivot", appointment: serverTime.toISOString() },
+        { name: "serverDate", appointment: serverTime.toISOString() },
       ])
     })
 
-    it("should parse the encoded js snippet. One week prior", async () => {
+    it("should parse the encoded js snippet. Return rows with appointments up to 1 week in the past", async () => {
       const jsBinding = "return snippets.WeeksAgo();"
       const encodedBinding = encodeJSBinding(jsBinding)
 
@@ -293,7 +292,7 @@ describe.each([
       ])
     })
 
-    it("should parse the encoded js binding. 2 weeks prior", async () => {
+    it("should parse the encoded js binding. Return rows with appointments 2 weeks in the past", async () => {
       const jsBinding =
         "const currentTime = new Date()\ncurrentTime.setDate(currentTime.getDate()-14);\nreturn currentTime.toISOString();"
       const encodedBinding = encodeJSBinding(jsBinding)
@@ -333,7 +332,7 @@ describe.each([
       ])
     })
 
-    it("should match the session user id in a multi user field", async () => {
+    it("should not match the session user id in a multi user field", async () => {
       await expectQuery({
         notContains: { multi_user: ["{{ [user]._id }}"] },
         notEmpty: { multi_user: true },
@@ -341,10 +340,44 @@ describe.each([
         {
           name: "multi user",
           multi_user: globalUsers.map((user: any) => {
-            return {
-              _id: user._id,
-            }
+            return { _id: user._id }
           }),
+        },
+      ])
+    })
+
+    it("should match the session user id and a user table row id using helpers, user binding and a static user id.", async () => {
+      await expectQuery({
+        oneOf: {
+          single_user: [
+            "{{ default [user]._id '_empty_' }}",
+            globalUsers[0]._id,
+          ],
+        },
+      }).toContainExactly([
+        {
+          name: "single user, session user",
+          single_user: [{ _id: config.getUser()._id }],
+        },
+        {
+          name: "single user",
+          single_user: [{ _id: globalUsers[0]._id }],
+        },
+      ])
+    })
+
+    it("should resolve 'default' helper to '_empty_' when binding resolves to nothing", async () => {
+      await expectQuery({
+        oneOf: {
+          single_user: [
+            "{{ default [user]._idx '_empty_' }}",
+            globalUsers[0]._id,
+          ],
+        },
+      }).toContainExactly([
+        {
+          name: "single user",
+          single_user: [{ _id: globalUsers[0]._id }],
         },
       ])
     })
