@@ -89,9 +89,10 @@ export function searchInputMapping(table: Table, options: RowSearchParams) {
       case FieldType.BB_REFERENCE_SINGLE:
         const subtype = column.subtype
         switch (subtype) {
-          case BBReferenceFieldSubType.USER:
+          case BBReferenceFieldSubType.USER: {
             userColumnMapping(key, options)
             break
+          }
           default:
             utils.unreachable(subtype)
         }
