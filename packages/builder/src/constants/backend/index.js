@@ -166,7 +166,7 @@ export const FIELDS = {
     ],
   },
   // Used for display of editing existing columns
-  OLD_USER: {
+  DEPRECATED_USER: {
     name: "User",
     type: FieldType.BB_REFERENCE,
     subtype: BBReferenceFieldSubType.USER,
