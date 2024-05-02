@@ -1,5 +1,4 @@
 import {
-  FieldSchema,
   Row,
   Table,
   TableRequest,

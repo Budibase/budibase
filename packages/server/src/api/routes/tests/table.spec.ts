@@ -699,7 +699,7 @@ describe.each([
       ])
     })
 
-    describe.only("unhappy paths", () => {
+    describe("unhappy paths", () => {
       let table: Table
       beforeAll(async () => {
         table = await config.api.table.save(
