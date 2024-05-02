@@ -7,7 +7,7 @@ import {
   AutoFieldSubType,
   Datasource,
   EmptyFilterOption,
-  FieldTypeSubtypes,
+  BBReferenceFieldSubType,
   FieldType,
   RowSearchParams,
   SearchFilters,
@@ -176,12 +176,13 @@ describe.each([
   // Ensure all bindings resolve and perform as expected
   describe("bindings", () => {
     let globalUsers: any = []
-    const future = new Date(serverTime.getTime())
+    let globalUserIds: any = []
 
+    const future = new Date(serverTime.getTime())
     future.setDate(future.getDate() + 30)
 
     const rows = (currentUser: User) => {
-      const globalUserIds = globalUsers.map((user: any) => {
+      globalUserIds = globalUsers.map((user: any) => {
         return user._id
       })
       return [
@@ -225,19 +226,19 @@ describe.each([
         single_user: {
           name: "single_user",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          subtype: BBReferenceFieldSubType.USER,
         },
         multi_user: {
           name: "multi_user",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       })
       await createRows([...rows(config.getUser())])
     })
 
     // !! Current User is auto generated per run
-    it("should return all rows matching the session firstname", async () => {
+    it("should return all rows matching the session user firstname", async () => {
       await expectQuery({
         equal: { name: "{{ [user].firstName }}" },
       }).toContainExactly([
@@ -245,7 +246,7 @@ describe.each([
       ])
     })
 
-    it("should return all rows after search request datetime", async () => {
+    it("should parse the date binding and return all rows after the resolved value", async () => {
       await expectQuery({
         range: {
           appointment: {
@@ -262,7 +263,7 @@ describe.each([
       ])
     })
 
-    it("should return all rows before search request datetime", async () => {
+    it("should parse the date binding and return all rows before the resolved value", async () => {
       await expectQuery({
         range: {
           appointment: {
@@ -319,6 +320,33 @@ describe.each([
         {
           name: "single user, session user",
           single_user: [{ _id: config.getUser()._id }],
+        },
+      ])
+    })
+
+    it("should match the session user id in a multi user field", async () => {
+      await expectQuery({
+        contains: { multi_user: ["{{ [user]._id }}"] },
+      }).toContainExactly([
+        {
+          name: "multi user with session user",
+          multi_user: [{ _id: config.getUser()._id }],
+        },
+      ])
+    })
+
+    it("should match the session user id in a multi user field", async () => {
+      await expectQuery({
+        notContains: { multi_user: ["{{ [user]._id }}"] },
+        notEmpty: { multi_user: true },
+      }).toContainExactly([
+        {
+          name: "multi user",
+          multi_user: globalUsers.map((user: any) => {
+            return {
+              _id: user._id,
+            }
+          }),
         },
       ])
     })
