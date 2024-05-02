@@ -3871,12 +3871,6 @@
       },
       {
         "type": "boolean",
-        "label": "24-hour time",
-        "key": "time24hr",
-        "defaultValue": false
-      },
-      {
-        "type": "boolean",
         "label": "Ignore time zones",
         "key": "ignoreTimezones",
         "defaultValue": false
@@ -6723,7 +6717,20 @@
     "illegalChildren": ["section", "sidepanel"],
     "showEmptyState": false,
     "draggable": false,
-    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action."
+    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
+    "settings": [
+      {
+        "type": "boolean",
+        "key": "ignoreClicksOutside",
+        "label": "Ignore clicks outside",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "key": "onClose",
+        "label": "On close"
+      }
+    ]
   },
   "rowexplorer": {
     "block": true,
