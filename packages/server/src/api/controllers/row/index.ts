@@ -198,7 +198,7 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const tableId = utils.getTableId(ctx)
 
-  await context.ensureSnippetContext()
+  await context.ensureSnippetContext(true)
 
   const enrichedQuery = await utils.enrichSearchContext(
     { ...ctx.request.body.query },
