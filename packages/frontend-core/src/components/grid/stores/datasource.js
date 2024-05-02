@@ -76,7 +76,11 @@ export const deriveStores = context => {
   )
 
   const hasBudibaseIdentifiers = derived(datasource, $datasource => {
-    return ["table", "viewV2", "link"].includes($datasource?.type)
+    let type = $datasource?.type
+    if (type === "provider") {
+      type = $datasource.value?.datasource?.type
+    }
+    return ["table", "viewV2", "link"].includes(type)
   })
 
   return {
