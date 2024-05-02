@@ -11,7 +11,7 @@ describe("run", () => {
 
   beforeAll(async () => {
     await config.init()
-    app = await config.createApp("testApp")
+    app = await config.createApp({ appName: "testApp" })
     screen = await config.createScreen()
   })
 
