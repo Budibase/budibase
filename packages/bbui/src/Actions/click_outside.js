@@ -9,14 +9,13 @@ const conditionallyIgnoredClasses = [
   ".spectrum-Popover",
 ]
 let clickHandlers = []
+let candidateTarget
 
 /**
  * Handle a body click event
  */
 const handleClick = event => {
-  // Treat right clicks (context menu events) as normal clicks
-  const eventType = event.type === "contextmenu" ? "click" : event.type
-
+  console.log("CLOSE")
   // Ignore click if this is an ignored class
   if (event.target.closest('[data-ignore-click-outside="true"]')) {
     return
@@ -29,11 +28,6 @@ const handleClick = event => {
 
   // Process handlers
   clickHandlers.forEach(handler => {
-    // Check that we're the right kind of click event
-    if (handler.allowedType && eventType !== handler.allowedType) {
-      return
-    }
-
     // Check that the click isn't inside the target
     if (handler.element.contains(event.target)) {
       return
@@ -51,17 +45,34 @@ const handleClick = event => {
     handler.callback?.(event)
   })
 }
-document.documentElement.addEventListener("click", handleClick, true)
-document.documentElement.addEventListener("mousedown", handleClick, true)
-document.documentElement.addEventListener("contextmenu", handleClick, true)
+
+const handleMouseUp = e => {
+  console.log("up")
+  if (candidateTarget === e.target) {
+    handleClick(e)
+  }
+  candidateTarget = null
+}
+
+const handleMouseDown = e => {
+  if (e.button !== 0) {
+    return
+  }
+  candidateTarget = e.target
+  document.removeEventListener("mouseup", handleMouseUp)
+  document.addEventListener("mouseup", handleMouseUp, true)
+}
+
+document.addEventListener("mousedown", handleMouseDown)
+document.addEventListener("contextmenu", handleClick)
 
 /**
  * Adds or updates a click handler
  */
-const updateHandler = (id, element, anchor, callback, allowedType) => {
+const updateHandler = (id, element, anchor, callback) => {
   let existingHandler = clickHandlers.find(x => x.id === id)
   if (!existingHandler) {
-    clickHandlers.push({ id, element, anchor, callback, allowedType })
+    clickHandlers.push({ id, element, anchor, callback })
   } else {
     existingHandler.callback = callback
   }
@@ -88,8 +99,7 @@ export default (element, opts) => {
     const callback =
       newOpts?.callback || (typeof newOpts === "function" ? newOpts : null)
     const anchor = newOpts?.anchor || element
-    const allowedType = newOpts?.allowedType || "click"
-    updateHandler(id, element, anchor, callback, allowedType)
+    updateHandler(id, element, anchor, callback)
   }
   update(opts)
   return {

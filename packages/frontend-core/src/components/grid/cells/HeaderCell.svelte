@@ -121,8 +121,10 @@
 
   const onContextMenu = e => {
     e.preventDefault()
-    ui.actions.blur()
-    open = !open
+    setTimeout(() => {
+      ui.actions.blur()
+      open = !open
+    }, 10)
   }
 
   const sortAscending = () => {
