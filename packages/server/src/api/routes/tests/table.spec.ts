@@ -493,16 +493,16 @@ describe.each([
       )
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE_SINGLE,
-          subtype: BBReferenceFieldSubType.USER,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE_SINGLE,
+        subtype: BBReferenceFieldSubType.USER,
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const migratedRows = await config.api.row.fetch(table._id!)
@@ -558,16 +558,19 @@ describe.each([
       )
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USER,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: {
+          type: "array",
+        },
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const migratedRow = await config.api.row.get(table._id!, testRow._id!)
@@ -610,16 +613,19 @@ describe.each([
       })
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USER,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: {
+          type: "array",
+        },
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const row1Migrated = await config.api.row.get(table._id!, row1._id!)
@@ -665,16 +671,19 @@ describe.each([
       })
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USER,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: {
+          type: "array",
+        },
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const row1Migrated = await config.api.row.get(table._id!, row1._id!)
@@ -690,7 +699,7 @@ describe.each([
       ])
     })
 
-    describe("unhappy paths", () => {
+    describe.only("unhappy paths", () => {
       let table: Table
       beforeAll(async () => {
         table = await config.api.table.save(
@@ -724,12 +733,8 @@ describe.each([
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: table.schema["user relationship"],
-            newColumn: {
-              name: "",
-              type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USER,
-            },
+            oldColumn: "user relationship",
+            newColumn: "",
           },
           { status: 400 }
         )
@@ -739,12 +744,8 @@ describe.each([
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: table.schema["user relationship"],
-            newColumn: {
-              name: "_id",
-              type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USER,
-            },
+            oldColumn: "user relationship",
+            newColumn: "_id",
           },
           { status: 400 }
         )
@@ -754,12 +755,8 @@ describe.each([
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: table.schema["user relationship"],
-            newColumn: {
-              name: "num",
-              type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USER,
-            },
+            oldColumn: "user relationship",
+            newColumn: "num",
           },
           { status: 400 }
         )
@@ -769,16 +766,8 @@ describe.each([
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: {
-              name: "not a column",
-              type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USER,
-            },
-            newColumn: {
-              name: "new column",
-              type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USER,
-            },
+            oldColumn: "not a column",
+            newColumn: "new column",
           },
           { status: 400 }
         )
