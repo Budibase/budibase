@@ -8,6 +8,10 @@ const isBetterSample = (newValue, oldValue) => {
     return true
   }
 
+  if (oldValue != null && newValue == null) {
+    return false
+  }
+
   // Don't change type
   const oldType = typeof oldValue
   const newType = typeof newValue

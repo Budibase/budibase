@@ -264,6 +264,7 @@ export const SchemaTypeOptions = [
   { label: "Number", value: FieldType.NUMBER },
   { label: "Boolean", value: FieldType.BOOLEAN },
   { label: "Datetime", value: FieldType.DATETIME },
+  { label: "JSON", value: FieldType.JSON },
 ]
 
 export const SchemaTypeOptionsExpanded = SchemaTypeOptions.map(el => ({

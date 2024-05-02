@@ -50,6 +50,8 @@
       metadata: { dataSource: table },
     },
   ]
+  $: height = $component.styles?.normal?.height || "408px"
+  $: styles = getSanitisedStyles($component.styles)
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
@@ -106,39 +108,48 @@
       },
     }))
   }
+
+  const getSanitisedStyles = styles => {
+    return {
+      ...styles,
+      normal: {
+        ...styles?.normal,
+        height: undefined,
+      },
+    }
+  }
 </script>
 
-<div
-  use:styleable={$component.styles}
-  class:in-builder={$builderStore.inBuilder}
->
-  <Provider {actions}>
-    <Grid
-      bind:this={grid}
-      datasource={table}
-      {API}
-      {stripeRows}
-      {quiet}
-      {initialFilter}
-      {initialSortColumn}
-      {initialSortOrder}
-      {fixedRowHeight}
-      {columnWhitelist}
-      {schemaOverrides}
-      {repeat}
-      canAddRows={allowAddRows}
-      canEditRows={allowEditRows}
-      canDeleteRows={allowDeleteRows}
-      canEditColumns={false}
-      canExpandRows={false}
-      canSaveSchema={false}
-      showControls={false}
-      notifySuccess={notificationStore.actions.success}
-      notifyError={notificationStore.actions.error}
-      buttons={enrichedButtons}
-      on:rowclick={e => onRowClick?.({ row: e.detail })}
-    />
-  </Provider>
+<div use:styleable={styles} class:in-builder={$builderStore.inBuilder}>
+  <span style="--height:{height};">
+    <Provider {actions}>
+      <Grid
+        bind:this={grid}
+        datasource={table}
+        {API}
+        {stripeRows}
+        {quiet}
+        {initialFilter}
+        {initialSortColumn}
+        {initialSortOrder}
+        {fixedRowHeight}
+        {columnWhitelist}
+        {schemaOverrides}
+        {repeat}
+        canAddRows={allowAddRows}
+        canEditRows={allowEditRows}
+        canDeleteRows={allowDeleteRows}
+        canEditColumns={false}
+        canExpandRows={false}
+        canSaveSchema={false}
+        showControls={false}
+        notifySuccess={notificationStore.actions.success}
+        notifyError={notificationStore.actions.error}
+        buttons={enrichedButtons}
+        on:rowclick={e => onRowClick?.({ row: e.detail })}
+      />
+    </Provider>
+  </span>
 </div>
 
 <style>
@@ -149,10 +160,14 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     overflow: hidden;
-    min-height: 230px;
-    height: 410px;
   }
   div.in-builder :global(*) {
     pointer-events: none;
+  }
+  span {
+    display: contents;
+  }
+  span :global(.grid) {
+    height: var(--height);
   }
 </style>
