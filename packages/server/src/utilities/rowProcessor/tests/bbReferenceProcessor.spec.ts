@@ -2,6 +2,7 @@ import _ from "lodash"
 import * as backendCore from "@budibase/backend-core"
 import { BBReferenceFieldSubType, FieldType, User } from "@budibase/types"
 import {
+  processInputBBReference,
   processInputBBReferences,
   processOutputBBReferences,
 } from "../bbReferenceProcessor"
@@ -22,6 +23,7 @@ jest.mock("@budibase/backend-core", (): typeof backendCore => {
       ...actual.cache,
       user: {
         ...actual.cache.user,
+        getUser: jest.fn(actual.cache.user.getUser),
         getUsers: jest.fn(actual.cache.user.getUsers),
       },
     },
@@ -31,9 +33,6 @@ jest.mock("@budibase/backend-core", (): typeof backendCore => {
 const config = new DBTestConfiguration()
 
 describe("bbReferenceProcessor", () => {
-  const cacheGetUsersSpy = backendCore.cache.user
-    .getUsers as jest.MockedFunction<typeof backendCore.cache.user.getUsers>
-
   const users: User[] = []
   beforeAll(async () => {
     const userCount = 10
@@ -56,21 +55,81 @@ describe("bbReferenceProcessor", () => {
     jest.clearAllMocks()
   })
 
-  describe("processInputBBReferences", () => {
+  describe("processInputBBReference", () => {
     describe("subtype user", () => {
+      const cacheGetUserSpy = backendCore.cache.user
+        .getUser as jest.MockedFunction<typeof backendCore.cache.user.getUser>
+
       it("validate valid string id", async () => {
         const user = _.sample(users)
         const userId = user!._id!
 
         const result = await config.doInTenant(() =>
-          processInputBBReferences(
-            userId,
-            FieldType.BB_REFERENCE,
-            BBReferenceFieldSubType.USER
-          )
+          processInputBBReference(userId, BBReferenceFieldSubType.USER)
         )
 
         expect(result).toEqual(userId)
+        expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUserSpy).toHaveBeenCalledWith(userId)
+      })
+
+      it("throws an error given an invalid id", async () => {
+        const userId = generator.guid()
+
+        await expect(
+          config.doInTenant(() =>
+            processInputBBReference(userId, BBReferenceFieldSubType.USER)
+          )
+        ).rejects.toThrow(
+          new InvalidBBRefError(userId, BBReferenceFieldSubType.USER)
+        )
+      })
+
+      it("validate valid user object", async () => {
+        const userId = _.sample(users)!._id!
+
+        const result = await config.doInTenant(() =>
+          processInputBBReference({ _id: userId }, BBReferenceFieldSubType.USER)
+        )
+
+        expect(result).toEqual(userId)
+        expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUserSpy).toHaveBeenCalledWith(userId)
+      })
+
+      it("empty strings will return null", async () => {
+        const result = await config.doInTenant(() =>
+          processInputBBReference("", BBReferenceFieldSubType.USER)
+        )
+
+        expect(result).toEqual(null)
+      })
+
+      it("should convert user medata IDs to global IDs", async () => {
+        const userId = _.sample(users)!._id!
+        const userMetadataId = backendCore.db.generateUserMetadataID(userId)
+        const result = await config.doInTenant(() =>
+          processInputBBReference(userMetadataId, BBReferenceFieldSubType.USER)
+        )
+        expect(result).toBe(userId)
+      })
+    })
+  })
+
+  describe("processInputBBReferences", () => {
+    describe("subtype user", () => {
+      const cacheGetUsersSpy = backendCore.cache.user
+        .getUsers as jest.MockedFunction<typeof backendCore.cache.user.getUsers>
+
+      it("validate valid string id", async () => {
+        const user = _.sample(users)
+        const userId = user!._id!
+
+        const result = await config.doInTenant(() =>
+          processInputBBReferences(userId, BBReferenceFieldSubType.USER)
+        )
+
+        expect(result).toEqual([userId])
         expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
         expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
@@ -80,11 +139,7 @@ describe("bbReferenceProcessor", () => {
 
         await expect(
           config.doInTenant(() =>
-            processInputBBReferences(
-              userId,
-              FieldType.BB_REFERENCE,
-              BBReferenceFieldSubType.USER
-            )
+            processInputBBReferences(userId, BBReferenceFieldSubType.USER)
           )
         ).rejects.toThrow(
           new InvalidBBRefError(userId, BBReferenceFieldSubType.USER)
@@ -98,14 +153,10 @@ describe("bbReferenceProcessor", () => {
 
         const userIdCsv = userIds.join(" ,  ")
         const result = await config.doInTenant(() =>
-          processInputBBReferences(
-            userIdCsv,
-            FieldType.BB_REFERENCE,
-            BBReferenceFieldSubType.USER
-          )
+          processInputBBReferences(userIdCsv, BBReferenceFieldSubType.USER)
         )
 
-        expect(result).toEqual(userIds.join(","))
+        expect(result).toEqual(userIds)
         expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
         expect(cacheGetUsersSpy).toHaveBeenCalledWith(userIds)
       })
@@ -122,45 +173,22 @@ describe("bbReferenceProcessor", () => {
 
         await expect(
           config.doInTenant(() =>
-            processInputBBReferences(
-              userIdCsv,
-              FieldType.BB_REFERENCE,
-              BBReferenceFieldSubType.USER
-            )
+            processInputBBReferences(userIdCsv, BBReferenceFieldSubType.USER)
           )
         ).rejects.toThrow(
           new InvalidBBRefError(wrongId, BBReferenceFieldSubType.USER)
         )
       })
 
-      it("validate valid user object", async () => {
-        const userId = _.sample(users)!._id!
-
-        const result = await config.doInTenant(() =>
-          processInputBBReferences(
-            { _id: userId },
-            FieldType.BB_REFERENCE,
-            BBReferenceFieldSubType.USER
-          )
-        )
-
-        expect(result).toEqual(userId)
-        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
-        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
-      })
-
       it("validate valid user object array", async () => {
-        const userIds = _.sampleSize(users, 3).map(x => x._id!)
+        const inputUsers = _.sampleSize(users, 3).map(u => ({ _id: u._id! }))
+        const userIds = inputUsers.map(u => u._id)
 
         const result = await config.doInTenant(() =>
-          processInputBBReferences(
-            userIds,
-            FieldType.BB_REFERENCE,
-            BBReferenceFieldSubType.USER
-          )
+          processInputBBReferences(inputUsers, BBReferenceFieldSubType.USER)
         )
 
-        expect(result).toEqual(userIds.join(","))
+        expect(result).toEqual(userIds)
         expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
         expect(cacheGetUsersSpy).toHaveBeenCalledWith(userIds)
       })
@@ -169,7 +197,7 @@ describe("bbReferenceProcessor", () => {
         const result = await config.doInTenant(() =>
           processInputBBReferences(
             "",
-            FieldType.BB_REFERENCE,
+
             BBReferenceFieldSubType.USER
           )
         )
@@ -179,11 +207,7 @@ describe("bbReferenceProcessor", () => {
 
       it("empty arrays will return null", async () => {
         const result = await config.doInTenant(() =>
-          processInputBBReferences(
-            [],
-            FieldType.BB_REFERENCE,
-            BBReferenceFieldSubType.USER
-          )
+          processInputBBReferences([], BBReferenceFieldSubType.USER)
         )
 
         expect(result).toEqual(null)
@@ -193,13 +217,9 @@ describe("bbReferenceProcessor", () => {
         const userId = _.sample(users)!._id!
         const userMetadataId = backendCore.db.generateUserMetadataID(userId)
         const result = await config.doInTenant(() =>
-          processInputBBReferences(
-            userMetadataId,
-            FieldType.BB_REFERENCE,
-            BBReferenceFieldSubType.USER
-          )
+          processInputBBReferences(userMetadataId, BBReferenceFieldSubType.USER)
         )
-        expect(result).toBe(userId)
+        expect(result).toEqual([userId])
       })
     })
   })
