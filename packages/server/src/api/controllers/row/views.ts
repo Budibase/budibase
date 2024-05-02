@@ -57,7 +57,7 @@ export async function searchView(
     })
   }
 
-  await context.ensureSnippetContext()
+  await context.ensureSnippetContext(true)
 
   const enrichedQuery = await enrichSearchContext(query, {
     user: sdk.users.getUserContextBindings(ctx.user),

@@ -281,7 +281,7 @@ export function doInScimContext(task: any) {
   return newContext(updates, task)
 }
 
-export async function ensureSnippetContext() {
+export async function ensureSnippetContext(enabled = !env.isTest()) {
   const ctx = getCurrentContext()
 
   // If we've already added snippets to context, continue
@@ -292,7 +292,7 @@ export async function ensureSnippetContext() {
   // Otherwise get snippets for this app and update context
   let snippets: Snippet[] | undefined
   const db = getAppDB()
-  if (db) {
+  if (db && enabled) {
     const app = await db.get<App>(DocumentType.APP_METADATA)
     snippets = app.snippets
   }
