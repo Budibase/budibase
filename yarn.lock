@@ -11441,11 +11441,6 @@ flat@^5.0.2:
   resolved "https://registry.yarnpkg.com/flat/-/flat-5.0.2.tgz#8ca6fe332069ffa9d324c327198c598259ceb241"
   integrity sha512-b6suED+5/3rTpUBdG1gupIl8MPFCAMA0QXwmljLhvCUKcUvdE4gWky9zpuGCcXHOsz4J9wPGNWq6OKpmIzz3hQ==
 
-flatpickr@^4.5.2:
-  version "4.6.13"
-  resolved "https://registry.yarnpkg.com/flatpickr/-/flatpickr-4.6.13.tgz#8a029548187fd6e0d670908471e43abe9ad18d94"
-  integrity sha512-97PMG/aywoYpB4IvbvUJi0RQi8vearvU0oov1WW3k0WZPBMrTQVqekSX5CjSG/M4Q3i6A/0FKXC7RyAoAUUSPw==
-
 flatted@^3.1.0:
   version "3.2.5"
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.5.tgz#76c8584f4fc843db64702a6bd04ab7a8bd666da3"
@@ -11612,7 +11607,7 @@ fs.realpath@^1.0.0:
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
 
-fsevents@^2.3.2, fsevents@~2.3.1, fsevents@~2.3.2:
+fsevents@^2.3.2, fsevents@~2.3.2:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
   integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
@@ -19761,13 +19756,6 @@ rollup-pluginutils@^2.3.1, rollup-pluginutils@^2.5.0, rollup-pluginutils@^2.8.1,
   dependencies:
     estree-walker "^0.6.1"
 
-rollup@2.45.2:
-  version "2.45.2"
-  resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.45.2.tgz#8fb85917c9f35605720e92328f3ccbfba6f78b48"
-  integrity sha512-kRRU7wXzFHUzBIv0GfoFFIN3m9oteY4uAsKllIpQDId5cfnkWF2J130l+27dzDju0E6MScKiV0ZM5Bw8m4blYQ==
-  optionalDependencies:
-    fsevents "~2.3.1"
-
 rollup@^2.36.2, rollup@^2.45.2:
   version "2.79.1"
   resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.79.1.tgz#bedee8faef7c9f93a2647ac0108748f497f081c7"
@@ -21104,20 +21092,6 @@ svelte-dnd-action@^0.9.8:
     espree "^9.0.0"
     postcss "^8.4.29"
     postcss-scss "^4.0.8"
-
-svelte-flatpickr@3.2.3:
-  version "3.2.3"
-  resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-3.2.3.tgz#db5dd7ad832ef83262b45e09737955ad3d591fc8"
-  integrity sha512-PNkqK4Napx8nTvCwkaUXdnKo8dISThaxEOK+szTUXcY6H0dQM0TSyuoMaVWY2yX7pM+PN5cpCQCcVe8YvTRFSw==
-  dependencies:
-    flatpickr "^4.5.2"
-
-svelte-flatpickr@^3.3.4:
-  version "3.3.4"
-  resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-3.3.4.tgz#80b1ed2d6bc37df78b1660404e9326bfc0a206f4"
-  integrity sha512-i+QqJRs8zPRKsxv8r2GIk1fsb8cI3ozn3/aHXtViAoNKLy0j4PV7OSWavgEZC1wlAa34qi2hMkUh+vg6qt2DRA==
-  dependencies:
-    flatpickr "^4.5.2"
 
 svelte-hmr@^0.15.1:
   version "0.15.3"
