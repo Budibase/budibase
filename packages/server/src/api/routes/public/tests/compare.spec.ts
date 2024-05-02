@@ -68,7 +68,7 @@ describe("check the applications endpoints", () => {
 
 describe("check the tables endpoints", () => {
   it("should allow retrieving tables through search", async () => {
-    await config.createApp("new app 1")
+    await config.createApp({ appName: "new app 1" })
     table = await config.upsertTable()
     const res = await makeRequest("post", "/tables/search")
     expect(res).toSatisfyApiSpec()
