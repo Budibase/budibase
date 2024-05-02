@@ -117,12 +117,12 @@ interface UserReferenceInfo {
 export function processOutputBBReferences(
   value: string,
   type: FieldType.BB_REFERENCE_SINGLE
-): Promise<UserReferenceInfo>
+): Promise<UserReferenceInfo | undefined>
 export function processOutputBBReferences(
   value: string,
   type: FieldType.BB_REFERENCE,
   subtype: BBReferenceFieldSubType
-): Promise<UserReferenceInfo[]>
+): Promise<UserReferenceInfo[] | undefined>
 
 export async function processOutputBBReferences(
   value: string | string[],
