@@ -12,7 +12,6 @@ import {
   UserMetadata,
   Database,
   ContextUserMetadata,
-  UserCtx,
 } from "@budibase/types"
 
 export function combineMetadataAndUser(
