@@ -25,6 +25,6 @@
     name="field"
     headings
     options={SchemaTypeOptionsExpanded}
-    compare={(option, value) => option.type === value.type}
+    compare={(option, value) => option.type === value?.type}
   />
 {/key}
