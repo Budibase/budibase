@@ -17,12 +17,13 @@
   let relationshipType
 
   $: {
-    if (type === FieldType.BB_REFERENCE_SINGLE) {
+    if (
+      type === FieldType.BB_REFERENCE_SINGLE ||
+      constraints?.type !== "array" // Handle deprecated "single" user references
+    ) {
       relationshipType = RelationshipType.ONE_TO_MANY
-    } else if (constraints?.type === "array") {
-      relationshipType = RelationshipType.MANY_TO_MANY
     } else {
-      relationshipType = RelationshipType.ONE_TO_MANY
+      relationshipType = RelationshipType.MANY_TO_MANY
     }
   }
 
