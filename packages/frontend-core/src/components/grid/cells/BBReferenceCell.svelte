@@ -9,9 +9,10 @@
 
   export let api
   export let hideCounter = false
+  export let schema
 
   const { API } = getContext("grid")
-  const { type, subtype, constraints } = $$props.schema
+  const { type, subtype, constraints } = schema
 
   let relationshipType
 
@@ -58,7 +59,7 @@
 
 <RelationshipCell
   bind:api
-  {...$$props}
+  {...$$restProps}
   {schema}
   {searchFunction}
   primaryDisplay={"email"}
