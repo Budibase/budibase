@@ -281,7 +281,7 @@
                   timeOnly={getSchema(filter)?.timeOnly}
                   bind:value={filter.value}
                 />
-              {:else if filter.type === FieldType.BB_REFERENCE}
+              {:else if [FieldType.BB_REFERENCE, FieldType.BB_REFERENCE_SINGLE].includes(filter.type)}
                 <FilterUsers
                   bind:value={filter.value}
                   multiselect={[
