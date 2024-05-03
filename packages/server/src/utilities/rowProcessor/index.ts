@@ -14,6 +14,7 @@ import { cloneDeep } from "lodash/fp"
 import {
   processInputBBReference,
   processInputBBReferences,
+  processOutputBBReference,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
 import { isExternalTableID } from "../../integrations/utils"
@@ -258,7 +259,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       column.type == FieldType.BB_REFERENCE_SINGLE
     ) {
       for (let row of enriched) {
-        row[property] = await processOutputBBReferences(
+        row[property] = await processOutputBBReference(
           row[property],
           column.subtype
         )
