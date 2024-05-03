@@ -18,7 +18,7 @@
     focusedCellAPI,
     focusedRowId,
     notifications,
-    isDatasourcePlus,
+    hasBudibaseIdentifiers,
   } = getContext("grid")
 
   let anchor
@@ -82,7 +82,7 @@
         </MenuItem>
         <MenuItem
           icon="Copy"
-          disabled={isNewRow || !$focusedRow?._id || !$isDatasourcePlus}
+          disabled={isNewRow || !$focusedRow?._id || !$hasBudibaseIdentifiers}
           on:click={() => copyToClipboard($focusedRow?._id)}
           on:click={menu.actions.close}
         >
@@ -90,7 +90,7 @@
         </MenuItem>
         <MenuItem
           icon="Copy"
-          disabled={isNewRow || !$focusedRow?._rev}
+          disabled={isNewRow || !$focusedRow?._rev || !$hasBudibaseIdentifiers}
           on:click={() => copyToClipboard($focusedRow?._rev)}
           on:click={menu.actions.close}
         >
