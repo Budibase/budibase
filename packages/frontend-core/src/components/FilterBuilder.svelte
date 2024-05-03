@@ -124,6 +124,7 @@
     const fieldSchema = schemaFields.find(x => x.name === filter.field)
     filter.type = fieldSchema?.type
     filter.subtype = fieldSchema?.subtype
+    filter.formulaType = fieldSchema?.formulaType
 
     // Update external type based on field
     filter.externalType = getSchema(filter)?.externalType
