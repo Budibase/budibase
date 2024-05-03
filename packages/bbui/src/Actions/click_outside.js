@@ -1,22 +1,25 @@
+// These class names will never trigger a callback if clicked, no matter what
 const ignoredClasses = [
   ".download-js-link",
   ".spectrum-Menu",
   ".date-time-popover",
 ]
+
+// These class names will only trigger a callback when clicked if the registered
+// component is not nested inside them. For example, clicking inside a modal
+// will not close the modal, or clicking inside a popover will not close the
+// popover.
 const conditionallyIgnoredClasses = [
   ".spectrum-Underlay",
   ".drawer-wrapper",
   ".spectrum-Popover",
 ]
 let clickHandlers = []
+let candidateTarget
 
-/**
- * Handle a body click event
- */
+// Processes a "click outside" event and invokes callbacks if our source element
+// is valid
 const handleClick = event => {
-  // Treat right clicks (context menu events) as normal clicks
-  const eventType = event.type === "contextmenu" ? "click" : event.type
-
   // Ignore click if this is an ignored class
   if (event.target.closest('[data-ignore-click-outside="true"]')) {
     return
@@ -29,11 +32,6 @@ const handleClick = event => {
 
   // Process handlers
   clickHandlers.forEach(handler => {
-    // Check that we're the right kind of click event
-    if (handler.allowedType && eventType !== handler.allowedType) {
-      return
-    }
-
     // Check that the click isn't inside the target
     if (handler.element.contains(event.target)) {
       return
@@ -51,17 +49,43 @@ const handleClick = event => {
     handler.callback?.(event)
   })
 }
-document.documentElement.addEventListener("click", handleClick, true)
-document.documentElement.addEventListener("mousedown", handleClick, true)
-document.documentElement.addEventListener("contextmenu", handleClick, true)
+
+// On mouse up we only trigger a "click outside" callback if we targetted the
+// same element that we did on mouse down. This fixes all sorts of issues where
+// we get annoying callbacks firing when we drag to select text.
+const handleMouseUp = e => {
+  if (candidateTarget === e.target) {
+    handleClick(e)
+  }
+  candidateTarget = null
+}
+
+// On mouse down we store which element was targetted for comparison later
+const handleMouseDown = e => {
+  // Only handle the primary mouse button here.
+  // We handle context menu (right click) events in another handler.
+  if (e.button !== 0) {
+    return
+  }
+  candidateTarget = e.target
+
+  // Clear any previous listeners in case of multiple down events, and register
+  // a single mouse up listener
+  document.removeEventListener("mouseup", handleMouseUp)
+  document.addEventListener("mouseup", handleMouseUp, true)
+}
+
+// Global singleton listeners for our events
+document.addEventListener("mousedown", handleMouseDown)
+document.addEventListener("contextmenu", handleClick)
 
 /**
  * Adds or updates a click handler
  */
-const updateHandler = (id, element, anchor, callback, allowedType) => {
+const updateHandler = (id, element, anchor, callback) => {
   let existingHandler = clickHandlers.find(x => x.id === id)
   if (!existingHandler) {
-    clickHandlers.push({ id, element, anchor, callback, allowedType })
+    clickHandlers.push({ id, element, anchor, callback })
   } else {
     existingHandler.callback = callback
   }
@@ -88,8 +112,7 @@ export default (element, opts) => {
     const callback =
       newOpts?.callback || (typeof newOpts === "function" ? newOpts : null)
     const anchor = newOpts?.anchor || element
-    const allowedType = newOpts?.allowedType || "click"
-    updateHandler(id, element, anchor, callback, allowedType)
+    updateHandler(id, element, anchor, callback)
   }
   update(opts)
   return {
