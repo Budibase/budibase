@@ -397,7 +397,7 @@ describe.each([
       })
     })
 
-  describe("strings", () => {
+  describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
     beforeAll(async () => {
       await createTable({
         name: { name: "name", type: FieldType.STRING },
@@ -749,7 +749,7 @@ describe.each([
     })
   })
 
-  describe("array of strings", () => {
+  describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
     beforeAll(async () => {
       await createTable({
         numbers: {
