@@ -68,6 +68,7 @@ describe("rowProcessor - outputProcessing", () => {
     ).toHaveBeenCalledTimes(1)
     expect(bbReferenceProcessor.processOutputBBReferences).toHaveBeenCalledWith(
       "123",
+      FieldType.BB_REFERENCE,
       BBReferenceFieldSubType.USER
     )
   })

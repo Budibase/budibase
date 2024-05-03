@@ -25,8 +25,8 @@ export const getValidOperatorsForType = (
     subtype?: BBReferenceFieldSubType
     formulaType?: FormulaType
   },
-  field: string,
-  datasource: Datasource & { tableId: any }
+  field?: string,
+  datasource?: Datasource & { tableId: any }
 ) => {
   const Op = OperatorOptions
   const stringOps = [
@@ -69,7 +69,8 @@ export const getValidOperatorsForType = (
   } else if (type === FieldType.FORMULA && formulaType === FormulaType.STATIC) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
   } else if (
-    type === FieldType.BB_REFERENCE &&
+    (type === FieldType.BB_REFERENCE_SINGLE ||
+      type === FieldType.BB_REFERENCE) &&
     subtype == BBReferenceFieldSubType.USER
   ) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]

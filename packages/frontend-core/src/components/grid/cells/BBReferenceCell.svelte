@@ -4,6 +4,7 @@
   import { BBReferenceFieldSubType, RelationshipType } from "@budibase/types"
 
   export let api
+  export let hideCounter = false
 
   const { API } = getContext("grid")
   const { subtype } = $$props.schema
@@ -48,4 +49,5 @@
   {schema}
   {searchFunction}
   primaryDisplay={"email"}
+  {hideCounter}
 />
