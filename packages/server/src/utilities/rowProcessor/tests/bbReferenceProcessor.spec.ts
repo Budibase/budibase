@@ -4,6 +4,7 @@ import { BBReferenceFieldSubType, FieldType, User } from "@budibase/types"
 import {
   processInputBBReference,
   processInputBBReferences,
+  processOutputBBReference,
   processOutputBBReferences,
 } from "../bbReferenceProcessor"
 import {
@@ -33,6 +34,12 @@ jest.mock("@budibase/backend-core", (): typeof backendCore => {
 const config = new DBTestConfiguration()
 
 describe("bbReferenceProcessor", () => {
+  const cacheGetUserSpy = backendCore.cache.user.getUser as jest.MockedFunction<
+    typeof backendCore.cache.user.getUser
+  >
+  const cacheGetUsersSpy = backendCore.cache.user
+    .getUsers as jest.MockedFunction<typeof backendCore.cache.user.getUsers>
+
   const users: User[] = []
   beforeAll(async () => {
     const userCount = 10
@@ -57,9 +64,6 @@ describe("bbReferenceProcessor", () => {
 
   describe("processInputBBReference", () => {
     describe("subtype user", () => {
-      const cacheGetUserSpy = backendCore.cache.user
-        .getUser as jest.MockedFunction<typeof backendCore.cache.user.getUser>
-
       it("validate valid string id", async () => {
         const user = _.sample(users)
         const userId = user!._id!
@@ -118,9 +122,6 @@ describe("bbReferenceProcessor", () => {
 
   describe("processInputBBReferences", () => {
     describe("subtype user", () => {
-      const cacheGetUsersSpy = backendCore.cache.user
-        .getUsers as jest.MockedFunction<typeof backendCore.cache.user.getUsers>
-
       it("validate valid string id", async () => {
         const user = _.sample(users)
         const userId = user!._id!
@@ -224,6 +225,41 @@ describe("bbReferenceProcessor", () => {
     })
   })
 
+  describe("processOutputBBReference", () => {
+    describe("subtype user", () => {
+      it("fetches user given a valid string id", async () => {
+        const user = _.sample(users)!
+        const userId = user._id!
+
+        const result = await config.doInTenant(() =>
+          processOutputBBReference(userId, BBReferenceFieldSubType.USER)
+        )
+
+        expect(result).toEqual({
+          _id: user._id,
+          primaryDisplay: user.email,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        })
+        expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUserSpy).toHaveBeenCalledWith(userId)
+      })
+
+      it("returns undefined given an unexisting user", async () => {
+        const userId = generator.guid()
+
+        const result = await config.doInTenant(() =>
+          processOutputBBReference(userId, BBReferenceFieldSubType.USER)
+        )
+
+        expect(result).toBeUndefined()
+        expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUserSpy).toHaveBeenCalledWith(userId)
+      })
+    })
+  })
+
   describe("processOutputBBReferences", () => {
     describe("subtype user", () => {
       it("fetches user given a valid string id", async () => {
@@ -231,11 +267,7 @@ describe("bbReferenceProcessor", () => {
         const userId = user._id!
 
         const result = await config.doInTenant(() =>
-          processOutputBBReferences(
-            userId,
-            FieldType.BB_REFERENCE,
-            BBReferenceFieldSubType.USER
-          )
+          processOutputBBReferences(userId, BBReferenceFieldSubType.USER)
         )
 
         expect(result).toEqual([
@@ -259,7 +291,6 @@ describe("bbReferenceProcessor", () => {
         const result = await config.doInTenant(() =>
           processOutputBBReferences(
             [userId1, userId2].join(","),
-            FieldType.BB_REFERENCE,
             BBReferenceFieldSubType.USER
           )
         )
@@ -278,6 +309,46 @@ describe("bbReferenceProcessor", () => {
         )
         expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
         expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId1, userId2])
+      })
+
+      it("trims unexisting users user given a valid string id csv", async () => {
+        const [user1, user2] = _.sampleSize(users, 2)
+        const userId1 = user1._id!
+        const userId2 = user2._id!
+
+        const unexistingUserId1 = generator.guid()
+        const unexistingUserId2 = generator.guid()
+
+        const input = [
+          unexistingUserId1,
+          userId1,
+          unexistingUserId2,
+          userId2,
+        ].join(",")
+
+        const result = await config.doInTenant(() =>
+          processOutputBBReferences(input, BBReferenceFieldSubType.USER)
+        )
+
+        expect(result).toHaveLength(2)
+        expect(result).toEqual(
+          expect.arrayContaining(
+            [user1, user2].map(u => ({
+              _id: u._id,
+              primaryDisplay: u.email,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+            }))
+          )
+        )
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([
+          unexistingUserId1,
+          userId1,
+          unexistingUserId2,
+          userId2,
+        ])
       })
     })
   })
