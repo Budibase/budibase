@@ -154,7 +154,7 @@ export const parseDate = (value, { enableTime = true }) => {
 // schema flags
 export const stringifyDate = (
   value,
-  { enableTime = true, timeOnly = false, ignoreTimezones = false }
+  { enableTime = true, timeOnly = false, ignoreTimezones = false } = {}
 ) => {
   if (!value) {
     return null
@@ -210,7 +210,7 @@ const localeDateFormat = new Intl.DateTimeFormat()
 // Formats a dayjs date according to schema flags
 export const getDateDisplayValue = (
   value,
-  { enableTime = true, timeOnly = false }
+  { enableTime = true, timeOnly = false } = {}
 ) => {
   if (!value?.isValid()) {
     return ""

@@ -49,7 +49,6 @@
       readonly={fieldState.readonly}
       error={fieldState.error}
       id={fieldState.fieldId}
-      appendTo={document.getElementById("flatpickr-root")}
       {enableTime}
       {timeOnly}
       {time24hr}
