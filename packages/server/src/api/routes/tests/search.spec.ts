@@ -15,17 +15,16 @@ import {
   TableSchema,
 } from "@budibase/types"
 import _ from "lodash"
-import exp from "constants"
 
 jest.unmock("mssql")
 
 describe.each([
-  // ["lucene", undefined],
+  ["lucene", undefined],
   ["sqs", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -167,7 +166,7 @@ describe.each([
     return expectSearch({ query })
   }
 
-  describe.only("boolean", () => {
+  describe("boolean", () => {
     beforeAll(async () => {
       await createTable({
         isTrue: { name: "isTrue", type: FieldType.BOOLEAN },

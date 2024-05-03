@@ -175,11 +175,7 @@ export async function sqlOutputProcessing(
       throw new Error("Unable to generate row ID for SQL rows")
     }
 
-    if (opts?.sqs) {
-      finalRows[thisRow._id] = fixBooleanFields({ row: thisRow, table })
-    } else {
-      finalRows[thisRow._id] = thisRow
-    }
+    finalRows[thisRow._id] = fixBooleanFields({ row: thisRow, table })
 
     // do this at end once its been added to the final rows
     finalRows = await updateRelationshipColumns(
