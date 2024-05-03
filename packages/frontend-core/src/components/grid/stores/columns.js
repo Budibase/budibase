@@ -194,7 +194,7 @@ export const initialise = context => {
             name: field,
             label: fieldSchema.displayName || field,
             schema: fieldSchema,
-            width: fieldSchema.width || oldColumn?.width || DefaultColumnWidth,
+            width: oldColumn?.width || fieldSchema.width || DefaultColumnWidth,
             visible: fieldSchema.visible ?? true,
             order: fieldSchema.order ?? oldColumn?.order,
             primaryDisplay: field === primaryDisplay,

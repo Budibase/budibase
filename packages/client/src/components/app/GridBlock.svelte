@@ -85,6 +85,7 @@
     columns?.forEach(column => {
       overrides[column.field] = {
         displayName: column.label,
+        width: column.width,
       }
     })
     return overrides
