@@ -16,7 +16,6 @@ export const DEFAULT_CONFIG = {
     smtp: { checked: false },
     adminUser: { checked: false },
     sso: { checked: false },
-    freeTrial: { checked: false },
   },
   maintenance: [],
   offlineMode: false,
