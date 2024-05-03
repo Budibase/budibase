@@ -2749,7 +2749,7 @@
       },
       {
         "type": "number",
-        "label": "Width",
+        "label": "Initial width",
         "key": "width",
         "placeholder": "Auto"
       }

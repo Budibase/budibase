@@ -36,13 +36,14 @@
   } = getContext("sdk")
 
   let grid
+  let resizedColumns = {}
 
   $: columnWhitelist = parsedColumns
     ?.filter(col => col.active)
     ?.map(col => col.field)
-  $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
   $: parsedColumns = getParsedColumns(columns)
+  $: schemaOverrides = getSchemaOverrides(parsedColumns, resizedColumns)
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
@@ -72,7 +73,6 @@
     if (columns?.length && columns[0]?.active !== undefined) {
       return columns
     }
-
     return columns?.map(column => ({
       label: column.displayName || column.name,
       field: column.name,
@@ -80,12 +80,17 @@
     }))
   }
 
-  const getSchemaOverrides = columns => {
+  const getSchemaOverrides = (columns, resizedColumns) => {
     let overrides = {}
     columns?.forEach(column => {
       overrides[column.field] = {
         displayName: column.label,
-        width: column.width,
+      }
+
+      // Only use the specified width until we resize the column, at which point
+      // we no longer want to override it
+      if (!resizedColumns[column.field]) {
+        overrides[column.field].width = column.width
       }
     })
     return overrides
@@ -119,6 +124,13 @@
       },
     }
   }
+
+  const onColumnResize = e => {
+    // Mark that we've resized this column so we can remove this width from
+    // schema overrides if present
+    const { column } = e.detail
+    resizedColumns = { ...resizedColumns, [column]: true }
+  }
 </script>
 
 <div use:styleable={styles} class:in-builder={$builderStore.inBuilder}>
@@ -148,6 +160,7 @@
         notifyError={notificationStore.actions.error}
         buttons={enrichedButtons}
         on:rowclick={e => onRowClick?.({ row: e.detail })}
+        on:columnresize={onColumnResize}
       />
     </Provider>
   </span>

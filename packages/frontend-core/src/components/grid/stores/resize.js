@@ -21,7 +21,7 @@ export const createStores = () => {
 }
 
 export const createActions = context => {
-  const { resize, columns, stickyColumn, ui } = context
+  const { resize, columns, stickyColumn, ui, dispatch } = context
 
   // Starts resizing a certain column
   const startResizing = (column, e) => {
@@ -102,6 +102,8 @@ export const createActions = context => {
     // Persist width if it changed
     if ($resize.width !== $resize.initialWidth) {
       await columns.actions.saveChanges()
+      const { column, width } = $resize
+      dispatch("columnresize", { column, width })
     }
   }
 
