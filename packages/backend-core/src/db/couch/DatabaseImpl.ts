@@ -21,6 +21,7 @@ import { WriteStream, ReadStream } from "fs"
 import { newid } from "../../docIds/newid"
 import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
+import { checkSlashesInUrl } from "../../helpers"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -252,17 +253,18 @@ export class DatabaseImpl implements Database {
   async _sqlQuery<T>(
     url: string,
     method: "POST" | "GET",
-    body?: any
+    body?: Record<string, any>
   ): Promise<T> {
+    url = checkSlashesInUrl(`${this.couchInfo.sqlUrl}/${url}`)
     const args: { url: string; method: string; cookie: string; body?: any } = {
-      url: `${this.couchInfo.sqlUrl}/${url}`,
+      url,
       method,
       cookie: this.couchInfo.cookie,
     }
     if (body) {
       args.body = body
     }
-    const response = await directCouchUrlCall(body)
+    const response = await directCouchUrlCall(args)
     if (response.status > 300) {
       throw new Error(await response.text())
     }
