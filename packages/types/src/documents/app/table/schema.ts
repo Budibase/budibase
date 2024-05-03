@@ -225,3 +225,9 @@ export function isAutoColumnField(
 ): field is AutoColumnFieldMetadata {
   return field.type === FieldType.AUTO
 }
+
+export function isAutoColumnNumberField(
+  field: FieldSchema
+): field is NumberFieldMetadata {
+  return field.type === FieldType.NUMBER
+}
