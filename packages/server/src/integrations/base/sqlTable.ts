@@ -1,6 +1,5 @@
 import { Knex, knex } from "knex"
 import {
-  BBReferenceFieldSubType,
   FieldType,
   NumberFieldMetadata,
   Operation,

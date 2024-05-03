@@ -51,7 +51,7 @@ export const getValidOperatorsForType = (
     value: string
     label: string
   }[] = []
-  const { type, subtype, formulaType } = fieldType
+  const { type, formulaType } = fieldType
   if (type === FieldType.STRING) {
     ops = stringOps
   } else if (type === FieldType.NUMBER || type === FieldType.BIGINT) {

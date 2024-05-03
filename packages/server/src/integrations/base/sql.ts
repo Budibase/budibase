@@ -12,7 +12,6 @@ import SqlTableQueryBuilder from "./sqlTable"
 import {
   BBReferenceFieldMetadata,
   FieldSchema,
-  BBReferenceFieldSubType,
   FieldType,
   JsonFieldMetadata,
   Operation,

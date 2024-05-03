@@ -129,7 +129,7 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
         return
       }
 
-      const { type: columnType, subtype: columnSubtype } = schema[columnName]
+      const { type: columnType } = schema[columnName]
       if (columnType === FieldType.NUMBER) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
