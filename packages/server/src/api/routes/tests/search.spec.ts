@@ -508,7 +508,7 @@ describe.each([
     })
   })
 
-  describe("array of strings", () => {
+  describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
     beforeAll(async () => {
       await createTable({
         numbers: {
