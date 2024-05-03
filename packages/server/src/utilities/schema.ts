@@ -188,10 +188,6 @@ function isValidBBReference(
         return false
       }
 
-      if (subtype === BBReferenceFieldSubType.USER && userArray.length > 1) {
-        return false
-      }
-
       const constainsWrongId = userArray.find(
         user => !db.isGlobalUserID(user._id)
       )
