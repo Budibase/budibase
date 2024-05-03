@@ -282,7 +282,6 @@ export class QueryBuilder<T> {
     }
 
     const equal = (key: string, value: any) => {
-      // 0 evaluates to false, which means we would return all rows if we don't check it
       if (value === null || value === undefined) {
         return null
       }
