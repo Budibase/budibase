@@ -121,7 +121,7 @@ export async function processOutputBBReference(
   }
 
   switch (subtype) {
-    case BBReferenceFieldSubType.USER:
+    case BBReferenceFieldSubType.USER: {
       let user
       try {
         user = await cache.user.getUser(value as string)
@@ -141,6 +141,7 @@ export async function processOutputBBReference(
         firstName: user.firstName,
         lastName: user.lastName,
       }
+    }
     default:
       throw utils.unreachable(subtype)
   }
