@@ -108,14 +108,9 @@ interface UserReferenceInfo {
 }
 
 export async function processOutputBBReference(
-  value: string,
+  value: string | null | undefined,
   subtype: BBReferenceFieldSubType.USER
 ): Promise<UserReferenceInfo | undefined> {
-  if (value === null || value === undefined) {
-    // Already processed or nothing to process
-    return value || undefined
-  }
-
   if (!value) {
     return undefined
   }
@@ -148,14 +143,12 @@ export async function processOutputBBReference(
 }
 
 export async function processOutputBBReferences(
-  value: string,
+  value: string | null | undefined,
   subtype: BBReferenceFieldSubType
 ): Promise<UserReferenceInfo[] | undefined> {
-  if (value === null || value === undefined) {
-    // Already processed or nothing to process
-    return value || undefined
+  if (!value) {
+    return undefined
   }
-
   const ids =
     typeof value === "string" ? value.split(",").filter(id => !!id) : value
 
