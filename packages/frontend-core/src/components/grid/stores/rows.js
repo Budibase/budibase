@@ -83,7 +83,7 @@ export const createActions = context => {
     error,
     notifications,
     fetch,
-    isDatasourcePlus,
+    hasBudibaseIdentifiers,
     refreshing,
   } = context
   const instanceLoaded = writable(false)
@@ -196,9 +196,16 @@ export const createActions = context => {
   // Handles validation errors from the rows API and updates local validation
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
+    let errorString
+    if (typeof error === "string") {
+      errorString = error
+    } else if (typeof error?.message === "string") {
+      errorString = error.message
+    }
+
     // If the server doesn't reply with a valid error, assume that the source
     // of the error is the focused cell's column
-    if (!error?.json?.validationErrors && error?.message) {
+    if (!error?.json?.validationErrors && errorString) {
       const focusedColumn = get(focusedCellId)?.split("-")[1]
       if (focusedColumn) {
         error = {
@@ -261,7 +268,7 @@ export const createActions = context => {
         focusedCellId.set(`${rowId}-${erroredColumns[0]}`)
       }
     } else {
-      get(notifications).error(error?.message || "An unknown error occurred")
+      get(notifications).error(errorString || "An unknown error occurred")
     }
   }
 
@@ -458,14 +465,14 @@ export const createActions = context => {
     }
     let rowsToAppend = []
     let newRow
-    const $isDatasourcePlus = get(isDatasourcePlus)
+    const $hasBudibaseIdentifiers = get(hasBudibaseIdentifiers)
     for (let i = 0; i < newRows.length; i++) {
       newRow = newRows[i]
 
       // Ensure we have a unique _id.
       // This means generating one for non DS+, overwriting any that may already
       // exist as we cannot allow duplicates.
-      if (!$isDatasourcePlus) {
+      if (!$hasBudibaseIdentifiers) {
         newRow._id = Helpers.uuid()
       }
 
@@ -510,7 +517,7 @@ export const createActions = context => {
   const cleanRow = row => {
     let clone = { ...row }
     delete clone.__idx
-    if (!get(isDatasourcePlus)) {
+    if (!get(hasBudibaseIdentifiers)) {
       delete clone._id
     }
     return clone
