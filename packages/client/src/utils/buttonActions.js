@@ -240,6 +240,7 @@ const triggerAutomationHandler = async action => {
 const navigationHandler = action => {
   const { url, peek, externalNewTab } = action.parameters
   routeStore.actions.navigate(url, peek, externalNewTab)
+  closeSidePanelHandler()
 }
 
 const queryExecutionHandler = async action => {
@@ -541,16 +542,22 @@ export const enrichButtonActions = (actions, context) => {
                 // then execute the rest of the actions in the chain
                 const result = await callback()
                 if (result !== false) {
-                  // Generate a new total context to pass into the next enrichment
+                  // Generate a new total context for the next enrichment
                   buttonContext.push(result)
                   const newContext = { ...context, actions: buttonContext }
 
-                  // Enrich and call the next button action if there is more than one action remaining
+                  // Enrich and call the next button action if there is more
+                  // than one action remaining
                   const next = enrichButtonActions(
                     actions.slice(i + 1),
                     newContext
                   )
-                  resolve(typeof next === "function" ? await next() : true)
+                  if (typeof next === "function") {
+                    // Pass the event context back into the new action chain
+                    resolve(await next(eventContext))
+                  } else {
+                    resolve(true)
+                  }
                 } else {
                   resolve(false)
                 }
