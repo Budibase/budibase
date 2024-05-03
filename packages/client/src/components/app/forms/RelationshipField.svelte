@@ -59,10 +59,10 @@
     if (primaryDisplay && fieldState && !optionsObj) {
       // Persist the initial values as options, allowing them to be present in the dropdown,
       // even if they are not in the inital fetch results
-      const valueAsSafeArray =
-        (!fieldState.value || Array.isArray(fieldState.value)
-          ? fieldState.value
-          : [fieldState.value]) || []
+      let valueAsSafeArray = fieldState.value || []
+      if (!Array.isArray(fieldState.value)) {
+        valueAsSafeArray = [fieldState.value]
+      }
       optionsObj = valueAsSafeArray.reduce((accumulator, value) => {
         // fieldState has to be an array of strings to be valid for an update
         // therefore we cannot guarantee value will be an object
