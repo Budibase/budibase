@@ -250,7 +250,6 @@ export async function outputProcessing<T extends Row[] | Row>(
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
           row[property],
-          column.type,
           column.subtype
         )
       }
@@ -261,7 +260,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
           row[property],
-          column.type
+          column.subtype
         )
       }
     }
