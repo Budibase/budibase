@@ -156,7 +156,7 @@ describe.each([
     return expectSearch({ query })
   }
 
-  describe("strings", () => {
+  describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
     beforeAll(async () => {
       await createTable({
         name: { name: "name", type: FieldType.STRING },
