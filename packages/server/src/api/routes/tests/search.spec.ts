@@ -54,7 +54,14 @@ describe.each([
     if (isSqs) {
       envCleanup = config.setEnv({ SQS_SEARCH_ENABLE: "true" })
     }
-    await config.init({ snippets })
+    await config.init()
+
+    if (config.app?.appId) {
+      config.app = await config.api.application.update(config.app?.appId, {
+        snippets,
+      })
+    }
+
     if (dsProvider) {
       datasource = await config.createDatasource({
         datasource: await dsProvider,
