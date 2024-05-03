@@ -10,6 +10,7 @@ import {
   RowAttachment,
   Table,
   isAutoColumnField,
+  isAutoColumnNumberField,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -40,7 +41,7 @@ async function getNextAutoId(
   const db = context.getAppDB()
   for (let attempt = 0; attempt < 5; attempt++) {
     const schema = table.schema[column]
-    if (!isAutoColumnField(schema)) {
+    if (!isAutoColumnField(schema) && !isAutoColumnNumberField(schema)) {
       throw new Error(`Column ${column} is not an auto column`)
     }
     schema.lastID = (schema.lastID || 0) + 1
