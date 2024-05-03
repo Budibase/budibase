@@ -117,6 +117,19 @@ export async function validate(
   })
 }
 
+function fixBooleanFields({ row, table }: { row: Row; table: Table }) {
+  for (let col of Object.values(table.schema)) {
+    if (col.type === FieldType.BOOLEAN) {
+      if (row[col.name] === 1) {
+        row[col.name] = true
+      } else if (row[col.name] === 0) {
+        row[col.name] = false
+      }
+    }
+  }
+  return row
+}
+
 export async function sqlOutputProcessing(
   rows: DatasourcePlusQueryResponse,
   table: Table,
@@ -161,7 +174,13 @@ export async function sqlOutputProcessing(
     if (thisRow._id == null) {
       throw new Error("Unable to generate row ID for SQL rows")
     }
-    finalRows[thisRow._id] = thisRow
+
+    if (opts?.sqs) {
+      finalRows[thisRow._id] = fixBooleanFields({ row: thisRow, table })
+    } else {
+      finalRows[thisRow._id] = thisRow
+    }
+
     // do this at end once its been added to the final rows
     finalRows = await updateRelationshipColumns(
       table,

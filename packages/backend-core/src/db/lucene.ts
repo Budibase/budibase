@@ -283,7 +283,7 @@ export class QueryBuilder<T> {
 
     const equal = (key: string, value: any) => {
       // 0 evaluates to false, which means we would return all rows if we don't check it
-      if (!value && value !== 0) {
+      if (value === null || value === undefined) {
         return null
       }
       return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
@@ -421,7 +421,7 @@ export class QueryBuilder<T> {
     }
     if (this.#query.notEqual) {
       build(this.#query.notEqual, (key: string, value: any) => {
-        if (!value) {
+        if (value === null || value === undefined) {
           return null
         }
         if (typeof value === "boolean") {
