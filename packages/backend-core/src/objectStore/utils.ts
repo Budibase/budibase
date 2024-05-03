@@ -1,10 +1,14 @@
 import path, { join } from "path"
 import { tmpdir } from "os"
-import fs, { ReadStream } from "fs"
+import fs from "fs"
 import env from "../environment"
 import { PutBucketLifecycleConfigurationRequest } from "aws-sdk/clients/s3"
 import * as objectStore from "./objectStore"
-import { AutomationAttachment } from "@budibase/types"
+import {
+  AutomationAttachment,
+  AutomationAttachmentContent,
+  BucketedContent,
+} from "@budibase/types"
 /****************************************************
  *      NOTE: When adding a new bucket - name       *
  *     sure that S3 usages (like budibase-infra)    *
@@ -57,44 +61,52 @@ export const bucketTTLConfig = (
   return params
 }
 
-export const processAutomationAttachment = async (
+// Function for handling URL attachments
+async function processUrlAttachment(
   attachment: AutomationAttachment
-): Promise<{
-  filename: string
-  path?: string
-  content:
-    | ReadStream
-    | NodeJS.ReadableStream
-    | ReadableStream<Uint8Array>
-    | null
-}> => {
+): Promise<AutomationAttachmentContent> {
+  const response = await fetch(attachment.url)
+  if (!response.ok) {
+    throw new Error(`Unexpected response ${response.statusText}`)
+  }
+  const fallbackFilename = path.basename(new URL(attachment.url).pathname)
+  return {
+    filename: attachment.filename || fallbackFilename,
+    content: response.body,
+  }
+}
+
+// Function for handling object storage attachments
+export async function processObjectStoreAttachment(
+  attachment: AutomationAttachment
+): Promise<BucketedContent> {
+  const result = objectStore.extractBucketAndPath(attachment.url)
+
+  if (result === null) {
+    throw new Error("Invalid signed URL")
+  }
+
+  const { bucket, path } = result
+  const readStream = await objectStore.getReadStream(bucket, path)
+  const fallbackFilename = path.split("/").pop() || ""
+  return {
+    bucket,
+    path,
+    filename: attachment.filename || fallbackFilename,
+    content: readStream,
+  }
+}
+
+// Main function to decide which processing function to call
+export async function processAutomationAttachment(
+  attachment: AutomationAttachment
+): Promise<AutomationAttachmentContent | BucketedContent> {
   const isFullyFormedUrl =
     attachment.url.startsWith("http://") ||
     attachment.url.startsWith("https://")
-
   if (isFullyFormedUrl) {
-    const response = await fetch(attachment.url)
-    if (!response.ok) {
-      throw new Error(`unexpected response ${response.statusText}`)
-    }
-    const fallbackFilename = path.basename(new URL(attachment.url).pathname)
-    return {
-      filename: attachment.filename || fallbackFilename,
-      content: response?.body,
-    }
+    return await processUrlAttachment(attachment)
   } else {
-    const url = attachment.url
-    const result = objectStore.extractBucketAndPath(url)
-    if (result === null) {
-      throw new Error("Invalid signed URL")
-    }
-    const { bucket, path } = result
-    const readStream = await objectStore.getReadStream(bucket, path)
-    const fallbackFilename = path.split("/").pop() || ""
-    return {
-      path,
-      filename: attachment.filename || fallbackFilename,
-      content: readStream,
-    }
+    return await processObjectStoreAttachment(attachment)
   }
 }

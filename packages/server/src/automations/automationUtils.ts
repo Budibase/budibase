@@ -103,55 +103,88 @@ export async function sendAutomationAttachmentsToStorage(
   row: Row
 ) {
   let table = await sdk.tables.getTable(tableId)
-  const attachmentRows: { [key: string]: any } = {}
+  const attachmentRows: Record<string, AutomationAttachment[]> = {}
 
-  Object.entries(row).forEach(([prop, value]) => {
+  for (const [prop, value] of Object.entries(row)) {
     const schema = table.schema[prop]
     if (
-      Object.hasOwn(table.schema, prop) &&
-      schema?.type === (FieldType.ATTACHMENTS || FieldType.ATTACHMENT_SINGLE)
+      schema?.type === FieldType.ATTACHMENTS ||
+      schema?.type === FieldType.ATTACHMENT_SINGLE
     ) {
       attachmentRows[prop] = value
     }
-  })
-  for (const prop in attachmentRows) {
-    const attachments = attachmentRows[prop]
-    let updatedAttachments = []
-    if (attachments.length) {
-      updatedAttachments = await Promise.all(
-        attachments.map(async (attachment: AutomationAttachment) => {
-          let s3Key
-          let { path, content } = await objectStore.processAutomationAttachment(
-            attachment
-          )
-          const extension = attachment.filename.split(".").pop() || ""
-          // If the path is an attachment that already exists, we don't want to stream it again,
-          // just use the existing s3 key else it doesn't exist and we need to upload
-          if (path?.includes(`${context.getProdAppId()}/attachments/`)) {
-            s3Key = attachment.url
-          } else {
-            const processedFileName = `${uuid.v4()}.${extension}`
-            s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
-            await objectStore.streamUpload({
-              bucket: objectStore.ObjectStoreBuckets.APPS,
-              stream: content,
-              filename: s3Key,
-            })
-          }
+  }
 
-          return {
-            size: 10,
-            name: attachment.filename,
-            extension,
-            key: s3Key,
-          }
-        })
+  for (const [prop, attachments] of Object.entries(attachmentRows)) {
+    if (attachments.length) {
+      row[prop] = await Promise.all(
+        attachments.map(attachment => generateAttachmentRow(attachment))
       )
     }
-    row[prop] = updatedAttachments
   }
 
   return row
+}
+
+async function generateAttachmentRow(attachment: AutomationAttachment) {
+  const prodAppId = context.getProdAppId()
+  try {
+    let size: number | null | undefined
+    let s3Key: string
+    const client = objectStore.ObjectStore(objectStore.ObjectStoreBuckets.APPS)
+
+    const attachmentResult = await objectStore.processAutomationAttachment(
+      attachment
+    )
+    const extension = attachment.filename.split(".").pop() || ""
+
+    if ("bucket" in attachmentResult && "path" in attachmentResult) {
+      const { path, content, bucket } = attachmentResult
+      let client = objectStore.ObjectStore(bucket)
+
+      if (path.includes(`${prodAppId}/attachments/`)) {
+        s3Key = path
+      } else {
+        const processedFileName = `${uuid.v4()}.${extension}`
+        s3Key = `${prodAppId}/attachments/${processedFileName}`
+        await objectStore.streamUpload({
+          bucket: bucket,
+          stream: content,
+          filename: s3Key,
+        })
+      }
+
+      const metadata = await client
+        .headObject({ Bucket: bucket, Key: s3Key })
+        .promise()
+      size = metadata.ContentLength
+    } else {
+      const { content } = attachmentResult
+      const processedFileName = `${uuid.v4()}.${extension}`
+      s3Key = `${prodAppId}/attachments/${processedFileName}`
+
+      await objectStore.streamUpload({
+        bucket: objectStore.ObjectStoreBuckets.APPS,
+        stream: content,
+        filename: s3Key,
+      })
+
+      const metadata = await client
+        .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
+        .promise()
+      size = metadata.ContentLength
+    }
+
+    return {
+      size,
+      name: attachment.filename,
+      extension,
+      key: s3Key,
+    }
+  } catch (error) {
+    console.error("Failed to process attachment:", error)
+    throw error
+  }
 }
 export function substituteLoopStep(hbsString: string, substitute: string) {
   let checkForJS = isJSBinding(hbsString)
