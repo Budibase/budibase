@@ -17,6 +17,7 @@ export const createActions = context => {
 
   const open = (cellId, e) => {
     e.preventDefault()
+    e.stopPropagation()
 
     // Get DOM node for grid data wrapper to compute relative position to
     const gridNode = document.getElementById(gridID)
