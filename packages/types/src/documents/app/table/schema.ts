@@ -219,3 +219,9 @@ export function isAttachmentField(
 ): field is AttachmentFieldMetadata {
   return field.type === FieldType.ATTACHMENTS
 }
+
+export function isAutoColumnField(
+  field: FieldSchema
+): field is AutoColumnFieldMetadata {
+  return field.type === FieldType.AUTO
+}

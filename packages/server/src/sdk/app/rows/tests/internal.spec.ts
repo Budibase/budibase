@@ -145,6 +145,7 @@ describe("sdk >> rows >> internal", () => {
                 lastID: 1,
               },
             },
+            _rev: expect.stringMatching("2-.*"),
           },
           row: {
             ...row,
