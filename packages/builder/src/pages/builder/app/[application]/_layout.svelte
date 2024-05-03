@@ -216,7 +216,6 @@
           })
           // Update the cached user
           await auth.getSelf()
-        } catch {
         } finally {
           freeTrialModal.hide()
         }
