@@ -1,6 +1,6 @@
 import _ from "lodash"
 import * as backendCore from "@budibase/backend-core"
-import { BBReferenceFieldSubType, User } from "@budibase/types"
+import { BBReferenceFieldSubType, FieldType, User } from "@budibase/types"
 import {
   processInputBBReferences,
   processOutputBBReferences,
@@ -63,7 +63,11 @@ describe("bbReferenceProcessor", () => {
         const userId = user!._id!
 
         const result = await config.doInTenant(() =>
-          processInputBBReferences(userId, BBReferenceFieldSubType.USER)
+          processInputBBReferences(
+            userId,
+            FieldType.BB_REFERENCE,
+            BBReferenceFieldSubType.USER
+          )
         )
 
         expect(result).toEqual(userId)
@@ -76,7 +80,11 @@ describe("bbReferenceProcessor", () => {
 
         await expect(
           config.doInTenant(() =>
-            processInputBBReferences(userId, BBReferenceFieldSubType.USER)
+            processInputBBReferences(
+              userId,
+              FieldType.BB_REFERENCE,
+              BBReferenceFieldSubType.USER
+            )
           )
         ).rejects.toThrow(
           new InvalidBBRefError(userId, BBReferenceFieldSubType.USER)
@@ -90,7 +98,11 @@ describe("bbReferenceProcessor", () => {
 
         const userIdCsv = userIds.join(" ,  ")
         const result = await config.doInTenant(() =>
-          processInputBBReferences(userIdCsv, BBReferenceFieldSubType.USER)
+          processInputBBReferences(
+            userIdCsv,
+            FieldType.BB_REFERENCE,
+            BBReferenceFieldSubType.USER
+          )
         )
 
         expect(result).toEqual(userIds.join(","))
@@ -110,7 +122,11 @@ describe("bbReferenceProcessor", () => {
 
         await expect(
           config.doInTenant(() =>
-            processInputBBReferences(userIdCsv, BBReferenceFieldSubType.USER)
+            processInputBBReferences(
+              userIdCsv,
+              FieldType.BB_REFERENCE,
+              BBReferenceFieldSubType.USER
+            )
           )
         ).rejects.toThrow(
           new InvalidBBRefError(wrongId, BBReferenceFieldSubType.USER)
@@ -123,6 +139,7 @@ describe("bbReferenceProcessor", () => {
         const result = await config.doInTenant(() =>
           processInputBBReferences(
             { _id: userId },
+            FieldType.BB_REFERENCE,
             BBReferenceFieldSubType.USER
           )
         )
@@ -136,7 +153,11 @@ describe("bbReferenceProcessor", () => {
         const userIds = _.sampleSize(users, 3).map(x => x._id!)
 
         const result = await config.doInTenant(() =>
-          processInputBBReferences(userIds, BBReferenceFieldSubType.USER)
+          processInputBBReferences(
+            userIds,
+            FieldType.BB_REFERENCE,
+            BBReferenceFieldSubType.USER
+          )
         )
 
         expect(result).toEqual(userIds.join(","))
@@ -146,7 +167,11 @@ describe("bbReferenceProcessor", () => {
 
       it("empty strings will return null", async () => {
         const result = await config.doInTenant(() =>
-          processInputBBReferences("", BBReferenceFieldSubType.USER)
+          processInputBBReferences(
+            "",
+            FieldType.BB_REFERENCE,
+            BBReferenceFieldSubType.USER
+          )
         )
 
         expect(result).toEqual(null)
@@ -154,7 +179,11 @@ describe("bbReferenceProcessor", () => {
 
       it("empty arrays will return null", async () => {
         const result = await config.doInTenant(() =>
-          processInputBBReferences([], BBReferenceFieldSubType.USER)
+          processInputBBReferences(
+            [],
+            FieldType.BB_REFERENCE,
+            BBReferenceFieldSubType.USER
+          )
         )
 
         expect(result).toEqual(null)
@@ -164,7 +193,11 @@ describe("bbReferenceProcessor", () => {
         const userId = _.sample(users)!._id!
         const userMetadataId = backendCore.db.generateUserMetadataID(userId)
         const result = await config.doInTenant(() =>
-          processInputBBReferences(userMetadataId, BBReferenceFieldSubType.USER)
+          processInputBBReferences(
+            userMetadataId,
+            FieldType.BB_REFERENCE,
+            BBReferenceFieldSubType.USER
+          )
         )
         expect(result).toBe(userId)
       })
@@ -178,7 +211,11 @@ describe("bbReferenceProcessor", () => {
         const userId = user._id!
 
         const result = await config.doInTenant(() =>
-          processOutputBBReferences(userId, BBReferenceFieldSubType.USER)
+          processOutputBBReferences(
+            userId,
+            FieldType.BB_REFERENCE,
+            BBReferenceFieldSubType.USER
+          )
         )
 
         expect(result).toEqual([
@@ -202,6 +239,7 @@ describe("bbReferenceProcessor", () => {
         const result = await config.doInTenant(() =>
           processOutputBBReferences(
             [userId1, userId2].join(","),
+            FieldType.BB_REFERENCE,
             BBReferenceFieldSubType.USER
           )
         )

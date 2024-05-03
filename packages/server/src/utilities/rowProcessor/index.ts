@@ -160,10 +160,14 @@ export async function inputProcessing(
       if (attachment?.url) {
         delete clonedRow[key].url
       }
-    }
-
-    if (field.type === FieldType.BB_REFERENCE && value) {
-      clonedRow[key] = await processInputBBReferences(value, field.subtype)
+    } else if (field.type === FieldType.BB_REFERENCE && value) {
+      clonedRow[key] = await processInputBBReferences(
+        value,
+        field.type,
+        field.subtype
+      )
+    } else if (field.type === FieldType.BB_REFERENCE_SINGLE && value) {
+      clonedRow[key] = await processInputBBReferences(value, field.type)
     }
   }
 
@@ -249,7 +253,18 @@ export async function outputProcessing<T extends Row[] | Row>(
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
           row[property],
+          column.type,
           column.subtype
+        )
+      }
+    } else if (
+      !opts.skipBBReferences &&
+      column.type == FieldType.BB_REFERENCE_SINGLE
+    ) {
+      for (let row of enriched) {
+        row[property] = await processOutputBBReferences(
+          row[property],
+          column.type
         )
       }
     }

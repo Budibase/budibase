@@ -66,6 +66,10 @@
       label: "Users",
       value: `${FieldType.BB_REFERENCE}${BBReferenceFieldSubType.USERS}`,
     },
+    {
+      label: "User",
+      value: `${FieldType.BB_REFERENCE_SINGLE}${BBReferenceFieldSubType.USER}`,
+    },
   ]
 
   $: {

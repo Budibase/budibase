@@ -52,17 +52,30 @@ interface AuthTokenResponse {
   access_token: string
 }
 
-const ALLOWED_TYPES = [
-  FieldType.STRING,
-  FieldType.FORMULA,
-  FieldType.NUMBER,
-  FieldType.LONGFORM,
-  FieldType.DATETIME,
-  FieldType.OPTIONS,
-  FieldType.BOOLEAN,
-  FieldType.BARCODEQR,
-  FieldType.BB_REFERENCE,
-]
+const isTypeAllowed: Record<FieldType, boolean> = {
+  [FieldType.STRING]: true,
+  [FieldType.FORMULA]: true,
+  [FieldType.NUMBER]: true,
+  [FieldType.LONGFORM]: true,
+  [FieldType.DATETIME]: true,
+  [FieldType.OPTIONS]: true,
+  [FieldType.BOOLEAN]: true,
+  [FieldType.BARCODEQR]: true,
+  [FieldType.BB_REFERENCE]: true,
+  [FieldType.BB_REFERENCE_SINGLE]: true,
+  [FieldType.ARRAY]: false,
+  [FieldType.ATTACHMENTS]: false,
+  [FieldType.ATTACHMENT_SINGLE]: false,
+  [FieldType.LINK]: false,
+  [FieldType.AUTO]: false,
+  [FieldType.JSON]: false,
+  [FieldType.INTERNAL]: false,
+  [FieldType.BIGINT]: false,
+}
+
+const ALLOWED_TYPES = Object.entries(isTypeAllowed)
+  .filter(([_, allowed]) => allowed)
+  .map(([type]) => type as FieldType)
 
 const SCHEMA: Integration = {
   plus: true,
