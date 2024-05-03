@@ -190,7 +190,6 @@ describe("sdk >> rows >> internal", () => {
             type: FieldType.AUTO,
             subtype: AutoFieldSubType.AUTO_ID,
             autocolumn: true,
-            lastID: 0,
           },
         },
       })
@@ -200,7 +199,7 @@ describe("sdk >> rows >> internal", () => {
           await internalSdk.save(table._id!, row, config.getUser()._id)
         }
         await Promise.all(
-          makeRows(10).map(row =>
+          makeRows(20).map(row =>
             internalSdk.save(table._id!, row, config.getUser()._id)
           )
         )
@@ -210,19 +209,21 @@ describe("sdk >> rows >> internal", () => {
       })
 
       const persistedRows = await config.getRows(table._id!)
-      expect(persistedRows).toHaveLength(20)
+      expect(persistedRows).toHaveLength(30)
       expect(persistedRows).toEqual(
         expect.arrayContaining(
-          Array.from({ length: 20 }).map((_, i) =>
+          Array.from({ length: 30 }).map((_, i) =>
             expect.objectContaining({ id: i + 1 })
           )
         )
       )
 
       const persistedTable = await config.getTable(table._id)
-      expect((table.schema.id as AutoColumnFieldMetadata).lastID).toBe(0)
+      expect(
+        (table.schema.id as AutoColumnFieldMetadata).lastID
+      ).toBeUndefined()
       expect((persistedTable.schema.id as AutoColumnFieldMetadata).lastID).toBe(
-        20
+        30
       )
     })
   })
