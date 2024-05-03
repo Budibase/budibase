@@ -104,7 +104,10 @@ export function basicProcessing({
 
 export function fixArrayTypes(row: Row, table: Table) {
   for (let [fieldName, schema] of Object.entries(table.schema)) {
-    if (schema.type === FieldType.ARRAY && typeof row[fieldName] === "string") {
+    if (
+      [FieldType.ARRAY, FieldType.BB_REFERENCE].includes(schema.type) &&
+      typeof row[fieldName] === "string"
+    ) {
       try {
         row[fieldName] = JSON.parse(row[fieldName])
       } catch (err) {
