@@ -8,6 +8,7 @@
     userStore,
     deploymentStore,
   } from "stores/builder"
+  import { get } from "svelte/store"
   import { auth, appsStore, licensing } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
@@ -46,6 +47,8 @@
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
+  $: planType = $licensing?.license?.plan?.type
+  $: showFreeTrialModal(planType, freeTrialModal)
 
   async function getPackage() {
     try {
@@ -104,6 +107,15 @@
     }
   }
 
+  const showFreeTrialModal = (planType, freeTrialModal) => {
+    if (
+      planType === "enterprise_basic_trial" &&
+      !$auth.user?.freeTrialConfirmedAt
+    ) {
+      freeTrialModal?.show()
+    }
+  }
+
   onMount(async () => {
     if (!hasSynced && application) {
       try {
@@ -116,8 +128,6 @@
       }
       hasSynced = true
     }
-    freeTrialModal.show()
-    console.log("LICENSE ", $licensing)
   })
 
   onDestroy(() => {
@@ -198,8 +208,19 @@
 
 <Modal bind:this={freeTrialModal} disableCancel={true}>
   <FreeTrialModal
-    onConfirm={() => {
-      freeTrialModal.hide()
+    onConfirm={async () => {
+      if (get(auth).user) {
+        try {
+          await API.updateSelf({
+            freeTrialConfirmedAt: new Date().toISOString(),
+          })
+          // Update the cached user
+          await auth.getSelf()
+        } catch {
+        } finally {
+          freeTrialModal.hide()
+        }
+      }
     }}
   />
 </Modal>
