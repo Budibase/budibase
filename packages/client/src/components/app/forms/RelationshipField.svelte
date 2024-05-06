@@ -60,7 +60,7 @@
       // Persist the initial values as options, allowing them to be present in the dropdown,
       // even if they are not in the inital fetch results
       let valueAsSafeArray = fieldState.value || []
-      if (!Array.isArray(fieldState.value)) {
+      if (!Array.isArray(valueAsSafeArray)) {
         valueAsSafeArray = [fieldState.value]
       }
       optionsObj = valueAsSafeArray.reduce((accumulator, value) => {
