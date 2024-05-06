@@ -17,6 +17,7 @@ import {
   TableRequest,
   TableSourceType,
   DatasourcePlusQueryResponse,
+  BBReferenceFieldSubType,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import {
@@ -363,6 +364,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           rowIndex: json.extra?.idFilter?.equal?.rowNumber,
           sheet,
           row: json.body,
+          table: json.meta.table,
         })
       case Operation.DELETE:
         return this.delete({
@@ -586,7 +588,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return { sheet, row }
   }
 
-  async update(query: { sheet: string; rowIndex: number; row: any }) {
+  async update(query: {
+    sheet: string
+    rowIndex: number
+    row: any
+    table: Table
+  }) {
     try {
       await this.connect()
       const { sheet, row } = await this.getRowByIndex(
@@ -601,6 +608,15 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
           if (row[key] === null) {
             row[key] = ""
+          }
+
+          const { type, subtype, constraints } = query.table.schema[key]
+          const isDeprecatedSingleUser =
+            type === FieldType.BB_REFERENCE &&
+            subtype === BBReferenceFieldSubType.USER &&
+            constraints?.type !== "array"
+          if (isDeprecatedSingleUser && Array.isArray(row[key])) {
+            row[key] = row[key][0]
           }
         }
         await row.save()
