@@ -1,5 +1,5 @@
 // need to handle table name + field or just field, depending on if relationships used
-import { FieldType, Row, Table } from "@budibase/types"
+import { BBReferenceFieldSubType, FieldType, Row, Table } from "@budibase/types"
 import { generateRowIdField } from "../../../../integrations/utils"
 import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 
@@ -108,16 +108,18 @@ export function fixArrayTypes(row: Row, table: Table) {
       [FieldType.ARRAY, FieldType.BB_REFERENCE].includes(schema.type) &&
       typeof row[fieldName] === "string"
     ) {
-      // Handling old single user type
-      if (schema.constraints?.type !== "array") {
-        continue
-      }
-
       try {
         row[fieldName] = JSON.parse(row[fieldName])
       } catch (err) {
-        // couldn't convert back to array, ignore
-        delete row[fieldName]
+        // Handling deprecated  single user type
+        const isDeprecatedSingleUser =
+          schema.type === FieldType.BB_REFERENCE &&
+          schema.subtype === BBReferenceFieldSubType.USER &&
+          schema.constraints?.type !== "array"
+        if (!isDeprecatedSingleUser) {
+          // couldn't convert back to array, ignore
+          delete row[fieldName]
+        }
       }
     }
   }
