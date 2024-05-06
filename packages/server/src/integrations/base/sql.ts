@@ -764,7 +764,10 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     field: FieldSchema
   ): field is JsonFieldMetadata | BBReferenceFieldMetadata {
     return (
-      field.type === FieldType.JSON || field.type === FieldType.BB_REFERENCE
+      field.type === FieldType.JSON ||
+      (field.type === FieldType.BB_REFERENCE &&
+        // Handling old single user type
+        field.constraints?.type === "array")
     )
   }
 

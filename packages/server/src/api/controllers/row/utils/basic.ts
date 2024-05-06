@@ -108,6 +108,11 @@ export function fixArrayTypes(row: Row, table: Table) {
       [FieldType.ARRAY, FieldType.BB_REFERENCE].includes(schema.type) &&
       typeof row[fieldName] === "string"
     ) {
+      // Handling old single user type
+      if (schema.constraints?.type !== "array") {
+        continue
+      }
+
       try {
         row[fieldName] = JSON.parse(row[fieldName])
       } catch (err) {
