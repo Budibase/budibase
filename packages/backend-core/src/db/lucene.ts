@@ -432,9 +432,25 @@ export class QueryBuilder<T> {
     }
     if (this.#query.empty) {
       build(this.#query.empty, (key: string) => `(*:* -${key}:["" TO *])`)
+
+      // Because the structure of an empty filter looks like this:
+      //   { empty: { someKey: null } }
+      //
+      // The check inside of `build` does not set `allFiltersEmpty`, which results
+      // in weird behaviour when the empty filter is the only filter. We get around
+      // this by setting `allFiltersEmpty` to false here.
+      allFiltersEmpty = false
     }
     if (this.#query.notEmpty) {
       build(this.#query.notEmpty, (key: string) => `${key}:["" TO *]`)
+
+      // Because the structure of a notEmpty filter looks like this:
+      //   { notEmpty: { someKey: null } }
+      //
+      // The check inside of `build` does not set `allFiltersEmpty`, which results
+      // in weird behaviour when the empty filter is the only filter. We get around
+      // this by setting `allFiltersEmpty` to false here.
+      allFiltersEmpty = false
     }
     if (this.#query.oneOf) {
       build(this.#query.oneOf, oneOf)
