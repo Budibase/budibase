@@ -264,11 +264,16 @@ export class DatabaseImpl implements Database {
     if (body) {
       args.body = body
     }
-    const response = await directCouchUrlCall(args)
-    if (response.status > 300) {
-      throw new Error(await response.text())
-    }
-    return (await response.json()) as T
+    return this.performCall(() => {
+      return async () => {
+        const response = await directCouchUrlCall(args)
+        const json = await response.json()
+        if (response.status > 300) {
+          throw json
+        }
+        return json as T
+      }
+    })
   }
 
   async sql<T extends Document>(

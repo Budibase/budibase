@@ -325,7 +325,7 @@ class TableSaveFunctions {
       user: this.user,
     })
     if (env.SQS_SEARCH_ENABLE) {
-      await sdk.tables.sqs.addTableToSqlite(table)
+      await sdk.tables.sqs.addTable(table)
     }
     return table
   }
@@ -519,7 +519,7 @@ export async function internalTableCleanup(table: Table, rows?: Row[]) {
     await AttachmentCleanup.tableDelete(table, rows)
   }
   if (env.SQS_SEARCH_ENABLE) {
-    await sdk.tables.sqs.removeTableFromSqlite(table)
+    await sdk.tables.sqs.removeTable(table)
   }
 }
 
