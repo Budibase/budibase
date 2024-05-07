@@ -165,12 +165,7 @@ export async function search(
       }
 
       let sql = query.sql
-      let bindings = query.bindings?.map(b => {
-        if (typeof b === "boolean") {
-          return b ? 1 : 0
-        }
-        return b
-      })
+      let bindings = query.bindings
 
       // quick hack for docIds
       sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
