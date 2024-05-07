@@ -4,6 +4,9 @@
   import dayjs from "dayjs"
   import NumberInput from "./NumberInput.svelte"
   import { createEventDispatcher } from "svelte"
+  import isoWeek from "dayjs/plugin/isoWeek"
+
+  dayjs.extend(isoWeek)
 
   export let value
 
@@ -43,7 +46,7 @@
       return []
     }
     let monthEnd = monthStart.endOf("month")
-    let calendarStart = monthStart.startOf("week")
+    let calendarStart = monthStart.startOf("isoWeek")
     const numWeeks = Math.ceil((monthEnd.diff(calendarStart, "day") + 1) / 7)
 
     let mondays = []
