@@ -68,7 +68,7 @@
     bind:this={tab_internal}
     on:click={onAnchorClick}
     class:is-selected={$selected.title === title}
-    class="spectrum-Tabs-item"
+    class="spectrum-Tabs-item link"
     class:emphasized={$selected.title === title && $selected.emphasized}
     tabindex="0"
   >
@@ -127,4 +127,8 @@
   .spectrum-Tabs-item:hover {
     color: var(--spectrum-global-color-gray-900);
   }
+  .link {
+    user-select: none;
+  }
+
 </style>

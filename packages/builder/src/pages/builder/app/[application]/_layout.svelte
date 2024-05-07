@@ -190,6 +190,11 @@
 </Modal>
 
 <style>
+  .linkWrapper {
+    text-decoration: none;
+    color: inherit;
+  }
+
   .back-to-apps {
     display: contents;
   }

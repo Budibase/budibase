@@ -75,7 +75,3 @@ html * {
     var(--spectrum-alias-background-color-default);
 }
 
-.linkWrapper {
-  text-decoration: none;
-  color: inherit;
-}
