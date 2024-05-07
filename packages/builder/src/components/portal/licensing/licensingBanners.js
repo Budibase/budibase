@@ -2,6 +2,7 @@ import { ExpiringKeys } from "./constants"
 import { admin, auth, licensing, temporalStore } from "stores/portal"
 import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
 
 const oneDayInSeconds = 86400
 
@@ -12,7 +13,7 @@ const defaultCacheFn = key => {
 const upgradeAction = key => {
   return defaultNavigateAction(
     key,
-    "Upgrade Plan",
+    "Upgrade",
     `${get(admin).accountPortalUrl}/portal/upgrade`
   )
 }
@@ -163,6 +164,25 @@ const buildUsersAboveLimitBanner = EXPIRY_KEY => {
   }
 }
 
+const buildEnterpriseBasicTrialRunningOutBanner = () => {
+  const appLicensing = get(licensing)
+  function daysUntilCancel() {
+    const cancelAt = appLicensing.license?.billing?.subscription?.cancelAt
+    const diffTime = Math.abs(cancelAt - new Date().getTime()) / 1000
+    return Math.floor(diffTime / oneDayInSeconds)
+  }
+  return {
+    key: "ENTERPRISE_BASIC_TRIAL_BANNER",
+    type: BANNER_TYPES.INFO,
+    criteria: () =>
+      appLicensing.license?.plan?.type ===
+      Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
+    message: `Your trial will expire in ${daysUntilCancel()} days`,
+    ...upgradeAction(),
+    showCloseButton: false,
+  }
+}
+
 export const getBanners = () => {
   return [
     buildPaymentFailedBanner(),
@@ -186,6 +206,7 @@ export const getBanners = () => {
       90
     ),
     buildUsersAboveLimitBanner(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER),
+    buildEnterpriseBasicTrialRunningOutBanner(),
   ].filter(licensingBanner => {
     return (
       !temporalStore.actions.getExpiring(licensingBanner.key) &&
