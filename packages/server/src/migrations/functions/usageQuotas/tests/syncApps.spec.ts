@@ -22,7 +22,7 @@ describe("syncApps", () => {
       expect(usageDoc.usageQuota.apps).toEqual(3)
 
       // create an extra app to test the migration
-      await config.createApp({ appName: "quota-test" })
+      await config.createApp("quota-test")
 
       // migrate
       await syncApps.run()

@@ -13,7 +13,7 @@ describe("run", () => {
   afterAll(config.end)
 
   it("runs successfully", async () => {
-    const app = await config.createApp({ appName: "testApp" })
+    const app = await config.createApp("testApp")
     const metadata = await dbCore.doWithDB(app.appId, async db => {
       const metadataDoc = await db.get(dbCore.DocumentType.APP_METADATA)
       delete metadataDoc.url

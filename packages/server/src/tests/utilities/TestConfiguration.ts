@@ -224,14 +224,11 @@ export default class TestConfiguration {
   // SETUP /  TEARDOWN
 
   // use a new id as the name to avoid name collisions
-  async init(opts = {}) {
+  async init(appName = newid()) {
     if (!this.started) {
       await startup()
     }
-    return this.newTenant({
-      appName: newid(),
-      ...opts,
-    })
+    return this.newTenant(appName)
   }
 
   end() {
@@ -551,14 +548,14 @@ export default class TestConfiguration {
     return this.tenantId
   }
 
-  async newTenant(opts: {}): Promise<App> {
+  async newTenant(appName = newid()): Promise<App> {
     this.csrfToken = generator.hash()
 
     this.tenantId = structures.tenant.id()
     this.user = await this.globalUser()
     this.userMetadataId = generateUserMetadataID(this.user._id!)
 
-    return this.createApp({ appName: newid(), ...opts })
+    return this.createApp(appName)
   }
 
   doInTenant<T>(task: () => T) {
@@ -588,9 +585,7 @@ export default class TestConfiguration {
   }
 
   // APP
-  async createApp(opts: CreateAppRequest): Promise<App> {
-    const { appName, url, snippets } = opts
-
+  async createApp(appName: string, url?: string): Promise<App> {
     this.appId = undefined
     this.app = await context.doInTenant(
       this.tenantId!,
@@ -601,19 +596,6 @@ export default class TestConfiguration {
         })) as App
     )
     this.appId = this.app.appId
-
-    if (snippets) {
-      this.app = await this._req(
-        appController.update,
-        {
-          ...this.app,
-          snippets,
-        },
-        {
-          appId: this.appId,
-        }
-      )
-    }
 
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app

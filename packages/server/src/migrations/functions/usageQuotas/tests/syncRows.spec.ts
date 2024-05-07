@@ -29,7 +29,7 @@ describe("syncRows", () => {
         await config.createRow()
       })
       // app 2
-      const app2 = await config.createApp({ appName: "second-app" })
+      const app2 = await config.createApp("second-app")
       await context.doInAppContext(app2.appId, async () => {
         await config.createTable()
         await config.createRow()
