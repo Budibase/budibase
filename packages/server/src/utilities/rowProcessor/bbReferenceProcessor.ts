@@ -1,13 +1,17 @@
 import { cache, db as dbCore } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import { FieldSubtype, DocumentType, SEPARATOR } from "@budibase/types"
+import {
+  BBReferenceFieldSubType,
+  DocumentType,
+  SEPARATOR,
+} from "@budibase/types"
 import { InvalidBBRefError } from "./errors"
 
 const ROW_PREFIX = DocumentType.ROW + SEPARATOR
 
 export async function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
 ): Promise<string | string[] | null> {
   let referenceIds: string[] = []
 
@@ -40,15 +44,18 @@ export async function processInputBBReferences(
   })
 
   switch (subtype) {
-    case FieldSubtype.USER:
-    case FieldSubtype.USERS: {
+    case BBReferenceFieldSubType.USER:
+    case BBReferenceFieldSubType.USERS: {
       const { notFoundIds } = await cache.user.getUsers(referenceIds)
 
       if (notFoundIds?.length) {
-        throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
+        throw new InvalidBBRefError(
+          notFoundIds[0],
+          BBReferenceFieldSubType.USER
+        )
       }
 
-      if (subtype === FieldSubtype.USERS) {
+      if (subtype === BBReferenceFieldSubType.USERS) {
         return referenceIds
       }
 
@@ -61,7 +68,7 @@ export async function processInputBBReferences(
 
 export async function processOutputBBReferences(
   value: string | string[],
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
 ) {
   if (value === null || value === undefined) {
     // Already processed or nothing to process
@@ -72,8 +79,8 @@ export async function processOutputBBReferences(
     typeof value === "string" ? value.split(",").filter(id => !!id) : value
 
   switch (subtype) {
-    case FieldSubtype.USER:
-    case FieldSubtype.USERS: {
+    case BBReferenceFieldSubType.USER:
+    case BBReferenceFieldSubType.USERS: {
       const { users } = await cache.user.getUsers(ids)
       if (!users.length) {
         return undefined
