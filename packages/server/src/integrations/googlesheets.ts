@@ -560,7 +560,11 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         })
 
       const [headers] = getResponse.data!.valueRanges![0].values!
-      const rows = getResponse.data!.valueRanges![1].values!
+
+      let rowNumber = offset
+      const rows = getResponse.data!.valueRanges![1].values!.map(r =>
+        this.buildRowObject(headers, r, rowNumber++)
+      )
 
       // this is a special case - need to handle the _id, it doesn't exist
       // we cannot edit the returned structure from google, it does not have
@@ -573,18 +577,13 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         for (let idFilterKey of idFilterKeys) {
           const id = query.filters.equal[idFilterKey]
           delete query.filters.equal[idFilterKey]
-          query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
+          query.filters.equal[`_id`] = id
         }
       }
 
-      let filtered = dataFilters.runLuceneQuery(rows, query.filters)
+      let response = dataFilters.runLuceneQuery(rows, query.filters)
       if (hasFilters && query.paginate) {
-        filtered = filtered.slice(offset, offset + limit)
-      }
-      let response = []
-      let rowNumber = offset
-      for (const row of filtered) {
-        response.push(this.buildRowObject(headers, row, rowNumber++))
+        response = response.slice(offset, offset + limit)
       }
 
       if (query.sort) {
