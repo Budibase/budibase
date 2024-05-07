@@ -10,6 +10,8 @@
   export let actionMessage = null
   export let action = null
   export let wide = false
+  export let messageLinkText
+  export let messageLinkAction
 
   const dispatch = createEventDispatcher()
 </script>
@@ -26,6 +28,11 @@
   {/if}
   <div class="spectrum-Toast-body" class:actionBody={!!action}>
     <div class="wrap spectrum-Toast-content">{message || ""}</div>
+    {#if messageLinkText}
+      <button type="button" on:click={messageLinkAction}>
+        {messageLinkText}
+      </button>
+    {/if}
     {#if action}
       <ActionButton
         quiet

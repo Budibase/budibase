@@ -3,6 +3,7 @@ import { admin, auth, licensing, temporalStore } from "stores/portal"
 import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
 import { Constants } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
 
 const oneDayInSeconds = 86400
 
@@ -176,9 +177,13 @@ const buildEnterpriseBasicTrialRunningOutBanner = () => {
     type: BANNER_TYPES.INFO,
     criteria: () =>
       appLicensing.license?.plan?.type ===
-      Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
-    message: `Your trial will expire in ${daysUntilCancel()} days`,
-    ...upgradeAction(),
+        Constants.PlanType.ENTERPRISE_BASIC_TRIAL &&
+      sdk.users.isAdmin(get(auth).user),
+    message: `Your free trial will end in ${daysUntilCancel()} days. `,
+    extraLinkAction: () => {
+      appLicensing.goToUpgradePage()
+    },
+    extraLinkText: "Please select a plan.",
     showCloseButton: false,
   }
 }
