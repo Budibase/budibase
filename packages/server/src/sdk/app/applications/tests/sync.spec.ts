@@ -36,7 +36,7 @@ function waitForUpdate(opts: { group?: boolean }) {
 }
 
 beforeAll(async () => {
-  await config.init({ appName: "syncApp" })
+  await config.init("syncApp")
 })
 
 async function createUser(email: string, roles: UserRoles, builder?: boolean) {
