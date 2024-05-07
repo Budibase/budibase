@@ -60,6 +60,7 @@ import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
+import { cleanupApp } from "../../sdk/app/tables/internal/sqs"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -589,6 +590,9 @@ async function destroyApp(ctx: UserCtx) {
 }
 
 async function preDestroyApp(ctx: UserCtx) {
+  if (env.SQS_SEARCH_ENABLE) {
+    await sdk.tables.sqs.cleanupApp()
+  }
   const { rows } = await getUniqueRows([ctx.params.appId])
   ctx.rowCount = rows.length
 }

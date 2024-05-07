@@ -62,7 +62,13 @@ export class DDInstrumentedDatabase implements Database {
   ): Promise<DocumentDestroyResponse> {
     return tracer.trace("db.remove", span => {
       span?.addTags({ db_name: this.name, doc_id: id })
-      return this.db.remove(id, rev)
+      if (typeof id === "object") {
+        return this.db.remove(id)
+      } else if (rev) {
+        return this.db.remove(id, rev)
+      } else {
+        throw new Error("No revision supplied for removal")
+      }
     })
   }
 

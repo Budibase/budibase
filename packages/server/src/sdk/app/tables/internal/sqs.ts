@@ -15,7 +15,9 @@ import {
   generateJunctionTableID,
 } from "../../../../db/utils"
 
-const BASIC_SQLITE_DOC: SQLiteDefinition = {
+type PreSaveSQLiteDefinition = Omit<SQLiteDefinition, "_rev">
+
+const BASIC_SQLITE_DOC: PreSaveSQLiteDefinition = {
   _id: SQLITE_DESIGN_DOC_ID,
   language: "sqlite",
   sql: {
@@ -102,7 +104,7 @@ function mapTable(table: Table): SQLiteTables {
 }
 
 // nothing exists, need to iterate though existing tables
-async function buildBaseDefinition(): Promise<SQLiteDefinition> {
+async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   const tables = await tablesSdk.getAllInternalTables()
   const definition = cloneDeep(BASIC_SQLITE_DOC)
   for (let table of tables) {
@@ -114,9 +116,15 @@ async function buildBaseDefinition(): Promise<SQLiteDefinition> {
   return definition
 }
 
-export async function addTableToSqlite(table: Table) {
+export async function syncDefinition(): Promise<void> {
   const db = context.getAppDB()
-  let definition: SQLiteDefinition
+  const definition = await buildBaseDefinition()
+  await db.put(definition)
+}
+
+export async function addTable(table: Table) {
+  const db = context.getAppDB()
+  let definition: PreSaveSQLiteDefinition | SQLiteDefinition
   try {
     definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
   } catch (err) {
@@ -129,7 +137,7 @@ export async function addTableToSqlite(table: Table) {
   await db.put(definition)
 }
 
-export async function removeTableFromSqlite(table: Table) {
+export async function removeTable(table: Table) {
   const db = context.getAppDB()
   try {
     const definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
@@ -145,5 +153,20 @@ export async function removeTableFromSqlite(table: Table) {
     } else {
       throw err
     }
+  }
+}
+
+export async function cleanupApp() {
+  const db = context.getAppDB()
+  if (!(await db.exists())) {
+    throw new Error("Cleanup must be preformed before app deletion.")
+  }
+  try {
+    const definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    // delete the design document
+    await db.remove(SQLITE_DESIGN_DOC_ID, definition._rev)
+    await db.sqlCleanup()
+  } catch (err: any) {
+    throw new Error(`Unable to cleanup SQS files - ${err.message}`)
   }
 }

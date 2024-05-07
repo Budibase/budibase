@@ -20,6 +20,7 @@ export type SQLiteTables = Record<
 
 export interface SQLiteDefinition {
   _id: string
+  _rev: string
   language: string
   sql: {
     tables: SQLiteTables

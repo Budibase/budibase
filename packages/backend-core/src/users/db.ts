@@ -492,7 +492,7 @@ export class UserDB {
 
     await platform.users.removeUser(dbUser)
 
-    await db.remove(userId, dbUser._rev)
+    await db.remove(userId, dbUser._rev!)
 
     const creatorsToDelete = (await isCreator(dbUser)) ? 1 : 0
     await UserDB.quotas.removeUsers(1, creatorsToDelete)
