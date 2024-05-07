@@ -32,7 +32,7 @@
   import { UserAvatars } from "@budibase/frontend-core"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
-  import FreeTrialModal from "components/portal/onboarding/FreeTrialModal.svelte"
+  import EnterpriseBasicTrialModal from "components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
 
   export let application
 
@@ -193,7 +193,7 @@
   <CommandPalette />
 </Modal>
 
-<FreeTrialModal />
+<EnterpriseBasicTrialModal />
 
 <style>
   .back-to-apps {
