@@ -40,9 +40,18 @@
     }
   }
 
-  const onClick = e => {
+  const onAnchorClick = e => {
     e.preventDefault()
 
+    $selected = {
+      ...$selected,
+      title,
+      info: tab_internal.getBoundingClientRect(),
+    }
+    dispatch("click")
+  }
+
+  const onClick = e => {
     $selected = {
       ...$selected,
       title,
@@ -57,7 +66,7 @@
     {href}
     {id}
     bind:this={tab_internal}
-    on:click={onClick}
+    on:click={onAnchorClick}
     class:is-selected={$selected.title === title}
     class="spectrum-Tabs-item"
     class:emphasized={$selected.title === title && $selected.emphasized}
