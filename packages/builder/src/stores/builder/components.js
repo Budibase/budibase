@@ -447,7 +447,6 @@ export class ComponentStore extends BudiStore {
       name: componentInstance._component,
     })
 
-
     return componentInstance
   }
 
