@@ -18,13 +18,13 @@ import {
   TableSourceType,
   DatasourcePlusQueryResponse,
 } from "@budibase/types"
-import { OAuth2Client } from "google-auth-library"
 import {
   buildExternalTableId,
   checkExternalTables,
   finaliseExternalTables,
 } from "./utils"
-import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
+// import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
+import { google, sheets_v4 } from "googleapis"
 import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
@@ -144,12 +144,12 @@ const SCHEMA: Integration = {
 
 class GoogleSheetsIntegration implements DatasourcePlus {
   private readonly config: GoogleSheetsConfig
-  private client: GoogleSpreadsheet
+  // private client: sheets_v4.Schema$Spreadsheet = undefined!
+  private spreadsheetId: string
 
   constructor(config: GoogleSheetsConfig) {
     this.config = config
-    const spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
-    this.client = new GoogleSpreadsheet(spreadsheetId)
+    this.spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
   }
 
   async testConnection(): Promise<ConnectionInfo> {
@@ -222,7 +222,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         throw new HTTPError("Google config not found", 400)
       }
 
-      const oauthClient = new OAuth2Client({
+      const oauthClient = new google.auth.OAuth2({
         clientId: googleConfig.clientID,
         clientSecret: googleConfig.clientSecret,
       })
@@ -238,8 +238,15 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         access_token: tokenResponse.access_token,
       })
 
-      this.client.useOAuth2Client(oauthClient)
-      await this.client.loadInfo()
+      // this.client = new GoogleSpreadsheet(this.spreadsheetId, oauthClient)
+      // this.client = (
+      //   await google
+      //     .sheets("v4")
+      //     .spreadsheets.get({ spreadsheetId: this.spreadsheetId })
+      // ).data
+      // this.client.use(oauthClient)
+      // await this.client.loadInfo()
+      return oauthClient
     } catch (err: any) {
       // this happens for xlsx imports
       if (err.message?.includes("operation is not supported")) {
@@ -253,8 +260,8 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async getTableNames(): Promise<string[]> {
     await this.connect()
-    const sheets = this.client.sheetsByIndex
-    return sheets.map(s => s.title)
+    const sheets = this.client.sheets!
+    return sheets.map(s => s.properties!.title!)
   }
 
   getTableSchema(
@@ -294,7 +301,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       return { tables: {}, errors: {} }
     }
     await this.connect()
-    const sheets = this.client.sheetsByIndex
+    const sheets = this.client.sheets!
     const tables: Record<string, Table> = {}
     let errors: Record<string, string> = {}
     await utils.parallelForeach(
@@ -302,7 +309,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       async sheet => {
         // must fetch rows to determine schema
         try {
-          await sheet.getRows()
+          sheet.rowGroups
         } catch (err) {
           // We expect this to always be an Error so if it's not, rethrow it to
           // make sure we don't fail quietly.
@@ -466,7 +473,11 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         typeof query.row === "string" ? JSON.parse(query.row) : query.row
       const row = await sheet.addRow(rowToInsert)
       return [
-        this.buildRowObject(sheet.headerValues, row._rawData, row._rowNumber),
+        this.buildRowObject(
+          sheet.headerValues,
+          row.toObject() as any,
+          row.rowNumber
+        ),
       ]
     } catch (err) {
       console.error("Error writing to google sheets", err)
@@ -484,7 +495,11 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       }
       const rows = await sheet.addRows(rowsToInsert)
       return rows.map(row =>
-        this.buildRowObject(sheet.headerValues, row._rawData, row._rowNumber)
+        this.buildRowObject(
+          sheet.headerValues,
+          row.toObject() as any,
+          row.rowNumber
+        )
       )
     } catch (err) {
       console.error("Error bulk writing to google sheets", err)
@@ -492,14 +507,30 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
+  private getAlphabetCharacter(number: number) {
+    let result = ""
+    const alphabetLength = 26
+
+    while (number > 0) {
+      const remainder = (number - 1) % alphabetLength
+      result = String.fromCharCode(65 + remainder) + result
+      number = Math.floor((number - 1) / alphabetLength)
+    }
+
+    return result
+  }
+
   async read(query: {
     sheet: string
     filters?: SearchFilters
     sort?: SortJson
     paginate?: PaginationJson
+    meta: {
+      table: Table
+    }
   }) {
     try {
-      await this.connect()
+      const auth = await this.connect()
       const hasFilters = dataFilters.hasFilters(query.filters)
       const limit = query.paginate?.limit || 100
       const page: number =
@@ -507,16 +538,50 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           ? query.paginate.page
           : parseInt(query.paginate?.page || "1")
       const offset = (page - 1) * limit
-      const sheet = this.client.sheetsByTitle[query.sheet]
-      let rows: GoogleSpreadsheetRow[] = []
+
+      const columnCount = Object.keys(query.meta.table.schema).length
+      const rangeEnd = this.getAlphabetCharacter(columnCount)
+
+      let range = query.sheet
       if (query.paginate && !hasFilters) {
-        rows = await sheet.getRows({
-          limit,
-          offset,
-        })
+        // TODO
+        range = `${query.sheet}!A${2 + offset}:${rangeEnd}${1 + offset + limit}`
       } else {
-        rows = await sheet.getRows()
+        range = `${query.sheet}!A1:A100`
       }
+
+      // const xx = await new Promise(r => {
+      //   google
+      //     .sheets("v4")
+      //     .spreadsheets.get(
+      //       { auth, spreadsheetId: this.spreadsheetId },
+      //       (err, res) => {
+      //         const info = res?.data
+      //         r(info)
+      //       }
+      //     )
+      // })
+
+      // this.client = (
+      const [headers, rows] = await new Promise<any[]>(r => {
+        google.sheets("v4").spreadsheets.values.batchGet(
+          {
+            auth,
+            spreadsheetId: this.spreadsheetId,
+            ranges: [`A1:${rangeEnd}1`, range],
+          },
+          (err, res) => {
+            if (err) {
+              console.error("The API returned an error.")
+              throw err
+            }
+
+            const [headers, rows] = res?.data.valueRanges || []
+            r([headers.values, rows.values])
+          }
+        )
+      })
+
       // this is a special case - need to handle the _id, it doesn't exist
       // we cannot edit the returned structure from google, it does not have
       // setter functions and is immutable, easier to update the filters
@@ -531,16 +596,17 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
         }
       }
+
+      // const [headerValues] = rows.splice(0, 1) // rows[0].headerValues
+
       let filtered = dataFilters.runLuceneQuery(rows, query.filters)
       if (hasFilters && query.paginate) {
         filtered = filtered.slice(offset, offset + limit)
       }
-      const headerValues = sheet.headerValues
       let response = []
-      for (let row of filtered) {
-        response.push(
-          this.buildRowObject(headerValues, row._rawData, row._rowNumber)
-        )
+      let rowNumber = offset
+      for (const row of filtered) {
+        response.push(this.buildRowObject(headers, row, rowNumber++))
       }
 
       if (query.sort) {
