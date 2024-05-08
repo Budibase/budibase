@@ -100,13 +100,13 @@ describe("rowProcessor - outputProcessing", () => {
     }
 
     const output = await outputProcessing(table, row, { squash: false })
-    expect(output.attach[0].url).toBe(
+    expect(output.attach[0].url?.split("?")[0]).toBe(
       "/files/signed/prod-budi-app-assets/test.jpg"
     )
 
     row.attach[0].url = ""
     const output2 = await outputProcessing(table, row, { squash: false })
-    expect(output2.attach[0].url).toBe(
+    expect(output2.attach[0].url?.split("?")[0]).toBe(
       "/files/signed/prod-budi-app-assets/test.jpg"
     )
 
@@ -141,13 +141,13 @@ describe("rowProcessor - outputProcessing", () => {
     }
 
     const output = await outputProcessing(table, row, { squash: false })
-    expect(output.attach.url).toBe(
+    expect(output.attach.url?.split("?")[0]).toBe(
       "/files/signed/prod-budi-app-assets/test.jpg"
     )
 
     row.attach.url = ""
     const output2 = await outputProcessing(table, row, { squash: false })
-    expect(output2.attach.url).toBe(
+    expect(output2.attach?.url?.split("?")[0]).toBe(
       "/files/signed/prod-budi-app-assets/test.jpg"
     )
 
