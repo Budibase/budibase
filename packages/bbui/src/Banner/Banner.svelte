@@ -89,10 +89,14 @@
     background: none;
     border: none;
     margin: 0;
-    margin-left: 1em;
+    margin-left: 0.5em;
     padding: 0;
     cursor: pointer;
     color: white;
+    font-weight: 600;
+  }
+
+  u {
     font-weight: 600;
   }
 </style>

@@ -15,8 +15,6 @@
           type={message.type}
           extraButtonText={message.extraButtonText}
           extraButtonAction={message.extraButtonAction}
-          extraLinkAction={message.extraLinkAction}
-          extraLinkText={message.extraLinkText}
           on:change={() => {
             if (message.onChange) {
               message.onChange()
