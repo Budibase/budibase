@@ -67,6 +67,22 @@ describe.each([
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
 
+    private findRow(expectedRow: any, foundRows: any[]) {
+      const row = foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
+      if (!row) {
+        const fields = Object.keys(expectedRow)
+        // To make the error message more readable, we only include the fields
+        // that are present in the expected row.
+        const searchedObjects = foundRows.map(row => _.pick(row, fields))
+        throw new Error(
+          `Failed to find row: ${JSON.stringify(
+            expectedRow
+          )} in ${JSON.stringify(searchedObjects)}`
+        )
+      }
+      return row
+    }
+
     // Asserts that the query returns rows matching exactly the set of rows
     // passed in. The order of the rows matters. Rows returned in an order
     // different to the one passed in will cause the assertion to fail.  Extra
@@ -82,9 +98,7 @@ describe.each([
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toEqual(
         expectedRows.map((expectedRow: any) =>
-          expect.objectContaining(
-            foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
-          )
+          expect.objectContaining(this.findRow(expectedRow, foundRows))
         )
       )
     }
@@ -104,9 +118,7 @@ describe.each([
       expect(foundRows).toEqual(
         expect.arrayContaining(
           expectedRows.map((expectedRow: any) =>
-            expect.objectContaining(
-              foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
-            )
+            expect.objectContaining(this.findRow(expectedRow, foundRows))
           )
         )
       )
@@ -125,9 +137,7 @@ describe.each([
       expect(foundRows).toEqual(
         expect.arrayContaining(
           expectedRows.map((expectedRow: any) =>
-            expect.objectContaining(
-              foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
-            )
+            expect.objectContaining(this.findRow(expectedRow, foundRows))
           )
         )
       )
@@ -155,6 +165,67 @@ describe.each([
   function expectQuery(query: SearchFilters) {
     return expectSearch({ query })
   }
+
+  describe("boolean", () => {
+    beforeAll(async () => {
+      await createTable({
+        isTrue: { name: "isTrue", type: FieldType.BOOLEAN },
+      })
+      await createRows([{ isTrue: true }, { isTrue: false }])
+    })
+
+    describe("equal", () => {
+      it("successfully finds true row", () =>
+        expectQuery({ equal: { isTrue: true } }).toMatchExactly([
+          { isTrue: true },
+        ]))
+
+      it("successfully finds false row", () =>
+        expectQuery({ equal: { isTrue: false } }).toMatchExactly([
+          { isTrue: false },
+        ]))
+    })
+
+    describe("notEqual", () => {
+      it("successfully finds false row", () =>
+        expectQuery({ notEqual: { isTrue: true } }).toContainExactly([
+          { isTrue: false },
+        ]))
+
+      it("successfully finds true row", () =>
+        expectQuery({ notEqual: { isTrue: false } }).toContainExactly([
+          { isTrue: true },
+        ]))
+    })
+
+    describe("oneOf", () => {
+      it("successfully finds true row", () =>
+        expectQuery({ oneOf: { isTrue: [true] } }).toContainExactly([
+          { isTrue: true },
+        ]))
+
+      it("successfully finds false row", () =>
+        expectQuery({ oneOf: { isTrue: [false] } }).toContainExactly([
+          { isTrue: false },
+        ]))
+    })
+
+    describe("sort", () => {
+      it("sorts ascending", () =>
+        expectSearch({
+          query: {},
+          sort: "isTrue",
+          sortOrder: SortOrder.ASCENDING,
+        }).toMatchExactly([{ isTrue: false }, { isTrue: true }]))
+
+      it("sorts descending", () =>
+        expectSearch({
+          query: {},
+          sort: "isTrue",
+          sortOrder: SortOrder.DESCENDING,
+        }).toMatchExactly([{ isTrue: true }, { isTrue: false }]))
+    })
+  })
 
   describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
     beforeAll(async () => {
