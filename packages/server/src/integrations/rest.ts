@@ -26,13 +26,13 @@ import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
 
-const BodyTypes = {
-  NONE: "none",
-  FORM_DATA: "form",
-  XML: "xml",
-  ENCODED: "encoded",
-  JSON: "json",
-  TEXT: "text",
+enum BodyType {
+  NONE = "none",
+  FORM_DATA = "form",
+  XML = "xml",
+  ENCODED = "encoded",
+  JSON = "json",
+  TEXT = "text",
 }
 
 const coreFields = {
@@ -54,7 +54,7 @@ const coreFields = {
   },
   bodyType: {
     type: DatasourceFieldType.STRING,
-    enum: Object.values(BodyTypes),
+    enum: Object.values(BodyType),
   },
   pagination: {
     type: DatasourceFieldType.OBJECT,
@@ -131,7 +131,10 @@ class RestIntegration implements IntegrationBase {
   }
 
   async parseResponse(response: any, pagination: PaginationConfig | null) {
-    let data, raw, headers, filename
+    let data: any[] | string | undefined,
+      raw: string | undefined,
+      headers: Record<string, string> = {},
+      filename: string | undefined
 
     const contentType = response.headers.get("content-type") || ""
     const contentDisposition = response.headers.get("content-disposition") || ""
@@ -149,7 +152,7 @@ class RestIntegration implements IntegrationBase {
       } else {
         if (response.status === 204) {
           data = []
-          raw = []
+          raw = ""
         } else if (contentType.includes("application/json")) {
           data = await response.json()
           raw = JSON.stringify(data)
@@ -162,16 +165,18 @@ class RestIntegration implements IntegrationBase {
           raw = xmlResponse.rawXml
         } else {
           data = await response.text()
-          raw = data
+          raw = data as string
         }
       }
     } catch (err) {
       throw `Failed to parse response body: ${err}`
     }
 
-    const size = formatBytes(
-      response.headers.get("content-length") || Buffer.byteLength(raw, "utf8")
-    )
+    let contentLength: string = response.headers.get("content-length")
+    if (!contentLength && raw) {
+      contentLength = Buffer.byteLength(raw, "utf8").toString()
+    }
+    const size = formatBytes(contentLength || "0")
     const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
     headers = response.headers.raw()
     for (let [key, value] of Object.entries(headers)) {
@@ -255,7 +260,7 @@ class RestIntegration implements IntegrationBase {
     if (!input.headers) {
       input.headers = {}
     }
-    if (bodyType === BodyTypes.NONE) {
+    if (bodyType === BodyType.NONE) {
       return input
     }
     let error,
@@ -283,11 +288,11 @@ class RestIntegration implements IntegrationBase {
     }
 
     switch (bodyType) {
-      case BodyTypes.TEXT:
+      case BodyType.TEXT:
         // content type defaults to plaintext
         input.body = string
         break
-      case BodyTypes.ENCODED: {
+      case BodyType.ENCODED: {
         const params = new URLSearchParams()
         for (let [key, value] of Object.entries(object)) {
           params.append(key, value as string)
@@ -298,7 +303,7 @@ class RestIntegration implements IntegrationBase {
         input.body = params
         break
       }
-      case BodyTypes.FORM_DATA: {
+      case BodyType.FORM_DATA: {
         const form = new FormData()
         for (let [key, value] of Object.entries(object)) {
           form.append(key, value)
@@ -309,14 +314,14 @@ class RestIntegration implements IntegrationBase {
         input.body = form
         break
       }
-      case BodyTypes.XML:
+      case BodyType.XML:
         if (object != null && Object.keys(object).length) {
           string = new XmlBuilder().buildObject(object)
         }
         input.body = string
         input.headers["Content-Type"] = "application/xml"
         break
-      case BodyTypes.JSON:
+      case BodyType.JSON:
         // if JSON error, throw it
         if (error) {
           throw "Invalid JSON for request body"
