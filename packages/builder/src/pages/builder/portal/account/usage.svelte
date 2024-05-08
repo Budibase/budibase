@@ -113,7 +113,9 @@
     textRows = []
 
     if (cancelAt && !usesInvoicing) {
-      textRows.push({ message: "Subscription has been cancelled" })
+      if (plan?.type !== Constants.PlanType.ENTERPRISE_BASIC_TRIAL) {
+        textRows.push({ message: "Subscription has been cancelled" })
+      }
       textRows.push({
         message: `${getDaysRemaining(cancelAt)} days remaining`,
         tooltip: new Date(cancelAt),
