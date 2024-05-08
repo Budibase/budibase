@@ -2,7 +2,6 @@ jest.unmock("node-fetch")
 jest.unmock("aws-sdk")
 import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
-import { objectStoreTestProviders } from "@budibase/backend-core/tests"
 import { objectStore } from "@budibase/backend-core"
 import tk from "timekeeper"
 import { EmailAttachment } from "@budibase/types"
@@ -19,12 +18,10 @@ describe("/api/global/email", () => {
 
   beforeAll(async () => {
     tk.reset()
-    await objectStoreTestProviders.minio.start()
     await config.beforeAll()
   })
 
   afterAll(async () => {
-    await objectStoreTestProviders.minio.stop()
     await config.afterAll()
   })
 
