@@ -1,15 +1,7 @@
 import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
-import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
 import env from "../../../src/environment"
 
 let container: StartedTestContainer | undefined
-
-class ObjectStoreWaitStrategy extends AbstractWaitStrategy {
-  async waitUntilReady(container: any, boundPorts: any, startTime?: Date) {
-    const logs = Wait.forListeningPorts()
-    await logs.waitUntilReady(container, boundPorts, startTime)
-  }
-}
 
 export async function start(): Promise<void> {
   container = await new GenericContainer("minio/minio")
@@ -19,7 +11,9 @@ export async function start(): Promise<void> {
       MINIO_ACCESS_KEY: "budibase",
       MINIO_SECRET_KEY: "budibase",
     })
-    .withWaitStrategy(new ObjectStoreWaitStrategy().withStartupTimeout(30000))
+    .withWaitStrategy(
+      Wait.forHttp("/minio/health/ready", 9000).withStartupTimeout(10000)
+    )
     .start()
 
   const port = container.getMappedPort(9000)
