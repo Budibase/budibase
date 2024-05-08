@@ -83,7 +83,7 @@ export function ObjectStore(
   bucket: string,
   opts: { presigning: boolean } = { presigning: false }
 ) {
-  const config: any = {
+  const config: AWS.S3.ClientConfiguration = {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
     apiVersion: "2006-03-01",
