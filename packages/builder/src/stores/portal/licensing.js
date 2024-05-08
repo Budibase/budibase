@@ -103,6 +103,8 @@ export const createLicensingStore = () => {
       const isEnterprisePlan = planType === Constants.PlanType.ENTERPRISE
       const isFreePlan = planType === Constants.PlanType.FREE
       const isBusinessPlan = planType === Constants.PlanType.BUSINESS
+      const isEnterpriseTrial =
+        planType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
       const groupsEnabled = license.features.includes(
         Constants.Features.USER_GROUPS
       )
@@ -143,6 +145,7 @@ export const createLicensingStore = () => {
           isEnterprisePlan,
           isFreePlan,
           isBusinessPlan,
+          isEnterpriseTrial,
           groupsEnabled,
           backupsEnabled,
           brandingEnabled,
