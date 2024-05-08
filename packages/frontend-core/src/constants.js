@@ -4,7 +4,7 @@
 export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
 export { Feature as Features } from "@budibase/types"
 import { BpmCorrelationKey } from "@budibase/shared-core"
-import { FieldType, FieldTypeSubtypes } from "@budibase/types"
+import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
 
 // Cookie names
 export const Cookies = {
@@ -57,6 +57,7 @@ export const PlanType = {
   PRO: "pro",
   BUSINESS: "business",
   ENTERPRISE: "enterprise",
+  ENTERPRISE_BASIC_TRIAL: "enterprise_basic_trial",
 }
 
 /**
@@ -125,8 +126,8 @@ export const TypeIconMap = {
   [FieldType.ARRAY]: "Duplicate",
   [FieldType.NUMBER]: "123",
   [FieldType.BOOLEAN]: "Boolean",
-  [FieldType.ATTACHMENTS]: "Attach",
-  [FieldType.ATTACHMENT_SINGLE]: "Attach",
+  [FieldType.ATTACHMENTS]: "DocumentFragmentGroup",
+  [FieldType.ATTACHMENT_SINGLE]: "DocumentFragment",
   [FieldType.LINK]: "DataCorrelated",
   [FieldType.FORMULA]: "Calculator",
   [FieldType.JSON]: "Brackets",
@@ -135,7 +136,7 @@ export const TypeIconMap = {
   [FieldType.USER]: "User",
   [FieldType.USERS]: "UserGroup",
   [FieldType.BB_REFERENCE]: {
-    [FieldTypeSubtypes.BB_REFERENCE.USER]: "User",
-    [FieldTypeSubtypes.BB_REFERENCE.USERS]: "UserGroup",
+    [BBReferenceFieldSubType.USER]: "User",
+    [BBReferenceFieldSubType.USERS]: "UserGroup",
   },
 }

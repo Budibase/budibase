@@ -3,6 +3,7 @@ import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 
 import * as setup from "./utilities"
 import {
+  AutoFieldSubType,
   Datasource,
   EmptyFilterOption,
   FieldType,
@@ -18,15 +19,16 @@ import _ from "lodash"
 jest.unmock("mssql")
 
 describe.each([
-  ["internal", undefined],
-  ["internal-sqs", undefined],
+  ["lucene", undefined],
+  ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
-  const isSqs = name === "internal-sqs"
-  const isInternal = name === "internal"
+  const isSqs = name === "sqs"
+  const isLucene = name === "lucene"
+  const isInternal = isSqs || isLucene
   const config = setup.getConfig()
 
   let envCleanup: (() => void) | undefined
@@ -59,7 +61,7 @@ describe.each([
   }
 
   async function createRows(rows: Record<string, any>[]) {
-    await Promise.all(rows.map(r => config.api.row.save(table._id!, r)))
+    await config.api.row.bulkImport(table._id!, { rows })
   }
 
   class SearchAssertion {
@@ -154,7 +156,7 @@ describe.each([
     return expectSearch({ query })
   }
 
-  describe("strings", () => {
+  describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
     beforeAll(async () => {
       await createTable({
         name: { name: "name", type: FieldType.STRING },
@@ -339,14 +341,14 @@ describe.each([
         }).toFindNothing())
 
       // We never implemented half-open ranges in Lucene.
-      !isInternal &&
+      !isLucene &&
         it("can search using just a low value", () =>
           expectQuery({
             range: { age: { low: 5 } },
           }).toContainExactly([{ age: 10 }]))
 
       // We never implemented half-open ranges in Lucene.
-      !isInternal &&
+      !isLucene &&
         it("can search using just a high value", () =>
           expectQuery({
             range: { age: { high: 5 } },
@@ -457,14 +459,14 @@ describe.each([
         }).toFindNothing())
 
       // We never implemented half-open ranges in Lucene.
-      !isInternal &&
+      !isLucene &&
         it("can search using just a low value", () =>
           expectQuery({
             range: { dob: { low: JAN_5TH } },
           }).toContainExactly([{ dob: JAN_10TH }]))
 
       // We never implemented half-open ranges in Lucene.
-      !isInternal &&
+      !isLucene &&
         it("can search using just a high value", () =>
           expectQuery({
             range: { dob: { high: JAN_5TH } },
@@ -506,7 +508,7 @@ describe.each([
     })
   })
 
-  describe("array of strings", () => {
+  describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
     beforeAll(async () => {
       await createTable({
         numbers: {
@@ -642,7 +644,7 @@ describe.each([
     // Range searches against bigints don't seem to work at all in Lucene, and I
     // couldn't figure out why. Given that we're replacing Lucene with SQS,
     // we've decided not to spend time on it.
-    !isInternal &&
+    !isLucene &&
       describe("range", () => {
         it("successfully finds a row", () =>
           expectQuery({
@@ -675,4 +677,137 @@ describe.each([
           }).toContainExactly([{ num: SMALL }, { num: MEDIUM }]))
       })
   })
+
+  isInternal &&
+    describe("auto", () => {
+      beforeAll(async () => {
+        await createTable({
+          auto: {
+            name: "auto",
+            type: FieldType.AUTO,
+            autocolumn: true,
+            subtype: AutoFieldSubType.AUTO_ID,
+          },
+        })
+        await createRows(new Array(10).fill({}))
+      })
+
+      describe("equal", () => {
+        it("successfully finds a row", () =>
+          expectQuery({ equal: { auto: 1 } }).toContainExactly([{ auto: 1 }]))
+
+        it("fails to find nonexistent row", () =>
+          expectQuery({ equal: { auto: 0 } }).toFindNothing())
+      })
+
+      describe("not equal", () => {
+        it("successfully finds a row", () =>
+          expectQuery({ notEqual: { auto: 1 } }).toContainExactly([
+            { auto: 2 },
+            { auto: 3 },
+            { auto: 4 },
+            { auto: 5 },
+            { auto: 6 },
+            { auto: 7 },
+            { auto: 8 },
+            { auto: 9 },
+            { auto: 10 },
+          ]))
+
+        it("fails to find nonexistent row", () =>
+          expectQuery({ notEqual: { auto: 0 } }).toContainExactly([
+            { auto: 1 },
+            { auto: 2 },
+            { auto: 3 },
+            { auto: 4 },
+            { auto: 5 },
+            { auto: 6 },
+            { auto: 7 },
+            { auto: 8 },
+            { auto: 9 },
+            { auto: 10 },
+          ]))
+      })
+
+      describe("oneOf", () => {
+        it("successfully finds a row", () =>
+          expectQuery({ oneOf: { auto: [1] } }).toContainExactly([{ auto: 1 }]))
+
+        it("fails to find nonexistent row", () =>
+          expectQuery({ oneOf: { auto: [0] } }).toFindNothing())
+      })
+
+      describe("range", () => {
+        it("successfully finds a row", () =>
+          expectQuery({
+            range: { auto: { low: 1, high: 1 } },
+          }).toContainExactly([{ auto: 1 }]))
+
+        it("successfully finds multiple rows", () =>
+          expectQuery({
+            range: { auto: { low: 1, high: 2 } },
+          }).toContainExactly([{ auto: 1 }, { auto: 2 }]))
+
+        it("successfully finds a row with a high bound", () =>
+          expectQuery({
+            range: { auto: { low: 2, high: 2 } },
+          }).toContainExactly([{ auto: 2 }]))
+
+        it("successfully finds no rows", () =>
+          expectQuery({
+            range: { auto: { low: 0, high: 0 } },
+          }).toFindNothing())
+
+        isSqs &&
+          it("can search using just a low value", () =>
+            expectQuery({
+              range: { auto: { low: 9 } },
+            }).toContainExactly([{ auto: 9 }, { auto: 10 }]))
+
+        isSqs &&
+          it("can search using just a high value", () =>
+            expectQuery({
+              range: { auto: { high: 2 } },
+            }).toContainExactly([{ auto: 1 }, { auto: 2 }]))
+      })
+
+      isSqs &&
+        describe("sort", () => {
+          it("sorts ascending", () =>
+            expectSearch({
+              query: {},
+              sort: "auto",
+              sortOrder: SortOrder.ASCENDING,
+            }).toMatchExactly([
+              { auto: 1 },
+              { auto: 2 },
+              { auto: 3 },
+              { auto: 4 },
+              { auto: 5 },
+              { auto: 6 },
+              { auto: 7 },
+              { auto: 8 },
+              { auto: 9 },
+              { auto: 10 },
+            ]))
+
+          it("sorts descending", () =>
+            expectSearch({
+              query: {},
+              sort: "auto",
+              sortOrder: SortOrder.DESCENDING,
+            }).toMatchExactly([
+              { auto: 10 },
+              { auto: 9 },
+              { auto: 8 },
+              { auto: 7 },
+              { auto: 6 },
+              { auto: 5 },
+              { auto: 4 },
+              { auto: 3 },
+              { auto: 2 },
+              { auto: 1 },
+            ]))
+        })
+    })
 })

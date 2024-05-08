@@ -19,3 +19,10 @@ export const getColumnIcon = column => {
 
   return result || "Text"
 }
+
+export const parseEventLocation = e => {
+  return {
+    x: e.clientX ?? e.touches?.[0]?.clientX,
+    y: e.clientY ?? e.touches?.[0]?.clientY,
+  }
+}

@@ -7,31 +7,41 @@ import tar from "tar-fs"
 import zlib from "zlib"
 import { promisify } from "util"
 import { join } from "path"
-import fs, { ReadStream } from "fs"
+import fs, { PathLike, ReadStream } from "fs"
 import env from "../environment"
-import { budibaseTempDir } from "./utils"
+import { bucketTTLConfig, budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
+import fsp from "fs/promises"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
 const STATE = {
   bucketCreationPromises: {},
 }
+const signedFilePrefix = "/files/signed"
 
 type ListParams = {
   ContinuationToken?: string
 }
 
-type UploadParams = {
+type BaseUploadParams = {
   bucket: string
   filename: string
-  path: string
   type?: string | null
-  // can be undefined, we will remove it
-  metadata?: {
-    [key: string]: string | undefined
-  }
+  metadata?: { [key: string]: string | undefined }
+  body?: ReadableStream | Buffer
+  ttl?: number
+  addTTL?: boolean
+  extra?: any
+}
+
+type UploadParams = BaseUploadParams & {
+  path?: string | PathLike
+}
+
+type StreamUploadParams = BaseUploadParams & {
+  stream: ReadStream
 }
 
 const CONTENT_TYPE_MAP: any = {
@@ -41,6 +51,8 @@ const CONTENT_TYPE_MAP: any = {
   js: "application/javascript",
   json: "application/json",
   gz: "application/gzip",
+  svg: "image/svg+xml",
+  form: "multipart/form-data",
 }
 
 const STRING_CONTENT_TYPES = [
@@ -105,7 +117,10 @@ export function ObjectStore(
  * Given an object store and a bucket name this will make sure the bucket exists,
  * if it does not exist then it will create it.
  */
-export async function makeSureBucketExists(client: any, bucketName: string) {
+export async function createBucketIfNotExists(
+  client: any,
+  bucketName: string
+): Promise<{ created: boolean; exists: boolean }> {
   bucketName = sanitizeBucket(bucketName)
   try {
     await client
@@ -113,15 +128,16 @@ export async function makeSureBucketExists(client: any, bucketName: string) {
         Bucket: bucketName,
       })
       .promise()
+    return { created: false, exists: true }
   } catch (err: any) {
     const promises: any = STATE.bucketCreationPromises
     const doesntExist = err.statusCode === 404,
       noAccess = err.statusCode === 403
     if (promises[bucketName]) {
       await promises[bucketName]
+      return { created: false, exists: true }
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
-        // bucket doesn't exist create it
         promises[bucketName] = client
           .createBucket({
             Bucket: bucketName,
@@ -129,13 +145,15 @@ export async function makeSureBucketExists(client: any, bucketName: string) {
           .promise()
         await promises[bucketName]
         delete promises[bucketName]
+        return { created: true, exists: false }
+      } else {
+        throw new Error("Access denied to object store bucket." + err)
       }
     } else {
       throw new Error("Unable to write to object store bucket.")
     }
   }
 }
-
 /**
  * Uploads the contents of a file given the required parameters, useful when
  * temp files in use (for example file uploaded as an attachment).
@@ -146,12 +164,22 @@ export async function upload({
   path,
   type,
   metadata,
+  body,
+  ttl,
 }: UploadParams) {
   const extension = filename.split(".").pop()
-  const fileBytes = fs.readFileSync(path)
+
+  const fileBytes = path ? (await fsp.open(path)).createReadStream() : body
 
   const objectStore = ObjectStore(bucketName)
-  await makeSureBucketExists(objectStore, bucketName)
+  const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
+
+  if (ttl && (bucketCreated.created || bucketCreated.exists)) {
+    let ttlConfig = bucketTTLConfig(bucketName, ttl)
+    if (objectStore.putBucketLifecycleConfiguration) {
+      await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+    }
+  }
 
   let contentType = type
   if (!contentType) {
@@ -174,6 +202,7 @@ export async function upload({
     }
     config.Metadata = metadata
   }
+
   return objectStore.upload(config).promise()
 }
 
@@ -181,14 +210,24 @@ export async function upload({
  * Similar to the upload function but can be used to send a file stream
  * through to the object store.
  */
-export async function streamUpload(
-  bucketName: string,
-  filename: string,
-  stream: ReadStream | ReadableStream,
-  extra = {}
-) {
+export async function streamUpload({
+  bucket: bucketName,
+  stream,
+  filename,
+  type,
+  extra,
+  ttl,
+}: StreamUploadParams) {
+  const extension = filename.split(".").pop()
   const objectStore = ObjectStore(bucketName)
-  await makeSureBucketExists(objectStore, bucketName)
+  const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
+
+  if (ttl && (bucketCreated.created || bucketCreated.exists)) {
+    let ttlConfig = bucketTTLConfig(bucketName, ttl)
+    if (objectStore.putBucketLifecycleConfiguration) {
+      await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+    }
+  }
 
   // Set content type for certain known extensions
   if (filename?.endsWith(".js")) {
@@ -203,10 +242,18 @@ export async function streamUpload(
     }
   }
 
+  let contentType = type
+  if (!contentType) {
+    contentType = extension
+      ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+      : CONTENT_TYPE_MAP.txt
+  }
+
   const params = {
     Bucket: sanitizeBucket(bucketName),
     Key: sanitizeKey(filename),
     Body: stream,
+    ContentType: contentType,
     ...extra,
   }
   return objectStore.upload(params).promise()
@@ -286,7 +333,7 @@ export function getPresignedUrl(
     const signedUrl = new URL(url)
     const path = signedUrl.pathname
     const query = signedUrl.search
-    return `/files/signed${path}${query}`
+    return `${signedFilePrefix}${path}${query}`
   }
 }
 
@@ -341,7 +388,7 @@ export async function retrieveDirectory(bucketName: string, path: string) {
  */
 export async function deleteFile(bucketName: string, filepath: string) {
   const objectStore = ObjectStore(bucketName)
-  await makeSureBucketExists(objectStore, bucketName)
+  await createBucketIfNotExists(objectStore, bucketName)
   const params = {
     Bucket: bucketName,
     Key: sanitizeKey(filepath),
@@ -351,7 +398,7 @@ export async function deleteFile(bucketName: string, filepath: string) {
 
 export async function deleteFiles(bucketName: string, filepaths: string[]) {
   const objectStore = ObjectStore(bucketName)
-  await makeSureBucketExists(objectStore, bucketName)
+  await createBucketIfNotExists(objectStore, bucketName)
   const params = {
     Bucket: bucketName,
     Delete: {
@@ -412,7 +459,13 @@ export async function uploadDirectory(
     if (file.isDirectory()) {
       uploads.push(uploadDirectory(bucketName, local, path))
     } else {
-      uploads.push(streamUpload(bucketName, path, fs.createReadStream(local)))
+      uploads.push(
+        streamUpload({
+          bucket: bucketName,
+          filename: path,
+          stream: fs.createReadStream(local),
+        })
+      )
     }
   }
   await Promise.all(uploads)
@@ -466,4 +519,24 @@ export async function getReadStream(
     Key: path,
   }
   return client.getObject(params).createReadStream()
+}
+
+/*
+Given a signed url like '/files/signed/tmp-files-attachments/app_123456/myfile.txt' extract
+the bucket and the path from it
+*/
+export function extractBucketAndPath(
+  url: string
+): { bucket: string; path: string } | null {
+  const baseUrl = url.split("?")[0]
+
+  const regex = new RegExp(`^${signedFilePrefix}/(?<bucket>[^/]+)/(?<path>.+)$`)
+  const match = baseUrl.match(regex)
+
+  if (match && match.groups) {
+    const { bucket, path } = match.groups
+    return { bucket, path }
+  }
+
+  return null
 }

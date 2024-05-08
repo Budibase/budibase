@@ -3871,12 +3871,6 @@
       },
       {
         "type": "boolean",
-        "label": "24-hour time",
-        "key": "time24hr",
-        "defaultValue": false
-      },
-      {
-        "type": "boolean",
         "label": "Ignore time zones",
         "key": "ignoreTimezones",
         "defaultValue": false
@@ -4275,8 +4269,8 @@
     ]
   },
   "attachmentfield": {
-    "name": "Attachment list",
-    "icon": "Attach",
+    "name": "Attachment List",
+    "icon": "DocumentFragmentGroup",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
@@ -4373,7 +4367,7 @@
   },
   "attachmentsinglefield": {
     "name": "Single Attachment",
-    "icon": "Attach",
+    "icon": "DocumentFragment",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
@@ -6772,7 +6766,20 @@
     "illegalChildren": ["section", "sidepanel"],
     "showEmptyState": false,
     "draggable": false,
-    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action."
+    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
+    "settings": [
+      {
+        "type": "boolean",
+        "key": "ignoreClicksOutside",
+        "label": "Ignore clicks outside",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "key": "onClose",
+        "label": "On close"
+      }
+    ]
   },
   "rowexplorer": {
     "block": true,
@@ -7020,6 +7027,12 @@
         "type": "boolean",
         "label": "High contrast",
         "key": "stripeRows",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Quiet",
+        "key": "quiet",
         "defaultValue": false
       },
       {
