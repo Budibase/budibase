@@ -376,6 +376,7 @@ function copyExistingPropsOver(
         case FieldType.ARRAY:
         case FieldType.ATTACHMENTS:
         case FieldType.ATTACHMENT_SINGLE:
+        case FieldType.SIGNATURE:
         case FieldType.JSON:
         case FieldType.BB_REFERENCE:
           shouldKeepSchema = keepIfType(FieldType.JSON, FieldType.STRING)
