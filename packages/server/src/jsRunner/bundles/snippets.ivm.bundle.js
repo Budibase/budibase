@@ -1,0 +1,3 @@
+"use strict";var snippets=(()=>{var p=Object.defineProperty;var f=Object.getOwnPropertyDescriptor;var s=Object.getOwnPropertyNames;var c=Object.prototype.hasOwnProperty;var u=(i,e)=>{for(var n in e)p(i,n,{get:e[n],enumerable:!0})},a=(i,e,n,r)=>{if(e&&typeof e=="object"||typeof e=="function")for(let t of s(e))!c.call(i,t)&&t!==n&&p(i,t,{get:()=>e[t],enumerable:!(r=f(e,t))||r.enumerable});return i};var h=i=>a(p({},"__esModule",{value:!0}),i);var C={};u(C,{default:()=>x});var o=i=>`(function(){
+${i}
+})();`;var x=new Proxy({},{get:function(i,e){return e in snippetCache||(snippetCache[e]=[eval][0](o(snippetDefinitions[e]))),snippetCache[e]}});return h(C);})();

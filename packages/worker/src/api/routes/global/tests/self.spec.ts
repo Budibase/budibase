@@ -41,10 +41,10 @@ describe("/api/global/self", () => {
       user._rev = dbUser._rev
       user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()
       expect(res.body._id).toBe(user._id)
-      expect(events.user.updated).toBeCalledTimes(1)
-      expect(events.user.updated).toBeCalledWith(dbUser)
-      expect(events.user.passwordUpdated).toBeCalledTimes(1)
-      expect(events.user.passwordUpdated).toBeCalledWith(dbUser)
+      expect(events.user.updated).toHaveBeenCalledTimes(1)
+      expect(events.user.updated).toHaveBeenCalledWith(dbUser)
+      expect(events.user.passwordUpdated).toHaveBeenCalledTimes(1)
+      expect(events.user.passwordUpdated).toHaveBeenCalledWith(dbUser)
     })
   })
 
@@ -55,6 +55,7 @@ describe("/api/global/self", () => {
     const res = await config.api.self
       .updateSelf(user, {
         onboardedAt: "2023-03-07T14:10:54.869Z",
+        freeTrialConfirmedAt: "2024-03-17T14:10:54.869Z",
       })
       .expect(200)
 
@@ -63,6 +64,7 @@ describe("/api/global/self", () => {
     user._rev = dbUser._rev
     user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()
     expect(dbUser.onboardedAt).toBe("2023-03-07T14:10:54.869Z")
+    expect(dbUser.freeTrialConfirmedAt).toBe("2024-03-17T14:10:54.869Z")
     expect(res.body._id).toBe(user._id)
   })
 })

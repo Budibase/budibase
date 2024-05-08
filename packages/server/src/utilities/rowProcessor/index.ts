@@ -1,12 +1,11 @@
 import * as linkRows from "../../db/linkedRows"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
-import { objectStore, utils } from "@budibase/backend-core"
+import { context, objectStore, utils } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import {
   FieldType,
   AutoFieldSubType,
-  FieldSubtype,
   Row,
   RowAttachment,
   Table,
@@ -26,7 +25,44 @@ type AutoColumnProcessingOpts = {
   noAutoRelationships?: boolean
 }
 
-const BASE_AUTO_ID = 1
+// Returns the next auto ID for a column in a table. On success, the table will
+// be updated which is why it gets returned. The nextID returned is guaranteed
+// to be given only to you, and if you don't use it it's gone forever (a gap
+// will be left in the auto ID sequence).
+//
+// This function can throw if it fails to generate an auto ID after so many
+// attempts.
+async function getNextAutoId(
+  table: Table,
+  column: string
+): Promise<{ table: Table; nextID: number }> {
+  const db = context.getAppDB()
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const schema = table.schema[column]
+    if (schema.type !== FieldType.NUMBER && schema.type !== FieldType.AUTO) {
+      throw new Error(`Column ${column} is not an auto column`)
+    }
+    schema.lastID = (schema.lastID || 0) + 1
+    try {
+      const resp = await db.put(table)
+      table._rev = resp.rev
+      return { table, nextID: schema.lastID }
+    } catch (e: any) {
+      if (e.status !== 409) {
+        throw e
+      }
+      // We wait for a random amount of time before retrying. The randomness
+      // makes it less likely for multiple requests modifying this table to
+      // collide.
+      await new Promise(resolve =>
+        setTimeout(resolve, Math.random() * 1.2 ** attempt * 1000)
+      )
+      table = await db.get(table._id)
+    }
+  }
+
+  throw new Error("Failed to generate an auto ID")
+}
 
 /**
  * This will update any auto columns that are found on the row/table with the correct information based on
@@ -38,7 +74,7 @@ const BASE_AUTO_ID = 1
  * @returns The updated row and table, the table may need to be updated
  * for automatic ID purposes.
  */
-export function processAutoColumn(
+export async function processAutoColumn(
   userId: string | null | undefined,
   table: Table,
   row: Row,
@@ -80,8 +116,9 @@ export function processAutoColumn(
         break
       case AutoFieldSubType.AUTO_ID:
         if (creating) {
-          schema.lastID = !schema.lastID ? BASE_AUTO_ID : schema.lastID + 1
-          row[key] = schema.lastID
+          const { table: newTable, nextID } = await getNextAutoId(table, key)
+          table = newTable
+          row[key] = nextID
         }
         break
     }
@@ -149,20 +186,22 @@ export async function inputProcessing(
     }
 
     // remove any attachment urls, they are generated on read
-    if (field.type === FieldType.ATTACHMENT) {
+    if (field.type === FieldType.ATTACHMENTS) {
       const attachments = clonedRow[key]
       if (attachments?.length) {
         attachments.forEach((attachment: RowAttachment) => {
           delete attachment.url
         })
       }
+    } else if (field.type === FieldType.ATTACHMENT_SINGLE) {
+      const attachment = clonedRow[key]
+      if (attachment?.url) {
+        delete clonedRow[key].url
+      }
     }
 
     if (field.type === FieldType.BB_REFERENCE && value) {
-      clonedRow[key] = await processInputBBReferences(
-        value,
-        field.subtype as FieldSubtype
-      )
+      clonedRow[key] = await processInputBBReferences(value, field.subtype)
     }
   }
 
@@ -220,7 +259,7 @@ export async function outputProcessing<T extends Row[] | Row>(
 
   // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
-    if (column.type === FieldType.ATTACHMENT) {
+    if (column.type === FieldType.ATTACHMENTS) {
       for (let row of enriched) {
         if (row[property] == null || !Array.isArray(row[property])) {
           continue
@@ -231,6 +270,16 @@ export async function outputProcessing<T extends Row[] | Row>(
           }
         })
       }
+    } else if (column.type === FieldType.ATTACHMENT_SINGLE) {
+      for (let row of enriched) {
+        if (!row[property]) {
+          continue
+        }
+
+        if (!row[property].url) {
+          row[property].url = objectStore.getAppFileUrl(row[property].key)
+        }
+      }
     } else if (
       !opts.skipBBReferences &&
       column.type == FieldType.BB_REFERENCE
@@ -238,14 +287,14 @@ export async function outputProcessing<T extends Row[] | Row>(
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
           row[property],
-          column.subtype as FieldSubtype
+          column.subtype
         )
       }
     }
   }
 
   // process formulas after the complex types had been processed
-  enriched = processFormulas(table, enriched, { dynamic: true })
+  enriched = await processFormulas(table, enriched, { dynamic: true })
 
   if (opts.squash) {
     enriched = (await linkRows.squashLinksToPrimaryDisplay(

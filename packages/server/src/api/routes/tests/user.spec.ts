@@ -3,8 +3,6 @@ import { checkPermissionsEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { UserMetadata } from "@budibase/types"
 
-jest.setTimeout(30000)
-
 jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {
     return {}
@@ -27,15 +25,17 @@ describe("/users", () => {
 
   describe("fetch", () => {
     it("returns a list of users from an instance db", async () => {
-      await config.createUser({ id: "uuidx" })
-      await config.createUser({ id: "uuidy" })
+      const id1 = `us_${utils.newid()}`
+      const id2 = `us_${utils.newid()}`
+      await config.createUser({ _id: id1 })
+      await config.createUser({ _id: id2 })
 
       const res = await config.api.user.fetch()
       expect(res.length).toBe(3)
 
       const ids = res.map(u => u._id)
-      expect(ids).toContain(`ro_ta_users_us_uuidx`)
-      expect(ids).toContain(`ro_ta_users_us_uuidy`)
+      expect(ids).toContain(`ro_ta_users_${id1}`)
+      expect(ids).toContain(`ro_ta_users_${id2}`)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -54,7 +54,7 @@ describe("/users", () => {
   describe("update", () => {
     it("should be able to update the user", async () => {
       const user: UserMetadata = await config.createUser({
-        id: `us_update${utils.newid()}`,
+        _id: `us_update${utils.newid()}`,
       })
       user.roleId = roles.BUILTIN_ROLE_IDS.BASIC
       delete user._rev
@@ -88,7 +88,7 @@ describe("/users", () => {
       })
       await config.api.user.update(
         { ...user, roleId: roles.BUILTIN_ROLE_IDS.POWER },
-        { expectStatus: 409 }
+        { status: 409 }
       )
     })
   })

@@ -12,19 +12,21 @@
   export let anchor
   export let align = "right"
   export let portalTarget
+  export let minWidth
   export let maxWidth
   export let maxHeight
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
-  export let offset = 5
+  export let offset = 4
   export let customHeight
   export let animate = true
   export let customZindex
-
   export let handlePostionUpdate
   export let showPopover = true
   export let clickOutsideOverride = false
+  export let resizable = true
+  export let wrap = false
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
@@ -87,9 +89,12 @@
         align,
         maxHeight,
         maxWidth,
+        minWidth,
         useAnchorWidth,
         offset,
         customUpdate: handlePostionUpdate,
+        resizable,
+        wrap,
       }}
       use:clickOutside={{
         callback: dismissible ? handleOutsideClick : () => {},
@@ -98,10 +103,12 @@
       on:keydown={handleEscape}
       class="spectrum-Popover is-open"
       class:customZindex
-      class:hide-popover={open && !showPopover}
+      class:hidden={!showPopover}
       role="presentation"
       style="height: {customHeight}; --customZindex: {customZindex};"
-      transition:fly|local={{ y: -20, duration: animate ? 200 : 0 }}
+      transition:fly|local={{ y: -20, duration: animate ? 260 : 0 }}
+      on:mouseenter
+      on:mouseleave
     >
       <slot />
     </div>
@@ -109,16 +116,16 @@
 {/if}
 
 <style>
-  .hide-popover {
-    display: contents;
-  }
-
   .spectrum-Popover {
     min-width: var(--spectrum-global-dimension-size-2000);
     border-color: var(--spectrum-global-color-gray-300);
     overflow: auto;
+    transition: opacity 260ms ease-out;
   }
-
+  .hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
   .customZindex {
     z-index: var(--customZindex) !important;
   }

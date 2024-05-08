@@ -10,10 +10,10 @@
     notifications,
   } from "@budibase/bbui"
   import { AppStatus } from "constants"
-  import { apps } from "stores/portal"
+  import { appsStore } from "stores/portal"
   import { appStore } from "stores/builder"
 
-  $: filteredApps = $apps.filter(app => app.devId == $appStore.appId)
+  $: filteredApps = $appsStore.apps.filter(app => app.devId == $appStore.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}
   $: appUrl = `${window.origin}/embed${app?.url}`
   $: appDeployed = app?.status === AppStatus.DEPLOYED

@@ -1,4 +1,5 @@
 export * from "./api"
+export * from "./fields"
 
 export const OperatorOptions = {
   Equals: {
@@ -98,6 +99,7 @@ export enum BuilderSocketEvent {
 export const SocketSessionTTL = 60
 export const ValidQueryNameRegex = /^[^()]*$/
 export const ValidColumnNameRegex = /^[_a-zA-Z0-9\s]*$/g
+export const ValidSnippetNameRegex = /^[a-z_][a-z0-9_]*$/i
 
 export const REBOOT_CRON = "@reboot"
 
@@ -158,3 +160,22 @@ export const InvalidFileExtensions = [
   "wsh",
   "zip",
 ]
+
+export enum BpmCorrelationKey {
+  ONBOARDING = "budibase:onboarding:correlationkey",
+}
+
+export enum BpmInstanceKey {
+  ONBOARDING = "budibase:onboarding:instancekey",
+}
+
+export enum BpmStatusKey {
+  ONBOARDING = "budibase:onboarding:status",
+}
+
+export enum BpmStatusValue {
+  STARTED = "started",
+  COMPLETING_ACCOUNT_INFO = "completing_account_info",
+  VERIFYING_EMAIL = "verifying_email",
+  COMPLETED = "completed",
+}

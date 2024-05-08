@@ -13,6 +13,7 @@ import {
   SourceName,
   Schema,
   TableSourceType,
+  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -21,6 +22,7 @@ import {
   finaliseExternalTables,
   SqlClient,
   checkExternalTables,
+  HOST_ADDRESS,
 } from "./utils"
 import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
@@ -87,7 +89,6 @@ const SCHEMA: Integration = {
     user: {
       type: DatasourceFieldType.STRING,
       required: true,
-      default: "localhost",
     },
     password: {
       type: DatasourceFieldType.PASSWORD,
@@ -95,7 +96,7 @@ const SCHEMA: Integration = {
     },
     server: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
     },
     port: {
       type: DatasourceFieldType.NUMBER,
@@ -251,7 +252,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       }
 
       switch (this.config.authType) {
-        case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY:
+        case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY: {
           const { clientId, tenantId, clientSecret } =
             this.config.adConfig || {}
           const clientApp = new ConfidentialClientApplication({
@@ -273,7 +274,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
             },
           }
           break
-        case MSSQLConfigAuthType.NTLM:
+        }
+        case MSSQLConfigAuthType.NTLM: {
           const { domain, trustServerCertificate } =
             this.config.ntlmConfig || {}
           clientCfg.authentication = {
@@ -285,6 +287,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           clientCfg.options ??= {}
           clientCfg.options.trustServerCertificate = !!trustServerCertificate
           break
+        }
         case null:
         case undefined:
           break
@@ -329,6 +332,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         operation === Operation.CREATE
           ? `${query.sql}; SELECT SCOPE_IDENTITY() AS id;`
           : query.sql
+      this.log(sql, query.bindings)
       return await request.query(sql)
     } catch (err: any) {
       let readableMessage = getReadableErrorMessage(
@@ -492,7 +496,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     return response.recordset || [{ deleted: true }]
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     const schema = this.config.schema
     await this.connect()
     if (schema && schema !== DEFAULT_SCHEMA && json?.endpoint) {
@@ -500,8 +504,18 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
     const operation = this._operation(json)
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)
-    const processFn = (result: any) =>
-      result.recordset ? result.recordset : [{ [operation]: true }]
+    const processFn = (result: any) => {
+      if (json?.meta?.table && result.recordset) {
+        return this.convertJsonStringColumns(
+          json.meta.table,
+          result.recordset,
+          json.tableAliases
+        )
+      } else if (result.recordset) {
+        return result.recordset
+      }
+      return [{ [operation]: true }]
+    }
     return this.queryWithReturning(json, queryFn, processFn)
   }
 

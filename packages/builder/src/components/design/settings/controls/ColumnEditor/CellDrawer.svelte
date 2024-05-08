@@ -7,10 +7,13 @@
     Layout,
     Label,
   } from "@budibase/bbui"
-  import { themeStore } from "stores/builder"
+  import { themeStore, previewStore } from "stores/builder"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let column
+
+  $: columnValue =
+    $previewStore.selectedComponentContext?.eventContext?.row?.[column.name]
 </script>
 
 <DrawerContent>
@@ -28,6 +31,7 @@
         placeholder="Default"
       />
       <DrawerBindableInput
+        title="Value"
         label="Value"
         value={column.template}
         on:change={e => (column.template = e.detail)}
@@ -40,6 +44,9 @@
             icon: "TableColumnMerge",
           },
         ]}
+        context={{
+          value: columnValue,
+        }}
       />
       <Layout noPadding gap="XS">
         <Label>Background color</Label>

@@ -31,6 +31,8 @@ import {
   RelationshipFieldMetadata,
   FieldType,
 } from "@budibase/types"
+import sdk from "../../../sdk"
+import env from "../../../environment"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
   const db = context.getAppDB()
@@ -88,6 +90,7 @@ export async function checkForColumnUpdates(
     // Update views
     await checkForViewUpdates(updatedTable, deletedColumns, columnRename)
   }
+
   return { rows: updatedRows, table: updatedTable }
 }
 
@@ -125,6 +128,7 @@ export async function importToRows(
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
     row._id = generateRowID(table._id!)
+    row.type = "row"
     row.tableId = table._id
 
     // We use a reference to table here and update it after input processing,
@@ -319,6 +323,9 @@ class TableSaveFunctions {
       importRows: this.importRows,
       user: this.user,
     })
+    if (env.SQS_SEARCH_ENABLE) {
+      await sdk.tables.sqs.addTableToSqlite(table)
+    }
     return table
   }
 

@@ -22,7 +22,6 @@
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
-  let valid = true
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
@@ -79,20 +78,18 @@
   {/if}
 </div>
 
-<Drawer bind:this={bindingDrawer} {title} headless>
-  <svelte:fragment slot="description">
-    Add the objects on the left to enrich your text.
-  </svelte:fragment>
-
-  <Button cta slot="buttons" on:click={handleClose} disabled={!valid}>
-    Save
-  </Button>
+<Drawer
+  bind:this={bindingDrawer}
+  title={title ?? placeholder ?? "Bindings"}
+  on:drawerHide
+  on:drawerShow
+>
+  <Button cta slot="buttons" on:click={handleClose}>Save</Button>
   <svelte:component
     this={panel}
     slot="body"
     value={readableValue}
     close={handleClose}
-    bind:valid
     on:change={event => (tempValue = event.detail)}
     {bindings}
     {allowJS}

@@ -11,12 +11,15 @@ import {
   Document,
   isDocument,
   RowResponse,
+  RowValue,
+  SqlQueryBinding,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { WriteStream, ReadStream } from "fs"
 import { newid } from "../../docIds/newid"
+import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
@@ -69,13 +72,30 @@ export class DatabaseImpl implements Database {
     DatabaseImpl.nano = buildNano(couchInfo)
   }
 
-  async exists() {
+  exists(docId?: string) {
+    if (docId === undefined) {
+      return this.dbExists()
+    }
+
+    return this.docExists(docId)
+  }
+
+  private async dbExists() {
     const response = await directCouchUrlCall({
       url: `${this.couchInfo.url}/${this.name}`,
       method: "HEAD",
       cookie: this.couchInfo.cookie,
     })
     return response.status === 200
+  }
+
+  private async docExists(id: string): Promise<boolean> {
+    try {
+      await this.performCall(db => () => db.head(id))
+      return true
+    } catch {
+      return false
+    }
   }
 
   private nano() {
@@ -221,12 +241,33 @@ export class DatabaseImpl implements Database {
     })
   }
 
-  async allDocs<T extends Document>(
+  async allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
     return this.performCall(db => {
       return () => db.list(params)
     })
+  }
+
+  async sql<T extends Document>(
+    sql: string,
+    parameters?: SqlQueryBinding
+  ): Promise<T[]> {
+    const dbName = this.name
+    const url = `/${dbName}/${SQLITE_DESIGN_DOC_ID}`
+    const response = await directCouchUrlCall({
+      url: `${this.couchInfo.sqlUrl}/${url}`,
+      method: "POST",
+      cookie: this.couchInfo.cookie,
+      body: {
+        query: sql,
+        args: parameters,
+      },
+    })
+    if (response.status > 300) {
+      throw new Error(await response.text())
+    }
+    return (await response.json()) as T[]
   }
 
   async query<T extends Document>(

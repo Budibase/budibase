@@ -1,7 +1,6 @@
 import {
-  FieldSubtype,
   FieldType,
-  FieldTypeSubtypes,
+  BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
   RowAttachment,
   Table,
@@ -42,7 +41,7 @@ describe("rowProcessor - outputProcessing", () => {
         },
         user: {
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          subtype: BBReferenceFieldSubType.USER,
           name: "user",
           constraints: {
             presence: false,
@@ -64,14 +63,16 @@ describe("rowProcessor - outputProcessing", () => {
 
     expect(result).toEqual({ name: "Jack", user })
 
-    expect(bbReferenceProcessor.processOutputBBReferences).toBeCalledTimes(1)
-    expect(bbReferenceProcessor.processOutputBBReferences).toBeCalledWith(
+    expect(
+      bbReferenceProcessor.processOutputBBReferences
+    ).toHaveBeenCalledTimes(1)
+    expect(bbReferenceProcessor.processOutputBBReferences).toHaveBeenCalledWith(
       "123",
-      FieldSubtype.USER
+      BBReferenceFieldSubType.USER
     )
   })
 
-  it("should handle attachments correctly", async () => {
+  it("should handle attachment list correctly", async () => {
     const table: Table = {
       _id: generator.guid(),
       name: "TestTable",
@@ -80,7 +81,7 @@ describe("rowProcessor - outputProcessing", () => {
       sourceType: TableSourceType.INTERNAL,
       schema: {
         attach: {
-          type: FieldType.ATTACHMENT,
+          type: FieldType.ATTACHMENTS,
           name: "attach",
           constraints: {},
         },
@@ -114,6 +115,47 @@ describe("rowProcessor - outputProcessing", () => {
     expect(output3.attach[0].url).toBe("aaaa")
   })
 
+  it("should handle single attachment correctly", async () => {
+    const table: Table = {
+      _id: generator.guid(),
+      name: "TestTable",
+      type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
+      schema: {
+        attach: {
+          type: FieldType.ATTACHMENT_SINGLE,
+          name: "attach",
+          constraints: {},
+        },
+      },
+    }
+
+    const row: { attach: RowAttachment } = {
+      attach: {
+        size: 10,
+        name: "test",
+        extension: "jpg",
+        key: "test.jpg",
+      },
+    }
+
+    const output = await outputProcessing(table, row, { squash: false })
+    expect(output.attach.url).toBe(
+      "/files/signed/prod-budi-app-assets/test.jpg"
+    )
+
+    row.attach.url = ""
+    const output2 = await outputProcessing(table, row, { squash: false })
+    expect(output2.attach.url).toBe(
+      "/files/signed/prod-budi-app-assets/test.jpg"
+    )
+
+    row.attach.url = "aaaa"
+    const output3 = await outputProcessing(table, row, { squash: false })
+    expect(output3.attach.url).toBe("aaaa")
+  })
+
   it("process output even when the field is not empty", async () => {
     const table: Table = {
       _id: generator.guid(),
@@ -132,7 +174,7 @@ describe("rowProcessor - outputProcessing", () => {
         },
         user: {
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          subtype: BBReferenceFieldSubType.USER,
           name: "user",
           constraints: {
             presence: false,
@@ -150,7 +192,9 @@ describe("rowProcessor - outputProcessing", () => {
 
     expect(result).toEqual({ name: "Jack" })
 
-    expect(bbReferenceProcessor.processOutputBBReferences).toBeCalledTimes(1)
+    expect(
+      bbReferenceProcessor.processOutputBBReferences
+    ).toHaveBeenCalledTimes(1)
   })
 
   it("does not fetch bb references when not in the schema", async () => {
@@ -189,6 +233,8 @@ describe("rowProcessor - outputProcessing", () => {
 
     expect(result).toEqual({ name: "Jack", user: "123" })
 
-    expect(bbReferenceProcessor.processOutputBBReferences).not.toBeCalled()
+    expect(
+      bbReferenceProcessor.processOutputBBReferences
+    ).not.toHaveBeenCalled()
   })
 })

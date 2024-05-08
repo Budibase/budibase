@@ -7,7 +7,13 @@ import {
   roles,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
-import { Plugin, ScreenProps, BBContext, Screen } from "@budibase/types"
+import {
+  Plugin,
+  ScreenProps,
+  BBContext,
+  Screen,
+  UserCtx,
+} from "@budibase/types"
 import { builderSocket } from "../../websockets"
 
 export async function fetch(ctx: BBContext) {
@@ -31,7 +37,7 @@ export async function fetch(ctx: BBContext) {
   )
 }
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: UserCtx<Screen, Screen>) {
   const db = context.getAppDB()
   let screen = ctx.request.body
 

@@ -1,5 +1,5 @@
 import { SearchFilter, SortOrder, SortType } from "../../api"
-import { UIFieldMetadata } from "./table"
+import { TableSchema, UIFieldMetadata } from "./table"
 import { Document } from "../document"
 import { DBView } from "../../sdk"
 
@@ -30,6 +30,7 @@ export interface View {
   map?: string
   reduce?: any
   meta?: ViewTemplateOpts
+  groupBy?: string
 }
 
 export interface ViewV2 {
@@ -45,6 +46,10 @@ export interface ViewV2 {
     type?: SortType
   }
   schema?: Record<string, UIFieldMetadata>
+}
+
+export interface ViewV2Enriched extends ViewV2 {
+  schema?: TableSchema
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema

@@ -47,6 +47,24 @@ export async function save(
     oldTable = await getTable(tableId)
   }
 
+  if (
+    !oldTable &&
+    (tableToSave.primary == null || tableToSave.primary.length === 0)
+  ) {
+    if (tableToSave.schema.id) {
+      throw new Error(
+        "External tables with no `primary` column set will define an `id` column, but we found an `id` column in the supplied schema. Either set a `primary` column or remove the `id` column."
+      )
+    }
+
+    tableToSave.primary = ["id"]
+    tableToSave.schema.id = {
+      type: FieldType.NUMBER,
+      autocolumn: true,
+      name: "id",
+    }
+  }
+
   if (hasTypeChanged(tableToSave, oldTable)) {
     throw new Error("A column type has changed.")
   }
@@ -165,13 +183,19 @@ export async function save(
 
   // remove the rename prop
   delete tableToSave._rename
-  // store it into couch now for budibase reference
+
   datasource.entities[tableToSave.name] = tableToSave
+
+  // store it into couch now for budibase reference
   await db.put(populateExternalTableSchemas(datasource))
 
   // Since tables are stored inside datasources, we need to notify clients
   // that the datasource definition changed
   const updatedDatasource = await datasourceSdk.get(datasource._id!)
+
+  if (updatedDatasource.isSQL) {
+    tableToSave.sql = true
+  }
 
   return { datasource: updatedDatasource, table: tableToSave }
 }

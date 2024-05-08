@@ -1,6 +1,14 @@
 import type Nano from "@budibase/nano"
-import { AllDocsResponse, AnyDocument, Document, ViewTemplateOpts } from "../"
+import {
+  AllDocsResponse,
+  AnyDocument,
+  Document,
+  RowValue,
+  SqlQueryBinding,
+  ViewTemplateOpts,
+} from "../"
 import { Writable } from "stream"
+import type PouchDB from "pouchdb-find"
 
 export enum SearchIndex {
   ROWS = "rows",
@@ -122,6 +130,7 @@ export interface Database {
 
   exists(): Promise<boolean>
   get<T extends Document>(id?: string): Promise<T>
+  exists(docId: string): Promise<boolean>
   getMultiple<T extends Document>(
     ids: string[],
     opts?: { allowMissing?: boolean }
@@ -135,7 +144,11 @@ export interface Database {
     opts?: DatabasePutOpts
   ): Promise<Nano.DocumentInsertResponse>
   bulkDocs(documents: AnyDocument[]): Promise<Nano.DocumentBulkResponse[]>
-  allDocs<T extends Document>(
+  sql<T extends Document>(
+    sql: string,
+    parameters?: SqlQueryBinding
+  ): Promise<T[]>
+  allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>
   query<T extends Document>(

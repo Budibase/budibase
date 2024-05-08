@@ -22,34 +22,60 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
   Query,
+  Webhook,
+  WebhookActionType,
 } from "@budibase/types"
 import { LoopInput, LoopStepType } from "../../definitions/automations"
+import { merge } from "lodash"
+import { generator } from "@budibase/backend-core/tests"
 
 const { BUILTIN_ROLE_IDS } = roles
 
-export function basicTable(): Table {
-  return {
-    name: "TestTable",
-    type: "table",
-    sourceId: INTERNAL_TABLE_SOURCE_ID,
-    sourceType: TableSourceType.INTERNAL,
-    schema: {
-      name: {
-        type: FieldType.STRING,
-        name: "name",
-        constraints: {
-          type: "string",
+export function tableForDatasource(
+  datasource?: Datasource,
+  ...extra: Partial<Table>[]
+): Table {
+  return merge(
+    {
+      name: generator.guid(),
+      type: "table",
+      sourceType: datasource
+        ? TableSourceType.EXTERNAL
+        : TableSourceType.INTERNAL,
+      sourceId: datasource ? datasource._id! : INTERNAL_TABLE_SOURCE_ID,
+      schema: {},
+    },
+    ...extra
+  )
+}
+
+export function basicTable(
+  datasource?: Datasource,
+  ...extra: Partial<Table>[]
+): Table {
+  return tableForDatasource(
+    datasource,
+    {
+      name: "TestTable",
+      schema: {
+        name: {
+          type: FieldType.STRING,
+          name: "name",
+          constraints: {
+            type: "string",
+          },
         },
-      },
-      description: {
-        type: FieldType.STRING,
-        name: "description",
-        constraints: {
-          type: "string",
+        description: {
+          type: FieldType.STRING,
+          name: "description",
+          constraints: {
+            type: "string",
+          },
         },
       },
     },
-  }
+    ...extra
+  )
 }
 
 export function basicView(tableId: string) {
@@ -407,12 +433,12 @@ export function basicLayout() {
   return cloneDeep(EMPTY_LAYOUT)
 }
 
-export function basicWebhook(automationId: string) {
+export function basicWebhook(automationId: string): Webhook {
   return {
     live: true,
     name: "webhook",
     action: {
-      type: "automation",
+      type: WebhookActionType.AUTOMATION,
       target: automationId,
     },
   }

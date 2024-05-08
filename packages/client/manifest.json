@@ -10,7 +10,8 @@
     "rowSelection": true,
     "continueIfAction": true,
     "showNotificationAction": true,
-    "sidePanel": true
+    "sidePanel": true,
+    "skeletonLoader": true
   },
   "layout": {
     "name": "Layout",
@@ -524,6 +525,38 @@
         "barIcon": "NoEdit",
         "barTitle": "Disable button",
         "key": "disabled"
+      },
+      {
+        "type": "icon",
+        "label": "Icon",
+        "key": "icon"
+      },
+      {
+        "type": "select",
+        "label": "Gap",
+        "key": "gap",
+        "showInBar": true,
+        "barStyle": "picker",
+        "dependsOn": "icon",
+        "options": [
+          {
+            "label": "None",
+            "value": "N"
+          },
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ],
+        "defaultValue": "M"
       },
       {
         "type": "event",
@@ -1103,6 +1136,12 @@
         "type": "color",
         "label": "Color",
         "key": "color",
+        "showInBar": true
+      },
+      {
+        "type": "color",
+        "label": "Text Color",
+        "key": "textColor",
         "showInBar": true
       },
       {
@@ -3832,12 +3871,6 @@
       },
       {
         "type": "boolean",
-        "label": "24-hour time",
-        "key": "time24hr",
-        "defaultValue": false
-      },
-      {
-        "type": "boolean",
         "label": "Ignore time zones",
         "key": "ignoreTimezones",
         "defaultValue": false
@@ -4187,8 +4220,8 @@
     ]
   },
   "attachmentfield": {
-    "name": "Attachment",
-    "icon": "Attach",
+    "name": "Attachment List",
+    "icon": "DocumentFragmentGroup",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
@@ -4223,6 +4256,97 @@
         "label": "Max attachments",
         "key": "maximum",
         "min": 1
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Compact",
+        "key": "compact",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "validation/attachment",
+        "label": "Validation",
+        "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
+      }
+    ]
+  },
+  "attachmentsinglefield": {
+    "name": "Single Attachment",
+    "icon": "DocumentFragment",
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 200
+    },
+    "settings": [
+      {
+        "type": "field/attachment_single",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
+        "label": "Extensions",
+        "key": "extensions"
       },
       {
         "type": "event",
@@ -4572,6 +4696,35 @@
         "required": true
       },
       {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
+      },
+      {
         "type": "filter",
         "label": "Filtering",
         "key": "filter"
@@ -4635,6 +4788,7 @@
     }
   },
   "table": {
+    "deprecated": true,
     "name": "Table",
     "icon": "Table",
     "illegalChildren": ["section"],
@@ -4936,6 +5090,35 @@
         "label": "Data",
         "key": "dataSource",
         "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
       },
       {
         "type": "text",
@@ -5380,6 +5563,7 @@
     ]
   },
   "tableblock": {
+    "deprecated": true,
     "block": true,
     "name": "Table Block",
     "icon": "Table",
@@ -5403,6 +5587,35 @@
             "label": "Data",
             "key": "dataSource",
             "required": true
+          },
+          {
+            "type": "select",
+            "label": "Auto-refresh",
+            "key": "autoRefresh",
+            "license": "premium",
+            "placeholder": "Never",
+            "options": [
+              {
+                "label": "10 seconds",
+                "value": 10
+              },
+              {
+                "label": "30 seconds",
+                "value": 30
+              },
+              {
+                "label": "1 minute",
+                "value": 60
+              },
+              {
+                "label": "5 minutes",
+                "value": 300
+              },
+              {
+                "label": "10 minutes",
+                "value": 600
+              }
+            ]
           },
           {
             "type": "columns",
@@ -5691,6 +5904,35 @@
         "required": true
       },
       {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
+      },
+      {
         "type": "searchfield",
         "label": "Search columns",
         "key": "searchColumns",
@@ -5854,7 +6096,7 @@
     "block": true,
     "name": "Repeater Block",
     "icon": "ViewList",
-    "illegalChildren": ["section"],
+    "illegalChildren": ["section", "rowexplorer"],
     "hasChildren": true,
     "size": {
       "width": 400,
@@ -5866,6 +6108,35 @@
         "label": "Data",
         "key": "dataSource",
         "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
       },
       {
         "type": "filter",
@@ -6446,7 +6717,20 @@
     "illegalChildren": ["section", "sidepanel"],
     "showEmptyState": false,
     "draggable": false,
-    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action."
+    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
+    "settings": [
+      {
+        "type": "boolean",
+        "key": "ignoreClicksOutside",
+        "label": "Ignore clicks outside",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "key": "onClose",
+        "label": "On close"
+      }
+    ]
   },
   "rowexplorer": {
     "block": true,
@@ -6462,6 +6746,35 @@
         "label": "Data",
         "key": "dataSource",
         "required": true
+      },
+      {
+        "type": "select",
+        "label": "Auto-refresh",
+        "key": "autoRefresh",
+        "license": "premium",
+        "placeholder": "Never",
+        "options": [
+          {
+            "label": "10 seconds",
+            "value": 10
+          },
+          {
+            "label": "30 seconds",
+            "value": 30
+          },
+          {
+            "label": "1 minute",
+            "value": 60
+          },
+          {
+            "label": "5 minutes",
+            "value": 300
+          },
+          {
+            "label": "10 minutes",
+            "value": 600
+          }
+        ]
       },
       {
         "type": "text",
@@ -6557,7 +6870,7 @@
     ]
   },
   "gridblock": {
-    "name": "Grid Block",
+    "name": "Table",
     "icon": "Table",
     "styles": ["size"],
     "size": {
@@ -6665,6 +6978,12 @@
         "type": "boolean",
         "label": "High contrast",
         "key": "stripeRows",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Quiet",
+        "key": "quiet",
         "defaultValue": false
       },
       {

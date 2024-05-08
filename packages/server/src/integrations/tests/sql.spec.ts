@@ -1,7 +1,27 @@
-const Sql = require("../base/sql").default
-const { SqlClient } = require("../utils")
+import { SqlClient } from "../utils"
+import Sql from "../base/sql"
+import {
+  FieldType,
+  Operation,
+  QueryJson,
+  Table,
+  TableSourceType,
+} from "@budibase/types"
 
 const TABLE_NAME = "test"
+const TABLE: Table = {
+  type: "table",
+  sourceType: TableSourceType.EXTERNAL,
+  sourceId: "SOURCE_ID",
+  schema: {
+    id: {
+      name: "id",
+      type: FieldType.NUMBER,
+    },
+  },
+  name: TABLE_NAME,
+  primary: ["id"],
+}
 
 function endpoint(table: any, operation: any) {
   return {
@@ -17,7 +37,11 @@ function generateReadJson({
   filters,
   sort,
   paginate,
-}: any = {}) {
+}: any = {}): QueryJson {
+  const tableObj = { ...TABLE }
+  if (table) {
+    tableObj.name = table
+  }
   return {
     endpoint: endpoint(table || TABLE_NAME, "READ"),
     resource: {
@@ -27,42 +51,59 @@ function generateReadJson({
     sort: sort || {},
     paginate: paginate || {},
     meta: {
-      table: {
-        name: table || TABLE_NAME,
-        primary: ["id"],
-      },
+      table: tableObj,
     },
   }
 }
 
-function generateCreateJson(table = TABLE_NAME, body = {}) {
+function generateCreateJson(table = TABLE_NAME, body = {}): QueryJson {
   return {
     endpoint: endpoint(table, "CREATE"),
+    meta: {
+      table: TABLE,
+    },
     body,
   }
 }
 
-function generateUpdateJson(table = TABLE_NAME, body = {}, filters = {}) {
+function generateUpdateJson({
+  table = TABLE_NAME,
+  body = {},
+  filters = {},
+  meta = {},
+}: {
+  table: string
+  body?: any
+  filters?: any
+  meta?: any
+}): QueryJson {
+  if (!meta.table) {
+    meta.table = TABLE
+  }
   return {
     endpoint: endpoint(table, "UPDATE"),
     filters,
     body,
+    meta,
   }
 }
 
-function generateDeleteJson(table = TABLE_NAME, filters = {}) {
+function generateDeleteJson(table = TABLE_NAME, filters = {}): QueryJson {
   return {
     endpoint: endpoint(table, "DELETE"),
+    meta: {
+      table: TABLE,
+    },
     filters,
   }
 }
 
-function generateRelationshipJson(config: { schema?: string } = {}) {
+function generateRelationshipJson(config: { schema?: string } = {}): QueryJson {
   return {
     endpoint: {
       datasourceId: "Postgres",
       entityId: "brands",
-      operation: "READ",
+      operation: Operation.READ,
       schema: config.schema,
     },
     resource: {
@@ -76,7 +117,6 @@ function generateRelationshipJson(config: { schema?: string } = {}) {
     },
     filters: {},
     sort: {},
-    paginate: {},
     relationships: [
       {
         from: "brand_id",
@@ -86,6 +126,9 @@ function generateRelationshipJson(config: { schema?: string } = {}) {
       },
     ],
     extra: { idFilter: {} },
+    meta: {
+      table: TABLE,
+    },
   }
 }
 
@@ -120,6 +163,9 @@ function generateManyRelationshipJson(config: { schema?: string } = {}) {
       },
     ],
     extra: { idFilter: {} },
+    meta: {
+      table: TABLE,
+    },
   }
 }
 
@@ -240,17 +286,17 @@ describe("SQL query builder", () => {
 
   it("should test an update statement", () => {
     const query = sql._query(
-      generateUpdateJson(
-        TABLE_NAME,
-        {
+      generateUpdateJson({
+        table: TABLE_NAME,
+        body: {
           name: "John",
         },
-        {
+        filters: {
           equal: {
             id: 1001,
           },
-        }
-      )
+        },
+      })
     )
     expect(query).toEqual({
       bindings: ["John", 1001],
@@ -303,7 +349,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [date, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" > $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" >= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -322,26 +368,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [date, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" < $1 limit $2) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should use greater than when only low range specified", () => {
-    const date = new Date()
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          range: {
-            property: {
-              low: date,
-            },
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [date, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" > $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" <= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -392,7 +419,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age"::jsonb @> '[20]' and "${TABLE_NAME}"."name"::jsonb @> '["John"]' limit $1) as "${TABLE_NAME}"`,
     })
   })
 
@@ -443,7 +470,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where NOT \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and NOT \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where NOT "${TABLE_NAME}"."age"::jsonb @> '[20]' and NOT "${TABLE_NAME}"."name"::jsonb @> '["John"]' limit $1) as "${TABLE_NAME}"`,
     })
   })
 
@@ -494,7 +521,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb ?| array [20,25] and \"${TABLE_NAME}\".\"name\"::jsonb ?| array ['John','Mary'] limit $1) as \"${TABLE_NAME}\"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age"::jsonb ?| array [20,25] and "${TABLE_NAME}"."name"::jsonb ?| array ['John','Mary'] limit $1) as "${TABLE_NAME}"`,
     })
   })
 
@@ -502,7 +529,7 @@ describe("SQL query builder", () => {
     const query = sql._query(generateRelationshipJson({ schema: "production" }))
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" limit $1) as "brands" left join "production"."products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
+      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" limit $1) as "brands" left join "production"."products" as "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
     })
   })
 
@@ -510,7 +537,7 @@ describe("SQL query builder", () => {
     const query = sql._query(generateRelationshipJson())
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" limit $1) as "brands" left join "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
+      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" limit $1) as "brands" left join "products" as "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
     })
   })
 
@@ -520,7 +547,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" limit $1) as "stores" left join "production"."stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" on "products"."product_id" = "stocks"."product_id" limit $2`,
+      sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" limit $1) as "stores" left join "production"."stocks" as "stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" as "products" on "products"."product_id" = "stocks"."product_id" limit $2`,
     })
   })
 
@@ -575,7 +602,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["2000-01-01 00:00:00", 500],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"dob\" > $1 limit $2) as \"${TABLE_NAME}\"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" >= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -594,7 +621,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["2010-01-01 00:00:00", 500],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"dob\" < $1 limit $2) as \"${TABLE_NAME}\"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" <= $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -610,7 +637,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["john%", limit],
-      sql: `select * from (select * from (select * from \"test\" where LOWER(\"test\".\"name\") LIKE :1) where rownum <= :2) \"test\"`,
+      sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -625,7 +652,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit],
-      sql: `select * from (select * from (select * from \"test\" where (LOWER(\"test\".\"age\") LIKE :1 AND LOWER(\"test\".\"age\") LIKE :2) and (LOWER(\"test\".\"name\") LIKE :3 AND LOWER(\"test\".\"name\") LIKE :4)) where rownum <= :5) \"test\"`,
+      sql: `select * from (select * from (select * from "test" where (LOWER("test"."age") LIKE :1 AND LOWER("test"."age") LIKE :2) and (LOWER("test"."name") LIKE :3 AND LOWER("test"."name") LIKE :4)) where rownum <= :5) "test"`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -639,7 +666,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [`%jo%`, limit],
-      sql: `select * from (select * from (select * from \"test\" where LOWER(\"test\".\"name\") LIKE :1) where rownum <= :2) \"test\"`,
+      sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
     })
   })
 
@@ -666,7 +693,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ['{ "created_at":"2023-09-09T03:21:06.024Z" }'],
-      sql: `insert into \"test\" (\"name\") values ($1) returning *`,
+      sql: `insert into "test" ("name") values ($1) returning *`,
     })
   })
 
@@ -679,7 +706,102 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [dateObj],
-      sql: `insert into \"test\" (\"name\") values ($1) returning *`,
+      sql: `insert into "test" ("name") values ($1) returning *`,
     })
+  })
+
+  it("should be able to rename column for MySQL", () => {
+    const table: Table = {
+      type: "table",
+      sourceType: TableSourceType.EXTERNAL,
+      name: TABLE_NAME,
+      schema: {
+        first_name: {
+          type: FieldType.STRING,
+          name: "first_name",
+          externalType: "varchar(45)",
+        },
+      },
+      sourceId: "SOURCE_ID",
+    }
+    const oldTable: Table = {
+      ...table,
+      schema: {
+        name: {
+          type: FieldType.STRING,
+          name: "name",
+          externalType: "varchar(45)",
+        },
+      },
+    }
+    const query = new Sql(SqlClient.MY_SQL, limit)._query({
+      table,
+      endpoint: {
+        datasourceId: "MySQL",
+        operation: Operation.UPDATE_TABLE,
+        entityId: TABLE_NAME,
+      },
+      meta: {
+        table: oldTable,
+        tables: { [oldTable.name]: oldTable },
+        renamed: {
+          old: "name",
+          updated: "first_name",
+        },
+      },
+    })
+    expect(query).toEqual({
+      bindings: [],
+      sql: `alter table \`${TABLE_NAME}\` rename column \`name\` to \`first_name\`;`,
+    })
+  })
+
+  it("should be able to delete a column", () => {
+    const table: Table = {
+      type: "table",
+      sourceType: TableSourceType.EXTERNAL,
+      name: TABLE_NAME,
+      schema: {
+        first_name: {
+          type: FieldType.STRING,
+          name: "first_name",
+          externalType: "varchar(45)",
+        },
+      },
+      sourceId: "SOURCE_ID",
+    }
+    const oldTable: Table = {
+      ...table,
+      schema: {
+        first_name: {
+          type: FieldType.STRING,
+          name: "first_name",
+          externalType: "varchar(45)",
+        },
+        last_name: {
+          type: FieldType.STRING,
+          name: "last_name",
+          externalType: "varchar(45)",
+        },
+      },
+    }
+    const query = sql._query({
+      table,
+      endpoint: {
+        datasourceId: "Postgres",
+        operation: Operation.UPDATE_TABLE,
+        entityId: TABLE_NAME,
+      },
+      meta: {
+        table: oldTable,
+        tables: [oldTable],
+      },
+    })
+    expect(query).toEqual([
+      {
+        bindings: [],
+        sql: `alter table "${TABLE_NAME}" drop column "last_name"`,
+      },
+    ])
   })
 })

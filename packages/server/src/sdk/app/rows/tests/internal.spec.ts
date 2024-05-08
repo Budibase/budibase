@@ -81,7 +81,7 @@ describe("sdk >> rows >> internal", () => {
         const response = await internalSdk.save(
           table._id!,
           row,
-          config.user._id
+          config.getUser()._id
         )
 
         expect(response).toEqual({
@@ -98,7 +98,10 @@ describe("sdk >> rows >> internal", () => {
           },
         })
 
-        const persistedRow = await config.getRow(table._id!, response.row._id!)
+        const persistedRow = await config.api.row.get(
+          table._id!,
+          response.row._id!
+        )
         expect(persistedRow).toEqual({
           ...row,
           type: "row",
@@ -129,7 +132,7 @@ describe("sdk >> rows >> internal", () => {
         const response = await internalSdk.save(
           table._id!,
           row,
-          config.user._id
+          config.getUser()._id
         )
 
         expect(response).toEqual({
@@ -142,6 +145,7 @@ describe("sdk >> rows >> internal", () => {
                 lastID: 1,
               },
             },
+            _rev: expect.stringMatching("2-.*"),
           },
           row: {
             ...row,
@@ -157,7 +161,10 @@ describe("sdk >> rows >> internal", () => {
           },
         })
 
-        const persistedRow = await config.getRow(table._id!, response.row._id!)
+        const persistedRow = await config.api.row.get(
+          table._id!,
+          response.row._id!
+        )
         expect(persistedRow).toEqual({
           ...row,
           type: "row",
@@ -183,39 +190,40 @@ describe("sdk >> rows >> internal", () => {
             type: FieldType.AUTO,
             subtype: AutoFieldSubType.AUTO_ID,
             autocolumn: true,
-            lastID: 0,
           },
         },
       })
 
       await config.doInContext(config.appId, async () => {
         for (const row of makeRows(5)) {
-          await internalSdk.save(table._id!, row, config.user._id)
+          await internalSdk.save(table._id!, row, config.getUser()._id)
         }
         await Promise.all(
-          makeRows(10).map(row =>
-            internalSdk.save(table._id!, row, config.user._id)
+          makeRows(20).map(row =>
+            internalSdk.save(table._id!, row, config.getUser()._id)
           )
         )
         for (const row of makeRows(5)) {
-          await internalSdk.save(table._id!, row, config.user._id)
+          await internalSdk.save(table._id!, row, config.getUser()._id)
         }
       })
 
       const persistedRows = await config.getRows(table._id!)
-      expect(persistedRows).toHaveLength(20)
+      expect(persistedRows).toHaveLength(30)
       expect(persistedRows).toEqual(
         expect.arrayContaining(
-          Array.from({ length: 20 }).map((_, i) =>
+          Array.from({ length: 30 }).map((_, i) =>
             expect.objectContaining({ id: i + 1 })
           )
         )
       )
 
       const persistedTable = await config.getTable(table._id)
-      expect((table.schema.id as AutoColumnFieldMetadata).lastID).toBe(0)
+      expect(
+        (table.schema.id as AutoColumnFieldMetadata).lastID
+      ).toBeUndefined()
       expect((persistedTable.schema.id as AutoColumnFieldMetadata).lastID).toBe(
-        20
+        30
       )
     })
   })

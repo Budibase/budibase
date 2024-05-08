@@ -45,10 +45,13 @@ type GroupFns = {
   getGroupBuilderAppIds: GroupBuildersFn
 }
 type CreateAdminUserOpts = {
+  password?: string
   ssoId?: string
   hashPassword?: boolean
   requirePassword?: boolean
   skipPasswordValidation?: boolean
+  firstName?: string
+  lastName?: string
 }
 type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
 
@@ -500,13 +503,13 @@ export class UserDB {
 
   static async createAdminUser(
     email: string,
-    password: string,
     tenantId: string,
     opts?: CreateAdminUserOpts
   ) {
+    const password = opts?.password
     const user: User = {
       email: email,
-      password: password,
+      password,
       createdAt: Date.now(),
       roles: {},
       builder: {
@@ -516,6 +519,8 @@ export class UserDB {
         global: true,
       },
       tenantId,
+      firstName: opts?.firstName,
+      lastName: opts?.lastName,
     }
     if (opts?.ssoId) {
       user.ssoId = opts.ssoId

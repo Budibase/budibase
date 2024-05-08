@@ -85,7 +85,9 @@ async function getImportableDocuments(db: Database) {
   const docPromises = []
   for (let docType of DocumentTypesToImport) {
     docPromises.push(
-      db.allDocs(dbCore.getDocParams(docType, null, { include_docs: true }))
+      db.allDocs<Document>(
+        dbCore.getDocParams(docType, null, { include_docs: true })
+      )
     )
   }
   // map the responses to the document itself

@@ -8,14 +8,13 @@ import {
   QueryResponse,
 } from "./definitions"
 import { IsolatedVM } from "../jsRunner/vm"
-import { iifeWrapper } from "../jsRunner/utilities"
+import { iifeWrapper, processStringSync } from "@budibase/string-templates"
 import { getIntegration } from "../integrations"
-import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { Datasource, Query, SourceName } from "@budibase/types"
+import { Datasource, Query, SourceName, Row } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
@@ -27,10 +26,11 @@ class QueryRunner {
   fields: any
   parameters: any
   pagination: any
-  transformer: string
+  transformer: string | null
   cachedVariables: any[]
   ctx: any
   queryResponse: any
+  nullDefaultSupport: boolean
   noRecursiveQuery: boolean
   hasRerun: boolean
   hasRefreshedOAuth: boolean
@@ -46,6 +46,7 @@ class QueryRunner {
     this.transformer = input.transformer
     this.queryId = input.queryId!
     this.schema = input.schema
+    this.nullDefaultSupport = !!input.nullDefaultSupport
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
     // Additional context items for enrichment
@@ -60,7 +61,14 @@ class QueryRunner {
   }
 
   async execute(): Promise<QueryResponse> {
-    let { datasource, fields, queryVerb, transformer, schema } = this
+    let {
+      datasource,
+      fields,
+      queryVerb,
+      transformer,
+      schema,
+      nullDefaultSupport,
+    } = this
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)
 
@@ -101,10 +109,12 @@ class QueryRunner {
       )
     }
 
-    let query
+    let query: Record<string, any>
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
-      query = await interpolateSQL(fieldsClone, enrichedContext, integration)
+      query = await interpolateSQL(fieldsClone, enrichedContext, integration, {
+        nullDefaultSupport,
+      })
     } else {
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }
@@ -115,7 +125,7 @@ class QueryRunner {
     }
 
     let output = threadUtils.formatResponse(await integration[queryVerb](query))
-    let rows = output,
+    let rows = output as Row[],
       info = undefined,
       extra = undefined,
       pagination = undefined
@@ -138,7 +148,9 @@ class QueryRunner {
         data: rows,
         params: enrichedParameters,
       }
-      rows = vm.withContext(ctx, () => vm.execute(transformer))
+      if (transformer != null) {
+        rows = vm.withContext(ctx, () => vm.execute(transformer!))
+      }
     }
 
     // if the request fails we retry once, invalidating the cached value
@@ -155,7 +167,7 @@ class QueryRunner {
         this.hasRerun = true
       }
 
-      await threadUtils.invalidateDynamicVariables(this.cachedVariables)
+      await threadUtils.invalidateCachedVariable(this.cachedVariables)
       return this.execute()
     }
 
@@ -170,7 +182,12 @@ class QueryRunner {
     }
 
     // get all the potential fields in the schema
-    let keys = rows.flatMap(Object.keys)
+    const keysSet: Set<string> = new Set()
+    rows.forEach(row => {
+      const keys = Object.keys(row)
+      keys.forEach(key => keysSet.add(key))
+    })
+    const keys: string[] = [...keysSet]
 
     if (integration.end) {
       integration.end()
@@ -187,13 +204,15 @@ class QueryRunner {
     })
     return new QueryRunner(
       {
-        datasource,
+        schema: query.schema,
         queryVerb: query.queryVerb,
         fields: query.fields,
-        parameters,
         transformer: query.transformer,
-        queryId,
+        nullDefaultSupport: query.nullDefaultSupport,
         ctx: this.ctx,
+        parameters,
+        datasource,
+        queryId,
       },
       { noRecursiveQuery: true }
     ).execute()
@@ -235,7 +254,7 @@ class QueryRunner {
     let { parameters } = this
     const queryId = variable.queryId,
       name = variable.name
-    let value = await threadUtils.checkCacheForDynamicVariable(queryId, name)
+    let value = await threadUtils.getCachedVariable(queryId, name)
     if (!value) {
       value = this.queryResponse[queryId]
         ? this.queryResponse[queryId]

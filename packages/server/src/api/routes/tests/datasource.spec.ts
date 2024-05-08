@@ -1,18 +1,28 @@
-jest.mock("pg")
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import { checkCacheForDynamicVariable } from "../../../threads/utils"
+import { getCachedVariable } from "../../../threads/utils"
 import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
 import tk from "timekeeper"
 import { mocks } from "@budibase/backend-core/tests"
-import { QueryPreview } from "@budibase/types"
+import {
+  Datasource,
+  FieldSchema,
+  BBReferenceFieldSubType,
+  FieldType,
+  QueryPreview,
+  RelationshipType,
+  SourceName,
+  Table,
+  TableSchema,
+} from "@budibase/types"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import { tableForDatasource } from "../../../tests/utilities/structures"
 
 tk.freeze(mocks.date.MOCK_DATE)
 
 let { basicDatasource } = setup.structures
-const pg = require("pg")
 
 describe("/datasources", () => {
   let request = setup.getRequest()
@@ -40,7 +50,24 @@ describe("/datasources", () => {
 
       expect(res.body.datasource.name).toEqual("Test")
       expect(res.body.errors).toEqual({})
-      expect(events.datasource.created).toBeCalledTimes(1)
+      expect(events.datasource.created).toHaveBeenCalledTimes(1)
+    })
+
+    it("should fail if the datasource is invalid", async () => {
+      await config.api.datasource.create(
+        {
+          name: "Test",
+          type: "test",
+          source: "invalid" as SourceName,
+          config: {},
+        },
+        {
+          status: 500,
+          body: {
+            message: "No datasource implementation found.",
+          },
+        }
+      )
     })
   })
 
@@ -56,7 +83,7 @@ describe("/datasources", () => {
 
       expect(res.body.datasource.name).toEqual("Updated Test")
       expect(res.body.errors).toBeUndefined()
-      expect(events.datasource.updated).toBeCalledTimes(1)
+      expect(events.datasource.updated).toHaveBeenCalledTimes(1)
     })
 
     describe("dynamic variables", () => {
@@ -74,7 +101,7 @@ describe("/datasources", () => {
           schema: {},
           readable: true,
         }
-        return config.api.query.previewQuery(queryPreview)
+        return config.api.query.preview(queryPreview)
       }
 
       it("should invalidate changed or removed variables", async () => {
@@ -85,10 +112,7 @@ describe("/datasources", () => {
           queryString: "test={{ variable3 }}",
         })
         // check variables in cache
-        let contents = await checkCacheForDynamicVariable(
-          query._id,
-          "variable3"
-        )
+        let contents = await getCachedVariable(query._id!, "variable3")
         expect(contents.rows.length).toEqual(1)
 
         // update the datasource to remove the variables
@@ -102,7 +126,7 @@ describe("/datasources", () => {
         expect(res.body.errors).toBeUndefined()
 
         // check variables no longer in cache
-        contents = await checkCacheForDynamicVariable(query._id, "variable3")
+        contents = await getCachedVariable(query._id!, "variable3")
         expect(contents).toBe(null)
       })
     })
@@ -149,35 +173,6 @@ describe("/datasources", () => {
     })
   })
 
-  describe("query", () => {
-    it("should be able to query a pg datasource", async () => {
-      const res = await request
-        .post(`/api/datasources/query`)
-        .send({
-          endpoint: {
-            datasourceId: datasource._id,
-            operation: "READ",
-            // table name below
-            entityId: "users",
-          },
-          resource: {
-            fields: ["users.name", "users.age"],
-          },
-          filters: {
-            string: {
-              name: "John",
-            },
-          },
-        })
-        .set(config.defaultHeaders())
-        .expect(200)
-      // this is mock data, can't test it
-      expect(res.body).toBeDefined()
-      const expSql = `select "users"."name" as "users.name", "users"."age" as "users.age" from (select * from "users" where "users"."name" ilike $1 limit $2) as "users"`
-      expect(pg.queryMock).toHaveBeenCalledWith(expSql, ["John%", 5000])
-    })
-  })
-
   describe("destroy", () => {
     beforeAll(setupTest)
 
@@ -196,7 +191,7 @@ describe("/datasources", () => {
         .expect(200)
 
       expect(res.body.length).toEqual(1)
-      expect(events.datasource.deleted).toBeCalledTimes(1)
+      expect(events.datasource.deleted).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -238,6 +233,154 @@ describe("/datasources", () => {
         const dbDatasource: any = await sdk.datasources.get(datasource._id)
         expect(dbDatasource.config.password).toBe("testing")
       })
+    })
+  })
+
+  describe.each([
+    [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+    [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+    [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+    [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  ])("fetch schema (%s)", (_, dsProvider) => {
+    beforeAll(async () => {
+      datasource = await config.api.datasource.create(await dsProvider)
+    })
+
+    it("fetching schema will not drop tables or columns", async () => {
+      const datasourceId = datasource!._id!
+
+      const simpleTable = await config.api.table.save(
+        tableForDatasource(datasource, {
+          name: "simple",
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+          },
+        })
+      )
+
+      type SupportedSqlTypes =
+        | FieldType.STRING
+        | FieldType.BARCODEQR
+        | FieldType.LONGFORM
+        | FieldType.OPTIONS
+        | FieldType.DATETIME
+        | FieldType.NUMBER
+        | FieldType.BOOLEAN
+        | FieldType.FORMULA
+        | FieldType.BIGINT
+        | FieldType.BB_REFERENCE
+        | FieldType.LINK
+        | FieldType.ARRAY
+
+      const fullSchema: {
+        [type in SupportedSqlTypes]: FieldSchema & { type: type }
+      } = {
+        [FieldType.STRING]: {
+          name: "string",
+          type: FieldType.STRING,
+          constraints: {
+            presence: true,
+          },
+        },
+        [FieldType.LONGFORM]: {
+          name: "longform",
+          type: FieldType.LONGFORM,
+        },
+        [FieldType.OPTIONS]: {
+          name: "options",
+          type: FieldType.OPTIONS,
+          constraints: {
+            presence: { allowEmpty: false },
+          },
+        },
+        [FieldType.NUMBER]: {
+          name: "number",
+          type: FieldType.NUMBER,
+        },
+        [FieldType.BOOLEAN]: {
+          name: "boolean",
+          type: FieldType.BOOLEAN,
+        },
+        [FieldType.ARRAY]: {
+          name: "array",
+          type: FieldType.ARRAY,
+        },
+        [FieldType.DATETIME]: {
+          name: "datetime",
+          type: FieldType.DATETIME,
+          dateOnly: true,
+          timeOnly: false,
+        },
+        [FieldType.LINK]: {
+          name: "link",
+          type: FieldType.LINK,
+          tableId: simpleTable._id!,
+          relationshipType: RelationshipType.ONE_TO_MANY,
+          fieldName: "link",
+        },
+        [FieldType.FORMULA]: {
+          name: "formula",
+          type: FieldType.FORMULA,
+          formula: "any formula",
+        },
+        [FieldType.BARCODEQR]: {
+          name: "barcodeqr",
+          type: FieldType.BARCODEQR,
+        },
+        [FieldType.BIGINT]: {
+          name: "bigint",
+          type: FieldType.BIGINT,
+        },
+        [FieldType.BB_REFERENCE]: {
+          name: "bb_reference",
+          type: FieldType.BB_REFERENCE,
+          subtype: BBReferenceFieldSubType.USERS,
+        },
+      }
+
+      await config.api.table.save(
+        tableForDatasource(datasource, {
+          name: "full",
+          schema: fullSchema,
+        })
+      )
+
+      const persisted = await config.api.datasource.get(datasourceId)
+      await config.api.datasource.fetchSchema(datasourceId)
+
+      const updated = await config.api.datasource.get(datasourceId)
+      const expected: Datasource = {
+        ...persisted,
+        entities:
+          persisted?.entities &&
+          Object.entries(persisted.entities).reduce<Record<string, Table>>(
+            (acc, [tableName, table]) => {
+              acc[tableName] = {
+                ...table,
+                primaryDisplay: expect.not.stringMatching(
+                  new RegExp(`^${table.primaryDisplay || ""}$`)
+                ),
+                schema: Object.entries(table.schema).reduce<TableSchema>(
+                  (acc, [fieldName, field]) => {
+                    acc[fieldName] = expect.objectContaining({
+                      ...field,
+                    })
+                    return acc
+                  },
+                  {}
+                ),
+              }
+              return acc
+            },
+            {}
+          ),
+
+        _rev: expect.any(String),
+      }
+      expect(updated).toEqual(expected)
     })
   })
 })

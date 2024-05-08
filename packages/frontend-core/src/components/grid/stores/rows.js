@@ -83,7 +83,7 @@ export const createActions = context => {
     error,
     notifications,
     fetch,
-    isDatasourcePlus,
+    hasBudibaseIdentifiers,
     refreshing,
   } = context
   const instanceLoaded = writable(false)
@@ -196,6 +196,27 @@ export const createActions = context => {
   // Handles validation errors from the rows API and updates local validation
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
+    let errorString
+    if (typeof error === "string") {
+      errorString = error
+    } else if (typeof error?.message === "string") {
+      errorString = error.message
+    }
+
+    // If the server doesn't reply with a valid error, assume that the source
+    // of the error is the focused cell's column
+    if (!error?.json?.validationErrors && errorString) {
+      const focusedColumn = get(focusedCellId)?.split("-")[1]
+      if (focusedColumn) {
+        error = {
+          json: {
+            validationErrors: {
+              [focusedColumn]: error.message,
+            },
+          },
+        }
+      }
+    }
     if (error?.json?.validationErrors) {
       // Normal validation errors
       const keys = Object.keys(error.json.validationErrors)
@@ -214,11 +235,19 @@ export const createActions = context => {
 
       // Process errors for columns that we have
       for (let column of erroredColumns) {
+        // Ensure we have a valid error to display
+        let err = error.json.validationErrors[column]
+        if (Array.isArray(err)) {
+          err = err[0]
+        }
+        if (typeof err !== "string" || !err.length) {
+          error = "Something went wrong"
+        }
+        // Set error against the cell
         validation.actions.setError(
           `${rowId}-${column}`,
-          `${column} ${error.json.validationErrors[column]}`
+          Helpers.capitalise(err)
         )
-
         // Ensure the column is visible
         const index = $columns.findIndex(x => x.name === column)
         if (index !== -1 && !$columns[index].visible) {
@@ -239,7 +268,7 @@ export const createActions = context => {
         focusedCellId.set(`${rowId}-${erroredColumns[0]}`)
       }
     } else {
-      get(notifications).error(error?.message || "An unknown error occurred")
+      get(notifications).error(errorString || "An unknown error occurred")
     }
   }
 
@@ -327,29 +356,31 @@ export const createActions = context => {
     get(fetch)?.getInitialData()
   }
 
-  // Patches a row with some changes
-  const updateRow = async (rowId, changes, options = { save: true }) => {
+  // Checks if a changeset for a row actually mutates the row or not
+  const changesAreValid = (row, changes) => {
+    const columns = Object.keys(changes || {})
+    if (!row || !columns.length) {
+      return false
+    }
+
+    // Ensure there is at least 1 column that creates a difference
+    return columns.some(column => row[column] !== changes[column])
+  }
+
+  // Patches a row with some changes in local state, and returns whether a
+  // valid pending change was made or not
+  const stashRowChanges = (rowId, changes) => {
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[rowId]
     const row = $rows[index]
-    if (index == null || !Object.keys(changes || {}).length) {
-      return
+
+    // Check this is a valid change
+    if (!row || !changesAreValid(row, changes)) {
+      return false
     }
 
-    // Abandon if no changes
-    let same = true
-    for (let column of Object.keys(changes)) {
-      if (row[column] !== changes[column]) {
-        same = false
-        break
-      }
-    }
-    if (same) {
-      return
-    }
-
-    // Immediately update state so that the change is reflected
+    // Add change to cache
     rowChangeCache.update(state => ({
       ...state,
       [rowId]: {
@@ -357,26 +388,30 @@ export const createActions = context => {
         ...changes,
       },
     }))
+    return true
+  }
 
-    // Stop here if we don't want to persist the change
-    if (!options?.save) {
+  // Saves any pending changes to a row
+  const applyRowChanges = async rowId => {
+    const $rows = get(rows)
+    const $rowLookupMap = get(rowLookupMap)
+    const index = $rowLookupMap[rowId]
+    const row = $rows[index]
+    if (row == null) {
       return
     }
 
     // Save change
     try {
-      inProgressChanges.update(state => ({
-        ...state,
-        [rowId]: true,
-      }))
+      // Mark as in progress
+      inProgressChanges.update(state => ({ ...state, [rowId]: true }))
 
       // Update row
-      const saved = await datasource.actions.updateRow({
-        ...cleanRow(row),
-        ...get(rowChangeCache)[rowId],
-      })
+      const changes = get(rowChangeCache)[rowId]
+      const newRow = { ...cleanRow(row), ...changes }
+      const saved = await datasource.actions.updateRow(newRow)
 
-      // Update state after a successful change
+      // Update row state after a successful change
       if (saved?._id) {
         rows.update(state => {
           state[index] = saved
@@ -386,6 +421,8 @@ export const createActions = context => {
         // Handle users table edge case
         await refreshRow(saved.id)
       }
+
+      // Wipe row change cache now that we've saved the row
       rowChangeCache.update(state => {
         delete state[rowId]
         return state
@@ -393,15 +430,17 @@ export const createActions = context => {
     } catch (error) {
       handleValidationError(rowId, error)
     }
-    inProgressChanges.update(state => ({
-      ...state,
-      [rowId]: false,
-    }))
+
+    // Mark as completed
+    inProgressChanges.update(state => ({ ...state, [rowId]: false }))
   }
 
   // Updates a value of a row
-  const updateValue = async ({ rowId, column, value, save = true }) => {
-    return await updateRow(rowId, { [column]: value }, { save })
+  const updateValue = async ({ rowId, column, value, apply = true }) => {
+    const success = stashRowChanges(rowId, { [column]: value })
+    if (success && apply) {
+      await applyRowChanges(rowId)
+    }
   }
 
   // Deletes an array of rows
@@ -411,9 +450,7 @@ export const createActions = context => {
     }
 
     // Actually delete rows
-    rowsToDelete.forEach(row => {
-      delete row.__idx
-    })
+    rowsToDelete.forEach(row => delete row.__idx)
     await datasource.actions.deleteRows(rowsToDelete)
 
     // Update state
@@ -428,14 +465,14 @@ export const createActions = context => {
     }
     let rowsToAppend = []
     let newRow
-    const $isDatasourcePlus = get(isDatasourcePlus)
+    const $hasBudibaseIdentifiers = get(hasBudibaseIdentifiers)
     for (let i = 0; i < newRows.length; i++) {
       newRow = newRows[i]
 
       // Ensure we have a unique _id.
-      // This means generating one for non DS+, overriting any that may already
+      // This means generating one for non DS+, overwriting any that may already
       // exist as we cannot allow duplicates.
-      if (!$isDatasourcePlus) {
+      if (!$hasBudibaseIdentifiers) {
         newRow._id = Helpers.uuid()
       }
 
@@ -480,7 +517,7 @@ export const createActions = context => {
   const cleanRow = row => {
     let clone = { ...row }
     delete clone.__idx
-    if (!get(isDatasourcePlus)) {
+    if (!get(hasBudibaseIdentifiers)) {
       delete clone._id
     }
     return clone
@@ -494,7 +531,7 @@ export const createActions = context => {
         duplicateRow,
         getRow,
         updateValue,
-        updateRow,
+        applyRowChanges,
         deleteRows,
         hasRow,
         loadNextPage,
@@ -508,7 +545,15 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { rowChangeCache, inProgressChanges, previousFocusedRowId } = context
+  const {
+    rowChangeCache,
+    inProgressChanges,
+    previousFocusedRowId,
+    previousFocusedCellId,
+    rows,
+    validation,
+    focusedCellId,
+  } = context
 
   // Wipe the row change cache when changing row
   previousFocusedRowId.subscribe(id => {
@@ -517,6 +562,27 @@ export const initialise = context => {
         delete state[id]
         return state
       })
+    }
+  })
+
+  // Ensure any unsaved changes are saved when changing cell
+  previousFocusedCellId.subscribe(async id => {
+    if (!id) {
+      return
+    }
+    // Stop if we changed row
+    const oldRowId = id.split("-")[0]
+    const oldColumn = id.split("-")[1]
+    const newRowId = get(focusedCellId)?.split("-")[0]
+    if (oldRowId !== newRowId) {
+      return
+    }
+    // Otherwise we just changed cell in the same row
+    const hasChanges = oldColumn in (get(rowChangeCache)[oldRowId] || {})
+    const hasErrors = validation.actions.rowHasErrors(oldRowId)
+    const isSavingChanges = get(inProgressChanges)[oldRowId]
+    if (oldRowId && !hasErrors && hasChanges && !isSavingChanges) {
+      await rows.actions.applyRowChanges(oldRowId)
     }
   })
 }

@@ -1,14 +1,63 @@
 import cloneDeep from "lodash/cloneDeep"
 import validateJs from "validate.js"
-import { FieldType, Row, Table, TableSchema } from "@budibase/types"
+import {
+  Datasource,
+  DatasourcePlusQueryResponse,
+  FieldType,
+  QueryJson,
+  Row,
+  SourceName,
+  Table,
+  TableSchema,
+} from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { isRelationshipColumn } from "../../../db/utils"
+import { SqlClient, isSQL } from "../../../integrations/utils"
 
-export async function getDatasourceAndQuery(json: any) {
+const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
+  [SourceName.POSTGRES]: SqlClient.POSTGRES,
+  [SourceName.MYSQL]: SqlClient.MY_SQL,
+  [SourceName.SQL_SERVER]: SqlClient.MS_SQL,
+  [SourceName.ORACLE]: SqlClient.ORACLE,
+  [SourceName.DYNAMODB]: undefined,
+  [SourceName.MONGODB]: undefined,
+  [SourceName.ELASTICSEARCH]: undefined,
+  [SourceName.COUCHDB]: undefined,
+  [SourceName.S3]: undefined,
+  [SourceName.AIRTABLE]: undefined,
+  [SourceName.ARANGODB]: undefined,
+  [SourceName.REST]: undefined,
+  [SourceName.FIRESTORE]: undefined,
+  [SourceName.GOOGLE_SHEETS]: undefined,
+  [SourceName.REDIS]: undefined,
+  [SourceName.SNOWFLAKE]: undefined,
+  [SourceName.BUDIBASE]: undefined,
+}
+
+export function getSQLClient(datasource: Datasource): SqlClient {
+  if (!isSQL(datasource)) {
+    throw new Error("Cannot get SQL Client for non-SQL datasource")
+  }
+  const lookup = SQL_CLIENT_SOURCE_MAP[datasource.source]
+  if (lookup) {
+    return lookup
+  }
+  throw new Error("Unable to determine client for SQL datasource")
+}
+
+export async function getDatasourceAndQuery(
+  json: QueryJson
+): Promise<DatasourcePlusQueryResponse> {
   const datasourceId = json.endpoint.datasourceId
   const datasource = await sdk.datasources.get(datasourceId)
+  const table = datasource.entities?.[json.endpoint.entityId]
+  if (!json.meta && table) {
+    json.meta = {
+      table,
+    }
+  }
   return makeExternalQuery(datasource, json)
 }
 
@@ -16,7 +65,8 @@ export function cleanExportRows(
   rows: any[],
   schema: TableSchema,
   format: string,
-  columns?: string[]
+  columns?: string[],
+  customHeaders: { [key: string]: string } = {}
 ) {
   let cleanRows = [...rows]
 
@@ -44,9 +94,25 @@ export function cleanExportRows(
         }
       }
     }
+  } else if (format === Format.JSON) {
+    // Replace row keys with custom headers
+    for (let row of cleanRows) {
+      renameKeys(customHeaders, row)
+    }
   }
 
   return cleanRows
+}
+
+function renameKeys(keysMap: { [key: string]: any }, row: any) {
+  for (const key in keysMap) {
+    Object.defineProperty(
+      row,
+      keysMap[key],
+      Object.getOwnPropertyDescriptor(row, key) || {}
+    )
+    delete row[key]
+  }
 }
 
 function isForeignKey(key: string, table: Table) {
@@ -115,13 +181,13 @@ export async function validate({
         errors[fieldName] = [`${fieldName} is required`]
       }
     } else if (
-      (type === FieldType.ATTACHMENT || type === FieldType.JSON) &&
+      (type === FieldType.ATTACHMENTS || type === FieldType.JSON) &&
       typeof row[fieldName] === "string"
     ) {
       // this should only happen if there is an error
       try {
         const json = JSON.parse(row[fieldName])
-        if (type === FieldType.ATTACHMENT) {
+        if (type === FieldType.ATTACHMENTS) {
           if (Array.isArray(json)) {
             row[fieldName] = json
           } else {

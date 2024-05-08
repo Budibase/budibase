@@ -1,6 +1,6 @@
 import _ from "lodash"
 import * as backendCore from "@budibase/backend-core"
-import { FieldSubtype, User } from "@budibase/types"
+import { BBReferenceFieldSubType, User } from "@budibase/types"
 import {
   processInputBBReferences,
   processOutputBBReferences,
@@ -63,12 +63,12 @@ describe("bbReferenceProcessor", () => {
         const userId = user!._id!
 
         const result = await config.doInTenant(() =>
-          processInputBBReferences(userId, FieldSubtype.USER)
+          processInputBBReferences(userId, BBReferenceFieldSubType.USER)
         )
 
         expect(result).toEqual(userId)
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith([userId])
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
 
       it("throws an error given an invalid id", async () => {
@@ -76,11 +76,13 @@ describe("bbReferenceProcessor", () => {
 
         await expect(
           config.doInTenant(() =>
-            processInputBBReferences(userId, FieldSubtype.USER)
+            processInputBBReferences(userId, BBReferenceFieldSubType.USER)
           )
-        ).rejects.toThrowError(new InvalidBBRefError(userId, FieldSubtype.USER))
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith([userId])
+        ).rejects.toThrow(
+          new InvalidBBRefError(userId, BBReferenceFieldSubType.USER)
+        )
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
 
       it("validates valid user ids as csv", async () => {
@@ -88,12 +90,12 @@ describe("bbReferenceProcessor", () => {
 
         const userIdCsv = userIds.join(" ,  ")
         const result = await config.doInTenant(() =>
-          processInputBBReferences(userIdCsv, FieldSubtype.USER)
+          processInputBBReferences(userIdCsv, BBReferenceFieldSubType.USER)
         )
 
         expect(result).toEqual(userIds.join(","))
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith(userIds)
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith(userIds)
       })
 
       it("throws an error given an invalid id in a csv", async () => {
@@ -108,10 +110,10 @@ describe("bbReferenceProcessor", () => {
 
         await expect(
           config.doInTenant(() =>
-            processInputBBReferences(userIdCsv, FieldSubtype.USER)
+            processInputBBReferences(userIdCsv, BBReferenceFieldSubType.USER)
           )
-        ).rejects.toThrowError(
-          new InvalidBBRefError(wrongId, FieldSubtype.USER)
+        ).rejects.toThrow(
+          new InvalidBBRefError(wrongId, BBReferenceFieldSubType.USER)
         )
       })
 
@@ -119,29 +121,32 @@ describe("bbReferenceProcessor", () => {
         const userId = _.sample(users)!._id!
 
         const result = await config.doInTenant(() =>
-          processInputBBReferences({ _id: userId }, FieldSubtype.USER)
+          processInputBBReferences(
+            { _id: userId },
+            BBReferenceFieldSubType.USER
+          )
         )
 
         expect(result).toEqual(userId)
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith([userId])
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
 
       it("validate valid user object array", async () => {
         const userIds = _.sampleSize(users, 3).map(x => x._id!)
 
         const result = await config.doInTenant(() =>
-          processInputBBReferences(userIds, FieldSubtype.USER)
+          processInputBBReferences(userIds, BBReferenceFieldSubType.USER)
         )
 
         expect(result).toEqual(userIds.join(","))
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith(userIds)
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith(userIds)
       })
 
       it("empty strings will return null", async () => {
         const result = await config.doInTenant(() =>
-          processInputBBReferences("", FieldSubtype.USER)
+          processInputBBReferences("", BBReferenceFieldSubType.USER)
         )
 
         expect(result).toEqual(null)
@@ -149,7 +154,7 @@ describe("bbReferenceProcessor", () => {
 
       it("empty arrays will return null", async () => {
         const result = await config.doInTenant(() =>
-          processInputBBReferences([], FieldSubtype.USER)
+          processInputBBReferences([], BBReferenceFieldSubType.USER)
         )
 
         expect(result).toEqual(null)
@@ -159,7 +164,7 @@ describe("bbReferenceProcessor", () => {
         const userId = _.sample(users)!._id!
         const userMetadataId = backendCore.db.generateUserMetadataID(userId)
         const result = await config.doInTenant(() =>
-          processInputBBReferences(userMetadataId, FieldSubtype.USER)
+          processInputBBReferences(userMetadataId, BBReferenceFieldSubType.USER)
         )
         expect(result).toBe(userId)
       })
@@ -173,7 +178,7 @@ describe("bbReferenceProcessor", () => {
         const userId = user._id!
 
         const result = await config.doInTenant(() =>
-          processOutputBBReferences(userId, FieldSubtype.USER)
+          processOutputBBReferences(userId, BBReferenceFieldSubType.USER)
         )
 
         expect(result).toEqual([
@@ -185,8 +190,8 @@ describe("bbReferenceProcessor", () => {
             lastName: user.lastName,
           },
         ])
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith([userId])
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
 
       it("fetches user given a valid string id csv", async () => {
@@ -197,7 +202,7 @@ describe("bbReferenceProcessor", () => {
         const result = await config.doInTenant(() =>
           processOutputBBReferences(
             [userId1, userId2].join(","),
-            FieldSubtype.USER
+            BBReferenceFieldSubType.USER
           )
         )
 
@@ -213,8 +218,8 @@ describe("bbReferenceProcessor", () => {
             }))
           )
         )
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith([userId1, userId2])
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId1, userId2])
       })
     })
   })

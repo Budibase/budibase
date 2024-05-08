@@ -1,7 +1,10 @@
 import { getDefinition, getDefinitions } from "../../integrations"
 import { SourceName, UserCtx } from "@budibase/types"
 
-const DISABLED_EXTERNAL_INTEGRATIONS = [SourceName.AIRTABLE]
+const DISABLED_EXTERNAL_INTEGRATIONS = [
+  SourceName.AIRTABLE,
+  SourceName.BUDIBASE,
+]
 
 export async function fetch(ctx: UserCtx) {
   const definitions = await getDefinitions()

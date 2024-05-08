@@ -374,11 +374,13 @@ class Orchestrator {
                         for (let [innerObject, innerValue] of Object.entries(
                           originalStepInput[key][innerKey]
                         )) {
-                          originalStepInput[key][innerKey][innerObject] =
-                            automationUtils.substituteLoopStep(
-                              innerValue as string,
-                              `steps.${loopStepNumber}`
-                            )
+                          if (typeof innerValue === "string") {
+                            originalStepInput[key][innerKey][innerObject] =
+                              automationUtils.substituteLoopStep(
+                                innerValue,
+                                `steps.${loopStepNumber}`
+                              )
+                          }
                         }
                       }
                     }
@@ -458,7 +460,6 @@ class Orchestrator {
                 inputs,
                 step.schema.inputs
               )
-
               try {
                 // appId is always passed
                 const outputs = await stepFn({
@@ -625,6 +626,7 @@ export async function executeInThread(job: Job<AutomationData>) {
   })
 
   return await context.doInAppContext(appId, async () => {
+    await context.ensureSnippetContext()
     const envVars = await sdkUtils.getEnvironmentVariables()
     // put into automation thread for whole context
     return await context.doInEnvironmentContext(envVars, async () => {

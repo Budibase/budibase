@@ -2,7 +2,7 @@ import {
   FieldType,
   Row,
   Table,
-  SearchParams,
+  RowSearchParams,
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
 } from "@budibase/types"
@@ -77,11 +77,11 @@ describe("internal", () => {
       await config.doInContext(config.appId, async () => {
         const tableId = config.table!._id!
 
-        const searchParams: SearchParams = {
+        const searchParams: RowSearchParams = {
           tableId,
           query: {},
         }
-        const result = await search(searchParams)
+        const result = await search(searchParams, config.table!)
 
         expect(result.rows).toHaveLength(10)
         expect(result.rows).toEqual(
@@ -94,12 +94,12 @@ describe("internal", () => {
       await config.doInContext(config.appId, async () => {
         const tableId = config.table!._id!
 
-        const searchParams: SearchParams = {
+        const searchParams: RowSearchParams = {
           tableId,
           query: {},
           fields: ["name", "age"],
         }
-        const result = await search(searchParams)
+        const result = await search(searchParams, config.table!)
 
         expect(result.rows).toHaveLength(10)
         expect(result.rows).toEqual(

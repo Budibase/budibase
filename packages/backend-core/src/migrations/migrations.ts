@@ -26,7 +26,6 @@ export const getMigrationsDoc = async (db: any) => {
     if (err.status && err.status === 404) {
       return { _id: DocumentType.MIGRATIONS }
     } else {
-      console.error(err)
       throw err
     }
   }
@@ -45,10 +44,6 @@ export const runMigration = async (
   options: MigrationOptions = {}
 ) => {
   const migrationType = migration.type
-  let tenantId: string | undefined
-  if (migrationType !== MigrationType.INSTALLATION) {
-    tenantId = context.getTenantId()
-  }
   const migrationName = migration.name
   const silent = migration.silent
 

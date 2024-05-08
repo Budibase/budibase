@@ -2,7 +2,7 @@ import { BadRequestError, context, db as dbCore } from "@budibase/backend-core"
 import {
   BBReferenceFieldMetadata,
   FieldSchema,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   InternalTable,
   isBBReferenceField,
   isRelationshipField,
@@ -96,7 +96,7 @@ function getColumnMigrator(
   }
 
   if (oldColumn.relationshipType === RelationshipType.ONE_TO_MANY) {
-    if (newColumn.subtype !== FieldSubtype.USER) {
+    if (newColumn.subtype !== BBReferenceFieldSubType.USER) {
       throw new BadRequestError(
         `Column "${oldColumn.name}" is a one-to-many column but "${newColumn.name}" is not a single user column`
       )
@@ -107,7 +107,7 @@ function getColumnMigrator(
     oldColumn.relationshipType === RelationshipType.MANY_TO_MANY ||
     oldColumn.relationshipType === RelationshipType.MANY_TO_ONE
   ) {
-    if (newColumn.subtype !== FieldSubtype.USERS) {
+    if (newColumn.subtype !== BBReferenceFieldSubType.USERS) {
       throw new BadRequestError(
         `Column "${oldColumn.name}" is a ${oldColumn.relationshipType} column but "${newColumn.name}" is not a multi user column`
       )

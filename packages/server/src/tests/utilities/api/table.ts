@@ -1,78 +1,68 @@
 import {
+  BulkImportRequest,
+  BulkImportResponse,
   MigrateRequest,
   MigrateResponse,
   SaveTableRequest,
   SaveTableResponse,
   Table,
 } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
+import { Expectations, TestAPI } from "./base"
 
 export class TableAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   save = async (
     data: SaveTableRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<SaveTableResponse> => {
-    const res = await this.request
-      .post(`/api/tables`)
-      .send(data)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-
-    return res.body
+    return await this._post<SaveTableResponse>("/api/tables", {
+      body: data,
+      expectations,
+    })
   }
 
-  fetch = async (
-    { expectStatus } = { expectStatus: 200 }
-  ): Promise<Table[]> => {
-    const res = await this.request
-      .get(`/api/tables`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return res.body
+  fetch = async (expectations?: Expectations): Promise<Table[]> => {
+    return await this._get<Table[]>("/api/tables", { expectations })
   }
 
   get = async (
     tableId: string,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<Table> => {
-    const res = await this.request
-      .get(`/api/tables/${tableId}`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return res.body
+    return await this._get<Table>(`/api/tables/${tableId}`, { expectations })
   }
 
   migrate = async (
     tableId: string,
     data: MigrateRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<MigrateResponse> => {
-    const res = await this.request
-      .post(`/api/tables/${tableId}/migrate`)
-      .send(data)
-      .set(this.config.defaultHeaders())
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-    return res.body
+    return await this._post<MigrateResponse>(`/api/tables/${tableId}/migrate`, {
+      body: data,
+      expectations,
+    })
+  }
+
+  import = async (
+    tableId: string,
+    data: BulkImportRequest,
+    expectations?: Expectations
+  ): Promise<BulkImportResponse> => {
+    return await this._post<BulkImportResponse>(
+      `/api/tables/${tableId}/import`,
+      {
+        body: data,
+        expectations,
+      }
+    )
+  }
+
+  destroy = async (
+    tableId: string,
+    revId: string,
+    expectations?: Expectations
+  ): Promise<void> => {
+    return await this._delete<void>(`/api/tables/${tableId}/${revId}`, {
+      expectations,
+    })
   }
 }

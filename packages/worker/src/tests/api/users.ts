@@ -4,7 +4,7 @@ import {
   InviteUsersRequest,
   User,
   CreateAdminUserRequest,
-  SearchQuery,
+  SearchFilters,
   InviteUsersResponse,
 } from "@budibase/types"
 import structures from "../structures"
@@ -127,6 +127,20 @@ export class UserAPI extends TestAPI {
       .expect(status ? status : 200)
   }
 
+  addSsoSupportInternalAPIAuth = (ssoId: string, email: string) => {
+    return this.request
+      .post(`/api/global/users/sso`)
+      .send({ ssoId, email })
+      .set(this.config.internalAPIHeaders())
+  }
+
+  addSsoSupportDefaultAuth = (ssoId: string, email: string) => {
+    return this.request
+      .post(`/api/global/users/sso`)
+      .send({ ssoId, email })
+      .set(this.config.defaultHeaders())
+  }
+
   deleteUser = (userId: string, status?: number) => {
     return this.request
       .delete(`/api/global/users/${userId}`)
@@ -136,7 +150,7 @@ export class UserAPI extends TestAPI {
   }
 
   searchUsers = (
-    { query }: { query?: SearchQuery },
+    { query }: { query?: SearchFilters },
     opts?: { status?: number; noHeaders?: boolean }
   ) => {
     const req = this.request

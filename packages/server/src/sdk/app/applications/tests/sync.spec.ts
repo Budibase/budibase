@@ -6,7 +6,7 @@ import EventEmitter from "events"
 import { UserGroup, UserMetadata, UserRoles, User } from "@budibase/types"
 
 const config = new TestConfiguration()
-let app, group: UserGroup, groupUser: User
+let group: UserGroup, groupUser: User
 const ROLE_ID = roles.BUILTIN_ROLE_IDS.BASIC
 
 const emitter = new EventEmitter()
@@ -36,15 +36,15 @@ function waitForUpdate(opts: { group?: boolean }) {
 }
 
 beforeAll(async () => {
-  app = await config.init("syncApp")
+  await config.init("syncApp")
 })
 
 async function createUser(email: string, roles: UserRoles, builder?: boolean) {
   const user = await config.createUser({
     email,
     roles,
-    builder: builder || false,
-    admin: false,
+    builder: { global: builder || false },
+    admin: { global: false },
   })
   await context.doInContext(config.appId!, async () => {
     await events.user.created(user)
@@ -55,10 +55,10 @@ async function createUser(email: string, roles: UserRoles, builder?: boolean) {
 async function removeUserRole(user: User) {
   const final = await config.globalUser({
     ...user,
-    id: user._id,
+    _id: user._id,
     roles: {},
-    builder: false,
-    admin: false,
+    builder: { global: false },
+    admin: { global: false },
   })
   await context.doInContext(config.appId!, async () => {
     await events.user.updated(final)
@@ -69,8 +69,8 @@ async function createGroupAndUser(email: string) {
   groupUser = await config.createUser({
     email,
     roles: {},
-    builder: false,
-    admin: false,
+    builder: { global: false },
+    admin: { global: false },
   })
   group = await config.createGroup()
   await config.addUserToGroup(group._id!, groupUser._id!)

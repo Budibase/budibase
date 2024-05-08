@@ -1,13 +1,15 @@
 import newid from "./newid"
 import { db as dbCore } from "@budibase/backend-core"
 import {
-  FieldType,
+  DatabaseQueryOpts,
+  Datasource,
   DocumentType,
   FieldSchema,
-  RelationshipFieldMetadata,
-  VirtualDocumentType,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
-  DatabaseQueryOpts,
+  RelationshipFieldMetadata,
+  SourceName,
+  VirtualDocumentType,
 } from "@budibase/types"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
@@ -20,11 +22,11 @@ export const enum AppStatus {
   DEPLOYED = "published",
 }
 
-export const BudibaseInternalDB = {
+export const BudibaseInternalDB: Datasource = {
   _id: INTERNAL_TABLE_SOURCE_ID,
   type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Budibase DB",
-  source: "BUDIBASE",
+  source: SourceName.BUDIBASE,
   config: {},
 }
 
@@ -38,6 +40,7 @@ export const USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${dbCore.Inte
 export const LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`
 export const TABLE_ROW_PREFIX = `${DocumentType.ROW}${SEPARATOR}${DocumentType.TABLE}`
 export const AUTOMATION_LOG_PREFIX = `${DocumentType.AUTOMATION_LOG}${SEPARATOR}`
+export const SQS_DATASOURCE_INTERNAL = "internal"
 export const ViewName = dbCore.ViewName
 export const InternalTables = dbCore.InternalTable
 export const UNICODE_MAX = dbCore.UNICODE_MAX
@@ -53,6 +56,14 @@ export const getUserMetadataParams = dbCore.getUserMetadataParams
 export const generateUserMetadataID = dbCore.generateUserMetadataID
 export const getGlobalIDFromUserMetadataID =
   dbCore.getGlobalIDFromUserMetadataID
+export const CONSTANT_INTERNAL_ROW_COLS = [
+  "_id",
+  "_rev",
+  "type",
+  "createdAt",
+  "updatedAt",
+  "tableId",
+]
 
 /**
  * Gets parameters for retrieving tables, this is a utility function for the getDocParams function.
@@ -282,6 +293,12 @@ export function getMemoryViewParams(
 
 export function generatePluginID(name: string) {
   return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
+}
+
+export function generateJunctionTableID(tableId1: string, tableId2: string) {
+  const first = tableId1 > tableId2 ? tableId1 : tableId2
+  const second = tableId1 > tableId2 ? tableId2 : tableId1
+  return `${first}${SEPARATOR}${second}`
 }
 
 /**

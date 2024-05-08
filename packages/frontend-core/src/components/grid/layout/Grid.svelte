@@ -10,6 +10,7 @@
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
+  import PopoverOverlay from "../overlays/PopoverOverlay.svelte"
   import HeaderRow from "./HeaderRow.svelte"
   import ScrollOverlay from "../overlays/ScrollOverlay.svelte"
   import MenuOverlay from "../overlays/MenuOverlay.svelte"
@@ -22,10 +23,12 @@
   import NewRow from "./NewRow.svelte"
   import { createGridWebsocket } from "../lib/websocket"
   import {
-    MaxCellRenderHeight,
-    MaxCellRenderWidthOverflow,
+    MaxCellRenderOverflow,
     GutterWidth,
     DefaultRowHeight,
+    Padding,
+    SmallRowHeight,
+    ControlsHeight,
   } from "../lib/constants"
 
   export let API = null
@@ -39,6 +42,7 @@
   export let canEditColumns = true
   export let canSaveSchema = true
   export let stripeRows = false
+  export let quiet = false
   export let collaboration = true
   export let showAvatars = true
   export let showControls = true
@@ -51,7 +55,7 @@
   export let buttons = null
 
   // Unique identifier for DOM nodes inside this instance
-  const rand = Math.random()
+  const gridID = `grid-${Math.random().toString().slice(2)}`
 
   // Store props in a store for reference in other stores
   const props = writable($$props)
@@ -59,7 +63,7 @@
   // Build up context
   let context = {
     API: API || createAPIClient(),
-    rand,
+    gridID,
     props,
   }
   context = { ...context, ...createEventManagers() }
@@ -91,6 +95,7 @@
     canEditColumns,
     canSaveSchema,
     stripeRows,
+    quiet,
     collaboration,
     showAvatars,
     showControls,
@@ -102,6 +107,8 @@
     notifyError,
     buttons,
   })
+  $: minHeight =
+    Padding + SmallRowHeight + $rowHeight + (showControls ? ControlsHeight : 0)
 
   // Set context for children to consume
   setContext("grid", context)
@@ -120,13 +127,14 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="grid"
-  id="grid-{rand}"
+  id={gridID}
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
   class:stripe={stripeRows}
+  class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
+  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{minHeight}px; --controls-height:{ControlsHeight}px;"
 >
   {#if showControls}
     <div class="controls">
@@ -178,6 +186,7 @@
           <ReorderOverlay />
           <ScrollOverlay />
           <MenuOverlay />
+          <PopoverOverlay />
         </div>
       </div>
     </div>
@@ -207,7 +216,6 @@
     --cell-spacing: 4px;
     --cell-border: 1px solid var(--spectrum-global-color-gray-200);
     --cell-font-size: 14px;
-    --controls-height: 50px;
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
@@ -216,6 +224,7 @@
     position: relative;
     overflow: hidden;
     background: var(--grid-background);
+    min-height: var(--min-height);
   }
   .grid,
   .grid :global(*) {
@@ -330,5 +339,10 @@
   .grid-data-outer :global(.spectrum-Checkbox-checkmark),
   .grid-data-outer :global(.spectrum-Checkbox-partialCheckmark) {
     transition: none;
+  }
+
+  /* Overrides */
+  .grid.quiet :global(.grid-data-content .row > .cell:not(:last-child)) {
+    border-right: none;
   }
 </style>

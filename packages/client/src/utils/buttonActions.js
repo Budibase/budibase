@@ -1,5 +1,6 @@
 import { get } from "svelte/store"
 import download from "downloadjs"
+import { downloadStream } from "@budibase/frontend-core"
 import {
   routeStore,
   builderStore,
@@ -239,6 +240,7 @@ const triggerAutomationHandler = async action => {
 const navigationHandler = action => {
   const { url, peek, externalNewTab } = action.parameters
   routeStore.actions.navigate(url, peek, externalNewTab)
+  closeSidePanelHandler()
 }
 
 const queryExecutionHandler = async action => {
@@ -341,7 +343,11 @@ const exportDataHandler = async action => {
         tableId: selection.tableId,
         rows: selection.selectedRows,
         format: action.parameters.type,
-        columns: action.parameters.columns,
+        columns: action.parameters.columns?.map(
+          column => column.name || column
+        ),
+        delimiter: action.parameters.delimiter,
+        customHeaders: action.parameters.customHeaders,
       })
       download(
         new Blob([data], { type: "text/plain" }),
@@ -396,6 +402,51 @@ const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
+const downloadFileHandler = async action => {
+  const { url, fileName } = action.parameters
+  try {
+    const { type } = action.parameters
+    if (type === "attachment") {
+      const { tableId, rowId, attachmentColumn } = action.parameters
+      const res = await API.downloadAttachment(
+        tableId,
+        rowId,
+        attachmentColumn,
+        { suppressErrors: true }
+      )
+      await downloadStream(res)
+      return
+    }
+
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      notificationStore.actions.error(
+        `Failed to download from '${url}'. Server returned status code: ${response.status}`
+      )
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(await response.blob())
+
+    const link = document.createElement("a")
+    link.href = objectUrl
+    link.download = fileName
+    link.click()
+
+    URL.revokeObjectURL(objectUrl)
+  } catch (e) {
+    console.error(e)
+    if (e.status) {
+      notificationStore.actions.error(
+        `Failed to download from '${url}'. Server returned status code: ${e.status}`
+      )
+    } else {
+      notificationStore.actions.error(`Failed to download from '${url}'.`)
+    }
+  }
+}
+
 const handlerMap = {
   ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
@@ -414,6 +465,7 @@ const handlerMap = {
   ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: openSidePanelHandler,
   ["Close Side Panel"]: closeSidePanelHandler,
+  ["Download File"]: downloadFileHandler,
 }
 
 const confirmTextMap = {
@@ -490,16 +542,22 @@ export const enrichButtonActions = (actions, context) => {
                 // then execute the rest of the actions in the chain
                 const result = await callback()
                 if (result !== false) {
-                  // Generate a new total context to pass into the next enrichment
+                  // Generate a new total context for the next enrichment
                   buttonContext.push(result)
                   const newContext = { ...context, actions: buttonContext }
 
-                  // Enrich and call the next button action if there is more than one action remaining
+                  // Enrich and call the next button action if there is more
+                  // than one action remaining
                   const next = enrichButtonActions(
                     actions.slice(i + 1),
                     newContext
                   )
-                  resolve(typeof next === "function" ? await next() : true)
+                  if (typeof next === "function") {
+                    // Pass the event context back into the new action chain
+                    resolve(await next(eventContext))
+                  } else {
+                    resolve(true)
+                  }
                 } else {
                   resolve(false)
                 }

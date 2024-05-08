@@ -1,20 +1,11 @@
 import { getRowParams } from "../../../db/utils"
 import {
   outputProcessing,
-  processAutoColumn,
   processFormulas,
 } from "../../../utilities/rowProcessor"
-import { context, locks } from "@budibase/backend-core"
-import {
-  Table,
-  Row,
-  LockType,
-  LockName,
-  FormulaType,
-  FieldType,
-} from "@budibase/types"
+import { context } from "@budibase/backend-core"
+import { Table, Row, FormulaType, FieldType } from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
-import sdk from "../../../sdk"
 import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
 
@@ -110,7 +101,7 @@ export async function updateAllFormulasInTable(table: Table) {
       (enriched: Row) => enriched._id === row._id
     )
     if (enrichedRow) {
-      const processed = processFormulas(table, cloneDeep(row), {
+      const processed = await processFormulas(table, cloneDeep(row), {
         dynamic: false,
         contextRows: [enrichedRow],
       })
@@ -143,7 +134,7 @@ export async function finaliseRow(
     squash: false,
   })) as Row
   // use enriched row to generate formulas for saving, specifically only use as context
-  row = processFormulas(table, row, {
+  row = await processFormulas(table, row, {
     dynamic: false,
     contextRows: [enrichedRow],
   })
@@ -151,35 +142,12 @@ export async function finaliseRow(
   // if another row has been written since processing this will
   // handle the auto ID clash
   if (oldTable && !isEqual(oldTable, table)) {
-    try {
-      await db.put(table)
-    } catch (err: any) {
-      if (err.status === 409) {
-        // Some conflicts with the autocolumns occurred, we need to refetch the table and recalculate
-        await locks.doWithLock(
-          {
-            type: LockType.AUTO_EXTEND,
-            name: LockName.PROCESS_AUTO_COLUMNS,
-            resource: table._id,
-          },
-          async () => {
-            const latestTable = await sdk.tables.getTable(table._id!)
-            let response = processAutoColumn(null, latestTable, row, {
-              reprocessing: true,
-            })
-            await db.put(response.table)
-            row = response.row
-          }
-        )
-      } else {
-        throw err
-      }
-    }
+    await db.put(table)
   }
   const response = await db.put(row)
   // for response, calculate the formulas for the enriched row
   enrichedRow._rev = response.rev
-  enrichedRow = processFormulas(table, enrichedRow, {
+  enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
   })
   // this updates the related formulas in other rows based on the relations to this row

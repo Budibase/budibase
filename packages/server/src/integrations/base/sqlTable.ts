@@ -1,18 +1,20 @@
 import { Knex, knex } from "knex"
 import {
-  RelationshipType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
+  FieldType,
   NumberFieldMetadata,
   Operation,
   QueryJson,
+  RelationshipType,
   RenameColumn,
+  SqlQuery,
   Table,
-  FieldType,
+  TableSourceType,
 } from "@budibase/types"
-import { breakExternalTableId } from "../utils"
+import { breakExternalTableId, getNativeSql, SqlClient } from "../utils"
+import { utils } from "@budibase/shared-core"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
-import { utils } from "@budibase/shared-core"
 
 function isIgnoredType(type: FieldType) {
   const ignored = [FieldType.LINK, FieldType.FORMULA]
@@ -59,19 +61,20 @@ function generateSchema(
       case FieldType.BARCODEQR:
         schema.text(key)
         break
-      case FieldType.BB_REFERENCE:
-        const subtype = column.subtype as FieldSubtype
+      case FieldType.BB_REFERENCE: {
+        const subtype = column.subtype
         switch (subtype) {
-          case FieldSubtype.USER:
+          case BBReferenceFieldSubType.USER:
             schema.text(key)
             break
-          case FieldSubtype.USERS:
+          case BBReferenceFieldSubType.USERS:
             schema.json(key)
             break
           default:
             throw utils.unreachable(subtype)
         }
         break
+      }
       case FieldType.NUMBER:
         // if meta is specified then this is a junction table entry
         if (column.meta && column.meta.toKey && column.meta.toTable) {
@@ -103,13 +106,13 @@ function generateSchema(
           column.relationshipType !== RelationshipType.MANY_TO_MANY
         ) {
           if (!column.foreignKey || !column.tableId) {
-            throw "Invalid relationship schema"
+            throw new Error("Invalid relationship schema")
           }
           const { tableName } = breakExternalTableId(column.tableId)
           // @ts-ignore
           const relatedTable = tables[tableName]
           if (!relatedTable) {
-            throw "Referenced table doesn't exist"
+            throw new Error("Referenced table doesn't exist")
           }
           const relatedPrimary = relatedTable.primary[0]
           const externalType = relatedTable.schema[relatedPrimary].externalType
@@ -135,7 +138,8 @@ function generateSchema(
   // need to check if any columns have been deleted
   if (oldTable) {
     const deletedColumns = Object.entries(oldTable.schema).filter(
-      ([key, column]) => isIgnoredType(column.type) && table.schema[key] == null
+      ([key, column]) =>
+        !isIgnoredType(column.type) && table.schema[key] == null
     )
     deletedColumns.forEach(([key, column]) => {
       if (renamed?.old === key || isIgnoredType(column.type)) {
@@ -197,24 +201,41 @@ class SqlTableQueryBuilder {
     return json.endpoint.operation
   }
 
-  _tableQuery(json: QueryJson): any {
+  _tableQuery(json: QueryJson): SqlQuery | SqlQuery[] {
     let client = knex({ client: this.sqlClient }).schema
-    if (json?.endpoint?.schema) {
-      client = client.withSchema(json.endpoint.schema)
+    let schemaName = json?.endpoint?.schema
+    if (schemaName) {
+      client = client.withSchema(schemaName)
     }
 
-    let query
+    let query: Knex.SchemaBuilder
     if (!json.table || !json.meta || !json.meta.tables) {
-      throw "Cannot execute without table being specified"
+      throw new Error("Cannot execute without table being specified")
     }
+    if (json.table.sourceType === TableSourceType.INTERNAL) {
+      throw new Error("Cannot perform table actions for SQS.")
+    }
+
     switch (this._operation(json)) {
       case Operation.CREATE_TABLE:
         query = buildCreateTable(client, json.table, json.meta.tables)
         break
       case Operation.UPDATE_TABLE:
         if (!json.meta || !json.meta.table) {
-          throw "Must specify old table for update"
+          throw new Error("Must specify old table for update")
         }
+        // renameColumn does not work for MySQL, so return a raw query
+        if (this.sqlClient === SqlClient.MY_SQL && json.meta.renamed) {
+          const updatedColumn = json.meta.renamed.updated
+          const tableName = schemaName
+            ? `\`${schemaName}\`.\`${json.table.name}\``
+            : `\`${json.table.name}\``
+          return {
+            sql: `alter table ${tableName} rename column \`${json.meta.renamed.old}\` to \`${updatedColumn}\`;`,
+            bindings: [],
+          }
+        }
+
         query = buildUpdateTable(
           client,
           json.table,
@@ -222,14 +243,35 @@ class SqlTableQueryBuilder {
           json.meta.table,
           json.meta.renamed!
         )
+
+        // renameColumn for SQL Server returns a parameterised `sp_rename` query,
+        // which is not supported by SQL Server and gives a syntax error.
+        if (this.sqlClient === SqlClient.MS_SQL && json.meta.renamed) {
+          const oldColumn = json.meta.renamed.old
+          const updatedColumn = json.meta.renamed.updated
+          const tableName = schemaName
+            ? `${schemaName}.${json.table.name}`
+            : `${json.table.name}`
+          const sql = getNativeSql(query)
+          if (Array.isArray(sql)) {
+            for (const query of sql) {
+              if (query.sql.startsWith("exec sp_rename")) {
+                query.sql = `exec sp_rename '${tableName}.${oldColumn}', '${updatedColumn}', 'COLUMN'`
+                query.bindings = []
+              }
+            }
+          }
+
+          return sql
+        }
         break
       case Operation.DELETE_TABLE:
         query = buildDeleteTable(client, json.table)
         break
       default:
-        throw "Table operation is of unknown type"
+        throw new Error("Table operation is of unknown type")
     }
-    return query.toSQL()
+    return getNativeSql(query)
   }
 }
 

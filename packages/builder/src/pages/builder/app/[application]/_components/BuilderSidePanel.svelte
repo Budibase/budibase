@@ -15,7 +15,14 @@
     FancySelect,
   } from "@budibase/bbui"
   import { builderStore, appStore, roles } from "stores/builder"
-  import { groups, licensing, apps, users, auth, admin } from "stores/portal"
+  import {
+    groups,
+    licensing,
+    appsStore,
+    users,
+    auth,
+    admin,
+  } from "stores/portal"
   import {
     fetchData,
     Constants,
@@ -54,7 +61,7 @@
 
   let inviteFailureResponse = ""
   $: validEmail = emailValidator(email) === true
-  $: prodAppId = apps.getProdAppID($appStore.appId)
+  $: prodAppId = appsStore.getProdAppID($appStore.appId)
   $: promptInvite = showInvite(
     filteredInvites,
     filteredUsers,
@@ -122,10 +129,7 @@
     filteredUsers = $usersFetch.rows
       .filter(user => user.email !== $auth.user.email)
       .map(user => {
-        const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(
-          user,
-          prodAppId
-        )
+        const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(user)
         const isAppBuilder = user.builder?.apps?.includes(prodAppId)
         let role
         if (isAdminOrGlobalBuilder) {

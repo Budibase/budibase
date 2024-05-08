@@ -262,11 +262,11 @@ export class BaseSocket {
     }
   }
 
-  async onConnect(socket: Socket) {
+  async onConnect(_socket: Socket) {
     // Override
   }
 
-  async onDisconnect(socket: Socket) {
+  async onDisconnect(_socket: Socket) {
     // Override
   }
 

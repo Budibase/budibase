@@ -74,11 +74,13 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const appId = ctx.appId
   const table = ctx.request.body
   const isImport = table.rows
+  const renaming = ctx.request.body._rename
 
-  let savedTable = await pickApi({ table }).save(ctx)
+  const api = pickApi({ table })
+  let savedTable = await api.save(ctx, renaming)
   if (!table._id) {
-    await events.table.created(savedTable)
     savedTable = sdk.tables.enrichViewSchemas(savedTable)
+    await events.table.created(savedTable)
   } else {
     await events.table.updated(savedTable)
   }

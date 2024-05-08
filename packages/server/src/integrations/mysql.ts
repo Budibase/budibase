@@ -12,7 +12,8 @@ import {
   SourceName,
   Schema,
   TableSourceType,
-  FieldType,
+  DatasourcePlusQueryResponse,
+  SqlQueryBinding,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -21,6 +22,7 @@ import {
   generateColumnDefinition,
   finaliseExternalTables,
   checkExternalTables,
+  HOST_ADDRESS,
 } from "./utils"
 import dayjs from "dayjs"
 import { NUMBER_REGEX } from "../utilities"
@@ -49,7 +51,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
@@ -112,7 +114,7 @@ const defaultTypeCasting = function (field: any, next: any) {
   return next()
 }
 
-export function bindingTypeCoerce(bindings: any[]) {
+export function bindingTypeCoerce(bindings: SqlQueryBinding) {
   for (let i = 0; i < bindings.length; i++) {
     const binding = bindings[i]
     if (typeof binding !== "string") {
@@ -142,7 +144,7 @@ export function bindingTypeCoerce(bindings: any[]) {
 }
 
 class MySQLIntegration extends Sql implements DatasourcePlus {
-  private config: MySQLConfig
+  private readonly config: MySQLConfig
   private client?: mysql.Connection
 
   constructor(config: MySQLConfig) {
@@ -261,6 +263,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       const bindings = opts?.disableCoercion
         ? baseBindings
         : bindingTypeCoerce(baseBindings)
+      this.log(query.sql, bindings)
       // Node MySQL is callback based, so we must wrap our call in a promise
       const response = await this.client!.query(query.sql, bindings)
       return response[0]
@@ -380,12 +383,22 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     return results.length ? results : [{ deleted: true }]
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     await this.connect()
     try {
       const queryFn = (query: any) =>
         this.internalQuery(query, { connect: false, disableCoercion: true })
-      return await this.queryWithReturning(json, queryFn)
+      const processFn = (result: any) => {
+        if (json?.meta?.table && Array.isArray(result)) {
+          return this.convertJsonStringColumns(
+            json.meta.table,
+            result,
+            json.tableAliases
+          )
+        }
+        return result
+      }
+      return await this.queryWithReturning(json, queryFn, processFn)
     } finally {
       await this.disconnect()
     }

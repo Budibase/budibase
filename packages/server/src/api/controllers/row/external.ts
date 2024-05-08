@@ -17,11 +17,9 @@ import {
   Row,
   Table,
   UserCtx,
-  EmptyFilterOption,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import * as utils from "./utils"
-import { dataFilters } from "@budibase/shared-core"
 import {
   inputProcessing,
   outputProcessing,
@@ -33,17 +31,6 @@ export async function handleRequest<T extends Operation>(
   tableId: string,
   opts?: RunConfig
 ): Promise<ExternalRequestReturnType<T>> {
-  // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
-  if (opts && opts.filters) {
-    opts.filters = sdk.rows.removeEmptyFilters(opts.filters)
-  }
-  if (
-    !dataFilters.hasFilters(opts?.filters) &&
-    opts?.filters?.onEmptyFilter === EmptyFilterOption.RETURN_NONE
-  ) {
-    return [] as any
-  }
-
   return new ExternalRequest<T>(operation, tableId, opts?.datasource).run(
     opts || {}
   )
@@ -128,7 +115,10 @@ export async function bulkDestroy(ctx: UserCtx) {
     )
   }
   const responses = await Promise.all(promises)
-  return { response: { ok: true }, rows: responses.map(resp => resp.row) }
+  const finalRows = responses
+    .map(resp => resp.row)
+    .filter(row => row && row._id)
+  return { response: { ok: true }, rows: finalRows }
 }
 
 export async function fetchEnrichedRow(ctx: UserCtx) {

@@ -2,11 +2,11 @@ import { generateQueryID } from "../../../db/utils"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
-import { invalidateDynamicVariables } from "../../../threads/utils"
+import { invalidateCachedVariable } from "../../../threads/utils"
 import env from "../../../environment"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import { QueryEvent } from "../../../threads/definitions"
+import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import {
   ConfigType,
   Query,
@@ -14,19 +14,33 @@ import {
   SessionCookie,
   JsonFieldSubType,
   QueryResponse,
-  QueryPreview,
   QuerySchema,
   FieldType,
-  type ExecuteQueryRequest,
-  type ExecuteQueryResponse,
-  type Row,
-  QueryParameter,
+  ExecuteQueryRequest,
+  ExecuteQueryResponse,
+  PreviewQueryRequest,
+  PreviewQueryResponse,
 } from "@budibase/types"
 import { ValidQueryNameRegex, utils as JsonUtils } from "@budibase/shared-core"
+import { findHBSBlocks } from "@budibase/string-templates"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
 })
+
+function validateQueryInputs(parameters: QueryEventParameters) {
+  for (let entry of Object.entries(parameters)) {
+    const [key, value] = entry
+    if (typeof value !== "string") {
+      continue
+    }
+    if (findHBSBlocks(value).length !== 0) {
+      throw new Error(
+        `Parameter '${key}' input contains a handlebars binding - this is not allowed.`
+      )
+    }
+  }
+}
 
 export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.queries.fetch()
@@ -73,7 +87,7 @@ const _import = async (ctx: UserCtx) => {
 }
 export { _import as import }
 
-export async function save(ctx: UserCtx) {
+export async function save(ctx: UserCtx<Query, Query>) {
   const db = context.getAppDB()
   const query: Query = ctx.request.body
 
@@ -85,10 +99,18 @@ export async function save(ctx: UserCtx) {
   const datasource = await sdk.datasources.get(query.datasourceId)
 
   let eventFn
-  if (!query._id) {
+  if (!query._id && !query._rev) {
     query._id = generateQueryID(query.datasourceId)
+    // flag to state whether the default bindings are empty strings (old behaviour) or null
+    query.nullDefaultSupport = true
     eventFn = () => events.query.created(datasource, query)
   } else {
+    // check if flag has previously been set, don't let it change
+    // allow it to be explicitly set to false via API incase this is ever needed
+    const existingQuery = await db.get<Query>(query._id)
+    if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
+      query.nullDefaultSupport = true
+    }
     eventFn = () => events.query.updated(datasource, query)
   }
   const response = await db.put(query)
@@ -120,30 +142,41 @@ function getAuthConfig(ctx: UserCtx) {
 }
 
 function enrichParameters(
-  queryParameters: QueryParameter[],
-  requestParameters: { [key: string]: string } = {}
-): {
-  [key: string]: string
-} {
+  query: Query,
+  requestParameters: QueryEventParameters = {}
+): QueryEventParameters {
+  const paramNotSet = (val: unknown) => val === "" || val == undefined
+  // first check parameters are all valid
+  validateQueryInputs(requestParameters)
   // make sure parameters are fully enriched with defaults
-  for (let parameter of queryParameters) {
-    if (!requestParameters[parameter.name]) {
-      requestParameters[parameter.name] = parameter.default
+  for (const parameter of query.parameters) {
+    let value: string | null =
+      requestParameters[parameter.name] || parameter.default
+    if (query.nullDefaultSupport && paramNotSet(value)) {
+      value = null
     }
+    requestParameters[parameter.name] = value
   }
   return requestParameters
 }
 
-export async function preview(ctx: UserCtx) {
+export async function preview(
+  ctx: UserCtx<PreviewQueryRequest, PreviewQueryResponse>
+) {
   const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
     ctx.request.body.datasourceId
   )
-  const query: QueryPreview = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
-  const { fields, parameters, queryVerb, transformer, queryId, schema } = query
+  const queryId = ctx.request.body.queryId
+  // the body contains the makings of a query, which has not been saved yet
+  const query: Query = ctx.request.body
+  // hasn't been saved, new query
+  if (!queryId && !query._id) {
+    query.nullDefaultSupport = true
+  }
 
-  let existingSchema = schema
+  let existingSchema = query.schema
   if (queryId && !existingSchema) {
     try {
       const db = context.getAppDB()
@@ -248,54 +281,59 @@ export async function preview(ctx: UserCtx) {
     return { previewSchema, nestedSchemaFields }
   }
 
+  const inputs: QueryEvent = {
+    appId: ctx.appId,
+    queryVerb: query.queryVerb,
+    fields: query.fields,
+    parameters: enrichParameters(query),
+    transformer: query.transformer,
+    schema: query.schema,
+    nullDefaultSupport: query.nullDefaultSupport,
+    queryId,
+    datasource,
+    // have to pass down to the thread runner - can't put into context now
+    environmentVariables: envVars,
+    ctx: {
+      user: ctx.user,
+      auth: { ...authConfigCtx },
+    },
+  }
+
+  let queryResponse: QueryResponse
   try {
-    const inputs: QueryEvent = {
-      appId: ctx.appId,
-      datasource,
-      queryVerb,
-      fields,
-      parameters: enrichParameters(parameters),
-      transformer,
-      queryId,
-      schema,
-      // have to pass down to the thread runner - can't put into context now
-      environmentVariables: envVars,
-      ctx: {
-        user: ctx.user,
-        auth: { ...authConfigCtx },
-      },
-    }
-
-    const { rows, keys, info, extra } = (await Runner.run(
-      inputs
-    )) as QueryResponse
-    const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
-
-    // if existing schema, update to include any previous schema keys
-    if (existingSchema) {
-      for (let key of Object.keys(previewSchema)) {
-        if (existingSchema[key]) {
-          previewSchema[key] = existingSchema[key]
-        }
-      }
-    }
-    // remove configuration before sending event
-    delete datasource.config
-    await events.query.previewed(datasource, query)
-    ctx.body = {
-      rows,
-      nestedSchemaFields,
-      schema: previewSchema,
-      info,
-      extra,
-    }
+    queryResponse = await Runner.run<QueryResponse>(inputs)
   } catch (err: any) {
     ctx.throw(400, err)
+  }
+
+  const { rows, keys, info, extra } = queryResponse
+  const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
+
+  // if existing schema, update to include any previous schema keys
+  if (existingSchema) {
+    for (let key of Object.keys(previewSchema)) {
+      if (existingSchema[key]) {
+        previewSchema[key] = existingSchema[key]
+      }
+    }
+  }
+  // remove configuration before sending event
+  delete datasource.config
+  await events.query.previewed(datasource, ctx.request.body)
+  ctx.body = {
+    rows,
+    nestedSchemaFields,
+    schema: previewSchema,
+    info,
+    extra,
   }
 }
 
 async function execute(
-  ctx: UserCtx<ExecuteQueryRequest, ExecuteQueryResponse | Row[]>,
+  ctx: UserCtx<
+    ExecuteQueryRequest,
+    ExecuteQueryResponse | Record<string, any>[]
+  >,
   opts: any = { rowsOnly: false, isAutomation: false }
 ) {
   const db = context.getAppDB()
@@ -318,14 +356,12 @@ async function execute(
       queryVerb: query.queryVerb,
       fields: query.fields,
       pagination: ctx.request.body.pagination,
-      parameters: enrichParameters(
-        query.parameters,
-        ctx.request.body.parameters
-      ),
+      parameters: enrichParameters(query, ctx.request.body.parameters),
       transformer: query.transformer,
       queryId: ctx.params.queryId,
       // have to pass down to the thread runner - can't put into context now
       environmentVariables: envVars,
+      nullDefaultSupport: query.nullDefaultSupport,
       ctx: {
         user: ctx.user,
         auth: { ...authConfigCtx },
@@ -350,18 +386,23 @@ async function execute(
   }
 }
 
-export async function executeV1(ctx: UserCtx) {
+export async function executeV1(
+  ctx: UserCtx<ExecuteQueryRequest, Record<string, any>[]>
+) {
   return execute(ctx, { rowsOnly: true, isAutomation: false })
 }
 
 export async function executeV2(
-  ctx: UserCtx,
+  ctx: UserCtx<
+    ExecuteQueryRequest,
+    ExecuteQueryResponse | Record<string, any>[]
+  >,
   { isAutomation }: { isAutomation?: boolean } = {}
 ) {
   return execute(ctx, { rowsOnly: false, isAutomation })
 }
 
-const removeDynamicVariables = async (queryId: any) => {
+const removeDynamicVariables = async (queryId: string) => {
   const db = context.getAppDB()
   const query = await db.get<Query>(queryId)
   const datasource = await sdk.datasources.get(query.datasourceId)
@@ -378,13 +419,13 @@ const removeDynamicVariables = async (queryId: any) => {
     const variablesToDelete = dynamicVariables!.filter(
       (dv: any) => dv.queryId === queryId
     )
-    await invalidateDynamicVariables(variablesToDelete)
+    await invalidateCachedVariable(variablesToDelete)
   }
 }
 
 export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
-  const queryId = ctx.params.queryId
+  const queryId = ctx.params.queryId as string
   await removeDynamicVariables(queryId)
   const query = await db.get<Query>(queryId)
   const datasource = await sdk.datasources.get(query.datasourceId)

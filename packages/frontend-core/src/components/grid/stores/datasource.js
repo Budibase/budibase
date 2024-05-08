@@ -75,14 +75,18 @@ export const deriveStores = context => {
     }
   )
 
-  const isDatasourcePlus = derived(datasource, $datasource => {
-    return ["table", "viewV2"].includes($datasource?.type)
+  const hasBudibaseIdentifiers = derived(datasource, $datasource => {
+    let type = $datasource?.type
+    if (type === "provider") {
+      type = $datasource.value?.datasource?.type
+    }
+    return ["table", "viewV2", "link"].includes(type)
   })
 
   return {
     schema,
     enrichedSchema,
-    isDatasourcePlus,
+    hasBudibaseIdentifiers,
   }
 }
 

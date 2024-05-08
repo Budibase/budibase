@@ -37,6 +37,7 @@
     "svg",
     "bmp",
     "jfif",
+    "webp",
   ]
 
   const fieldId = id || uuid()
@@ -67,7 +68,7 @@
   }
 
   $: showDropzone =
-    (!maximum || (maximum && value?.length < maximum)) && !disabled
+    (!maximum || (maximum && (value?.length || 0) < maximum)) && !disabled
 
   async function processFileList(fileList) {
     if (
@@ -197,7 +198,9 @@
         >
           <Icon name="ChevronRight" />
         </div>
-        <div class="footer">File {selectedImageIdx + 1} of {fileCount}</div>
+        {#if maximum !== 1}
+          <div class="footer">File {selectedImageIdx + 1} of {fileCount}</div>
+        {/if}
       </div>
     {:else if value?.length}
       {#each value as file}

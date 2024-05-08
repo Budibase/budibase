@@ -6,33 +6,38 @@ import {
   FieldType,
   FilterType,
   IncludeRelationship,
-  ManyToManyRelationshipFieldMetadata,
   OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
   RelationshipFieldMetadata,
-  RelationshipsJson,
-  RelationshipType,
   Row,
   SearchFilters,
   SortJson,
   SortType,
   Table,
+  isManyToOne,
 } from "@budibase/types"
 import {
   breakExternalTableId,
   breakRowIdField,
   convertRowId,
-  generateRowIdField,
   isRowId,
   isSQL,
+  generateRowIdField,
 } from "../../../integrations/utils"
+import {
+  buildExternalRelationships,
+  buildSqlFieldList,
+  generateIdForRow,
+  sqlOutputProcessing,
+  isManyToMany,
+} from "./utils"
 import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
-import { processDates, processFormulas } from "../../../utilities/rowProcessor"
 import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
+import env from "../../../environment"
 
 export interface ManyRelationship {
   tableId?: string
@@ -101,6 +106,45 @@ function buildFilters(
   }
 }
 
+async function removeManyToManyRelationships(
+  rowId: string,
+  table: Table,
+  colName: string
+) {
+  const tableId = table._id!
+  const filters = buildFilters(rowId, {}, table)
+  // safety check, if there are no filters on deletion bad things happen
+  if (Object.keys(filters).length !== 0) {
+    return getDatasourceAndQuery({
+      endpoint: getEndpoint(tableId, Operation.DELETE),
+      body: { [colName]: null },
+      filters,
+      meta: {
+        table,
+      },
+    })
+  } else {
+    return []
+  }
+}
+
+async function removeOneToManyRelationships(rowId: string, table: Table) {
+  const tableId = table._id!
+  const filters = buildFilters(rowId, {}, table)
+  // safety check, if there are no filters on deletion bad things happen
+  if (Object.keys(filters).length !== 0) {
+    return getDatasourceAndQuery({
+      endpoint: getEndpoint(tableId, Operation.UPDATE),
+      filters,
+      meta: {
+        table,
+      },
+    })
+  } else {
+    return []
+  }
+}
+
 /**
  * This function checks the incoming parameters to make sure all the inputs are
  * valid based on on the table schema. The main thing this is looking for is when a
@@ -119,7 +163,8 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   // filter out fields which cannot be keys
   const fieldNames = Object.entries(table.schema)
     .filter(schema => primaryOptions.find(val => val === schema[1].type))
-    .map(([fieldName]) => fieldName)
+    // map to fieldName
+    .map(entry => entry[0])
   const iterateObject = (obj: { [key: string]: any }) => {
     for (let [field, value] of Object.entries(obj)) {
       if (fieldNames.find(name => name === field) && isRowId(value)) {
@@ -148,109 +193,16 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   return config
 }
 
-function generateIdForRow(
-  row: Row | undefined,
-  table: Table,
-  isLinked: boolean = false
-): string {
-  const primary = table.primary
-  if (!row || !primary) {
-    return ""
-  }
-  // build id array
-  let idParts = []
-  for (let field of primary) {
-    let fieldValue = extractFieldValue({
-      row,
-      tableName: table.name,
-      fieldName: field,
-      isLinked,
-    })
-    if (fieldValue != null) {
-      idParts.push(fieldValue)
-    }
-  }
-  if (idParts.length === 0) {
-    return ""
-  }
-  return generateRowIdField(idParts)
-}
-
 function getEndpoint(tableId: string | undefined, operation: string) {
   if (!tableId) {
-    return {}
+    throw new Error("Cannot get endpoint information - no table ID specified")
   }
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   return {
-    datasourceId,
-    entityId: tableName,
-    operation,
+    datasourceId: datasourceId!,
+    entityId: tableName!,
+    operation: operation as Operation,
   }
-}
-
-// need to handle table name + field or just field, depending on if relationships used
-function extractFieldValue({
-  row,
-  tableName,
-  fieldName,
-  isLinked,
-}: {
-  row: Row
-  tableName: string
-  fieldName: string
-  isLinked: boolean
-}) {
-  let value = row[`${tableName}.${fieldName}`]
-  if (value == null && !isLinked) {
-    value = row[fieldName]
-  }
-  return value
-}
-
-function basicProcessing({
-  row,
-  table,
-  isLinked,
-}: {
-  row: Row
-  table: Table
-  isLinked: boolean
-}): Row {
-  const thisRow: Row = {}
-  // filter the row down to what is actually the row (not joined)
-  for (let field of Object.values(table.schema)) {
-    const fieldName = field.name
-
-    const value = extractFieldValue({
-      row,
-      tableName: table.name,
-      fieldName,
-      isLinked,
-    })
-
-    // all responses include "select col as table.col" so that overlaps are handled
-    if (value != null) {
-      thisRow[fieldName] = value
-    }
-  }
-  thisRow._id = generateIdForRow(row, table, isLinked)
-  thisRow.tableId = table._id
-  thisRow._rev = "rev"
-  return thisRow
-}
-
-function fixArrayTypes(row: Row, table: Table) {
-  for (let [fieldName, schema] of Object.entries(table.schema)) {
-    if (schema.type === FieldType.ARRAY && typeof row[fieldName] === "string") {
-      try {
-        row[fieldName] = JSON.parse(row[fieldName])
-      } catch (err) {
-        // couldn't convert back to array, ignore
-        delete row[fieldName]
-      }
-    }
-  }
-  return row
 }
 
 function isOneSide(
@@ -259,12 +211,6 @@ function isOneSide(
   return (
     field.relationshipType && field.relationshipType.split("-")[0] === "one"
   )
-}
-
-function isManyToMany(
-  field: RelationshipFieldMetadata
-): field is ManyToManyRelationshipFieldMetadata {
-  return !!(field as ManyToManyRelationshipFieldMetadata).through
 }
 
 function isEditableColumn(column: FieldSchema) {
@@ -301,6 +247,21 @@ export class ExternalRequest<T extends Operation> {
     const { tableName } = breakExternalTableId(tableId)
     if (tableName) {
       return this.tables[tableName]
+    }
+  }
+
+  async getRow(table: Table, rowId: string): Promise<Row> {
+    const response = await getDatasourceAndQuery({
+      endpoint: getEndpoint(table._id!, Operation.READ),
+      filters: buildFilters(rowId, {}, table),
+      meta: {
+        table,
+      },
+    })
+    if (Array.isArray(response) && response.length > 0) {
+      return response[0]
+    } else {
+      throw new Error(`Cannot fetch row by ID "${rowId}"`)
     }
   }
 
@@ -388,190 +349,14 @@ export class ExternalRequest<T extends Operation> {
     return { row: newRow, manyRelationships }
   }
 
-  processRelationshipFields(
-    table: Table,
-    row: Row,
-    relationships: RelationshipsJson[]
-  ): Row {
-    for (let relationship of relationships) {
-      const linkedTable = this.tables[relationship.tableName]
-      if (!linkedTable || !row[relationship.column]) {
-        continue
-      }
-      for (let key of Object.keys(row[relationship.column])) {
-        let relatedRow: Row = row[relationship.column][key]
-        // add this row as context for the relationship
-        for (let col of Object.values(linkedTable.schema)) {
-          if (col.type === FieldType.LINK && col.tableId === table._id) {
-            relatedRow[col.name] = [row]
-          }
-        }
-        // process additional types
-        relatedRow = processDates(table, relatedRow)
-        relatedRow = processFormulas(linkedTable, relatedRow)
-        row[relationship.column][key] = relatedRow
-      }
-    }
-    return row
-  }
-
-  /**
-   * This iterates through the returned rows and works out what elements of the rows
-   * actually match up to another row (based on primary keys) - this is pretty specific
-   * to SQL and the way that SQL relationships are returned based on joins.
-   * This is complicated, but the idea is that when a SQL query returns all the relations
-   * will be separate rows, with all of the data in each row. We have to decipher what comes
-   * from where (which tables) and how to convert that into budibase columns.
-   */
-  updateRelationshipColumns(
-    table: Table,
-    row: Row,
-    rows: { [key: string]: Row },
-    relationships: RelationshipsJson[]
-  ) {
-    const columns: { [key: string]: any } = {}
-    for (let relationship of relationships) {
-      const linkedTable = this.tables[relationship.tableName]
-      if (!linkedTable) {
-        continue
-      }
-      const fromColumn = `${table.name}.${relationship.from}`
-      const toColumn = `${linkedTable.name}.${relationship.to}`
-      // this is important when working with multiple relationships
-      // between the same tables, don't want to overlap/multiply the relations
-      if (
-        !relationship.through &&
-        row[fromColumn]?.toString() !== row[toColumn]?.toString()
-      ) {
-        continue
-      }
-
-      let linked = basicProcessing({ row, table: linkedTable, isLinked: true })
-      if (!linked._id) {
-        continue
-      }
-      columns[relationship.column] = linked
-    }
-    for (let [column, related] of Object.entries(columns)) {
-      if (!row._id) {
-        continue
-      }
-      const rowId: string = row._id
-      if (!Array.isArray(rows[rowId][column])) {
-        rows[rowId][column] = []
-      }
-      // make sure relationship hasn't been found already
-      if (
-        !rows[rowId][column].find(
-          (relation: Row) => relation._id === related._id
-        )
-      ) {
-        rows[rowId][column].push(related)
-      }
-    }
-    return rows
-  }
-
-  outputProcessing(
-    rows: Row[] = [],
-    table: Table,
-    relationships: RelationshipsJson[]
-  ) {
-    if (!rows || rows.length === 0 || rows[0].read === true) {
-      return []
-    }
-    let finalRows: { [key: string]: Row } = {}
-    for (let row of rows) {
-      const rowId = generateIdForRow(row, table)
-      row._id = rowId
-      // this is a relationship of some sort
-      if (finalRows[rowId]) {
-        finalRows = this.updateRelationshipColumns(
-          table,
-          row,
-          finalRows,
-          relationships
-        )
-        continue
-      }
-      const thisRow = fixArrayTypes(
-        basicProcessing({ row, table, isLinked: false }),
-        table
-      )
-      if (thisRow._id == null) {
-        throw "Unable to generate row ID for SQL rows"
-      }
-      finalRows[thisRow._id] = thisRow
-      // do this at end once its been added to the final rows
-      finalRows = this.updateRelationshipColumns(
-        table,
-        row,
-        finalRows,
-        relationships
-      )
-    }
-
-    // make sure all related rows are correct
-    let finalRowArray = Object.values(finalRows).map(row =>
-      this.processRelationshipFields(table, row, relationships)
-    )
-
-    // process some additional types
-    finalRowArray = processDates(table, finalRowArray)
-    return finalRowArray
-  }
-
-  /**
-   * Gets the list of relationship JSON structures based on the columns in the table,
-   * this will be used by the underlying library to build whatever relationship mechanism
-   * it has (e.g. SQL joins).
-   */
-  buildRelationships(table: Table): RelationshipsJson[] {
-    const relationships = []
-    for (let [fieldName, field] of Object.entries(table.schema)) {
-      if (field.type !== FieldType.LINK) {
-        continue
-      }
-      const { tableName: linkTableName } = breakExternalTableId(field.tableId)
-      // no table to link to, this is not a valid relationships
-      if (!linkTableName || !this.tables[linkTableName]) {
-        continue
-      }
-      const linkTable = this.tables[linkTableName]
-      if (!table.primary || !linkTable.primary) {
-        continue
-      }
-      const definition: RelationshipsJson = {
-        tableName: linkTableName,
-        // need to specify where to put this back into
-        column: fieldName,
-      }
-      if (isManyToMany(field)) {
-        const { tableName: throughTableName } = breakExternalTableId(
-          field.through
-        )
-        definition.through = throughTableName
-        // don't support composite keys for relationships
-        definition.from = field.throughTo || table.primary[0]
-        definition.to = field.throughFrom || linkTable.primary[0]
-        definition.fromPrimary = table.primary[0]
-        definition.toPrimary = linkTable.primary[0]
-      } else {
-        // if no foreign key specified then use the name of the field in other table
-        definition.from = field.foreignKey || table.primary[0]
-        definition.to = field.fieldName
-      }
-      relationships.push(definition)
-    }
-    return relationships
-  }
-
   /**
    * This is a cached lookup, of relationship records, this is mainly for creating/deleting junction
    * information.
    */
   async lookupRelations(tableId: string, row: Row) {
-    const related: { [key: string]: any } = {}
+    const related: {
+      [key: string]: { rows: Row[]; isMany: boolean; tableId: string }
+    } = {}
     const { tableName } = breakExternalTableId(tableId)
     if (!tableName) {
       return related
@@ -589,29 +374,57 @@ export class ExternalRequest<T extends Operation> {
       ) {
         continue
       }
-      const isMany = field.relationshipType === RelationshipType.MANY_TO_MANY
-      const tableId = isMany ? field.through : field.tableId
-      const { tableName: relatedTableName } = breakExternalTableId(tableId)
+      let relatedTableId: string | undefined,
+        lookupField: string | undefined,
+        fieldName: string | undefined
+      if (isManyToMany(field)) {
+        relatedTableId = field.through
+        lookupField = primaryKey
+        fieldName = field.throughTo || primaryKey
+      } else if (isManyToOne(field)) {
+        relatedTableId = field.tableId
+        lookupField = field.foreignKey
+        fieldName = field.fieldName
+      }
+      if (!relatedTableId || !lookupField || !fieldName) {
+        throw new Error(
+          "Unable to lookup relationships - undefined column properties."
+        )
+      }
+      const { tableName: relatedTableName } =
+        breakExternalTableId(relatedTableId)
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
-
-      const lookupField = isMany ? primaryKey : field.foreignKey
-      const fieldName = isMany ? field.throughTo || primaryKey : field.fieldName
       if (!lookupField || !row[lookupField]) {
         continue
       }
+      const endpoint = getEndpoint(relatedTableId, Operation.READ)
+      const relatedTable = this.tables[endpoint.entityId]
+      if (!relatedTable) {
+        throw new Error("unable to find related table")
+      }
       const response = await getDatasourceAndQuery({
-        endpoint: getEndpoint(tableId, Operation.READ),
+        endpoint: endpoint,
         filters: {
           equal: {
             [fieldName]: row[lookupField],
           },
         },
+        meta: {
+          table: relatedTable,
+        },
       })
       // this is the response from knex if no rows found
-      const rows = !response[0].read ? response : []
-      const storeTo = isMany ? field.throughFrom || linkPrimaryKey : fieldName
-      related[storeTo] = { rows, isMany, tableId }
+      const rows: Row[] =
+        !Array.isArray(response) || response?.[0].read ? [] : response
+      const storeTo = isManyToMany(field)
+        ? field.throughFrom || linkPrimaryKey
+        : fieldName
+      related[storeTo] = {
+        rows,
+        isMany: isManyToMany(field),
+        tableId: relatedTableId,
+      }
     }
     return related
   }
@@ -648,7 +461,7 @@ export class ExternalRequest<T extends Operation> {
 
       const rows = related[key]?.rows || []
 
-      function relationshipMatchPredicate({
+      const relationshipMatchPredicate = ({
         row,
         linkPrimary,
         linkSecondary,
@@ -656,7 +469,7 @@ export class ExternalRequest<T extends Operation> {
         row: Row
         linkPrimary: string
         linkSecondary?: string
-      }) {
+      }) => {
         const matchesPrimaryLink =
           row[linkPrimary] === relationship.id ||
           row[linkPrimary] === body?.[linkPrimary]
@@ -679,6 +492,9 @@ export class ExternalRequest<T extends Operation> {
             // if we're doing many relationships then we're writing, only one response
             body,
             filters: buildFilters(id, {}, linkTable),
+            meta: {
+              table: linkTable,
+            },
           })
         )
       } else {
@@ -697,57 +513,41 @@ export class ExternalRequest<T extends Operation> {
         continue
       }
       for (let row of rows) {
-        const filters = buildFilters(generateIdForRow(row, table), {}, table)
-        // safety check, if there are no filters on deletion bad things happen
-        if (Object.keys(filters).length !== 0) {
-          const op = isMany ? Operation.DELETE : Operation.UPDATE
-          const body = isMany ? null : { [colName]: null }
-          promises.push(
-            getDatasourceAndQuery({
-              endpoint: getEndpoint(tableId, op),
-              body,
-              filters,
-            })
-          )
+        const rowId = generateIdForRow(row, table)
+        const promise: Promise<any> = isMany
+          ? removeManyToManyRelationships(rowId, table, colName)
+          : removeOneToManyRelationships(rowId, table)
+        if (promise) {
+          promises.push(promise)
         }
       }
     }
     await Promise.all(promises)
   }
 
-  /**
-   * This function is a bit crazy, but the exact purpose of it is to protect against the scenario in which
-   * you have column overlap in relationships, e.g. we join a few different tables and they all have the
-   * concept of an ID, but for some of them it will be null (if they say don't have a relationship).
-   * Creating the specific list of fields that we desire, and excluding the ones that are no use to us
-   * is more performant and has the added benefit of protecting against this scenario.
-   */
-  buildFields(table: Table, includeRelations: boolean) {
-    function extractRealFields(table: Table, existing: string[] = []) {
-      return Object.entries(table.schema)
-        .filter(
-          column =>
-            column[1].type !== FieldType.LINK &&
-            column[1].type !== FieldType.FORMULA &&
-            !existing.find((field: string) => field === column[0])
-        )
-        .map(column => `${table.name}.${column[0]}`)
-    }
-    let fields = extractRealFields(table)
-    for (let field of Object.values(table.schema)) {
-      if (field.type !== FieldType.LINK || !includeRelations) {
+  async removeRelationshipsToRow(table: Table, rowId: string) {
+    const row = await this.getRow(table, rowId)
+    const related = await this.lookupRelations(table._id!, row)
+    for (let column of Object.values(table.schema)) {
+      const relationshipColumn = column as RelationshipFieldMetadata
+      if (!isManyToOne(relationshipColumn)) {
         continue
       }
-      const { tableName: linkTableName } = breakExternalTableId(field.tableId)
-      if (linkTableName) {
-        const linkTable = this.tables[linkTableName]
-        if (linkTable) {
-          const linkedFields = extractRealFields(linkTable, fields)
-          fields = fields.concat(linkedFields)
-        }
-      }
+      const { rows, isMany, tableId } = related[relationshipColumn.fieldName]
+      const table = this.getTable(tableId)!
+      await Promise.all(
+        rows.map(row => {
+          const rowId = generateIdForRow(row, table)
+          return isMany
+            ? removeManyToManyRelationships(
+                rowId,
+                table,
+                relationshipColumn.fieldName
+              )
+            : removeOneToManyRelationships(rowId, table)
+        })
+      )
     }
-    return fields
   }
 
   async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
@@ -783,14 +583,16 @@ export class ExternalRequest<T extends Operation> {
           delete sort?.[sortColumn]
           break
         case FieldType.NUMBER:
-          sort[sortColumn].type = SortType.number
+          if (sort && sort[sortColumn]) {
+            sort[sortColumn].type = SortType.NUMBER
+          }
           break
       }
     }
     filters = buildFilters(id, filters || {}, table)
-    const relationships = this.buildRelationships(table)
+    const relationships = buildExternalRelationships(table, this.tables)
 
-    const includeSqlRelationships =
+    const incRelationships =
       config.includeSqlRelationships === IncludeRelationship.INCLUDE
 
     // clean up row on ingress using schema
@@ -804,13 +606,17 @@ export class ExternalRequest<T extends Operation> {
     }
     let json = {
       endpoint: {
-        datasourceId,
+        datasourceId: datasourceId!,
         entityId: tableName,
         operation,
       },
       resource: {
         // have to specify the fields to avoid column overlap (for SQL)
-        fields: isSql ? this.buildFields(table, includeSqlRelationships) : [],
+        fields: isSql
+          ? buildSqlFieldList(table, this.tables, {
+              relationships: incRelationships,
+            })
+          : [],
       },
       filters,
       sort,
@@ -826,17 +632,35 @@ export class ExternalRequest<T extends Operation> {
       },
     }
 
-    // can't really use response right now
-    const response = await getDatasourceAndQuery(json)
-    // handle many to many relationships now if we know the ID (could be auto increment)
+    // remove any relationships that could block deletion
+    if (operation === Operation.DELETE && id) {
+      await this.removeRelationshipsToRow(table, generateRowIdField(id))
+    }
+
+    // aliasing can be disabled fully if desired
+    let response
+    if (env.SQL_ALIASING_DISABLE) {
+      response = await getDatasourceAndQuery(json)
+    } else {
+      const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
+      response = await aliasing.queryWithAliasing(json)
+    }
+
+    const responseRows = Array.isArray(response) ? response : []
+    // handle many-to-many relationships now if we know the ID (could be auto increment)
     if (operation !== Operation.READ) {
       await this.handleManyRelationships(
         table._id || "",
-        response[0],
+        responseRows[0],
         processed.manyRelationships
       )
     }
-    const output = this.outputProcessing(response, table, relationships)
+    const output = await sqlOutputProcessing(
+      response,
+      table,
+      this.tables,
+      relationships
+    )
     // if reading it'll just be an array of rows, return whole thing
     if (operation === Operation.READ) {
       return (

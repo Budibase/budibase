@@ -1,6 +1,7 @@
 <script>
   import { onMount, getContext } from "svelte"
   import { Dropzone } from "@budibase/bbui"
+  import GridPopover from "../overlays/GridPopover.svelte"
 
   export let value
   export let focused = false
@@ -8,12 +9,14 @@
   export let readonly = false
   export let api
   export let invertX = false
-  export let invertY = false
+  export let schema
+  export let maximum
 
   const { API, notifications } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
 
   let isOpen = false
+  let anchor
 
   $: editable = focused && !readonly
   $: {
@@ -59,14 +62,6 @@
     }
   }
 
-  const deleteAttachments = async fileList => {
-    try {
-      return await API.deleteBuilderAttachments(fileList)
-    } catch (error) {
-      return []
-    }
-  }
-
   onMount(() => {
     api = {
       focus: () => open(),
@@ -79,7 +74,12 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="attachment-cell" class:editable on:click={editable ? open : null}>
+<div
+  class="attachment-cell"
+  class:editable
+  on:click={editable ? open : null}
+  bind:this={anchor}
+>
   {#each value || [] as attachment}
     {#if isImage(attachment.extension)}
       <img src={attachment.url} alt={attachment.extension} />
@@ -92,16 +92,24 @@
 </div>
 
 {#if isOpen}
-  <div class="dropzone" class:invertX class:invertY>
-    <Dropzone
-      {value}
-      compact
-      on:change={e => onChange(e.detail)}
-      {processFiles}
-      {deleteAttachments}
-      {handleFileTooLarge}
-    />
-  </div>
+  <GridPopover
+    open={isOpen}
+    {anchor}
+    {invertX}
+    maxHeight={null}
+    on:close={close}
+  >
+    <div class="dropzone">
+      <Dropzone
+        {value}
+        compact
+        on:change={e => onChange(e.detail)}
+        maximum={maximum || schema.constraints?.length?.maximum}
+        {processFiles}
+        {handleFileTooLarge}
+      />
+    </div>
+  </GridPopover>
 {/if}
 
 <style>
@@ -135,23 +143,8 @@
     user-select: none;
   }
   .dropzone {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 320px;
     background: var(--grid-background-alt);
-    border: var(--cell-border);
+    width: 320px;
     padding: var(--cell-padding);
-    box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
-  }
-  .dropzone.invertX {
-    left: auto;
-    right: 0;
-  }
-  .dropzone.invertY {
-    transform: translateY(-100%);
-    top: 0;
   }
 </style>

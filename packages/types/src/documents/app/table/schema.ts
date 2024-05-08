@@ -1,9 +1,10 @@
 // all added by grid/table when defining the
 // column size, position and whether it can be viewed
-import { FieldSubtype, FieldType } from "../row"
+import { FieldType } from "../row"
 import {
   AutoFieldSubType,
   AutoReason,
+  BBReferenceFieldSubType,
   FormulaType,
   JsonFieldSubType,
   RelationshipType,
@@ -91,6 +92,7 @@ export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.DATETIME
   ignoreTimezones?: boolean
   timeOnly?: boolean
+  dateOnly?: boolean
   subtype?: AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT
 }
 
@@ -108,8 +110,12 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
 export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+  subtype: BBReferenceFieldSubType.USER | BBReferenceFieldSubType.USERS
   relationshipType?: RelationshipType
+}
+
+export interface AttachmentFieldMetadata extends BaseFieldSchema {
+  type: FieldType.ATTACHMENTS
 }
 
 export interface FieldConstraints {
@@ -119,6 +125,7 @@ export interface FieldConstraints {
   length?: {
     minimum?: string | number | null
     maximum?: string | number | null
+    message?: string
   }
   numericality?: {
     greaterThanOrEqualTo: string | null
@@ -156,6 +163,8 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.FORMULA
     | FieldType.NUMBER
     | FieldType.LONGFORM
+    | FieldType.BB_REFERENCE
+    | FieldType.ATTACHMENTS
   >
 }
 
@@ -169,6 +178,7 @@ export type FieldSchema =
   | LongFormFieldMetadata
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
+  | AttachmentFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
@@ -202,4 +212,10 @@ export function isBBReferenceField(
   field: FieldSchema
 ): field is BBReferenceFieldMetadata {
   return field.type === FieldType.BB_REFERENCE
+}
+
+export function isAttachmentField(
+  field: FieldSchema
+): field is AttachmentFieldMetadata {
+  return field.type === FieldType.ATTACHMENTS
 }

@@ -1,11 +1,10 @@
 import {
-  SearchQuery,
-  SearchQueryOperators,
+  SearchFilters,
+  SearchFilterOperator,
   FieldType,
   SearchFilter,
 } from "@budibase/types"
 import { buildLuceneQuery, runLuceneQuery } from "../filters"
-import { expect, describe, it, test } from "vitest"
 
 describe("runLuceneQuery", () => {
   const docs = [
@@ -47,11 +46,8 @@ describe("runLuceneQuery", () => {
     },
   ]
 
-  function buildQuery(
-    filterKey: string,
-    value: { [key: string]: any }
-  ): SearchQuery {
-    const query: SearchQuery = {
+  function buildQuery(filters: { [filterKey: string]: any }): SearchFilters {
+    const query: SearchFilters = {
       string: {},
       fuzzy: {},
       range: {},
@@ -63,8 +59,13 @@ describe("runLuceneQuery", () => {
       notContains: {},
       oneOf: {},
       containsAny: {},
+      allOr: false,
     }
-    query[filterKey as SearchQueryOperators] = value
+
+    for (const filterKey in filters) {
+      query[filterKey as SearchFilterOperator] = filters[filterKey]
+    }
+
     return query
   }
 
@@ -73,16 +74,17 @@ describe("runLuceneQuery", () => {
   })
 
   it("should return matching rows for equal filter", () => {
-    const query = buildQuery("equal", {
-      order_status: 4,
+    const query = buildQuery({
+      equal: { order_status: 4 },
     })
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([1, 2])
   })
 
   it("should return matching row for notEqual filter", () => {
-    const query = buildQuery("notEqual", {
-      order_status: 4,
+    const query = buildQuery({
+      notEqual: { order_status: 4 },
     })
+
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([3])
   })
 
@@ -90,48 +92,56 @@ describe("runLuceneQuery", () => {
     expect(
       runLuceneQuery(
         docs,
-        buildQuery("fuzzy", {
-          description: "sm",
+        buildQuery({
+          fuzzy: { description: "sm" },
         })
       ).map(row => row.description)
     ).toEqual(["Small box"])
     expect(
       runLuceneQuery(
         docs,
-        buildQuery("string", {
-          description: "SM",
+        buildQuery({
+          string: { description: "SM" },
         })
       ).map(row => row.description)
     ).toEqual(["Small box"])
   })
 
   it("should return rows within a range filter", () => {
-    const query = buildQuery("range", {
-      customer_id: {
-        low: 500,
-        high: 1000,
+    const query = buildQuery({
+      range: {
+        customer_id: {
+          low: 500,
+          high: 1000,
+        },
       },
     })
+
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([3])
   })
 
   it("should return rows with numeric strings within a range filter", () => {
-    const query = buildQuery("range", {
-      customer_id: {
-        low: "500",
-        high: "1000",
+    const query = buildQuery({
+      range: {
+        customer_id: {
+          low: "500",
+          high: "1000",
+        },
       },
     })
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([3])
   })
 
   it("should return rows with ISO date strings within a range filter", () => {
-    const query = buildQuery("range", {
-      order_date: {
-        low: "2016-01-04T00:00:00.000Z",
-        high: "2016-01-11T00:00:00.000Z",
+    const query = buildQuery({
+      range: {
+        order_date: {
+          low: "2016-01-04T00:00:00.000Z",
+          high: "2016-01-11T00:00:00.000Z",
+        },
       },
     })
+
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2])
   })
 
@@ -150,40 +160,88 @@ describe("runLuceneQuery", () => {
         label: "",
       },
     ]
-    const query = buildQuery("range", {
-      order_date: {
-        low: "2016-01-04T00:00:00.000Z",
-        high: "2016-01-11T00:00:00.000Z",
+
+    const query = buildQuery({
+      range: {
+        order_date: {
+          low: "2016-01-04T00:00:00.000Z",
+          high: "2016-01-11T00:00:00.000Z",
+        },
       },
     })
+
     expect(runLuceneQuery(docs, query)).toEqual(docs)
   })
 
   it("should return rows with matches on empty filter", () => {
-    const query = buildQuery("empty", {
-      label: null,
+    const query = buildQuery({
+      empty: {
+        label: null,
+      },
     })
+
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([1])
   })
 
   it("should return rows with matches on notEmpty filter", () => {
-    const query = buildQuery("notEmpty", {
-      label: null,
+    const query = buildQuery({
+      notEmpty: {
+        label: null,
+      },
     })
+
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2, 3])
   })
 
-  test.each([[523, 259], "523,259"])(
+  it.each([[523, 259], "523,259"])(
     "should return rows with matches on numeric oneOf filter",
     input => {
-      let query = buildQuery("oneOf", {
-        customer_id: input,
+      const query = buildQuery({
+        oneOf: {
+          customer_id: input,
+        },
       })
+
       expect(runLuceneQuery(docs, query).map(row => row.customer_id)).toEqual([
         259, 523,
       ])
     }
   )
+
+  it.each([
+    [false, []],
+    [true, [1, 2, 3]],
+  ])("should return %s  if allOr is %s ", (allOr, expectedResult) => {
+    const query = buildQuery({
+      allOr,
+      oneOf: { staff_id: [10] },
+      contains: { description: ["box"] },
+    })
+
+    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual(
+      expectedResult
+    )
+  })
+
+  it("should return matching results if allOr is true and only one filter matches with different operands", () => {
+    const query = buildQuery({
+      allOr: true,
+      equal: { order_status: 4 },
+      oneOf: { label: ["FRAGILE"] },
+    })
+
+    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([1, 2])
+  })
+
+  it("should handle when a value is null or undefined", () => {
+    const query = buildQuery({
+      allOr: true,
+      equal: { order_status: null },
+      oneOf: { label: ["FRAGILE"] },
+    })
+
+    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2])
+  })
 })
 
 describe("buildLuceneQuery", () => {
@@ -207,13 +265,13 @@ describe("buildLuceneQuery", () => {
   it("should parseFloat if the type is a number, but the value is a numeric string", () => {
     const filter: SearchFilter[] = [
       {
-        operator: SearchQueryOperators.EQUAL,
+        operator: SearchFilterOperator.EQUAL,
         field: "customer_id",
         type: FieldType.NUMBER,
         value: "1212",
       },
       {
-        operator: SearchQueryOperators.ONE_OF,
+        operator: SearchFilterOperator.ONE_OF,
         field: "customer_id",
         type: FieldType.NUMBER,
         value: "1000,1212,3400",
@@ -241,13 +299,13 @@ describe("buildLuceneQuery", () => {
   it("should not parseFloat if the type is a number, but the value is a handlebars binding string", () => {
     const filter: SearchFilter[] = [
       {
-        operator: SearchQueryOperators.EQUAL,
+        operator: SearchFilterOperator.EQUAL,
         field: "customer_id",
         type: FieldType.NUMBER,
         value: "{{ customer_id }}",
       },
       {
-        operator: SearchQueryOperators.ONE_OF,
+        operator: SearchFilterOperator.ONE_OF,
         field: "customer_id",
         type: FieldType.NUMBER,
         value: "{{ list_of_customer_ids }}",
@@ -275,19 +333,19 @@ describe("buildLuceneQuery", () => {
   it("should cast string to boolean if the type is boolean", () => {
     const filter: SearchFilter[] = [
       {
-        operator: SearchQueryOperators.EQUAL,
+        operator: SearchFilterOperator.EQUAL,
         field: "a",
         type: FieldType.BOOLEAN,
         value: "not_true",
       },
       {
-        operator: SearchQueryOperators.NOT_EQUAL,
+        operator: SearchFilterOperator.NOT_EQUAL,
         field: "b",
         type: FieldType.BOOLEAN,
         value: "not_true",
       },
       {
-        operator: SearchQueryOperators.EQUAL,
+        operator: SearchFilterOperator.EQUAL,
         field: "c",
         type: FieldType.BOOLEAN,
         value: "true",
@@ -316,19 +374,19 @@ describe("buildLuceneQuery", () => {
   it("should split the string for contains operators", () => {
     const filter: SearchFilter[] = [
       {
-        operator: SearchQueryOperators.CONTAINS,
+        operator: SearchFilterOperator.CONTAINS,
         field: "description",
         type: FieldType.ARRAY,
         value: "Large box,Heavy box,Small box",
       },
       {
-        operator: SearchQueryOperators.NOT_CONTAINS,
+        operator: SearchFilterOperator.NOT_CONTAINS,
         field: "description",
         type: FieldType.ARRAY,
         value: "Large box,Heavy box,Small box",
       },
       {
-        operator: SearchQueryOperators.CONTAINS_ANY,
+        operator: SearchFilterOperator.CONTAINS_ANY,
         field: "description",
         type: FieldType.ARRAY,
         value: "Large box,Heavy box,Small box",
