@@ -131,6 +131,7 @@
         {API}
         {stripeRows}
         {quiet}
+        {darkMode}
         {initialFilter}
         {initialSortColumn}
         {initialSortOrder}
