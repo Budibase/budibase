@@ -148,14 +148,13 @@ async function generateAttachmentRow(attachment: AutomationAttachment) {
         const processedFileName = `${uuid.v4()}.${extension}`
         s3Key = `${prodAppId}/attachments/${processedFileName}`
         await objectStore.streamUpload({
-          bucket: bucket,
+          bucket: objectStore.ObjectStoreBuckets.APPS,
           stream: content,
           filename: s3Key,
         })
       }
-
       const metadata = await client
-        .headObject({ Bucket: bucket, Key: s3Key })
+        .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
         .promise()
       size = metadata.ContentLength
     } else {

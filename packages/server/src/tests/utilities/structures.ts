@@ -91,7 +91,7 @@ export function basicTableWithAttachmentField(
           type: FieldType.ATTACHMENTS,
           name: "description",
           constraints: {
-            type: FieldType.ATTACHMENTS,
+            type: "array",
           },
         },
       },

@@ -1,8 +1,8 @@
 import * as setup from "./utilities"
-import { objectStoreTestProviders } from "@budibase/backend-core/tests"
-import { objectStore } from "@budibase/backend-core"
 import tk from "timekeeper"
 import { basicTableWithAttachmentField } from "../../tests/utilities/structures"
+import { utils } from "@budibase/backend-core/tests"
+import { objectStore } from "@budibase/backend-core"
 
 describe("test the create row action", () => {
   let table: any
@@ -21,11 +21,9 @@ describe("test the create row action", () => {
 
   beforeAll(async () => {
     tk.reset()
-    await objectStoreTestProviders.minio.start()
   })
 
   afterAll(async () => {
-    await objectStoreTestProviders.minio.stop()
     await setup.afterAll()
   })
 
@@ -59,7 +57,6 @@ describe("test the create row action", () => {
   })
 
   it("should check that an attachment field is sent to storage and parsed", async () => {
-    jest.unmock("aws-sdk")
     let attachmentTable = await config.createTable(
       basicTableWithAttachmentField()
     )
@@ -68,18 +65,8 @@ describe("test the create row action", () => {
       tableId: attachmentTable._id,
     }
 
-    let bucket = "testbucket"
     let filename = "test.txt"
-    await objectStore.upload({
-      bucket,
-      filename,
-      body: Buffer.from("test data"),
-    })
-    let presignedUrl = await objectStore.getPresignedUrl(
-      bucket,
-      filename,
-      60000
-    )
+    let presignedUrl = await utils.file.getSignedUrlFromTestFile(filename)
     let attachmentObject = [
       {
         url: presignedUrl,
@@ -91,6 +78,18 @@ describe("test the create row action", () => {
     const res = await setup.runStep(setup.actions.CREATE_ROW.stepId, {
       row: attachmentRow,
     })
+
     expect(res.success).toEqual(true)
+    expect(res.row.file_attachment[0]).toHaveProperty("key")
+    let s3Key = res.row.file_attachment[0].key
+
+    const client = objectStore.ObjectStore(objectStore.ObjectStoreBuckets.APPS)
+
+    const objectData = await client
+      .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
+      .promise()
+
+    expect(objectData).toBeDefined()
+    expect(objectData.ContentLength).toBeGreaterThan(0)
   })
 })

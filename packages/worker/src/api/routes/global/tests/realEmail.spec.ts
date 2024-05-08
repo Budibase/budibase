@@ -2,7 +2,7 @@ jest.unmock("node-fetch")
 jest.unmock("aws-sdk")
 import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
-import { objectStore } from "@budibase/backend-core"
+import { utils } from "@budibase/backend-core/tests"
 import tk from "timekeeper"
 import { EmailAttachment } from "@budibase/types"
 
@@ -97,19 +97,8 @@ describe("/api/global/email", () => {
   })
 
   it("should be able to send an email with attachments", async () => {
-    let bucket = "testbucket"
     let filename = "test.txt"
-    await objectStore.upload({
-      bucket,
-      filename,
-      body: Buffer.from("test data"),
-    })
-    let presignedUrl = await objectStore.getPresignedUrl(
-      bucket,
-      filename,
-      60000
-    )
-
+    let presignedUrl = await utils.file.getSignedUrlFromTestFile(filename)
     let attachmentObject = {
       url: presignedUrl,
       filename,
