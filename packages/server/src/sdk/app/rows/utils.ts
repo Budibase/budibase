@@ -34,6 +34,7 @@ const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.REDIS]: undefined,
   [SourceName.SNOWFLAKE]: undefined,
   [SourceName.BUDIBASE]: undefined,
+  [SourceName.AZURE]: undefined,
 }
 
 export function getSQLClient(datasource: Datasource): SqlClient {
