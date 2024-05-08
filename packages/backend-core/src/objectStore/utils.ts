@@ -61,7 +61,6 @@ export const bucketTTLConfig = (
   return params
 }
 
-// Function for handling URL attachments
 async function processUrlAttachment(
   attachment: AutomationAttachment
 ): Promise<AutomationAttachmentContent> {
@@ -76,7 +75,6 @@ async function processUrlAttachment(
   }
 }
 
-// Function for handling object storage attachments
 export async function processObjectStoreAttachment(
   attachment: AutomationAttachment
 ): Promise<BucketedContent> {
@@ -97,7 +95,6 @@ export async function processObjectStoreAttachment(
   }
 }
 
-// Main function to decide which processing function to call
 export async function processAutomationAttachment(
   attachment: AutomationAttachment
 ): Promise<AutomationAttachmentContent | BucketedContent> {
