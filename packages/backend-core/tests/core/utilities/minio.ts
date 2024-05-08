@@ -24,11 +24,12 @@ export async function start(): Promise<void> {
   }
 
   const ports = testContainerUtils.getExposedV4Ports(info)
-  if (!ports.length) {
-    throw new Error("No ports found")
+  const port = ports.find(x => x.container === 9000)?.host
+  if (!port) {
+    throw new Error("Couldn't find a mapping for minio port 9000")
   }
 
-  env._set("MINIO_URL", `http://127.0.0.1:${ports[0]}`)
+  env._set("MINIO_URL", `http://127.0.0.1:${port}`)
 }
 
 export async function stop() {
