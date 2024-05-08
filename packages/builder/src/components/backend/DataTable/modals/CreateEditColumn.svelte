@@ -29,7 +29,11 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
-  import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
+  import {
+    FieldType,
+    BBReferenceFieldSubType,
+    SourceName,
+  } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
@@ -41,8 +45,6 @@
   const NUMBER_TYPE = FieldType.NUMBER
   const JSON_TYPE = FieldType.JSON
   const DATE_TYPE = FieldType.DATETIME
-  const USER_TYPE = FieldSubtype.USER
-  const USERS_TYPE = FieldSubtype.USERS
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -263,9 +265,9 @@
       delete saveColumn.fieldName
     }
     if (isUsersColumn(saveColumn)) {
-      if (saveColumn.subtype === USER_TYPE) {
+      if (saveColumn.subtype === BBReferenceFieldSubType.USER) {
         saveColumn.relationshipType = RelationshipType.ONE_TO_MANY
-      } else if (saveColumn.subtype === USERS_TYPE) {
+      } else if (saveColumn.subtype === BBReferenceFieldSubType.USERS) {
         saveColumn.relationshipType = RelationshipType.MANY_TO_MANY
       }
     }
@@ -363,19 +365,17 @@
 
   function getAllowedTypes() {
     if (originalName) {
-      const possibleTypes = (
-        SWITCHABLE_TYPES[field.type] || [editableColumn.type]
-      ).map(t => t.toLowerCase())
+      const possibleTypes = SWITCHABLE_TYPES[field.type] || [
+        editableColumn.type,
+      ]
       return Object.entries(FIELDS)
-        .filter(([fieldType]) =>
-          possibleTypes.includes(fieldType.toLowerCase())
-        )
+        .filter(([_, field]) => possibleTypes.includes(field.type))
         .map(([_, fieldDefinition]) => fieldDefinition)
     }
 
     const isUsers =
       editableColumn.type === FieldType.BB_REFERENCE &&
-      editableColumn.subtype === FieldSubtype.USERS
+      editableColumn.subtype === BBReferenceFieldSubType.USERS
 
     if (!externalTable) {
       return [
@@ -486,7 +486,9 @@
   function isUsersColumn(column) {
     return (
       column.type === FieldType.BB_REFERENCE &&
-      [FieldSubtype.USER, FieldSubtype.USERS].includes(column.subtype)
+      [BBReferenceFieldSubType.USER, BBReferenceFieldSubType.USERS].includes(
+        column.subtype
+      )
     )
   }
 
@@ -514,6 +516,7 @@
     />
   {/if}
   <Select
+    placeholder={null}
     disabled={!typeEnabled}
     bind:value={editableColumn.fieldId}
     on:change={onHandleTypeChange}
@@ -689,12 +692,14 @@
     >
   {:else if isUsersColumn(editableColumn) && datasource?.source !== SourceName.GOOGLE_SHEETS}
     <Toggle
-      value={editableColumn.subtype === FieldSubtype.USERS}
+      value={editableColumn.subtype === BBReferenceFieldSubType.USERS}
       on:change={e =>
         handleTypeChange(
           makeFieldId(
             FieldType.BB_REFERENCE,
-            e.detail ? FieldSubtype.USERS : FieldSubtype.USER
+            e.detail
+              ? BBReferenceFieldSubType.USERS
+              : BBReferenceFieldSubType.USER
           )
         )}
       disabled={!isCreating}

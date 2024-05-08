@@ -22,6 +22,7 @@ import {
   isJSBinding,
   decodeJSBinding,
   encodeJSBinding,
+  getJsHelperList,
 } from "@budibase/string-templates"
 import { TableNames } from "./constants"
 import { JSONUtils, Constants } from "@budibase/frontend-core"
@@ -1105,50 +1106,51 @@ export const getAllStateVariables = () => {
   getAllAssets().forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
       const settings = componentStore.getComponentSettings(component._component)
+      const nestedTypes = [
+        "buttonConfiguration",
+        "fieldConfiguration",
+        "stepConfiguration",
+      ]
 
+      // Extracts all event settings from a component instance.
+      // Recurses into nested types to find all event-like settings at any
+      // depth.
       const parseEventSettings = (settings, comp) => {
+        if (!settings?.length) {
+          return
+        }
+
+        // Extract top level event settings
         settings
           .filter(setting => setting.type === "event")
           .forEach(setting => {
             eventSettings.push(comp[setting.key])
           })
-      }
 
-      const parseComponentSettings = (settings, component) => {
-        // Parse the nested button configurations
+        // Recurse into any nested instance types
         settings
-          .filter(setting => setting.type === "buttonConfiguration")
+          .filter(setting => nestedTypes.includes(setting.type))
           .forEach(setting => {
-            const buttonConfig = component[setting.key]
+            const instances = comp[setting.key]
+            if (Array.isArray(instances) && instances.length) {
+              instances.forEach(instance => {
+                let type = instance?._component
 
-            if (Array.isArray(buttonConfig)) {
-              buttonConfig.forEach(button => {
-                const nestedSettings = componentStore.getComponentSettings(
-                  button._component
-                )
-                parseEventSettings(nestedSettings, button)
+                // Backwards compatibility for multi-step from blocks which
+                // didn't set a proper component type previously.
+                if (setting.type === "stepConfiguration" && !type) {
+                  type = "@budibase/standard-components/multistepformblockstep"
+                }
+
+                // Parsed nested component instances inside this setting
+                const nestedSettings = componentStore.getComponentSettings(type)
+                parseEventSettings(nestedSettings, instance)
               })
             }
           })
-
-        parseEventSettings(settings, component)
       }
 
-      // Parse the base component settings
-      parseComponentSettings(settings, component)
-
-      // Parse step configuration
-      const stepSetting = settings.find(
-        setting => setting.type === "stepConfiguration"
-      )
-      const steps = stepSetting ? component[stepSetting.key] : []
-      const stepDefinition = componentStore.getComponentSettings(
-        "@budibase/standard-components/multistepformblockstep"
-      )
-
-      steps?.forEach(step => {
-        parseComponentSettings(stepDefinition, step)
-      })
+      parseEventSettings(settings, component)
     })
   })
 
@@ -1210,9 +1212,32 @@ const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
   if (!currentValue?.includes(from)) {
     return false
   }
-  if (convertTo === "readableBinding") {
-    // Dont replace if the value already matches the readable binding
+  // some cases we have the same binding for readable/runtime, specific logic for this
+  const sameBindings = binding.runtimeBinding.includes(binding.readableBinding)
+  const convertingToReadable = convertTo === "readableBinding"
+  const helperNames = Object.keys(getJsHelperList())
+  const matchedHelperNames = helperNames.filter(
+    name => name.includes(from) && currentValue.includes(name)
+  )
+  // edge case - if the binding is part of a helper it may accidentally replace it
+  if (matchedHelperNames.length > 0) {
+    const indexStart = currentValue.indexOf(from),
+      indexEnd = indexStart + from.length
+    for (let helperName of matchedHelperNames) {
+      const helperIndexStart = currentValue.indexOf(helperName),
+        helperIndexEnd = helperIndexStart + helperName.length
+      if (indexStart >= helperIndexStart && indexEnd <= helperIndexEnd) {
+        return false
+      }
+    }
+  }
+
+  if (convertingToReadable && !sameBindings) {
+    // Don't replace if the value already matches the readable binding
     return currentValue.indexOf(binding.readableBinding) === -1
+  } else if (convertingToReadable) {
+    // if the runtime and readable bindings are very similar we have to assume it should be replaced
+    return true
   }
   // remove all the spaces, if the input is surrounded by spaces e.g. [ Auto ID ] then
   // this makes sure it is detected

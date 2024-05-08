@@ -5,6 +5,7 @@ import {
   UpdateDatasourceResponse,
   UpdateDatasourceRequest,
   QueryJson,
+  BuildSchemaFromSourceResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -68,5 +69,14 @@ export class DatasourceAPI extends TestAPI {
       body: query,
       expectations,
     })
+  }
+
+  fetchSchema = async (id: string, expectations?: Expectations) => {
+    return await this._post<BuildSchemaFromSourceResponse>(
+      `/api/datasources/${id}/schema`,
+      {
+        expectations,
+      }
+    )
   }
 }

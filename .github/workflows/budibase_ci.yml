@@ -92,8 +92,6 @@ jobs:
 
   test-libraries:
     runs-on: ubuntu-latest
-    env:
-      REUSE_CONTAINERS: true
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -150,8 +148,6 @@ jobs:
 
   test-server:
     runs-on: budi-tubby-tornado-quad-core-150gb
-    env:
-      REUSE_CONTAINERS: true
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
