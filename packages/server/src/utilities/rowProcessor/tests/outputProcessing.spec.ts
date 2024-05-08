@@ -7,11 +7,7 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import { outputProcessing } from ".."
-import {
-  generator,
-  structures,
-  objectStoreTestProviders,
-} from "@budibase/backend-core/tests"
+import { generator, structures } from "@budibase/backend-core/tests"
 import * as bbReferenceProcessor from "../bbReferenceProcessor"
 
 jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
@@ -20,14 +16,6 @@ jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
 }))
 
 describe("rowProcessor - outputProcessing", () => {
-  beforeAll(async () => {
-    await objectStoreTestProviders.minio.start()
-  })
-
-  afterAll(async () => {
-    await objectStoreTestProviders.minio.stop()
-  })
-
   beforeEach(() => {
     jest.resetAllMocks()
   })

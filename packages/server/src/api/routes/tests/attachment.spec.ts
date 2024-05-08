@@ -1,16 +1,13 @@
 import * as setup from "./utilities"
 import { APIError } from "@budibase/types"
-import { objectStoreTestProviders } from "@budibase/backend-core/tests"
 
 describe("/api/applications/:appId/sync", () => {
   let config = setup.getConfig()
 
   beforeAll(async () => {
-    await objectStoreTestProviders.minio.start()
     await config.init()
   })
   afterAll(async () => {
-    await objectStoreTestProviders.minio.stop()
     setup.afterAll()
   })
 
