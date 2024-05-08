@@ -28,7 +28,6 @@ jest.mock("uuid", () => ({ v4: () => "00000000-0000-0000-0000-000000000000" }))
 import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
 import fetch from "node-fetch"
-import { objectStoreTestProviders } from "@budibase/backend-core/tests"
 import { Readable } from "stream"
 
 const FormData = require("form-data")
@@ -627,15 +626,6 @@ describe("REST Integration", () => {
   })
 
   describe("File Handling", () => {
-    beforeAll(async () => {
-      jest.unmock("aws-sdk")
-      await objectStoreTestProviders.minio.start()
-    })
-
-    afterAll(async () => {
-      await objectStoreTestProviders.minio.stop()
-    })
-
     it("uploads file to object store and returns signed URL", async () => {
       const responseData = Buffer.from("teest file contnt")
       const filename = "test.tar.gz"
