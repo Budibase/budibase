@@ -13,11 +13,7 @@ import { dataFilters } from "@budibase/shared-core"
 export const removeKeyNumbering = dataFilters.removeKeyNumbering
 
 function isEmpty(value: any) {
-  return (
-    value == null ||
-    value === "" ||
-    (Array.isArray(value) && value.length === 0)
-  )
+  return value == null || value === ""
 }
 
 /**
