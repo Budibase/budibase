@@ -1,7 +1,6 @@
 import * as setup from "./utilities"
 import tk from "timekeeper"
 import { basicTableWithAttachmentField } from "../../tests/utilities/structures"
-import { utils } from "@budibase/backend-core/tests"
 import { objectStore } from "@budibase/backend-core"
 
 describe("test the create row action", () => {
@@ -65,8 +64,19 @@ describe("test the create row action", () => {
       tableId: attachmentTable._id,
     }
 
+    let bucket = "testbucket"
     let filename = "test.txt"
-    let presignedUrl = await utils.file.getSignedUrlFromTestFile(filename)
+    await objectStore.upload({
+      bucket,
+      filename,
+      body: Buffer.from("test data"),
+    })
+    let presignedUrl = await objectStore.getPresignedUrl(
+      bucket,
+      filename,
+      60000
+    )
+
     let attachmentObject = [
       {
         url: presignedUrl,
