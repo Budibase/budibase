@@ -20,12 +20,12 @@ jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
 }))
 
 describe("rowProcessor - outputProcessing", () => {
-  beforeAll(() => {
-    objectStoreTestProviders.minio.start()
+  beforeAll(async () => {
+    await objectStoreTestProviders.minio.start()
   })
 
-  afterAll(() => {
-    objectStoreTestProviders.minio.stop()
+  afterAll(async () => {
+    await objectStoreTestProviders.minio.stop()
   })
 
   beforeEach(() => {
