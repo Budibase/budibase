@@ -498,6 +498,31 @@ describe.each([
         }).toFindNothing())
     })
 
+    describe("empty", () => {
+      it("finds no empty rows", () =>
+        expectQuery({ empty: { name: null } }).toFindNothing())
+
+      it("should not be affected by when filter empty behaviour", () =>
+        expectQuery({
+          empty: { name: null },
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+        }).toFindNothing())
+    })
+
+    describe("notEmpty", () => {
+      it("finds all non-empty rows", () =>
+        expectQuery({ notEmpty: { name: null } }).toContainExactly([
+          { name: "foo" },
+          { name: "bar" },
+        ]))
+
+      it("should not be affected by when filter empty behaviour", () =>
+        expectQuery({
+          notEmpty: { name: null },
+          onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
+    })
+
     describe("sort", () => {
       it("sorts ascending", () =>
         expectSearch({
