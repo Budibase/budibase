@@ -1,5 +1,6 @@
 import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
 import env from "../../../src/environment"
+import { testContainerUtils } from "."
 
 let container: StartedTestContainer | undefined
 
@@ -11,13 +12,23 @@ export async function start(): Promise<void> {
       MINIO_ACCESS_KEY: "budibase",
       MINIO_SECRET_KEY: "budibase",
     })
+    .withLabels({ "com.budibase": "true" })
     .withWaitStrategy(
       Wait.forHttp("/minio/health/ready", 9000).withStartupTimeout(10000)
     )
     .start()
 
-  const port = container.getMappedPort(9000)
-  env._set("MINIO_URL", `http://127.0.0.1:${port}`)
+  const info = testContainerUtils.getContainerById(container.getId())
+  if (!info) {
+    throw new Error("Container not found")
+  }
+
+  const ports = testContainerUtils.getExposedV4Ports(info)
+  if (!ports.length) {
+    throw new Error("No ports found")
+  }
+
+  env._set("MINIO_URL", `http://127.0.0.1:${ports[0]}`)
 }
 
 export async function stop() {
