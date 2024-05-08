@@ -5,6 +5,7 @@
   import { auth, licensing } from "stores/portal"
   import { API } from "api"
   import { PlanType } from "@budibase/types"
+  import { sdk } from "@budibase/shared-core"
 
   let freeTrialModal
 
@@ -14,7 +15,8 @@
   const showFreeTrialModal = (planType, freeTrialModal) => {
     if (
       planType === PlanType.ENTERPRISE_BASIC_TRIAL &&
-      !$auth.user?.freeTrialConfirmedAt
+      !$auth.user?.freeTrialConfirmedAt &&
+      sdk.users.isAdmin($auth.user)
     ) {
       freeTrialModal?.show()
     }
