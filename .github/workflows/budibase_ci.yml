@@ -179,6 +179,8 @@ jobs:
       - run: yarn --frozen-lockfile
 
       - name: Test server
+        env:
+          DEBUG: "testcontainers*"
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
             yarn test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
