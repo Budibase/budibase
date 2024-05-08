@@ -1,16 +1,22 @@
+import { objectStoreTestProviders, mocks } from "@budibase/backend-core/tests"
 import tk from "timekeeper"
 import * as setup from "./utilities"
 import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import { mocks } from "@budibase/backend-core/tests"
 
 mocks.licenses.useBackups()
 
 describe("/backups", () => {
   let config = setup.getConfig()
 
-  afterAll(setup.afterAll)
+  beforeAll(async () => {
+    await objectStoreTestProviders.minio.start()
+  })
+  afterAll(async () => {
+    await objectStoreTestProviders.minio.stop()
+    setup.afterAll()
+  })
 
   beforeEach(async () => {
     tk.reset()

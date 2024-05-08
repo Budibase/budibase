@@ -628,7 +628,6 @@ describe("REST Integration", () => {
 
   describe("File Handling", () => {
     beforeAll(async () => {
-      jest.unmock("aws-sdk")
       await objectStoreTestProviders.minio.start()
     })
 

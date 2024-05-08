@@ -1,12 +1,17 @@
 import * as setup from "./utilities"
 import { APIError } from "@budibase/types"
+import { objectStoreTestProviders } from "@budibase/backend-core/tests"
 
 describe("/api/applications/:appId/sync", () => {
   let config = setup.getConfig()
 
-  afterAll(setup.afterAll)
   beforeAll(async () => {
+    await objectStoreTestProviders.minio.start()
     await config.init()
+  })
+  afterAll(async () => {
+    await objectStoreTestProviders.minio.stop()
+    setup.afterAll()
   })
 
   describe("/api/attachments/process", () => {
@@ -18,7 +23,8 @@ describe("/api/applications/:appId/sync", () => {
       expect(resp.length).toBe(1)
 
       let upload = resp[0]
-      expect(upload.url.endsWith(".jpg")).toBe(true)
+
+      expect(upload.url.split("?")[0].endsWith(".jpg")).toBe(true)
       expect(upload.extension).toBe("jpg")
       expect(upload.size).toBe(1)
       expect(upload.name).toBe("1px.jpg")

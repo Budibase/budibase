@@ -7,7 +7,11 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import { outputProcessing } from ".."
-import { generator, structures } from "@budibase/backend-core/tests"
+import {
+  generator,
+  structures,
+  objectStoreTestProviders,
+} from "@budibase/backend-core/tests"
 import * as bbReferenceProcessor from "../bbReferenceProcessor"
 
 jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
@@ -16,6 +20,14 @@ jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
 }))
 
 describe("rowProcessor - outputProcessing", () => {
+  beforeAll(() => {
+    objectStoreTestProviders.minio.start()
+  })
+
+  afterAll(() => {
+    objectStoreTestProviders.minio.stop()
+  })
+
   beforeEach(() => {
     jest.resetAllMocks()
   })
@@ -100,13 +112,13 @@ describe("rowProcessor - outputProcessing", () => {
     }
 
     const output = await outputProcessing(table, row, { squash: false })
-    expect(output.attach[0].url).toBe(
+    expect(output.attach[0].url?.split("?")[0]).toBe(
       "/files/signed/prod-budi-app-assets/test.jpg"
     )
 
     row.attach[0].url = ""
     const output2 = await outputProcessing(table, row, { squash: false })
-    expect(output2.attach[0].url).toBe(
+    expect(output2.attach[0].url?.split("?")[0]).toBe(
       "/files/signed/prod-budi-app-assets/test.jpg"
     )
 
@@ -141,13 +153,13 @@ describe("rowProcessor - outputProcessing", () => {
     }
 
     const output = await outputProcessing(table, row, { squash: false })
-    expect(output.attach.url).toBe(
+    expect(output.attach.url?.split("?")[0]).toBe(
       "/files/signed/prod-budi-app-assets/test.jpg"
     )
 
     row.attach.url = ""
     const output2 = await outputProcessing(table, row, { squash: false })
-    expect(output2.attach.url).toBe(
+    expect(output2.attach?.url?.split("?")[0]).toBe(
       "/files/signed/prod-budi-app-assets/test.jpg"
     )
 
