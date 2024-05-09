@@ -1,6 +1,5 @@
 import { Knex, knex } from "knex"
 import {
-  BBReferenceFieldSubType,
   FieldType,
   NumberFieldMetadata,
   Operation,
@@ -63,20 +62,6 @@ function generateSchema(
       case FieldType.BB_REFERENCE_SINGLE:
         schema.text(key)
         break
-      case FieldType.BB_REFERENCE: {
-        const subtype = column.subtype
-        switch (subtype) {
-          case BBReferenceFieldSubType.USER:
-            schema.text(key)
-            break
-          case BBReferenceFieldSubType.USERS:
-            schema.json(key)
-            break
-          default:
-            throw utils.unreachable(subtype)
-        }
-        break
-      }
       case FieldType.NUMBER:
         // if meta is specified then this is a junction table entry
         if (column.meta && column.meta.toKey && column.meta.toTable) {
@@ -99,6 +84,7 @@ function generateSchema(
         })
         break
       case FieldType.ARRAY:
+      case FieldType.BB_REFERENCE:
         schema.json(key)
         break
       case FieldType.LINK:

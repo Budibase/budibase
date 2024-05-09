@@ -132,7 +132,7 @@ export const TypeIconMap = {
   [FieldType.BIGINT]: "TagBold",
   [FieldType.AUTO]: "MagicWand",
   [FieldType.BB_REFERENCE]: {
-    [BBReferenceFieldSubType.USER]: "User",
+    [BBReferenceFieldSubType.USER]: "UserGroup",
     [BBReferenceFieldSubType.USERS]: "UserGroup",
   },
   [FieldType.BB_REFERENCE_SINGLE]: {

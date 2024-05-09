@@ -13,7 +13,11 @@
     Layout,
     AbsTooltip,
   } from "@budibase/bbui"
-  import { SWITCHABLE_TYPES, ValidColumnNameRegex } from "@budibase/shared-core"
+  import {
+    SWITCHABLE_TYPES,
+    ValidColumnNameRegex,
+    helpers,
+  } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
@@ -29,7 +33,11 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
-  import { FieldType, SourceName } from "@budibase/types"
+  import {
+    BBReferenceFieldSubType,
+    FieldType,
+    SourceName,
+  } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
@@ -356,9 +364,29 @@
 
   function getAllowedTypes(datasource) {
     if (originalName) {
-      const possibleTypes = SWITCHABLE_TYPES[field.type] || [
-        editableColumn.type,
-      ]
+      let possibleTypes = SWITCHABLE_TYPES[field.type] || [editableColumn.type]
+      if (helpers.schema.isDeprecatedSingleUserColumn(editableColumn)) {
+        // This will handle old single users columns
+        return [
+          {
+            ...FIELDS.USER,
+            type: FieldType.BB_REFERENCE,
+            subtype: BBReferenceFieldSubType.USER,
+          },
+        ]
+      } else if (
+        editableColumn.type === FieldType.BB_REFERENCE &&
+        editableColumn.subtype === BBReferenceFieldSubType.USERS
+      ) {
+        // This will handle old multi users columns
+        return [
+          {
+            ...FIELDS.USERS,
+            subtype: BBReferenceFieldSubType.USERS,
+          },
+        ]
+      }
+
       return Object.entries(FIELDS)
         .filter(([_, field]) => possibleTypes.includes(field.type))
         .map(([_, fieldDefinition]) => fieldDefinition)

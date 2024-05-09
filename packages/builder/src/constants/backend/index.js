@@ -165,20 +165,11 @@ export const FIELDS = {
       BBReferenceFieldSubType.USER
     ],
   },
-  // Used for display of editing existing columns
-  DEPRECATED_USER: {
-    name: "User",
-    type: FieldType.BB_REFERENCE,
-    subtype: BBReferenceFieldSubType.USER,
-    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
-      BBReferenceFieldSubType.USER
-    ],
-  },
   USERS: {
     name: "User List",
     type: FieldType.BB_REFERENCE,
-    subtype: BBReferenceFieldSubType.USERS,
-    icon: TypeIconMap[FieldType.BB_REFERENCE][BBReferenceFieldSubType.USERS],
+    subtype: BBReferenceFieldSubType.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE][BBReferenceFieldSubType.USER],
     constraints: {
       type: "array",
     },
