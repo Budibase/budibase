@@ -1,8 +1,8 @@
 import { context, events } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
-  Datasource,
   BBReferenceFieldSubType,
+  Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
@@ -211,6 +211,57 @@ describe.each([
           })
           expect(table.schema.email).toBeDefined()
           expect(table.schema.roleId).toBeDefined()
+        })
+    })
+
+    describe("external table validation", () => {
+      !isInternal &&
+        it("should error if column is of type auto", async () => {
+          const table = basicTable(datasource)
+          await config.api.table.save(
+            {
+              ...table,
+              schema: {
+                ...table.schema,
+                auto: {
+                  name: "auto",
+                  autocolumn: true,
+                  type: FieldType.AUTO,
+                },
+              },
+            },
+            {
+              status: 400,
+              body: {
+                message: `Column "auto" has type "${FieldType.AUTO}" - this is not supported.`,
+              },
+            }
+          )
+        })
+
+      !isInternal &&
+        it("should error if column has auto subtype", async () => {
+          const table = basicTable(datasource)
+          await config.api.table.save(
+            {
+              ...table,
+              schema: {
+                ...table.schema,
+                auto: {
+                  name: "auto",
+                  autocolumn: true,
+                  type: FieldType.NUMBER,
+                  subtype: AutoFieldSubType.AUTO_ID,
+                },
+              },
+            },
+            {
+              status: 400,
+              body: {
+                message: `Column "auto" has subtype "${AutoFieldSubType.AUTO_ID}" - this is not supported.`,
+              },
+            }
+          )
         })
     })
 
