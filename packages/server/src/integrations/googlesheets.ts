@@ -158,12 +158,12 @@ const SCHEMA: Integration = {
 
 class GoogleSheetsIntegration implements DatasourcePlus {
   private readonly config: GoogleSheetsConfig
-  private client: GoogleSpreadsheet
+  private readonly spreadsheetId: string
+  private client: GoogleSpreadsheet = undefined!
 
   constructor(config: GoogleSheetsConfig) {
     this.config = config
-    const spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
-    this.client = new GoogleSpreadsheet(spreadsheetId)
+    this.spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
   }
 
   async testConnection(): Promise<ConnectionInfo> {
@@ -252,7 +252,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         access_token: tokenResponse.access_token,
       })
 
-      this.client.useOAuth2Client(oauthClient)
+      this.client = new GoogleSpreadsheet(this.spreadsheetId, oauthClient)
       await this.client.loadInfo()
     } catch (err: any) {
       // this happens for xlsx imports
@@ -385,13 +385,17 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  buildRowObject(headers: string[], values: string[], rowNumber: number) {
+  buildRowObject(
+    headers: string[],
+    values: Record<string, string>,
+    rowNumber: number
+  ) {
     const rowObject: { rowNumber: number } & Row = {
       rowNumber,
       _id: rowNumber.toString(),
     }
     for (let i = 0; i < headers.length; i++) {
-      rowObject[headers[i]] = values[i]
+      rowObject[headers[i]] = values[headers[i]]
     }
     return rowObject
   }
@@ -475,7 +479,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         typeof query.row === "string" ? JSON.parse(query.row) : query.row
       const row = await sheet.addRow(rowToInsert)
       return [
-        this.buildRowObject(sheet.headerValues, row._rawData, row._rowNumber),
+        this.buildRowObject(sheet.headerValues, row.toObject(), row.rowNumber),
       ]
     } catch (err) {
       console.error("Error writing to google sheets", err)
@@ -493,7 +497,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       }
       const rows = await sheet.addRows(rowsToInsert)
       return rows.map(row =>
-        this.buildRowObject(sheet.headerValues, row._rawData, row._rowNumber)
+        this.buildRowObject(sheet.headerValues, row.toObject(), row.rowNumber)
       )
     } catch (err) {
       console.error("Error bulk writing to google sheets", err)
@@ -548,7 +552,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       let response = []
       for (let row of filtered) {
         response.push(
-          this.buildRowObject(headerValues, row._rawData, row._rowNumber)
+          this.buildRowObject(headerValues, row.toObject(), row._rowNumber)
         )
       }
 
@@ -598,10 +602,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         const updateValues =
           typeof query.row === "string" ? JSON.parse(query.row) : query.row
         for (let key in updateValues) {
-          row[key] = updateValues[key]
+          row.set(key, updateValues[key])
 
-          if (row[key] === null) {
-            row[key] = ""
+          if (row.get(key) === null) {
+            row.set(key, "")
           }
 
           const { type, subtype, constraints } = query.table.schema[key]
@@ -615,7 +619,11 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         }
         await row.save()
         return [
-          this.buildRowObject(sheet.headerValues, row._rawData, row._rowNumber),
+          this.buildRowObject(
+            sheet.headerValues,
+            row.toObject(),
+            row.rowNumber
+          ),
         ]
       } else {
         throw new Error("Row does not exist.")
