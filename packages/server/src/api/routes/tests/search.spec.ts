@@ -301,7 +301,7 @@ describe.each([
         appointment: { name: "appointment", type: FieldType.DATETIME },
         single_user: {
           name: "single_user",
-          type: FieldType.BB_REFERENCE,
+          type: FieldType.BB_REFERENCE_SINGLE,
           subtype: BBReferenceFieldSubType.USER,
         },
         multi_user: {
