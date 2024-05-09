@@ -1,4 +1,8 @@
-import { context, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
+import {
+  context,
+  SQLITE_DESIGN_DOC_ID,
+  db as dbCore,
+} from "@budibase/backend-core"
 import {
   FieldType,
   RelationshipFieldMetadata,
@@ -156,8 +160,8 @@ export async function removeTable(table: Table) {
   }
 }
 
-export async function cleanupApp() {
-  const db = context.getAppDB()
+export async function cleanupApp(appId: string) {
+  const db = dbCore.getDB(appId)
   if (!(await db.exists())) {
     throw new Error("Cleanup must be preformed before app deletion.")
   }
