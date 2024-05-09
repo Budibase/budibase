@@ -536,9 +536,11 @@ export async function getObjectMetadata(
     Key: path,
   }
 
-  const metadata = await client.headObject(params).promise()
-
-  return metadata
+  try {
+    return await client.headObject(params).promise()
+  } catch (err: any) {
+    throw new Error("Unable to retrieve metadata from object")
+  }
 }
 
 /*

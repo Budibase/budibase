@@ -154,13 +154,11 @@ async function generateAttachmentRow(attachment: AutomationAttachment) {
 
   async function getSize(s3Key: string) {
     return (
-      (
-        await objectStore.getObjectMetadata(
-          objectStore.ObjectStoreBuckets.APPS,
-          s3Key
-        )
-      ).ContentLength || 0
-    )
+      await objectStore.getObjectMetadata(
+        objectStore.ObjectStoreBuckets.APPS,
+        s3Key
+      )
+    ).ContentLength
   }
 
   try {
