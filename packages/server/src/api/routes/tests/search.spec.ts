@@ -1,11 +1,13 @@
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import { db as dbCore } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
 import {
   AutoFieldSubType,
   Datasource,
   EmptyFilterOption,
+  BBReferenceFieldSubType,
   FieldType,
   RowSearchParams,
   SearchFilters,
@@ -13,8 +15,14 @@ import {
   SortType,
   Table,
   TableSchema,
+  User,
 } from "@budibase/types"
 import _ from "lodash"
+import tk from "timekeeper"
+import { encodeJSBinding } from "@budibase/string-templates"
+
+const serverTime = new Date("2024-05-06T00:00:00.000Z")
+tk.freeze(serverTime)
 
 describe.each([
   ["lucene", undefined],
@@ -33,11 +41,25 @@ describe.each([
   let datasource: Datasource | undefined
   let table: Table
 
+  const snippets = [
+    {
+      name: "WeeksAgo",
+      code: "return function (weeks) {\n  const currentTime = new Date();\n  currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));\n  return currentTime.toISOString();\n}",
+    },
+  ]
+
   beforeAll(async () => {
     if (isSqs) {
       envCleanup = config.setEnv({ SQS_SEARCH_ENABLE: "true" })
     }
     await config.init()
+
+    if (config.app?.appId) {
+      config.app = await config.api.application.update(config.app?.appId, {
+        snippets,
+      })
+    }
+
     if (dsProvider) {
       datasource = await config.createDatasource({
         datasource: await dsProvider,
@@ -222,6 +244,230 @@ describe.each([
           sort: "isTrue",
           sortOrder: SortOrder.DESCENDING,
         }).toMatchExactly([{ isTrue: true }, { isTrue: false }]))
+    })
+  })
+
+  // Ensure all bindings resolve and perform as expected
+  describe("bindings", () => {
+    let globalUsers: any = []
+
+    const future = new Date(serverTime.getTime())
+    future.setDate(future.getDate() + 30)
+
+    const rows = (currentUser: User) => {
+      return [
+        { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
+        { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
+        { name: currentUser.firstName, appointment: future.toISOString() },
+        { name: "serverDate", appointment: serverTime.toISOString() },
+        {
+          name: "single user, session user",
+          single_user: JSON.stringify([currentUser]),
+        },
+        {
+          name: "single user",
+          single_user: JSON.stringify([globalUsers[0]]),
+        },
+        {
+          name: "multi user",
+          multi_user: JSON.stringify(globalUsers),
+        },
+        {
+          name: "multi user with session user",
+          multi_user: JSON.stringify([...globalUsers, currentUser]),
+        },
+      ]
+    }
+
+    beforeAll(async () => {
+      // Set up some global users
+      globalUsers = await Promise.all(
+        Array(2)
+          .fill(0)
+          .map(async () => {
+            const globalUser = await config.globalUser()
+            const userMedataId = globalUser._id
+              ? dbCore.generateUserMetadataID(globalUser._id)
+              : null
+            return {
+              _id: globalUser._id,
+              _meta: userMedataId,
+            }
+          })
+      )
+
+      await createTable({
+        name: { name: "name", type: FieldType.STRING },
+        appointment: { name: "appointment", type: FieldType.DATETIME },
+        single_user: {
+          name: "single_user",
+          type: FieldType.BB_REFERENCE,
+          subtype: BBReferenceFieldSubType.USER,
+        },
+        multi_user: {
+          name: "multi_user",
+          type: FieldType.BB_REFERENCE,
+          subtype: BBReferenceFieldSubType.USERS,
+        },
+      })
+      await createRows(rows(config.getUser()))
+    })
+
+    // !! Current User is auto generated per run
+    it("should return all rows matching the session user firstname", async () => {
+      await expectQuery({
+        equal: { name: "{{ [user].firstName }}" },
+      }).toContainExactly([
+        {
+          name: config.getUser().firstName,
+          appointment: future.toISOString(),
+        },
+      ])
+    })
+
+    it("should parse the date binding and return all rows after the resolved value", async () => {
+      await expectQuery({
+        range: {
+          appointment: {
+            low: "{{ [now] }}",
+            high: "9999-00-00T00:00:00.000Z",
+          },
+        },
+      }).toContainExactly([
+        {
+          name: config.getUser().firstName,
+          appointment: future.toISOString(),
+        },
+        { name: "serverDate", appointment: serverTime.toISOString() },
+      ])
+    })
+
+    it("should parse the date binding and return all rows before the resolved value", async () => {
+      await expectQuery({
+        range: {
+          appointment: {
+            low: "0000-00-00T00:00:00.000Z",
+            high: "{{ [now] }}",
+          },
+        },
+      }).toContainExactly([
+        { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
+        { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
+        { name: "serverDate", appointment: serverTime.toISOString() },
+      ])
+    })
+
+    it("should parse the encoded js snippet. Return rows with appointments up to 1 week in the past", async () => {
+      const jsBinding = "return snippets.WeeksAgo();"
+      const encodedBinding = encodeJSBinding(jsBinding)
+
+      await expectQuery({
+        range: {
+          appointment: {
+            low: "0000-00-00T00:00:00.000Z",
+            high: encodedBinding,
+          },
+        },
+      }).toContainExactly([
+        { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
+        { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
+      ])
+    })
+
+    it("should parse the encoded js binding. Return rows with appointments 2 weeks in the past", async () => {
+      const jsBinding =
+        "const currentTime = new Date()\ncurrentTime.setDate(currentTime.getDate()-14);\nreturn currentTime.toISOString();"
+      const encodedBinding = encodeJSBinding(jsBinding)
+
+      await expectQuery({
+        range: {
+          appointment: {
+            low: "0000-00-00T00:00:00.000Z",
+            high: encodedBinding,
+          },
+        },
+      }).toContainExactly([
+        { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
+        { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
+      ])
+    })
+
+    it("should match a single user row by the session user id", async () => {
+      await expectQuery({
+        equal: { single_user: "{{ [user]._id }}" },
+      }).toContainExactly([
+        {
+          name: "single user, session user",
+          single_user: [{ _id: config.getUser()._id }],
+        },
+      ])
+    })
+    // TODO(samwho): fix for SQS
+    !isSqs &&
+      it("should match the session user id in a multi user field", async () => {
+        const allUsers = [...globalUsers, config.getUser()].map((user: any) => {
+          return { _id: user._id }
+        })
+
+        await expectQuery({
+          contains: { multi_user: ["{{ [user]._id }}"] },
+        }).toContainExactly([
+          {
+            name: "multi user with session user",
+            multi_user: allUsers,
+          },
+        ])
+      })
+
+    !isSqs &&
+      it("should not match the session user id in a multi user field", async () => {
+        await expectQuery({
+          notContains: { multi_user: ["{{ [user]._id }}"] },
+          notEmpty: { multi_user: true },
+        }).toContainExactly([
+          {
+            name: "multi user",
+            multi_user: globalUsers.map((user: any) => {
+              return { _id: user._id }
+            }),
+          },
+        ])
+      })
+
+    it("should match the session user id and a user table row id using helpers, user binding and a static user id.", async () => {
+      await expectQuery({
+        oneOf: {
+          single_user: [
+            "{{ default [user]._id '_empty_' }}",
+            globalUsers[0]._id,
+          ],
+        },
+      }).toContainExactly([
+        {
+          name: "single user, session user",
+          single_user: [{ _id: config.getUser()._id }],
+        },
+        {
+          name: "single user",
+          single_user: [{ _id: globalUsers[0]._id }],
+        },
+      ])
+    })
+
+    it("should resolve 'default' helper to '_empty_' when binding resolves to nothing", async () => {
+      await expectQuery({
+        oneOf: {
+          single_user: [
+            "{{ default [user]._idx '_empty_' }}",
+            globalUsers[0]._id,
+          ],
+        },
+      }).toContainExactly([
+        {
+          name: "single user",
+          single_user: [{ _id: globalUsers[0]._id }],
+        },
+      ])
     })
   })
 
