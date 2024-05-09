@@ -65,13 +65,13 @@ async function processUrlAttachment(
   attachment: AutomationAttachment
 ): Promise<AutomationAttachmentContent> {
   const response = await fetch(attachment.url)
-  if (!response.ok) {
+  if (!response.ok || !response.body) {
     throw new Error(`Unexpected response ${response.statusText}`)
   }
   const fallbackFilename = path.basename(new URL(attachment.url).pathname)
   return {
     filename: attachment.filename || fallbackFilename,
-    content: response.body!,
+    content: response.body,
   }
 }
 

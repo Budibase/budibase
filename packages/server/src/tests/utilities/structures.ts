@@ -94,6 +94,10 @@ export function basicTableWithAttachmentField(
             type: "array",
           },
         },
+        single_file_attachment: {
+          type: FieldType.ATTACHMENT_SINGLE,
+          name: "description",
+        },
       },
     },
     ...extra

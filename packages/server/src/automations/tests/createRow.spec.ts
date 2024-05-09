@@ -2,6 +2,17 @@ import * as setup from "./utilities"
 import { basicTableWithAttachmentField } from "../../tests/utilities/structures"
 import { objectStore } from "@budibase/backend-core"
 
+async function uploadTestFile(filename: string) {
+  let bucket = "testbucket"
+  await objectStore.upload({
+    bucket,
+    filename,
+    body: Buffer.from("test data"),
+  })
+  let presignedUrl = await objectStore.getPresignedUrl(bucket, filename, 60000)
+
+  return presignedUrl
+}
 describe("test the create row action", () => {
   let table: any
   let row: any
@@ -55,19 +66,8 @@ describe("test the create row action", () => {
       tableId: attachmentTable._id,
     }
 
-    let bucket = "testbucket"
-    let filename = "test.txt"
-    await objectStore.upload({
-      bucket,
-      filename,
-      body: Buffer.from("test data"),
-    })
-    let presignedUrl = await objectStore.getPresignedUrl(
-      bucket,
-      filename,
-      60000
-    )
-
+    let filename = "test1.txt"
+    let presignedUrl = await uploadTestFile(filename)
     let attachmentObject = [
       {
         url: presignedUrl,
@@ -83,6 +83,41 @@ describe("test the create row action", () => {
     expect(res.success).toEqual(true)
     expect(res.row.file_attachment[0]).toHaveProperty("key")
     let s3Key = res.row.file_attachment[0].key
+
+    const client = objectStore.ObjectStore(objectStore.ObjectStoreBuckets.APPS)
+
+    const objectData = await client
+      .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
+      .promise()
+
+    expect(objectData).toBeDefined()
+    expect(objectData.ContentLength).toBeGreaterThan(0)
+  })
+
+  it("should check that an single attachment field is sent to storage and parsed", async () => {
+    let attachmentTable = await config.createTable(
+      basicTableWithAttachmentField()
+    )
+
+    let attachmentRow: any = {
+      tableId: attachmentTable._id,
+    }
+
+    let filename = "test2.txt"
+    let presignedUrl = await uploadTestFile(filename)
+    let attachmentObject = {
+      url: presignedUrl,
+      filename,
+    }
+
+    attachmentRow.single_file_attachment = attachmentObject
+    const res = await setup.runStep(setup.actions.CREATE_ROW.stepId, {
+      row: attachmentRow,
+    })
+
+    expect(res.success).toEqual(true)
+    expect(res.row.single_file_attachment).toHaveProperty("key")
+    let s3Key = res.row.single_file_attachment.key
 
     const client = objectStore.ObjectStore(objectStore.ObjectStoreBuckets.APPS)
 
