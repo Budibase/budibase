@@ -30,12 +30,18 @@ import { populateExternalTableSchemas } from "../validation"
 import datasourceSdk from "../../datasources"
 import * as viewSdk from "../../views"
 
+const DEFAULT_PRIMARY_COLUMN = "id"
+
 function noPrimaryKey(table: Table) {
   return table.primary == null || table.primary.length === 0
 }
 
 function validate(table: Table, oldTable?: Table) {
-  if (!oldTable && table.schema.id && noPrimaryKey(table)) {
+  if (
+    !oldTable &&
+    table.schema[DEFAULT_PRIMARY_COLUMN] &&
+    noPrimaryKey(table)
+  ) {
     throw new Error(
       "External tables with no `primary` column set will define an `id` column, but we found an `id` column in the supplied schema. Either set a `primary` column or remove the `id` column."
     )
@@ -48,6 +54,10 @@ function validate(table: Table, oldTable?: Table) {
   const autoSubTypes = Object.values(AutoFieldSubType)
   // check for auto columns, they are not allowed
   for (let [key, column] of Object.entries(table.schema)) {
+    // this column is a special case, do not validate it
+    if (key === DEFAULT_PRIMARY_COLUMN) {
+      continue
+    }
     // the auto-column type should never be used
     if (column.type === FieldType.AUTO) {
       throw new Error(
@@ -55,7 +65,10 @@ function validate(table: Table, oldTable?: Table) {
       )
     }
 
-    if (column.subtype && autoSubTypes.includes(column.subtype)) {
+    if (
+      column.subtype &&
+      autoSubTypes.includes(column.subtype as AutoFieldSubType)
+    ) {
       throw new Error(
         `Column "${key}" has subtype "${column.subtype}" - this is not supported.`
       )
@@ -85,11 +98,11 @@ export async function save(
   validate(tableToSave, oldTable)
 
   if (!oldTable && noPrimaryKey(tableToSave)) {
-    tableToSave.primary = ["id"]
-    tableToSave.schema.id = {
+    tableToSave.primary = [DEFAULT_PRIMARY_COLUMN]
+    tableToSave.schema[DEFAULT_PRIMARY_COLUMN] = {
       type: FieldType.NUMBER,
       autocolumn: true,
-      name: "id",
+      name: DEFAULT_PRIMARY_COLUMN,
     }
   }
 
