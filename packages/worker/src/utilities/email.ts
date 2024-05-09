@@ -6,6 +6,7 @@ import { processString } from "@budibase/string-templates"
 import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
 import { configs, cache, objectStore } from "@budibase/backend-core"
 import ical from "ical-generator"
+import _ from "lodash"
 
 const nodemailer = require("nodemailer")
 
@@ -167,11 +168,7 @@ export async function sendEmail(
       opts.attachments?.map(objectStore.processAutomationAttachment)
     )
     attachments = attachments.map(attachment => {
-      if ("path" in attachment) {
-        const { path, ...rest } = attachment
-        return rest
-      }
-      return attachment
+      return _.omit(attachment, "path")
     })
     message = { ...message, attachments }
   }

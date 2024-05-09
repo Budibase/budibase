@@ -18,14 +18,6 @@ describe("test the create row action", () => {
     }
   })
 
-  beforeAll(async () => {
-    tk.reset()
-  })
-
-  afterAll(async () => {
-    await setup.afterAll()
-  })
-
   afterAll(setup.afterAll)
 
   it("should be able to run the action", async () => {

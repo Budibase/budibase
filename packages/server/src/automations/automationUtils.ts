@@ -8,6 +8,7 @@ import { AutomationAttachment, FieldType, Row } from "@budibase/types"
 import { LoopInput, LoopStepType } from "../definitions/automations"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
+import path from "path"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -101,9 +102,12 @@ export function getError(err: any) {
 export async function sendAutomationAttachmentsToStorage(
   tableId: string,
   row: Row
-) {
-  let table = await sdk.tables.getTable(tableId)
-  const attachmentRows: Record<string, AutomationAttachment[]> = {}
+): Promise<Row> {
+  const table = await sdk.tables.getTable(tableId)
+  const attachmentRows: Record<
+    string,
+    AutomationAttachment[] | AutomationAttachment
+  > = {}
 
   for (const [prop, value] of Object.entries(row)) {
     const schema = table.schema[prop]
@@ -114,12 +118,15 @@ export async function sendAutomationAttachmentsToStorage(
       attachmentRows[prop] = value
     }
   }
-
   for (const [prop, attachments] of Object.entries(attachmentRows)) {
-    if (attachments.length) {
-      row[prop] = await Promise.all(
-        attachments.map(attachment => generateAttachmentRow(attachment))
-      )
+    if (Array.isArray(attachments)) {
+      if (attachments.length) {
+        row[prop] = await Promise.all(
+          attachments.map(attachment => generateAttachmentRow(attachment))
+        )
+      }
+    } else if (Object.keys(row[prop]).length > 0) {
+      row[prop] = await generateAttachmentRow(attachments)
     }
   }
 
@@ -129,50 +136,59 @@ export async function sendAutomationAttachmentsToStorage(
 async function generateAttachmentRow(attachment: AutomationAttachment) {
   const prodAppId = context.getProdAppId()
   try {
-    let size: number | null | undefined
+    let size: number
     let s3Key: string
-    const client = objectStore.ObjectStore(objectStore.ObjectStoreBuckets.APPS)
 
     const attachmentResult = await objectStore.processAutomationAttachment(
       attachment
     )
-    const extension = attachment.filename.split(".").pop() || ""
-
+    const extension = path.extname(attachment.filename)
     if ("bucket" in attachmentResult && "path" in attachmentResult) {
-      const { path, content, bucket } = attachmentResult
-      let client = objectStore.ObjectStore(bucket)
+      const { path, content } = attachmentResult
 
-      if (path.includes(`${prodAppId}/attachments/`)) {
+      if (path.startsWith(`${prodAppId}/attachments/`)) {
         s3Key = path
       } else {
         const processedFileName = `${uuid.v4()}.${extension}`
         s3Key = `${prodAppId}/attachments/${processedFileName}`
+
+        if (content) {
+          await objectStore.streamUpload({
+            bucket: objectStore.ObjectStoreBuckets.APPS,
+            stream: content,
+            filename: s3Key,
+          })
+        }
+      }
+
+      size =
+        (
+          await objectStore.getObjectMetadata(
+            objectStore.ObjectStoreBuckets.APPS,
+            s3Key
+          )
+        ).ContentLength || 0
+    } else {
+      const { content } = attachmentResult
+      const processedFileName = `${uuid.v4()}.${extension}`
+      s3Key = `${prodAppId}/attachments/${processedFileName}`
+
+      if (content) {
         await objectStore.streamUpload({
           bucket: objectStore.ObjectStoreBuckets.APPS,
           stream: content,
           filename: s3Key,
         })
       }
-      const metadata = await client
-        .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
-        .promise()
-      size = metadata.ContentLength
-    } else {
-      const { content } = attachmentResult
-      const processedFileName = `${uuid.v4()}.${extension}`
-      s3Key = `${prodAppId}/attachments/${processedFileName}`
-
-      await objectStore.streamUpload({
-        bucket: objectStore.ObjectStoreBuckets.APPS,
-        stream: content,
-        filename: s3Key,
-      })
-
-      const metadata = await client
-        .headObject({ Bucket: objectStore.ObjectStoreBuckets.APPS, Key: s3Key })
-        .promise()
-      size = metadata.ContentLength
+      size =
+        (
+          await objectStore.getObjectMetadata(
+            objectStore.ObjectStoreBuckets.APPS,
+            s3Key
+          )
+        ).ContentLength || 0
     }
+    console.log("generate: " + JSON.stringify(attachment))
 
     return {
       size,

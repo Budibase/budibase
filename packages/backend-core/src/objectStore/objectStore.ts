@@ -13,13 +13,14 @@ import { bucketTTLConfig, budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
+import { HeadObjectOutput } from "aws-sdk/clients/s3"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
 const STATE = {
   bucketCreationPromises: {},
 }
-export const signedFilePrefix = "/files/signed"
+export const SIGNED_FILE_PREFIX = "/files/signed"
 
 type ListParams = {
   ContinuationToken?: string
@@ -41,7 +42,7 @@ type UploadParams = BaseUploadParams & {
 }
 
 type StreamUploadParams = BaseUploadParams & {
-  stream: ReadStream | NodeJS.ReadableStream | ReadableStream<Uint8Array> | null
+  stream?: ReadStream | NodeJS.ReadableStream | ReadableStream<Uint8Array>
 }
 
 const CONTENT_TYPE_MAP: any = {
@@ -329,10 +330,10 @@ export function getPresignedUrl(
     const signedUrl = new URL(url)
     const path = signedUrl.pathname
     const query = signedUrl.search
-    if (path.startsWith(signedFilePrefix)) {
+    if (path.startsWith(SIGNED_FILE_PREFIX)) {
       return `${path}${query}`
     } else {
-      return `${signedFilePrefix}${path}${query}`
+      return `${SIGNED_FILE_PREFIX}${path}${query}`
     }
   }
 }
@@ -521,6 +522,24 @@ export async function getReadStream(
   return client.getObject(params).createReadStream()
 }
 
+export async function getObjectMetadata(
+  bucket: string,
+  path: string
+): Promise<HeadObjectOutput> {
+  bucket = sanitizeBucket(bucket)
+  path = sanitizeKey(path)
+
+  const client = ObjectStore(bucket)
+  const params = {
+    Bucket: bucket,
+    Key: path,
+  }
+
+  const metadata = await client.headObject(params).promise()
+
+  return metadata
+}
+
 /*
 Given a signed url like '/files/signed/tmp-files-attachments/app_123456/myfile.txt' extract
 the bucket and the path from it
@@ -530,7 +549,9 @@ export function extractBucketAndPath(
 ): { bucket: string; path: string } | null {
   const baseUrl = url.split("?")[0]
 
-  const regex = new RegExp(`^${signedFilePrefix}/(?<bucket>[^/]+)/(?<path>.+)$`)
+  const regex = new RegExp(
+    `^${SIGNED_FILE_PREFIX}/(?<bucket>[^/]+)/(?<path>.+)$`
+  )
   const match = baseUrl.match(regex)
 
   if (match && match.groups) {

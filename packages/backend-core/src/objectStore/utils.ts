@@ -99,8 +99,8 @@ export async function processAutomationAttachment(
   attachment: AutomationAttachment
 ): Promise<AutomationAttachmentContent | BucketedContent> {
   const isFullyFormedUrl =
-    attachment.url.startsWith("http://") ||
-    attachment.url.startsWith("https://")
+    attachment.url?.startsWith("http://") ||
+    attachment.url?.startsWith("https://")
   if (isFullyFormedUrl) {
     return await processUrlAttachment(attachment)
   } else {

@@ -272,7 +272,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       }
     } else if (column.type === FieldType.ATTACHMENT_SINGLE) {
       for (let row of enriched) {
-        if (!row[property]) {
+        if (!row[property] || Object.keys(row[property]).length === 0) {
           continue
         }
 

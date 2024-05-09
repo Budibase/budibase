@@ -27,7 +27,18 @@
 
   const handleAttachmentParams = keyValuObj => {
     let params = {}
-    if (keyValuObj?.length) {
+
+    if (
+      schema.type === FieldType.ATTACHMENT_SINGLE &&
+      Object.keys(keyValuObj).length === 0
+    ) {
+      return []
+    }
+    if (!Array.isArray(keyValuObj)) {
+      keyValuObj = [keyValuObj]
+    }
+
+    if (keyValuObj.length) {
       for (let param of keyValuObj) {
         params[param.url] = param.filename
       }
@@ -95,10 +106,15 @@
       on:change={e =>
         onChange(
           {
-            detail: e.detail.map(({ name, value }) => ({
-              url: name,
-              filename: value,
-            })),
+            detail:
+              schema.type === FieldType.ATTACHMENT_SINGLE
+                ? e.detail.length > 0
+                  ? { url: e.detail[0].name, filename: e.detail[0].value }
+                  : {}
+                : e.detail.map(({ name, value }) => ({
+                    url: name,
+                    filename: value,
+                  })),
           },
           field
         )}
@@ -109,11 +125,11 @@
       customButtonText={"Add attachment"}
       keyPlaceholder={"URL"}
       valuePlaceholder={"Filename"}
-      noAddButton={schema.type === FieldType.ATTACHMENT_SINGLE &&
-        value[field].length >= 1}
+      actionButtonDisabled={schema.type === FieldType.ATTACHMENT_SINGLE &&
+        Object.keys(value[field]).length >= 1}
     />
   </div>
-{:else if ["string", "number", "bigint", "barcodeqr", "array", "attachment"].includes(schema.type)}
+{:else if ["string", "number", "bigint", "barcodeqr", "array"].includes(schema.type)}
   <svelte:component
     this={isTestModal ? ModalBindableInput : DrawerBindableInput}
     panel={AutomationBindingPanel}
