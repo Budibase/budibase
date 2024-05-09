@@ -24,8 +24,6 @@ import { encodeJSBinding } from "@budibase/string-templates"
 const serverTime = new Date("2024-05-06T00:00:00.000Z")
 tk.freeze(serverTime)
 
-jest.unmock("mssql")
-
 describe.each([
   ["lucene", undefined],
   ["sqs", undefined],
