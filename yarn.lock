@@ -5272,13 +5272,6 @@
   resolved "https://registry.yarnpkg.com/@types/global-agent/-/global-agent-2.1.1.tgz#3f93185e48a3a36e377a52a8301320cd162a831b"
   integrity sha512-sVox8Phk1UKgP6LQPAdeRxfww6vHKt7Bf59dXzYLsQBUEMEn8S10a+ESp/yO0i4fJ3WS4+CIuz42hgJcuA+3mA==
 
-"@types/google-spreadsheet@4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@types/google-spreadsheet/-/google-spreadsheet-4.0.0.tgz#a5828b3e5461eec0e138b8e4a7ab15fd69c3af30"
-  integrity sha512-GdfhBRQcN1KhpZGbhOEu/Cj2LimDLUW7hVB/GD552F4IY4FuYFwYwIz1TIB7rRqMVnMy99RdwpgXPX0G5Uu+7g==
-  dependencies:
-    google-spreadsheet "*"
-
 "@types/graceful-fs@^4.1.3":
   version "4.1.6"
   resolved "https://registry.yarnpkg.com/@types/graceful-fs/-/graceful-fs-4.1.6.tgz#e14b2576a1c25026b7f02ede1de3b84c3a1efeae"
@@ -11532,7 +11525,7 @@ google-p12-pem@^4.0.0:
   dependencies:
     node-forge "^1.3.1"
 
-google-spreadsheet@*, google-spreadsheet@4.1.1:
+google-spreadsheet@4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/google-spreadsheet/-/google-spreadsheet-4.1.1.tgz#56c422c86b51a2ea9dad21c40cd69bccbd58591f"
   integrity sha512-Npk/xAMTgxEt/m/X9EXIqdY6CEYGiqUHrSuiLnNSKli5H+wiOQLSLsnfMxcdNPH6aSh6GttZm6QJhrnsxjwpZQ==
