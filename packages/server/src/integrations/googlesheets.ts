@@ -397,8 +397,32 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       throw new Error("Must provide name for new sheet.")
     }
     try {
-      await this.connect()
-      await this.client.addSheet({ title: name, headerValues: [name] })
+      const auth = await this.connect()
+      await google.sheets("v4").spreadsheets.batchUpdate({
+        auth,
+        spreadsheetId: this.spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              addSheet: {
+                properties: {
+                  title: name,
+                },
+              },
+            },
+          ],
+        },
+      })
+
+      await google.sheets("v4").spreadsheets.values.update({
+        auth,
+        spreadsheetId: this.spreadsheetId,
+        range: `${name}!A1`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[name]],
+        },
+      })
     } catch (err) {
       console.error("Error creating new table in google sheets", err)
       throw err
@@ -562,9 +586,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       const [headers] = getResponse.data!.valueRanges![0].values!
 
       let rowNumber = offset
-      const rows = getResponse.data!.valueRanges![1].values!.map(r =>
-        this.buildRowObject(headers, r, rowNumber++)
-      )
+      const rows =
+        getResponse.data!.valueRanges![1].values?.map(r =>
+          this.buildRowObject(headers, r, rowNumber++)
+        ) || []
 
       // this is a special case - need to handle the _id, it doesn't exist
       // we cannot edit the returned structure from google, it does not have
