@@ -289,6 +289,7 @@
                     OperatorOptions.ContainsAny.value,
                   ].includes(filter.operator)}
                   disabled={filter.noValue}
+                  type={filter.valueType}
                 />
               {:else}
                 <Input disabled />
@@ -325,8 +326,6 @@
 <style>
   .container {
     width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
   }
   .fields {
     display: grid;

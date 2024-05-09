@@ -149,6 +149,22 @@ function getTableName(table?: Table): string | undefined {
   }
 }
 
+function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
+  if (Array.isArray(query)) {
+    return query.map((q: SqlQuery) => convertBooleans(q) as SqlQuery)
+  } else {
+    if (query.bindings) {
+      query.bindings = query.bindings.map(binding => {
+        if (typeof binding === "boolean") {
+          return binding ? 1 : 0
+        }
+        return binding
+      })
+    }
+  }
+  return query
+}
+
 class InternalBuilder {
   private readonly client: string
 
@@ -653,7 +669,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     if (opts?.disableBindings) {
       return { sql: query.toString() }
     } else {
-      return getNativeSql(query)
+      let native = getNativeSql(query)
+      if (sqlClient === SqlClient.SQL_LITE) {
+        native = convertBooleans(native)
+      }
+      return native
     }
   }
 
