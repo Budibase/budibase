@@ -402,6 +402,7 @@ describe.each([
         },
       ])
     })
+
     // TODO(samwho): fix for SQS
     !isSqs &&
       it("should match the session user id in a multi user field", async () => {
@@ -419,6 +420,7 @@ describe.each([
         ])
       })
 
+    // TODO(samwho): fix for SQS
     !isSqs &&
       it("should not match the session user id in a multi user field", async () => {
         await expectQuery({
