@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import { helpers } from "@budibase/shared-core"
   import RelationshipCell from "./RelationshipCell.svelte"
   import {
     BBReferenceFieldSubType,
@@ -12,26 +13,17 @@
   export let schema
 
   const { API } = getContext("grid")
-  const { type, subtype, constraints } = schema
-
-  let relationshipType
-
-  $: {
-    if (
-      type === FieldType.BB_REFERENCE_SINGLE ||
-      constraints?.type !== "array" // Handle deprecated "single" user references
-    ) {
-      relationshipType = RelationshipType.ONE_TO_MANY
-    } else {
-      relationshipType = RelationshipType.MANY_TO_MANY
-    }
-  }
+  const { type, subtype } = schema
 
   $: schema = {
     ...$$props.schema,
     // This is not really used, just adding some content to be able to render the relationship cell
     tableId: "external",
-    relationshipType,
+    relationshipType:
+      type === FieldType.BB_REFERENCE_SINGLE ||
+      helpers.schema.isDeprecatedSingleUserColumn(schema)
+        ? RelationshipType.ONE_TO_MANY
+        : RelationshipType.MANY_TO_MANY,
   }
 
   async function searchFunction(searchParams) {
