@@ -228,6 +228,46 @@ describe.each([
       await assertRowUsage(rowUsage + 10)
     })
 
+    it("should increment auto ID correctly when creating rows in parallel", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            "Row ID": {
+              name: "Row ID",
+              type: FieldType.NUMBER,
+              subtype: AutoFieldSubType.AUTO_ID,
+              icon: "ri-magic-line",
+              autocolumn: true,
+              constraints: {
+                type: "number",
+                presence: true,
+                numericality: {
+                  greaterThanOrEqualTo: "",
+                  lessThanOrEqualTo: "",
+                },
+              },
+            },
+          },
+        })
+      )
+
+      await Promise.all(
+        Array(50)
+          .fill(0)
+          .map(() => config.api.row.save(table._id!, {}))
+      )
+
+      const rows = await config.api.row.fetch(table._id!)
+      expect(rows).toHaveLength(50)
+
+      const ids = rows.map(r => r["Row ID"])
+      expect(ids).toContain(
+        Array(50)
+          .fill(0)
+          .map((_, i) => i + 1)
+      )
+    })
+
     isInternal &&
       it("row values are coerced", async () => {
         const str: FieldSchema = {
