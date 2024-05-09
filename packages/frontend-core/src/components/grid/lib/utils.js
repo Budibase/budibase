@@ -1,3 +1,4 @@
+import { helpers } from "@budibase/shared-core"
 import { TypeIconMap } from "../../../constants"
 
 export const getColor = (idx, opacity = 0.3) => {
@@ -11,8 +12,12 @@ export const getColumnIcon = column => {
   if (column.schema.autocolumn) {
     return "MagicWand"
   }
-  const { type, subtype } = column.schema
 
+  if (helpers.schema.isDeprecatedSingleUserColumn(column.schema)) {
+    return "User"
+  }
+
+  const { type, subtype } = column.schema
   const result =
     typeof TypeIconMap[type] === "object" && subtype
       ? TypeIconMap[type][subtype]

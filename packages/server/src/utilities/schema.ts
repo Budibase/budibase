@@ -129,7 +129,7 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
         return
       }
 
-      const { type: columnType, subtype: columnSubtype } = schema[columnName]
+      const { type: columnType } = schema[columnName]
       if (columnType === FieldType.NUMBER) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
@@ -140,21 +140,9 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
           : columnData
       } else if (columnType === FieldType.BB_REFERENCE) {
         const parsedValues =
-          !!columnData && parseCsvExport<{ _id: string }[]>(columnData)
-        if (!parsedValues) {
-          parsedRow[columnName] = undefined
-        } else {
-          switch (columnSubtype) {
-            case BBReferenceFieldSubType.USER:
-              parsedRow[columnName] = parsedValues[0]?._id
-              break
-            case BBReferenceFieldSubType.USERS:
-              parsedRow[columnName] = parsedValues.map(u => u._id)
-              break
-            default:
-              utils.unreachable(columnSubtype)
-          }
-        }
+          (!!columnData && parseCsvExport<{ _id: string }[]>(columnData)) || []
+
+        parsedRow[columnName] = parsedValues?.map(u => u._id)
       } else if (columnType === FieldType.BB_REFERENCE_SINGLE) {
         const parsedValue =
           columnData && parseCsvExport<{ _id: string }>(columnData)
@@ -197,10 +185,6 @@ function isValidBBReference(
     case BBReferenceFieldSubType.USERS: {
       const userArray = parseCsvExport<{ _id: string }[]>(data)
       if (!Array.isArray(userArray)) {
-        return false
-      }
-
-      if (subtype === BBReferenceFieldSubType.USER && userArray.length > 1) {
         return false
       }
 
