@@ -373,7 +373,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       case Operation.CREATE_TABLE:
         return this.createTable(json?.table?.name)
       case Operation.UPDATE_TABLE:
-        return this.updateTable(json.table!)
+        return this.updateTable(json.table!, rangeLimit)
       case Operation.DELETE_TABLE:
         return this.deleteTable(json?.table?.name)
       default:
@@ -429,10 +429,13 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  async updateTable(table: TableRequest) {
-    await this.connect()
-    const sheet = this.client.sheetsByTitle[table.name]
-    await sheet.loadHeaderRow()
+  async updateTable(table: TableRequest, rangeLimit: string) {
+    const auth = await this.connect()
+
+    const headers = await this.getHeaders(auth, table.name, rangeLimit)
+
+    // const sheet = this.client.sheetsByTitle[table.name]
+    // await sheet.loadHeaderRow()
 
     if (table._rename) {
       const headers = []
@@ -450,7 +453,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         throw err
       }
     } else {
-      const updatedHeaderValues = [...sheet.headerValues]
+      const updatedHeaderValues = [...headers]
 
       // add new column - doesn't currently exist
       for (let [key, column] of Object.entries(table.schema)) {
@@ -459,16 +462,13 @@ class GoogleSheetsIntegration implements DatasourcePlus {
             `Column type: ${column.type} not allowed for GSheets integration.`
           )
         }
-        if (
-          !sheet.headerValues.includes(key) &&
-          column.type !== FieldType.FORMULA
-        ) {
+        if (!headers.includes(key) && column.type !== FieldType.FORMULA) {
           updatedHeaderValues.push(key)
         }
       }
 
       // clear out deleted columns
-      for (let key of sheet.headerValues) {
+      for (let key of headers) {
         if (!Object.keys(table.schema).includes(key)) {
           const idx = updatedHeaderValues.indexOf(key)
           updatedHeaderValues.splice(idx, 1)
@@ -476,7 +476,15 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       }
 
       try {
-        await sheet.setHeaderRow(updatedHeaderValues)
+        await google.sheets("v4").spreadsheets.values.update({
+          auth,
+          spreadsheetId: this.spreadsheetId,
+          range: `${table.name}!A1:${this.getAlphabetCharacter(
+            updatedHeaderValues.length
+          )}1`,
+          valueInputOption: "RAW",
+          requestBody: { values: [updatedHeaderValues] },
+        })
       } catch (err) {
         console.error("Error updating table in google sheets", err)
         throw err
@@ -652,6 +660,21 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return { headers, row }
   }
 
+  private async getHeaders(
+    auth: OAuth2Client,
+    sheet: string,
+    rangeLimit: string
+  ) {
+    const { data: headers } = await google
+      .sheets("v4")
+      .spreadsheets.values.get({
+        auth,
+        spreadsheetId: this.spreadsheetId,
+        range: `${sheet}!A1:${rangeLimit}1`,
+      })
+    return headers.values![0]
+  }
+
   async update(query: {
     sheet: string
     rowIndex: number
@@ -661,24 +684,17 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     try {
       const auth = await this.connect()
 
-      const { data: headers } = await google
-        .sheets("v4")
-        .spreadsheets.values.get({
-          auth,
-          spreadsheetId: this.spreadsheetId,
-          range: `${query.sheet}!A1:${query.rangeLimit}1`,
-        })
+      const headers = await this.getHeaders(auth, query.sheet, query.rangeLimit)
 
       const updateValues =
         typeof query.row === "string" ? JSON.parse(query.row) : query.row
 
       const valuesArray = []
-      for (const column of headers.values![0]) {
+      for (const column of headers) {
         valuesArray.push(updateValues[column])
       }
 
       await google.sheets("v4").spreadsheets.values.update({
-        includeValuesInResponse: true,
         auth,
         spreadsheetId: this.spreadsheetId,
         range: `${query.sheet}!A${query.rowIndex + 2}:${query.rangeLimit}${
