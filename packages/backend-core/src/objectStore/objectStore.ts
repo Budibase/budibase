@@ -335,11 +335,7 @@ export function getPresignedUrl(
     const signedUrl = new URL(url)
     const path = signedUrl.pathname
     const query = signedUrl.search
-    if (path.startsWith(SIGNED_FILE_PREFIX)) {
-      return `${path}${query}`
-    } else {
-      return `${SIGNED_FILE_PREFIX}${path}${query}`
-    }
+    return `${SIGNED_FILE_PREFIX}${path}${query}`
   }
 }
 

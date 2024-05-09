@@ -71,7 +71,7 @@ async function processUrlAttachment(
   const fallbackFilename = path.basename(new URL(attachment.url).pathname)
   return {
     filename: attachment.filename || fallbackFilename,
-    content: response.body,
+    content: response.body!,
   }
 }
 
