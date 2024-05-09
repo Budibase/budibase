@@ -1,6 +1,8 @@
 import { TypeIconMap } from "../../../constants"
 
-const JOINING_CHARACTER = "——"
+// we can't use "-" for joining the ID/field, as this can be present in the ID or column name
+// using something very unusual to avoid this problem
+const JOINING_CHARACTER = "‽‽"
 
 export const splitRowId = rowId => {
   if (!rowId) {
