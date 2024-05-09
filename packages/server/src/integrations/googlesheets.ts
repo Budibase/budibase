@@ -371,9 +371,11 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   }
 
   buildRowObject(headers: string[], values: string[], rowNumber: number) {
-    const rowObject: { rowNumber: number; [key: string]: any } = { rowNumber }
+    const rowObject: { rowNumber: number } & Row = {
+      rowNumber,
+      _id: rowNumber.toString(),
+    }
     for (let i = 0; i < headers.length; i++) {
-      rowObject._id = rowNumber
       rowObject[headers[i]] = values[i]
     }
     return rowObject
@@ -450,7 +452,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  async create(query: { sheet: string; row: any }) {
+  async create(query: { sheet: string; row: Row }) {
     try {
       await this.connect()
       const sheet = this.client.sheetsByTitle[query.sheet]
@@ -466,7 +468,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  async createBulk(query: { sheet: string; rows: any[] }) {
+  async createBulk(query: { sheet: string; rows: Row[] }) {
     try {
       await this.connect()
       const sheet = this.client.sheetsByTitle[query.sheet]
