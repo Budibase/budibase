@@ -1,5 +1,4 @@
 jest.unmock("node-fetch")
-jest.unmock("aws-sdk")
 import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
 import { objectStore } from "@budibase/backend-core"
