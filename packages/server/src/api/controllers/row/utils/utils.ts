@@ -240,6 +240,7 @@ export async function enrichSearchContext(
   // enrich the fields with dynamic parameters
   for (let key of Object.keys(fields)) {
     if (fields[key] == null) {
+      enrichedQuery[key] = null
       continue
     }
     if (typeof fields[key] === "object") {
