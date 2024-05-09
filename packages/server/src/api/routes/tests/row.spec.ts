@@ -884,7 +884,7 @@ describe.each([
 
             for (const entry of attachmentEntries) {
               const attachmentId = entry.key.split("/").pop()
-              expect(entry.url).toBe(
+              expect(entry.url.split("?")[0]).toBe(
                 `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
               )
             }

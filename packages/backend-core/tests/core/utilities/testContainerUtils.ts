@@ -86,10 +86,18 @@ export function setupEnv(...envs: any[]) {
     throw new Error("CouchDB SQL port not found")
   }
 
+  const minio = getContainerByImage("minio/minio")
+
+  const minioPort = getExposedV4Port(minio, 9000)
+  if (!minioPort) {
+    throw new Error("Minio port not found")
+  }
+
   const configs = [
     { key: "COUCH_DB_PORT", value: `${couchPort}` },
     { key: "COUCH_DB_URL", value: `http://127.0.0.1:${couchPort}` },
     { key: "COUCH_DB_SQL_URL", value: `http://127.0.0.1:${couchSqlPort}` },
+    { key: "MINIO_URL", value: `http://127.0.0.1:${minioPort}` },
   ]
 
   for (const config of configs.filter(x => !!x.value)) {

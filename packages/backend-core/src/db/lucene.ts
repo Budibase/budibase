@@ -12,6 +12,10 @@ import { dataFilters } from "@budibase/shared-core"
 
 export const removeKeyNumbering = dataFilters.removeKeyNumbering
 
+function isEmpty(value: any) {
+  return value == null || value === ""
+}
+
 /**
  * Class to build lucene query URLs.
  * Optionally takes a base lucene query object.
@@ -282,15 +286,14 @@ export class QueryBuilder<T> {
     }
 
     const equal = (key: string, value: any) => {
-      // 0 evaluates to false, which means we would return all rows if we don't check it
-      if (!value && value !== 0) {
+      if (isEmpty(value)) {
         return null
       }
       return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
     }
 
     const contains = (key: string, value: any, mode = "AND") => {
-      if (!value || (Array.isArray(value) && value.length === 0)) {
+      if (isEmpty(value)) {
         return null
       }
       if (!Array.isArray(value)) {
@@ -306,7 +309,7 @@ export class QueryBuilder<T> {
     }
 
     const fuzzy = (key: string, value: any) => {
-      if (!value) {
+      if (isEmpty(value)) {
         return null
       }
       value = builder.preprocess(value, {
@@ -328,7 +331,7 @@ export class QueryBuilder<T> {
     }
 
     const oneOf = (key: string, value: any) => {
-      if (!value) {
+      if (isEmpty(value)) {
         return `*:*`
       }
       if (!Array.isArray(value)) {
@@ -386,7 +389,7 @@ export class QueryBuilder<T> {
     // Construct the actual lucene search query string from JSON structure
     if (this.#query.string) {
       build(this.#query.string, (key: string, value: any) => {
-        if (!value) {
+        if (isEmpty(value)) {
           return null
         }
         value = builder.preprocess(value, {
@@ -399,7 +402,7 @@ export class QueryBuilder<T> {
     }
     if (this.#query.range) {
       build(this.#query.range, (key: string, value: any) => {
-        if (!value) {
+        if (isEmpty(value)) {
           return null
         }
         if (value.low == null || value.low === "") {
@@ -421,7 +424,7 @@ export class QueryBuilder<T> {
     }
     if (this.#query.notEqual) {
       build(this.#query.notEqual, (key: string, value: any) => {
-        if (!value) {
+        if (isEmpty(value)) {
           return null
         }
         if (typeof value === "boolean") {
@@ -431,10 +434,28 @@ export class QueryBuilder<T> {
       })
     }
     if (this.#query.empty) {
-      build(this.#query.empty, (key: string) => `(*:* -${key}:["" TO *])`)
+      build(this.#query.empty, (key: string) => {
+        // Because the structure of an empty filter looks like this:
+        //   { empty: { someKey: null } }
+        //
+        // The check inside of `build` does not set `allFiltersEmpty`, which results
+        // in weird behaviour when the empty filter is the only filter. We get around
+        // this by setting `allFiltersEmpty` to false here.
+        allFiltersEmpty = false
+        return `(*:* -${key}:["" TO *])`
+      })
     }
     if (this.#query.notEmpty) {
-      build(this.#query.notEmpty, (key: string) => `${key}:["" TO *]`)
+      build(this.#query.notEmpty, (key: string) => {
+        // Because the structure of a notEmpty filter looks like this:
+        //   { notEmpty: { someKey: null } }
+        //
+        // The check inside of `build` does not set `allFiltersEmpty`, which results
+        // in weird behaviour when the empty filter is the only filter. We get around
+        // this by setting `allFiltersEmpty` to false here.
+        allFiltersEmpty = false
+        return `${key}:["" TO *]`
+      })
     }
     if (this.#query.oneOf) {
       build(this.#query.oneOf, oneOf)
