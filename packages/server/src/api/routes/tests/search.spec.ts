@@ -16,8 +16,6 @@ import {
 } from "@budibase/types"
 import _ from "lodash"
 
-jest.unmock("mssql")
-
 describe.each([
   ["lucene", undefined],
   ["sqs", undefined],
