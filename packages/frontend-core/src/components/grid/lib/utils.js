@@ -1,5 +1,20 @@
 import { TypeIconMap } from "../../../constants"
 
+const JOINING_CHARACTER = "——"
+
+export const splitRowId = rowId => {
+  if (!rowId) {
+    return undefined
+  }
+  const parts = rowId.split(JOINING_CHARACTER)
+  const field = parts.pop()
+  return { id: parts.join(JOINING_CHARACTER), field }
+}
+
+export const combineRowId = (rowId, fieldName) => {
+  return `${rowId}${JOINING_CHARACTER}${fieldName}`
+}
+
 export const getColor = (idx, opacity = 0.3) => {
   if (idx == null || idx === -1) {
     idx = 0
