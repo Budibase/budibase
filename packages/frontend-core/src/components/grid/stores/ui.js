@@ -7,15 +7,7 @@ import {
   MediumRowHeight,
   NewRowID,
 } from "../lib/constants"
-
-function splitRowId(rowId) {
-  if (!rowId) {
-    return undefined
-  }
-  const parts = rowId.split("-")
-  const field = parts.pop()
-  return { id: parts.join("-"), field }
-}
+import { splitRowId } from "../lib/utils"
 
 export const createStores = context => {
   const { props } = context

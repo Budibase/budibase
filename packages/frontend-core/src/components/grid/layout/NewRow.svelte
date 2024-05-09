@@ -7,6 +7,7 @@
   import { GutterWidth, NewRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
+  import { combineRowId } from "../lib/utils"
 
   const {
     hoveredRowId,
@@ -70,7 +71,7 @@
 
       // Select the first cell if possible
       if (firstColumn) {
-        $focusedCellId = `${savedRow._id}-${firstColumn.name}`
+        $focusedCellId = combineRowId(savedRow._id, firstColumn.name)
       }
     }
     isAdding = false
@@ -118,7 +119,7 @@
     visible = true
     $hoveredRowId = NewRowID
     if (firstColumn) {
-      $focusedCellId = `${NewRowID}-${firstColumn.name}`
+      $focusedCellId = combineRowId(NewRowID, firstColumn.name)
     }
 
     // Attach key listener
@@ -194,7 +195,7 @@
         {/if}
       </GutterCell>
       {#if $stickyColumn}
-        {@const cellId = `${NewRowID}-${$stickyColumn.name}`}
+        {@const cellId = combineRowId(NewRowID, $stickyColumn.name)}
         <DataCell
           {cellId}
           rowFocused

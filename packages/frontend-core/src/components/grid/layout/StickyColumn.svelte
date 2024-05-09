@@ -8,6 +8,7 @@
   import { GutterWidth, BlankRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
+  import { combineRowId } from "../lib/utils"
 
   const {
     rows,
@@ -71,7 +72,7 @@
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
         {@const rowFocused = $focusedRow?._id === row._id}
-        {@const cellId = `${row._id}-${$stickyColumn?.name}`}
+        {@const cellId = combineRowId(row._id, $stickyColumn?.name)}
         <div
           class="row"
           on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
