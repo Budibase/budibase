@@ -8,6 +8,15 @@ import {
   NewRowID,
 } from "../lib/constants"
 
+function splitRowId(rowId) {
+  if (!rowId) {
+    return undefined
+  }
+  const parts = rowId.split("-")
+  const field = parts.pop()
+  return { id: parts.join("-"), field }
+}
+
 export const createStores = context => {
   const { props } = context
   const focusedCellId = writable(null)
@@ -25,7 +34,7 @@ export const createStores = context => {
   const focusedRowId = derived(
     focusedCellId,
     $focusedCellId => {
-      return $focusedCellId?.split("-")[0]
+      return splitRowId($focusedCellId)?.id
     },
     null
   )
@@ -72,7 +81,7 @@ export const deriveStores = context => {
   const focusedRow = derived(
     [focusedCellId, rowLookupMap, rows],
     ([$focusedCellId, $rowLookupMap, $rows]) => {
-      const rowId = $focusedCellId?.split("-")[0]
+      const rowId = splitRowId($focusedCellId)?.id
 
       // Edge case for new rows
       if (rowId === NewRowID) {
@@ -152,7 +161,7 @@ export const initialise = context => {
     const hasRow = rows.actions.hasRow
 
     // Check selected cell
-    const selectedRowId = $focusedCellId?.split("-")[0]
+    const selectedRowId = splitRowId($focusedCellId)?.id
     if (selectedRowId && !hasRow(selectedRowId)) {
       focusedCellId.set(null)
     }
