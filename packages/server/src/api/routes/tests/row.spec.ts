@@ -32,8 +32,6 @@ import * as uuid from "uuid"
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
 
-jest.unmock("mssql")
-
 describe.each([
   ["internal", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
