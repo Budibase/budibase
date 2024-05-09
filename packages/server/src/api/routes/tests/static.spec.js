@@ -1,3 +1,13 @@
+// Directly mock the AWS SDK
+jest.mock("aws-sdk", () => ({
+  S3: jest.fn(() => ({
+    getSignedUrl: jest.fn(
+      (operation, params) => `http://example.com/${params.Bucket}/${params.Key}`
+    ),
+    upload: jest.fn(() => ({ Contents: {} })),
+  })),
+}))
+
 const setup = require("./utilities")
 const { constants } = require("@budibase/backend-core")
 

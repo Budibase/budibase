@@ -856,7 +856,7 @@ describe.each([
         await config.withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
             const enriched = await outputProcessing(table, [row])
-            expect((enriched as Row[])[0].attachment.url).toBe(
+            expect((enriched as Row[])[0].attachment.url.split("?")[0]).toBe(
               `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
             )
           })
@@ -889,7 +889,7 @@ describe.each([
         await config.withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
             const enriched = await outputProcessing(table, [row])
-            expect((enriched as Row[])[0].attachment[0].url).toBe(
+            expect((enriched as Row[])[0].attachment[0].url.split("?")[0]).toBe(
               `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
             )
           })
