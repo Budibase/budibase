@@ -1,6 +1,6 @@
 import * as linkRows from "../../db/linkedRows"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
-import { context, objectStore, utils } from "@budibase/backend-core"
+import { objectStore, utils } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import {
