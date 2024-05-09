@@ -84,12 +84,12 @@ export async function processObjectStoreAttachment(
     throw new Error("Invalid signed URL")
   }
 
-  const { bucket, path } = result
-  const readStream = await objectStore.getReadStream(bucket, path)
-  const fallbackFilename = path.split("/").pop() || ""
+  const { bucket, path: objectPath } = result
+  const readStream = await objectStore.getReadStream(bucket, objectPath)
+  const fallbackFilename = path.basename(objectPath)
   return {
     bucket,
-    path,
+    path: objectPath,
     filename: attachment.filename || fallbackFilename,
     content: readStream,
   }
