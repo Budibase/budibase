@@ -13,7 +13,11 @@
     Layout,
     AbsTooltip,
   } from "@budibase/bbui"
-  import { SWITCHABLE_TYPES, ValidColumnNameRegex } from "@budibase/shared-core"
+  import {
+    SWITCHABLE_TYPES,
+    ValidColumnNameRegex,
+    helpers,
+  } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
@@ -361,11 +365,7 @@
   function getAllowedTypes(datasource) {
     if (originalName) {
       let possibleTypes = SWITCHABLE_TYPES[field.type] || [editableColumn.type]
-      if (
-        editableColumn.type === FieldType.BB_REFERENCE &&
-        editableColumn.subtype === BBReferenceFieldSubType.USER &&
-        editableColumn.constraints?.type !== "array"
-      ) {
+      if (helpers.schema.isDeprecatedSingleUserColumn(editableColumn)) {
         // This will handle old single users columns
         return [
           {
