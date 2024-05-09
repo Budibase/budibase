@@ -430,14 +430,6 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         }
       }
 
-      // clear out deleted columns
-      for (let key of sheet.headerValues) {
-        if (!Object.keys(table.schema).includes(key)) {
-          const idx = updatedHeaderValues.indexOf(key)
-          updatedHeaderValues.splice(idx, 1)
-        }
-      }
-
       try {
         await sheet.setHeaderRow(updatedHeaderValues)
       } catch (err) {
