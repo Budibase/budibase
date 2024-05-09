@@ -135,64 +135,56 @@ export async function sendAutomationAttachmentsToStorage(
 
 async function generateAttachmentRow(attachment: AutomationAttachment) {
   const prodAppId = context.getProdAppId()
-  try {
-    let size: number
-    let s3Key: string
 
+  async function uploadToS3(
+    extension: string,
+    content: objectStore.StreamTypes
+  ) {
+    const fileName = `${uuid.v4()}.${extension}`
+    const s3Key = `${prodAppId}/attachments/${fileName}`
+
+    await objectStore.streamUpload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      stream: content,
+      filename: s3Key,
+    })
+
+    return s3Key
+  }
+
+  async function getSize(s3Key: string) {
+    return (
+      (
+        await objectStore.getObjectMetadata(
+          objectStore.ObjectStoreBuckets.APPS,
+          s3Key
+        )
+      ).ContentLength || 0
+    )
+  }
+
+  try {
+    const { filename } = attachment
+    const extension = path.extname(filename)
     const attachmentResult = await objectStore.processAutomationAttachment(
       attachment
     )
-    const extension = path.extname(attachment.filename)
-    if ("bucket" in attachmentResult && "path" in attachmentResult) {
-      const { path, content } = attachmentResult
 
-      if (path.startsWith(`${prodAppId}/attachments/`)) {
-        s3Key = path
-      } else {
-        const processedFileName = `${uuid.v4()}.${extension}`
-        s3Key = `${prodAppId}/attachments/${processedFileName}`
-
-        if (content) {
-          await objectStore.streamUpload({
-            bucket: objectStore.ObjectStoreBuckets.APPS,
-            stream: content,
-            filename: s3Key,
-          })
-        }
-      }
-
-      size =
-        (
-          await objectStore.getObjectMetadata(
-            objectStore.ObjectStoreBuckets.APPS,
-            s3Key
-          )
-        ).ContentLength || 0
+    let s3Key = ""
+    if (
+      "path" in attachmentResult &&
+      attachmentResult.path.startsWith(`${prodAppId}/attachments/`)
+    ) {
+      s3Key = attachmentResult.path
     } else {
-      const { content } = attachmentResult
-      const processedFileName = `${uuid.v4()}.${extension}`
-      s3Key = `${prodAppId}/attachments/${processedFileName}`
-
-      if (content) {
-        await objectStore.streamUpload({
-          bucket: objectStore.ObjectStoreBuckets.APPS,
-          stream: content,
-          filename: s3Key,
-        })
-      }
-      size =
-        (
-          await objectStore.getObjectMetadata(
-            objectStore.ObjectStoreBuckets.APPS,
-            s3Key
-          )
-        ).ContentLength || 0
+      s3Key = await uploadToS3(extension, attachmentResult.content)
     }
-    console.log("generate: " + JSON.stringify(attachment))
+
+    const size = await getSize(s3Key)
 
     return {
       size,
-      name: attachment.filename,
+      name: filename,
       extension,
       key: s3Key,
     }

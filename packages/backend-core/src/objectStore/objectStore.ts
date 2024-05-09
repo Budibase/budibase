@@ -41,8 +41,13 @@ type UploadParams = BaseUploadParams & {
   path?: string | PathLike
 }
 
-type StreamUploadParams = BaseUploadParams & {
-  stream?: ReadStream | NodeJS.ReadableStream | ReadableStream<Uint8Array>
+export type StreamTypes =
+  | ReadStream
+  | NodeJS.ReadableStream
+  | ReadableStream<Uint8Array>
+
+export type StreamUploadParams = BaseUploadParams & {
+  stream?: StreamTypes
 }
 
 const CONTENT_TYPE_MAP: any = {

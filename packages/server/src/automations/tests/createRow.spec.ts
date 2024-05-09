@@ -1,5 +1,4 @@
 import * as setup from "./utilities"
-import tk from "timekeeper"
 import { basicTableWithAttachmentField } from "../../tests/utilities/structures"
 import { objectStore } from "@budibase/backend-core"
 
