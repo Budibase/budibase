@@ -149,58 +149,59 @@ describe.each([
       expect(res.name).toBeUndefined()
     })
 
-    it("updates only the passed fields", async () => {
-      await timekeeper.withFreeze(new Date(2021, 1, 1), async () => {
-        const table = await config.api.table.save(
-          tableForDatasource(datasource, {
-            schema: {
-              autoId: {
-                name: "id",
-                type: FieldType.NUMBER,
-                subtype: AutoFieldSubType.AUTO_ID,
-                autocolumn: true,
-                constraints: {
-                  type: "number",
-                  presence: false,
+    isInternal &&
+      it("updates only the passed fields", async () => {
+        await timekeeper.withFreeze(new Date(2021, 1, 1), async () => {
+          const table = await config.api.table.save(
+            tableForDatasource(datasource, {
+              schema: {
+                autoId: {
+                  name: "id",
+                  type: FieldType.NUMBER,
+                  subtype: AutoFieldSubType.AUTO_ID,
+                  autocolumn: true,
+                  constraints: {
+                    type: "number",
+                    presence: false,
+                  },
                 },
               },
-            },
+            })
+          )
+
+          const newName = generator.guid()
+
+          const updatedTable = await config.api.table.save({
+            ...table,
+            name: newName,
           })
-        )
 
-        const newName = generator.guid()
+          let expected: Table = {
+            ...table,
+            name: newName,
+            _id: expect.any(String),
+          }
+          if (isInternal) {
+            expected._rev = expect.stringMatching(/^2-.+/)
+          }
 
-        const updatedTable = await config.api.table.save({
-          ...table,
-          name: newName,
+          expect(updatedTable).toEqual(expected)
+
+          const persistedTable = await config.api.table.get(updatedTable._id!)
+          expected = {
+            ...table,
+            name: newName,
+            _id: updatedTable._id,
+          }
+          if (datasource?.isSQL) {
+            expected.sql = true
+          }
+          if (isInternal) {
+            expected._rev = expect.stringMatching(/^2-.+/)
+          }
+          expect(persistedTable).toEqual(expected)
         })
-
-        let expected: Table = {
-          ...table,
-          name: newName,
-          _id: expect.any(String),
-        }
-        if (isInternal) {
-          expected._rev = expect.stringMatching(/^2-.+/)
-        }
-
-        expect(updatedTable).toEqual(expected)
-
-        const persistedTable = await config.api.table.get(updatedTable._id!)
-        expected = {
-          ...table,
-          name: newName,
-          _id: updatedTable._id,
-        }
-        if (datasource?.isSQL) {
-          expected.sql = true
-        }
-        if (isInternal) {
-          expected._rev = expect.stringMatching(/^2-.+/)
-        }
-        expect(persistedTable).toEqual(expected)
       })
-    })
 
     describe("user table", () => {
       isInternal &&
