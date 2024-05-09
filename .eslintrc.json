@@ -36,6 +36,9 @@
     {
       "files": ["**/*.ts"],
       "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": ["./packages/*/tsconfig.json"]
+      },
       "plugins": ["@typescript-eslint"],
       "extends": ["eslint:recommended"],
       "globals": {
@@ -54,7 +57,7 @@
             "ignoreRestSiblings": true
           }
         ],
-        "local-rules/no-budibase-imports": "error"
+        "@typescript-eslint/no-floating-promises": "error"
       }
     },
     {
