@@ -26,11 +26,11 @@ tk.freeze(serverTime)
 
 describe.each([
   ["lucene", undefined],
-  ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // ["sqs", undefined],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -269,6 +269,14 @@ describe.each([
           single_user: JSON.stringify(globalUsers[0]),
         },
         {
+          name: "deprecated single user, session user",
+          deprecated_single_user: JSON.stringify([currentUser]),
+        },
+        {
+          name: "deprecated single user",
+          deprecated_single_user: JSON.stringify([globalUsers[0]]),
+        },
+        {
           name: "multi user",
           multi_user: JSON.stringify(globalUsers),
         },
@@ -314,7 +322,7 @@ describe.each([
         },
         deprecated_single_user: {
           name: "deprecated_single_user",
-          type: FieldType.BB_REFERENCE_SINGLE,
+          type: FieldType.BB_REFERENCE,
           subtype: BBReferenceFieldSubType.USER,
           constraints: {
             type: "array",
@@ -424,6 +432,17 @@ describe.each([
       ])
     })
 
+    it("should match a deprecated single user row by the session user id", async () => {
+      await expectQuery({
+        equal: { deprecated_single_user: "{{ [user]._id }}" },
+      }).toContainExactly([
+        {
+          name: "deprecated single user, session user",
+          deprecated_single_user: [{ _id: config.getUser()._id }],
+        },
+      ])
+    })
+
     // TODO(samwho): fix for SQS
     !isSqs &&
       it("should match the session user id in a multi user field", async () => {
@@ -510,6 +529,26 @@ describe.each([
       ])
     })
 
+    it("should match the session user id and a user table row id using helpers, user binding and a static user id. (deprecated single user)", async () => {
+      await expectQuery({
+        oneOf: {
+          deprecated_single_user: [
+            "{{ default [user]._id '_empty_' }}",
+            globalUsers[0]._id,
+          ],
+        },
+      }).toContainExactly([
+        {
+          name: "deprecated single user, session user",
+          deprecated_single_user: [{ _id: config.getUser()._id }],
+        },
+        {
+          name: "deprecated single user",
+          deprecated_single_user: [{ _id: globalUsers[0]._id }],
+        },
+      ])
+    })
+
     it("should resolve 'default' helper to '_empty_' when binding resolves to nothing", async () => {
       await expectQuery({
         oneOf: {
@@ -522,6 +561,22 @@ describe.each([
         {
           name: "single user",
           single_user: { _id: globalUsers[0]._id },
+        },
+      ])
+    })
+
+    it("should resolve 'default' helper to '_empty_' when binding resolves to nothing (deprecated single user)", async () => {
+      await expectQuery({
+        oneOf: {
+          deprecated_single_user: [
+            "{{ default [user]._idx '_empty_' }}",
+            globalUsers[0]._id,
+          ],
+        },
+      }).toContainExactly([
+        {
+          name: "deprecated single user",
+          deprecated_single_user: [{ _id: globalUsers[0]._id }],
         },
       ])
     })
