@@ -43,8 +43,9 @@ class CouchDBError extends Error {
   statusCode: number
   reason: string
   name: string
-  errid: string | undefined
-  description: string | undefined
+  errid: string
+  error: string
+  description: string
 
   constructor(
     message: string,
@@ -54,6 +55,7 @@ class CouchDBError extends Error {
       errid: string
       description: string
       reason: string
+      error: string
     }
   ) {
     super(message)
@@ -63,6 +65,7 @@ class CouchDBError extends Error {
     this.name = info.name
     this.errid = info.errid
     this.description = info.description
+    this.error = info.error
   }
 }
 
@@ -168,13 +171,7 @@ export class DatabaseImpl implements Database {
         return await this.performCall(call)
       }
       // stripping the error down the props which are safe/useful, drop everything else
-      throw new CouchDBError(`CouchDB error: ${err.message}`, {
-        status: err.status || err.statusCode,
-        name: err.name,
-        errid: err.errid,
-        description: err.description,
-        reason: err.reason,
-      })
+      throw new CouchDBError(`CouchDB error: ${err.message}`, err)
     }
   }
 
