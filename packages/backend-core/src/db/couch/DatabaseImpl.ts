@@ -50,7 +50,8 @@ class CouchDBError extends Error {
   constructor(
     message: string,
     info: {
-      status: number
+      status: number | undefined
+      statusCode: number | undefined
       name: string
       errid: string
       description: string
@@ -59,8 +60,9 @@ class CouchDBError extends Error {
     }
   ) {
     super(message)
-    this.status = info.status
-    this.statusCode = info.status
+    const statusCode = info.status || info.statusCode || 500
+    this.status = statusCode
+    this.statusCode = statusCode
     this.reason = info.reason
     this.name = info.name
     this.errid = info.errid
