@@ -314,9 +314,16 @@ export class DatabaseImpl implements Database {
   }
 
   async destroy() {
-    return this.performCall(async () => {
-      return () => this.nano().db.destroy(this.name)
-    })
+    try {
+      return await this.nano().db.destroy(this.name)
+    } catch (err: any) {
+      // didn't exist, don't worry
+      if (err.statusCode === 404) {
+        return
+      } else {
+        throw new CouchDBError(err.message, err)
+      }
+    }
   }
 
   async compact() {
