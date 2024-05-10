@@ -307,7 +307,7 @@ describe.each([
         multi_user: {
           name: "multi_user",
           type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USERS,
+          subtype: BBReferenceFieldSubType.USER,
         },
       })
       await createRows(rows(config.getUser()))
