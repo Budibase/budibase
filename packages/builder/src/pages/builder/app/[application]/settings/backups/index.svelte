@@ -98,14 +98,22 @@
     })
   }
 
-  async function fetchBackups(filters, page, dateRange) {
-    const response = await backups.searchBackups({
+  async function fetchBackups(filters, page, dateRange = []) {
+    const body = {
       appId: $appStore.appId,
       ...filters,
       page,
-      startDate: dateRange[0],
-      endDate: dateRange[1],
-    })
+    }
+
+    const [startDate, endDate] = dateRange
+    if (startDate) {
+      body.startDate = startDate
+    }
+    if (endDate) {
+      body.endDate = endDate
+    }
+
+    const response = await backups.searchBackups(body)
     pageInfo.fetched(response.hasNextPage, response.nextPage)
 
     // flatten so we have an easier structure to use for the table schema
@@ -120,7 +128,7 @@
       })
       await fetchBackups(filterOpt, page)
       notifications.success(response.message)
-    } catch {
+    } catch (err) {
       notifications.error("Unable to create backup")
     }
   }

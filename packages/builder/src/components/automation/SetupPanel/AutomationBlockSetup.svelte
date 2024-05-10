@@ -358,7 +358,8 @@
       value.customType !== "cron" &&
       value.customType !== "triggerSchema" &&
       value.customType !== "automationFields" &&
-      value.type !== "attachment"
+      value.type !== "attachment" &&
+      value.type !== "attachment_single"
     )
   }
 
