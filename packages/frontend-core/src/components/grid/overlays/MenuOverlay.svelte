@@ -3,7 +3,7 @@
   import { getContext } from "svelte"
   import { NewRowID } from "../lib/constants"
   import GridPopover from "./GridPopover.svelte"
-  import { combineRowId } from "../lib/utils"
+  import { getCellID } from "../lib/utils"
 
   const {
     focusedRow,
@@ -42,7 +42,7 @@
     const newRow = await rows.actions.duplicateRow($focusedRow)
     if (newRow) {
       const column = $stickyColumn?.name || $columns[0].name
-      $focusedCellId = combineRowId(newRow._id, column)
+      $focusedCellId = getCellID(newRow._id, column)
     }
   }
 

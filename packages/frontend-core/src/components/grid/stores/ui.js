@@ -7,7 +7,7 @@ import {
   MediumRowHeight,
   NewRowID,
 } from "../lib/constants"
-import { splitRowId } from "../lib/utils"
+import { parseCellID } from "../lib/utils"
 
 export const createStores = context => {
   const { props } = context
@@ -26,7 +26,7 @@ export const createStores = context => {
   const focusedRowId = derived(
     focusedCellId,
     $focusedCellId => {
-      return splitRowId($focusedCellId)?.id
+      return parseCellID($focusedCellId)?.id
     },
     null
   )
@@ -73,7 +73,7 @@ export const deriveStores = context => {
   const focusedRow = derived(
     [focusedCellId, rowLookupMap, rows],
     ([$focusedCellId, $rowLookupMap, $rows]) => {
-      const rowId = splitRowId($focusedCellId)?.id
+      const rowId = parseCellID($focusedCellId)?.id
 
       // Edge case for new rows
       if (rowId === NewRowID) {
@@ -153,7 +153,7 @@ export const initialise = context => {
     const hasRow = rows.actions.hasRow
 
     // Check selected cell
-    const selectedRowId = splitRowId($focusedCellId)?.id
+    const selectedRowId = parseCellID($focusedCellId)?.id
     if (selectedRowId && !hasRow(selectedRowId)) {
       focusedCellId.set(null)
     }

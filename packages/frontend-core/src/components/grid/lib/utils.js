@@ -4,7 +4,7 @@ import { TypeIconMap } from "../../../constants"
 // using something very unusual to avoid this problem
 const JOINING_CHARACTER = "‽‽"
 
-export const splitRowId = rowId => {
+export const parseCellID = rowId => {
   if (!rowId) {
     return undefined
   }
@@ -13,7 +13,7 @@ export const splitRowId = rowId => {
   return { id: parts.join(JOINING_CHARACTER), field }
 }
 
-export const combineRowId = (rowId, fieldName) => {
+export const getCellID = (rowId, fieldName) => {
   return `${rowId}${JOINING_CHARACTER}${fieldName}`
 }
 
