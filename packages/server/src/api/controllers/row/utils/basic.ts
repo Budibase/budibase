@@ -73,12 +73,15 @@ export function basicProcessing({
   // filter the row down to what is actually the row (not joined)
   for (let field of Object.values(table.schema)) {
     const fieldName = field.name
-    const value = extractFieldValue({
+    let value = extractFieldValue({
       row,
       tableName: table.name,
       fieldName,
       isLinked,
     })
+    if (value instanceof Buffer) {
+      value = value.toString()
+    }
     // all responses include "select col as table.col" so that overlaps are handled
     if (value != null) {
       thisRow[fieldName] = value

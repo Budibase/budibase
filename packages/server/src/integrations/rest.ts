@@ -139,13 +139,13 @@ class RestIntegration implements IntegrationBase {
     const contentType = response.headers.get("content-type") || ""
     const contentDisposition = response.headers.get("content-disposition") || ""
     if (
+      contentDisposition.includes("filename") ||
       contentDisposition.includes("attachment") ||
       contentDisposition.includes("form-data")
     ) {
       filename =
         path.basename(parse(contentDisposition).parameters?.filename) || ""
     }
-
     try {
       if (filename) {
         return handleFileResponse(response, filename, this.startTimeMs)
