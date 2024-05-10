@@ -2,7 +2,7 @@
   import { getContext, onMount } from "svelte"
   import { debounce } from "../../../utils/utils"
   import { NewRowID } from "../lib/constants"
-  import { combineRowId, splitRowId } from "../lib/utils"
+  import { getCellID, parseCellID } from "../lib/utils"
 
   const {
     rows,
@@ -155,7 +155,7 @@
     if (!firstColumn) {
       return
     }
-    focusedCellId.set(combineRowId(firstRow._id, firstColumn.name))
+    focusedCellId.set(getCellID(firstRow._id, firstColumn.name))
   }
 
   // Changes the focused cell by moving it left or right to a different column
@@ -164,7 +164,7 @@
       return
     }
     const cols = $visibleColumns
-    const { id, field: columnName } = splitRowId($focusedCellId)
+    const { id, field: columnName } = parseCellID($focusedCellId)
     let newColumnName
     if (columnName === $stickyColumn?.name) {
       const index = delta - 1
@@ -178,7 +178,7 @@
       }
     }
     if (newColumnName) {
-      $focusedCellId = combineRowId(id, newColumnName)
+      $focusedCellId = getCellID(id, newColumnName)
     }
   }
 
@@ -189,8 +189,8 @@
     }
     const newRow = $rows[$focusedRow.__idx + delta]
     if (newRow) {
-      const { field } = splitRowId($focusedCellId)
-      $focusedCellId = combineRowId(newRow._id, field)
+      const { field } = parseCellID($focusedCellId)
+      $focusedCellId = getCellID(newRow._id, field)
     }
   }
 

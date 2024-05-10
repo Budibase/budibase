@@ -1,5 +1,5 @@
 import { writable, get, derived } from "svelte/store"
-import { combineRowId, splitRowId } from "../lib/utils"
+import { getCellID, parseCellID } from "../lib/utils"
 
 // Normally we would break out actions into the explicit "createActions"
 // function, but for validation all these actions are pure so can go into
@@ -13,7 +13,7 @@ export const createStores = () => {
     Object.entries($validation).forEach(([key, error]) => {
       // Extract row ID from all errored cell IDs
       if (error) {
-        map[splitRowId(key).id] = true
+        map[parseCellID(key).id] = true
       }
     })
     return map
@@ -54,10 +54,10 @@ export const initialise = context => {
       const $stickyColumn = get(stickyColumn)
       validation.update(state => {
         $columns.forEach(column => {
-          state[combineRowId(id, column.name)] = null
+          state[getCellID(id, column.name)] = null
         })
         if ($stickyColumn) {
-          state[combineRowId(id, stickyColumn.name)] = null
+          state[getCellID(id, stickyColumn.name)] = null
         }
         return state
       })

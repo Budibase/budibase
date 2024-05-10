@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import DataCell from "../cells/DataCell.svelte"
-  import { combineRowId } from "../lib/utils"
+  import { getCellID } from "../lib/utils"
 
   export let row
   export let top = false
@@ -39,7 +39,7 @@
   on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
 >
   {#each $visibleColumns as column, columnIdx}
-    {@const cellId = combineRowId(row._id, column.name)}
+    {@const cellId = getCellID(row._id, column.name)}
     <DataCell
       {cellId}
       {column}

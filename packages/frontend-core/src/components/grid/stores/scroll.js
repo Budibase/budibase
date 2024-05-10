@@ -1,7 +1,7 @@
 import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
 import { Padding, GutterWidth, FocusedCellMinOffset } from "../lib/constants"
-import { splitRowId } from "../lib/utils"
+import { parseCellID } from "../lib/utils"
 
 export const createStores = () => {
   const scroll = writable({
@@ -177,7 +177,7 @@ export const initialise = context => {
     // Ensure horizontal position is viewable
     // Check horizontal position of columns next
     const $visibleColumns = get(visibleColumns)
-    const { field: columnName } = splitRowId($focusedCellId)
+    const { field: columnName } = parseCellID($focusedCellId)
     const column = $visibleColumns.find(col => col.name === columnName)
     if (!column) {
       return
