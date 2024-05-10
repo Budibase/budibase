@@ -276,6 +276,14 @@ describe.each([
           name: "multi user with session user",
           multi_user: JSON.stringify([...globalUsers, currentUser]),
         },
+        {
+          name: "deprecated multi user",
+          deprecated_multi_user: JSON.stringify(globalUsers),
+        },
+        {
+          name: "deprecated multi user with session user",
+          deprecated_multi_user: JSON.stringify([...globalUsers, currentUser]),
+        },
       ]
     }
 
@@ -304,10 +312,23 @@ describe.each([
           type: FieldType.BB_REFERENCE_SINGLE,
           subtype: BBReferenceFieldSubType.USER,
         },
+        deprecated_single_user: {
+          name: "deprecated_single_user",
+          type: FieldType.BB_REFERENCE_SINGLE,
+          subtype: BBReferenceFieldSubType.USER,
+          constraints: {
+            type: "array",
+          },
+        },
         multi_user: {
           name: "multi_user",
           type: FieldType.BB_REFERENCE,
           subtype: BBReferenceFieldSubType.USER,
+        },
+        deprecated_multi_user: {
+          name: "deprecated_multi_user",
+          type: FieldType.BB_REFERENCE,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       })
       await createRows(rows(config.getUser()))
@@ -422,6 +443,23 @@ describe.each([
 
     // TODO(samwho): fix for SQS
     !isSqs &&
+      it("should match the session user id in a deprecated multi user field", async () => {
+        const allUsers = [...globalUsers, config.getUser()].map((user: any) => {
+          return { _id: user._id }
+        })
+
+        await expectQuery({
+          contains: { deprecated_multi_user: ["{{ [user]._id }}"] },
+        }).toContainExactly([
+          {
+            name: "deprecated multi user with session user",
+            deprecated_multi_user: allUsers,
+          },
+        ])
+      })
+
+    // TODO(samwho): fix for SQS
+    !isSqs &&
       it("should not match the session user id in a multi user field", async () => {
         await expectQuery({
           notContains: { multi_user: ["{{ [user]._id }}"] },
@@ -430,6 +468,22 @@ describe.each([
           {
             name: "multi user",
             multi_user: globalUsers.map((user: any) => {
+              return { _id: user._id }
+            }),
+          },
+        ])
+      })
+
+    // TODO(samwho): fix for SQS
+    !isSqs &&
+      it("should not match the session user id in a deprecated multi user field", async () => {
+        await expectQuery({
+          notContains: { deprecated_multi_user: ["{{ [user]._id }}"] },
+          notEmpty: { deprecated_multi_user: true },
+        }).toContainExactly([
+          {
+            name: "deprecated multi user",
+            deprecated_multi_user: globalUsers.map((user: any) => {
               return { _id: user._id }
             }),
           },
