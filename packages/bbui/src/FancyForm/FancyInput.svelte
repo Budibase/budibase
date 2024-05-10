@@ -11,6 +11,7 @@
   export let error = null
   export let validate = null
   export let suffix = null
+  export let validateOn = "change"
 
   const dispatch = createEventDispatcher()
 
@@ -24,7 +25,16 @@
     const newValue = e.target.value
     dispatch("change", newValue)
     value = newValue
-    if (validate) {
+    if (validate && (error || validateOn === "change")) {
+      error = validate(newValue)
+    }
+  }
+
+  const onBlur = e => {
+    focused = false
+    const newValue = e.target.value
+    dispatch("blur", newValue)
+    if (validate && validateOn === "blur") {
       error = validate(newValue)
     }
   }
@@ -61,7 +71,7 @@
     type={type || "text"}
     on:input={onChange}
     on:focus={() => (focused = true)}
-    on:blur={() => (focused = false)}
+    on:blur={onBlur}
     class:placeholder
     bind:this={ref}
   />
