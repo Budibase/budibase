@@ -262,11 +262,11 @@ describe.each([
         { name: "serverDate", appointment: serverTime.toISOString() },
         {
           name: "single user, session user",
-          single_user: JSON.stringify([currentUser]),
+          single_user: JSON.stringify(currentUser),
         },
         {
           name: "single user",
-          single_user: JSON.stringify([globalUsers[0]]),
+          single_user: JSON.stringify(globalUsers[0]),
         },
         {
           name: "multi user",
@@ -398,7 +398,7 @@ describe.each([
       }).toContainExactly([
         {
           name: "single user, session user",
-          single_user: [{ _id: config.getUser()._id }],
+          single_user: { _id: config.getUser()._id },
         },
       ])
     })
@@ -447,11 +447,11 @@ describe.each([
       }).toContainExactly([
         {
           name: "single user, session user",
-          single_user: [{ _id: config.getUser()._id }],
+          single_user: { _id: config.getUser()._id },
         },
         {
           name: "single user",
-          single_user: [{ _id: globalUsers[0]._id }],
+          single_user: { _id: globalUsers[0]._id },
         },
       ])
     })
@@ -467,7 +467,7 @@ describe.each([
       }).toContainExactly([
         {
           name: "single user",
-          single_user: [{ _id: globalUsers[0]._id }],
+          single_user: { _id: globalUsers[0]._id },
         },
       ])
     })
