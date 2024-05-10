@@ -3,11 +3,11 @@ import {
   AllDocsResponse,
   AnyDocument,
   Database,
-  DatabaseOpts,
-  DatabaseQueryOpts,
-  DatabasePutOpts,
   DatabaseCreateIndexOpts,
   DatabaseDeleteIndexOpts,
+  DatabaseOpts,
+  DatabasePutOpts,
+  DatabaseQueryOpts,
   Document,
   isDocument,
   RowResponse,
@@ -17,7 +17,7 @@ import {
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
-import { WriteStream, ReadStream } from "fs"
+import { ReadStream, WriteStream } from "fs"
 import { newid } from "../../docIds/newid"
 import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
@@ -37,6 +37,34 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
 }
 
 type DBCall<T> = () => Promise<T>
+
+class CouchDBError extends Error {
+  status: number
+  statusCode: number
+  reason: string
+  name: string
+  errid: string | undefined
+  description: string | undefined
+
+  constructor(
+    message: string,
+    info: {
+      status: number
+      name: string
+      errid: string
+      description: string
+      reason: string
+    }
+  ) {
+    super(message)
+    this.status = info.status
+    this.statusCode = info.status
+    this.reason = info.reason
+    this.name = info.name
+    this.errid = info.errid
+    this.description = info.description
+  }
+}
 
 export function DatabaseWithConnection(
   dbName: string,
@@ -119,7 +147,7 @@ export class DatabaseImpl implements Database {
       } catch (err: any) {
         // Handling race conditions
         if (err.statusCode !== 412) {
-          throw err
+          throw new CouchDBError(err.message, err)
         }
       }
     }
@@ -138,10 +166,15 @@ export class DatabaseImpl implements Database {
       if (err.statusCode === 404 && err.reason === DATABASE_NOT_FOUND) {
         await this.checkAndCreateDb()
         return await this.performCall(call)
-      } else if (err.statusCode) {
-        err.status = err.statusCode
       }
-      throw err
+      // stripping the error down the props which are safe/useful, drop everything else
+      throw new CouchDBError(`CouchDB error: ${err.message}`, {
+        status: err.status || err.statusCode,
+        name: err.name,
+        errid: err.errid,
+        description: err.description,
+        reason: err.reason,
+      })
     }
   }
 
@@ -281,16 +314,9 @@ export class DatabaseImpl implements Database {
   }
 
   async destroy() {
-    try {
-      return await this.nano().db.destroy(this.name)
-    } catch (err: any) {
-      // didn't exist, don't worry
-      if (err.statusCode === 404) {
-        return
-      } else {
-        throw { ...err, status: err.statusCode }
-      }
-    }
+    return this.performCall(async () => {
+      return () => this.nano().db.destroy(this.name)
+    })
   }
 
   async compact() {
