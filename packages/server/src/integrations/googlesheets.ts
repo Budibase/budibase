@@ -371,9 +371,11 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   }
 
   buildRowObject(headers: string[], values: string[], rowNumber: number) {
-    const rowObject: { rowNumber: number; [key: string]: any } = { rowNumber }
+    const rowObject: { rowNumber: number } & Row = {
+      rowNumber,
+      _id: rowNumber.toString(),
+    }
     for (let i = 0; i < headers.length; i++) {
-      rowObject._id = rowNumber
       rowObject[headers[i]] = values[i]
     }
     return rowObject
@@ -430,14 +432,6 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         }
       }
 
-      // clear out deleted columns
-      for (let key of sheet.headerValues) {
-        if (!Object.keys(table.schema).includes(key)) {
-          const idx = updatedHeaderValues.indexOf(key)
-          updatedHeaderValues.splice(idx, 1)
-        }
-      }
-
       try {
         await sheet.setHeaderRow(updatedHeaderValues)
       } catch (err) {
@@ -458,7 +452,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  async create(query: { sheet: string; row: any }) {
+  async create(query: { sheet: string; row: Row }) {
     try {
       await this.connect()
       const sheet = this.client.sheetsByTitle[query.sheet]
@@ -474,7 +468,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  async createBulk(query: { sheet: string; rows: any[] }) {
+  async createBulk(query: { sheet: string; rows: Row[] }) {
     try {
       await this.connect()
       const sheet = this.client.sheetsByTitle[query.sheet]
