@@ -12,7 +12,7 @@ import { NoEmptyFilterStrings } from "../../../constants"
 import * as sqs from "./search/sqs"
 import env from "../../../environment"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
-import { dataFilters, helpers } from "@budibase/shared-core"
+import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
 
