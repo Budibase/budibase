@@ -24,7 +24,11 @@
     parameters
   }
   $: automations = $automationStore.automations
-    .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
+    .filter(
+      a =>
+        a.definition.trigger?.stepId === TriggerStepID.APP &&
+        a.disabled !== true
+    )
     .map(automation => {
       const schema = Object.entries(
         automation.definition.trigger.inputs.fields || {}
