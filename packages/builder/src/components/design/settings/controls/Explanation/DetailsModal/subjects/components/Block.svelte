@@ -10,6 +10,7 @@
 <style>
   .block {
     font-style: italic;
+    border-radius: 1px;
     padding: 0px 5px 0px 3px;
     border-radius: 1px;
     background-color: var(--grey-3);

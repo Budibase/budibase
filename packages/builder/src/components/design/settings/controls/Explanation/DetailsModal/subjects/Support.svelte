@@ -23,7 +23,7 @@
   </Section>
   <Section>
     <InfoWord icon="Alert" color="var(--red)" text="Not compatible" />
-    <span class="body">Imcompatible with the component.</span>
+    <span class="body">Incompatible with the component.</span>
   </Section>
 </Subject>
 
