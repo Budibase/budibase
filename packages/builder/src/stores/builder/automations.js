@@ -135,8 +135,8 @@ const automationActions = store => ({
     })
     await store.actions.fetch()
   },
-toggleDisabled: async (automationId) => {
-  let automation;
+  toggleDisabled: async (automationId) => {
+    let automation;
     try {
       automation = store.actions.getDefinition(automationId);
       if (!automation) {
