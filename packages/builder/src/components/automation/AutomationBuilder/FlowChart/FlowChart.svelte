@@ -75,12 +75,12 @@
     </div>
     <div class="setting-spacing">
       <Toggle
-        text={automation.disabled ? "Enable" : "Disable"}
+        text={automation.disabled ? "Paused" : "Activated"}
         on:change={automationStore.actions.toggleDisabled(
           automation._id,
           automation.disabled
         )}
-        value={automation.disabled}
+        value={!automation.disabled}
       />
     </div>
   </div>

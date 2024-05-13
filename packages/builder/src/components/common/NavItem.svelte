@@ -168,7 +168,7 @@
     color: var(--ink);
   }
   .nav-item.disabled span {
-    color: var(--spectrum-global-color-gray-800);
+    color: var(--spectrum-global-color-gray-700);
   }
   .nav-item:hover,
   .hovering {

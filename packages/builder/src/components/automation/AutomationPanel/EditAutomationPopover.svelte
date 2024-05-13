@@ -46,7 +46,7 @@
       automation.disabled
     )}
   >
-    {automation.disabled ? "Enable" : "Disable"}
+    {automation.disabled ? "Activate" : "Pause"}
   </MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
