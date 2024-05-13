@@ -47,7 +47,6 @@
   const dispatch = createEventDispatcher()
 
   let button
-  let popover
   let component
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
@@ -153,7 +152,6 @@
 <Popover
   anchor={customAnchor ? customAnchor : button}
   align={align || "left"}
-  bind:this={popover}
   {open}
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
