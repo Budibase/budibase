@@ -1,3 +1,4 @@
+import { helpers } from "@budibase/shared-core"
 import { TypeIconMap } from "../../../constants"
 
 // we can't use "-" for joining the ID/field, as this can be present in the ID or column name
@@ -28,8 +29,12 @@ export const getColumnIcon = column => {
   if (column.schema.autocolumn) {
     return "MagicWand"
   }
-  const { type, subtype } = column.schema
 
+  if (helpers.schema.isDeprecatedSingleUserColumn(column.schema)) {
+    return "User"
+  }
+
+  const { type, subtype } = column.schema
   const result =
     typeof TypeIconMap[type] === "object" && subtype
       ? TypeIconMap[type][subtype]

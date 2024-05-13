@@ -45,6 +45,7 @@ const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BIGINT]: SQLiteType.TEXT,
   // TODO: consider the difference between multi-user and single user types (subtyping)
   [FieldType.BB_REFERENCE]: SQLiteType.TEXT,
+  [FieldType.BB_REFERENCE_SINGLE]: SQLiteType.TEXT,
 }
 
 function buildRelationshipDefinitions(

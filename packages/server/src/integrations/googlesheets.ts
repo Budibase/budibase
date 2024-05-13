@@ -17,6 +17,7 @@ import {
   TableRequest,
   TableSourceType,
   DatasourcePlusQueryResponse,
+  BBReferenceFieldSubType,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import {
@@ -52,17 +53,30 @@ interface AuthTokenResponse {
   access_token: string
 }
 
-const ALLOWED_TYPES = [
-  FieldType.STRING,
-  FieldType.FORMULA,
-  FieldType.NUMBER,
-  FieldType.LONGFORM,
-  FieldType.DATETIME,
-  FieldType.OPTIONS,
-  FieldType.BOOLEAN,
-  FieldType.BARCODEQR,
-  FieldType.BB_REFERENCE,
-]
+const isTypeAllowed: Record<FieldType, boolean> = {
+  [FieldType.STRING]: true,
+  [FieldType.FORMULA]: true,
+  [FieldType.NUMBER]: true,
+  [FieldType.LONGFORM]: true,
+  [FieldType.DATETIME]: true,
+  [FieldType.OPTIONS]: true,
+  [FieldType.BOOLEAN]: true,
+  [FieldType.BARCODEQR]: true,
+  [FieldType.BB_REFERENCE]: true,
+  [FieldType.BB_REFERENCE_SINGLE]: true,
+  [FieldType.ARRAY]: false,
+  [FieldType.ATTACHMENTS]: false,
+  [FieldType.ATTACHMENT_SINGLE]: false,
+  [FieldType.LINK]: false,
+  [FieldType.AUTO]: false,
+  [FieldType.JSON]: false,
+  [FieldType.INTERNAL]: false,
+  [FieldType.BIGINT]: false,
+}
+
+const ALLOWED_TYPES = Object.entries(isTypeAllowed)
+  .filter(([_, allowed]) => allowed)
+  .map(([type]) => type as FieldType)
 
 const SCHEMA: Integration = {
   plus: true,
@@ -350,6 +364,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           rowIndex: json.extra?.idFilter?.equal?.rowNumber,
           sheet,
           row: json.body,
+          table: json.meta.table,
         })
       case Operation.DELETE:
         return this.delete({
@@ -567,7 +582,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return { sheet, row }
   }
 
-  async update(query: { sheet: string; rowIndex: number; row: any }) {
+  async update(query: {
+    sheet: string
+    rowIndex: number
+    row: any
+    table: Table
+  }) {
     try {
       await this.connect()
       const { sheet, row } = await this.getRowByIndex(
@@ -582,6 +602,15 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
           if (row[key] === null) {
             row[key] = ""
+          }
+
+          const { type, subtype, constraints } = query.table.schema[key]
+          const isDeprecatedSingleUser =
+            type === FieldType.BB_REFERENCE &&
+            subtype === BBReferenceFieldSubType.USER &&
+            constraints?.type !== "array"
+          if (isDeprecatedSingleUser && Array.isArray(row[key])) {
+            row[key] = row[key][0]
           }
         }
         await row.save()
