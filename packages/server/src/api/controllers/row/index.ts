@@ -2,7 +2,7 @@ import stream from "stream"
 import archiver from "archiver"
 
 import { quotas } from "@budibase/pro"
-import { objectStore } from "@budibase/backend-core"
+import { objectStore, context } from "@budibase/backend-core"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTableID } from "../../../integrations/utils"
@@ -198,8 +198,18 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const tableId = utils.getTableId(ctx)
 
+  await context.ensureSnippetContext(true)
+
+  const enrichedQuery = await utils.enrichSearchContext(
+    { ...ctx.request.body.query },
+    {
+      user: sdk.users.getUserContextBindings(ctx.user),
+    }
+  )
+
   const searchParams: RowSearchParams = {
     ...ctx.request.body,
+    query: enrichedQuery,
     tableId,
   }
 

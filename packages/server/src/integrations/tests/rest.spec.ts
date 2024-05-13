@@ -28,7 +28,6 @@ jest.mock("uuid", () => ({ v4: () => "00000000-0000-0000-0000-000000000000" }))
 import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
 import fetch from "node-fetch"
-import { objectStoreTestProviders } from "@budibase/backend-core/tests"
 import { Readable } from "stream"
 
 const FormData = require("form-data")
@@ -246,13 +245,13 @@ describe("REST Integration", () => {
       expect(output.extra.headers["content-type"]).toEqual("application/xml")
     })
 
-    test.each(contentTypes)(
+    test.each([...contentTypes, undefined])(
       "should not throw an error on 204 no content",
       async contentType => {
         const input = buildInput(undefined, null, contentType, 204)
         const output = await config.integration.parseResponse(input)
         expect(output.data).toEqual([])
-        expect(output.extra.raw).toEqual([])
+        expect(output.extra.raw).toEqual("")
         expect(output.info.code).toEqual(204)
         expect(output.extra.headers["content-type"]).toEqual(contentType)
       }
@@ -627,15 +626,6 @@ describe("REST Integration", () => {
   })
 
   describe("File Handling", () => {
-    beforeAll(async () => {
-      jest.unmock("aws-sdk")
-      await objectStoreTestProviders.minio.start()
-    })
-
-    afterAll(async () => {
-      await objectStoreTestProviders.minio.stop()
-    })
-
     it("uploads file to object store and returns signed URL", async () => {
       const responseData = Buffer.from("teest file contnt")
       const filename = "test.tar.gz"

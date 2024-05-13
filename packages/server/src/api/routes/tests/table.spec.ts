@@ -1,8 +1,8 @@
 import { context, events } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
-  Datasource,
   BBReferenceFieldSubType,
+  Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
@@ -149,58 +149,59 @@ describe.each([
       expect(res.name).toBeUndefined()
     })
 
-    it("updates only the passed fields", async () => {
-      await timekeeper.withFreeze(new Date(2021, 1, 1), async () => {
-        const table = await config.api.table.save(
-          tableForDatasource(datasource, {
-            schema: {
-              autoId: {
-                name: "id",
-                type: FieldType.NUMBER,
-                subtype: AutoFieldSubType.AUTO_ID,
-                autocolumn: true,
-                constraints: {
-                  type: "number",
-                  presence: false,
+    isInternal &&
+      it("updates only the passed fields", async () => {
+        await timekeeper.withFreeze(new Date(2021, 1, 1), async () => {
+          const table = await config.api.table.save(
+            tableForDatasource(datasource, {
+              schema: {
+                autoId: {
+                  name: "id",
+                  type: FieldType.NUMBER,
+                  subtype: AutoFieldSubType.AUTO_ID,
+                  autocolumn: true,
+                  constraints: {
+                    type: "number",
+                    presence: false,
+                  },
                 },
               },
-            },
+            })
+          )
+
+          const newName = generator.guid()
+
+          const updatedTable = await config.api.table.save({
+            ...table,
+            name: newName,
           })
-        )
 
-        const newName = generator.guid()
+          let expected: Table = {
+            ...table,
+            name: newName,
+            _id: expect.any(String),
+          }
+          if (isInternal) {
+            expected._rev = expect.stringMatching(/^2-.+/)
+          }
 
-        const updatedTable = await config.api.table.save({
-          ...table,
-          name: newName,
+          expect(updatedTable).toEqual(expected)
+
+          const persistedTable = await config.api.table.get(updatedTable._id!)
+          expected = {
+            ...table,
+            name: newName,
+            _id: updatedTable._id,
+          }
+          if (datasource?.isSQL) {
+            expected.sql = true
+          }
+          if (isInternal) {
+            expected._rev = expect.stringMatching(/^2-.+/)
+          }
+          expect(persistedTable).toEqual(expected)
         })
-
-        let expected: Table = {
-          ...table,
-          name: newName,
-          _id: expect.any(String),
-        }
-        if (isInternal) {
-          expected._rev = expect.stringMatching(/^2-.+/)
-        }
-
-        expect(updatedTable).toEqual(expected)
-
-        const persistedTable = await config.api.table.get(updatedTable._id!)
-        expected = {
-          ...table,
-          name: newName,
-          _id: updatedTable._id,
-        }
-        if (datasource?.isSQL) {
-          expected.sql = true
-        }
-        if (isInternal) {
-          expected._rev = expect.stringMatching(/^2-.+/)
-        }
-        expect(persistedTable).toEqual(expected)
       })
-    })
 
     describe("user table", () => {
       isInternal &&
@@ -211,6 +212,57 @@ describe.each([
           })
           expect(table.schema.email).toBeDefined()
           expect(table.schema.roleId).toBeDefined()
+        })
+    })
+
+    describe("external table validation", () => {
+      !isInternal &&
+        it("should error if column is of type auto", async () => {
+          const table = basicTable(datasource)
+          await config.api.table.save(
+            {
+              ...table,
+              schema: {
+                ...table.schema,
+                auto: {
+                  name: "auto",
+                  autocolumn: true,
+                  type: FieldType.AUTO,
+                },
+              },
+            },
+            {
+              status: 400,
+              body: {
+                message: `Column "auto" has type "${FieldType.AUTO}" - this is not supported.`,
+              },
+            }
+          )
+        })
+
+      !isInternal &&
+        it("should error if column has auto subtype", async () => {
+          const table = basicTable(datasource)
+          await config.api.table.save(
+            {
+              ...table,
+              schema: {
+                ...table.schema,
+                auto: {
+                  name: "auto",
+                  autocolumn: true,
+                  type: FieldType.NUMBER,
+                  subtype: AutoFieldSubType.AUTO_ID,
+                },
+              },
+            },
+            {
+              status: 400,
+              body: {
+                message: `Column "auto" has subtype "${AutoFieldSubType.AUTO_ID}" - this is not supported.`,
+              },
+            }
+          )
         })
     })
 
@@ -493,16 +545,16 @@ describe.each([
       )
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USER,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE_SINGLE,
+        subtype: BBReferenceFieldSubType.USER,
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const migratedRows = await config.api.row.fetch(table._id!)
@@ -515,7 +567,7 @@ describe.each([
         expect(migratedRow["user column"]).toBeDefined()
         expect(migratedRow["user relationship"]).not.toBeDefined()
         expect(row["user relationship"][0]._id).toEqual(
-          migratedRow["user column"][0]._id
+          migratedRow["user column"]._id
         )
       }
     })
@@ -558,16 +610,19 @@ describe.each([
       )
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USERS,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: {
+          type: "array",
+        },
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const migratedRow = await config.api.row.get(table._id!, testRow._id!)
@@ -610,16 +665,19 @@ describe.each([
       })
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USERS,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: {
+          type: "array",
+        },
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const row1Migrated = await config.api.row.get(table._id!, row1._id!)
@@ -665,16 +723,19 @@ describe.each([
       })
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USERS,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: {
+          type: "array",
+        },
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const row1Migrated = await config.api.row.get(table._id!, row1._id!)
@@ -724,12 +785,8 @@ describe.each([
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: table.schema["user relationship"],
-            newColumn: {
-              name: "",
-              type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USERS,
-            },
+            oldColumn: "user relationship",
+            newColumn: "",
           },
           { status: 400 }
         )
@@ -739,12 +796,8 @@ describe.each([
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: table.schema["user relationship"],
-            newColumn: {
-              name: "_id",
-              type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USERS,
-            },
+            oldColumn: "user relationship",
+            newColumn: "_id",
           },
           { status: 400 }
         )
@@ -754,12 +807,8 @@ describe.each([
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: table.schema["user relationship"],
-            newColumn: {
-              name: "num",
-              type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USERS,
-            },
+            oldColumn: "user relationship",
+            newColumn: "num",
           },
           { status: 400 }
         )
@@ -769,16 +818,8 @@ describe.each([
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: {
-              name: "not a column",
-              type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USERS,
-            },
-            newColumn: {
-              name: "new column",
-              type: FieldType.BB_REFERENCE,
-              subtype: BBReferenceFieldSubType.USERS,
-            },
+            oldColumn: "not a column",
+            newColumn: "new column",
           },
           { status: 400 }
         )
