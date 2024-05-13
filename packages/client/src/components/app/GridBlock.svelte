@@ -145,34 +145,34 @@
 
 <div use:styleable={styles} class:in-builder={$builderStore.inBuilder}>
   <span style="--height:{height};">
-    <Provider {data} {actions}>
-      <Grid
-        bind:this={grid}
-        datasource={table}
-        {API}
-        {stripeRows}
-        {quiet}
-        {initialFilter}
-        {initialSortColumn}
-        {initialSortOrder}
-        {fixedRowHeight}
-        {columnWhitelist}
-        {schemaOverrides}
-        canAddRows={allowAddRows}
-        canEditRows={allowEditRows}
-        canDeleteRows={allowDeleteRows}
-        canEditColumns={false}
-        canExpandRows={false}
-        canSaveSchema={false}
-        showControls={false}
-        notifySuccess={notificationStore.actions.success}
-        notifyError={notificationStore.actions.error}
-        buttons={enrichedButtons}
-        on:rowclick={e => onRowClick?.({ row: e.detail })}
-      />
-    </Provider>
+    <Grid
+      bind:this={grid}
+      datasource={table}
+      {API}
+      {stripeRows}
+      {quiet}
+      {initialFilter}
+      {initialSortColumn}
+      {initialSortOrder}
+      {fixedRowHeight}
+      {columnWhitelist}
+      {schemaOverrides}
+      canAddRows={allowAddRows}
+      canEditRows={allowEditRows}
+      canDeleteRows={allowDeleteRows}
+      canEditColumns={false}
+      canExpandRows={false}
+      canSaveSchema={false}
+      showControls={false}
+      notifySuccess={notificationStore.actions.success}
+      notifyError={notificationStore.actions.error}
+      buttons={enrichedButtons}
+      on:rowclick={e => onRowClick?.({ row: e.detail })}
+    />
   </span>
 </div>
+
+<Provider {data} {actions} />
 
 <style>
   div {
