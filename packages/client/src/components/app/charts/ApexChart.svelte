@@ -47,16 +47,15 @@
   }
 
   $: noData = optionsCopy == null || optionsCopy?.series?.length === 0
-  $: hide = noData
 
-  // Call render chart upon changes to hide, as apex charts has issues with rendering upon changes automatically
+  // Call render chart upon changes to noData, as apex charts has issues with rendering upon changes automatically
   // if the chart is hidden.
-  $: renderChart(chartElement, hide)
+  $: renderChart(chartElement, noData)
   $: updateChart(optionsCopy)
 </script>
 
 {#key optionsCopy?.customColor}
-  <div class:hide use:styleable={$component.styles} bind:this={chartElement} />
+  <div class:hide={noData} use:styleable={$component.styles} bind:this={chartElement} />
   {#if $builderStore.inBuilder && noData}
     <div
       class="component-placeholder"
