@@ -166,10 +166,17 @@ const automationActions = store => ({
     await store.actions.save(newAutomation)
   },
   test: async (automation, testData) => {
-    const result = await API.testAutomation({
-      automationId: automation?._id,
-      testData,
-    })
+    const baseError = "Something went wrong testing your automation"
+    let result
+    try {
+      result = await API.testAutomation({
+        automationId: automation?._id,
+        testData,
+      })
+    } catch (err) {
+      const message = err.message || err.status || JSON.stringify(err)
+      throw `${baseError} - ${message}`
+    }
     if (!result?.trigger && !result?.steps?.length) {
       if (result?.err?.code === "usage_limit_exceeded") {
         throw "You have exceeded your automation quota"
