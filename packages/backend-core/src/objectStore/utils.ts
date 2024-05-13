@@ -1,9 +1,14 @@
-import { join } from "path"
+import path, { join } from "path"
 import { tmpdir } from "os"
 import fs from "fs"
 import env from "../environment"
 import { PutBucketLifecycleConfigurationRequest } from "aws-sdk/clients/s3"
-
+import * as objectStore from "./objectStore"
+import {
+  AutomationAttachment,
+  AutomationAttachmentContent,
+  BucketedContent,
+} from "@budibase/types"
 /****************************************************
  *      NOTE: When adding a new bucket - name       *
  *     sure that S3 usages (like budibase-infra)    *
@@ -54,4 +59,51 @@ export const bucketTTLConfig = (
   }
 
   return params
+}
+
+async function processUrlAttachment(
+  attachment: AutomationAttachment
+): Promise<AutomationAttachmentContent> {
+  const response = await fetch(attachment.url)
+  if (!response.ok || !response.body) {
+    throw new Error(`Unexpected response ${response.statusText}`)
+  }
+  const fallbackFilename = path.basename(new URL(attachment.url).pathname)
+  return {
+    filename: attachment.filename || fallbackFilename,
+    content: response.body,
+  }
+}
+
+export async function processObjectStoreAttachment(
+  attachment: AutomationAttachment
+): Promise<BucketedContent> {
+  const result = objectStore.extractBucketAndPath(attachment.url)
+
+  if (result === null) {
+    throw new Error("Invalid signed URL")
+  }
+
+  const { bucket, path: objectPath } = result
+  const readStream = await objectStore.getReadStream(bucket, objectPath)
+  const fallbackFilename = path.basename(objectPath)
+  return {
+    bucket,
+    path: objectPath,
+    filename: attachment.filename || fallbackFilename,
+    content: readStream,
+  }
+}
+
+export async function processAutomationAttachment(
+  attachment: AutomationAttachment
+): Promise<AutomationAttachmentContent | BucketedContent> {
+  const isFullyFormedUrl =
+    attachment.url?.startsWith("http://") ||
+    attachment.url?.startsWith("https://")
+  if (isFullyFormedUrl) {
+    return await processUrlAttachment(attachment)
+  } else {
+    return await processObjectStoreAttachment(attachment)
+  }
 }

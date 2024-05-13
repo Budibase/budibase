@@ -7,6 +7,7 @@
   import { GutterWidth, NewRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
+  import { getCellID } from "../lib/utils"
 
   const {
     hoveredRowId,
@@ -30,6 +31,7 @@
     refreshing,
     config,
     filter,
+    inlineFilters,
     columnRenderMap,
   } = getContext("grid")
 
@@ -69,7 +71,7 @@
 
       // Select the first cell if possible
       if (firstColumn) {
-        $focusedCellId = `${savedRow._id}-${firstColumn.name}`
+        $focusedCellId = getCellID(savedRow._id, firstColumn.name)
       }
     }
     isAdding = false
@@ -117,7 +119,7 @@
     visible = true
     $hoveredRowId = NewRowID
     if (firstColumn) {
-      $focusedCellId = `${NewRowID}-${firstColumn.name}`
+      $focusedCellId = getCellID(NewRowID, firstColumn.name)
     }
 
     // Attach key listener
@@ -157,7 +159,11 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <TempTooltip
   text="Click here to create your first row"
-  condition={hasNoRows && $loaded && !$filter?.length && !$refreshing}
+  condition={hasNoRows &&
+    $loaded &&
+    !$filter?.length &&
+    !$inlineFilters?.length &&
+    !$refreshing}
   type={TooltipType.Info}
 >
   {#if !visible && !selectedRowCount && $config.canAddRows}
@@ -189,7 +195,7 @@
         {/if}
       </GutterCell>
       {#if $stickyColumn}
-        {@const cellId = `${NewRowID}-${$stickyColumn.name}`}
+        {@const cellId = getCellID(NewRowID, $stickyColumn.name)}
         <DataCell
           {cellId}
           rowFocused
