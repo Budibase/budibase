@@ -71,21 +71,22 @@ function userColumnMapping(
       }
     }
 
-    if (isDeprecatedSingleUserColumn && filterValue && isString && isSql) {
+    let wrapper = (s: string) => s
+    if (isDeprecatedSingleUserColumn && filterValue && isSql) {
       // Decreated single users are stored as stringified arrays of a single value
-      return JSON.stringify([processString(filterValue)])
+      wrapper = (s: string) => JSON.stringify([s])
     }
 
     if (isArray) {
       return filterValue.map(el => {
         if (typeof el === "string") {
-          return processString(el)
+          return wrapper(processString(el))
         } else {
           return el
         }
       })
     } else {
-      return processString(filterValue)
+      return wrapper(processString(filterValue))
     }
   })
 }
