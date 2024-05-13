@@ -25,6 +25,7 @@
   export let selectedBy = null
   export let compact = false
   export let hovering = false
+  export let disabled = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -74,6 +75,7 @@
   class:scrollable
   class:highlighted
   class:selectedBy
+  class:disabled
   on:dragend
   on:dragstart
   on:dragover
@@ -164,6 +166,9 @@
     background-color: var(--spectrum-global-color-gray-300) !important;
     --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
+  }
+  .nav-item.disabled span {
+    color: var(--spectrum-global-color-gray-800);
   }
   .nav-item:hover,
   .hovering {

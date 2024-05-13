@@ -61,6 +61,7 @@
         selected={automation._id === selectedAutomationId}
         on:click={() => selectAutomation(automation._id)}
         selectedBy={$userSelectedResourceMap[automation._id]}
+        disabled={automation.disabled}
       >
         <EditAutomationPopover {automation} />
       </NavItem>
