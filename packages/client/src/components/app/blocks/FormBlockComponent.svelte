@@ -21,6 +21,7 @@
     [FieldType.JSON]: "jsonfield",
     [FieldType.BARCODEQR]: "codescanner",
     [FieldType.BB_REFERENCE]: "bbreferencefield",
+    [FieldType.BB_REFERENCE_SINGLE]: "bbreferencesinglefield",
   }
 
   const getFieldSchema = field => {

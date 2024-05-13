@@ -73,7 +73,10 @@
     $context.device.width,
     $context.device.height
   )
-  $: autoCloseSidePanel = !$builderStore.inBuilder && $sidePanelStore.open
+  $: autoCloseSidePanel =
+    !$builderStore.inBuilder &&
+    $sidePanelStore.open &&
+    !$sidePanelStore.ignoreClicksOutside
   $: screenId = $builderStore.inBuilder
     ? `${$builderStore.screen?._id}-screen`
     : "screen"
@@ -191,6 +194,11 @@
     }
     return url
   }
+
+  const handleClickLink = () => {
+    mobileOpen = false
+    sidePanelStore.actions.close()
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -281,7 +289,7 @@
                     url={navItem.url}
                     subLinks={navItem.subLinks}
                     internalLink={navItem.internalLink}
-                    on:clickLink={() => (mobileOpen = false)}
+                    on:clickLink={handleClickLink}
                     leftNav={navigation === "Left"}
                     {mobile}
                     {navStateStore}
@@ -316,10 +324,7 @@
   <div
     id="side-panel-container"
     class:open={$sidePanelStore.open}
-    use:clickOutside={{
-      callback: autoCloseSidePanel ? sidePanelStore.actions.close : null,
-      allowedType: "mousedown",
-    }}
+    use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
     class:builder={$builderStore.inBuilder}
   >
     <div class="side-panel-header">

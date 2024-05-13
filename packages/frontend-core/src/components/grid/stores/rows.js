@@ -1,6 +1,7 @@
 import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
+import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 
@@ -83,7 +84,7 @@ export const createActions = context => {
     error,
     notifications,
     fetch,
-    isDatasourcePlus,
+    hasBudibaseIdentifiers,
     refreshing,
   } = context
   const instanceLoaded = writable(false)
@@ -196,6 +197,27 @@ export const createActions = context => {
   // Handles validation errors from the rows API and updates local validation
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
+    let errorString
+    if (typeof error === "string") {
+      errorString = error
+    } else if (typeof error?.message === "string") {
+      errorString = error.message
+    }
+
+    // If the server doesn't reply with a valid error, assume that the source
+    // of the error is the focused cell's column
+    if (!error?.json?.validationErrors && errorString) {
+      const { field: focusedColumn } = parseCellID(get(focusedCellId))
+      if (focusedColumn) {
+        error = {
+          json: {
+            validationErrors: {
+              [focusedColumn]: error.message,
+            },
+          },
+        }
+      }
+    }
     if (error?.json?.validationErrors) {
       // Normal validation errors
       const keys = Object.keys(error.json.validationErrors)
@@ -214,11 +236,19 @@ export const createActions = context => {
 
       // Process errors for columns that we have
       for (let column of erroredColumns) {
+        // Ensure we have a valid error to display
+        let err = error.json.validationErrors[column]
+        if (Array.isArray(err)) {
+          err = err[0]
+        }
+        if (typeof err !== "string" || !err.length) {
+          error = "Something went wrong"
+        }
+        // Set error against the cell
         validation.actions.setError(
-          `${rowId}-${column}`,
-          `${column} ${error.json.validationErrors[column]}`
+          getCellID(rowId, column),
+          Helpers.capitalise(err)
         )
-
         // Ensure the column is visible
         const index = $columns.findIndex(x => x.name === column)
         if (index !== -1 && !$columns[index].visible) {
@@ -236,10 +266,10 @@ export const createActions = context => {
 
       // Focus the first cell with an error
       if (erroredColumns.length) {
-        focusedCellId.set(`${rowId}-${erroredColumns[0]}`)
+        focusedCellId.set(getCellID(rowId, erroredColumns[0]))
       }
     } else {
-      get(notifications).error(error?.message || "An unknown error occurred")
+      get(notifications).error(errorString || "An unknown error occurred")
     }
   }
 
@@ -436,14 +466,14 @@ export const createActions = context => {
     }
     let rowsToAppend = []
     let newRow
-    const $isDatasourcePlus = get(isDatasourcePlus)
+    const $hasBudibaseIdentifiers = get(hasBudibaseIdentifiers)
     for (let i = 0; i < newRows.length; i++) {
       newRow = newRows[i]
 
       // Ensure we have a unique _id.
       // This means generating one for non DS+, overwriting any that may already
       // exist as we cannot allow duplicates.
-      if (!$isDatasourcePlus) {
+      if (!$hasBudibaseIdentifiers) {
         newRow._id = Helpers.uuid()
       }
 
@@ -488,7 +518,7 @@ export const createActions = context => {
   const cleanRow = row => {
     let clone = { ...row }
     delete clone.__idx
-    if (!get(isDatasourcePlus)) {
+    if (!get(hasBudibaseIdentifiers)) {
       delete clone._id
     }
     return clone
@@ -523,6 +553,7 @@ export const initialise = context => {
     previousFocusedCellId,
     rows,
     validation,
+    focusedCellId,
   } = context
 
   // Wipe the row change cache when changing row
@@ -537,12 +568,23 @@ export const initialise = context => {
 
   // Ensure any unsaved changes are saved when changing cell
   previousFocusedCellId.subscribe(async id => {
-    const rowId = id?.split("-")[0]
-    const hasErrors = validation.actions.rowHasErrors(rowId)
-    const hasChanges = Object.keys(get(rowChangeCache)[rowId] || {}).length > 0
-    const isSavingChanges = get(inProgressChanges)[rowId]
-    if (rowId && !hasErrors && hasChanges && !isSavingChanges) {
-      await rows.actions.applyRowChanges(rowId)
+    if (!id) {
+      return
+    }
+    // Stop if we changed row
+    const split = parseCellID(id)
+    const oldRowId = split.id
+    const oldColumn = split.field
+    const { id: newRowId } = parseCellID(get(focusedCellId))
+    if (oldRowId !== newRowId) {
+      return
+    }
+    // Otherwise we just changed cell in the same row
+    const hasChanges = oldColumn in (get(rowChangeCache)[oldRowId] || {})
+    const hasErrors = validation.actions.rowHasErrors(oldRowId)
+    const isSavingChanges = get(inProgressChanges)[oldRowId]
+    if (oldRowId && !hasErrors && hasChanges && !isSavingChanges) {
+      await rows.actions.applyRowChanges(oldRowId)
     }
   })
 }

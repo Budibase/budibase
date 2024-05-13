@@ -1,5 +1,4 @@
 import {
-  FieldSchema,
   Row,
   Table,
   TableRequest,
@@ -31,8 +30,8 @@ export interface BulkImportResponse {
 }
 
 export interface MigrateRequest {
-  oldColumn: FieldSchema
-  newColumn: FieldSchema
+  oldColumn: string
+  newColumn: string
 }
 
 export interface MigrateResponse {
