@@ -12,7 +12,7 @@ import { NoEmptyFilterStrings } from "../../../constants"
 import * as sqs from "./search/sqs"
 import env from "../../../environment"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, helpers } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
 
@@ -79,7 +79,9 @@ export async function search(
   }
 
   const table = await sdk.tables.getTable(options.tableId)
-  options = searchInputMapping(table, options)
+  options = searchInputMapping(table, options, {
+    isSql: !!table.sql || !!env.SQS_SEARCH_ENABLE,
+  })
 
   if (isExternalTable) {
     return external.search(options, table)

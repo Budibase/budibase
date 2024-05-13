@@ -11,7 +11,7 @@ import {
   RowSearchParams,
 } from "@budibase/types"
 import { db as dbCore, context } from "@budibase/backend-core"
-import { utils } from "@budibase/shared-core"
+import { helpers, utils } from "@budibase/shared-core"
 
 export async function paginatedSearch(
   query: SearchFilters,
@@ -49,13 +49,19 @@ function findColumnInQueries(
   }
 }
 
-function userColumnMapping(column: string, options: RowSearchParams) {
+function userColumnMapping(
+  column: string,
+  options: RowSearchParams,
+  isDeprecatedSingleUserColumn: boolean = false,
+  isSql: boolean = false
+) {
   findColumnInQueries(column, options, (filterValue: any): any => {
     const isArray = Array.isArray(filterValue),
       isString = typeof filterValue === "string"
     if (!isString && !isArray) {
       return filterValue
     }
+
     const processString = (input: string) => {
       const rowPrefix = DocumentType.ROW + SEPARATOR
       if (input.startsWith(rowPrefix)) {
@@ -64,6 +70,12 @@ function userColumnMapping(column: string, options: RowSearchParams) {
         return input
       }
     }
+
+    if (isDeprecatedSingleUserColumn && filterValue && isString && isSql) {
+      // Decreated single users are stored as stringified arrays of a single value
+      return JSON.stringify([processString(filterValue)])
+    }
+
     if (isArray) {
       return filterValue.map(el => {
         if (typeof el === "string") {
@@ -80,7 +92,11 @@ function userColumnMapping(column: string, options: RowSearchParams) {
 
 // maps through the search parameters to check if any of the inputs are invalid
 // based on the table schema, converts them to something that is valid.
-export function searchInputMapping(table: Table, options: RowSearchParams) {
+export function searchInputMapping(
+  table: Table,
+  options: RowSearchParams,
+  datasourceOptions: { isSql?: boolean }
+) {
   if (!table?.schema) {
     return options
   }
@@ -99,7 +115,12 @@ export function searchInputMapping(table: Table, options: RowSearchParams) {
         break
       }
       case FieldType.BB_REFERENCE: {
-        userColumnMapping(key, options)
+        userColumnMapping(
+          key,
+          options,
+          helpers.schema.isDeprecatedSingleUserColumn(column),
+          datasourceOptions.isSql
+        )
         break
       }
     }
