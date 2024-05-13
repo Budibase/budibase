@@ -39,6 +39,15 @@
     >Duplicate</MenuItem
   >
   <MenuItem icon="Edit" on:click={updateAutomationDialog.show}>Edit</MenuItem>
+  <MenuItem
+    icon={automation.disabled ? "CheckmarkCircle" : "Cancel"}
+    on:click={automationStore.actions.toggleDisabled(
+      automation._id,
+      automation.disabled
+    )}
+  >
+    {automation.disabled ? "Enable" : "Disable"}
+  </MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
 
