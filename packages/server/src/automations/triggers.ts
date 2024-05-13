@@ -40,8 +40,8 @@ async function queueRelevantRowAutomations(
     automations = automations.filter(automation => {
       const trigger = automation.definition.trigger
       return (
-        trigger && 
-        trigger.event === eventType && 
+        trigger &&
+        trigger.event === eventType &&
         (automation.disabled === undefined || automation.disabled === false)
       )
     })
