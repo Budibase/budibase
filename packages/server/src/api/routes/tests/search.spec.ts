@@ -324,19 +324,22 @@ describe.each([
           name: "deprecated_single_user",
           type: FieldType.BB_REFERENCE,
           subtype: BBReferenceFieldSubType.USER,
-          constraints: {
-            type: "array",
-          },
         },
         multi_user: {
           name: "multi_user",
           type: FieldType.BB_REFERENCE,
           subtype: BBReferenceFieldSubType.USER,
+          constraints: {
+            type: "array",
+          },
         },
         deprecated_multi_user: {
           name: "deprecated_multi_user",
           type: FieldType.BB_REFERENCE,
           subtype: BBReferenceFieldSubType.USERS,
+          constraints: {
+            type: "array",
+          },
         },
       })
       await createRows(rows(config.getUser()))
