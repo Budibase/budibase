@@ -39,11 +39,7 @@ async function queueRelevantRowAutomations(
     // filter down to the correct event type and enabled automations
     automations = automations.filter(automation => {
       const trigger = automation.definition.trigger
-      return (
-        trigger &&
-        trigger.event === eventType &&
-        !automation.disabled
-      )
+      return trigger && trigger.event === eventType && !automation.disabled
     })
 
     for (let automation of automations) {
