@@ -166,7 +166,6 @@ const automationActions = store => ({
     await store.actions.save(newAutomation)
   },
   test: async (automation, testData) => {
-    const baseError = "Something went wrong testing your automation"
     let result
     try {
       result = await API.testAutomation({
@@ -175,7 +174,7 @@ const automationActions = store => ({
       })
     } catch (err) {
       const message = err.message || err.status || JSON.stringify(err)
-      throw `${baseError} - ${message}`
+      throw `Automation test failed - ${message}`
     }
     if (!result?.trigger && !result?.steps?.length) {
       if (result?.err?.code === "usage_limit_exceeded") {
