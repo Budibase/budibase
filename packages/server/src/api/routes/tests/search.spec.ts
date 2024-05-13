@@ -44,7 +44,7 @@ describe.each([
   const snippets = [
     {
       name: "WeeksAgo",
-      code: "return function (weeks) {\n  const currentTime = new Date();\n  currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));\n  return currentTime.toISOString();\n}",
+      code: `return function (weeks) {\n  const currentTime = new Date(${Date.now()});\n  currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));\n  return currentTime.toISOString();\n}`,
     },
   ]
 
