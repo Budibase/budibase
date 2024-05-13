@@ -1,4 +1,5 @@
 import { get, writable, derived } from "svelte/store"
+import { parseEventLocation } from "../lib/utils"
 
 const reorderInitialState = {
   sourceColumn: null,
@@ -31,8 +32,8 @@ export const createActions = context => {
     scroll,
     bounds,
     stickyColumn,
-    ui,
     maxScrollLeft,
+    width,
   } = context
 
   let autoScrollInterval
@@ -43,7 +44,6 @@ export const createActions = context => {
     const $visibleColumns = get(visibleColumns)
     const $bounds = get(bounds)
     const $stickyColumn = get(stickyColumn)
-    ui.actions.blur()
 
     // Generate new breakpoints for the current columns
     let breakpoints = $visibleColumns.map(col => ({
@@ -54,6 +54,11 @@ export const createActions = context => {
       breakpoints.unshift({
         x: 0,
         column: $stickyColumn.name,
+      })
+    } else if (!$visibleColumns[0].primaryDisplay) {
+      breakpoints.unshift({
+        x: 0,
+        column: null,
       })
     }
 
@@ -69,6 +74,9 @@ export const createActions = context => {
     // Add listeners to handle mouse movement
     document.addEventListener("mousemove", onReorderMouseMove)
     document.addEventListener("mouseup", stopReordering)
+    document.addEventListener("touchmove", onReorderMouseMove)
+    document.addEventListener("touchend", stopReordering)
+    document.addEventListener("touchcancel", stopReordering)
 
     // Trigger a move event immediately so ensure a candidate column is chosen
     onReorderMouseMove(e)
@@ -77,7 +85,7 @@ export const createActions = context => {
   // Callback when moving the mouse when reordering columns
   const onReorderMouseMove = e => {
     // Immediately handle the current position
-    const x = e.clientX
+    const { x } = parseEventLocation(e)
     reorder.update(state => ({
       ...state,
       latestX: x,
@@ -86,8 +94,8 @@ export const createActions = context => {
 
     // Check if we need to start auto-scrolling
     const $reorder = get(reorder)
-    const proximityCutoff = 140
-    const speedFactor = 8
+    const proximityCutoff = Math.min(140, get(width) / 6)
+    const speedFactor = 16
     const rightProximity = Math.max(0, $reorder.gridLeft + $reorder.width - x)
     const leftProximity = Math.max(0, x - $reorder.gridLeft)
     if (rightProximity < proximityCutoff) {
@@ -158,19 +166,22 @@ export const createActions = context => {
     // Ensure auto-scrolling is stopped
     stopAutoScroll()
 
-    // Swap position of columns
-    let { sourceColumn, targetColumn } = get(reorder)
-    moveColumn(sourceColumn, targetColumn)
-
-    // Reset state
-    reorder.set(reorderInitialState)
-
     // Remove event handlers
     document.removeEventListener("mousemove", onReorderMouseMove)
     document.removeEventListener("mouseup", stopReordering)
+    document.removeEventListener("touchmove", onReorderMouseMove)
+    document.removeEventListener("touchend", stopReordering)
+    document.removeEventListener("touchcancel", stopReordering)
 
-    // Save column changes
-    await columns.actions.saveChanges()
+    // Ensure there's actually a change
+    let { sourceColumn, targetColumn } = get(reorder)
+    if (sourceColumn !== targetColumn) {
+      moveColumn(sourceColumn, targetColumn)
+      await columns.actions.saveChanges()
+    }
+
+    // Reset state
+    reorder.set(reorderInitialState)
   }
 
   // Moves a column after another columns.
@@ -185,8 +196,7 @@ export const createActions = context => {
       if (--targetIdx < sourceIdx) {
         targetIdx++
       }
-      state.splice(targetIdx, 0, removed[0])
-      return state.slice()
+      return state.toSpliced(targetIdx, 0, removed[0])
     })
   }
 

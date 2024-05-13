@@ -1,6 +1,3 @@
-import fs from "fs"
-import { join } from "path"
-
 const response = (body: any, extra?: any) => () => ({
   promise: () => body,
   ...extra,
@@ -62,9 +59,7 @@ class S3 {
         Body: "",
       },
       {
-        createReadStream: jest
-          .fn()
-          .mockReturnValue(fs.createReadStream(join(__dirname, "aws-sdk.ts"))),
+        createReadStream: jest.fn().mockReturnValue("stream"),
       }
     )
   )

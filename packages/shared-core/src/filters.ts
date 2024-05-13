@@ -1,6 +1,6 @@
 import {
   Datasource,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   FieldType,
   FormulaType,
   SearchFilter,
@@ -9,10 +9,11 @@ import {
   SearchFilterOperator,
   SortDirection,
   SortType,
+  FieldConstraints,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
-import { deepGet } from "./helpers"
+import { deepGet, schema } from "./helpers"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -22,11 +23,12 @@ const HBS_REGEX = /{{([^{].*?)}}/g
 export const getValidOperatorsForType = (
   fieldType: {
     type: FieldType
-    subtype?: FieldSubtype
+    subtype?: BBReferenceFieldSubType
     formulaType?: FormulaType
+    constraints?: FieldConstraints
   },
-  field: string,
-  datasource: Datasource & { tableId: any }
+  field?: string,
+  datasource?: Datasource & { tableId: any }
 ) => {
   const Op = OperatorOptions
   const stringOps = [
@@ -51,7 +53,7 @@ export const getValidOperatorsForType = (
     value: string
     label: string
   }[] = []
-  const { type, subtype, formulaType } = fieldType
+  const { type, formulaType } = fieldType
   if (type === FieldType.STRING) {
     ops = stringOps
   } else if (type === FieldType.NUMBER || type === FieldType.BIGINT) {
@@ -68,9 +70,12 @@ export const getValidOperatorsForType = (
     ops = numOps
   } else if (type === FieldType.FORMULA && formulaType === FormulaType.STATIC) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
-  } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USER) {
+  } else if (
+    type === FieldType.BB_REFERENCE_SINGLE ||
+    schema.isDeprecatedSingleUserColumn(fieldType)
+  ) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
-  } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USERS) {
+  } else if (type === FieldType.BB_REFERENCE) {
     ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
   }
 
