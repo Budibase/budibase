@@ -37,7 +37,6 @@
     "downloadjs": "1.4.7",
     "html5-qrcode": "^2.2.1",
     "leaflet": "^1.7.1",
-    "lodash": "^4.17.21",
     "sanitize-html": "^2.7.0",
     "screenfull": "^6.0.1",
     "shortid": "^2.2.15",

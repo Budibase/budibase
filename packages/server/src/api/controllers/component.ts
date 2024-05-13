@@ -20,6 +20,7 @@ export async function fetchAppComponentDefinitions(ctx: UserCtx) {
     const definitions: { [key: string]: any } = {}
     for (let { manifest, library } of componentManifests) {
       for (let key of Object.keys(manifest)) {
+        // These keys are not components, and should not be preprended with the `@budibase/` prefix
         if (key === "features" || key === "typeSupportPresets") {
           definitions[key] = manifest[key]
         } else {
