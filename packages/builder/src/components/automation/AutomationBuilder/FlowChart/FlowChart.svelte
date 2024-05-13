@@ -12,6 +12,7 @@
   import { Icon, notifications, Modal } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import { Toggle } from "@budibase/bbui"
 
   export let automation
 
@@ -72,6 +73,16 @@
       >
         Test details
       </div>
+    </div>
+    <div class="setting-spacing">
+      <Toggle
+        text={automation.disabled ? "Enable" : "Disable"}
+        on:change={automationStore.actions.toggleDisabled(
+          automation._id,
+          automation.disabled
+        )}
+        value={automation.disabled}
+      />
     </div>
   </div>
 </div>
