@@ -28,6 +28,7 @@ const DEFAULTS = {
   PLUGINS_DIR: "/plugins",
   FORKED_PROCESS_NAME: "main",
   JS_RUNNER_MEMORY_LIMIT: 64,
+  COUCH_DB_SQL_URL: "http://localhost:4006",
 }
 
 const QUERY_THREAD_TIMEOUT =
@@ -39,6 +40,7 @@ const environment = {
   // important - prefer app port to generic port
   PORT: process.env.APP_PORT || process.env.PORT,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
+  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || DEFAULTS.COUCH_DB_SQL_URL,
   MINIO_URL: process.env.MINIO_URL,
   WORKER_URL: process.env.WORKER_URL,
   AWS_REGION: process.env.AWS_REGION,
@@ -86,6 +88,7 @@ const environment = {
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
   SQL_LOGGING_ENABLE: process.env.SQL_LOGGING_ENABLE,
   SQL_ALIASING_DISABLE: process.env.SQL_ALIASING_DISABLE,
+  SQS_SEARCH_ENABLE: process.env.SQS_SEARCH_ENABLE,
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,

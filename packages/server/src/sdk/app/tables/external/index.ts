@@ -3,10 +3,10 @@ import {
   Operation,
   RelationshipType,
   RenameColumn,
-  AddColumn,
   Table,
   TableRequest,
   ViewV2,
+  AutoFieldSubType,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { buildExternalTableId } from "../../../../integrations/utils"
@@ -30,10 +30,56 @@ import { populateExternalTableSchemas } from "../validation"
 import datasourceSdk from "../../datasources"
 import * as viewSdk from "../../views"
 
+const DEFAULT_PRIMARY_COLUMN = "id"
+
+function noPrimaryKey(table: Table) {
+  return table.primary == null || table.primary.length === 0
+}
+
+function validate(table: Table, oldTable?: Table) {
+  if (
+    !oldTable &&
+    table.schema[DEFAULT_PRIMARY_COLUMN] &&
+    noPrimaryKey(table)
+  ) {
+    throw new Error(
+      "External tables with no `primary` column set will define an `id` column, but we found an `id` column in the supplied schema. Either set a `primary` column or remove the `id` column."
+    )
+  }
+
+  if (hasTypeChanged(table, oldTable)) {
+    throw new Error("A column type has changed.")
+  }
+
+  const autoSubTypes = Object.values(AutoFieldSubType)
+  // check for auto columns, they are not allowed
+  for (let [key, column] of Object.entries(table.schema)) {
+    // this column is a special case, do not validate it
+    if (key === DEFAULT_PRIMARY_COLUMN) {
+      continue
+    }
+    // the auto-column type should never be used
+    if (column.type === FieldType.AUTO) {
+      throw new Error(
+        `Column "${key}" has type "${FieldType.AUTO}" - this is not supported.`
+      )
+    }
+
+    if (
+      column.subtype &&
+      autoSubTypes.includes(column.subtype as AutoFieldSubType)
+    ) {
+      throw new Error(
+        `Column "${key}" has subtype "${column.subtype}" - this is not supported.`
+      )
+    }
+  }
+}
+
 export async function save(
   datasourceId: string,
   update: Table,
-  opts?: { tableId?: string; renaming?: RenameColumn; adding?: AddColumn }
+  opts?: { tableId?: string; renaming?: RenameColumn }
 ) {
   let tableToSave: TableRequest = {
     ...update,
@@ -48,8 +94,16 @@ export async function save(
     oldTable = await getTable(tableId)
   }
 
-  if (hasTypeChanged(tableToSave, oldTable)) {
-    throw new Error("A column type has changed.")
+  // this will throw an error if something is wrong
+  validate(tableToSave, oldTable)
+
+  if (!oldTable && noPrimaryKey(tableToSave)) {
+    tableToSave.primary = [DEFAULT_PRIMARY_COLUMN]
+    tableToSave.schema[DEFAULT_PRIMARY_COLUMN] = {
+      type: FieldType.NUMBER,
+      autocolumn: true,
+      name: DEFAULT_PRIMARY_COLUMN,
+    }
   }
 
   for (let view in tableToSave.views) {
@@ -167,14 +221,7 @@ export async function save(
   // remove the rename prop
   delete tableToSave._rename
 
-  // if adding a new column, we need to rebuild the schema for that table to get the 'externalType' of the column
-  if (opts?.adding) {
-    datasource.entities[tableToSave.name] = (
-      await datasourceSdk.buildFilteredSchema(datasource, [tableToSave.name])
-    ).tables[tableToSave.name]
-  } else {
-    datasource.entities[tableToSave.name] = tableToSave
-  }
+  datasource.entities[tableToSave.name] = tableToSave
 
   // store it into couch now for budibase reference
   await db.put(populateExternalTableSchemas(datasource))
@@ -182,6 +229,10 @@ export async function save(
   // Since tables are stored inside datasources, we need to notify clients
   // that the datasource definition changed
   const updatedDatasource = await datasourceSdk.get(datasource._id!)
+
+  if (updatedDatasource.isSQL) {
+    tableToSave.sql = true
+  }
 
   return { datasource: updatedDatasource, table: tableToSave }
 }

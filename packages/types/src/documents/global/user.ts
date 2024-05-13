@@ -22,6 +22,13 @@ export interface UserSSO {
   providerType: SSOProviderType
   oauth2?: OAuth2
   thirdPartyProfile?: SSOProfileJson
+  profile?: {
+    displayName?: string
+    name?: {
+      givenName?: string
+      familyName?: string
+    }
+  }
 }
 
 export type SSOUser = User & UserSSO
@@ -55,6 +62,7 @@ export interface User extends Document {
   dayPassRecordedAt?: string
   userGroups?: string[]
   onboardedAt?: string
+  freeTrialConfirmedAt?: string
   tours?: Record<string, Date>
   scimInfo?: { isSync: true } & Record<string, any>
   appFavourites?: string[]

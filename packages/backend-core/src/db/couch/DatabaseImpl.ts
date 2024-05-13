@@ -3,21 +3,23 @@ import {
   AllDocsResponse,
   AnyDocument,
   Database,
-  DatabaseOpts,
-  DatabaseQueryOpts,
-  DatabasePutOpts,
   DatabaseCreateIndexOpts,
   DatabaseDeleteIndexOpts,
+  DatabaseOpts,
+  DatabasePutOpts,
+  DatabaseQueryOpts,
   Document,
   isDocument,
   RowResponse,
   RowValue,
+  SqlQueryBinding,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
-import { WriteStream, ReadStream } from "fs"
+import { ReadStream, WriteStream } from "fs"
 import { newid } from "../../docIds/newid"
+import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
@@ -35,6 +37,39 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
 }
 
 type DBCall<T> = () => Promise<T>
+
+class CouchDBError extends Error {
+  status: number
+  statusCode: number
+  reason: string
+  name: string
+  errid: string
+  error: string
+  description: string
+
+  constructor(
+    message: string,
+    info: {
+      status: number | undefined
+      statusCode: number | undefined
+      name: string
+      errid: string
+      description: string
+      reason: string
+      error: string
+    }
+  ) {
+    super(message)
+    const statusCode = info.status || info.statusCode || 500
+    this.status = statusCode
+    this.statusCode = statusCode
+    this.reason = info.reason
+    this.name = info.name
+    this.errid = info.errid
+    this.description = info.description
+    this.error = info.error
+  }
+}
 
 export function DatabaseWithConnection(
   dbName: string,
@@ -117,7 +152,7 @@ export class DatabaseImpl implements Database {
       } catch (err: any) {
         // Handling race conditions
         if (err.statusCode !== 412) {
-          throw err
+          throw new CouchDBError(err.message, err)
         }
       }
     }
@@ -136,10 +171,9 @@ export class DatabaseImpl implements Database {
       if (err.statusCode === 404 && err.reason === DATABASE_NOT_FOUND) {
         await this.checkAndCreateDb()
         return await this.performCall(call)
-      } else if (err.statusCode) {
-        err.status = err.statusCode
       }
-      throw err
+      // stripping the error down the props which are safe/useful, drop everything else
+      throw new CouchDBError(`CouchDB error: ${err.message}`, err)
     }
   }
 
@@ -247,6 +281,27 @@ export class DatabaseImpl implements Database {
     })
   }
 
+  async sql<T extends Document>(
+    sql: string,
+    parameters?: SqlQueryBinding
+  ): Promise<T[]> {
+    const dbName = this.name
+    const url = `/${dbName}/${SQLITE_DESIGN_DOC_ID}`
+    const response = await directCouchUrlCall({
+      url: `${this.couchInfo.sqlUrl}/${url}`,
+      method: "POST",
+      cookie: this.couchInfo.cookie,
+      body: {
+        query: sql,
+        args: parameters,
+      },
+    })
+    if (response.status > 300) {
+      throw new Error(await response.text())
+    }
+    return (await response.json()) as T[]
+  }
+
   async query<T extends Document>(
     viewName: string,
     params: DatabaseQueryOpts
@@ -265,7 +320,7 @@ export class DatabaseImpl implements Database {
       if (err.statusCode === 404) {
         return
       } else {
-        throw { ...err, status: err.statusCode }
+        throw new CouchDBError(err.message, err)
       }
     }
   }

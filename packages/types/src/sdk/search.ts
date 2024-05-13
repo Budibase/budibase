@@ -1,47 +1,67 @@
 import { Operation, SortDirection } from "./datasources"
 import { Row, Table } from "../documents"
 import { SortType } from "../api"
+import { Knex } from "knex"
+
+export enum SearchFilterOperator {
+  STRING = "string",
+  FUZZY = "fuzzy",
+  RANGE = "range",
+  EQUAL = "equal",
+  NOT_EQUAL = "notEqual",
+  EMPTY = "empty",
+  NOT_EMPTY = "notEmpty",
+  ONE_OF = "oneOf",
+  CONTAINS = "contains",
+  NOT_CONTAINS = "notContains",
+  CONTAINS_ANY = "containsAny",
+}
 
 export interface SearchFilters {
   allOr?: boolean
   onEmptyFilter?: EmptyFilterOption
-  string?: {
+  [SearchFilterOperator.STRING]?: {
     [key: string]: string
   }
-  fuzzy?: {
+  [SearchFilterOperator.FUZZY]?: {
     [key: string]: string
   }
-  range?: {
-    [key: string]: {
-      high: number | string
-      low: number | string
-    }
+  [SearchFilterOperator.RANGE]?: {
+    [key: string]:
+      | {
+          high: number | string
+          low: number | string
+        }
+      | { high: number | string }
+      | { low: number | string }
   }
-  equal?: {
+  [SearchFilterOperator.EQUAL]?: {
     [key: string]: any
   }
-  notEqual?: {
+  [SearchFilterOperator.NOT_EQUAL]?: {
     [key: string]: any
   }
-  empty?: {
+  [SearchFilterOperator.EMPTY]?: {
     [key: string]: any
   }
-  notEmpty?: {
+  [SearchFilterOperator.NOT_EMPTY]?: {
     [key: string]: any
   }
-  oneOf?: {
+  [SearchFilterOperator.ONE_OF]?: {
     [key: string]: any[]
   }
-  contains?: {
-    [key: string]: any[] | any
-  }
-  notContains?: {
+  [SearchFilterOperator.CONTAINS]?: {
     [key: string]: any[]
   }
-  containsAny?: {
+  [SearchFilterOperator.NOT_CONTAINS]?: {
+    [key: string]: any[]
+  }
+  [SearchFilterOperator.CONTAINS_ANY]?: {
     [key: string]: any[]
   }
 }
+
+export type SearchQueryFields = Omit<SearchFilters, "allOr" | "onEmptyFilter">
 
 export interface SortJson {
   [key: string]: {
@@ -58,10 +78,6 @@ export interface PaginationJson {
 export interface RenameColumn {
   old: string
   updated: string
-}
-
-export interface AddColumn {
-  name: string
 }
 
 export interface RelationshipsJson {
@@ -89,8 +105,8 @@ export interface QueryJson {
   paginate?: PaginationJson
   body?: Row | Row[]
   table?: Table
-  meta?: {
-    table?: Table
+  meta: {
+    table: Table
     tables?: Record<string, Table>
     renamed?: RenameColumn
   }
@@ -101,9 +117,11 @@ export interface QueryJson {
   tableAliases?: Record<string, string>
 }
 
+export type SqlQueryBinding = Knex.Value[]
+
 export interface SqlQuery {
   sql: string
-  bindings?: string[]
+  bindings?: SqlQueryBinding
 }
 
 export enum EmptyFilterOption {

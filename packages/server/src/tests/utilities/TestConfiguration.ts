@@ -58,7 +58,7 @@ import {
   RelationshipType,
   Row,
   Screen,
-  SearchParams,
+  RowSearchParams,
   SourceName,
   Table,
   TableSourceType,
@@ -80,6 +80,12 @@ mocks.licenses.init(pro)
 mocks.licenses.useUnlimited()
 
 dbInit()
+
+export interface CreateAppRequest {
+  appName: string
+  url?: string
+  snippets?: any[]
+}
 
 export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
@@ -580,8 +586,6 @@ export default class TestConfiguration {
 
   // APP
   async createApp(appName: string, url?: string): Promise<App> {
-    // create dev app
-    // clear any old app
     this.appId = undefined
     this.app = await context.doInTenant(
       this.tenantId!,
@@ -592,6 +596,7 @@ export default class TestConfiguration {
         })) as App
     )
     this.appId = this.app.appId
+
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
       this.prodApp = await this.publish()
@@ -733,7 +738,7 @@ export default class TestConfiguration {
     return this.api.row.fetch(tableId)
   }
 
-  async searchRows(tableId: string, searchParams?: SearchParams) {
+  async searchRows(tableId: string, searchParams?: RowSearchParams) {
     if (!tableId && this.table) {
       tableId = this.table._id!
     }

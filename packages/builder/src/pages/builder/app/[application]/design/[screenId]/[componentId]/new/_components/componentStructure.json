@@ -63,6 +63,7 @@
       "optionsfield",
       "booleanfield",
       "longformfield",
+      "attachmentsinglefield",
       "attachmentfield",
       "jsonfield",
       "relationshipfield",
@@ -70,6 +71,7 @@
       "multifieldselect",
       "s3upload",
       "codescanner",
+      "bbreferencesinglefield",
       "bbreferencefield"
     ]
   },
