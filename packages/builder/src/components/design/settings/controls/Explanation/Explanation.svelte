@@ -16,7 +16,7 @@
     DateAsNumber,
   } from "./lines"
   import subjects from "./subjects"
-  import { componentStore } from "stores/builder"
+  import { appStore } from "stores/builder"
 
   export let explanation
   export let columnIcon
@@ -29,7 +29,7 @@
 
   $: explanationWithPresets = getExplanationWithPresets(
     explanation,
-    $componentStore.typeSupportPresets
+    $appStore.typeSupportPresets
   )
   let support
   let messages = []

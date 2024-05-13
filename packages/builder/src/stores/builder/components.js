@@ -103,12 +103,12 @@ export class ComponentStore extends BudiStore {
     this.update(state => ({
       ...state,
       components,
-      customComponents,
-      typeSupportPresets: components?.typeSupportPresets ?? {},
+      customComponents
     }))
 
     // Sync client features to app store
     appStore.syncClientFeatures(components.features)
+    appStore.syncClientTypeSupportPresets(components?.typeSupportPresets ?? {})
 
     return components
   }
