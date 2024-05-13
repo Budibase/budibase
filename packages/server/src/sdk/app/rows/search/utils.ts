@@ -96,7 +96,7 @@ function userColumnMapping(
 export function searchInputMapping(
   table: Table,
   options: RowSearchParams,
-  datasourceOptions: { isSql?: boolean }
+  datasourceOptions: { isSql?: boolean } = {}
 ) {
   if (!table?.schema) {
     return options
