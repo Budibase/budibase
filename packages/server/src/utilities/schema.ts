@@ -139,8 +139,10 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
           ? new Date(columnData).toISOString()
           : columnData
       } else if (columnType === FieldType.BB_REFERENCE) {
-        const parsedValues =
-          (!!columnData && parseCsvExport<{ _id: string }[]>(columnData)) || []
+        let parsedValues: { _id: string }[] = columnData || []
+        if (columnData) {
+          parsedValues = parseCsvExport<{ _id: string }[]>(columnData)
+        }
 
         parsedRow[columnName] = parsedValues?.map(u => u._id)
       } else if (columnType === FieldType.BB_REFERENCE_SINGLE) {

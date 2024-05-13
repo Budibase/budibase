@@ -26,6 +26,7 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import environment from "../../environment"
+import { helpers } from "@budibase/shared-core"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
@@ -786,8 +787,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return (
       field.type === FieldType.JSON ||
       (field.type === FieldType.BB_REFERENCE &&
-        // Handling old single user type
-        field.constraints?.type === "array")
+        !helpers.schema.isDeprecatedSingleUserColumn(field))
     )
   }
 

@@ -11,7 +11,7 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import { breakExternalTableId, getNativeSql, SqlClient } from "../utils"
-import { utils } from "@budibase/shared-core"
+import { helpers, utils } from "@budibase/shared-core"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
 
@@ -85,7 +85,12 @@ function generateSchema(
         break
       case FieldType.ARRAY:
       case FieldType.BB_REFERENCE:
-        schema.json(key)
+        if (helpers.schema.isDeprecatedSingleUserColumn(column)) {
+          // This is still required for unit testing, in order to create "deprecated" schemas
+          schema.text(key)
+        } else {
+          schema.json(key)
+        }
         break
       case FieldType.LINK:
         // this side of the relationship doesn't need any SQL work

@@ -9,10 +9,11 @@ import {
   SearchFilterOperator,
   SortDirection,
   SortType,
+  FieldConstraints,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
-import { deepGet } from "./helpers"
+import { deepGet, schema } from "./helpers"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -24,6 +25,7 @@ export const getValidOperatorsForType = (
     type: FieldType
     subtype?: BBReferenceFieldSubType
     formulaType?: FormulaType
+    constraints?: FieldConstraints
   },
   field?: string,
   datasource?: Datasource & { tableId: any }
@@ -68,7 +70,10 @@ export const getValidOperatorsForType = (
     ops = numOps
   } else if (type === FieldType.FORMULA && formulaType === FormulaType.STATIC) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
-  } else if (type === FieldType.BB_REFERENCE_SINGLE) {
+  } else if (
+    type === FieldType.BB_REFERENCE_SINGLE ||
+    schema.isDeprecatedSingleUserColumn(fieldType)
+  ) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   } else if (type === FieldType.BB_REFERENCE) {
     ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
