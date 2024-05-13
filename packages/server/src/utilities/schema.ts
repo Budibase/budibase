@@ -1,6 +1,6 @@
 import {
   FieldType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   TableSchema,
   FieldSchema,
   Row,
@@ -54,12 +54,19 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
         type: columnType,
         subtype: columnSubtype,
         autocolumn: isAutoColumn,
+        constraints,
       } = schema[columnName] || {}
 
       // If the column had an invalid value we don't want to override it
       if (results.schemaValidation[columnName] === false) {
         return
       }
+
+      const isRequired =
+        !!constraints &&
+        ((typeof constraints.presence !== "boolean" &&
+          !constraints.presence?.allowEmpty) ||
+          constraints.presence === true)
 
       // If the columnType is not a string, then it's not present in the schema, and should be added to the invalid columns array
       if (typeof columnType !== "string") {
@@ -92,8 +99,9 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
       ) {
         results.schemaValidation[columnName] = false
       } else if (
-        columnType === FieldType.BB_REFERENCE &&
-        !isValidBBReference(columnData, columnSubtype)
+        (columnType === FieldType.BB_REFERENCE ||
+          columnType === FieldType.BB_REFERENCE_SINGLE) &&
+        !isValidBBReference(columnData, columnType, columnSubtype, isRequired)
       ) {
         results.schemaValidation[columnName] = false
       } else {
@@ -121,7 +129,7 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
         return
       }
 
-      const { type: columnType, subtype: columnSubtype } = schema[columnName]
+      const { type: columnType } = schema[columnName]
       if (columnType === FieldType.NUMBER) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
@@ -131,22 +139,22 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
           ? new Date(columnData).toISOString()
           : columnData
       } else if (columnType === FieldType.BB_REFERENCE) {
-        const parsedValues =
-          !!columnData && parseCsvExport<{ _id: string }[]>(columnData)
-        if (!parsedValues) {
-          parsedRow[columnName] = undefined
-        } else {
-          switch (columnSubtype) {
-            case FieldSubtype.USER:
-              parsedRow[columnName] = parsedValues[0]?._id
-              break
-            case FieldSubtype.USERS:
-              parsedRow[columnName] = parsedValues.map(u => u._id)
-              break
-            default:
-              utils.unreachable(columnSubtype)
-          }
+        let parsedValues: { _id: string }[] = columnData || []
+        if (columnData) {
+          parsedValues = parseCsvExport<{ _id: string }[]>(columnData)
         }
+
+        parsedRow[columnName] = parsedValues?.map(u => u._id)
+      } else if (columnType === FieldType.BB_REFERENCE_SINGLE) {
+        const parsedValue =
+          columnData && parseCsvExport<{ _id: string }>(columnData)
+        parsedRow[columnName] = parsedValue?._id
+      } else if (
+        (columnType === FieldType.ATTACHMENTS ||
+          columnType === FieldType.ATTACHMENT_SINGLE) &&
+        typeof columnData === "string"
+      ) {
+        parsedRow[columnName] = parseCsvExport(columnData)
       } else {
         parsedRow[columnName] = columnData
       }
@@ -157,21 +165,28 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
 }
 
 function isValidBBReference(
-  columnData: any,
-  columnSubtype: FieldSubtype.USER | FieldSubtype.USERS
+  data: any,
+  type: FieldType.BB_REFERENCE | FieldType.BB_REFERENCE_SINGLE,
+  subtype: BBReferenceFieldSubType,
+  isRequired: boolean
 ): boolean {
-  switch (columnSubtype) {
-    case FieldSubtype.USER:
-    case FieldSubtype.USERS: {
-      if (typeof columnData !== "string") {
-        return false
-      }
-      const userArray = parseCsvExport<{ _id: string }[]>(columnData)
-      if (!Array.isArray(userArray)) {
-        return false
-      }
+  if (typeof data !== "string") {
+    return false
+  }
 
-      if (columnSubtype === FieldSubtype.USER && userArray.length > 1) {
+  if (type === FieldType.BB_REFERENCE_SINGLE) {
+    if (!data) {
+      return !isRequired
+    }
+    const user = parseCsvExport<{ _id: string }>(data)
+    return db.isGlobalUserID(user._id)
+  }
+
+  switch (subtype) {
+    case BBReferenceFieldSubType.USER:
+    case BBReferenceFieldSubType.USERS: {
+      const userArray = parseCsvExport<{ _id: string }[]>(data)
+      if (!Array.isArray(userArray)) {
         return false
       }
 
@@ -181,6 +196,6 @@ function isValidBBReference(
       return !constainsWrongId
     }
     default:
-      throw utils.unreachable(columnSubtype)
+      throw utils.unreachable(subtype)
   }
 }

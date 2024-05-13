@@ -12,11 +12,12 @@ import {
 } from "./utilities"
 import { convertHBSBlock } from "./conversion"
 import { setJSRunner, removeJSRunner } from "./helpers/javascript"
-import { helpersToRemoveForJs } from "./helpers/list"
 
 import manifest from "./manifest.json"
 import { ProcessOptions } from "./types"
 
+export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
+export { FIND_ANY_HBS_REGEX } from "./utilities"
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
 export { iifeWrapper } from "./iife"
 
@@ -412,15 +413,9 @@ export function convertToJS(hbs: string) {
   return `${varBlock}${js}`
 }
 
-const _FIND_ANY_HBS_REGEX = FIND_ANY_HBS_REGEX
-export { _FIND_ANY_HBS_REGEX as FIND_ANY_HBS_REGEX }
-
 export { JsErrorTimeout } from "./errors"
 
-const _helpersToRemoveForJs = helpersToRemoveForJs
-export { _helpersToRemoveForJs as helpersToRemoveForJs }
-
-function defaultJSSetup() {
+export function defaultJSSetup() {
   if (!isBackendService()) {
     /**
      * Use polyfilled vm to run JS scripts in a browser Env
@@ -440,6 +435,3 @@ function defaultJSSetup() {
   }
 }
 defaultJSSetup()
-
-const _defaultJSSetup = defaultJSSetup
-export { _defaultJSSetup as defaultJSSetup }

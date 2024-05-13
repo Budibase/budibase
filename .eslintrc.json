@@ -1,4 +1,5 @@
 {
+  "root": true,
   "env": {
     "browser": true,
     "es6": true,
@@ -42,8 +43,19 @@
       },
       "rules": {
         "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": "error",
-        "local-rules/no-budibase-imports": "error"
+        "local-rules/no-budibase-imports": "error",
+        "local-rules/no-console-error": "error",
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "varsIgnorePattern": "^_",
+            "argsIgnorePattern": "^_",
+            "destructuredArrayIgnorePattern": "^_",
+            "ignoreRestSiblings": true
+          }
+        ],
+        "no-redeclare": "off",
+        "@typescript-eslint/no-redeclare": "error"
       }
     },
     {
@@ -59,7 +71,15 @@
       },
       "rules": {
         "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": "error",
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "varsIgnorePattern": "^_",
+            "argsIgnorePattern": "^_",
+            "destructuredArrayIgnorePattern": "^_",
+            "ignoreRestSiblings": true
+          }
+        ],
         "local-rules/no-test-com": "error",
         "local-rules/email-domain-example-com": "error",
         "no-console": "warn",
@@ -89,7 +109,8 @@
       {
         "varsIgnorePattern": "^_",
         "argsIgnorePattern": "^_",
-        "destructuredArrayIgnorePattern": "^_"
+        "destructuredArrayIgnorePattern": "^_",
+        "ignoreRestSiblings": true
       }
     ],
     "import/no-relative-packages": "error",

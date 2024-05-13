@@ -12,7 +12,13 @@
     OptionSelectDnD,
     Layout,
     AbsTooltip,
+    ProgressCircle,
   } from "@budibase/bbui"
+  import {
+    SWITCHABLE_TYPES,
+    ValidColumnNameRegex,
+    helpers,
+  } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/builder"
@@ -20,11 +26,6 @@
   import {
     FIELDS,
     RelationshipType,
-    ALLOWABLE_STRING_OPTIONS,
-    ALLOWABLE_NUMBER_OPTIONS,
-    ALLOWABLE_STRING_TYPES,
-    ALLOWABLE_NUMBER_TYPES,
-    SWITCHABLE_TYPES,
     PrettyRelationshipDefinitions,
     DB_TYPE_EXTERNAL,
   } from "constants/backend"
@@ -33,21 +34,22 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
-  import { ValidColumnNameRegex } from "@budibase/shared-core"
-  import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
+  import {
+    BBReferenceFieldSubType,
+    FieldType,
+    SourceName,
+  } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
 
-  const AUTO_TYPE = FIELDS.AUTO.type
-  const FORMULA_TYPE = FIELDS.FORMULA.type
-  const LINK_TYPE = FIELDS.LINK.type
-  const STRING_TYPE = FIELDS.STRING.type
-  const NUMBER_TYPE = FIELDS.NUMBER.type
-  const JSON_TYPE = FIELDS.JSON.type
-  const DATE_TYPE = FIELDS.DATETIME.type
-  const USER_TYPE = FIELDS.USER.subtype
-  const USERS_TYPE = FIELDS.USERS.subtype
+  const AUTO_TYPE = FieldType.AUTO
+  const FORMULA_TYPE = FieldType.FORMULA
+  const LINK_TYPE = FieldType.LINK
+  const STRING_TYPE = FieldType.STRING
+  const NUMBER_TYPE = FieldType.NUMBER
+  const JSON_TYPE = FieldType.JSON
+  const DATE_TYPE = FieldType.DATETIME
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -61,8 +63,8 @@
   let primaryDisplay
   let indexes = [...($tables.selected.indexes || [])]
   let isCreating = undefined
-  let relationshipPart1 = PrettyRelationshipDefinitions.Many
-  let relationshipPart2 = PrettyRelationshipDefinitions.One
+  let relationshipPart1 = PrettyRelationshipDefinitions.MANY
+  let relationshipPart2 = PrettyRelationshipDefinitions.ONE
   let relationshipTableIdPrimary = null
   let relationshipTableIdSecondary = null
   let table = $tables.selected
@@ -70,7 +72,6 @@
   let savingColumn
   let deleteColName
   let jsonSchemaModal
-  let allowedTypes = []
   let editableColumn = {
     type: FIELDS.STRING.type,
     constraints: FIELDS.STRING.constraints,
@@ -175,8 +176,13 @@
   $: typeEnabled =
     !originalName ||
     (originalName &&
-      SWITCHABLE_TYPES.indexOf(editableColumn.type) !== -1 &&
+      SWITCHABLE_TYPES[field.type] &&
       !editableColumn?.autocolumn)
+
+  $: allowedTypes = getAllowedTypes(datasource).map(t => ({
+    fieldId: makeFieldId(t.type, t.subtype),
+    ...t,
+  }))
 
   const fieldDefinitions = Object.values(FIELDS).reduce(
     // Storing the fields by complex field id
@@ -191,7 +197,10 @@
     // don't make field IDs for auto types
     if (type === AUTO_TYPE || autocolumn) {
       return type.toUpperCase()
-    } else if (type === FieldType.BB_REFERENCE) {
+    } else if (
+      type === FieldType.BB_REFERENCE ||
+      type === FieldType.BB_REFERENCE_SINGLE
+    ) {
       return `${type}${subtype || ""}`.toUpperCase()
     } else {
       return type.toUpperCase()
@@ -229,11 +238,6 @@
         editableColumn.subtype,
         editableColumn.autocolumn
       )
-
-      allowedTypes = getAllowedTypes().map(t => ({
-        fieldId: makeFieldId(t.type, t.subtype),
-        ...t,
-      }))
     }
   }
 
@@ -248,11 +252,11 @@
   }
 
   async function saveColumn() {
-    savingColumn = true
     if (errors?.length) {
       return
     }
 
+    savingColumn = true
     let saveColumn = cloneDeep(editableColumn)
 
     delete saveColumn.fieldId
@@ -266,13 +270,6 @@
     }
     if (saveColumn.type !== LINK_TYPE) {
       delete saveColumn.fieldName
-    }
-    if (isUsersColumn(saveColumn)) {
-      if (saveColumn.subtype === USER_TYPE) {
-        saveColumn.relationshipType = RelationshipType.ONE_TO_MANY
-      } else if (saveColumn.subtype === USERS_TYPE) {
-        saveColumn.relationshipType = RelationshipType.MANY_TO_MANY
-      }
     }
 
     try {
@@ -292,6 +289,8 @@
       }
     } catch (err) {
       notifications.error(`Error saving column: ${err.message}`)
+    } finally {
+      savingColumn = false
     }
   }
 
@@ -366,22 +365,35 @@
     deleteColName = ""
   }
 
-  function getAllowedTypes() {
-    if (
-      originalName &&
-      ALLOWABLE_STRING_TYPES.indexOf(editableColumn.type) !== -1
-    ) {
-      return ALLOWABLE_STRING_OPTIONS
-    } else if (
-      originalName &&
-      ALLOWABLE_NUMBER_TYPES.indexOf(editableColumn.type) !== -1
-    ) {
-      return ALLOWABLE_NUMBER_OPTIONS
-    }
+  function getAllowedTypes(datasource) {
+    if (originalName) {
+      let possibleTypes = SWITCHABLE_TYPES[field.type] || [editableColumn.type]
+      if (helpers.schema.isDeprecatedSingleUserColumn(editableColumn)) {
+        // This will handle old single users columns
+        return [
+          {
+            ...FIELDS.USER,
+            type: FieldType.BB_REFERENCE,
+            subtype: BBReferenceFieldSubType.USER,
+          },
+        ]
+      } else if (
+        editableColumn.type === FieldType.BB_REFERENCE &&
+        editableColumn.subtype === BBReferenceFieldSubType.USERS
+      ) {
+        // This will handle old multi users columns
+        return [
+          {
+            ...FIELDS.USERS,
+            subtype: BBReferenceFieldSubType.USERS,
+          },
+        ]
+      }
 
-    const isUsers =
-      editableColumn.type === FieldType.BB_REFERENCE &&
-      editableColumn.subtype === FieldSubtype.USERS
+      return Object.entries(FIELDS)
+        .filter(([_, field]) => possibleTypes.includes(field.type))
+        .map(([_, fieldDefinition]) => fieldDefinition)
+    }
 
     if (!externalTable) {
       return [
@@ -394,11 +406,13 @@
         FIELDS.BIGINT,
         FIELDS.BOOLEAN,
         FIELDS.DATETIME,
-        FIELDS.ATTACHMENT,
+        FIELDS.ATTACHMENT_SINGLE,
+        FIELDS.ATTACHMENTS,
         FIELDS.LINK,
         FIELDS.FORMULA,
         FIELDS.JSON,
-        isUsers ? FIELDS.USERS : FIELDS.USER,
+        FIELDS.USER,
+        FIELDS.USERS,
         FIELDS.AUTO,
       ]
     } else {
@@ -412,8 +426,12 @@
         FIELDS.BOOLEAN,
         FIELDS.FORMULA,
         FIELDS.BIGINT,
-        isUsers ? FIELDS.USERS : FIELDS.USER,
+        FIELDS.USER,
       ]
+
+      if (datasource && datasource.source !== SourceName.GOOGLE_SHEETS) {
+        fields.push(FIELDS.USERS)
+      }
       // no-sql or a spreadsheet
       if (!externalTable || table.sql) {
         fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
@@ -487,13 +505,6 @@
     return newError
   }
 
-  function isUsersColumn(column) {
-    return (
-      column.type === FieldType.BB_REFERENCE &&
-      [FieldSubtype.USER, FieldSubtype.USERS].includes(column.subtype)
-    )
-  }
-
   onMount(() => {
     mounted = true
   })
@@ -518,6 +529,7 @@
     />
   {/if}
   <Select
+    placeholder={null}
     disabled={!typeEnabled}
     bind:value={editableColumn.fieldId}
     on:change={onHandleTypeChange}
@@ -631,7 +643,7 @@
         />
       </div>
     </div>
-  {:else if editableColumn.type === FieldType.LINK}
+  {:else if editableColumn.type === FieldType.LINK && !editableColumn.autocolumn}
     <RelationshipSelector
       bind:relationshipPart1
       bind:relationshipPart2
@@ -691,20 +703,6 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
-  {:else if isUsersColumn(editableColumn) && datasource?.source !== SourceName.GOOGLE_SHEETS}
-    <Toggle
-      value={editableColumn.subtype === FieldSubtype.USERS}
-      on:change={e =>
-        handleTypeChange(
-          makeFieldId(
-            FieldType.BB_REFERENCE,
-            e.detail ? FieldSubtype.USERS : FieldSubtype.USER
-          )
-        )}
-      disabled={!isCreating}
-      thin
-      text="Allow multiple users"
-    />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
     <Select
@@ -739,7 +737,20 @@
     <Button quiet warning text on:click={confirmDelete}>Delete</Button>
   {/if}
   <Button secondary newStyles on:click={cancelEdit}>Cancel</Button>
-  <Button disabled={invalid} newStyles cta on:click={saveColumn}>Save</Button>
+  <Button
+    disabled={invalid || savingColumn}
+    newStyles
+    cta
+    on:click={saveColumn}
+  >
+    {#if savingColumn}
+      <div class="save-loading">
+        <ProgressCircle overBackground={true} size="S" />
+      </div>
+    {:else}
+      Save
+    {/if}
+  </Button>
 </div>
 <Modal bind:this={jsonSchemaModal}>
   <JSONSchemaModal
@@ -803,5 +814,10 @@
   b:hover {
     cursor: pointer;
     color: var(--spectrum-global-color-gray-900);
+  }
+
+  .save-loading {
+    display: flex;
+    justify-content: center;
   }
 </style>

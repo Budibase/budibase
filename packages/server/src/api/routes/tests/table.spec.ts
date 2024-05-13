@@ -1,11 +1,11 @@
 import { context, events } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
+  Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
-  NumberFieldMetadata,
   RelationshipType,
   Row,
   SaveTableRequest,
@@ -13,31 +13,38 @@ import {
   TableSourceType,
   User,
   ViewCalculation,
+  ViewV2Enriched,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
-import sdk from "../../../sdk"
 import * as uuid from "uuid"
 
-import tk from "timekeeper"
-import { generator, mocks } from "@budibase/backend-core/tests"
-import { TableToBuild } from "../../../tests/utilities/TestConfiguration"
-
-tk.freeze(mocks.date.MOCK_DATE)
+import { generator } from "@budibase/backend-core/tests"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import { tableForDatasource } from "../../../tests/utilities/structures"
+import timekeeper from "timekeeper"
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
-describe("/tables", () => {
-  let request = setup.getRequest()
+describe.each([
+  ["internal", undefined],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+])("/tables (%s)", (_, dsProvider) => {
+  const isInternal: boolean = !dsProvider
+  let datasource: Datasource | undefined
   let config = setup.getConfig()
-  let appId: string
 
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
-    const app = await config.init()
-    appId = app.appId
+    await config.init()
+    if (dsProvider) {
+      datasource = await config.api.datasource.create(await dsProvider)
+    }
   })
 
   describe("create", () => {
@@ -45,102 +52,28 @@ describe("/tables", () => {
       jest.clearAllMocks()
     })
 
-    const createTable = (table?: Table) => {
-      if (!table) {
-        table = basicTable()
-      }
-      return request
-        .post(`/api/tables`)
-        .send(table)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-    }
-
-    it("returns a success message when the table is successfully created", async () => {
-      const res = await createTable()
-
-      expect((res as any).res.statusMessage).toEqual(
-        "Table TestTable saved successfully."
+    it("creates a table successfully", async () => {
+      const name = generator.guid()
+      const table = await config.api.table.save(
+        tableForDatasource(datasource, { name })
       )
-      expect(res.body.name).toEqual("TestTable")
+      expect(table.name).toEqual(name)
       expect(events.table.created).toHaveBeenCalledTimes(1)
-      expect(events.table.created).toHaveBeenCalledWith(res.body)
-    })
-
-    it("creates all the passed fields", async () => {
-      const tableData: TableToBuild = {
-        name: "TestTable",
-        type: "table",
-        schema: {
-          autoId: {
-            name: "id",
-            type: FieldType.NUMBER,
-            subtype: AutoFieldSubType.AUTO_ID,
-            autocolumn: true,
-            constraints: {
-              type: "number",
-              presence: false,
-            },
-          },
-        },
-        views: {
-          "table view": {
-            id: "viewId",
-            version: 2,
-            name: "table view",
-            tableId: "tableId",
-          },
-        },
-      }
-      const testTable = await config.createTable(tableData)
-
-      const expected: Table = {
-        ...tableData,
-        type: "table",
-        views: {
-          "table view": {
-            ...tableData.views!["table view"],
-            schema: {
-              autoId: {
-                autocolumn: true,
-                constraints: {
-                  presence: false,
-                  type: "number",
-                },
-                name: "id",
-                type: FieldType.NUMBER,
-                subtype: AutoFieldSubType.AUTO_ID,
-                visible: false,
-              } as NumberFieldMetadata,
-            },
-          },
-        },
-        sourceType: TableSourceType.INTERNAL,
-        sourceId: expect.any(String),
-        _rev: expect.stringMatching(/^1-.+/),
-        _id: expect.any(String),
-        createdAt: mocks.date.MOCK_DATE.toISOString(),
-        updatedAt: mocks.date.MOCK_DATE.toISOString(),
-      }
-      expect(testTable).toEqual(expected)
-
-      const persistedTable = await config.api.table.get(testTable._id!)
-      expect(persistedTable).toEqual(expected)
+      expect(events.table.created).toHaveBeenCalledWith(table)
     })
 
     it("creates a table via data import", async () => {
       const table: SaveTableRequest = basicTable()
       table.rows = [{ name: "test-name", description: "test-desc" }]
 
-      const res = await createTable(table)
+      const res = await config.api.table.save(table)
 
       expect(events.table.created).toHaveBeenCalledTimes(1)
-      expect(events.table.created).toHaveBeenCalledWith(res.body)
+      expect(events.table.created).toHaveBeenCalledWith(res)
       expect(events.table.imported).toHaveBeenCalledTimes(1)
-      expect(events.table.imported).toHaveBeenCalledWith(res.body)
+      expect(events.table.imported).toHaveBeenCalledWith(res)
       expect(events.rows.imported).toHaveBeenCalledTimes(1)
-      expect(events.rows.imported).toHaveBeenCalledWith(res.body, 1)
+      expect(events.rows.imported).toHaveBeenCalledWith(res, 1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -155,21 +88,31 @@ describe("/tables", () => {
 
   describe("update", () => {
     it("updates a table", async () => {
-      const testTable = await config.createTable()
+      const table = await config.api.table.save(
+        tableForDatasource(datasource, {
+          schema: {
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+              constraints: {
+                type: "string",
+              },
+            },
+          },
+        })
+      )
 
-      const res = await request
-        .post(`/api/tables`)
-        .send(testTable)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const updatedTable = await config.api.table.save({
+        ...table,
+        name: generator.guid(),
+      })
 
       expect(events.table.updated).toHaveBeenCalledTimes(1)
-      expect(events.table.updated).toHaveBeenCalledWith(res.body)
+      expect(events.table.updated).toHaveBeenCalledWith(updatedTable)
     })
 
     it("updates all the row fields for a table when a schema key is renamed", async () => {
-      const testTable = await config.createTable()
+      const testTable = await config.api.table.save(basicTable(datasource))
       await config.createLegacyView({
         name: "TestView",
         field: "Price",
@@ -179,128 +122,156 @@ describe("/tables", () => {
         filters: [],
       })
 
-      const testRow = await request
-        .post(`/api/${testTable._id}/rows`)
-        .send({
-          name: "test",
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const testRow = await config.api.row.save(testTable._id!, {
+        name: "test",
+      })
 
-      const updatedTable = await request
-        .post(`/api/tables`)
-        .send({
-          _id: testTable._id,
-          _rev: testTable._rev,
-          name: "TestTable",
-          key: "name",
-          _rename: {
-            old: "name",
-            updated: "updatedName",
-          },
-          schema: {
-            updatedName: { type: "string" },
-          },
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect((updatedTable as any).res.statusMessage).toEqual(
-        "Table TestTable saved successfully."
-      )
-      expect(updatedTable.body.name).toEqual("TestTable")
-
-      const res = await request
-        .get(`/api/${testTable._id}/rows/${testRow.body._id}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      expect(res.body.updatedName).toEqual("test")
-      expect(res.body.name).toBeUndefined()
-    })
-
-    it("updates only the passed fields", async () => {
-      const testTable = await config.createTable({
-        name: "TestTable",
-        type: "table",
+      const { name, ...otherColumns } = testTable.schema
+      const updatedTable = await config.api.table.save({
+        ...testTable,
+        _rename: {
+          old: "name",
+          updated: "updatedName",
+        },
         schema: {
-          autoId: {
-            name: "id",
-            type: FieldType.NUMBER,
-            subtype: AutoFieldSubType.AUTO_ID,
-            autocolumn: true,
-            constraints: {
-              type: "number",
-              presence: false,
-            },
-          },
-        },
-        views: {
-          view1: {
-            id: "viewId",
-            version: 2,
-            name: "table view",
-            tableId: "tableId",
+          ...otherColumns,
+          updatedName: {
+            ...name,
+            name: "updatedName",
           },
         },
       })
 
-      const response = await request
-        .post(`/api/tables`)
-        .send({
-          ...testTable,
-          name: "UpdatedName",
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      expect(updatedTable.name).toEqual(testTable.name)
 
-      expect(response.body).toEqual({
-        ...testTable,
-        name: "UpdatedName",
-        _rev: expect.stringMatching(/^2-.+/),
-      })
-
-      const persistedTable = await config.api.table.get(testTable._id!)
-      expect(persistedTable).toEqual({
-        ...testTable,
-        name: "UpdatedName",
-        _rev: expect.stringMatching(/^2-.+/),
-      })
+      const res = await config.api.row.get(testTable._id!, testRow._id!)
+      expect(res.updatedName).toEqual("test")
+      expect(res.name).toBeUndefined()
     })
+
+    isInternal &&
+      it("updates only the passed fields", async () => {
+        await timekeeper.withFreeze(new Date(2021, 1, 1), async () => {
+          const table = await config.api.table.save(
+            tableForDatasource(datasource, {
+              schema: {
+                autoId: {
+                  name: "id",
+                  type: FieldType.NUMBER,
+                  subtype: AutoFieldSubType.AUTO_ID,
+                  autocolumn: true,
+                  constraints: {
+                    type: "number",
+                    presence: false,
+                  },
+                },
+              },
+            })
+          )
+
+          const newName = generator.guid()
+
+          const updatedTable = await config.api.table.save({
+            ...table,
+            name: newName,
+          })
+
+          let expected: Table = {
+            ...table,
+            name: newName,
+            _id: expect.any(String),
+          }
+          if (isInternal) {
+            expected._rev = expect.stringMatching(/^2-.+/)
+          }
+
+          expect(updatedTable).toEqual(expected)
+
+          const persistedTable = await config.api.table.get(updatedTable._id!)
+          expected = {
+            ...table,
+            name: newName,
+            _id: updatedTable._id,
+          }
+          if (datasource?.isSQL) {
+            expected.sql = true
+          }
+          if (isInternal) {
+            expected._rev = expect.stringMatching(/^2-.+/)
+          }
+          expect(persistedTable).toEqual(expected)
+        })
+      })
 
     describe("user table", () => {
-      it("should add roleId and email field when adjusting user table schema", async () => {
-        const res = await request
-          .post(`/api/tables`)
-          .send({
-            ...basicTable(),
+      isInternal &&
+        it("should add roleId and email field when adjusting user table schema", async () => {
+          const table = await config.api.table.save({
+            ...basicTable(datasource),
             _id: "ta_users",
           })
-          .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(200)
-        expect(res.body.schema.email).toBeDefined()
-        expect(res.body.schema.roleId).toBeDefined()
-      })
+          expect(table.schema.email).toBeDefined()
+          expect(table.schema.roleId).toBeDefined()
+        })
+    })
+
+    describe("external table validation", () => {
+      !isInternal &&
+        it("should error if column is of type auto", async () => {
+          const table = basicTable(datasource)
+          await config.api.table.save(
+            {
+              ...table,
+              schema: {
+                ...table.schema,
+                auto: {
+                  name: "auto",
+                  autocolumn: true,
+                  type: FieldType.AUTO,
+                },
+              },
+            },
+            {
+              status: 400,
+              body: {
+                message: `Column "auto" has type "${FieldType.AUTO}" - this is not supported.`,
+              },
+            }
+          )
+        })
+
+      !isInternal &&
+        it("should error if column has auto subtype", async () => {
+          const table = basicTable(datasource)
+          await config.api.table.save(
+            {
+              ...table,
+              schema: {
+                ...table.schema,
+                auto: {
+                  name: "auto",
+                  autocolumn: true,
+                  type: FieldType.NUMBER,
+                  subtype: AutoFieldSubType.AUTO_ID,
+                },
+              },
+            },
+            {
+              status: 400,
+              body: {
+                message: `Column "auto" has subtype "${AutoFieldSubType.AUTO_ID}" - this is not supported.`,
+              },
+            }
+          )
+        })
     })
 
     it("should add a new column for an internal DB table", async () => {
       const saveTableRequest: SaveTableRequest = {
-        _add: {
-          name: "NEW_COLUMN",
-        },
         ...basicTable(),
       }
 
-      const response = await request
-        .post(`/api/tables`)
-        .send(saveTableRequest)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const response = await config.api.table.save(saveTableRequest)
 
       const expectedResponse = {
         ...saveTableRequest,
@@ -310,16 +281,16 @@ describe("/tables", () => {
         updatedAt: expect.stringMatching(ISO_REGEX_PATTERN),
         views: {},
       }
-      delete expectedResponse._add
-
-      expect(response.status).toBe(200)
-      expect(response.body).toEqual(expectedResponse)
+      expect(response).toEqual(expectedResponse)
     })
   })
 
   describe("import", () => {
     it("imports rows successfully", async () => {
-      const table = await config.createTable()
+      const name = generator.guid()
+      const table = await config.api.table.save(
+        basicTable(datasource, { name })
+      )
       const importRequest = {
         schema: table.schema,
         rows: [{ name: "test-name", description: "test-desc" }],
@@ -327,83 +298,36 @@ describe("/tables", () => {
 
       jest.clearAllMocks()
 
-      await request
-        .post(`/api/tables/${table._id}/import`)
-        .send(importRequest)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      await config.api.table.import(table._id!, importRequest)
 
       expect(events.table.created).not.toHaveBeenCalled()
       expect(events.rows.imported).toHaveBeenCalledTimes(1)
       expect(events.rows.imported).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: "TestTable",
+          name,
           _id: table._id,
         }),
         1
       )
     })
-
-    it("should update Auto ID field after bulk import", async () => {
-      const table = await config.createTable({
-        name: "TestTable",
-        type: "table",
-        schema: {
-          autoId: {
-            name: "id",
-            type: FieldType.NUMBER,
-            subtype: AutoFieldSubType.AUTO_ID,
-            autocolumn: true,
-            constraints: {
-              type: "number",
-              presence: false,
-            },
-          },
-        },
-      })
-
-      let row = await config.api.row.save(table._id!, {})
-      expect(row.autoId).toEqual(1)
-
-      await config.api.row.bulkImport(table._id!, {
-        rows: [{ autoId: 2 }],
-        identifierFields: [],
-      })
-
-      row = await config.api.row.save(table._id!, {})
-      expect(row.autoId).toEqual(3)
-    })
   })
 
   describe("fetch", () => {
     let testTable: Table
-    const enrichViewSchemasMock = jest.spyOn(sdk.tables, "enrichViewSchemas")
 
     beforeEach(async () => {
-      testTable = await config.createTable(testTable)
+      testTable = await config.api.table.save(
+        basicTable(datasource, { name: generator.guid() })
+      )
     })
 
-    afterEach(() => {
-      delete testTable._rev
-    })
-
-    afterAll(() => {
-      enrichViewSchemasMock.mockRestore()
-    })
-
-    it("returns all the tables for that instance in the response body", async () => {
-      const res = await request
-        .get(`/api/tables`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      const table = res.body.find((t: Table) => t._id === testTable._id)
+    it("returns all tables", async () => {
+      const res = await config.api.table.fetch()
+      const table = res.find(t => t._id === testTable._id)
       expect(table).toBeDefined()
-      expect(table.name).toEqual(testTable.name)
-      expect(table.type).toEqual("table")
-      expect(table.sourceType).toEqual("internal")
+      expect(table!.name).toEqual(testTable.name)
+      expect(table!.type).toEqual("table")
+      expect(table!.sourceType).toEqual(testTable.sourceType)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -414,99 +338,110 @@ describe("/tables", () => {
       })
     })
 
-    it("should fetch views", async () => {
-      const tableId = config.table!._id!
-      const views = [
-        await config.api.viewV2.create({ tableId, name: generator.guid() }),
-        await config.api.viewV2.create({ tableId, name: generator.guid() }),
-      ]
-
-      const res = await request
-        .get(`/api/tables`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      expect(res.body).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            _id: tableId,
-            views: views.reduce((p, c) => {
-              p[c.name] = { ...c, schema: expect.anything() }
-              return p
-            }, {} as any),
-          }),
-        ])
-      )
-    })
-
-    it("should enrich the view schemas for viewsV2", async () => {
-      const tableId = config.table!._id!
-      enrichViewSchemasMock.mockImplementation(t => ({
-        ...t,
-        views: {
-          view1: {
-            version: 2,
-            name: "view1",
-            schema: {},
-            id: "new_view_id",
-            tableId: t._id!,
-          },
-        },
-      }))
-
-      await config.api.viewV2.create({ tableId, name: generator.guid() })
-      await config.createLegacyView()
+    it("should enrich the view schemas", async () => {
+      const viewV2 = await config.api.viewV2.create({
+        tableId: testTable._id!,
+        name: generator.guid(),
+      })
+      const legacyView = await config.api.legacyView.save({
+        tableId: testTable._id!,
+        name: generator.guid(),
+        filters: [],
+        schema: {},
+      })
 
       const res = await config.api.table.fetch()
 
-      expect(res).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            _id: tableId,
-            views: {
-              view1: {
-                version: 2,
-                name: "view1",
-                schema: {},
-                id: "new_view_id",
-                tableId,
-              },
+      const table = res.find(t => t._id === testTable._id)
+      expect(table).toBeDefined()
+      expect(table!.views![viewV2.name]).toBeDefined()
+
+      const expectedViewV2: ViewV2Enriched = {
+        ...viewV2,
+        schema: {
+          description: {
+            constraints: {
+              type: "string",
             },
-          }),
-        ])
+            name: "description",
+            type: FieldType.STRING,
+            visible: false,
+          },
+          name: {
+            constraints: {
+              type: "string",
+            },
+            name: "name",
+            type: FieldType.STRING,
+            visible: false,
+          },
+        },
+      }
+
+      if (!isInternal) {
+        expectedViewV2.schema!.id = {
+          name: "id",
+          type: FieldType.NUMBER,
+          visible: false,
+          autocolumn: true,
+        }
+      }
+
+      expect(table!.views![viewV2.name!]).toEqual(expectedViewV2)
+
+      if (isInternal) {
+        expect(table!.views![legacyView.name!]).toBeDefined()
+        expect(table!.views![legacyView.name!]).toEqual({
+          ...legacyView,
+          schema: {
+            description: {
+              constraints: {
+                type: "string",
+              },
+              name: "description",
+              type: "string",
+            },
+            name: {
+              constraints: {
+                type: "string",
+              },
+              name: "name",
+              type: "string",
+            },
+          },
+        })
+      }
+    })
+  })
+
+  describe("get", () => {
+    it("returns a table", async () => {
+      const table = await config.api.table.save(
+        basicTable(datasource, { name: generator.guid() })
       )
+      const res = await config.api.table.get(table._id!)
+      expect(res).toEqual(table)
     })
   })
 
   describe("indexing", () => {
     it("should be able to create a table with indexes", async () => {
-      await context.doInAppContext(appId, async () => {
+      await context.doInAppContext(config.getAppId(), async () => {
         const db = context.getAppDB()
         const indexCount = (await db.getIndexes()).total_rows
         const table = basicTable()
         table.indexes = ["name"]
-        const res = await request
-          .post(`/api/tables`)
-          .send(table)
-          .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(200)
-        expect(res.body._id).toBeDefined()
-        expect(res.body._rev).toBeDefined()
+        const res = await config.api.table.save(table)
+        expect(res._id).toBeDefined()
+        expect(res._rev).toBeDefined()
         expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
         // update index to see what happens
         table.indexes = ["name", "description"]
-        await request
-          .post(`/api/tables`)
-          .send({
-            ...table,
-            _id: res.body._id,
-            _rev: res.body._rev,
-          })
-          .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(200)
+        await config.api.table.save({
+          ...table,
+          _id: res._id,
+          _rev: res._rev,
+        })
         // shouldn't have created a new index
         expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
       })
@@ -521,12 +456,9 @@ describe("/tables", () => {
     })
 
     it("returns a success response when a table is deleted.", async () => {
-      const res = await request
-        .delete(`/api/tables/${testTable._id}/${testTable._rev}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
+      await config.api.table.destroy(testTable._id!, testTable._rev!, {
+        body: { message: `Table ${testTable._id} deleted.` },
+      })
       expect(events.table.deleted).toHaveBeenCalledTimes(1)
       expect(events.table.deleted).toHaveBeenCalledWith({
         ...testTable,
@@ -559,12 +491,9 @@ describe("/tables", () => {
         },
       })
 
-      const res = await request
-        .delete(`/api/tables/${testTable._id}/${testTable._rev}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
+      await config.api.table.destroy(testTable._id!, testTable._rev!, {
+        body: { message: `Table ${testTable._id} deleted.` },
+      })
       const dependentTable = await config.api.table.get(linkedTable._id!)
       expect(dependentTable.schema.TestTable).not.toBeDefined()
     })
@@ -616,16 +545,16 @@ describe("/tables", () => {
       )
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USER,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE_SINGLE,
+        subtype: BBReferenceFieldSubType.USER,
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const migratedRows = await config.api.row.fetch(table._id!)
@@ -638,7 +567,7 @@ describe("/tables", () => {
         expect(migratedRow["user column"]).toBeDefined()
         expect(migratedRow["user relationship"]).not.toBeDefined()
         expect(row["user relationship"][0]._id).toEqual(
-          migratedRow["user column"][0]._id
+          migratedRow["user column"]._id
         )
       }
     })
@@ -681,16 +610,19 @@ describe("/tables", () => {
       )
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USERS,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: {
+          type: "array",
+        },
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const migratedRow = await config.api.row.get(table._id!, testRow._id!)
@@ -733,16 +665,19 @@ describe("/tables", () => {
       })
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USERS,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: {
+          type: "array",
+        },
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const row1Migrated = await config.api.row.get(table._id!, row1._id!)
@@ -788,16 +723,19 @@ describe("/tables", () => {
       })
 
       await config.api.table.migrate(table._id!, {
-        oldColumn: table.schema["user relationship"],
-        newColumn: {
-          name: "user column",
-          type: FieldType.BB_REFERENCE,
-          subtype: FieldSubtype.USERS,
-        },
+        oldColumn: "user relationship",
+        newColumn: "user column",
       })
 
       const migratedTable = await config.api.table.get(table._id!)
-      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user column"]).toEqual({
+        name: "user column",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: {
+          type: "array",
+        },
+      })
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const row1Migrated = await config.api.row.get(table._id!, row1._id!)
@@ -816,45 +754,39 @@ describe("/tables", () => {
     describe("unhappy paths", () => {
       let table: Table
       beforeAll(async () => {
-        table = await config.api.table.save({
-          name: "table",
-          type: "table",
-          sourceId: INTERNAL_TABLE_SOURCE_ID,
-          sourceType: TableSourceType.INTERNAL,
-          schema: {
-            "user relationship": {
-              type: FieldType.LINK,
-              fieldName: "test",
-              name: "user relationship",
-              constraints: {
-                type: "array",
-                presence: false,
+        table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              "user relationship": {
+                type: FieldType.LINK,
+                fieldName: "test",
+                name: "user relationship",
+                constraints: {
+                  type: "array",
+                  presence: false,
+                },
+                relationshipType: RelationshipType.MANY_TO_ONE,
+                tableId: InternalTable.USER_METADATA,
               },
-              relationshipType: RelationshipType.MANY_TO_ONE,
-              tableId: InternalTable.USER_METADATA,
-            },
-            num: {
-              type: FieldType.NUMBER,
-              name: "num",
-              constraints: {
-                type: "number",
-                presence: false,
+              num: {
+                type: FieldType.NUMBER,
+                name: "num",
+                constraints: {
+                  type: "number",
+                  presence: false,
+                },
               },
             },
-          },
-        })
+          })
+        )
       })
 
       it("should fail if the new column name is blank", async () => {
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: table.schema["user relationship"],
-            newColumn: {
-              name: "",
-              type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
-            },
+            oldColumn: "user relationship",
+            newColumn: "",
           },
           { status: 400 }
         )
@@ -864,12 +796,8 @@ describe("/tables", () => {
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: table.schema["user relationship"],
-            newColumn: {
-              name: "_id",
-              type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
-            },
+            oldColumn: "user relationship",
+            newColumn: "_id",
           },
           { status: 400 }
         )
@@ -879,12 +807,8 @@ describe("/tables", () => {
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: table.schema["user relationship"],
-            newColumn: {
-              name: "num",
-              type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
-            },
+            oldColumn: "user relationship",
+            newColumn: "num",
           },
           { status: 400 }
         )
@@ -894,16 +818,8 @@ describe("/tables", () => {
         await config.api.table.migrate(
           table._id!,
           {
-            oldColumn: {
-              name: "not a column",
-              type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
-            },
-            newColumn: {
-              name: "new column",
-              type: FieldType.BB_REFERENCE,
-              subtype: FieldSubtype.USERS,
-            },
+            oldColumn: "not a column",
+            newColumn: "new column",
           },
           { status: 400 }
         )

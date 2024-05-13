@@ -121,6 +121,9 @@ globals:
   # to the old value for the duration of the rotation.
   jwtSecretFallback: ""
 
+  ## -- If using S3 the bucket name to be used for storing temporary files
+  tempBucketName: ""
+
   smtp:
     # -- Whether to enable SMTP or not.
     enabled: false
@@ -206,6 +209,20 @@ services:
       # for autoscaling to work, you will need to have metrics-server
       # configured, and resources set for the proxy pods.
       targetCPUUtilizationPercentage: 80
+      # -- Additional containers to be added to the proxy pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
+
+    # -- Additional volumeMounts to the main proxy container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the proxy pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
 
   apps:
     # @ignore (you shouldn't need to change this)
@@ -274,6 +291,20 @@ services:
       # autoscaling to work, you will need to have metrics-server configured,
       # and resources set for the apps pods.
       targetCPUUtilizationPercentage: 80
+    # -- Additional containers to be added to the apps pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
+
+    # -- Additional volumeMounts to the main apps container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the apps pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
 
   automationWorkers:
     # -- Whether or not to enable the automation worker service. If you disable this,
@@ -346,6 +377,20 @@ services:
       # Note that for autoscaling to work, you will need to have metrics-server
       # configured, and resources set for the automation worker pods.
       targetCPUUtilizationPercentage: 80
+    # -- Additional containers to be added to the automationWorkers pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
+
+    # -- Additional volumeMounts to the main automationWorkers container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the automationWorkers pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
 
   worker:
     # @ignore (you shouldn't need to change this)
@@ -414,6 +459,20 @@ services:
       # for autoscaling to work, you will need to have metrics-server
       # configured, and resources set for the worker pods.
       targetCPUUtilizationPercentage: 80
+    # -- Additional containers to be added to the worker pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
+
+    # -- Additional volumeMounts to the main worker container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the worker pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
 
   couchdb:
     # -- Whether or not to spin up a CouchDB instance in your cluster. True by
@@ -440,6 +499,8 @@ services:
       resources: {}
 
   redis:
+    # -- The Redis image to use.
+    image: redis
     # -- Whether or not to deploy a Redis pod into your cluster.
     enabled: true
     # -- Port to expose Redis on.
@@ -463,6 +524,20 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- Additional containers to be added to the redis pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
+
+    # -- Additional volumeMounts to the main redis container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the redis pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
 
   objectStore:
     # -- Set to false if using another object store, such as S3. You will need
@@ -488,7 +563,7 @@ services:
     # do this.
     url: "http://minio-service:9000"
     # -- How much storage to give Minio in its PersistentVolumeClaim.
-    storage: 100Mi
+    storage: 2Gi
     # -- If defined, storageClassName: <storageClass> If set to "-",
     # storageClassName: "", which disables dynamic provisioning If undefined
     # (the default) or set to null, no storageClassName spec is set, choosing
@@ -505,6 +580,20 @@ services:
       publicKeyId: ""
       # -- Base64 encoded private key for the above public key.
       privateKey64: ""
+    # -- Additional containers to be added to the objectStore pod.
+    extraContainers: []
+    #  - name: my-sidecar
+    #    image: myimage:latest
+
+    # -- Additional volumeMounts to the main objectStore container.
+    extraVolumeMounts: []
+    #  - name: my-volume
+    #   mountPath: /path/to/mount
+
+    # -- Additional volumes to the objectStore pod.
+    extraVolumes: []
+    #  - name: my-volume
+    #    emptyDir: {}
 
 # Override values in couchDB subchart. We're only specifying the values we're changing.
 # If you want to see all of the available values, see:

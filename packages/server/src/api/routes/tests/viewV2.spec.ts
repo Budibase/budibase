@@ -8,7 +8,7 @@ import {
   PermissionLevel,
   QuotaUsageType,
   SaveTableRequest,
-  SearchQueryOperators,
+  SearchFilterOperator,
   SortOrder,
   SortType,
   StaticQuotaName,
@@ -23,8 +23,6 @@ import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { roles } from "@budibase/backend-core"
-
-jest.unmock("mssql")
 
 describe.each([
   ["internal", undefined],
@@ -132,7 +130,7 @@ describe.each([
         primaryDisplay: generator.word(),
         query: [
           {
-            operator: SearchQueryOperators.EQUAL,
+            operator: SearchFilterOperator.EQUAL,
             field: "field",
             value: "value",
           },
@@ -236,7 +234,7 @@ describe.each([
         ...view,
         query: [
           {
-            operator: SearchQueryOperators.EQUAL,
+            operator: SearchFilterOperator.EQUAL,
             field: "newField",
             value: "thatValue",
           },
@@ -263,7 +261,7 @@ describe.each([
         primaryDisplay: generator.word(),
         query: [
           {
-            operator: SearchQueryOperators.EQUAL,
+            operator: SearchFilterOperator.EQUAL,
             field: generator.word(),
             value: generator.word(),
           },
@@ -341,7 +339,7 @@ describe.each([
           tableId: generator.guid(),
           query: [
             {
-              operator: SearchQueryOperators.EQUAL,
+              operator: SearchFilterOperator.EQUAL,
               field: "newField",
               value: "thatValue",
             },
@@ -652,7 +650,6 @@ describe.each([
             ? {}
             : {
                 hasNextPage: false,
-                bookmark: null,
               }),
         })
       })
@@ -672,7 +669,7 @@ describe.each([
           name: generator.guid(),
           query: [
             {
-              operator: SearchQueryOperators.EQUAL,
+              operator: SearchFilterOperator.EQUAL,
               field: "two",
               value: "bar2",
             },
@@ -705,7 +702,6 @@ describe.each([
             ? {}
             : {
                 hasNextPage: false,
-                bookmark: null,
               }),
         })
       })
@@ -813,7 +809,7 @@ describe.each([
           {
             field: "age",
             order: SortOrder.ASCENDING,
-            type: SortType.number,
+            type: SortType.NUMBER,
           },
           ["Danny", "Alice", "Charly", "Bob"],
         ],
@@ -835,7 +831,7 @@ describe.each([
           {
             field: "age",
             order: SortOrder.DESCENDING,
-            type: SortType.number,
+            type: SortType.NUMBER,
           },
           ["Bob", "Charly", "Alice", "Danny"],
         ],

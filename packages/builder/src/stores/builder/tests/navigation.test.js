@@ -50,10 +50,18 @@ describe("Navigation store", () => {
       {
         url: "/home",
         text: "Home",
+        type: "link",
       },
       {
         url: "/test",
         text: "Test",
+        type: "sublinks",
+        subLinks: [
+          {
+            text: "Foo",
+            url: "/bar",
+          },
+        ],
       },
     ]
 
@@ -66,7 +74,7 @@ describe("Navigation store", () => {
       .spyOn(ctx.test.navigationStore, "save")
       .mockImplementation(() => {})
 
-    await ctx.test.navigationStore.saveLink("/test-url", "Testing")
+    await ctx.test.navigationStore.saveLink("/test-url", "Testing", "BASIC")
 
     expect(saveSpy).toBeCalledWith({
       ...INITIAL_NAVIGATION_STATE,
@@ -75,6 +83,8 @@ describe("Navigation store", () => {
         {
           url: "/test-url",
           text: "Testing",
+          type: "link",
+          roleId: "BASIC",
         },
       ],
     })
@@ -87,6 +97,7 @@ describe("Navigation store", () => {
         {
           url: "/home",
           text: "Home",
+          type: "link",
         },
       ],
     }))
@@ -94,7 +105,7 @@ describe("Navigation store", () => {
       .spyOn(ctx.test.navigationStore, "save")
       .mockImplementation(() => {})
 
-    await ctx.test.navigationStore.saveLink("/home", "Home")
+    await ctx.test.navigationStore.saveLink("/home", "Home", "BASIC")
 
     expect(saveSpy).not.toHaveBeenCalled()
   })
@@ -106,14 +117,23 @@ describe("Navigation store", () => {
         {
           url: "/home",
           text: "Home",
+          type: "link",
         },
         {
           url: "/test",
           text: "Test",
+          type: "link",
         },
         {
           url: "/last",
           text: "Last Link",
+          type: "sublinks",
+          subLinks: [
+            {
+              text: "Foo",
+              url: "/home",
+            },
+          ],
         },
       ],
     }))
@@ -130,6 +150,8 @@ describe("Navigation store", () => {
         {
           text: "Last Link",
           url: "/last",
+          type: "sublinks",
+          subLinks: [],
         },
       ],
     })
@@ -140,14 +162,17 @@ describe("Navigation store", () => {
       {
         url: "/home",
         text: "Home",
+        type: "link",
       },
       {
         url: "/test",
         text: "Test",
+        type: "link",
       },
       {
         url: "/last",
         text: "Last Link",
+        type: "link",
       },
     ]
 
@@ -168,10 +193,12 @@ describe("Navigation store", () => {
         {
           url: "/home",
           text: "Home",
+          type: "link",
         },
         {
           url: "/last",
           text: "Last Link",
+          type: "link",
         },
       ],
     })
@@ -180,10 +207,7 @@ describe("Navigation store", () => {
   it("Should ignore a request to delete if there are no links", async ctx => {
     const saveSpy = vi.spyOn(ctx.test.navigationStore, "save")
 
-    await ctx.test.navigationStore.deleteLink({
-      url: "/some-link",
-      text: "Some Link",
-    })
+    await ctx.test.navigationStore.deleteLink("/some-link")
 
     expect(saveSpy).not.toBeCalled()
   })
@@ -201,10 +225,18 @@ describe("Navigation store", () => {
         {
           url: "/home",
           text: "Home",
+          type: "link",
         },
         {
           url: "/last",
           text: "Last Link",
+          type: "sublinks",
+          subLinks: [
+            {
+              text: "Foo",
+              url: "/bar",
+            },
+          ],
         },
       ],
     }))
@@ -217,6 +249,7 @@ describe("Navigation store", () => {
         {
           url: "/new-link",
           text: "New Link",
+          type: "link",
         },
       ],
     }

@@ -685,7 +685,6 @@ describe("postgres integrations", () => {
 
           expect(res.body).toEqual({
             rows: [],
-            bookmark: null,
             hasNextPage: false,
           })
         })
@@ -710,7 +709,6 @@ describe("postgres integrations", () => {
             rows: expect.arrayContaining(
               rows.map(r => expect.objectContaining(r.rowData))
             ),
-            bookmark: null,
             hasNextPage: false,
           })
           expect(res.body.rows).toHaveLength(rowsCount)
@@ -772,7 +770,6 @@ describe("postgres integrations", () => {
 
       expect(res.body).toEqual({
         rows: expect.arrayContaining(rowsToFilter.map(expect.objectContaining)),
-        bookmark: null,
         hasNextPage: false,
       })
       expect(res.body.rows).toHaveLength(4)
@@ -1201,6 +1198,40 @@ describe("postgres integrations", () => {
       const schema =
         response.body.datasource.entities[repeated_table_name].schema
       expect(Object.keys(schema).sort()).toEqual(["id", "val1"])
+    })
+  })
+
+  describe("check custom column types", () => {
+    beforeAll(async () => {
+      await rawQuery(
+        rawDatasource,
+        `CREATE TABLE binaryTable (
+          id BYTEA PRIMARY KEY,
+          column1 TEXT,
+          column2 INT
+        );
+      `
+      )
+    })
+
+    it("should handle binary columns", async () => {
+      const response = await makeRequest(
+        "post",
+        `/api/datasources/${datasource._id}/schema`
+      )
+      expect(response.body).toBeDefined()
+      expect(response.body.datasource.entities).toBeDefined()
+      const table = response.body.datasource.entities["binarytable"]
+      expect(table).toBeDefined()
+      expect(table.schema.id.externalType).toBe("bytea")
+      const row = await config.api.row.save(table._id, {
+        id: "1111",
+        column1: "hello",
+        column2: 222,
+      })
+      expect(row._id).toBeDefined()
+      const decoded = decodeURIComponent(row._id!).replace(/'/g, '"')
+      expect(JSON.parse(decoded)[0]).toBe("1111")
     })
   })
 })

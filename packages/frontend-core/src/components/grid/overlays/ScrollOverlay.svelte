@@ -2,6 +2,7 @@
   import { getContext } from "svelte"
   import { domDebounce } from "../../../utils/utils"
   import { DefaultRowHeight, ScrollBarSize } from "../lib/constants"
+  import { parseEventLocation } from "../lib/utils"
 
   const {
     scroll,
@@ -17,6 +18,7 @@
     height,
     isDragging,
     menu,
+    focusedCellAPI,
   } = getContext("grid")
 
   // State for dragging bars
@@ -47,33 +49,27 @@
   $: barLeft = ScrollBarSize + availWidth * ($scrollLeft / $maxScrollLeft)
 
   // Helper to close the context menu if it's open
-  const closeMenu = () => {
+  const closePopovers = () => {
     if ($menu.visible) {
       menu.actions.close()
     }
-  }
-
-  const getLocation = e => {
-    return {
-      y: e.touches?.[0]?.clientY ?? e.clientY,
-      x: e.touches?.[0]?.clientX ?? e.clientX,
-    }
+    $focusedCellAPI?.blur()
   }
 
   // V scrollbar drag handlers
   const startVDragging = e => {
     e.preventDefault()
-    initialMouse = getLocation(e).y
+    initialMouse = parseEventLocation(e).y
     initialScroll = $scrollTop
     document.addEventListener("mousemove", moveVDragging)
     document.addEventListener("touchmove", moveVDragging)
     document.addEventListener("mouseup", stopVDragging)
     document.addEventListener("touchend", stopVDragging)
     isDraggingV = true
-    closeMenu()
+    closePopovers()
   }
   const moveVDragging = domDebounce(e => {
-    const delta = getLocation(e).y - initialMouse
+    const delta = parseEventLocation(e).y - initialMouse
     const weight = delta / availHeight
     const newScrollTop = initialScroll + weight * $maxScrollTop
     scroll.update(state => ({
@@ -92,17 +88,17 @@
   // H scrollbar drag handlers
   const startHDragging = e => {
     e.preventDefault()
-    initialMouse = getLocation(e).x
+    initialMouse = parseEventLocation(e).x
     initialScroll = $scrollLeft
     document.addEventListener("mousemove", moveHDragging)
     document.addEventListener("touchmove", moveHDragging)
     document.addEventListener("mouseup", stopHDragging)
     document.addEventListener("touchend", stopHDragging)
     isDraggingH = true
-    closeMenu()
+    closePopovers()
   }
   const moveHDragging = domDebounce(e => {
-    const delta = getLocation(e).x - initialMouse
+    const delta = parseEventLocation(e).x - initialMouse
     const weight = delta / availWidth
     const newScrollLeft = initialScroll + weight * $maxScrollLeft
     scroll.update(state => ({

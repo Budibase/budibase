@@ -31,8 +31,12 @@ describe("should be able to re-write attachment URLs", () => {
       sourceType: TableSourceType.INTERNAL,
       schema: {
         photo: {
-          type: FieldType.ATTACHMENT,
+          type: FieldType.ATTACHMENT_SINGLE,
           name: "photo",
+        },
+        gallery: {
+          type: FieldType.ATTACHMENTS,
+          name: "gallery",
         },
         otherCol: {
           type: FieldType.STRING,
@@ -43,7 +47,8 @@ describe("should be able to re-write attachment URLs", () => {
 
     for (let i = 0; i < FIND_LIMIT * 4; i++) {
       await config.api.row.save(table._id!, {
-        photo: [attachment],
+        photo: { ...attachment },
+        gallery: [{ ...attachment }, { ...attachment }],
         otherCol: "string",
       })
     }
@@ -56,8 +61,12 @@ describe("should be able to re-write attachment URLs", () => {
     )
     for (const row of rows) {
       expect(row.otherCol).toBe("string")
-      expect(row.photo[0].url).toBe("")
-      expect(row.photo[0].key).toBe(`${db.name}/attachments/a.png`)
+      expect(row.photo.url).toBe("")
+      expect(row.photo.key).toBe(`${db.name}/attachments/a.png`)
+      expect(row.gallery[0].url).toBe("")
+      expect(row.gallery[0].key).toBe(`${db.name}/attachments/a.png`)
+      expect(row.gallery[1].url).toBe("")
+      expect(row.gallery[1].key).toBe(`${db.name}/attachments/a.png`)
     }
   })
 })
