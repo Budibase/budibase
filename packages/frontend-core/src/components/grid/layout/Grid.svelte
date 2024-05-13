@@ -41,6 +41,7 @@
   export let canDeleteRows = true
   export let canEditColumns = true
   export let canSaveSchema = true
+  export let canSelectRows = false
   export let stripeRows = false
   export let quiet = false
   export let collaboration = true
@@ -94,6 +95,7 @@
     canDeleteRows,
     canEditColumns,
     canSaveSchema,
+    canSelectRows,
     stripeRows,
     quiet,
     collaboration,
