@@ -21,26 +21,24 @@
   const currentStep = derived(multiStepStore, state => state.currentStep)
   const componentType = "@budibase/standard-components/multistepformblockstep"
 
+  setContext("multi-step-form-block", multiStepStore)
+
   let cachedValue
   let cachedInstance = {}
 
   $: if (!isEqual(cachedValue, value)) {
     cachedValue = value
   }
-
   $: if (!isEqual(componentInstance, cachedInstance)) {
     cachedInstance = componentInstance
   }
-
-  setContext("multi-step-form-block", multiStepStore)
-
   $: stepCount = cachedValue?.length || 0
   $: updateStore(stepCount)
   $: dataSource = getDatasourceForProvider($selectedScreen, cachedInstance)
   $: emitCurrentStep($currentStep)
   $: stepLabel = getStepLabel($multiStepStore)
   $: stepDef = getDefinition(stepLabel)
-  $: stepSettings = cachedValue?.[$currentStep] || {}
+  $: savedInstance = cachedValue?.[$currentStep] || {}
   $: defaults = Utils.buildMultiStepFormBlockDefaultProps({
     _id: cachedInstance._id,
     stepCount: $multiStepStore.stepCount,
@@ -48,14 +46,16 @@
     actionType: cachedInstance.actionType,
     dataSource: cachedInstance.dataSource,
   })
+  // For backwards compatibility we need to sometimes manually set base
+  // properties like _id and _component as we didn't used to save these
   $: stepInstance = {
-    _id: Helpers.uuid(),
-    _component: componentType,
+    _id: savedInstance._id || Helpers.uuid(),
+    _component: savedInstance._component || componentType,
     _instanceName: `Step ${currentStep + 1}`,
-    title: stepSettings.title ?? defaults?.title,
-    buttons: stepSettings.buttons || defaults?.buttons,
-    fields: stepSettings.fields,
-    desc: stepSettings.desc,
+    title: savedInstance.title ?? defaults?.title,
+    buttons: savedInstance.buttons || defaults?.buttons,
+    fields: savedInstance.fields,
+    desc: savedInstance.desc,
 
     // Needed for field configuration
     dataSource,
@@ -92,7 +92,8 @@
   }
 
   const addStep = () => {
-    value = value.toSpliced($currentStep + 1, 0, {})
+    const newInstance = componentStore.createInstance(componentType)
+    value = value.toSpliced($currentStep + 1, 0, newInstance)
     dispatch("change", value)
     multiStepStore.update(state => ({
       ...state,

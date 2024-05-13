@@ -18,6 +18,7 @@ const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.LINK]: false,
   [FieldType.JSON]: false,
   [FieldType.BB_REFERENCE]: false,
+  [FieldType.BB_REFERENCE_SINGLE]: false,
 }
 
 const allowSortColumnByType: Record<FieldType, boolean> = {
@@ -39,6 +40,7 @@ const allowSortColumnByType: Record<FieldType, boolean> = {
   [FieldType.ARRAY]: false,
   [FieldType.LINK]: false,
   [FieldType.BB_REFERENCE]: false,
+  [FieldType.BB_REFERENCE_SINGLE]: false,
 }
 
 export function canBeDisplayColumn(type: FieldType): boolean {

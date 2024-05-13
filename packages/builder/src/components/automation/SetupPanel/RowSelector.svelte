@@ -2,6 +2,8 @@
   import { tables } from "stores/builder"
   import { Select, Checkbox, Label } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
+  import { FieldType } from "@budibase/types"
+
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
@@ -14,7 +16,6 @@
   export let bindings
   export let isTestModal
   export let isUpdateRow
-
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
     clone.icon = "ShareAndroid"
@@ -26,15 +27,19 @@
 
   $: {
     table = $tables.list.find(table => table._id === value?.tableId)
-    schemaFields = Object.entries(table?.schema ?? {})
-    // surface the schema so the user can see it in the json
-    schemaFields.map(([, schema]) => {
+
+    // Just sorting attachment types to the bottom here for a cleaner UX
+    schemaFields = Object.entries(table?.schema ?? {}).sort(
+      ([, schemaA], [, schemaB]) =>
+        (schemaA.type === "attachment") - (schemaB.type === "attachment")
+    )
+
+    schemaFields.forEach(([, schema]) => {
       if (!schema.autocolumn && !value[schema.name]) {
         value[schema.name] = ""
       }
     })
   }
-
   const onChangeTable = e => {
     value["tableId"] = e.detail
     dispatch("change", value)
@@ -114,10 +119,16 @@
 </div>
 {#if schemaFields.length}
   {#each schemaFields as [field, schema]}
-    {#if !schema.autocolumn && schema.type !== "attachment"}
-      <div class="schema-fields">
+    {#if !schema.autocolumn}
+      <div
+        class:schema-fields={schema.type !== FieldType.ATTACHMENTS &&
+          schema.type !== FieldType.ATTACHMENT_SINGLE}
+      >
         <Label>{field}</Label>
-        <div class="field-width">
+        <div
+          class:field-width={schema.type !== FieldType.ATTACHMENTS &&
+            schema.type !== FieldType.ATTACHMENT_SINGLE}
+        >
           {#if isTestModal}
             <RowSelectorTypes
               {isTestModal}
