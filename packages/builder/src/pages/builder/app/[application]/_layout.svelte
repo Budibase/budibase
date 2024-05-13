@@ -149,19 +149,17 @@
         </span>
         <Tabs {selected} size="M">
           {#key $builderStore?.fonts}
-            <span style="display:contents">
-              {#each $layout.children as { path, title }}
-                <TourWrap stepKeys={[`builder-${title}-section`]}>
-                  <Tab
-                    quiet
-                    selected={$isActive(path)}
-                    on:click={topItemNavigate(path)}
-                    title={capitalise(title)}
-                    id={`builder-${title}-tab`}
-                  />
-                </TourWrap>
-              {/each}
-            </span>
+            {#each $layout.children as { path, title }}
+              <TourWrap stepKeys={[`builder-${title}-section`]}>
+                <Tab
+                  quiet
+                  selected={$isActive(path)}
+                  on:click={topItemNavigate(path)}
+                  title={capitalise(title)}
+                  id={`builder-${title}-tab`}
+                />
+              </TourWrap>
+            {/each}
           {/key}
         </Tabs>
       </div>
