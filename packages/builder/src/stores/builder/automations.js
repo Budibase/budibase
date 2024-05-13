@@ -135,21 +135,22 @@ const automationActions = store => ({
     })
     await store.actions.fetch()
   },
-  toggleDisabled: async (automationId) => {
+toggleDisabled: async (automationId) => {
+  let automation;
     try {
-      const automation = store.actions.getDefinition(automationId)
+      automation = store.actions.getDefinition(automationId);
       if (!automation) {
-        return
+        return;
       }
-      automation.disabled = !automation.disabled
-      await store.actions.save(automation)
+      automation.disabled = !automation.disabled;
+      await store.actions.save(automation);
       notifications.success(
         `Automation ${automation.disabled ? "enabled" : "disabled"} successfully`
-      )
-    }catch (error) {
+      );
+    } catch (error) {
       notifications.error(
-        `Error ${automation.disabled ? "enabling" : "disabling"} automation`
-      )
+        `Error ${automation && automation.disabled ? "enabling" : "disabling"} automation`
+      );
     }
   },
   updateBlockInputs: async (block, data) => {
