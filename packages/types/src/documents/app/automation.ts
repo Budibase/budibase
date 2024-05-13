@@ -1,6 +1,7 @@
 import { Document } from "../document"
 import { EventEmitter } from "events"
 import { User } from "../global"
+import { ReadStream } from "fs"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -234,4 +235,19 @@ export type AutomationStepInput = {
 export interface AutomationMetadata extends Document {
   errorCount?: number
   automationChainCount?: number
+}
+
+export type AutomationAttachment = {
+  url: string
+  filename: string
+}
+
+export type AutomationAttachmentContent = {
+  filename: string
+  content: ReadStream | NodeJS.ReadableStream | ReadableStream<Uint8Array>
+}
+
+export type BucketedContent = AutomationAttachmentContent & {
+  bucket: string
+  path: string
 }
