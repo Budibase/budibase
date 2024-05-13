@@ -133,10 +133,11 @@ export const TypeIconMap = {
   [FieldType.JSON]: "Brackets",
   [FieldType.BIGINT]: "TagBold",
   [FieldType.AUTO]: "MagicWand",
-  [FieldType.USER]: "User",
-  [FieldType.USERS]: "UserGroup",
   [FieldType.BB_REFERENCE]: {
-    [BBReferenceFieldSubType.USER]: "User",
+    [BBReferenceFieldSubType.USER]: "UserGroup",
     [BBReferenceFieldSubType.USERS]: "UserGroup",
+  },
+  [FieldType.BB_REFERENCE_SINGLE]: {
+    [BBReferenceFieldSubType.USER]: "User",
   },
 }

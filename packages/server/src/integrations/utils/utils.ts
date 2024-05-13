@@ -384,6 +384,7 @@ function copyExistingPropsOver(
         case FieldType.SIGNATURE:
         case FieldType.JSON:
         case FieldType.BB_REFERENCE:
+        case FieldType.BB_REFERENCE_SINGLE:
           shouldKeepSchema = keepIfType(FieldType.JSON, FieldType.STRING)
           break
 

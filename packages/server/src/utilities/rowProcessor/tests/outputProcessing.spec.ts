@@ -11,7 +11,9 @@ import { generator, structures } from "@budibase/backend-core/tests"
 import * as bbReferenceProcessor from "../bbReferenceProcessor"
 
 jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
+  processInputBBReference: jest.fn(),
   processInputBBReferences: jest.fn(),
+  processOutputBBReference: jest.fn(),
   processOutputBBReferences: jest.fn(),
 }))
 
@@ -20,10 +22,12 @@ describe("rowProcessor - outputProcessing", () => {
     jest.resetAllMocks()
   })
 
+  const processOutputBBReferenceMock =
+    bbReferenceProcessor.processOutputBBReference as jest.Mock
   const processOutputBBReferencesMock =
     bbReferenceProcessor.processOutputBBReferences as jest.Mock
 
-  it("fetches bb user references given a populated field", async () => {
+  it("fetches single user references given a populated field", async () => {
     const table: Table = {
       _id: generator.guid(),
       name: "TestTable",
@@ -40,7 +44,7 @@ describe("rowProcessor - outputProcessing", () => {
           },
         },
         user: {
-          type: FieldType.BB_REFERENCE,
+          type: FieldType.BB_REFERENCE_SINGLE,
           subtype: BBReferenceFieldSubType.USER,
           name: "user",
           constraints: {
@@ -57,11 +61,60 @@ describe("rowProcessor - outputProcessing", () => {
     }
 
     const user = structures.users.user()
-    processOutputBBReferencesMock.mockResolvedValue(user)
+    processOutputBBReferenceMock.mockResolvedValue(user)
 
     const result = await outputProcessing(table, row, { squash: false })
 
     expect(result).toEqual({ name: "Jack", user })
+
+    expect(bbReferenceProcessor.processOutputBBReference).toHaveBeenCalledTimes(
+      1
+    )
+    expect(bbReferenceProcessor.processOutputBBReference).toHaveBeenCalledWith(
+      "123",
+      BBReferenceFieldSubType.USER
+    )
+  })
+
+  it("fetches users references given a populated field", async () => {
+    const table: Table = {
+      _id: generator.guid(),
+      name: "TestTable",
+      type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
+      schema: {
+        name: {
+          type: FieldType.STRING,
+          name: "name",
+          constraints: {
+            presence: true,
+            type: "string",
+          },
+        },
+        users: {
+          type: FieldType.BB_REFERENCE,
+          subtype: BBReferenceFieldSubType.USER,
+          name: "users",
+          constraints: {
+            presence: false,
+            type: "string",
+          },
+        },
+      },
+    }
+
+    const row = {
+      name: "Jack",
+      users: "123",
+    }
+
+    const users = [structures.users.user()]
+    processOutputBBReferencesMock.mockResolvedValue(users)
+
+    const result = await outputProcessing(table, row, { squash: false })
+
+    expect(result).toEqual({ name: "Jack", users })
 
     expect(
       bbReferenceProcessor.processOutputBBReferences
