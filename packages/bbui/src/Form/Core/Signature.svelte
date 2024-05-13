@@ -66,8 +66,7 @@
   let urlFailed
 
   $: if (value) {
-    const [attachment] = value || []
-    signatureFile = attachment
+    signatureFile = value
   }
 
   $: if (signatureFile?.url) {

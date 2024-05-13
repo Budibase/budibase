@@ -192,16 +192,16 @@ const parseType = (value, type) => {
     return value === true
   }
 
-  // Parse attachments/signatures, treating no elements as null
-  if (type === FieldTypes.ATTACHMENTS || type === FieldTypes.SIGNATURE) {
+  // Parse attachments, treating no elements as null
+  if (type === FieldTypes.ATTACHMENTS) {
     if (!Array.isArray(value) || !value.length) {
       return null
     }
     return value
   }
 
-  // Parse attachment single, treating no key as null
-  if (type === FieldTypes.ATTACHMENT_SINGLE) {
+  // Parse attachment/signature single, treating no key as null
+  if (type === FieldTypes.ATTACHMENT_SINGLE || type === FieldTypes.SIGNATURE) {
     if (!value?.key) {
       return null
     }

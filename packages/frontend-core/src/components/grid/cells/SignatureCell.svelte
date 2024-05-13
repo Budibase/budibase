@@ -15,13 +15,7 @@
   const { API, notifications, props } = getContext("grid")
 
   let isOpen = false
-  let signature
   let modal
-
-  $: if (value) {
-    const [attachment] = value
-    signature = attachment
-  }
 
   $: editable = focused && !readonly
   $: {
@@ -43,7 +37,7 @@
   }
 
   const deleteSignature = async () => {
-    onChange([])
+    onChange(null)
   }
 
   const saveSignature = async sigCanvas => {
@@ -54,7 +48,8 @@
 
     try {
       const uploadReq = await API.uploadBuilderAttachment(attachRequest)
-      onChange(uploadReq)
+      const [signatureAttachment] = uploadReq
+      onChange(signatureAttachment)
     } catch (error) {
       $notifications.error(error.message || "Failed to save signature")
       return []
@@ -79,9 +74,9 @@
   class:editable
   on:click={editable ? open : null}
 >
-  {#if signature?.url}
+  {#if value?.url}
     <!-- svelte-ignore a11y-missing-attribute -->
-    <img src={signature?.url} />
+    <img src={value?.url} />
   {/if}
 </div>
 
@@ -94,8 +89,8 @@
 />
 
 {#if isOpen}
-  <div class="signature" class:invertX class:invertY class:empty={!signature}>
-    {#if signature?.key}
+  <div class="signature" class:invertX class:invertY class:empty={!value}>
+    {#if value?.key}
       <div class="signature-wrap">
         <CoreSignature
           darkMode={$props.darkMode}

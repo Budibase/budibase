@@ -312,7 +312,7 @@ describe.each([
         const signature: FieldSchema = {
           type: FieldType.SIGNATURE,
           name: "signature",
-          constraints: { type: "array", presence: false },
+          constraints: { presence: false },
         }
         const bool: FieldSchema = {
           type: FieldType.BOOLEAN,
@@ -382,8 +382,6 @@ describe.each([
               attachmentListEmptyArrayStr: attachmentList,
               signatureNull: signature,
               signatureUndefined: signature,
-              signatureEmpty: signature,
-              signatureEmptyArrayStr: signature,
               arrayFieldEmptyArrayStr: arrayField,
               arrayFieldArrayStrKnown: arrayField,
               arrayFieldNull: arrayField,
@@ -427,8 +425,6 @@ describe.each([
           attachmentListEmptyArrayStr: "[]",
           signatureNull: null,
           signatureUndefined: undefined,
-          signatureEmpty: "",
-          signatureEmptyArrayStr: "[]",
           arrayFieldEmptyArrayStr: "[]",
           arrayFieldUndefined: undefined,
           arrayFieldNull: null,
@@ -463,10 +459,8 @@ describe.each([
         expect(row.attachmentListUndefined).toBe(undefined)
         expect(row.attachmentListEmpty).toEqual([])
         expect(row.attachmentListEmptyArrayStr).toEqual([])
-        expect(row.signatureNull).toEqual([])
+        expect(row.signatureNull).toEqual(null)
         expect(row.signatureUndefined).toBe(undefined)
-        expect(row.signatureEmpty).toEqual([])
-        expect(row.signatureEmptyArrayStr).toEqual([])
         expect(row.arrayFieldEmptyArrayStr).toEqual([])
         expect(row.arrayFieldNull).toEqual([])
         expect(row.arrayFieldUndefined).toEqual(undefined)
@@ -990,11 +984,11 @@ describe.each([
             signature: {
               type: FieldType.SIGNATURE,
               name: "signature",
-              constraints: { type: "array", presence: false },
+              constraints: { presence: false },
             },
           },
           "signature",
-          [`${uuid.v4()}.png`]
+          `${uuid.v4()}.png`
         )
       })
     })

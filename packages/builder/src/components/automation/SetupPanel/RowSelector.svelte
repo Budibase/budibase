@@ -24,6 +24,11 @@
 
   let table
   let schemaFields
+  let attachmentTypes = [
+    FieldType.ATTACHMENTS,
+    FieldType.ATTACHMENT_SINGLE,
+    FieldType.SIGNATURE,
+  ]
 
   $: {
     table = $tables.list.find(table => table._id === value?.tableId)
@@ -120,15 +125,9 @@
 {#if schemaFields.length}
   {#each schemaFields as [field, schema]}
     {#if !schema.autocolumn}
-      <div
-        class:schema-fields={schema.type !== FieldType.ATTACHMENTS &&
-          schema.type !== FieldType.ATTACHMENT_SINGLE}
-      >
+      <div class:schema-fields={!attachmentTypes.includes(schema.type)}>
         <Label>{field}</Label>
-        <div
-          class:field-width={schema.type !== FieldType.ATTACHMENTS &&
-            schema.type !== FieldType.ATTACHMENT_SINGLE}
-        >
+        <div class:field-width={!attachmentTypes.includes(schema.type)}>
           {#if isTestModal}
             <RowSelectorTypes
               {isTestModal}
