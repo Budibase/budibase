@@ -132,7 +132,6 @@ export const FIELDS = {
     type: FieldType.SIGNATURE,
     icon: "AnnotatePen",
     constraints: {
-      type: "array",
       presence: false,
     },
   },

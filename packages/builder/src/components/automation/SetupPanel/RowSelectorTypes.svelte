@@ -29,7 +29,8 @@
     let params = {}
 
     if (
-      schema.type === FieldType.ATTACHMENT_SINGLE &&
+      (schema.type === FieldType.ATTACHMENT_SINGLE ||
+        schema.type === FieldType.SIGNATURE) &&
       Object.keys(keyValuObj).length === 0
     ) {
       return []
@@ -100,16 +101,20 @@
     on:change={e => onChange(e, field)}
     useLabel={false}
   />
-{:else if schema.type === FieldType.ATTACHMENTS || schema.type === FieldType.ATTACHMENT_SINGLE}
+{:else if schema.type === FieldType.ATTACHMENTS || schema.type === FieldType.ATTACHMENT_SINGLE || schema.type === FieldType.SIGNATURE}
   <div class="attachment-field-spacinng">
     <KeyValueBuilder
       on:change={e =>
         onChange(
           {
             detail:
-              schema.type === FieldType.ATTACHMENT_SINGLE
+              schema.type === FieldType.ATTACHMENT_SINGLE ||
+              schema.type === FieldType.SIGNATURE
                 ? e.detail.length > 0
-                  ? { url: e.detail[0].name, filename: e.detail[0].value }
+                  ? {
+                      url: e.detail[0].name,
+                      filename: e.detail[0].value,
+                    }
                   : {}
                 : e.detail.map(({ name, value }) => ({
                     url: name,
@@ -125,7 +130,8 @@
       customButtonText={"Add attachment"}
       keyPlaceholder={"URL"}
       valuePlaceholder={"Filename"}
-      actionButtonDisabled={schema.type === FieldType.ATTACHMENT_SINGLE &&
+      actionButtonDisabled={(schema.type === FieldType.ATTACHMENT_SINGLE ||
+        schema.type === FieldType.SIGNATURE) &&
         Object.keys(value[field]).length >= 1}
     />
   </div>

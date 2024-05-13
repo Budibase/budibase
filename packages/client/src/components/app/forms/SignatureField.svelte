@@ -35,10 +35,10 @@
           data: attachRequest,
           tableId: formContext?.dataSource?.tableId,
         })
-
-        updateValue = resp
+        const [signatureAttachment] = resp
+        updateValue = signatureAttachment
       } else {
-        updateValue = []
+        updateValue = null
       }
 
       const changed = fieldApi.setValue(updateValue)
@@ -54,9 +54,9 @@
   }
 
   const deleteSignature = async () => {
-    const changed = fieldApi.setValue([])
+    const changed = fieldApi.setValue(null)
     if (onChange && changed) {
-      onChange({ value: [] })
+      onChange({ value: null })
     }
   }
 

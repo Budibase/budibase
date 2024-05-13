@@ -35,7 +35,7 @@ export class AttachmentCleanup {
       return []
     }
 
-    if (type === FieldType.ATTACHMENTS || type === FieldType.SIGNATURE) {
+    if (type === FieldType.ATTACHMENTS) {
       return rowData.map((attachment: any) => attachment.key)
     }
     return [rowData.key]

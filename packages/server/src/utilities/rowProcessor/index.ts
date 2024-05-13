@@ -148,17 +148,17 @@ export async function inputProcessing(
     }
 
     // remove any attachment urls, they are generated on read
-    if (
-      field.type === FieldType.ATTACHMENTS ||
-      field.type === FieldType.SIGNATURE
-    ) {
+    if (field.type === FieldType.ATTACHMENTS) {
       const attachments = clonedRow[key]
       if (attachments?.length) {
         attachments.forEach((attachment: RowAttachment) => {
           delete attachment.url
         })
       }
-    } else if (field.type === FieldType.ATTACHMENT_SINGLE) {
+    } else if (
+      field.type === FieldType.ATTACHMENT_SINGLE ||
+      field.type === FieldType.SIGNATURE
+    ) {
       const attachment = clonedRow[key]
       if (attachment?.url) {
         delete clonedRow[key].url
@@ -224,10 +224,7 @@ export async function outputProcessing<T extends Row[] | Row>(
 
   // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
-    if (
-      column.type === FieldType.ATTACHMENTS ||
-      column.type === FieldType.SIGNATURE
-    ) {
+    if (column.type === FieldType.ATTACHMENTS) {
       for (let row of enriched) {
         if (row[property] == null || !Array.isArray(row[property])) {
           continue
@@ -238,7 +235,10 @@ export async function outputProcessing<T extends Row[] | Row>(
           }
         })
       }
-    } else if (column.type === FieldType.ATTACHMENT_SINGLE) {
+    } else if (
+      column.type === FieldType.ATTACHMENT_SINGLE ||
+      column.type === FieldType.SIGNATURE
+    ) {
       for (let row of enriched) {
         if (!row[property] || Object.keys(row[property]).length === 0) {
           continue

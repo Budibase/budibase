@@ -28,6 +28,12 @@
   let bindingDrawer
   let currentVal = value
 
+  let attachmentTypes = [
+    FieldType.ATTACHMENT_SINGLE,
+    FieldType.ATTACHMENTS,
+    FieldType.SIGNATURE,
+  ]
+
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
   $: isJS = isJSBinding(value)
@@ -105,6 +111,7 @@
     boolean: isValidBoolean,
     attachment: false,
     attachment_single: false,
+    signature: false,
   }
 
   const isValid = value => {
@@ -126,6 +133,7 @@
         "bigint",
         "barcodeqr",
         "attachment",
+        "signature",
         "attachment_single",
       ].includes(type)
     ) {
@@ -169,7 +177,7 @@
       {updateOnChange}
     />
   {/if}
-  {#if !disabled && type !== "formula" && !disabled && type !== FieldType.ATTACHMENTS && !disabled && type !== FieldType.ATTACHMENT_SINGLE}
+  {#if !disabled && type !== "formula" && !disabled && !attachmentTypes.includes(type)}
     <div
       class={`icon ${getIconClass(value, type)}`}
       on:click={() => {

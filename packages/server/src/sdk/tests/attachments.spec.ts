@@ -94,14 +94,14 @@ describe("should be able to re-write attachment URLs", () => {
         },
       },
       {
-        signature: [{ ...attachment }],
+        signature: { ...attachment },
         otherCol: "string",
       }
     )
     for (const row of rows) {
       expect(row.otherCol).toBe("string")
-      expect(row.signature[0].url).toBe("")
-      expect(row.signature[0].key).toBe(`${db.name}/attachments/a.png`)
+      expect(row.signature.url).toBe("")
+      expect(row.signature.key).toBe(`${db.name}/attachments/a.png`)
     }
   })
 })

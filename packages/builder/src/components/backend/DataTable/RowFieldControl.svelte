@@ -62,7 +62,8 @@
 
     try {
       const uploadReq = await API.uploadBuilderAttachment(attachRequest)
-      value = uploadReq
+      const [signatureAttachment] = uploadReq
+      value = signatureAttachment
     } catch (error) {
       $notifications.error(error.message || "Failed to save signature")
       value = []
@@ -114,14 +115,14 @@
 {:else if type === "signature"}
   <div class="signature">
     <Label>{label}</Label>
-    <div class="sig-wrap" class:display={value?.length}>
-      {#if value?.length}
+    <div class="sig-wrap" class:display={value}>
+      {#if value}
         <CoreSignature
           {darkMode}
           {value}
           editable={false}
           on:clear={() => {
-            value = []
+            value = null
           }}
         />
       {:else}
