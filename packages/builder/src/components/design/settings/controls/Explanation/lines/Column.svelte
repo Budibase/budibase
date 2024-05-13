@@ -36,9 +36,34 @@
     if (columnType === "User") {
       return "https://docs.budibase.com/docs/user"
     }
+    if (columnType === "QR") {
+      return "https://docs.budibase.com/docs/barcodeqr"
+    }
+    if (columnType === "Relationship") {
+      return "https://docs.budibase.com/docs/relationships"
+    }
+    if (columnType === "Formula") {
+      return "https://docs.budibase.com/docs/formula"
+    }
+    if (columnType === "Options") {
+      return "https://docs.budibase.com/docs/options"
+    }
+    if (columnType === "BigInt") {
+      // No BigInt docs
+      return null
+    }
+    if (columnType === "Boolean") {
+      return "https://docs.budibase.com/docs/boolean-truefalse"
+    }
+    if (columnType === "Signature") {
+      // No Signature docs
+      return null
+    }
 
-    return ""
+    return null
   }
+
+  $: docLink = getDocLink(columnType);
 </script>
 
 <Line noWrap>
@@ -50,7 +75,8 @@
   />
   <Text value=" is a " />
   <DocumentationLink
-    href={getDocLink(columnType)}
+    disabled={docLink === null}
+    href={docLink}
     icon={columnIcon}
     text={`${columnType} column`}
   />

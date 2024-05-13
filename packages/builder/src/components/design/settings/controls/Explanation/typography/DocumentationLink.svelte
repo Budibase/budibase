@@ -4,9 +4,10 @@
   export let icon
   export let text
   export let href
+  export let disabled = false
 </script>
 
-<a tabindex="0" {href} rel="noopener noreferrer" target="_blank" class="link">
+<a class:disabled tabindex="0" {href} rel="noopener noreferrer" target="_blank" class="link">
   <Icon size="XS" name={icon} />
   <span class="text">
     <slot>
@@ -42,8 +43,17 @@
     filter: brightness(120%);
   }
 
+  .disabled {
+    filter: brightness(100%);
+    border-bottom: 1px solid var(--grey-6);
+  }
+
   .link :global(svg) {
     margin-right: 3px;
     color: var(--blue);
+  }
+
+  .disabled :global(svg){
+    color: var(--grey-6);
   }
 </style>
