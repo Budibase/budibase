@@ -46,7 +46,7 @@ export default async function setup() {
   await killContainers(containers)
 
   try {
-    let couchdb = new GenericContainer("budibase/couchdb:v3.2.1-sqs")
+    const couchdb = new GenericContainer("budibase/couchdb:v3.2.1-sqs")
       .withExposedPorts(5984, 4984)
       .withEnvironment({
         COUCHDB_PASSWORD: "budibase",
@@ -69,7 +69,20 @@ export default async function setup() {
         ).withStartupTimeout(20000)
       )
 
-    await couchdb.start()
+    const minio = new GenericContainer("minio/minio")
+      .withExposedPorts(9000)
+      .withCommand(["server", "/data"])
+      .withEnvironment({
+        MINIO_ACCESS_KEY: "budibase",
+        MINIO_SECRET_KEY: "budibase",
+      })
+      .withLabels({ "com.budibase": "true" })
+      .withReuse()
+      .withWaitStrategy(
+        Wait.forHttp("/minio/health/ready", 9000).withStartupTimeout(10000)
+      )
+
+    await Promise.all([couchdb.start(), minio.start()])
   } finally {
     lockfile.unlockSync(lockPath)
   }
