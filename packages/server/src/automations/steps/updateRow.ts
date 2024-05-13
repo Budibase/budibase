@@ -108,7 +108,15 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
 
   try {
     if (tableId) {
-      inputs.row = await automationUtils.cleanUpRow(tableId, inputs.row)
+      inputs.row = await automationUtils.cleanUpRow(
+        inputs.row.tableId,
+        inputs.row
+      )
+
+      inputs.row = await automationUtils.sendAutomationAttachmentsToStorage(
+        inputs.row.tableId,
+        inputs.row
+      )
     }
     await rowController.patch(ctx)
     return {

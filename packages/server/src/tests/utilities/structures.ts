@@ -78,6 +78,32 @@ export function basicTable(
   )
 }
 
+export function basicTableWithAttachmentField(
+  datasource?: Datasource,
+  ...extra: Partial<Table>[]
+): Table {
+  return tableForDatasource(
+    datasource,
+    {
+      name: "TestTable",
+      schema: {
+        file_attachment: {
+          type: FieldType.ATTACHMENTS,
+          name: "description",
+          constraints: {
+            type: "array",
+          },
+        },
+        single_file_attachment: {
+          type: FieldType.ATTACHMENT_SINGLE,
+          name: "description",
+        },
+      },
+    },
+    ...extra
+  )
+}
+
 export function basicView(tableId: string) {
   return {
     tableId,

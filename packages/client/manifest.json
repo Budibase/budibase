@@ -4220,8 +4220,8 @@
     ]
   },
   "attachmentfield": {
-    "name": "Attachment list",
-    "icon": "Attach",
+    "name": "Attachment List",
+    "icon": "DocumentFragmentGroup",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
@@ -4318,7 +4318,7 @@
   },
   "attachmentsinglefield": {
     "name": "Single Attachment",
-    "icon": "Attach",
+    "icon": "DocumentFragment",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
@@ -6718,7 +6718,20 @@
     "illegalChildren": ["section", "sidepanel"],
     "showEmptyState": false,
     "draggable": false,
-    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action."
+    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
+    "settings": [
+      {
+        "type": "boolean",
+        "key": "ignoreClicksOutside",
+        "label": "Ignore clicks outside",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "key": "onClose",
+        "label": "On close"
+      }
+    ]
   },
   "rowexplorer": {
     "block": true,

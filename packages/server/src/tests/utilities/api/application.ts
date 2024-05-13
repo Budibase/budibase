@@ -5,6 +5,8 @@ import {
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
   DuplicateAppResponse,
+  UpdateAppRequest,
+  UpdateAppResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 import { AppStatus } from "../../../db/utils"
@@ -109,11 +111,11 @@ export class ApplicationAPI extends TestAPI {
 
   update = async (
     appId: string,
-    app: { name?: string; url?: string },
+    app: UpdateAppRequest,
     expectations?: Expectations
-  ): Promise<App> => {
+  ): Promise<UpdateAppResponse> => {
     return await this._put<App>(`/api/applications/${appId}`, {
-      fields: app,
+      body: app,
       expectations,
     })
   }
