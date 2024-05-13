@@ -492,7 +492,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
         icon: bindingCategory.icon,
         display: {
           name: `${fieldSchema.name || key}`,
-          type: fieldSchema.type,
+          type: fieldSchema.display?.type || fieldSchema.type,
         },
       })
     })
@@ -1030,12 +1030,13 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
         fixedSchema[fieldName] = {
           type: fieldSchema,
           name: fieldName,
+          display: { type: fieldSchema },
         }
       } else {
         fixedSchema[fieldName] = {
           ...fieldSchema,
-          type: field?.name || fieldSchema.name,
           name: fieldName,
+          display: { type: field?.name || fieldSchema.type },
         }
       }
     })
