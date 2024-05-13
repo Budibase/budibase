@@ -1,5 +1,6 @@
 // need to handle table name + field or just field, depending on if relationships used
 import { FieldType, Row, Table } from "@budibase/types"
+import { helpers } from "@budibase/shared-core"
 import { generateRowIdField } from "../../../../integrations/utils"
 import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 
@@ -107,12 +108,17 @@ export function basicProcessing({
 
 export function fixArrayTypes(row: Row, table: Table) {
   for (let [fieldName, schema] of Object.entries(table.schema)) {
-    if (schema.type === FieldType.ARRAY && typeof row[fieldName] === "string") {
+    if (
+      [FieldType.ARRAY, FieldType.BB_REFERENCE].includes(schema.type) &&
+      typeof row[fieldName] === "string"
+    ) {
       try {
         row[fieldName] = JSON.parse(row[fieldName])
       } catch (err) {
-        // couldn't convert back to array, ignore
-        delete row[fieldName]
+        if (!helpers.schema.isDeprecatedSingleUserColumn(schema)) {
+          // couldn't convert back to array, ignore
+          delete row[fieldName]
+        }
       }
     }
   }
