@@ -72,6 +72,7 @@ const isTypeAllowed: Record<FieldType, boolean> = {
   [FieldType.JSON]: false,
   [FieldType.INTERNAL]: false,
   [FieldType.BIGINT]: false,
+  [FieldType.SIGNATURE]: false,
 }
 
 const ALLOWED_TYPES = Object.entries(isTypeAllowed)
