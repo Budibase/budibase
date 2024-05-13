@@ -613,8 +613,8 @@ class GoogleSheetsIntegration implements DatasourcePlus {
             type === FieldType.BB_REFERENCE &&
             subtype === BBReferenceFieldSubType.USER &&
             constraints?.type !== "array"
-          if (isDeprecatedSingleUser && Array.isArray(row[key])) {
-            row[key] = row[key][0]
+          if (isDeprecatedSingleUser && Array.isArray(row.get(key))) {
+            row.set(key, row.get(key)[0])
           }
         }
         await row.save()
