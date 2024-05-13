@@ -82,6 +82,7 @@ const automationActions = store => ({
         steps: [],
         trigger,
       },
+      disabled: false,
     }
     const response = await store.actions.save(automation)
     await store.actions.fetch()
@@ -133,6 +134,23 @@ const automationActions = store => ({
       return state
     })
     await store.actions.fetch()
+  },
+  toggleDisabled: async (automationId) => {
+    try {
+      const automation = store.actions.getDefinition(automationId)
+      if (!automation) {
+        return
+      }
+      automation.disabled = !automation.disabled
+      await store.actions.save(automation)
+      notifications.success(
+        `Automation ${automation.disabled ? "enabled" : "disabled"} successfully`
+      )
+    }catch (error) {
+      notifications.error(
+        `Error ${automation.disabled ? "enabling" : "disabling"} automation`
+      )
+    }
   },
   updateBlockInputs: async (block, data) => {
     // Create new modified block

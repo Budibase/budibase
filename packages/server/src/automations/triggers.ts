@@ -36,10 +36,14 @@ async function queueRelevantRowAutomations(
   await context.doInAppContext(event.appId, async () => {
     let automations = await getAllAutomations()
 
-    // filter down to the correct event type
+    // filter down to the correct event type and enabled automations
     automations = automations.filter(automation => {
       const trigger = automation.definition.trigger
-      return trigger && trigger.event === eventType
+      return (
+        trigger && 
+        trigger.event === eventType && 
+        (automation.disabled === undefined || automation.disabled === false)
+      )
     })
 
     for (let automation of automations) {

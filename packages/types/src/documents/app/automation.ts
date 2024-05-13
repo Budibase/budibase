@@ -125,6 +125,7 @@ export interface Automation extends Document {
   name: string
   internal?: boolean
   type?: string
+  disabled?: boolean
 }
 
 interface BaseIOStructure {
