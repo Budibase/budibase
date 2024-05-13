@@ -12,6 +12,7 @@
     OptionSelectDnD,
     Layout,
     AbsTooltip,
+    ProgressCircle,
   } from "@budibase/bbui"
   import {
     SWITCHABLE_TYPES,
@@ -251,11 +252,11 @@
   }
 
   async function saveColumn() {
-    savingColumn = true
     if (errors?.length) {
       return
     }
 
+    savingColumn = true
     let saveColumn = cloneDeep(editableColumn)
 
     delete saveColumn.fieldId
@@ -288,6 +289,8 @@
       }
     } catch (err) {
       notifications.error(`Error saving column: ${err.message}`)
+    } finally {
+      savingColumn = false
     }
   }
 
@@ -734,7 +737,20 @@
     <Button quiet warning text on:click={confirmDelete}>Delete</Button>
   {/if}
   <Button secondary newStyles on:click={cancelEdit}>Cancel</Button>
-  <Button disabled={invalid} newStyles cta on:click={saveColumn}>Save</Button>
+  <Button
+    disabled={invalid || savingColumn}
+    newStyles
+    cta
+    on:click={saveColumn}
+  >
+    {#if savingColumn}
+      <div class="save-loading">
+        <ProgressCircle overBackground={true} size="S" />
+      </div>
+    {:else}
+      Save
+    {/if}
+  </Button>
 </div>
 <Modal bind:this={jsonSchemaModal}>
   <JSONSchemaModal
@@ -798,5 +814,10 @@
   b:hover {
     cursor: pointer;
     color: var(--spectrum-global-color-gray-900);
+  }
+
+  .save-loading {
+    display: flex;
+    justify-content: center;
   }
 </style>
