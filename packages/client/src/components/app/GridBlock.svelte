@@ -163,6 +163,7 @@
       canEditColumns={false}
       canExpandRows={false}
       canSaveSchema={false}
+      canSelectRows={true}
       showControls={false}
       notifySuccess={notificationStore.actions.success}
       notifyError={notificationStore.actions.error}
