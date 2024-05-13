@@ -42,7 +42,7 @@ async function queueRelevantRowAutomations(
       return (
         trigger &&
         trigger.event === eventType &&
-        (automation.disabled === undefined || automation.disabled === false)
+        !automation.disabled
       )
     })
 

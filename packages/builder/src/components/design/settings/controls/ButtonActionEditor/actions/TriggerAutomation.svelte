@@ -25,9 +25,7 @@
   }
   $: automations = $automationStore.automations
     .filter(
-      a =>
-        a.definition.trigger?.stepId === TriggerStepID.APP &&
-        a.disabled !== true
+      a => a.definition.trigger?.stepId === TriggerStepID.APP && !a.disabled
     )
     .map(automation => {
       const schema = Object.entries(
