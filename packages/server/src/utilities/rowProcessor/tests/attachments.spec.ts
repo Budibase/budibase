@@ -75,13 +75,11 @@ const rowGenerators: [
     "signature",
     function rowWithSignature(): Row {
       return {
-        signature: [
-          {
-            size: 1,
-            extension: "png",
-            key: `${uuid.v4()}.png`,
-          },
-        ],
+        signature: {
+          size: 1,
+          extension: "png",
+          key: `${uuid.v4()}.png`,
+        },
       }
     },
   ],
