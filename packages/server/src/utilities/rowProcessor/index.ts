@@ -12,7 +12,9 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
+  processInputBBReference,
   processInputBBReferences,
+  processOutputBBReference,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
 import { isExternalTableID } from "../../integrations/utils"
@@ -25,8 +27,6 @@ type AutoColumnProcessingOpts = {
   noAutoRelationships?: boolean
 }
 
-const BASE_AUTO_ID = 1
-
 /**
  * This will update any auto columns that are found on the row/table with the correct information based on
  * time now and the current logged in user making the request.
@@ -37,7 +37,7 @@ const BASE_AUTO_ID = 1
  * @returns The updated row and table, the table may need to be updated
  * for automatic ID purposes.
  */
-export function processAutoColumn(
+export async function processAutoColumn(
   userId: string | null | undefined,
   table: Table,
   row: Row,
@@ -79,8 +79,10 @@ export function processAutoColumn(
         break
       case AutoFieldSubType.AUTO_ID:
         if (creating) {
-          schema.lastID = !schema.lastID ? BASE_AUTO_ID : schema.lastID + 1
-          row[key] = schema.lastID
+          schema.lastID = schema.lastID || 0
+          row[key] = schema.lastID + 1
+          schema.lastID++
+          table.schema[key] = schema
         }
         break
     }
@@ -160,10 +162,10 @@ export async function inputProcessing(
       if (attachment?.url) {
         delete clonedRow[key].url
       }
-    }
-
-    if (field.type === FieldType.BB_REFERENCE && value) {
+    } else if (field.type === FieldType.BB_REFERENCE && value) {
       clonedRow[key] = await processInputBBReferences(value, field.subtype)
+    } else if (field.type === FieldType.BB_REFERENCE_SINGLE && value) {
+      clonedRow[key] = await processInputBBReference(value, field.subtype)
     }
   }
 
@@ -234,7 +236,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       }
     } else if (column.type === FieldType.ATTACHMENT_SINGLE) {
       for (let row of enriched) {
-        if (!row[property]) {
+        if (!row[property] || Object.keys(row[property]).length === 0) {
           continue
         }
 
@@ -248,6 +250,16 @@ export async function outputProcessing<T extends Row[] | Row>(
     ) {
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
+          row[property],
+          column.subtype
+        )
+      }
+    } else if (
+      !opts.skipBBReferences &&
+      column.type == FieldType.BB_REFERENCE_SINGLE
+    ) {
+      for (let row of enriched) {
+        row[property] = await processOutputBBReference(
           row[property],
           column.subtype
         )

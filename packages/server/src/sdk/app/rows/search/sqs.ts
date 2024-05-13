@@ -131,11 +131,6 @@ export async function search(
     },
     relationships,
   }
-  // make sure only rows returned
-  request.filters!.equal = {
-    ...request.filters?.equal,
-    type: "row",
-  }
 
   if (params.sort) {
     const sortField = table.schema[params.sort]
@@ -169,8 +164,8 @@ export async function search(
         throw new Error("SQS cannot currently handle multiple queries")
       }
 
-      let sql = query.sql,
-        bindings = query.bindings
+      let sql = query.sql
+      let bindings = query.bindings
 
       // quick hack for docIds
       sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
