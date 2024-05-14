@@ -80,7 +80,7 @@ export async function search(
 
   const table = await sdk.tables.getTable(options.tableId)
   options = searchInputMapping(table, options, {
-    isSql: !!table.sql || !!env.SQS_SEARCH_ENABLE,
+    isSql: !!table.sql,
   })
 
   if (isExternalTable) {
