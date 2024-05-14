@@ -24,8 +24,6 @@ import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { roles } from "@budibase/backend-core"
 
-jest.unmock("mssql")
-
 describe.each([
   ["internal", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
