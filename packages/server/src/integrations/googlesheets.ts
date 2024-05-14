@@ -191,7 +191,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
    * @param spreadsheetId - the URL or standard spreadsheetId of the google sheet
    * @returns spreadsheet Id of the google sheet
    */
-  cleanSpreadsheetUrl(spreadsheetId: string) {
+  private cleanSpreadsheetUrl(spreadsheetId: string) {
     if (!spreadsheetId) {
       throw new Error(
         "You must set a spreadsheet ID in your configuration to fetch tables."
@@ -201,7 +201,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return parts.length > 5 ? parts[5] : spreadsheetId
   }
 
-  async fetchAccessToken(
+  private async fetchAccessToken(
     payload: AuthTokenRequest
   ): Promise<AuthTokenResponse> {
     const response = await fetch("https://www.googleapis.com/oauth2/v4/token", {
@@ -226,7 +226,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return json
   }
 
-  async connect() {
+  private async connect() {
     try {
       await setupCreationAuth(this.config)
 
@@ -271,7 +271,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return sheets.map(s => s.title)
   }
 
-  getTableSchema(
+  private getTableSchema(
     title: string,
     headerValues: string[],
     datasourceId: string,
@@ -385,7 +385,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  buildRowObject(
+  private buildRowObject(
     headers: string[],
     values: Record<string, string>,
     rowNumber: number
@@ -400,7 +400,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return rowObject
   }
 
-  async createTable(name?: string) {
+  private async createTable(name?: string) {
     if (!name) {
       throw new Error("Must provide name for new sheet.")
     }
@@ -413,7 +413,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  async updateTable(table: TableRequest) {
+  private async updateTable(table: TableRequest) {
     await this.connect()
     const sheet = this.client.sheetsByTitle[table.name]
     await sheet.loadHeaderRow()
@@ -460,7 +460,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  async deleteTable(sheet: any) {
+  private async deleteTable(sheet: any) {
     try {
       await this.connect()
       const sheetToDelete = this.client.sheetsByTitle[sheet]
@@ -487,7 +487,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  async createBulk(query: { sheet: string; rows: Row[] }) {
+  private async createBulk(query: { sheet: string; rows: Row[] }) {
     try {
       await this.connect()
       const sheet = this.client.sheetsByTitle[query.sheet]
