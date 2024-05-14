@@ -14,7 +14,11 @@ export async function processInputBBReference(
   subtype: BBReferenceFieldSubType.USER
 ): Promise<string | null> {
   if (value && Array.isArray(value)) {
-    throw "BB_REFERENCE_SINGLE cannot be an array"
+    throw new InvalidBBRefError(
+      JSON.stringify(value),
+      BBReferenceFieldSubType.USER,
+      "BB_REFERENCE_SINGLE cannot be an array"
+    )
   }
   let id = typeof value === "string" ? value : value?._id
 
