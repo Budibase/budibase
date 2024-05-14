@@ -11,7 +11,6 @@
 
 <style>
   .line {
-    background-color: var(--background-alt);
     color: var(--ink);
     align-items: flex-start;
     display: flex;

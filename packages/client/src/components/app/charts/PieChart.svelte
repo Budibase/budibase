@@ -30,7 +30,7 @@
     },
     legend: {
       show: legend,
-      position: "top",
+      position: "right",
       horizontalAlign: "right",
       showForSingleSeries: true,
       showForNullSeries: true,
