@@ -830,7 +830,7 @@ export const getActionBindings = (actions, actionId) => {
  * @return {{schema: Object, table: Object}}
  */
 export const getSchemaForDatasourcePlus = (resourceId, options) => {
-  const isViewV2 = resourceId?.includes("view_")
+  const isViewV2 = resourceId?.startsWith("view_")
   const datasource = isViewV2
     ? {
         type: "viewV2",
