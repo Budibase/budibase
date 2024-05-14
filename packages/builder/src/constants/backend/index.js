@@ -33,7 +33,7 @@ export const FIELDS = {
     },
   },
   BARCODEQR: {
-    name: "Barcode/QR",
+    name: "Barcode / QR",
     type: FieldType.BARCODEQR,
     icon: TypeIconMap[FieldType.BARCODEQR],
     constraints: {
@@ -43,7 +43,7 @@ export const FIELDS = {
     },
   },
   LONGFORM: {
-    name: "Long Form Text",
+    name: "Long form text",
     type: FieldType.LONGFORM,
     icon: TypeIconMap[FieldType.LONGFORM],
     constraints: {
@@ -53,7 +53,7 @@ export const FIELDS = {
     },
   },
   OPTIONS: {
-    name: "Options",
+    name: "Single select",
     type: FieldType.OPTIONS,
     icon: TypeIconMap[FieldType.OPTIONS],
     constraints: {
@@ -63,7 +63,7 @@ export const FIELDS = {
     },
   },
   ARRAY: {
-    name: "Multi-select",
+    name: "Multi select",
     type: FieldType.ARRAY,
     icon: TypeIconMap[FieldType.ARRAY],
     constraints: {
@@ -83,7 +83,7 @@ export const FIELDS = {
     },
   },
   BIGINT: {
-    name: "BigInt",
+    name: "Big integer",
     type: FieldType.BIGINT,
     icon: TypeIconMap[FieldType.BIGINT],
   },
@@ -97,7 +97,7 @@ export const FIELDS = {
     },
   },
   DATETIME: {
-    name: "Date/Time",
+    name: "Date / time",
     type: FieldType.DATETIME,
     icon: TypeIconMap[FieldType.DATETIME],
     constraints: {
@@ -111,7 +111,7 @@ export const FIELDS = {
     },
   },
   ATTACHMENT_SINGLE: {
-    name: "Attachment",
+    name: "Single attachment",
     type: FieldType.ATTACHMENT_SINGLE,
     icon: TypeIconMap[FieldType.ATTACHMENT_SINGLE],
     constraints: {
@@ -119,7 +119,7 @@ export const FIELDS = {
     },
   },
   ATTACHMENTS: {
-    name: "Attachment List",
+    name: "Multiple attachments",
     type: FieldType.ATTACHMENTS,
     icon: TypeIconMap[FieldType.ATTACHMENTS],
     constraints: {
@@ -137,7 +137,7 @@ export const FIELDS = {
     },
   },
   AUTO: {
-    name: "Auto Column",
+    name: "Auto column",
     type: FieldType.AUTO,
     icon: TypeIconMap[FieldType.AUTO],
     constraints: {},
@@ -158,7 +158,7 @@ export const FIELDS = {
     },
   },
   USER: {
-    name: "User",
+    name: "Single user",
     type: FieldType.BB_REFERENCE_SINGLE,
     subtype: BBReferenceFieldSubType.USER,
     icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
@@ -166,7 +166,7 @@ export const FIELDS = {
     ],
   },
   USERS: {
-    name: "User List",
+    name: "Multiple users",
     type: FieldType.BB_REFERENCE,
     subtype: BBReferenceFieldSubType.USER,
     icon: TypeIconMap[FieldType.BB_REFERENCE][BBReferenceFieldSubType.USER],
