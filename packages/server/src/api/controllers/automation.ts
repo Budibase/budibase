@@ -279,8 +279,7 @@ export async function trigger(ctx: UserCtx) {
       {
         fields: ctx.request.body.fields,
         timeout:
-          ctx.request.body.timeout * 1000 ||
-          env.getDefaults().AUTOMATION_SYNC_TIMEOUT,
+          ctx.request.body.timeout * 1000 || env.AUTOMATION_THREAD_TIMEOUT,
       },
       { getResponses: true }
     )

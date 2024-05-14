@@ -44,7 +44,7 @@ describe.each([
   const snippets = [
     {
       name: "WeeksAgo",
-      code: "return function (weeks) {\n  const currentTime = new Date();\n  currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));\n  return currentTime.toISOString();\n}",
+      code: `return function (weeks) {\n  const currentTime = new Date(${Date.now()});\n  currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));\n  return currentTime.toISOString();\n}`,
     },
   ]
 
@@ -262,11 +262,19 @@ describe.each([
         { name: "serverDate", appointment: serverTime.toISOString() },
         {
           name: "single user, session user",
-          single_user: JSON.stringify([currentUser]),
+          single_user: JSON.stringify(currentUser),
         },
         {
           name: "single user",
-          single_user: JSON.stringify([globalUsers[0]]),
+          single_user: JSON.stringify(globalUsers[0]),
+        },
+        {
+          name: "deprecated single user, session user",
+          deprecated_single_user: JSON.stringify([currentUser]),
+        },
+        {
+          name: "deprecated single user",
+          deprecated_single_user: JSON.stringify([globalUsers[0]]),
         },
         {
           name: "multi user",
@@ -275,6 +283,14 @@ describe.each([
         {
           name: "multi user with session user",
           multi_user: JSON.stringify([...globalUsers, currentUser]),
+        },
+        {
+          name: "deprecated multi user",
+          deprecated_multi_user: JSON.stringify(globalUsers),
+        },
+        {
+          name: "deprecated multi user with session user",
+          deprecated_multi_user: JSON.stringify([...globalUsers, currentUser]),
         },
       ]
     }
@@ -301,13 +317,29 @@ describe.each([
         appointment: { name: "appointment", type: FieldType.DATETIME },
         single_user: {
           name: "single_user",
+          type: FieldType.BB_REFERENCE_SINGLE,
+          subtype: BBReferenceFieldSubType.USER,
+        },
+        deprecated_single_user: {
+          name: "deprecated_single_user",
           type: FieldType.BB_REFERENCE,
           subtype: BBReferenceFieldSubType.USER,
         },
         multi_user: {
           name: "multi_user",
           type: FieldType.BB_REFERENCE,
+          subtype: BBReferenceFieldSubType.USER,
+          constraints: {
+            type: "array",
+          },
+        },
+        deprecated_multi_user: {
+          name: "deprecated_multi_user",
+          type: FieldType.BB_REFERENCE,
           subtype: BBReferenceFieldSubType.USERS,
+          constraints: {
+            type: "array",
+          },
         },
       })
       await createRows(rows(config.getUser()))
@@ -398,7 +430,18 @@ describe.each([
       }).toContainExactly([
         {
           name: "single user, session user",
-          single_user: [{ _id: config.getUser()._id }],
+          single_user: { _id: config.getUser()._id },
+        },
+      ])
+    })
+
+    it("should match a deprecated single user row by the session user id", async () => {
+      await expectQuery({
+        equal: { deprecated_single_user: "{{ [user]._id }}" },
+      }).toContainExactly([
+        {
+          name: "deprecated single user, session user",
+          deprecated_single_user: [{ _id: config.getUser()._id }],
         },
       ])
     })
@@ -422,6 +465,23 @@ describe.each([
 
     // TODO(samwho): fix for SQS
     !isSqs &&
+      it("should match the session user id in a deprecated multi user field", async () => {
+        const allUsers = [...globalUsers, config.getUser()].map((user: any) => {
+          return { _id: user._id }
+        })
+
+        await expectQuery({
+          contains: { deprecated_multi_user: ["{{ [user]._id }}"] },
+        }).toContainExactly([
+          {
+            name: "deprecated multi user with session user",
+            deprecated_multi_user: allUsers,
+          },
+        ])
+      })
+
+    // TODO(samwho): fix for SQS
+    !isSqs &&
       it("should not match the session user id in a multi user field", async () => {
         await expectQuery({
           notContains: { multi_user: ["{{ [user]._id }}"] },
@@ -430,6 +490,22 @@ describe.each([
           {
             name: "multi user",
             multi_user: globalUsers.map((user: any) => {
+              return { _id: user._id }
+            }),
+          },
+        ])
+      })
+
+    // TODO(samwho): fix for SQS
+    !isSqs &&
+      it("should not match the session user id in a deprecated multi user field", async () => {
+        await expectQuery({
+          notContains: { deprecated_multi_user: ["{{ [user]._id }}"] },
+          notEmpty: { deprecated_multi_user: true },
+        }).toContainExactly([
+          {
+            name: "deprecated multi user",
+            deprecated_multi_user: globalUsers.map((user: any) => {
               return { _id: user._id }
             }),
           },
@@ -447,11 +523,31 @@ describe.each([
       }).toContainExactly([
         {
           name: "single user, session user",
-          single_user: [{ _id: config.getUser()._id }],
+          single_user: { _id: config.getUser()._id },
         },
         {
           name: "single user",
-          single_user: [{ _id: globalUsers[0]._id }],
+          single_user: { _id: globalUsers[0]._id },
+        },
+      ])
+    })
+
+    it("should match the session user id and a user table row id using helpers, user binding and a static user id. (deprecated single user)", async () => {
+      await expectQuery({
+        oneOf: {
+          deprecated_single_user: [
+            "{{ default [user]._id '_empty_' }}",
+            globalUsers[0]._id,
+          ],
+        },
+      }).toContainExactly([
+        {
+          name: "deprecated single user, session user",
+          deprecated_single_user: [{ _id: config.getUser()._id }],
+        },
+        {
+          name: "deprecated single user",
+          deprecated_single_user: [{ _id: globalUsers[0]._id }],
         },
       ])
     })
@@ -467,7 +563,23 @@ describe.each([
       }).toContainExactly([
         {
           name: "single user",
-          single_user: [{ _id: globalUsers[0]._id }],
+          single_user: { _id: globalUsers[0]._id },
+        },
+      ])
+    })
+
+    it("should resolve 'default' helper to '_empty_' when binding resolves to nothing (deprecated single user)", async () => {
+      await expectQuery({
+        oneOf: {
+          deprecated_single_user: [
+            "{{ default [user]._idx '_empty_' }}",
+            globalUsers[0]._id,
+          ],
+        },
+      }).toContainExactly([
+        {
+          name: "deprecated single user",
+          deprecated_single_user: [{ _id: globalUsers[0]._id }],
         },
       ])
     })

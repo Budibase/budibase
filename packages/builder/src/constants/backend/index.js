@@ -159,15 +159,17 @@ export const FIELDS = {
   },
   USER: {
     name: "User",
-    type: FieldType.BB_REFERENCE,
+    type: FieldType.BB_REFERENCE_SINGLE,
     subtype: BBReferenceFieldSubType.USER,
-    icon: TypeIconMap[FieldType.USER],
+    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
+      BBReferenceFieldSubType.USER
+    ],
   },
   USERS: {
-    name: "Users",
+    name: "User List",
     type: FieldType.BB_REFERENCE,
-    subtype: BBReferenceFieldSubType.USERS,
-    icon: TypeIconMap[FieldType.USERS],
+    subtype: BBReferenceFieldSubType.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE][BBReferenceFieldSubType.USER],
     constraints: {
       type: "array",
     },

@@ -1,6 +1,7 @@
 import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
+import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 
@@ -206,7 +207,7 @@ export const createActions = context => {
     // If the server doesn't reply with a valid error, assume that the source
     // of the error is the focused cell's column
     if (!error?.json?.validationErrors && errorString) {
-      const focusedColumn = get(focusedCellId)?.split("-")[1]
+      const { field: focusedColumn } = parseCellID(get(focusedCellId))
       if (focusedColumn) {
         error = {
           json: {
@@ -245,7 +246,7 @@ export const createActions = context => {
         }
         // Set error against the cell
         validation.actions.setError(
-          `${rowId}-${column}`,
+          getCellID(rowId, column),
           Helpers.capitalise(err)
         )
         // Ensure the column is visible
@@ -265,7 +266,7 @@ export const createActions = context => {
 
       // Focus the first cell with an error
       if (erroredColumns.length) {
-        focusedCellId.set(`${rowId}-${erroredColumns[0]}`)
+        focusedCellId.set(getCellID(rowId, erroredColumns[0]))
       }
     } else {
       get(notifications).error(errorString || "An unknown error occurred")
@@ -571,9 +572,10 @@ export const initialise = context => {
       return
     }
     // Stop if we changed row
-    const oldRowId = id.split("-")[0]
-    const oldColumn = id.split("-")[1]
-    const newRowId = get(focusedCellId)?.split("-")[0]
+    const split = parseCellID(id)
+    const oldRowId = split.id
+    const oldColumn = split.field
+    const { id: newRowId } = parseCellID(get(focusedCellId))
     if (oldRowId !== newRowId) {
       return
     }

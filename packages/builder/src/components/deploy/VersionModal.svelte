@@ -7,10 +7,12 @@
     Body,
     Button,
     StatusLight,
+    Link,
   } from "@budibase/bbui"
   import { appStore, initialise } from "stores/builder"
   import { API } from "api"
   import RevertModalVersionSelect from "./RevertModalVersionSelect.svelte"
+  import { ChangelogURL } from "constants"
 
   export function show() {
     updateModal.show()
@@ -106,6 +108,10 @@
         latest version available.
       </Body>
     {/if}
+    <Body size="S">
+      Find the changelog for the latest release
+      <Link href={ChangelogURL} target="_blank">here</Link>
+    </Body>
     {#if revertAvailable}
       <Body size="S">
         You can revert this app to version

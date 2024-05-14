@@ -12,7 +12,9 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
+  processInputBBReference,
   processInputBBReferences,
+  processOutputBBReference,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
 import { isExternalTableID } from "../../integrations/utils"
@@ -160,10 +162,10 @@ export async function inputProcessing(
       if (attachment?.url) {
         delete clonedRow[key].url
       }
-    }
-
-    if (field.type === FieldType.BB_REFERENCE && value) {
+    } else if (field.type === FieldType.BB_REFERENCE && value) {
       clonedRow[key] = await processInputBBReferences(value, field.subtype)
+    } else if (field.type === FieldType.BB_REFERENCE_SINGLE && value) {
+      clonedRow[key] = await processInputBBReference(value, field.subtype)
     }
   }
 
@@ -248,6 +250,16 @@ export async function outputProcessing<T extends Row[] | Row>(
     ) {
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
+          row[property],
+          column.subtype
+        )
+      }
+    } else if (
+      !opts.skipBBReferences &&
+      column.type == FieldType.BB_REFERENCE_SINGLE
+    ) {
+      for (let row of enriched) {
+        row[property] = await processOutputBBReference(
           row[property],
           column.subtype
         )
