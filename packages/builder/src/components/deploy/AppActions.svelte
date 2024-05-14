@@ -24,7 +24,6 @@
     isOnlyUser,
     appStore,
     deploymentStore,
-    initialise,
     sortedScreens,
   } from "stores/builder"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
