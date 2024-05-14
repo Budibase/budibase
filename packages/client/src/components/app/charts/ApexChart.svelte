@@ -55,7 +55,11 @@
 </script>
 
 {#key optionsCopy?.customColor}
-  <div class:hide={noData} use:styleable={$component.styles} bind:this={chartElement} />
+  <div
+    class:hide={noData}
+    use:styleable={$component.styles}
+    bind:this={chartElement}
+  />
   {#if $builderStore.inBuilder && noData}
     <div
       class="component-placeholder"

@@ -63,7 +63,7 @@
     return null
   }
 
-  $: docLink = getDocLink(columnType);
+  $: docLink = getDocLink(columnType)
 </script>
 
 <Line noWrap>

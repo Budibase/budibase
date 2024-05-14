@@ -83,7 +83,7 @@ export class AppMetaStore extends BudiStore {
   syncClientTypeSupportPresets(typeSupportPresets) {
     this.update(state => ({
       ...state,
-      typeSupportPresets
+      typeSupportPresets,
     }))
   }
 
