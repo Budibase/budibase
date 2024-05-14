@@ -18,6 +18,7 @@ import {
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
 import { isExternalTableID } from "../../integrations/utils"
+import { helpers } from "@budibase/shared-core"
 
 export * from "./utils"
 export * from "./attachments"
@@ -162,10 +163,13 @@ export async function inputProcessing(
       if (attachment?.url) {
         delete clonedRow[key].url
       }
-    } else if (field.type === FieldType.BB_REFERENCE && value) {
-      clonedRow[key] = await processInputBBReferences(value, field.subtype)
-    } else if (field.type === FieldType.BB_REFERENCE_SINGLE && value) {
+    } else if (
+      field.type === FieldType.BB_REFERENCE_SINGLE ||
+      helpers.schema.isDeprecatedSingleUserColumn(field)
+    ) {
       clonedRow[key] = await processInputBBReference(value, field.subtype)
+    } else if (field.type === FieldType.BB_REFERENCE) {
+      clonedRow[key] = await processInputBBReferences(value, field.subtype)
     }
   }
 
