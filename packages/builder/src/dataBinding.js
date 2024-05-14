@@ -29,6 +29,7 @@ import { JSONUtils, Constants } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
 import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
+import { FIELDS } from "constants/backend"
 
 const { ContextScopes } = Constants
 
@@ -491,7 +492,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
         icon: bindingCategory.icon,
         display: {
           name: `${fieldSchema.name || key}`,
-          type: fieldSchema.type,
+          type: fieldSchema.display?.type || fieldSchema.type,
         },
       })
     })
@@ -1019,15 +1020,23 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     // are objects
     let fixedSchema = {}
     Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+      const field = Object.values(FIELDS).find(
+        field =>
+          field.type === fieldSchema.type &&
+          field.subtype === fieldSchema.subtype
+      )
+
       if (typeof fieldSchema === "string") {
         fixedSchema[fieldName] = {
           type: fieldSchema,
           name: fieldName,
+          display: { type: fieldSchema },
         }
       } else {
         fixedSchema[fieldName] = {
           ...fieldSchema,
           name: fieldName,
+          display: { type: field?.name || fieldSchema.type },
         }
       }
     })
@@ -1106,50 +1115,51 @@ export const getAllStateVariables = () => {
   getAllAssets().forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
       const settings = componentStore.getComponentSettings(component._component)
+      const nestedTypes = [
+        "buttonConfiguration",
+        "fieldConfiguration",
+        "stepConfiguration",
+      ]
 
+      // Extracts all event settings from a component instance.
+      // Recurses into nested types to find all event-like settings at any
+      // depth.
       const parseEventSettings = (settings, comp) => {
+        if (!settings?.length) {
+          return
+        }
+
+        // Extract top level event settings
         settings
           .filter(setting => setting.type === "event")
           .forEach(setting => {
             eventSettings.push(comp[setting.key])
           })
-      }
 
-      const parseComponentSettings = (settings, component) => {
-        // Parse the nested button configurations
+        // Recurse into any nested instance types
         settings
-          .filter(setting => setting.type === "buttonConfiguration")
+          .filter(setting => nestedTypes.includes(setting.type))
           .forEach(setting => {
-            const buttonConfig = component[setting.key]
+            const instances = comp[setting.key]
+            if (Array.isArray(instances) && instances.length) {
+              instances.forEach(instance => {
+                let type = instance?._component
 
-            if (Array.isArray(buttonConfig)) {
-              buttonConfig.forEach(button => {
-                const nestedSettings = componentStore.getComponentSettings(
-                  button._component
-                )
-                parseEventSettings(nestedSettings, button)
+                // Backwards compatibility for multi-step from blocks which
+                // didn't set a proper component type previously.
+                if (setting.type === "stepConfiguration" && !type) {
+                  type = "@budibase/standard-components/multistepformblockstep"
+                }
+
+                // Parsed nested component instances inside this setting
+                const nestedSettings = componentStore.getComponentSettings(type)
+                parseEventSettings(nestedSettings, instance)
               })
             }
           })
-
-        parseEventSettings(settings, component)
       }
 
-      // Parse the base component settings
-      parseComponentSettings(settings, component)
-
-      // Parse step configuration
-      const stepSetting = settings.find(
-        setting => setting.type === "stepConfiguration"
-      )
-      const steps = stepSetting ? component[stepSetting.key] : []
-      const stepDefinition = componentStore.getComponentSettings(
-        "@budibase/standard-components/multistepformblockstep"
-      )
-
-      steps?.forEach(step => {
-        parseComponentSettings(stepDefinition, step)
-      })
+      parseEventSettings(settings, component)
     })
   })
 

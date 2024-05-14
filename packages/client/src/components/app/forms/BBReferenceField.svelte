@@ -1,8 +1,10 @@
 <script>
-  import RelationshipField from "./RelationshipField.svelte"
   import { sdk } from "@budibase/shared-core"
+  import { FieldType } from "@budibase/types"
+  import RelationshipField from "./RelationshipField.svelte"
 
   export let defaultValue
+  export let type = FieldType.BB_REFERENCE
 
   function updateUserIDs(value) {
     if (Array.isArray(value)) {
@@ -22,6 +24,7 @@
 
 <RelationshipField
   {...$$props}
+  {type}
   datasourceType={"user"}
   primaryDisplay={"email"}
   defaultValue={updateReferences(defaultValue)}

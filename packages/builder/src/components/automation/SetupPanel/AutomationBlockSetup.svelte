@@ -32,6 +32,7 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import BindingSidePanel from "components/common/bindings/BindingSidePanel.svelte"
+  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { BindingHelpers, BindingType } from "components/common/bindings/utils"
   import {
     bindingsToCompletions,
@@ -47,6 +48,7 @@
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
+  import { FIELDS } from "constants/backend"
 
   export let block
   export let testData
@@ -227,6 +229,10 @@
       categoryName,
       bindingName
     ) => {
+      const field = Object.values(FIELDS).find(
+        field => field.type === value.type && field.subtype === value.subtype
+      )
+
       return {
         readableBinding: bindingName
           ? `${bindingName}.${name}`
@@ -237,7 +243,7 @@
         icon,
         category: categoryName,
         display: {
-          type: value.type,
+          type: field?.name || value.type,
           name,
           rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
         },
@@ -281,6 +287,7 @@
         for (const key in table?.schema) {
           schema[key] = {
             type: table.schema[key].type,
+            subtype: table.schema[key].subtype,
           }
         }
         // remove the original binding
@@ -356,13 +363,25 @@
       value.customType !== "queryParams" &&
       value.customType !== "cron" &&
       value.customType !== "triggerSchema" &&
-      value.customType !== "automationFields"
+      value.customType !== "automationFields" &&
+      value.type !== "attachment" &&
+      value.type !== "attachment_single"
     )
   }
 
   function getFieldLabel(key, value) {
     const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
     return `${value.title || (key === "row" ? "Table" : key)} ${requiredSuffix}`
+  }
+
+  function handleAttachmentParams(keyValueObj) {
+    let params = {}
+    if (keyValueObj?.length) {
+      for (let param of keyValueObj) {
+        params[param.url] = param.filename
+      }
+    }
+    return params
   }
 
   onMount(async () => {
@@ -437,6 +456,33 @@
               value={inputData[key]}
               options={Object.keys(table?.schema || {})}
             />
+          {:else if value.type === "attachment"}
+            <div class="attachment-field-wrapper">
+              <div class="label-wrapper">
+                <Label>{label}</Label>
+              </div>
+              <div class="attachment-field-width">
+                <KeyValueBuilder
+                  on:change={e =>
+                    onChange(
+                      {
+                        detail: e.detail.map(({ name, value }) => ({
+                          url: name,
+                          filename: value,
+                        })),
+                      },
+                      key
+                    )}
+                  object={handleAttachmentParams(inputData[key])}
+                  allowJS
+                  {bindings}
+                  keyBindings
+                  customButtonText={"Add attachment"}
+                  keyPlaceholder={"URL"}
+                  valuePlaceholder={"Filename"}
+                />
+              </div>
+            </div>
           {:else if value.customType === "filters"}
             <ActionButton on:click={drawer.show}>Define filters</ActionButton>
             <Drawer bind:this={drawer} title="Filtering">
@@ -651,12 +697,20 @@
   }
 
   .block-field {
-    display: flex; /* Use Flexbox */
+    display: flex;
     justify-content: space-between;
-    flex-direction: row; /* Arrange label and field side by side */
-    align-items: center; /* Align vertically in the center */
-    gap: 10px; /* Add some space between label and field */
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
     flex: 1;
+  }
+
+  .attachment-field-width {
+    margin-top: var(--spacing-xs);
+  }
+
+  .label-wrapper {
+    margin-top: var(--spacing-s);
   }
 
   .test :global(.drawer) {

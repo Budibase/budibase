@@ -1,6 +1,5 @@
 import { Knex, knex } from "knex"
 import {
-  FieldSubtype,
   FieldType,
   NumberFieldMetadata,
   Operation,
@@ -12,7 +11,7 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import { breakExternalTableId, getNativeSql, SqlClient } from "../utils"
-import { utils } from "@budibase/shared-core"
+import { helpers, utils } from "@budibase/shared-core"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
 
@@ -54,27 +53,15 @@ function generateSchema(
     ) {
       continue
     }
-    switch (column.type) {
+    const columnType = column.type
+    switch (columnType) {
       case FieldType.STRING:
       case FieldType.OPTIONS:
       case FieldType.LONGFORM:
       case FieldType.BARCODEQR:
+      case FieldType.BB_REFERENCE_SINGLE:
         schema.text(key)
         break
-      case FieldType.BB_REFERENCE: {
-        const subtype = column.subtype
-        switch (subtype) {
-          case FieldSubtype.USER:
-            schema.text(key)
-            break
-          case FieldSubtype.USERS:
-            schema.json(key)
-            break
-          default:
-            throw utils.unreachable(subtype)
-        }
-        break
-      }
       case FieldType.NUMBER:
         // if meta is specified then this is a junction table entry
         if (column.meta && column.meta.toKey && column.meta.toTable) {
@@ -97,7 +84,13 @@ function generateSchema(
         })
         break
       case FieldType.ARRAY:
-        schema.json(key)
+      case FieldType.BB_REFERENCE:
+        if (helpers.schema.isDeprecatedSingleUserColumn(column)) {
+          // This is still required for unit testing, in order to create "deprecated" schemas
+          schema.text(key)
+        } else {
+          schema.json(key)
+        }
         break
       case FieldType.LINK:
         // this side of the relationship doesn't need any SQL work
@@ -127,6 +120,18 @@ function generateSchema(
             .references(`${tableName}.${relatedPrimary}`)
         }
         break
+      case FieldType.FORMULA:
+        // This is allowed, but nothing to do on the external datasource
+        break
+      case FieldType.ATTACHMENTS:
+      case FieldType.ATTACHMENT_SINGLE:
+      case FieldType.AUTO:
+      case FieldType.JSON:
+      case FieldType.INTERNAL:
+        throw `${column.type} is not a valid SQL type`
+
+      default:
+        utils.unreachable(columnType)
     }
   }
 
