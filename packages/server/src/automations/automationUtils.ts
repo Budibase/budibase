@@ -163,7 +163,10 @@ async function generateAttachmentRow(attachment: AutomationAttachment) {
 
   try {
     const { filename } = attachment
-    const extension = path.extname(filename).replaceAll(".", "")
+    let extension = path.extname(filename)
+    if (extension.startsWith(".")) {
+      extension = extension.substring(1, extension.length)
+    }
     const attachmentResult = await objectStore.processAutomationAttachment(
       attachment
     )
@@ -182,8 +185,8 @@ async function generateAttachmentRow(attachment: AutomationAttachment) {
 
     return {
       size,
+      extension,
       name: filename,
-      extension: extension,
       key: s3Key,
     }
   } catch (error) {

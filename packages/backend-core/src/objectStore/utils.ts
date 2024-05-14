@@ -70,6 +70,9 @@ async function processUrlAttachment(
     throw new Error(`Unexpected response ${response.statusText}`)
   }
   const fallbackFilename = path.basename(new URL(attachment.url).pathname)
+  if (!response.body) {
+    throw new Error("No response received for attachment")
+  }
   return {
     filename: attachment.filename || fallbackFilename,
     content: stream.Readable.fromWeb(response.body as streamWeb.ReadableStream),
