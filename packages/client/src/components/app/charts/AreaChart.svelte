@@ -14,7 +14,7 @@
   export let dataLabels
   export let curve
   export let legend
-  export let valueUnits
+  export let yAxisUnits
   export let palette
   export let c1, c2, c3, c4, c5
 
@@ -30,8 +30,8 @@
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
       ? "datetime"
       : "category"
-  $: xAxisFormatter = getFormatter(labelType, valueUnits, "x")
-  $: yAxisFormatter = getFormatter(labelType, valueUnits, "y")
+  $: xAxisFormatter = getFormatter(labelType, yAxisUnits, "x")
+  $: yAxisFormatter = getFormatter(labelType, yAxisUnits, "y")
   $: fill = getFill(gradient)
 
   $: options = {
@@ -125,7 +125,7 @@
     })
   }
 
-  const getFormatter = (labelType, valueUnits, axis) => {
+  const getFormatter = (labelType, yAxisUnits, axis) => {
     const isLabelAxis = axis === "x"
 
     if (labelType === "datetime" && isLabelAxis) {
@@ -136,7 +136,7 @@
       return formatters["Default"]
     }
 
-    return formatters[valueUnits]
+    return formatters[yAxisUnits]
   }
 
   const getFill = gradient => {
