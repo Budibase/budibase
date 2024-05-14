@@ -12,7 +12,6 @@ import SqlTableQueryBuilder from "./sqlTable"
 import {
   BBReferenceFieldMetadata,
   FieldSchema,
-  BBReferenceFieldSubType,
   FieldType,
   JsonFieldMetadata,
   Operation,
@@ -27,6 +26,7 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import environment from "../../environment"
+import { helpers } from "@budibase/shared-core"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
@@ -787,7 +787,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return (
       field.type === FieldType.JSON ||
       (field.type === FieldType.BB_REFERENCE &&
-        field.subtype === BBReferenceFieldSubType.USERS)
+        !helpers.schema.isDeprecatedSingleUserColumn(field))
     )
   }
 

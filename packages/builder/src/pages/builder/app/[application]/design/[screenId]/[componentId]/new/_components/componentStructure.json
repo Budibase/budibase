@@ -71,6 +71,7 @@
       "multifieldselect",
       "s3upload",
       "codescanner",
+      "bbreferencesinglefield",
       "bbreferencefield"
     ]
   },
