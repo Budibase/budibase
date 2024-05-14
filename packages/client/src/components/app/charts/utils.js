@@ -5,6 +5,17 @@ export const formatters = {
   ["Datetime"]: val => new Date(val).toLocaleString(),
 }
 
+export const parsePalette = (paletteName) => {
+  if (paletteName === "Custom") {
+    // return null in this case so that the palette option doesn't get consumed by Apex Charts
+    return null;
+  }
+
+  const [_, number] = paletteName.split(" ");
+
+  return `pallete${number}`
+}
+
 // Deep clone which copies function references
 export const cloneDeep = (value) => {
   const typesToNaiveCopy = ["string", "boolean", "number", "function", "symbol"]
