@@ -589,9 +589,6 @@ async function destroyApp(ctx: UserCtx) {
 }
 
 async function preDestroyApp(ctx: UserCtx) {
-  if (env.SQS_SEARCH_ENABLE) {
-    await sdk.tables.sqs.cleanupApp(ctx.params.appId)
-  }
   const { rows } = await getUniqueRows([ctx.params.appId])
   ctx.rowCount = rows.length
 }

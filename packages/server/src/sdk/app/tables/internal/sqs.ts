@@ -1,8 +1,4 @@
-import {
-  context,
-  SQLITE_DESIGN_DOC_ID,
-  db as dbCore,
-} from "@budibase/backend-core"
+import { context, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import {
   FieldType,
   RelationshipFieldMetadata,
@@ -158,20 +154,5 @@ export async function removeTable(table: Table) {
     } else {
       throw err
     }
-  }
-}
-
-export async function cleanupApp(appId: string) {
-  const db = dbCore.getDB(appId)
-  if (!(await db.exists())) {
-    throw new Error("Cleanup must be preformed before app deletion.")
-  }
-  try {
-    const definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
-    // delete the design document
-    await db.remove(SQLITE_DESIGN_DOC_ID, definition._rev)
-    await db.sqlCleanup()
-  } catch (err: any) {
-    throw new Error(`Unable to cleanup SQS files - ${err.message}`)
   }
 }
