@@ -155,6 +155,8 @@ export default function positionDropdown(element, opts) {
         applyXStrategy(Strategies.StartToEnd)
       } else if (align === "left-outside") {
         applyXStrategy(Strategies.EndToStart)
+      } else if (align === "center") {
+        applyXStrategy(Strategies.MidPoint)
       } else {
         applyXStrategy(Strategies.StartToStart)
       }
