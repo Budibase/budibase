@@ -13,7 +13,7 @@ export const parsePalette = (paletteName) => {
 
   const [_, number] = paletteName.split(" ");
 
-  return `pallete${number}`
+  return `palette${number}`
 }
 
 // Deep clone which copies function references

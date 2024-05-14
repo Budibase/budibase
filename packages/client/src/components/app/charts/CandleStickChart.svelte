@@ -14,7 +14,7 @@
   export let height
   export let width
   export let animate
-  export let valueUnits
+  export let yAxisUnits
 
   $: series = getSeries(
     dataProvider,
@@ -55,7 +55,7 @@
     },
     yaxis: {
       labels: {
-        formatter: formatters[valueUnits],
+        formatter: formatters[yAxisUnits],
       },
       title: {
         text: yAxisLabel,

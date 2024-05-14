@@ -15,7 +15,7 @@
   export let animate
   export let legend
   export let stacked
-  export let valueUnits
+  export let yAxisUnits
   export let palette
   export let c1, c2, c3, c4, c5
   export let horizontal
@@ -27,8 +27,8 @@
     dataProvider?.schema?.[labelColumn]?.type === "datetime"
       ? "datetime"
       : "category"
-  $: xAxisFormatter = getFormatter(labelType, valueUnits, horizontal, "x")
-  $: yAxisFormatter = getFormatter(labelType, valueUnits, horizontal, "y")
+  $: xAxisFormatter = getFormatter(labelType, yAxisUnits, horizontal, "x")
+  $: yAxisFormatter = getFormatter(labelType, yAxisUnits, horizontal, "y")
 
   $: options = {
     series,
@@ -124,7 +124,7 @@
     })
   }
 
-  const getFormatter = (labelType, valueUnits, horizontal, axis) => {
+  const getFormatter = (labelType, yAxisUnits, horizontal, axis) => {
     const isLabelAxis =
       (axis === "y" && horizontal) || (axis === "x" && !horizontal)
     if (labelType === "datetime" && isLabelAxis) {
@@ -135,7 +135,7 @@
       return formatters["Default"]
     }
 
-    return formatters[valueUnits]
+    return formatters[yAxisUnits]
   }
 </script>
 
