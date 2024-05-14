@@ -73,7 +73,7 @@ function userColumnMapping(
 
     let wrapper = (s: string) => s
     if (isDeprecatedSingleUserColumn && filterValue && isSql) {
-      // Decreated single users are stored as stringified arrays of a single value
+      // Deprecated single users are stored as stringified arrays of a single value
       wrapper = (s: string) => JSON.stringify([s])
     }
 
