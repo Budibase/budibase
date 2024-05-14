@@ -33,6 +33,7 @@
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import EnterpriseBasicTrialModal from "components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
+  import UpdateAppTopNav from "components/common/UpdateAppTopNav.svelte"
 
   export let application
 
@@ -158,7 +159,11 @@
         </Tabs>
       </div>
       <div class="topcenternav">
-        <Heading size="XS">{$appStore.name}</Heading>
+        <div class="app-name">
+          <UpdateAppTopNav {application}>
+            <Heading noPadding size="XS">{$appStore.name}</Heading>
+          </UpdateAppTopNav>
+        </div>
       </div>
       <div class="toprightnav">
         <span>
@@ -247,7 +252,6 @@
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0px var(--spacing-m);
   }
 
   .topleftnav {
