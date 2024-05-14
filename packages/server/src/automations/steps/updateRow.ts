@@ -94,22 +94,29 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
     }
   }
 
-  // have to clean up the row, remove the table from it
-  const ctx: any = buildCtx(appId, emitter, {
-    body: {
-      ...inputs.row,
-      _id: inputs.rowId,
-    },
-    params: {
-      rowId: inputs.rowId,
-      tableId: tableId,
-    },
-  })
-
   try {
     if (tableId) {
-      inputs.row = await automationUtils.cleanUpRow(tableId, inputs.row)
+      inputs.row = await automationUtils.cleanUpRow(
+        inputs.row.tableId,
+        inputs.row
+      )
+
+      inputs.row = await automationUtils.sendAutomationAttachmentsToStorage(
+        inputs.row.tableId,
+        inputs.row
+      )
     }
+    // have to clean up the row, remove the table from it
+    const ctx: any = buildCtx(appId, emitter, {
+      body: {
+        ...inputs.row,
+        _id: inputs.rowId,
+      },
+      params: {
+        rowId: inputs.rowId,
+        tableId: tableId,
+      },
+    })
     await rowController.patch(ctx)
     return {
       row: ctx.body,

@@ -7,6 +7,7 @@ import {
   MediumRowHeight,
   NewRowID,
 } from "../lib/constants"
+import { parseCellID } from "../lib/utils"
 
 export const createStores = context => {
   const { props } = context
@@ -25,7 +26,7 @@ export const createStores = context => {
   const focusedRowId = derived(
     focusedCellId,
     $focusedCellId => {
-      return $focusedCellId?.split("-")[0]
+      return parseCellID($focusedCellId)?.id
     },
     null
   )
@@ -72,7 +73,7 @@ export const deriveStores = context => {
   const focusedRow = derived(
     [focusedCellId, rowLookupMap, rows],
     ([$focusedCellId, $rowLookupMap, $rows]) => {
-      const rowId = $focusedCellId?.split("-")[0]
+      const rowId = parseCellID($focusedCellId)?.id
 
       // Edge case for new rows
       if (rowId === NewRowID) {
@@ -98,7 +99,7 @@ export const deriveStores = context => {
 
   // Derive whether we should use the compact UI, depending on width
   const compact = derived([stickyColumn, width], ([$stickyColumn, $width]) => {
-    return ($stickyColumn?.width || 0) + $width + GutterWidth < 1100
+    return ($stickyColumn?.width || 0) + $width + GutterWidth < 800
   })
 
   return {
@@ -109,12 +110,11 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { focusedCellId, selectedRows, hoveredRowId } = context
+  const { focusedCellId, hoveredRowId } = context
 
   // Callback when leaving the grid, deselecting all focussed or selected items
   const blur = () => {
     focusedCellId.set(null)
-    selectedRows.set({})
     hoveredRowId.set(null)
   }
 
@@ -152,7 +152,7 @@ export const initialise = context => {
     const hasRow = rows.actions.hasRow
 
     // Check selected cell
-    const selectedRowId = $focusedCellId?.split("-")[0]
+    const selectedRowId = parseCellID($focusedCellId)?.id
     if (selectedRowId && !hasRow(selectedRowId)) {
       focusedCellId.set(null)
     }
