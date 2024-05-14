@@ -59,7 +59,7 @@
 
 <style>
   .wrapper {
-    background-color: var(--background-alt);
+    background-color: var(--spectrum-global-color-gray-100);
     box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.42);
     opacity: 0;
     overflow: hidden;
