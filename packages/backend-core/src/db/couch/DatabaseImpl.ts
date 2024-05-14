@@ -12,6 +12,7 @@ import {
   isDocument,
   RowResponse,
   RowValue,
+  SQLiteDefinition,
   SqlQueryBinding,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
@@ -22,6 +23,7 @@ import { newid } from "../../docIds/newid"
 import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 import { checkSlashesInUrl } from "../../helpers"
+import env from "../../environment"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -349,6 +351,17 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     try {
+      if (env.SQS_SEARCH_ENABLE) {
+        // delete the design document, then run the cleanup operation
+        try {
+          const definition = await this.get<SQLiteDefinition>(
+            SQLITE_DESIGN_DOC_ID
+          )
+          await this.remove(SQLITE_DESIGN_DOC_ID, definition._rev)
+        } finally {
+          await this.sqlCleanup()
+        }
+      }
       return await this.nano().db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
