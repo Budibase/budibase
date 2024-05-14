@@ -94,7 +94,9 @@ describe("Application Meta Store", () => {
   it("Sync type support information to state", async ctx => {
     ctx.test.appStore.syncClientTypeSupportPresets({ preset: "information" })
 
-    expect(ctx.test.store.typeSupportPresets).toStrictEqual({ preset: "information" })
+    expect(ctx.test.store.typeSupportPresets).toStrictEqual({
+      preset: "information",
+    })
   })
 
   it("Sync component feature flags to state", async ctx => {

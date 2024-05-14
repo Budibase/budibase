@@ -5,19 +5,19 @@ export const formatters = {
   ["Datetime"]: val => new Date(val).toLocaleString(),
 }
 
-export const parsePalette = (paletteName) => {
+export const parsePalette = paletteName => {
   if (paletteName === "Custom") {
     // return null in this case so that the palette option doesn't get consumed by Apex Charts
-    return null;
+    return null
   }
 
-  const [_, number] = paletteName.split(" ");
+  const [_, number] = paletteName.split(" ")
 
   return `palette${number}`
 }
 
 // Deep clone which copies function references
-export const cloneDeep = (value) => {
+export const cloneDeep = value => {
   const typesToNaiveCopy = ["string", "boolean", "number", "function", "symbol"]
 
   if (value === null) {
@@ -29,7 +29,7 @@ export const cloneDeep = (value) => {
   }
 
   if (typesToNaiveCopy.includes(typeof value)) {
-    return value;
+    return value
   }
 
   if (Array.isArray(value)) {
@@ -44,7 +44,7 @@ export const cloneDeep = (value) => {
       cloneObject[key] = cloneDeep(childValue)
     })
 
-    return cloneObject;
+    return cloneObject
   }
 
   throw `Unsupported value: "${value}" of type: "${typeof value}"`

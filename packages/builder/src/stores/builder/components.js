@@ -103,7 +103,7 @@ export class ComponentStore extends BudiStore {
     this.update(state => ({
       ...state,
       components,
-      customComponents
+      customComponents,
     }))
 
     // Sync client features to app store

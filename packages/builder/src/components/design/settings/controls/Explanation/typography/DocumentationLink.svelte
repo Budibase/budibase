@@ -7,7 +7,14 @@
   export let disabled = false
 </script>
 
-<a class:disabled tabindex="0" {href} rel="noopener noreferrer" target="_blank" class="link">
+<a
+  class:disabled
+  tabindex="0"
+  {href}
+  rel="noopener noreferrer"
+  target="_blank"
+  class="link"
+>
   <Icon size="XS" name={icon} />
   <span class="text">
     <slot>
@@ -53,7 +60,7 @@
     color: var(--blue);
   }
 
-  .disabled :global(svg){
+  .disabled :global(svg) {
     color: var(--grey-6);
   }
 </style>
