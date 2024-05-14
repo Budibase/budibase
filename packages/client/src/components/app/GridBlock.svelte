@@ -36,6 +36,7 @@
 
   let grid
   let gridContext
+  let minHeight
 
   $: parsedColumns = getParsedColumns(columns)
   $: columnWhitelist = parsedColumns.filter(x => x.active).map(x => x.field)
@@ -50,8 +51,7 @@
       metadata: { dataSource: table },
     },
   ]
-  $: height = $component.styles?.normal?.height || "408px"
-  $: styles = getSanitisedStyles($component.styles)
+  $: gridContext?.minHeight?.subscribe($height => (minHeight = $height))
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
@@ -128,23 +128,16 @@
     )
   }
 
-  const getSanitisedStyles = styles => {
-    return {
-      ...styles,
-      normal: {
-        ...styles?.normal,
-        height: undefined,
-      },
-    }
-  }
-
   onMount(() => {
     gridContext = grid.getContext()
   })
 </script>
 
-<div use:styleable={styles} class:in-builder={$builderStore.inBuilder}>
-  <span style="--height:{height};">
+<span style="--min-height:{minHeight}px">
+  <div
+    use:styleable={$component.styles}
+    class:in-builder={$builderStore.inBuilder}
+  >
     <Grid
       bind:this={grid}
       datasource={table}
@@ -170,12 +163,15 @@
       buttons={enrichedButtons}
       on:rowclick={e => onRowClick?.({ row: e.detail })}
     />
-  </span>
-</div>
+  </div>
+</span>
 
 <Provider {data} {actions} />
 
 <style>
+  span {
+    display: contents;
+  }
   div {
     display: flex;
     flex-direction: column;
@@ -183,14 +179,10 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     overflow: hidden;
+    height: 410px;
+    min-height: var(--min-height);
   }
   div.in-builder :global(*) {
     pointer-events: none;
-  }
-  span {
-    display: contents;
-  }
-  span :global(.grid) {
-    height: var(--height);
   }
 </style>
