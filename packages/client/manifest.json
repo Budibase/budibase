@@ -2751,7 +2751,9 @@
         "type": "number",
         "label": "Initial width",
         "key": "width",
-        "placeholder": "Auto"
+        "placeholder": "Auto",
+        "min": 80,
+        "max": 9999
       }
     ]
   },
