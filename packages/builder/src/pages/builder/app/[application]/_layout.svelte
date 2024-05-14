@@ -105,6 +105,10 @@
   }
 
   onMount(async () => {
+    document.fonts.onloadingdone = e => {
+      builderStore.loadFonts(e.fontfaces)
+    }
+
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
@@ -145,17 +149,19 @@
           />
         </span>
         <Tabs {selected} size="M">
-          {#each $layout.children as { path, title }}
-            <TourWrap stepKeys={[`builder-${title}-section`]}>
-              <Tab
-                quiet
-                selected={$isActive(path)}
-                on:click={topItemNavigate(path)}
-                title={capitalise(title)}
-                id={`builder-${title}-tab`}
-              />
-            </TourWrap>
-          {/each}
+          {#key $builderStore?.fonts}
+            {#each $layout.children as { path, title }}
+              <TourWrap stepKeys={[`builder-${title}-section`]}>
+                <Tab
+                  quiet
+                  selected={$isActive(path)}
+                  on:click={topItemNavigate(path)}
+                  title={capitalise(title)}
+                  id={`builder-${title}-tab`}
+                />
+              </TourWrap>
+            {/each}
+          {/key}
         </Tabs>
       </div>
       <div class="topcenternav">
