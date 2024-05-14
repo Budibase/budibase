@@ -1,5 +1,6 @@
 <script>
   import ApexChart from "./ApexChart.svelte"
+  import { parsePalette } from "./utils"
 
   export let dataProvider
   export let valueColumn
@@ -25,7 +26,7 @@
     series,
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
     theme: {
-      palette: palette === "Custom" ? null : palette,
+      palette: parsePalette(palette),
     },
     title: {
       text: title,

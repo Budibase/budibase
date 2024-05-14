@@ -1,6 +1,6 @@
 <script>
   import ApexChart from "./ApexChart.svelte"
-  import { formatters } from "./utils"
+  import { formatters, parsePalette } from "./utils"
 
   export let title
   export let dataProvider
@@ -35,7 +35,7 @@
     },
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
     theme: {
-      palette: palette === "Custom" ? null : palette,
+      palette: parsePalette(palette),
     },
     legend: {
       show: legend,

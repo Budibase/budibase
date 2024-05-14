@@ -11,7 +11,6 @@
 
   // Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone options here to provide a buffer.
   $: optionsCopy = cloneDeep(options)
-  $: console.log(options, optionsCopy)
 
   let chartElement
   let chart
