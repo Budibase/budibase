@@ -102,7 +102,7 @@ describe("rowProcessor - inputProcessing", () => {
           name: "user",
           constraints: {
             presence: true,
-            type: "string",
+            type: "array",
           },
         },
       },
@@ -154,7 +154,7 @@ describe("rowProcessor - inputProcessing", () => {
           name: "user",
           constraints: {
             presence: false,
-            type: "string",
+            type: "array",
           },
         },
       },
@@ -196,7 +196,7 @@ describe("rowProcessor - inputProcessing", () => {
             name: "user",
             constraints: {
               presence: false,
-              type: "string",
+              type: "array",
             },
           },
         },

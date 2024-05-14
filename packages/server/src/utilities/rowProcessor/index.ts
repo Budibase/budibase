@@ -164,11 +164,12 @@ export async function inputProcessing(
         delete clonedRow[key].url
       }
     } else if (
-      field.type === FieldType.BB_REFERENCE_SINGLE ||
-      helpers.schema.isDeprecatedSingleUserColumn(field)
+      value &&
+      (field.type === FieldType.BB_REFERENCE_SINGLE ||
+        helpers.schema.isDeprecatedSingleUserColumn(field))
     ) {
       clonedRow[key] = await processInputBBReference(value, field.subtype)
-    } else if (field.type === FieldType.BB_REFERENCE) {
+    } else if (value && field.type === FieldType.BB_REFERENCE) {
       clonedRow[key] = await processInputBBReferences(value, field.subtype)
     }
   }
