@@ -25,22 +25,22 @@
     return !!schema.constraints?.inclusion?.length
   }
 
-  const handleAttachmentParams = keyValuObj => {
+  function handleAttachmentParams(keyValueObj) {
     let params = {}
 
     if (
       (schema.type === FieldType.ATTACHMENT_SINGLE ||
         schema.type === FieldType.SIGNATURE) &&
-      Object.keys(keyValuObj).length === 0
+      Object.keys(keyValueObj).length === 0
     ) {
       return []
     }
-    if (!Array.isArray(keyValuObj)) {
-      keyValuObj = [keyValuObj]
+    if (!Array.isArray(keyValueObj) && keyValueObj) {
+      keyValueObj = [keyValueObj]
     }
 
-    if (keyValuObj.length) {
-      for (let param of keyValuObj) {
+    if (keyValueObj.length) {
+      for (let param of keyValueObj) {
         params[param.url] = param.filename
       }
     }

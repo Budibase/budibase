@@ -1,11 +1,11 @@
 import * as linkRows from "../../db/linkedRows"
-import { processFormulas, fixAutoColumnSubType } from "./utils"
+import { fixAutoColumnSubType, processFormulas } from "./utils"
 import { objectStore, utils } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import {
-  FieldType,
   AutoFieldSubType,
+  FieldType,
   Row,
   RowAttachment,
   Table,
@@ -224,30 +224,32 @@ export async function outputProcessing<T extends Row[] | Row>(
     opts.squash = true
   }
 
-  // process complex types: attachements, bb references...
+  // process complex types: attachments, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
-    if (column.type === FieldType.ATTACHMENTS) {
-      for (let row of enriched) {
-        if (row[property] == null || !Array.isArray(row[property])) {
-          continue
-        }
-        row[property].forEach((attachment: RowAttachment) => {
-          if (!attachment.url) {
-            attachment.url = objectStore.getAppFileUrl(attachment.key)
-          }
-        })
-      }
-    } else if (
+    if (
+      column.type === FieldType.ATTACHMENTS ||
       column.type === FieldType.ATTACHMENT_SINGLE ||
       column.type === FieldType.SIGNATURE
     ) {
       for (let row of enriched) {
-        if (!row[property] || Object.keys(row[property]).length === 0) {
+        if (row[property] == null) {
           continue
         }
-
-        if (!row[property].url) {
-          row[property].url = objectStore.getAppFileUrl(row[property].key)
+        const process = (attachment: RowAttachment) => {
+          if (!attachment.url && attachment.key) {
+            attachment.url = objectStore.getAppFileUrl(attachment.key)
+          }
+          return attachment
+        }
+        if (typeof row[property] === "string") {
+          row[property] = JSON.parse(row[property])
+        }
+        if (Array.isArray(row[property])) {
+          row[property].forEach((attachment: RowAttachment) => {
+            process(attachment)
+          })
+        } else {
+          process(row[property])
         }
       }
     } else if (
