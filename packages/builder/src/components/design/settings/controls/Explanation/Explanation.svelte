@@ -94,7 +94,7 @@
 <style>
   .tooltipContents {
     max-width: 450px;
-    background-color: var(--background-alt);
+    background-color: var(--spectrum-global-color-gray-100);
     display: block;
     padding: 20px 16px 10px;
     border-radius: 5px;
