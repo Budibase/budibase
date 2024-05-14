@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import ApexCharts from "apexcharts"
   import { Icon } from "@budibase/bbui"
-  import { cloneDeep } from "lodash"
+  import { cloneDeep } from "./utils"
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -10,7 +10,8 @@
   export let options
 
   // Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone options here to provide a buffer.
-  $: optionsCopy = structuredClone(options)
+  $: optionsCopy = cloneDeep(options)
+  $: console.log(options, optionsCopy)
 
   let chartElement
   let chart

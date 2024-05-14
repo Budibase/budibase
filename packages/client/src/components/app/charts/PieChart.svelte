@@ -1,6 +1,6 @@
 <script>
   import ApexChart from "./ApexChart.svelte"
-  import formatters from "./formatters"
+  import { formatters } from "./utils"
 
   export let title
   export let dataProvider
