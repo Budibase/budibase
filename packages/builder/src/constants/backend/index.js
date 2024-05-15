@@ -119,7 +119,7 @@ export const FIELDS = {
     },
   },
   ATTACHMENTS: {
-    name: "Multiple attachments",
+    name: "Multi attachment",
     type: FieldType.ATTACHMENTS,
     icon: TypeIconMap[FieldType.ATTACHMENTS],
     constraints: {
@@ -166,7 +166,7 @@ export const FIELDS = {
     ],
   },
   USERS: {
-    name: "Multiple users",
+    name: "Multi user",
     type: FieldType.BB_REFERENCE,
     subtype: BBReferenceFieldSubType.USER,
     icon: TypeIconMap[FieldType.BB_REFERENCE][BBReferenceFieldSubType.USER],
