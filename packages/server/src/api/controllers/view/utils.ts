@@ -2,13 +2,18 @@ import {
   ViewName,
   generateMemoryViewID,
   getMemoryViewParams,
-  DocumentType,
   SEPARATOR,
 } from "../../../db/utils"
 import env from "../../../environment"
 import { context } from "@budibase/backend-core"
 import viewBuilder from "./viewBuilder"
-import { Database, DBView, DesignDocument, InMemoryView } from "@budibase/types"
+import {
+  Database,
+  DBView,
+  DocumentType,
+  DesignDocument,
+  InMemoryView,
+} from "@budibase/types"
 
 export async function getView(viewName: string) {
   const db = context.getAppDB()

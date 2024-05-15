@@ -4,6 +4,7 @@ services:
   # user: sa
   # database: master
   mssql:
+    # platform: linux/amd64
     image: bb/mssql
     build:
       context: .

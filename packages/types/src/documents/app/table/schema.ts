@@ -1,9 +1,10 @@
 // all added by grid/table when defining the
 // column size, position and whether it can be viewed
-import { FieldSubtype, FieldType } from "../row"
+import { FieldType } from "../row"
 import {
   AutoFieldSubType,
   AutoReason,
+  BBReferenceFieldSubType,
   FormulaType,
   JsonFieldSubType,
   RelationshipType,
@@ -91,6 +92,7 @@ export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.DATETIME
   ignoreTimezones?: boolean
   timeOnly?: boolean
+  dateOnly?: boolean
   subtype?: AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT
 }
 
@@ -108,14 +110,17 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
 export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+  subtype: BBReferenceFieldSubType
   relationshipType?: RelationshipType
 }
-
-export interface AttachmentFieldMetadata
+export interface BBReferenceSingleFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
-  type: FieldType.ATTACHMENT
-  subtype?: FieldSubtype.SINGLE
+  type: FieldType.BB_REFERENCE_SINGLE
+  subtype: Exclude<BBReferenceFieldSubType, BBReferenceFieldSubType.USERS>
+}
+
+export interface AttachmentFieldMetadata extends BaseFieldSchema {
+  type: FieldType.ATTACHMENTS
 }
 
 export interface FieldConstraints {
@@ -164,7 +169,8 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.NUMBER
     | FieldType.LONGFORM
     | FieldType.BB_REFERENCE
-    | FieldType.ATTACHMENT
+    | FieldType.BB_REFERENCE_SINGLE
+    | FieldType.ATTACHMENTS
   >
 }
 
@@ -179,6 +185,7 @@ export type FieldSchema =
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
   | AttachmentFieldMetadata
+  | BBReferenceSingleFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
@@ -206,16 +213,4 @@ export function isManyToOne(
   field: RelationshipFieldMetadata
 ): field is ManyToOneRelationshipFieldMetadata {
   return field.relationshipType === RelationshipType.MANY_TO_ONE
-}
-
-export function isBBReferenceField(
-  field: FieldSchema
-): field is BBReferenceFieldMetadata {
-  return field.type === FieldType.BB_REFERENCE
-}
-
-export function isAttachmentField(
-  field: FieldSchema
-): field is AttachmentFieldMetadata {
-  return field.type === FieldType.ATTACHMENT
 }

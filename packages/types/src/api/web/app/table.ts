@@ -1,18 +1,12 @@
 import {
-  FieldSchema,
   Row,
   Table,
   TableRequest,
-  TableSchema,
   View,
-  ViewV2,
+  ViewV2Enriched,
 } from "../../../documents"
 
-interface ViewV2Response extends ViewV2 {
-  schema: TableSchema
-}
-
-export type TableViewsResponse = { [key: string]: View | ViewV2Response }
+export type TableViewsResponse = { [key: string]: View | ViewV2Enriched }
 
 export interface TableResponse extends Table {
   views?: TableViewsResponse
@@ -36,8 +30,8 @@ export interface BulkImportResponse {
 }
 
 export interface MigrateRequest {
-  oldColumn: FieldSchema
-  newColumn: FieldSchema
+  oldColumn: string
+  newColumn: string
 }
 
 export interface MigrateResponse {

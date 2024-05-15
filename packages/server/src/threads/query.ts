@@ -167,7 +167,7 @@ class QueryRunner {
         this.hasRerun = true
       }
 
-      await threadUtils.invalidateDynamicVariables(this.cachedVariables)
+      await threadUtils.invalidateCachedVariable(this.cachedVariables)
       return this.execute()
     }
 
@@ -254,7 +254,7 @@ class QueryRunner {
     let { parameters } = this
     const queryId = variable.queryId,
       name = variable.name
-    let value = await threadUtils.checkCacheForDynamicVariable(queryId, name)
+    let value = await threadUtils.getCachedVariable(queryId, name)
     if (!value) {
       value = this.queryResponse[queryId]
         ? this.queryResponse[queryId]

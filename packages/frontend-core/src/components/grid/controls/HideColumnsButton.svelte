@@ -81,6 +81,7 @@
           size="S"
           value={column.visible}
           on:change={e => toggleVisibility(column, e.detail)}
+          disabled={column.primaryDisplay}
         />
       {/each}
     </div>

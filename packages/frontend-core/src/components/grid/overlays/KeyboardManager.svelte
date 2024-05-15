@@ -2,6 +2,7 @@
   import { getContext, onMount } from "svelte"
   import { debounce } from "../../../utils/utils"
   import { NewRowID } from "../lib/constants"
+  import { getCellID, parseCellID } from "../lib/utils"
 
   const {
     rows,
@@ -20,6 +21,7 @@
 
   const ignoredOriginSelectors = [
     ".spectrum-Modal",
+    ".date-time-popover",
     "#builder-side-panel-container",
     "[data-grid-ignore]",
   ]
@@ -153,7 +155,7 @@
     if (!firstColumn) {
       return
     }
-    focusedCellId.set(`${firstRow._id}-${firstColumn.name}`)
+    focusedCellId.set(getCellID(firstRow._id, firstColumn.name))
   }
 
   // Changes the focused cell by moving it left or right to a different column
@@ -162,8 +164,7 @@
       return
     }
     const cols = $visibleColumns
-    const split = $focusedCellId.split("-")
-    const columnName = split[1]
+    const { id, field: columnName } = parseCellID($focusedCellId)
     let newColumnName
     if (columnName === $stickyColumn?.name) {
       const index = delta - 1
@@ -177,7 +178,7 @@
       }
     }
     if (newColumnName) {
-      $focusedCellId = `${split[0]}-${newColumnName}`
+      $focusedCellId = getCellID(id, newColumnName)
     }
   }
 
@@ -188,8 +189,8 @@
     }
     const newRow = $rows[$focusedRow.__idx + delta]
     if (newRow) {
-      const split = $focusedCellId.split("-")
-      $focusedCellId = `${newRow._id}-${split[1]}`
+      const { field } = parseCellID($focusedCellId)
+      $focusedCellId = getCellID(newRow._id, field)
     }
   }
 

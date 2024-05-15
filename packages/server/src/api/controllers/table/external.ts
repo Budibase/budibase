@@ -15,6 +15,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
+import { inputProcessing } from "../../../utilities/rowProcessor"
 
 function getDatasourceId(table: Table) {
   if (!table) {
@@ -31,7 +32,6 @@ export async function save(
   renaming?: RenameColumn
 ) {
   const inputs = ctx.request.body
-  const adding = inputs?._add
   // can't do this right now
   delete inputs.rows
   const tableId = ctx.request.body._id
@@ -44,7 +44,7 @@ export async function save(
     const { datasource, table } = await sdk.tables.external.save(
       datasourceId!,
       inputs,
-      { tableId, renaming, adding }
+      { tableId, renaming }
     )
     builderSocket?.emitDatasourceUpdate(ctx, datasource)
     return table
@@ -81,7 +81,7 @@ export async function destroy(ctx: UserCtx) {
 export async function bulkImport(
   ctx: UserCtx<BulkImportRequest, BulkImportResponse>
 ) {
-  const table = await sdk.tables.getTable(ctx.params.tableId)
+  let table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows } = ctx.request.body
   const schema = table.schema
 
@@ -89,7 +89,15 @@ export async function bulkImport(
     ctx.throw(400, "Provided data import information is invalid.")
   }
 
-  const parsedRows = parse(rows, schema)
+  const parsedRows = []
+  for (const row of parse(rows, schema)) {
+    const processed = await inputProcessing(ctx.user?._id, table, row, {
+      noAutoRelationships: true,
+    })
+    parsedRows.push(processed.row)
+    table = processed.table
+  }
+
   await handleRequest(Operation.BULK_CREATE, table._id!, {
     rows: parsedRows,
   })

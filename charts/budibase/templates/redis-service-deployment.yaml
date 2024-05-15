@@ -22,7 +22,7 @@ spec:
         - redis-server 
         - --requirepass 
         - {{ .Values.services.redis.password }}
-        image: redis
+        image: {{ .Values.services.redis.image }}
         imagePullPolicy: ""
         name: redis-service
         ports:
@@ -34,6 +34,12 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: redis-data
+        {{ if .Values.services.redis.extraVolumeMounts }}
+          {{- toYaml .Values.services.redis.extraVolumeMounts | nindent 8 }}
+        {{- end }}
+    {{- if .Values.services.redis.extraContainers }}
+      {{- toYaml .Values.services.redis.extraContainers | nindent 6 }}
+    {{- end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -55,6 +61,9 @@ spec:
       - name: redis-data
         persistentVolumeClaim:
           claimName: redis-data
+      {{ if .Values.services.redis.extraVolumes }}
+        {{- toYaml .Values.services.redis.extraVolumes | nindent 6 }}
+      {{- end }}
 
 status: {}
 {{- end }}

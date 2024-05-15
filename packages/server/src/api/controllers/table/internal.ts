@@ -16,7 +16,7 @@ export async function save(
   ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
   renaming?: RenameColumn
 ) {
-  const { rows, ...rest } = ctx.request.body
+  const { _rename, rows, ...rest } = ctx.request.body
   let tableToSave: Table = {
     _id: generateTableID(),
     ...rest,

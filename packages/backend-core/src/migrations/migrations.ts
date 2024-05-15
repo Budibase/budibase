@@ -26,7 +26,6 @@ export const getMigrationsDoc = async (db: any) => {
     if (err.status && err.status === 404) {
       return { _id: DocumentType.MIGRATIONS }
     } else {
-      console.error(err)
       throw err
     }
   }

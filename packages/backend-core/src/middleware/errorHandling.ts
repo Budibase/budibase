@@ -12,7 +12,7 @@ export async function errorHandling(ctx: any, next: any) {
     if (status >= 400 && status < 500) {
       console.warn(err)
     } else {
-      console.error(err)
+      console.error("Got 400 response code", err)
     }
 
     let error: APIError = {

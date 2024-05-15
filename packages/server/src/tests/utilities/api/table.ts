@@ -1,4 +1,6 @@
 import {
+  BulkImportRequest,
+  BulkImportResponse,
   MigrateRequest,
   MigrateResponse,
   SaveTableRequest,
@@ -36,6 +38,30 @@ export class TableAPI extends TestAPI {
   ): Promise<MigrateResponse> => {
     return await this._post<MigrateResponse>(`/api/tables/${tableId}/migrate`, {
       body: data,
+      expectations,
+    })
+  }
+
+  import = async (
+    tableId: string,
+    data: BulkImportRequest,
+    expectations?: Expectations
+  ): Promise<BulkImportResponse> => {
+    return await this._post<BulkImportResponse>(
+      `/api/tables/${tableId}/import`,
+      {
+        body: data,
+        expectations,
+      }
+    )
+  }
+
+  destroy = async (
+    tableId: string,
+    revId: string,
+    expectations?: Expectations
+  ): Promise<void> => {
+    return await this._delete<void>(`/api/tables/${tableId}/${revId}`, {
       expectations,
     })
   }

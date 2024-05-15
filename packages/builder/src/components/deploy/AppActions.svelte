@@ -32,13 +32,9 @@
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
-  import { onMount } from "svelte"
-  import PosthogClient from "../../analytics/PosthogClient"
 
   export let application
   export let loaded
-
-  const posthog = new PosthogClient(process.env.POSTHOG_TOKEN)
 
   let unpublishModal
   let updateAppModal
@@ -154,10 +150,6 @@
       notifications.error("Error refreshing app")
     }
   }
-
-  onMount(() => {
-    posthog.init()
-  })
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -4,6 +4,7 @@
 export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
 export { Feature as Features } from "@budibase/types"
 import { BpmCorrelationKey } from "@budibase/shared-core"
+import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
 
 // Cookie names
 export const Cookies = {
@@ -56,6 +57,7 @@ export const PlanType = {
   PRO: "pro",
   BUSINESS: "business",
   ENTERPRISE: "enterprise",
+  ENTERPRISE_BASIC_TRIAL: "enterprise_basic_trial",
 }
 
 /**
@@ -112,4 +114,29 @@ export const EventPublishType = {
 export const ContextScopes = {
   Local: "local",
   Global: "global",
+}
+
+export const TypeIconMap = {
+  [FieldType.STRING]: "Text",
+  [FieldType.OPTIONS]: "Dropdown",
+  [FieldType.DATETIME]: "Calendar",
+  [FieldType.BARCODEQR]: "Camera",
+  [FieldType.LONGFORM]: "TextAlignLeft",
+  [FieldType.ARRAY]: "Duplicate",
+  [FieldType.NUMBER]: "123",
+  [FieldType.BOOLEAN]: "Boolean",
+  [FieldType.ATTACHMENTS]: "DocumentFragmentGroup",
+  [FieldType.ATTACHMENT_SINGLE]: "DocumentFragment",
+  [FieldType.LINK]: "DataCorrelated",
+  [FieldType.FORMULA]: "Calculator",
+  [FieldType.JSON]: "Brackets",
+  [FieldType.BIGINT]: "TagBold",
+  [FieldType.AUTO]: "MagicWand",
+  [FieldType.BB_REFERENCE]: {
+    [BBReferenceFieldSubType.USER]: "UserGroup",
+    [BBReferenceFieldSubType.USERS]: "UserGroup",
+  },
+  [FieldType.BB_REFERENCE_SINGLE]: {
+    [BBReferenceFieldSubType.USER]: "User",
+  },
 }

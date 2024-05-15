@@ -126,7 +126,7 @@
       <div class="right-content">
         <svelte:component
           this={listType}
-          anchor={anchors[draggableItem.item._id]}
+          anchor={anchors[draggableItem.id]}
           item={draggableItem.item}
           {...listTypeProps}
           on:change={onItemChanged}

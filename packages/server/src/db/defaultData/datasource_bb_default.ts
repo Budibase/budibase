@@ -299,7 +299,7 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
       sortable: false,
     },
     "Badge Photo": {
-      type: FieldType.ATTACHMENT,
+      type: FieldType.ATTACHMENTS,
       constraints: {
         type: FieldType.ARRAY,
         presence: false,
@@ -607,7 +607,7 @@ export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
       ignoreTimezones: true,
     },
     Attachment: {
-      type: FieldType.ATTACHMENT,
+      type: FieldType.ATTACHMENTS,
       constraints: {
         type: FieldType.ARRAY,
         presence: false,

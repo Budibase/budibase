@@ -106,6 +106,5 @@
     display: flex;
     flex-direction: column;
     background: var(--background);
-    overflow: hidden;
   }
 </style>

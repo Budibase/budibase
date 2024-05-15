@@ -42,7 +42,7 @@ export class NavigationStore extends BudiStore {
     this.syncAppNavigation(app.navigation)
   }
 
-  async saveLink(url, title) {
+  async saveLink(url, title, roleId) {
     const navigation = get(this.store)
     let links = [...(navigation?.links ?? [])]
 
@@ -54,6 +54,8 @@ export class NavigationStore extends BudiStore {
     links.push({
       text: title,
       url,
+      type: "link",
+      roleId,
     })
     await this.save({
       ...navigation,
@@ -67,10 +69,19 @@ export class NavigationStore extends BudiStore {
     if (!links?.length) {
       return
     }
-
-    // Filter out the URLs to delete
     urls = Array.isArray(urls) ? urls : [urls]
+
+    // Filter out top level links pointing to these URLs
     links = links.filter(link => !urls.includes(link.url))
+
+    // Filter out nested links pointing to these URLs
+    links.forEach(link => {
+      if (link.type === "sublinks" && link.subLinks?.length) {
+        link.subLinks = link.subLinks.filter(
+          subLink => !urls.includes(subLink.url)
+        )
+      }
+    })
 
     await this.save({
       ...navigation,

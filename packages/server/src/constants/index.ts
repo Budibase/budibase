@@ -20,6 +20,7 @@ export enum FilterTypes {
   NOT_EMPTY = "notEmpty",
   CONTAINS = "contains",
   NOT_CONTAINS = "notContains",
+  CONTAINS_ANY = "containsAny",
   ONE_OF = "oneOf",
 }
 
@@ -30,6 +31,7 @@ export const NoEmptyFilterStrings = [
   FilterTypes.NOT_EQUAL,
   FilterTypes.CONTAINS,
   FilterTypes.NOT_CONTAINS,
+  FilterTypes.CONTAINS_ANY,
 ]
 
 export const CanSwitchTypes = [

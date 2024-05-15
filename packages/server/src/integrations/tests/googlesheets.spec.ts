@@ -129,10 +129,11 @@ describe("Google Sheets Integration", () => {
       })
       expect(sheet.loadHeaderRow).toHaveBeenCalledTimes(1)
       expect(sheet.setHeaderRow).toHaveBeenCalledTimes(1)
-      expect(sheet.setHeaderRow).toHaveBeenCalledWith(["name"])
-
-      // No undefined are sent
-      expect((sheet.setHeaderRow as any).mock.calls[0][0]).toHaveLength(1)
+      expect(sheet.setHeaderRow).toHaveBeenCalledWith([
+        "name",
+        "description",
+        "location",
+      ])
     })
   })
 

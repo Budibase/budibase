@@ -459,10 +459,11 @@ describe("scim", () => {
       it("should return 404 when requesting unexisting user id", async () => {
         const response = await findScimUser(structures.uuid(), { expect: 404 })
 
-        expect(response).toEqual({
-          message: "missing",
-          status: 404,
-        })
+        expect(response).toEqual(
+          expect.objectContaining({
+            status: 404,
+          })
+        )
       })
     })
 
@@ -704,7 +705,6 @@ describe("scim", () => {
           expect(response).toEqual({
             Resources: expect.arrayContaining(
               groups.map(g => {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { members, ...groupData } = g
                 return groupData
               })
@@ -724,7 +724,6 @@ describe("scim", () => {
           expect(response).toEqual({
             Resources: expect.arrayContaining(
               groups.map(g => {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { members, displayName, ...groupData } = g
                 return groupData
               })
@@ -863,10 +862,11 @@ describe("scim", () => {
       it("should return 404 when requesting unexisting group id", async () => {
         const response = await findScimGroup(structures.uuid(), { expect: 404 })
 
-        expect(response).toEqual({
-          message: "missing",
-          status: 404,
-        })
+        expect(response).toEqual(
+          expect.objectContaining({
+            status: 404,
+          })
+        )
       })
 
       it("should allow excluding members", async () => {
@@ -874,7 +874,6 @@ describe("scim", () => {
           qs: "excludedAttributes=members",
         })
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { members, ...expectedResponse } = group
 
         expect(response).toEqual(expectedResponse)

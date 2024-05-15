@@ -65,6 +65,7 @@ describe("getColumns", () => {
     it("returns the selected and unselected fields in the modern format, respecting the original order", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
+          _id: "three",
           _instanceName: "three",
           active: true,
           columnType: "foo",
@@ -73,6 +74,7 @@ describe("getColumns", () => {
           label: "three label",
         },
         {
+          _id: "two",
           _instanceName: "two",
           active: true,
           columnType: "foo",
@@ -81,6 +83,7 @@ describe("getColumns", () => {
           label: "two label",
         },
         {
+          _id: "one",
           _instanceName: "one",
           active: false,
           columnType: "foo",
@@ -91,6 +94,7 @@ describe("getColumns", () => {
       ])
 
       expect(ctx.columns.primary).toEqual({
+        _id: "four",
         _instanceName: "four",
         active: true,
         columnType: "foo",
@@ -115,6 +119,7 @@ describe("getColumns", () => {
     it("returns all columns, with non-hidden columns automatically selected", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
+          _id: "two",
           _instanceName: "two",
           active: true,
           columnType: "foo",
@@ -123,6 +128,7 @@ describe("getColumns", () => {
           label: "two",
         },
         {
+          _id: "three",
           _instanceName: "three",
           active: true,
           columnType: "foo",
@@ -131,6 +137,7 @@ describe("getColumns", () => {
           label: "three",
         },
         {
+          _id: "one",
           _instanceName: "one",
           active: false,
           columnType: "foo",
@@ -141,6 +148,7 @@ describe("getColumns", () => {
       ])
 
       expect(ctx.columns.primary).toEqual({
+        _id: "four",
         _instanceName: "four",
         active: true,
         columnType: "foo",
@@ -173,6 +181,7 @@ describe("getColumns", () => {
     it("returns all columns, including those missing from the initial data", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
+          _id: "three",
           _instanceName: "three",
           active: true,
           columnType: "foo",
@@ -181,6 +190,7 @@ describe("getColumns", () => {
           label: "three label",
         },
         {
+          _id: "two",
           _instanceName: "two",
           active: false,
           columnType: "foo",
@@ -189,6 +199,7 @@ describe("getColumns", () => {
           label: "two",
         },
         {
+          _id: "one",
           _instanceName: "one",
           active: false,
           columnType: "foo",
@@ -199,6 +210,7 @@ describe("getColumns", () => {
       ])
 
       expect(ctx.columns.primary).toEqual({
+        _id: "four",
         _instanceName: "four",
         active: true,
         columnType: "foo",
@@ -228,6 +240,7 @@ describe("getColumns", () => {
     it("returns all valid columns, excluding those that aren't valid for the schema", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
+          _id: "three",
           _instanceName: "three",
           active: true,
           columnType: "foo",
@@ -236,6 +249,7 @@ describe("getColumns", () => {
           label: "three label",
         },
         {
+          _id: "two",
           _instanceName: "two",
           active: false,
           columnType: "foo",
@@ -244,6 +258,7 @@ describe("getColumns", () => {
           label: "two",
         },
         {
+          _id: "one",
           _instanceName: "one",
           active: false,
           columnType: "foo",
@@ -254,6 +269,7 @@ describe("getColumns", () => {
       ])
 
       expect(ctx.columns.primary).toEqual({
+        _id: "four",
         _instanceName: "four",
         active: true,
         columnType: "foo",
@@ -318,6 +334,7 @@ describe("getColumns", () => {
       beforeEach(ctx => {
         ctx.updateSortable([
           {
+            _id: "three",
             _instanceName: "three",
             active: true,
             columnType: "foo",
@@ -326,6 +343,7 @@ describe("getColumns", () => {
             label: "three",
           },
           {
+            _id: "one",
             _instanceName: "one",
             active: true,
             columnType: "foo",
@@ -334,6 +352,7 @@ describe("getColumns", () => {
             label: "one",
           },
           {
+            _id: "two",
             _instanceName: "two",
             active: false,
             columnType: "foo",

@@ -1,9 +1,6 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "sourceMap": true,
     "baseUrl": ".",
     "paths": {
       "assets/*": ["./assets/*"],

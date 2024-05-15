@@ -1,10 +1,13 @@
 import {
   FieldType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
   AutoFieldSubType,
   Hosting,
 } from "@budibase/types"
+import { Constants } from "@budibase/frontend-core"
+
+const { TypeIconMap } = Constants
 
 export { RelationshipType } from "@budibase/types"
 
@@ -22,7 +25,7 @@ export const FIELDS = {
   STRING: {
     name: "Text",
     type: FieldType.STRING,
-    icon: "Text",
+    icon: TypeIconMap[FieldType.STRING],
     constraints: {
       type: "string",
       length: {},
@@ -30,9 +33,9 @@ export const FIELDS = {
     },
   },
   BARCODEQR: {
-    name: "Barcode/QR",
+    name: "Barcode / QR",
     type: FieldType.BARCODEQR,
-    icon: "Camera",
+    icon: TypeIconMap[FieldType.BARCODEQR],
     constraints: {
       type: "string",
       length: {},
@@ -40,9 +43,9 @@ export const FIELDS = {
     },
   },
   LONGFORM: {
-    name: "Long Form Text",
+    name: "Long form text",
     type: FieldType.LONGFORM,
-    icon: "TextAlignLeft",
+    icon: TypeIconMap[FieldType.LONGFORM],
     constraints: {
       type: "string",
       length: {},
@@ -50,9 +53,9 @@ export const FIELDS = {
     },
   },
   OPTIONS: {
-    name: "Options",
+    name: "Single select",
     type: FieldType.OPTIONS,
-    icon: "Dropdown",
+    icon: TypeIconMap[FieldType.OPTIONS],
     constraints: {
       type: "string",
       presence: false,
@@ -60,9 +63,9 @@ export const FIELDS = {
     },
   },
   ARRAY: {
-    name: "Multi-select",
+    name: "Multi select",
     type: FieldType.ARRAY,
-    icon: "Duplicate",
+    icon: TypeIconMap[FieldType.ARRAY],
     constraints: {
       type: "array",
       presence: false,
@@ -72,7 +75,7 @@ export const FIELDS = {
   NUMBER: {
     name: "Number",
     type: FieldType.NUMBER,
-    icon: "123",
+    icon: TypeIconMap[FieldType.NUMBER],
     constraints: {
       type: "number",
       presence: false,
@@ -80,23 +83,23 @@ export const FIELDS = {
     },
   },
   BIGINT: {
-    name: "BigInt",
+    name: "Big integer",
     type: FieldType.BIGINT,
-    icon: "TagBold",
+    icon: TypeIconMap[FieldType.BIGINT],
   },
   BOOLEAN: {
     name: "Boolean",
     type: FieldType.BOOLEAN,
-    icon: "Boolean",
+    icon: TypeIconMap[FieldType.BOOLEAN],
     constraints: {
       type: "boolean",
       presence: false,
     },
   },
   DATETIME: {
-    name: "Date/Time",
+    name: "Date / time",
     type: FieldType.DATETIME,
-    icon: "Calendar",
+    icon: TypeIconMap[FieldType.DATETIME],
     constraints: {
       type: "string",
       length: {},
@@ -107,10 +110,18 @@ export const FIELDS = {
       },
     },
   },
-  ATTACHMENT: {
-    name: "Attachment",
-    type: FieldType.ATTACHMENT,
-    icon: "Folder",
+  ATTACHMENT_SINGLE: {
+    name: "Single attachment",
+    type: FieldType.ATTACHMENT_SINGLE,
+    icon: TypeIconMap[FieldType.ATTACHMENT_SINGLE],
+    constraints: {
+      presence: false,
+    },
+  },
+  ATTACHMENTS: {
+    name: "Multi attachment",
+    type: FieldType.ATTACHMENTS,
+    icon: TypeIconMap[FieldType.ATTACHMENTS],
     constraints: {
       type: "array",
       presence: false,
@@ -119,44 +130,46 @@ export const FIELDS = {
   LINK: {
     name: "Relationship",
     type: FieldType.LINK,
-    icon: "Link",
+    icon: TypeIconMap[FieldType.LINK],
     constraints: {
       type: "array",
       presence: false,
     },
   },
   AUTO: {
-    name: "Auto Column",
+    name: "Auto column",
     type: FieldType.AUTO,
-    icon: "MagicWand",
+    icon: TypeIconMap[FieldType.AUTO],
     constraints: {},
   },
   FORMULA: {
     name: "Formula",
     type: FieldType.FORMULA,
-    icon: "Calculator",
+    icon: TypeIconMap[FieldType.FORMULA],
     constraints: {},
   },
   JSON: {
     name: "JSON",
     type: FieldType.JSON,
-    icon: "Brackets",
+    icon: TypeIconMap[FieldType.JSON],
     constraints: {
       type: "object",
       presence: false,
     },
   },
   USER: {
-    name: "User",
-    type: FieldType.BB_REFERENCE,
-    subtype: FieldSubtype.USER,
-    icon: "User",
+    name: "Single user",
+    type: FieldType.BB_REFERENCE_SINGLE,
+    subtype: BBReferenceFieldSubType.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
+      BBReferenceFieldSubType.USER
+    ],
   },
   USERS: {
-    name: "Users",
+    name: "Multi user",
     type: FieldType.BB_REFERENCE,
-    subtype: FieldSubtype.USERS,
-    icon: "User",
+    subtype: BBReferenceFieldSubType.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE][BBReferenceFieldSubType.USER],
     constraints: {
       type: "array",
     },
@@ -190,26 +203,6 @@ export const PrettyRelationshipDefinitions = {
   MANY: "Many rows",
   ONE: "One row",
 }
-
-export const ALLOWABLE_STRING_OPTIONS = [
-  FIELDS.STRING,
-  FIELDS.OPTIONS,
-  FIELDS.LONGFORM,
-  FIELDS.BARCODEQR,
-]
-export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
-  opt => opt.type
-)
-
-export const ALLOWABLE_NUMBER_OPTIONS = [FIELDS.NUMBER, FIELDS.BOOLEAN]
-export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
-  opt => opt.type
-)
-
-export const SWITCHABLE_TYPES = [
-  ...ALLOWABLE_STRING_TYPES,
-  ...ALLOWABLE_NUMBER_TYPES,
-]
 
 export const BUDIBASE_INTERNAL_DB_ID = INTERNAL_TABLE_SOURCE_ID
 export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
@@ -262,6 +255,7 @@ export const SchemaTypeOptions = [
   { label: "Number", value: FieldType.NUMBER },
   { label: "Boolean", value: FieldType.BOOLEAN },
   { label: "Datetime", value: FieldType.DATETIME },
+  { label: "JSON", value: FieldType.JSON },
 ]
 
 export const SchemaTypeOptionsExpanded = SchemaTypeOptions.map(el => ({
@@ -299,7 +293,7 @@ export const PaginationLocations = [
 
 export const BannedSearchTypes = [
   FieldType.LINK,
-  FieldType.ATTACHMENT,
+  FieldType.ATTACHMENTS,
   FieldType.FORMULA,
   FieldType.JSON,
   "jsonarray",

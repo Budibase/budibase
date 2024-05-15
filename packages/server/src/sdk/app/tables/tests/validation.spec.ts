@@ -125,7 +125,7 @@ describe("validation and update of external table schemas", () => {
   }
 
   it("should correctly set utilised foreign keys to autocolumns", () => {
-    const response = populateExternalTableSchemas(cloneDeep(SCHEMA) as any)
+    const response = populateExternalTableSchemas(cloneDeep(SCHEMA))
     const foreignKey = getForeignKeyColumn(response)
     expect(foreignKey.autocolumn).toBe(true)
     expect(foreignKey.autoReason).toBe(AutoReason.FOREIGN_KEY)
@@ -133,7 +133,7 @@ describe("validation and update of external table schemas", () => {
   })
 
   it("should correctly unset foreign keys when no longer used", () => {
-    const setResponse = populateExternalTableSchemas(cloneDeep(SCHEMA) as any)
+    const setResponse = populateExternalTableSchemas(cloneDeep(SCHEMA))
     const beforeFk = getForeignKeyColumn(setResponse)
     delete setResponse.entities!.client.schema.project
     delete setResponse.entities!.project.schema.client

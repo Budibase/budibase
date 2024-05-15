@@ -54,11 +54,9 @@ export async function downloadDockerCompose() {
 
 export async function checkDockerConfigured() {
   const error =
-    "docker/docker-compose has not been installed, please follow instructions at: https://docs.budibase.com/docs/docker-compose"
+    "docker has not been installed, please follow instructions at: https://docs.budibase.com/docs/docker-compose"
   const docker = await lookpath("docker")
-  const compose = await lookpath("docker-compose")
-  const composeV2 = await lookpath("docker compose")
-  if (!docker || (!compose && !composeV2)) {
+  if (!docker) {
     throw error
   }
 }
@@ -105,7 +103,6 @@ export function getAppService(path: string) {
 }
 
 export function updateDockerComposeService(
-  // eslint-disable-next-line no-unused-vars
   updateFn: (service: DockerCompose) => void
 ) {
   const opts = ["docker-compose.yaml", "docker-compose.yml"]

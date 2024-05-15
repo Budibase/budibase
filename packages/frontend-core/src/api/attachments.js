@@ -61,31 +61,17 @@ export const buildAttachmentEndpoints = API => {
       })
       return { publicUrl }
     },
-
     /**
-     * Deletes attachments from the bucket.
-     * @param keys the attachments to delete
-     * @param tableId the associated table ID
+     * Download an attachment from a row given its column name.
+     * @param datasourceId the ID of the datasource to download from
+     * @param rowId the ID of the row to download from
+     * @param columnName the column name to download
      */
-    deleteAttachments: async ({ keys, tableId }) => {
-      return await API.post({
-        url: `/api/attachments/${tableId}/delete`,
-        body: {
-          keys,
-        },
-      })
-    },
-
-    /**
-     * Deletes attachments from the builder bucket.
-     * @param keys the attachments to delete
-     */
-    deleteBuilderAttachments: async keys => {
-      return await API.post({
-        url: `/api/attachments/delete`,
-        body: {
-          keys,
-        },
+    downloadAttachment: async (datasourceId, rowId, columnName, options) => {
+      return await API.get({
+        url: `/api/${datasourceId}/rows/${rowId}/attachment/${columnName}`,
+        parseResponse: response => response,
+        suppressErrors: options?.suppressErrors,
       })
     },
   }
