@@ -460,7 +460,7 @@ describe("scim", () => {
         const response = await findScimUser(structures.uuid(), { expect: 404 })
 
         expect(response).toEqual({
-          message: "missing",
+          message: "CouchDB error: missing",
           status: 404,
         })
       })
@@ -862,7 +862,7 @@ describe("scim", () => {
         const response = await findScimGroup(structures.uuid(), { expect: 404 })
 
         expect(response).toEqual({
-          message: "missing",
+          message: "CouchDB error: missing",
           status: 404,
         })
       })
