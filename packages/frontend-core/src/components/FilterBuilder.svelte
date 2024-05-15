@@ -124,6 +124,8 @@
     const fieldSchema = schemaFields.find(x => x.name === filter.field)
     filter.type = fieldSchema?.type
     filter.subtype = fieldSchema?.subtype
+    filter.formulaType = fieldSchema?.formulaType
+    filter.constraints = fieldSchema?.constraints
 
     // Update external type based on field
     filter.externalType = getSchema(filter)?.externalType
@@ -280,7 +282,7 @@
                   timeOnly={getSchema(filter)?.timeOnly}
                   bind:value={filter.value}
                 />
-              {:else if filter.type === FieldType.BB_REFERENCE}
+              {:else if [FieldType.BB_REFERENCE, FieldType.BB_REFERENCE_SINGLE].includes(filter.type)}
                 <FilterUsers
                   bind:value={filter.value}
                   multiselect={[
@@ -288,6 +290,7 @@
                     OperatorOptions.ContainsAny.value,
                   ].includes(filter.operator)}
                   disabled={filter.noValue}
+                  type={filter.valueType}
                 />
               {:else}
                 <Input disabled />
@@ -324,8 +327,6 @@
 <style>
   .container {
     width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
   }
   .fields {
     display: grid;

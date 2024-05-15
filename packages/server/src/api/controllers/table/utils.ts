@@ -128,6 +128,7 @@ export async function importToRows(
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
     row._id = generateRowID(table._id!)
+    row.type = "row"
     row.tableId = table._id
 
     // We use a reference to table here and update it after input processing,

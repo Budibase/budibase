@@ -12,7 +12,6 @@ import SqlTableQueryBuilder from "./sqlTable"
 import {
   BBReferenceFieldMetadata,
   FieldSchema,
-  FieldSubtype,
   FieldType,
   JsonFieldMetadata,
   Operation,
@@ -27,6 +26,7 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import environment from "../../environment"
+import { helpers } from "@budibase/shared-core"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
@@ -148,6 +148,22 @@ function getTableName(table?: Table): string | undefined {
   } else {
     return table?.name
   }
+}
+
+function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
+  if (Array.isArray(query)) {
+    return query.map((q: SqlQuery) => convertBooleans(q) as SqlQuery)
+  } else {
+    if (query.bindings) {
+      query.bindings = query.bindings.map(binding => {
+        if (typeof binding === "boolean") {
+          return binding ? 1 : 0
+        }
+        return binding
+      })
+    }
+  }
+  return query
 }
 
 class InternalBuilder {
@@ -654,7 +670,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     if (opts?.disableBindings) {
       return { sql: query.toString() }
     } else {
-      return getNativeSql(query)
+      let native = getNativeSql(query)
+      if (sqlClient === SqlClient.SQL_LITE) {
+        native = convertBooleans(native)
+      }
+      return native
     }
   }
 
@@ -767,7 +787,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return (
       field.type === FieldType.JSON ||
       (field.type === FieldType.BB_REFERENCE &&
-        field.subtype === FieldSubtype.USERS)
+        !helpers.schema.isDeprecatedSingleUserColumn(field))
     )
   }
 

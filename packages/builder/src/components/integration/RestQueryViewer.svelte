@@ -695,7 +695,7 @@
                   menuItems={schemaMenuItems}
                   showMenu={!schemaReadOnly}
                   readOnly={schemaReadOnly}
-                  compare={(option, value) => option.type === value.type}
+                  compare={(option, value) => option.type === value?.type}
                 />
               </Tab>
             {/if}

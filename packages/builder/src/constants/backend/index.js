@@ -1,6 +1,6 @@
 import {
   FieldType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
   AutoFieldSubType,
   Hosting,
@@ -159,15 +159,17 @@ export const FIELDS = {
   },
   USER: {
     name: "User",
-    type: FieldType.BB_REFERENCE,
-    subtype: FieldSubtype.USER,
-    icon: TypeIconMap[FieldType.USER],
+    type: FieldType.BB_REFERENCE_SINGLE,
+    subtype: BBReferenceFieldSubType.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
+      BBReferenceFieldSubType.USER
+    ],
   },
   USERS: {
-    name: "Users",
+    name: "User List",
     type: FieldType.BB_REFERENCE,
-    subtype: FieldSubtype.USERS,
-    icon: TypeIconMap[FieldType.USERS],
+    subtype: BBReferenceFieldSubType.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE][BBReferenceFieldSubType.USER],
     constraints: {
       type: "array",
     },
@@ -253,6 +255,7 @@ export const SchemaTypeOptions = [
   { label: "Number", value: FieldType.NUMBER },
   { label: "Boolean", value: FieldType.BOOLEAN },
   { label: "Datetime", value: FieldType.DATETIME },
+  { label: "JSON", value: FieldType.JSON },
 ]
 
 export const SchemaTypeOptionsExpanded = SchemaTypeOptions.map(el => ({

@@ -92,8 +92,6 @@ jobs:
 
   test-libraries:
     runs-on: ubuntu-latest
-    env:
-      REUSE_CONTAINERS: true
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -150,8 +148,6 @@ jobs:
 
   test-server:
     runs-on: budi-tubby-tornado-quad-core-150gb
-    env:
-      REUSE_CONTAINERS: true
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -174,7 +170,8 @@ jobs:
           docker pull mongo:7.0-jammy &
           docker pull mariadb:lts &
           docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.2.1-sql &
+          docker pull budibase/couchdb:v3.2.1-sqs &
+          docker pull minio/minio &
           docker pull redis &
 
           wait $(jobs -p)

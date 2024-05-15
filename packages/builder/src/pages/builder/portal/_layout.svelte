@@ -1,7 +1,7 @@
 <script>
   import { isActive, redirect, goto, url } from "@roxi/routify"
   import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
-  import { organisation, auth, menu, appsStore } from "stores/portal"
+  import { organisation, auth, menu, appsStore, licensing } from "stores/portal"
   import { onMount } from "svelte"
   import UpgradeButton from "./_components/UpgradeButton.svelte"
   import MobileMenu from "./_components/MobileMenu.svelte"
@@ -10,6 +10,8 @@
   import HelpMenu from "components/common/HelpMenu.svelte"
   import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
   import { sdk } from "@budibase/shared-core"
+  import EnterpriseBasicTrialBanner from "components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
+  import { Constants } from "@budibase/frontend-core"
 
   let loaded = false
   let mobileMenuVisible = false
@@ -32,6 +34,14 @@
 
   const showMobileMenu = () => (mobileMenuVisible = true)
   const hideMobileMenu = () => (mobileMenuVisible = false)
+
+  const showFreeTrialBanner = () => {
+    return (
+      $licensing.license?.plan?.type ===
+        Constants.PlanType.ENTERPRISE_BASIC_TRIAL &&
+      sdk.users.isAdmin($auth.user)
+    )
+  }
 
   onMount(async () => {
     // Prevent non-builders from accessing the portal
@@ -58,6 +68,7 @@
     <HelpMenu />
     <div class="container">
       <VerificationPromptBanner />
+      <EnterpriseBasicTrialBanner show={showFreeTrialBanner()} />
       <div class="nav">
         <div class="branding">
           <Logo />

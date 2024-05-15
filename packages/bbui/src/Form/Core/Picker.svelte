@@ -155,6 +155,7 @@
   useAnchorWidth={!autoWidth}
   maxWidth={autoWidth ? 400 : null}
   customHeight={customPopoverHeight}
+  maxHeight={240}
 >
   <div
     class="popover-content"

@@ -4,8 +4,11 @@ import {
   encodeJSBinding,
 } from "@budibase/string-templates"
 import sdk from "../sdk"
-import { Row } from "@budibase/types"
+import { AutomationAttachment, FieldType, Row } from "@budibase/types"
 import { LoopInput, LoopStepType } from "../definitions/automations"
+import { objectStore, context } from "@budibase/backend-core"
+import * as uuid from "uuid"
+import path from "path"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -96,6 +99,101 @@ export function getError(err: any) {
   return typeof err !== "string" ? err.toString() : err
 }
 
+export async function sendAutomationAttachmentsToStorage(
+  tableId: string,
+  row: Row
+): Promise<Row> {
+  const table = await sdk.tables.getTable(tableId)
+  const attachmentRows: Record<
+    string,
+    AutomationAttachment[] | AutomationAttachment
+  > = {}
+
+  for (const [prop, value] of Object.entries(row)) {
+    const schema = table.schema[prop]
+    if (
+      schema?.type === FieldType.ATTACHMENTS ||
+      schema?.type === FieldType.ATTACHMENT_SINGLE
+    ) {
+      attachmentRows[prop] = value
+    }
+  }
+  for (const [prop, attachments] of Object.entries(attachmentRows)) {
+    if (Array.isArray(attachments)) {
+      if (attachments.length) {
+        row[prop] = await Promise.all(
+          attachments.map(attachment => generateAttachmentRow(attachment))
+        )
+      }
+    } else if (Object.keys(row[prop]).length > 0) {
+      row[prop] = await generateAttachmentRow(attachments)
+    }
+  }
+
+  return row
+}
+
+async function generateAttachmentRow(attachment: AutomationAttachment) {
+  const prodAppId = context.getProdAppId()
+
+  async function uploadToS3(
+    extension: string,
+    content: objectStore.StreamTypes
+  ) {
+    const fileName = `${uuid.v4()}${extension}`
+    const s3Key = `${prodAppId}/attachments/${fileName}`
+
+    await objectStore.streamUpload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      stream: content,
+      filename: s3Key,
+    })
+
+    return s3Key
+  }
+
+  async function getSize(s3Key: string) {
+    return (
+      await objectStore.getObjectMetadata(
+        objectStore.ObjectStoreBuckets.APPS,
+        s3Key
+      )
+    ).ContentLength
+  }
+
+  try {
+    const { filename } = attachment
+    let extension = path.extname(filename)
+    if (extension.startsWith(".")) {
+      extension = extension.substring(1, extension.length)
+    }
+    const attachmentResult = await objectStore.processAutomationAttachment(
+      attachment
+    )
+
+    let s3Key = ""
+    if (
+      "path" in attachmentResult &&
+      attachmentResult.path.startsWith(`${prodAppId}/attachments/`)
+    ) {
+      s3Key = attachmentResult.path
+    } else {
+      s3Key = await uploadToS3(extension, attachmentResult.content)
+    }
+
+    const size = await getSize(s3Key)
+
+    return {
+      size,
+      extension,
+      name: filename,
+      key: s3Key,
+    }
+  } catch (error) {
+    console.error("Failed to process attachment:", error)
+    throw error
+  }
+}
 export function substituteLoopStep(hbsString: string, substitute: string) {
   let checkForJS = isJSBinding(hbsString)
   let substitutedHbsString = ""

@@ -43,6 +43,9 @@
   on:mouseup
   on:click
   on:contextmenu
+  on:touchstart
+  on:touchend
+  on:touchcancel
   {style}
 >
   {#if error}
