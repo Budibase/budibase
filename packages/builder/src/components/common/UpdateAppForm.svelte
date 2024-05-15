@@ -9,11 +9,13 @@
   import * as appValidation from "helpers/validation/yup/app"
   import EditableIcon from "components/common/EditableIcon.svelte"
   import { isEqual } from "lodash"
+  import { createEventDispatcher } from "svelte"
 
   export let alignActions = "left"
 
   const values = writable({})
   const validation = createValidationStore()
+  const dispatch = createEventDispatcher()
 
   let updating = false
   let edited = false
@@ -173,6 +175,7 @@
             updating = true
             await updateApp()
             updating = false
+            dispatch("updated")
           }}
           disabled={appDeployed || updating || !edited || !$validation.valid}
         >
