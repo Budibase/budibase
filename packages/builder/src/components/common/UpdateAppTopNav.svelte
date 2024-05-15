@@ -40,7 +40,6 @@
   customZindex={998}
   bind:this={formPopover}
   align="center"
-  disabled={!isPublished}
   anchor={formPopoverAnchor}
   offset={20}
   on:close={() => {
