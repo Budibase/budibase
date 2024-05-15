@@ -146,7 +146,7 @@ class RestIntegration implements IntegrationBase {
       // the API does not follow the requirements of https://www.ietf.org/rfc/rfc2183.txt
       // all content-disposition headers should be format disposition-type; parameters
       // but some APIs do not provide a type, causing the parse below to fail - add one to fix this
-      if (!contentDisposition.includes(";")) {
+      if (!contentDisposition.includes("; ")) {
         contentDisposition = `attachment; ${contentDisposition}`
       }
       filename =
