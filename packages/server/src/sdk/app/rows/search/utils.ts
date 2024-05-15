@@ -11,7 +11,7 @@ import {
   RowSearchParams,
 } from "@budibase/types"
 import { db as dbCore, context } from "@budibase/backend-core"
-import { helpers, utils } from "@budibase/shared-core"
+import { utils } from "@budibase/shared-core"
 
 export async function paginatedSearch(
   query: SearchFilters,
@@ -49,11 +49,7 @@ function findColumnInQueries(
   }
 }
 
-function userColumnMapping(
-  column: string,
-  options: RowSearchParams,
-  isDeprecatedSingleUserColumn: boolean = false
-) {
+function userColumnMapping(column: string, options: RowSearchParams) {
   findColumnInQueries(column, options, (filterValue: any): any => {
     const isArray = Array.isArray(filterValue),
       isString = typeof filterValue === "string"
@@ -105,11 +101,7 @@ export function searchInputMapping(table: Table, options: RowSearchParams) {
         break
       }
       case FieldType.BB_REFERENCE: {
-        userColumnMapping(
-          key,
-          options,
-          helpers.schema.isDeprecatedSingleUserColumn(column)
-        )
+        userColumnMapping(key, options)
         break
       }
     }
