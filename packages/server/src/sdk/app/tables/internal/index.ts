@@ -22,8 +22,6 @@ import { checkAutoColumns } from "./utils"
 import * as viewsSdk from "../../views"
 import { getRowParams } from "../../../../db/utils"
 import { quotas } from "@budibase/pro"
-import env from "../../../../environment"
-import { AttachmentCleanup } from "../../../../utilities/rowProcessor"
 
 export async function save(
   table: Table,
