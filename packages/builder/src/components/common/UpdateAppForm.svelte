@@ -17,43 +17,48 @@
 
   let updating = false
   let edited = false
+  let initialised = false
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId == $appStore.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 
-  $: appIdParts = app.appId ? app.appId?.split("_") : []
-  $: appId = appIdParts.slice(-1)[0]
+  $: appName = $appStore.name
+  $: appURL = $appStore.url
+  $: appIconName = $appStore.icon?.name
+  $: appIconColor = $appStore.icon?.color
 
   $: appMeta = {
-    name: $appStore.name,
-    url: $appStore.url,
-    iconName: $appStore.icon?.name,
-    iconColor: $appStore.icon?.color,
+    name: appName,
+    url: appURL,
+    iconName: appIconName,
+    iconColor: appIconColor,
   }
 
-  // On app update, reset the state.
-  $: if (appMeta) {
+  const initForm = appMeta => {
     edited = false
-    const { name, url, iconName, iconColor } = appMeta
     values.set({
-      name,
-      url,
-      iconName,
-      iconColor,
+      ...appMeta,
     })
 
-    setupValidation()
+    if (!initialised) {
+      setupValidation()
+      initialised = true
+    }
   }
 
-  $: if (values && $values) {
-    const { url } = $values || {}
+  const validate = (vals, appMeta) => {
+    const { url } = vals || {}
     validation.check({
-      ...$values,
+      ...vals,
       url: url?.[0] === "/" ? url.substring(1, url.length) : url,
     })
-    edited = !isEqual($values, appMeta)
+    edited = !isEqual(vals, appMeta)
   }
+
+  // On app/apps update, reset the state.
+  $: initForm(appMeta)
+  $: validate($values, appMeta)
 
   const resolveAppUrl = (template, name) => {
     let parsedName
@@ -89,26 +94,13 @@
   }
 
   const setupValidation = async () => {
-    const applications = $appsStore.apps
     appValidation.name(validation, {
-      apps: applications,
-      currentApp: {
-        ...app,
-        appId,
-      },
+      apps: $appsStore.apps,
+      currentApp: app,
     })
     appValidation.url(validation, {
-      apps: applications,
-      currentApp: {
-        ...app,
-        appId,
-      },
-    })
-    // init validation
-    const { url } = $values
-    validation.check({
-      ...$values,
-      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
+      apps: $appsStore.apps,
+      currentApp: app,
     })
   }
 
@@ -182,8 +174,10 @@
             await updateApp()
             updating = false
           }}
-          disabled={appDeployed || updating || !edited}>Save</Button
+          disabled={appDeployed || updating || !edited || !$validation.valid}
         >
+          Save
+        </Button>
       {:else}
         <div class="edit-info">
           <Icon size="S" name="Info" /> Unpublish your app to edit name and URL
