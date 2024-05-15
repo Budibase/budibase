@@ -22,6 +22,7 @@
 
   const context = getContext("context")
   const component = getContext("component")
+  const { environmentStore } = getContext("sdk")
   const {
     styleable,
     API,
@@ -161,6 +162,7 @@
       notifySuccess={notificationStore.actions.success}
       notifyError={notificationStore.actions.error}
       buttons={enrichedButtons}
+      isCloud={$environmentStore.cloud}
       on:rowclick={e => onRowClick?.({ row: e.detail })}
     />
   </div>
