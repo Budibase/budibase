@@ -2,7 +2,7 @@ import { generateQueryID } from "../../../db/utils"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
-import { invalidateDynamicVariables } from "../../../threads/utils"
+import { invalidateCachedVariable } from "../../../threads/utils"
 import env from "../../../environment"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
@@ -281,48 +281,51 @@ export async function preview(
     return { previewSchema, nestedSchemaFields }
   }
 
+  const inputs: QueryEvent = {
+    appId: ctx.appId,
+    queryVerb: query.queryVerb,
+    fields: query.fields,
+    parameters: enrichParameters(query),
+    transformer: query.transformer,
+    schema: query.schema,
+    nullDefaultSupport: query.nullDefaultSupport,
+    queryId,
+    datasource,
+    // have to pass down to the thread runner - can't put into context now
+    environmentVariables: envVars,
+    ctx: {
+      user: ctx.user,
+      auth: { ...authConfigCtx },
+    },
+  }
+
+  let queryResponse: QueryResponse
   try {
-    const inputs: QueryEvent = {
-      appId: ctx.appId,
-      queryVerb: query.queryVerb,
-      fields: query.fields,
-      parameters: enrichParameters(query),
-      transformer: query.transformer,
-      schema: query.schema,
-      nullDefaultSupport: query.nullDefaultSupport,
-      queryId,
-      datasource,
-      // have to pass down to the thread runner - can't put into context now
-      environmentVariables: envVars,
-      ctx: {
-        user: ctx.user,
-        auth: { ...authConfigCtx },
-      },
-    }
-
-    const { rows, keys, info, extra } = await Runner.run<QueryResponse>(inputs)
-    const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
-
-    // if existing schema, update to include any previous schema keys
-    if (existingSchema) {
-      for (let key of Object.keys(previewSchema)) {
-        if (existingSchema[key]) {
-          previewSchema[key] = existingSchema[key]
-        }
-      }
-    }
-    // remove configuration before sending event
-    delete datasource.config
-    await events.query.previewed(datasource, ctx.request.body)
-    ctx.body = {
-      rows,
-      nestedSchemaFields,
-      schema: previewSchema,
-      info,
-      extra,
-    }
+    queryResponse = await Runner.run<QueryResponse>(inputs)
   } catch (err: any) {
     ctx.throw(400, err)
+  }
+
+  const { rows, keys, info, extra } = queryResponse
+  const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
+
+  // if existing schema, update to include any previous schema keys
+  if (existingSchema) {
+    for (let key of Object.keys(previewSchema)) {
+      if (existingSchema[key]) {
+        previewSchema[key] = existingSchema[key]
+      }
+    }
+  }
+  // remove configuration before sending event
+  delete datasource.config
+  await events.query.previewed(datasource, ctx.request.body)
+  ctx.body = {
+    rows,
+    nestedSchemaFields,
+    schema: previewSchema,
+    info,
+    extra,
   }
 }
 
@@ -416,7 +419,7 @@ const removeDynamicVariables = async (queryId: string) => {
     const variablesToDelete = dynamicVariables!.filter(
       (dv: any) => dv.queryId === queryId
     )
-    await invalidateDynamicVariables(variablesToDelete)
+    await invalidateCachedVariable(variablesToDelete)
   }
 }
 

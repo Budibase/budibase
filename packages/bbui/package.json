@@ -43,6 +43,7 @@
     "@spectrum-css/avatar": "3.0.2",
     "@spectrum-css/button": "3.0.1",
     "@spectrum-css/buttongroup": "3.0.2",
+    "@spectrum-css/calendar": "3.2.7",
     "@spectrum-css/checkbox": "3.0.2",
     "@spectrum-css/dialog": "3.0.1",
     "@spectrum-css/divider": "1.0.3",
@@ -82,7 +83,6 @@
     "dayjs": "^1.10.8",
     "easymde": "^2.16.1",
     "svelte-dnd-action": "^0.9.8",
-    "svelte-flatpickr": "3.2.3",
     "svelte-portal": "^1.0.0"
   },
   "resolutions": {

@@ -348,8 +348,7 @@ export default class DataFetch {
    * Determine the feature flag for this datasource definition
    * @param definition
    */
-  // eslint-disable-next-line no-unused-vars
-  determineFeatureFlags(definition) {
+  determineFeatureFlags(_definition) {
     return {
       supportsSearch: false,
       supportsSort: false,

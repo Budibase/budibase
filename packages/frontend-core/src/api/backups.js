@@ -1,7 +1,4 @@
 export const buildBackupsEndpoints = API => ({
-  /**
-   * Gets a list of users in the current tenant.
-   */
   searchBackups: async ({ appId, trigger, type, page, startDate, endDate }) => {
     const opts = {}
     if (page) {

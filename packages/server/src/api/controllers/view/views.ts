@@ -4,7 +4,6 @@ import { csv, json, jsonWithSchema, Format, isFormat } from "./exporters"
 import { deleteView, getView, getViews, saveView } from "./utils"
 import { fetchView } from "../row"
 import { context, events } from "@budibase/backend-core"
-import { DocumentType } from "../../../db/utils"
 import sdk from "../../../sdk"
 import {
   FieldType,
@@ -14,6 +13,7 @@ import {
   TableExportFormat,
   TableSchema,
   View,
+  DocumentType,
 } from "@budibase/types"
 import { builderSocket } from "../../../websockets"
 

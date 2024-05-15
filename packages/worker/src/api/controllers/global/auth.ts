@@ -35,8 +35,7 @@ async function passportCallback(
   info: { message: string } | null = null
 ) {
   if (err) {
-    console.error("Authentication error")
-    console.error(err)
+    console.error("Authentication error", err)
     console.trace(err)
     return ctx.throw(403, info ? info : "Unauthorized")
   }

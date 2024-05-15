@@ -34,7 +34,7 @@
     $selectedScreen,
     datasource
   )?.table?.primaryDisplay
-  $: schema = getSchema(selectedScreen, datasource)
+  $: schema = getSchema($selectedScreen, datasource)
   $: columns = getColumns({
     columns: value,
     schema,

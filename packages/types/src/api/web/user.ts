@@ -1,5 +1,5 @@
 import { User } from "../../documents"
-import { SearchQuery } from "./searchFilter"
+import { SearchFilters } from "../../sdk"
 
 export interface SaveUserResponse {
   _id: string
@@ -55,7 +55,7 @@ export interface InviteUsersResponse {
 
 export interface SearchUsersRequest {
   bookmark?: string
-  query?: SearchQuery
+  query?: SearchFilters
   appId?: string
   limit?: number
   paginate?: boolean
@@ -66,6 +66,8 @@ export interface CreateAdminUserRequest {
   password?: string
   tenantId: string
   ssoId?: string
+  familyName?: string
+  givenName?: string
 }
 
 export interface AddSSoUserRequest {

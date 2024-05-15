@@ -1,4 +1,25 @@
 module.exports = {
+  "no-console-error": {
+    create: function(context) {
+      return {
+        CallExpression(node) {
+          if (
+            node.callee.type === "MemberExpression" &&
+            node.callee.object.name === "console" &&
+            node.callee.property.name === "error" &&
+            node.arguments.length === 1 &&
+            node.arguments[0].name &&
+            node.arguments[0].name.startsWith("err")
+          ) {
+            context.report({
+              node,
+              message: 'Using console.error(err) on its own is not allowed. Either provide context to the error (console.error(msg, err)) or throw it.',
+            })
+          }
+        },
+      };
+    },
+  },
   "no-budibase-imports": {
     create: function (context) {
       return {

@@ -18,6 +18,7 @@ export interface UpdateSelfRequest {
   password?: string
   forceResetPassword?: boolean
   onboardedAt?: string
+  freeTrialConfirmedAt?: string
   appFavourites?: string[]
   tours?: Record<string, Date>
 }

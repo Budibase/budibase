@@ -13,7 +13,7 @@ import { getGlobalDB, doInTenant } from "../context"
 import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
 import env from "../environment"
-import { Ctx, EndpointMatcher, SessionCookie } from "@budibase/types"
+import { Ctx, EndpointMatcher, SessionCookie, User } from "@budibase/types"
 import { InvalidAPIKeyError, ErrorCode } from "../errors"
 import tracer from "dd-trace"
 
@@ -41,7 +41,10 @@ function finalise(ctx: any, opts: FinaliseOpts = {}) {
   ctx.version = opts.version
 }
 
-async function checkApiKey(apiKey: string, populateUser?: Function) {
+async function checkApiKey(
+  apiKey: string,
+  populateUser?: (userId: string, tenantId: string) => Promise<User>
+) {
   // check both the primary and the fallback internal api keys
   // this allows for rotation
   if (isValidInternalAPIKey(apiKey)) {
@@ -128,6 +131,7 @@ export default function (
           } else {
             user = await getUser(userId, session.tenantId)
           }
+          // @ts-ignore
           user.csrfToken = session.csrfToken
 
           if (session?.lastAccessedAt < timeMinusOneMinute()) {
@@ -138,7 +142,6 @@ export default function (
         } catch (err: any) {
           authenticated = false
           console.error(`Auth Error: ${err.message}`)
-          console.error(err)
           // remove the cookie as the user does not exist anymore
           clearCookie(ctx, Cookie.Auth)
         }
@@ -168,26 +171,31 @@ export default function (
         authenticated = false
       }
 
-      if (user) {
+      const isUser = (
+        user: any
+      ): user is User & { budibaseAccess?: string } => {
+        return user && user.email
+      }
+
+      if (isUser(user)) {
         tracer.setUser({
-          id: user?._id,
-          tenantId: user?.tenantId,
-          budibaseAccess: user?.budibaseAccess,
-          status: user?.status,
+          id: user._id!,
+          tenantId: user.tenantId,
+          budibaseAccess: user.budibaseAccess,
+          status: user.status,
         })
       }
 
       // isAuthenticated is a function, so use a variable to be able to check authed state
       finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
 
-      if (user && user.email) {
+      if (isUser(user)) {
         return identity.doInUserContext(user, ctx, next)
       } else {
         return next()
       }
     } catch (err: any) {
       console.error(`Auth Error: ${err.message}`)
-      console.error(err)
       // invalid token, clear the cookie
       if (err?.name === "JsonWebTokenError") {
         clearCookie(ctx, Cookie.Auth)

@@ -1,4 +1,4 @@
-import { SearchFilters, SearchParams } from "../../../sdk"
+import { SearchFilters, RowSearchParams } from "../../../sdk"
 import { Row } from "../../../documents"
 import { PaginationResponse, SortOrder } from "../../../api"
 import { ReadStream } from "fs"
@@ -13,7 +13,7 @@ export interface PatchRowRequest extends Row {
 
 export interface PatchRowResponse extends Row {}
 
-export interface SearchRowRequest extends Omit<SearchParams, "tableId"> {}
+export interface SearchRowRequest extends Omit<RowSearchParams, "tableId"> {}
 
 export interface SearchViewRowRequest
   extends Pick<

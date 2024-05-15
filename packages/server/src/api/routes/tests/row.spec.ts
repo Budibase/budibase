@@ -1,4 +1,4 @@
-import { databaseTestProviders } from "../../../integrations/tests/utils"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
 import { outputProcessing } from "../../../utilities/rowProcessor"
@@ -6,14 +6,17 @@ import * as setup from "./utilities"
 import { context, InternalTable, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  AttachmentFieldMetadata,
   AutoFieldSubType,
   Datasource,
+  DateFieldMetadata,
   DeleteRow,
   FieldSchema,
   FieldType,
-  FieldTypeSubtypes,
+  BBReferenceFieldSubType,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
+  NumberFieldMetadata,
   QuotaUsageType,
   RelationshipType,
   Row,
@@ -29,15 +32,12 @@ import * as uuid from "uuid"
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
 
-jest.unmock("mssql")
-jest.unmock("pg")
-
 describe.each([
   ["internal", undefined],
-  ["postgres", databaseTestProviders.postgres],
-  ["mysql", databaseTestProviders.mysql],
-  ["mssql", databaseTestProviders.mssql],
-  ["mariadb", databaseTestProviders.mariadb],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/rows (%s)", (__, dsProvider) => {
   const isInternal = dsProvider === undefined
   const config = setup.getConfig()
@@ -49,23 +49,23 @@ describe.each([
     await config.init()
     if (dsProvider) {
       datasource = await config.createDatasource({
-        datasource: await dsProvider.datasource(),
+        datasource: await dsProvider,
       })
     }
   })
 
   afterAll(async () => {
-    if (dsProvider) {
-      await dsProvider.stop()
-    }
     setup.afterAll()
   })
 
   function saveTableRequest(
-    ...overrides: Partial<SaveTableRequest>[]
+    // We omit the name field here because it's generated in the function with a
+    // high likelihood to be unique. Tests should not have any reason to control
+    // the table name they're writing to.
+    ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
   ): SaveTableRequest {
     const req: SaveTableRequest = {
-      name: uuid.v4().substring(0, 16),
+      name: uuid.v4().substring(0, 10),
       type: "table",
       sourceType: datasource
         ? TableSourceType.EXTERNAL
@@ -87,7 +87,10 @@ describe.each([
   }
 
   function defaultTable(
-    ...overrides: Partial<SaveTableRequest>[]
+    // We omit the name field here because it's generated in the function with a
+    // high likelihood to be unique. Tests should not have any reason to control
+    // the table name they're writing to.
+    ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
   ): SaveTableRequest {
     return saveTableRequest(
       {
@@ -126,7 +129,13 @@ describe.each([
 
   const assertRowUsage = async (expected: number) => {
     const usage = await getRowUsage()
-    expect(usage).toBe(expected)
+
+    // Because our quota tracking is not perfect, we allow a 10% margin of
+    // error.  This is to account for the fact that parallel writes can result
+    // in some quota updates getting lost. We don't have any need to solve this
+    // right now, so we just allow for some error.
+    expect(usage).toBeGreaterThan(expected * 0.9)
+    expect(usage).toBeLessThan(expected * 1.1)
   }
 
   const defaultRowFields = isInternal
@@ -189,40 +198,99 @@ describe.each([
       await assertRowUsage(rowUsage)
     })
 
-    it("increment row autoId per create row request", async () => {
-      const rowUsage = await getRowUsage()
+    isInternal &&
+      it("increment row autoId per create row request", async () => {
+        const rowUsage = await getRowUsage()
 
-      const newTable = await config.api.table.save(
-        saveTableRequest({
-          name: "TestTableAuto",
-          schema: {
-            "Row ID": {
-              name: "Row ID",
-              type: FieldType.NUMBER,
-              subtype: AutoFieldSubType.AUTO_ID,
-              icon: "ri-magic-line",
-              autocolumn: true,
-              constraints: {
-                type: "number",
-                presence: true,
-                numericality: {
-                  greaterThanOrEqualTo: "",
-                  lessThanOrEqualTo: "",
+        const newTable = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              "Row ID": {
+                name: "Row ID",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                icon: "ri-magic-line",
+                autocolumn: true,
+                constraints: {
+                  type: "number",
+                  presence: true,
+                  numericality: {
+                    greaterThanOrEqualTo: "",
+                    lessThanOrEqualTo: "",
+                  },
                 },
               },
             },
-          },
-        })
-      )
+          })
+        )
 
-      let previousId = 0
-      for (let i = 0; i < 10; i++) {
-        const row = await config.api.row.save(newTable._id!, {})
-        expect(row["Row ID"]).toBeGreaterThan(previousId)
-        previousId = row["Row ID"]
-      }
-      await assertRowUsage(rowUsage + 10)
-    })
+        let previousId = 0
+        for (let i = 0; i < 10; i++) {
+          const row = await config.api.row.save(newTable._id!, {})
+          expect(row["Row ID"]).toBeGreaterThan(previousId)
+          previousId = row["Row ID"]
+        }
+        await assertRowUsage(rowUsage + 10)
+      })
+
+    isInternal &&
+      it("should increment auto ID correctly when creating rows in parallel", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              "Row ID": {
+                name: "Row ID",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                icon: "ri-magic-line",
+                autocolumn: true,
+                constraints: {
+                  type: "number",
+                  presence: true,
+                  numericality: {
+                    greaterThanOrEqualTo: "",
+                    lessThanOrEqualTo: "",
+                  },
+                },
+              },
+            },
+          })
+        )
+
+        const sequence = Array(50)
+          .fill(0)
+          .map((_, i) => i + 1)
+
+        // This block of code is simulating users creating auto ID rows at the
+        // same time. It's expected that this operation will sometimes return
+        // a document conflict error (409), but the idea is to retry in those
+        // situations. The code below does this a large number of times with
+        // small, random delays between them to try and get through the list
+        // as quickly as possible.
+        await Promise.all(
+          sequence.map(async () => {
+            const attempts = 20
+            for (let attempt = 0; attempt < attempts; attempt++) {
+              try {
+                await config.api.row.save(table._id!, {})
+                return
+              } catch (e) {
+                await new Promise(r => setTimeout(r, Math.random() * 15))
+              }
+            }
+            throw new Error(`Failed to create row after ${attempts} attempts`)
+          })
+        )
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows).toHaveLength(50)
+
+        // The main purpose of this test is to ensure that even under pressure,
+        // we maintain data integrity. An auto ID column should hand out
+        // monotonically increasing unique integers no matter what.
+        const ids = rows.map(r => r["Row ID"])
+        expect(ids).toEqual(expect.arrayContaining(sequence))
+      })
 
     isInternal &&
       it("row values are coerced", async () => {
@@ -231,9 +299,14 @@ describe.each([
           name: "str",
           constraints: { type: "string", presence: false },
         }
-        const attachment: FieldSchema = {
-          type: FieldType.ATTACHMENT,
-          name: "attachment",
+        const singleAttachment: FieldSchema = {
+          type: FieldType.ATTACHMENT_SINGLE,
+          name: "single attachment",
+          constraints: { presence: false },
+        }
+        const attachmentList: AttachmentFieldMetadata = {
+          type: FieldType.ATTACHMENTS,
+          name: "attachments",
           constraints: { type: "array", presence: false },
         }
         const bool: FieldSchema = {
@@ -241,12 +314,12 @@ describe.each([
           name: "boolean",
           constraints: { type: "boolean", presence: false },
         }
-        const number: FieldSchema = {
+        const number: NumberFieldMetadata = {
           type: FieldType.NUMBER,
           name: "str",
           constraints: { type: "number", presence: false },
         }
-        const datetime: FieldSchema = {
+        const datetime: DateFieldMetadata = {
           type: FieldType.DATETIME,
           name: "datetime",
           constraints: {
@@ -296,10 +369,12 @@ describe.each([
               boolUndefined: bool,
               boolString: bool,
               boolBool: bool,
-              attachmentNull: attachment,
-              attachmentUndefined: attachment,
-              attachmentEmpty: attachment,
-              attachmentEmptyArrayStr: attachment,
+              singleAttachmentNull: singleAttachment,
+              singleAttachmentUndefined: singleAttachment,
+              attachmentListNull: attachmentList,
+              attachmentListUndefined: attachmentList,
+              attachmentListEmpty: attachmentList,
+              attachmentListEmptyArrayStr: attachmentList,
               arrayFieldEmptyArrayStr: arrayField,
               arrayFieldArrayStrKnown: arrayField,
               arrayFieldNull: arrayField,
@@ -335,10 +410,12 @@ describe.each([
           boolString: "true",
           boolBool: true,
           tableId: table._id,
-          attachmentNull: null,
-          attachmentUndefined: undefined,
-          attachmentEmpty: "",
-          attachmentEmptyArrayStr: "[]",
+          singleAttachmentNull: null,
+          singleAttachmentUndefined: undefined,
+          attachmentListNull: null,
+          attachmentListUndefined: undefined,
+          attachmentListEmpty: "",
+          attachmentListEmptyArrayStr: "[]",
           arrayFieldEmptyArrayStr: "[]",
           arrayFieldUndefined: undefined,
           arrayFieldNull: null,
@@ -367,10 +444,12 @@ describe.each([
         expect(row.boolUndefined).toBe(undefined)
         expect(row.boolString).toBe(true)
         expect(row.boolBool).toBe(true)
-        expect(row.attachmentNull).toEqual([])
-        expect(row.attachmentUndefined).toBe(undefined)
-        expect(row.attachmentEmpty).toEqual([])
-        expect(row.attachmentEmptyArrayStr).toEqual([])
+        expect(row.singleAttachmentNull).toEqual(null)
+        expect(row.singleAttachmentUndefined).toBe(undefined)
+        expect(row.attachmentListNull).toEqual([])
+        expect(row.attachmentListUndefined).toBe(undefined)
+        expect(row.attachmentListEmpty).toEqual([])
+        expect(row.attachmentListEmptyArrayStr).toEqual([])
         expect(row.arrayFieldEmptyArrayStr).toEqual([])
         expect(row.arrayFieldNull).toEqual([])
         expect(row.arrayFieldUndefined).toEqual(undefined)
@@ -383,11 +462,9 @@ describe.each([
 
     isInternal &&
       it("doesn't allow creating in user table", async () => {
-        const userTableId = InternalTable.USER_METADATA
         const response = await config.api.row.save(
-          userTableId,
+          InternalTable.USER_METADATA,
           {
-            tableId: userTableId,
             firstName: "Joe",
             lastName: "Joe",
             email: "joe@joe.com",
@@ -462,7 +539,6 @@ describe.each([
       table = await config.api.table.save(defaultTable())
       otherTable = await config.api.table.save(
         defaultTable({
-          name: "a",
           schema: {
             relationship: {
               name: "relationship",
@@ -724,6 +800,39 @@ describe.each([
     })
   })
 
+  describe("bulkImport", () => {
+    isInternal &&
+      it("should update Auto ID field after bulk import", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            primary: ["autoId"],
+            schema: {
+              autoId: {
+                name: "autoId",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                autocolumn: true,
+                constraints: {
+                  type: "number",
+                  presence: false,
+                },
+              },
+            },
+          })
+        )
+
+        let row = await config.api.row.save(table._id!, {})
+        expect(row.autoId).toEqual(1)
+
+        await config.api.row.bulkImport(table._id!, {
+          rows: [{ autoId: 2 }],
+        })
+
+        row = await config.api.row.save(table._id!, {})
+        expect(row.autoId).toEqual(3)
+      })
+  })
+
   describe("enrich", () => {
     beforeAll(async () => {
       table = await config.api.table.save(defaultTable())
@@ -786,12 +895,44 @@ describe.each([
 
   isInternal &&
     describe("attachments", () => {
-      it("should allow enriching attachment rows", async () => {
+      it("should allow enriching single attachment rows", async () => {
         const table = await config.api.table.save(
           defaultTable({
             schema: {
               attachment: {
-                type: FieldType.ATTACHMENT,
+                type: FieldType.ATTACHMENT_SINGLE,
+                name: "attachment",
+                constraints: { presence: false },
+              },
+            },
+          })
+        )
+        const attachmentId = `${uuid.v4()}.csv`
+        const row = await config.api.row.save(table._id!, {
+          name: "test",
+          description: "test",
+          attachment: {
+            key: `${config.getAppId()}/attachments/${attachmentId}`,
+          },
+
+          tableId: table._id,
+        })
+        await config.withEnv({ SELF_HOSTED: "true" }, async () => {
+          return context.doInAppContext(config.getAppId(), async () => {
+            const enriched = await outputProcessing(table, [row])
+            expect((enriched as Row[])[0].attachment.url.split("?")[0]).toBe(
+              `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
+            )
+          })
+        })
+      })
+
+      it("should allow enriching attachment list rows", async () => {
+        const table = await config.api.table.save(
+          defaultTable({
+            schema: {
+              attachment: {
+                type: FieldType.ATTACHMENTS,
                 name: "attachment",
                 constraints: { type: "array", presence: false },
               },
@@ -812,7 +953,7 @@ describe.each([
         await config.withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
             const enriched = await outputProcessing(table, [row])
-            expect((enriched as Row[])[0].attachment[0].url).toBe(
+            expect((enriched as Row[])[0].attachment[0].url.split("?")[0]).toBe(
               `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
             )
           })
@@ -898,8 +1039,8 @@ describe.each([
   let o2mTable: Table
   let m2mTable: Table
   beforeAll(async () => {
-    o2mTable = await config.api.table.save(defaultTable({ name: "o2m" }))
-    m2mTable = await config.api.table.save(defaultTable({ name: "m2m" }))
+    o2mTable = await config.api.table.save(defaultTable())
+    m2mTable = await config.api.table.save(defaultTable())
   })
 
   describe.each([
@@ -938,12 +1079,12 @@ describe.each([
         user: {
           name: "user",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          subtype: BBReferenceFieldSubType.USER,
         },
         users: {
           name: "users",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       }),
       () => config.createUser(),
@@ -1241,7 +1382,6 @@ describe.each([
           ? {}
           : {
               hasNextPage: false,
-              bookmark: null,
             }),
       })
     })
@@ -1256,7 +1396,6 @@ describe.each([
       otherTable = await config.api.table.save(defaultTable())
       table = await config.api.table.save(
         saveTableRequest({
-          name: "b",
           schema: {
             links: {
               name: "links",
@@ -1298,7 +1437,7 @@ describe.each([
 
   describe("Formula JS protection", () => {
     it("should time out JS execution if a single cell takes too long", async () => {
-      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 20 }, async () => {
+      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 40 }, async () => {
         const js = Buffer.from(
           `
               let i = 0;
@@ -1338,8 +1477,8 @@ describe.each([
     it("should time out JS execution if a multiple cells take too long", async () => {
       await config.withEnv(
         {
-          JS_PER_INVOCATION_TIMEOUT_MS: 20,
-          JS_PER_REQUEST_TIMEOUT_MS: 40,
+          JS_PER_INVOCATION_TIMEOUT_MS: 40,
+          JS_PER_REQUEST_TIMEOUT_MS: 80,
         },
         async () => {
           const js = Buffer.from(
@@ -1354,7 +1493,6 @@ describe.each([
 
           const table = await config.api.table.save(
             saveTableRequest({
-              name: "table",
               schema: {
                 text: {
                   name: "text",

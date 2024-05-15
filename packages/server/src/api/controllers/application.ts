@@ -52,6 +52,8 @@ import {
   FetchAppPackageResponse,
   DuplicateAppRequest,
   DuplicateAppResponse,
+  UpdateAppRequest,
+  UpdateAppResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -320,6 +322,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         "theme",
         "customTheme",
         "icon",
+        "snippets",
       ]
       keys.forEach(key => {
         if (existing[key]) {
@@ -449,7 +452,7 @@ export async function create(ctx: UserCtx<CreateAppRequest, App>) {
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
 export async function update(
-  ctx: UserCtx<{ name?: string; url?: string }, App>
+  ctx: UserCtx<UpdateAppRequest, UpdateAppResponse>
 ) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   // validation

@@ -1,4 +1,12 @@
-import newid from "../../db/newid"
+import TestConfig from "../../tests/utilities/TestConfiguration"
+import { db as dbCore } from "@budibase/backend-core"
+import sdk from "../index"
+import {
+  FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  TableSourceType,
+} from "@budibase/types"
+import { FIND_LIMIT } from "../app/rows/attachments"
 
 const attachment = {
   size: 73479,
@@ -8,69 +16,57 @@ const attachment = {
   key: "app_bbb/attachments/a.png",
 }
 
-const row = {
-  _id: "ro_ta_aaa",
-  photo: [attachment],
-  otherCol: "string",
-}
-
-const table = {
-  _id: "ta_aaa",
-  name: "photos",
-  schema: {
-    photo: {
-      type: "attachment",
-      name: "photo",
-    },
-    otherCol: {
-      type: "string",
-      name: "otherCol",
-    },
-  },
-}
-
-jest.mock("@budibase/backend-core", () => {
-  const core = jest.requireActual("@budibase/backend-core")
-  return {
-    ...core,
-    db: {
-      ...core.db,
-      directCouchFind: jest.fn(),
-    },
-  }
-})
-
-import { db as dbCore } from "@budibase/backend-core"
-import sdk from "../index"
-
 describe("should be able to re-write attachment URLs", () => {
+  const config = new TestConfig()
+
+  beforeAll(async () => {
+    await config.init()
+  })
+
   it("should update URLs on a number of rows over the limit", async () => {
-    const db = dbCore.getDB("app_aaa")
-    await db.put(table)
-    const limit = 30
-    let rows = []
-    for (let i = 0; i < limit; i++) {
-      const rowToWrite = {
-        ...row,
-        _id: `${row._id}_${newid()}`,
-      }
-      const { rev } = await db.put(rowToWrite)
-      rows.push({
-        ...rowToWrite,
-        _rev: rev,
+    const table = await config.api.table.save({
+      name: "photos",
+      type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
+      schema: {
+        photo: {
+          type: FieldType.ATTACHMENT_SINGLE,
+          name: "photo",
+        },
+        gallery: {
+          type: FieldType.ATTACHMENTS,
+          name: "gallery",
+        },
+        otherCol: {
+          type: FieldType.STRING,
+          name: "otherCol",
+        },
+      },
+    })
+
+    for (let i = 0; i < FIND_LIMIT * 4; i++) {
+      await config.api.row.save(table._id!, {
+        photo: { ...attachment },
+        gallery: [{ ...attachment }, { ...attachment }],
+        otherCol: "string",
       })
     }
 
-    dbCore.directCouchFind
-      // @ts-ignore
-      .mockReturnValueOnce({ rows: rows.slice(0, 25), bookmark: "aaa" })
-      .mockReturnValueOnce({ rows: rows.slice(25, limit), bookmark: "bbb" })
+    const db = dbCore.getDB(config.getAppId())
     await sdk.backups.updateAttachmentColumns(db.name, db)
-    const finalRows = await sdk.rows.getAllInternalRows(db.name)
-    for (let rowToCheck of finalRows) {
-      expect(rowToCheck.otherCol).toBe(row.otherCol)
-      expect(rowToCheck.photo[0].url).toBe("")
-      expect(rowToCheck.photo[0].key).toBe(`${db.name}/attachments/a.png`)
+
+    const rows = (await sdk.rows.getAllInternalRows(db.name)).filter(
+      row => row.tableId === table._id
+    )
+    for (const row of rows) {
+      expect(row.otherCol).toBe("string")
+      expect(row.photo.url).toBe("")
+      expect(row.photo.key).toBe(`${db.name}/attachments/a.png`)
+      expect(row.gallery[0].url).toBe("")
+      expect(row.gallery[0].key).toBe(`${db.name}/attachments/a.png`)
+      expect(row.gallery[1].url).toBe("")
+      expect(row.gallery[1].key).toBe(`${db.name}/attachments/a.png`)
     }
   })
 })

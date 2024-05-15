@@ -6,7 +6,7 @@ import {
   Row,
   SourceName,
   Table,
-  SearchParams,
+  RowSearchParams,
   TableSourceType,
 } from "@budibase/types"
 
@@ -16,8 +16,6 @@ import {
   expectAnyExternalColsAttributes,
   generator,
 } from "@budibase/backend-core/tests"
-
-jest.setTimeout(30000)
 
 describe("external search", () => {
   const config = new TestConfiguration()
@@ -110,11 +108,11 @@ describe("external search", () => {
     await config.doInContext(config.appId, async () => {
       const tableId = config.table!._id!
 
-      const searchParams: SearchParams = {
+      const searchParams: RowSearchParams = {
         tableId,
         query: {},
       }
-      const result = await search(searchParams)
+      const result = await search(searchParams, config.table!)
 
       expect(result.rows).toHaveLength(10)
       expect(result.rows).toEqual(
@@ -127,12 +125,12 @@ describe("external search", () => {
     await config.doInContext(config.appId, async () => {
       const tableId = config.table!._id!
 
-      const searchParams: SearchParams = {
+      const searchParams: RowSearchParams = {
         tableId,
         query: {},
         fields: ["name", "age"],
       }
-      const result = await search(searchParams)
+      const result = await search(searchParams, config.table!)
 
       expect(result.rows).toHaveLength(10)
       expect(result.rows).toEqual(
@@ -151,7 +149,7 @@ describe("external search", () => {
     await config.doInContext(config.appId, async () => {
       const tableId = config.table!._id!
 
-      const searchParams: SearchParams = {
+      const searchParams: RowSearchParams = {
         tableId,
         query: {
           oneOf: {
@@ -159,7 +157,7 @@ describe("external search", () => {
           },
         },
       }
-      const result = await search(searchParams)
+      const result = await search(searchParams, config.table!)
 
       expect(result.rows).toHaveLength(3)
       expect(result.rows.map(row => row.id)).toEqual([1, 4, 8])

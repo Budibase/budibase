@@ -1,6 +1,7 @@
 import { Document } from "../document"
 import { EventEmitter } from "events"
 import { User } from "../global"
+import { ReadStream } from "fs"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -10,6 +11,7 @@ export enum AutomationIOType {
   ARRAY = "array",
   JSON = "json",
   DATE = "date",
+  ATTACHMENT = "attachment",
 }
 
 export enum AutomationCustomIOType {
@@ -30,6 +32,7 @@ export enum AutomationCustomIOType {
   WEBHOOK_URL = "webhookUrl",
   AUTOMATION = "automation",
   AUTOMATION_FIELDS = "automationFields",
+  MULTI_ATTACHMENTS = "multi_attachments",
 }
 
 export enum AutomationTriggerStepId {
@@ -80,6 +83,11 @@ export interface EmailInvite {
   url?: string
 }
 
+export interface EmailAttachment {
+  url: string
+  filename: string
+}
+
 export interface SendEmailOpts {
   // workspaceId If finer grain controls being used then this will lookup config for workspace.
   workspaceId?: string
@@ -97,6 +105,7 @@ export interface SendEmailOpts {
   bcc?: boolean
   automation?: boolean
   invite?: EmailInvite
+  attachments?: EmailAttachment[]
 }
 
 export const AutomationStepIdArray = [
@@ -226,4 +235,19 @@ export type AutomationStepInput = {
 export interface AutomationMetadata extends Document {
   errorCount?: number
   automationChainCount?: number
+}
+
+export type AutomationAttachment = {
+  url: string
+  filename: string
+}
+
+export type AutomationAttachmentContent = {
+  filename: string
+  content: ReadStream | NodeJS.ReadableStream | ReadableStream<Uint8Array>
+}
+
+export type BucketedContent = AutomationAttachmentContent & {
+  bucket: string
+  path: string
 }

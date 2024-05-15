@@ -40,7 +40,6 @@ services:
       - PROXY_ADDRESS=host.docker.internal
 
   couchdb-service:
-    # platform: linux/amd64
     container_name: budi-couchdb3-dev
     restart: on-failure
     image: budibase/couchdb

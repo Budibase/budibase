@@ -106,22 +106,22 @@ export async function updateClientLibrary(appId: string) {
   }
 
   // Upload latest manifest and client library
-  const manifestUpload = objectStore.streamUpload(
-    ObjectStoreBuckets.APPS,
-    join(appId, "manifest.json"),
-    fs.createReadStream(manifest),
-    {
+  const manifestUpload = objectStore.streamUpload({
+    bucket: ObjectStoreBuckets.APPS,
+    filename: join(appId, "manifest.json"),
+    stream: fs.createReadStream(manifest),
+    extra: {
       ContentType: "application/json",
-    }
-  )
-  const clientUpload = objectStore.streamUpload(
-    ObjectStoreBuckets.APPS,
-    join(appId, "budibase-client.js"),
-    fs.createReadStream(client),
-    {
+    },
+  })
+  const clientUpload = objectStore.streamUpload({
+    bucket: ObjectStoreBuckets.APPS,
+    filename: join(appId, "budibase-client.js"),
+    stream: fs.createReadStream(client),
+    extra: {
       ContentType: "application/javascript",
-    }
-  )
+    },
+  })
 
   const manifestSrc = fs.promises.readFile(manifest, "utf8")
 

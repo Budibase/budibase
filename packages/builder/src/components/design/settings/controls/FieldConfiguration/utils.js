@@ -41,9 +41,11 @@ export const FieldTypeToComponentMap = {
   [FieldType.BOOLEAN]: "booleanfield",
   [FieldType.LONGFORM]: "longformfield",
   [FieldType.DATETIME]: "datetimefield",
-  [FieldType.ATTACHMENT]: "attachmentfield",
+  [FieldType.ATTACHMENTS]: "attachmentfield",
+  [FieldType.ATTACHMENT_SINGLE]: "attachmentsinglefield",
   [FieldType.LINK]: "relationshipfield",
   [FieldType.JSON]: "jsonfield",
   [FieldType.BARCODEQR]: "codescanner",
   [FieldType.BB_REFERENCE]: "bbreferencefield",
+  [FieldType.BB_REFERENCE_SINGLE]: "bbreferencesinglefield",
 }

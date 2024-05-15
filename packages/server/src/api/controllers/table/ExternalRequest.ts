@@ -22,6 +22,7 @@ export async function makeTableRequest(
       operation,
     },
     meta: {
+      table,
       tables,
     },
     table,

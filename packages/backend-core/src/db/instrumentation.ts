@@ -13,6 +13,7 @@ import {
   DatabaseQueryOpts,
   Document,
   RowValue,
+  SqlQueryBinding,
 } from "@budibase/types"
 import tracer from "dd-trace"
 import { Writable } from "stream"
@@ -147,6 +148,16 @@ export class DDInstrumentedDatabase implements Database {
     return tracer.trace("db.getIndexes", span => {
       span?.addTags({ db_name: this.name })
       return this.db.getIndexes(...args)
+    })
+  }
+
+  sql<T extends Document>(
+    sql: string,
+    parameters?: SqlQueryBinding
+  ): Promise<T[]> {
+    return tracer.trace("db.sql", span => {
+      span?.addTags({ db_name: this.name })
+      return this.db.sql(sql, parameters)
     })
   }
 }

@@ -35,7 +35,6 @@ export function init() {
         // Because we can't pass functions into an Isolate, we remove them from
         // the passed context and rely on the withHelpers() method to add them
         // back in.
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { helpers, snippets, ...rest } = ctx
         return vm.withContext(rest, () => vm.execute(js))
       } catch (error: any) {

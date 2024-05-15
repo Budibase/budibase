@@ -78,7 +78,12 @@
   {/if}
 </div>
 
-<Drawer bind:this={bindingDrawer} title={title ?? placeholder ?? "Bindings"}>
+<Drawer
+  bind:this={bindingDrawer}
+  title={title ?? placeholder ?? "Bindings"}
+  on:drawerHide
+  on:drawerShow
+>
   <Button cta slot="buttons" on:click={handleClose}>Save</Button>
   <svelte:component
     this={panel}

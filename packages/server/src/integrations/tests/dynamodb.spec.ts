@@ -1,6 +1,5 @@
+jest.mock("aws-sdk", () => require("./aws-sdk.mock"))
 import { default as DynamoDBIntegration } from "../dynamodb"
-
-jest.mock("aws-sdk")
 
 class TestConfiguration {
   integration: any

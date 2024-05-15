@@ -131,7 +131,7 @@
     if (bindings?.length) {
       options.push(SidePanels.Bindings)
     }
-    if (context) {
+    if (context && Object.keys(context).length > 0) {
       options.push(SidePanels.Evaluation)
     }
     if (useSnippets && mode === Modes.JavaScript) {

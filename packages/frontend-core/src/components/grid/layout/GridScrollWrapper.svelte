@@ -12,6 +12,7 @@
     bounds,
     hoveredRowId,
     menu,
+    focusedCellAPI,
   } = getContext("grid")
 
   export let scrollVertically = false
@@ -34,6 +35,9 @@
   const handleWheel = e => {
     e.preventDefault()
     updateScroll(e.deltaX, e.deltaY, e.clientY)
+
+    // Close any open popovers when scrolling
+    $focusedCellAPI?.blur()
 
     // If a context menu was visible, hide it
     if ($menu.visible) {

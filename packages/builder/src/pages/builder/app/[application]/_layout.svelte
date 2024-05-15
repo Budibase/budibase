@@ -32,6 +32,7 @@
   import { UserAvatars } from "@budibase/frontend-core"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
+  import EnterpriseBasicTrialModal from "components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
 
   export let application
 
@@ -103,6 +104,10 @@
   }
 
   onMount(async () => {
+    document.fonts.onloadingdone = e => {
+      builderStore.loadFonts(e.fontfaces)
+    }
+
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
@@ -143,17 +148,19 @@
           />
         </span>
         <Tabs {selected} size="M">
-          {#each $layout.children as { path, title }}
-            <TourWrap stepKeys={[`builder-${title}-section`]}>
-              <Tab
-                quiet
-                selected={$isActive(path)}
-                on:click={topItemNavigate(path)}
-                title={capitalise(title)}
-                id={`builder-${title}-tab`}
-              />
-            </TourWrap>
-          {/each}
+          {#key $builderStore?.fonts}
+            {#each $layout.children as { path, title }}
+              <TourWrap stepKeys={[`builder-${title}-section`]}>
+                <Tab
+                  quiet
+                  selected={$isActive(path)}
+                  on:click={topItemNavigate(path)}
+                  title={capitalise(title)}
+                  id={`builder-${title}-tab`}
+                />
+              </TourWrap>
+            {/each}
+          {/key}
         </Tabs>
       </div>
       <div class="topcenternav">
@@ -191,6 +198,8 @@
 <Modal bind:this={commandPaletteModal} zIndex={999999}>
   <CommandPalette />
 </Modal>
+
+<EnterpriseBasicTrialModal />
 
 <style>
   .back-to-apps {

@@ -12,7 +12,6 @@
     Icon,
     clickOutside,
     CoreTextArea,
-    DatePicker,
     Pagination,
     Helpers,
     Divider,
@@ -27,6 +26,8 @@
   import TimeRenderer from "./_components/TimeRenderer.svelte"
   import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
   import { cloneDeep } from "lodash"
+  import DateRangePicker from "components/common/DateRangePicker.svelte"
+  import dayjs from "dayjs"
 
   const schema = {
     date: { width: "0.8fr" },
@@ -69,16 +70,13 @@
   let sidePanelVisible = false
   let wideSidePanel = false
   let timer
-  let startDate = new Date()
-  startDate.setDate(startDate.getDate() - 30)
-  let endDate = new Date()
+  let dateRange = [dayjs().subtract(30, "days"), dayjs()]
 
   $: fetchUsers(userPage, userSearchTerm)
   $: fetchLogs({
     logsPage,
     logSearchTerm,
-    startDate,
-    endDate,
+    dateRange,
     selectedUsers,
     selectedApps,
     selectedEvents,
@@ -136,8 +134,7 @@
   const fetchLogs = async ({
     logsPage,
     logSearchTerm,
-    startDate,
-    endDate,
+    dateRange,
     selectedUsers,
     selectedApps,
     selectedEvents,
@@ -155,8 +152,8 @@
       logsPageInfo.loading()
       await auditLogs.search({
         bookmark: logsPage,
-        startDate,
-        endDate,
+        startDate: dateRange[0],
+        endDate: dateRange[1],
         fullSearch: logSearchTerm,
         userIds: selectedUsers,
         appIds: selectedApps,
@@ -214,8 +211,8 @@
   const downloadLogs = async () => {
     try {
       window.location = auditLogs.getDownloadUrl({
-        startDate,
-        endDate,
+        startDate: dateRange[0],
+        endDate: dateRange[1],
         fullSearch: logSearchTerm,
         userIds: selectedUsers,
         appIds: selectedApps,
@@ -302,22 +299,9 @@
     </div>
 
     <div class="date-picker">
-      <DatePicker
-        value={[startDate, endDate]}
-        placeholder="Choose date range"
-        range={true}
-        on:change={e => {
-          if (e.detail[0]?.length === 1) {
-            startDate = e.detail[0][0].toISOString()
-            endDate = ""
-          } else if (e.detail[0]?.length > 1) {
-            startDate = e.detail[0][0].toISOString()
-            endDate = e.detail[0][1].toISOString()
-          } else {
-            startDate = ""
-            endDate = ""
-          }
-        }}
+      <DateRangePicker
+        value={dateRange}
+        on:change={e => (dateRange = e.detail)}
       />
     </div>
     <div class="freeSearch">
@@ -488,7 +472,7 @@
     flex-direction: row;
     gap: var(--spacing-l);
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-end;
   }
 
   .side-panel-icons {
@@ -505,6 +489,13 @@
   .date-picker {
     flex-basis: calc(70% - 32px);
     min-width: 100px;
+    display: flex;
+    flex-direction: row;
+  }
+  .date-picker :global(.date-range-picker),
+  .date-picker :global(.spectrum-Form-item) {
+    flex: 1 1 auto;
+    width: 0;
   }
 
   .freeSearch {

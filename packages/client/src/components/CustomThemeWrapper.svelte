@@ -60,16 +60,6 @@
     --spectrum-link-primary-m-text-color-hover: var(--primaryColorHover);
   }
 
-  /* Theme flatpickr */
-  :global(.flatpickr-day.selected) {
-    background: var(--primaryColor);
-    border-color: var(--primaryColor);
-  }
-  :global(.flatpickr-day.selected:hover) {
-    background: var(--primaryColorHover);
-    border-color: var(--primaryColorHover);
-  }
-
   /* Custom scrollbars */
   :global(::-webkit-scrollbar) {
     width: 8px;
