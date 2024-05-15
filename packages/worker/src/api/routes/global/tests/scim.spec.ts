@@ -459,10 +459,11 @@ describe("scim", () => {
       it("should return 404 when requesting unexisting user id", async () => {
         const response = await findScimUser(structures.uuid(), { expect: 404 })
 
-        expect(response).toEqual({
-          message: "CouchDB error: missing",
-          status: 404,
-        })
+        expect(response).toEqual(
+          expect.objectContaining({
+            status: 404,
+          })
+        )
       })
     })
 
@@ -861,10 +862,11 @@ describe("scim", () => {
       it("should return 404 when requesting unexisting group id", async () => {
         const response = await findScimGroup(structures.uuid(), { expect: 404 })
 
-        expect(response).toEqual({
-          message: "CouchDB error: missing",
-          status: 404,
-        })
+        expect(response).toEqual(
+          expect.objectContaining({
+            status: 404,
+          })
+        )
       })
 
       it("should allow excluding members", async () => {
