@@ -41,9 +41,9 @@
   }
 
   const onAnchorClick = e => {
-    if (e.metaKey || e.shiftKey || e.altKey || e.ctrlKey) return;
+    if (e.metaKey || e.shiftKey || e.altKey || e.ctrlKey) return
 
-    e.preventDefault();
+    e.preventDefault()
     $selected = {
       ...$selected,
       title,
@@ -131,5 +131,4 @@
   .link {
     user-select: none;
   }
-
 </style>
