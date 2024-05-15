@@ -137,12 +137,18 @@ class RestIntegration implements IntegrationBase {
       filename: string | undefined
 
     const contentType = response.headers.get("content-type") || ""
-    const contentDisposition = response.headers.get("content-disposition") || ""
+    let contentDisposition = response.headers.get("content-disposition") || ""
     if (
       contentDisposition.includes("filename") ||
       contentDisposition.includes("attachment") ||
       contentDisposition.includes("form-data")
     ) {
+      // the API does not follow the requirements of https://www.ietf.org/rfc/rfc2183.txt
+      // all content-disposition headers should be format disposition-type; parameters
+      // but some APIs do not provide a type, causing the parse below to fail - add one to fix this
+      if (!contentDisposition.includes(";")) {
+        contentDisposition = `attachment; ${contentDisposition}`
+      }
       filename =
         path.basename(parse(contentDisposition).parameters?.filename) || ""
     }
