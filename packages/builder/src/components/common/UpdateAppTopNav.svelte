@@ -1,22 +1,10 @@
 <script>
   import { Popover, Layout, Icon } from "@budibase/bbui"
-  import { deploymentStore } from "stores/builder"
-  import { appsStore } from "stores/portal"
   import UpdateAppForm from "./UpdateAppForm.svelte"
-
-  export let application
 
   let formPopover
   let formPopoverAnchor
   let formPopoverOpen = false
-
-  $: filteredApps = $appsStore.apps.filter(app => app.devId === application)
-  $: selectedApp = filteredApps?.length ? filteredApps[0] : null
-  $: latestDeployments = $deploymentStore
-    .filter(deployment => deployment.status === "SUCCESS")
-    .sort((a, b) => a.updatedAt > b.updatedAt)
-  $: isPublished =
-    selectedApp?.status === "published" && latestDeployments?.length > 0
 </script>
 
 <div bind:this={formPopoverAnchor}>
