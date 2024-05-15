@@ -52,7 +52,7 @@
     dispatch("click")
   }
 
-  const onClick = e => {
+  const onClick = () => {
     $selected = {
       ...$selected,
       title,
