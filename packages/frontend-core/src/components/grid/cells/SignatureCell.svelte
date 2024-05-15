@@ -2,6 +2,7 @@
   import { onMount, getContext } from "svelte"
   import { SignatureModal } from "@budibase/frontend-core/src/components"
   import { CoreSignature, ActionButton } from "@budibase/bbui"
+  import GridPopover from "../overlays/GridPopover.svelte"
 
   export let schema
   export let value
@@ -16,6 +17,7 @@
 
   let isOpen = false
   let modal
+  let anchor
 
   $: editable = focused && !readonly
   $: {
@@ -72,6 +74,7 @@
   class="signature-cell"
   class:light={!$props?.darkMode}
   class:editable
+  bind:this={anchor}
   on:click={editable ? open : null}
 >
   {#if value?.url}
@@ -89,35 +92,46 @@
 />
 
 {#if isOpen}
-  <div class="signature" class:invertX class:invertY class:empty={!value}>
-    {#if value?.key}
-      <div class="signature-wrap">
-        <CoreSignature
-          darkMode={$props.darkMode}
-          editable={false}
-          {value}
-          on:change={saveSignature}
-          on:clear={deleteSignature}
-        />
-      </div>
-    {:else}
-      <div class="add-signature">
-        <ActionButton
-          fullWidth
-          on:click={() => {
-            modal.show()
-          }}
-        >
-          Add signature
-        </ActionButton>
-      </div>
-    {/if}
-  </div>
+  <GridPopover
+    open={isOpen}
+    {anchor}
+    {invertX}
+    maxHeight={null}
+    on:close={close}
+  >
+    <div class="signature" class:empty={!value}>
+      {#if value?.key}
+        <div class="signature-wrap">
+          <CoreSignature
+            darkMode={$props.darkMode}
+            editable={false}
+            {value}
+            on:change={saveSignature}
+            on:clear={deleteSignature}
+          />
+        </div>
+      {:else}
+        <div class="add-signature">
+          <ActionButton
+            fullWidth
+            on:click={() => {
+              modal.show()
+            }}
+          >
+            Add signature
+          </ActionButton>
+        </div>
+      {/if}
+    </div>
+  </GridPopover>
 {/if}
 
 <style>
   .signature {
     min-width: 320px;
+    padding: var(--cell-padding);
+    background: var(--grid-background-alt);
+    border: var(--cell-border);
   }
   .signature.empty {
     width: 100%;
@@ -143,14 +157,6 @@
   .signature-cell.editable:hover {
     cursor: pointer;
   }
-  .signature {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: var(--grid-background-alt);
-    border: var(--cell-border);
-    padding: var(--cell-padding);
-  }
   .signature-wrap {
     display: flex;
     flex-direction: column;
@@ -160,13 +166,5 @@
     color: var(--spectrum-alias-text-color);
     box-sizing: border-box;
     position: relative;
-  }
-  .signature.invertX {
-    left: auto;
-    right: 0;
-  }
-  .signature.invertY {
-    transform: translateY(-100%);
-    top: 0;
   }
 </style>
