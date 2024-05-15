@@ -398,44 +398,50 @@
     if (!externalTable) {
       return [
         FIELDS.STRING,
-        FIELDS.BARCODEQR,
-        FIELDS.LONGFORM,
+        FIELDS.NUMBER,
         FIELDS.OPTIONS,
         FIELDS.ARRAY,
-        FIELDS.NUMBER,
-        FIELDS.BIGINT,
         FIELDS.BOOLEAN,
         FIELDS.DATETIME,
-        FIELDS.ATTACHMENT_SINGLE,
-        FIELDS.ATTACHMENTS,
         FIELDS.LINK,
-        FIELDS.FORMULA,
-        FIELDS.JSON,
+        FIELDS.LONGFORM,
         FIELDS.USER,
         FIELDS.USERS,
+        FIELDS.ATTACHMENT_SINGLE,
+        FIELDS.ATTACHMENTS,
+        FIELDS.FORMULA,
+        FIELDS.JSON,
+        FIELDS.BARCODEQR,
+        FIELDS.BIGINT,
         FIELDS.AUTO,
       ]
     } else {
       let fields = [
         FIELDS.STRING,
-        FIELDS.BARCODEQR,
-        FIELDS.LONGFORM,
-        FIELDS.OPTIONS,
-        FIELDS.DATETIME,
         FIELDS.NUMBER,
+        FIELDS.OPTIONS,
+        FIELDS.ARRAY,
         FIELDS.BOOLEAN,
-        FIELDS.FORMULA,
-        FIELDS.BIGINT,
+        FIELDS.DATETIME,
+        FIELDS.LINK,
+        FIELDS.LONGFORM,
         FIELDS.USER,
+        FIELDS.USERS,
+        FIELDS.FORMULA,
+        FIELDS.BARCODEQR,
+        FIELDS.BIGINT,
       ]
 
-      if (datasource && datasource.source !== SourceName.GOOGLE_SHEETS) {
-        fields.push(FIELDS.USERS)
+      // Filter out multiple users for google sheets
+      if (datasource?.source === SourceName.GOOGLE_SHEETS) {
+        fields = fields.filter(x => x !== FIELDS.USERS)
       }
-      // no-sql or a spreadsheet
-      if (!externalTable || table.sql) {
-        fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
+
+      // Filter out SQL-specific types for non-SQL datasources
+      if (!table.sql) {
+        fields = fields.filter(x => x !== FIELDS.LINK && x !== FIELDS.ARRAY)
       }
+
       return fields
     }
   }
