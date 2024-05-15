@@ -16,6 +16,7 @@ import get from "lodash/get"
 import * as https from "https"
 import qs from "querystring"
 import fetch from "node-fetch"
+import type { Response } from "node-fetch"
 import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
 import FormData from "form-data"
@@ -25,6 +26,7 @@ import { handleFileResponse, handleXml } from "./utils"
 import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
+import { getAttachmentHeaders } from "./utils/restUtils"
 
 enum BodyType {
   NONE = "none",
@@ -130,25 +132,20 @@ class RestIntegration implements IntegrationBase {
     this.config = config
   }
 
-  async parseResponse(response: any, pagination: PaginationConfig | null) {
+  async parseResponse(response: Response, pagination: PaginationConfig | null) {
     let data: any[] | string | undefined,
       raw: string | undefined,
-      headers: Record<string, string> = {},
+      headers: Record<string, string[] | string> = {},
       filename: string | undefined
 
-    const contentType = response.headers.get("content-type") || ""
-    let contentDisposition = response.headers.get("content-disposition") || ""
+    const { contentType, contentDisposition } = getAttachmentHeaders(
+      response.headers
+    )
     if (
       contentDisposition.includes("filename") ||
       contentDisposition.includes("attachment") ||
       contentDisposition.includes("form-data")
     ) {
-      // the API does not follow the requirements of https://www.ietf.org/rfc/rfc2183.txt
-      // all content-disposition headers should be format disposition-type; parameters
-      // but some APIs do not provide a type, causing the parse below to fail - add one to fix this
-      if (!contentDisposition.includes("; ")) {
-        contentDisposition = `attachment; ${contentDisposition}`
-      }
       filename =
         path.basename(parse(contentDisposition).parameters?.filename) || ""
     }
@@ -178,7 +175,7 @@ class RestIntegration implements IntegrationBase {
       throw `Failed to parse response body: ${err}`
     }
 
-    let contentLength: string = response.headers.get("content-length")
+    let contentLength = response.headers.get("content-length")
     if (!contentLength && raw) {
       contentLength = Buffer.byteLength(raw, "utf8").toString()
     }
