@@ -39,7 +39,11 @@
 >
   <Layout noPadding gap="M">
     <div class="popover-content">
-      <UpdateAppForm />
+      <UpdateAppForm
+        on:updated={() => {
+          formPopover.hide()
+        }}
+      />
     </div>
   </Layout>
 </Popover>
