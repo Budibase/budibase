@@ -68,7 +68,7 @@
   // e.g. if one of your screens is selected on front end, then
   // you browse to backend, when you click frontend, you will be
   // brought back to the same screen.
-  const topItemNavigate = path => () => {
+  const topItemNavigate = path => {
     const activeTopNav = $layout.children.find(c => $isActive(c.path))
     if (activeTopNav) {
       builderStore.setPreviousTopNavPath(
@@ -151,7 +151,7 @@
                   href={$url(path)}
                   quiet
                   selected={$isActive(path)}
-                  on:click={topItemNavigate(path)}
+                  on:click={() => topItemNavigate(path)}
                   title={capitalise(title)}
                   id={`builder-${title}-tab`}
                 />

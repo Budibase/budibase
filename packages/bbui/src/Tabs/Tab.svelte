@@ -41,8 +41,9 @@
   }
 
   const onAnchorClick = e => {
-    e.preventDefault()
+    if (e.metaKey || e.shiftKey || e.altKey || e.ctrlKey) return;
 
+    e.preventDefault();
     $selected = {
       ...$selected,
       title,
