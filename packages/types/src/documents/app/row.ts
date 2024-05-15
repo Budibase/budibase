@@ -100,13 +100,17 @@ export enum FieldType {
    */
   BIGINT = "bigint",
   /**
-   * a JSON type, called User within Budibase. This type is used to represent a link to an internal Budibase
+   * a JSON type, called Users within Budibase. It will hold an array of strings. This type is used to represent a link to an internal Budibase
    * resource, like a user or group, today only users are supported. This type will be represented as an
    * array of internal resource IDs (e.g. user IDs) within the row - this ID list will be enriched with
    * the full resources when rows are returned from the API. The full resources can be input to the API, or
    * an array of resource IDs, the API will squash these down and validate them before saving the row.
    */
   BB_REFERENCE = "bb_reference",
+  /**
+   * a string type, called User within Budibase. Same logic as `bb_reference`, storing a single id as string instead of an array
+   */
+  BB_REFERENCE_SINGLE = "bb_reference_single",
 }
 
 export interface RowAttachment {
@@ -123,17 +127,4 @@ export interface Row extends Document {
   tableId?: string
   _viewId?: string
   [key: string]: any
-}
-
-export enum FieldSubtype {
-  USER = "user",
-  USERS = "users",
-}
-
-// The 'as' are required for typescript not to type the outputs as generic FieldSubtype
-export const FieldTypeSubtypes = {
-  BB_REFERENCE: {
-    USER: FieldSubtype.USER as FieldSubtype.USER,
-    USERS: FieldSubtype.USERS as FieldSubtype.USERS,
-  },
 }

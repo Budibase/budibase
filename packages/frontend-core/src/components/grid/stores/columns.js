@@ -48,22 +48,28 @@ export const createStores = () => {
 export const deriveStores = context => {
   const { columns, stickyColumn } = context
 
-  // Derive if we have any normal columns
-  const hasNonAutoColumn = derived(
+  // Quick access to all columns
+  const allColumns = derived(
     [columns, stickyColumn],
     ([$columns, $stickyColumn]) => {
       let allCols = $columns || []
       if ($stickyColumn) {
         allCols = [...allCols, $stickyColumn]
       }
-      const normalCols = allCols.filter(column => {
-        return !column.schema?.autocolumn
-      })
-      return normalCols.length > 0
+      return allCols
     }
   )
 
+  // Derive if we have any normal columns
+  const hasNonAutoColumn = derived(allColumns, $allColumns => {
+    const normalCols = $allColumns.filter(column => {
+      return !column.schema?.autocolumn
+    })
+    return normalCols.length > 0
+  })
+
   return {
+    allColumns,
     hasNonAutoColumn,
   }
 }
@@ -142,24 +148,26 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { definition, columns, stickyColumn, enrichedSchema } = context
+  const {
+    definition,
+    columns,
+    stickyColumn,
+    allColumns,
+    enrichedSchema,
+    compact,
+  } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
-  enrichedSchema.subscribe($enrichedSchema => {
+  const processColumns = $enrichedSchema => {
     if (!$enrichedSchema) {
       columns.set([])
       stickyColumn.set(null)
       return
     }
     const $definition = get(definition)
-    const $columns = get(columns)
+    const $allColumns = get(allColumns)
     const $stickyColumn = get(stickyColumn)
-
-    // Generate array of all columns to easily find pre-existing columns
-    let allColumns = $columns || []
-    if ($stickyColumn) {
-      allColumns.push($stickyColumn)
-    }
+    const $compact = get(compact)
 
     // Find primary display
     let primaryDisplay
@@ -171,7 +179,7 @@ export const initialise = context => {
     // Get field list
     let fields = []
     Object.keys($enrichedSchema).forEach(field => {
-      if (field !== primaryDisplay) {
+      if ($compact || field !== primaryDisplay) {
         fields.push(field)
       }
     })
@@ -181,7 +189,7 @@ export const initialise = context => {
       fields
         .map(field => {
           const fieldSchema = $enrichedSchema[field]
-          const oldColumn = allColumns?.find(x => x.name === field)
+          const oldColumn = $allColumns?.find(x => x.name === field)
           return {
             name: field,
             label: fieldSchema.displayName || field,
@@ -189,9 +197,18 @@ export const initialise = context => {
             width: fieldSchema.width || oldColumn?.width || DefaultColumnWidth,
             visible: fieldSchema.visible ?? true,
             order: fieldSchema.order ?? oldColumn?.order,
+            primaryDisplay: field === primaryDisplay,
           }
         })
         .sort((a, b) => {
+          // If we don't have a pinned column then primary display will be in
+          // the normal columns list, and should be first
+          if (a.name === primaryDisplay) {
+            return -1
+          } else if (b.name === primaryDisplay) {
+            return 1
+          }
+
           // Sort by order first
           const orderA = a.order
           const orderB = b.order
@@ -214,12 +231,12 @@ export const initialise = context => {
     )
 
     // Update sticky column
-    if (!primaryDisplay) {
+    if ($compact || !primaryDisplay) {
       stickyColumn.set(null)
       return
     }
     const stickySchema = $enrichedSchema[primaryDisplay]
-    const oldStickyColumn = allColumns?.find(x => x.name === primaryDisplay)
+    const oldStickyColumn = $allColumns?.find(x => x.name === primaryDisplay)
     stickyColumn.set({
       name: primaryDisplay,
       label: stickySchema.displayName || primaryDisplay,
@@ -228,6 +245,13 @@ export const initialise = context => {
       visible: true,
       order: 0,
       left: GutterWidth,
+      primaryDisplay: true,
     })
-  })
+  }
+
+  // Process columns when schema changes
+  enrichedSchema.subscribe(processColumns)
+
+  // Process columns when compact flag changes
+  compact.subscribe(() => processColumns(get(enrichedSchema)))
 }

@@ -38,7 +38,15 @@
 <div use:getAnchor on:click={openMenu}>
   <slot name="control" />
 </div>
-<Popover bind:this={dropdown} {anchor} {align} {portalTarget} on:open on:close>
+<Popover
+  bind:this={dropdown}
+  {anchor}
+  {align}
+  {portalTarget}
+  resizable={false}
+  on:open
+  on:close
+>
   <Menu>
     <slot />
   </Menu>

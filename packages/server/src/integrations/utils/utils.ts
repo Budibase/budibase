@@ -192,6 +192,11 @@ export function generateRowIdField(keyProps: any[] = []) {
   if (!Array.isArray(keyProps)) {
     keyProps = [keyProps]
   }
+  for (let index in keyProps) {
+    if (keyProps[index] instanceof Buffer) {
+      keyProps[index] = keyProps[index].toString()
+    }
+  }
   // this conserves order and types
   // we have to swap the double quotes to single quotes for use in HBS statements
   // when using the literal helper the double quotes can break things
@@ -378,6 +383,7 @@ function copyExistingPropsOver(
         case FieldType.ATTACHMENT_SINGLE:
         case FieldType.JSON:
         case FieldType.BB_REFERENCE:
+        case FieldType.BB_REFERENCE_SINGLE:
           shouldKeepSchema = keepIfType(FieldType.JSON, FieldType.STRING)
           break
 

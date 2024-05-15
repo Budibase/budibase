@@ -1,5 +1,6 @@
-import flatpickr from "flatpickr"
+import dayjs from "dayjs"
 import { FieldTypes } from "../../../constants"
+import { Helpers } from "@budibase/bbui"
 
 /**
  * Creates a validation function from a combination of schema-level constraints
@@ -81,7 +82,7 @@ export const createValidatorFromConstraints = (
     // Date constraint
     if (exists(schemaConstraints.datetime?.earliest)) {
       const limit = schemaConstraints.datetime.earliest
-      const limitString = flatpickr.formatDate(new Date(limit), "F j Y, H:i")
+      const limitString = Helpers.getDateDisplayValue(dayjs(limit))
       rules.push({
         type: "datetime",
         constraint: "minValue",
@@ -91,7 +92,7 @@ export const createValidatorFromConstraints = (
     }
     if (exists(schemaConstraints.datetime?.latest)) {
       const limit = schemaConstraints.datetime.latest
-      const limitString = flatpickr.formatDate(new Date(limit), "F j Y, H:i")
+      const limitString = Helpers.getDateDisplayValue(dayjs(limit))
       rules.push({
         type: "datetime",
         constraint: "maxValue",

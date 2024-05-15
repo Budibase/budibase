@@ -1,30 +1,71 @@
 import { cache, db as dbCore } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import { FieldSubtype, DocumentType, SEPARATOR } from "@budibase/types"
+import {
+  BBReferenceFieldSubType,
+  DocumentType,
+  SEPARATOR,
+} from "@budibase/types"
 import { InvalidBBRefError } from "./errors"
 
 const ROW_PREFIX = DocumentType.ROW + SEPARATOR
 
-export async function processInputBBReferences(
-  value: string | string[] | { _id: string } | { _id: string }[],
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
-): Promise<string | string[] | null> {
-  let referenceIds: string[] = []
-
-  if (Array.isArray(value)) {
-    referenceIds.push(
-      ...value.map(idOrDoc =>
-        typeof idOrDoc === "string" ? idOrDoc : idOrDoc._id
+export async function processInputBBReference(
+  value: string | { _id: string },
+  subtype: BBReferenceFieldSubType.USER
+): Promise<string | null> {
+  if (value && Array.isArray(value)) {
+    if (value.length > 1) {
+      throw new InvalidBBRefError(
+        JSON.stringify(value),
+        BBReferenceFieldSubType.USER
       )
-    )
-  } else if (typeof value !== "string") {
-    referenceIds.push(value._id)
+    }
+    value = value[0]
+  }
+  let id = typeof value === "string" ? value : value?._id
+
+  if (!id) {
+    return null
+  }
+
+  switch (subtype) {
+    case BBReferenceFieldSubType.USER: {
+      if (id.startsWith(ROW_PREFIX)) {
+        id = dbCore.getGlobalIDFromUserMetadataID(id)
+      }
+
+      try {
+        await cache.user.getUser(id)
+        return id
+      } catch (e: any) {
+        if (e.statusCode === 404) {
+          throw new InvalidBBRefError(id, BBReferenceFieldSubType.USER)
+        }
+        throw e
+      }
+    }
+
+    default:
+      throw utils.unreachable(subtype)
+  }
+}
+export async function processInputBBReferences(
+  value: string | string[] | { _id: string }[],
+  subtype: BBReferenceFieldSubType
+): Promise<string[] | null> {
+  if (!value || !value[0]) {
+    return null
+  }
+
+  let referenceIds
+  if (typeof value === "string") {
+    referenceIds = value
+      .split(",")
+      .map(u => u.trim())
+      .filter(u => !!u)
   } else {
-    referenceIds.push(
-      ...value
-        .split(",")
-        .filter(x => x)
-        .map((id: string) => id.trim())
+    referenceIds = value.map(idOrDoc =>
+      typeof idOrDoc === "string" ? idOrDoc : idOrDoc._id
     )
   }
 
@@ -40,19 +81,67 @@ export async function processInputBBReferences(
   })
 
   switch (subtype) {
-    case FieldSubtype.USER:
-    case FieldSubtype.USERS: {
+    case undefined:
+      throw "Subtype must be defined"
+    case BBReferenceFieldSubType.USER:
+    case BBReferenceFieldSubType.USERS: {
       const { notFoundIds } = await cache.user.getUsers(referenceIds)
 
       if (notFoundIds?.length) {
-        throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
+        throw new InvalidBBRefError(
+          notFoundIds[0],
+          BBReferenceFieldSubType.USER
+        )
       }
 
-      if (subtype === FieldSubtype.USERS) {
-        return referenceIds
+      if (!referenceIds?.length) {
+        return null
       }
 
-      return referenceIds.join(",") || null
+      return referenceIds
+    }
+    default:
+      throw utils.unreachable(subtype)
+  }
+}
+
+interface UserReferenceInfo {
+  _id: string
+  primaryDisplay: string
+  email: string
+  firstName?: string
+  lastName?: string
+}
+
+export async function processOutputBBReference(
+  value: string | null | undefined,
+  subtype: BBReferenceFieldSubType.USER
+): Promise<UserReferenceInfo | undefined> {
+  if (!value) {
+    return undefined
+  }
+
+  switch (subtype) {
+    case BBReferenceFieldSubType.USER: {
+      let user
+      try {
+        user = await cache.user.getUser(value as string)
+      } catch (err: any) {
+        if (err.statusCode !== 404) {
+          throw err
+        }
+      }
+      if (!user) {
+        return undefined
+      }
+
+      return {
+        _id: user._id!,
+        primaryDisplay: user.email,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      }
     }
     default:
       throw utils.unreachable(subtype)
@@ -60,27 +149,25 @@ export async function processInputBBReferences(
 }
 
 export async function processOutputBBReferences(
-  value: string | string[],
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
-) {
-  if (value === null || value === undefined) {
-    // Already processed or nothing to process
-    return value || undefined
+  value: string | null | undefined,
+  subtype: BBReferenceFieldSubType
+): Promise<UserReferenceInfo[] | undefined> {
+  if (!value) {
+    return undefined
   }
-
   const ids =
     typeof value === "string" ? value.split(",").filter(id => !!id) : value
 
   switch (subtype) {
-    case FieldSubtype.USER:
-    case FieldSubtype.USERS: {
+    case BBReferenceFieldSubType.USER:
+    case BBReferenceFieldSubType.USERS: {
       const { users } = await cache.user.getUsers(ids)
       if (!users.length) {
         return undefined
       }
 
       return users.map(u => ({
-        _id: u._id,
+        _id: u._id!,
         primaryDisplay: u.email,
         email: u.email,
         firstName: u.firstName,

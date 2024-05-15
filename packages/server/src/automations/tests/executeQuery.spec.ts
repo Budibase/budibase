@@ -88,7 +88,7 @@ describe.each(
     let res = await setup.runStep(setup.actions.EXECUTE_QUERY.stepId, {
       query: { queryId: "wrong_id" },
     })
-    expect(res.response).toEqual("Error: missing")
+    expect(res.response).toEqual("Error: CouchDB error: missing")
     expect(res.success).toEqual(false)
   })
 })

@@ -44,3 +44,6 @@ export interface PublishResponse {
   status: string
   appUrl: string
 }
+
+export interface UpdateAppRequest extends Partial<App> {}
+export interface UpdateAppResponse extends App {}

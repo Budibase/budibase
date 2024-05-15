@@ -13,13 +13,14 @@ import { bucketTTLConfig, budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
+import { HeadObjectOutput } from "aws-sdk/clients/s3"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
 const STATE = {
   bucketCreationPromises: {},
 }
-const signedFilePrefix = "/files/signed"
+export const SIGNED_FILE_PREFIX = "/files/signed"
 
 type ListParams = {
   ContinuationToken?: string
@@ -40,8 +41,13 @@ type UploadParams = BaseUploadParams & {
   path?: string | PathLike
 }
 
-type StreamUploadParams = BaseUploadParams & {
-  stream: ReadStream
+export type StreamTypes =
+  | ReadStream
+  | NodeJS.ReadableStream
+  | ReadableStream<Uint8Array>
+
+export type StreamUploadParams = BaseUploadParams & {
+  stream?: StreamTypes
 }
 
 const CONTENT_TYPE_MAP: any = {
@@ -83,7 +89,7 @@ export function ObjectStore(
   bucket: string,
   opts: { presigning: boolean } = { presigning: false }
 ) {
-  const config: any = {
+  const config: AWS.S3.ClientConfiguration = {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
     apiVersion: "2006-03-01",
@@ -174,11 +180,9 @@ export async function upload({
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (ttl && (bucketCreated.created || bucketCreated.exists)) {
+  if (ttl && bucketCreated.created) {
     let ttlConfig = bucketTTLConfig(bucketName, ttl)
-    if (objectStore.putBucketLifecycleConfiguration) {
-      await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
-    }
+    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
 
   let contentType = type
@@ -222,11 +226,9 @@ export async function streamUpload({
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (ttl && (bucketCreated.created || bucketCreated.exists)) {
+  if (ttl && bucketCreated.created) {
     let ttlConfig = bucketTTLConfig(bucketName, ttl)
-    if (objectStore.putBucketLifecycleConfiguration) {
-      await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
-    }
+    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
 
   // Set content type for certain known extensions
@@ -333,7 +335,7 @@ export function getPresignedUrl(
     const signedUrl = new URL(url)
     const path = signedUrl.pathname
     const query = signedUrl.search
-    return `${signedFilePrefix}${path}${query}`
+    return `${SIGNED_FILE_PREFIX}${path}${query}`
   }
 }
 
@@ -521,6 +523,26 @@ export async function getReadStream(
   return client.getObject(params).createReadStream()
 }
 
+export async function getObjectMetadata(
+  bucket: string,
+  path: string
+): Promise<HeadObjectOutput> {
+  bucket = sanitizeBucket(bucket)
+  path = sanitizeKey(path)
+
+  const client = ObjectStore(bucket)
+  const params = {
+    Bucket: bucket,
+    Key: path,
+  }
+
+  try {
+    return await client.headObject(params).promise()
+  } catch (err: any) {
+    throw new Error("Unable to retrieve metadata from object")
+  }
+}
+
 /*
 Given a signed url like '/files/signed/tmp-files-attachments/app_123456/myfile.txt' extract
 the bucket and the path from it
@@ -530,7 +552,9 @@ export function extractBucketAndPath(
 ): { bucket: string; path: string } | null {
   const baseUrl = url.split("?")[0]
 
-  const regex = new RegExp(`^${signedFilePrefix}/(?<bucket>[^/]+)/(?<path>.+)$`)
+  const regex = new RegExp(
+    `^${SIGNED_FILE_PREFIX}/(?<bucket>[^/]+)/(?<path>.+)$`
+  )
   const match = baseUrl.match(regex)
 
   if (match && match.groups) {
