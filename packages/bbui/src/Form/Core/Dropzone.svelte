@@ -2,7 +2,7 @@
   import "@spectrum-css/dropzone/dist/index-vars.css"
   import "@spectrum-css/typography/dist/index-vars.css"
   import "@spectrum-css/illustratedmessage/dist/index-vars.css"
-  import { createEventDispatcher, getContext } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import { uuid } from "../../helpers"
   import Icon from "../../Icon/Icon.svelte"
   import Link from "../../Link/Link.svelte"

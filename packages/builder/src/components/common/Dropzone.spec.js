@@ -4,7 +4,7 @@ import { render, fireEvent } from "@testing-library/svelte"
 import { notifications } from "@budibase/bbui";
 import { admin } from "stores/portal"
 
-vi.spyOn(notifications, "error").mockImplementation(() => {});
+vi.spyOn(notifications, "error").mockImplementation(() => {})
 
 
 describe("Dropzone", () => {
@@ -33,7 +33,7 @@ describe("Dropzone", () => {
         type: "image/png"
       }
     )
-    await fireEvent.change(fileInput, { target: { files: [file] } });
+    await fireEvent.change(fileInput, { target: { files: [file] } })
     expect(notifications.error).toHaveBeenCalledWith("Files cannot exceed 1MB. Please try again with smaller files.")
   })
 
@@ -51,7 +51,7 @@ describe("Dropzone", () => {
         type: "image/png"
       }
     )
-    await fireEvent.change(fileInput, { target: { files: [file] } });
+    await fireEvent.change(fileInput, { target: { files: [file] } })
     expect(notifications.error).not.toHaveBeenCalledWith("Files cannot exceed 1MB. Please try again with smaller files.")
   })
 })
