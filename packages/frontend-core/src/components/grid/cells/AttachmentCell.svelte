@@ -12,7 +12,7 @@
   export let schema
   export let maximum
 
-  const { API, notifications, isCloud } = getContext("grid")
+  const { API, notifications, props } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
 
   let isOpen = false
@@ -106,7 +106,7 @@
         on:change={e => onChange(e.detail)}
         maximum={maximum || schema.constraints?.length?.maximum}
         {processFiles}
-        handleFileTooLarge={isCloud ? handleFileTooLarge : null}
+        handleFileTooLarge={$props.isCloud ? handleFileTooLarge : null}
       />
     </div>
   </GridPopover>
