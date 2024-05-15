@@ -55,6 +55,7 @@
   export let notifyError = null
   export let buttons = null
   export let darkMode
+  export let isCloud = null
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -110,6 +111,7 @@
     notifyError,
     buttons,
     darkMode,
+    isCloud,
   })
   $: minHeight =
     Padding + SmallRowHeight + $rowHeight + (showControls ? ControlsHeight : 0)

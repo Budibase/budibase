@@ -1,9 +1,11 @@
 <script>
   import { Dropzone, notifications } from "@budibase/bbui"
+  import { admin } from "stores/portal"
   import { API } from "api"
 
   export let value = []
   export let label
+  export let fileSizeLimit = undefined
 
   const BYTES_IN_MB = 1000000
 
@@ -34,6 +36,6 @@
   {label}
   {...$$restProps}
   {processFiles}
-  {handleFileTooLarge}
-  on:change
+  handleFileTooLarge={$admin.cloud ? handleFileTooLarge : null}
+  {fileSizeLimit}
 />
