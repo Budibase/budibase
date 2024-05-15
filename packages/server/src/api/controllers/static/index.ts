@@ -314,11 +314,9 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
       signedUrl = s3.getSignedUrl("putObject", params)
       if (datasource?.config?.endpoint) {
         publicUrl = `${datasource.config.endpoint}/${bucket}/${key}`
-      }
-      else {
+      } else {
         publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
       }
-
     } catch (error: any) {
       ctx.throw(400, error)
     }
