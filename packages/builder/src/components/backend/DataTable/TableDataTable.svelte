@@ -1,6 +1,6 @@
 <script>
   import { datasources, tables, integrations, appStore } from "stores/builder"
-  import { themeStore } from "stores/portal"
+  import { themeStore, admin } from "stores/portal"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
@@ -68,6 +68,7 @@
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}
+    isCloud={$admin.cloud}
   >
     <svelte:fragment slot="filter">
       {#if isUsersTable && $appStore.features.disableUserMetadata}

@@ -131,7 +131,7 @@ export class AppsStore extends BudiStore {
       if (updatedAppIndex !== -1) {
         let updatedApp = state.apps[updatedAppIndex]
         updatedApp = { ...updatedApp, ...value }
-        state.apps = state.apps.splice(updatedAppIndex, 1, updatedApp)
+        state.apps.splice(updatedAppIndex, 1, updatedApp)
       }
       return state
     })
