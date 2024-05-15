@@ -52,8 +52,7 @@ function findColumnInQueries(
 function userColumnMapping(
   column: string,
   options: RowSearchParams,
-  isDeprecatedSingleUserColumn: boolean = false,
-  isSql: boolean = false
+  isDeprecatedSingleUserColumn: boolean = false
 ) {
   findColumnInQueries(column, options, (filterValue: any): any => {
     const isArray = Array.isArray(filterValue),
@@ -71,33 +70,23 @@ function userColumnMapping(
       }
     }
 
-    let wrapper = (s: string) => s
-    if (isDeprecatedSingleUserColumn && filterValue && isSql) {
-      // Deprecated single users are stored as stringified arrays of a single value
-      wrapper = (s: string) => JSON.stringify([s])
-    }
-
     if (isArray) {
       return filterValue.map(el => {
         if (typeof el === "string") {
-          return wrapper(processString(el))
+          return processString(el)
         } else {
           return el
         }
       })
     } else {
-      return wrapper(processString(filterValue))
+      return processString(filterValue)
     }
   })
 }
 
 // maps through the search parameters to check if any of the inputs are invalid
 // based on the table schema, converts them to something that is valid.
-export function searchInputMapping(
-  table: Table,
-  options: RowSearchParams,
-  datasourceOptions: { isSql?: boolean } = {}
-) {
+export function searchInputMapping(table: Table, options: RowSearchParams) {
   if (!table?.schema) {
     return options
   }
@@ -119,8 +108,7 @@ export function searchInputMapping(
         userColumnMapping(
           key,
           options,
-          helpers.schema.isDeprecatedSingleUserColumn(column),
-          datasourceOptions.isSql
+          helpers.schema.isDeprecatedSingleUserColumn(column)
         )
         break
       }
