@@ -7,11 +7,13 @@
   export let darkMode
 
   export const show = () => {
+    edited = false
     modal.show()
   }
 
   let modal
   let canvas
+  let edited = false
 </script>
 
 <Modal bind:this={modal}>
@@ -20,6 +22,7 @@
     showCancelButton={false}
     showCloseIcon={false}
     custom
+    disabled={!edited}
     showDivider={false}
     onConfirm={() => {
       onConfirm(canvas)
@@ -29,7 +32,15 @@
       <Body>{title}</Body>
     </div>
     <div class="signature-wrap modal">
-      <CoreSignature {darkMode} {value} saveIcon={false} bind:this={canvas} />
+      <CoreSignature
+        {darkMode}
+        {value}
+        saveIcon={false}
+        bind:this={canvas}
+        on:update={() => {
+          edited = true
+        }}
+      />
     </div>
   </ModalContent>
 </Modal>
