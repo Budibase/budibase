@@ -146,7 +146,7 @@ export async function removeTable(table: Table) {
       delete definition.sql.tables[table._id!]
       await db.put(definition)
       // make sure SQS is cleaned up, tables removed
-      await db.sqlCleanup()
+      await db.sqlDiskCleanup()
     }
   } catch (err: any) {
     if (err?.status === 404) {
