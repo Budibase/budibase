@@ -5,12 +5,12 @@ import {
   QueryJson,
   Row,
   SearchFilters,
+  SqlClient,
 } from "@budibase/types"
 import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
 import datasources from "../datasources"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import { SqlClient } from "../../../integrations/utils"
 import { SQS_DATASOURCE_INTERNAL } from "../../../db/utils"
 
 const WRITE_OPERATIONS: Operation[] = [

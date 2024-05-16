@@ -117,6 +117,11 @@ export interface QueryJson {
   tableAliases?: Record<string, string>
 }
 
+export interface QueryOptions {
+  disableReturning?: boolean
+  disableBindings?: boolean
+}
+
 export type SqlQueryBinding = Knex.Value[]
 
 export interface SqlQuery {
@@ -127,4 +132,12 @@ export interface SqlQuery {
 export enum EmptyFilterOption {
   RETURN_ALL = "all",
   RETURN_NONE = "none",
+}
+
+export enum SqlClient {
+  MS_SQL = "mssql",
+  POSTGRES = "pg",
+  MY_SQL = "mysql2",
+  ORACLE = "oracledb",
+  SQL_LITE = "sqlite3",
 }

@@ -42,12 +42,13 @@ services:
   couchdb-service:
     container_name: budi-couchdb3-dev
     restart: on-failure
-    image: budibase/couchdb
+    image: budibase/couchdb:v3.2.1-sqs
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
     ports:
       - "${COUCH_DB_PORT}:5984"
+      - "${COUCH_DB_SQS_PORT}:4984"
     volumes:
       - couchdb_data:/data
 
