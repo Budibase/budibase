@@ -20,9 +20,8 @@
   import { SignatureModal } from "@budibase/frontend-core/src/components"
   import { themeStore } from "stores/portal"
 
-  export let defaultValue
   export let meta
-  export let value = defaultValue || (meta.type === "boolean" ? false : "")
+  export let value
   export let readonly
   export let error
 
