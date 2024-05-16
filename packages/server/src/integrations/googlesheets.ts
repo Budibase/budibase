@@ -261,9 +261,6 @@ class GoogleSheetsIntegration implements DatasourcePlus {
             clients: {},
           }
           bbCtx.cleanup = bbCtx.cleanup || []
-
-      this.client = new GoogleSpreadsheet(this.spreadsheetId, oauthClient)
-      await this.client.loadInfo()
         }
       }
 
