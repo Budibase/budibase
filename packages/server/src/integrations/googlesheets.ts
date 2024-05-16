@@ -228,32 +228,56 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   private async connect() {
     try {
-      await setupCreationAuth(this.config)
+      const bbCtx = context.getCurrentContext()
+      let oauthClient = bbCtx?.googleSheets?.oauthClient
 
-      // Initialise oAuth client
-      const googleConfig = await configs.getGoogleDatasourceConfig()
-      if (!googleConfig) {
-        throw new HTTPError("Google config not found", 400)
-      }
+      if (!oauthClient) {
+        await setupCreationAuth(this.config)
 
-      const oauthClient = new OAuth2Client({
-        clientId: googleConfig.clientID,
-        clientSecret: googleConfig.clientSecret,
-      })
+        // Initialise oAuth client
+        const googleConfig = await configs.getGoogleDatasourceConfig()
+        if (!googleConfig) {
+          throw new HTTPError("Google config not found", 400)
+        }
 
-      const tokenResponse = await this.fetchAccessToken({
-        client_id: googleConfig.clientID,
-        client_secret: googleConfig.clientSecret,
-        refresh_token: this.config.auth.refreshToken,
-      })
+        oauthClient = new OAuth2Client({
+          clientId: googleConfig.clientID,
+          clientSecret: googleConfig.clientSecret,
+        })
 
-      oauthClient.setCredentials({
-        refresh_token: this.config.auth.refreshToken,
-        access_token: tokenResponse.access_token,
-      })
+        const tokenResponse = await this.fetchAccessToken({
+          client_id: googleConfig.clientID,
+          client_secret: googleConfig.clientSecret,
+          refresh_token: this.config.auth.refreshToken,
+        })
+
+        oauthClient.setCredentials({
+          refresh_token: this.config.auth.refreshToken,
+          access_token: tokenResponse.access_token,
+        })
+        if (bbCtx && !bbCtx.googleSheets) {
+          bbCtx.googleSheets = {
+            oauthClient,
+            clients: {},
+          }
+          bbCtx.cleanup = bbCtx.cleanup || []
 
       this.client = new GoogleSpreadsheet(this.spreadsheetId, oauthClient)
       await this.client.loadInfo()
+        }
+      }
+
+      let client = bbCtx?.googleSheets?.clients[this.spreadsheetId]
+      if (!client) {
+        client = new GoogleSpreadsheet(this.spreadsheetId, oauthClient)
+        await client.loadInfo()
+
+        if (bbCtx?.googleSheets?.clients) {
+          bbCtx.googleSheets.clients[this.spreadsheetId] = client
+        }
+      }
+
+      this.client = client
     } catch (err: any) {
       // this happens for xlsx imports
       if (err.message?.includes("operation is not supported")) {
