@@ -323,14 +323,16 @@ export class DatabaseImpl implements Database {
   }
 
   // checks design document is accurate (cleans up tables)
-  async sqlCleanup(): Promise<void> {
+  // this will check the design document and remove anything from
+  // disk which is not supposed to be there
+  async sqlDiskCleanup(): Promise<void> {
     const dbName = this.name
     const url = `/${dbName}/_cleanup`
     return await this._sqlQuery<void>(url, "POST")
   }
 
   // removes a document from sqlite
-  async sqlPurge(docIds: string[] | string): Promise<void> {
+  async sqlPurgeDocument(docIds: string[] | string): Promise<void> {
     if (!Array.isArray(docIds)) {
       docIds = [docIds]
     }
@@ -359,7 +361,7 @@ export class DatabaseImpl implements Database {
           )
           await this.remove(SQLITE_DESIGN_DOC_ID, definition._rev)
         } finally {
-          await this.sqlCleanup()
+          await this.sqlDiskCleanup()
         }
       }
       return await this.nano().db.destroy(this.name)

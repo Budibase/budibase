@@ -56,19 +56,16 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
+  remove(idOrDoc: Document): Promise<DocumentDestroyResponse>
+  remove(idOrDoc: string, rev?: string): Promise<DocumentDestroyResponse>
   remove(
-    id: string | Document,
-    rev?: string | undefined
+    idOrDoc: string | Document,
+    rev?: string
   ): Promise<DocumentDestroyResponse> {
     return tracer.trace("db.remove", span => {
-      span?.addTags({ db_name: this.name, doc_id: id })
-      if (typeof id === "object") {
-        return this.db.remove(id)
-      } else if (rev) {
-        return this.db.remove(id, rev)
-      } else {
-        throw new Error("No revision supplied for removal")
-      }
+      span?.addTags({ db_name: this.name, doc_id: idOrDoc })
+      const id: string = typeof idOrDoc === "object" ? idOrDoc._id! : idOrDoc
+      return this.db.remove(id, rev)
     })
   }
 
@@ -167,17 +164,17 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  sqlPurge(docIds: string[] | string): Promise<void> {
-    return tracer.trace("db.sqlPurge", span => {
+  sqlPurgeDocument(docIds: string[] | string): Promise<void> {
+    return tracer.trace("db.sqlPurgeDocument", span => {
       span?.addTags({ db_name: this.name })
-      return this.db.sqlPurge(docIds)
+      return this.db.sqlPurgeDocument(docIds)
     })
   }
 
-  sqlCleanup(): Promise<void> {
-    return tracer.trace("db.sqlCleanup", span => {
+  sqlDiskCleanup(): Promise<void> {
+    return tracer.trace("db.sqlDiskCleanup", span => {
       span?.addTags({ db_name: this.name })
-      return this.db.sqlCleanup()
+      return this.db.sqlDiskCleanup()
     })
   }
 }

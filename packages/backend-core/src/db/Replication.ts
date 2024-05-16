@@ -5,13 +5,12 @@ import { DocumentType } from "@budibase/types"
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
   TO_DEV = "toDev",
-  UNKNOWN = "unknown",
 }
 
 class Replication {
   source: PouchDB.Database
   target: PouchDB.Database
-  direction: ReplicationDirection
+  direction: ReplicationDirection | undefined
 
   constructor({ source, target }: { source: string; target: string }) {
     this.source = getPouchDB(source)
@@ -26,8 +25,6 @@ class Replication {
       target.startsWith(DocumentType.APP_DEV)
     ) {
       this.direction = ReplicationDirection.TO_DEV
-    } else {
-      this.direction = ReplicationDirection.UNKNOWN
     }
   }
 
