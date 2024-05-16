@@ -149,7 +149,11 @@
     {/if}
   {:else}
     <div bind:this={canvasWrap} class="canvas-wrap">
-      <canvas id="signature-canvas" bind:this={canvasRef} />
+      <canvas
+        id="signature-canvas"
+        bind:this={canvasRef}
+        style="--max-sig-width: {width}px; --max-sig-height: {height}px"
+      />
       {#if editable}
         <div class="indicator-overlay">
           <div class="sign-here">
@@ -192,6 +196,10 @@
   }
   .signature img {
     max-width: 100%;
+  }
+  #signature-canvas {
+    max-width: var(--max-sig-width);
+    max-height: var(--max-sig-height);
   }
   .signature.light img,
   .signature.light #signature-canvas {
