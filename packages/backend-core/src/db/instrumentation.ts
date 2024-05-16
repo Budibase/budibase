@@ -64,7 +64,9 @@ export class DDInstrumentedDatabase implements Database {
   ): Promise<DocumentDestroyResponse> {
     return tracer.trace("db.remove", span => {
       span?.addTags({ db_name: this.name, doc_id: idOrDoc })
-      const id: string = typeof idOrDoc === "object" ? idOrDoc._id! : idOrDoc
+      const isDocument = typeof idOrDoc === "object"
+      const id = isDocument ? idOrDoc._id! : idOrDoc
+      rev = isDocument ? idOrDoc._rev : rev
       return this.db.remove(id, rev)
     })
   }
