@@ -5,6 +5,8 @@
 
   const dispatch = createEventDispatcher()
 
+  let last
+
   export let value
   export let disabled = false
   export let editable = true
@@ -73,16 +75,44 @@
     updated = false
   }
 
+  $: if (last) {
+    dispatch("update")
+  }
+
   onMount(() => {
     if (!editable) {
       return
     }
+
+    const getPos = e => {
+      var rect = canvasRef.getBoundingClientRect()
+      const canvasX = e.offsetX || e.targetTouches?.[0].pageX - rect.left
+      const canvasY = e.offsetY || e.targetTouches?.[0].pageY - rect.top
+
+      return { x: canvasX, y: canvasY }
+    }
+
+    const checkUp = e => {
+      last = getPos(e)
+    }
+
+    canvasRef.addEventListener("pointerdown", e => {
+      const current = getPos(e)
+      //If the cursor didn't move at all, block the default pointerdown
+      if (last?.x === current?.x && last?.y === current?.y) {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+      }
+    })
+
+    document.addEventListener("pointerup", checkUp)
 
     signature = new Atrament(canvasRef, {
       width,
       height,
       color: "white",
     })
+
     signature.weight = 4
     signature.smoothing = 2
 
@@ -96,6 +126,11 @@
     canvasWidth = wrapWidth
 
     canvasContext = canvasRef.getContext("2d")
+
+    return () => {
+      signature.destroy()
+      document.removeEventListener("pointerup", checkUp)
+    }
   })
 </script>
 
