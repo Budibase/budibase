@@ -1,13 +1,7 @@
 import { Knex, knex } from "knex"
-import { db as dbCore } from "@budibase/backend-core"
-import { QueryOptions } from "../../definitions/datasource"
-import {
-  isIsoDateString,
-  SqlClient,
-  isValidFilter,
-  getNativeSql,
-  SqlStatements,
-} from "../utils"
+import * as dbCore from "../db"
+import { isIsoDateString, isValidFilter, getNativeSql } from "./utils"
+import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
   BBReferenceFieldMetadata,
@@ -24,8 +18,10 @@ import {
   Table,
   TableSourceType,
   INTERNAL_TABLE_SOURCE_ID,
+  SqlClient,
+  QueryOptions,
 } from "@budibase/types"
-import environment from "../../environment"
+import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any

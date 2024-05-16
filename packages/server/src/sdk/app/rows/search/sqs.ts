@@ -11,15 +11,14 @@ import {
   SortOrder,
   SortType,
   Table,
+  SqlClient,
 } from "@budibase/types"
-import SqlQueryBuilder from "../../../../integrations/base/sql"
-import { SqlClient } from "../../../../integrations/utils"
 import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../api/controllers/row/utils"
 import sdk from "../../../index"
-import { context, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
+import { context, sql, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import {
   CONSTANT_INTERNAL_ROW_COLS,
   SQS_DATASOURCE_INTERNAL,
@@ -104,7 +103,7 @@ export async function search(
 ): Promise<SearchResponse<Row>> {
   const { paginate, query, ...params } = options
 
-  const builder = new SqlQueryBuilder(SqlClient.SQL_LITE)
+  const builder = new sql.Sql(SqlClient.SQL_LITE)
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
   if (!table) {

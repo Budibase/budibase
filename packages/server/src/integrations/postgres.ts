@@ -13,17 +13,16 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
+  SqlClient,
 } from "@budibase/types"
 import {
   getSqlQuery,
   buildExternalTableId,
   generateColumnDefinition,
   finaliseExternalTables,
-  SqlClient,
   checkExternalTables,
   HOST_ADDRESS,
 } from "./utils"
-import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
@@ -31,7 +30,7 @@ import { Client, ClientConfig, types } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import { exec } from "child_process"
 import { storeTempFile } from "../utilities/fileSystem"
-import { env } from "@budibase/backend-core"
+import { env, sql } from "@budibase/backend-core"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -43,6 +42,7 @@ if (types) {
 }
 
 const JSON_REGEX = /'{.*}'::json/s
+const Sql = sql.Sql
 
 interface PostgresConfig {
   host: string
