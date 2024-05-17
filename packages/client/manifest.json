@@ -4107,7 +4107,7 @@
       }
     ]
   },
-  "signaturefield": {
+  "signaturesinglefield": {
     "name": "Signature",
     "icon": "AnnotatePen",
     "styles": ["size"],
@@ -4117,7 +4117,7 @@
     },
     "settings": [
       {
-        "type": "field/signature",
+        "type": "field/signature_single",
         "label": "Field",
         "key": "field",
         "required": true
@@ -4150,7 +4150,7 @@
         ]
       },
       {
-        "type": "validation/signature",
+        "type": "validation/signature_single",
         "label": "Validation",
         "key": "validation"
       }

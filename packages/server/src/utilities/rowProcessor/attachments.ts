@@ -32,7 +32,7 @@ export class AttachmentCleanup {
     if (
       type !== FieldType.ATTACHMENTS &&
       type !== FieldType.ATTACHMENT_SINGLE &&
-      type !== FieldType.SIGNATURE
+      type !== FieldType.SIGNATURE_SINGLE
     ) {
       return []
     }
@@ -64,7 +64,7 @@ export class AttachmentCleanup {
         if (
           schema.type !== FieldType.ATTACHMENTS &&
           schema.type !== FieldType.ATTACHMENT_SINGLE &&
-          schema.type !== FieldType.SIGNATURE
+          schema.type !== FieldType.SIGNATURE_SINGLE
         ) {
           continue
         }
@@ -103,7 +103,7 @@ export class AttachmentCleanup {
         if (
           schema.type !== FieldType.ATTACHMENTS &&
           schema.type !== FieldType.ATTACHMENT_SINGLE &&
-          schema.type !== FieldType.SIGNATURE
+          schema.type !== FieldType.SIGNATURE_SINGLE
         ) {
           continue
         }
@@ -125,7 +125,7 @@ export class AttachmentCleanup {
         if (
           schema.type !== FieldType.ATTACHMENTS &&
           schema.type !== FieldType.ATTACHMENT_SINGLE &&
-          schema.type !== FieldType.SIGNATURE
+          schema.type !== FieldType.SIGNATURE_SINGLE
         ) {
           continue
         }

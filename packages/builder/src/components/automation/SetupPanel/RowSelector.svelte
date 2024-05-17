@@ -27,7 +27,7 @@
   let attachmentTypes = [
     FieldType.ATTACHMENTS,
     FieldType.ATTACHMENT_SINGLE,
-    FieldType.SIGNATURE,
+    FieldType.SIGNATURE_SINGLE,
   ]
 
   $: {

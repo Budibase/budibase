@@ -160,7 +160,7 @@ export async function inputProcessing(
       }
     } else if (
       field.type === FieldType.ATTACHMENT_SINGLE ||
-      field.type === FieldType.SIGNATURE
+      field.type === FieldType.SIGNATURE_SINGLE
     ) {
       const attachment = clonedRow[key]
       if (attachment?.url) {
@@ -234,7 +234,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     if (
       column.type === FieldType.ATTACHMENTS ||
       column.type === FieldType.ATTACHMENT_SINGLE ||
-      column.type === FieldType.SIGNATURE
+      column.type === FieldType.SIGNATURE_SINGLE
     ) {
       for (let row of enriched) {
         if (row[property] == null) {

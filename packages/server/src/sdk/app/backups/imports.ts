@@ -69,7 +69,7 @@ export async function updateAttachmentColumns(prodAppId: string, db: Database) {
             )
           } else if (
             (columnType === FieldType.ATTACHMENT_SINGLE ||
-              columnType === FieldType.SIGNATURE) &&
+              columnType === FieldType.SIGNATURE_SINGLE) &&
             row[column]
           ) {
             row[column] = rewriteAttachmentUrl(prodAppId, row[column])

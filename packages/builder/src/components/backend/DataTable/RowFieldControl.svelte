@@ -111,7 +111,7 @@
     }}
     maximum={1}
   />
-{:else if type === "signature"}
+{:else if type === "signature_single"}
   <div class="signature">
     <Label>{label}</Label>
     <div class="sig-wrap" class:display={value}>
