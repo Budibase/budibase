@@ -3,7 +3,7 @@
   import { ActionButton, Popover, Toggle, Icon } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
 
-  const { columns, stickyColumn, dispatch } = getContext("grid")
+  const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
 
   let open = false
   let anchor
@@ -12,34 +12,28 @@
   $: text = getText($columns)
 
   const toggleVisibility = async (column, visible) => {
-    columns.update(state => {
-      const index = state.findIndex(col => col.name === column.name)
-      state[index].visible = visible
-      return state.slice()
-    })
-    await columns.actions.saveChanges()
+    datasource.actions.addSchemaMutation(column, { visible })
+    await datasource.actions.saveSchemaMutations()
     dispatch(visible ? "show-column" : "hide-column")
   }
 
   const showAll = async () => {
-    columns.update(state => {
-      return state.map(col => ({
-        ...col,
-        visible: true,
-      }))
+    let mutations = {}
+    columns.forEach(column => {
+      mutations[column.name] = { visible: true }
     })
-    await columns.actions.saveChanges()
+    datasource.actions.addSchemaMutations(mutations)
+    await datasource.actions.saveSchemaMutations()
     dispatch("show-column")
   }
 
   const hideAll = async () => {
-    columns.update(state => {
-      return state.map(col => ({
-        ...col,
-        visible: false,
-      }))
+    let mutations = {}
+    columns.forEach(column => {
+      mutations[column.name] = { visible: false }
     })
-    await columns.actions.saveChanges()
+    datasource.actions.addSchemaMutations(mutations)
+    await datasource.actions.saveSchemaMutations()
     dispatch("hide-column")
   }
 
