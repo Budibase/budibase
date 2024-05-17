@@ -347,7 +347,8 @@ export class ExternalRequest<T extends Operation> {
       } else if (
         field.type === FieldType.DATETIME &&
         field.timeOnly &&
-        row[key]
+        row[key] &&
+        dayjs(row[key]).isValid()
       ) {
         newRow[key] = dayjs(row[key]).format("HH:mm")
       } else {
