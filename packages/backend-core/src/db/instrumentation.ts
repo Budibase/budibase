@@ -56,12 +56,17 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
+  remove(idOrDoc: Document): Promise<DocumentDestroyResponse>
+  remove(idOrDoc: string, rev?: string): Promise<DocumentDestroyResponse>
   remove(
-    id: string | Document,
-    rev?: string | undefined
+    idOrDoc: string | Document,
+    rev?: string
   ): Promise<DocumentDestroyResponse> {
     return tracer.trace("db.remove", span => {
-      span?.addTags({ db_name: this.name, doc_id: id })
+      span?.addTags({ db_name: this.name, doc_id: idOrDoc })
+      const isDocument = typeof idOrDoc === "object"
+      const id = isDocument ? idOrDoc._id! : idOrDoc
+      rev = isDocument ? idOrDoc._rev : rev
       return this.db.remove(id, rev)
     })
   }
@@ -158,6 +163,20 @@ export class DDInstrumentedDatabase implements Database {
     return tracer.trace("db.sql", span => {
       span?.addTags({ db_name: this.name })
       return this.db.sql(sql, parameters)
+    })
+  }
+
+  sqlPurgeDocument(docIds: string[] | string): Promise<void> {
+    return tracer.trace("db.sqlPurgeDocument", span => {
+      span?.addTags({ db_name: this.name })
+      return this.db.sqlPurgeDocument(docIds)
+    })
+  }
+
+  sqlDiskCleanup(): Promise<void> {
+    return tracer.trace("db.sqlDiskCleanup", span => {
+      span?.addTags({ db_name: this.name })
+      return this.db.sqlDiskCleanup()
     })
   }
 }
