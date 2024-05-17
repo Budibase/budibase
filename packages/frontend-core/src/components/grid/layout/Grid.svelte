@@ -1,6 +1,6 @@
 <script>
   import { setContext, onMount } from "svelte"
-  import { writable } from "svelte/store"
+  import { writable, derived } from "svelte/store"
   import { fade } from "svelte/transition"
   import { clickOutside, ProgressCircle } from "@budibase/bbui"
   import { createEventManagers } from "../lib/events"
@@ -113,8 +113,13 @@
     darkMode,
     isCloud,
   })
-  $: minHeight =
-    Padding + SmallRowHeight + $rowHeight + (showControls ? ControlsHeight : 0)
+
+  // Derive min height and make available in context
+  const minHeight = derived(rowHeight, $height => {
+    const heightForControls = showControls ? ControlsHeight : 0
+    return Padding + SmallRowHeight + $height + heightForControls
+  })
+  context = { ...context, minHeight }
 
   // Set context for children to consume
   setContext("grid", context)
@@ -140,7 +145,7 @@
   class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{minHeight}px; --controls-height:{ControlsHeight}px;"
+  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{ControlsHeight}px;"
 >
   {#if showControls}
     <div class="controls">
