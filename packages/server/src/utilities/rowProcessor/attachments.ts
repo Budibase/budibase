@@ -1,6 +1,12 @@
 import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
-import { FieldType, RenameColumn, Row, Table } from "@budibase/types"
+import {
+  FieldType,
+  RenameColumn,
+  Row,
+  RowAttachment,
+  Table,
+} from "@budibase/types"
 
 export class AttachmentCleanup {
   static async coreCleanup(fileListFn: () => string[]): Promise<void> {
@@ -21,7 +27,7 @@ export class AttachmentCleanup {
 
   private static extractAttachmentKeys(
     type: FieldType,
-    rowData: any
+    rowData: RowAttachment[] | RowAttachment
   ): string[] {
     if (
       type !== FieldType.ATTACHMENTS &&
@@ -34,10 +40,15 @@ export class AttachmentCleanup {
       return []
     }
 
-    if (type === FieldType.ATTACHMENTS) {
-      return rowData.map((attachment: any) => attachment.key)
+    if (type === FieldType.ATTACHMENTS && Array.isArray(rowData)) {
+      return rowData
+        .filter(attachment => attachment.key)
+        .map(attachment => attachment.key)
+    } else if ("key" in rowData) {
+      return [rowData.key]
     }
-    return [rowData.key]
+
+    return []
   }
 
   private static async tableChange(
