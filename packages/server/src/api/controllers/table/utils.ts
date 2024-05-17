@@ -33,6 +33,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import env from "../../../environment"
+import { runStaticFormulaChecks } from "./bulkFormula"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
   const db = context.getAppDB()
@@ -324,7 +325,7 @@ class TableSaveFunctions {
       user: this.user,
     })
     if (env.SQS_SEARCH_ENABLE) {
-      await sdk.tables.sqs.addTableToSqlite(table)
+      await sdk.tables.sqs.addTable(table)
     }
     return table
   }
@@ -494,6 +495,32 @@ export function setStaticSchemas(datasource: Datasource, table: Table) {
     delete table.schema?.id
   }
   return table
+}
+
+export async function internalTableCleanup(table: Table, rows?: Row[]) {
+  const db = context.getAppDB()
+  const tableId = table._id!
+  // remove table search index
+  if (!env.isTest() || env.COUCH_DB_URL) {
+    const currentIndexes = await db.getIndexes()
+    const existingIndex = currentIndexes.indexes.find(
+      (existing: any) => existing.name === `search:${tableId}`
+    )
+    if (existingIndex) {
+      await db.deleteIndex(existingIndex)
+    }
+  }
+
+  // has to run after, make sure it has _id
+  await runStaticFormulaChecks(table, {
+    deletion: true,
+  })
+  if (rows) {
+    await AttachmentCleanup.tableDelete(table, rows)
+  }
+  if (env.SQS_SEARCH_ENABLE) {
+    await sdk.tables.sqs.removeTable(table)
+  }
 }
 
 const _TableSaveFunctions = TableSaveFunctions
