@@ -1,14 +1,31 @@
 import PouchDB from "pouchdb"
 import { getPouchDB, closePouchDB } from "./couch"
-import { DocumentType } from "../constants"
+import { DocumentType } from "@budibase/types"
+
+enum ReplicationDirection {
+  TO_PRODUCTION = "toProduction",
+  TO_DEV = "toDev",
+}
 
 class Replication {
   source: PouchDB.Database
   target: PouchDB.Database
+  direction: ReplicationDirection | undefined
 
   constructor({ source, target }: { source: string; target: string }) {
     this.source = getPouchDB(source)
     this.target = getPouchDB(target)
+    if (
+      source.startsWith(DocumentType.APP_DEV) &&
+      target.startsWith(DocumentType.APP)
+    ) {
+      this.direction = ReplicationDirection.TO_PRODUCTION
+    } else if (
+      source.startsWith(DocumentType.APP) &&
+      target.startsWith(DocumentType.APP_DEV)
+    ) {
+      this.direction = ReplicationDirection.TO_DEV
+    }
   }
 
   async close() {
@@ -40,12 +57,18 @@ class Replication {
     }
 
     const filter = opts.filter
+    const direction = this.direction
+    const toDev = direction === ReplicationDirection.TO_DEV
     delete opts.filter
 
     return {
       ...opts,
       filter: (doc: any, params: any) => {
-        if (doc._id && doc._id.startsWith(DocumentType.AUTOMATION_LOG)) {
+        // don't sync design documents
+        if (toDev && doc._id?.startsWith("_design")) {
+          return false
+        }
+        if (doc._id?.startsWith(DocumentType.AUTOMATION_LOG)) {
           return false
         }
         if (doc._id === DocumentType.APP_METADATA) {
