@@ -135,10 +135,8 @@ export interface Database {
     ids: string[],
     opts?: { allowMissing?: boolean }
   ): Promise<T[]>
-  remove(
-    id: string | Document,
-    rev?: string
-  ): Promise<Nano.DocumentDestroyResponse>
+  remove(idOrDoc: Document): Promise<Nano.DocumentDestroyResponse>
+  remove(idOrDoc: string, rev?: string): Promise<Nano.DocumentDestroyResponse>
   put(
     document: AnyDocument,
     opts?: DatabasePutOpts
@@ -148,6 +146,8 @@ export interface Database {
     sql: string,
     parameters?: SqlQueryBinding
   ): Promise<T[]>
+  sqlPurgeDocument(docIds: string[] | string): Promise<void>
+  sqlDiskCleanup(): Promise<void>
   allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>
