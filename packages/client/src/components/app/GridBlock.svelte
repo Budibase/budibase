@@ -38,11 +38,10 @@
   let grid
   let gridContext
   let minHeight
-  let resizedColumns = {}
 
   $: parsedColumns = getParsedColumns(columns)
   $: columnWhitelist = parsedColumns.filter(x => x.active).map(x => x.field)
-  $: schemaOverrides = getSchemaOverrides(parsedColumns, resizedColumns)
+  $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
   $: selectedRows = deriveSelectedRows(gridContext)
   $: styles = patchStyles($component.styles, minHeight)
@@ -84,17 +83,13 @@
     }))
   }
 
-  const getSchemaOverrides = (columns, resizedColumns) => {
+  const getSchemaOverrides = columns => {
     let overrides = {}
-    columns.forEach(column => {
+    columns.forEach((column, idx) => {
       overrides[column.field] = {
         displayName: column.label,
-      }
-
-      // Only use the specified width until we resize the column, at which point
-      // we no longer want to override it
-      if (!resizedColumns[column.field]) {
-        overrides[column.field].width = column.width
+        width: column.width,
+        order: idx,
       }
     })
     return overrides
@@ -146,13 +141,6 @@
     }
   }
 
-  const onColumnResize = e => {
-    // Mark that we've resized this column so we can remove this width from
-    // schema overrides if present
-    const { column } = e.detail
-    resizedColumns = { ...resizedColumns, [column]: true }
-  }
-
   onMount(() => {
     gridContext = grid.getContext()
     gridContext.minHeight.subscribe($height => (minHeight = $height))
@@ -185,7 +173,6 @@
     buttons={enrichedButtons}
     isCloud={$environmentStore.cloud}
     on:rowclick={e => onRowClick?.({ row: e.detail })}
-    on:columnresize={onColumnResize}
   />
 </div>
 
