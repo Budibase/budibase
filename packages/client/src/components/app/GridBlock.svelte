@@ -51,7 +51,6 @@
       metadata: { dataSource: table },
     },
   ]
-  $: gridContext?.minHeight?.subscribe($height => (minHeight = $height))
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
@@ -130,6 +129,7 @@
 
   onMount(() => {
     gridContext = grid.getContext()
+    gridContext.minHeight.subscribe($height => (minHeight = $height))
   })
 </script>
 
