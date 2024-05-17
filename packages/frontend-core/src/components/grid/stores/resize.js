@@ -89,7 +89,9 @@ export const createActions = context => {
 
   // Resets a column size back to default
   const resetSize = async column => {
-    datasource.actions.addSchemaMutation(column, { width: DefaultColumnWidth })
+    datasource.actions.addSchemaMutation(column.name, {
+      width: DefaultColumnWidth,
+    })
     await datasource.actions.saveSchemaMutations()
   }
 

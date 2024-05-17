@@ -12,7 +12,7 @@
   $: text = getText($columns)
 
   const toggleVisibility = async (column, visible) => {
-    datasource.actions.addSchemaMutation(column, { visible })
+    datasource.actions.addSchemaMutation(column.name, { visible })
     await datasource.actions.saveSchemaMutations()
     dispatch(visible ? "show-column" : "hide-column")
   }
