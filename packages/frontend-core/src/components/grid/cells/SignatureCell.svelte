@@ -11,7 +11,6 @@
   export let readonly = false
   export let api
   export let invertX = false
-  export let invertY = false
 
   const { API, notifications, props } = getContext("grid")
 

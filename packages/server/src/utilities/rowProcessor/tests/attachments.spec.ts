@@ -35,7 +35,11 @@ const mockedDeleteFiles = objectStore.deleteFiles as jest.MockedFunction<
 
 const rowGenerators: [
   string,
-  FieldType.ATTACHMENT_SINGLE | FieldType.ATTACHMENTS | FieldType.SIGNATURE,
+  (
+    | FieldType.ATTACHMENT_SINGLE
+    | FieldType.ATTACHMENTS
+    | FieldType.SIGNATURE_SINGLE
+  ),
   string,
   (fileKey?: string) => Row
 ][] = [
@@ -71,7 +75,7 @@ const rowGenerators: [
   ],
   [
     "row with a single signature column",
-    FieldType.SIGNATURE,
+    FieldType.SIGNATURE_SINGLE,
     "signature",
     function rowWithSignature(): Row {
       return {
@@ -102,7 +106,7 @@ describe.each(rowGenerators)(
           },
           signature: {
             name: "signature",
-            type: FieldType.SIGNATURE,
+            type: FieldType.SIGNATURE_SINGLE,
             constraints: {},
           },
         },

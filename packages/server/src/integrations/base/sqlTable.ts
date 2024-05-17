@@ -125,7 +125,7 @@ function generateSchema(
         break
       case FieldType.ATTACHMENTS:
       case FieldType.ATTACHMENT_SINGLE:
-      case FieldType.SIGNATURE:
+      case FieldType.SIGNATURE_SINGLE:
       case FieldType.AUTO:
       case FieldType.JSON:
       case FieldType.INTERNAL:

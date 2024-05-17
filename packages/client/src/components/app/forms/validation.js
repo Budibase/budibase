@@ -201,7 +201,10 @@ const parseType = (value, type) => {
   }
 
   // Parse attachment/signature single, treating no key as null
-  if (type === FieldTypes.ATTACHMENT_SINGLE || type === FieldTypes.SIGNATURE) {
+  if (
+    type === FieldTypes.ATTACHMENT_SINGLE ||
+    type === FieldTypes.SIGNATURE_SINGLE
+  ) {
     if (!value?.key) {
       return null
     }

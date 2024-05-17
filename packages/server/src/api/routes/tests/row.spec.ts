@@ -310,7 +310,7 @@ describe.each([
           constraints: { type: "array", presence: false },
         }
         const signature: FieldSchema = {
-          type: FieldType.SIGNATURE,
+          type: FieldType.SIGNATURE_SINGLE,
           name: "signature",
           constraints: { presence: false },
         }
@@ -982,7 +982,7 @@ describe.each([
         await coreAttachmentEnrichment(
           {
             signature: {
-              type: FieldType.SIGNATURE,
+              type: FieldType.SIGNATURE_SINGLE,
               name: "signature",
               constraints: { presence: false },
             },

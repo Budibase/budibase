@@ -152,7 +152,7 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
       } else if (
         (columnType === FieldType.ATTACHMENTS ||
           columnType === FieldType.ATTACHMENT_SINGLE ||
-          columnType === FieldType.SIGNATURE) &&
+          columnType === FieldType.SIGNATURE_SINGLE) &&
         typeof columnData === "string"
       ) {
         parsedRow[columnName] = parseCsvExport(columnData)

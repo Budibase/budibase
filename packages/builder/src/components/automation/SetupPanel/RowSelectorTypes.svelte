@@ -21,6 +21,12 @@
     return clone
   })
 
+  let attachmentTypes = [
+    FieldType.ATTACHMENTS,
+    FieldType.ATTACHMENT_SINGLE,
+    FieldType.SIGNATURE_SINGLE,
+  ]
+
   function schemaHasOptions(schema) {
     return !!schema.constraints?.inclusion?.length
   }
@@ -30,7 +36,7 @@
 
     if (
       (schema.type === FieldType.ATTACHMENT_SINGLE ||
-        schema.type === FieldType.SIGNATURE) &&
+        schema.type === FieldType.SIGNATURE_SINGLE) &&
       Object.keys(keyValueObj).length === 0
     ) {
       return []
@@ -101,7 +107,7 @@
     on:change={e => onChange(e, field)}
     useLabel={false}
   />
-{:else if schema.type === FieldType.ATTACHMENTS || schema.type === FieldType.ATTACHMENT_SINGLE || schema.type === FieldType.SIGNATURE}
+{:else if attachmentTypes.includes(schema.type)}
   <div class="attachment-field-spacinng">
     <KeyValueBuilder
       on:change={e =>
@@ -109,7 +115,7 @@
           {
             detail:
               schema.type === FieldType.ATTACHMENT_SINGLE ||
-              schema.type === FieldType.SIGNATURE
+              schema.type === FieldType.SIGNATURE_SINGLE
                 ? e.detail.length > 0
                   ? {
                       url: e.detail[0].name,

@@ -80,7 +80,7 @@
   {validation}
   {span}
   {helpText}
-  type="signature"
+  type="signature_single"
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema

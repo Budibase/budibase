@@ -76,7 +76,7 @@ const componentMap = {
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,
   "field/barcodeqr": FormFieldSelect,
-  "field/signature": FormFieldSelect,
+  "field/signature_single": FormFieldSelect,
   "field/bb_reference": FormFieldSelect,
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
@@ -87,7 +87,7 @@ const componentMap = {
   "validation/datetime": ValidationEditor,
   "validation/attachment": ValidationEditor,
   "validation/attachment_single": ValidationEditor,
-  "validation/signature": ValidationEditor,
+  "validation/signature_single": ValidationEditor,
   "validation/link": ValidationEditor,
   "validation/bb_reference": ValidationEditor,
 }

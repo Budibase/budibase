@@ -85,7 +85,7 @@ describe("should be able to re-write attachment URLs", () => {
     const { rows, db } = await coreBehaviour(
       {
         signature: {
-          type: FieldType.SIGNATURE,
+          type: FieldType.SIGNATURE_SINGLE,
           name: "signature",
         },
         otherCol: {

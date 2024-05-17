@@ -114,7 +114,7 @@ export async function sendAutomationAttachmentsToStorage(
     if (
       schema?.type === FieldType.ATTACHMENTS ||
       schema?.type === FieldType.ATTACHMENT_SINGLE ||
-      schema?.type === FieldType.SIGNATURE
+      schema?.type === FieldType.SIGNATURE_SINGLE
     ) {
       attachmentRows[prop] = value
     }

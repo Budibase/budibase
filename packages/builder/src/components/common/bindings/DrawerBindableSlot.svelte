@@ -31,7 +31,7 @@
   let attachmentTypes = [
     FieldType.ATTACHMENT_SINGLE,
     FieldType.ATTACHMENTS,
-    FieldType.SIGNATURE,
+    FieldType.SIGNATURE_SINGLE,
   ]
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
@@ -111,7 +111,7 @@
     boolean: isValidBoolean,
     attachment: false,
     attachment_single: false,
-    signature: false,
+    signature_single: false,
   }
 
   const isValid = value => {
@@ -133,7 +133,7 @@
         "bigint",
         "barcodeqr",
         "attachment",
-        "signature",
+        "signature_single",
         "attachment_single",
       ].includes(type)
     ) {
