@@ -174,14 +174,12 @@ export const createActions = context => {
     document.removeEventListener("touchend", stopReordering)
     document.removeEventListener("touchcancel", stopReordering)
 
-    // Ensure there's actually a change
-    let { sourceColumn, targetColumn } = get(reorder)
+    // Ensure there's actually a change before saving
+    const { sourceColumn, targetColumn } = get(reorder)
+    reorder.set(reorderInitialState)
     if (sourceColumn !== targetColumn) {
       await moveColumn(sourceColumn, targetColumn)
     }
-
-    // Reset state
-    reorder.set(reorderInitialState)
   }
 
   // Moves a column after another columns.

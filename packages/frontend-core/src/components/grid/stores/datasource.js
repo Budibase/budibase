@@ -6,8 +6,6 @@ export const createStores = () => {
   const definition = memo(null)
   const schemaMutations = memo({})
 
-  definition.subscribe(console.log)
-
   return {
     definition,
     schemaMutations,
@@ -61,7 +59,7 @@ export const deriveStores = context => {
         }
         enrichedSchema[field] = {
           ...$schema[field],
-          ...$schemaOverrides[field],
+          ...$schemaOverrides?.[field],
           ...schemaMutations[field],
         }
       })
@@ -148,36 +146,6 @@ export const createActions = context => {
     })
   }
 
-  // Adds a row to the datasource
-  const addRow = async row => {
-    return await getAPI()?.actions.addRow(row)
-  }
-
-  // Updates an existing row in the datasource
-  const updateRow = async row => {
-    return await getAPI()?.actions.updateRow(row)
-  }
-
-  // Deletes rows from the datasource
-  const deleteRows = async rows => {
-    return await getAPI()?.actions.deleteRows(rows)
-  }
-
-  // Gets a single row from a datasource
-  const getRow = async id => {
-    return await getAPI()?.actions.getRow(id)
-  }
-
-  // Checks if a certain datasource config is valid
-  const isDatasourceValid = datasource => {
-    return getAPI()?.actions.isDatasourceValid(datasource)
-  }
-
-  // Checks if this datasource can use a specific column by name
-  const canUseColumn = name => {
-    return getAPI()?.actions.canUseColumn(name)
-  }
-
   // Adds a schema mutation for a single field
   const addSchemaMutation = (field, mutation) => {
     if (!field || !mutation) {
@@ -237,6 +205,36 @@ export const createActions = context => {
       schema: newSchema,
     })
     schemaMutations.set({})
+  }
+
+  // Adds a row to the datasource
+  const addRow = async row => {
+    return await getAPI()?.actions.addRow(row)
+  }
+
+  // Updates an existing row in the datasource
+  const updateRow = async row => {
+    return await getAPI()?.actions.updateRow(row)
+  }
+
+  // Deletes rows from the datasource
+  const deleteRows = async rows => {
+    return await getAPI()?.actions.deleteRows(rows)
+  }
+
+  // Gets a single row from a datasource
+  const getRow = async id => {
+    return await getAPI()?.actions.getRow(id)
+  }
+
+  // Checks if a certain datasource config is valid
+  const isDatasourceValid = datasource => {
+    return getAPI()?.actions.isDatasourceValid(datasource)
+  }
+
+  // Checks if this datasource can use a specific column by name
+  const canUseColumn = name => {
+    return getAPI()?.actions.canUseColumn(name)
   }
 
   return {
