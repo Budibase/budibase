@@ -34,6 +34,7 @@
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import EnterpriseBasicTrialModal from "components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
   import UpdateAppTopNav from "components/common/UpdateAppTopNav.svelte"
+  import { isEqual } from "lodash"
 
   export let application
 
@@ -46,6 +47,11 @@
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
+
+  let fonts = []
+  $: if (!isEqual($builderStore.fonts || [], fonts)) {
+    fonts = [...$builderStore.fonts]
+  }
 
   async function getPackage() {
     try {
@@ -149,9 +155,12 @@
           />
         </span>
         <Tabs {selected} size="M">
-          {#key $builderStore?.fonts}
+          {#key fonts}
             {#each $layout.children as { path, title }}
-              <TourWrap stepKeys={[`builder-${title}-section`]}>
+              <TourWrap
+                stepKeys={[`builder-${title}-section`]}
+                endTourOnDestroy={false}
+              >
                 <Tab
                   quiet
                   selected={$isActive(path)}

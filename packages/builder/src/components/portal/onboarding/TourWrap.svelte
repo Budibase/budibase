@@ -5,6 +5,7 @@
   import { builderStore } from "stores/builder"
 
   export let stepKeys = []
+  export let endTourOnDestroy = true
 
   let ready = false
   let registered = {}
@@ -54,7 +55,7 @@
 
       // Check if the step is part of an active tour. End the tour if that is the case
       const step = TOURSBYSTEP[stepKey]
-      if (step.tour === tourKeyWatch) {
+      if (step.tour === tourKeyWatch && endTourOnDestroy) {
         builderStore.setTour()
       }
     })
