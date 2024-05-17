@@ -19,7 +19,7 @@ import {
   sqlOutputProcessing,
 } from "../../../../api/controllers/row/utils"
 import sdk from "../../../index"
-import { context } from "@budibase/backend-core"
+import { context, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import {
   CONSTANT_INTERNAL_ROW_COLS,
   SQS_DATASOURCE_INTERNAL,
@@ -195,6 +195,10 @@ export async function search(
     }
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
+    if (err.status === 404 && err.message?.includes(SQLITE_DESIGN_DOC_ID)) {
+      await sdk.tables.sqs.syncDefinition()
+      return search(options, table)
+    }
     throw new Error(`Unable to search by SQL - ${msg}`, { cause: err })
   }
 }
