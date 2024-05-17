@@ -18,11 +18,13 @@ import {
   sqlOutputProcessing,
 } from "../../../../api/controllers/row/utils"
 import sdk from "../../../index"
-import { context, sql, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import {
-  CONSTANT_INTERNAL_ROW_COLS,
+  context,
+  sql,
+  SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
-} from "../../../../db/utils"
+} from "@budibase/backend-core"
+import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 
@@ -146,10 +148,16 @@ export async function search(
       },
     }
   }
+
+  if (typeof params.bookmark !== "number") {
+    throw new Error("Unable to paginate with string based bookmarks")
+  }
+  const bookmark: number = params.bookmark || 1
+  const limit = params.limit
   if (paginate && params.limit) {
     request.paginate = {
       limit: params.limit,
-      page: params.bookmark,
+      page: bookmark,
     }
   }
   try {
@@ -185,12 +193,22 @@ export async function search(
       }
     )
 
-    return {
-      // final row processing for response
-      rows: await outputProcessing<Row[]>(table, processed, {
-        preserveLinks: true,
-        squash: true,
-      }),
+    const finalRows = await outputProcessing<Row[]>(table, processed, {
+      preserveLinks: true,
+      squash: true,
+    })
+    if (paginate && limit) {
+      return {
+        // final row processing for response
+        rows: finalRows,
+        bookmark: bookmark + 1,
+        // TODO: need to work out if next page available
+        hasNextPage: false,
+      }
+    } else {
+      return {
+        rows: finalRows,
+      }
     }
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message

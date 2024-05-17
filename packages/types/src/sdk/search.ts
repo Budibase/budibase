@@ -19,6 +19,9 @@ export enum SearchFilterOperator {
 
 export interface SearchFilters {
   allOr?: boolean
+  // TODO: this is just around for now - we need a better way to do or/and
+  // allows just fuzzy to be or - all the fuzzy/like parameters
+  fuzzyOr?: boolean
   onEmptyFilter?: EmptyFilterOption
   [SearchFilterOperator.STRING]?: {
     [key: string]: string

@@ -50,7 +50,7 @@ function likeKey(client: string, key: string): string {
       end = "]"
       break
     case SqlClient.SQL_LITE:
-      start = end = "'"
+      start = end = ""
       break
     default:
       throw new Error("Unknown client generating like key")
@@ -198,17 +198,20 @@ class InternalBuilder {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
-          fn(`${getTableAlias(tableName)}.${updatedKey}`, value)
+          const alias = getTableAlias(tableName)
+          fn(alias ? `${alias}.${updatedKey}` : updatedKey, value)
         }
         if (opts.relationship && isRelationshipField) {
           const [filterTableName, property] = updatedKey.split(".")
-          fn(`${getTableAlias(filterTableName)}.${property}`, value)
+          const alias = getTableAlias(filterTableName)
+          fn(alias ? `${alias}.${property}` : property, value)
         }
       }
     }
 
     const like = (key: string, value: any) => {
-      const fnc = allOr ? "orWhere" : "where"
+      const fuzzyOr = filters?.fuzzyOr
+      const fnc = fuzzyOr || allOr ? "orWhere" : "where"
       // postgres supports ilike, nothing else does
       if (this.client === SqlClient.POSTGRES) {
         query = query[fnc](key, "ilike", `%${value}%`)
