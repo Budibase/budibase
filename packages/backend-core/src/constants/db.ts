@@ -65,6 +65,7 @@ export const StaticDatabases = {
 export const APP_PREFIX = prefixed(DocumentType.APP)
 export const APP_DEV = prefixed(DocumentType.APP_DEV)
 export const APP_DEV_PREFIX = APP_DEV
+export const SQS_DATASOURCE_INTERNAL = "internal"
 export const BUDIBASE_DATASOURCE_TYPE = "budibase"
 export const SQLITE_DESIGN_DOC_ID = "_design/sqlite"
 export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"

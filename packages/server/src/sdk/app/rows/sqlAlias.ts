@@ -7,11 +7,11 @@ import {
   SearchFilters,
   SqlClient,
 } from "@budibase/types"
+import { SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
 import datasources from "../datasources"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import { SQS_DATASOURCE_INTERNAL } from "../../../db/utils"
 
 const WRITE_OPERATIONS: Operation[] = [
   Operation.CREATE,
