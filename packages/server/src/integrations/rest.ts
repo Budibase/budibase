@@ -1,22 +1,22 @@
 import {
-  Integration,
   DatasourceFieldType,
-  QueryType,
-  PaginationConfig,
+  HttpMethod,
+  Integration,
   IntegrationBase,
+  PaginationConfig,
   PaginationValues,
-  RestQueryFields as RestQuery,
-  RestConfig,
+  QueryType,
   RestAuthType,
   RestBasicAuthConfig,
   RestBearerAuthConfig,
-  HttpMethod,
+  RestConfig,
+  RestQueryFields as RestQuery,
 } from "@budibase/types"
 import get from "lodash/get"
 import * as https from "https"
 import qs from "querystring"
-import fetch from "node-fetch"
 import type { Response } from "node-fetch"
+import fetch from "node-fetch"
 import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
 import FormData from "form-data"
@@ -87,6 +87,12 @@ const SCHEMA: Integration = {
       default: true,
       required: false,
     },
+    downloadImages: {
+      display: "Download images",
+      type: DatasourceFieldType.BOOLEAN,
+      default: true,
+      required: false,
+    },
   },
   query: {
     create: {
@@ -139,7 +145,8 @@ class RestIntegration implements IntegrationBase {
       filename: string | undefined
 
     const { contentType, contentDisposition } = getAttachmentHeaders(
-      response.headers
+      response.headers,
+      { downloadImages: this.config.downloadImages }
     )
     if (
       contentDisposition.includes("filename") ||
