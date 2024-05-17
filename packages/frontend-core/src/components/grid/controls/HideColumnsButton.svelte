@@ -11,30 +11,20 @@
   $: anyHidden = $columns.some(col => !col.visible)
   $: text = getText($columns)
 
-  const toggleVisibility = async (column, visible) => {
+  const toggleColumn = async (column, visible) => {
     datasource.actions.addSchemaMutation(column.name, { visible })
     await datasource.actions.saveSchemaMutations()
     dispatch(visible ? "show-column" : "hide-column")
   }
 
-  const showAll = async () => {
+  const toggleAll = async visible => {
     let mutations = {}
-    columns.forEach(column => {
-      mutations[column.name] = { visible: true }
+    $columns.forEach(column => {
+      mutations[column.name] = { visible }
     })
     datasource.actions.addSchemaMutations(mutations)
     await datasource.actions.saveSchemaMutations()
-    dispatch("show-column")
-  }
-
-  const hideAll = async () => {
-    let mutations = {}
-    columns.forEach(column => {
-      mutations[column.name] = { visible: false }
-    })
-    datasource.actions.addSchemaMutations(mutations)
-    await datasource.actions.saveSchemaMutations()
-    dispatch("hide-column")
+    dispatch(visible ? "show-column" : "hide-column")
   }
 
   const getText = columns => {
@@ -74,14 +64,14 @@
         <Toggle
           size="S"
           value={column.visible}
-          on:change={e => toggleVisibility(column, e.detail)}
+          on:change={e => toggleColumn(column, e.detail)}
           disabled={column.primaryDisplay}
         />
       {/each}
     </div>
     <div class="buttons">
-      <ActionButton on:click={showAll}>Show all</ActionButton>
-      <ActionButton on:click={hideAll}>Hide all</ActionButton>
+      <ActionButton on:click={() => toggleAll(true)}>Show all</ActionButton>
+      <ActionButton on:click={() => toggleAll(false)}>Hide all</ActionButton>
     </div>
   </div>
 </Popover>

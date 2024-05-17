@@ -47,7 +47,7 @@ export const deriveStores = context => {
   // prop and user overrides
   const enrichedSchema = derived(
     [schema, schemaOverrides, schemaMutations, columnWhitelist],
-    ([$schema, $schemaOverrides, schemaMutations, $columnWhitelist]) => {
+    ([$schema, $schemaOverrides, $schemaMutations, $columnWhitelist]) => {
       if (!$schema) {
         return null
       }
@@ -60,7 +60,7 @@ export const deriveStores = context => {
         enrichedSchema[field] = {
           ...$schema[field],
           ...$schemaOverrides?.[field],
-          ...schemaMutations[field],
+          ...$schemaMutations[field],
         }
       })
       return enrichedSchema
