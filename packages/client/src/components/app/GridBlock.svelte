@@ -45,7 +45,6 @@
   $: schemaOverrides = getSchemaOverrides(parsedColumns, resizedColumns)
   $: enrichedButtons = enrichButtons(buttons)
   $: selectedRows = deriveSelectedRows(gridContext)
-  $: height = $component.styles?.normal?.height || "408px"
   $: styles = patchStyles($component.styles, minHeight)
   $: data = { selectedRows: $selectedRows }
   $: actions = [
