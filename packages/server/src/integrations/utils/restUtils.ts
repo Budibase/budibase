@@ -23,6 +23,15 @@ export function getAttachmentHeaders(headers: Headers) {
       }
     }
   }
+  // for images which don't supply a content disposition, make one up, as binary
+  // data for images in REST responses isn't really useful, we should always download them
+  else if (contentType.startsWith("image/")) {
+    const format = contentType.split("/")[1]
+    return {
+      contentDisposition: `attachment; filename="image.${format}"`,
+      contentType,
+    }
+  }
 
   return { contentDisposition, contentType }
 }
