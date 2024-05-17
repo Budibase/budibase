@@ -1,13 +1,13 @@
 import { getAttachmentHeaders } from "../utils/restUtils"
 import type { Headers } from "node-fetch"
 
-function headers(dispositionValue: string) {
+function headers(dispositionValue: string, contentType?: string) {
   return {
     get: (name: string) => {
       if (name.toLowerCase() === "content-disposition") {
         return dispositionValue
       } else {
-        return "application/pdf"
+        return contentType || "application/pdf"
       }
     },
     set: () => {},
@@ -34,5 +34,15 @@ describe("getAttachmentHeaders", () => {
       headers(`inline; filename="report.pdf"`)
     )
     expect(contentDisposition).toBe(`inline; filename="report.pdf"`)
+  })
+
+  it("should handle an image", () => {
+    const { contentDisposition } = getAttachmentHeaders(
+      headers("", "image/png"),
+      {
+        downloadImages: true,
+      }
+    )
+    expect(contentDisposition).toBe(`attachment; filename="image.png"`)
   })
 })
