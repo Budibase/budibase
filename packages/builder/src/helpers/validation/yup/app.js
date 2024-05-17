@@ -19,11 +19,10 @@ export const name = (validation, { apps, currentApp } = { apps: [] }) => {
             // exit early, above validator will fail
             return true
           }
-          if (currentApp) {
-            // filter out the current app if present
-            apps = apps.filter(app => app.appId !== currentApp.appId)
-          }
           return !apps
+            .filter(app => {
+              return app.appId !== currentApp?.appId
+            })
             .map(app => app.name)
             .some(appName => appName.toLowerCase() === value.toLowerCase())
         }

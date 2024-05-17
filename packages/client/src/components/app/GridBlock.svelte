@@ -22,6 +22,7 @@
 
   const context = getContext("context")
   const component = getContext("component")
+  const { environmentStore } = getContext("sdk")
   const {
     styleable,
     API,
@@ -36,6 +37,7 @@
 
   let grid
   let gridContext
+  let minHeight
   let resizedColumns = {}
 
   $: parsedColumns = getParsedColumns(columns)
@@ -44,7 +46,7 @@
   $: enrichedButtons = enrichButtons(buttons)
   $: selectedRows = deriveSelectedRows(gridContext)
   $: height = $component.styles?.normal?.height || "408px"
-  $: styles = getSanitisedStyles($component.styles)
+  $: styles = patchStyles($component.styles, minHeight)
   $: data = { selectedRows: $selectedRows }
   $: actions = [
     {
@@ -135,12 +137,12 @@
     )
   }
 
-  const getSanitisedStyles = styles => {
+  const patchStyles = (styles, minHeight) => {
     return {
       ...styles,
       normal: {
         ...styles?.normal,
-        height: undefined,
+        "min-height": `${minHeight}px`,
       },
     }
   }
@@ -154,38 +156,38 @@
 
   onMount(() => {
     gridContext = grid.getContext()
+    gridContext.minHeight.subscribe($height => (minHeight = $height))
   })
 </script>
 
 <div use:styleable={styles} class:in-builder={$builderStore.inBuilder}>
-  <span style="--height:{height};">
-    <Grid
-      bind:this={grid}
-      datasource={table}
-      {API}
-      {stripeRows}
-      {quiet}
-      {initialFilter}
-      {initialSortColumn}
-      {initialSortOrder}
-      {fixedRowHeight}
-      {columnWhitelist}
-      {schemaOverrides}
-      canAddRows={allowAddRows}
-      canEditRows={allowEditRows}
-      canDeleteRows={allowDeleteRows}
-      canEditColumns={false}
-      canExpandRows={false}
-      canSaveSchema={false}
-      canSelectRows={true}
-      showControls={false}
-      notifySuccess={notificationStore.actions.success}
-      notifyError={notificationStore.actions.error}
-      buttons={enrichedButtons}
-      on:rowclick={e => onRowClick?.({ row: e.detail })}
-      on:columnresize={onColumnResize}
-    />
-  </span>
+  <Grid
+    bind:this={grid}
+    datasource={table}
+    {API}
+    {stripeRows}
+    {quiet}
+    {initialFilter}
+    {initialSortColumn}
+    {initialSortOrder}
+    {fixedRowHeight}
+    {columnWhitelist}
+    {schemaOverrides}
+    canAddRows={allowAddRows}
+    canEditRows={allowEditRows}
+    canDeleteRows={allowDeleteRows}
+    canEditColumns={false}
+    canExpandRows={false}
+    canSaveSchema={false}
+    canSelectRows={true}
+    showControls={false}
+    notifySuccess={notificationStore.actions.success}
+    notifyError={notificationStore.actions.error}
+    buttons={enrichedButtons}
+    isCloud={$environmentStore.cloud}
+    on:rowclick={e => onRowClick?.({ row: e.detail })}
+    on:columnresize={onColumnResize}
+  />
 </div>
 
 <Provider {data} {actions} />
@@ -198,14 +200,9 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     overflow: hidden;
+    height: 410px;
   }
   div.in-builder :global(*) {
     pointer-events: none;
-  }
-  span {
-    display: contents;
-  }
-  span :global(.grid) {
-    height: var(--height);
   }
 </style>

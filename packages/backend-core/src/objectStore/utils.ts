@@ -9,6 +9,9 @@ import {
   AutomationAttachmentContent,
   BucketedContent,
 } from "@budibase/types"
+import stream from "stream"
+import streamWeb from "node:stream/web"
+
 /****************************************************
  *      NOTE: When adding a new bucket - name       *
  *     sure that S3 usages (like budibase-infra)    *
@@ -53,12 +56,10 @@ export const bucketTTLConfig = (
     Rules: [lifecycleRule],
   }
 
-  const params = {
+  return {
     Bucket: bucketName,
     LifecycleConfiguration: lifecycleConfiguration,
   }
-
-  return params
 }
 
 async function processUrlAttachment(
@@ -69,9 +70,12 @@ async function processUrlAttachment(
     throw new Error(`Unexpected response ${response.statusText}`)
   }
   const fallbackFilename = path.basename(new URL(attachment.url).pathname)
+  if (!response.body) {
+    throw new Error("No response received for attachment")
+  }
   return {
     filename: attachment.filename || fallbackFilename,
-    content: response.body,
+    content: stream.Readable.fromWeb(response.body as streamWeb.ReadableStream),
   }
 }
 
