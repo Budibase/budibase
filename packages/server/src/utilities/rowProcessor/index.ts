@@ -242,7 +242,7 @@ export async function outputProcessing<T extends Row[] | Row>(
           }
           return attachment
         }
-        if (typeof row[property] === "string") {
+        if (typeof row[property] === "string" && row[property].length) {
           row[property] = JSON.parse(row[property])
         }
         if (Array.isArray(row[property])) {

@@ -14,9 +14,8 @@
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import Editor from "../../integration/QueryEditor.svelte"
 
-  export let defaultValue
   export let meta
-  export let value = defaultValue || (meta.type === "boolean" ? false : "")
+  export let value
   export let readonly
   export let error
 
