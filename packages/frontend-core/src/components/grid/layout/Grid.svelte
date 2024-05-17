@@ -54,6 +54,7 @@
   export let notifySuccess = null
   export let notifyError = null
   export let buttons = null
+  export let isCloud = null
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -108,6 +109,7 @@
     notifySuccess,
     notifyError,
     buttons,
+    isCloud,
   })
 
   // Derive min height and make available in context
