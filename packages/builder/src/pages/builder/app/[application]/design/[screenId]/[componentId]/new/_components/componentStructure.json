@@ -71,6 +71,7 @@
       "multifieldselect",
       "s3upload",
       "codescanner",
+      "signaturesinglefield",
       "bbreferencesinglefield",
       "bbreferencefield"
     ]

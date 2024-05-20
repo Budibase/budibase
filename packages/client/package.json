@@ -34,7 +34,8 @@
     "screenfull": "^6.0.1",
     "shortid": "^2.2.15",
     "svelte-apexcharts": "^1.0.2",
-    "svelte-spa-router": "^4.0.1"
+    "svelte-spa-router": "^4.0.1",
+    "atrament": "^4.3.0"
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^5.1.0",
