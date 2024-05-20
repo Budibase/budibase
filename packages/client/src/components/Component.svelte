@@ -193,6 +193,9 @@
   $: pad = pad || (interactive && hasChildren && inDndPath)
   $: $dndIsDragging, (pad = false)
 
+  $: currentTheme = $context?.device?.theme
+  $: darkMode = !currentTheme?.includes("light")
+
   // Update component context
   $: store.set({
     id,
@@ -222,6 +225,7 @@
     parent: id,
     ancestors: [...($component?.ancestors ?? []), instance._component],
     path: [...($component?.path ?? []), id],
+    darkMode,
   })
 
   const initialise = (instance, force = false) => {
