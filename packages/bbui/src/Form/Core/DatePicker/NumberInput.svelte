@@ -4,13 +4,14 @@
   export let max
   export let hideArrows = false
   export let width
+  export let type = "number"
 
   $: style = width ? `width:${width}px;` : ""
 </script>
 
 <input
   class:hide-arrows={hideArrows}
-  type="number"
+  {type}
   {style}
   {value}
   {min}
