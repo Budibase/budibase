@@ -122,17 +122,21 @@ function generateSelectStatement(
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
     const columnName = fieldNames[1]
-    if (
-      columnName &&
-      schema?.[columnName] &&
-      knex.client.config.client === SqlClient.POSTGRES
-    ) {
+    const columnSchema = schema?.[columnName]
+    if (columnSchema && knex.client.config.client === SqlClient.POSTGRES) {
       const externalType = schema[columnName].externalType
       if (externalType?.includes("money")) {
         return knex.raw(
           `"${tableName}"."${columnName}"::money::numeric as "${field}"`
         )
       }
+    }
+    if (
+      knex.client.config.client === SqlClient.MS_SQL &&
+      columnSchema.type === FieldType.DATETIME &&
+      columnSchema.timeOnly
+    ) {
+      return knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
     }
     return `${field} as ${field}`
   })
@@ -634,13 +638,23 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    */
   _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery | SqlQuery[] {
     const sqlClient = this.getSqlClient()
-    const config: { client: string; useNullAsDefault?: boolean } = {
+    const config: Knex.Config = {
       client: sqlClient,
     }
     if (sqlClient === SqlClient.SQL_LITE) {
       config.useNullAsDefault = true
     }
+
+    if (sqlClient === SqlClient.MS_SQL) {
+      // config.connection ??= {}
+      // config.connection.typeCast = (field: any, next: any): any => {
+      //   if (field.type === "TIME") return field.string()
+      //   return next()
+      // }
+    }
+
     const client = knex(config)
+
     let query: Knex.QueryBuilder
     const builder = new InternalBuilder(sqlClient)
     switch (this._operation(json)) {
