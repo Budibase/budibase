@@ -180,5 +180,5 @@ export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
   }
 
   ctx.status = 200
-  ctx.body = { message: `Column ${oldColumn.name} migrated.` }
+  ctx.body = { message: `Column ${oldColumn} migrated.` }
 }

@@ -19,7 +19,7 @@ const tableWithUserCol: Table = {
   schema: {
     user: {
       name: "user",
-      type: FieldType.BB_REFERENCE,
+      type: FieldType.BB_REFERENCE_SINGLE,
       subtype: BBReferenceFieldSubType.USER,
     },
   },
@@ -35,7 +35,7 @@ const tableWithUsersCol: Table = {
     user: {
       name: "user",
       type: FieldType.BB_REFERENCE,
-      subtype: BBReferenceFieldSubType.USERS,
+      subtype: BBReferenceFieldSubType.USER,
     },
   },
 }

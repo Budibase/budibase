@@ -29,6 +29,7 @@ import { JSONUtils, Constants } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
 import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
+import { FIELDS } from "constants/backend"
 
 const { ContextScopes } = Constants
 
@@ -491,7 +492,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
         icon: bindingCategory.icon,
         display: {
           name: `${fieldSchema.name || key}`,
-          type: fieldSchema.type,
+          type: fieldSchema.display?.type || fieldSchema.type,
         },
       })
     })
@@ -829,7 +830,7 @@ export const getActionBindings = (actions, actionId) => {
  * @return {{schema: Object, table: Object}}
  */
 export const getSchemaForDatasourcePlus = (resourceId, options) => {
-  const isViewV2 = resourceId?.includes("view_")
+  const isViewV2 = resourceId?.startsWith("view_")
   const datasource = isViewV2
     ? {
         type: "viewV2",
@@ -1019,15 +1020,23 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     // are objects
     let fixedSchema = {}
     Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+      const field = Object.values(FIELDS).find(
+        field =>
+          field.type === fieldSchema.type &&
+          field.subtype === fieldSchema.subtype
+      )
+
       if (typeof fieldSchema === "string") {
         fixedSchema[fieldName] = {
           type: fieldSchema,
           name: fieldName,
+          display: { type: fieldSchema },
         }
       } else {
         fixedSchema[fieldName] = {
           ...fieldSchema,
           name: fieldName,
+          display: { type: field?.name || fieldSchema.type },
         }
       }
     })
