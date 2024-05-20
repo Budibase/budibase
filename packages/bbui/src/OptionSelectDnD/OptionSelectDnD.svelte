@@ -9,8 +9,8 @@
 
   export let constraints
   export let optionColors = {}
-  let options = []
 
+  let options = []
   let colorPopovers = []
   let anchors = []
 
@@ -64,9 +64,14 @@
     delete optionColors[optionName]
   }
 
-  const openColorPickerPopover = (optionIdx, target) => {
-    colorPopovers[optionIdx].show()
-    anchors[optionIdx] = target
+  const openColorPickerPopover = optionIdx => {
+    for (let i = 0; i < colorPopovers.length; i++) {
+      if (i === optionIdx) {
+        colorPopovers[i].show()
+      } else {
+        colorPopovers[i]?.hide()
+      }
+    }
   }
 
   onMount(() => {
@@ -94,7 +99,7 @@
     on:consider={handleDndConsider}
     on:finalize={handleDndFinalize}
   >
-    {#each options as option, idx (option.id)}
+    {#each options as option, idx (`${option.id}-${idx}`)}
       <div
         class="no-border action-container"
         animate:flip={{ duration: flipDurationMs }}
@@ -102,25 +107,24 @@
         <div class="child drag-handle-spacing">
           <Icon name="DragHandle" size="L" />
         </div>
-        <div class="child color-picker">
+        <div
+          bind:this={anchors[idx]}
+          class="child color-picker"
+          on:click={e => openColorPickerPopover(idx, e.target)}
+        >
           <div
-            id="color-picker"
-            bind:this={anchors[idx]}
+            class="circle"
             style="--color:{optionColors?.[option.name] ||
               'hsla(0, 1%, 50%, 0.3)'}"
-            class="circle"
-            on:click={e => openColorPickerPopover(idx, e.target)}
           >
             <Popover
               bind:this={colorPopovers[idx]}
               anchor={anchors[idx]}
               align="left"
               offset={0}
-              style=""
-              popoverTarget={document.getElementById(`color-picker`)}
               animate={false}
             >
-              <div class="colors">
+              <div class="colors" data-ignore-click-outside="true">
                 {#each colorsArray as color}
                   <div
                     on:click={() => handleColorChange(option.name, color, idx)}
@@ -226,6 +230,10 @@
     flex-grow: 1;
     justify-content: center;
     display: flex;
+  }
+
+  .color-picker:hover {
+    cursor: pointer;
   }
 
   .circle {
