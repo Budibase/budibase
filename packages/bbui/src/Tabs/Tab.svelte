@@ -1,40 +1,28 @@
 <script>
-  import { getContext, onMount, createEventDispatcher } from "svelte"
+  import { getContext, onDestroy } from "svelte"
   import Portal from "svelte-portal"
 
   export let title
   export let icon = ""
   export let id
 
-  const dispatch = createEventDispatcher()
   let selected = getContext("tab")
-  let tab_internal
-  let tabInfo
+  let observer
+  let ref
 
-  const setTabInfo = () => {
-    // If the tabs are being rendered inside a component which uses
-    // a svelte transition to enter, then this initial getBoundingClientRect
-    // will return an incorrect position.
-    // We just need to get this off the main thread to fix this, by using
-    // a 0ms timeout.
-    setTimeout(() => {
-      tabInfo = tab_internal?.getBoundingClientRect()
-      if (tabInfo && $selected.title === title) {
-        $selected.info = tabInfo
-      }
-    }, 0)
+  $: isSelected = $selected.title === title
+  $: {
+    if (isSelected && ref) {
+      observe()
+    } else {
+      stopObserving()
+    }
   }
 
-  onMount(() => {
-    setTabInfo()
-  })
-
-  //Ensure that the underline is in the correct location
-  $: {
-    if ($selected.title === title && tab_internal) {
-      if ($selected.info?.left !== tab_internal.getBoundingClientRect().left) {
-        setTabInfo()
-      }
+  const setTabInfo = () => {
+    const tabInfo = ref?.getBoundingClientRect()
+    if (tabInfo) {
+      $selected.info = tabInfo
     }
   }
 
@@ -42,10 +30,25 @@
     $selected = {
       ...$selected,
       title,
-      info: tab_internal.getBoundingClientRect(),
+      info: ref.getBoundingClientRect(),
     }
-    dispatch("click")
   }
+
+  const observe = () => {
+    if (!observer) {
+      observer = new ResizeObserver(setTabInfo)
+      observer.observe(ref)
+    }
+  }
+
+  const stopObserving = () => {
+    if (observer) {
+      observer.unobserve(ref)
+      observer = null
+    }
+  }
+
+  onDestroy(stopObserving)
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -53,11 +56,12 @@
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <div
   {id}
-  bind:this={tab_internal}
+  bind:this={ref}
   on:click={onClick}
-  class:is-selected={$selected.title === title}
+  on:click
   class="spectrum-Tabs-item"
-  class:emphasized={$selected.title === title && $selected.emphasized}
+  class:is-selected={isSelected}
+  class:emphasized={isSelected && $selected.emphasized}
   tabindex="0"
 >
   {#if icon}
@@ -72,7 +76,8 @@
   {/if}
   <span class="spectrum-Tabs-itemLabel">{title}</span>
 </div>
-{#if $selected.title === title}
+
+{#if isSelected}
   <Portal target=".spectrum-Tabs-content-{$selected.id}">
     <slot />
   </Portal>
