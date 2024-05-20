@@ -962,6 +962,36 @@ describe.each([
     })
   })
 
+  describe("datetime - time only", () => {
+    const T_1000 = "10:00"
+    const T_1045 = "10:45"
+    const T_1200 = "12:00"
+    const T_1530 = "15:30"
+    const T_0000 = "00:00"
+
+    beforeAll(async () => {
+      await createTable({
+        time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
+      })
+
+      await createRows(
+        _.shuffle([T_1000, T_1045, T_1200, T_1530, T_0000]).map(time => ({
+          time,
+        }))
+      )
+    })
+
+    describe("equal", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ equal: { time: T_1000 } }).toContainExactly([
+          { time: "10:00:00" },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ equal: { time: "10:01" } }).toFindNothing())
+    })
+  })
+
   describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
     beforeAll(async () => {
       await createTable({
