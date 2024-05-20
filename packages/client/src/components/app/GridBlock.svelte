@@ -44,6 +44,7 @@
   $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
   $: selectedRows = deriveSelectedRows(gridContext)
+  $: styles = patchStyles($component.styles, minHeight)
   $: data = { selectedRows: $selectedRows }
   $: actions = [
     {
@@ -84,9 +85,11 @@
 
   const getSchemaOverrides = columns => {
     let overrides = {}
-    columns.forEach(column => {
+    columns.forEach((column, idx) => {
       overrides[column.field] = {
         displayName: column.label,
+        width: column.width,
+        order: idx,
       }
     })
     return overrides
@@ -128,52 +131,54 @@
     )
   }
 
+  const patchStyles = (styles, minHeight) => {
+    return {
+      ...styles,
+      normal: {
+        ...styles?.normal,
+        "min-height": `${minHeight}px`,
+      },
+    }
+  }
+
   onMount(() => {
     gridContext = grid.getContext()
     gridContext.minHeight.subscribe($height => (minHeight = $height))
   })
 </script>
 
-<span style="--min-height:{minHeight}px">
-  <div
-    use:styleable={$component.styles}
-    class:in-builder={$builderStore.inBuilder}
-  >
-    <Grid
-      bind:this={grid}
-      datasource={table}
-      {API}
-      {stripeRows}
-      {quiet}
-      {initialFilter}
-      {initialSortColumn}
-      {initialSortOrder}
-      {fixedRowHeight}
-      {columnWhitelist}
-      {schemaOverrides}
-      canAddRows={allowAddRows}
-      canEditRows={allowEditRows}
-      canDeleteRows={allowDeleteRows}
-      canEditColumns={false}
-      canExpandRows={false}
-      canSaveSchema={false}
-      canSelectRows={true}
-      showControls={false}
-      notifySuccess={notificationStore.actions.success}
-      notifyError={notificationStore.actions.error}
-      buttons={enrichedButtons}
-      isCloud={$environmentStore.cloud}
-      on:rowclick={e => onRowClick?.({ row: e.detail })}
-    />
-  </div>
-</span>
+<div use:styleable={styles} class:in-builder={$builderStore.inBuilder}>
+  <Grid
+    bind:this={grid}
+    datasource={table}
+    {API}
+    {stripeRows}
+    {quiet}
+    {initialFilter}
+    {initialSortColumn}
+    {initialSortOrder}
+    {fixedRowHeight}
+    {columnWhitelist}
+    {schemaOverrides}
+    canAddRows={allowAddRows}
+    canEditRows={allowEditRows}
+    canDeleteRows={allowDeleteRows}
+    canEditColumns={false}
+    canExpandRows={false}
+    canSaveSchema={false}
+    canSelectRows={true}
+    showControls={false}
+    notifySuccess={notificationStore.actions.success}
+    notifyError={notificationStore.actions.error}
+    buttons={enrichedButtons}
+    isCloud={$environmentStore.cloud}
+    on:rowclick={e => onRowClick?.({ row: e.detail })}
+  />
+</div>
 
 <Provider {data} {actions} />
 
 <style>
-  span {
-    display: contents;
-  }
   div {
     display: flex;
     flex-direction: column;
@@ -182,7 +187,6 @@
     border-radius: 4px;
     overflow: hidden;
     height: 410px;
-    min-height: var(--min-height);
   }
   div.in-builder :global(*) {
     pointer-events: none;

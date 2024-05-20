@@ -4,15 +4,23 @@ import { memo } from "../../../utils"
 
 export const createStores = () => {
   const definition = memo(null)
+  const schemaMutations = memo({})
 
   return {
     definition,
+    schemaMutations,
   }
 }
 
 export const deriveStores = context => {
-  const { API, definition, schemaOverrides, columnWhitelist, datasource } =
-    context
+  const {
+    API,
+    definition,
+    schemaOverrides,
+    columnWhitelist,
+    datasource,
+    schemaMutations,
+  } = context
 
   const schema = derived(definition, $definition => {
     let schema = getDatasourceSchema({
@@ -35,42 +43,26 @@ export const deriveStores = context => {
     return schema
   })
 
+  // Derives the total enriched schema, made up of the saved schema and any
+  // prop and user overrides
   const enrichedSchema = derived(
-    [schema, schemaOverrides, columnWhitelist],
-    ([$schema, $schemaOverrides, $columnWhitelist]) => {
+    [schema, schemaOverrides, schemaMutations, columnWhitelist],
+    ([$schema, $schemaOverrides, $schemaMutations, $columnWhitelist]) => {
       if (!$schema) {
         return null
       }
-      let enrichedSchema = { ...$schema }
-
-      // Apply schema overrides
-      Object.keys($schemaOverrides || {}).forEach(field => {
-        if (enrichedSchema[field]) {
-          enrichedSchema[field] = {
-            ...enrichedSchema[field],
-            ...$schemaOverrides[field],
-          }
+      let enrichedSchema = {}
+      Object.keys($schema).forEach(field => {
+        // Apply whitelist if provided
+        if ($columnWhitelist?.length && !$columnWhitelist.includes(field)) {
+          return
+        }
+        enrichedSchema[field] = {
+          ...$schema[field],
+          ...$schemaOverrides?.[field],
+          ...$schemaMutations[field],
         }
       })
-
-      // Apply whitelist if specified
-      if ($columnWhitelist?.length) {
-        const sortedColumns = {}
-
-        $columnWhitelist.forEach((columnKey, idx) => {
-          const enrichedColumn = enrichedSchema[columnKey]
-          if (enrichedColumn) {
-            sortedColumns[columnKey] = {
-              ...enrichedColumn,
-              order: idx,
-              visible: true,
-            }
-          }
-        })
-
-        return sortedColumns
-      }
-
       return enrichedSchema
     }
   )
@@ -100,6 +92,8 @@ export const createActions = context => {
     table,
     viewV2,
     nonPlus,
+    schemaMutations,
+    schema,
   } = context
 
   // Gets the appropriate API for the configured datasource type
@@ -136,11 +130,81 @@ export const createActions = context => {
     // Update server
     if (get(config).canSaveSchema) {
       await getAPI()?.actions.saveDefinition(newDefinition)
-    }
 
-    // Broadcast change to external state can be updated, as this change
-    // will not be received by the builder websocket because we caused it ourselves
-    dispatch("updatedatasource", newDefinition)
+      // Broadcast change so external state can be updated, as this change
+      // will not be received by the builder websocket because we caused it
+      // ourselves
+      dispatch("updatedatasource", newDefinition)
+    }
+  }
+
+  // Updates the datasources primary display column
+  const changePrimaryDisplay = async column => {
+    return await saveDefinition({
+      ...get(definition),
+      primaryDisplay: column,
+    })
+  }
+
+  // Adds a schema mutation for a single field
+  const addSchemaMutation = (field, mutation) => {
+    if (!field || !mutation) {
+      return
+    }
+    schemaMutations.update($schemaMutations => {
+      return {
+        ...$schemaMutations,
+        [field]: {
+          ...$schemaMutations[field],
+          ...mutation,
+        },
+      }
+    })
+  }
+
+  // Adds schema mutations for multiple fields at once
+  const addSchemaMutations = mutations => {
+    const fields = Object.keys(mutations || {})
+    if (!fields.length) {
+      return
+    }
+    schemaMutations.update($schemaMutations => {
+      let newSchemaMutations = { ...$schemaMutations }
+      fields.forEach(field => {
+        newSchemaMutations[field] = {
+          ...newSchemaMutations[field],
+          ...mutations[field],
+        }
+      })
+      return newSchemaMutations
+    })
+  }
+
+  // Saves schema changes to the server, if possible
+  const saveSchemaMutations = async () => {
+    // If we can't save schema changes then we just want to keep this in memory
+    if (!get(config).canSaveSchema) {
+      return
+    }
+    const $definition = get(definition)
+    const $schemaMutations = get(schemaMutations)
+    const $schema = get(schema)
+    let newSchema = {}
+
+    // Build new updated datasource schema
+    Object.keys($schema).forEach(column => {
+      newSchema[column] = {
+        ...$schema[column],
+        ...$schemaMutations[column],
+      }
+    })
+
+    // Save the changes, then reset our local mutations
+    await saveDefinition({
+      ...$definition,
+      schema: newSchema,
+    })
+    schemaMutations.set({})
   }
 
   // Adds a row to the datasource
@@ -185,6 +249,10 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
+        changePrimaryDisplay,
+        addSchemaMutation,
+        addSchemaMutations,
+        saveSchemaMutations,
       },
     },
   }
