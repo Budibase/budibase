@@ -2,21 +2,21 @@
   import { Modal, ModalContent } from "@budibase/bbui"
   import FreeTrial from "../../../../assets/FreeTrial.svelte"
   import { get } from "svelte/store"
-  import { auth, licensing } from "stores/portal"
+  import { auth, licensing, admin } from "stores/portal"
   import { API } from "api"
   import { PlanType } from "@budibase/types"
-  import { sdk } from "@budibase/shared-core"
 
   let freeTrialModal
 
   $: planType = $licensing?.license?.plan?.type
   $: showFreeTrialModal(planType, freeTrialModal)
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   const showFreeTrialModal = (planType, freeTrialModal) => {
     if (
       planType === PlanType.ENTERPRISE_BASIC_TRIAL &&
       !$auth.user?.freeTrialConfirmedAt &&
-      sdk.users.isAdmin($auth.user)
+      isOwner
     ) {
       freeTrialModal?.show()
     }

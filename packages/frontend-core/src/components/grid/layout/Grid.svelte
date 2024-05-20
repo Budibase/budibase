@@ -1,6 +1,6 @@
 <script>
   import { setContext, onMount } from "svelte"
-  import { writable } from "svelte/store"
+  import { writable, derived } from "svelte/store"
   import { fade } from "svelte/transition"
   import { clickOutside, ProgressCircle } from "@budibase/bbui"
   import { createEventManagers } from "../lib/events"
@@ -41,6 +41,7 @@
   export let canDeleteRows = true
   export let canEditColumns = true
   export let canSaveSchema = true
+  export let canSelectRows = false
   export let stripeRows = false
   export let quiet = false
   export let collaboration = true
@@ -53,6 +54,7 @@
   export let notifySuccess = null
   export let notifyError = null
   export let buttons = null
+  export let isCloud = null
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -94,6 +96,7 @@
     canDeleteRows,
     canEditColumns,
     canSaveSchema,
+    canSelectRows,
     stripeRows,
     quiet,
     collaboration,
@@ -106,9 +109,15 @@
     notifySuccess,
     notifyError,
     buttons,
+    isCloud,
   })
-  $: minHeight =
-    Padding + SmallRowHeight + $rowHeight + (showControls ? ControlsHeight : 0)
+
+  // Derive min height and make available in context
+  const minHeight = derived(rowHeight, $height => {
+    const heightForControls = showControls ? ControlsHeight : 0
+    return Padding + SmallRowHeight + $height + heightForControls
+  })
+  context = { ...context, minHeight }
 
   // Set context for children to consume
   setContext("grid", context)
@@ -134,7 +143,7 @@
   class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{minHeight}px; --controls-height:{ControlsHeight}px;"
+  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{ControlsHeight}px;"
 >
   {#if showControls}
     <div class="controls">

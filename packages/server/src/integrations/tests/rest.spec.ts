@@ -4,7 +4,11 @@ jest.mock("node-fetch", () => {
       raw: () => {
         return { "content-type": ["application/json"] }
       },
-      get: () => ["application/json"],
+      get: (name: string) => {
+        if (name.toLowerCase() === "content-type") {
+          return ["application/json"]
+        }
+      },
     },
     json: jest.fn(() => ({
       my_next_cursor: 123,
@@ -211,7 +215,16 @@ describe("REST Integration", () => {
         json: json ? async () => json : undefined,
         text: text ? async () => text : undefined,
         headers: {
-          get: (key: any) => (key === "content-length" ? 100 : header),
+          get: (key: string) => {
+            switch (key.toLowerCase()) {
+              case "content-length":
+                return 100
+              case "content-type":
+                return header
+              default:
+                return ""
+            }
+          },
           raw: () => ({ "content-type": header }),
         },
       }
