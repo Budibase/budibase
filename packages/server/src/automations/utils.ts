@@ -196,6 +196,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
   if (
     isCronTrigger(automation) &&
     !isRebootTrigger(automation) &&
+    !automation.disabled &&
     trigger?.inputs.cron
   ) {
     const cronExp = trigger.inputs.cron
@@ -250,6 +251,7 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
     return (
       auto &&
       auto.definition.trigger &&
+      !auto.disabled &&
       auto.definition.trigger.stepId === WH_STEP_ID
     )
   }
