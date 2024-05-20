@@ -12,6 +12,7 @@ import {
   isDocument,
   RowResponse,
   RowValue,
+  SQLiteDefinition,
   SqlQueryBinding,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
@@ -21,6 +22,8 @@ import { ReadStream, WriteStream } from "fs"
 import { newid } from "../../docIds/newid"
 import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
+import { checkSlashesInUrl } from "../../helpers"
+import env from "../../environment"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -281,25 +284,61 @@ export class DatabaseImpl implements Database {
     })
   }
 
+  async _sqlQuery<T>(
+    url: string,
+    method: "POST" | "GET",
+    body?: Record<string, any>
+  ): Promise<T> {
+    url = checkSlashesInUrl(`${this.couchInfo.sqlUrl}/${url}`)
+    const args: { url: string; method: string; cookie: string; body?: any } = {
+      url,
+      method,
+      cookie: this.couchInfo.cookie,
+    }
+    if (body) {
+      args.body = body
+    }
+    return this.performCall(() => {
+      return async () => {
+        const response = await directCouchUrlCall(args)
+        const json = await response.json()
+        if (response.status > 300) {
+          throw json
+        }
+        return json as T
+      }
+    })
+  }
+
   async sql<T extends Document>(
     sql: string,
     parameters?: SqlQueryBinding
   ): Promise<T[]> {
     const dbName = this.name
     const url = `/${dbName}/${SQLITE_DESIGN_DOC_ID}`
-    const response = await directCouchUrlCall({
-      url: `${this.couchInfo.sqlUrl}/${url}`,
-      method: "POST",
-      cookie: this.couchInfo.cookie,
-      body: {
-        query: sql,
-        args: parameters,
-      },
+    return await this._sqlQuery<T[]>(url, "POST", {
+      query: sql,
+      args: parameters,
     })
-    if (response.status > 300) {
-      throw new Error(await response.text())
+  }
+
+  // checks design document is accurate (cleans up tables)
+  // this will check the design document and remove anything from
+  // disk which is not supposed to be there
+  async sqlDiskCleanup(): Promise<void> {
+    const dbName = this.name
+    const url = `/${dbName}/_cleanup`
+    return await this._sqlQuery<void>(url, "POST")
+  }
+
+  // removes a document from sqlite
+  async sqlPurgeDocument(docIds: string[] | string): Promise<void> {
+    if (!Array.isArray(docIds)) {
+      docIds = [docIds]
     }
-    return (await response.json()) as T[]
+    const dbName = this.name
+    const url = `/${dbName}/_purge`
+    return await this._sqlQuery<void>(url, "POST", { docs: docIds })
   }
 
   async query<T extends Document>(
@@ -314,6 +353,17 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     try {
+      if (env.SQS_SEARCH_ENABLE) {
+        // delete the design document, then run the cleanup operation
+        try {
+          const definition = await this.get<SQLiteDefinition>(
+            SQLITE_DESIGN_DOC_ID
+          )
+          await this.remove(SQLITE_DESIGN_DOC_ID, definition._rev)
+        } finally {
+          await this.sqlDiskCleanup()
+        }
+      }
       return await this.nano().db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry

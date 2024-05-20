@@ -15,7 +15,9 @@ import {
   generateJunctionTableID,
 } from "../../../../db/utils"
 
-const BASIC_SQLITE_DOC: SQLiteDefinition = {
+type PreSaveSQLiteDefinition = Omit<SQLiteDefinition, "_rev">
+
+const BASIC_SQLITE_DOC: PreSaveSQLiteDefinition = {
   _id: SQLITE_DESIGN_DOC_ID,
   language: "sqlite",
   sql: {
@@ -40,6 +42,7 @@ const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BARCODEQR]: SQLiteType.BLOB,
   [FieldType.ATTACHMENTS]: SQLiteType.BLOB,
   [FieldType.ATTACHMENT_SINGLE]: SQLiteType.BLOB,
+  [FieldType.SIGNATURE_SINGLE]: SQLiteType.BLOB,
   [FieldType.ARRAY]: SQLiteType.BLOB,
   [FieldType.LINK]: SQLiteType.BLOB,
   [FieldType.BIGINT]: SQLiteType.TEXT,
@@ -103,7 +106,7 @@ function mapTable(table: Table): SQLiteTables {
 }
 
 // nothing exists, need to iterate though existing tables
-async function buildBaseDefinition(): Promise<SQLiteDefinition> {
+async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   const tables = await tablesSdk.getAllInternalTables()
   const definition = cloneDeep(BASIC_SQLITE_DOC)
   for (let table of tables) {
@@ -115,11 +118,17 @@ async function buildBaseDefinition(): Promise<SQLiteDefinition> {
   return definition
 }
 
-export async function addTableToSqlite(table: Table) {
+export async function syncDefinition(): Promise<void> {
   const db = context.getAppDB()
-  let definition: SQLiteDefinition
+  const definition = await buildBaseDefinition()
+  await db.put(definition)
+}
+
+export async function addTable(table: Table) {
+  const db = context.getAppDB()
+  let definition: PreSaveSQLiteDefinition | SQLiteDefinition
   try {
-    definition = await db.get(SQLITE_DESIGN_DOC_ID)
+    definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
   } catch (err) {
     definition = await buildBaseDefinition()
   }
@@ -128,4 +137,23 @@ export async function addTableToSqlite(table: Table) {
     ...mapTable(table),
   }
   await db.put(definition)
+}
+
+export async function removeTable(table: Table) {
+  const db = context.getAppDB()
+  try {
+    const definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    if (definition.sql?.tables?.[table._id!]) {
+      delete definition.sql.tables[table._id!]
+      await db.put(definition)
+      // make sure SQS is cleaned up, tables removed
+      await db.sqlDiskCleanup()
+    }
+  } catch (err: any) {
+    if (err?.status === 404) {
+      return
+    } else {
+      throw err
+    }
+  }
 }

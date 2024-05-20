@@ -36,10 +36,10 @@ async function queueRelevantRowAutomations(
   await context.doInAppContext(event.appId, async () => {
     let automations = await getAllAutomations()
 
-    // filter down to the correct event type
+    // filter down to the correct event type and enabled automations
     automations = automations.filter(automation => {
       const trigger = automation.definition.trigger
-      return trigger && trigger.event === eventType
+      return trigger && trigger.event === eventType && !automation.disabled
     })
 
     for (let automation of automations) {
@@ -94,6 +94,9 @@ export async function externalTrigger(
   params: { fields: Record<string, any>; timeout?: number },
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
+  if (automation.disabled) {
+    throw new Error("Automation is disabled")
+  }
   if (
     automation.definition != null &&
     automation.definition.trigger != null &&

@@ -8,7 +8,6 @@
   export let onChange
   export let readonly = false
   export let api
-  export let invertX = false
 
   let textarea
   let isOpen = false
@@ -67,7 +66,7 @@
 </div>
 
 {#if isOpen}
-  <GridPopover {anchor} {invertX} on:close={close}>
+  <GridPopover {anchor} on:close={close}>
     <textarea
       bind:this={textarea}
       value={value || ""}
