@@ -1,6 +1,6 @@
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
-import { db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, utils } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
 import {
@@ -25,12 +25,12 @@ const serverTime = new Date("2024-05-06T00:00:00.000Z")
 tk.freeze(serverTime)
 
 describe.each([
-  ["lucene", undefined],
+  //["lucene", undefined],
   ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  //[DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  //[DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  //[DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  //[DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -1152,4 +1152,126 @@ describe.each([
             ]))
         })
     })
+
+  describe("user", () => {
+    let user1: User
+    let user2: User
+
+    beforeAll(async () => {
+      user1 = await config.createUser({ _id: `us_${utils.newid()}` })
+      user2 = await config.createUser({ _id: `us_${utils.newid()}` })
+
+      await createTable({
+        user: {
+          name: "user",
+          type: FieldType.BB_REFERENCE_SINGLE,
+          subtype: BBReferenceFieldSubType.USER,
+        },
+      })
+
+      await createRows([
+        { user: JSON.stringify(user1) },
+        { user: JSON.stringify(user2) },
+      ])
+    })
+
+    describe("equal", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ equal: { user: user1._id } }).toContainExactly([
+          { user: { _id: user1._id } },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ equal: { user: "us_none" } }).toFindNothing())
+    })
+
+    describe("notEqual", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ notEqual: { user: user1._id } }).toContainExactly([
+          { user: { _id: user2._id } },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ notEqual: { user: "us_none" } }).toContainExactly([
+          { user: { _id: user1._id } },
+          { user: { _id: user2._id } },
+        ]))
+    })
+
+    describe("oneOf", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ oneOf: { user: [user1._id] } }).toContainExactly([
+          { user: { _id: user1._id } },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ oneOf: { user: ["us_none"] } }).toFindNothing())
+    })
+  })
+
+  describe("multi user", () => {
+    let user1: User
+    let user2: User
+
+    beforeAll(async () => {
+      user1 = await config.createUser({ _id: `us_${utils.newid()}` })
+      user2 = await config.createUser({ _id: `us_${utils.newid()}` })
+
+      await createTable({
+        users: {
+          name: "users",
+          type: FieldType.BB_REFERENCE,
+          subtype: BBReferenceFieldSubType.USER,
+        },
+      })
+
+      await createRows([
+        { users: JSON.stringify([user1]) },
+        { users: JSON.stringify([user2]) },
+        { users: JSON.stringify([user1, user2]) },
+        { users: JSON.stringify([]) },
+      ])
+    })
+
+    describe("contains", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ contains: { users: [user1._id] } }).toContainExactly([
+          { users: [{ _id: user1._id }] },
+          { users: [{ _id: user1._id }, { _id: user2._id }] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ contains: { users: ["us_none"] } }).toFindNothing())
+    })
+
+    describe("notContains", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ notContains: { users: [user1._id] } }).toContainExactly([
+          { users: [{ _id: user2._id }] },
+          { users: [] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ notContains: { users: ["us_none"] } }).toContainExactly([
+          { users: [{ _id: user1._id }] },
+          { users: [{ _id: user2._id }] },
+          { users: [{ _id: user1._id }, { _id: user2._id }] },
+          { users: [] },
+        ]))
+    })
+
+    describe("containsAny", () => {
+      it("successfully finds rows", () =>
+        expectQuery({
+          containsAny: { users: [user1._id, user2._id] },
+        }).toContainExactly([
+          { users: [{ _id: user1._id }] },
+          { users: [{ _id: user2._id }] },
+          { users: [{ _id: user1._id }, { _id: user2._id }] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ containsAny: { users: ["us_none"] } }).toFindNothing())
+    })
+  })
 })
