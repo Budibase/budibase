@@ -364,6 +364,7 @@
       value.customType !== "cron" &&
       value.customType !== "triggerSchema" &&
       value.customType !== "automationFields" &&
+      value.type !== "signature_single" &&
       value.type !== "attachment" &&
       value.type !== "attachment_single"
     )
@@ -456,7 +457,7 @@
               value={inputData[key]}
               options={Object.keys(table?.schema || {})}
             />
-          {:else if value.type === "attachment"}
+          {:else if value.type === "attachment" || value.type === "signature_single"}
             <div class="attachment-field-wrapper">
               <div class="label-wrapper">
                 <Label>{label}</Label>
