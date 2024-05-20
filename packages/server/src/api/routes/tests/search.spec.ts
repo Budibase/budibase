@@ -21,9 +21,6 @@ import _ from "lodash"
 import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
 
-const serverTime = new Date("2024-05-06T00:00:00.000Z")
-tk.freeze(serverTime)
-
 describe.each([
   ["lucene", undefined],
   ["sqs", undefined],
@@ -251,6 +248,8 @@ describe.each([
   describe("bindings", () => {
     let globalUsers: any = []
 
+    const serverTime = new Date()
+    serverTime.setMilliseconds(0)
     const future = new Date(serverTime.getTime())
     future.setDate(future.getDate() + 30)
 
@@ -358,20 +357,22 @@ describe.each([
     })
 
     it("should parse the date binding and return all rows after the resolved value", async () => {
-      await expectQuery({
-        range: {
-          appointment: {
-            low: "{{ [now] }}",
-            high: "9999-00-00T00:00:00.000Z",
+      await tk.withFreeze(serverTime, async () => {
+        await expectQuery({
+          range: {
+            appointment: {
+              low: "{{ [now] }}",
+              high: "9999-00-00T00:00:00.000Z",
+            },
           },
-        },
-      }).toContainExactly([
-        {
-          name: config.getUser().firstName,
-          appointment: future.toISOString(),
-        },
-        { name: "serverDate", appointment: serverTime.toISOString() },
-      ])
+        }).toContainExactly([
+          {
+            name: config.getUser().firstName,
+            appointment: future.toISOString(),
+          },
+          { name: "serverDate", appointment: serverTime.toISOString() },
+        ])
+      })
     })
 
     it("should parse the date binding and return all rows before the resolved value", async () => {
