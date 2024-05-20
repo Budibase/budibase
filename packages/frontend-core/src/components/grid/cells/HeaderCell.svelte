@@ -236,6 +236,14 @@
   }
   const debouncedUpdateFilter = debounce(updateFilter, 250)
 
+  const handleDoubleClick = () => {
+    if (!$config.canEditColumns || column.schema.disabled || searching) {
+      return
+    }
+    open = true
+    editColumn()
+  }
+
   onMount(() => subscribe("close-edit-column", close))
 </script>
 
@@ -254,6 +262,7 @@
   bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
   class:sticky={idx === "sticky"}
+  on:dblclick={handleDoubleClick}
 >
   <GridCell
     on:mousedown={onMouseDown}
@@ -316,7 +325,7 @@
 {#if open}
   <GridPopover
     {anchor}
-    align="right"
+    align="left"
     on:close={close}
     maxHeight={null}
     resizable

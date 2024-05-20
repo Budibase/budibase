@@ -1,14 +1,13 @@
 <script>
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import Icon from "../Icon/Icon.svelte"
-  import Popover from "../Popover/Popover.svelte"
+  import { Icon, Popover } from "@budibase/bbui"
   import { onMount } from "svelte"
-
-  const flipDurationMs = 150
 
   export let constraints
   export let optionColors = {}
+
+  const flipDurationMs = 150
 
   let options = []
   let colorPopovers = []

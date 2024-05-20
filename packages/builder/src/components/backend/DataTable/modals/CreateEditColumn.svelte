@@ -9,7 +9,6 @@
     DatePicker,
     Modal,
     notifications,
-    OptionSelectDnD,
     Layout,
     AbsTooltip,
     ProgressCircle,
@@ -42,6 +41,7 @@
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
+  import OptionsEditor from "./OptionsEditor.svelte"
 
   const AUTO_TYPE = FieldType.AUTO
   const FORMULA_TYPE = FieldType.FORMULA
@@ -558,7 +558,7 @@
       bind:value={editableColumn.constraints.length.maximum}
     />
   {:else if editableColumn.type === FieldType.OPTIONS}
-    <OptionSelectDnD
+    <OptionsEditor
       bind:constraints={editableColumn.constraints}
       bind:optionColors={editableColumn.optionColors}
     />
@@ -581,7 +581,7 @@
       />
     </div>
   {:else if editableColumn.type === FieldType.ARRAY}
-    <OptionSelectDnD
+    <OptionsEditor
       bind:constraints={editableColumn.constraints}
       bind:optionColors={editableColumn.optionColors}
     />
