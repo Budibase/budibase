@@ -55,6 +55,10 @@
       value: FieldType.ATTACHMENT_SINGLE,
     },
     {
+      label: "Signature",
+      value: FieldType.SIGNATURE_SINGLE,
+    },
+    {
       label: "Attachment list",
       value: FieldType.ATTACHMENTS,
     },
