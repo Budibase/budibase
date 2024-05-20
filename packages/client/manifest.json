@@ -2746,6 +2746,14 @@
         "type": "plainText",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "number",
+        "label": "Initial width",
+        "key": "width",
+        "placeholder": "Auto",
+        "min": 80,
+        "max": 9999
       }
     ]
   },
