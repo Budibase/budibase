@@ -221,7 +221,7 @@ describe("/automations", () => {
         .expect(400)
 
       expect(res.body.message).toEqual("Automation is disabled")
-    });     
+    })
 
     it("triggers an asynchronous automation", async () => {
       let automation = newAutomation()

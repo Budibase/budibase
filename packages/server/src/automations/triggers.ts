@@ -95,7 +95,7 @@ export async function externalTrigger(
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
   if (automation.disabled) {
-    throw new Error('Automation is disabled');
+    throw new Error("Automation is disabled")
   }
   if (
     automation.definition != null &&

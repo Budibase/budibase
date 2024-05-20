@@ -284,7 +284,7 @@ export async function trigger(ctx: UserCtx) {
         },
         { getResponses: true }
       )
-    
+
       let collectedValue = response.steps.find(
         step => step.stepId === AutomationActionStepId.COLLECT
       )
