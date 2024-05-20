@@ -249,9 +249,13 @@ describe.each([
     let globalUsers: any = []
 
     const serverTime = new Date()
+
+    // In MariaDB and MySQL we only store dates to second precision, so we need
+    // to remove milliseconds from the server time to ensure searches work as
+    // expected.
     serverTime.setMilliseconds(0)
-    const future = new Date(serverTime.getTime())
-    future.setDate(future.getDate() + 30)
+
+    const future = new Date(serverTime.getTime() + 1000 * 60 * 60 * 24 * 30)
 
     const rows = (currentUser: User) => {
       return [
