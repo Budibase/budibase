@@ -110,15 +110,17 @@ describe("Run through some parts of the automations system", () => {
         disabled: false,
         appId: config.appId!,
       },
-    ];
+    ]
 
     // Apply the filter function to the automations list
-    const activeAutomations = automations.filter((automation) => {
-      const trigger = automation.definition.trigger;
-      return trigger && !automation.disabled;
-    });
+    const activeAutomations = automations.filter(automation => {
+      const trigger = automation.definition.trigger
+      return trigger && !automation.disabled
+    })
 
     // Ensure that none of the filtered automations are disabled
-    expect(activeAutomations.every((automation) => !automation.disabled)).toBe(true);
-  });
+    expect(activeAutomations.every(automation => !automation.disabled)).toBe(
+      true
+    )
+  })
 })
