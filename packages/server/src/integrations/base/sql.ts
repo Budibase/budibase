@@ -272,7 +272,8 @@ class InternalBuilder {
             }
             statement +=
               (statement ? andOr : "") +
-              `COALESCE(LOWER(${likeKey(this.client, key)}) LIKE ?, FALSE)`
+              // `COALESCE(LOWER(${likeKey(this.client, key)}) LIKE ?, FALSE)`
+              `LOWER(${likeKey(this.client, key)}) LIKE ?`
           }
 
           if (statement === "") {
