@@ -18,8 +18,6 @@
   export let row
   export let cellId
   export let updateValue = rows.actions.updateValue
-  export let invertX = false
-  export let invertY = false
   export let contentLines = 1
   export let hidden = false
 
@@ -93,8 +91,6 @@
     onChange={cellAPI.setValue}
     {focused}
     {readonly}
-    {invertY}
-    {invertX}
     {contentLines}
   />
   <slot />

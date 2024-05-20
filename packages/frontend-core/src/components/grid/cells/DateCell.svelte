@@ -10,7 +10,6 @@
   export let focused = false
   export let readonly = false
   export let api
-  export let invertX = false
 
   let isOpen
   let anchor
@@ -111,7 +110,7 @@
 </div>
 
 {#if isOpen}
-  <GridPopover {anchor} {invertX} maxHeight={null} on:close={close}>
+  <GridPopover {anchor} maxHeight={null} on:close={close}>
     <CoreDatePickerPopoverContents
       value={parsedValue}
       useKeyboardShortcuts={false}
