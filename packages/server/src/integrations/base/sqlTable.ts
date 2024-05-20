@@ -79,9 +79,13 @@ function generateSchema(
         schema.boolean(key)
         break
       case FieldType.DATETIME:
-        schema.datetime(key, {
-          useTz: !column.ignoreTimezones,
-        })
+        if (!column.timeOnly) {
+          schema.datetime(key, {
+            useTz: !column.ignoreTimezones,
+          })
+        } else {
+          schema.time(key)
+        }
         break
       case FieldType.ARRAY:
       case FieldType.BB_REFERENCE:
