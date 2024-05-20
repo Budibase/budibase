@@ -19,11 +19,7 @@ import {
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
-import { mocks } from "@budibase/backend-core/tests"
 import { encodeJSBinding } from "@budibase/string-templates"
-
-const serverTime = mocks.date.MOCK_DATE
-tk.freeze(serverTime)
 
 describe.each([
   ["lucene", undefined],
@@ -252,8 +248,14 @@ describe.each([
   describe("bindings", () => {
     let globalUsers: any = []
 
-    const future = new Date(serverTime.getTime())
-    future.setDate(future.getDate() + 30)
+    const serverTime = new Date()
+
+    // In MariaDB and MySQL we only store dates to second precision, so we need
+    // to remove milliseconds from the server time to ensure searches work as
+    // expected.
+    serverTime.setMilliseconds(0)
+
+    const future = new Date(serverTime.getTime() + 1000 * 60 * 60 * 24 * 30)
 
     const rows = (currentUser: User) => {
       return [
@@ -359,20 +361,22 @@ describe.each([
     })
 
     it("should parse the date binding and return all rows after the resolved value", async () => {
-      await expectQuery({
-        range: {
-          appointment: {
-            low: "{{ [now] }}",
-            high: "9999-00-00T00:00:00.000Z",
+      await tk.withFreeze(serverTime, async () => {
+        await expectQuery({
+          range: {
+            appointment: {
+              low: "{{ [now] }}",
+              high: "9999-00-00T00:00:00.000Z",
+            },
           },
-        },
-      }).toContainExactly([
-        {
-          name: config.getUser().firstName,
-          appointment: future.toISOString(),
-        },
-        { name: "serverDate", appointment: serverTime.toISOString() },
-      ])
+        }).toContainExactly([
+          {
+            name: config.getUser().firstName,
+            appointment: future.toISOString(),
+          },
+          { name: "serverDate", appointment: serverTime.toISOString() },
+        ])
+      })
     })
 
     it("should parse the date binding and return all rows before the resolved value", async () => {
