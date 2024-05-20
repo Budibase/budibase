@@ -2746,6 +2746,14 @@
         "type": "plainText",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "number",
+        "label": "Initial width",
+        "key": "width",
+        "placeholder": "Auto",
+        "min": 80,
+        "max": 9999
       }
     ]
   },
@@ -7017,10 +7025,22 @@
         ]
       }
     ],
-    "context": {
-      "type": "schema",
-      "scope": "local"
-    },
+    "context": [
+      {
+        "type": "schema",
+        "scope": "local"
+      },
+      {
+        "type": "static",
+        "values": [
+          {
+            "label": "Selected rows",
+            "key": "selectedRows",
+            "type": "array"
+          }
+        ]
+      }
+    ],
     "actions": ["RefreshDatasource"]
   },
   "bbreferencefield": {
