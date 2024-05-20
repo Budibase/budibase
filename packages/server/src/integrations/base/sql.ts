@@ -645,14 +645,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       config.useNullAsDefault = true
     }
 
-    if (sqlClient === SqlClient.MS_SQL) {
-      // config.connection ??= {}
-      // config.connection.typeCast = (field: any, next: any): any => {
-      //   if (field.type === "TIME") return field.string()
-      //   return next()
-      // }
-    }
-
     const client = knex(config)
 
     let query: Knex.QueryBuilder
