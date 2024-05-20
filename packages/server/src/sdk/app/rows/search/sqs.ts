@@ -149,10 +149,10 @@ export async function search(
     }
   }
 
-  if (typeof params.bookmark !== "number") {
+  if (params.bookmark && typeof params.bookmark !== "number") {
     throw new Error("Unable to paginate with string based bookmarks")
   }
-  const bookmark: number = params.bookmark || 1
+  const bookmark: number = (params.bookmark as number) || 1
   const limit = params.limit
   if (paginate && params.limit) {
     request.paginate = {
@@ -212,7 +212,7 @@ export async function search(
     }
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
-    if (err.status === 404 && err.message?.includes(SQLITE_DESIGN_DOC_ID)) {
+    if (err.status === 404 && msg?.includes(SQLITE_DESIGN_DOC_ID)) {
       await sdk.tables.sqs.syncDefinition()
       return search(options, table)
     }
