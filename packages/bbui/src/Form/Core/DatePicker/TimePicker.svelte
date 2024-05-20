@@ -31,10 +31,4 @@
     flex-direction: row;
     align-items: center;
   }
-  .time-picker span {
-    font-weight: bold;
-    font-size: 18px;
-    z-index: 0;
-    margin-bottom: 1px;
-  }
 </style>
