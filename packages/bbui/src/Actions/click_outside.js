@@ -71,8 +71,8 @@ const handleMouseDown = e => {
 
   // Clear any previous listeners in case of multiple down events, and register
   // a single mouse up listener
-  document.removeEventListener("mouseup", handleMouseUp)
-  document.addEventListener("mouseup", handleMouseUp, true)
+  document.removeEventListener("click", handleMouseUp)
+  document.addEventListener("click", handleMouseUp, true)
 }
 
 // Global singleton listeners for our events

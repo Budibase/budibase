@@ -1,6 +1,9 @@
 import type { Headers } from "node-fetch"
 
-export function getAttachmentHeaders(headers: Headers) {
+export function getAttachmentHeaders(
+  headers: Headers,
+  opts?: { downloadImages?: boolean }
+) {
   const contentType = headers.get("content-type") || ""
   let contentDisposition = headers.get("content-disposition") || ""
 
@@ -21,6 +24,15 @@ export function getAttachmentHeaders(headers: Headers) {
         contentDisposition: `attachment; ${contentDisposition}`,
         contentType,
       }
+    }
+  }
+  // for images which don't supply a content disposition, make one up, as binary
+  // data for images in REST responses isn't really useful, we should always download them
+  else if (opts?.downloadImages && contentType.startsWith("image/")) {
+    const format = contentType.split("/")[1]
+    return {
+      contentDisposition: `attachment; filename="image.${format}"`,
+      contentType,
     }
   }
 

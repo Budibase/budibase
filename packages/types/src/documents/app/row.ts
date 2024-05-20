@@ -94,6 +94,11 @@ export enum FieldType {
    */
   BARCODEQR = "barcodeqr",
   /**
+   * a JSON type, called Signature within Budibase. This type functions much the same as ATTACHMENTS but restricted
+   * only to signatures.
+   */
+  SIGNATURE_SINGLE = "signature_single",
+  /**
    * a string type, this allows representing very large integers, but they are held/managed within Budibase as
    * strings. When stored in external databases Budibase will attempt to use a real big integer type and depend
    * on the database parsing the string to this type as part of saving.
