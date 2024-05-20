@@ -412,6 +412,7 @@
         FIELDS.FORMULA,
         FIELDS.JSON,
         FIELDS.BARCODEQR,
+        FIELDS.SIGNATURE_SINGLE,
         FIELDS.BIGINT,
         FIELDS.AUTO,
       ]

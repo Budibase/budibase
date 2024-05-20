@@ -19,9 +19,10 @@ import {
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
+import { mocks } from "@budibase/backend-core/tests"
 import { encodeJSBinding } from "@budibase/string-templates"
 
-const serverTime = new Date("2024-05-06T00:00:00.000Z")
+const serverTime = mocks.date.MOCK_DATE
 tk.freeze(serverTime)
 
 describe.each([
@@ -407,8 +408,7 @@ describe.each([
     })
 
     it("should parse the encoded js binding. Return rows with appointments 2 weeks in the past", async () => {
-      const jsBinding =
-        "const currentTime = new Date()\ncurrentTime.setDate(currentTime.getDate()-14);\nreturn currentTime.toISOString();"
+      const jsBinding = `const currentTime = new Date(${Date.now()})\ncurrentTime.setDate(currentTime.getDate()-14);\nreturn currentTime.toISOString();`
       const encodedBinding = encodeJSBinding(jsBinding)
 
       await expectQuery({

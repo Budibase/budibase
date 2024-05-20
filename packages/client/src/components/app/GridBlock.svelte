@@ -37,8 +37,10 @@
 
   let grid
   let gridContext
-  let minHeight
+  let minHeight = 0
 
+  $: currentTheme = $context?.device?.theme
+  $: darkMode = !currentTheme?.includes("light")
   $: parsedColumns = getParsedColumns(columns)
   $: columnWhitelist = parsedColumns.filter(x => x.active).map(x => x.field)
   $: schemaOverrides = getSchemaOverrides(parsedColumns)
@@ -154,6 +156,7 @@
     {API}
     {stripeRows}
     {quiet}
+    {darkMode}
     {initialFilter}
     {initialSortColumn}
     {initialSortOrder}
