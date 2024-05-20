@@ -33,6 +33,7 @@
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import EnterpriseBasicTrialModal from "components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
+  import UpdateAppTopNav from "components/common/UpdateAppTopNav.svelte"
 
   export let application
 
@@ -104,10 +105,6 @@
   }
 
   onMount(async () => {
-    document.fonts.onloadingdone = e => {
-      builderStore.loadFonts(e.fontfaces)
-    }
-
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
@@ -148,23 +145,25 @@
           />
         </span>
         <Tabs {selected} size="M">
-          {#key $builderStore?.fonts}
-            {#each $layout.children as { path, title }}
-              <TourWrap stepKeys={[`builder-${title}-section`]}>
-                <Tab
-                  quiet
-                  selected={$isActive(path)}
-                  on:click={topItemNavigate(path)}
-                  title={capitalise(title)}
-                  id={`builder-${title}-tab`}
-                />
-              </TourWrap>
-            {/each}
-          {/key}
+          {#each $layout.children as { path, title }}
+            <TourWrap stepKeys={[`builder-${title}-section`]}>
+              <Tab
+                quiet
+                selected={$isActive(path)}
+                on:click={topItemNavigate(path)}
+                title={capitalise(title)}
+                id={`builder-${title}-tab`}
+              />
+            </TourWrap>
+          {/each}
         </Tabs>
       </div>
       <div class="topcenternav">
-        <Heading size="XS">{$appStore.name}</Heading>
+        <div class="app-name">
+          <UpdateAppTopNav {application}>
+            <Heading noPadding size="XS">{$appStore.name}</Heading>
+          </UpdateAppTopNav>
+        </div>
       </div>
       <div class="toprightnav">
         <span>
@@ -253,7 +252,6 @@
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0px var(--spacing-m);
   }
 
   .topleftnav {

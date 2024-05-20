@@ -18,6 +18,7 @@ import {
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
 import { isExternalTableID } from "../../integrations/utils"
+import { helpers } from "@budibase/shared-core"
 
 export * from "./utils"
 export * from "./attachments"
@@ -157,15 +158,22 @@ export async function inputProcessing(
           delete attachment.url
         })
       }
-    } else if (field.type === FieldType.ATTACHMENT_SINGLE) {
+    } else if (
+      field.type === FieldType.ATTACHMENT_SINGLE ||
+      field.type === FieldType.SIGNATURE_SINGLE
+    ) {
       const attachment = clonedRow[key]
       if (attachment?.url) {
         delete clonedRow[key].url
       }
-    } else if (field.type === FieldType.BB_REFERENCE && value) {
-      clonedRow[key] = await processInputBBReferences(value, field.subtype)
-    } else if (field.type === FieldType.BB_REFERENCE_SINGLE && value) {
+    } else if (
+      value &&
+      (field.type === FieldType.BB_REFERENCE_SINGLE ||
+        helpers.schema.isDeprecatedSingleUserColumn(field))
+    ) {
       clonedRow[key] = await processInputBBReference(value, field.subtype)
+    } else if (value && field.type === FieldType.BB_REFERENCE) {
+      clonedRow[key] = await processInputBBReferences(value, field.subtype)
     }
   }
 
@@ -225,7 +233,8 @@ export async function outputProcessing<T extends Row[] | Row>(
   for (let [property, column] of Object.entries(table.schema)) {
     if (
       column.type === FieldType.ATTACHMENTS ||
-      column.type === FieldType.ATTACHMENT_SINGLE
+      column.type === FieldType.ATTACHMENT_SINGLE ||
+      column.type === FieldType.SIGNATURE_SINGLE
     ) {
       for (let row of enriched) {
         if (row[property] == null) {
@@ -237,7 +246,7 @@ export async function outputProcessing<T extends Row[] | Row>(
           }
           return attachment
         }
-        if (typeof row[property] === "string") {
+        if (typeof row[property] === "string" && row[property].length) {
           row[property] = JSON.parse(row[property])
         }
         if (Array.isArray(row[property])) {
