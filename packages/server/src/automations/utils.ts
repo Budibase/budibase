@@ -196,6 +196,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
   if (
     isCronTrigger(automation) &&
     !isRebootTrigger(automation) &&
+    !automation.disabled &&
     trigger?.inputs.cron
   ) {
     const cronExp = trigger.inputs.cron
