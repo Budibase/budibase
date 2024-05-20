@@ -56,6 +56,7 @@ function userColumnMapping(column: string, options: RowSearchParams) {
     if (!isString && !isArray) {
       return filterValue
     }
+
     const processString = (input: string) => {
       const rowPrefix = DocumentType.ROW + SEPARATOR
       if (input.startsWith(rowPrefix)) {
@@ -64,6 +65,7 @@ function userColumnMapping(column: string, options: RowSearchParams) {
         return input
       }
     }
+
     if (isArray) {
       return filterValue.map(el => {
         if (typeof el === "string") {

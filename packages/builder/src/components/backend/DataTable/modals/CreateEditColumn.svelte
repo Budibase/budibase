@@ -12,6 +12,7 @@
     OptionSelectDnD,
     Layout,
     AbsTooltip,
+    ProgressCircle,
   } from "@budibase/bbui"
   import {
     SWITCHABLE_TYPES,
@@ -251,11 +252,11 @@
   }
 
   async function saveColumn() {
-    savingColumn = true
     if (errors?.length) {
       return
     }
 
+    savingColumn = true
     let saveColumn = cloneDeep(editableColumn)
 
     delete saveColumn.fieldId
@@ -288,6 +289,8 @@
       }
     } catch (err) {
       notifications.error(`Error saving column: ${err.message}`)
+    } finally {
+      savingColumn = false
     }
   }
 
@@ -395,44 +398,50 @@
     if (!externalTable) {
       return [
         FIELDS.STRING,
-        FIELDS.BARCODEQR,
-        FIELDS.LONGFORM,
+        FIELDS.NUMBER,
         FIELDS.OPTIONS,
         FIELDS.ARRAY,
-        FIELDS.NUMBER,
-        FIELDS.BIGINT,
         FIELDS.BOOLEAN,
         FIELDS.DATETIME,
-        FIELDS.ATTACHMENT_SINGLE,
-        FIELDS.ATTACHMENTS,
         FIELDS.LINK,
-        FIELDS.FORMULA,
-        FIELDS.JSON,
+        FIELDS.LONGFORM,
         FIELDS.USER,
         FIELDS.USERS,
+        FIELDS.ATTACHMENT_SINGLE,
+        FIELDS.ATTACHMENTS,
+        FIELDS.FORMULA,
+        FIELDS.JSON,
+        FIELDS.BARCODEQR,
+        FIELDS.BIGINT,
         FIELDS.AUTO,
       ]
     } else {
       let fields = [
         FIELDS.STRING,
-        FIELDS.BARCODEQR,
-        FIELDS.LONGFORM,
-        FIELDS.OPTIONS,
-        FIELDS.DATETIME,
         FIELDS.NUMBER,
+        FIELDS.OPTIONS,
+        FIELDS.ARRAY,
         FIELDS.BOOLEAN,
-        FIELDS.FORMULA,
-        FIELDS.BIGINT,
+        FIELDS.DATETIME,
+        FIELDS.LINK,
+        FIELDS.LONGFORM,
         FIELDS.USER,
+        FIELDS.USERS,
+        FIELDS.FORMULA,
+        FIELDS.BARCODEQR,
+        FIELDS.BIGINT,
       ]
 
-      if (datasource && datasource.source !== SourceName.GOOGLE_SHEETS) {
-        fields.push(FIELDS.USERS)
+      // Filter out multiple users for google sheets
+      if (datasource?.source === SourceName.GOOGLE_SHEETS) {
+        fields = fields.filter(x => x !== FIELDS.USERS)
       }
-      // no-sql or a spreadsheet
-      if (!externalTable || table.sql) {
-        fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
+
+      // Filter out SQL-specific types for non-SQL datasources
+      if (!table.sql) {
+        fields = fields.filter(x => x !== FIELDS.LINK && x !== FIELDS.ARRAY)
       }
+
       return fields
     }
   }
@@ -734,7 +743,20 @@
     <Button quiet warning text on:click={confirmDelete}>Delete</Button>
   {/if}
   <Button secondary newStyles on:click={cancelEdit}>Cancel</Button>
-  <Button disabled={invalid} newStyles cta on:click={saveColumn}>Save</Button>
+  <Button
+    disabled={invalid || savingColumn}
+    newStyles
+    cta
+    on:click={saveColumn}
+  >
+    {#if savingColumn}
+      <div class="save-loading">
+        <ProgressCircle overBackground={true} size="S" />
+      </div>
+    {:else}
+      Save
+    {/if}
+  </Button>
 </div>
 <Modal bind:this={jsonSchemaModal}>
   <JSONSchemaModal
@@ -798,5 +820,10 @@
   b:hover {
     cursor: pointer;
     color: var(--spectrum-global-color-gray-900);
+  }
+
+  .save-loading {
+    display: flex;
+    justify-content: center;
   }
 </style>
