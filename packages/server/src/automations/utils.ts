@@ -251,7 +251,6 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
     return (
       auto &&
       auto.definition.trigger &&
-      !auto.disabled &&
       auto.definition.trigger.stepId === WH_STEP_ID
     )
   }
