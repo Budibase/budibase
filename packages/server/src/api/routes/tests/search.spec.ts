@@ -962,35 +962,148 @@ describe.each([
     })
   })
 
-  describe("datetime - time only", () => {
-    const T_1000 = "10:00"
-    const T_1045 = "10:45"
-    const T_1200 = "12:00"
-    const T_1530 = "15:30"
-    const T_0000 = "00:00"
+  !isInternal &&
+    describe("datetime - time only", () => {
+      const T_1000 = "10:00"
+      const T_1045 = "10:45"
+      const T_1200 = "12:00"
+      const T_1530 = "15:30"
+      const T_0000 = "00:00"
 
-    beforeAll(async () => {
-      await createTable({
-        time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
+      const UNEXISTING_TIME = "10:01"
+
+      beforeAll(async () => {
+        await createTable({
+          time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
+        })
+
+        await createRows(
+          _.shuffle([T_1000, T_1045, T_1200, T_1530, T_0000]).map(time => ({
+            time,
+          }))
+        )
       })
 
-      await createRows(
-        _.shuffle([T_1000, T_1045, T_1200, T_1530, T_0000]).map(time => ({
-          time,
-        }))
-      )
-    })
+      describe("equal", () => {
+        it("successfully finds a row", () =>
+          expectQuery({ equal: { time: T_1000 } }).toContainExactly([
+            { time: "10:00:00" },
+          ]))
 
-    describe("equal", () => {
-      it("successfully finds a row", () =>
-        expectQuery({ equal: { time: T_1000 } }).toContainExactly([
-          { time: "10:00:00" },
-        ]))
+        it("fails to find nonexistent row", () =>
+          expectQuery({ equal: { time: UNEXISTING_TIME } }).toFindNothing())
+      })
 
-      it("fails to find nonexistent row", () =>
-        expectQuery({ equal: { time: "10:01" } }).toFindNothing())
+      describe("notEqual", () => {
+        it("successfully finds a row", () =>
+          expectQuery({ notEqual: { time: T_1000 } }).toContainExactly([
+            { time: "10:45:00" },
+            { time: "12:00:00" },
+            { time: "15:30:00" },
+            { time: "00:00:00" },
+          ]))
+
+        it("return all when requesting non-existing", () =>
+          expectQuery({ notEqual: { time: UNEXISTING_TIME } }).toContainExactly(
+            [
+              { time: "10:00:00" },
+              { time: "10:45:00" },
+              { time: "12:00:00" },
+              { time: "15:30:00" },
+              { time: "00:00:00" },
+            ]
+          ))
+      })
+
+      describe("oneOf", () => {
+        it("successfully finds a row", () =>
+          expectQuery({ oneOf: { time: [T_1000] } }).toContainExactly([
+            { time: "10:00:00" },
+          ]))
+
+        it("fails to find nonexistent row", () =>
+          expectQuery({ oneOf: { time: [UNEXISTING_TIME] } }).toFindNothing())
+      })
+
+      describe("range", () => {
+        it("successfully finds a row", () =>
+          expectQuery({
+            range: { time: { low: T_1045, high: T_1045 } },
+          }).toContainExactly([{ time: "10:45:00" }]))
+
+        it("successfully finds multiple rows", () =>
+          expectQuery({
+            range: { time: { low: T_1045, high: T_1530 } },
+          }).toContainExactly([
+            { time: "10:45:00" },
+            { time: "12:00:00" },
+            { time: "15:30:00" },
+          ]))
+
+        it("successfully finds no rows", () =>
+          expectQuery({
+            range: { time: { low: UNEXISTING_TIME, high: UNEXISTING_TIME } },
+          }).toFindNothing())
+      })
+
+      describe("sort", () => {
+        it("sorts ascending", () =>
+          expectSearch({
+            query: {},
+            sort: "time",
+            sortOrder: SortOrder.ASCENDING,
+          }).toMatchExactly([
+            { time: "00:00:00" },
+            { time: "10:00:00" },
+            { time: "10:45:00" },
+            { time: "12:00:00" },
+            { time: "15:30:00" },
+          ]))
+
+        it("sorts descending", () =>
+          expectSearch({
+            query: {},
+            sort: "time",
+            sortOrder: SortOrder.DESCENDING,
+          }).toMatchExactly([
+            { time: "15:30:00" },
+            { time: "12:00:00" },
+            { time: "10:45:00" },
+            { time: "10:00:00" },
+            { time: "00:00:00" },
+          ]))
+
+        describe("sortType STRING", () => {
+          it("sorts ascending", () =>
+            expectSearch({
+              query: {},
+              sort: "time",
+              sortType: SortType.STRING,
+              sortOrder: SortOrder.ASCENDING,
+            }).toMatchExactly([
+              { time: "00:00:00" },
+              { time: "10:00:00" },
+              { time: "10:45:00" },
+              { time: "12:00:00" },
+              { time: "15:30:00" },
+            ]))
+
+          it("sorts descending", () =>
+            expectSearch({
+              query: {},
+              sort: "time",
+              sortType: SortType.STRING,
+              sortOrder: SortOrder.DESCENDING,
+            }).toMatchExactly([
+              { time: "15:30:00" },
+              { time: "12:00:00" },
+              { time: "10:45:00" },
+              { time: "10:00:00" },
+              { time: "00:00:00" },
+            ]))
+        })
+      })
     })
-  })
 
   describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
     beforeAll(async () => {
