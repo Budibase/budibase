@@ -14,7 +14,6 @@ export const INITIAL_BUILDER_STATE = {
   tourKey: null,
   tourStepKey: null,
   hoveredComponentId: null,
-  fonts: null,
 }
 
 export class BuilderStore extends BudiStore {
@@ -35,16 +34,6 @@ export class BuilderStore extends BudiStore {
     this.startBuilderOnboarding = this.startBuilderOnboarding.bind(this)
 
     this.websocket
-  }
-
-  loadFonts(fontFaces) {
-    const ff = fontFaces.map(
-      fontFace => `${fontFace.family}-${fontFace.weight}`
-    )
-    this.update(state => ({
-      ...state,
-      fonts: [...(state.fonts || []), ...ff],
-    }))
   }
 
   init(app) {
