@@ -145,6 +145,10 @@ export async function validate({
     throw new Error("Unable to fetch table for validation")
   }
   const errors: Record<string, any> = {}
+  const disallowArrayTypes = [
+    FieldType.ATTACHMENT_SINGLE,
+    FieldType.BB_REFERENCE_SINGLE,
+  ]
   for (let fieldName of Object.keys(fetchedTable.schema)) {
     const column = fetchedTable.schema[fieldName]
     const constraints = cloneDeep(column.constraints)
@@ -160,6 +164,10 @@ export async function validate({
     // special case for options, need to always allow unselected (empty)
     if (type === FieldType.OPTIONS && constraints?.inclusion) {
       constraints.inclusion.push(null as any, "")
+    }
+
+    if (disallowArrayTypes.includes(type) && Array.isArray(row[fieldName])) {
+      errors[fieldName] = `Cannot accept arrays`
     }
     let res
 

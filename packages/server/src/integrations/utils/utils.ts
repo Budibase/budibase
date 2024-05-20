@@ -254,6 +254,7 @@ function copyExistingPropsOver(
         case FieldType.ARRAY:
         case FieldType.ATTACHMENTS:
         case FieldType.ATTACHMENT_SINGLE:
+        case FieldType.SIGNATURE_SINGLE:
         case FieldType.JSON:
         case FieldType.BB_REFERENCE:
         case FieldType.BB_REFERENCE_SINGLE:
