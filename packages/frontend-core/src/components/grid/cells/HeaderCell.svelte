@@ -58,6 +58,7 @@
   $: searching = searchValue != null
   $: debouncedUpdateFilter(searchValue)
   $: orderable = !column.primaryDisplay
+  $: editable = $config.canEditColumns && !column.schema.disabled
 
   const close = () => {
     open = false
@@ -237,7 +238,7 @@
   const debouncedUpdateFilter = debounce(updateFilter, 250)
 
   const handleDoubleClick = () => {
-    if (!$config.canEditColumns || column.schema.disabled || searching) {
+    if (!editable || searching) {
       return
     }
     open = true
@@ -254,12 +255,12 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
+  bind:this={anchor}
   class="header-cell"
+  style="flex: 0 0 {column.width}px;"
   class:open
   class:searchable
   class:searching
-  style="flex: 0 0 {column.width}px;"
-  bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
   class:sticky={idx === "sticky"}
   on:dblclick={handleDoubleClick}
@@ -336,11 +337,7 @@
       </div>
     {:else}
       <Menu>
-        <MenuItem
-          icon="Edit"
-          on:click={editColumn}
-          disabled={!$config.canEditColumns || column.schema.disabled}
-        >
+        <MenuItem icon="Edit" on:click={editColumn} disabled={!editable}>
           Edit column
         </MenuItem>
         <MenuItem
