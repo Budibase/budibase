@@ -646,7 +646,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     }
 
     const client = knex(config)
-
     let query: Knex.QueryBuilder
     const builder = new InternalBuilder(sqlClient)
     switch (this._operation(json)) {
