@@ -97,30 +97,4 @@ describe("Run through some parts of the automations system", () => {
     expect(output.c).toBe(false)
     expect(output.d).toBe(1)
   })
-
-  it("should remove disabled automations from the active queue", () => {
-    const automations: Automation[] = [
-      {
-        ...basicAutomation(),
-        disabled: true,
-        appId: config.appId!,
-      },
-      {
-        ...basicAutomation(),
-        disabled: false,
-        appId: config.appId!,
-      },
-    ]
-
-    // Apply the filter function to the automations list
-    const activeAutomations = automations.filter(automation => {
-      const trigger = automation.definition.trigger
-      return trigger && !automation.disabled
-    })
-
-    // Ensure that none of the filtered automations are disabled
-    expect(activeAutomations.every(automation => !automation.disabled)).toBe(
-      true
-    )
-  })
 })
