@@ -17,8 +17,10 @@ module FetchMock {
           raw: () => {
             return { "content-type": ["application/json"] }
           },
-          get: () => {
-            return ["application/json"]
+          get: (name: string) => {
+            if (name.toLowerCase() === "content-type") {
+              return ["application/json"]
+            }
           },
         },
         json: async () => {
