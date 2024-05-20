@@ -22,12 +22,12 @@ import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
 
 describe.each([
-  //["lucene", undefined],
+  ["lucene", undefined],
   ["sqs", undefined],
-  //[DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  //[DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  //[DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  //[DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/api/:sourceId/search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -1288,6 +1288,7 @@ describe.each([
       await createRows([
         { user: JSON.stringify(user1) },
         { user: JSON.stringify(user2) },
+        { user: null },
       ])
     })
 
@@ -1305,12 +1306,14 @@ describe.each([
       it("successfully finds a row", () =>
         expectQuery({ notEqual: { user: user1._id } }).toContainExactly([
           { user: { _id: user2._id } },
+          {},
         ]))
 
       it("fails to find nonexistent row", () =>
         expectQuery({ notEqual: { user: "us_none" } }).toContainExactly([
           { user: { _id: user1._id } },
           { user: { _id: user2._id } },
+          { user: {} },
         ]))
     })
 
@@ -1322,6 +1325,19 @@ describe.each([
 
       it("fails to find nonexistent row", () =>
         expectQuery({ oneOf: { user: ["us_none"] } }).toFindNothing())
+    })
+
+    describe("empty", () => {
+      it("finds empty rows", () =>
+        expectQuery({ empty: { user: null } }).toContainExactly([{}]))
+    })
+
+    describe("notEmpty", () => {
+      it("finds non-empty rows", () =>
+        expectQuery({ notEmpty: { user: null } }).toContainExactly([
+          { user: { _id: user1._id } },
+          { user: { _id: user2._id } },
+        ]))
     })
   })
 
@@ -1338,14 +1354,19 @@ describe.each([
           name: "users",
           type: FieldType.BB_REFERENCE,
           subtype: BBReferenceFieldSubType.USER,
+          constraints: { type: "array" },
+        },
+        number: {
+          name: "number",
+          type: FieldType.NUMBER,
         },
       })
 
       await createRows([
-        { users: JSON.stringify([user1]) },
-        { users: JSON.stringify([user2]) },
-        { users: JSON.stringify([user1, user2]) },
-        { users: JSON.stringify([]) },
+        { number: 1, users: JSON.stringify([user1]) },
+        { number: 2, users: JSON.stringify([user2]) },
+        { number: 3, users: JSON.stringify([user1, user2]) },
+        { number: 4, users: JSON.stringify([]) },
       ])
     })
 
@@ -1388,6 +1409,20 @@ describe.each([
 
       it("fails to find nonexistent row", () =>
         expectQuery({ containsAny: { users: ["us_none"] } }).toFindNothing())
+    })
+
+    describe("multi-column equals", () => {
+      it("successfully finds a row", () =>
+        expectQuery({
+          equal: { number: 1 },
+          contains: { users: [user1._id] },
+        }).toContainExactly([{ users: [{ _id: user1._id }], number: 1 }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({
+          equal: { number: 2 },
+          contains: { users: [user1._id] },
+        }).toFindNothing())
     })
   })
 })
