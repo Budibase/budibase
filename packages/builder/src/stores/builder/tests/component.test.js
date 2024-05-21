@@ -42,6 +42,7 @@ vi.mock("stores/builder", async () => {
     update: mockAppStore.update,
     set: mockAppStore.set,
     syncClientFeatures: vi.fn(),
+    syncClientTypeSupportPresets: vi.fn(),
   }
   const mockTableStore = writable()
   const tables = {
