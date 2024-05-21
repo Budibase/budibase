@@ -42,6 +42,7 @@ const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BARCODEQR]: SQLiteType.BLOB,
   [FieldType.ATTACHMENTS]: SQLiteType.BLOB,
   [FieldType.ATTACHMENT_SINGLE]: SQLiteType.BLOB,
+  [FieldType.SIGNATURE_SINGLE]: SQLiteType.BLOB,
   [FieldType.ARRAY]: SQLiteType.BLOB,
   [FieldType.LINK]: SQLiteType.BLOB,
   [FieldType.BIGINT]: SQLiteType.TEXT,

@@ -5,7 +5,6 @@
 
   export let row
   export let top = false
-  export let invertY = false
 
   const {
     focusedCellId,
@@ -15,7 +14,6 @@
     hoveredRowId,
     selectedCellMap,
     focusedRow,
-    columnHorizontalInversionIndex,
     contentLines,
     isDragging,
     dispatch,
@@ -38,15 +36,13 @@
   on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
   on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
 >
-  {#each $visibleColumns as column, columnIdx}
+  {#each $visibleColumns as column}
     {@const cellId = getCellID(row._id, column.name)}
     <DataCell
       {cellId}
       {column}
       {row}
-      {invertY}
       {rowFocused}
-      invertX={columnIdx >= $columnHorizontalInversionIndex}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
       selected={rowSelected}
       rowIdx={row.__idx}
