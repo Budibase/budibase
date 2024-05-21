@@ -8,7 +8,6 @@
   export let onChange
   export let readonly = false
   export let api
-  export let invertX = false
   export let schema
   export let maximum
 
@@ -92,13 +91,7 @@
 </div>
 
 {#if isOpen}
-  <GridPopover
-    open={isOpen}
-    {anchor}
-    {invertX}
-    maxHeight={null}
-    on:close={close}
-  >
+  <GridPopover open={isOpen} {anchor} maxHeight={null} on:close={close}>
     <div class="dropzone">
       <Dropzone
         {value}

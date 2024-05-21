@@ -105,10 +105,6 @@
   }
 
   onMount(async () => {
-    document.fonts.onloadingdone = e => {
-      builderStore.loadFonts(e.fontfaces)
-    }
-
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
@@ -144,21 +140,19 @@
           <Icon size="S" hoverable name="BackAndroid" />
         </a>
         <Tabs {selected} size="M">
-          {#key $builderStore?.fonts}
-            {#each $layout.children as { path, title }}
-              <TourWrap stepKeys={[`builder-${title}-section`]}>
-                <Tab
-                  link
-                  href={$url(path)}
-                  quiet
-                  selected={$isActive(path)}
-                  on:click={() => topItemNavigate(path)}
-                  title={capitalise(title)}
-                  id={`builder-${title}-tab`}
-                />
-              </TourWrap>
-            {/each}
-          {/key}
+          {#each $layout.children as { path, title }}
+            <TourWrap stepKeys={[`builder-${title}-section`]}>
+              <Tab
+                link
+                href={$url(path)}
+                quiet
+                selected={$isActive(path)}
+                on:click={() => topItemNavigate(path)}
+                title={capitalise(title)}
+                id={`builder-${title}-tab`}
+              />
+            </TourWrap>
+          {/each}
         </Tabs>
       </div>
       <div class="topcenternav">
