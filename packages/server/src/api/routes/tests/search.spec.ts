@@ -78,7 +78,7 @@ describe.each([
   }
 
   async function createRows(rows: Record<string, any>[]) {
-    await config.api.row.bulkImport(table._id!, { rows })
+    await config.api.row.bulkImport(table._id!, { rows: _.shuffle(rows) })
   }
 
   class SearchAssertion {
@@ -981,11 +981,13 @@ describe.each([
           time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
         })
 
-        await createRows(
-          _.shuffle([T_1000, T_1045, T_1200, T_1530, T_0000]).map(time => ({
-            time,
-          }))
-        )
+        await createRows([
+          { time: T_1000 },
+          { time: T_1045 },
+          { time: T_1200 },
+          { time: T_1530 },
+          { time: T_0000 },
+        ])
       })
 
       describe("equal", () => {
