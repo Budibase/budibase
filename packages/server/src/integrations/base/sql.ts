@@ -387,7 +387,13 @@ class InternalBuilder {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
           value.direction === SortDirection.ASCENDING ? "asc" : "desc"
-        query = query.orderBy(`${aliased}.${key}`, direction)
+        let nulls
+        if (this.client === SqlClient.POSTGRES) {
+          // All other clients already sort this as expected by default, and adding this to the rest of the clients is causing issues
+          nulls = value.direction === SortDirection.ASCENDING ? "first" : "last"
+        }
+
+        query = query.orderBy(`${aliased}.${key}`, direction, nulls)
       }
     } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
       // @ts-ignore
