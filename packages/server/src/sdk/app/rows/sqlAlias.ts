@@ -126,16 +126,25 @@ export default class AliasTables {
   }
 
   reverse<T extends Row | Row[]>(rows: T): T {
+    const mapping = new Map()
+
     const process = (row: Row) => {
       const final: Row = {}
-      for (let [key, value] of Object.entries(row)) {
-        if (!key.includes(".")) {
-          final[key] = value
-        } else {
-          const [alias, column] = key.split(".")
-          const tableName = this.tableAliases[alias] || alias
-          final[`${tableName}.${column}`] = value
+      for (const key of Object.keys(row)) {
+        let mappedKey = mapping.get(key)
+        if (!mappedKey) {
+          const dotLocation = key.indexOf(".")
+          if (dotLocation === -1) {
+            mappedKey = key
+          } else {
+            const alias = key.slice(0, dotLocation)
+            const column = key.slice(dotLocation + 1)
+            const tableName = this.tableAliases[alias] || alias
+            mappedKey = `${tableName}.${column}`
+          }
+          mapping.set(key, mappedKey)
         }
+        final[mappedKey] = row[key]
       }
       return final
     }
