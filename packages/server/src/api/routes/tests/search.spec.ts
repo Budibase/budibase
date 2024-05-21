@@ -980,12 +980,16 @@ describe.each([
 
       const UNEXISTING_TIME = "10:01"
 
+      const NULL_TIME__ID = `null_time__id`
+
       beforeAll(async () => {
         await createTable({
+          timeid: { name: "timeid", type: FieldType.STRING },
           time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
         })
 
         await createRows([
+          { timeid: NULL_TIME__ID, time: null },
           { time: T_1000 },
           { time: T_1045 },
           { time: T_1200 },
