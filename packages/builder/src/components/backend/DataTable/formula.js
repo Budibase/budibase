@@ -56,7 +56,7 @@ export function getBindings({
       )
     }
     const field = Object.values(FIELDS).find(
-      field => field.type === schema.type && field.subtype === schema.subtype
+      field => field.type === schema.type
     )
 
     const label = path == null ? column : `${path}.0.${column}`
