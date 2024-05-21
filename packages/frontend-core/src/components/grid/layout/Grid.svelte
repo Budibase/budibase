@@ -54,6 +54,7 @@
   export let notifySuccess = null
   export let notifyError = null
   export let buttons = null
+  export let darkMode
   export let isCloud = null
 
   // Unique identifier for DOM nodes inside this instance
@@ -109,6 +110,7 @@
     notifySuccess,
     notifyError,
     buttons,
+    darkMode,
     isCloud,
   })
 
