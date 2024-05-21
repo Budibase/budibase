@@ -9,6 +9,7 @@
   export let optionColors = {}
 
   const flipDurationMs = 150
+  const { OptionColours } = Constants
 
   let options = []
   let colorPopovers = []
@@ -27,7 +28,8 @@
     const id = Math.random()
     options = [...options, { name: newName, id }]
     constraints.inclusion = [...constraints.inclusion, newName]
-    optionColors[newName] = Constants.OptionColours[(options.length - 1) % 9]
+    optionColors[newName] =
+      OptionColours[(options.length - 1) % OptionColours.length]
     colorPopovers.push(undefined)
     anchors.push(undefined)
     await tick()
@@ -64,6 +66,10 @@
     }
   }
 
+  const getOptionColor = (name, idx) => {
+    return optionColors?.[name] || OptionColours[idx % OptionColours.length]
+  }
+
   onMount(() => {
     // Initialize anchor arrays on mount, assuming 'options' is already populated
     colorPopovers = constraints.inclusion.map(() => undefined)
@@ -89,6 +95,7 @@
   on:finalize={handleDndFinalize}
 >
   {#each options as option, idx (`${option.id}-${idx}`)}
+    {@const color = getOptionColor(option.name, idx)}
     <div class="option" animate:flip={{ duration: flipDurationMs }}>
       <div class="drag-handle">
         <Icon name="DragHandle" size="L" />
@@ -98,24 +105,23 @@
         class="color-picker"
         on:click={e => openColorPickerPopover(idx, e.target)}
       >
-        <div
-          class="circle"
-          style="--color:{optionColors?.[option.name] ||
-            'hsla(0, 1%, 50%, 0.3)'}"
-        >
+        <div class="circle" style="--color:{color}">
           <Popover
             bind:this={colorPopovers[idx]}
             anchor={anchors[idx]}
             align="left"
             offset={0}
             animate={false}
+            resizable={false}
           >
             <div class="colors" data-ignore-click-outside="true">
-              {#each Constants.OptionColours as color}
+              {#each OptionColours as colorOption}
                 <div
-                  on:click={() => handleColorChange(option.name, color, idx)}
-                  style="--color:{color};"
-                  class="circle circle-hover"
+                  on:click={() =>
+                    handleColorChange(option.name, colorOption, idx)}
+                  style="--color:{colorOption};"
+                  class="circle"
+                  class:selected={colorOption === color}
                 />
               {/each}
             </div>
@@ -183,7 +189,8 @@
     border: 1px solid transparent;
     transition: border 130ms ease-out;
   }
-  .circle:hover {
+  .circle:hover,
+  .circle.selected {
     border: 1px solid var(--spectrum-global-color-blue-600);
     cursor: pointer;
   }
