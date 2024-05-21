@@ -133,7 +133,7 @@ function generateSelectStatement(
     }
     if (
       knex.client.config.client === SqlClient.MS_SQL &&
-      columnSchema.type === FieldType.DATETIME &&
+      columnSchema?.type === FieldType.DATETIME &&
       columnSchema.timeOnly
     ) {
       return knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
