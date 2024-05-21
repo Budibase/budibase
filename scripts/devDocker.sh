@@ -7,6 +7,6 @@ if [ ! -d "./packages/pro/src" ]; then
 fi
 
 yarn build --scope @budibase/server --scope @budibase/worker
-docker-compose -f hosting/docker-compose.build.yaml -f hosting/docker-compose.dev.yaml --env-file hosting/.env up --build --scale proxy-service=0
+DOCKER_BUILDKIT=1 docker compose -f hosting/docker-compose.build.yaml -f hosting/docker-compose.dev.yaml --env-file hosting/.env up --build --scale proxy-service=0
 
 
