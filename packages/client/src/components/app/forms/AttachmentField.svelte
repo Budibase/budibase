@@ -25,7 +25,7 @@
   let fieldState
   let fieldApi
 
-  const { API, notificationStore } = getContext("sdk")
+  const { API, notificationStore, environmentStore } = getContext("sdk")
   const formContext = getContext("form")
   const BYTES_IN_MB = 1000000
 
@@ -87,7 +87,7 @@
       error={fieldState.error}
       on:change={handleChange}
       {processFiles}
-      {handleFileTooLarge}
+      handleFileTooLarge={$environmentStore.cloud ? handleFileTooLarge : null}
       {handleTooManyFiles}
       {maximum}
       {extensions}

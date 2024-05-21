@@ -1,9 +1,5 @@
 import { derived } from "svelte/store"
-import {
-  MaxCellRenderOverflow,
-  MinColumnWidth,
-  ScrollBarSize,
-} from "../lib/constants"
+import { MinColumnWidth } from "../lib/constants"
 
 export const deriveStores = context => {
   const {
@@ -85,51 +81,10 @@ export const deriveStores = context => {
     }
   )
 
-  // Determine the row index at which we should start vertically inverting cell
-  // dropdowns
-  const rowVerticalInversionIndex = derived(
-    [height, rowHeight, scrollTop],
-    ([$height, $rowHeight, $scrollTop]) => {
-      const offset = $scrollTop % $rowHeight
-
-      // Compute the last row index with space to render popovers below it
-      const minBottom =
-        $height - ScrollBarSize * 3 - MaxCellRenderOverflow + offset
-      const lastIdx = Math.floor(minBottom / $rowHeight)
-
-      // Compute the first row index with space to render popovers above it
-      const minTop = MaxCellRenderOverflow + offset
-      const firstIdx = Math.ceil(minTop / $rowHeight)
-
-      // Use the greater of the two indices so that we prefer content below,
-      // unless there is room to render the entire popover above
-      return Math.max(lastIdx, firstIdx)
-    }
-  )
-
-  // Determine the column index at which we should start horizontally inverting
-  // cell dropdowns
-  const columnHorizontalInversionIndex = derived(
-    [visibleColumns, scrollLeft, width],
-    ([$visibleColumns, $scrollLeft, $width]) => {
-      const cutoff = $width + $scrollLeft - ScrollBarSize * 3
-      let inversionIdx = $visibleColumns.length
-      for (let i = $visibleColumns.length - 1; i >= 0; i--, inversionIdx--) {
-        const rightEdge = $visibleColumns[i].left + $visibleColumns[i].width
-        if (rightEdge + MaxCellRenderOverflow <= cutoff) {
-          break
-        }
-      }
-      return inversionIdx
-    }
-  )
-
   return {
     scrolledRowCount,
     visualRowCapacity,
     renderedRows,
     columnRenderMap,
-    rowVerticalInversionIndex,
-    columnHorizontalInversionIndex,
   }
 }

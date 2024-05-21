@@ -86,8 +86,9 @@ export const createValidatedConfigStore = (integration, config) => {
     ([$configStore, $errorsStore, $selectedValidatorsStore]) => {
       const validatedConfig = []
 
+      const allowedRestKeys = ["rejectUnauthorized", "downloadImages"]
       Object.entries(integration.datasource).forEach(([key, properties]) => {
-        if (integration.name === "REST" && key !== "rejectUnauthorized") {
+        if (integration.name === "REST" && !allowedRestKeys.includes(key)) {
           return
         }
 
