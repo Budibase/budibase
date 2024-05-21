@@ -555,7 +555,6 @@ export class ComponentStore extends BudiStore {
       const patchResult = patchFn(component, screen)
 
       // Post processing
-      this.enrichEmptySettings(component, { screen, useDefaultValues: false })
       const migrated = this.migrateSettings(component)
 
       // Returning an explicit false signifies that we should skip this
