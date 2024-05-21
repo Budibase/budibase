@@ -10,6 +10,7 @@ import {
   RowSearchParams,
   DeleteRows,
   DeleteRow,
+  PaginatedSearchRowResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -133,12 +134,20 @@ export class RowAPI extends TestAPI {
     )
   }
 
-  search = async (
+  search = async <T extends RowSearchParams>(
     sourceId: string,
-    params?: RowSearchParams,
+    params?: T,
     expectations?: Expectations
-  ): Promise<SearchRowResponse> => {
-    return await this._post<SearchRowResponse>(`/api/${sourceId}/search`, {
+  ): Promise<
+    T extends { paginate: true }
+      ? PaginatedSearchRowResponse
+      : SearchRowResponse
+  > => {
+    return await this._post<
+      T extends { paginate: true }
+        ? PaginatedSearchRowResponse
+        : SearchRowResponse
+    >(`/api/${sourceId}/search`, {
       body: params,
       expectations,
     })
