@@ -37,7 +37,7 @@ export function tableForDatasource(
 ): Table {
   return merge(
     {
-      name: generator.guid(),
+      name: generator.guid().substring(0, 10),
       type: "table",
       sourceType: datasource
         ? TableSourceType.EXTERNAL

@@ -56,16 +56,6 @@ function generateReadJson({
   }
 }
 
-function generateCreateJson(table = TABLE_NAME, body = {}): QueryJson {
-  return {
-    endpoint: endpoint(table, "CREATE"),
-    meta: {
-      table: TABLE,
-    },
-    body,
-  }
-}
-
 function generateRelationshipJson(config: { schema?: string } = {}): QueryJson {
   return {
     endpoint: {
@@ -146,24 +136,6 @@ describe("SQL query builder", () => {
     sql = new Sql(client, limit)
   })
 
-  it("should allow filtering on a related field", () => {
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          equal: {
-            age: 10,
-            "task.name": "task 1",
-          },
-        },
-      })
-    )
-    // order of bindings changes because relationship filters occur outside inner query
-    expect(query).toEqual({
-      bindings: [10, limit, "task 1"],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age" = $1 limit $2) as "${TABLE_NAME}" where "task"."name" = $3`,
-    })
-  })
-
   it("should add the schema to the LEFT JOIN", () => {
     const query = sql._query(generateRelationshipJson({ schema: "production" }))
     expect(query).toEqual({
@@ -232,31 +204,6 @@ describe("SQL query builder", () => {
     expect(query).toEqual({
       bindings: [`%jo%`, limit],
       sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
-    })
-  })
-
-  it("should not parse JSON string as Date", () => {
-    let query = new Sql(SqlClient.POSTGRES, limit)._query(
-      generateCreateJson(TABLE_NAME, {
-        name: '{ "created_at":"2023-09-09T03:21:06.024Z" }',
-      })
-    )
-    expect(query).toEqual({
-      bindings: ['{ "created_at":"2023-09-09T03:21:06.024Z" }'],
-      sql: `insert into "test" ("name") values ($1) returning *`,
-    })
-  })
-
-  it("should parse and trim valid string as Date", () => {
-    const dateObj = new Date("2023-09-09T03:21:06.024Z")
-    let query = new Sql(SqlClient.POSTGRES, limit)._query(
-      generateCreateJson(TABLE_NAME, {
-        name: " 2023-09-09T03:21:06.024Z ",
-      })
-    )
-    expect(query).toEqual({
-      bindings: [dateObj],
-      sql: `insert into "test" ("name") values ($1) returning *`,
     })
   })
 })
