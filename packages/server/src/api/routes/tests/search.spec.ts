@@ -21,9 +21,6 @@ import _ from "lodash"
 import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
 
-const serverTime = new Date("2024-05-06T00:00:00.000Z")
-tk.freeze(serverTime)
-
 describe.each([
   ["lucene", undefined],
   ["sqs", undefined],
@@ -251,8 +248,14 @@ describe.each([
   describe("bindings", () => {
     let globalUsers: any = []
 
-    const future = new Date(serverTime.getTime())
-    future.setDate(future.getDate() + 30)
+    const serverTime = new Date()
+
+    // In MariaDB and MySQL we only store dates to second precision, so we need
+    // to remove milliseconds from the server time to ensure searches work as
+    // expected.
+    serverTime.setMilliseconds(0)
+
+    const future = new Date(serverTime.getTime() + 1000 * 60 * 60 * 24 * 30)
 
     const rows = (currentUser: User) => {
       return [
@@ -358,20 +361,22 @@ describe.each([
     })
 
     it("should parse the date binding and return all rows after the resolved value", async () => {
-      await expectQuery({
-        range: {
-          appointment: {
-            low: "{{ [now] }}",
-            high: "9999-00-00T00:00:00.000Z",
+      await tk.withFreeze(serverTime, async () => {
+        await expectQuery({
+          range: {
+            appointment: {
+              low: "{{ [now] }}",
+              high: "9999-00-00T00:00:00.000Z",
+            },
           },
-        },
-      }).toContainExactly([
-        {
-          name: config.getUser().firstName,
-          appointment: future.toISOString(),
-        },
-        { name: "serverDate", appointment: serverTime.toISOString() },
-      ])
+        }).toContainExactly([
+          {
+            name: config.getUser().firstName,
+            appointment: future.toISOString(),
+          },
+          { name: "serverDate", appointment: serverTime.toISOString() },
+        ])
+      })
     })
 
     it("should parse the date binding and return all rows before the resolved value", async () => {
@@ -407,8 +412,7 @@ describe.each([
     })
 
     it("should parse the encoded js binding. Return rows with appointments 2 weeks in the past", async () => {
-      const jsBinding =
-        "const currentTime = new Date()\ncurrentTime.setDate(currentTime.getDate()-14);\nreturn currentTime.toISOString();"
+      const jsBinding = `const currentTime = new Date(${Date.now()})\ncurrentTime.setDate(currentTime.getDate()-14);\nreturn currentTime.toISOString();`
       const encodedBinding = encodeJSBinding(jsBinding)
 
       await expectQuery({

@@ -31,7 +31,8 @@ export class AttachmentCleanup {
   ): string[] {
     if (
       type !== FieldType.ATTACHMENTS &&
-      type !== FieldType.ATTACHMENT_SINGLE
+      type !== FieldType.ATTACHMENT_SINGLE &&
+      type !== FieldType.SIGNATURE_SINGLE
     ) {
       return []
     }
@@ -62,7 +63,8 @@ export class AttachmentCleanup {
       for (let [key, schema] of Object.entries(tableSchema)) {
         if (
           schema.type !== FieldType.ATTACHMENTS &&
-          schema.type !== FieldType.ATTACHMENT_SINGLE
+          schema.type !== FieldType.ATTACHMENT_SINGLE &&
+          schema.type !== FieldType.SIGNATURE_SINGLE
         ) {
           continue
         }
@@ -100,10 +102,12 @@ export class AttachmentCleanup {
       for (let [key, schema] of Object.entries(table.schema)) {
         if (
           schema.type !== FieldType.ATTACHMENTS &&
-          schema.type !== FieldType.ATTACHMENT_SINGLE
+          schema.type !== FieldType.ATTACHMENT_SINGLE &&
+          schema.type !== FieldType.SIGNATURE_SINGLE
         ) {
           continue
         }
+
         rows.forEach(row => {
           files = files.concat(
             AttachmentCleanup.extractAttachmentKeys(schema.type, row[key])
@@ -120,7 +124,8 @@ export class AttachmentCleanup {
       for (let [key, schema] of Object.entries(table.schema)) {
         if (
           schema.type !== FieldType.ATTACHMENTS &&
-          schema.type !== FieldType.ATTACHMENT_SINGLE
+          schema.type !== FieldType.ATTACHMENT_SINGLE &&
+          schema.type !== FieldType.SIGNATURE_SINGLE
         ) {
           continue
         }

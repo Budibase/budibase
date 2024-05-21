@@ -13,7 +13,6 @@
   export let focused
   export let schema
   export let onChange
-  export let invertX = false
   export let contentLines = 1
   export let searchFunction = API.searchTable
   export let primaryDisplay
@@ -275,7 +274,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if isOpen}
-  <GridPopover open={isOpen} {anchor} {invertX} on:close={close}>
+  <GridPopover open={isOpen} {anchor} on:close={close}>
     <div class="dropdown" on:wheel|stopPropagation>
       <div class="search">
         <Input
