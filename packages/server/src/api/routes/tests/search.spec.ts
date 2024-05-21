@@ -1309,6 +1309,25 @@ describe.each([
               { auto: 2 },
               { auto: 1 },
             ]))
+
+          // This is important for pagination. The order of results must always
+          // be stable or pagination will break. We don't want the user to need
+          // to specify an order for pagination to work.
+          it("is stable without a sort specified", async () => {
+            let { rows } = await config.api.row.search(table._id!, {
+              tableId: table._id!,
+              query: {},
+            })
+
+            for (let i = 0; i < 10; i++) {
+              const response = await config.api.row.search(table._id!, {
+                tableId: table._id!,
+                limit: 1,
+                query: {},
+              })
+              expect(response.rows).toEqual(rows)
+            }
+          })
         })
 
       // TODO(samwho): fix for SQS

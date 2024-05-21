@@ -235,21 +235,6 @@ describe("SQL query builder", () => {
     })
   })
 
-  it("should sort SQL Server tables by the primary key if no sort data is provided", () => {
-    let query = new Sql(SqlClient.MS_SQL, limit)._query(
-      generateReadJson({
-        sort: {},
-        paginate: {
-          limit: 10,
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10],
-      sql: `select * from (select top (@p0) * from [test] order by [test].[id] asc) as [test]`,
-    })
-  })
-
   it("should not parse JSON string as Date", () => {
     let query = new Sql(SqlClient.POSTGRES, limit)._query(
       generateCreateJson(TABLE_NAME, {
