@@ -9,7 +9,7 @@
   import TestDataModal from "./TestDataModal.svelte"
   import { flip } from "svelte/animate"
   import { fly } from "svelte/transition"
-  import { Icon, notifications, Modal } from "@budibase/bbui"
+  import { Icon, notifications, Modal, Toggle } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
 
@@ -72,6 +72,16 @@
       >
         Test details
       </div>
+    </div>
+    <div class="setting-spacing">
+      <Toggle
+        text={automation.disabled ? "Paused" : "Activated"}
+        on:change={automationStore.actions.toggleDisabled(
+          automation._id,
+          automation.disabled
+        )}
+        value={!automation.disabled}
+      />
     </div>
   </div>
 </div>

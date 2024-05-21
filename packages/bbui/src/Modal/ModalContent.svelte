@@ -27,6 +27,7 @@
   export let secondaryButtonText = undefined
   export let secondaryAction = undefined
   export let secondaryButtonWarning = false
+  export let custom = false
 
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
@@ -63,12 +64,13 @@
   class:spectrum-Dialog--medium={size === "M"}
   class:spectrum-Dialog--large={size === "L"}
   class:spectrum-Dialog--extraLarge={size === "XL"}
+  class:no-grid={custom}
   style="position: relative;"
   role="dialog"
   tabindex="-1"
   aria-modal="true"
 >
-  <div class="spectrum-Dialog-grid">
+  <div class="modal-core" class:spectrum-Dialog-grid={!custom}>
     {#if title || $$slots.header}
       <h1
         class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
@@ -153,6 +155,25 @@
   .spectrum-Dialog-content {
     overflow: visible;
   }
+
+  .no-grid .spectrum-Dialog-content {
+    border-top: 2px solid var(--spectrum-global-color-gray-200);
+    border-bottom: 2px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .no-grid .spectrum-Dialog-heading {
+    margin-top: 12px;
+    margin-left: 12px;
+  }
+
+  .spectrum-Dialog.no-grid {
+    width: 100%;
+  }
+
+  .spectrum-Dialog.no-grid .spectrum-Dialog-buttonGroup {
+    padding: 12px;
+  }
+
   .spectrum-Dialog-heading {
     font-family: var(--font-accent);
     font-weight: 600;

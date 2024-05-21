@@ -206,6 +206,23 @@ describe("/automations", () => {
       expect(res.body.value).toEqual([1, 2, 3])
     })
 
+    it("should throw an error when attempting to trigger a disabled automation", async () => {
+      mocks.licenses.useSyncAutomations()
+      let automation = collectAutomation()
+      automation = await config.createAutomation({
+        ...automation,
+        disabled: true,
+      })
+
+      const res = await request
+        .post(`/api/automations/${automation._id}/trigger`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res.body.message).toEqual("Automation is disabled")
+    })
+
     it("triggers an asynchronous automation", async () => {
       let automation = newAutomation()
       automation = await config.createAutomation(automation)

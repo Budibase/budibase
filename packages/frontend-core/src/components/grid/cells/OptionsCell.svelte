@@ -11,7 +11,6 @@
   export let multi = false
   export let readonly = false
   export let api
-  export let invertX
   export let contentLines = 1
 
   let isOpen = false
@@ -120,7 +119,7 @@
 </div>
 
 {#if isOpen}
-  <GridPopover {anchor} {invertX} on:close={close}>
+  <GridPopover {anchor} on:close={close}>
     <div class="options">
       {#each options as option, idx}
         {@const color = optionColors[option] || getOptionColor(option)}

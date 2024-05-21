@@ -1,20 +1,21 @@
 import {
-  Integration,
   DatasourceFieldType,
-  QueryType,
-  PaginationConfig,
+  HttpMethod,
+  Integration,
   IntegrationBase,
+  PaginationConfig,
   PaginationValues,
-  RestQueryFields as RestQuery,
-  RestConfig,
+  QueryType,
   RestAuthType,
   RestBasicAuthConfig,
   RestBearerAuthConfig,
-  HttpMethod,
+  RestConfig,
+  RestQueryFields as RestQuery,
 } from "@budibase/types"
 import get from "lodash/get"
 import * as https from "https"
 import qs from "querystring"
+import type { Response } from "node-fetch"
 import fetch from "node-fetch"
 import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
@@ -25,6 +26,7 @@ import { handleFileResponse, handleXml } from "./utils"
 import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
+import { getAttachmentHeaders } from "./utils/restUtils"
 
 enum BodyType {
   NONE = "none",
@@ -85,6 +87,12 @@ const SCHEMA: Integration = {
       default: true,
       required: false,
     },
+    downloadImages: {
+      display: "Download images",
+      type: DatasourceFieldType.BOOLEAN,
+      default: true,
+      required: false,
+    },
   },
   query: {
     create: {
@@ -130,14 +138,16 @@ class RestIntegration implements IntegrationBase {
     this.config = config
   }
 
-  async parseResponse(response: any, pagination: PaginationConfig | null) {
+  async parseResponse(response: Response, pagination: PaginationConfig | null) {
     let data: any[] | string | undefined,
       raw: string | undefined,
-      headers: Record<string, string> = {},
+      headers: Record<string, string[] | string> = {},
       filename: string | undefined
 
-    const contentType = response.headers.get("content-type") || ""
-    const contentDisposition = response.headers.get("content-disposition") || ""
+    const { contentType, contentDisposition } = getAttachmentHeaders(
+      response.headers,
+      { downloadImages: this.config.downloadImages }
+    )
     if (
       contentDisposition.includes("filename") ||
       contentDisposition.includes("attachment") ||
@@ -172,7 +182,7 @@ class RestIntegration implements IntegrationBase {
       throw `Failed to parse response body: ${err}`
     }
 
-    let contentLength: string = response.headers.get("content-length")
+    let contentLength = response.headers.get("content-length")
     if (!contentLength && raw) {
       contentLength = Buffer.byteLength(raw, "utf8").toString()
     }
