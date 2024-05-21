@@ -27,6 +27,7 @@ import {
 import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
+import pick from "lodash/pick"
 
 function buildInternalFieldList(
   table: Table,
@@ -196,10 +197,19 @@ export async function search(
       }
     )
 
-    const finalRows = await outputProcessing<Row[]>(table, processed, {
+    // get the rows
+    let finalRows = await outputProcessing<Row[]>(table, processed, {
       preserveLinks: true,
       squash: true,
     })
+
+    // check if we need to pick specific rows out
+    if (options.fields) {
+      const fields = [...options.fields, ...CONSTANT_INTERNAL_ROW_COLS]
+      finalRows = finalRows.map((r: any) => pick(r, fields))
+    }
+
+    // check for pagination
     if (paginate && limit) {
       const response: SearchResponse<Row> = {
         rows: finalRows,

@@ -52,14 +52,24 @@ describe.each([
       jest.clearAllMocks()
     })
 
-    it("creates a table successfully", async () => {
-      const name = generator.guid()
+    it.each([
+      "alphanum",
+      "with spaces",
+      "with-dashes",
+      "with_underscores",
+      'with "double quotes"',
+      "with 'single quotes'",
+      "with `backticks`",
+    ])("creates a table with name: %s", async name => {
       const table = await config.api.table.save(
         tableForDatasource(datasource, { name })
       )
       expect(table.name).toEqual(name)
       expect(events.table.created).toHaveBeenCalledTimes(1)
       expect(events.table.created).toHaveBeenCalledWith(table)
+
+      const res = await config.api.table.get(table._id!)
+      expect(res.name).toEqual(name)
     })
 
     it("creates a table via data import", async () => {
