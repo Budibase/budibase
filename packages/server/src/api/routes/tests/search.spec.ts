@@ -78,6 +78,7 @@ describe.each([
   }
 
   async function createRows(rows: Record<string, any>[]) {
+    // Shuffling to avoid false positives given a fixed order
     await config.api.row.bulkImport(table._id!, { rows: _.shuffle(rows) })
   }
 
