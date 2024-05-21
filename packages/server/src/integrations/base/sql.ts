@@ -136,6 +136,7 @@ function generateSelectStatement(
       columnSchema?.type === FieldType.DATETIME &&
       columnSchema.timeOnly
     ) {
+      // Time gets returned as timestamp from mssql, not matching the expected HH:mm format
       return knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
     }
     return `${field} as ${field}`
