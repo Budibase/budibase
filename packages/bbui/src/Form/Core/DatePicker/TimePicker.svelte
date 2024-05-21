@@ -24,7 +24,6 @@
     hideArrows
     type={"time"}
     value={displayValue}
-    width={60}
     on:input={handleChange}
     on:change={handleChange}
   />

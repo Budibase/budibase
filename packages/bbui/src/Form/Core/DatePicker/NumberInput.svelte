@@ -52,4 +52,7 @@
   input.hide-arrows {
     -moz-appearance: textfield;
   }
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    display: none;
+  }
 </style>
