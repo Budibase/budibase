@@ -150,12 +150,6 @@ export async function inputProcessing(
       clonedRow[key] = coerce(value, field.type)
     }
 
-    if (field.type === FieldType.DATETIME) {
-      if (typeof clonedRow[key] === "string") {
-        clonedRow[key] = clonedRow[key].trim()
-      }
-    }
-
     // remove any attachment urls, they are generated on read
     if (field.type === FieldType.ATTACHMENTS) {
       const attachments = clonedRow[key]
