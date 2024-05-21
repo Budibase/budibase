@@ -84,7 +84,7 @@ describe.each([
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
 
-    private findRow(expectedRow: any, foundRows: any[]) {
+    private popRow(expectedRow: any, foundRows: any[]) {
       const row = foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
       if (!row) {
         const fields = Object.keys(expectedRow)
@@ -97,6 +97,9 @@ describe.each([
           )} in ${JSON.stringify(searchedObjects)}`
         )
       }
+
+      // Ensuring the same row is not matched twice
+      foundRows.splice(foundRows.indexOf(row), 1)
       return row
     }
 
@@ -113,9 +116,9 @@ describe.each([
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
       // eslint-disable-next-line jest/no-standalone-expect
-      expect(foundRows).toEqual(
+      expect([...foundRows]).toEqual(
         expectedRows.map((expectedRow: any) =>
-          expect.objectContaining(this.findRow(expectedRow, foundRows))
+          expect.objectContaining(this.popRow(expectedRow, foundRows))
         )
       )
     }
@@ -132,10 +135,10 @@ describe.each([
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
       // eslint-disable-next-line jest/no-standalone-expect
-      expect(foundRows).toEqual(
+      expect([...foundRows]).toEqual(
         expect.arrayContaining(
           expectedRows.map((expectedRow: any) =>
-            expect.objectContaining(this.findRow(expectedRow, foundRows))
+            expect.objectContaining(this.popRow(expectedRow, foundRows))
           )
         )
       )
@@ -151,10 +154,10 @@ describe.each([
       })
 
       // eslint-disable-next-line jest/no-standalone-expect
-      expect(foundRows).toEqual(
+      expect([...foundRows]).toEqual(
         expect.arrayContaining(
           expectedRows.map((expectedRow: any) =>
-            expect.objectContaining(this.findRow(expectedRow, foundRows))
+            expect.objectContaining(this.popRow(expectedRow, foundRows))
           )
         )
       )
