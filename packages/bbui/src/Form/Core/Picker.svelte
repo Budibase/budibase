@@ -41,6 +41,8 @@
   export let footer = null
   export let customAnchor = null
   export let loading
+  export let onOptionMouseenter = () => {}
+  export let onOptionMouseleave = () => {}
 
   const dispatch = createEventDispatcher()
 
@@ -199,6 +201,8 @@
             aria-selected="true"
             tabindex="0"
             on:click={() => onSelectOption(getOptionValue(option, idx))}
+            on:mouseenter={e => onOptionMouseenter(e, option)}
+            on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
           >
             {#if getOptionIcon(option, idx)}
