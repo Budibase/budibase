@@ -4,6 +4,7 @@ import { get } from "svelte/store"
 
 export function getTableFields(linkField) {
   const table = get(tables).list.find(table => table._id === linkField.tableId)
+  // TODO: mdrury - add support for this with SQS at some point
   if (!table || !table.sql) {
     return []
   }
