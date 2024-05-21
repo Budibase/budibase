@@ -287,10 +287,23 @@
         const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
         const dependsOnValue = setting.dependsOn.value
         const realDependentValue = instance[dependsOnKey]
+
+        const sectionDependsOnKey =
+          setting.sectionDependsOn?.setting || setting.sectionDependsOn
+        const sectionDependsOnValue = setting.sectionDependsOn?.value
+        const sectionRealDependentValue = instance[sectionDependsOnKey]
+
         if (dependsOnValue == null && realDependentValue == null) {
           return false
         }
-        if (dependsOnValue !== realDependentValue) {
+        if (dependsOnValue != null && dependsOnValue !== realDependentValue) {
+          return false
+        }
+
+        if (
+          sectionDependsOnValue != null &&
+          sectionDependsOnValue !== sectionRealDependentValue
+        ) {
           return false
         }
       }
