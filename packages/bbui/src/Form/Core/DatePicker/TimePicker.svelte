@@ -1,4 +1,5 @@
 <script>
+  import dayjs from "dayjs"
   import NumberInput from "./NumberInput.svelte"
   import { createEventDispatcher } from "svelte"
 
@@ -15,7 +16,7 @@
     }
 
     const [hour, minute] = e.target.value.split(":").map(x => parseInt(x))
-    dispatch("change", value.hour(hour).minute(minute))
+    dispatch("change", (value || dayjs()).hour(hour).minute(minute))
   }
 </script>
 
