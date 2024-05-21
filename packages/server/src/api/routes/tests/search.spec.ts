@@ -1067,6 +1067,7 @@ describe.each([
             sort: "time",
             sortOrder: SortOrder.ASCENDING,
           }).toMatchExactly([
+            { timeid: NULL_TIME__ID },
             { time: "00:00:00" },
             { time: "10:00:00" },
             { time: "10:45:00" },
@@ -1085,6 +1086,7 @@ describe.each([
             { time: "10:45:00" },
             { time: "10:00:00" },
             { time: "00:00:00" },
+            { timeid: NULL_TIME__ID },
           ]))
 
         describe("sortType STRING", () => {
@@ -1095,6 +1097,7 @@ describe.each([
               sortType: SortType.STRING,
               sortOrder: SortOrder.ASCENDING,
             }).toMatchExactly([
+              { timeid: NULL_TIME__ID },
               { time: "00:00:00" },
               { time: "10:00:00" },
               { time: "10:45:00" },
@@ -1114,6 +1117,7 @@ describe.each([
               { time: "10:45:00" },
               { time: "10:00:00" },
               { time: "00:00:00" },
+              { timeid: NULL_TIME__ID },
             ]))
         })
       })
