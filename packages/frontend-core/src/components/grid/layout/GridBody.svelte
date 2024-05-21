@@ -9,7 +9,6 @@
     bounds,
     renderedRows,
     visibleColumns,
-    rowVerticalInversionIndex,
     hoveredRowId,
     dispatch,
     isDragging,
@@ -41,11 +40,7 @@
 <div bind:this={body} class="grid-body">
   <GridScrollWrapper scrollHorizontally scrollVertically attachHandlers>
     {#each $renderedRows as row, idx}
-      <GridRow
-        {row}
-        top={idx === 0}
-        invertY={idx >= $rowVerticalInversionIndex}
-      />
+      <GridRow {row} top={idx === 0} />
     {/each}
     {#if $config.canAddRows}
       <div
