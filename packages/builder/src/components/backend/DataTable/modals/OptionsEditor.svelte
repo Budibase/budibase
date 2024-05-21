@@ -2,7 +2,7 @@
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { Icon, Popover } from "@budibase/bbui"
-  import { onMount } from "svelte"
+  import { onMount, tick } from "svelte"
   import { Constants } from "@budibase/frontend-core"
 
   export let constraints
@@ -22,13 +22,16 @@
     anchors.pop(undefined)
   }
 
-  const addNewInput = () => {
-    const newOption = `Option ${constraints.inclusion.length + 1}`
-    options = [...options, { name: newOption, id: Math.random() }]
-    constraints.inclusion = [...constraints.inclusion, newOption]
-    optionColors[newOption] = Constants.OptionColours[(options.length - 1) % 9]
+  const addNewInput = async () => {
+    const newName = `Option ${constraints.inclusion.length + 1}`
+    const id = Math.random()
+    options = [...options, { name: newName, id }]
+    constraints.inclusion = [...constraints.inclusion, newName]
+    optionColors[newName] = Constants.OptionColours[(options.length - 1) % 9]
     colorPopovers.push(undefined)
     anchors.push(undefined)
+    await tick()
+    document.getElementById(`option-${id}`)?.focus()
   }
 
   const handleDndConsider = e => {
@@ -75,154 +78,101 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div>
-  <div
-    class="actions"
-    use:dndzone={{
-      items: options,
-      flipDurationMs,
-      dropTargetStyle: { outline: "none" },
-    }}
-    on:consider={handleDndConsider}
-    on:finalize={handleDndFinalize}
-  >
-    {#each options as option, idx (`${option.id}-${idx}`)}
+<div
+  class="options"
+  use:dndzone={{
+    items: options,
+    flipDurationMs,
+    dropTargetStyle: { outline: "none" },
+  }}
+  on:consider={handleDndConsider}
+  on:finalize={handleDndFinalize}
+>
+  {#each options as option, idx (`${option.id}-${idx}`)}
+    <div class="option" animate:flip={{ duration: flipDurationMs }}>
+      <div class="drag-handle">
+        <Icon name="DragHandle" size="L" />
+      </div>
       <div
-        class="no-border action-container"
-        animate:flip={{ duration: flipDurationMs }}
+        bind:this={anchors[idx]}
+        class="color-picker"
+        on:click={e => openColorPickerPopover(idx, e.target)}
       >
-        <div class="child drag-handle-spacing">
-          <Icon name="DragHandle" size="L" />
-        </div>
         <div
-          bind:this={anchors[idx]}
-          class="child color-picker"
-          on:click={e => openColorPickerPopover(idx, e.target)}
+          class="circle"
+          style="--color:{optionColors?.[option.name] ||
+            'hsla(0, 1%, 50%, 0.3)'}"
         >
-          <div
-            class="circle"
-            style="--color:{optionColors?.[option.name] ||
-              'hsla(0, 1%, 50%, 0.3)'}"
+          <Popover
+            bind:this={colorPopovers[idx]}
+            anchor={anchors[idx]}
+            align="left"
+            offset={0}
+            animate={false}
           >
-            <Popover
-              bind:this={colorPopovers[idx]}
-              anchor={anchors[idx]}
-              align="left"
-              offset={0}
-              animate={false}
-            >
-              <div class="colors" data-ignore-click-outside="true">
-                {#each Constants.OptionColours as color}
-                  <div
-                    on:click={() => handleColorChange(option.name, color, idx)}
-                    style="--color:{color};"
-                    class="circle circle-hover"
-                  />
-                {/each}
-              </div>
-            </Popover>
-          </div>
-        </div>
-        <div class="child">
-          <input
-            class="input-field"
-            type="text"
-            on:change={e => handleNameChange(option.name, idx, e.target.value)}
-            value={option.name}
-            placeholder="Option name"
-          />
-        </div>
-        <div class="child">
-          <Icon name="Close" hoverable size="S" on:click={removeInput(idx)} />
+            <div class="colors" data-ignore-click-outside="true">
+              {#each Constants.OptionColours as color}
+                <div
+                  on:click={() => handleColorChange(option.name, color, idx)}
+                  style="--color:{color};"
+                  class="circle circle-hover"
+                />
+              {/each}
+            </div>
+          </Popover>
         </div>
       </div>
-    {/each}
-  </div>
+      <input
+        class="option-name"
+        type="text"
+        on:change={e => handleNameChange(option.name, idx, e.target.value)}
+        value={option.name}
+        placeholder="Option name"
+        id="option-{option.id}"
+      />
+      <Icon name="Close" hoverable size="S" on:click={removeInput(idx)} />
+    </div>
+  {/each}
   <div on:click={addNewInput} class="add-option">
-    <Icon hoverable name="Add" />
+    <Icon name="Add" />
     <div>Add option</div>
   </div>
 </div>
 
 <style>
-  .action-container {
-    background-color: var(--spectrum-alias-background-color-primary);
-    border-radius: 0px;
+  /* Container */
+  .options {
+    overflow: hidden;
+    border-radius: 4px;
     border: 1px solid var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-50);
+  }
+  .options > * {
+    height: 32px;
+  }
+
+  /* Options row */
+  .option {
     transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
       border-color 130ms ease-in-out;
     display: flex;
     flex-direction: row;
     align-items: center;
-  }
-  .no-border {
-    border-bottom: none;
-  }
-
-  .action-container:last-child {
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300) !important;
-  }
-
-  .child {
-    height: 30px;
-  }
-  .child:hover,
-  .child:focus {
-    background: var(--spectrum-global-color-gray-200);
-  }
-  .add-option {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: var(--spacing-m);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     gap: var(--spacing-m);
-    cursor: pointer;
+    padding: 0 var(--spacing-m) 0 var(--spacing-s);
+  }
+  .option:hover,
+  .option:focus {
+    background: var(--spectrum-global-color-gray-100);
   }
 
-  .input-field {
-    border: none;
-    outline: none;
-    background-color: transparent;
-    width: 100%;
-    color: var(--text);
+  /* Option row components */
+  .color-picker {
+    align-self: stretch;
+    display: grid;
+    place-items: center;
   }
-
-  .child input[type="text"] {
-    padding-left: 10px;
-  }
-
-  .input-field:hover,
-  .input-field:focus {
-    background: var(--spectrum-global-color-gray-200);
-  }
-
-  .action-container > :nth-child(1) {
-    flex-grow: 1;
-    justify-content: center;
-    display: flex;
-  }
-
-  .action-container > :nth-child(2) {
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .action-container > :nth-child(3) {
-    flex-grow: 4;
-    display: flex;
-  }
-  .action-container > :nth-child(4) {
-    flex-grow: 1;
-    justify-content: center;
-    display: flex;
-  }
-
-  .color-picker:hover {
-    cursor: pointer;
-  }
-
   .circle {
     height: 20px;
     width: 20px;
@@ -230,18 +180,39 @@
     border-radius: 50%;
     display: inline-block;
     box-sizing: border-box;
+    border: 1px solid transparent;
+    transition: border 130ms ease-out;
   }
-
-  .circle-hover:hover {
-    border: 1px solid var(--spectrum-global-color-blue-400);
+  .circle:hover {
+    border: 1px solid var(--spectrum-global-color-blue-600);
     cursor: pointer;
   }
-
   .colors {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: var(--spacing-xl);
     justify-items: center;
     margin: var(--spacing-m);
+  }
+  .option-name {
+    border: none;
+    outline: none;
+    background-color: transparent;
+    width: 100%;
+    color: var(--text);
+  }
+
+  /* Add option */
+  .add-option {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-m);
+    gap: var(--spacing-m);
+  }
+  .add-option:hover {
+    cursor: pointer !important;
+    background: var(--spectrum-global-color-gray-200);
   }
 </style>
