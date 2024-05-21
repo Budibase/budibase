@@ -364,6 +364,7 @@
       value.customType !== "cron" &&
       value.customType !== "triggerSchema" &&
       value.customType !== "automationFields" &&
+      value.type !== "signature_single" &&
       value.type !== "attachment" &&
       value.type !== "attachment_single"
     )
@@ -374,6 +375,16 @@
     return `${value.title || (key === "row" ? "Table" : key)} ${requiredSuffix}`
   }
 
+  function handleAttachmentParams(keyValueObj) {
+    let params = {}
+    if (keyValueObj?.length) {
+      for (let param of keyValueObj) {
+        params[param.url] = param.filename
+      }
+    }
+    return params
+  }
+
   onMount(async () => {
     try {
       await environment.loadVariables()
@@ -381,15 +392,6 @@
       console.error(error)
     }
   })
-  const handleAttachmentParams = keyValuObj => {
-    let params = {}
-    if (keyValuObj?.length) {
-      for (let param of keyValuObj) {
-        params[param.url] = param.filename
-      }
-    }
-    return params
-  }
 </script>
 
 <div class="fields">
@@ -455,7 +457,7 @@
               value={inputData[key]}
               options={Object.keys(table?.schema || {})}
             />
-          {:else if value.type === "attachment"}
+          {:else if value.type === "attachment" || value.type === "signature_single"}
             <div class="attachment-field-wrapper">
               <div class="label-wrapper">
                 <Label>{label}</Label>

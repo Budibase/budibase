@@ -1,5 +1,4 @@
 import { derived, get, writable } from "svelte/store"
-import { cloneDeep } from "lodash/fp"
 import { GutterWidth, DefaultColumnWidth } from "../lib/constants"
 
 export const createStores = () => {
@@ -75,72 +74,23 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { columns, stickyColumn, datasource, definition, schema } = context
-
-  // Updates the datasources primary display column
-  const changePrimaryDisplay = async column => {
-    return await datasource.actions.saveDefinition({
-      ...get(definition),
-      primaryDisplay: column,
-    })
-  }
+  const { columns, datasource, schema } = context
 
   // Updates the width of all columns
   const changeAllColumnWidths = async width => {
-    columns.update(state => {
-      return state.map(col => ({
-        ...col,
-        width,
-      }))
+    const $schema = get(schema)
+    let mutations = {}
+    Object.keys($schema).forEach(field => {
+      mutations[field] = { width }
     })
-    if (get(stickyColumn)) {
-      stickyColumn.update(state => ({
-        ...state,
-        width,
-      }))
-    }
-    await saveChanges()
-  }
-
-  // Persists column changes by saving metadata against datasource schema
-  const saveChanges = async () => {
-    const $columns = get(columns)
-    const $definition = get(definition)
-    const $stickyColumn = get(stickyColumn)
-    let newSchema = cloneDeep(get(schema)) || {}
-
-    // Build new updated datasource schema
-    Object.keys(newSchema).forEach(column => {
-      // Respect order specified by columns
-      const index = $columns.findIndex(x => x.name === column)
-      if (index !== -1) {
-        newSchema[column].order = index
-      } else {
-        delete newSchema[column].order
-      }
-
-      // Copy over metadata
-      if (column === $stickyColumn?.name) {
-        newSchema[column].visible = true
-        newSchema[column].width = $stickyColumn.width || DefaultColumnWidth
-      } else {
-        newSchema[column].visible = $columns[index]?.visible ?? true
-        newSchema[column].width = $columns[index]?.width || DefaultColumnWidth
-      }
-    })
-
-    await datasource.actions.saveDefinition({
-      ...$definition,
-      schema: newSchema,
-    })
+    datasource.actions.addSchemaMutations(mutations)
+    await datasource.actions.saveSchemaMutations()
   }
 
   return {
     columns: {
       ...columns,
       actions: {
-        saveChanges,
-        changePrimaryDisplay,
         changeAllColumnWidths,
       },
     },

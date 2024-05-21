@@ -8,13 +8,11 @@
     ActionButton,
     Icon,
     Link,
-    Modal,
     StatusLight,
     AbsTooltip,
   } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
-  import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import analytics, { Events, EventSource } from "analytics"
@@ -26,7 +24,6 @@
     isOnlyUser,
     appStore,
     deploymentStore,
-    initialise,
     sortedScreens,
   } from "stores/builder"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
@@ -37,7 +34,6 @@
   export let loaded
 
   let unpublishModal
-  let updateAppModal
   let revertModal
   let versionModal
   let appActionPopover
@@ -60,11 +56,6 @@
     $appStore.upgradableVersion !== $appStore.version
   $: canPublish = !publishing && loaded && $sortedScreens.length > 0
   $: lastDeployed = getLastDeployedString($deploymentStore, lastOpened)
-
-  const initialiseApp = async () => {
-    const applicationPkg = await API.fetchAppPackage($appStore.devId)
-    await initialise(applicationPkg)
-  }
 
   const getLastDeployedString = deployments => {
     return deployments?.length
@@ -247,16 +238,12 @@
                   appActionPopover.hide()
                   if (isPublished) {
                     viewApp()
-                  } else {
-                    updateAppModal.show()
                   }
                 }}
               >
                 {$appStore.url}
                 {#if isPublished}
                   <Icon size="S" name="LinkOut" />
-                {:else}
-                  <Icon size="S" name="Edit" />
                 {/if}
               </span>
             </Body>
@@ -329,20 +316,6 @@
 >
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
-
-<Modal bind:this={updateAppModal} padding={false} width="600px">
-  <UpdateAppModal
-    app={{
-      name: $appStore.name,
-      url: $appStore.url,
-      icon: $appStore.icon,
-      appId: $appStore.appId,
-    }}
-    onUpdateComplete={async () => {
-      await initialiseApp()
-    }}
-  />
-</Modal>
 
 <RevertModal bind:this={revertModal} />
 <VersionModal hideIcon bind:this={versionModal} />

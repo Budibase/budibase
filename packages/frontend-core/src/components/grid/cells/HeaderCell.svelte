@@ -23,7 +23,6 @@
     subscribe,
     config,
     ui,
-    columns,
     definition,
     datasource,
     schema,
@@ -158,17 +157,13 @@
   }
 
   const makeDisplayColumn = () => {
-    columns.actions.changePrimaryDisplay(column.name)
+    datasource.actions.changePrimaryDisplay(column.name)
     open = false
   }
 
   const hideColumn = () => {
-    columns.update(state => {
-      const index = state.findIndex(col => col.name === column.name)
-      state[index].visible = false
-      return state.slice()
-    })
-    columns.actions.saveChanges()
+    datasource.actions.addSchemaMutation(column.name, { visible: false })
+    datasource.actions.saveSchemaMutations()
     open = false
   }
 
@@ -386,7 +381,7 @@
         >
           Hide column
         </MenuItem>
-        {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS}
+        {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS && !column.schema.autocolumn}
           <MenuItem icon="User" on:click={openMigrationModal}>
             Migrate to user column
           </MenuItem>

@@ -113,7 +113,8 @@ export async function sendAutomationAttachmentsToStorage(
     const schema = table.schema[prop]
     if (
       schema?.type === FieldType.ATTACHMENTS ||
-      schema?.type === FieldType.ATTACHMENT_SINGLE
+      schema?.type === FieldType.ATTACHMENT_SINGLE ||
+      schema?.type === FieldType.SIGNATURE_SINGLE
     ) {
       attachmentRows[prop] = value
     }
@@ -163,7 +164,10 @@ async function generateAttachmentRow(attachment: AutomationAttachment) {
 
   try {
     const { filename } = attachment
-    const extension = path.extname(filename)
+    let extension = path.extname(filename)
+    if (extension.startsWith(".")) {
+      extension = extension.substring(1, extension.length)
+    }
     const attachmentResult = await objectStore.processAutomationAttachment(
       attachment
     )
@@ -182,8 +186,8 @@ async function generateAttachmentRow(attachment: AutomationAttachment) {
 
     return {
       size,
-      name: filename,
       extension,
+      name: filename,
       key: s3Key,
     }
   } catch (error) {

@@ -82,6 +82,7 @@ const automationActions = store => ({
         steps: [],
         trigger,
       },
+      disabled: false,
     }
     const response = await store.actions.save(automation)
     await store.actions.fetch()
@@ -134,6 +135,28 @@ const automationActions = store => ({
     })
     await store.actions.fetch()
   },
+  toggleDisabled: async automationId => {
+    let automation
+    try {
+      automation = store.actions.getDefinition(automationId)
+      if (!automation) {
+        return
+      }
+      automation.disabled = !automation.disabled
+      await store.actions.save(automation)
+      notifications.success(
+        `Automation ${
+          automation.disabled ? "enabled" : "disabled"
+        } successfully`
+      )
+    } catch (error) {
+      notifications.error(
+        `Error ${
+          automation && automation.disabled ? "enabling" : "disabling"
+        } automation`
+      )
+    }
+  },
   updateBlockInputs: async (block, data) => {
     // Create new modified block
     let newBlock = {
@@ -166,10 +189,16 @@ const automationActions = store => ({
     await store.actions.save(newAutomation)
   },
   test: async (automation, testData) => {
-    const result = await API.testAutomation({
-      automationId: automation?._id,
-      testData,
-    })
+    let result
+    try {
+      result = await API.testAutomation({
+        automationId: automation?._id,
+        testData,
+      })
+    } catch (err) {
+      const message = err.message || err.status || JSON.stringify(err)
+      throw `Automation test failed - ${message}`
+    }
     if (!result?.trigger && !result?.steps?.length) {
       if (result?.err?.code === "usage_limit_exceeded") {
         throw "You have exceeded your automation quota"

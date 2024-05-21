@@ -108,6 +108,7 @@ export class ComponentStore extends BudiStore {
 
     // Sync client features to app store
     appStore.syncClientFeatures(components.features)
+    appStore.syncClientTypeSupportPresets(components?.typeSupportPresets ?? {})
 
     return components
   }
@@ -439,6 +440,8 @@ export class ComponentStore extends BudiStore {
       state.selectedComponentId = componentInstance._id
       return state
     })
+
+    componentTreeNodesStore.makeNodeVisible(componentInstance._id)
 
     // Log event
     analytics.captureEvent(Events.COMPONENT_CREATED, {
