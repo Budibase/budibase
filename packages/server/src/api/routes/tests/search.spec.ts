@@ -712,6 +712,20 @@ describe.each([
         expectQuery({
           range: { name: { low: "g", high: "h" } },
         }).toFindNothing())
+
+      !isLucene &&
+        it("ignores low if it's an empty object", () =>
+          expectQuery({
+            // @ts-ignore
+            range: { name: { low: {}, high: "z" } },
+          }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
+
+      !isLucene &&
+        it("ignores high if it's an empty object", () =>
+          expectQuery({
+            // @ts-ignore
+            range: { name: { low: "a", high: {} } },
+          }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
     })
 
     describe("empty", () => {
