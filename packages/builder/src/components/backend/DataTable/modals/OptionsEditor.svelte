@@ -3,6 +3,7 @@
   import { dndzone } from "svelte-dnd-action"
   import { Icon, Popover } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import { Constants } from "@budibase/frontend-core"
 
   export let constraints
   export let optionColors = {}
@@ -13,14 +14,6 @@
   let colorPopovers = []
   let anchors = []
 
-  let colorsArray = [
-    "hsla(0, 90%, 75%, 0.3)",
-    "hsla(50, 80%, 75%, 0.3)",
-    "hsla(120, 90%, 75%, 0.3)",
-    "hsla(200, 90%, 75%, 0.3)",
-    "hsla(240, 90%, 75%, 0.3)",
-    "hsla(320, 90%, 75%, 0.3)",
-  ]
   const removeInput = idx => {
     delete optionColors[options[idx].name]
     constraints.inclusion = constraints.inclusion.filter((e, i) => i !== idx)
@@ -30,15 +23,10 @@
   }
 
   const addNewInput = () => {
-    options = [
-      ...options,
-      { name: `Option ${constraints.inclusion.length + 1}`, id: Math.random() },
-    ]
-    constraints.inclusion = [
-      ...constraints.inclusion,
-      `Option ${constraints.inclusion.length + 1}`,
-    ]
-
+    const newOption = `Option ${constraints.inclusion.length + 1}`
+    options = [...options, { name: newOption, id: Math.random() }]
+    constraints.inclusion = [...constraints.inclusion, newOption]
+    optionColors[newOption] = Constants.OptionColours[(options.length - 1) % 9]
     colorPopovers.push(undefined)
     anchors.push(undefined)
   }
@@ -124,7 +112,7 @@
               animate={false}
             >
               <div class="colors" data-ignore-click-outside="true">
-                {#each colorsArray as color}
+                {#each Constants.OptionColours as color}
                   <div
                     on:click={() => handleColorChange(option.name, color, idx)}
                     style="--color:{color};"
