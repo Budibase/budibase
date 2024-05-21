@@ -4,14 +4,14 @@ import {
   QueryJson,
   RelationshipFieldMetadata,
   Row,
-  SearchFilters,
   RowSearchParams,
+  SearchFilters,
   SearchResponse,
   SortDirection,
   SortOrder,
   SortType,
-  Table,
   SqlClient,
+  Table,
 } from "@budibase/types"
 import {
   buildInternalRelationships,
@@ -99,13 +99,35 @@ function buildTableMap(tables: Table[]) {
   return tableMap
 }
 
+async function runSqlQuery(json: QueryJson, tables: Table[]) {
+  const builder = new sql.Sql(SqlClient.SQL_LITE)
+  const alias = new AliasTables(tables.map(table => table.name))
+  return await alias.queryWithAliasing(json, async json => {
+    const query = builder._query(json, {
+      disableReturning: true,
+    })
+
+    if (Array.isArray(query)) {
+      throw new Error("SQS cannot currently handle multiple queries")
+    }
+
+    let sql = query.sql
+    let bindings = query.bindings
+
+    // quick hack for docIds
+    sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
+    sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
+    const db = context.getAppDB()
+    return await db.sql<Row>(sql, bindings)
+  })
+}
+
 export async function search(
   options: RowSearchParams,
   table: Table
 ): Promise<SearchResponse<Row>> {
   const { paginate, query, ...params } = options
 
-  const builder = new sql.Sql(SqlClient.SQL_LITE)
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
   if (!table) {
@@ -161,26 +183,7 @@ export async function search(
     }
   }
   try {
-    const alias = new AliasTables(allTables.map(table => table.name))
-    const rows = await alias.queryWithAliasing(request, async json => {
-      const query = builder._query(json, {
-        disableReturning: true,
-      })
-
-      if (Array.isArray(query)) {
-        throw new Error("SQS cannot currently handle multiple queries")
-      }
-
-      let sql = query.sql
-      let bindings = query.bindings
-
-      // quick hack for docIds
-      sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
-      sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
-
-      const db = context.getAppDB()
-      return await db.sql<Row>(sql, bindings)
-    })
+    const rows = await runSqlQuery(request, allTables)
 
     // process from the format of tableId.column to expected format
     const processed = await sqlOutputProcessing(
@@ -198,13 +201,23 @@ export async function search(
       squash: true,
     })
     if (paginate && limit) {
-      return {
-        // final row processing for response
+      const response: SearchResponse<Row> = {
         rows: finalRows,
-        bookmark: bookmark + 1,
-        // TODO: need to work out if next page available
-        hasNextPage: false,
       }
+      const prevLimit = request.paginate!.limit
+      request.paginate = {
+        limit: 1,
+        page: bookmark * prevLimit + 1,
+      }
+      // check if there is another row
+      const nextRow = await runSqlQuery(request, allTables)
+      // check if there is a row found
+      const hasNextPage = Array.isArray(nextRow) && nextRow.length >= 1
+      response.hasNextPage = hasNextPage
+      if (hasNextPage) {
+        response.bookmark = bookmark + 1
+      }
+      return response
     } else {
       return {
         rows: finalRows,
