@@ -228,6 +228,51 @@ describe("SQL query builder", () => {
     })
   })
 
+  it("should lowercase the values for Oracle LIKE statements", () => {
+    let query = new Sql(SqlClient.ORACLE, limit)._query(
+      generateReadJson({
+        filters: {
+          string: {
+            name: "John",
+          },
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: ["john%", limit],
+      sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
+    })
+
+    query = new Sql(SqlClient.ORACLE, limit)._query(
+      generateReadJson({
+        filters: {
+          contains: {
+            age: [20, 25],
+            name: ["John", "Mary"],
+          },
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit],
+      sql: `select * from (select * from (select * from "test" where (LOWER("test"."age") LIKE :1 AND LOWER("test"."age") LIKE :2) and (LOWER("test"."name") LIKE :3 AND LOWER("test"."name") LIKE :4)) where rownum <= :5) "test"`,
+    })
+
+    query = new Sql(SqlClient.ORACLE, limit)._query(
+      generateReadJson({
+        filters: {
+          fuzzy: {
+            name: "Jo",
+          },
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: [`%jo%`, limit],
+      sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
+    })
+  })
+
   it("should sort SQL Server tables by the primary key if no sort data is provided", () => {
     let query = new Sql(SqlClient.MS_SQL, limit)._query(
       generateReadJson({
