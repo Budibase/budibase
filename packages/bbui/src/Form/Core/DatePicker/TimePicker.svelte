@@ -9,6 +9,11 @@
   $: displayValue = value?.format("HH:mm")
 
   const handleChange = e => {
+    if (!e.target.value) {
+      dispatch("change", undefined)
+      return
+    }
+
     const [hour, minute] = e.target.value.split(":").map(x => parseInt(x))
     dispatch("change", value.hour(hour).minute(minute))
   }
