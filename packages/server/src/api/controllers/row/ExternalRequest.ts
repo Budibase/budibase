@@ -1,3 +1,4 @@
+import dayjs from "dayjs"
 import {
   AutoFieldSubType,
   AutoReason,
@@ -285,65 +286,73 @@ export class ExternalRequest<T extends Operation> {
       // parse floats/numbers
       if (field.type === FieldType.NUMBER && !isNaN(parseFloat(row[key]))) {
         newRow[key] = parseFloat(row[key])
-      }
-      // if its not a link then just copy it over
-      if (field.type !== FieldType.LINK) {
-        newRow[key] = row[key]
-        continue
-      }
-      const { tableName: linkTableName } = breakExternalTableId(field?.tableId)
-      // table has to exist for many to many
-      if (!linkTableName || !this.tables[linkTableName]) {
-        continue
-      }
-      const linkTable = this.tables[linkTableName]
-      // @ts-ignore
-      const linkTablePrimary = linkTable.primary[0]
-      // one to many
-      if (isOneSide(field)) {
-        let id = row[key][0]
-        if (id) {
-          if (typeof row[key] === "string") {
-            id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
-          }
-          newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
-        } else {
-          // Removing from both new and row, as we don't know if it has already been processed
-          row[field.foreignKey || linkTablePrimary] = null
-          newRow[field.foreignKey || linkTablePrimary] = null
+      } else if (field.type === FieldType.LINK) {
+        const { tableName: linkTableName } = breakExternalTableId(
+          field?.tableId
+        )
+        // table has to exist for many to many
+        if (!linkTableName || !this.tables[linkTableName]) {
+          continue
         }
-      }
-      // many to many
-      else if (isManyToMany(field)) {
-        // we're not inserting a doc, will be a bunch of update calls
-        const otherKey: string = field.throughFrom || linkTablePrimary
-        const thisKey: string = field.throughTo || tablePrimary
-        for (const relationship of row[key]) {
-          manyRelationships.push({
-            tableId: field.through || field.tableId,
-            isUpdate: false,
-            key: otherKey,
-            [otherKey]: breakRowIdField(relationship)[0],
-            // leave the ID for enrichment later
-            [thisKey]: `{{ literal ${tablePrimary} }}`,
-          })
-        }
-      }
-      // many to one
-      else {
-        const thisKey: string = "id"
+        const linkTable = this.tables[linkTableName]
         // @ts-ignore
-        const otherKey: string = field.fieldName
-        for (const relationship of row[key]) {
-          manyRelationships.push({
-            tableId: field.tableId,
-            isUpdate: true,
-            key: otherKey,
-            [thisKey]: breakRowIdField(relationship)[0],
-            // leave the ID for enrichment later
-            [otherKey]: `{{ literal ${tablePrimary} }}`,
-          })
+        const linkTablePrimary = linkTable.primary[0]
+        // one to many
+        if (isOneSide(field)) {
+          let id = row[key][0]
+          if (id) {
+            if (typeof row[key] === "string") {
+              id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
+            }
+            newRow[field.foreignKey || linkTablePrimary] =
+              breakRowIdField(id)[0]
+          } else {
+            // Removing from both new and row, as we don't know if it has already been processed
+            row[field.foreignKey || linkTablePrimary] = null
+            newRow[field.foreignKey || linkTablePrimary] = null
+          }
         }
+        // many to many
+        else if (isManyToMany(field)) {
+          // we're not inserting a doc, will be a bunch of update calls
+          const otherKey: string = field.throughFrom || linkTablePrimary
+          const thisKey: string = field.throughTo || tablePrimary
+          for (const relationship of row[key]) {
+            manyRelationships.push({
+              tableId: field.through || field.tableId,
+              isUpdate: false,
+              key: otherKey,
+              [otherKey]: breakRowIdField(relationship)[0],
+              // leave the ID for enrichment later
+              [thisKey]: `{{ literal ${tablePrimary} }}`,
+            })
+          }
+        }
+        // many to one
+        else {
+          const thisKey: string = "id"
+          // @ts-ignore
+          const otherKey: string = field.fieldName
+          for (const relationship of row[key]) {
+            manyRelationships.push({
+              tableId: field.tableId,
+              isUpdate: true,
+              key: otherKey,
+              [thisKey]: breakRowIdField(relationship)[0],
+              // leave the ID for enrichment later
+              [otherKey]: `{{ literal ${tablePrimary} }}`,
+            })
+          }
+        }
+      } else if (
+        field.type === FieldType.DATETIME &&
+        field.timeOnly &&
+        row[key] &&
+        dayjs(row[key]).isValid()
+      ) {
+        newRow[key] = dayjs(row[key]).format("HH:mm")
+      } else {
+        newRow[key] = row[key]
       }
     }
     // we return the relationships that may need to be created in the through table

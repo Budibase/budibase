@@ -26,6 +26,7 @@ import {
 } from "../../../../db/utils"
 import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
+import pick from "lodash/pick"
 
 function buildInternalFieldList(
   table: Table,
@@ -186,13 +187,19 @@ export async function search(
       }
     )
 
-    return {
-      // final row processing for response
+    const output = {
       rows: await outputProcessing<Row[]>(table, processed, {
         preserveLinks: true,
         squash: true,
       }),
     }
+
+    if (options.fields) {
+      const fields = [...options.fields, ...CONSTANT_INTERNAL_ROW_COLS]
+      output.rows = output.rows.map((r: any) => pick(r, fields))
+    }
+
+    return output
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
     if (err.status === 404 && err.message?.includes(SQLITE_DESIGN_DOC_ID)) {
