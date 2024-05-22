@@ -8,6 +8,7 @@ import {
   DB_TYPE_EXTERNAL,
   DEFAULT_BB_DATASOURCE_ID,
 } from "constants/backend"
+import { FieldType } from "@budibase/types"
 
 const getDocId = () => {
   return v4().replace(/-/g, "")
@@ -42,6 +43,52 @@ export const COMPONENT_DEFINITIONS = {
       {
         type: "table",
         key: "dataSource",
+      },
+    ],
+  },
+  cardsblock: {
+    block: true,
+    name: "Cards Block",
+    settings: [
+      {
+        type: "dataSource",
+        label: "Data",
+        key: "dataSource",
+        required: true,
+      },
+      {
+        section: true,
+        name: "Cards",
+        settings: [
+          {
+            type: "text",
+            key: "cardTitle",
+            label: "Title",
+            nested: true,
+            resetOn: "dataSource",
+          },
+          {
+            type: "text",
+            key: "cardSubtitle",
+            label: "Subtitle",
+            nested: true,
+            resetOn: "dataSource",
+          },
+          {
+            type: "text",
+            key: "cardDescription",
+            label: "Description",
+            nested: true,
+            resetOn: "dataSource",
+          },
+          {
+            type: "text",
+            key: "cardImageURL",
+            label: "Image URL",
+            nested: true,
+            resetOn: "dataSource",
+          },
+        ],
       },
     ],
   },
@@ -262,14 +309,23 @@ export const internalTableDoc = {
   name: "Media",
   sourceId: BUDIBASE_INTERNAL_DB_ID,
   sourceType: DB_TYPE_INTERNAL,
+  primaryDisplay: "MediaTitle",
   schema: {
     MediaTitle: {
       name: "MediaTitle",
-      type: "string",
+      type: FieldType.STRING,
     },
     MediaVersion: {
       name: "MediaVersion",
-      type: "string",
+      type: FieldType.STRING,
+    },
+    MediaDescription: {
+      name: "MediaDescription",
+      type: FieldType.LONGFORM,
+    },
+    MediaImage: {
+      name: "MediaImage",
+      type: FieldType.ATTACHMENT_SINGLE,
     },
   },
 }
