@@ -1385,8 +1385,7 @@ describe.each([
   })
 
   // This will never work for Lucene.
-  // TODO(samwho): fix for SQS
-  !isInternal &&
+  !isLucene &&
     describe("relations", () => {
       let otherTable: Table
       let rows: Row[]
