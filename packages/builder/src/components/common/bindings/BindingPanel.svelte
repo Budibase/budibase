@@ -236,11 +236,12 @@
   }
 
   const onChangeJSValue = e => {
+    jsValue = encodeJSBinding(e.detail)
     if (!e.detail?.trim()) {
       // Don't bother saving empty values as JS
-      updateValue("")
+      updateValue(null)
     } else {
-      updateValue(encodeJSBinding(e.detail))
+      updateValue(jsValue)
     }
   }
 
