@@ -6243,27 +6243,28 @@
             "key": "cardTitle",
             "label": "Title",
             "nested": true,
-            "defaultValue": "Title"
+            "resetOn": "dataSource"
           },
           {
             "type": "text",
             "key": "cardSubtitle",
             "label": "Subtitle",
             "nested": true,
-            "defaultValue": "Subtitle"
+            "resetOn": "dataSource"
           },
           {
             "type": "text",
             "key": "cardDescription",
             "label": "Description",
             "nested": true,
-            "defaultValue": "Description"
+            "resetOn": "dataSource"
           },
           {
             "type": "text",
             "key": "cardImageURL",
             "label": "Image URL",
-            "nested": true
+            "nested": true,
+            "resetOn": "dataSource"
           },
           {
             "type": "boolean",

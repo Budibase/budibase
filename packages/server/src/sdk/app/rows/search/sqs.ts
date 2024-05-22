@@ -26,6 +26,7 @@ import {
 } from "../../../../db/utils"
 import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
+import pick from "lodash/pick"
 
 function buildInternalFieldList(
   table: Table,
@@ -54,8 +55,8 @@ function buildInternalFieldList(
   return fieldList
 }
 
-function tableInFilter(name: string) {
-  return `:${name}.`
+function tableNameInFieldRegex(tableName: string) {
+  return new RegExp(`^${tableName}.|:${tableName}.`, "g")
 }
 
 function cleanupFilters(filters: SearchFilters, tables: Table[]) {
@@ -71,15 +72,13 @@ function cleanupFilters(filters: SearchFilters, tables: Table[]) {
       // relationship, switch to table ID
       const tableRelated = tables.find(
         table =>
-          table.originalName && key.includes(tableInFilter(table.originalName))
+          table.originalName &&
+          key.match(tableNameInFieldRegex(table.originalName))
       )
       if (tableRelated && tableRelated.originalName) {
-        filter[
-          key.replace(
-            tableInFilter(tableRelated.originalName),
-            tableInFilter(tableRelated._id!)
-          )
-        ] = filter[key]
+        // only replace the first, not replaceAll
+        filter[key.replace(tableRelated.originalName, tableRelated._id!)] =
+          filter[key]
         delete filter[key]
       }
     }
@@ -187,13 +186,19 @@ export async function search(
       }
     )
 
-    return {
-      // final row processing for response
+    const output = {
       rows: await outputProcessing<Row[]>(table, processed, {
         preserveLinks: true,
         squash: true,
       }),
     }
+
+    if (options.fields) {
+      const fields = [...options.fields, ...CONSTANT_INTERNAL_ROW_COLS]
+      output.rows = output.rows.map((r: any) => pick(r, fields))
+    }
+
+    return output
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
     if (err.status === 404 && err.message?.includes(SQLITE_DESIGN_DOC_ID)) {
