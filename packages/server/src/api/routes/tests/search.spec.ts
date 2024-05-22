@@ -16,6 +16,7 @@ import {
   Table,
   TableSchema,
   User,
+  Row,
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
@@ -629,6 +630,19 @@ describe.each([
 
       it("fails to find nonexistent row", () =>
         expectQuery({ equal: { name: "none" } }).toFindNothing())
+
+      it("works as an or condition", () =>
+        expectQuery({
+          allOr: true,
+          equal: { name: "foo" },
+          oneOf: { name: ["bar"] },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
+
+      it("can have multiple values for same column", () =>
+        expectQuery({
+          allOr: true,
+          equal: { "1:name": "foo", "2:name": "bar" },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
     })
 
     describe("notEqual", () => {
@@ -661,6 +675,21 @@ describe.each([
 
       it("fails to find nonexistent row", () =>
         expectQuery({ fuzzy: { name: "none" } }).toFindNothing())
+    })
+
+    describe("string", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ string: { name: "fo" } }).toContainExactly([
+          { name: "foo" },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ string: { name: "none" } }).toFindNothing())
+
+      it("is case-insensitive", () =>
+        expectQuery({ string: { name: "FO" } }).toContainExactly([
+          { name: "foo" },
+        ]))
     })
 
     describe("range", () => {
@@ -1267,5 +1296,57 @@ describe.each([
               { auto: 1 },
             ]))
         })
+
+      // TODO(samwho): fix for SQS
+      !isSqs &&
+        describe("pagination", () => {
+          it("should paginate through all rows", async () => {
+            // @ts-ignore
+            let bookmark: string | number = undefined
+            let rows: Row[] = []
+
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
+              const response = await config.api.row.search(table._id!, {
+                tableId: table._id!,
+                limit: 3,
+                query: {},
+                bookmark,
+                paginate: true,
+              })
+
+              rows.push(...response.rows)
+
+              if (!response.bookmark || !response.hasNextPage) {
+                break
+              }
+              bookmark = response.bookmark
+            }
+
+            expect(rows).toHaveLength(10)
+            expect(rows.map(row => row.auto)).toEqual(
+              expect.arrayContaining([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+            )
+          })
+        })
     })
+
+  describe("field name 1:name", () => {
+    beforeAll(async () => {
+      await createTable({
+        "1:name": { name: "1:name", type: FieldType.STRING },
+      })
+      await createRows([{ "1:name": "bar" }, { "1:name": "foo" }])
+    })
+
+    describe("equal", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ equal: { "1:1:name": "bar" } }).toContainExactly([
+          { "1:name": "bar" },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ equal: { "1:1:name": "none" } }).toFindNothing())
+    })
+  })
 })

@@ -1,6 +1,6 @@
 <script>
-  import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
+  import { formatters } from "./utils"
 
   export let title
   export let dataProvider
@@ -16,78 +16,121 @@
   export let animate
   export let yAxisUnits
 
-  $: options = setUpChart(
-    title,
+  $: series = getSeries(
     dataProvider,
     dateColumn,
     openColumn,
     highColumn,
     lowColumn,
-    closeColumn,
-    xAxisLabel,
-    yAxisLabel,
-    height,
-    width,
-    animate,
-    yAxisUnits
+    closeColumn
   )
 
-  const setUpChart = (
-    title,
+  $: options = {
+    series,
+    title: {
+      text: title,
+    },
+    chart: {
+      height: height == null || height === "" ? "auto" : height,
+      width: width == null || width === "" ? "100%" : width,
+      type: "candlestick",
+      animations: {
+        enabled: animate,
+      },
+      toolbar: {
+        show: false,
+      },
+      zoom: {
+        enabled: false,
+      },
+    },
+    xaxis: {
+      tooltip: {
+        formatter: formatters["Datetime"],
+      },
+      type: "datetime",
+      title: {
+        text: xAxisLabel,
+      },
+    },
+    yaxis: {
+      labels: {
+        formatter: formatters[yAxisUnits],
+      },
+      title: {
+        text: yAxisLabel,
+      },
+    },
+  }
+
+  const getValueAsUnixTime = (dataprovider, dateColumn, row) => {
+    const value = row[dateColumn]
+
+    if (dataProvider?.schema?.[dateColumn]?.type === "datetime") {
+      return Date.parse(value)
+    }
+
+    if (typeof value === "number") {
+      return value
+    }
+
+    const isString = typeof value === "string"
+    // "2025" could be either an ISO 8601 datetime string or Unix time.
+    // There's no way to tell the user's intent without providing more
+    // granular controls.
+    // We'll just assume any string without dashes is Unix time.
+
+    if (isString && value.includes("-")) {
+      const unixTime = Date.parse(value)
+
+      if (isNaN(unixTime)) {
+        return null
+      }
+
+      return unixTime
+    }
+
+    if (isString) {
+      const unixTime = parseInt(value, 10)
+
+      if (isNaN(unixTime)) {
+        return null
+      }
+
+      return unixTime
+    }
+
+    return null
+  }
+
+  const getSeries = (
     dataProvider,
     dateColumn,
     openColumn,
     highColumn,
     lowColumn,
-    closeColumn,
-    xAxisLabel,
-    yAxisLabel,
-    height,
-    width,
-    animate,
-    yAxisUnits
+    closeColumn
   ) => {
-    const allCols = [dateColumn, openColumn, highColumn, lowColumn, closeColumn]
-    if (
-      !dataProvider ||
-      !dataProvider.rows?.length ||
-      allCols.find(x => x == null)
-    ) {
-      return null
-    }
+    const rows = dataProvider.rows ?? []
 
-    // Fetch data
-    const { schema, rows } = dataProvider
-    const reducer = row => (valid, column) => valid && row[column] != null
-    const hasAllColumns = row => allCols.reduce(reducer(row), true)
-    const data = rows.filter(row => hasAllColumns(row))
-    if (!schema || !data.length) {
-      return null
-    }
+    return [
+      {
+        data: rows.map(row => {
+          const open = parseFloat(row[openColumn])
+          const high = parseFloat(row[highColumn])
+          const low = parseFloat(row[lowColumn])
+          const close = parseFloat(row[closeColumn])
 
-    // Initialise default chart
-    let builder = new ApexOptionsBuilder()
-      .type("candlestick")
-      .title(title)
-      .width(width)
-      .height(height)
-      .xLabel(xAxisLabel)
-      .yLabel(yAxisLabel)
-      .animate(animate)
-      .yUnits(yAxisUnits)
-      .yTooltip(true)
-      .xType("datetime")
-
-    // Add data
-    const parseDate = d => (isNaN(d) ? Date.parse(d).valueOf() : parseInt(d))
-    const chartData = data.map(row => ({
-      x: parseDate(row[dateColumn]),
-      y: [row[openColumn], row[highColumn], row[lowColumn], row[closeColumn]],
-    }))
-    builder = builder.series([{ data: chartData }])
-
-    // Build chart options
-    return builder.getOptions()
+          return [
+            getValueAsUnixTime(dataProvider, dateColumn, row),
+            isNaN(open) ? 0 : open,
+            isNaN(high) ? 0 : high,
+            isNaN(low) ? 0 : low,
+            isNaN(close) ? 0 : close,
+          ]
+        }),
+      },
+    ]
   }
 </script>
 
