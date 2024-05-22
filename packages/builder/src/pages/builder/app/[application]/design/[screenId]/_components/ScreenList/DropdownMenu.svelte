@@ -1,5 +1,5 @@
 <script>
-  import { screenStore, componentStore } from "stores/builder"
+  import { screenStore, componentStore, navigationStore } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ActionMenu,
@@ -12,6 +12,7 @@
   import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
   import sanitizeUrl from "helpers/sanitizeUrl"
   import { makeComponentUnique } from "helpers/components"
+  import { capitalise } from "helpers"
 
   export let screenId
 
@@ -48,6 +49,13 @@
     try {
       // Create the screen
       await screenStore.save(duplicateScreen)
+
+      // Add new screen to navigation
+      await navigationStore.saveLink(
+        duplicateScreen.routing.route,
+        capitalise(duplicateScreen.routing.route.split("/")[1]),
+        duplicateScreen.routing.roleId
+      )
     } catch (error) {
       notifications.error("Error duplicating screen")
     }
