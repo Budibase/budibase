@@ -166,7 +166,7 @@ export const stringifyDate = (
   const offsetForTimezone = (enableTime && ignoreTimezones) || timeOnly
   if (offsetForTimezone) {
     // Ensure we use the correct offset for the date
-    const referenceDate = timeOnly ? new Date() : value.toDate()
+    const referenceDate = value.toDate()
     const offset = referenceDate.getTimezoneOffset() * 60000
     return new Date(value.valueOf() - offset).toISOString().slice(0, -1)
   }
