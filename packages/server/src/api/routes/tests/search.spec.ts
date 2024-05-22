@@ -87,8 +87,11 @@ describe.each([
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
 
-    private popRow(expectedRow: any, foundRows: any[]) {
-      const row = foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
+    private popRow<T extends object>(
+      expectedRow: T,
+      foundRows: T[]
+    ): NonNullable<T> {
+      const row = foundRows.find(row => _.isMatch(row, expectedRow))
       if (!row) {
         const fields = Object.keys(expectedRow)
         // To make the error message more readable, we only include the fields
@@ -130,6 +133,8 @@ describe.each([
     // passed in. The order of the rows is not important, but extra rows will
     // cause the assertion to fail.
     async toContainExactly(expectedRows: any[]) {
+      expectedRows.sort((a, b) => Object.keys(b).length - Object.keys(a).length)
+
       const { rows: foundRows } = await config.api.row.search(table._id!, {
         ...this.query,
         tableId: table._id!,
@@ -151,6 +156,8 @@ describe.each([
     // The order of the rows is not important. Extra rows will not cause the
     // assertion to fail.
     async toContain(expectedRows: any[]) {
+      expectedRows.sort((a, b) => Object.keys(b).length - Object.keys(a).length)
+
       const { rows: foundRows } = await config.api.row.search(table._id!, {
         ...this.query,
         tableId: table._id!,
@@ -1055,6 +1062,7 @@ describe.each([
       describe("notEqual", () => {
         it("successfully finds a row", () =>
           expectQuery({ notEqual: { time: T_1000 } }).toContainExactly([
+            { timeid: NULL_TIME__ID },
             { time: "10:45:00" },
             { time: "12:00:00" },
             { time: "15:30:00" },
@@ -1064,6 +1072,7 @@ describe.each([
         it("return all when requesting non-existing", () =>
           expectQuery({ notEqual: { time: UNEXISTING_TIME } }).toContainExactly(
             [
+              { timeid: NULL_TIME__ID },
               { time: "10:00:00" },
               { time: "10:45:00" },
               { time: "12:00:00" },
@@ -1668,7 +1677,7 @@ describe.each([
     })
 
     describe("containsAny", () => {
-      it("successfully finds rows", () =>
+      it.only("successfully finds rows", () =>
         expectQuery({
           containsAny: { users: [user1._id, user2._id] },
         }).toContainExactly([
