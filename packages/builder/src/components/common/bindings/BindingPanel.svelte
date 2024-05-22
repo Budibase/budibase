@@ -186,8 +186,6 @@
   }
 
   const updateValue = val => {
-    console.log("val", val)
-
     const runtimeExpression = readableToRuntimeBinding(enrichedBindings, val)
     dispatch("change", val)
     requestEval(runtimeExpression, context, snippets)
