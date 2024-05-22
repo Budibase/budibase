@@ -20,7 +20,7 @@ import {
   previewStore,
   tables,
   componentTreeNodesStore,
-} from "stores/builder/index"
+} from "stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
@@ -30,6 +30,7 @@ import {
 } from "constants/backend"
 import BudiStore from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
+import { FieldType } from "@budibase/types"
 
 export const INITIAL_COMPONENTS_STATE = {
   components: {},
@@ -296,6 +297,80 @@ export class ComponentStore extends BudiStore {
         }
       }
     })
+
+    // Add default bindings to card blocks
+    if (component._component.endsWith("/cardsblock")) {
+      // Only proceed if the card is empty, i.e. we just changed datasource or
+      // just created the card
+      const cardKeys = ["cardTitle", "cardSubtitle", "cardDescription"]
+      if (cardKeys.every(key => !component[key]) && !component.cardImageURL) {
+        const { _id, dataSource } = component
+        if (dataSource) {
+          const { schema, table } = getSchemaForDatasource(screen, dataSource)
+
+          // Finds fields by types from the schema of the configured datasource
+          const findFieldTypes = fieldTypes => {
+            if (!Array.isArray(fieldTypes)) {
+              fieldTypes = [fieldTypes]
+            }
+            return Object.entries(schema || {})
+              .filter(([name, fieldSchema]) => {
+                return (
+                  fieldTypes.includes(fieldSchema.type) &&
+                  !fieldSchema.autoColumn &&
+                  name !== table?.primaryDisplay &&
+                  !name.startsWith("_")
+                )
+              })
+              .map(([name]) => name)
+          }
+
+          // Inserts a card binding for a certain setting
+          const addBinding = (key, fallback, ...parts) => {
+            if (parts.some(x => x == null)) {
+              component[key] = fallback
+            } else {
+              parts.unshift(`${_id}-repeater`)
+              component[key] = `{{ ${parts.map(safe).join(".")} }}`
+            }
+          }
+
+          // Extract good field candidates to prefill our cards with.
+          // Use the primary display as the best field, if it exists.
+          const shortFields = [
+            ...findFieldTypes(FieldType.STRING),
+            ...findFieldTypes(FieldType.OPTIONS),
+            ...findFieldTypes(FieldType.ARRAY),
+            ...findFieldTypes(FieldType.NUMBER),
+          ]
+          const longFields = findFieldTypes(FieldType.LONGFORM)
+          if (schema?.[table?.primaryDisplay]) {
+            shortFields.unshift(table.primaryDisplay)
+          }
+
+          // Fill title and subtitle with short fields
+          addBinding("cardTitle", "Title", shortFields[0])
+          addBinding("cardSubtitle", "Subtitle", shortFields[1])
+
+          // Fill description with a long field if possible
+          const longField = longFields[0] ?? shortFields[2]
+          addBinding("cardDescription", "Description", longField)
+
+          // Attempt to fill the image setting.
+          // Check single attachment fields first.
+          let imgField = findFieldTypes(FieldType.ATTACHMENT_SINGLE)[0]
+          if (imgField) {
+            addBinding("cardImageURL", null, imgField, "url")
+          } else {
+            // Then try multi-attachment fields if no single ones exist
+            imgField = findFieldTypes(FieldType.ATTACHMENTS)[0]
+            if (imgField) {
+              addBinding("cardImageURL", null, imgField, 0, "url")
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -324,21 +399,21 @@ export class ComponentStore extends BudiStore {
       ...presetProps,
     }
 
-    // Enrich empty settings
+    // Standard post processing
     this.enrichEmptySettings(instance, {
       parent,
       screen: get(selectedScreen),
       useDefaultValues: true,
     })
-
-    // Migrate nested component settings
     this.migrateSettings(instance)
 
-    // Add any extra properties the component needs
+    // Custom post processing for creation only
     let extras = {}
     if (definition.hasChildren) {
       extras._children = []
     }
+
+    // Add step name to form steps
     if (componentName.endsWith("/formstep")) {
       const parentForm = findClosestMatchingComponent(
         get(selectedScreen).props,
@@ -351,6 +426,7 @@ export class ComponentStore extends BudiStore {
       extras.step = formSteps.length + 1
       extras._instanceName = `Step ${formSteps.length + 1}`
     }
+
     return {
       ...cloneDeep(instance),
       ...extras,
@@ -463,7 +539,6 @@ export class ComponentStore extends BudiStore {
     if (!componentId || !screenId) {
       const state = get(this.store)
       componentId = componentId || state.selectedComponentId
-
       const screenState = get(screenStore)
       screenId = screenId || screenState.selectedScreenId
     }
@@ -471,7 +546,6 @@ export class ComponentStore extends BudiStore {
       return
     }
     const patchScreen = screen => {
-      // findComponent looks in the tree not comp.settings[0]
       let component = findComponent(screen.props, componentId)
       if (!component) {
         return false
@@ -480,7 +554,7 @@ export class ComponentStore extends BudiStore {
       // Mutates the fetched component with updates
       const patchResult = patchFn(component, screen)
 
-      // Mutates the component with any required settings updates
+      // Post processing
       const migrated = this.migrateSettings(component)
 
       // Returning an explicit false signifies that we should skip this
