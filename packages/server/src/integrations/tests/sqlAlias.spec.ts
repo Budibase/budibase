@@ -61,9 +61,9 @@ describe("Captures of real examples", () => {
               "b"."taskid" as "b.taskid", "b"."completed" as "b.completed", "b"."qaid" as "b.qaid", 
               "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", 
               "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" 
-              from (select * from "persons" as "a" order by "a"."firstname" asc limit $1) as "a" 
+              from (select * from "persons" as "a" order by "a"."firstname" asc nulls first limit $1) as "a" 
               left join "tasks" as "b" on "a"."personid" = "b"."qaid" or "a"."personid" = "b"."executorid" 
-              order by "a"."firstname" asc limit $2`),
+              order by "a"."firstname" asc nulls first limit $2`),
       })
     })
 
@@ -75,10 +75,10 @@ describe("Captures of real examples", () => {
         sql: multiline(`select "a"."productname" as "a.productname", "a"."productid" as "a.productid", 
               "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", 
               "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" 
-              from (select * from "products" as "a" order by "a"."productname" asc limit $1) as "a" 
+              from (select * from "products" as "a" order by "a"."productname" asc nulls first limit $1) as "a" 
               left join "products_tasks" as "c" on "a"."productid" = "c"."productid" 
               left join "tasks" as "b" on "b"."taskid" = "c"."taskid" where "b"."taskname" = $2 
-              order by "a"."productname" asc limit $3`),
+              order by "a"."productname" asc nulls first limit $3`),
       })
     })
 
@@ -90,10 +90,10 @@ describe("Captures of real examples", () => {
         sql: multiline(`select "a"."productname" as "a.productname", "a"."productid" as "a.productid", 
               "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", 
               "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" 
-              from (select * from "products" as "a" order by "a"."productname" asc limit $1) as "a" 
+              from (select * from "products" as "a" order by "a"."productname" asc nulls first limit $1) as "a" 
               left join "products_tasks" as "c" on "a"."productid" = "c"."productid" 
               left join "tasks" as "b" on "b"."taskid" = "c"."taskid" 
-              order by "a"."productname" asc limit $2`),
+              order by "a"."productname" asc nulls first limit $2`),
       })
     })
 
@@ -138,11 +138,11 @@ describe("Captures of real examples", () => {
              "c"."personid" as "c.personid", "c"."address" as "c.address", "c"."age" as "c.age", "c"."type" as "c.type", 
              "c"."city" as "c.city", "c"."lastname" as "c.lastname" 
              from (select * from "tasks" as "a" where not "a"."completed" = $1 
-             order by "a"."taskname" asc limit $2) as "a" 
+             order by "a"."taskname" asc nulls first limit $2) as "a" 
              left join "products_tasks" as "d" on "a"."taskid" = "d"."taskid" 
              left join "products" as "b" on "b"."productid" = "d"."productid" 
              left join "persons" as "c" on "a"."executorid" = "c"."personid" or "a"."qaid" = "c"."personid" 
-             where "c"."year" between $3 and $4 and "b"."productname" = $5 order by "a"."taskname" asc limit $6`),
+             where "c"."year" between $3 and $4 and "b"."productname" = $5 order by "a"."taskname" asc nulls first limit $6`),
       })
     })
   })
