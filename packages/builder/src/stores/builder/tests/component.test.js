@@ -23,6 +23,7 @@ import {
   DB_TYPE_EXTERNAL,
   DEFAULT_BB_DATASOURCE_ID,
 } from "constants/backend"
+import { makePropSafe as safe } from "@budibase/string-templates"
 
 // Could move to fixtures
 const COMP_PREFIX = "@budibase/standard-components"
@@ -360,7 +361,29 @@ describe("Component store", () => {
       resourceId: internalTableDoc._id,
       type: "table",
     })
+
+    return comp
   }
+
+  it("enrichEmptySettings - initialise cards blocks with correct fields", async ctx => {
+    const comp = enrichSettingsDS("cardsblock", ctx)
+    const expectBinding = (setting, ...parts) => {
+      expect(comp[setting]).toStrictEqual(
+        `{{ ${safe(`${comp._id}-repeater`)}.${parts.map(safe).join(".")} }}`
+      )
+    }
+    expectBinding("cardTitle", internalTableDoc.schema.MediaTitle.name)
+    expectBinding("cardSubtitle", internalTableDoc.schema.MediaVersion.name)
+    expectBinding(
+      "cardDescription",
+      internalTableDoc.schema.MediaDescription.name
+    )
+    expectBinding(
+      "cardImageURL",
+      internalTableDoc.schema.MediaImage.name,
+      "url"
+    )
+  })
 
   it("enrichEmptySettings - set default datasource for 'table' setting type", async ctx => {
     enrichSettingsDS("formblock", ctx)
