@@ -64,6 +64,11 @@ export interface SearchFilters {
   }
 }
 
+export type SearchFilterKey = keyof Omit<
+  SearchFilters,
+  "allOr" | "onEmptyFilter" | "fuzzyOr"
+>
+
 export type SearchQueryFields = Omit<SearchFilters, "allOr" | "onEmptyFilter">
 
 export interface SortJson {
