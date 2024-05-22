@@ -1027,7 +1027,7 @@ describe.each([
       const NULL_TIME__ID = `null_time__id`
 
       beforeAll(async () => {
-        await createTable({
+        table = await createTable({
           timeid: { name: "timeid", type: FieldType.STRING },
           time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
         })
