@@ -6,7 +6,7 @@
   } from "dataBinding"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
-  import { isJSBinding, decodeJSBinding } from "@budibase/string-templates"
+  import { isJSBinding } from "@budibase/string-templates"
   import { builderStore } from "stores/builder"
 
   export let panel = ClientBindingPanel
@@ -34,12 +34,7 @@
   $: isJS = isJSBinding(value)
 
   const saveBinding = () => {
-    // Don't bother saving empty JS expressions as JS
-    let val = tempValue
-    if (decodeJSBinding(tempValue)?.trim() === "") {
-      val = null
-    }
-    onChange(val)
+    onChange(tempValue)
     onBlur()
     builderStore.propertyFocus()
     bindingDrawer.hide()

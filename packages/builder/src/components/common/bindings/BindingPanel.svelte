@@ -186,6 +186,8 @@
   }
 
   const updateValue = val => {
+    console.log("val", val)
+
     const runtimeExpression = readableToRuntimeBinding(enrichedBindings, val)
     dispatch("change", val)
     requestEval(runtimeExpression, context, snippets)
@@ -236,8 +238,12 @@
   }
 
   const onChangeJSValue = e => {
-    jsValue = encodeJSBinding(e.detail)
-    updateValue(jsValue)
+    if (!e.detail?.trim()) {
+      // Don't bother saving empty values as JS
+      updateValue("")
+    } else {
+      updateValue(encodeJSBinding(e.detail))
+    }
   }
 
   onMount(() => {
