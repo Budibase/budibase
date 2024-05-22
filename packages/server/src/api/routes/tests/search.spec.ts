@@ -16,6 +16,7 @@ import {
   Table,
   TableSchema,
   User,
+  Row,
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
@@ -78,13 +79,14 @@ describe.each([
   }
 
   async function createRows(rows: Record<string, any>[]) {
-    await config.api.row.bulkImport(table._id!, { rows })
+    // Shuffling to avoid false positives given a fixed order
+    await config.api.row.bulkImport(table._id!, { rows: _.shuffle(rows) })
   }
 
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
 
-    private findRow(expectedRow: any, foundRows: any[]) {
+    private popRow(expectedRow: any, foundRows: any[]) {
       const row = foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
       if (!row) {
         const fields = Object.keys(expectedRow)
@@ -97,6 +99,9 @@ describe.each([
           )} in ${JSON.stringify(searchedObjects)}`
         )
       }
+
+      // Ensuring the same row is not matched twice
+      foundRows.splice(foundRows.indexOf(row), 1)
       return row
     }
 
@@ -113,9 +118,9 @@ describe.each([
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
       // eslint-disable-next-line jest/no-standalone-expect
-      expect(foundRows).toEqual(
+      expect([...foundRows]).toEqual(
         expectedRows.map((expectedRow: any) =>
-          expect.objectContaining(this.findRow(expectedRow, foundRows))
+          expect.objectContaining(this.popRow(expectedRow, foundRows))
         )
       )
     }
@@ -132,10 +137,10 @@ describe.each([
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
       // eslint-disable-next-line jest/no-standalone-expect
-      expect(foundRows).toEqual(
+      expect([...foundRows]).toEqual(
         expect.arrayContaining(
           expectedRows.map((expectedRow: any) =>
-            expect.objectContaining(this.findRow(expectedRow, foundRows))
+            expect.objectContaining(this.popRow(expectedRow, foundRows))
           )
         )
       )
@@ -151,10 +156,10 @@ describe.each([
       })
 
       // eslint-disable-next-line jest/no-standalone-expect
-      expect(foundRows).toEqual(
+      expect([...foundRows]).toEqual(
         expect.arrayContaining(
           expectedRows.map((expectedRow: any) =>
-            expect.objectContaining(this.findRow(expectedRow, foundRows))
+            expect.objectContaining(this.popRow(expectedRow, foundRows))
           )
         )
       )
@@ -629,6 +634,19 @@ describe.each([
 
       it("fails to find nonexistent row", () =>
         expectQuery({ equal: { name: "none" } }).toFindNothing())
+
+      it("works as an or condition", () =>
+        expectQuery({
+          allOr: true,
+          equal: { name: "foo" },
+          oneOf: { name: ["bar"] },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
+
+      it("can have multiple values for same column", () =>
+        expectQuery({
+          allOr: true,
+          equal: { "1:name": "foo", "2:name": "bar" },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
     })
 
     describe("notEqual", () => {
@@ -661,6 +679,21 @@ describe.each([
 
       it("fails to find nonexistent row", () =>
         expectQuery({ fuzzy: { name: "none" } }).toFindNothing())
+    })
+
+    describe("string", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ string: { name: "fo" } }).toContainExactly([
+          { name: "foo" },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ string: { name: "none" } }).toFindNothing())
+
+      it("is case-insensitive", () =>
+        expectQuery({ string: { name: "FO" } }).toContainExactly([
+          { name: "foo" },
+        ]))
     })
 
     describe("range", () => {
@@ -966,6 +999,159 @@ describe.each([
     })
   })
 
+  !isInternal &&
+    describe("datetime - time only", () => {
+      const T_1000 = "10:00"
+      const T_1045 = "10:45"
+      const T_1200 = "12:00"
+      const T_1530 = "15:30"
+      const T_0000 = "00:00"
+
+      const UNEXISTING_TIME = "10:01"
+
+      const NULL_TIME__ID = `null_time__id`
+
+      beforeAll(async () => {
+        await createTable({
+          timeid: { name: "timeid", type: FieldType.STRING },
+          time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
+        })
+
+        await createRows([
+          { timeid: NULL_TIME__ID, time: null },
+          { time: T_1000 },
+          { time: T_1045 },
+          { time: T_1200 },
+          { time: T_1530 },
+          { time: T_0000 },
+        ])
+      })
+
+      describe("equal", () => {
+        it("successfully finds a row", () =>
+          expectQuery({ equal: { time: T_1000 } }).toContainExactly([
+            { time: "10:00:00" },
+          ]))
+
+        it("fails to find nonexistent row", () =>
+          expectQuery({ equal: { time: UNEXISTING_TIME } }).toFindNothing())
+      })
+
+      describe("notEqual", () => {
+        it("successfully finds a row", () =>
+          expectQuery({ notEqual: { time: T_1000 } }).toContainExactly([
+            { time: "10:45:00" },
+            { time: "12:00:00" },
+            { time: "15:30:00" },
+            { time: "00:00:00" },
+          ]))
+
+        it("return all when requesting non-existing", () =>
+          expectQuery({ notEqual: { time: UNEXISTING_TIME } }).toContainExactly(
+            [
+              { time: "10:00:00" },
+              { time: "10:45:00" },
+              { time: "12:00:00" },
+              { time: "15:30:00" },
+              { time: "00:00:00" },
+            ]
+          ))
+      })
+
+      describe("oneOf", () => {
+        it("successfully finds a row", () =>
+          expectQuery({ oneOf: { time: [T_1000] } }).toContainExactly([
+            { time: "10:00:00" },
+          ]))
+
+        it("fails to find nonexistent row", () =>
+          expectQuery({ oneOf: { time: [UNEXISTING_TIME] } }).toFindNothing())
+      })
+
+      describe("range", () => {
+        it("successfully finds a row", () =>
+          expectQuery({
+            range: { time: { low: T_1045, high: T_1045 } },
+          }).toContainExactly([{ time: "10:45:00" }]))
+
+        it("successfully finds multiple rows", () =>
+          expectQuery({
+            range: { time: { low: T_1045, high: T_1530 } },
+          }).toContainExactly([
+            { time: "10:45:00" },
+            { time: "12:00:00" },
+            { time: "15:30:00" },
+          ]))
+
+        it("successfully finds no rows", () =>
+          expectQuery({
+            range: { time: { low: UNEXISTING_TIME, high: UNEXISTING_TIME } },
+          }).toFindNothing())
+      })
+
+      describe("sort", () => {
+        it("sorts ascending", () =>
+          expectSearch({
+            query: {},
+            sort: "time",
+            sortOrder: SortOrder.ASCENDING,
+          }).toMatchExactly([
+            { timeid: NULL_TIME__ID },
+            { time: "00:00:00" },
+            { time: "10:00:00" },
+            { time: "10:45:00" },
+            { time: "12:00:00" },
+            { time: "15:30:00" },
+          ]))
+
+        it("sorts descending", () =>
+          expectSearch({
+            query: {},
+            sort: "time",
+            sortOrder: SortOrder.DESCENDING,
+          }).toMatchExactly([
+            { time: "15:30:00" },
+            { time: "12:00:00" },
+            { time: "10:45:00" },
+            { time: "10:00:00" },
+            { time: "00:00:00" },
+            { timeid: NULL_TIME__ID },
+          ]))
+
+        describe("sortType STRING", () => {
+          it("sorts ascending", () =>
+            expectSearch({
+              query: {},
+              sort: "time",
+              sortType: SortType.STRING,
+              sortOrder: SortOrder.ASCENDING,
+            }).toMatchExactly([
+              { timeid: NULL_TIME__ID },
+              { time: "00:00:00" },
+              { time: "10:00:00" },
+              { time: "10:45:00" },
+              { time: "12:00:00" },
+              { time: "15:30:00" },
+            ]))
+
+          it("sorts descending", () =>
+            expectSearch({
+              query: {},
+              sort: "time",
+              sortType: SortType.STRING,
+              sortOrder: SortOrder.DESCENDING,
+            }).toMatchExactly([
+              { time: "15:30:00" },
+              { time: "12:00:00" },
+              { time: "10:45:00" },
+              { time: "10:00:00" },
+              { time: "00:00:00" },
+              { timeid: NULL_TIME__ID },
+            ]))
+        })
+      })
+    })
+
   describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
     beforeAll(async () => {
       await createTable({
@@ -1267,5 +1453,57 @@ describe.each([
               { auto: 1 },
             ]))
         })
+
+      // TODO(samwho): fix for SQS
+      !isSqs &&
+        describe("pagination", () => {
+          it("should paginate through all rows", async () => {
+            // @ts-ignore
+            let bookmark: string | number = undefined
+            let rows: Row[] = []
+
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
+              const response = await config.api.row.search(table._id!, {
+                tableId: table._id!,
+                limit: 3,
+                query: {},
+                bookmark,
+                paginate: true,
+              })
+
+              rows.push(...response.rows)
+
+              if (!response.bookmark || !response.hasNextPage) {
+                break
+              }
+              bookmark = response.bookmark
+            }
+
+            expect(rows).toHaveLength(10)
+            expect(rows.map(row => row.auto)).toEqual(
+              expect.arrayContaining([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+            )
+          })
+        })
     })
+
+  describe("field name 1:name", () => {
+    beforeAll(async () => {
+      await createTable({
+        "1:name": { name: "1:name", type: FieldType.STRING },
+      })
+      await createRows([{ "1:name": "bar" }, { "1:name": "foo" }])
+    })
+
+    describe("equal", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ equal: { "1:1:name": "bar" } }).toContainExactly([
+          { "1:name": "bar" },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ equal: { "1:1:name": "none" } }).toFindNothing())
+    })
+  })
 })
