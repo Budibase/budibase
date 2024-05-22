@@ -134,7 +134,11 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
       if (columnType === FieldType.NUMBER) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
-      } else if (columnType === FieldType.DATETIME && !columnSchema.timeOnly) {
+      } else if (
+        columnType === FieldType.DATETIME &&
+        !columnSchema.timeOnly &&
+        !columnSchema.dateOnly
+      ) {
         // If provided must be a valid date
         parsedRow[columnName] = columnData
           ? new Date(columnData).toISOString()
