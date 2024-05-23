@@ -24,7 +24,6 @@
     ".date-time-popover",
     "#builder-side-panel-container",
     "[data-grid-ignore]",
-    ".create-edit-column",
   ]
 
   // Global key listener which intercepts all key events

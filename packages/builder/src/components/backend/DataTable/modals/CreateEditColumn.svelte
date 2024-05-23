@@ -517,261 +517,258 @@
   })
 </script>
 
-<span class="create-edit-column">
-  <Layout noPadding gap="S">
-    {#if mounted}
-      <Input
-        value={editableColumn.name}
-        autofocus
-        on:input={e => {
-          if (
-            !uneditable &&
-            !(linkEditDisabled && editableColumn.type === LINK_TYPE)
-          ) {
-            editableColumn.name = e.target.value
-          }
-        }}
-        disabled={uneditable ||
-          (linkEditDisabled && editableColumn.type === LINK_TYPE)}
-        error={errors?.name}
-      />
-    {/if}
-    <Select
-      placeholder={null}
-      disabled={!typeEnabled}
-      bind:value={editableColumn.fieldId}
-      on:change={onHandleTypeChange}
-      options={allowedTypes}
-      getOptionLabel={field => field.name}
-      getOptionValue={field => field.fieldId}
-      getOptionIcon={field => field.icon}
-      isOptionEnabled={option => {
-        if (option.type === AUTO_TYPE) {
-          return availableAutoColumnKeys?.length > 0
+<Layout noPadding gap="S">
+  {#if mounted}
+    <Input
+      value={editableColumn.name}
+      autofocus
+      on:input={e => {
+        if (
+          !uneditable &&
+          !(linkEditDisabled && editableColumn.type === LINK_TYPE)
+        ) {
+          editableColumn.name = e.target.value
         }
-        return true
       }}
+      disabled={uneditable ||
+        (linkEditDisabled && editableColumn.type === LINK_TYPE)}
+      error={errors?.name}
     />
+  {/if}
+  <Select
+    placeholder={null}
+    disabled={!typeEnabled}
+    bind:value={editableColumn.fieldId}
+    on:change={onHandleTypeChange}
+    options={allowedTypes}
+    getOptionLabel={field => field.name}
+    getOptionValue={field => field.fieldId}
+    getOptionIcon={field => field.icon}
+    isOptionEnabled={option => {
+      if (option.type === AUTO_TYPE) {
+        return availableAutoColumnKeys?.length > 0
+      }
+      return true
+    }}
+  />
 
-    {#if editableColumn.type === FieldType.STRING}
-      <Input
-        type="number"
-        label="Max Length"
-        bind:value={editableColumn.constraints.length.maximum}
-      />
-    {:else if editableColumn.type === FieldType.OPTIONS}
-      <OptionSelectDnD
-        bind:constraints={editableColumn.constraints}
-        bind:optionColors={editableColumn.optionColors}
-      />
-    {:else if editableColumn.type === FieldType.LONGFORM}
-      <div>
-        <div class="tooltip-alignment">
-          <Label size="M">Formatting</Label>
-          <AbsTooltip
-            position="top"
-            type="info"
-            text={"Rich text includes support for images, link"}
-          >
-            <Icon size="XS" name="InfoOutline" />
-          </AbsTooltip>
-        </div>
+  {#if editableColumn.type === FieldType.STRING}
+    <Input
+      type="number"
+      label="Max Length"
+      bind:value={editableColumn.constraints.length.maximum}
+    />
+  {:else if editableColumn.type === FieldType.OPTIONS}
+    <OptionSelectDnD
+      bind:constraints={editableColumn.constraints}
+      bind:optionColors={editableColumn.optionColors}
+    />
+  {:else if editableColumn.type === FieldType.LONGFORM}
+    <div>
+      <div class="tooltip-alignment">
+        <Label size="M">Formatting</Label>
+        <AbsTooltip
+          position="top"
+          type="info"
+          text={"Rich text includes support for images, link"}
+        >
+          <Icon size="XS" name="InfoOutline" />
+        </AbsTooltip>
+      </div>
 
-        <Toggle
-          bind:value={editableColumn.useRichText}
-          text="Enable rich text support (markdown)"
+      <Toggle
+        bind:value={editableColumn.useRichText}
+        text="Enable rich text support (markdown)"
+      />
+    </div>
+  {:else if editableColumn.type === FieldType.ARRAY}
+    <OptionSelectDnD
+      bind:constraints={editableColumn.constraints}
+      bind:optionColors={editableColumn.optionColors}
+    />
+  {:else if editableColumn.type === DATE_TYPE && !editableColumn.autocolumn}
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Earliest</Label>
+      </div>
+      <div class="input-length">
+        <DatePicker
+          bind:value={editableColumn.constraints.datetime.earliest}
+          enableTime={!editableColumn.dateOnly}
+          timeOnly={editableColumn.timeOnly}
         />
       </div>
-    {:else if editableColumn.type === FieldType.ARRAY}
-      <OptionSelectDnD
-        bind:constraints={editableColumn.constraints}
-        bind:optionColors={editableColumn.optionColors}
-      />
-    {:else if editableColumn.type === DATE_TYPE && !editableColumn.autocolumn}
-      <div class="split-label">
-        <div class="label-length">
-          <Label size="M">Earliest</Label>
-        </div>
-        <div class="input-length">
-          <DatePicker
-            bind:value={editableColumn.constraints.datetime.earliest}
-            enableTime={!editableColumn.dateOnly}
-            timeOnly={editableColumn.timeOnly}
-          />
-        </div>
-      </div>
+    </div>
 
-      <div class="split-label">
-        <div class="label-length">
-          <Label size="M">Latest</Label>
-        </div>
-        <div class="input-length">
-          <DatePicker
-            bind:value={editableColumn.constraints.datetime.latest}
-            enableTime={!editableColumn.dateOnly}
-            timeOnly={editableColumn.timeOnly}
-          />
-        </div>
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Latest</Label>
       </div>
-      {#if !editableColumn.timeOnly}
-        {#if datasource?.source !== SourceName.ORACLE && datasource?.source !== SourceName.SQL_SERVER && !editableColumn.dateOnly}
-          <div>
-            <div class="row">
-              <Label>Time zones</Label>
-              <AbsTooltip
-                position="top"
-                type="info"
-                text={isCreating
-                  ? null
-                  : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
-              >
-                <Icon size="XS" name="InfoOutline" />
-              </AbsTooltip>
-            </div>
-            <Toggle
-              bind:value={editableColumn.ignoreTimezones}
-              text="Ignore time zones"
-            />
+      <div class="input-length">
+        <DatePicker
+          bind:value={editableColumn.constraints.datetime.latest}
+          enableTime={!editableColumn.dateOnly}
+          timeOnly={editableColumn.timeOnly}
+        />
+      </div>
+    </div>
+    {#if !editableColumn.timeOnly}
+      {#if datasource?.source !== SourceName.ORACLE && datasource?.source !== SourceName.SQL_SERVER && !editableColumn.dateOnly}
+        <div>
+          <div class="row">
+            <Label>Time zones</Label>
+            <AbsTooltip
+              position="top"
+              type="info"
+              text={isCreating
+                ? null
+                : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
+            >
+              <Icon size="XS" name="InfoOutline" />
+            </AbsTooltip>
           </div>
-        {/if}
-        <Toggle bind:value={editableColumn.dateOnly} text="Date only" />
-      {/if}
-    {:else if editableColumn.type === FieldType.NUMBER && !editableColumn.autocolumn}
-      <div class="split-label">
-        <div class="label-length">
-          <Label size="M">Min Value</Label>
-        </div>
-        <div class="input-length">
-          <Input
-            type="number"
-            bind:value={editableColumn.constraints.numericality
-              .greaterThanOrEqualTo}
-          />
-        </div>
-      </div>
-
-      <div class="split-label">
-        <div class="label-length">
-          <Label size="M">Max Value</Label>
-        </div>
-        <div class="input-length">
-          <Input
-            type="number"
-            bind:value={editableColumn.constraints.numericality
-              .lessThanOrEqualTo}
-          />
-        </div>
-      </div>
-    {:else if editableColumn.type === FieldType.LINK && !editableColumn.autocolumn}
-      <RelationshipSelector
-        bind:relationshipPart1
-        bind:relationshipPart2
-        bind:relationshipTableIdPrimary
-        bind:relationshipTableIdSecondary
-        bind:editableColumn
-        {relationshipOpts1}
-        {relationshipOpts2}
-        {linkEditDisabled}
-        {tableOptions}
-        {errors}
-      />
-    {:else if editableColumn.type === FORMULA_TYPE}
-      {#if !table.sql}
-        <div class="split-label">
-          <div class="label-length">
-            <Label size="M">Formula Type</Label>
-          </div>
-          <div class="input-length">
-            <Select
-              bind:value={editableColumn.formulaType}
-              options={[
-                { label: "Dynamic", value: "dynamic" },
-                { label: "Static", value: "static" },
-              ]}
-              disabled={!isCreating}
-              getOptionLabel={option => option.label}
-              getOptionValue={option => option.value}
-              tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
-         while static formula are calculated when the row is saved."
-            />
-          </div>
-        </div>
-      {/if}
-      <div class="split-label">
-        <div class="label-length">
-          <Label size="M">Formula</Label>
-        </div>
-        <div class="input-length">
-          <ModalBindableInput
-            panel={ServerBindingPanel}
-            title="Formula"
-            value={editableColumn.formula}
-            on:change={e => {
-              editableColumn = {
-                ...editableColumn,
-                formula: e.detail,
-              }
-            }}
-            bindings={getBindings({ table })}
-            allowJS
-            context={rowGoldenSample}
-          />
-        </div>
-      </div>
-    {:else if editableColumn.type === JSON_TYPE}
-      <Button primary text on:click={openJsonSchemaEditor}
-        >Open schema editor</Button
-      >
-    {/if}
-    {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
-      <Select
-        label="Auto column type"
-        value={editableColumn.subtype}
-        on:change={e => (editableColumn.subtype = e.detail)}
-        options={Object.entries(autoColumnOptions)}
-        getOptionLabel={option => option[1].name}
-        getOptionValue={option => option[0]}
-        disabled={!availableAutoColumnKeys?.length || editableColumn.autocolumn}
-        error={errors?.subtype}
-      />
-    {/if}
-
-    {#if canBeRequired || canBeDisplay}
-      <div>
-        {#if canBeRequired}
           <Toggle
-            value={required}
-            on:change={onChangeRequired}
-            disabled={primaryDisplay}
-            thin
-            text="Required"
+            bind:value={editableColumn.ignoreTimezones}
+            text="Ignore time zones"
           />
-        {/if}
+        </div>
+      {/if}
+      <Toggle bind:value={editableColumn.dateOnly} text="Date only" />
+    {/if}
+  {:else if editableColumn.type === FieldType.NUMBER && !editableColumn.autocolumn}
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Min Value</Label>
+      </div>
+      <div class="input-length">
+        <Input
+          type="number"
+          bind:value={editableColumn.constraints.numericality
+            .greaterThanOrEqualTo}
+        />
+      </div>
+    </div>
+
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Max Value</Label>
+      </div>
+      <div class="input-length">
+        <Input
+          type="number"
+          bind:value={editableColumn.constraints.numericality.lessThanOrEqualTo}
+        />
+      </div>
+    </div>
+  {:else if editableColumn.type === FieldType.LINK && !editableColumn.autocolumn}
+    <RelationshipSelector
+      bind:relationshipPart1
+      bind:relationshipPart2
+      bind:relationshipTableIdPrimary
+      bind:relationshipTableIdSecondary
+      bind:editableColumn
+      {relationshipOpts1}
+      {relationshipOpts2}
+      {linkEditDisabled}
+      {tableOptions}
+      {errors}
+    />
+  {:else if editableColumn.type === FORMULA_TYPE}
+    {#if !table.sql}
+      <div class="split-label">
+        <div class="label-length">
+          <Label size="M">Formula Type</Label>
+        </div>
+        <div class="input-length">
+          <Select
+            bind:value={editableColumn.formulaType}
+            options={[
+              { label: "Dynamic", value: "dynamic" },
+              { label: "Static", value: "static" },
+            ]}
+            disabled={!isCreating}
+            getOptionLabel={option => option.label}
+            getOptionValue={option => option.value}
+            tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
+         while static formula are calculated when the row is saved."
+          />
+        </div>
       </div>
     {/if}
-  </Layout>
-
-  <div class="action-buttons">
-    {#if !uneditable && originalName != null}
-      <Button quiet warning text on:click={confirmDelete}>Delete</Button>
-    {/if}
-    <Button secondary newStyles on:click={cancelEdit}>Cancel</Button>
-    <Button
-      disabled={invalid || savingColumn}
-      newStyles
-      cta
-      on:click={saveColumn}
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Formula</Label>
+      </div>
+      <div class="input-length">
+        <ModalBindableInput
+          panel={ServerBindingPanel}
+          title="Formula"
+          value={editableColumn.formula}
+          on:change={e => {
+            editableColumn = {
+              ...editableColumn,
+              formula: e.detail,
+            }
+          }}
+          bindings={getBindings({ table })}
+          allowJS
+          context={rowGoldenSample}
+        />
+      </div>
+    </div>
+  {:else if editableColumn.type === JSON_TYPE}
+    <Button primary text on:click={openJsonSchemaEditor}
+      >Open schema editor</Button
     >
-      {#if savingColumn}
-        <div class="save-loading">
-          <ProgressCircle overBackground={true} size="S" />
-        </div>
-      {:else}
-        Save
+  {/if}
+  {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
+    <Select
+      label="Auto column type"
+      value={editableColumn.subtype}
+      on:change={e => (editableColumn.subtype = e.detail)}
+      options={Object.entries(autoColumnOptions)}
+      getOptionLabel={option => option[1].name}
+      getOptionValue={option => option[0]}
+      disabled={!availableAutoColumnKeys?.length || editableColumn.autocolumn}
+      error={errors?.subtype}
+    />
+  {/if}
+
+  {#if canBeRequired || canBeDisplay}
+    <div>
+      {#if canBeRequired}
+        <Toggle
+          value={required}
+          on:change={onChangeRequired}
+          disabled={primaryDisplay}
+          thin
+          text="Required"
+        />
       {/if}
-    </Button>
-  </div>
-</span>
+    </div>
+  {/if}
+</Layout>
+
+<div class="action-buttons">
+  {#if !uneditable && originalName != null}
+    <Button quiet warning text on:click={confirmDelete}>Delete</Button>
+  {/if}
+  <Button secondary newStyles on:click={cancelEdit}>Cancel</Button>
+  <Button
+    disabled={invalid || savingColumn}
+    newStyles
+    cta
+    on:click={saveColumn}
+  >
+    {#if savingColumn}
+      <div class="save-loading">
+        <ProgressCircle overBackground={true} size="S" />
+      </div>
+    {:else}
+      Save
+    {/if}
+  </Button>
+</div>
 <Modal bind:this={jsonSchemaModal}>
   <JSONSchemaModal
     schema={editableColumn.schema}
