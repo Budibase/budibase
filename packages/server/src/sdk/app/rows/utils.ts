@@ -224,13 +224,16 @@ function validateTimeOnlyField(
 ) {
   let res
   if (value && !value.match(/^(\d+)(:[0-5]\d){1,2}$/)) {
-    res = [`${fieldName} is not a valid time`]
-  }
-  if (constraints) {
+    res = [`"${fieldName}" is not a valid time`]
+  } else if (constraints) {
     let castedValue = value
     const stringTimeToDateISOString = (value: string) => {
-      const [hour, minute] = value.split(":").map((x: string) => +x)
-      return dayjs().hour(hour).minute(minute).toISOString()
+      const [hour, minute, second] = value.split(":").map((x: string) => +x)
+      let date = dayjs("2000-01-01T00:00:00.000Z").hour(hour).minute(minute)
+      if (!isNaN(second)) {
+        date = date.second(second)
+      }
+      return date.toISOString()
     }
 
     if (castedValue) {
