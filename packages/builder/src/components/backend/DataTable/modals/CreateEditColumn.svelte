@@ -586,13 +586,17 @@
       bind:constraints={editableColumn.constraints}
       bind:optionColors={editableColumn.optionColors}
     />
-  {:else if editableColumn.type === FieldType.DATETIME && !editableColumn.autocolumn}
+  {:else if editableColumn.type === DATE_TYPE && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
         <Label size="M">Earliest</Label>
       </div>
       <div class="input-length">
-        <DatePicker bind:value={editableColumn.constraints.datetime.earliest} />
+        <DatePicker
+          bind:value={editableColumn.constraints.datetime.earliest}
+          enableTime={!editableColumn.dateOnly}
+          timeOnly={editableColumn.timeOnly}
+        />
       </div>
     </div>
 
@@ -601,7 +605,11 @@
         <Label size="M">Latest</Label>
       </div>
       <div class="input-length">
-        <DatePicker bind:value={editableColumn.constraints.datetime.latest} />
+        <DatePicker
+          bind:value={editableColumn.constraints.datetime.latest}
+          enableTime={!editableColumn.dateOnly}
+          timeOnly={editableColumn.timeOnly}
+        />
       </div>
     </div>
     {#if !editableColumn.timeOnly}

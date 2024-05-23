@@ -170,7 +170,8 @@ export const stringifyDate = (
     const offset = referenceDate.getTimezoneOffset() * 60000
     const date = new Date(value.valueOf() - offset)
     if (timeOnly) {
-      return date.toISOString().slice(11, 19)
+      // Extract HH:mm
+      return date.toISOString().slice(11, 16)
     }
     return date.toISOString().slice(0, -1)
   }
