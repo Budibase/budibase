@@ -77,7 +77,7 @@ function validate(table: Table, oldTable?: Table) {
     if (column.type === FieldType.DATETIME) {
       const oldColumn = oldTable?.schema[key] as typeof column
 
-      if (column.timeOnly !== oldColumn.timeOnly) {
+      if (oldColumn && column.timeOnly !== oldColumn.timeOnly) {
         throw new Error(
           `Column "${key}" can not change from time to datetime or viceversa.`
         )
