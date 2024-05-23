@@ -189,7 +189,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit],
-      sql: `select * from (select * from (select * from "test" where (LOWER("test"."age") LIKE :1 AND LOWER("test"."age") LIKE :2) and (LOWER("test"."name") LIKE :3 AND LOWER("test"."name") LIKE :4)) where rownum <= :5) "test"`,
+      sql: `select * from (select * from (select * from "test" where (COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2) and (COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4)) where rownum <= :5) "test"`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
