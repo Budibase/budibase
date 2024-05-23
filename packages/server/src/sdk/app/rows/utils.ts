@@ -1,8 +1,10 @@
-import cloneDeep from "lodash/cloneDeep"
 import validateJs from "validate.js"
+import dayjs from "dayjs"
+import cloneDeep from "lodash/fp/cloneDeep"
 import {
   Datasource,
   DatasourcePlusQueryResponse,
+  FieldConstraints,
   FieldType,
   QueryJson,
   Row,
@@ -206,13 +208,63 @@ export async function validate({
         errors[fieldName] = [`Contains invalid JSON`]
       }
     } else if (type === FieldType.DATETIME && column.timeOnly) {
-      if (row[fieldName] && !row[fieldName].match(/^(\d+)(:[0-5]\d){1,2}$/)) {
-        errors[fieldName] = [`${fieldName} is not a valid time`]
-      }
+      res = validateTimeOnlyField(fieldName, row[fieldName], constraints)
     } else {
       res = validateJs.single(row[fieldName], constraints)
     }
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
+}
+
+function validateTimeOnlyField(
+  fieldName: string,
+  value: any,
+  constraints: FieldConstraints | undefined
+) {
+  let res
+  if (value && !value.match(/^(\d+)(:[0-5]\d){1,2}$/)) {
+    res = [`${fieldName} is not a valid time`]
+  }
+  if (constraints) {
+    let castedValue = value
+    const stringTimeToDateISOString = (value: string) => {
+      const [hour, minute] = value.split(":").map((x: string) => +x)
+      return dayjs().hour(hour).minute(minute).toISOString()
+    }
+
+    if (castedValue) {
+      castedValue = stringTimeToDateISOString(castedValue)
+    }
+    let castedConstraints = cloneDeep(constraints)
+    if (castedConstraints.datetime?.earliest) {
+      castedConstraints.datetime.earliest = stringTimeToDateISOString(
+        castedConstraints.datetime?.earliest
+      )
+    }
+    if (castedConstraints.datetime?.latest) {
+      castedConstraints.datetime.latest = stringTimeToDateISOString(
+        castedConstraints.datetime?.latest
+      )
+    }
+
+    let jsValidation = validateJs.single(castedValue, castedConstraints)
+    jsValidation = jsValidation?.map((m: string) =>
+      m
+        ?.replace(
+          castedConstraints.datetime?.earliest || "",
+          constraints.datetime?.earliest || ""
+        )
+        .replace(
+          castedConstraints.datetime?.latest || "",
+          constraints.datetime?.latest || ""
+        )
+    )
+    if (jsValidation) {
+      res ??= []
+      res.push(...jsValidation)
+    }
+  }
+
+  return res
 }
