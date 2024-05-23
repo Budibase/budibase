@@ -20,6 +20,7 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
   SqlClient,
   QueryOptions,
+  JsonTypes,
 } from "@budibase/types"
 import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
@@ -796,9 +797,8 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     field: FieldSchema
   ): field is JsonFieldMetadata | BBReferenceFieldMetadata {
     return (
-      field.type === FieldType.JSON ||
-      (field.type === FieldType.BB_REFERENCE &&
-        !helpers.schema.isDeprecatedSingleUserColumn(field))
+      JsonTypes.includes(field.type) &&
+      !helpers.schema.isDeprecatedSingleUserColumn(field)
     )
   }
 
