@@ -194,12 +194,24 @@ describe("validate", () => {
             },
           }
 
-          it.each(["10:00", "15:00", `9:${minute()}`, "16:34"])(
+          it.each(["10:00", "15:00", `9:${minute()}`, "16:34", "00:00"])(
             "should accept values in range (%s)",
             async time => {
               const row = { time }
               const output = await validate({ table, tableId: table._id!, row })
               expect(output.valid).toBe(true)
+            }
+          )
+
+          it.each(["10:01", "14:59:59", `12:${minute()}`])(
+            "should reject values out range (%s)",
+            async time => {
+              const row = { time }
+              const output = await validate({ table, tableId: table._id!, row })
+              expect(output.valid).toBe(false)
+              expect(output.errors).toEqual({
+                time: ["must be no later than 10:00"],
+              })
             }
           )
         })
