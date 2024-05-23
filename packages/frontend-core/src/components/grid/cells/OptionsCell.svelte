@@ -13,6 +13,8 @@
   export let api
   export let contentLines = 1
 
+  const InvalidColor = "hsla(0, 0%, 70%, 0.3)"
+
   let isOpen = false
   let focusedOptionIdx = null
   let anchor
@@ -40,7 +42,7 @@
   const getOptionColor = value => {
     let idx = value ? options.indexOf(value) : null
     if (idx == null || idx === -1) {
-      idx = 0
+      return InvalidColor
     }
     return OptionColours[idx % OptionColours.length]
   }
