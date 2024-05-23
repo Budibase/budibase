@@ -17,6 +17,7 @@ import {
   TableSchema,
   User,
   Row,
+  RelationshipType,
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
@@ -73,7 +74,7 @@ describe.each([
   })
 
   async function createTable(schema: TableSchema) {
-    table = await config.api.table.save(
+    return await config.api.table.save(
       tableForDatasource(datasource, { schema })
     )
   }
@@ -190,7 +191,7 @@ describe.each([
 
   describe("boolean", () => {
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         isTrue: { name: "isTrue", type: FieldType.BOOLEAN },
       })
       await createRows([{ isTrue: true }, { isTrue: false }])
@@ -320,7 +321,7 @@ describe.each([
           })
       )
 
-      await createTable({
+      table = await createTable({
         name: { name: "name", type: FieldType.STRING },
         appointment: { name: "appointment", type: FieldType.DATETIME },
         single_user: {
@@ -596,7 +597,7 @@ describe.each([
 
   describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         name: { name: "name", type: FieldType.STRING },
       })
       await createRows([{ name: "foo" }, { name: "bar" }])
@@ -716,6 +717,20 @@ describe.each([
         expectQuery({
           range: { name: { low: "g", high: "h" } },
         }).toFindNothing())
+
+      !isLucene &&
+        it("ignores low if it's an empty object", () =>
+          expectQuery({
+            // @ts-ignore
+            range: { name: { low: {}, high: "z" } },
+          }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
+
+      !isLucene &&
+        it("ignores high if it's an empty object", () =>
+          expectQuery({
+            // @ts-ignore
+            range: { name: { low: "a", high: {} } },
+          }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
     })
 
     describe("empty", () => {
@@ -780,7 +795,7 @@ describe.each([
 
   describe("numbers", () => {
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         age: { name: "age", type: FieldType.NUMBER },
       })
       await createRows([{ age: 1 }, { age: 10 }])
@@ -889,7 +904,7 @@ describe.each([
     const JAN_10TH = "2020-01-10T00:00:00.000Z"
 
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         dob: { name: "dob", type: FieldType.DATETIME },
       })
 
@@ -1012,7 +1027,7 @@ describe.each([
       const NULL_TIME__ID = `null_time__id`
 
       beforeAll(async () => {
-        await createTable({
+        table = await createTable({
           timeid: { name: "timeid", type: FieldType.STRING },
           time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
         })
@@ -1154,7 +1169,7 @@ describe.each([
 
   describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         numbers: {
           name: "numbers",
           type: FieldType.ARRAY,
@@ -1234,7 +1249,7 @@ describe.each([
     const BIG = "9223372036854775807"
 
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         num: { name: "num", type: FieldType.BIGINT },
       })
       await createRows([{ num: SMALL }, { num: MEDIUM }, { num: BIG }])
@@ -1325,7 +1340,7 @@ describe.each([
   isInternal &&
     describe("auto", () => {
       beforeAll(async () => {
-        await createTable({
+        table = await createTable({
           auto: {
             name: "auto",
             type: FieldType.AUTO,
@@ -1452,6 +1467,25 @@ describe.each([
               { auto: 2 },
               { auto: 1 },
             ]))
+
+          // This is important for pagination. The order of results must always
+          // be stable or pagination will break. We don't want the user to need
+          // to specify an order for pagination to work.
+          it("is stable without a sort specified", async () => {
+            let { rows } = await config.api.row.search(table._id!, {
+              tableId: table._id!,
+              query: {},
+            })
+
+            for (let i = 0; i < 10; i++) {
+              const response = await config.api.row.search(table._id!, {
+                tableId: table._id!,
+                limit: 1,
+                query: {},
+              })
+              expect(response.rows).toEqual(rows)
+            }
+          })
         })
 
       // TODO(samwho): fix for SQS
@@ -1490,7 +1524,7 @@ describe.each([
 
   describe("field name 1:name", () => {
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         "1:name": { name: "1:name", type: FieldType.STRING },
       })
       await createRows([{ "1:name": "bar" }, { "1:name": "foo" }])
@@ -1506,4 +1540,51 @@ describe.each([
         expectQuery({ equal: { "1:1:name": "none" } }).toFindNothing())
     })
   })
+
+  // This will never work for Lucene.
+  !isLucene &&
+    describe("relations", () => {
+      let otherTable: Table
+      let rows: Row[]
+
+      beforeAll(async () => {
+        otherTable = await createTable({
+          one: { name: "one", type: FieldType.STRING },
+        })
+        table = await createTable({
+          two: { name: "two", type: FieldType.STRING },
+          other: {
+            type: FieldType.LINK,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            name: "other",
+            fieldName: "other",
+            tableId: otherTable._id!,
+            constraints: {
+              type: "array",
+            },
+          },
+        })
+
+        rows = await Promise.all([
+          config.api.row.save(otherTable._id!, { one: "foo" }),
+          config.api.row.save(otherTable._id!, { one: "bar" }),
+        ])
+
+        await Promise.all([
+          config.api.row.save(table._id!, {
+            two: "foo",
+            other: [rows[0]._id],
+          }),
+          config.api.row.save(table._id!, {
+            two: "bar",
+            other: [rows[1]._id],
+          }),
+        ])
+      })
+
+      it("can search through relations", () =>
+        expectQuery({
+          equal: { [`${otherTable.name}.one`]: "foo" },
+        }).toContainExactly([{ two: "foo", other: [{ _id: rows[0]._id }] }]))
+    })
 })
