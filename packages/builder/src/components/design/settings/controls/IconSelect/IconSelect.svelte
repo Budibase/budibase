@@ -306,6 +306,7 @@
     text-align: center;
     font-size: 12px;
     margin-bottom: 2px;
+    color: var(--spectrum-global-color-gray-700);
   }
   .page-btn {
     color: var(--spectrum-global-color-gray-700);
