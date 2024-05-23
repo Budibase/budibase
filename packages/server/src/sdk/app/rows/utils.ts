@@ -242,11 +242,24 @@ function validateTimeOnlyField(
     let castedConstraints = cloneDeep(constraints)
 
     let earliest, latest
+    let easliestTimeString: string, latestTimeString: string
     if (castedConstraints.datetime?.earliest) {
-      earliest = stringTimeToDate(castedConstraints.datetime?.earliest)
+      easliestTimeString = castedConstraints.datetime.earliest
+      if (dayjs(castedConstraints.datetime.earliest).isValid()) {
+        easliestTimeString = dayjs(castedConstraints.datetime.earliest).format(
+          "HH:mm"
+        )
+      }
+      earliest = stringTimeToDate(easliestTimeString)
     }
     if (castedConstraints.datetime?.latest) {
-      latest = stringTimeToDate(castedConstraints.datetime?.latest)
+      latestTimeString = castedConstraints.datetime.latest
+      if (dayjs(castedConstraints.datetime.latest).isValid()) {
+        latestTimeString = dayjs(castedConstraints.datetime.latest).format(
+          "HH:mm"
+        )
+      }
+      latest = stringTimeToDate(latestTimeString)
     }
 
     if (earliest && latest && earliest.isAfter(latest)) {
@@ -271,11 +284,11 @@ function validateTimeOnlyField(
       m
         ?.replace(
           castedConstraints.datetime?.earliest || "",
-          constraints.datetime?.earliest || ""
+          easliestTimeString || ""
         )
         .replace(
           castedConstraints.datetime?.latest || "",
-          constraints.datetime?.latest || ""
+          latestTimeString || ""
         )
     )
     if (jsValidation) {
