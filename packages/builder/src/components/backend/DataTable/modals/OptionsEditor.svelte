@@ -28,11 +28,10 @@
 
   const updateConstraints = options => {
     constraints.inclusion = options.map(option => option.name)
-    let newColors = {}
-    options.forEach(option => {
-      newColors[option.name] = option.color
-    })
-    optionColors = newColors
+    optionColors = options.reduce(
+      (colors, option) => ({ ...colors, [option.name]: option.color }),
+      {}
+    )
   }
 
   const getDefaultColor = idx => {
