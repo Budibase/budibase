@@ -72,48 +72,76 @@ describe("validate", () => {
     })
 
     describe("time constraints", () => {
-      it.each(["10:00", "15:00", `10:${minute()}`, "12:34"])(
-        "should accept values in range (%s)",
-        async time => {
-          const row = { time }
-          const table = getTable()
-          table.schema.time.constraints = {
-            presence: true,
-            datetime: {
-              earliest: "10:00",
-              latest: "15:00",
-            },
-          }
-          const output = await validate({ table, tableId: table._id!, row })
-          expect(output.valid).toBe(true)
-        }
-      )
-
-      it.each([
-        "9:59:50",
-        `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
-      ])("should reject values before range (%s)", async time => {
-        const row = { time }
+      describe("earliest only", () => {
         const table = getTable()
         table.schema.time.constraints = {
           presence: true,
           datetime: {
             earliest: "10:00",
-            latest: "15:00",
+            latest: "",
           },
         }
-        const output = await validate({ table, tableId: table._id!, row })
-        expect(output.valid).toBe(false)
-        expect(output.errors).toEqual({
-          time: ["must be no earlier than 10:00"],
+
+        it.each([
+          "10:00",
+          "15:00",
+          `10:${minute()}`,
+          "12:34",
+          `${generator.integer({ min: 11, max: 23 })}:${minute()}`,
+        ])("should accept values after config value (%s)", async time => {
+          const row = { time }
+          const output = await validate({ table, tableId: table._id!, row })
+          expect(output.valid).toBe(true)
+        })
+
+        it.each([
+          "09:59:59",
+          `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
+        ])("should reject values before config value (%s)", async time => {
+          const row = { time }
+          const output = await validate({ table, tableId: table._id!, row })
+          expect(output.valid).toBe(false)
+          expect(output.errors).toEqual({
+            time: ["must be no earlier than 10:00"],
+          })
         })
       })
 
-      it.each([
-        "15:00:01",
-        `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
-      ])("should reject values after range (%s)", async time => {
-        const row = { time }
+      describe("latest only", () => {
+        const table = getTable()
+        table.schema.time.constraints = {
+          presence: true,
+          datetime: {
+            earliest: "",
+            latest: "15:16:17",
+          },
+        }
+
+        it.each([
+          "15:16:17",
+          "15:16",
+          "15:00",
+          `${generator.integer({ min: 0, max: 12 })}:${minute()}`,
+        ])("should accept values before config value (%s)", async time => {
+          const row = { time }
+          const output = await validate({ table, tableId: table._id!, row })
+          expect(output.valid).toBe(true)
+        })
+
+        it.each([
+          "15:16:18",
+          `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
+        ])("should reject values after config value (%s)", async time => {
+          const row = { time }
+          const output = await validate({ table, tableId: table._id!, row })
+          expect(output.valid).toBe(false)
+          expect(output.errors).toEqual({
+            time: ["must be no later than 15:16:17"],
+          })
+        })
+      })
+
+      describe("range", () => {
         const table = getTable()
         table.schema.time.constraints = {
           presence: true,
@@ -122,9 +150,39 @@ describe("validate", () => {
             latest: "15:00",
           },
         }
-        const output = await validate({ table, tableId: table._id!, row })
-        expect(output.valid).toBe(false)
-        expect(output.errors).toEqual({ time: ["must be no later than 15:00"] })
+
+        it.each(["10:00", "15:00", `10:${minute()}`, "12:34"])(
+          "should accept values in range (%s)",
+          async time => {
+            const row = { time }
+            const output = await validate({ table, tableId: table._id!, row })
+            expect(output.valid).toBe(true)
+          }
+        )
+
+        it.each([
+          "9:59:50",
+          `${generator.integer({ min: 0, max: 9 })}:${minute()}`,
+        ])("should reject values before range (%s)", async time => {
+          const row = { time }
+          const output = await validate({ table, tableId: table._id!, row })
+          expect(output.valid).toBe(false)
+          expect(output.errors).toEqual({
+            time: ["must be no earlier than 10:00"],
+          })
+        })
+
+        it.each([
+          "15:00:01",
+          `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
+        ])("should reject values after range (%s)", async time => {
+          const row = { time }
+          const output = await validate({ table, tableId: table._id!, row })
+          expect(output.valid).toBe(false)
+          expect(output.errors).toEqual({
+            time: ["must be no later than 15:00"],
+          })
+        })
       })
     })
 
