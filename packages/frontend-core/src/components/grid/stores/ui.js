@@ -19,6 +19,7 @@ export const createStores = context => {
   const previousFocusedRowId = writable(null)
   const previousFocusedCellId = writable(null)
   const gridFocused = writable(false)
+  const keyboardBlocked = writable(false)
   const isDragging = writable(false)
   const buttonColumnWidth = writable(0)
 
@@ -54,6 +55,7 @@ export const createStores = context => {
     hoveredRowId,
     rowHeight,
     gridFocused,
+    keyboardBlocked,
     isDragging,
     buttonColumnWidth,
     selectedRows: {
