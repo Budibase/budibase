@@ -177,7 +177,7 @@ export const stringifyDate = (
     const year = value.year()
     const month = `${value.month() + 1}`.padStart(2, "0")
     const day = `${value.date()}`.padStart(2, "0")
-    return `${year}-${month}-${day}T00:00:00.000`
+    return `${year}-${month}-${day}`
   }
 
   // Otherwise use a normal ISO string with time and timezone
