@@ -29,6 +29,7 @@
     focusedCellId,
     filter,
     inlineFilters,
+    keyboardBlocked,
   } = getContext("grid")
 
   const searchableTypes = [
@@ -58,6 +59,7 @@
   $: debouncedUpdateFilter(searchValue)
   $: orderable = !column.primaryDisplay
   $: editable = $config.canEditColumns && !column.schema.disabled
+  $: keyboardBlocked.set(open)
 
   const close = () => {
     open = false

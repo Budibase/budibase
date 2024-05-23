@@ -66,7 +66,7 @@
 
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
+  <div class="content">
     <GridScrollWrapper scrollVertically attachHandlers>
       {#each $renderedRows as row, idx}
         {@const rowSelected = !!$selectedRows[row._id]}
