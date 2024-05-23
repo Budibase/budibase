@@ -29,6 +29,8 @@ import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
 
+const builder = new sql.Sql(SqlClient.SQL_LITE)
+
 function buildInternalFieldList(
   table: Table,
   tables: Table[],
@@ -99,7 +101,6 @@ function buildTableMap(tables: Table[]) {
 }
 
 async function runSqlQuery(json: QueryJson, tables: Table[]) {
-  const builder = new sql.Sql(SqlClient.SQL_LITE)
   const alias = new AliasTables(tables.map(table => table.name))
   return await alias.queryWithAliasing(json, async json => {
     const query = builder._query(json, {
@@ -184,15 +185,13 @@ export async function search(
   try {
     const rows = await runSqlQuery(request, allTables)
 
-    // process from the format of tableId.column to expected format
-    const processed = await sqlOutputProcessing(
-      rows,
-      table!,
-      allTablesMap,
-      relationships,
-      {
+    // process from the format of tableId.column to expected format also
+    // make sure JSON columns corrected
+    const processed = builder.convertJsonStringColumns<Row>(
+      table,
+      await sqlOutputProcessing(rows, table!, allTablesMap, relationships, {
         sqs: true,
-      }
+      })
     )
 
     // check for pagination final row

@@ -768,11 +768,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
 
-  convertJsonStringColumns(
+  convertJsonStringColumns<T extends Record<string, any>>(
     table: Table,
-    results: Record<string, any>[],
+    results: T[],
     aliases?: Record<string, string>
-  ): Record<string, any>[] {
+  ): T[] {
     const tableName = getTableName(table)
     for (const [name, field] of Object.entries(table.schema)) {
       if (!this._isJsonColumn(field)) {
@@ -781,11 +781,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       const aliasedTableName = (tableName && aliases?.[tableName]) || tableName
       const fullName = `${aliasedTableName}.${name}`
       for (let row of results) {
-        if (typeof row[fullName] === "string") {
-          row[fullName] = JSON.parse(row[fullName])
+        if (typeof row[fullName as keyof T] === "string") {
+          row[fullName as keyof T] = JSON.parse(row[fullName])
         }
-        if (typeof row[name] === "string") {
-          row[name] = JSON.parse(row[name])
+        if (typeof row[name as keyof T] === "string") {
+          row[name as keyof T] = JSON.parse(row[name])
         }
       }
     }
