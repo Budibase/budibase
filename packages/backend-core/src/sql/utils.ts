@@ -8,7 +8,7 @@ const ROW_ID_REGEX = /^\[.*]$/g
 const ENCODED_SPACE = encodeURIComponent(" ")
 
 export function isExternalTableID(tableId: string) {
-  return tableId.includes(DocumentType.DATASOURCE)
+  return tableId.startsWith(DocumentType.DATASOURCE + SEPARATOR)
 }
 
 export function isInternalTableID(tableId: string) {
