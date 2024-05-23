@@ -102,6 +102,7 @@ const SQL_OPTIONS_TYPE_MAP: Record<string, PrimitiveTypes> = {
 const SQL_MISC_TYPE_MAP: Record<string, PrimitiveTypes> = {
   json: FieldType.JSON,
   bigint: FieldType.BIGINT,
+  enum: FieldType.OPTIONS,
 }
 
 const SQL_TYPE_MAP: Record<string, PrimitiveTypes> = {

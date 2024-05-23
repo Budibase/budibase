@@ -73,6 +73,16 @@ function validate(table: Table, oldTable?: Table) {
         `Column "${key}" has subtype "${column.subtype}" - this is not supported.`
       )
     }
+
+    if (column.type === FieldType.DATETIME) {
+      const oldColumn = oldTable?.schema[key] as typeof column
+
+      if (oldColumn && column.timeOnly !== oldColumn.timeOnly) {
+        throw new Error(
+          `Column "${key}" can not change from time to datetime or viceversa.`
+        )
+      }
+    }
   }
 }
 

@@ -485,6 +485,25 @@ describe.each([
         )
         expect(response.message).toBe("Cannot create new user entry.")
       })
+
+    it("should not mis-parse date string out of JSON", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+            },
+          },
+        })
+      )
+
+      const row = await config.api.row.save(table._id!, {
+        name: `{ "foo": "2023-01-26T11:48:57.000Z" }`,
+      })
+
+      expect(row.name).toEqual(`{ "foo": "2023-01-26T11:48:57.000Z" }`)
+    })
   })
 
   describe("get", () => {
