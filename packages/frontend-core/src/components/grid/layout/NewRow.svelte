@@ -209,7 +209,7 @@
       <GridScrollWrapper scrollHorizontally attachHandlers>
         <div class="row">
           {#each $visibleColumns as column}
-            {@const cellId = `new-${column.name}`}
+            {@const cellId = getCellID(NewRowID, column.name)}
             <DataCell
               {cellId}
               {column}
