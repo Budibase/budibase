@@ -4,6 +4,7 @@
   import { Icon, Popover } from "@budibase/bbui"
   import { onMount, tick } from "svelte"
   import { Constants } from "@budibase/frontend-core"
+  import { getSequentialName } from "helpers/duplicate"
 
   export let constraints
   export let optionColors = {}
@@ -15,25 +16,33 @@
   let colorPopovers = []
   let anchors = []
 
-  const removeInput = idx => {
-    delete optionColors[options[idx].name]
-    constraints.inclusion = constraints.inclusion.filter((e, i) => i !== idx)
-    options = options.filter((e, i) => i !== idx)
+  $: enrichedOptions = options.map((option, idx) => ({
+    ...option,
+    color: optionColors?.[option.name] || defaultColor(idx),
+  }))
+
+  const defaultColor = idx => OptionColours[idx % OptionColours.length]
+
+  const removeInput = name => {
+    delete optionColors[name]
+    constraints.inclusion = constraints.inclusion.filter(opt => opt !== name)
+    options = options.filter(opt => opt.name !== name)
     colorPopovers.pop(undefined)
     anchors.pop(undefined)
   }
 
   const addNewInput = async () => {
-    const newName = `Option ${constraints.inclusion.length + 1}`
-    const id = Math.random()
-    options = [...options, { name: newName, id }]
+    const newName = getSequentialName(constraints.inclusion, "Option ", {
+      numberFirstItem: true,
+    })
+    const newId = Math.random()
+    options = [...options, { name: newName, id: newId }]
     constraints.inclusion = [...constraints.inclusion, newName]
-    optionColors[newName] =
-      OptionColours[(options.length - 1) % OptionColours.length]
+    optionColors[newName] = defaultColor(options.length - 1)
     colorPopovers.push(undefined)
     anchors.push(undefined)
     await tick()
-    document.getElementById(`option-${id}`)?.focus()
+    document.getElementById(`option-${newId}`)?.focus()
   }
 
   const handleDndConsider = e => {
@@ -44,16 +53,29 @@
     constraints.inclusion = options.map(option => option.name)
   }
 
-  const handleColorChange = (optionName, color, idx) => {
-    optionColors[optionName] = color
+  const handleColorChange = (name, color, idx) => {
+    optionColors[name] = color
     colorPopovers[idx].hide()
   }
 
-  const handleNameChange = (optionName, idx, value) => {
-    constraints.inclusion[idx] = value
-    options[idx].name = value
-    optionColors[value] = optionColors[optionName]
-    delete optionColors[optionName]
+  const handleNameChange = (name, idx, newName) => {
+    // Check we don't already have this option
+    const existing = options.some((option, optionIdx) => {
+      return newName === option.name && idx !== optionIdx
+    })
+    const invalid = !newName || existing
+    options.find(option => option.name === name).invalid = invalid
+    options = options.slice()
+
+    // Stop if invalid or no change
+    if (invalid || name === newName) {
+      return
+    }
+
+    constraints.inclusion[idx] = newName
+    options[idx].name = newName
+    optionColors[newName] = optionColors[name]
+    delete optionColors[name]
   }
 
   const openColorPickerPopover = optionIdx => {
@@ -66,79 +88,84 @@
     }
   }
 
-  const getOptionColor = (name, idx) => {
-    return optionColors?.[name] || OptionColours[idx % OptionColours.length]
-  }
-
   onMount(() => {
     // Initialize anchor arrays on mount, assuming 'options' is already populated
     colorPopovers = constraints.inclusion.map(() => undefined)
     anchors = constraints.inclusion.map(() => undefined)
-
     options = constraints.inclusion.map(value => ({
-      name: value,
       id: Math.random(),
+      name: value,
     }))
   })
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div
-  class="options"
-  use:dndzone={{
-    items: options,
-    flipDurationMs,
-    dropTargetStyle: { outline: "none" },
-  }}
-  on:consider={handleDndConsider}
-  on:finalize={handleDndFinalize}
->
-  {#each options as option, idx (`${option.id}-${idx}`)}
-    {@const color = getOptionColor(option.name, idx)}
-    <div class="option" animate:flip={{ duration: flipDurationMs }}>
-      <div class="drag-handle">
-        <Icon name="DragHandle" size="L" />
-      </div>
+<div class="wrapper">
+  <div
+    class="options"
+    use:dndzone={{
+      items: options,
+      flipDurationMs,
+      dropTargetStyle: { outline: "none" },
+    }}
+    on:consider={handleDndConsider}
+    on:finalize={handleDndFinalize}
+  >
+    {#each enrichedOptions as option, idx (option.id)}
       <div
-        bind:this={anchors[idx]}
-        class="color-picker"
-        on:click={e => openColorPickerPopover(idx, e.target)}
+        class="option"
+        animate:flip={{ duration: flipDurationMs }}
+        class:invalid={option.invalid}
       >
-        <div class="circle" style="--color:{color}">
-          <Popover
-            bind:this={colorPopovers[idx]}
-            anchor={anchors[idx]}
-            align="left"
-            offset={0}
-            animate={false}
-            resizable={false}
-          >
-            <div class="colors" data-ignore-click-outside="true">
-              {#each OptionColours as colorOption}
-                <div
-                  on:click={() =>
-                    handleColorChange(option.name, colorOption, idx)}
-                  style="--color:{colorOption};"
-                  class="circle"
-                  class:selected={colorOption === color}
-                />
-              {/each}
-            </div>
-          </Popover>
+        <div class="drag-handle">
+          <Icon name="DragHandle" size="L" />
         </div>
+        <div
+          bind:this={anchors[idx]}
+          class="color-picker"
+          on:click={e => openColorPickerPopover(idx, e.target)}
+        >
+          <div class="circle" style="--color:{option.color}">
+            <Popover
+              bind:this={colorPopovers[idx]}
+              anchor={anchors[idx]}
+              align="left"
+              offset={0}
+              animate={false}
+              resizable={false}
+            >
+              <div class="colors" data-ignore-click-outside="true">
+                {#each OptionColours as colorOption}
+                  <div
+                    on:click={() =>
+                      handleColorChange(option.name, colorOption, idx)}
+                    style="--color:{colorOption};"
+                    class="circle"
+                    class:selected={colorOption === option.color}
+                  />
+                {/each}
+              </div>
+            </Popover>
+          </div>
+        </div>
+        <input
+          class="option-name"
+          type="text"
+          value={option.name}
+          placeholder="Option name"
+          id="option-{option.id}"
+          on:input={e => handleNameChange(option.name, idx, e.target.value)}
+        />
+        <Icon
+          name="Close"
+          hoverable
+          size="S"
+          on:click={removeInput(option.name)}
+        />
       </div>
-      <input
-        class="option-name"
-        type="text"
-        on:change={e => handleNameChange(option.name, idx, e.target.value)}
-        value={option.name}
-        placeholder="Option name"
-        id="option-{option.id}"
-      />
-      <Icon name="Close" hoverable size="S" on:click={removeInput(idx)} />
-    </div>
-  {/each}
+    {/each}
+  </div>
   <div on:click={addNewInput} class="add-option">
     <Icon name="Add" />
     <div>Add option</div>
@@ -147,13 +174,14 @@
 
 <style>
   /* Container */
-  .options {
+  .wrapper {
     overflow: hidden;
     border-radius: 4px;
     border: 1px solid var(--spectrum-global-color-gray-300);
     background-color: var(--spectrum-global-color-gray-50);
   }
-  .options > * {
+  .options > *,
+  .add-option {
     height: 32px;
   }
 
@@ -164,12 +192,16 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    border: 1px solid transparent;
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     gap: var(--spacing-m);
     padding: 0 var(--spacing-m) 0 var(--spacing-s);
   }
-  .option:hover,
-  .option:focus {
+  .option.invalid {
+    border: 1px solid var(--spectrum-global-color-red-400);
+  }
+  .option:not(.invalid):hover,
+  .option:not(.invalid):focus {
     background: var(--spectrum-global-color-gray-100);
   }
 
