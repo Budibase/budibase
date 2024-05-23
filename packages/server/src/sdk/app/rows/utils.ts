@@ -205,6 +205,10 @@ export async function validate({
       } catch (err) {
         errors[fieldName] = [`Contains invalid JSON`]
       }
+    } else if (type === FieldType.DATETIME && column.timeOnly) {
+      if (row[fieldName] && !row[fieldName].match(/^(\d+)(:[0-5]\d){1,2}$/)) {
+        errors[fieldName] = [`${fieldName} is not a valid time`]
+      }
     } else {
       res = validateJs.single(row[fieldName], constraints)
     }
