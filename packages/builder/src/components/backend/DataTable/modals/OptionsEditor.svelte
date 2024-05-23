@@ -196,6 +196,7 @@
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     gap: var(--spacing-m);
     padding: 0 var(--spacing-m) 0 var(--spacing-s);
+    outline: none !important;
   }
   .option.invalid {
     border: 1px solid var(--spectrum-global-color-red-400);
