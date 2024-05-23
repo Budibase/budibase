@@ -2,101 +2,104 @@
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { Icon, Popover } from "@budibase/bbui"
-  import { onMount, tick } from "svelte"
+  import { tick } from "svelte"
   import { Constants } from "@budibase/frontend-core"
   import { getSequentialName } from "helpers/duplicate"
+  import { writable } from "svelte/store"
 
   export let constraints
   export let optionColors = {}
 
-  const flipDurationMs = 150
+  const flipDurationMs = 130
   const { OptionColours } = Constants
 
-  let options = []
-  let colorPopovers = []
-  let anchors = []
+  let openOption = null
+  let anchor = null
+  let options = writable(
+    constraints.inclusion.map((value, idx) => ({
+      id: Math.random(),
+      name: value,
+      color: optionColors?.[value] || getDefaultColor(idx),
+      invalid: false,
+    }))
+  )
 
-  $: enrichedOptions = options.map((option, idx) => ({
-    ...option,
-    color: optionColors?.[option.name] || defaultColor(idx),
-  }))
+  $: options.subscribe(updateConstraints)
 
-  const defaultColor = idx => OptionColours[idx % OptionColours.length]
+  const updateConstraints = options => {
+    constraints.inclusion = options.map(option => option.name)
+    let newColors = {}
+    options.forEach(option => {
+      newColors[option.name] = option.color
+    })
+    optionColors = newColors
+  }
 
-  const removeInput = name => {
-    delete optionColors[name]
-    constraints.inclusion = constraints.inclusion.filter(opt => opt !== name)
-    options = options.filter(opt => opt.name !== name)
-    colorPopovers.pop(undefined)
-    anchors.pop(undefined)
+  const getDefaultColor = idx => {
+    return OptionColours[idx % OptionColours.length]
   }
 
   const addNewInput = async () => {
-    const newName = getSequentialName(constraints.inclusion, "Option ", {
-      numberFirstItem: true,
-    })
     const newId = Math.random()
-    options = [...options, { name: newName, id: newId }]
-    constraints.inclusion = [...constraints.inclusion, newName]
-    optionColors[newName] = defaultColor(options.length - 1)
-    colorPopovers.push(undefined)
-    anchors.push(undefined)
+    const newName = getSequentialName($options, "Option ", {
+      numberFirstItem: true,
+      getName: option => option.name,
+    })
+    options.update(state => {
+      return [
+        ...state,
+        {
+          name: newName,
+          id: newId,
+          color: getDefaultColor(state.length),
+        },
+      ]
+    })
+
+    // Focus new option
     await tick()
     document.getElementById(`option-${newId}`)?.focus()
   }
 
-  const handleDndConsider = e => {
-    options = e.detail.items
-  }
-  const handleDndFinalize = e => {
-    options = e.detail.items
-    constraints.inclusion = options.map(option => option.name)
+  const removeInput = id => {
+    options.update(state => state.filter(option => option.id !== id))
   }
 
-  const handleColorChange = (name, color, idx) => {
-    optionColors[name] = color
-    colorPopovers[idx].hide()
+  const openColorPicker = id => {
+    anchor = document.getElementById(`color-${id}`)
+    openOption = id
   }
 
-  const handleNameChange = (name, idx, newName) => {
+  const handleColorChange = (id, color) => {
+    options.update(state => {
+      state.find(option => option.id === id).color = color
+      return state.slice()
+    })
+    openOption = null
+  }
+
+  const handleNameChange = (id, newName) => {
     // Check we don't already have this option
-    const existing = options.some((option, optionIdx) => {
-      return newName === option.name && idx !== optionIdx
+    const existing = $options.some(option => {
+      return (option.name === newName) & (option.id !== id)
     })
     const invalid = !newName || existing
-    options.find(option => option.name === name).invalid = invalid
-    options = options.slice()
+    options.update(state => {
+      state.find(option => option.id === id).invalid = invalid
+      return state.slice()
+    })
 
-    // Stop if invalid or no change
-    if (invalid || name === newName) {
+    // Stop if invalid
+    if (invalid) {
       return
     }
 
-    constraints.inclusion[idx] = newName
-    options[idx].name = newName
-    optionColors[newName] = optionColors[name]
-    delete optionColors[name]
+    // Update name
+    options.update(state => {
+      state.find(option => option.id === id).name = newName
+      return state.slice()
+    })
   }
-
-  const openColorPickerPopover = optionIdx => {
-    for (let i = 0; i < colorPopovers.length; i++) {
-      if (i === optionIdx) {
-        colorPopovers[i].show()
-      } else {
-        colorPopovers[i]?.hide()
-      }
-    }
-  }
-
-  onMount(() => {
-    // Initialize anchor arrays on mount, assuming 'options' is already populated
-    colorPopovers = constraints.inclusion.map(() => undefined)
-    anchors = constraints.inclusion.map(() => undefined)
-    options = constraints.inclusion.map(value => ({
-      id: Math.random(),
-      name: value,
-    }))
-  })
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -105,14 +108,14 @@
   <div
     class="options"
     use:dndzone={{
-      items: options,
+      items: $options,
       flipDurationMs,
       dropTargetStyle: { outline: "none" },
     }}
-    on:consider={handleDndConsider}
-    on:finalize={handleDndFinalize}
+    on:consider={e => options.set(e.detail.items)}
+    on:finalize={e => options.set(e.detail.items)}
   >
-    {#each enrichedOptions as option, idx (option.id)}
+    {#each $options as option (option.id)}
       <div
         class="option"
         animate:flip={{ duration: flipDurationMs }}
@@ -122,14 +125,14 @@
           <Icon name="DragHandle" size="L" />
         </div>
         <div
-          bind:this={anchors[idx]}
+          id="color-{option.id}"
           class="color-picker"
-          on:click={e => openColorPickerPopover(idx, e.target)}
+          on:click={() => openColorPicker(option.id)}
         >
           <div class="circle" style="--color:{option.color}">
             <Popover
-              bind:this={colorPopovers[idx]}
-              anchor={anchors[idx]}
+              open={openOption === option.id}
+              {anchor}
               align="left"
               offset={0}
               animate={false}
@@ -138,8 +141,7 @@
               <div class="colors" data-ignore-click-outside="true">
                 {#each OptionColours as colorOption}
                   <div
-                    on:click={() =>
-                      handleColorChange(option.name, colorOption, idx)}
+                    on:click={() => handleColorChange(option.id, colorOption)}
                     style="--color:{colorOption};"
                     class="circle"
                     class:selected={colorOption === option.color}
@@ -155,13 +157,13 @@
           value={option.name}
           placeholder="Option name"
           id="option-{option.id}"
-          on:input={e => handleNameChange(option.name, idx, e.target.value)}
+          on:input={e => handleNameChange(option.id, e.target.value)}
         />
         <Icon
           name="Close"
           hoverable
           size="S"
-          on:click={removeInput(option.name)}
+          on:click={() => removeInput(option.id)}
         />
       </div>
     {/each}
