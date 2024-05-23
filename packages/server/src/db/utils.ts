@@ -77,7 +77,7 @@ export function getTableParams(tableId?: Optional, otherProps = {}) {
  * @returns The new table ID which the table doc can be stored under.
  */
 export function generateTableID() {
-  return `${DocumentType.TABLE}${SEPARATOR}${newid()}`
+  return dbCore.generateTableID()
 }
 
 /**
