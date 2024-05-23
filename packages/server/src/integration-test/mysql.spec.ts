@@ -17,7 +17,6 @@ import {
   rawQuery,
 } from "../integrations/tests/utils"
 import { generator } from "@budibase/backend-core/tests"
-import { log } from "console";
 // @ts-ignore
 fetch.mockSearch()
 
