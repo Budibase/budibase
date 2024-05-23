@@ -17,6 +17,7 @@ import {
   rawQuery,
 } from "../integrations/tests/utils"
 import { generator } from "@budibase/backend-core/tests"
+import { log } from "console";
 // @ts-ignore
 fetch.mockSearch()
 
@@ -281,4 +282,41 @@ describe("mysql integrations", () => {
       ])
     })
   })
+
+  describe("POST /api/datasources/:datasourceId/schema", () => {
+    let tableName: string
+  
+    beforeEach(async () => {
+      tableName = uniqueTableName()
+    });
+  
+    afterEach(async () => {
+      await rawQuery(rawDatasource, `DROP TABLE IF EXISTS \`${tableName}\``)
+    })
+  
+    it("recognises enum columns as options", async () => {
+      const enumColumnName = 'status'
+  
+      const createTableQuery = `
+        CREATE TABLE \`${tableName}\` (
+          \`order_id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`customer_name\` VARCHAR(100) NOT NULL,
+          \`${enumColumnName}\` ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled')
+        );
+      `
+  
+      await rawQuery(rawDatasource, createTableQuery)
+  
+      const response = await makeRequest(
+        "post",
+        `/api/datasources/${datasource._id}/schema`
+      )
+  
+      const table = response.body.datasource.entities[tableName]
+  
+      expect(table).toBeDefined()
+      expect(table.schema[enumColumnName].type).toEqual(FieldType.OPTIONS)
+    });
+  });
+  
 })
