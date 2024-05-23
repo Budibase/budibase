@@ -55,8 +55,8 @@ function buildInternalFieldList(
   return fieldList
 }
 
-function tableInFilter(name: string) {
-  return `:${name}.`
+function tableNameInFieldRegex(tableName: string) {
+  return new RegExp(`^${tableName}.|:${tableName}.`, "g")
 }
 
 function cleanupFilters(filters: SearchFilters, tables: Table[]) {
@@ -72,15 +72,13 @@ function cleanupFilters(filters: SearchFilters, tables: Table[]) {
       // relationship, switch to table ID
       const tableRelated = tables.find(
         table =>
-          table.originalName && key.includes(tableInFilter(table.originalName))
+          table.originalName &&
+          key.match(tableNameInFieldRegex(table.originalName))
       )
       if (tableRelated && tableRelated.originalName) {
-        filter[
-          key.replace(
-            tableInFilter(tableRelated.originalName),
-            tableInFilter(tableRelated._id!)
-          )
-        ] = filter[key]
+        // only replace the first, not replaceAll
+        filter[key.replace(tableRelated.originalName, tableRelated._id!)] =
+          filter[key]
         delete filter[key]
       }
     }
