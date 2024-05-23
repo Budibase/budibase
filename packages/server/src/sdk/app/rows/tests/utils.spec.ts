@@ -183,6 +183,26 @@ describe("validate", () => {
             time: ["must be no later than 15:00"],
           })
         })
+
+        describe("range crossing midnight", () => {
+          const table = getTable()
+          table.schema.time.constraints = {
+            presence: true,
+            datetime: {
+              earliest: "15:00",
+              latest: "10:00",
+            },
+          }
+
+          it.each(["10:00", "15:00", `9:${minute()}`, "16:34"])(
+            "should accept values in range (%s)",
+            async time => {
+              const row = { time }
+              const output = await validate({ table, tableId: table._id!, row })
+              expect(output.valid).toBe(true)
+            }
+          )
+        })
       })
     })
 
