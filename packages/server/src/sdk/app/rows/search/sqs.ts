@@ -177,7 +177,7 @@ export async function search(
   const limit = params.limit
   if (paginate && params.limit) {
     request.paginate = {
-      limit: params.limit,
+      limit: params.limit + 1,
       page: bookmark,
     }
   }
@@ -194,6 +194,12 @@ export async function search(
         sqs: true,
       }
     )
+
+    // check for pagination final row
+    let nextRow: Row | undefined
+    if (paginate && params.limit && processed.length > params.limit) {
+      nextRow = processed.pop()
+    }
 
     // get the rows
     let finalRows = await outputProcessing<Row[]>(table, processed, {
@@ -217,10 +223,7 @@ export async function search(
         limit: 1,
         page: bookmark * prevLimit + 1,
       }
-      // check if there is another row
-      const nextRow = await runSqlQuery(request, allTables)
-      // check if there is a row found
-      const hasNextPage = Array.isArray(nextRow) && nextRow.length >= 1
+      const hasNextPage = !!nextRow
       response.hasNextPage = hasNextPage
       if (hasNextPage) {
         response.bookmark = bookmark + 1
