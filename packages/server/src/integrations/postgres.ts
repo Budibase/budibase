@@ -331,10 +331,10 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const enumsResponse = await this.client.query(this.ENUM_VALUES())
       // output array, allows for more than 1 single-select to be used at a time
       const enumValues = enumsResponse.rows?.reduce((acc, row) => {
-          return {
-              ...acc,
-              [row.typname]: [...(acc[row.typname] || []), row.enumlabel]
-          };
+        return {
+          ...acc,
+          [row.typname]: [...(acc[row.typname] || []), row.enumlabel],
+        }
       }, {})
 
       for (let column of columnsResponse.rows) {
