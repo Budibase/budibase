@@ -604,27 +604,29 @@
         <DatePicker bind:value={editableColumn.constraints.datetime.latest} />
       </div>
     </div>
-    {#if datasource?.source !== SourceName.ORACLE && datasource?.source !== SourceName.SQL_SERVER && !editableColumn.dateOnly}
-      <div>
-        <div class="row">
-          <Label>Time zones</Label>
-          <AbsTooltip
-            position="top"
-            type="info"
-            text={isCreating
-              ? null
-              : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
-          >
-            <Icon size="XS" name="InfoOutline" />
-          </AbsTooltip>
+    {#if !editableColumn.timeOnly}
+      {#if datasource?.source !== SourceName.ORACLE && datasource?.source !== SourceName.SQL_SERVER && !editableColumn.dateOnly}
+        <div>
+          <div class="row">
+            <Label>Time zones</Label>
+            <AbsTooltip
+              position="top"
+              type="info"
+              text={isCreating
+                ? null
+                : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
+            >
+              <Icon size="XS" name="InfoOutline" />
+            </AbsTooltip>
+          </div>
+          <Toggle
+            bind:value={editableColumn.ignoreTimezones}
+            text="Ignore time zones"
+          />
         </div>
-        <Toggle
-          bind:value={editableColumn.ignoreTimezones}
-          text="Ignore time zones"
-        />
-      </div>
+      {/if}
+      <Toggle bind:value={editableColumn.dateOnly} text="Date only" />
     {/if}
-    <Toggle bind:value={editableColumn.dateOnly} text="Date only" />
   {:else if editableColumn.type === FieldType.NUMBER && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
