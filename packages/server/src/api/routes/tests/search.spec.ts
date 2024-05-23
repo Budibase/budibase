@@ -87,24 +87,67 @@ describe.each([
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
 
-    private popRow<T extends object>(
+    // We originally used _.isMatch to compare rows, but found that when
+    // comparing arrays it would return true if the source array was a subset of
+    // the target array. This would sometimes create false matches. This
+    // function is a more strict version of _.isMatch that only returns true if
+    // the source array is an exact match of the target.
+    //
+    // _.isMatch("100", "1") also returns true which is not what we want.
+    private isMatch<T extends Record<string, any>>(expected: T, found: T) {
+      if (!expected) {
+        throw new Error("Expected is undefined")
+      }
+      if (!found) {
+        return false
+      }
+
+      for (const key of Object.keys(expected)) {
+        if (Array.isArray(expected[key])) {
+          if (!Array.isArray(found[key])) {
+            return false
+          }
+          if (expected[key].length !== found[key].length) {
+            return false
+          }
+          if (!_.isMatch(found[key], expected[key])) {
+            return false
+          }
+        } else if (typeof expected[key] === "object") {
+          if (!this.isMatch(expected[key], found[key])) {
+            return false
+          }
+        } else {
+          if (expected[key] !== found[key]) {
+            return false
+          }
+        }
+      }
+      return true
+    }
+
+    // This function exists to ensure that the same row is not matched twice.
+    // When a row gets matched, we make sure to remove it from the list of rows
+    // we're matching against.
+    private popRow<T extends { [key: string]: any }>(
       expectedRow: T,
       foundRows: T[]
     ): NonNullable<T> {
-      const row = foundRows.find(row => _.isMatch(row, expectedRow))
+      const row = foundRows.find(row => this.isMatch(expectedRow, row))
       if (!row) {
         const fields = Object.keys(expectedRow)
         // To make the error message more readable, we only include the fields
         // that are present in the expected row.
         const searchedObjects = foundRows.map(row => _.pick(row, fields))
         throw new Error(
-          `Failed to find row: ${JSON.stringify(
-            expectedRow
-          )} in ${JSON.stringify(searchedObjects)}`
+          `Failed to find row:\n\n${JSON.stringify(
+            expectedRow,
+            null,
+            2
+          )}\n\nin\n\n${JSON.stringify(searchedObjects, null, 2)}`
         )
       }
 
-      // Ensuring the same row is not matched twice
       foundRows.splice(foundRows.indexOf(row), 1)
       return row
     }
@@ -133,8 +176,6 @@ describe.each([
     // passed in. The order of the rows is not important, but extra rows will
     // cause the assertion to fail.
     async toContainExactly(expectedRows: any[]) {
-      expectedRows.sort((a, b) => Object.keys(b).length - Object.keys(a).length)
-
       const { rows: foundRows } = await config.api.row.search(table._id!, {
         ...this.query,
         tableId: table._id!,
@@ -156,8 +197,6 @@ describe.each([
     // The order of the rows is not important. Extra rows will not cause the
     // assertion to fail.
     async toContain(expectedRows: any[]) {
-      expectedRows.sort((a, b) => Object.keys(b).length - Object.keys(a).length)
-
       const { rows: foundRows } = await config.api.row.search(table._id!, {
         ...this.query,
         tableId: table._id!,
@@ -1592,7 +1631,7 @@ describe.each([
         expectQuery({ notEqual: { user: "us_none" } }).toContainExactly([
           { user: { _id: user1._id } },
           { user: { _id: user2._id } },
-          { user: {} },
+          {},
         ]))
     })
 
@@ -1664,7 +1703,7 @@ describe.each([
       it("successfully finds a row", () =>
         expectQuery({ notContains: { users: [user1._id] } }).toContainExactly([
           { users: [{ _id: user2._id }] },
-          { users: [] },
+          {},
         ]))
 
       it("fails to find nonexistent row", () =>
@@ -1672,12 +1711,12 @@ describe.each([
           { users: [{ _id: user1._id }] },
           { users: [{ _id: user2._id }] },
           { users: [{ _id: user1._id }, { _id: user2._id }] },
-          { users: [] },
+          {},
         ]))
     })
 
     describe("containsAny", () => {
-      it.only("successfully finds rows", () =>
+      it("successfully finds rows", () =>
         expectQuery({
           containsAny: { users: [user1._id, user2._id] },
         }).toContainExactly([
