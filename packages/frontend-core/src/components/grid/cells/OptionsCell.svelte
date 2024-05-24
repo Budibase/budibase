@@ -1,8 +1,8 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { getColor } from "../lib/utils"
   import { onMount } from "svelte"
   import GridPopover from "../overlays/GridPopover.svelte"
+  import { OptionColours } from "../../../constants"
 
   export let value
   export let schema
@@ -12,6 +12,8 @@
   export let readonly = false
   export let api
   export let contentLines = 1
+
+  const InvalidColor = "hsla(0, 0%, 70%, 0.3)"
 
   let isOpen = false
   let focusedOptionIdx = null
@@ -38,8 +40,11 @@
   }
 
   const getOptionColor = value => {
-    const index = value ? options.indexOf(value) : null
-    return getColor(index)
+    let idx = value ? options.indexOf(value) : null
+    if (idx == null || idx === -1) {
+      return InvalidColor
+    }
+    return OptionColours[idx % OptionColours.length]
   }
 
   const toggleOption = option => {
