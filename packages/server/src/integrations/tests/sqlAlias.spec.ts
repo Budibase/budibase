@@ -77,7 +77,7 @@ describe("Captures of real examples", () => {
               "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" 
               from (select * from "products" as "a" order by "a"."productname" asc nulls first limit $1) as "a" 
               left join "products_tasks" as "c" on "a"."productid" = "c"."productid" 
-              left join "tasks" as "b" on "b"."taskid" = "c"."taskid" where "b"."taskname" = $2 
+              left join "tasks" as "b" on "b"."taskid" = "c"."taskid" where COALESCE("b"."taskname" = $2, FALSE)
               order by "a"."productname" asc nulls first limit $3`),
       })
     })
@@ -137,12 +137,12 @@ describe("Captures of real examples", () => {
              "c"."city" as "c.city", "c"."lastname" as "c.lastname", "c"."year" as "c.year", "c"."firstname" as "c.firstname", 
              "c"."personid" as "c.personid", "c"."address" as "c.address", "c"."age" as "c.age", "c"."type" as "c.type", 
              "c"."city" as "c.city", "c"."lastname" as "c.lastname" 
-             from (select * from "tasks" as "a" where not "a"."completed" = $1 
+             from (select * from "tasks" as "a" where COALESCE("a"."completed" != $1, TRUE)
              order by "a"."taskname" asc nulls first limit $2) as "a" 
              left join "products_tasks" as "d" on "a"."taskid" = "d"."taskid" 
              left join "products" as "b" on "b"."productid" = "d"."productid" 
              left join "persons" as "c" on "a"."executorid" = "c"."personid" or "a"."qaid" = "c"."personid" 
-             where "c"."year" between $3 and $4 and "b"."productname" = $5 order by "a"."taskname" asc nulls first limit $6`),
+             where "c"."year" between $3 and $4 and COALESCE("b"."productname" = $5, FALSE) order by "a"."taskname" asc nulls first limit $6`),
       })
     })
   })
@@ -154,7 +154,7 @@ describe("Captures of real examples", () => {
       expect(query).toEqual({
         bindings: [1990, "C", "A Street", 34, "designer", "London", "B", 5],
         sql: multiline(`update "persons" as "a" set "year" = $1, "firstname" = $2, "address" = $3, "age" = $4, 
-             "type" = $5, "city" = $6, "lastname" = $7 where "a"."personid" = $8 returning *`),
+             "type" = $5, "city" = $6, "lastname" = $7 where COALESCE("a"."personid" = $8, FALSE) returning *`),
       })
     })
 
@@ -164,7 +164,7 @@ describe("Captures of real examples", () => {
       expect(query).toEqual({
         bindings: [1990, "C", "A Street", 34, "designer", "London", "B", 5],
         sql: multiline(`update "persons" as "a" set "year" = $1, "firstname" = $2, "address" = $3, "age" = $4, 
-             "type" = $5, "city" = $6, "lastname" = $7 where "a"."personid" = $8 returning *`),
+             "type" = $5, "city" = $6, "lastname" = $7 where COALESCE("a"."personid" = $8, FALSE) returning *`),
       })
     })
   })
@@ -175,8 +175,9 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
         bindings: ["ddd", ""],
-        sql: multiline(`delete from "compositetable" as "a" where "a"."keypartone" = $1 and "a"."keyparttwo" = $2 
-             returning "a"."keyparttwo" as "a.keyparttwo", "a"."keypartone" as "a.keypartone", "a"."name" as "a.name"`),
+        sql: multiline(`delete from "compositetable" as "a" 
+          where COALESCE("a"."keypartone" = $1, FALSE) and COALESCE("a"."keyparttwo" = $2, FALSE)
+          returning "a"."keyparttwo" as "a.keyparttwo", "a"."keypartone" as "a.keypartone", "a"."name" as "a.name"`),
       })
     })
   })
@@ -197,7 +198,7 @@ describe("Captures of real examples", () => {
         returningQuery = input
       }, queryJson)
       expect(returningQuery).toEqual({
-        sql: "select * from (select top (@p0) * from [people] where [people].[name] = @p1 and [people].[age] = @p2 order by [people].[name] asc) as [people]",
+        sql: "select * from (select top (@p0) * from [people] where CASE WHEN [people].[name] = @p1 THEN 1 ELSE 0 END = 1 and CASE WHEN [people].[age] = @p2 THEN 1 ELSE 0 END = 1 order by [people].[name] asc) as [people]",
         bindings: [1, "Test", 22],
       })
     })
