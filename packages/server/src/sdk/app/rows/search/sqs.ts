@@ -171,7 +171,8 @@ export async function search(
       sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
 
       const db = context.getAppDB()
-      return await db.sql<Row>(sql, bindings)
+      const rows = await db.sql<Row>(sql, bindings)
+      return rows
     })
 
     // process from the format of tableId.column to expected format

@@ -89,7 +89,6 @@ export { default as ListItem } from "./List/ListItem.svelte"
 export { default as IconSideNav } from "./IconSideNav/IconSideNav.svelte"
 export { default as IconSideNavItem } from "./IconSideNav/IconSideNavItem.svelte"
 export { default as Accordion } from "./Accordion/Accordion.svelte"
-export { default as OptionSelectDnD } from "./OptionSelectDnD/OptionSelectDnD.svelte"
 export { default as AbsTooltip } from "./Tooltip/AbsTooltip.svelte"
 export { TooltipPosition, TooltipType } from "./Tooltip/AbsTooltip.svelte"
 
