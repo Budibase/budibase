@@ -33,6 +33,10 @@ export interface View {
   groupBy?: string
 }
 
+export type ViewUIFieldMetadata = UIFieldMetadata & {
+  readonly?: boolean
+}
+
 export interface ViewV2 {
   version: 2
   id: string
@@ -45,7 +49,7 @@ export interface ViewV2 {
     order?: SortOrder
     type?: SortType
   }
-  schema?: Record<string, UIFieldMetadata>
+  schema?: Record<string, ViewUIFieldMetadata>
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
