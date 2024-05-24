@@ -1,7 +1,7 @@
 <script>
   import { Multiselect } from "@budibase/bbui"
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { selectedScreen, tables } from "stores/builder"
+  import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import { getFields } from "helpers/searchFields"
 
@@ -20,10 +20,7 @@
     if (!ds?.tableId) {
       return base.map(field => field.name)
     }
-    const currentTable = $tables.list.find(table => table._id === ds.tableId)
-    return getFields(base, { allowLinks: currentTable?.sql }).map(
-      field => field.name
-    )
+    return getFields(base, { allowLinks: true }).map(field => field.name)
   }
 
   function getSelectedOption(selectedOptions, allOptions) {
