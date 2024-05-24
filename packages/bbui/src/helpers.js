@@ -168,7 +168,12 @@ export const stringifyDate = (
     // Ensure we use the correct offset for the date
     const referenceDate = value.toDate()
     const offset = referenceDate.getTimezoneOffset() * 60000
-    return new Date(value.valueOf() - offset).toISOString().slice(0, -1)
+    const date = new Date(value.valueOf() - offset)
+    if (timeOnly) {
+      // Extract HH:mm
+      return date.toISOString().slice(11, 16)
+    }
+    return date.toISOString().slice(0, -1)
   }
 
   // For date-only fields, construct a manual timestamp string without a time
