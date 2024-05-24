@@ -28,13 +28,16 @@ export function processTable(table: Table): Table {
       sourceType: TableSourceType.EXTERNAL,
     }
   } else {
-    return {
+    const processed: Table = {
       ...table,
-      sql: !!env.SQS_SEARCH_ENABLE,
       type: "table",
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
     }
+    if (env.SQS_SEARCH_ENABLE) {
+      processed.sql = !!env.SQS_SEARCH_ENABLE
+    }
+    return processed
   }
 }
 
