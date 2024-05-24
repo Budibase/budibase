@@ -5,10 +5,11 @@
   import { tick } from "svelte"
   import { Constants } from "@budibase/frontend-core"
   import { getSequentialName } from "helpers/duplicate"
-  import { writable } from "svelte/store"
+  import { derived, writable } from "svelte/store"
 
   export let constraints
   export let optionColors = {}
+  export let valid = true
 
   const flipDurationMs = 130
   const { OptionColours } = Constants
@@ -21,11 +22,22 @@
       invalid: false,
     }))
   )
+  const enrichedOptions = derived(options, $options => {
+    let enriched = []
+    $options.forEach(option => {
+      enriched.push({
+        ...option,
+        valid: option.name && !enriched.some(opt => opt.name === option.name),
+      })
+    })
+    return enriched
+  })
 
   let openOption = null
   let anchor = null
 
   $: options.subscribe(updateConstraints)
+  $: valid = $enrichedOptions.every(option => option.valid)
 
   const updateConstraints = options => {
     constraints.inclusion = options.map(option => option.name)
@@ -74,25 +86,9 @@
     openOption = null
   }
 
-  const handleNameChange = (id, newName) => {
-    // Check we don't already have this option
-    const existing = $options.some(option => {
-      return (option.name === newName) & (option.id !== id)
-    })
-    const invalid = !newName || existing
+  const handleNameChange = (id, name) => {
     options.update(state => {
-      state.find(option => option.id === id).invalid = invalid
-      return state.slice()
-    })
-
-    // Stop if invalid
-    if (invalid) {
-      return
-    }
-
-    // Update name
-    options.update(state => {
-      state.find(option => option.id === id).name = newName
+      state.find(option => option.id === id).name = name
       return state.slice()
     })
   }
@@ -111,11 +107,11 @@
     on:consider={e => options.set(e.detail.items)}
     on:finalize={e => options.set(e.detail.items)}
   >
-    {#each $options as option (option.id)}
+    {#each $enrichedOptions as option (option.id)}
       <div
         class="option"
         animate:flip={{ duration: flipDurationMs }}
-        class:invalid={option.invalid}
+        class:invalid={!option.valid}
       >
         <div class="drag-handle">
           <Icon name="DragHandle" size="L" />
