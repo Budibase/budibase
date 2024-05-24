@@ -122,17 +122,22 @@ function generateSelectStatement(
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
     const columnName = fieldNames[1]
-    if (
-      columnName &&
-      schema?.[columnName] &&
-      knex.client.config.client === SqlClient.POSTGRES
-    ) {
+    const columnSchema = schema?.[columnName]
+    if (columnSchema && knex.client.config.client === SqlClient.POSTGRES) {
       const externalType = schema[columnName].externalType
       if (externalType?.includes("money")) {
         return knex.raw(
           `"${tableName}"."${columnName}"::money::numeric as "${field}"`
         )
       }
+    }
+    if (
+      knex.client.config.client === SqlClient.MS_SQL &&
+      columnSchema?.type === FieldType.DATETIME &&
+      columnSchema.timeOnly
+    ) {
+      // Time gets returned as timestamp from mssql, not matching the expected HH:mm format
+      return knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
     }
     return `${field} as ${field}`
   })
@@ -226,8 +231,7 @@ class InternalBuilder {
     }
 
     const contains = (mode: object, any: boolean = false) => {
-      const fnc = allOr ? "orWhere" : "where"
-      const rawFnc = `${fnc}Raw`
+      const rawFnc = allOr ? "orWhereRaw" : "whereRaw"
       const not = mode === filters?.notContains ? "NOT " : ""
       function stringifyArray(value: Array<any>, quoteStyle = '"'): string {
         for (let i in value) {
@@ -240,24 +244,24 @@ class InternalBuilder {
       if (this.client === SqlClient.POSTGRES) {
         iterate(mode, (key: string, value: Array<any>) => {
           const wrap = any ? "" : "'"
-          const containsOp = any ? "\\?| array" : "@>"
+          const op = any ? "\\?| array" : "@>"
           const fieldNames = key.split(/\./g)
-          const tableName = fieldNames[0]
-          const columnName = fieldNames[1]
-          // @ts-ignore
+          const table = fieldNames[0]
+          const col = fieldNames[1]
           query = query[rawFnc](
-            `${not}"${tableName}"."${columnName}"::jsonb ${containsOp} ${wrap}${stringifyArray(
+            `${not}COALESCE("${table}"."${col}"::jsonb ${op} ${wrap}${stringifyArray(
               value,
               any ? "'" : '"'
-            )}${wrap}`
+            )}${wrap}, FALSE)`
           )
         })
       } else if (this.client === SqlClient.MY_SQL) {
         const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
         iterate(mode, (key: string, value: Array<any>) => {
-          // @ts-ignore
           query = query[rawFnc](
-            `${not}${jsonFnc}(${key}, '${stringifyArray(value)}')`
+            `${not}COALESCE(${jsonFnc}(${key}, '${stringifyArray(
+              value
+            )}'), FALSE)`
           )
         })
       } else {
@@ -272,7 +276,7 @@ class InternalBuilder {
             }
             statement +=
               (statement ? andOr : "") +
-              `LOWER(${likeKey(this.client, key)}) LIKE ?`
+              `COALESCE(LOWER(${likeKey(this.client, key)}), '') LIKE ?`
           }
 
           if (statement === "") {
@@ -337,14 +341,34 @@ class InternalBuilder {
     }
     if (filters.equal) {
       iterate(filters.equal, (key, value) => {
-        const fnc = allOr ? "orWhere" : "where"
-        query = query[fnc]({ [key]: value })
+        const fnc = allOr ? "orWhereRaw" : "whereRaw"
+        if (this.client === SqlClient.MS_SQL) {
+          query = query[fnc](
+            `CASE WHEN ${likeKey(this.client, key)} = ? THEN 1 ELSE 0 END = 1`,
+            [value]
+          )
+        } else {
+          query = query[fnc](
+            `COALESCE(${likeKey(this.client, key)} = ?, FALSE)`,
+            [value]
+          )
+        }
       })
     }
     if (filters.notEqual) {
       iterate(filters.notEqual, (key, value) => {
-        const fnc = allOr ? "orWhereNot" : "whereNot"
-        query = query[fnc]({ [key]: value })
+        const fnc = allOr ? "orWhereRaw" : "whereRaw"
+        if (this.client === SqlClient.MS_SQL) {
+          query = query[fnc](
+            `CASE WHEN ${likeKey(this.client, key)} = ? THEN 1 ELSE 0 END = 0`,
+            [value]
+          )
+        } else {
+          query = query[fnc](
+            `COALESCE(${likeKey(this.client, key)} != ?, TRUE)`,
+            [value]
+          )
+        }
       })
     }
     if (filters.empty) {
@@ -383,7 +407,13 @@ class InternalBuilder {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
           value.direction === SortDirection.ASCENDING ? "asc" : "desc"
-        query = query.orderBy(`${aliased}.${key}`, direction)
+        let nulls
+        if (this.client === SqlClient.POSTGRES) {
+          // All other clients already sort this as expected by default, and adding this to the rest of the clients is causing issues
+          nulls = value.direction === SortDirection.ASCENDING ? "first" : "last"
+        }
+
+        query = query.orderBy(`${aliased}.${key}`, direction, nulls)
       }
     } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
       // @ts-ignore
@@ -634,12 +664,13 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    */
   _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery | SqlQuery[] {
     const sqlClient = this.getSqlClient()
-    const config: { client: string; useNullAsDefault?: boolean } = {
+    const config: Knex.Config = {
       client: sqlClient,
     }
     if (sqlClient === SqlClient.SQL_LITE) {
       config.useNullAsDefault = true
     }
+
     const client = knex(config)
     let query: Knex.QueryBuilder
     const builder = new InternalBuilder(sqlClient)
