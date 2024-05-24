@@ -42,6 +42,7 @@ function likeKey(client: string, key: string): string {
     case SqlClient.MY_SQL:
       start = end = "`"
       break
+    case SqlClient.SQL_LITE:
     case SqlClient.ORACLE:
     case SqlClient.POSTGRES:
       start = end = '"'
@@ -49,9 +50,6 @@ function likeKey(client: string, key: string): string {
     case SqlClient.MS_SQL:
       start = "["
       end = "]"
-      break
-    case SqlClient.SQL_LITE:
-      start = end = ""
       break
     default:
       throw new Error("Unknown client generating like key")
