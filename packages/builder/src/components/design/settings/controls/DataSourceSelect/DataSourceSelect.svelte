@@ -309,7 +309,7 @@
     {#if links?.length}
       <DataSourceCategory
         dividerState={true}
-        heading="Links"
+        heading="Relationships"
         dataSet={links}
         {value}
         onSelect={handleSelected}
