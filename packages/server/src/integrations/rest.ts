@@ -163,12 +163,14 @@ class RestIntegration implements IntegrationBase {
 
     let triedParsing: boolean = false,
       responseTxt: string | undefined
-    const hasContent = contentLength && parseInt(contentLength) > 0
     try {
       if (filename) {
         return handleFileResponse(response, filename, this.startTimeMs)
       } else {
-        responseTxt = hasContent && response.text ? await response.text() : ""
+        responseTxt = response.text ? await response.text() : ""
+        const hasContent =
+          (contentLength && parseInt(contentLength) > 0) ||
+          responseTxt.length > 0
         if (response.status === 204) {
           data = []
           raw = ""
