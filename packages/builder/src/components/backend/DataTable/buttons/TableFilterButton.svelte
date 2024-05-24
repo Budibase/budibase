@@ -4,7 +4,8 @@
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
   import { getUserBindings } from "dataBinding"
   import { makePropSafe } from "@budibase/string-templates"
-  import { getFields } from "helpers/searchFields"
+  import { search } from "@budibase/frontend-core"
+  import { tables } from "stores/builder"
 
   export let schema
   export let filters
@@ -16,7 +17,11 @@
   let drawer
 
   $: tempValue = filters || []
-  $: schemaFields = getFields(Object.values(schema || {}), { allowLinks: true })
+  $: schemaFields = search.getFields(
+    $tables.list,
+    Object.values(schema || {}),
+    { allowLinks: true }
+  )
 
   $: text = getText(filters)
   $: selected = tempValue.filter(x => !x.onEmptyFilter)?.length > 0
