@@ -95,6 +95,7 @@
     },
   }
   let autoColumnInfo = getAutoColumnInformation()
+  let optionsValid = true
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
   $: if (primaryDisplay) {
@@ -138,7 +139,8 @@
   $: invalid =
     !editableColumn?.name ||
     (editableColumn?.type === LINK_TYPE && !editableColumn?.tableId) ||
-    Object.keys(errors).length !== 0
+    Object.keys(errors).length !== 0 ||
+    !optionsValid
   $: errors = checkErrors(editableColumn)
   $: datasource = $datasources.list.find(
     source => source._id === table?.sourceId
@@ -562,6 +564,7 @@
     <OptionsEditor
       bind:constraints={editableColumn.constraints}
       bind:optionColors={editableColumn.optionColors}
+      bind:valid={optionsValid}
     />
   {:else if editableColumn.type === FieldType.LONGFORM}
     <div>
@@ -585,6 +588,7 @@
     <OptionsEditor
       bind:constraints={editableColumn.constraints}
       bind:optionColors={editableColumn.optionColors}
+      bind:valid={optionsValid}
     />
   {:else if editableColumn.type === DATE_TYPE && !editableColumn.autocolumn}
     <div class="split-label">
