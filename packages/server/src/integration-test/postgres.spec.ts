@@ -1122,6 +1122,37 @@ describe("postgres integrations", () => {
         [tableName]: "Table contains invalid columns.",
       })
     })
+
+    it("recognises enum columns as options", async () => {
+      const tableName = `orders_${generator
+        .guid()
+        .replaceAll("-", "")
+        .substring(0, 6)}`
+      const enumColumnName = "status"
+
+      await rawQuery(
+        rawDatasource,
+        `
+        CREATE TYPE order_status AS ENUM ('pending', 'processing', 'shipped', 'delivered', 'cancelled');
+        
+        CREATE TABLE ${tableName} (
+          order_id SERIAL PRIMARY KEY,
+          customer_name VARCHAR(100) NOT NULL,
+          ${enumColumnName} order_status
+        );
+      `
+      )
+
+      const response = await makeRequest(
+        "post",
+        `/api/datasources/${datasource._id}/schema`
+      )
+
+      const table = response.body.datasource.entities[tableName]
+
+      expect(table).toBeDefined()
+      expect(table.schema[enumColumnName].type).toEqual(FieldType.OPTIONS)
+    })
   })
 
   describe("Integration compatibility with postgres search_path", () => {

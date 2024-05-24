@@ -141,3 +141,7 @@ export const TypeIconMap = {
     [BBReferenceFieldSubType.USER]: "User",
   },
 }
+
+export const OptionColours = [...new Array(12).keys()].map(idx => {
+  return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, 0.3)`
+})
