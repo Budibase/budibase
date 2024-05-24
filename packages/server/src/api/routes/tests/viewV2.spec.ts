@@ -218,6 +218,48 @@ describe.each([
         status: 201,
       })
     })
+
+    it("does not persist non-visible fields", async () => {
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: table._id!,
+        primaryDisplay: generator.word(),
+        schema: {
+          Price: { visible: true },
+          Category: { visible: false },
+        },
+      }
+      const res = await config.api.viewV2.create(newView)
+
+      expect(res).toEqual({
+        ...newView,
+        schema: {
+          Price: {
+            visible: true,
+          },
+        },
+        id: expect.any(String),
+        version: 2,
+      })
+    })
+
+    it("throws bad request when the schema fields are not valid", async () => {
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: table._id!,
+        schema: {
+          nonExisting: {
+            visible: true,
+          },
+        },
+      }
+      await config.api.viewV2.create(newView, {
+        status: 400,
+        body: {
+          message: 'Field "nonExisting" is not valid for the requested table',
+        },
+      })
+    })
   })
 
   describe("update", () => {
