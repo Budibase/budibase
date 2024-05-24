@@ -1,19 +1,27 @@
 jest.mock("node-fetch", () => {
+  const obj = {
+    my_next_cursor: 123,
+  }
+  const str = JSON.stringify(obj)
   return jest.fn(() => ({
     headers: {
       raw: () => {
-        return { "content-type": ["application/json"] }
+        return {
+          "content-type": ["application/json"],
+          "content-length": str.length,
+        }
       },
       get: (name: string) => {
-        if (name.toLowerCase() === "content-type") {
+        const lcName = name.toLowerCase()
+        if (lcName === "content-type") {
           return ["application/json"]
+        } else if (lcName === "content-length") {
+          return str.length
         }
       },
     },
-    json: jest.fn(() => ({
-      my_next_cursor: 123,
-    })),
-    text: jest.fn(),
+    json: jest.fn(() => obj),
+    text: jest.fn(() => str),
   }))
 })
 
@@ -231,7 +239,8 @@ describe("REST Integration", () => {
     }
 
     it("should be able to parse JSON response", async () => {
-      const input = buildInput({ a: 1 }, null, "application/json")
+      const obj = { a: 1 }
+      const input = buildInput(obj, JSON.stringify(obj), "application/json")
       const output = await config.integration.parseResponse(input)
       expect(output.data).toEqual({ a: 1 })
       expect(output.info.code).toEqual(200)
@@ -261,7 +270,7 @@ describe("REST Integration", () => {
     test.each([...contentTypes, undefined])(
       "should not throw an error on 204 no content",
       async contentType => {
-        const input = buildInput(undefined, null, contentType, 204)
+        const input = buildInput(undefined, "", contentType, 204)
         const output = await config.integration.parseResponse(input)
         expect(output.data).toEqual([])
         expect(output.extra.raw).toEqual("")
