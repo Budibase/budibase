@@ -17,6 +17,7 @@
     config,
     menu,
     gridFocused,
+    keyboardBlocked,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -29,7 +30,7 @@
   // Global key listener which intercepts all key events
   const handleKeyDown = e => {
     // Ignore completely if the grid is not focused
-    if (!$gridFocused) {
+    if (!$gridFocused || $keyboardBlocked) {
       return
     }
 

@@ -117,6 +117,11 @@ async function runSqlQuery(json: QueryJson, tables: Table[]) {
     // quick hack for docIds
     sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
     sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
+
+    if (Array.isArray(query)) {
+      throw new Error("SQS cannot currently handle multiple queries")
+    }
+
     const db = context.getAppDB()
     return await db.sql<Row>(sql, bindings)
   })
