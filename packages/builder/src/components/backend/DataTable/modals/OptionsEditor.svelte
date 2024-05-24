@@ -12,10 +12,8 @@
 
   const flipDurationMs = 130
   const { OptionColours } = Constants
-
-  let openOption = null
-  let anchor = null
-  let options = writable(
+  const getDefaultColor = idx => OptionColours[idx % OptionColours.length]
+  const options = writable(
     constraints.inclusion.map((value, idx) => ({
       id: Math.random(),
       name: value,
@@ -23,6 +21,9 @@
       invalid: false,
     }))
   )
+
+  let openOption = null
+  let anchor = null
 
   $: options.subscribe(updateConstraints)
 
@@ -32,10 +33,6 @@
       (colors, option) => ({ ...colors, [option.name]: option.color }),
       {}
     )
-  }
-
-  const getDefaultColor = idx => {
-    return OptionColours[idx % OptionColours.length]
   }
 
   const addNewInput = async () => {
