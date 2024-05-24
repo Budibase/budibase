@@ -43,7 +43,7 @@
     <b>{linkedTable.name}</b>
     table.
   </Label>
-{:else if schema.relationshipType === "one-to-many"}
+{:else if schema.relationshipType === "one-to-many" || schema.type === "bb_reference_single"}
   <Select
     value={linkedIds?.[0]}
     options={rows}
