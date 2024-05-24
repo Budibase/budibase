@@ -1,9 +1,9 @@
 <script>
-  import { getColor } from "../lib/utils"
   import { onMount, getContext } from "svelte"
   import { Icon, Input, ProgressCircle } from "@budibase/bbui"
   import { debounce } from "../../../utils/utils"
   import GridPopover from "../overlays/GridPopover.svelte"
+  import { OptionColours } from "../../../constants"
 
   const { API, cache } = getContext("grid")
 
@@ -18,7 +18,7 @@
   export let primaryDisplay
   export let hideCounter = false
 
-  const color = getColor(0)
+  const color = OptionColours[0]
 
   let isOpen = false
   let searchResults

@@ -99,7 +99,7 @@
     on:change={e => onChange(e, field)}
     useLabel={false}
   />
-{:else if schema.type === "bb_reference"}
+{:else if schema.type === "bb_reference" || schema.type === "bb_reference_single"}
   <LinkedRowSelector
     linkedRows={value[field]}
     {schema}

@@ -57,5 +57,5 @@ export function isFormat(format: any): format is Format {
 }
 
 export function parseCsvExport<T>(value: string) {
-  return JSON.parse(value?.replace(/'/g, '"')) as T
+  return JSON.parse(value) as T
 }
