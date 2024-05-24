@@ -16,12 +16,13 @@
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import FilterUsers from "./FilterUsers.svelte"
-  import { getFields } from "@budibase/builder/src/helpers/searchFields"
+  import { getFields } from "../utils/searchFields"
 
   const { OperatorOptions } = Constants
 
   export let schemaFields
   export let filters = []
+  export let tables = []
   export let datasource
   export let behaviourFilters = false
   export let allowBindings = false
@@ -46,12 +47,12 @@
 
   const context = getContext("context")
 
-  $: fieldOptions = getFields(schemaFields || [], { allowLinks: true }).map(
-    field => ({
-      label: field.displayName || field.name,
-      value: field.name,
-    })
-  )
+  $: fieldOptions = getFields(tables, schemaFields || [], {
+    allowLinks: true,
+  }).map(field => ({
+    label: field.displayName || field.name,
+    value: field.name,
+  }))
 
   const addFilter = () => {
     filters = [
