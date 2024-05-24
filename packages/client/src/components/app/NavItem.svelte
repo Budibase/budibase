@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, getContext } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import active from "svelte-spa-router/active"
   import { Icon } from "@budibase/bbui"
 
@@ -13,8 +13,6 @@
   export let navStateStore
 
   const dispatch = createEventDispatcher()
-  const sdk = getContext("sdk")
-  const { linkable } = sdk
 
   let renderKey
 
@@ -46,10 +44,9 @@
       styled
     -->
     <a
-      href={url}
+      href="#{url}"
       on:click={onClickLink}
       use:active={url}
-      use:linkable
       class:active={false}
     >
       {text}
@@ -73,10 +70,9 @@
           {#each subLinks || [] as subLink}
             {#if subLink.internalLink}
               <a
-                href={subLink.url}
+                href="#{subLink.url}"
                 on:click={onClickLink}
                 use:active={subLink.url}
-                use:linkable
               >
                 {subLink.text}
               </a>

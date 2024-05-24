@@ -71,7 +71,11 @@ const SQL_DATE_TYPE_MAP: Record<string, PrimitiveTypes> = {
 }
 
 const SQL_DATE_ONLY_TYPES = ["date"]
-const SQL_TIME_ONLY_TYPES = ["time"]
+const SQL_TIME_ONLY_TYPES = [
+  "time",
+  "time without time zone",
+  "time with time zone",
+]
 
 const SQL_STRING_TYPE_MAP: Record<string, PrimitiveTypes> = {
   varchar: FieldType.STRING,
@@ -98,6 +102,7 @@ const SQL_OPTIONS_TYPE_MAP: Record<string, PrimitiveTypes> = {
 const SQL_MISC_TYPE_MAP: Record<string, PrimitiveTypes> = {
   json: FieldType.JSON,
   bigint: FieldType.BIGINT,
+  enum: FieldType.OPTIONS,
 }
 
 const SQL_TYPE_MAP: Record<string, PrimitiveTypes> = {
