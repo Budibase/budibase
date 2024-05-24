@@ -1,5 +1,5 @@
 <script>
-  import { AbsTooltip, Icon } from "@budibase/bbui"
+  import { Icon, TooltipType, TooltipPosition } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { helpers } from "@budibase/shared-core"
   import { UserAvatars } from "@budibase/frontend-core"
@@ -114,9 +114,14 @@
       </div>
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
-        <AbsTooltip type="info" position="right" text={iconTooltip}>
-          <Icon color={iconColor} size="S" name={icon} />
-        </AbsTooltip>
+        <Icon
+          color={iconColor}
+          size="S"
+          name={icon}
+          tooltip={iconTooltip}
+          tooltipType={TooltipType.Info}
+          tooltipPosition={TooltipPosition.Right}
+        />
       </div>
     {/if}
     <div class="text" title={showTooltip ? text : null}>
