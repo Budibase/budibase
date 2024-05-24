@@ -330,10 +330,8 @@ export function checkExternalTables(
   return errors
 }
 
-export async function handleXml(response: any) {
-  let data,
-    rawXml = await response.text()
-  data =
+export async function handleXml(rawXml: string) {
+  let data =
     (await xmlParser(rawXml, {
       explicitArray: false,
       trim: true,
