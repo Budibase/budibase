@@ -168,7 +168,7 @@ class RestIntegration implements IntegrationBase {
       if (filename) {
         return handleFileResponse(response, filename, this.startTimeMs)
       } else {
-        responseTxt = hasContent ? await response.text() : ""
+        responseTxt = hasContent && response.text ? await response.text() : ""
         if (response.status === 204) {
           data = []
           raw = ""
