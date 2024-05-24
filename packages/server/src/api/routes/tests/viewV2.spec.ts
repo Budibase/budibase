@@ -141,7 +141,7 @@ describe.each([
           type: SortType.STRING,
         },
         schema: {
-          name: {
+          Price: {
             visible: true,
           },
         },
@@ -150,7 +150,11 @@ describe.each([
 
       expect(res).toEqual({
         ...newView,
-        schema: newView.schema,
+        schema: {
+          Price: {
+            visible: true,
+          },
+        },
         id: expect.any(String),
         version: 2,
       })
