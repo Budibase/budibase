@@ -3,7 +3,8 @@
   import { Icon } from "@budibase/bbui"
   import GridPopover from "../overlays/GridPopover.svelte"
 
-  const { visibleColumns, scroll, width, subscribe, ui } = getContext("grid")
+  const { visibleColumns, scroll, width, subscribe, ui, keyboardBlocked } =
+    getContext("grid")
 
   let anchor
   let isOpen = false
@@ -14,6 +15,7 @@
   )
   $: end = columnsWidth - 1 - $scroll.left
   $: left = Math.min($width - 40, end)
+  $: keyboardBlocked.set(isOpen)
 
   const open = () => {
     ui.actions.blur()
