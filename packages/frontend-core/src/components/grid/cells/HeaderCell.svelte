@@ -29,6 +29,7 @@
     focusedCellId,
     filter,
     inlineFilters,
+    keyboardBlocked,
   } = getContext("grid")
 
   const searchableTypes = [
@@ -57,6 +58,8 @@
   $: searching = searchValue != null
   $: debouncedUpdateFilter(searchValue)
   $: orderable = !column.primaryDisplay
+  $: editable = $config.canEditColumns && !column.schema.disabled
+  $: keyboardBlocked.set(open)
 
   const close = () => {
     open = false
@@ -231,6 +234,14 @@
   }
   const debouncedUpdateFilter = debounce(updateFilter, 250)
 
+  const handleDoubleClick = () => {
+    if (!editable || searching) {
+      return
+    }
+    open = true
+    editColumn()
+  }
+
   onMount(() => subscribe("close-edit-column", close))
 </script>
 
@@ -241,14 +252,15 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
+  bind:this={anchor}
   class="header-cell"
+  style="flex: 0 0 {column.width}px;"
   class:open
   class:searchable
   class:searching
-  style="flex: 0 0 {column.width}px;"
-  bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
   class:sticky={idx === "sticky"}
+  on:dblclick={handleDoubleClick}
 >
   <GridCell
     on:mousedown={onMouseDown}
@@ -311,7 +323,7 @@
 {#if open}
   <GridPopover
     {anchor}
-    align="right"
+    align="left"
     on:close={close}
     maxHeight={null}
     resizable
@@ -322,11 +334,7 @@
       </div>
     {:else}
       <Menu>
-        <MenuItem
-          icon="Edit"
-          on:click={editColumn}
-          disabled={!$config.canEditColumns || column.schema.disabled}
-        >
+        <MenuItem icon="Edit" on:click={editColumn} disabled={!editable}>
           Edit column
         </MenuItem>
         <MenuItem

@@ -18,13 +18,6 @@ export const getCellID = (rowId, fieldName) => {
   return `${rowId}${JOINING_CHARACTER}${fieldName}`
 }
 
-export const getColor = (idx, opacity = 0.3) => {
-  if (idx == null || idx === -1) {
-    idx = 0
-  }
-  return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, ${opacity})`
-}
-
 export const getColumnIcon = column => {
   if (column.schema.autocolumn) {
     return "MagicWand"
