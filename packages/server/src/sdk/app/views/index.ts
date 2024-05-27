@@ -15,6 +15,7 @@ import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
+import { isRequired } from "../../../utilities/schema"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {
@@ -35,17 +36,28 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
 
 async function guardViewSchema(
   tableId: string,
-  schema?: Record<string, ViewUIFieldMetadata>
+  viewSchema?: Record<string, ViewUIFieldMetadata>
 ) {
-  if (!schema || !Object.keys(schema).length) {
+  if (!viewSchema || !Object.keys(viewSchema).length) {
     return
   }
   const table = await sdk.tables.getTable(tableId)
-  if (schema) {
-    for (const field of Object.keys(schema)) {
-      if (!table.schema[field]) {
+  if (viewSchema) {
+    for (const field of Object.keys(viewSchema)) {
+      const tableSchemaField = table.schema[field]
+      if (!tableSchemaField) {
         throw new HTTPError(
           `Field "${field}" is not valid for the requested table`,
+          400
+        )
+      }
+
+      if (
+        viewSchema[field].readonly &&
+        isRequired(tableSchemaField.constraints)
+      ) {
+        throw new HTTPError(
+          `Field "${field}" cannot be readonly as it is a required field`,
           400
         )
       }

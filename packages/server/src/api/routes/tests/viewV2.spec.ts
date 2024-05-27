@@ -23,6 +23,14 @@ import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { roles } from "@budibase/backend-core"
+import * as schemaUtils from "../../../utilities/schema"
+
+jest.mock("../../../utilities/schema", () => {
+  return {
+    __esModule: true,
+    ...jest.requireActual("../../../utilities/schema"),
+  }
+})
 
 describe.each([
   ["internal", undefined],
@@ -257,6 +265,45 @@ describe.each([
         status: 400,
         body: {
           message: 'Field "nonExisting" is not valid for the requested table',
+        },
+      })
+    })
+
+    it("required fields cannot be marked as readonly", async () => {
+      const isRequiredSpy = jest.spyOn(schemaUtils, "isRequired")
+
+      isRequiredSpy.mockReturnValue(true)
+
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+            description: {
+              name: "description",
+              type: FieldType.STRING,
+            },
+          },
+        })
+      )
+
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: table._id!,
+        schema: {
+          name: {
+            readonly: true,
+          },
+        },
+      }
+
+      await config.api.viewV2.create(newView, {
+        status: 400,
+        body: {
+          message: 'Field "name" cannot be readonly as it is a required field',
+          status: 400,
         },
       })
     })
