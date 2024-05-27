@@ -14,8 +14,8 @@ import {
   StaticQuotaName,
   Table,
   TableSourceType,
-  UIFieldMetadata,
   UpdateViewRequest,
+  ViewUIFieldMetadata,
   ViewV2,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
@@ -698,6 +698,45 @@ describe.each([
         },
       })
     })
+
+    it("can remove readonly config after license downgrade", async () => {
+      mocks.licenses.useViewReadonlyColumns()
+
+      view = await config.api.viewV2.update({
+        ...view,
+        schema: {
+          Price: {
+            visible: true,
+            readonly: true,
+          },
+          Category: {
+            visible: true,
+            readonly: true,
+          },
+        },
+      })
+      mocks.licenses.useCloudFree()
+      const res = await config.api.viewV2.update({
+        ...view,
+        schema: {
+          Price: {
+            visible: true,
+            readonly: false,
+          },
+        },
+      })
+      expect(res).toEqual(
+        expect.objectContaining({
+          ...view,
+          schema: {
+            Price: {
+              visible: true,
+              readonly: false,
+            },
+          },
+        })
+      )
+    })
   })
 
   describe("delete", () => {
@@ -739,9 +778,27 @@ describe.each([
       const updatedTable = await config.api.table.get(table._id!)
       const viewSchema = updatedTable.views![view!.name!].schema as Record<
         string,
-        UIFieldMetadata
+        ViewUIFieldMetadata
       >
       expect(viewSchema.Price?.visible).toEqual(false)
+      expect(viewSchema.Category?.visible).toEqual(true)
+    })
+
+    it("should be able to fetch readonly config after downgrades", async () => {
+      mocks.licenses.useViewReadonlyColumns()
+      const res = await config.api.viewV2.create({
+        name: generator.name(),
+        tableId: table._id!,
+        schema: {
+          Price: { visible: true, readonly: true },
+        },
+      })
+
+      mocks.licenses.useCloudFree()
+      const view = await config.api.viewV2.get(res.id)
+      expect(view.schema?.Price).toEqual(
+        expect.objectContaining({ visible: true, readonly: true })
+      )
     })
   })
 
@@ -773,7 +830,7 @@ describe.each([
           },
         },
       })
-      })
+    })
 
     it("views have extra data trimmed", async () => {
       let row = await config.api.row.save(view.id, {
