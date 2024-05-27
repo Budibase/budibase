@@ -313,8 +313,7 @@ describe.each([
 
     it("required fields cannot be marked as readonly", async () => {
       const isRequiredSpy = jest.spyOn(schemaUtils, "isRequired")
-
-      isRequiredSpy.mockReturnValue(true)
+      isRequiredSpy.mockReturnValueOnce(true)
 
       const table = await config.api.table.save(
         saveTableRequest({
@@ -410,6 +409,10 @@ describe.each([
           Category: {
             visible: false,
           },
+          Price: {
+            visible: true,
+            readonly: true,
+          },
         },
       }
       await config.api.viewV2.update(updatedData)
@@ -426,7 +429,8 @@ describe.each([
               visible: false,
             }),
             Price: expect.objectContaining({
-              visible: false,
+              visible: true,
+              readonly: true,
             }),
           },
         },
