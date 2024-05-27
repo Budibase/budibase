@@ -277,6 +277,7 @@ describe.each([
       beforeEach(() => {
         mocks.licenses.useViewReadonlyColumns()
       })
+
       it("readonly fields are persisted", async () => {
         const table = await config.api.table.save(
           saveTableRequest({
@@ -391,6 +392,43 @@ describe.each([
           status: 400,
           body: {
             message: 'Field "name" cannot be readonly and not visible',
+            status: 400,
+          },
+        })
+      })
+
+      it("readonly fields cannot be used on free license", async () => {
+        mocks.licenses.useCloudFree()
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+              description: {
+                name: "description",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        const newView: CreateViewRequest = {
+          name: generator.name(),
+          tableId: table._id!,
+          schema: {
+            name: {
+              visible: true,
+              readonly: true,
+            },
+          },
+        }
+
+        await config.api.viewV2.create(newView, {
+          status: 400,
+          body: {
+            message: "Readonly fields are not enabled for your tenant",
             status: 400,
           },
         })
@@ -638,6 +676,28 @@ describe.each([
         }
       )
     })
+
+    it("cannot update views with readonly on on free license", async () => {
+      mocks.licenses.useViewReadonlyColumns()
+
+      view = await config.api.viewV2.update({
+        ...view,
+        schema: {
+          Price: {
+            visible: true,
+            readonly: true,
+          },
+        },
+      })
+
+      mocks.licenses.useCloudFree()
+      await config.api.viewV2.create(view, {
+        status: 400,
+        body: {
+          message: "Readonly fields are not enabled for your tenant",
+        },
+      })
+    })
   })
 
   describe("delete", () => {
@@ -686,8 +746,10 @@ describe.each([
   })
 
   describe("read", () => {
-    it("views have extra data trimmed", async () => {
-      const table = await config.api.table.save(
+    let view: ViewV2
+
+    beforeAll(async () => {
+      table = await config.api.table.save(
         saveTableRequest({
           schema: {
             Country: {
@@ -702,7 +764,7 @@ describe.each([
         })
       )
 
-      const view = await config.api.viewV2.create({
+      view = await config.api.viewV2.create({
         tableId: table._id!,
         name: generator.guid(),
         schema: {
@@ -711,7 +773,9 @@ describe.each([
           },
         },
       })
+      })
 
+    it("views have extra data trimmed", async () => {
       let row = await config.api.row.save(view.id, {
         Country: "Aussy",
         Story: "aaaaa",
