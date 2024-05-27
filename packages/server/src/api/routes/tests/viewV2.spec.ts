@@ -104,6 +104,10 @@ describe.each([
     setup.afterAll()
   })
 
+  beforeEach(() => {
+    mocks.licenses.useCloudFree()
+  })
+
   const getRowUsage = async () => {
     const { total } = await config.doInContext(undefined, () =>
       quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
@@ -269,26 +273,43 @@ describe.each([
       })
     })
 
-    it("readonly fields are persisted", async () => {
-      const table = await config.api.table.save(
-        saveTableRequest({
+    describe("readonly fields", () => {
+      beforeEach(() => {
+        mocks.licenses.useViewReadonlyColumns()
+      })
+      it("readonly fields are persisted", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+              description: {
+                name: "description",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        const newView: CreateViewRequest = {
+          name: generator.name(),
+          tableId: table._id!,
           schema: {
             name: {
-              name: "name",
-              type: FieldType.STRING,
+              visible: true,
+              readonly: true,
             },
             description: {
-              name: "description",
-              type: FieldType.STRING,
+              visible: true,
+              readonly: true,
             },
           },
-        })
-      )
+        }
 
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: table._id!,
-        schema: {
+        const res = await config.api.viewV2.create(newView)
+        expect(res.schema).toEqual({
           name: {
             visible: true,
             readonly: true,
@@ -297,93 +318,82 @@ describe.each([
             visible: true,
             readonly: true,
           },
-        },
-      }
-
-      const res = await config.api.viewV2.create(newView)
-      expect(res.schema).toEqual({
-        name: {
-          visible: true,
-          readonly: true,
-        },
-        description: {
-          visible: true,
-          readonly: true,
-        },
+        })
       })
-    })
 
-    it("required fields cannot be marked as readonly", async () => {
-      const isRequiredSpy = jest.spyOn(schemaUtils, "isRequired")
-      isRequiredSpy.mockReturnValueOnce(true)
+      it("required fields cannot be marked as readonly", async () => {
+        const isRequiredSpy = jest.spyOn(schemaUtils, "isRequired")
+        isRequiredSpy.mockReturnValueOnce(true)
 
-      const table = await config.api.table.save(
-        saveTableRequest({
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+              description: {
+                name: "description",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        const newView: CreateViewRequest = {
+          name: generator.name(),
+          tableId: table._id!,
           schema: {
             name: {
-              name: "name",
-              type: FieldType.STRING,
+              readonly: true,
             },
-            description: {
-              name: "description",
-              type: FieldType.STRING,
-            },
+          },
+        }
+
+        await config.api.viewV2.create(newView, {
+          status: 400,
+          body: {
+            message:
+              'Field "name" cannot be readonly as it is a required field',
+            status: 400,
           },
         })
-      )
-
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: table._id!,
-        schema: {
-          name: {
-            readonly: true,
-          },
-        },
-      }
-
-      await config.api.viewV2.create(newView, {
-        status: 400,
-        body: {
-          message: 'Field "name" cannot be readonly as it is a required field',
-          status: 400,
-        },
       })
-    })
 
-    it("readonly fields must be visible", async () => {
-      const table = await config.api.table.save(
-        saveTableRequest({
+      it("readonly fields must be visible", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+              description: {
+                name: "description",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        const newView: CreateViewRequest = {
+          name: generator.name(),
+          tableId: table._id!,
           schema: {
             name: {
-              name: "name",
-              type: FieldType.STRING,
+              visible: false,
+              readonly: true,
             },
-            description: {
-              name: "description",
-              type: FieldType.STRING,
-            },
+          },
+        }
+
+        await config.api.viewV2.create(newView, {
+          status: 400,
+          body: {
+            message: 'Field "name" cannot be readonly and not visible',
+            status: 400,
           },
         })
-      )
-
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: table._id!,
-        schema: {
-          name: {
-            visible: false,
-            readonly: true,
-          },
-        },
-      }
-
-      await config.api.viewV2.create(newView, {
-        status: 400,
-        body: {
-          message: 'Field "name" cannot be readonly and not visible',
-          status: 400,
-        },
       })
     })
   })
@@ -423,6 +433,7 @@ describe.each([
     })
 
     it("can update all fields", async () => {
+      mocks.licenses.useViewReadonlyColumns()
       const tableId = table._id!
 
       const updatedData: Required<UpdateViewRequest> = {
