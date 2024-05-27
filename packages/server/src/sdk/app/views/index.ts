@@ -7,6 +7,7 @@ import {
   ViewV2Enriched,
 } from "@budibase/types"
 import { HTTPError, db as dbCore } from "@budibase/backend-core"
+import { features } from "@budibase/pro"
 import { cloneDeep } from "lodash"
 
 import * as utils from "../../../db/utils"
@@ -53,6 +54,13 @@ async function guardViewSchema(
       }
 
       if (viewSchema[field].readonly) {
+        if (!(await features.isViewReadonlyColumnsEnabled())) {
+          throw new HTTPError(
+            `Readonly fields are not enabled for your tenant`,
+            400
+          )
+        }
+
         if (isRequired(tableSchemaField.constraints)) {
           throw new HTTPError(
             `Field "${field}" cannot be readonly as it is a required field`,
