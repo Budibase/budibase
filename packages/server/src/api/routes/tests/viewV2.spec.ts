@@ -269,6 +269,48 @@ describe.each([
       })
     })
 
+    it("readonly fields are persisted", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+            description: {
+              name: "description",
+              type: FieldType.STRING,
+            },
+          },
+        })
+      )
+
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: table._id!,
+        schema: {
+          name: {
+            visible: true,
+            readonly: true,
+          },
+          description: {
+            readonly: true,
+          },
+        },
+      }
+
+      const res = await config.api.viewV2.create(newView)
+      expect(res.schema).toEqual({
+        name: {
+          visible: true,
+          readonly: true,
+        },
+        description: {
+          readonly: true,
+        },
+      })
+    })
+
     it("required fields cannot be marked as readonly", async () => {
       const isRequiredSpy = jest.spyOn(schemaUtils, "isRequired")
 
