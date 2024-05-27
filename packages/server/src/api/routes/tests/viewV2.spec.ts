@@ -294,6 +294,7 @@ describe.each([
             readonly: true,
           },
           description: {
+            visible: true,
             readonly: true,
           },
         },
@@ -306,6 +307,7 @@ describe.each([
           readonly: true,
         },
         description: {
+          visible: true,
           readonly: true,
         },
       })
@@ -344,6 +346,42 @@ describe.each([
         status: 400,
         body: {
           message: 'Field "name" cannot be readonly as it is a required field',
+          status: 400,
+        },
+      })
+    })
+
+    it("readonly fields must be visible", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+            description: {
+              name: "description",
+              type: FieldType.STRING,
+            },
+          },
+        })
+      )
+
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: table._id!,
+        schema: {
+          name: {
+            visible: false,
+            readonly: true,
+          },
+        },
+      }
+
+      await config.api.viewV2.create(newView, {
+        status: 400,
+        body: {
+          message: 'Field "name" cannot be readonly and not visible',
           status: 400,
         },
       })

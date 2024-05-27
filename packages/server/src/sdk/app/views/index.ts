@@ -52,14 +52,20 @@ async function guardViewSchema(
         )
       }
 
-      if (
-        viewSchema[field].readonly &&
-        isRequired(tableSchemaField.constraints)
-      ) {
-        throw new HTTPError(
-          `Field "${field}" cannot be readonly as it is a required field`,
-          400
-        )
+      if (viewSchema[field].readonly) {
+        if (isRequired(tableSchemaField.constraints)) {
+          throw new HTTPError(
+            `Field "${field}" cannot be readonly as it is a required field`,
+            400
+          )
+        }
+
+        if (!viewSchema[field].visible) {
+          throw new HTTPError(
+            `Field "${field}" cannot be readonly and not visible`,
+            400
+          )
+        }
       }
     }
   }
