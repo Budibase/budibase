@@ -22,5 +22,29 @@
   "devDependencies": {
     "rimraf": "3.0.2",
     "typescript": "5.2.2"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      },
+      "dev": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }

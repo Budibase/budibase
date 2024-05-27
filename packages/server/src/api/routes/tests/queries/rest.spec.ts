@@ -64,13 +64,11 @@ describe("rest", () => {
     cached = await getCachedVariable(basedOnQuery._id!, "foo")
     expect(cached).toBeNull()
 
-    nock("http://one.example.com")
-      .get("/")
-      .reply(200, [{ name: "one" }])
+    const body1 = [{ name: "one" }]
+    const body2 = [{ name: "two" }]
+    nock("http://one.example.com").get("/").reply(200, body1)
     nock("http://two.example.com").get("/?test=one").reply(500)
-    nock("http://two.example.com")
-      .get("/?test=one")
-      .reply(200, [{ name: "two" }])
+    nock("http://two.example.com").get("/?test=one").reply(200, body2)
 
     const res = await config.api.query.preview({
       datasourceId: datasource._id!,
