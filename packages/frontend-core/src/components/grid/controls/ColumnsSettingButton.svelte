@@ -17,16 +17,6 @@
     dispatch(visible ? "show-column" : "hide-column")
   }
 
-  const toggleAll = async visible => {
-    let mutations = {}
-    $columns.forEach(column => {
-      mutations[column.name] = { visible }
-    })
-    datasource.actions.addSchemaMutations(mutations)
-    await datasource.actions.saveSchemaMutations()
-    dispatch(visible ? "show-column" : "hide-column")
-  }
-
   const getText = columns => {
     const hidden = columns.filter(col => !col.visible).length
     return hidden ? `Columns (${hidden})` : "Columns"
@@ -68,10 +58,6 @@
           disabled={column.primaryDisplay}
         />
       {/each}
-    </div>
-    <div class="buttons">
-      <ActionButton on:click={() => toggleAll(true)}>Show all</ActionButton>
-      <ActionButton on:click={() => toggleAll(false)}>Hide all</ActionButton>
     </div>
   </div>
 </Popover>
