@@ -109,15 +109,15 @@
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-gray-500);
   }
-  .noPadding {
-    padding: 0;
-    min-width: 0;
-  }
   .spectrum-ActionButton--quiet {
     padding: 0 8px;
   }
   .spectrum-ActionButton--quiet.is-selected {
     color: var(--spectrum-global-color-gray-900);
+  }
+  .noPadding {
+    padding: 0;
+    min-width: 0;
   }
   .is-selected:not(.emphasized) .spectrum-Icon {
     color: var(--spectrum-global-color-gray-900);
