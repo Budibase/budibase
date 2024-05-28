@@ -3,23 +3,16 @@ import {
   Table,
   Datasource,
   FieldType,
-  TableSourceType,
   FieldSchema,
 } from "@budibase/types"
-import { context, objectStore } from "@budibase/backend-core"
+import { context, objectStore, sql } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { parseStringPromise as xmlParser } from "xml2js"
 import { formatBytes } from "../../utilities"
 import bl from "bl"
 import env from "../../environment"
-import { DocumentType, SEPARATOR } from "../../db/utils"
-import { InvalidColumns, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
+import { InvalidColumns } from "../../constants"
 import { helpers, utils } from "@budibase/shared-core"
-import { Knex } from "knex"
-
-const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
-const ROW_ID_REGEX = /^\[.*]$/g
-const ENCODED_SPACE = encodeURIComponent(" ")
 
 type PrimitiveTypes =
   | FieldType.STRING
@@ -114,13 +107,15 @@ const SQL_TYPE_MAP: Record<string, PrimitiveTypes> = {
   ...SQL_OPTIONS_TYPE_MAP,
 }
 
-export enum SqlClient {
-  MS_SQL = "mssql",
-  POSTGRES = "pg",
-  MY_SQL = "mysql2",
-  ORACLE = "oracledb",
-  SQL_LITE = "sqlite3",
-}
+export const isExternalTableID = sql.utils.isExternalTableID
+export const isExternalTable = sql.utils.isExternalTable
+export const buildExternalTableId = sql.utils.buildExternalTableId
+export const breakExternalTableId = sql.utils.breakExternalTableId
+export const generateRowIdField = sql.utils.generateRowIdField
+export const isRowId = sql.utils.isRowId
+export const convertRowId = sql.utils.convertRowId
+export const breakRowIdField = sql.utils.breakRowIdField
+export const isValidFilter = sql.utils.isValidFilter
 
 const isCloud = env.isProd() && !env.SELF_HOSTED
 const isSelfHost = env.isProd() && env.SELF_HOSTED
@@ -129,119 +124,6 @@ export const HOST_ADDRESS = isSelfHost
   : isCloud
   ? ""
   : "localhost"
-
-export function isExternalTableID(tableId: string) {
-  return tableId.includes(DocumentType.DATASOURCE)
-}
-
-export function isInternalTableID(tableId: string) {
-  return !isExternalTableID(tableId)
-}
-
-export function getNativeSql(
-  query: Knex.SchemaBuilder | Knex.QueryBuilder
-): SqlQuery | SqlQuery[] {
-  let sql = query.toSQL()
-  if (Array.isArray(sql)) {
-    return sql as SqlQuery[]
-  }
-  let native: Knex.SqlNative | undefined
-  if (sql.toNative) {
-    native = sql.toNative()
-  }
-  return {
-    sql: native?.sql || sql.sql,
-    bindings: native?.bindings || sql.bindings,
-  } as SqlQuery
-}
-
-export function isExternalTable(table: Table) {
-  if (
-    table?.sourceId &&
-    table.sourceId.includes(DocumentType.DATASOURCE + SEPARATOR) &&
-    table?.sourceId !== DEFAULT_BB_DATASOURCE_ID
-  ) {
-    return true
-  } else if (table?.sourceType === TableSourceType.EXTERNAL) {
-    return true
-  } else if (table?._id && isExternalTableID(table._id)) {
-    return true
-  }
-  return false
-}
-
-export function buildExternalTableId(datasourceId: string, tableName: string) {
-  // encode spaces
-  if (tableName.includes(" ")) {
-    tableName = encodeURIComponent(tableName)
-  }
-  return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
-}
-
-export function breakExternalTableId(tableId: string | undefined) {
-  if (!tableId) {
-    return {}
-  }
-  const parts = tableId.split(DOUBLE_SEPARATOR)
-  let datasourceId = parts.shift()
-  // if they need joined
-  let tableName = parts.join(DOUBLE_SEPARATOR)
-  // if contains encoded spaces, decode it
-  if (tableName.includes(ENCODED_SPACE)) {
-    tableName = decodeURIComponent(tableName)
-  }
-  return { datasourceId, tableName }
-}
-
-export function generateRowIdField(keyProps: any[] = []) {
-  if (!Array.isArray(keyProps)) {
-    keyProps = [keyProps]
-  }
-  for (let index in keyProps) {
-    if (keyProps[index] instanceof Buffer) {
-      keyProps[index] = keyProps[index].toString()
-    }
-  }
-  // this conserves order and types
-  // we have to swap the double quotes to single quotes for use in HBS statements
-  // when using the literal helper the double quotes can break things
-  return encodeURIComponent(JSON.stringify(keyProps).replace(/"/g, "'"))
-}
-
-export function isRowId(field: any) {
-  return (
-    Array.isArray(field) ||
-    (typeof field === "string" && field.match(ROW_ID_REGEX) != null)
-  )
-}
-
-export function convertRowId(field: any) {
-  if (Array.isArray(field)) {
-    return field[0]
-  }
-  if (typeof field === "string" && field.match(ROW_ID_REGEX) != null) {
-    return field.substring(1, field.length - 1)
-  }
-  return field
-}
-
-// should always return an array
-export function breakRowIdField(_id: string | { _id: string }): any[] {
-  if (!_id) {
-    return []
-  }
-  // have to replace on the way back as we swapped out the double quotes
-  // when encoding, but JSON can't handle the single quotes
-  const id = typeof _id === "string" ? _id : _id._id
-  const decoded: string = decodeURIComponent(id).replace(/'/g, '"')
-  try {
-    const parsed = JSON.parse(decoded)
-    return Array.isArray(parsed) ? parsed : [parsed]
-  } catch (err) {
-    // wasn't json - likely was handlebars for a many to many
-    return [_id]
-  }
-}
 
 export function generateColumnDefinition(config: {
   externalType: string
@@ -300,15 +182,6 @@ export function getSqlQuery(query: SqlQuery | string): SqlQuery {
 
 export function isSQL(datasource: Datasource) {
   return helpers.isSQL(datasource)
-}
-
-export function isIsoDateString(str: string) {
-  const trimmedValue = str.trim()
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(trimmedValue)) {
-    return false
-  }
-  let d = new Date(trimmedValue)
-  return d.toISOString() === trimmedValue
 }
 
 /**
@@ -457,37 +330,8 @@ export function checkExternalTables(
   return errors
 }
 
-/**
- * Checks if the provided input is an object, but specifically not a date type object.
- * Used during coercion of types and relationship handling, dates are considered valid
- * and can be used as a display field, but objects and arrays cannot.
- * @param testValue an unknown type which this function will attempt to extract
- * a valid primary display string from.
- */
-export function getPrimaryDisplay(testValue: unknown): string | undefined {
-  if (testValue instanceof Date) {
-    return testValue.toISOString()
-  }
-  if (
-    Array.isArray(testValue) &&
-    testValue[0] &&
-    typeof testValue[0] !== "object"
-  ) {
-    return testValue.join(", ")
-  }
-  if (typeof testValue === "object") {
-    return undefined
-  }
-  return testValue as string
-}
-
-export function isValidFilter(value: any) {
-  return value != null && value !== ""
-}
-
 export async function handleXml(rawXml: string) {
-  let data
-  data =
+  let data =
     (await xmlParser(rawXml, {
       explicitArray: false,
       trim: true,
@@ -522,12 +366,6 @@ export async function handleFileResponse(
     const contentLength = response.headers.get("content-length")
     if (contentLength) {
       size = parseInt(contentLength, 10)
-    } else {
-      const chunks: Buffer[] = []
-      for await (const chunk of response.body) {
-        chunks.push(chunk)
-        size += chunk.length
-      }
     }
 
     await objectStore.streamUpload({
@@ -538,7 +376,7 @@ export async function handleFileResponse(
       type: response.headers["content-type"],
     })
   }
-  presignedUrl = await objectStore.getPresignedUrl(bucket, key)
+  presignedUrl = objectStore.getPresignedUrl(bucket, key)
   return {
     data: {
       size,

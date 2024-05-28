@@ -664,6 +664,7 @@ describe("REST Integration", () => {
             }),
             get: (header: any) => {
               if (header === "content-type") return contentType
+              if (header === "content-length") return responseData.byteLength
               if (header === "content-disposition")
                 return `attachment; filename="${filename}"`
             },
@@ -709,6 +710,7 @@ describe("REST Integration", () => {
             }),
             get: (header: any) => {
               if (header === "content-type") return contentType
+              if (header === "content-length") return responseData.byteLength
               if (header === "content-disposition")
                 // eslint-disable-next-line no-useless-escape
                 return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
