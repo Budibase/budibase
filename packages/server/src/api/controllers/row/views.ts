@@ -4,8 +4,8 @@ import {
   SearchRowResponse,
   SearchViewRowRequest,
   RequiredKeys,
-  SearchFilters,
   RowSearchParams,
+  SearchFilterKey,
 } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
@@ -45,10 +45,7 @@ export async function searchView(
 
     // Carry over filters for unused fields
     Object.keys(body.query).forEach(key => {
-      const operator = key as keyof Omit<
-        SearchFilters,
-        "allOr" | "onEmptyFilter"
-      >
+      const operator = key as SearchFilterKey
       Object.keys(body.query[operator] || {}).forEach(field => {
         if (!existingFields.includes(db.removeKeyNumbering(field))) {
           query[operator]![field] = body.query[operator]![field]

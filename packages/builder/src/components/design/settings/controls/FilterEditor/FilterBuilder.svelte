@@ -4,6 +4,7 @@
 
   import { dataFilters } from "@budibase/shared-core"
   import { FilterBuilder } from "@budibase/frontend-core"
+  import { tables } from "stores/builder"
 
   import { createEventDispatcher, onMount } from "svelte"
 
@@ -58,6 +59,7 @@
 <FilterBuilder
   bind:filters={rawFilters}
   behaviourFilters={true}
+  tables={$tables.list}
   {schemaFields}
   {datasource}
   {allowBindings}
