@@ -3,6 +3,7 @@
   import { Button } from "@budibase/bbui"
   import GridCell from "../cells/GridCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
+  import { ScrollBarSize } from "../lib/constants"
 
   const {
     renderedRows,
@@ -16,6 +17,7 @@
     scroll,
     isDragging,
     buttonColumnWidth,
+    showVScrollbar,
   } = getContext("grid")
 
   let measureContainer
@@ -67,7 +69,7 @@
             selected={rowSelected}
             highlighted={rowHovered || rowFocused}
           >
-            <div class="buttons">
+            <div class="buttons" class:offset={$showVScrollbar}>
               {#each buttons as button}
                 <Button
                   newStyles
@@ -120,6 +122,9 @@
     padding: 0 var(--cell-padding);
     gap: var(--cell-padding);
     height: inherit;
+  }
+  .buttons.offset {
+    padding-right: calc(var(--cell-padding) + 2 * var(--scroll-bar-size) - 2px);
   }
   .buttons :global(.spectrum-Button-Label) {
     display: flex;
