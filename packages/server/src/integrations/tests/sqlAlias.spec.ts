@@ -6,12 +6,14 @@ import {
   SqlQuery,
   Table,
   TableSourceType,
+  SqlClient,
 } from "@budibase/types"
+import { sql } from "@budibase/backend-core"
 import { join } from "path"
-import Sql from "../base/sql"
-import { SqlClient } from "../utils"
 import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../sdk"
+
+const Sql = sql.Sql
 
 // this doesn't exist strictly
 const TABLE: Table = {
