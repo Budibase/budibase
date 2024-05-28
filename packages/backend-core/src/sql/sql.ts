@@ -397,6 +397,12 @@ class InternalBuilder {
       contains(filters.containsAny, true)
     }
 
+    // when searching internal tables make sure long looking for rows
+    if (filters.documentType && !isExternalTable(table)) {
+      // has to be its own option, must always be AND onto the search
+      query.andWhereLike("_id", `${prefixed(filters.documentType)}%`)
+    }
+
     return query
   }
 
@@ -562,15 +568,8 @@ class InternalBuilder {
   }
 
   read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
-    let {
-      endpoint,
-      resource,
-      filters,
-      paginate,
-      relationships,
-      tableAliases,
-      meta,
-    } = json
+    let { endpoint, resource, filters, paginate, relationships, tableAliases } =
+      json
 
     const tableName = endpoint.entityId
     // select all if not specified
@@ -605,11 +604,6 @@ class InternalBuilder {
     query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
     })
-
-    // when searching internal tables make sure long looking for rows
-    if (meta.documentType && !isExternalTable(meta.table)) {
-      query.andWhereLike("_id", `${prefixed(meta.documentType)}%`)
-    }
 
     // add sorting to pre-query
     query = this.addSorting(query, json)
