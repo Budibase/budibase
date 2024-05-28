@@ -18,7 +18,7 @@
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
   import SortButton from "../controls/SortButton.svelte"
-  import HideColumnsButton from "../controls/HideColumnsButton.svelte"
+  import ColumnsSettingButton from "../controls/ColumnsSettingButton.svelte"
   import SizeButton from "../controls/SizeButton.svelte"
   import NewRow from "./NewRow.svelte"
   import { createGridWebsocket } from "../lib/websocket"
@@ -152,7 +152,7 @@
       <div class="controls-left">
         <slot name="filter" />
         <SortButton />
-        <HideColumnsButton />
+        <ColumnsSettingButton />
         <SizeButton />
         <slot name="controls" />
       </div>
