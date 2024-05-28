@@ -9,8 +9,9 @@ import {
   SqlQuery,
   Table,
   TableSourceType,
+  SqlClient,
 } from "@budibase/types"
-import { breakExternalTableId, getNativeSql, SqlClient } from "../utils"
+import { breakExternalTableId, getNativeSql } from "./utils"
 import { helpers, utils } from "@budibase/shared-core"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder

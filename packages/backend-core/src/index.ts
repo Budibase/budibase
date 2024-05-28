@@ -34,6 +34,7 @@ export * as docUpdates from "./docUpdates"
 export * from "./utils/Duration"
 export * as docIds from "./docIds"
 export * as security from "./security"
+export * as sql from "./sql"
 // Add context to tenancy for backwards compatibility
 // only do this for external usages to prevent internal
 // circular dependencies

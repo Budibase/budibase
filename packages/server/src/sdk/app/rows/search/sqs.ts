@@ -4,29 +4,32 @@ import {
   QueryJson,
   RelationshipFieldMetadata,
   Row,
-  SearchFilters,
   RowSearchParams,
+  SearchFilters,
   SearchResponse,
   SortDirection,
   SortOrder,
   SortType,
+  SqlClient,
   Table,
 } from "@budibase/types"
-import SqlQueryBuilder from "../../../../integrations/base/sql"
-import { SqlClient } from "../../../../integrations/utils"
 import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../api/controllers/row/utils"
 import sdk from "../../../index"
-import { context, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import {
-  CONSTANT_INTERNAL_ROW_COLS,
+  context,
+  sql,
+  SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
-} from "../../../../db/utils"
+} from "@budibase/backend-core"
+import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
+
+const builder = new sql.Sql(SqlClient.SQL_LITE)
 
 function buildInternalFieldList(
   table: Table,
@@ -97,13 +100,39 @@ function buildTableMap(tables: Table[]) {
   return tableMap
 }
 
+async function runSqlQuery(json: QueryJson, tables: Table[]) {
+  const alias = new AliasTables(tables.map(table => table.name))
+  return await alias.queryWithAliasing(json, async json => {
+    const query = builder._query(json, {
+      disableReturning: true,
+    })
+
+    if (Array.isArray(query)) {
+      throw new Error("SQS cannot currently handle multiple queries")
+    }
+
+    let sql = query.sql
+    let bindings = query.bindings
+
+    // quick hack for docIds
+    sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
+    sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
+
+    if (Array.isArray(query)) {
+      throw new Error("SQS cannot currently handle multiple queries")
+    }
+
+    const db = context.getAppDB()
+    return await db.sql<Row>(sql, bindings)
+  })
+}
+
 export async function search(
   options: RowSearchParams,
   table: Table
 ): Promise<SearchResponse<Row>> {
   const { paginate, query, ...params } = options
 
-  const builder = new SqlQueryBuilder(SqlClient.SQL_LITE)
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
   if (!table) {
@@ -146,62 +175,72 @@ export async function search(
       },
     }
   }
+
+  if (params.bookmark && typeof params.bookmark !== "number") {
+    throw new Error("Unable to paginate with string based bookmarks")
+  }
+  const bookmark: number = (params.bookmark as number) || 1
+  const limit = params.limit
   if (paginate && params.limit) {
     request.paginate = {
-      limit: params.limit,
-      page: params.bookmark,
+      limit: params.limit + 1,
+      page: bookmark,
     }
   }
   try {
-    const alias = new AliasTables(allTables.map(table => table.name))
-    const rows = await alias.queryWithAliasing(request, async json => {
-      const query = builder._query(json, {
-        disableReturning: true,
-      })
+    const rows = await runSqlQuery(request, allTables)
 
-      if (Array.isArray(query)) {
-        throw new Error("SQS cannot currently handle multiple queries")
-      }
-
-      let sql = query.sql
-      let bindings = query.bindings
-
-      // quick hack for docIds
-      sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
-      sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
-
-      const db = context.getAppDB()
-      const rows = await db.sql<Row>(sql, bindings)
-      return rows
-    })
-
-    // process from the format of tableId.column to expected format
-    const processed = await sqlOutputProcessing(
-      rows,
-      table!,
-      allTablesMap,
-      relationships,
-      {
+    // process from the format of tableId.column to expected format also
+    // make sure JSON columns corrected
+    const processed = builder.convertJsonStringColumns<Row>(
+      table,
+      await sqlOutputProcessing(rows, table!, allTablesMap, relationships, {
         sqs: true,
-      }
+      })
     )
 
-    const output = {
-      rows: await outputProcessing<Row[]>(table, processed, {
-        preserveLinks: true,
-        squash: true,
-      }),
+    // check for pagination final row
+    let nextRow: Row | undefined
+    if (paginate && params.limit && processed.length > params.limit) {
+      nextRow = processed.pop()
     }
 
+    // get the rows
+    let finalRows = await outputProcessing<Row[]>(table, processed, {
+      preserveLinks: true,
+      squash: true,
+    })
+
+    // check if we need to pick specific rows out
     if (options.fields) {
       const fields = [...options.fields, ...CONSTANT_INTERNAL_ROW_COLS]
-      output.rows = output.rows.map((r: any) => pick(r, fields))
+      finalRows = finalRows.map((r: any) => pick(r, fields))
     }
 
-    return output
+    // check for pagination
+    if (paginate && limit) {
+      const response: SearchResponse<Row> = {
+        rows: finalRows,
+      }
+      const prevLimit = request.paginate!.limit
+      request.paginate = {
+        limit: 1,
+        page: bookmark * prevLimit + 1,
+      }
+      const hasNextPage = !!nextRow
+      response.hasNextPage = hasNextPage
+      if (hasNextPage) {
+        response.bookmark = bookmark + 1
+      }
+      return response
+    } else {
+      return {
+        rows: finalRows,
+      }
+    }
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
-    if (err.status === 404 && err.message?.includes(SQLITE_DESIGN_DOC_ID)) {
+    if (err.status === 404 && msg?.includes(SQLITE_DESIGN_DOC_ID)) {
       await sdk.tables.sqs.syncDefinition()
       return search(options, table)
     }
