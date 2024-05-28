@@ -1,4 +1,5 @@
 import {
+  DocumentType,
   FieldType,
   Operation,
   QueryJson,
@@ -153,6 +154,7 @@ export async function search(
     meta: {
       table,
       tables: allTablesMap,
+      documentType: DocumentType.ROW,
     },
     resource: {
       fields: buildInternalFieldList(table, allTables),

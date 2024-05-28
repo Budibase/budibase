@@ -1,5 +1,5 @@
 import { Operation, SortDirection } from "./datasources"
-import { Row, Table } from "../documents"
+import { Row, Table, DocumentType } from "../documents"
 import { SortType } from "../api"
 import { Knex } from "knex"
 
@@ -117,6 +117,7 @@ export interface QueryJson {
     table: Table
     tables?: Record<string, Table>
     renamed?: RenameColumn
+    documentType?: DocumentType
   }
   extra?: {
     idFilter?: SearchFilters
