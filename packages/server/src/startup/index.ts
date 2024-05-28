@@ -28,11 +28,6 @@ import fs from "fs"
 
 let STARTUP_RAN = false
 
-if (env.isProd() && env.SQS_SEARCH_ENABLE) {
-  console.error("Stopping service - SQS search support is not yet available.")
-  process.exit(-1)
-}
-
 async function initRoutes(app: Koa) {
   if (!env.isTest()) {
     const plugin = await bullboard.init()
