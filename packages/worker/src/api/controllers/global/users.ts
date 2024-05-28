@@ -448,6 +448,7 @@ export const inviteAccept = async (
           _id: user._id!,
           _rev: user._rev!,
           email: user.email,
+          tenantId: user.tenantId,
         }
       }
     )

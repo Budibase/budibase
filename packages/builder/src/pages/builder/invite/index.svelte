@@ -32,8 +32,14 @@
     onboarding = true
     try {
       const { password, firstName, lastName } = formData
-      await users.acceptInvite(inviteCode, password, firstName, lastName)
+      const user = await users.acceptInvite(
+        inviteCode,
+        password,
+        firstName,
+        lastName
+      )
       notifications.success("Invitation accepted successfully")
+      auth.setOrg(user.tenantId)
       await login()
     } catch (error) {
       notifications.error(error.message)
@@ -66,7 +72,7 @@
       notifications.success("Logged in successfully")
       $goto("../portal")
     } catch (err) {
-      notifications.error(err.message ? err.message : "Invalid credentials") //not likely, considering.
+      notifications.error(err.message ? err.message : "Something went wrong")
     }
   }
 
