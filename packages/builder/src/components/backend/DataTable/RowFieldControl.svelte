@@ -92,7 +92,6 @@
   />
 {:else if type === "attachment"}
   <Dropzone
-    compact
     {label}
     {error}
     {value}
@@ -102,7 +101,6 @@
   />
 {:else if type === "attachment_single"}
   <Dropzone
-    compact
     {label}
     {error}
     value={value ? [value] : []}

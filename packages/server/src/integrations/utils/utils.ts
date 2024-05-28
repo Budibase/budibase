@@ -485,9 +485,8 @@ export function isValidFilter(value: any) {
   return value != null && value !== ""
 }
 
-export async function handleXml(response: any) {
-  let data,
-    rawXml = await response.text()
+export async function handleXml(rawXml: string) {
+  let data
   data =
     (await xmlParser(rawXml, {
       explicitArray: false,
