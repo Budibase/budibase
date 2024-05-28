@@ -62,11 +62,15 @@ export interface SearchFilters {
   [SearchFilterOperator.CONTAINS_ANY]?: {
     [key: string]: any[]
   }
+  // specific to SQS/SQLite search on internal tables this can be used
+  // to make sure the documents returned are always filtered down to a
+  // specific document type (such as just rows)
+  documentType?: DocumentType
 }
 
 export type SearchFilterKey = keyof Omit<
   SearchFilters,
-  "allOr" | "onEmptyFilter" | "fuzzyOr"
+  "allOr" | "onEmptyFilter" | "fuzzyOr" | "documentType"
 >
 
 export type SearchQueryFields = Omit<SearchFilters, "allOr" | "onEmptyFilter">
@@ -117,10 +121,6 @@ export interface QueryJson {
     table: Table
     tables?: Record<string, Table>
     renamed?: RenameColumn
-    // specific to SQS/SQLite search on internal tables this can be used
-    // to make sure the documents returned are always filtered down to a
-    // specific document type (such as just rows)
-    documentType?: DocumentType
   }
   extra?: {
     idFilter?: SearchFilters
