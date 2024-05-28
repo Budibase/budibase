@@ -3,7 +3,6 @@
   import { Button } from "@budibase/bbui"
   import GridCell from "../cells/GridCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
-  import { ScrollBarSize } from "../lib/constants"
 
   const {
     renderedRows,
