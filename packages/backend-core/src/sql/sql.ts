@@ -1,6 +1,11 @@
 import { Knex, knex } from "knex"
 import * as dbCore from "../db"
-import { isIsoDateString, isValidFilter, getNativeSql } from "./utils"
+import {
+  isIsoDateString,
+  isValidFilter,
+  getNativeSql,
+  isExternalTable,
+} from "./utils"
 import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
@@ -21,6 +26,7 @@ import {
   SqlClient,
   QueryOptions,
   JsonTypes,
+  prefixed,
 } from "@budibase/types"
 import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
@@ -556,8 +562,15 @@ class InternalBuilder {
   }
 
   read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
-    let { endpoint, resource, filters, paginate, relationships, tableAliases } =
-      json
+    let {
+      endpoint,
+      resource,
+      filters,
+      paginate,
+      relationships,
+      tableAliases,
+      meta,
+    } = json
 
     const tableName = endpoint.entityId
     // select all if not specified
@@ -592,6 +605,12 @@ class InternalBuilder {
     query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
     })
+
+    // when searching internal tables make sure long looking for rows
+    if (meta.documentType && !isExternalTable(meta.table)) {
+      query.andWhereLike("_id", `${prefixed(meta.documentType)}%`)
+    }
+
     // add sorting to pre-query
     query = this.addSorting(query, json)
     const alias = tableAliases?.[tableName] || tableName
