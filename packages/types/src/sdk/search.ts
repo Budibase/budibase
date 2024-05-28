@@ -117,6 +117,9 @@ export interface QueryJson {
     table: Table
     tables?: Record<string, Table>
     renamed?: RenameColumn
+    // specific to SQS/SQLite search on internal tables this can be used
+    // to make sure the documents returned are always filtered down to a
+    // specific document type (such as just rows)
     documentType?: DocumentType
   }
   extra?: {
