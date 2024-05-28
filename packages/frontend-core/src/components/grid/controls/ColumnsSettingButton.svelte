@@ -29,13 +29,13 @@
 
   const getText = columns => {
     const hidden = columns.filter(col => !col.visible).length
-    return hidden ? `Hide columns (${hidden})` : "Hide columns"
+    return hidden ? `Columns (${hidden})` : "Columns"
   }
 </script>
 
 <div bind:this={anchor}>
   <ActionButton
-    icon="VisibilityOff"
+    icon="ColumnSettings"
     quiet
     size="M"
     on:click={() => (open = !open)}
