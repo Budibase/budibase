@@ -19,7 +19,7 @@
     showVScrollbar,
   } = getContext("grid")
 
-  let measureContainer
+  let container
 
   $: buttons = $props.buttons?.slice(0, 3) || []
   $: columnsWidth = $visibleColumns.reduce(
@@ -40,7 +40,7 @@
       const width = entries?.[0]?.contentRect?.width ?? 0
       buttonColumnWidth.set(width)
     })
-    observer.observe(measureContainer)
+    observer.observe(container)
   })
 </script>
 
@@ -51,7 +51,7 @@
   class:hidden={$buttonColumnWidth === 0}
 >
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
-    <GridScrollWrapper scrollVertically attachHandlers>
+    <GridScrollWrapper scrollVertically attachHandlers bind:ref={container}>
       {#each $renderedRows as row}
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
@@ -60,7 +60,6 @@
           class="row"
           on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
           on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
-          bind:this={measureContainer}
         >
           <GridCell
             width="auto"
