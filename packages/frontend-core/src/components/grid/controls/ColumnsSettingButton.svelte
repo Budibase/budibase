@@ -21,7 +21,7 @@
 
   const getText = columns => {
     const hidden = columns.filter(col => !col.visible).length
-    return hidden ? `Columns (${hidden})` : "Columns"
+    return hidden ? `Columns (${hidden} restricted)` : "Columns"
   }
 
   const PERMISSION_OPTIONS = {
