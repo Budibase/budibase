@@ -1,12 +1,14 @@
-import { SqlClient } from "../utils"
-import Sql from "../base/sql"
 import {
   FieldType,
   Operation,
   QueryJson,
   Table,
   TableSourceType,
+  SqlClient,
 } from "@budibase/types"
+import { sql } from "@budibase/backend-core"
+
+const Sql = sql.Sql
 
 const TABLE_NAME = "test"
 const TABLE: Table = {

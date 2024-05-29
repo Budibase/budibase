@@ -6,6 +6,15 @@ export { Feature as Features } from "@budibase/types"
 import { BpmCorrelationKey } from "@budibase/shared-core"
 import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
 
+export const BannedSearchTypes = [
+  FieldType.LINK,
+  FieldType.ATTACHMENTS,
+  FieldType.FORMULA,
+  FieldType.JSON,
+  "jsonarray",
+  "queryarray",
+]
+
 // Cookie names
 export const Cookies = {
   Auth: "budibase:auth",
