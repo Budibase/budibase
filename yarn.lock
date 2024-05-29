@@ -2050,6 +2050,7 @@
     ioredis "5.3.2"
     joi "17.6.0"
     jsonwebtoken "9.0.2"
+    knex "2.4.2"
     koa-passport "^6.0.0"
     koa-pino-logger "4.0.0"
     lodash "4.17.21"
