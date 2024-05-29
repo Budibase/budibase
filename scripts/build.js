@@ -95,6 +95,7 @@ async function runBuild(entry, outfile) {
       "mysql",
       "mysql2",
       "oracle",
+      "oracledb",
       "pg",
       "pg-query-stream",
       "pg-native",
