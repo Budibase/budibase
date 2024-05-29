@@ -1,7 +1,8 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Popover, Toggle, Icon } from "@budibase/bbui"
+  import { ActionButton, Popover, Icon } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
+  import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
 
   const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
 
@@ -30,8 +31,12 @@
   }
 
   const options = [
-    { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE },
-    { icon: "VisibilityOff", value: PERMISSION_OPTIONS.HIDDEN },
+    { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE, tooltip: "Writable" },
+    {
+      icon: "VisibilityOff",
+      value: PERMISSION_OPTIONS.HIDDEN,
+      tooltip: "Hidden",
+    },
   ]
 
   function columnToPermissionOptions(column) {
@@ -65,36 +70,22 @@
           {$stickyColumn.label}
         </div>
 
-        <div class="permissionPicker">
-          {#each options as option}
-            <ActionButton
-              disabled
-              size="S"
-              icon={option.icon}
-              quiet
-              selected={option.value === PERMISSION_OPTIONS.WRITABLE}
-              noPadding
-            />
-          {/each}
-        </div>
+        <ToggleActionButtonGroup
+          disabled
+          value={PERMISSION_OPTIONS.WRITABLE}
+          {options}
+        />
       {/if}
       {#each $columns as column}
         <div class="column">
           <Icon size="S" name={getColumnIcon(column)} />
           {column.label}
         </div>
-        <div class="permissionPicker">
-          {#each options as option}
-            <ActionButton
-              on:click={() => toggleColumn(column, option.value)}
-              size="S"
-              icon={option.icon}
-              quiet
-              selected={option.value === columnToPermissionOptions(column)}
-              noPadding
-            />
-          {/each}
-        </div>
+        <ToggleActionButtonGroup
+          on:click={e => toggleColumn(column, e.detail)}
+          value={columnToPermissionOptions(column)}
+          {options}
+        />
       {/each}
     </div>
   </div>
@@ -119,17 +110,5 @@
   .column {
     display: flex;
     gap: 8px;
-  }
-  .permissionPicker {
-    display: flex;
-    gap: var(--spacing-xs);
-    padding-left: calc(var(--spacing-xl) * 2);
-  }
-
-  .permissionPicker :global(.spectrum-Icon) {
-    width: 14px;
-  }
-  .permissionPicker :global(.spectrum-ActionButton) {
-    width: 22px;
   }
 </style>
