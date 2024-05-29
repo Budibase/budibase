@@ -118,6 +118,15 @@ export enum FieldType {
   BB_REFERENCE_SINGLE = "bb_reference_single",
 }
 
+export const JsonTypes = [
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.ATTACHMENTS,
+  // only BB_REFERENCE is JSON, it's an array, BB_REFERENCE_SINGLE is a string type
+  FieldType.BB_REFERENCE,
+  FieldType.JSON,
+  FieldType.ARRAY,
+]
+
 export interface RowAttachment {
   size: number
   name: string
