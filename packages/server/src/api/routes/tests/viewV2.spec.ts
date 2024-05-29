@@ -873,10 +873,58 @@ describe.each([
         expect(row.one).toBeUndefined()
         expect(row.two).toEqual("bar")
       })
+
+      it("can't persist readonly columns", async () => {
+        mocks.licenses.useViewReadonlyColumns()
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            one: { visible: true, readonly: true },
+            two: { visible: true },
+          },
+        })
+        const row = await config.api.row.save(view.id, {
+          tableId: table!._id,
+          _viewId: view.id,
+          one: "foo",
+          two: "bar",
+        })
+
+        expect(row.one).toBeUndefined()
+        expect(row.two).toEqual("bar")
+      })
     })
 
     describe("patch", () => {
       it("should update only the view fields for a row", async () => {
+        const newRow = await config.api.row.save(table._id!, {
+          one: "foo",
+          two: "bar",
+        })
+        await config.api.row.patch(view.id, {
+          tableId: table._id!,
+          _id: newRow._id!,
+          _rev: newRow._rev!,
+          one: "newFoo",
+          two: "newBar",
+        })
+
+        const row = await config.api.row.get(table._id!, newRow._id!)
+        expect(row.one).toEqual("foo")
+        expect(row.two).toEqual("newBar")
+      })
+
+      it("can't update readonly columns", async () => {
+        mocks.licenses.useViewReadonlyColumns()
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            one: { visible: true, readonly: true },
+            two: { visible: true },
+          },
+        })
         const newRow = await config.api.row.save(table._id!, {
           one: "foo",
           two: "bar",

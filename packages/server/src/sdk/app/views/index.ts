@@ -104,7 +104,13 @@ export async function remove(viewId: string): Promise<ViewV2> {
 
 export function allowedFields(view: View | ViewV2) {
   return [
-    ...Object.keys(view?.schema || {}),
+    ...Object.keys(view?.schema || {}).filter(key => {
+      if (!isV2(view)) {
+        return true
+      }
+      const fieldSchema = view.schema![key]
+      return fieldSchema.visible && !fieldSchema.readonly
+    }),
     ...dbCore.CONSTANT_EXTERNAL_ROW_COLS,
     ...dbCore.CONSTANT_INTERNAL_ROW_COLS,
   ]
