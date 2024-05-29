@@ -106,6 +106,10 @@ export const useViewPermissions = () => {
   return useFeature(Feature.VIEW_PERMISSIONS)
 }
 
+export const useViewReadonlyColumns = () => {
+  return useFeature(Feature.VIEW_READONLY_COLUMNS)
+}
+
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {
