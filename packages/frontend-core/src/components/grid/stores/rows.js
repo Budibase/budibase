@@ -564,7 +564,6 @@ export const initialise = context => {
     previousFocusedCellId,
     rows,
     validation,
-    focusedCellId,
   } = context
 
   // Wipe the row change cache when changing row
@@ -582,20 +581,12 @@ export const initialise = context => {
     if (!id) {
       return
     }
-    // Stop if we changed row
-    const split = parseCellID(id)
-    const oldRowId = split.id
-    const oldColumn = split.field
-    const { id: newRowId } = parseCellID(get(focusedCellId))
-    if (oldRowId !== newRowId) {
-      return
-    }
-    // Otherwise we just changed cell in the same row
-    const hasChanges = oldColumn in (get(rowChangeCache)[oldRowId] || {})
-    const hasErrors = validation.actions.rowHasErrors(oldRowId)
-    const isSavingChanges = get(inProgressChanges)[oldRowId]
-    if (oldRowId && !hasErrors && hasChanges && !isSavingChanges) {
-      await rows.actions.applyRowChanges(oldRowId)
+    const { id: rowId, field } = parseCellID(id)
+    const hasChanges = field in (get(rowChangeCache)[rowId] || {})
+    const hasErrors = validation.actions.rowHasErrors(rowId)
+    const isSavingChanges = get(inProgressChanges)[rowId]
+    if (rowId && !hasErrors && hasChanges && !isSavingChanges) {
+      await rows.actions.applyRowChanges(rowId)
     }
   })
 }
