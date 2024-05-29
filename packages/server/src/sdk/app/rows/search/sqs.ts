@@ -149,12 +149,14 @@ export async function search(
       entityId: table._id!,
       operation: Operation.READ,
     },
-    filters: cleanupFilters(query, allTables),
+    filters: {
+      ...cleanupFilters(query, allTables),
+      documentType: DocumentType.ROW,
+    },
     table,
     meta: {
       table,
       tables: allTablesMap,
-      documentType: DocumentType.ROW,
     },
     resource: {
       fields: buildInternalFieldList(table, allTables),
