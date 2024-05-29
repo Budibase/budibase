@@ -314,6 +314,16 @@ export default class TestConfiguration {
     }
   }
 
+  async withApp(app: App | string, f: () => Promise<void>) {
+    const oldAppId = this.appId
+    this.appId = typeof app === "string" ? app : app.appId
+    try {
+      return await f()
+    } finally {
+      this.appId = oldAppId
+    }
+  }
+
   // UTILS
 
   _req<Req extends Record<string, any> | void, Res>(

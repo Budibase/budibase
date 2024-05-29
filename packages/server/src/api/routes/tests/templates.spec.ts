@@ -1,5 +1,7 @@
 import * as setup from "./utilities"
+import path from "path"
 import nock from "nock"
+import { generator } from "@budibase/backend-core/tests"
 
 interface App {
   background: string
@@ -27,7 +29,7 @@ function setManifest(manifest: Manifest) {
 
 function mockApp(key: string, tarPath: string) {
   nock("https://prod-budi-templates.s3-eu-west-1.amazonaws.com")
-    .get(`/app/${key}.tar.gz`)
+    .get(`/templates/app/${key}.tar.gz`)
     .replyWithFile(200, tarPath)
 }
 
@@ -54,7 +56,7 @@ function mockAgencyClientPortal() {
 
   mockApp(
     "agency-client-portal",
-    "packages/server/src/api/routes/tests/data/agency-client-portal.tar.gz"
+    path.resolve(__dirname, "data", "agency-client-portal.tar.gz")
   )
 }
 
@@ -72,9 +74,52 @@ describe("/templates", () => {
 
   describe("fetch", () => {
     it("should be able to fetch templates", async () => {
-      const res = await config.api.templates.fetch()
-      expect(res).toHaveLength(1)
-      expect(res[0].name).toBe("Agency Client Portal")
+      const templates = await config.api.templates.fetch()
+      expect(templates).toHaveLength(1)
+      expect(templates[0].name).toBe("Agency Client Portal")
     })
+  })
+
+  describe("create app from template", () => {
+    it.each(["sqs", "lucene"])(
+      `should be able to create an app from a template (%s)`,
+      async source => {
+        const env = {
+          SQS_SEARCH_ENABLE: source === "sqs" ? "true" : "false",
+        }
+
+        await config.withEnv(env, async () => {
+          const name = generator.guid().replaceAll("-", "")
+          const url = `/${name}`
+
+          const app = await config.api.application.create({
+            name,
+            url,
+            useTemplate: "true",
+            templateName: "Agency Client Portal",
+            templateKey: "app/agency-client-portal",
+          })
+          expect(app.name).toBe(name)
+          expect(app.url).toBe(url)
+
+          await config.withApp(app, async () => {
+            const tables = await config.api.table.fetch()
+            expect(tables).toHaveLength(2)
+
+            tables.sort((a, b) => a.name.localeCompare(b.name))
+            const [agencyProjects, users] = tables
+            expect(agencyProjects.name).toBe("Agency Projects")
+            expect(users.name).toBe("Users")
+
+            const { rows } = await config.api.row.search(agencyProjects._id!, {
+              tableId: agencyProjects._id!,
+              query: {},
+            })
+
+            expect(rows).toHaveLength(3)
+          })
+        })
+      }
+    )
   })
 })
