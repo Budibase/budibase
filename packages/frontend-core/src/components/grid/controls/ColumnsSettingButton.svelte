@@ -64,7 +64,19 @@
           <Icon size="S" name={getColumnIcon($stickyColumn)} />
           {$stickyColumn.label}
         </div>
-        <Toggle disabled size="S" value={true} />
+
+        <div class="permissionPicker">
+          {#each options as option}
+            <ActionButton
+              disabled
+              size="S"
+              icon={option.icon}
+              quiet
+              selected={option.value === PERMISSION_OPTIONS.WRITABLE}
+              noPadding
+            />
+          {/each}
+        </div>
       {/if}
       {#each $columns as column}
         <div class="column">
@@ -99,6 +111,7 @@
     display: grid;
     align-items: center;
     grid-template-columns: 1fr auto;
+    gap: 8px;
   }
   .columns :global(.spectrum-Switch) {
     margin-right: 0;
