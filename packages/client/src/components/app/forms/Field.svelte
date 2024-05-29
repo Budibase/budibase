@@ -126,9 +126,6 @@
     display: flex;
     flex-direction: column;
   }
-  label {
-    white-space: nowrap;
-  }
   label.hidden {
     padding: 0;
   }
