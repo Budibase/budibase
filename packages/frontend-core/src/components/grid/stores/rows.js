@@ -404,8 +404,11 @@ export const createActions = context => {
 
     // Save change
     try {
-      // Mark as in progress
-      inProgressChanges.update(state => ({ ...state, [rowId]: true }))
+      // Incremenet change count for this row
+      inProgressChanges.update(state => ({
+        ...state,
+        [rowId]: (state[rowId] || 0) + 1,
+      }))
 
       // Update row
       const changes = get(rowChangeCache)[rowId]
@@ -423,17 +426,25 @@ export const createActions = context => {
         await refreshRow(saved.id)
       }
 
-      // Wipe row change cache now that we've saved the row
+      // Wipe row change cache for any values which have been saved
+      const liveChanges = get(rowChangeCache)[rowId]
       rowChangeCache.update(state => {
-        delete state[rowId]
+        Object.keys(changes || {}).forEach(key => {
+          if (changes[key] === liveChanges?.[key]) {
+            delete state[rowId][key]
+          }
+        })
         return state
       })
     } catch (error) {
       handleValidationError(rowId, error)
     }
 
-    // Mark as completed
-    inProgressChanges.update(state => ({ ...state, [rowId]: false }))
+    // Decrement change count for this row
+    inProgressChanges.update(state => ({
+      ...state,
+      [rowId]: (state[rowId] || 1) - 1,
+    }))
   }
 
   // Updates a value of a row
