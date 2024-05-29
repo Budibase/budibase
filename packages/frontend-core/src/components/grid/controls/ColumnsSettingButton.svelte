@@ -13,9 +13,8 @@
 
   const toggleColumn = async (column, permission) => {
     const visible = permission !== PERMISSION_OPTIONS.HIDDEN
-    const readonly = permission === PERMISSION_OPTIONS.READONLY
 
-    datasource.actions.addSchemaMutation(column.name, { visible, readonly })
+    datasource.actions.addSchemaMutation(column.name, { visible })
     await datasource.actions.saveSchemaMutations()
     dispatch(visible ? "show-column" : "hide-column")
   }
@@ -27,23 +26,17 @@
 
   const PERMISSION_OPTIONS = {
     WRITABLE: "writable",
-    READONLY: "readonly",
     HIDDEN: "hidden",
   }
 
   const options = [
     { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE },
-    { icon: "Visibility", value: PERMISSION_OPTIONS.READONLY },
     { icon: "VisibilityOff", value: PERMISSION_OPTIONS.HIDDEN },
   ]
 
   function columnToPermissionOptions(column) {
     if (!column.visible) {
       return PERMISSION_OPTIONS.HIDDEN
-    }
-
-    if (column.readonly) {
-      return PERMISSION_OPTIONS.READONLY
     }
 
     return PERMISSION_OPTIONS.WRITABLE
