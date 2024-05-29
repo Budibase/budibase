@@ -11,6 +11,7 @@
   import {
     decodeJSBinding,
     encodeJSBinding,
+    processObjectSync,
     processStringSync,
   } from "@budibase/string-templates"
   import { readableToRuntimeBinding } from "dataBinding"
@@ -153,13 +154,6 @@
     debouncedEval(expression, context, snippets)
   }
 
-  const getBindingValue = (binding, context, snippets) => {
-    const js = `return $("${binding.runtimeBinding}")`
-    const hbs = encodeJSBinding(js)
-    const res = processStringSync(hbs, { ...context, snippets })
-    return JSON.stringify(res, null, 2)
-  }
-
   const highlightJSON = json => {
     return formatHighlight(json, {
       keyColor: "#e06c75",
@@ -172,11 +166,27 @@
   }
 
   const enrichBindings = (bindings, context, snippets) => {
-    return bindings.map(binding => {
+    // Create a single big array to enrich in one go
+    const bindingStrings = bindings.map(binding => {
+      if (binding.runtimeBinding.startsWith('trim "')) {
+        // Account for nasty hardcoded HBS bindings for roles, for legacy
+        // compatibility
+        return `{{ ${binding.runtimeBinding} }}`
+      } else {
+        return `{{ literal ${binding.runtimeBinding} }}`
+      }
+    })
+    const bindingEvauations = processObjectSync(bindingStrings, {
+      ...context,
+      snippets,
+    })
+
+    // Enrich bindings with evaluations and highlighted HTML
+    return bindings.map((binding, idx) => {
       if (!context) {
         return binding
       }
-      const value = getBindingValue(binding, context, snippets)
+      const value = JSON.stringify(bindingEvauations[idx], null, 2)
       return {
         ...binding,
         value,
