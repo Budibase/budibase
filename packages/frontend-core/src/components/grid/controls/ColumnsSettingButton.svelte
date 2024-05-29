@@ -31,7 +31,7 @@
   }
 
   const options = [
-    { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE, tooltip: "Writable" },
+    { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE, tooltip: "Writeable" },
     {
       icon: "VisibilityOff",
       value: PERMISSION_OPTIONS.HIDDEN,
@@ -61,7 +61,7 @@
   </ActionButton>
 </div>
 
-<Popover bind:open {anchor} align="left">
+<Popover bind:open {anchor} align="left" overflow>
   <div class="content">
     <div class="columns">
       {#if $stickyColumn}
