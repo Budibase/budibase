@@ -11,6 +11,7 @@
     "continueIfAction": true,
     "showNotificationAction": true,
     "sidePanel": true,
+    "modal": true,
     "skeletonLoader": true
   },
   "typeSupportPresets": {
@@ -6978,6 +6979,28 @@
     "showEmptyState": false,
     "draggable": false,
     "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
+    "settings": [
+      {
+        "type": "boolean",
+        "key": "ignoreClicksOutside",
+        "label": "Ignore clicks outside",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "key": "onClose",
+        "label": "On close"
+      }
+    ]
+  },
+  "modal": {
+    "name": "Modal",
+    "icon": "MBox",
+    "hasChildren": true,
+    "illegalChildren": ["section", "modal"],
+    "showEmptyState": false,
+    "draggable": false,
+    "info": "A modal?",
     "settings": [
       {
         "type": "boolean",

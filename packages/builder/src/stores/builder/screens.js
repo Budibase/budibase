@@ -128,6 +128,9 @@ export class ScreenStore extends BudiStore {
       if (type === "@budibase/standard-components/sidepanel") {
         illegalChildren = []
       }
+      if (type === "@budibase/standard-components/modal") {
+        illegalChildren = []
+      }
 
       const definition = componentStore.getDefinition(component._component)
       // Reset whitelist for direct children

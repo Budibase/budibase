@@ -12,6 +12,7 @@
     linkable,
     builderStore,
     sidePanelStore,
+    modalStore,
     appStore,
   } = sdk
   const context = getContext("context")
@@ -77,6 +78,12 @@
     !$builderStore.inBuilder &&
     $sidePanelStore.open &&
     !$sidePanelStore.ignoreClicksOutside
+
+  $: autoCloseModal =
+    !$builderStore.inBuilder &&
+    $modalStore.open &&
+    !$modalStore.ignoreClicksOutside
+
   $: screenId = $builderStore.inBuilder
     ? `${$builderStore.screen?._id}-screen`
     : "screen"
@@ -198,6 +205,7 @@
   const handleClickLink = () => {
     mobileOpen = false
     sidePanelStore.actions.close()
+    modalStore.actions.close()
   }
 </script>
 
@@ -322,6 +330,22 @@
     </div>
   </div>
   <div
+    id="modal-container"
+    class:open={$modalStore.open}
+    use:clickOutside={autoCloseModal ? modalStore.actions.close : null}
+    class:builder={$builderStore.inBuilder}
+  >
+    <div class="modal-header">
+      <p>some content</p>
+      <Icon
+        color="var(--spectrum-global-color-gray-600)"
+        name="RailRightClose"
+        hoverable
+        on:click={modalStore.actions.close}
+      />
+    </div>
+  </div>
+  <div
     id="side-panel-container"
     class:open={$sidePanelStore.open}
     use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
@@ -423,6 +447,42 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-xl);
+  }
+
+  #modal-container {
+    max-width: calc(100vw - 40px);
+    background: var(--spectrum-global-color-gray-50);
+    z-index: 3;
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: transform 130ms ease-out;
+    position: absolute;
+    width: 400px;
+    right: 0;
+    transform: translateX(100%);
+    height: 100%;
+  }
+  #modal-container.builder {
+    transform: translateX(0);
+    opacity: 0;
+    pointer-events: none;
+  }
+  #modal-container.open {
+    transform: translateX(0);
+    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
+  }
+  #modal-container.builder.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
   }
 
   #side-panel-container {

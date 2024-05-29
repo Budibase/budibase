@@ -62,6 +62,9 @@
       if (ancestor._component === `@budibase/standard-components/sidepanel`) {
         illegalChildren = []
       }
+      if (ancestor._component === `@budibase/standard-components/modal`) {
+        illegalChildren = []
+      }
       const def = componentStore.getDefinition(ancestor._component)
       const blacklist = def?.illegalChildren?.map(x => {
         return `@budibase/standard-components/${x}`
