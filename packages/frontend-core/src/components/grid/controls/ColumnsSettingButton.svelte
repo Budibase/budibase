@@ -78,7 +78,7 @@
           <Icon size="S" name={getColumnIcon(column)} />
           {column.label}
         </div>
-        <div>
+        <div class="permissionPicker">
           {#each options as option}
             <ActionButton
               on:click={() => toggleColumn(column, option.value)}
@@ -86,6 +86,7 @@
               icon={option.icon}
               quiet
               selected={option.value === columnToPermissionOptions(column)}
+              noPadding
             />
           {/each}
         </div>
@@ -101,11 +102,6 @@
     flex-direction: column;
     gap: 12px;
   }
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-  }
   .columns {
     display: grid;
     align-items: center;
@@ -117,5 +113,17 @@
   .column {
     display: flex;
     gap: 8px;
+  }
+  .permissionPicker {
+    display: flex;
+    gap: var(--spacing-xs);
+    padding-left: calc(var(--spacing-xl) * 2);
+  }
+
+  .permissionPicker :global(.spectrum-Icon) {
+    width: 14px;
+  }
+  .permissionPicker :global(.spectrum-ActionButton) {
+    width: 22px;
   }
 </style>
