@@ -1,5 +1,4 @@
 import { Document } from "../document"
-import type { Row } from "./row"
 
 export interface QuerySchema {
   name?: string
@@ -16,6 +15,8 @@ export interface Query extends Document {
   schema: Record<string, QuerySchema | string>
   readable: boolean
   queryVerb: string
+  // flag to state whether the default bindings are empty strings (old behaviour) or null
+  nullDefaultSupport?: boolean
 }
 
 export interface QueryPreview extends Omit<Query, "_id"> {

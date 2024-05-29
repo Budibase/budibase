@@ -140,7 +140,7 @@ describe("/webhooks", () => {
     })
   })
 
-  it("should trigger a synchronous webhook call ", async () => {
+  it("should trigger a synchronous webhook call", async () => {
     mocks.licenses.useSyncAutomations()
     let automation = collectAutomation()
     let newAutomation = await config.createAutomation(automation)

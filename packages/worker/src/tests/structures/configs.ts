@@ -62,8 +62,8 @@ export function smtpEthereal(): SMTPConfig {
       from: "testfrom@example.com",
       secure: false,
       auth: {
-        user: "wyatt.zulauf29@ethereal.email",
-        pass: "tEwDtHBWWxusVWAPfa",
+        user: "mortimer.leuschke@ethereal.email",
+        pass: "5hSjsPbzRv7gEUsfzx",
       },
       connectionTimeout: 1000, // must be less than the jest default of 5000
     },

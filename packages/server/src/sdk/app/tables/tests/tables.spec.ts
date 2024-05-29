@@ -84,7 +84,7 @@ describe("table sdk", () => {
         },
       })
 
-      expect(sdk.views.enrichSchema).toBeCalledTimes(3)
+      expect(sdk.views.enrichSchema).toHaveBeenCalledTimes(3)
 
       expect(res).toEqual({
         ...basicTable,

@@ -1,4 +1,5 @@
 import { helpers } from "@budibase/shared-core"
+import dayjs from "dayjs"
 
 export const deepGet = helpers.deepGet
 
@@ -114,4 +115,116 @@ export const copyToClipboard = value => {
       res()
     }
   })
+}
+
+// Parsed a date value. This is usually an ISO string, but can be a
+// bunch of different formats and shapes depending on schema flags.
+export const parseDate = (value, { enableTime = true }) => {
+  // If empty then invalid
+  if (!value) {
+    return null
+  }
+
+  // Certain string values need transformed
+  if (typeof value === "string") {
+    // Check for time only values
+    if (!isNaN(new Date(`0-${value}`))) {
+      value = `0-${value}`
+    }
+
+    // If date only, check for cases where we received a UTC string
+    else if (!enableTime && value.endsWith("Z")) {
+      value = value.split("Z")[0]
+    }
+  }
+
+  // Parse value and check for validity
+  const parsedDate = dayjs(value)
+  if (!parsedDate.isValid()) {
+    return null
+  }
+
+  // By rounding to the nearest second we avoid locking up in an endless
+  // loop in the builder, caused by potentially enriching {{ now }} to every
+  // millisecond.
+  return dayjs(Math.floor(parsedDate.valueOf() / 1000) * 1000)
+}
+
+// Stringifies a dayjs object to create an ISO string that respects the various
+// schema flags
+export const stringifyDate = (
+  value,
+  { enableTime = true, timeOnly = false, ignoreTimezones = false } = {}
+) => {
+  if (!value) {
+    return null
+  }
+
+  // Time only fields always ignore timezones, otherwise they make no sense.
+  // For non-timezone-aware fields, create an ISO 8601 timestamp of the exact
+  // time picked, without timezone
+  const offsetForTimezone = (enableTime && ignoreTimezones) || timeOnly
+  if (offsetForTimezone) {
+    // Ensure we use the correct offset for the date
+    const referenceDate = value.toDate()
+    const offset = referenceDate.getTimezoneOffset() * 60000
+    const date = new Date(value.valueOf() - offset)
+    if (timeOnly) {
+      // Extract HH:mm
+      return date.toISOString().slice(11, 16)
+    }
+    return date.toISOString().slice(0, -1)
+  }
+
+  // For date-only fields, construct a manual timestamp string without a time
+  // or time zone
+  else if (!enableTime) {
+    const year = value.year()
+    const month = `${value.month() + 1}`.padStart(2, "0")
+    const day = `${value.date()}`.padStart(2, "0")
+    return `${year}-${month}-${day}`
+  }
+
+  // Otherwise use a normal ISO string with time and timezone
+  else {
+    return value.toISOString()
+  }
+}
+
+// Determine the dayjs-compatible format of the browser's default locale
+const getPatternForPart = part => {
+  switch (part.type) {
+    case "day":
+      return "D".repeat(part.value.length)
+    case "month":
+      return "M".repeat(part.value.length)
+    case "year":
+      return "Y".repeat(part.value.length)
+    case "literal":
+      return part.value
+    default:
+      console.log("Unsupported date part", part)
+      return ""
+  }
+}
+const localeDateFormat = new Intl.DateTimeFormat()
+  .formatToParts(new Date("2021-01-01"))
+  .map(getPatternForPart)
+  .join("")
+
+// Formats a dayjs date according to schema flags
+export const getDateDisplayValue = (
+  value,
+  { enableTime = true, timeOnly = false } = {}
+) => {
+  if (!value?.isValid()) {
+    return ""
+  }
+  if (timeOnly) {
+    return value.format("HH:mm")
+  } else if (!enableTime) {
+    return value.format(localeDateFormat)
+  } else {
+    return value.format(`${localeDateFormat} HH:mm`)
+  }
 }

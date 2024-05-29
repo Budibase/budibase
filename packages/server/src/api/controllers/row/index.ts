@@ -1,4 +1,8 @@
+import stream from "stream"
+import archiver from "archiver"
+
 import { quotas } from "@budibase/pro"
+import { objectStore, context } from "@budibase/backend-core"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTableID } from "../../../integrations/utils"
@@ -9,11 +13,13 @@ import {
   DeleteRows,
   ExportRowsRequest,
   ExportRowsResponse,
+  FieldType,
   GetRowResponse,
   PatchRowRequest,
   PatchRowResponse,
   Row,
-  SearchParams,
+  RowAttachment,
+  RowSearchParams,
   SearchRowRequest,
   SearchRowResponse,
   UserCtx,
@@ -192,8 +198,18 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const tableId = utils.getTableId(ctx)
 
-  const searchParams: SearchParams = {
+  await context.ensureSnippetContext(true)
+
+  const enrichedQuery = await utils.enrichSearchContext(
+    { ...ctx.request.body.query },
+    {
+      user: sdk.users.getUserContextBindings(ctx.user),
+    }
+  )
+
+  const searchParams: RowSearchParams = {
     ...ctx.request.body,
+    query: enrichedQuery,
     tableId,
   }
 
@@ -250,4 +266,60 @@ export const exportRows = async (
   })
   ctx.attachment(fileName)
   ctx.body = apiFileReturn(content)
+}
+
+export async function downloadAttachment(ctx: UserCtx) {
+  const { columnName } = ctx.params
+
+  const tableId = utils.getTableId(ctx)
+  const row = await pickApi(tableId).find(ctx)
+
+  const table = await sdk.tables.getTable(tableId)
+  const columnSchema = table.schema[columnName]
+  if (!columnSchema) {
+    ctx.throw(400, `'${columnName}' is not valid`)
+  }
+
+  const columnType = columnSchema.type
+
+  if (
+    columnType !== FieldType.ATTACHMENTS &&
+    columnType !== FieldType.ATTACHMENT_SINGLE
+  ) {
+    ctx.throw(404, `'${columnName}' is not valid attachment column`)
+  }
+
+  const attachments: RowAttachment[] =
+    columnType === FieldType.ATTACHMENTS ? row[columnName] : [row[columnName]]
+
+  if (!attachments?.length) {
+    ctx.throw(404)
+  }
+
+  if (attachments.length === 1) {
+    const attachment = attachments[0]
+    ctx.attachment(attachment.name)
+    ctx.body = await objectStore.getReadStream(
+      objectStore.ObjectStoreBuckets.APPS,
+      attachment.key
+    )
+  } else {
+    const passThrough = new stream.PassThrough()
+    const archive = archiver.create("zip")
+    archive.pipe(passThrough)
+
+    for (const attachment of attachments) {
+      const attachmentStream = await objectStore.getReadStream(
+        objectStore.ObjectStoreBuckets.APPS,
+        attachment.key
+      )
+      archive.append(attachmentStream, { name: attachment.name })
+    }
+
+    const displayName = row[table.primaryDisplay || "_id"]
+    ctx.attachment(`${displayName}_${columnName}.zip`)
+    archive.finalize()
+    ctx.body = passThrough
+    ctx.type = "zip"
+  }
 }

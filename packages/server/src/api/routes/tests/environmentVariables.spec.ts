@@ -138,12 +138,15 @@ describe("/api/env/variables", () => {
       .expect("Content-Type", /json/)
       .expect(200)
     expect(res.body.rows.length).toEqual(0)
-    expect(events.query.previewed).toBeCalledTimes(1)
+    expect(events.query.previewed).toHaveBeenCalledTimes(1)
     // API doesn't include config in response
     delete response.body.datasource.config
-    expect(events.query.previewed).toBeCalledWith(
+    expect(events.query.previewed).toHaveBeenCalledWith(
       response.body.datasource,
-      queryPreview
+      {
+        ...queryPreview,
+        nullDefaultSupport: true,
+      }
     )
     expect(pg.Client).toHaveBeenCalledWith({ password: "test", ssl: undefined })
   })

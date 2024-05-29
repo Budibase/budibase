@@ -1,5 +1,5 @@
 import { Context, createContext, runInNewContext } from "vm"
-import { create } from "handlebars"
+import { create, TemplateDelegate } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
 import { preprocess, postprocess } from "./processors"
 import {
@@ -12,11 +12,12 @@ import {
 } from "./utilities"
 import { convertHBSBlock } from "./conversion"
 import { setJSRunner, removeJSRunner } from "./helpers/javascript"
-import { helpersToRemoveForJs } from "./helpers/list"
 
 import manifest from "./manifest.json"
 import { ProcessOptions } from "./types"
 
+export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
+export { FIND_ANY_HBS_REGEX } from "./utilities"
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
 export { iifeWrapper } from "./iife"
 
@@ -47,7 +48,7 @@ function testObject(object: any) {
 /**
  * Creates a HBS template function for a given string, and optionally caches it.
  */
-const templateCache: Record<string, HandlebarsTemplateDelegate<any>> = {}
+const templateCache: Record<string, TemplateDelegate<any>> = {}
 function createTemplate(string: string, opts?: ProcessOptions) {
   opts = { ...defaultOpts, ...opts }
 
@@ -94,7 +95,7 @@ export async function processObject<T extends Record<string, any>>(
   for (const key of Object.keys(object || {})) {
     if (object[key] != null) {
       const val = object[key]
-      let parsedValue
+      let parsedValue = val
       if (typeof val === "string") {
         parsedValue = await processString(object[key], context, opts)
       } else if (typeof val === "object") {
@@ -412,15 +413,9 @@ export function convertToJS(hbs: string) {
   return `${varBlock}${js}`
 }
 
-const _FIND_ANY_HBS_REGEX = FIND_ANY_HBS_REGEX
-export { _FIND_ANY_HBS_REGEX as FIND_ANY_HBS_REGEX }
-
 export { JsErrorTimeout } from "./errors"
 
-const _helpersToRemoveForJs = helpersToRemoveForJs
-export { _helpersToRemoveForJs as helpersToRemoveForJs }
-
-function defaultJSSetup() {
+export function defaultJSSetup() {
   if (!isBackendService()) {
     /**
      * Use polyfilled vm to run JS scripts in a browser Env
@@ -440,6 +435,3 @@ function defaultJSSetup() {
   }
 }
 defaultJSSetup()
-
-const _defaultJSSetup = defaultJSSetup
-export { _defaultJSSetup as defaultJSSetup }

@@ -29,6 +29,7 @@ const DefaultBucketName = {
   TEMPLATES: "templates",
   GLOBAL: "global",
   PLUGINS: "plugins",
+  TEMP: "tmp-file-attachments",
 }
 
 const selfHosted = !!parseInt(process.env.SELF_HOSTED || "")
@@ -107,7 +108,8 @@ const environment = {
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
-  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || "http://localhost:4984",
+  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || "http://localhost:4006",
+  SQS_SEARCH_ENABLE: process.env.SQS_SEARCH_ENABLE,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -146,6 +148,7 @@ const environment = {
     process.env.GLOBAL_BUCKET_NAME || DefaultBucketName.GLOBAL,
   PLUGIN_BUCKET_NAME:
     process.env.PLUGIN_BUCKET_NAME || DefaultBucketName.PLUGINS,
+  TEMP_BUCKET_NAME: process.env.TEMP_BUCKET_NAME || DefaultBucketName.TEMP,
   USE_COUCH: process.env.USE_COUCH || true,
   MOCK_REDIS: process.env.MOCK_REDIS,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
@@ -156,6 +159,9 @@ const environment = {
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
   HTTP_LOGGING: httpLogging(),
   ENABLE_AUDIT_LOG_IP_ADDR: process.env.ENABLE_AUDIT_LOG_IP_ADDR,
+  // Couch/search
+  SQL_LOGGING_ENABLE: process.env.SQL_LOGGING_ENABLE,
+  SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
   // smtp
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
   SMTP_USER: process.env.SMTP_USER,

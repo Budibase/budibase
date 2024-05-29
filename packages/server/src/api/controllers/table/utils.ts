@@ -31,6 +31,9 @@ import {
   RelationshipFieldMetadata,
   FieldType,
 } from "@budibase/types"
+import sdk from "../../../sdk"
+import env from "../../../environment"
+import { runStaticFormulaChecks } from "./bulkFormula"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
   const db = context.getAppDB()
@@ -88,6 +91,7 @@ export async function checkForColumnUpdates(
     // Update views
     await checkForViewUpdates(updatedTable, deletedColumns, columnRename)
   }
+
   return { rows: updatedRows, table: updatedTable }
 }
 
@@ -125,6 +129,7 @@ export async function importToRows(
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
     row._id = generateRowID(table._id!)
+    row.type = "row"
     row.tableId = table._id
 
     // We use a reference to table here and update it after input processing,
@@ -319,6 +324,9 @@ class TableSaveFunctions {
       importRows: this.importRows,
       user: this.user,
     })
+    if (env.SQS_SEARCH_ENABLE) {
+      await sdk.tables.sqs.addTable(table)
+    }
     return table
   }
 
@@ -487,6 +495,32 @@ export function setStaticSchemas(datasource: Datasource, table: Table) {
     delete table.schema?.id
   }
   return table
+}
+
+export async function internalTableCleanup(table: Table, rows?: Row[]) {
+  const db = context.getAppDB()
+  const tableId = table._id!
+  // remove table search index
+  if (!env.isTest() || env.COUCH_DB_URL) {
+    const currentIndexes = await db.getIndexes()
+    const existingIndex = currentIndexes.indexes.find(
+      (existing: any) => existing.name === `search:${tableId}`
+    )
+    if (existingIndex) {
+      await db.deleteIndex(existingIndex)
+    }
+  }
+
+  // has to run after, make sure it has _id
+  await runStaticFormulaChecks(table, {
+    deletion: true,
+  })
+  if (rows) {
+    await AttachmentCleanup.tableDelete(table, rows)
+  }
+  if (env.SQS_SEARCH_ENABLE) {
+    await sdk.tables.sqs.removeTable(table)
+  }
 }
 
 const _TableSaveFunctions = TableSaveFunctions

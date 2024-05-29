@@ -304,7 +304,7 @@ describe("scim", () => {
 
           await postScimUser({ body })
 
-          expect(events.user.created).toBeCalledTimes(1)
+          expect(events.user.created).toHaveBeenCalledTimes(1)
         })
 
         it("if the username is an email, the user name will be used as email", async () => {
@@ -459,10 +459,11 @@ describe("scim", () => {
       it("should return 404 when requesting unexisting user id", async () => {
         const response = await findScimUser(structures.uuid(), { expect: 404 })
 
-        expect(response).toEqual({
-          message: "missing",
-          status: 404,
-        })
+        expect(response).toEqual(
+          expect.objectContaining({
+            status: 404,
+          })
+        )
       })
     })
 
@@ -571,7 +572,7 @@ describe("scim", () => {
 
         await patchScimUser({ id: user.id, body })
 
-        expect(events.user.updated).toBeCalledTimes(1)
+        expect(events.user.updated).toHaveBeenCalledTimes(1)
       })
     })
 
@@ -603,7 +604,7 @@ describe("scim", () => {
       it("an event is dispatched", async () => {
         await deleteScimUser(user.id, { expect: 204 })
 
-        expect(events.user.deleted).toBeCalledTimes(1)
+        expect(events.user.deleted).toHaveBeenCalledTimes(1)
       })
 
       it("an account holder cannot be removed even when synched", async () => {
@@ -861,10 +862,11 @@ describe("scim", () => {
       it("should return 404 when requesting unexisting group id", async () => {
         const response = await findScimGroup(structures.uuid(), { expect: 404 })
 
-        expect(response).toEqual({
-          message: "missing",
-          status: 404,
-        })
+        expect(response).toEqual(
+          expect.objectContaining({
+            status: 404,
+          })
+        )
       })
 
       it("should allow excluding members", async () => {

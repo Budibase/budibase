@@ -1,11 +1,13 @@
 import { budibaseTempDir } from "../budibaseDir"
 import fs from "fs"
 import { join } from "path"
-import { ObjectStoreBuckets } from "../../constants"
+import { ObjectStoreBuckets, devClientVersion } from "../../constants"
 import { updateClientLibrary } from "./clientLibrary"
 import env from "../../environment"
 import { objectStore, context } from "@budibase/backend-core"
 import { TOP_LEVEL_PATH } from "./filesystem"
+import { DocumentType } from "../../db/utils"
+import { App } from "@budibase/types"
 
 export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 
@@ -35,20 +37,25 @@ export const getComponentLibraryManifest = async (library: string) => {
   const filename = "manifest.json"
 
   if (env.isDev() || env.isTest()) {
-    const paths = [
-      join(TOP_LEVEL_PATH, "packages/client", filename),
-      join(process.cwd(), "client", filename),
-    ]
-    for (let path of paths) {
-      if (fs.existsSync(path)) {
-        // always load from new so that updates are refreshed
-        delete require.cache[require.resolve(path)]
-        return require(path)
+    const db = context.getAppDB()
+    const app = await db.get<App>(DocumentType.APP_METADATA)
+
+    if (app.version === devClientVersion || env.isTest()) {
+      const paths = [
+        join(TOP_LEVEL_PATH, "packages/client", filename),
+        join(process.cwd(), "client", filename),
+      ]
+      for (let path of paths) {
+        if (fs.existsSync(path)) {
+          // always load from new so that updates are refreshed
+          delete require.cache[require.resolve(path)]
+          return require(path)
+        }
       }
+      throw new Error(
+        `Unable to find ${filename} in development environment (may need to build).`
+      )
     }
-    throw new Error(
-      `Unable to find ${filename} in development environment (may need to build).`
-    )
   }
 
   if (!appId) {

@@ -3,7 +3,7 @@ import { generator } from "./generator"
 
 export function userGroup(): UserGroup {
   return {
-    name: generator.word(),
+    name: generator.guid(),
     icon: generator.word(),
     color: generator.word(),
   }

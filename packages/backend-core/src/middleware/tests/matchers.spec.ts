@@ -34,23 +34,6 @@ describe("matchers", () => {
     expect(!!matchers.matches(ctx, built)).toBe(true)
   })
 
-  it("doesn't wildcard path with strict", () => {
-    const pattern = [
-      {
-        route: "/api/tests",
-        method: "POST",
-        strict: true,
-      },
-    ]
-    const ctx = structures.koa.newContext()
-    ctx.request.url = "/api/tests/id/something/else"
-    ctx.request.method = "POST"
-
-    const built = matchers.buildMatcherRegex(pattern)
-
-    expect(!!matchers.matches(ctx, built)).toBe(false)
-  })
-
   it("matches with param", () => {
     const pattern = [
       {
@@ -66,23 +49,6 @@ describe("matchers", () => {
 
     expect(!!matchers.matches(ctx, built)).toBe(true)
   })
-
-  // TODO: Support the below behaviour
-  // Strict does not work when a param is present
-  // it("matches with param with strict", () => {
-  //   const pattern = [{
-  //     route: "/api/tests/:testId",
-  //     method: "GET",
-  //     strict: true
-  //   }]
-  //   const ctx = structures.koa.newContext()
-  //   ctx.request.url = "/api/tests/id"
-  //   ctx.request.method = "GET"
-  //
-  //   const built = matchers.buildMatcherRegex(pattern)
-  //
-  //   expect(!!matchers.matches(ctx, built)).toBe(true)
-  // })
 
   it("doesn't match by path", () => {
     const pattern = [

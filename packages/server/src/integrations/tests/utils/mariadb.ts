@@ -1,8 +1,11 @@
 import { Datasource, SourceName } from "@budibase/types"
-import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
+import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
+import { rawQuery } from "./mysql"
+import { generator, testContainerUtils } from "@budibase/backend-core/tests"
+import { startContainer } from "."
 
-let container: StartedTestContainer | undefined
+let ports: Promise<testContainerUtils.Port[]>
 
 class MariaDBWaitStrategy extends AbstractWaitStrategy {
   async waitUntilReady(container: any, boundPorts: any, startTime?: Date) {
@@ -21,38 +24,38 @@ class MariaDBWaitStrategy extends AbstractWaitStrategy {
   }
 }
 
-export async function start(): Promise<StartedTestContainer> {
-  return await new GenericContainer("mariadb:lts")
-    .withExposedPorts(3306)
-    .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
-    .withWaitStrategy(new MariaDBWaitStrategy())
-    .start()
-}
-
-export async function datasource(): Promise<Datasource> {
-  if (!container) {
-    container = await start()
+export async function getDatasource(): Promise<Datasource> {
+  if (!ports) {
+    ports = startContainer(
+      new GenericContainer("mariadb:lts")
+        .withExposedPorts(3306)
+        .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
+        .withWaitStrategy(new MariaDBWaitStrategy())
+    )
   }
-  const host = container.getHost()
-  const port = container.getMappedPort(3306)
 
-  return {
+  const port = (await ports).find(x => x.container === 3306)?.host
+  if (!port) {
+    throw new Error("MariaDB port not found")
+  }
+
+  const config = {
+    host: "127.0.0.1",
+    port,
+    user: "root",
+    password: "password",
+    database: "mysql",
+  }
+
+  const datasource = {
     type: "datasource_plus",
     source: SourceName.MYSQL,
     plus: true,
-    config: {
-      host,
-      port,
-      user: "root",
-      password: "password",
-      database: "mysql",
-    },
+    config,
   }
-}
 
-export async function stop() {
-  if (container) {
-    await container.stop()
-    container = undefined
-  }
+  const database = generator.guid().replaceAll("-", "")
+  await rawQuery(datasource, `CREATE DATABASE \`${database}\``)
+  datasource.config.database = database
+  return datasource
 }

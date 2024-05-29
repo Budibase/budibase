@@ -74,8 +74,8 @@ describe("/views", () => {
 
   describe("create", () => {
     it("returns a success message when the view is successfully created", async () => {
-      const res = await saveView()
-      expect(events.view.created).toBeCalledTimes(1)
+      await saveView()
+      expect(events.view.created).toHaveBeenCalledTimes(1)
     })
 
     it("creates a view with a calculation", async () => {
@@ -84,14 +84,14 @@ describe("/views", () => {
       const view = await saveView({ calculation: ViewCalculation.COUNT })
 
       expect(view.tableId).toBe(table._id)
-      expect(events.view.created).toBeCalledTimes(1)
-      expect(events.view.updated).not.toBeCalled()
-      expect(events.view.calculationCreated).toBeCalledTimes(1)
-      expect(events.view.calculationUpdated).not.toBeCalled()
-      expect(events.view.calculationDeleted).not.toBeCalled()
-      expect(events.view.filterCreated).not.toBeCalled()
-      expect(events.view.filterUpdated).not.toBeCalled()
-      expect(events.view.filterDeleted).not.toBeCalled()
+      expect(events.view.created).toHaveBeenCalledTimes(1)
+      expect(events.view.updated).not.toHaveBeenCalled()
+      expect(events.view.calculationCreated).toHaveBeenCalledTimes(1)
+      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
+      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
+      expect(events.view.filterCreated).not.toHaveBeenCalled()
+      expect(events.view.filterUpdated).not.toHaveBeenCalled()
+      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("creates a view with a filter", async () => {
@@ -109,14 +109,14 @@ describe("/views", () => {
       })
 
       expect(view.tableId).toBe(table._id)
-      expect(events.view.created).toBeCalledTimes(1)
-      expect(events.view.updated).not.toBeCalled()
-      expect(events.view.calculationCreated).not.toBeCalled()
-      expect(events.view.calculationUpdated).not.toBeCalled()
-      expect(events.view.calculationDeleted).not.toBeCalled()
-      expect(events.view.filterCreated).toBeCalledTimes(1)
-      expect(events.view.filterUpdated).not.toBeCalled()
-      expect(events.view.filterDeleted).not.toBeCalled()
+      expect(events.view.created).toHaveBeenCalledTimes(1)
+      expect(events.view.updated).not.toHaveBeenCalled()
+      expect(events.view.calculationCreated).not.toHaveBeenCalled()
+      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
+      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
+      expect(events.view.filterCreated).toHaveBeenCalledTimes(1)
+      expect(events.view.filterUpdated).not.toHaveBeenCalled()
+      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("updates the table row with the new view metadata", async () => {
@@ -165,14 +165,14 @@ describe("/views", () => {
 
       await saveView()
 
-      expect(events.view.created).not.toBeCalled()
-      expect(events.view.updated).toBeCalledTimes(1)
-      expect(events.view.calculationCreated).not.toBeCalled()
-      expect(events.view.calculationUpdated).not.toBeCalled()
-      expect(events.view.calculationDeleted).not.toBeCalled()
-      expect(events.view.filterCreated).not.toBeCalled()
-      expect(events.view.filterUpdated).not.toBeCalled()
-      expect(events.view.filterDeleted).not.toBeCalled()
+      expect(events.view.created).not.toHaveBeenCalled()
+      expect(events.view.updated).toHaveBeenCalledTimes(1)
+      expect(events.view.calculationCreated).not.toHaveBeenCalled()
+      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
+      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
+      expect(events.view.filterCreated).not.toHaveBeenCalled()
+      expect(events.view.filterUpdated).not.toHaveBeenCalled()
+      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("updates a view calculation", async () => {
@@ -181,14 +181,14 @@ describe("/views", () => {
 
       await saveView({ calculation: ViewCalculation.COUNT })
 
-      expect(events.view.created).not.toBeCalled()
-      expect(events.view.updated).toBeCalledTimes(1)
-      expect(events.view.calculationCreated).not.toBeCalled()
-      expect(events.view.calculationUpdated).toBeCalledTimes(1)
-      expect(events.view.calculationDeleted).not.toBeCalled()
-      expect(events.view.filterCreated).not.toBeCalled()
-      expect(events.view.filterUpdated).not.toBeCalled()
-      expect(events.view.filterDeleted).not.toBeCalled()
+      expect(events.view.created).not.toHaveBeenCalled()
+      expect(events.view.updated).toHaveBeenCalledTimes(1)
+      expect(events.view.calculationCreated).not.toHaveBeenCalled()
+      expect(events.view.calculationUpdated).toHaveBeenCalledTimes(1)
+      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
+      expect(events.view.filterCreated).not.toHaveBeenCalled()
+      expect(events.view.filterUpdated).not.toHaveBeenCalled()
+      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("deletes a view calculation", async () => {
@@ -197,14 +197,14 @@ describe("/views", () => {
 
       await saveView({ calculation: undefined })
 
-      expect(events.view.created).not.toBeCalled()
-      expect(events.view.updated).toBeCalledTimes(1)
-      expect(events.view.calculationCreated).not.toBeCalled()
-      expect(events.view.calculationUpdated).not.toBeCalled()
-      expect(events.view.calculationDeleted).toBeCalledTimes(1)
-      expect(events.view.filterCreated).not.toBeCalled()
-      expect(events.view.filterUpdated).not.toBeCalled()
-      expect(events.view.filterDeleted).not.toBeCalled()
+      expect(events.view.created).not.toHaveBeenCalled()
+      expect(events.view.updated).toHaveBeenCalledTimes(1)
+      expect(events.view.calculationCreated).not.toHaveBeenCalled()
+      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
+      expect(events.view.calculationDeleted).toHaveBeenCalledTimes(1)
+      expect(events.view.filterCreated).not.toHaveBeenCalled()
+      expect(events.view.filterUpdated).not.toHaveBeenCalled()
+      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("updates a view filter", async () => {
@@ -229,14 +229,14 @@ describe("/views", () => {
         ],
       })
 
-      expect(events.view.created).not.toBeCalled()
-      expect(events.view.updated).toBeCalledTimes(1)
-      expect(events.view.calculationCreated).not.toBeCalled()
-      expect(events.view.calculationUpdated).not.toBeCalled()
-      expect(events.view.calculationDeleted).not.toBeCalled()
-      expect(events.view.filterCreated).not.toBeCalled()
-      expect(events.view.filterUpdated).toBeCalledTimes(1)
-      expect(events.view.filterDeleted).not.toBeCalled()
+      expect(events.view.created).not.toHaveBeenCalled()
+      expect(events.view.updated).toHaveBeenCalledTimes(1)
+      expect(events.view.calculationCreated).not.toHaveBeenCalled()
+      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
+      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
+      expect(events.view.filterCreated).not.toHaveBeenCalled()
+      expect(events.view.filterUpdated).toHaveBeenCalledTimes(1)
+      expect(events.view.filterDeleted).not.toHaveBeenCalled()
     })
 
     it("deletes a view filter", async () => {
@@ -253,14 +253,14 @@ describe("/views", () => {
 
       await saveView({ filters: [] })
 
-      expect(events.view.created).not.toBeCalled()
-      expect(events.view.updated).toBeCalledTimes(1)
-      expect(events.view.calculationCreated).not.toBeCalled()
-      expect(events.view.calculationUpdated).not.toBeCalled()
-      expect(events.view.calculationDeleted).not.toBeCalled()
-      expect(events.view.filterCreated).not.toBeCalled()
-      expect(events.view.filterUpdated).not.toBeCalled()
-      expect(events.view.filterDeleted).toBeCalledTimes(1)
+      expect(events.view.created).not.toHaveBeenCalled()
+      expect(events.view.updated).toHaveBeenCalledTimes(1)
+      expect(events.view.calculationCreated).not.toHaveBeenCalled()
+      expect(events.view.calculationUpdated).not.toHaveBeenCalled()
+      expect(events.view.calculationDeleted).not.toHaveBeenCalled()
+      expect(events.view.filterCreated).not.toHaveBeenCalled()
+      expect(events.view.filterUpdated).not.toHaveBeenCalled()
+      expect(events.view.filterDeleted).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -393,7 +393,7 @@ describe("/views", () => {
       const deletedView = await config.api.legacyView.destroy(view.name!)
       expect(deletedView.map).toBeDefined()
       expect(deletedView.meta?.tableId).toEqual(table._id)
-      expect(events.view.deleted).toBeCalledTimes(1)
+      expect(events.view.deleted).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -443,8 +443,8 @@ describe("/views", () => {
       const res = await config.api.legacyView.export(table._id!, "json")
 
       assertJsonExport(res)
-      expect(events.table.exported).toBeCalledTimes(1)
-      expect(events.table.exported).toBeCalledWith(table, "json")
+      expect(events.table.exported).toHaveBeenCalledTimes(1)
+      expect(events.table.exported).toHaveBeenCalledWith(table, "json")
     })
 
     it("should be able to export a table as CSV", async () => {
@@ -453,8 +453,8 @@ describe("/views", () => {
       const res = await config.api.legacyView.export(table._id!, "csv")
 
       assertCSVExport(res)
-      expect(events.table.exported).toBeCalledTimes(1)
-      expect(events.table.exported).toBeCalledWith(table, "csv")
+      expect(events.table.exported).toHaveBeenCalledTimes(1)
+      expect(events.table.exported).toHaveBeenCalledWith(table, "csv")
     })
 
     it("should be able to export a view as JSON", async () => {
@@ -470,8 +470,8 @@ describe("/views", () => {
       let res = await config.api.legacyView.export(view.name!, "json")
 
       assertJsonExport(res)
-      expect(events.view.exported).toBeCalledTimes(1)
-      expect(events.view.exported).toBeCalledWith(table, "json")
+      expect(events.view.exported).toHaveBeenCalledTimes(1)
+      expect(events.view.exported).toHaveBeenCalledWith(table, "json")
     })
 
     it("should be able to export a view as CSV", async () => {
@@ -487,8 +487,8 @@ describe("/views", () => {
       let res = await config.api.legacyView.export(view.name!, "csv")
 
       assertCSVExport(res)
-      expect(events.view.exported).toBeCalledTimes(1)
-      expect(events.view.exported).toBeCalledWith(table, "csv")
+      expect(events.view.exported).toHaveBeenCalledTimes(1)
+      expect(events.view.exported).toHaveBeenCalledWith(table, "csv")
     })
   })
 })

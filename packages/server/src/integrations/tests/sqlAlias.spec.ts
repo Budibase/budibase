@@ -1,10 +1,31 @@
-import { Datasource, Operation, QueryJson, SourceName } from "@budibase/types"
+import {
+  Datasource,
+  Operation,
+  QueryJson,
+  SourceName,
+  SqlQuery,
+  Table,
+  TableSourceType,
+  SqlClient,
+} from "@budibase/types"
+import { sql } from "@budibase/backend-core"
 import { join } from "path"
-import Sql from "../base/sql"
-import { SqlClient } from "../utils"
-import AliasTables from "../../api/controllers/row/alias"
 import { generator } from "@budibase/backend-core/tests"
-import { Knex } from "knex"
+import sdk from "../../sdk"
+
+const Sql = sql.Sql
+
+// this doesn't exist strictly
+const TABLE: Table = {
+  type: "table",
+  sourceType: TableSourceType.EXTERNAL,
+  sourceId: "SOURCE_ID",
+  schema: {},
+  name: "tableName",
+  primary: ["id"],
+}
+
+const AliasTables = sdk.rows.AliasTables
 
 function multiline(sql: string) {
   return sql.replace(/\n/g, "").replace(/ +/g, " ")
@@ -42,9 +63,9 @@ describe("Captures of real examples", () => {
               "b"."taskid" as "b.taskid", "b"."completed" as "b.completed", "b"."qaid" as "b.qaid", 
               "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", 
               "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" 
-              from (select * from "persons" as "a" order by "a"."firstname" asc limit $1) as "a" 
+              from (select * from "persons" as "a" order by "a"."firstname" asc nulls first limit $1) as "a" 
               left join "tasks" as "b" on "a"."personid" = "b"."qaid" or "a"."personid" = "b"."executorid" 
-              order by "a"."firstname" asc limit $2`),
+              order by "a"."firstname" asc nulls first limit $2`),
       })
     })
 
@@ -56,10 +77,10 @@ describe("Captures of real examples", () => {
         sql: multiline(`select "a"."productname" as "a.productname", "a"."productid" as "a.productid", 
               "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", 
               "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" 
-              from (select * from "products" as "a" order by "a"."productname" asc limit $1) as "a" 
+              from (select * from "products" as "a" order by "a"."productname" asc nulls first limit $1) as "a" 
               left join "products_tasks" as "c" on "a"."productid" = "c"."productid" 
-              left join "tasks" as "b" on "b"."taskid" = "c"."taskid" where "b"."taskname" = $2 
-              order by "a"."productname" asc limit $3`),
+              left join "tasks" as "b" on "b"."taskid" = "c"."taskid" where COALESCE("b"."taskname" = $2, FALSE)
+              order by "a"."productname" asc nulls first limit $3`),
       })
     })
 
@@ -71,10 +92,10 @@ describe("Captures of real examples", () => {
         sql: multiline(`select "a"."productname" as "a.productname", "a"."productid" as "a.productid", 
               "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", 
               "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" 
-              from (select * from "products" as "a" order by "a"."productname" asc limit $1) as "a" 
+              from (select * from "products" as "a" order by "a"."productname" asc nulls first limit $1) as "a" 
               left join "products_tasks" as "c" on "a"."productid" = "c"."productid" 
               left join "tasks" as "b" on "b"."taskid" = "c"."taskid" 
-              order by "a"."productname" asc limit $2`),
+              order by "a"."productname" asc nulls first limit $2`),
       })
     })
 
@@ -98,7 +119,8 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       const filters = queryJson.filters
       const notEqualsValue = Object.values(filters?.notEqual!)[0]
-      const rangeValue = Object.values(filters?.range!)[0]
+      const rangeValue: { high?: string | number; low?: string | number } =
+        Object.values(filters?.range!)[0]
       const equalValue = Object.values(filters?.equal!)[0]
 
       expect(query).toEqual({
@@ -117,12 +139,12 @@ describe("Captures of real examples", () => {
              "c"."city" as "c.city", "c"."lastname" as "c.lastname", "c"."year" as "c.year", "c"."firstname" as "c.firstname", 
              "c"."personid" as "c.personid", "c"."address" as "c.address", "c"."age" as "c.age", "c"."type" as "c.type", 
              "c"."city" as "c.city", "c"."lastname" as "c.lastname" 
-             from (select * from "tasks" as "a" where not "a"."completed" = $1 
-             order by "a"."taskname" asc limit $2) as "a" 
+             from (select * from "tasks" as "a" where COALESCE("a"."completed" != $1, TRUE)
+             order by "a"."taskname" asc nulls first limit $2) as "a" 
              left join "products_tasks" as "d" on "a"."taskid" = "d"."taskid" 
              left join "products" as "b" on "b"."productid" = "d"."productid" 
              left join "persons" as "c" on "a"."executorid" = "c"."personid" or "a"."qaid" = "c"."personid" 
-             where "c"."year" between $3 and $4 and "b"."productname" = $5 order by "a"."taskname" asc limit $6`),
+             where "c"."year" between $3 and $4 and COALESCE("b"."productname" = $5, FALSE) order by "a"."taskname" asc nulls first limit $6`),
       })
     })
   })
@@ -134,7 +156,7 @@ describe("Captures of real examples", () => {
       expect(query).toEqual({
         bindings: [1990, "C", "A Street", 34, "designer", "London", "B", 5],
         sql: multiline(`update "persons" as "a" set "year" = $1, "firstname" = $2, "address" = $3, "age" = $4, 
-             "type" = $5, "city" = $6, "lastname" = $7 where "a"."personid" = $8 returning *`),
+             "type" = $5, "city" = $6, "lastname" = $7 where COALESCE("a"."personid" = $8, FALSE) returning *`),
       })
     })
 
@@ -144,7 +166,7 @@ describe("Captures of real examples", () => {
       expect(query).toEqual({
         bindings: [1990, "C", "A Street", 34, "designer", "London", "B", 5],
         sql: multiline(`update "persons" as "a" set "year" = $1, "firstname" = $2, "address" = $3, "age" = $4, 
-             "type" = $5, "city" = $6, "lastname" = $7 where "a"."personid" = $8 returning *`),
+             "type" = $5, "city" = $6, "lastname" = $7 where COALESCE("a"."personid" = $8, FALSE) returning *`),
       })
     })
   })
@@ -155,8 +177,9 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
         bindings: ["ddd", ""],
-        sql: multiline(`delete from "compositetable" as "a" where "a"."keypartone" = $1 and "a"."keyparttwo" = $2 
-             returning "a"."keyparttwo" as "a.keyparttwo", "a"."keypartone" as "a.keypartone", "a"."name" as "a.name"`),
+        sql: multiline(`delete from "compositetable" as "a" 
+          where COALESCE("a"."keypartone" = $1, FALSE) and COALESCE("a"."keyparttwo" = $2, FALSE)
+          returning "a"."keyparttwo" as "a.keyparttwo", "a"."keypartone" as "a.keypartone", "a"."name" as "a.name"`),
       })
     })
   })
@@ -172,12 +195,12 @@ describe("Captures of real examples", () => {
       })
 
       // now check returning
-      let returningQuery: Knex.SqlNative = { sql: "", bindings: [] }
-      SQL.getReturningRow((input: Knex.SqlNative) => {
+      let returningQuery: SqlQuery | SqlQuery[] = { sql: "", bindings: [] }
+      SQL.getReturningRow((input: SqlQuery | SqlQuery[]) => {
         returningQuery = input
       }, queryJson)
       expect(returningQuery).toEqual({
-        sql: "select * from (select top (@p0) * from [people] where [people].[name] = @p1 and [people].[age] = @p2 order by [people].[name] asc) as [people]",
+        sql: "select * from (select top (@p0) * from [people] where CASE WHEN [people].[name] = @p1 THEN 1 ELSE 0 END = 1 and CASE WHEN [people].[age] = @p2 THEN 1 ELSE 0 END = 1 order by [people].[name] asc) as [people]",
         bindings: [1, "Test", 22],
       })
     })
@@ -214,6 +237,9 @@ describe("Captures of real examples", () => {
         endpoint: { datasourceId: "", entityId: "", operation: op },
         resource: {
           fields,
+        },
+        meta: {
+          table: TABLE,
         },
       }
     }
@@ -294,7 +320,7 @@ describe("Captures of real examples", () => {
           type: "datasource",
           isSQL: false,
         })
-      )
+      ).toEqual(false)
     })
 
     it("should disable when no fields", () => {

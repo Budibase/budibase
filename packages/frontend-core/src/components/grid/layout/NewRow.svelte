@@ -7,6 +7,7 @@
   import { GutterWidth, NewRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
+  import { getCellID } from "../lib/utils"
 
   const {
     hoveredRowId,
@@ -23,13 +24,12 @@
     rowHeight,
     hasNextPage,
     maxScrollTop,
-    rowVerticalInversionIndex,
-    columnHorizontalInversionIndex,
     selectedRows,
     loaded,
     refreshing,
     config,
     filter,
+    inlineFilters,
     columnRenderMap,
   } = getContext("grid")
 
@@ -41,16 +41,8 @@
   $: firstColumn = $stickyColumn || $visibleColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $datasource, (visible = false)
-  $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
   $: selectedRowCount = Object.values($selectedRows).length
   $: hasNoRows = !$rows.length
-
-  const shouldInvertY = (offset, inversionIndex, rows) => {
-    if (offset === 0) {
-      return false
-    }
-    return rows.length >= inversionIndex
-  }
 
   const addRow = async () => {
     // Blur the active cell and tick to let final value updates propagate
@@ -69,7 +61,7 @@
 
       // Select the first cell if possible
       if (firstColumn) {
-        $focusedCellId = `${savedRow._id}-${firstColumn.name}`
+        $focusedCellId = getCellID(savedRow._id, firstColumn.name)
       }
     }
     isAdding = false
@@ -117,7 +109,7 @@
     visible = true
     $hoveredRowId = NewRowID
     if (firstColumn) {
-      $focusedCellId = `${NewRowID}-${firstColumn.name}`
+      $focusedCellId = getCellID(NewRowID, firstColumn.name)
     }
 
     // Attach key listener
@@ -157,7 +149,11 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <TempTooltip
   text="Click here to create your first row"
-  condition={hasNoRows && $loaded && !$filter?.length && !$refreshing}
+  condition={hasNoRows &&
+    $loaded &&
+    !$filter?.length &&
+    !$inlineFilters?.length &&
+    !$refreshing}
   type={TooltipType.Info}
 >
   {#if !visible && !selectedRowCount && $config.canAddRows}
@@ -189,7 +185,7 @@
         {/if}
       </GutterCell>
       {#if $stickyColumn}
-        {@const cellId = `${NewRowID}-${$stickyColumn.name}`}
+        {@const cellId = getCellID(NewRowID, $stickyColumn.name)}
         <DataCell
           {cellId}
           rowFocused
@@ -199,7 +195,6 @@
           width={$stickyColumn.width}
           {updateValue}
           topRow={offset === 0}
-          {invertY}
         >
           {#if $stickyColumn?.schema?.autocolumn}
             <div class="readonly-overlay">Can't edit auto column</div>
@@ -213,8 +208,8 @@
     <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally attachHandlers>
         <div class="row">
-          {#each $visibleColumns as column, columnIdx}
-            {@const cellId = `new-${column.name}`}
+          {#each $visibleColumns as column}
+            {@const cellId = getCellID(NewRowID, column.name)}
             <DataCell
               {cellId}
               {column}
@@ -224,8 +219,6 @@
               focused={$focusedCellId === cellId}
               width={column.width}
               topRow={offset === 0}
-              invertX={columnIdx >= $columnHorizontalInversionIndex}
-              {invertY}
               hidden={!$columnRenderMap[column.name]}
             >
               {#if column?.schema?.autocolumn}

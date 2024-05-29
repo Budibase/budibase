@@ -8,8 +8,7 @@ export default class LoggingProcessor implements EventProcessor {
   async processEvent(
     event: Event,
     identity: Identity,
-    properties: any,
-    timestamp?: string
+    properties: any
   ): Promise<void> {
     if (skipLogging) {
       return
@@ -17,14 +16,14 @@ export default class LoggingProcessor implements EventProcessor {
     console.log(`[audit] [identityType=${identity.type}] ${event}`, properties)
   }
 
-  async identify(identity: Identity, timestamp?: string | number) {
+  async identify(identity: Identity) {
     if (skipLogging) {
       return
     }
     console.log(`[audit] identified`, identity)
   }
 
-  async identifyGroup(group: Group, timestamp?: string | number) {
+  async identifyGroup(group: Group) {
     if (skipLogging) {
       return
     }

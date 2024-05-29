@@ -1,6 +1,7 @@
 <script>
   import Field from "./Field.svelte"
   import { CoreDropzone } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
   import { getContext } from "svelte"
 
   export let field
@@ -14,11 +15,17 @@
   export let maximum = undefined
   export let span
   export let helpText = null
+  export let type = FieldType.ATTACHMENTS
+  export let fieldApiMapper = {
+    get: value => value,
+    set: value => value,
+  }
+  export let defaultValue = []
 
   let fieldState
   let fieldApi
 
-  const { API, notificationStore } = getContext("sdk")
+  const { API, notificationStore, environmentStore } = getContext("sdk")
   const formContext = getContext("form")
   const BYTES_IN_MB = 1000000
 
@@ -51,21 +58,11 @@
     }
   }
 
-  const deleteAttachments = async fileList => {
-    try {
-      return await API.deleteAttachments({
-        keys: fileList,
-        tableId: formContext?.dataSource?.tableId,
-      })
-    } catch (error) {
-      return []
-    }
-  }
-
   const handleChange = e => {
-    const changed = fieldApi.setValue(e.detail)
+    const value = fieldApiMapper.set(e.detail)
+    const changed = fieldApi.setValue(value)
     if (onChange && changed) {
-      onChange({ value: e.detail })
+      onChange({ value })
     }
   }
 </script>
@@ -78,20 +75,19 @@
   {validation}
   {span}
   {helpText}
-  type="attachment"
+  {type}
   bind:fieldState
   bind:fieldApi
-  defaultValue={[]}
+  {defaultValue}
 >
   {#if fieldState}
     <CoreDropzone
-      value={fieldState.value}
+      value={fieldApiMapper.get(fieldState.value)}
       disabled={fieldState.disabled || fieldState.readonly}
       error={fieldState.error}
       on:change={handleChange}
       {processFiles}
-      {deleteAttachments}
-      {handleFileTooLarge}
+      handleFileTooLarge={$environmentStore.cloud ? handleFileTooLarge : null}
       {handleTooManyFiles}
       {maximum}
       {extensions}

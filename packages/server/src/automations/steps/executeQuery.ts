@@ -10,8 +10,6 @@ import {
   AutomationStepSchema,
   AutomationStepType,
 } from "@budibase/types"
-import { utils } from "@budibase/backend-core"
-import env from "../../environment"
 
 export const definition: AutomationStepSchema = {
   name: "External Data Connector",

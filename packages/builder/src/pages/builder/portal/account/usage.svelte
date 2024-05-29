@@ -29,6 +29,7 @@
   const manageUrl = `${$admin.accountPortalUrl}/portal/billing`
 
   const WARN_USAGE = ["Queries", "Automations", "Rows", "Day Passes", "Users"]
+  const oneDayInSeconds = 86400
 
   const EXCLUDE_QUOTAS = {
     Queries: () => true,
@@ -104,24 +105,17 @@
     if (!timestamp) {
       return
     }
-    const now = new Date()
-    now.setHours(0)
-    now.setMinutes(0)
-
-    const thenDate = new Date(timestamp)
-    thenDate.setHours(0)
-    thenDate.setMinutes(0)
-
-    const difference = thenDate.getTime() - now
-    // return the difference in days
-    return (difference / (1000 * 3600 * 24)).toFixed(0)
+    const diffTime = Math.abs(timestamp - new Date().getTime()) / 1000
+    return Math.floor(diffTime / oneDayInSeconds)
   }
 
   const setTextRows = () => {
     textRows = []
 
     if (cancelAt && !usesInvoicing) {
-      textRows.push({ message: "Subscription has been cancelled" })
+      if (plan?.type !== Constants.PlanType.ENTERPRISE_BASIC_TRIAL) {
+        textRows.push({ message: "Subscription has been cancelled" })
+      }
       textRows.push({
         message: `${getDaysRemaining(cancelAt)} days remaining`,
         tooltip: new Date(cancelAt),

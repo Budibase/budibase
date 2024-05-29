@@ -246,7 +246,7 @@ describe("context", () => {
           context.doInAppMigrationContext(db.generateAppID(), async () => {
             await otherContextCall()
           })
-        ).rejects.toThrowError(
+        ).rejects.toThrow(
           "The context cannot be changed, a migration is currently running"
         )
       }

@@ -3,22 +3,27 @@ import {
   AllDocsResponse,
   AnyDocument,
   Database,
-  DatabaseOpts,
-  DatabaseQueryOpts,
-  DatabasePutOpts,
   DatabaseCreateIndexOpts,
   DatabaseDeleteIndexOpts,
+  DatabaseOpts,
+  DatabasePutOpts,
+  DatabaseQueryOpts,
   Document,
   isDocument,
   RowResponse,
   RowValue,
+  SQLiteDefinition,
+  SqlQueryBinding,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
-import { WriteStream, ReadStream } from "fs"
+import { ReadStream, WriteStream } from "fs"
 import { newid } from "../../docIds/newid"
+import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
+import { checkSlashesInUrl } from "../../helpers"
+import env from "../../environment"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -35,6 +40,39 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
 }
 
 type DBCall<T> = () => Promise<T>
+
+class CouchDBError extends Error {
+  status: number
+  statusCode: number
+  reason: string
+  name: string
+  errid: string
+  error: string
+  description: string
+
+  constructor(
+    message: string,
+    info: {
+      status: number | undefined
+      statusCode: number | undefined
+      name: string
+      errid: string
+      description: string
+      reason: string
+      error: string
+    }
+  ) {
+    super(message)
+    const statusCode = info.status || info.statusCode || 500
+    this.status = statusCode
+    this.statusCode = statusCode
+    this.reason = info.reason
+    this.name = info.name
+    this.errid = info.errid
+    this.description = info.description
+    this.error = info.error
+  }
+}
 
 export function DatabaseWithConnection(
   dbName: string,
@@ -117,7 +155,7 @@ export class DatabaseImpl implements Database {
       } catch (err: any) {
         // Handling race conditions
         if (err.statusCode !== 412) {
-          throw err
+          throw new CouchDBError(err.message, err)
         }
       }
     }
@@ -136,10 +174,9 @@ export class DatabaseImpl implements Database {
       if (err.statusCode === 404 && err.reason === DATABASE_NOT_FOUND) {
         await this.checkAndCreateDb()
         return await this.performCall(call)
-      } else if (err.statusCode) {
-        err.status = err.statusCode
       }
-      throw err
+      // stripping the error down the props which are safe/useful, drop everything else
+      throw new CouchDBError(`CouchDB error: ${err.message}`, err)
     }
   }
 
@@ -247,6 +284,63 @@ export class DatabaseImpl implements Database {
     })
   }
 
+  async _sqlQuery<T>(
+    url: string,
+    method: "POST" | "GET",
+    body?: Record<string, any>
+  ): Promise<T> {
+    url = checkSlashesInUrl(`${this.couchInfo.sqlUrl}/${url}`)
+    const args: { url: string; method: string; cookie: string; body?: any } = {
+      url,
+      method,
+      cookie: this.couchInfo.cookie,
+    }
+    if (body) {
+      args.body = body
+    }
+    return this.performCall(() => {
+      return async () => {
+        const response = await directCouchUrlCall(args)
+        const json = await response.json()
+        if (response.status > 300) {
+          throw json
+        }
+        return json as T
+      }
+    })
+  }
+
+  async sql<T extends Document>(
+    sql: string,
+    parameters?: SqlQueryBinding
+  ): Promise<T[]> {
+    const dbName = this.name
+    const url = `/${dbName}/${SQLITE_DESIGN_DOC_ID}`
+    return await this._sqlQuery<T[]>(url, "POST", {
+      query: sql,
+      args: parameters,
+    })
+  }
+
+  // checks design document is accurate (cleans up tables)
+  // this will check the design document and remove anything from
+  // disk which is not supposed to be there
+  async sqlDiskCleanup(): Promise<void> {
+    const dbName = this.name
+    const url = `/${dbName}/_cleanup`
+    return await this._sqlQuery<void>(url, "POST")
+  }
+
+  // removes a document from sqlite
+  async sqlPurgeDocument(docIds: string[] | string): Promise<void> {
+    if (!Array.isArray(docIds)) {
+      docIds = [docIds]
+    }
+    const dbName = this.name
+    const url = `/${dbName}/_purge`
+    return await this._sqlQuery<void>(url, "POST", { docs: docIds })
+  }
+
   async query<T extends Document>(
     viewName: string,
     params: DatabaseQueryOpts
@@ -259,13 +353,24 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     try {
+      if (env.SQS_SEARCH_ENABLE) {
+        // delete the design document, then run the cleanup operation
+        try {
+          const definition = await this.get<SQLiteDefinition>(
+            SQLITE_DESIGN_DOC_ID
+          )
+          await this.remove(SQLITE_DESIGN_DOC_ID, definition._rev)
+        } finally {
+          await this.sqlDiskCleanup()
+        }
+      }
       return await this.nano().db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
       if (err.statusCode === 404) {
         return
       } else {
-        throw { ...err, status: err.statusCode }
+        throw new CouchDBError(err.message, err)
       }
     }
   }

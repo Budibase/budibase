@@ -28,7 +28,6 @@
   let deleteTableName
 
   $: externalTable = table?.sourceType === DB_TYPE_EXTERNAL
-  $: allowDeletion = !externalTable || table?.created
 
   function showDeleteModal() {
     templateScreens = $screenStore.screens.filter(
@@ -56,7 +55,7 @@
         $goto(`./datasource/${table.datasourceId}`)
       }
     } catch (error) {
-      notifications.error("Error deleting table")
+      notifications.error(`Error deleting table - ${error.message}`)
     }
   }
 
@@ -86,17 +85,15 @@
   }
 </script>
 
-{#if allowDeletion}
-  <ActionMenu>
-    <div slot="control" class="icon">
-      <Icon s hoverable name="MoreSmallList" />
-    </div>
-    {#if !externalTable}
-      <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
-    {/if}
-    <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
-  </ActionMenu>
-{/if}
+<ActionMenu>
+  <div slot="control" class="icon">
+    <Icon s hoverable name="MoreSmallList" />
+  </div>
+  {#if !externalTable}
+    <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
+  {/if}
+  <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
+</ActionMenu>
 
 <Modal bind:this={editorModal} on:show={initForm}>
   <ModalContent

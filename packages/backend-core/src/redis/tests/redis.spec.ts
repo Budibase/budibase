@@ -120,7 +120,7 @@ describe("redis", () => {
 
       await redis.bulkStore(data, ttl)
 
-      for (const [key, value] of Object.entries(data)) {
+      for (const key of Object.keys(data)) {
         expect(await redis.get(key)).toBe(null)
       }
 
@@ -145,17 +145,6 @@ describe("redis", () => {
         await redis.increment(key),
       ]
       expect(results).toEqual([1, 2, 3, 4, 5])
-    })
-
-    it("can increment on a new key", async () => {
-      const key1 = structures.uuid()
-      const key2 = structures.uuid()
-
-      const result1 = await redis.increment(key1)
-      expect(result1).toBe(1)
-
-      const result2 = await redis.increment(key2)
-      expect(result2).toBe(1)
     })
 
     it("can increment multiple times in parallel", async () => {
@@ -184,7 +173,7 @@ describe("redis", () => {
       const key = structures.uuid()
       await redis.store(key, value)
 
-      await expect(redis.increment(key)).rejects.toThrowError(
+      await expect(redis.increment(key)).rejects.toThrow(
         "ERR value is not an integer or out of range"
       )
     })

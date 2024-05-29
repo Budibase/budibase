@@ -44,7 +44,10 @@ function checkForeignKeysAreAutoColumns(datasource: Datasource) {
       if (shouldBeForeign && !column.autocolumn) {
         column.autocolumn = true
         column.autoReason = AutoReason.FOREIGN_KEY
-      } else if (column.autoReason === AutoReason.FOREIGN_KEY) {
+      } else if (
+        !shouldBeForeign &&
+        column.autoReason === AutoReason.FOREIGN_KEY
+      ) {
         delete column.autocolumn
         delete column.autoReason
       }

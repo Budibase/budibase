@@ -1,43 +1,39 @@
+import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { Datasource, SourceName } from "@budibase/types"
-import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
+import { GenericContainer, Wait } from "testcontainers"
+import { startContainer } from "."
 
-let container: StartedTestContainer | undefined
+let ports: Promise<testContainerUtils.Port[]>
 
-export async function start(): Promise<StartedTestContainer> {
-  return await new GenericContainer("mongo:7.0-jammy")
-    .withExposedPorts(27017)
-    .withEnvironment({
-      MONGO_INITDB_ROOT_USERNAME: "mongo",
-      MONGO_INITDB_ROOT_PASSWORD: "password",
-    })
-    .withWaitStrategy(
-      Wait.forSuccessfulCommand(
-        `mongosh --eval "db.version()"`
-      ).withStartupTimeout(10000)
+export async function getDatasource(): Promise<Datasource> {
+  if (!ports) {
+    ports = startContainer(
+      new GenericContainer("mongo:7.0-jammy")
+        .withExposedPorts(27017)
+        .withEnvironment({
+          MONGO_INITDB_ROOT_USERNAME: "mongo",
+          MONGO_INITDB_ROOT_PASSWORD: "password",
+        })
+        .withWaitStrategy(
+          Wait.forSuccessfulCommand(
+            `mongosh --eval "db.version()"`
+          ).withStartupTimeout(10000)
+        )
     )
-    .start()
-}
-
-export async function datasource(): Promise<Datasource> {
-  if (!container) {
-    container = await start()
   }
-  const host = container.getHost()
-  const port = container.getMappedPort(27017)
+
+  const port = (await ports).find(x => x.container === 27017)
+  if (!port) {
+    throw new Error("MongoDB port not found")
+  }
+
   return {
     type: "datasource",
     source: SourceName.MONGODB,
     plus: false,
     config: {
-      connectionString: `mongodb://mongo:password@${host}:${port}`,
-      db: "mongo",
+      connectionString: `mongodb://mongo:password@127.0.0.1:${port.host}`,
+      db: generator.guid(),
     },
-  }
-}
-
-export async function stop() {
-  if (container) {
-    await container.stop()
-    container = undefined
   }
 }

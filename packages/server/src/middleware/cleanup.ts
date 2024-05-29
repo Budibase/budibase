@@ -13,7 +13,7 @@ export default async (ctx: Ctx, next: any) => {
   let errors = []
   for (let fn of current.cleanup) {
     try {
-      await tracer.trace("cleanup", async span => {
+      await tracer.trace("cleanup", async () => {
         await fn()
       })
     } catch (e) {

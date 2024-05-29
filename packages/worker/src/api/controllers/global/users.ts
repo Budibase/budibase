@@ -3,6 +3,7 @@ import env from "../../../environment"
 import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
+  AddSSoUserRequest,
   BulkUserRequest,
   BulkUserResponse,
   CloudAccount,
@@ -15,6 +16,7 @@ import {
   LockName,
   LockType,
   MigrationType,
+  PlatformUserByEmail,
   SaveUserResponse,
   SearchUsersRequest,
   User,
@@ -33,6 +35,7 @@ import {
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
+import { BpmStatusKey, BpmStatusValue } from "@budibase/shared-core"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -48,6 +51,25 @@ export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
       _rev: user._rev!,
       email: user.email,
     }
+  } catch (err: any) {
+    ctx.throw(err.status || 400, err)
+  }
+}
+
+export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
+  const { email, ssoId } = ctx.request.body
+  try {
+    // Status is changed to 404 from getUserDoc if user is not found
+    let userByEmail = (await platform.users.getUserDoc(
+      email
+    )) as PlatformUserByEmail
+    await platform.users.addSsoUser(
+      ssoId,
+      email,
+      userByEmail.userId,
+      userByEmail.tenantId
+    )
+    ctx.status = 200
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -95,7 +117,8 @@ const parseBooleanParam = (param: any) => {
 export const adminUser = async (
   ctx: Ctx<CreateAdminUserRequest, CreateAdminUserResponse>
 ) => {
-  const { email, password, tenantId, ssoId } = ctx.request.body
+  const { email, password, tenantId, ssoId, givenName, familyName } =
+    ctx.request.body
 
   if (await platform.tenants.exists(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
@@ -125,16 +148,14 @@ export const adminUser = async (
     }
 
     try {
-      const finalUser = await userSdk.db.createAdminUser(
-        email,
+      const finalUser = await userSdk.db.createAdminUser(email, tenantId, {
         password,
-        tenantId,
-        {
-          ssoId,
-          hashPassword,
-          requirePassword,
-        }
-      )
+        ssoId,
+        hashPassword,
+        requirePassword,
+        firstName: givenName,
+        lastName: familyName,
+      })
 
       // events
       let account: CloudAccount | undefined
@@ -208,7 +229,7 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
     }
     // Validate we aren't trying to search on any illegal fields
     if (!userSdk.core.isSupportedUserSearch(body.query)) {
-      ctx.throw(400, "Can only search by string.email or equal._id")
+      ctx.throw(400, "Can only search by string.email, equal._id or oneOf._id")
     }
   }
 
@@ -424,10 +445,16 @@ export const inviteAccept = async (
 
         await cache.invite.deleteCode(inviteCode)
 
+        // make sure onboarding flow is cleared
+        ctx.cookies.set(BpmStatusKey.ONBOARDING, BpmStatusValue.COMPLETED, {
+          expires: new Date(0),
+        })
+
         ctx.body = {
           _id: user._id!,
           _rev: user._rev!,
           email: user.email,
+          tenantId: user.tenantId,
         }
       }
     )

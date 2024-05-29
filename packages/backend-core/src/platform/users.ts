@@ -20,7 +20,7 @@ export async function lookupTenantId(userId: string) {
   return user.tenantId
 }
 
-async function getUserDoc(emailOrId: string): Promise<PlatformUser> {
+export async function getUserDoc(emailOrId: string): Promise<PlatformUser> {
   const db = getPlatformDB()
   return db.get(emailOrId)
 }
@@ -79,6 +79,17 @@ async function addUserDoc(emailOrId: string, newDocFn: () => PlatformUser) {
   }
 }
 
+export async function addSsoUser(
+  ssoId: string,
+  email: string,
+  userId: string,
+  tenantId: string
+) {
+  return addUserDoc(ssoId, () =>
+    newUserSsoIdDoc(ssoId, email, userId, tenantId)
+  )
+}
+
 export async function addUser(
   tenantId: string,
   userId: string,
@@ -91,9 +102,7 @@ export async function addUser(
   ]
 
   if (ssoId) {
-    promises.push(
-      addUserDoc(ssoId, () => newUserSsoIdDoc(ssoId, email, userId, tenantId))
-    )
+    promises.push(addSsoUser(ssoId, email, userId, tenantId))
   }
 
   await Promise.all(promises)

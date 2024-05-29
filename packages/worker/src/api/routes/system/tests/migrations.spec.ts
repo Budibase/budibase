@@ -31,13 +31,13 @@ describe("/api/system/migrations", () => {
         status: 403,
       })
       expect(res.body).toEqual({ message: "Unauthorized", status: 403 })
-      expect(migrateFn).toBeCalledTimes(0)
+      expect(migrateFn).toHaveBeenCalledTimes(0)
     })
 
     it("runs migrations", async () => {
       const res = await config.api.migrations.runMigrations()
       expect(res.text).toBe("OK")
-      expect(migrateFn).toBeCalledTimes(1)
+      expect(migrateFn).toHaveBeenCalledTimes(1)
     })
   })
 

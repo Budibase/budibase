@@ -129,7 +129,7 @@ export default class BaseCache {
     }
   }
 
-  async bustCache(key: string, opts = { client: null }) {
+  async bustCache(key: string) {
     const client = await this.getClient()
     try {
       await client.delete(generateTenantKey(key))

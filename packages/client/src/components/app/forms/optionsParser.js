@@ -6,36 +6,24 @@ export const getOptions = (
   valueColumn,
   customOptions
 ) => {
-  const isArray = fieldSchema?.type === "array"
   // Take options from schema
   if (optionsSource == null || optionsSource === "schema") {
     return fieldSchema?.constraints?.inclusion ?? []
   }
 
-  if (optionsSource === "provider" && isArray) {
-    let optionsSet = {}
-
-    dataProvider?.rows?.forEach(row => {
-      const value = row?.[valueColumn]
-      if (value != null) {
-        const label = row[labelColumn] || value
-        optionsSet[value] = { value, label }
-      }
-    })
-    return Object.values(optionsSet)
-  }
-
   // Extract options from data provider
   if (optionsSource === "provider" && valueColumn) {
-    let optionsSet = {}
+    let valueCache = {}
+    let options = []
     dataProvider?.rows?.forEach(row => {
       const value = row?.[valueColumn]
-      if (value != null) {
+      if (value != null && !valueCache[value]) {
+        valueCache[value] = true
         const label = row[labelColumn] || value
-        optionsSet[value] = { value, label }
+        options.push({ value, label })
       }
     })
-    return Object.values(optionsSet)
+    return options
   }
 
   // Extract custom options

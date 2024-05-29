@@ -43,7 +43,7 @@ export const checkDevelopmentEnvironment = () => {
     error = "Must run via yarn once to generate environment."
   }
   if (error) {
-    console.error(error)
+    console.error("Error during development environment check", error)
     process.exit(-1)
   }
 }

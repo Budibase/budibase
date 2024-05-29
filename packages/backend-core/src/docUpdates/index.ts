@@ -17,13 +17,8 @@ export function init(processors: ProcessorMap) {
   // if not processing in this instance, kick it off
   if (!processingPromise) {
     processingPromise = asyncEventQueue.process(async job => {
-      const { event, identity, properties, timestamp } = job.data
-      await documentProcessor.processEvent(
-        event,
-        identity,
-        properties,
-        timestamp
-      )
+      const { event, identity, properties } = job.data
+      await documentProcessor.processEvent(event, identity, properties)
     })
   }
 }

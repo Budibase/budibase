@@ -16,6 +16,7 @@
   export let detailFields
   export let detailTitle
   export let noRowsMessage
+  export let autoRefresh
 
   const stateKey = generate()
   const context = getContext("context")
@@ -66,6 +67,7 @@
             noValue: false,
           },
         ],
+        autoRefresh,
       }}
       styles={{
         custom: `

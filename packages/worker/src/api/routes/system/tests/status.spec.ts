@@ -28,7 +28,7 @@ describe("/api/system/status", () => {
           passing: true,
         },
       })
-      expect(accounts.getStatus).toBeCalledTimes(0)
+      expect(accounts.getStatus).toHaveBeenCalledTimes(0)
       config.cloudHosted()
     })
 
@@ -45,7 +45,7 @@ describe("/api/system/status", () => {
 
       const res = await config.api.status.getStatus()
 
-      expect(accounts.getStatus).toBeCalledTimes(1)
+      expect(accounts.getStatus).toHaveBeenCalledTimes(1)
       expect(res.body).toEqual(value)
     })
   })

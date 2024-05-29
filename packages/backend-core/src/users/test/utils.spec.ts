@@ -45,7 +45,7 @@ describe("Users", () => {
       ...{ _id: groupId, roles: { app1: "ADMIN" } },
     }
     const users: User[] = []
-    for (const _ of Array.from({ length: usersInGroup })) {
+    for (let i = 0; i < usersInGroup; i++) {
       const userId = `us_${generator.guid()}`
       const user: User = structures.users.user({
         _id: userId,

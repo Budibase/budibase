@@ -45,7 +45,7 @@ describe("migrationsProcessor", () => {
 
     await expect(
       config.doInContext(appId, () => processMigrations(appId, testMigrations))
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       "The context cannot be changed, a migration is currently running"
     )
   })

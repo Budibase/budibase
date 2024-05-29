@@ -81,7 +81,7 @@ describe("Firebase Integration", () => {
   })
 
   it("calls the delete method with the correct params", async () => {
-    const response = await config.integration.delete({
+    await config.integration.delete({
       table: tableName,
       json: {
         id: "test",

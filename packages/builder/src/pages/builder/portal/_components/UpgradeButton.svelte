@@ -6,7 +6,7 @@
   import { sdk } from "@budibase/shared-core"
 </script>
 
-{#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING) && !$licensing.isEnterprisePlan}
+{#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING) && !$licensing.isEnterprisePlan && !$licensing.isEnterpriseTrial}
   {#if $admin.cloud && $auth?.user?.accountPortalAccess}
     <Button
       cta

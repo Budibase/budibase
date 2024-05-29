@@ -193,6 +193,9 @@
   $: pad = pad || (interactive && hasChildren && inDndPath)
   $: $dndIsDragging, (pad = false)
 
+  $: currentTheme = $context?.device?.theme
+  $: darkMode = !currentTheme?.includes("light")
+
   // Update component context
   $: store.set({
     id,
@@ -222,6 +225,7 @@
     parent: id,
     ancestors: [...($component?.ancestors ?? []), instance._component],
     path: [...($component?.path ?? []), id],
+    darkMode,
   })
 
   const initialise = (instance, force = false) => {
@@ -246,15 +250,18 @@
       return
     }
 
+    const cacheId = `${definition.name}${
+      definition?.deprecated === true ? "_deprecated" : ""
+    }`
     // Get the settings definition for this component, and cache it
-    if (SettingsDefinitionCache[definition.name]) {
-      settingsDefinition = SettingsDefinitionCache[definition.name]
-      settingsDefinitionMap = SettingsDefinitionMapCache[definition.name]
+    if (SettingsDefinitionCache[cacheId]) {
+      settingsDefinition = SettingsDefinitionCache[cacheId]
+      settingsDefinitionMap = SettingsDefinitionMapCache[cacheId]
     } else {
       settingsDefinition = getSettingsDefinition(definition)
       settingsDefinitionMap = getSettingsDefinitionMap(settingsDefinition)
-      SettingsDefinitionCache[definition.name] = settingsDefinition
-      SettingsDefinitionMapCache[definition.name] = settingsDefinitionMap
+      SettingsDefinitionCache[cacheId] = settingsDefinition
+      SettingsDefinitionMapCache[cacheId] = settingsDefinitionMap
     }
 
     // Parse the instance settings, and cache them
@@ -280,10 +287,23 @@
         const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
         const dependsOnValue = setting.dependsOn.value
         const realDependentValue = instance[dependsOnKey]
+
+        const sectionDependsOnKey =
+          setting.sectionDependsOn?.setting || setting.sectionDependsOn
+        const sectionDependsOnValue = setting.sectionDependsOn?.value
+        const sectionRealDependentValue = instance[sectionDependsOnKey]
+
         if (dependsOnValue == null && realDependentValue == null) {
           return false
         }
-        if (dependsOnValue !== realDependentValue) {
+        if (dependsOnValue != null && dependsOnValue !== realDependentValue) {
+          return false
+        }
+
+        if (
+          sectionDependsOnValue != null &&
+          sectionDependsOnValue !== sectionRealDependentValue
+        ) {
           return false
         }
       }

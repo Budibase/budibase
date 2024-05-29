@@ -1,9 +1,5 @@
-import { Event, AuditedEventFriendlyName } from "../../../sdk"
-import {
-  PaginationResponse,
-  PaginationRequest,
-  BasicPaginationRequest,
-} from "../"
+import { Event } from "../../../sdk"
+import { PaginationResponse, BasicPaginationRequest } from "../"
 import { User, App } from "../../../"
 
 export interface AuditLogSearchParams {

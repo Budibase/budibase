@@ -3,6 +3,7 @@ import helpers from "@budibase/handlebars-helpers"
 
 import { date, duration } from "./date"
 import { HelperFunctionBuiltin } from "./constants"
+import Handlebars from "handlebars"
 
 /**
  * full list of supported helpers can be found here:

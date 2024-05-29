@@ -8,11 +8,10 @@ import {
 import { context, logging } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { IsolatedVM } from "./vm"
-import type { VM } from "@budibase/types"
 
 export function init() {
   setJSRunner((js: string, ctx: Record<string, any>) => {
-    return tracer.trace("runJS", {}, span => {
+    return tracer.trace("runJS", {}, () => {
       try {
         // Reuse an existing isolate from context, or make a new one
         const bbCtx = context.getCurrentContext()

@@ -1,8 +1,14 @@
 <script>
-  import { notifications, ActionButton, Button, Drawer } from "@budibase/bbui"
+  import {
+    notifications,
+    ActionButton,
+    Button,
+    Drawer,
+    DrawerContent,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import FilterDrawer from "./FilterDrawer.svelte"
+  import FilterBuilder from "./FilterBuilder.svelte"
   import { selectedScreen } from "stores/builder"
 
   const dispatch = createEventDispatcher()
@@ -40,14 +46,15 @@
 </div>
 <Drawer bind:this={drawer} title="Filtering" on:drawerHide on:drawerShow>
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
-  <FilterDrawer
-    slot="body"
-    filters={value}
-    {bindings}
-    {schemaFields}
-    {datasource}
-    on:change={e => (tempValue = e.detail)}
-  />
+  <DrawerContent slot="body">
+    <FilterBuilder
+      filters={value}
+      {bindings}
+      {schemaFields}
+      {datasource}
+      on:change={e => (tempValue = e.detail)}
+    />
+  </DrawerContent>
 </Drawer>
 
 <style>

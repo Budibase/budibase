@@ -1,11 +1,10 @@
 import {
-  SearchQuery,
-  SearchQueryOperators,
+  SearchFilters,
+  SearchFilterOperator,
   FieldType,
   SearchFilter,
 } from "@budibase/types"
 import { buildLuceneQuery, runLuceneQuery } from "../filters"
-import { expect, describe, it, test } from "vitest"
 
 describe("runLuceneQuery", () => {
   const docs = [
@@ -47,8 +46,8 @@ describe("runLuceneQuery", () => {
     },
   ]
 
-  function buildQuery(filters: { [filterKey: string]: any }): SearchQuery {
-    const query: SearchQuery = {
+  function buildQuery(filters: { [filterKey: string]: any }): SearchFilters {
+    const query: SearchFilters = {
       string: {},
       fuzzy: {},
       range: {},
@@ -64,7 +63,7 @@ describe("runLuceneQuery", () => {
     }
 
     for (const filterKey in filters) {
-      query[filterKey as SearchQueryOperators] = filters[filterKey]
+      query[filterKey as SearchFilterOperator] = filters[filterKey]
     }
 
     return query
@@ -194,7 +193,7 @@ describe("runLuceneQuery", () => {
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2, 3])
   })
 
-  test.each([[523, 259], "523,259"])(
+  it.each([[523, 259], "523,259"])(
     "should return rows with matches on numeric oneOf filter",
     input => {
       const query = buildQuery({
@@ -209,7 +208,7 @@ describe("runLuceneQuery", () => {
     }
   )
 
-  test.each([
+  it.each([
     [false, []],
     [true, [1, 2, 3]],
   ])("should return %s  if allOr is %s ", (allOr, expectedResult) => {
@@ -266,13 +265,13 @@ describe("buildLuceneQuery", () => {
   it("should parseFloat if the type is a number, but the value is a numeric string", () => {
     const filter: SearchFilter[] = [
       {
-        operator: SearchQueryOperators.EQUAL,
+        operator: SearchFilterOperator.EQUAL,
         field: "customer_id",
         type: FieldType.NUMBER,
         value: "1212",
       },
       {
-        operator: SearchQueryOperators.ONE_OF,
+        operator: SearchFilterOperator.ONE_OF,
         field: "customer_id",
         type: FieldType.NUMBER,
         value: "1000,1212,3400",
@@ -300,13 +299,13 @@ describe("buildLuceneQuery", () => {
   it("should not parseFloat if the type is a number, but the value is a handlebars binding string", () => {
     const filter: SearchFilter[] = [
       {
-        operator: SearchQueryOperators.EQUAL,
+        operator: SearchFilterOperator.EQUAL,
         field: "customer_id",
         type: FieldType.NUMBER,
         value: "{{ customer_id }}",
       },
       {
-        operator: SearchQueryOperators.ONE_OF,
+        operator: SearchFilterOperator.ONE_OF,
         field: "customer_id",
         type: FieldType.NUMBER,
         value: "{{ list_of_customer_ids }}",
@@ -334,19 +333,19 @@ describe("buildLuceneQuery", () => {
   it("should cast string to boolean if the type is boolean", () => {
     const filter: SearchFilter[] = [
       {
-        operator: SearchQueryOperators.EQUAL,
+        operator: SearchFilterOperator.EQUAL,
         field: "a",
         type: FieldType.BOOLEAN,
         value: "not_true",
       },
       {
-        operator: SearchQueryOperators.NOT_EQUAL,
+        operator: SearchFilterOperator.NOT_EQUAL,
         field: "b",
         type: FieldType.BOOLEAN,
         value: "not_true",
       },
       {
-        operator: SearchQueryOperators.EQUAL,
+        operator: SearchFilterOperator.EQUAL,
         field: "c",
         type: FieldType.BOOLEAN,
         value: "true",
@@ -375,19 +374,19 @@ describe("buildLuceneQuery", () => {
   it("should split the string for contains operators", () => {
     const filter: SearchFilter[] = [
       {
-        operator: SearchQueryOperators.CONTAINS,
+        operator: SearchFilterOperator.CONTAINS,
         field: "description",
         type: FieldType.ARRAY,
         value: "Large box,Heavy box,Small box",
       },
       {
-        operator: SearchQueryOperators.NOT_CONTAINS,
+        operator: SearchFilterOperator.NOT_CONTAINS,
         field: "description",
         type: FieldType.ARRAY,
         value: "Large box,Heavy box,Small box",
       },
       {
-        operator: SearchQueryOperators.CONTAINS_ANY,
+        operator: SearchFilterOperator.CONTAINS_ANY,
         field: "description",
         type: FieldType.ARRAY,
         value: "Large box,Heavy box,Small box",

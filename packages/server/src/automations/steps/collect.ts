@@ -4,7 +4,6 @@ import {
   AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
-  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {

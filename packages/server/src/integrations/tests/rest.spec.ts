@@ -1,21 +1,46 @@
 jest.mock("node-fetch", () => {
+  const obj = {
+    my_next_cursor: 123,
+  }
+  const str = JSON.stringify(obj)
   return jest.fn(() => ({
     headers: {
       raw: () => {
-        return { "content-type": ["application/json"] }
+        return {
+          "content-type": ["application/json"],
+          "content-length": str.length,
+        }
       },
-      get: () => ["application/json"],
+      get: (name: string) => {
+        const lcName = name.toLowerCase()
+        if (lcName === "content-type") {
+          return ["application/json"]
+        } else if (lcName === "content-length") {
+          return str.length
+        }
+      },
     },
-    json: jest.fn(() => ({
-      my_next_cursor: 123,
-    })),
-    text: jest.fn(),
+    json: jest.fn(() => obj),
+    text: jest.fn(() => str),
   }))
 })
 
-import fetch from "node-fetch"
+jest.mock("@budibase/backend-core", () => {
+  const core = jest.requireActual("@budibase/backend-core")
+  return {
+    ...core,
+    context: {
+      ...core.context,
+      getProdAppId: jest.fn(() => "app-id"),
+    },
+  }
+})
+jest.mock("uuid", () => ({ v4: () => "00000000-0000-0000-0000-000000000000" }))
+
 import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
+import fetch from "node-fetch"
+import { Readable } from "stream"
 
 const FormData = require("form-data")
 const { URLSearchParams } = require("url")
@@ -70,7 +95,7 @@ describe("REST Integration", () => {
         Accept: "text/html",
       },
     }
-    const response = await config.integration.read(query)
+    await config.integration.read(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       headers: {
         Accept: "text/html",
@@ -91,7 +116,7 @@ describe("REST Integration", () => {
         name: "test",
       }),
     }
-    const response = await config.integration.update(query)
+    await config.integration.update(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "PUT",
       body: '{"name":"test"}',
@@ -111,7 +136,7 @@ describe("REST Integration", () => {
         name: "test",
       }),
     }
-    const response = await config.integration.delete(query)
+    await config.integration.delete(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "DELETE",
       headers: HEADERS,
@@ -198,14 +223,24 @@ describe("REST Integration", () => {
         json: json ? async () => json : undefined,
         text: text ? async () => text : undefined,
         headers: {
-          get: (key: any) => (key === "content-length" ? 100 : header),
+          get: (key: string) => {
+            switch (key.toLowerCase()) {
+              case "content-length":
+                return 100
+              case "content-type":
+                return header
+              default:
+                return ""
+            }
+          },
           raw: () => ({ "content-type": header }),
         },
       }
     }
 
     it("should be able to parse JSON response", async () => {
-      const input = buildInput({ a: 1 }, null, "application/json")
+      const obj = { a: 1 }
+      const input = buildInput(obj, JSON.stringify(obj), "application/json")
       const output = await config.integration.parseResponse(input)
       expect(output.data).toEqual({ a: 1 })
       expect(output.info.code).toEqual(200)
@@ -232,13 +267,13 @@ describe("REST Integration", () => {
       expect(output.extra.headers["content-type"]).toEqual("application/xml")
     })
 
-    test.each(contentTypes)(
+    test.each([...contentTypes, undefined])(
       "should not throw an error on 204 no content",
       async contentType => {
-        const input = buildInput(undefined, null, contentType, 204)
+        const input = buildInput(undefined, "", contentType, 204)
         const output = await config.integration.parseResponse(input)
         expect(output.data).toEqual([])
-        expect(output.extra.raw).toEqual([])
+        expect(output.extra.raw).toEqual("")
         expect(output.info.code).toEqual(204)
         expect(output.extra.headers["content-type"]).toEqual(contentType)
       }
@@ -418,9 +453,9 @@ describe("REST Integration", () => {
       })
       // @ts-ignore
       const sentData = fetch.mock.calls[0][1].body
-      expect(sentData.has(pageParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(pageParam)).toEqual(pageValue.toString())
-      expect(sentData.has(sizeParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
     })
   })
@@ -551,9 +586,9 @@ describe("REST Integration", () => {
       })
       // @ts-ignore
       const sentData = fetch.mock.calls[0][1].body
-      expect(sentData.has(pageParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(pageParam)).toEqual(pageValue.toString())
-      expect(sentData.has(sizeParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
       expect(res.pagination.cursor).toEqual(123)
     })
@@ -610,5 +645,98 @@ describe("REST Integration", () => {
     expect(calledConfig.method).toBe("GET")
     expect(calledConfig.headers).toEqual({})
     expect(calledConfig.agent.options.rejectUnauthorized).toBe(false)
+  })
+
+  describe("File Handling", () => {
+    it("uploads file to object store and returns signed URL", async () => {
+      const responseData = Buffer.from("teest file contnt")
+      const filename = "test.tar.gz"
+      const contentType = "application/gzip"
+      const mockReadable = new Readable()
+      mockReadable.push(responseData)
+      mockReadable.push(null)
+      ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
+        Promise.resolve({
+          headers: {
+            raw: () => ({
+              "content-type": [contentType],
+              "content-disposition": [`attachment; filename="${filename}"`],
+            }),
+            get: (header: any) => {
+              if (header === "content-type") return contentType
+              if (header === "content-length") return responseData.byteLength
+              if (header === "content-disposition")
+                return `attachment; filename="${filename}"`
+            },
+          },
+          body: mockReadable,
+        })
+      )
+
+      const query = {
+        path: "api",
+      }
+
+      const response = await config.integration.read(query)
+
+      expect(response.data).toEqual({
+        size: responseData.byteLength,
+        name: "00000000-0000-0000-0000-000000000000.tar.gz",
+        url: expect.stringContaining(
+          "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.tar.gz"
+        ),
+        extension: "tar.gz",
+        key: expect.stringContaining(
+          "app-id/00000000-0000-0000-0000-000000000000.tar.gz"
+        ),
+      })
+    })
+
+    it("uploads file with non ascii filename to object store and returns signed URL", async () => {
+      const responseData = Buffer.from("teest file contnt")
+      const contentType = "text/plain"
+      const mockReadable = new Readable()
+      mockReadable.push(responseData)
+      mockReadable.push(null)
+      ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
+        Promise.resolve({
+          headers: {
+            raw: () => ({
+              "content-type": [contentType],
+              "content-disposition": [
+                // eslint-disable-next-line no-useless-escape
+                `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
+              ],
+            }),
+            get: (header: any) => {
+              if (header === "content-type") return contentType
+              if (header === "content-length") return responseData.byteLength
+              if (header === "content-disposition")
+                // eslint-disable-next-line no-useless-escape
+                return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
+            },
+          },
+          body: mockReadable,
+        })
+      )
+
+      const query = {
+        path: "api",
+      }
+
+      const response = await config.integration.read(query)
+
+      expect(response.data).toEqual({
+        size: responseData.byteLength,
+        name: "00000000-0000-0000-0000-000000000000.pdf",
+        url: expect.stringContaining(
+          "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.pdf"
+        ),
+        extension: "pdf",
+        key: expect.stringContaining(
+          "app-id/00000000-0000-0000-0000-000000000000.pdf"
+        ),
+      })
+    })
   })
 })

@@ -57,20 +57,22 @@ describe("configs", () => {
       describe("create", () => {
         it("should create activated google config", async () => {
           await saveGoogleConfig()
-          expect(events.auth.SSOCreated).toBeCalledTimes(1)
-          expect(events.auth.SSOCreated).toBeCalledWith(ConfigType.GOOGLE)
-          expect(events.auth.SSODeactivated).not.toBeCalled()
-          expect(events.auth.SSOActivated).toBeCalledTimes(1)
-          expect(events.auth.SSOActivated).toBeCalledWith(ConfigType.GOOGLE)
+          expect(events.auth.SSOCreated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOCreated).toHaveBeenCalledWith(ConfigType.GOOGLE)
+          expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
+          expect(events.auth.SSOActivated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOActivated).toHaveBeenCalledWith(
+            ConfigType.GOOGLE
+          )
           await config.deleteConfig(ConfigType.GOOGLE)
         })
 
         it("should create deactivated google config", async () => {
           await saveGoogleConfig({ activated: false })
-          expect(events.auth.SSOCreated).toBeCalledTimes(1)
-          expect(events.auth.SSOCreated).toBeCalledWith(ConfigType.GOOGLE)
-          expect(events.auth.SSOActivated).not.toBeCalled()
-          expect(events.auth.SSODeactivated).not.toBeCalled()
+          expect(events.auth.SSOCreated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOCreated).toHaveBeenCalledWith(ConfigType.GOOGLE)
+          expect(events.auth.SSOActivated).not.toHaveBeenCalled()
+          expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
           await config.deleteConfig(ConfigType.GOOGLE)
         })
       })
@@ -84,11 +86,13 @@ describe("configs", () => {
             googleConf._id,
             googleConf._rev
           )
-          expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-          expect(events.auth.SSOUpdated).toBeCalledWith(ConfigType.GOOGLE)
-          expect(events.auth.SSOActivated).not.toBeCalled()
-          expect(events.auth.SSODeactivated).toBeCalledTimes(1)
-          expect(events.auth.SSODeactivated).toBeCalledWith(ConfigType.GOOGLE)
+          expect(events.auth.SSOUpdated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOUpdated).toHaveBeenCalledWith(ConfigType.GOOGLE)
+          expect(events.auth.SSOActivated).not.toHaveBeenCalled()
+          expect(events.auth.SSODeactivated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSODeactivated).toHaveBeenCalledWith(
+            ConfigType.GOOGLE
+          )
           await config.deleteConfig(ConfigType.GOOGLE)
         })
 
@@ -100,11 +104,13 @@ describe("configs", () => {
             googleConf._id,
             googleConf._rev
           )
-          expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-          expect(events.auth.SSOUpdated).toBeCalledWith(ConfigType.GOOGLE)
-          expect(events.auth.SSODeactivated).not.toBeCalled()
-          expect(events.auth.SSOActivated).toBeCalledTimes(1)
-          expect(events.auth.SSOActivated).toBeCalledWith(ConfigType.GOOGLE)
+          expect(events.auth.SSOUpdated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOUpdated).toHaveBeenCalledWith(ConfigType.GOOGLE)
+          expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
+          expect(events.auth.SSOActivated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOActivated).toHaveBeenCalledWith(
+            ConfigType.GOOGLE
+          )
           await config.deleteConfig(ConfigType.GOOGLE)
         })
       })
@@ -123,20 +129,20 @@ describe("configs", () => {
       describe("create", () => {
         it("should create activated OIDC config", async () => {
           await saveOIDCConfig()
-          expect(events.auth.SSOCreated).toBeCalledTimes(1)
-          expect(events.auth.SSOCreated).toBeCalledWith(ConfigType.OIDC)
-          expect(events.auth.SSODeactivated).not.toBeCalled()
-          expect(events.auth.SSOActivated).toBeCalledTimes(1)
-          expect(events.auth.SSOActivated).toBeCalledWith(ConfigType.OIDC)
+          expect(events.auth.SSOCreated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOCreated).toHaveBeenCalledWith(ConfigType.OIDC)
+          expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
+          expect(events.auth.SSOActivated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOActivated).toHaveBeenCalledWith(ConfigType.OIDC)
           await config.deleteConfig(ConfigType.OIDC)
         })
 
         it("should create deactivated OIDC config", async () => {
           await saveOIDCConfig({ activated: false })
-          expect(events.auth.SSOCreated).toBeCalledTimes(1)
-          expect(events.auth.SSOCreated).toBeCalledWith(ConfigType.OIDC)
-          expect(events.auth.SSOActivated).not.toBeCalled()
-          expect(events.auth.SSODeactivated).not.toBeCalled()
+          expect(events.auth.SSOCreated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOCreated).toHaveBeenCalledWith(ConfigType.OIDC)
+          expect(events.auth.SSOActivated).not.toHaveBeenCalled()
+          expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
           await config.deleteConfig(ConfigType.OIDC)
         })
       })
@@ -150,11 +156,13 @@ describe("configs", () => {
             oidcConf._id,
             oidcConf._rev
           )
-          expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-          expect(events.auth.SSOUpdated).toBeCalledWith(ConfigType.OIDC)
-          expect(events.auth.SSOActivated).not.toBeCalled()
-          expect(events.auth.SSODeactivated).toBeCalledTimes(1)
-          expect(events.auth.SSODeactivated).toBeCalledWith(ConfigType.OIDC)
+          expect(events.auth.SSOUpdated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOUpdated).toHaveBeenCalledWith(ConfigType.OIDC)
+          expect(events.auth.SSOActivated).not.toHaveBeenCalled()
+          expect(events.auth.SSODeactivated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSODeactivated).toHaveBeenCalledWith(
+            ConfigType.OIDC
+          )
           await config.deleteConfig(ConfigType.OIDC)
         })
 
@@ -166,11 +174,11 @@ describe("configs", () => {
             oidcConf._id,
             oidcConf._rev
           )
-          expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-          expect(events.auth.SSOUpdated).toBeCalledWith(ConfigType.OIDC)
-          expect(events.auth.SSODeactivated).not.toBeCalled()
-          expect(events.auth.SSOActivated).toBeCalledTimes(1)
-          expect(events.auth.SSOActivated).toBeCalledWith(ConfigType.OIDC)
+          expect(events.auth.SSOUpdated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOUpdated).toHaveBeenCalledWith(ConfigType.OIDC)
+          expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
+          expect(events.auth.SSOActivated).toHaveBeenCalledTimes(1)
+          expect(events.auth.SSOActivated).toHaveBeenCalledWith(ConfigType.OIDC)
           await config.deleteConfig(ConfigType.OIDC)
         })
       })
@@ -190,8 +198,8 @@ describe("configs", () => {
         it("should create SMTP config", async () => {
           await config.deleteConfig(ConfigType.SMTP)
           await saveSMTPConfig()
-          expect(events.email.SMTPUpdated).not.toBeCalled()
-          expect(events.email.SMTPCreated).toBeCalledTimes(1)
+          expect(events.email.SMTPUpdated).not.toHaveBeenCalled()
+          expect(events.email.SMTPCreated).toHaveBeenCalledTimes(1)
           await config.deleteConfig(ConfigType.SMTP)
         })
       })
@@ -201,8 +209,8 @@ describe("configs", () => {
           const smtpConf = await saveSMTPConfig()
           jest.clearAllMocks()
           await saveSMTPConfig(smtpConf.config, smtpConf._id, smtpConf._rev)
-          expect(events.email.SMTPCreated).not.toBeCalled()
-          expect(events.email.SMTPUpdated).toBeCalledTimes(1)
+          expect(events.email.SMTPCreated).not.toHaveBeenCalled()
+          expect(events.email.SMTPUpdated).toHaveBeenCalledTimes(1)
           await config.deleteConfig(ConfigType.SMTP)
         })
       })
@@ -215,9 +223,9 @@ describe("configs", () => {
 
           await saveSettingsConfig()
 
-          expect(events.org.nameUpdated).not.toBeCalled()
-          expect(events.org.logoUpdated).not.toBeCalled()
-          expect(events.org.platformURLUpdated).not.toBeCalled()
+          expect(events.org.nameUpdated).not.toHaveBeenCalled()
+          expect(events.org.logoUpdated).not.toHaveBeenCalled()
+          expect(events.org.platformURLUpdated).not.toHaveBeenCalled()
         })
 
         it("should create settings config with non-default settings", async () => {
@@ -231,9 +239,9 @@ describe("configs", () => {
 
           await saveSettingsConfig(conf)
 
-          expect(events.org.nameUpdated).toBeCalledTimes(1)
-          expect(events.org.logoUpdated).toBeCalledTimes(1)
-          expect(events.org.platformURLUpdated).toBeCalledTimes(1)
+          expect(events.org.nameUpdated).toHaveBeenCalledTimes(1)
+          expect(events.org.logoUpdated).toHaveBeenCalledTimes(1)
+          expect(events.org.platformURLUpdated).toHaveBeenCalledTimes(1)
           config.cloudHosted()
         })
       })
@@ -253,9 +261,9 @@ describe("configs", () => {
             settingsConfig._rev
           )
 
-          expect(events.org.nameUpdated).toBeCalledTimes(1)
-          expect(events.org.logoUpdated).toBeCalledTimes(1)
-          expect(events.org.platformURLUpdated).toBeCalledTimes(1)
+          expect(events.org.nameUpdated).toHaveBeenCalledTimes(1)
+          expect(events.org.logoUpdated).toHaveBeenCalledTimes(1)
+          expect(events.org.platformURLUpdated).toHaveBeenCalledTimes(1)
           config.cloudHosted()
         })
       })

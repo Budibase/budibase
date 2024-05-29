@@ -10,6 +10,18 @@ import { formats } from "dd-trace/ext"
 
 import { localFileDestination } from "../system"
 
+function isPlainObject(obj: any) {
+  return typeof obj === "object" && obj !== null && !(obj instanceof Error)
+}
+
+function isError(obj: any) {
+  return obj instanceof Error
+}
+
+function isMessage(obj: any) {
+  return typeof obj === "string"
+}
+
 // LOGGER
 
 let pinoInstance: pino.Logger | undefined
@@ -71,23 +83,11 @@ if (!env.DISABLE_PINO_LOGGER) {
     err?: Error
   }
 
-  function isPlainObject(obj: any) {
-    return typeof obj === "object" && obj !== null && !(obj instanceof Error)
-  }
-
-  function isError(obj: any) {
-    return obj instanceof Error
-  }
-
-  function isMessage(obj: any) {
-    return typeof obj === "string"
-  }
-
   /**
    * Backwards compatibility between console logging statements
    * and pino logging requirements.
    */
-  function getLogParams(args: any[]): [MergingObject, string] {
+  const getLogParams = (args: any[]): [MergingObject, string] => {
     let error = undefined
     let objects: any[] = []
     let message = ""

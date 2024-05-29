@@ -9,7 +9,6 @@ export const PreprocessorNames = {
   FINALISE: "finalise",
 }
 
-/* eslint-disable no-unused-vars */
 class Preprocessor {
   name: string
   private fn: any

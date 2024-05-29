@@ -1,17 +1,17 @@
-import { FIELDS } from "constants/backend"
+import { FieldType } from "@budibase/types"
 
 function baseConversion(type) {
   if (type === "string") {
     return {
-      type: FIELDS.STRING.type,
+      type: FieldType.STRING,
     }
   } else if (type === "boolean") {
     return {
-      type: FIELDS.BOOLEAN.type,
+      type: FieldType.BOOLEAN,
     }
   } else if (type === "number") {
     return {
-      type: FIELDS.NUMBER.type,
+      type: FieldType.NUMBER,
     }
   }
 }
@@ -31,7 +31,7 @@ function recurse(schemaLevel = {}, objectLevel) {
       const schema = recurse(schemaLevel[key], value[0])
       if (schema) {
         schemaLevel[key] = {
-          type: FIELDS.ARRAY.type,
+          type: FieldType.ARRAY,
           schema,
         }
       }
@@ -45,7 +45,7 @@ function recurse(schemaLevel = {}, objectLevel) {
     }
   }
   if (!schemaLevel.type) {
-    return { type: FIELDS.JSON.type, schema: schemaLevel }
+    return { type: FieldType.JSON, schema: schemaLevel }
   } else {
     return schemaLevel
   }

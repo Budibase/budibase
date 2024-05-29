@@ -17,6 +17,7 @@
   export let hAlign
   export let vAlign
   export let gap
+  export let autoRefresh
 
   const component = getContext("component")
   const context = getContext("context")
@@ -47,6 +48,7 @@
       sortOrder,
       limit,
       paginate,
+      autoRefresh,
     }}
   >
     {#if $component.empty}

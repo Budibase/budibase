@@ -4,9 +4,11 @@ import {
   AnyDocument,
   Document,
   RowValue,
+  SqlQueryBinding,
   ViewTemplateOpts,
 } from "../"
 import { Writable } from "stream"
+import type PouchDB from "pouchdb-find"
 
 export enum SearchIndex {
   ROWS = "rows",
@@ -133,15 +135,19 @@ export interface Database {
     ids: string[],
     opts?: { allowMissing?: boolean }
   ): Promise<T[]>
-  remove(
-    id: string | Document,
-    rev?: string
-  ): Promise<Nano.DocumentDestroyResponse>
+  remove(idOrDoc: Document): Promise<Nano.DocumentDestroyResponse>
+  remove(idOrDoc: string, rev?: string): Promise<Nano.DocumentDestroyResponse>
   put(
     document: AnyDocument,
     opts?: DatabasePutOpts
   ): Promise<Nano.DocumentInsertResponse>
   bulkDocs(documents: AnyDocument[]): Promise<Nano.DocumentBulkResponse[]>
+  sql<T extends Document>(
+    sql: string,
+    parameters?: SqlQueryBinding
+  ): Promise<T[]>
+  sqlPurgeDocument(docIds: string[] | string): Promise<void>
+  sqlDiskCleanup(): Promise<void>
   allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>

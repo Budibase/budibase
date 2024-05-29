@@ -3,7 +3,7 @@
   import { ActionButton, Popover, Toggle, Icon } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
 
-  const { columns, stickyColumn, dispatch } = getContext("grid")
+  const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
 
   let open = false
   let anchor
@@ -11,36 +11,20 @@
   $: anyHidden = $columns.some(col => !col.visible)
   $: text = getText($columns)
 
-  const toggleVisibility = async (column, visible) => {
-    columns.update(state => {
-      const index = state.findIndex(col => col.name === column.name)
-      state[index].visible = visible
-      return state.slice()
-    })
-    await columns.actions.saveChanges()
+  const toggleColumn = async (column, visible) => {
+    datasource.actions.addSchemaMutation(column.name, { visible })
+    await datasource.actions.saveSchemaMutations()
     dispatch(visible ? "show-column" : "hide-column")
   }
 
-  const showAll = async () => {
-    columns.update(state => {
-      return state.map(col => ({
-        ...col,
-        visible: true,
-      }))
+  const toggleAll = async visible => {
+    let mutations = {}
+    $columns.forEach(column => {
+      mutations[column.name] = { visible }
     })
-    await columns.actions.saveChanges()
-    dispatch("show-column")
-  }
-
-  const hideAll = async () => {
-    columns.update(state => {
-      return state.map(col => ({
-        ...col,
-        visible: false,
-      }))
-    })
-    await columns.actions.saveChanges()
-    dispatch("hide-column")
+    datasource.actions.addSchemaMutations(mutations)
+    await datasource.actions.saveSchemaMutations()
+    dispatch(visible ? "show-column" : "hide-column")
   }
 
   const getText = columns => {
@@ -80,13 +64,14 @@
         <Toggle
           size="S"
           value={column.visible}
-          on:change={e => toggleVisibility(column, e.detail)}
+          on:change={e => toggleColumn(column, e.detail)}
+          disabled={column.primaryDisplay}
         />
       {/each}
     </div>
     <div class="buttons">
-      <ActionButton on:click={showAll}>Show all</ActionButton>
-      <ActionButton on:click={hideAll}>Hide all</ActionButton>
+      <ActionButton on:click={() => toggleAll(true)}>Show all</ActionButton>
+      <ActionButton on:click={() => toggleAll(false)}>Hide all</ActionButton>
     </div>
   </div>
 </Popover>

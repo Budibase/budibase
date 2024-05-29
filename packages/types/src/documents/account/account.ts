@@ -102,6 +102,7 @@ export function isVerifiableSSOProvider(provider: AccountSSOProvider): boolean {
 }
 
 export interface AccountSSO {
+  ssoId?: string
   provider: AccountSSOProvider
   providerType: AccountSSOProviderType
   oauth2?: OAuthTokens

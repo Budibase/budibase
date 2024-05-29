@@ -7,7 +7,6 @@
   } from "@budibase/bbui"
   import { getContext } from "svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
-  import { FieldSubtype, FieldType, RelationshipType } from "@budibase/types"
 
   const { API, definition, rows } = getContext("grid")
 
@@ -29,20 +28,11 @@
   }
 
   const migrateUserColumn = async () => {
-    let subtype = FieldSubtype.USERS
-    if (column.schema.relationshipType === RelationshipType.ONE_TO_MANY) {
-      subtype = FieldSubtype.USER
-    }
-
     try {
       await API.migrateColumn({
         tableId: $definition._id,
-        oldColumn: column.schema,
-        newColumn: {
-          name: newColumnName,
-          type: FieldType.BB_REFERENCE,
-          subtype,
-        },
+        oldColumn: column.schema.name,
+        newColumn: newColumnName,
       })
       notifications.success("Column migrated")
     } catch (e) {

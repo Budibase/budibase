@@ -40,6 +40,7 @@ export async function shutdown() {
   if (inviteClient) await inviteClient.finish()
   if (passwordResetClient) await passwordResetClient.finish()
   if (socketClient) await socketClient.finish()
+  if (docWritethroughClient) await docWritethroughClient.finish()
 }
 
 process.on("exit", async () => {

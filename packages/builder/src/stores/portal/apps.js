@@ -131,7 +131,7 @@ export class AppsStore extends BudiStore {
       if (updatedAppIndex !== -1) {
         let updatedApp = state.apps[updatedAppIndex]
         updatedApp = { ...updatedApp, ...value }
-        state.apps = state.apps.splice(updatedAppIndex, 1, updatedApp)
+        state.apps.splice(updatedAppIndex, 1, updatedApp)
       }
       return state
     })
@@ -148,7 +148,7 @@ export const enrichedApps = derived([appsStore, auth], ([$store, $auth]) => {
         deployed: app.status === AppStatus.DEPLOYED,
         lockedYou: app.lockedBy && app.lockedBy.email === $auth.user?.email,
         lockedOther: app.lockedBy && app.lockedBy.email !== $auth.user?.email,
-        favourite: $auth?.user.appFavourites?.includes(app.appId),
+        favourite: $auth.user?.appFavourites?.includes(app.appId),
       }))
     : []
 

@@ -45,7 +45,8 @@ export default {
   onwarn(warning, warn) {
     if (
       warning.code === "THIS_IS_UNDEFINED" ||
-      warning.code === "CIRCULAR_DEPENDENCY"
+      warning.code === "CIRCULAR_DEPENDENCY" ||
+      warning.code === "EVAL"
     ) {
       return
     }

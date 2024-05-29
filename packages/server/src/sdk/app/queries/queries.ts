@@ -65,13 +65,32 @@ export async function fetch(opts: { enrich: boolean } = { enrich: true }) {
   return updateSchemas(queries)
 }
 
+export async function enrichArrayContext(
+  fields: any[],
+  inputs = {}
+): Promise<any[]> {
+  const map: Record<string, any> = {}
+  for (let index in fields) {
+    map[index] = fields[index]
+  }
+  const output = await enrichContext(map, inputs)
+  const outputArray: any[] = []
+  for (let [key, value] of Object.entries(output)) {
+    outputArray[parseInt(key)] = value
+  }
+  return outputArray
+}
+
 export async function enrichContext(
   fields: Record<string, any>,
   inputs = {}
 ): Promise<Record<string, any>> {
-  const enrichedQuery: Record<string, any> = Array.isArray(fields) ? [] : {}
+  const enrichedQuery: Record<string, any> = {}
   if (!fields || !inputs) {
     return enrichedQuery
+  }
+  if (Array.isArray(fields)) {
+    return enrichArrayContext(fields, inputs)
   }
   const env = await getEnvironmentVariables()
   const parameters = { ...inputs, env }

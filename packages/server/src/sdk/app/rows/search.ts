@@ -1,10 +1,22 @@
-import { Row, SearchFilters, SearchParams, SortOrder } from "@budibase/types"
+import {
+  EmptyFilterOption,
+  Row,
+  RowSearchParams,
+  SearchFilters,
+  SearchResponse,
+} from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
-import { Format } from "../../../api/controllers/view/exporters"
+import { NoEmptyFilterStrings } from "../../../constants"
+import * as sqs from "./search/sqs"
+import env from "../../../environment"
+import { ExportRowsParams, ExportRowsResult } from "./search/types"
+import { dataFilters } from "@budibase/shared-core"
+import sdk from "../../index"
+import { searchInputMapping } from "./search/utils"
 
-export { isValidFilter, removeEmptyFilters } from "../../../integrations/utils"
+export { isValidFilter } from "../../../integrations/utils"
 
 export interface ViewParams {
   calculation: string
@@ -19,29 +31,63 @@ function pickApi(tableId: any) {
   return internal
 }
 
-export async function search(options: SearchParams): Promise<{
-  rows: any[]
-  hasNextPage?: boolean
-  bookmark?: number | null
-}> {
-  return pickApi(options.tableId).search(options)
+function isEmptyArray(value: any) {
+  return Array.isArray(value) && value.length === 0
 }
 
-export interface ExportRowsParams {
-  tableId: string
-  format: Format
-  delimiter?: string
-  rowIds?: string[]
-  columns?: string[]
-  query?: SearchFilters
-  sort?: string
-  sortOrder?: SortOrder
-  customHeaders?: { [key: string]: string }
+// don't do a pure falsy check, as 0 is included
+// https://github.com/Budibase/budibase/issues/10118
+export function removeEmptyFilters(filters: SearchFilters) {
+  for (let filterField of NoEmptyFilterStrings) {
+    if (!filters[filterField]) {
+      continue
+    }
+
+    for (let filterType of Object.keys(filters)) {
+      if (filterType !== filterField) {
+        continue
+      }
+      // don't know which one we're checking, type could be anything
+      const value = filters[filterType] as unknown
+      if (typeof value === "object") {
+        for (let [key, value] of Object.entries(
+          filters[filterType] as object
+        )) {
+          if (value == null || value === "" || isEmptyArray(value)) {
+            // @ts-ignore
+            delete filters[filterField][key]
+          }
+        }
+      }
+    }
+  }
+  return filters
 }
 
-export interface ExportRowsResult {
-  fileName: string
-  content: string
+export async function search(
+  options: RowSearchParams
+): Promise<SearchResponse<Row>> {
+  const isExternalTable = isExternalTableID(options.tableId)
+  options.query = removeEmptyFilters(options.query || {})
+  if (
+    !dataFilters.hasFilters(options.query) &&
+    options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
+  ) {
+    return {
+      rows: [],
+    }
+  }
+
+  const table = await sdk.tables.getTable(options.tableId)
+  options = searchInputMapping(table, options)
+
+  if (isExternalTable) {
+    return external.search(options, table)
+  } else if (env.SQS_SEARCH_ENABLE) {
+    return sqs.search(options, table)
+  } else {
+    return internal.search(options, table)
+  }
 }
 
 export async function exportRows(

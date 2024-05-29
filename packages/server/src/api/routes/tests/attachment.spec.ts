@@ -4,9 +4,11 @@ import { APIError } from "@budibase/types"
 describe("/api/applications/:appId/sync", () => {
   let config = setup.getConfig()
 
-  afterAll(setup.afterAll)
   beforeAll(async () => {
     await config.init()
+  })
+  afterAll(async () => {
+    setup.afterAll()
   })
 
   describe("/api/attachments/process", () => {
@@ -18,7 +20,8 @@ describe("/api/applications/:appId/sync", () => {
       expect(resp.length).toBe(1)
 
       let upload = resp[0]
-      expect(upload.url.endsWith(".jpg")).toBe(true)
+
+      expect(upload.url.split("?")[0].endsWith(".jpg")).toBe(true)
       expect(upload.extension).toBe("jpg")
       expect(upload.size).toBe(1)
       expect(upload.name).toBe("1px.jpg")

@@ -11,6 +11,7 @@
     "types": ["node", "jest"],
     "outDir": "dist",
     "skipLibCheck": true,
+    "baseUrl": ".",
     "paths": {
       "@budibase/types": ["../types/src"],
       "@budibase/backend-core": ["../backend-core/src"],

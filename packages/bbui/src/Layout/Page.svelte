@@ -7,11 +7,11 @@
   export let narrower = false
   export let noPadding = false
 
-  let sidePanelVisble = false
+  let sidePanelVisible = false
 
   setContext("side-panel", {
-    open: () => (sidePanelVisble = true),
-    close: () => (sidePanelVisble = false),
+    open: () => (sidePanelVisible = true),
+    close: () => (sidePanelVisible = false),
   })
 </script>
 
@@ -24,9 +24,9 @@
   </div>
   <div
     id="side-panel"
-    class:visible={sidePanelVisble}
+    class:visible={sidePanelVisible}
     use:clickOutside={() => {
-      sidePanelVisble = false
+      sidePanelVisible = false
     }}
   >
     <slot name="side-panel" />

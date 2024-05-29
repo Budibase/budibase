@@ -4,8 +4,9 @@
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
   import { licensing } from "stores/portal"
   import { isPremiumOrAbove } from "helpers/planTitle"
+  import { ChangelogURL } from "constants"
 
-  $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license.plan.type)
+  $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license?.plan?.type)
 
   let show
   let hide
@@ -28,6 +29,13 @@
           <FontAwesomeIcon name="fa-solid fa-book" />
         </div>
         <Body size="S">Help docs</Body>
+      </a>
+      <div class="divider" />
+      <a target="_blank" href={ChangelogURL}>
+        <div class="icon">
+          <FontAwesomeIcon name="fa-solid fa-rectangle-list" />
+        </div>
+        <Body size="S">Changelog</Body>
       </a>
       <div class="divider" />
       <a

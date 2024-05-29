@@ -313,7 +313,7 @@ export const bindingsToCompletions = (bindings, mode) => {
       ...bindingByCategory[catKey].reduce((acc, binding) => {
         let displayType = binding.fieldSchema?.type || binding.display?.type
         acc.push({
-          label: binding.display?.name || "NO NAME",
+          label: binding.display?.name || binding.readableBinding || "NO NAME",
           info: completion => {
             return buildBindingInfoNode(completion, binding)
           },

@@ -1,6 +1,5 @@
-import { generateLinkID } from "../utils"
-import { FieldTypes } from "../../constants"
-import { FieldType, LinkDocument, SEPARATOR } from "@budibase/types"
+import { generateLinkID, generateJunctionTableID } from "../utils"
+import { FieldType, LinkDocument } from "@budibase/types"
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -45,17 +44,20 @@ class LinkDocumentImpl implements LinkDocument {
       fieldName2
     )
     this.type = FieldType.LINK
-    this.doc1 = {
+    this.tableId = generateJunctionTableID(tableId1, tableId2)
+    const docA = {
       tableId: tableId1,
       fieldName: fieldName1,
       rowId: rowId1,
     }
-    this.doc2 = {
+    const docB = {
       tableId: tableId2,
       fieldName: fieldName2,
       rowId: rowId2,
     }
-    this.tableId = [this.doc1.tableId, this.doc2.tableId].sort().join(SEPARATOR)
+    // have to determine which one will be doc1 - very important for SQL linking
+    this.doc1 = docA.tableId > docB.tableId ? docA : docB
+    this.doc2 = docA.tableId > docB.tableId ? docB : docA
   }
   _rev?: string | undefined
   createdAt?: string | number | undefined
