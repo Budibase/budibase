@@ -2,7 +2,6 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover, Toggle, Icon } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
-  import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
 
   const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
 
@@ -31,6 +30,12 @@
     READONLY: "readonly",
     HIDDEN: "hidden",
   }
+
+  const options = [
+    { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE },
+    { icon: "Visibility", value: PERMISSION_OPTIONS.READONLY },
+    { icon: "VisibilityOff", value: PERMISSION_OPTIONS.HIDDEN },
+  ]
 
   function columnToPermissionOptions(column) {
     if (!column.visible) {
@@ -73,15 +78,17 @@
           <Icon size="S" name={getColumnIcon(column)} />
           {column.label}
         </div>
-        <ToggleActionButtonGroup
-          on:change={e => toggleColumn(column, e.detail)}
-          value={columnToPermissionOptions(column)}
-          options={[
-            { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE },
-            { icon: "Visibility", value: PERMISSION_OPTIONS.READONLY },
-            { icon: "VisibilityOff", value: PERMISSION_OPTIONS.HIDDEN },
-          ]}
-        />
+        <div>
+          {#each options as option}
+            <ActionButton
+              on:click={() => toggleColumn(column, option.value)}
+              size="S"
+              icon={option.icon}
+              quiet
+              selected={option.value === columnToPermissionOptions(column)}
+            />
+          {/each}
+        </div>
       {/each}
     </div>
   </div>
