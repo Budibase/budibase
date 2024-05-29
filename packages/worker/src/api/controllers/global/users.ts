@@ -35,6 +35,7 @@ import {
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
+import { BpmStatusKey, BpmStatusValue } from "@budibase/shared-core"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -444,10 +445,16 @@ export const inviteAccept = async (
 
         await cache.invite.deleteCode(inviteCode)
 
+        // make sure onboarding flow is cleared
+        ctx.cookies.set(BpmStatusKey.ONBOARDING, BpmStatusValue.COMPLETED, {
+          expires: new Date(0),
+        })
+
         ctx.body = {
           _id: user._id!,
           _rev: user._rev!,
           email: user.email,
+          tenantId: user.tenantId,
         }
       }
     )
