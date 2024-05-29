@@ -29,3 +29,5 @@ export interface SQLiteDefinition {
     }
   }
 }
+
+export type PreSaveSQLiteDefinition = Omit<SQLiteDefinition, "_rev">
