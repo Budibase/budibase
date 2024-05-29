@@ -38,6 +38,7 @@
   import { API } from "api"
   import { OnboardingType } from "constants"
   import { sdk } from "@budibase/shared-core"
+  import { v4 as uuidv4 } from "uuid"
 
   const fetch = fetchData({
     API,
@@ -60,6 +61,7 @@
     userLimitReachedModal
   let searchEmail = undefined
   let selectedRows = []
+  let selectedInvites = []
   let bulkSaveResponse
   let customRenderers = [
     { column: "email", component: EmailTableRenderer },
@@ -132,6 +134,7 @@
       const { admin, builder, userGroups, apps } = invite.info
 
       return {
+        _id: uuidv4(),
         email: invite.email,
         builder,
         admin,
@@ -260,9 +263,22 @@
         return
       }
 
-      await users.bulkDelete(ids)
-      notifications.success(`Successfully deleted ${selectedRows.length} rows`)
+      if (ids.length > 0) {
+        await users.bulkDelete(ids)
+      }
+
+      if (selectedInvites.length > 0) {
+        await users.removeInvites(selectedInvites)
+        pendingInvites = await users.getInvites()
+      }
+
+      notifications.success(
+        `Successfully deleted ${
+          selectedRows.length + selectedInvites.length
+        } rows`
+      )
       selectedRows = []
+      selectedInvites = []
       await fetch.refresh()
     } catch (error) {
       notifications.error("Error deleting users")
@@ -328,15 +344,15 @@
       </div>
     {/if}
     <div class="controls-right">
-      <Search bind:value={searchEmail} placeholder="Search" />
-      {#if selectedRows.length > 0}
+      {#if selectedRows.length > 0 || selectedInvites.length > 0}
         <DeleteRowsButton
           item="user"
           on:updaterows
-          {selectedRows}
+          selectedRows={[...selectedRows, ...selectedInvites]}
           deleteRows={deleteUsers}
         />
       {/if}
+      <Search bind:value={searchEmail} placeholder="Search" />
     </div>
   </div>
   <Table
@@ -362,10 +378,12 @@
   </div>
 
   <Table
+    bind:selectedRows={selectedInvites}
     schema={pendingSchema}
     data={parsedInvites}
     allowEditColumns={false}
     allowEditRows={false}
+    allowSelectRows={!readonly}
     {customRenderers}
     loading={!invitesLoaded}
     allowClickRows={false}
