@@ -386,7 +386,8 @@ describe.each([
         await config.api.viewV2.create(newView, {
           status: 400,
           body: {
-            message: 'Field "name" cannot be readonly and not visible',
+            message:
+              'Field "name" must be visible if you want to make it readonly',
             status: 400,
           },
         })
@@ -686,7 +687,7 @@ describe.each([
       })
 
       mocks.licenses.useCloudFree()
-      await config.api.viewV2.create(view, {
+      await config.api.viewV2.update(view, {
         status: 400,
         body: {
           message: "Readonly fields are not enabled for your tenant",

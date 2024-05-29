@@ -43,37 +43,36 @@ async function guardViewSchema(
     return
   }
   const table = await sdk.tables.getTable(tableId)
-  if (viewSchema) {
-    for (const field of Object.keys(viewSchema)) {
-      const tableSchemaField = table.schema[field]
-      if (!tableSchemaField) {
+
+  for (const field of Object.keys(viewSchema)) {
+    const tableSchemaField = table.schema[field]
+    if (!tableSchemaField) {
+      throw new HTTPError(
+        `Field "${field}" is not valid for the requested table`,
+        400
+      )
+    }
+
+    if (viewSchema[field].readonly) {
+      if (!(await features.isViewReadonlyColumnsEnabled())) {
         throw new HTTPError(
-          `Field "${field}" is not valid for the requested table`,
+          `Readonly fields are not enabled for your tenant`,
           400
         )
       }
 
-      if (viewSchema[field].readonly) {
-        if (!(await features.isViewReadonlyColumnsEnabled())) {
-          throw new HTTPError(
-            `Readonly fields are not enabled for your tenant`,
-            400
-          )
-        }
+      if (isRequired(tableSchemaField.constraints)) {
+        throw new HTTPError(
+          `Field "${field}" cannot be readonly as it is a required field`,
+          400
+        )
+      }
 
-        if (isRequired(tableSchemaField.constraints)) {
-          throw new HTTPError(
-            `Field "${field}" cannot be readonly as it is a required field`,
-            400
-          )
-        }
-
-        if (!viewSchema[field].visible) {
-          throw new HTTPError(
-            `Field "${field}" cannot be readonly and not visible`,
-            400
-          )
-        }
+      if (!viewSchema[field].visible) {
+        throw new HTTPError(
+          `Field "${field}" must be visible if you want to make it readonly`,
+          400
+        )
       }
     }
   }
