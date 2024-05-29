@@ -25,12 +25,7 @@ import { quotas } from "@budibase/pro"
 import { roles } from "@budibase/backend-core"
 import * as schemaUtils from "../../../utilities/schema"
 
-jest.mock("../../../utilities/schema", () => {
-  return {
-    __esModule: true,
-    ...jest.requireActual("../../../utilities/schema"),
-  }
-})
+jest.mock("../../../utilities/schema")
 
 describe.each([
   ["internal", undefined],
