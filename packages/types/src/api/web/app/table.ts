@@ -1,10 +1,5 @@
-import {
-  Row,
-  Table,
-  TableRequest,
-  View,
-  ViewV2Enriched,
-} from "../../../documents"
+import { Row, Table, TableRequest, View } from "../../../documents"
+import { ViewV2Enriched } from "../../../sdk"
 
 export type TableViewsResponse = { [key: string]: View | ViewV2Enriched }
 
