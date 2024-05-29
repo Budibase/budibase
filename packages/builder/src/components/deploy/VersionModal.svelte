@@ -1,4 +1,5 @@
 <script>
+  import { admin } from "stores/portal"
   import {
     Modal,
     notifications,
@@ -6,9 +7,12 @@
     Body,
     Button,
     StatusLight,
+    Link,
   } from "@budibase/bbui"
   import { appStore, initialise } from "stores/builder"
   import { API } from "api"
+  import RevertModalVersionSelect from "./RevertModalVersionSelect.svelte"
+  import { ChangelogURL } from "constants"
 
   export function show() {
     updateModal.show()
@@ -28,7 +32,9 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
-  $: revertAvailable = $appStore.revertableVersion != null
+  $: revertAvailable =
+    $appStore.revertableVersion != null ||
+    ($admin.isDev && $appStore.version === "0.0.0")
 
   const refreshAppPackage = async () => {
     try {
@@ -62,7 +68,9 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App reverted successfully to version ${$appStore.revertableVersion}`
+        $appStore.revertableVersion
+          ? `App reverted successfully to version ${$appStore.revertableVersion}`
+          : "App reverted successfully"
       )
     } catch (err) {
       notifications.error(`Error reverting app: ${err}`)
@@ -100,10 +108,20 @@
         latest version available.
       </Body>
     {/if}
+    <Body size="S">
+      Find the changelog for the latest release
+      <Link href={ChangelogURL} target="_blank">here</Link>
+    </Body>
     {#if revertAvailable}
       <Body size="S">
         You can revert this app to version
-        <b>{$appStore.revertableVersion}</b>
+        {#if $admin.isDev}
+          <RevertModalVersionSelect
+            revertableVersion={$appStore.revertableVersion}
+          />
+        {:else}
+          <b>{$appStore.revertableVersion}</b>
+        {/if}
         if you're experiencing issues with the current version.
       </Body>
     {/if}

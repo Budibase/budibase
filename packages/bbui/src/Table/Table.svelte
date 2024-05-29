@@ -42,6 +42,7 @@
   export let customPlaceholder = false
   export let showHeaderBorder = true
   export let placeholderText = "No rows found"
+  export let snippets = []
 
   const dispatch = createEventDispatcher()
 
@@ -425,6 +426,7 @@
                   <CellRenderer
                     {customRenderers}
                     {row}
+                    {snippets}
                     schema={schema[field]}
                     value={deepGet(row, field)}
                     on:clickrelationship

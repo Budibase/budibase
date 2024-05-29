@@ -7,6 +7,7 @@
   import Component from "./Component.svelte"
   import SDK from "sdk"
   import {
+    featuresStore,
     createContextStore,
     initialise,
     screenStore,
@@ -38,7 +39,6 @@
   import DevTools from "components/devtools/DevTools.svelte"
   import FreeFooter from "components/FreeFooter.svelte"
   import MaintenanceScreen from "components/MaintenanceScreen.svelte"
-  import licensing from "../licensing"
   import SnippetsProvider from "./context/SnippetsProvider.svelte"
 
   // Provide contexts
@@ -83,11 +83,18 @@
     }
   }
 
+  let fontsLoaded = false
+
   // Load app config
   onMount(async () => {
+    document.fonts.ready.then(() => {
+      fontsLoaded = true
+    })
+
     await initialise()
     await authStore.actions.fetchUser()
     dataLoaded = true
+
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
     } else {
@@ -96,6 +103,12 @@
       })
     }
   })
+
+  $: {
+    if (dataLoaded && fontsLoaded) {
+      document.getElementById("clientAppSkeletonLoader")?.remove()
+    }
+  }
 </script>
 
 <svelte:head>
@@ -113,6 +126,7 @@
     dir="ltr"
     class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
     class:builder={$builderStore.inBuilder}
+    class:show={fontsLoaded && dataLoaded}
   >
     {#if $environmentStore.maintenance.length > 0}
       <MaintenanceScreen maintenanceList={$environmentStore.maintenance} />
@@ -192,13 +206,6 @@
                               />
                             {/key}
 
-                            <!--
-                          Flatpickr needs to be inside the theme wrapper.
-                          It also needs its own container because otherwise it hijacks
-                          key events on the whole page. It is painful to work with.
-                        -->
-                            <div id="flatpickr-root" />
-
                             <!-- Modal container to ensure they sit on top -->
                             <div class="modal-container" />
 
@@ -214,7 +221,7 @@
                         {/if}
                       </div>
 
-                      {#if !$builderStore.inBuilder && licensing.logoEnabled()}
+                      {#if !$builderStore.inBuilder && $featuresStore.logoEnabled}
                         <FreeFooter />
                       {/if}
                     </div>
@@ -244,10 +251,11 @@
 
 <style>
   #spectrum-root {
+    height: 0;
+    visibility: hidden;
     padding: 0;
     margin: 0;
     overflow: hidden;
-    height: 100%;
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -266,6 +274,11 @@
     position: relative;
     overflow: hidden;
     background-color: transparent;
+  }
+
+  #spectrum-root.show {
+    height: 100%;
+    visibility: visible;
   }
 
   #app-root {

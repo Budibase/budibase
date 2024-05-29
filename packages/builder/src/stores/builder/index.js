@@ -1,10 +1,6 @@
 import { layoutStore } from "./layouts.js"
 import { appStore } from "./app.js"
-import {
-  componentStore,
-  selectedComponent,
-  selectedComponentPath,
-} from "./components"
+import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation.js"
 import { themeStore } from "./theme.js"
 import { screenStore, selectedScreen, sortedScreens } from "./screens.js"
@@ -31,8 +27,10 @@ import { integrations } from "./integrations"
 import { sortedIntegrations } from "./sortedIntegrations"
 import { queries } from "./queries"
 import { flags } from "./flags"
+import componentTreeNodesStore from "./componentTreeNodes"
 
 export {
+  componentTreeNodesStore,
   layoutStore,
   appStore,
   componentStore,
@@ -51,7 +49,6 @@ export {
   isOnlyUser,
   deploymentStore,
   selectedComponent,
-  selectedComponentPath,
   tables,
   views,
   viewsV2,

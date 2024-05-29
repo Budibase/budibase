@@ -1,5 +1,4 @@
 <script>
-  import { fade } from "svelte/transition"
   import { Icon } from "@budibase/bbui"
 
   export let top
@@ -11,7 +10,6 @@
   export let color
   export let zIndex
   export let componentId
-  export let transition = false
   export let line = false
   export let alignRight = false
   export let showResizeAnchors = false
@@ -31,10 +29,6 @@
 </script>
 
 <div
-  in:fade={{
-    delay: transition ? 100 : 0,
-    duration: transition ? 100 : 0,
-  }}
   class="indicator"
   class:flipped
   class:line
@@ -125,10 +119,6 @@
     color: white;
     font-size: 11px;
     font-weight: 600;
-  }
-
-  /* Icon styles */
-  .label :global(.spectrum-Icon + .text) {
   }
 
   /* Anchor */

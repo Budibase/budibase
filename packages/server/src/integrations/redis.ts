@@ -6,6 +6,7 @@ import {
   QueryType,
 } from "@budibase/types"
 import Redis from "ioredis"
+import { HOST_ADDRESS } from "./utils"
 
 interface RedisConfig {
   host: string
@@ -28,7 +29,7 @@ const SCHEMA: Integration = {
     host: {
       type: DatasourceFieldType.STRING,
       required: true,
-      default: "localhost",
+      default: HOST_ADDRESS,
     },
     port: {
       type: DatasourceFieldType.NUMBER,

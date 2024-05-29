@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 
 import { Client, ClientOptions } from "@elastic/elasticsearch"
+import { HOST_ADDRESS } from "./utils"
 
 interface ElasticsearchConfig {
   url: string
@@ -29,7 +30,7 @@ const SCHEMA: Integration = {
     url: {
       type: DatasourceFieldType.STRING,
       required: true,
-      default: "http://localhost:9200",
+      default: `http://${HOST_ADDRESS}:9200`,
     },
     ssl: {
       type: DatasourceFieldType.BOOLEAN,

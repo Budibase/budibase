@@ -131,7 +131,7 @@
     if (bindings?.length) {
       options.push(SidePanels.Bindings)
     }
-    if (context) {
+    if (context && Object.keys(context).length > 0) {
       options.push(SidePanels.Evaluation)
     }
     if (useSnippets && mode === Modes.JavaScript) {
@@ -237,7 +237,12 @@
 
   const onChangeJSValue = e => {
     jsValue = encodeJSBinding(e.detail)
-    updateValue(jsValue)
+    if (!e.detail?.trim()) {
+      // Don't bother saving empty values as JS
+      updateValue(null)
+    } else {
+      updateValue(jsValue)
+    }
   }
 
   onMount(() => {
@@ -371,6 +376,7 @@
 <style>
   .binding-panel {
     height: 100%;
+    overflow: hidden;
   }
   .binding-panel,
   .tabs {

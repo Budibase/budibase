@@ -1,3 +1,4 @@
+ARG BASEIMG=budibase/couchdb:v3.3.3
 FROM node:20-slim as build
 
 # install node-gyp dependencies
@@ -19,9 +20,6 @@ RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
 RUN ./scripts/removeWorkspaceDependencies.sh packages/server/package.json
 RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 
-
-# We will never want to sync pro, but the script is still required
-RUN echo '' > scripts/syncProPackage.js
 RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
 RUN ./scripts/removeWorkspaceDependencies.sh package.json
 RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production --frozen-lockfile
@@ -35,7 +33,7 @@ COPY packages/worker/dist packages/worker/dist
 COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
 
 
-FROM budibase/couchdb:v3.3.3 as runner
+FROM $BASEIMG as runner
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)

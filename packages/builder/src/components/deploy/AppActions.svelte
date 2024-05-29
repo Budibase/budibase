@@ -8,13 +8,11 @@
     ActionButton,
     Icon,
     Link,
-    Modal,
     StatusLight,
     AbsTooltip,
   } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
-  import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import analytics, { Events, EventSource } from "analytics"
@@ -26,7 +24,6 @@
     isOnlyUser,
     appStore,
     deploymentStore,
-    initialise,
     sortedScreens,
   } from "stores/builder"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
@@ -37,13 +34,14 @@
   export let loaded
 
   let unpublishModal
-  let updateAppModal
   let revertModal
   let versionModal
   let appActionPopover
   let appActionPopoverOpen = false
   let appActionPopoverAnchor
   let publishing = false
+  let showNpsSurvey = false
+  let lastOpened
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId === application)
   $: selectedApp = filteredApps?.length ? filteredApps[0] : null
@@ -57,12 +55,7 @@
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
   $: canPublish = !publishing && loaded && $sortedScreens.length > 0
-  $: lastDeployed = getLastDeployedString($deploymentStore)
-
-  const initialiseApp = async () => {
-    const applicationPkg = await API.fetchAppPackage($appStore.devId)
-    await initialise(applicationPkg)
-  }
+  $: lastDeployed = getLastDeployedString($deploymentStore, lastOpened)
 
   const getLastDeployedString = deployments => {
     return deployments?.length
@@ -97,6 +90,7 @@
         type: "success",
         icon: "GlobeCheck",
       })
+      showNpsSurvey = true
       await completePublish()
     } catch (error) {
       console.error(error)
@@ -201,6 +195,7 @@
       class="app-action-button publish app-action-popover"
       on:click={() => {
         if (!appActionPopoverOpen) {
+          lastOpened = new Date()
           appActionPopover.show()
         } else {
           appActionPopover.hide()
@@ -243,16 +238,12 @@
                   appActionPopover.hide()
                   if (isPublished) {
                     viewApp()
-                  } else {
-                    updateAppModal.show()
                   }
                 }}
               >
                 {$appStore.url}
                 {#if isPublished}
                   <Icon size="S" name="LinkOut" />
-                {:else}
-                  <Icon size="S" name="Edit" />
                 {/if}
               </span>
             </Body>
@@ -326,22 +317,12 @@
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
-<Modal bind:this={updateAppModal} padding={false} width="600px">
-  <UpdateAppModal
-    app={{
-      name: $appStore.name,
-      url: $appStore.url,
-      icon: $appStore.icon,
-      appId: $appStore.appId,
-    }}
-    onUpdateComplete={async () => {
-      await initialiseApp()
-    }}
-  />
-</Modal>
-
 <RevertModal bind:this={revertModal} />
 <VersionModal hideIcon bind:this={versionModal} />
+
+{#if showNpsSurvey}
+  <div class="nps-survey" />
+{/if}
 
 <style>
   .app-action-popover-content {

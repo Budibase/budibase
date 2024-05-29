@@ -22,7 +22,7 @@ describe("Elasticsearch Integration", () => {
     const body = {
       name: "Hello",
     }
-    const response = await config.integration.create({
+    await config.integration.create({
       index: indexName,
       json: body,
     })

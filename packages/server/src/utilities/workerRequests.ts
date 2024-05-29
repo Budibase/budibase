@@ -1,10 +1,4 @@
-import {
-  Response,
-  default as fetch,
-  type RequestInit,
-  Headers,
-  HeadersInit,
-} from "node-fetch"
+import { Response, default as fetch, type RequestInit } from "node-fetch"
 import env from "../environment"
 import { checkSlashesInUrl } from "./index"
 import {
@@ -13,9 +7,8 @@ import {
   tenancy,
   logging,
   env as coreEnv,
-  utils,
 } from "@budibase/backend-core"
-import { Ctx, User, EmailInvite } from "@budibase/types"
+import { Ctx, User, EmailInvite, EmailAttachment } from "@budibase/types"
 
 interface Request {
   ctx?: Ctx
@@ -104,6 +97,7 @@ export async function sendSmtpEmail({
   bcc,
   automation,
   invite,
+  attachments,
 }: {
   to: string
   from: string
@@ -112,6 +106,7 @@ export async function sendSmtpEmail({
   cc: string
   bcc: string
   automation: boolean
+  attachments?: EmailAttachment[]
   invite?: EmailInvite
 }) {
   // tenant ID will be set in header
@@ -129,6 +124,7 @@ export async function sendSmtpEmail({
         purpose: "custom",
         automation,
         invite,
+        attachments,
       },
     })
   )

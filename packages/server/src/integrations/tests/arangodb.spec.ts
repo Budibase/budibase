@@ -12,7 +12,6 @@ class TestConfiguration {
 
 describe("ArangoDB Integration", () => {
   let config: any
-  let indexName = "Users"
 
   beforeEach(() => {
     config = new TestConfiguration()
@@ -23,7 +22,7 @@ describe("ArangoDB Integration", () => {
       json: "Hello",
     }
 
-    const response = await config.integration.create(body)
+    await config.integration.create(body)
     expect(config.integration.client.query).toHaveBeenCalledWith(
       `INSERT Hello INTO collection RETURN NEW`
     )
@@ -33,7 +32,7 @@ describe("ArangoDB Integration", () => {
     const query = {
       sql: `test`,
     }
-    const response = await config.integration.read(query)
+    await config.integration.read(query)
     expect(config.integration.client.query).toHaveBeenCalledWith(query.sql)
   })
 })

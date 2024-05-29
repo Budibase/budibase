@@ -183,6 +183,7 @@
               props={{
                 // Generic settings
                 placeholder: setting.placeholder || null,
+                license: setting.license,
 
                 // Select settings
                 options: setting.options || [],
@@ -190,6 +191,9 @@
                 // Number fields
                 min: setting.min ?? null,
                 max: setting.max ?? null,
+
+                // Field select settings
+                explanation: setting.explanation,
               }}
               {bindings}
               {componentBindings}

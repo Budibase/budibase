@@ -14,7 +14,6 @@
   export let key
   export let nested
   export let max
-  export let context
 
   const dispatch = createEventDispatcher()
 

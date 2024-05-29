@@ -12,12 +12,15 @@ export default new Proxy(
       // See https://esbuild.github.io/content-types/#direct-eval for info on
       // why eval is being called this way.
       // Snippets are cached and reused once they have been evaluated.
-      // @ts-ignore
+      // @ts-expect-error snippetDefinitions and snippetCache are injected to the global scope
+      // eslint-disable-next-line no-undef
       if (!(name in snippetCache)) {
-        // @ts-ignore
+        // @ts-expect-error snippetDefinitions and snippetCache are injected to the global scope
+        // eslint-disable-next-line no-undef
         snippetCache[name] = [eval][0](iifeWrapper(snippetDefinitions[name]))
       }
-      // @ts-ignore
+      // @ts-expect-error snippetDefinitions and snippetCache are injected to the global scope
+      // eslint-disable-next-line no-undef
       return snippetCache[name]
     },
   }

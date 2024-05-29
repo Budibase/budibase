@@ -170,7 +170,8 @@ export class IsolatedVM implements VM {
       }
 
       decode(...input: any) {
-        // @ts-ignore
+        // @ts-expect-error - this is going to run in the isolate, where this function will be available
+        // eslint-disable-next-line no-undef
         return textDecoderCb({
           constructorArgs: this.constructorArgs,
           functionArgs: input,

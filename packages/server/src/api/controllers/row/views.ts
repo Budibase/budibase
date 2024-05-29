@@ -1,16 +1,16 @@
-import { quotas } from "@budibase/pro"
 import {
   UserCtx,
   ViewV2,
   SearchRowResponse,
   SearchViewRowRequest,
   RequiredKeys,
-  SearchParams,
-  SearchFilters,
+  RowSearchParams,
+  SearchFilterKey,
 } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
-import { db } from "@budibase/backend-core"
+import { db, context } from "@budibase/backend-core"
+import { enrichSearchContext } from "./utils"
 
 export async function searchView(
   ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
@@ -45,10 +45,7 @@ export async function searchView(
 
     // Carry over filters for unused fields
     Object.keys(body.query).forEach(key => {
-      const operator = key as keyof Omit<
-        SearchFilters,
-        "allOr" | "onEmptyFilter"
-      >
+      const operator = key as SearchFilterKey
       Object.keys(body.query[operator] || {}).forEach(field => {
         if (!existingFields.includes(db.removeKeyNumbering(field))) {
           query[operator]![field] = body.query[operator]![field]
@@ -57,10 +54,16 @@ export async function searchView(
     })
   }
 
+  await context.ensureSnippetContext(true)
+
+  const enrichedQuery = await enrichSearchContext(query, {
+    user: sdk.users.getUserContextBindings(ctx.user),
+  })
+
   const searchOptions: RequiredKeys<SearchViewRowRequest> &
-    RequiredKeys<Pick<SearchParams, "tableId" | "query" | "fields">> = {
+    RequiredKeys<Pick<RowSearchParams, "tableId" | "query" | "fields">> = {
     tableId: view.tableId,
-    query,
+    query: enrichedQuery,
     fields: viewFields,
     ...getSortOptions(body, view),
     limit: body.limit,

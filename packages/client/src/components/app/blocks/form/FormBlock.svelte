@@ -34,6 +34,7 @@
   $: formattedFields = convertOldFieldFormat(fields)
   $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
   $: fetchSchema(dataSource)
+  $: id = $component.id
   // We could simply spread $$props into the inner form and append our
   // additions, but that would create svelte warnings about unused props and
   // make maintenance in future more confusing as we typically always have a
@@ -53,7 +54,7 @@
     buttons:
       buttons ||
       Utils.buildFormBlockButtonConfig({
-        _id: $component.id,
+        _id: id,
         showDeleteButton,
         showSaveButton,
         saveButtonLabel,

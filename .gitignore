@@ -5,6 +5,9 @@ packages/server/runtime_apps/
 bb-airgapped.tar.gz
 *.iml
 
+packages/server/build/oldClientVersions/**/*
+packages/builder/src/components/deploy/clientVersions.json
+
 # Logs
 logs
 *.log
@@ -66,7 +69,6 @@ typings/
 
 # dotenv environment variables file
 .env
-!qa-core/.env
 !hosting/.env
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -107,3 +109,4 @@ budibase-component
 budibase-datasource
 
 *.iml
+.nx

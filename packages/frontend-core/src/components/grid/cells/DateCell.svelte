@@ -1,7 +1,8 @@
 <script>
-  import dayjs from "dayjs"
-  import { CoreDatePicker, Icon } from "@budibase/bbui"
+  import { CoreDatePickerPopoverContents, Icon, Helpers } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import dayjs from "dayjs"
+  import GridPopover from "../overlays/GridPopover.svelte"
 
   export let value
   export let schema
@@ -10,82 +11,115 @@
   export let readonly = false
   export let api
 
-  let flatpickr
   let isOpen
+  let anchor
 
-  // Adding the 0- will turn a string like 00:00:00 into a valid ISO
-  // date, but will make actual ISO dates invalid
-  $: isTimeValue = !isNaN(new Date(`0-${value}`))
-  $: timeOnly = isTimeValue || schema?.timeOnly
-  $: dateOnly = schema?.dateOnly
-  $: format = timeOnly
-    ? "HH:mm:ss"
-    : dateOnly
-    ? "MMM D YYYY"
-    : "MMM D YYYY, HH:mm"
+  $: timeOnly = schema?.timeOnly
+  $: enableTime = !schema?.dateOnly
+  $: ignoreTimezones = schema?.ignoreTimezones
   $: editable = focused && !readonly
-  $: displayValue = getDisplayValue(value, format, timeOnly, isTimeValue)
-
-  const getDisplayValue = (value, format, timeOnly, isTimeValue) => {
-    if (!value) {
-      return ""
-    }
-    // Parse full date strings
-    if (!timeOnly || !isTimeValue) {
-      return dayjs(value).format(format)
-    }
-    // Otherwise must be a time string
-    return dayjs(`0-${value}`).format(format)
-  }
-
-  // Ensure we close flatpickr when unselected
+  $: parsedValue = Helpers.parseDate(value, {
+    timeOnly,
+    enableTime,
+    ignoreTimezones,
+  })
+  $: displayValue = getDisplayValue(parsedValue, timeOnly, enableTime)
+  // Ensure open state matches desired state
   $: {
-    if (!focused) {
-      flatpickr?.close()
+    if (!focused && isOpen) {
+      close()
     }
   }
 
-  const onKeyDown = () => {
-    return isOpen
+  const getDisplayValue = (value, timeOnly, enableTime) => {
+    return Helpers.getDateDisplayValue(value, {
+      enableTime,
+      timeOnly,
+    })
+  }
+
+  const open = () => {
+    isOpen = true
+  }
+
+  const close = () => {
+    isOpen = false
+
+    // Only save the changed value when closing. If the value is unchanged then
+    // this is handled upstream and no action is taken.
+    onChange(value)
+  }
+
+  const onKeyDown = e => {
+    if (!isOpen) {
+      return false
+    }
+    e.preventDefault()
+    if (e.key === "ArrowUp") {
+      changeDate(-1, "week")
+    } else if (e.key === "ArrowDown") {
+      changeDate(1, "week")
+    } else if (e.key === "ArrowLeft") {
+      changeDate(-1, "day")
+    } else if (e.key === "ArrowRight") {
+      changeDate(1, "day")
+    } else if (e.key === "Enter") {
+      close()
+    }
+    return true
+  }
+
+  const changeDate = (quantity, unit) => {
+    let newValue
+    if (!value) {
+      newValue = dayjs()
+    } else {
+      newValue = dayjs(value).add(quantity, unit)
+    }
+    value = Helpers.stringifyDate(newValue, {
+      enableTime,
+      timeOnly,
+      ignoreTimezones,
+    })
   }
 
   onMount(() => {
     api = {
       onKeyDown,
-      focus: () => flatpickr?.open(),
-      blur: () => flatpickr?.close(),
+      focus: open,
+      blur: close,
       isActive: () => isOpen,
     }
   })
 </script>
 
-<div class="container">
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div
+  class="container"
+  class:editable
+  on:click={editable ? open : null}
+  bind:this={anchor}
+>
   <div class="value">
-    {#if value}
-      {displayValue}
-    {/if}
+    {displayValue}
   </div>
   {#if editable}
     <Icon name="Calendar" />
   {/if}
 </div>
 
-{#if editable}
-  <div class="picker">
-    <CoreDatePicker
-      {value}
-      on:change={e => onChange(e.detail)}
-      appendTo={document.documentElement}
-      enableTime={!dateOnly}
-      {timeOnly}
-      time24hr
-      ignoreTimezones={schema.ignoreTimezones}
-      bind:flatpickr
-      on:open={() => (isOpen = true)}
-      on:close={() => (isOpen = false)}
+{#if isOpen}
+  <GridPopover {anchor} maxHeight={null} on:close={close}>
+    <CoreDatePickerPopoverContents
+      value={parsedValue}
       useKeyboardShortcuts={false}
+      on:change={e => (value = e.detail)}
+      {enableTime}
+      {timeOnly}
+      {ignoreTimezones}
     />
-  </div>
+  </GridPopover>
 {/if}
 
 <style>
@@ -97,6 +131,10 @@
     align-items: center;
     flex: 1 1 auto;
     gap: var(--cell-spacing);
+    user-select: none;
+  }
+  .container.editable:hover {
+    cursor: pointer;
   }
   .value {
     flex: 1 1 auto;
@@ -105,15 +143,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     line-height: 20px;
-  }
-  .picker {
-    position: absolute;
-    opacity: 0;
-  }
-  .picker :global(.flatpickr) {
-    min-width: 0;
-  }
-  .picker :global(.spectrum-Textfield-input) {
-    width: 100%;
+    height: 20px;
   }
 </style>

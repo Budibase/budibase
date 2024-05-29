@@ -1,16 +1,18 @@
+import { mocks } from "@budibase/backend-core/tests"
 import tk from "timekeeper"
 import * as setup from "./utilities"
 import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import { mocks } from "@budibase/backend-core/tests"
 
 mocks.licenses.useBackups()
 
 describe("/backups", () => {
   let config = setup.getConfig()
 
-  afterAll(setup.afterAll)
+  afterAll(async () => {
+    setup.afterAll()
+  })
 
   beforeEach(async () => {
     tk.reset()
@@ -21,7 +23,7 @@ describe("/backups", () => {
     it("should be able to export app", async () => {
       const body = await config.api.backup.exportBasicBackup(config.getAppId()!)
       expect(body instanceof Buffer).toBe(true)
-      expect(events.app.exported).toBeCalledTimes(1)
+      expect(events.app.exported).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

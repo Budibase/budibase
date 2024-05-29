@@ -161,13 +161,14 @@ export class OpenAPI3 extends OpenAPISource {
         for (let param of allParams) {
           if (parameterNotRef(param)) {
             switch (param.in) {
-              case "query":
+              case "query": {
                 let prefix = ""
                 if (queryString) {
                   prefix = "&"
                 }
                 queryString = `${queryString}${prefix}${param.name}={{${param.name}}}`
                 break
+              }
               case "header":
                 headers[param.name] = `{{${param.name}}}`
                 break

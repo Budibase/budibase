@@ -4,7 +4,6 @@ export const PostProcessorNames = {
   CONVERT_LITERALS: "convert-literals",
 }
 
-/* eslint-disable no-unused-vars */
 class Postprocessor {
   name: string
   private fn: any

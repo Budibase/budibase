@@ -11,7 +11,6 @@ import {
 
 import authorizedMiddleware from "../authorized"
 import env from "../../environment"
-import { generateTableID, generateViewID } from "../../db/utils"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { initProMocks } from "../../tests/utilities/mocks/pro"
 import { getResourcePerms } from "../../sdk/app/permissions"
@@ -213,11 +212,11 @@ describe("Authorization middleware", () => {
       it("will fetch resource permissions when resource is set", async () => {
         await config.executeMiddleware()
 
-        expect(config.throw).not.toBeCalled()
+        expect(config.throw).not.toHaveBeenCalled()
         expect(config.next).toHaveBeenCalled()
 
-        expect(mockedGetResourcePerms).toBeCalledTimes(1)
-        expect(mockedGetResourcePerms).toBeCalledWith(resourceId)
+        expect(mockedGetResourcePerms).toHaveBeenCalledTimes(1)
+        expect(mockedGetResourcePerms).toHaveBeenCalledWith(resourceId)
       })
     })
   })

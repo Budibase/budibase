@@ -12,7 +12,7 @@ const defaultCacheFn = key => {
 const upgradeAction = key => {
   return defaultNavigateAction(
     key,
-    "Upgrade Plan",
+    "Upgrade",
     `${get(admin).accountPortalUrl}/portal/upgrade`
   )
 }

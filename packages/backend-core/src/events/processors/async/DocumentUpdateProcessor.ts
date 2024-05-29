@@ -14,12 +14,7 @@ export default class DocumentUpdateProcessor implements EventProcessor {
     this.processors = processors
   }
 
-  async processEvent(
-    event: Event,
-    identity: Identity,
-    properties: any,
-    timestamp?: string | number
-  ) {
+  async processEvent(event: Event, identity: Identity, properties: any) {
     const tenantId = identity.realTenantId
     const docId = getDocumentId(event, properties)
     if (!tenantId || !docId) {

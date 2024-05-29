@@ -6,6 +6,10 @@ import {
   TableSourceType,
 } from "@budibase/types"
 
+import env from "../environment"
+
+export const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
+
 export enum FilterTypes {
   STRING = "string",
   FUZZY = "fuzzy",
@@ -16,6 +20,7 @@ export enum FilterTypes {
   NOT_EMPTY = "notEmpty",
   CONTAINS = "contains",
   NOT_CONTAINS = "notContains",
+  CONTAINS_ANY = "containsAny",
   ONE_OF = "oneOf",
 }
 
@@ -26,6 +31,7 @@ export const NoEmptyFilterStrings = [
   FilterTypes.NOT_EQUAL,
   FilterTypes.CONTAINS,
   FilterTypes.NOT_CONTAINS,
+  FilterTypes.CONTAINS_ANY,
 ]
 
 export const CanSwitchTypes = [
@@ -161,12 +167,14 @@ export enum AutomationErrors {
   FAILURE_CONDITION = "FAILURE_CONDITION_MET",
 }
 
+export const devClientVersion = "0.0.0"
+
 // pass through the list from the auth/core lib
 export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 export const MAX_AUTOMATION_RECURRING_ERRORS = 5
 export const GOOGLE_SHEETS_PRIMARY_KEY = "rowNumber"
-export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
-export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
-export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
-export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
-export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
+export const DEFAULT_JOBS_TABLE_ID = constants.DEFAULT_JOBS_TABLE_ID
+export const DEFAULT_INVENTORY_TABLE_ID = constants.DEFAULT_INVENTORY_TABLE_ID
+export const DEFAULT_EXPENSES_TABLE_ID = constants.DEFAULT_EXPENSES_TABLE_ID
+export const DEFAULT_EMPLOYEE_TABLE_ID = constants.DEFAULT_EMPLOYEE_TABLE_ID
+export const DEFAULT_BB_DATASOURCE_ID = constants.DEFAULT_BB_DATASOURCE_ID

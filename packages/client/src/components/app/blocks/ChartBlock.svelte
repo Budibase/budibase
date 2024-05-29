@@ -8,6 +8,7 @@
   export let sortColumn
   export let sortOrder
   export let limit
+  export let autoRefresh
 
   // Block
   export let chartTitle
@@ -31,7 +32,7 @@
 
   // Bar/Line/Area
   export let valueColumns
-  export let yAxisUnits
+  export let valueUnits
   export let yAxisLabel
   export let xAxisLabel
   export let curve
@@ -50,8 +51,6 @@
   export let bucketCount
 
   let dataProviderId
-
-  $: colors = c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null
 </script>
 
 <Block>
@@ -65,6 +64,7 @@
       sortColumn,
       sortOrder,
       limit,
+      autoRefresh,
     }}
   >
     {#if dataProviderId && chartType}
@@ -82,8 +82,7 @@
           dataLabels,
           legend,
           animate,
-          ...colors,
-          yAxisUnits,
+          valueUnits,
           yAxisLabel,
           xAxisLabel,
           stacked,
@@ -96,6 +95,11 @@
           lowColumn,
           dateColumn,
           bucketCount,
+          c1,
+          c2,
+          c3,
+          c4,
+          c5,
         }}
       />
     {/if}

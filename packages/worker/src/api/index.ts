@@ -4,8 +4,13 @@ const compress = require("koa-compress")
 
 import zlib from "zlib"
 import { routes } from "./routes"
-import { middleware as pro } from "@budibase/pro"
+import { middleware as pro, sdk } from "@budibase/pro"
 import { auth, middleware } from "@budibase/backend-core"
+import env from "../environment"
+
+if (env.SQS_SEARCH_ENABLE) {
+  sdk.auditLogs.useSQLSearch()
+}
 
 const PUBLIC_ENDPOINTS = [
   // deprecated single tenant sso callback
@@ -39,6 +44,10 @@ const PUBLIC_ENDPOINTS = [
   },
   {
     route: "/api/global/users/init",
+    method: "POST",
+  },
+  {
+    route: "/api/global/users/sso",
     method: "POST",
   },
   {
@@ -81,6 +90,11 @@ const NO_TENANCY_ENDPOINTS = [
     route: "/api/global/users/init",
     method: "POST",
   },
+  // tenant is retrieved from the user found by the requested email
+  {
+    route: "/api/global/users/sso",
+    method: "POST",
+  },
   // deprecated single tenant sso callback
   {
     route: "/api/admin/auth/google/callback",
@@ -91,16 +105,20 @@ const NO_TENANCY_ENDPOINTS = [
     route: "/api/admin/auth/oidc/callback",
     method: "GET",
   },
-  // tenant is determined from code in redis
-  {
-    route: "/api/global/users/invite/accept",
-    method: "POST",
-  },
   // global user search - no tenancy
   // :id is user id
   // TODO: this should really be `/api/system/users/:id`
   {
     route: "/api/global/users/tenant/:id",
+    method: "GET",
+  },
+  // tenant is determined from code in redis
+  {
+    route: "/api/global/users/invite/accept",
+    method: "POST",
+  },
+  {
+    route: "/api/global/users/invite/:code",
     method: "GET",
   },
 ]

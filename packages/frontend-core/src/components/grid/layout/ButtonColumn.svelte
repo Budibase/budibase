@@ -43,19 +43,6 @@
   })
 </script>
 
-<!-- Hidden copy of buttons to measure -->
-<div class="measure" bind:this={measureContainer}>
-  <GridCell width="auto">
-    <div class="buttons">
-      {#each buttons as button}
-        <Button size="S">
-          {button.text || "Button"}
-        </Button>
-      {/each}
-    </div>
-  </GridCell>
-</div>
-
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="button-column"
@@ -72,6 +59,7 @@
           class="row"
           on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
           on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+          bind:this={measureContainer}
         >
           <GridCell
             width="auto"
@@ -91,6 +79,9 @@
                   overBackground={button.type === "overBackground"}
                   on:click={() => handleClick(button, row)}
                 >
+                  {#if button.icon}
+                    <i class="{button.icon} S" />
+                  {/if}
                   {button.text || "Button"}
                 </Button>
               {/each}
@@ -130,16 +121,14 @@
     gap: var(--cell-padding);
     height: inherit;
   }
+  .buttons :global(.spectrum-Button-Label) {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
 
   /* Add left cell border */
   .button-column :global(.cell) {
     border-left: var(--cell-border);
-  }
-
-  /* Hidden copy of buttons to measure width against */
-  .measure {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
   }
 </style>

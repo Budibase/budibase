@@ -68,5 +68,10 @@ router
     authorized(permissions.BUILDER),
     controller.importToApp
   )
+  .post(
+    "/api/applications/:appId/setRevertableVersion",
+    authorized(permissions.BUILDER),
+    controller.setRevertableVersion
+  )
 
 export default router

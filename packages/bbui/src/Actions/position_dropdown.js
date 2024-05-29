@@ -1,3 +1,22 @@
+/**
+ * Valid alignment options are
+ * - left
+ * - right
+ * - left-outside
+ * - right-outside
+ **/
+
+// Strategies are defined as [Popover]To[Anchor].
+// They can apply for both horizontal and vertical alignment.
+const Strategies = {
+  StartToStart: "StartToStart", // e.g. left alignment
+  EndToEnd: "EndToEnd", // e.g. right alignment
+  StartToEnd: "StartToEnd", // e.g. right-outside alignment
+  EndToStart: "EndToStart", // e.g. left-outside alignment
+  MidPoint: "MidPoint", // centers relative to midpoints
+  ScreenEdge: "ScreenEdge", // locks to screen edge
+}
+
 export default function positionDropdown(element, opts) {
   let resizeObserver
   let latestOpts = opts
@@ -19,6 +38,8 @@ export default function positionDropdown(element, opts) {
       useAnchorWidth,
       offset = 5,
       customUpdate,
+      resizable,
+      wrap,
     } = opts
     if (!anchor) {
       return
@@ -27,56 +48,161 @@ export default function positionDropdown(element, opts) {
     // Compute bounds
     const anchorBounds = anchor.getBoundingClientRect()
     const elementBounds = element.getBoundingClientRect()
+    const winWidth = window.innerWidth
+    const winHeight = window.innerHeight
+    const screenOffset = 8
     let styles = {
-      maxHeight: null,
-      minWidth,
-      maxWidth,
+      maxHeight,
+      minWidth: useAnchorWidth ? anchorBounds.width : minWidth,
+      maxWidth: useAnchorWidth ? anchorBounds.width : maxWidth,
       left: null,
       top: null,
     }
 
+    // Ignore all our logic for custom logic
     if (typeof customUpdate === "function") {
       styles = customUpdate(anchorBounds, elementBounds, {
         ...styles,
         offset: opts.offset,
       })
-    } else {
-      // Determine vertical styles
-      if (align === "right-outside" || align === "left-outside") {
-        styles.top =
-          anchorBounds.top + anchorBounds.height / 2 - elementBounds.height / 2
-        styles.maxHeight = maxHeight
-        if (styles.top + elementBounds.height > window.innerHeight) {
-          styles.top = window.innerHeight - elementBounds.height
-        }
-      } else if (
-        window.innerHeight - anchorBounds.bottom <
-        (maxHeight || 100)
-      ) {
-        styles.top = anchorBounds.top - elementBounds.height - offset
-        styles.maxHeight = maxHeight || 240
-      } else {
-        styles.top = anchorBounds.bottom + offset
-        styles.maxHeight =
-          maxHeight || window.innerHeight - anchorBounds.bottom - 20
+    }
+
+    // Otherwise position ourselves as normal
+    else {
+      // Checks if we overflow off the screen. We only report that we overflow
+      // when the alternative dimension is larger than the one we are checking.
+      const doesXOverflow = () => {
+        const overflows = styles.left + elementBounds.width > winWidth
+        return overflows && anchorBounds.left > winWidth - anchorBounds.right
+      }
+      const doesYOverflow = () => {
+        const overflows = styles.top + elementBounds.height > winHeight
+        return overflows && anchorBounds.top > winHeight - anchorBounds.bottom
       }
 
-      // Determine horizontal styles
-      if (!maxWidth && useAnchorWidth) {
-        styles.maxWidth = anchorBounds.width
+      // Applies a dynamic max height constraint if appropriate
+      const applyMaxHeight = height => {
+        if (!styles.maxHeight && resizable) {
+          styles.maxHeight = height
+        }
       }
-      if (useAnchorWidth) {
-        styles.minWidth = anchorBounds.width
+
+      // Applies the X strategy to our styles
+      const applyXStrategy = strategy => {
+        switch (strategy) {
+          case Strategies.StartToStart:
+          default:
+            styles.left = anchorBounds.left
+            break
+          case Strategies.EndToEnd:
+            styles.left = anchorBounds.right - elementBounds.width
+            break
+          case Strategies.StartToEnd:
+            styles.left = anchorBounds.right + offset
+            break
+          case Strategies.EndToStart:
+            styles.left = anchorBounds.left - elementBounds.width - offset
+            break
+          case Strategies.MidPoint:
+            styles.left =
+              anchorBounds.left +
+              anchorBounds.width / 2 -
+              elementBounds.width / 2
+            break
+          case Strategies.ScreenEdge:
+            styles.left = winWidth - elementBounds.width - screenOffset
+            break
+        }
       }
+
+      // Applies the Y strategy to our styles
+      const applyYStrategy = strategy => {
+        switch (strategy) {
+          case Strategies.StartToStart:
+            styles.top = anchorBounds.top
+            applyMaxHeight(winHeight - anchorBounds.top - screenOffset)
+            break
+          case Strategies.EndToEnd:
+            styles.top = anchorBounds.bottom - elementBounds.height
+            applyMaxHeight(anchorBounds.bottom - screenOffset)
+            break
+          case Strategies.StartToEnd:
+          default:
+            styles.top = anchorBounds.bottom + offset
+            applyMaxHeight(winHeight - anchorBounds.bottom - screenOffset)
+            break
+          case Strategies.EndToStart:
+            styles.top = anchorBounds.top - elementBounds.height - offset
+            applyMaxHeight(anchorBounds.top - screenOffset)
+            break
+          case Strategies.MidPoint:
+            styles.top =
+              anchorBounds.top +
+              anchorBounds.height / 2 -
+              elementBounds.height / 2
+            break
+          case Strategies.ScreenEdge:
+            styles.top = winHeight - elementBounds.height - screenOffset
+            applyMaxHeight(winHeight - 2 * screenOffset)
+            break
+        }
+      }
+
+      // Determine X strategy
       if (align === "right") {
-        styles.left =
-          anchorBounds.left + anchorBounds.width - elementBounds.width
+        applyXStrategy(Strategies.EndToEnd)
       } else if (align === "right-outside") {
-        styles.left = anchorBounds.right + offset
+        applyXStrategy(Strategies.StartToEnd)
       } else if (align === "left-outside") {
-        styles.left = anchorBounds.left - elementBounds.width - offset
+        applyXStrategy(Strategies.EndToStart)
+      } else if (align === "center") {
+        applyXStrategy(Strategies.MidPoint)
       } else {
-        styles.left = anchorBounds.left
+        applyXStrategy(Strategies.StartToStart)
+      }
+
+      // Determine Y strategy
+      if (align === "right-outside" || align === "left-outside") {
+        applyYStrategy(Strategies.MidPoint)
+      } else {
+        applyYStrategy(Strategies.StartToEnd)
+      }
+
+      // Handle screen overflow
+      if (doesXOverflow()) {
+        // Swap left to right
+        if (align === "left") {
+          applyXStrategy(Strategies.EndToEnd)
+        }
+        // Swap right-outside to left-outside
+        else if (align === "right-outside") {
+          applyXStrategy(Strategies.EndToStart)
+        }
+      }
+      if (doesYOverflow()) {
+        // If wrapping, lock to the bottom of the screen and also reposition to
+        // the side to not block the anchor
+        if (wrap) {
+          applyYStrategy(Strategies.MidPoint)
+          if (doesYOverflow()) {
+            applyYStrategy(Strategies.ScreenEdge)
+          }
+          applyXStrategy(Strategies.StartToEnd)
+          if (doesXOverflow()) {
+            applyXStrategy(Strategies.EndToStart)
+          }
+        }
+        // Othewise invert as normal
+        else {
+          // If using an outside strategy then lock to the bottom of the screen
+          if (align === "left-outside" || align === "right-outside") {
+            applyYStrategy(Strategies.ScreenEdge)
+          }
+          // Otherwise flip above
+          else {
+            applyYStrategy(Strategies.EndToStart)
+          }
+        }
       }
     }
 

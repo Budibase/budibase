@@ -68,7 +68,6 @@ export async function strategyFactory(
       verify
     )
   } catch (err: any) {
-    console.error(err)
     throw new Error(`Error constructing google authentication strategy: ${err}`)
   }
 }

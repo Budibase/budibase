@@ -5,13 +5,19 @@ import {
   AccountCreatedEvent,
   AccountDeletedEvent,
   AccountVerifiedEvent,
+  Identity,
 } from "@budibase/types"
 
-async function created(account: Account) {
+async function created(account: Account, identityOverride?: Identity) {
   const properties: AccountCreatedEvent = {
     tenantId: account.tenantId,
   }
-  await publishEvent(Event.ACCOUNT_CREATED, properties)
+  await publishEvent(
+    Event.ACCOUNT_CREATED,
+    properties,
+    undefined,
+    identityOverride
+  )
 }
 
 async function deleted(account: Account) {

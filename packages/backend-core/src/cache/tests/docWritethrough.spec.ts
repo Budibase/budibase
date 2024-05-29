@@ -6,7 +6,7 @@ import { getDB } from "../../db"
 
 import {
   DocWritethrough,
-  docWritethroughProcessorQueue,
+  DocWritethroughProcessor,
   init,
 } from "../docWritethrough"
 
@@ -15,7 +15,7 @@ import InMemoryQueue from "../../queue/inMemoryQueue"
 const initialTime = Date.now()
 
 async function waitForQueueCompletion() {
-  const queue: InMemoryQueue = docWritethroughProcessorQueue as never
+  const queue: InMemoryQueue = DocWritethroughProcessor.queue as never
   await queue.waitForCompletion()
 }
 
@@ -235,11 +235,11 @@ describe("docWritethrough", () => {
           return acc
         }, {})
       }
-      const queueMessageSpy = jest.spyOn(docWritethroughProcessorQueue, "add")
+      const queueMessageSpy = jest.spyOn(DocWritethroughProcessor.queue, "add")
 
       await config.doInTenant(async () => {
         let patches = await parallelPatch(5)
-        expect(queueMessageSpy).toBeCalledTimes(5)
+        expect(queueMessageSpy).toHaveBeenCalledTimes(5)
 
         await waitForQueueCompletion()
         expect(await db.get(documentId)).toEqual(
@@ -247,7 +247,7 @@ describe("docWritethrough", () => {
         )
 
         patches = { ...patches, ...(await parallelPatch(40)) }
-        expect(queueMessageSpy).toBeCalledTimes(45)
+        expect(queueMessageSpy).toHaveBeenCalledTimes(45)
 
         await waitForQueueCompletion()
         expect(await db.get(documentId)).toEqual(
@@ -255,7 +255,7 @@ describe("docWritethrough", () => {
         )
 
         patches = { ...patches, ...(await parallelPatch(10)) }
-        expect(queueMessageSpy).toBeCalledTimes(55)
+        expect(queueMessageSpy).toHaveBeenCalledTimes(55)
 
         await waitForQueueCompletion()
         expect(await db.get(documentId)).toEqual(
@@ -265,6 +265,7 @@ describe("docWritethrough", () => {
     })
 
     // This is not yet supported
+    // eslint-disable-next-line jest/no-disabled-tests
     it.skip("patches will execute in order", async () => {
       let incrementalValue = 0
       const keyToOverride = generator.word()

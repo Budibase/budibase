@@ -21,7 +21,7 @@ async function start() {
   app = koa.app
   server = koa.server
   // startup includes automation runner - if enabled
-  await startup(app, server)
+  await startup({ app, server })
 }
 
 start().catch(err => {

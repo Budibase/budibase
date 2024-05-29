@@ -13,9 +13,7 @@ export interface Datasource extends Document {
   config?: Record<string, any>
   plus?: boolean
   isSQL?: boolean
-  entities?: {
-    [key: string]: Table
-  }
+  entities?: Record<string, Table>
 }
 
 export enum RestAuthType {
@@ -48,6 +46,7 @@ export interface DynamicVariable {
 export interface RestConfig {
   url: string
   rejectUnauthorized: boolean
+  downloadImages?: boolean
   defaultHeaders: {
     [key: string]: any
   }

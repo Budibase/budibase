@@ -8,6 +8,7 @@
   export let allowJS = false
   export let allowHelpers = true
   export let autofocusEditor = false
+  export let context = null
 
   $: enrichedBindings = enrichBindings(bindings)
 
@@ -27,7 +28,7 @@
 
 <BindingPanel
   bindings={enrichedBindings}
-  context={$previewStore.selectedComponentContext}
+  context={{ ...$previewStore.selectedComponentContext, ...context }}
   snippets={$snippets}
   {value}
   {allowJS}

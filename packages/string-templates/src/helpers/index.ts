@@ -1,5 +1,5 @@
 import Helper from "./Helper"
-import { SafeString } from "handlebars"
+import Handlebars from "handlebars"
 import * as externalHandlebars from "./external"
 import { processJS } from "./javascript"
 import {
@@ -28,7 +28,7 @@ function isObject(value: string | any[]) {
 const HELPERS = [
   // external helpers
   new Helper(HelperFunctionNames.OBJECT, (value: any) => {
-    return new SafeString(JSON.stringify(value))
+    return new Handlebars.SafeString(JSON.stringify(value))
   }),
   // javascript helper
   new Helper(HelperFunctionNames.JS, processJS, false),
@@ -38,7 +38,7 @@ const HELPERS = [
     (value: string, inputs: { __opts: any }) => {
       const { __opts } = inputs
       if (isObject(value)) {
-        return new SafeString(JSON.stringify(value))
+        return new Handlebars.SafeString(JSON.stringify(value))
       }
       // null/undefined values produce bad results
       if (__opts && __opts.onlyFound && value == null) {
@@ -55,7 +55,7 @@ const HELPERS = [
       if (__opts && __opts.escapeNewlines) {
         text = value.replace(/\n/g, "\\n")
       }
-      text = new SafeString(text.replace(/&amp;/g, "&"))
+      text = new Handlebars.SafeString(text.replace(/&amp;/g, "&"))
       if (text == null || typeof text !== "string") {
         return text
       }

@@ -77,15 +77,10 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const renaming = ctx.request.body._rename
 
   const api = pickApi({ table })
-  // do not pass _rename or _add if saving to CouchDB
-  if (api === internal) {
-    delete ctx.request.body._add
-    delete ctx.request.body._rename
-  }
   let savedTable = await api.save(ctx, renaming)
   if (!table._id) {
-    await events.table.created(savedTable)
     savedTable = sdk.tables.enrichViewSchemas(savedTable)
+    await events.table.created(savedTable)
   } else {
     await events.table.updated(savedTable)
   }
@@ -185,5 +180,5 @@ export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
   }
 
   ctx.status = 200
-  ctx.body = { message: `Column ${oldColumn.name} migrated.` }
+  ctx.body = { message: `Column ${oldColumn} migrated.` }
 }

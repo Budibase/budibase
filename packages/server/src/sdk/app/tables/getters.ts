@@ -15,6 +15,7 @@ import {
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
+import env from "../../../environment"
 
 export function processTable(table: Table): Table {
   if (!table) {
@@ -27,12 +28,16 @@ export function processTable(table: Table): Table {
       sourceType: TableSourceType.EXTERNAL,
     }
   } else {
-    return {
+    const processed: Table = {
       ...table,
       type: "table",
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
     }
+    if (env.SQS_SEARCH_ENABLE) {
+      processed.sql = !!env.SQS_SEARCH_ENABLE
+    }
+    return processed
   }
 }
 
@@ -142,7 +147,9 @@ export function enrichViewSchemas(table: Table): TableResponse {
   return {
     ...table,
     views: Object.values(table.views ?? [])
-      .map(v => sdk.views.enrichSchema(v, table.schema))
+      .map(v =>
+        sdk.views.isV2(v) ? sdk.views.enrichSchema(v, table.schema) : v
+      )
       .reduce((p, v) => {
         p[v.name!] = v
         return p

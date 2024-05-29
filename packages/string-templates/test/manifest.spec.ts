@@ -48,7 +48,7 @@ describe("manifest", () => {
         const arrays = hbs.match(/\[[^/\]]+\]/)
         arrays?.forEach((arrayString, i) => {
           hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), `array${i}`)
-          context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
+          context[`array${i}`] = JSON.parse(arrayString.replace(/'/g, '"'))
         })
 
         let result = await processString(hbs, context)

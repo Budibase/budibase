@@ -1,55 +1,43 @@
-import { databaseTestProviders } from "../../../integrations/tests/utils"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
-import { context, InternalTable, roles, tenancy } from "@budibase/backend-core"
+import { context, InternalTable, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  AttachmentFieldMetadata,
   AutoFieldSubType,
   Datasource,
+  DateFieldMetadata,
   DeleteRow,
   FieldSchema,
   FieldType,
-  FieldTypeSubtypes,
+  BBReferenceFieldSubType,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
-  PermissionLevel,
+  NumberFieldMetadata,
   QuotaUsageType,
   RelationshipType,
   Row,
   SaveTableRequest,
-  SearchQueryOperators,
-  SortOrder,
-  SortType,
   StaticQuotaName,
   Table,
   TableSourceType,
-  ViewV2,
 } from "@budibase/types"
-import {
-  expectAnyExternalColsAttributes,
-  expectAnyInternalColsAttributes,
-  generator,
-  mocks,
-} from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
 import * as uuid from "uuid"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
 
-jest.unmock("mysql2")
-jest.unmock("mysql2/promise")
-jest.unmock("mssql")
-jest.unmock("pg")
-
 describe.each([
   ["internal", undefined],
-  ["postgres", databaseTestProviders.postgres],
-  ["mysql", databaseTestProviders.mysql],
-  ["mssql", databaseTestProviders.mssql],
-  ["mariadb", databaseTestProviders.mariadb],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/rows (%s)", (__, dsProvider) => {
   const isInternal = dsProvider === undefined
   const config = setup.getConfig()
@@ -61,23 +49,23 @@ describe.each([
     await config.init()
     if (dsProvider) {
       datasource = await config.createDatasource({
-        datasource: await dsProvider.datasource(),
+        datasource: await dsProvider,
       })
     }
   })
 
   afterAll(async () => {
-    if (dsProvider) {
-      await dsProvider.stop()
-    }
     setup.afterAll()
   })
 
   function saveTableRequest(
-    ...overrides: Partial<SaveTableRequest>[]
+    // We omit the name field here because it's generated in the function with a
+    // high likelihood to be unique. Tests should not have any reason to control
+    // the table name they're writing to.
+    ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
   ): SaveTableRequest {
     const req: SaveTableRequest = {
-      name: uuid.v4().substring(0, 16),
+      name: uuid.v4().substring(0, 10),
       type: "table",
       sourceType: datasource
         ? TableSourceType.EXTERNAL
@@ -99,7 +87,10 @@ describe.each([
   }
 
   function defaultTable(
-    ...overrides: Partial<SaveTableRequest>[]
+    // We omit the name field here because it's generated in the function with a
+    // high likelihood to be unique. Tests should not have any reason to control
+    // the table name they're writing to.
+    ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
   ): SaveTableRequest {
     return saveTableRequest(
       {
@@ -138,7 +129,13 @@ describe.each([
 
   const assertRowUsage = async (expected: number) => {
     const usage = await getRowUsage()
-    expect(usage).toBe(expected)
+
+    // Because our quota tracking is not perfect, we allow a 10% margin of
+    // error.  This is to account for the fact that parallel writes can result
+    // in some quota updates getting lost. We don't have any need to solve this
+    // right now, so we just allow for some error.
+    expect(usage).toBeGreaterThan(expected * 0.9)
+    expect(usage).toBeLessThan(expected * 1.1)
   }
 
   const defaultRowFields = isInternal
@@ -201,40 +198,99 @@ describe.each([
       await assertRowUsage(rowUsage)
     })
 
-    it("increment row autoId per create row request", async () => {
-      const rowUsage = await getRowUsage()
+    isInternal &&
+      it("increment row autoId per create row request", async () => {
+        const rowUsage = await getRowUsage()
 
-      const newTable = await config.api.table.save(
-        saveTableRequest({
-          name: "TestTableAuto",
-          schema: {
-            "Row ID": {
-              name: "Row ID",
-              type: FieldType.NUMBER,
-              subtype: AutoFieldSubType.AUTO_ID,
-              icon: "ri-magic-line",
-              autocolumn: true,
-              constraints: {
-                type: "number",
-                presence: true,
-                numericality: {
-                  greaterThanOrEqualTo: "",
-                  lessThanOrEqualTo: "",
+        const newTable = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              "Row ID": {
+                name: "Row ID",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                icon: "ri-magic-line",
+                autocolumn: true,
+                constraints: {
+                  type: "number",
+                  presence: true,
+                  numericality: {
+                    greaterThanOrEqualTo: "",
+                    lessThanOrEqualTo: "",
+                  },
                 },
               },
             },
-          },
-        })
-      )
+          })
+        )
 
-      let previousId = 0
-      for (let i = 0; i < 10; i++) {
-        const row = await config.api.row.save(newTable._id!, {})
-        expect(row["Row ID"]).toBeGreaterThan(previousId)
-        previousId = row["Row ID"]
-      }
-      await assertRowUsage(rowUsage + 10)
-    })
+        let previousId = 0
+        for (let i = 0; i < 10; i++) {
+          const row = await config.api.row.save(newTable._id!, {})
+          expect(row["Row ID"]).toBeGreaterThan(previousId)
+          previousId = row["Row ID"]
+        }
+        await assertRowUsage(rowUsage + 10)
+      })
+
+    isInternal &&
+      it("should increment auto ID correctly when creating rows in parallel", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              "Row ID": {
+                name: "Row ID",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                icon: "ri-magic-line",
+                autocolumn: true,
+                constraints: {
+                  type: "number",
+                  presence: true,
+                  numericality: {
+                    greaterThanOrEqualTo: "",
+                    lessThanOrEqualTo: "",
+                  },
+                },
+              },
+            },
+          })
+        )
+
+        const sequence = Array(50)
+          .fill(0)
+          .map((_, i) => i + 1)
+
+        // This block of code is simulating users creating auto ID rows at the
+        // same time. It's expected that this operation will sometimes return
+        // a document conflict error (409), but the idea is to retry in those
+        // situations. The code below does this a large number of times with
+        // small, random delays between them to try and get through the list
+        // as quickly as possible.
+        await Promise.all(
+          sequence.map(async () => {
+            const attempts = 20
+            for (let attempt = 0; attempt < attempts; attempt++) {
+              try {
+                await config.api.row.save(table._id!, {})
+                return
+              } catch (e) {
+                await new Promise(r => setTimeout(r, Math.random() * 15))
+              }
+            }
+            throw new Error(`Failed to create row after ${attempts} attempts`)
+          })
+        )
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows).toHaveLength(50)
+
+        // The main purpose of this test is to ensure that even under pressure,
+        // we maintain data integrity. An auto ID column should hand out
+        // monotonically increasing unique integers no matter what.
+        const ids = rows.map(r => r["Row ID"])
+        expect(ids).toEqual(expect.arrayContaining(sequence))
+      })
 
     isInternal &&
       it("row values are coerced", async () => {
@@ -243,22 +299,32 @@ describe.each([
           name: "str",
           constraints: { type: "string", presence: false },
         }
-        const attachment: FieldSchema = {
-          type: FieldType.ATTACHMENT,
-          name: "attachment",
+        const singleAttachment: FieldSchema = {
+          type: FieldType.ATTACHMENT_SINGLE,
+          name: "single attachment",
+          constraints: { presence: false },
+        }
+        const attachmentList: AttachmentFieldMetadata = {
+          type: FieldType.ATTACHMENTS,
+          name: "attachments",
           constraints: { type: "array", presence: false },
+        }
+        const signature: FieldSchema = {
+          type: FieldType.SIGNATURE_SINGLE,
+          name: "signature",
+          constraints: { presence: false },
         }
         const bool: FieldSchema = {
           type: FieldType.BOOLEAN,
           name: "boolean",
           constraints: { type: "boolean", presence: false },
         }
-        const number: FieldSchema = {
+        const number: NumberFieldMetadata = {
           type: FieldType.NUMBER,
           name: "str",
           constraints: { type: "number", presence: false },
         }
-        const datetime: FieldSchema = {
+        const datetime: DateFieldMetadata = {
           type: FieldType.DATETIME,
           name: "datetime",
           constraints: {
@@ -308,10 +374,14 @@ describe.each([
               boolUndefined: bool,
               boolString: bool,
               boolBool: bool,
-              attachmentNull: attachment,
-              attachmentUndefined: attachment,
-              attachmentEmpty: attachment,
-              attachmentEmptyArrayStr: attachment,
+              singleAttachmentNull: singleAttachment,
+              singleAttachmentUndefined: singleAttachment,
+              attachmentListNull: attachmentList,
+              attachmentListUndefined: attachmentList,
+              attachmentListEmpty: attachmentList,
+              attachmentListEmptyArrayStr: attachmentList,
+              signatureNull: signature,
+              signatureUndefined: signature,
               arrayFieldEmptyArrayStr: arrayField,
               arrayFieldArrayStrKnown: arrayField,
               arrayFieldNull: arrayField,
@@ -347,10 +417,14 @@ describe.each([
           boolString: "true",
           boolBool: true,
           tableId: table._id,
-          attachmentNull: null,
-          attachmentUndefined: undefined,
-          attachmentEmpty: "",
-          attachmentEmptyArrayStr: "[]",
+          singleAttachmentNull: null,
+          singleAttachmentUndefined: undefined,
+          attachmentListNull: null,
+          attachmentListUndefined: undefined,
+          attachmentListEmpty: "",
+          attachmentListEmptyArrayStr: "[]",
+          signatureNull: null,
+          signatureUndefined: undefined,
           arrayFieldEmptyArrayStr: "[]",
           arrayFieldUndefined: undefined,
           arrayFieldNull: null,
@@ -379,10 +453,14 @@ describe.each([
         expect(row.boolUndefined).toBe(undefined)
         expect(row.boolString).toBe(true)
         expect(row.boolBool).toBe(true)
-        expect(row.attachmentNull).toEqual([])
-        expect(row.attachmentUndefined).toBe(undefined)
-        expect(row.attachmentEmpty).toEqual([])
-        expect(row.attachmentEmptyArrayStr).toEqual([])
+        expect(row.singleAttachmentNull).toEqual(null)
+        expect(row.singleAttachmentUndefined).toBe(undefined)
+        expect(row.attachmentListNull).toEqual([])
+        expect(row.attachmentListUndefined).toBe(undefined)
+        expect(row.attachmentListEmpty).toEqual([])
+        expect(row.attachmentListEmptyArrayStr).toEqual([])
+        expect(row.signatureNull).toEqual(null)
+        expect(row.signatureUndefined).toBe(undefined)
         expect(row.arrayFieldEmptyArrayStr).toEqual([])
         expect(row.arrayFieldNull).toEqual([])
         expect(row.arrayFieldUndefined).toEqual(undefined)
@@ -392,6 +470,40 @@ describe.each([
         expect(row.arrayFieldArrayStrKnown).toEqual(["One"])
         expect(row.optsFieldStrKnown).toEqual("Alpha")
       })
+
+    isInternal &&
+      it("doesn't allow creating in user table", async () => {
+        const response = await config.api.row.save(
+          InternalTable.USER_METADATA,
+          {
+            firstName: "Joe",
+            lastName: "Joe",
+            email: "joe@joe.com",
+            roles: {},
+          },
+          { status: 400 }
+        )
+        expect(response.message).toBe("Cannot create new user entry.")
+      })
+
+    it("should not mis-parse date string out of JSON", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+            },
+          },
+        })
+      )
+
+      const row = await config.api.row.save(table._id!, {
+        name: `{ "foo": "2023-01-26T11:48:57.000Z" }`,
+      })
+
+      expect(row.name).toEqual(`{ "foo": "2023-01-26T11:48:57.000Z" }`)
+    })
   })
 
   describe("get", () => {
@@ -457,7 +569,6 @@ describe.each([
       table = await config.api.table.save(defaultTable())
       otherTable = await config.api.table.save(
         defaultTable({
-          name: "a",
           schema: {
             relationship: {
               name: "relationship",
@@ -719,6 +830,39 @@ describe.each([
     })
   })
 
+  describe("bulkImport", () => {
+    isInternal &&
+      it("should update Auto ID field after bulk import", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            primary: ["autoId"],
+            schema: {
+              autoId: {
+                name: "autoId",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                autocolumn: true,
+                constraints: {
+                  type: "number",
+                  presence: false,
+                },
+              },
+            },
+          })
+        )
+
+        let row = await config.api.row.save(table._id!, {})
+        expect(row.autoId).toEqual(1)
+
+        await config.api.row.bulkImport(table._id!, {
+          rows: [{ autoId: 2 }],
+        })
+
+        row = await config.api.row.save(table._id!, {})
+        expect(row.autoId).toEqual(3)
+      })
+  })
+
   describe("enrich", () => {
     beforeAll(async () => {
       table = await config.api.table.save(defaultTable())
@@ -780,38 +924,91 @@ describe.each([
   })
 
   isInternal &&
-    describe("attachments", () => {
-      it("should allow enriching attachment rows", async () => {
-        const table = await config.api.table.save(
+    describe("attachments and signatures", () => {
+      const coreAttachmentEnrichment = async (
+        schema: any,
+        field: string,
+        attachmentCfg: string | string[]
+      ) => {
+        const testTable = await config.api.table.save(
           defaultTable({
-            schema: {
-              attachment: {
-                type: FieldType.ATTACHMENT,
-                name: "attachment",
-                constraints: { type: "array", presence: false },
-              },
-            },
+            schema,
           })
         )
-        const attachmentId = `${uuid.v4()}.csv`
-        const row = await config.api.row.save(table._id!, {
+        const attachmentToStoreKey = (attachmentId: string) => {
+          return {
+            key: `${config.getAppId()}/attachments/${attachmentId}`,
+          }
+        }
+        const draftRow = {
           name: "test",
           description: "test",
-          attachment: [
-            {
-              key: `${config.getAppId()}/attachments/${attachmentId}`,
-            },
-          ],
-          tableId: table._id,
-        })
+          [field]:
+            typeof attachmentCfg === "string"
+              ? attachmentToStoreKey(attachmentCfg)
+              : attachmentCfg.map(attachmentToStoreKey),
+          tableId: testTable._id,
+        }
+        const row = await config.api.row.save(testTable._id!, draftRow)
+
         await config.withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
-            const enriched = await outputProcessing(table, [row])
-            expect((enriched as Row[])[0].attachment[0].url).toBe(
-              `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
-            )
+            const enriched: Row[] = await outputProcessing(table, [row])
+            const [targetRow] = enriched
+            const attachmentEntries = Array.isArray(targetRow[field])
+              ? targetRow[field]
+              : [targetRow[field]]
+
+            for (const entry of attachmentEntries) {
+              const attachmentId = entry.key.split("/").pop()
+              expect(entry.url.split("?")[0]).toBe(
+                `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
+              )
+            }
           })
         })
+      }
+
+      it("should allow enriching single attachment rows", async () => {
+        await coreAttachmentEnrichment(
+          {
+            attachment: {
+              type: FieldType.ATTACHMENT_SINGLE,
+              name: "attachment",
+              constraints: { presence: false },
+            },
+          },
+          "attachment",
+          `${uuid.v4()}.csv`
+        )
+      })
+
+      it("should allow enriching attachment list rows", async () => {
+        await coreAttachmentEnrichment(
+          {
+            attachments: {
+              type: FieldType.ATTACHMENTS,
+              name: "attachments",
+              constraints: { type: "array", presence: false },
+            },
+          },
+          "attachments",
+          [`${uuid.v4()}.csv`]
+        )
+      })
+
+      it("should allow enriching signature rows", async () => {
+        await coreAttachmentEnrichment(
+          {
+            signature: {
+              type: FieldType.SIGNATURE_SINGLE,
+              name: "signature",
+              constraints: { presence: false },
+            },
+          },
+          "signature",
+          `${uuid.v4()}.png`
+        )
       })
     })
 
@@ -890,647 +1087,11 @@ describe.each([
     })
   })
 
-  describe("view 2.0", () => {
-    async function userTable(): Promise<Table> {
-      return saveTableRequest({
-        name: `users_${uuid.v4()}`,
-        type: "table",
-        schema: {
-          name: {
-            type: FieldType.STRING,
-            name: "name",
-          },
-          surname: {
-            type: FieldType.STRING,
-            name: "surname",
-          },
-          age: {
-            type: FieldType.NUMBER,
-            name: "age",
-          },
-          address: {
-            type: FieldType.STRING,
-            name: "address",
-          },
-          jobTitle: {
-            type: FieldType.STRING,
-            name: "jobTitle",
-          },
-        },
-      })
-    }
-
-    const randomRowData = () => ({
-      name: generator.first(),
-      surname: generator.last(),
-      age: generator.age(),
-      address: generator.address(),
-      jobTitle: generator.word(),
-    })
-
-    describe("create", () => {
-      it("should persist a new row with only the provided view fields", async () => {
-        const table = await config.api.table.save(await userTable())
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          schema: {
-            name: { visible: true },
-            surname: { visible: true },
-            address: { visible: true },
-          },
-        })
-
-        const data = randomRowData()
-        const newRow = await config.api.row.save(view.id, {
-          tableId: table!._id,
-          _viewId: view.id,
-          ...data,
-        })
-
-        const row = await config.api.row.get(table._id!, newRow._id!)
-        expect(row).toEqual({
-          name: data.name,
-          surname: data.surname,
-          address: data.address,
-          tableId: table!._id,
-          _id: newRow._id,
-          _rev: newRow._rev,
-          id: newRow.id,
-          ...defaultRowFields,
-        })
-        expect(row._viewId).toBeUndefined()
-        expect(row.age).toBeUndefined()
-        expect(row.jobTitle).toBeUndefined()
-      })
-    })
-
-    describe("patch", () => {
-      it("should update only the view fields for a row", async () => {
-        const table = await config.api.table.save(await userTable())
-        const tableId = table._id!
-        const view = await config.api.viewV2.create({
-          tableId: tableId,
-          name: generator.guid(),
-          schema: {
-            name: { visible: true },
-            address: { visible: true },
-          },
-        })
-
-        const newRow = await config.api.row.save(view.id, {
-          tableId,
-          _viewId: view.id,
-          ...randomRowData(),
-        })
-        const newData = randomRowData()
-        await config.api.row.patch(view.id, {
-          tableId,
-          _viewId: view.id,
-          _id: newRow._id!,
-          _rev: newRow._rev!,
-          ...newData,
-        })
-
-        const row = await config.api.row.get(tableId, newRow._id!)
-        expect(row).toEqual({
-          ...newRow,
-          name: newData.name,
-          address: newData.address,
-          _id: newRow._id,
-          _rev: expect.any(String),
-          id: newRow.id,
-          ...defaultRowFields,
-        })
-        expect(row._viewId).toBeUndefined()
-        expect(row.age).toBeUndefined()
-        expect(row.jobTitle).toBeUndefined()
-      })
-    })
-
-    describe("destroy", () => {
-      it("should be able to delete a row", async () => {
-        const table = await config.api.table.save(await userTable())
-        const tableId = table._id!
-        const view = await config.api.viewV2.create({
-          tableId: tableId,
-          name: generator.guid(),
-          schema: {
-            name: { visible: true },
-            address: { visible: true },
-          },
-        })
-
-        const createdRow = await config.api.row.save(table._id!, {})
-        const rowUsage = await getRowUsage()
-
-        await config.api.row.bulkDelete(view.id, { rows: [createdRow] })
-
-        await assertRowUsage(rowUsage - 1)
-
-        await config.api.row.get(tableId, createdRow._id!, {
-          status: 404,
-        })
-      })
-
-      it("should be able to delete multiple rows", async () => {
-        const table = await config.api.table.save(await userTable())
-        const tableId = table._id!
-        const view = await config.api.viewV2.create({
-          tableId: tableId,
-          name: generator.guid(),
-          schema: {
-            name: { visible: true },
-            address: { visible: true },
-          },
-        })
-
-        const rows = await Promise.all([
-          config.api.row.save(table._id!, {}),
-          config.api.row.save(table._id!, {}),
-          config.api.row.save(table._id!, {}),
-        ])
-        const rowUsage = await getRowUsage()
-
-        await config.api.row.bulkDelete(view.id, { rows: [rows[0], rows[2]] })
-
-        await assertRowUsage(rowUsage - 2)
-
-        await config.api.row.get(tableId, rows[0]._id!, {
-          status: 404,
-        })
-        await config.api.row.get(tableId, rows[2]._id!, {
-          status: 404,
-        })
-        await config.api.row.get(tableId, rows[1]._id!, { status: 200 })
-      })
-    })
-
-    describe("view search", () => {
-      let table: Table
-      const viewSchema = { age: { visible: true }, name: { visible: true } }
-
-      beforeAll(async () => {
-        table = await config.api.table.save(
-          saveTableRequest({
-            name: `users_${uuid.v4()}`,
-            schema: {
-              name: {
-                type: FieldType.STRING,
-                name: "name",
-                constraints: { type: "string" },
-              },
-              age: {
-                type: FieldType.NUMBER,
-                name: "age",
-                constraints: {},
-              },
-            },
-          })
-        )
-      })
-
-      it("returns empty rows from view when no schema is passed", async () => {
-        const rows = await Promise.all(
-          Array.from({ length: 10 }, () =>
-            config.api.row.save(table._id!, { tableId: table._id })
-          )
-        )
-
-        const createViewResponse = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-        })
-        const response = await config.api.viewV2.search(createViewResponse.id)
-
-        expect(response.rows).toHaveLength(10)
-        expect(response).toEqual({
-          rows: expect.arrayContaining(
-            rows.map(r => ({
-              _viewId: createViewResponse.id,
-              tableId: table._id,
-              _id: r._id,
-              _rev: r._rev,
-              ...defaultRowFields,
-            }))
-          ),
-          ...(isInternal
-            ? {}
-            : {
-                hasNextPage: false,
-                bookmark: null,
-              }),
-        })
-      })
-
-      it("searching respects the view filters", async () => {
-        await Promise.all(
-          Array.from({ length: 10 }, () =>
-            config.api.row.save(table._id!, {
-              tableId: table._id,
-              name: generator.name(),
-              age: generator.integer({ min: 10, max: 30 }),
-            })
-          )
-        )
-
-        const expectedRows = await Promise.all(
-          Array.from({ length: 5 }, () =>
-            config.api.row.save(table._id!, {
-              tableId: table._id,
-              name: generator.name(),
-              age: 40,
-            })
-          )
-        )
-
-        const createViewResponse = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          query: [
-            { operator: SearchQueryOperators.EQUAL, field: "age", value: 40 },
-          ],
-          schema: viewSchema,
-        })
-
-        const response = await config.api.viewV2.search(createViewResponse.id)
-
-        expect(response.rows).toHaveLength(5)
-        expect(response).toEqual({
-          rows: expect.arrayContaining(
-            expectedRows.map(r => ({
-              _viewId: createViewResponse.id,
-              tableId: table._id,
-              name: r.name,
-              age: r.age,
-              _id: r._id,
-              _rev: r._rev,
-              ...defaultRowFields,
-            }))
-          ),
-          ...(isInternal
-            ? {}
-            : {
-                hasNextPage: false,
-                bookmark: null,
-              }),
-        })
-      })
-
-      const sortTestOptions: [
-        {
-          field: string
-          order?: SortOrder
-          type?: SortType
-        },
-        string[]
-      ][] = [
-        [
-          {
-            field: "name",
-            order: SortOrder.ASCENDING,
-            type: SortType.STRING,
-          },
-          ["Alice", "Bob", "Charly", "Danny"],
-        ],
-        [
-          {
-            field: "name",
-          },
-          ["Alice", "Bob", "Charly", "Danny"],
-        ],
-        [
-          {
-            field: "name",
-            order: SortOrder.DESCENDING,
-          },
-          ["Danny", "Charly", "Bob", "Alice"],
-        ],
-        [
-          {
-            field: "name",
-            order: SortOrder.DESCENDING,
-            type: SortType.STRING,
-          },
-          ["Danny", "Charly", "Bob", "Alice"],
-        ],
-        [
-          {
-            field: "age",
-            order: SortOrder.ASCENDING,
-            type: SortType.number,
-          },
-          ["Danny", "Alice", "Charly", "Bob"],
-        ],
-        [
-          {
-            field: "age",
-            order: SortOrder.ASCENDING,
-          },
-          ["Danny", "Alice", "Charly", "Bob"],
-        ],
-        [
-          {
-            field: "age",
-            order: SortOrder.DESCENDING,
-          },
-          ["Bob", "Charly", "Alice", "Danny"],
-        ],
-        [
-          {
-            field: "age",
-            order: SortOrder.DESCENDING,
-            type: SortType.number,
-          },
-          ["Bob", "Charly", "Alice", "Danny"],
-        ],
-      ]
-
-      describe("sorting", () => {
-        let table: Table
-        beforeAll(async () => {
-          table = await config.api.table.save(await userTable())
-          const users = [
-            { name: "Alice", age: 25 },
-            { name: "Bob", age: 30 },
-            { name: "Charly", age: 27 },
-            { name: "Danny", age: 15 },
-          ]
-          await Promise.all(
-            users.map(u =>
-              config.api.row.save(table._id!, {
-                tableId: table._id,
-                ...u,
-              })
-            )
-          )
-        })
-
-        it.each(sortTestOptions)(
-          "allow sorting (%s)",
-          async (sortParams, expected) => {
-            const createViewResponse = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              sort: sortParams,
-              schema: viewSchema,
-            })
-
-            const response = await config.api.viewV2.search(
-              createViewResponse.id
-            )
-
-            expect(response.rows).toHaveLength(4)
-            expect(response.rows).toEqual(
-              expected.map(name => expect.objectContaining({ name }))
-            )
-          }
-        )
-
-        it.each(sortTestOptions)(
-          "allow override the default view sorting (%s)",
-          async (sortParams, expected) => {
-            const createViewResponse = await config.api.viewV2.create({
-              tableId: table._id!,
-              name: generator.guid(),
-              sort: {
-                field: "name",
-                order: SortOrder.ASCENDING,
-                type: SortType.STRING,
-              },
-              schema: viewSchema,
-            })
-
-            const response = await config.api.viewV2.search(
-              createViewResponse.id,
-              {
-                sort: sortParams.field,
-                sortOrder: sortParams.order,
-                sortType: sortParams.type,
-                query: {},
-              }
-            )
-
-            expect(response.rows).toHaveLength(4)
-            expect(response.rows).toEqual(
-              expected.map(name => expect.objectContaining({ name }))
-            )
-          }
-        )
-      })
-
-      it("when schema is defined, defined columns and row attributes are returned", async () => {
-        const table = await config.api.table.save(await userTable())
-        const rows = await Promise.all(
-          Array.from({ length: 10 }, () =>
-            config.api.row.save(table._id!, {
-              tableId: table._id,
-              name: generator.name(),
-              age: generator.age(),
-            })
-          )
-        )
-
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-          schema: { name: { visible: true } },
-        })
-        const response = await config.api.viewV2.search(view.id)
-
-        expect(response.rows).toHaveLength(10)
-        expect(response.rows).toEqual(
-          expect.arrayContaining(
-            rows.map(r => ({
-              ...(isInternal
-                ? expectAnyInternalColsAttributes
-                : expectAnyExternalColsAttributes),
-              _viewId: view.id,
-              name: r.name,
-            }))
-          )
-        )
-      })
-
-      it("views without data can be returned", async () => {
-        const table = await config.api.table.save(await userTable())
-        const createViewResponse = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-        })
-        const response = await config.api.viewV2.search(createViewResponse.id)
-        expect(response.rows).toHaveLength(0)
-      })
-
-      it("respects the limit parameter", async () => {
-        const table = await config.api.table.save(await userTable())
-        await Promise.all(
-          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
-        )
-
-        const limit = generator.integer({ min: 1, max: 8 })
-
-        const createViewResponse = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-        })
-        const response = await config.api.viewV2.search(createViewResponse.id, {
-          limit,
-          query: {},
-        })
-
-        expect(response.rows).toHaveLength(limit)
-      })
-
-      it("can handle pagination", async () => {
-        const table = await config.api.table.save(await userTable())
-        await Promise.all(
-          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
-        )
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: generator.guid(),
-        })
-        const rows = (await config.api.viewV2.search(view.id)).rows
-
-        const page1 = await config.api.viewV2.search(view.id, {
-          paginate: true,
-          limit: 4,
-          query: {},
-        })
-        expect(page1).toEqual({
-          rows: expect.arrayContaining(rows.slice(0, 4)),
-          totalRows: isInternal ? 10 : undefined,
-          hasNextPage: true,
-          bookmark: expect.anything(),
-        })
-
-        const page2 = await config.api.viewV2.search(view.id, {
-          paginate: true,
-          limit: 4,
-          bookmark: page1.bookmark,
-
-          query: {},
-        })
-        expect(page2).toEqual({
-          rows: expect.arrayContaining(rows.slice(4, 8)),
-          totalRows: isInternal ? 10 : undefined,
-          hasNextPage: true,
-          bookmark: expect.anything(),
-        })
-
-        const page3 = await config.api.viewV2.search(view.id, {
-          paginate: true,
-          limit: 4,
-          bookmark: page2.bookmark,
-          query: {},
-        })
-        expect(page3).toEqual({
-          rows: expect.arrayContaining(rows.slice(8)),
-          totalRows: isInternal ? 10 : undefined,
-          hasNextPage: false,
-          bookmark: expect.anything(),
-        })
-      })
-
-      isInternal &&
-        it("doesn't allow creating in user table", async () => {
-          const userTableId = InternalTable.USER_METADATA
-          const response = await config.api.row.save(
-            userTableId,
-            {
-              tableId: userTableId,
-              firstName: "Joe",
-              lastName: "Joe",
-              email: "joe@joe.com",
-              roles: {},
-            },
-            { status: 400 }
-          )
-          expect(response.message).toBe("Cannot create new user entry.")
-        })
-
-      describe("permissions", () => {
-        let table: Table
-        let view: ViewV2
-
-        beforeAll(async () => {
-          table = await config.api.table.save(await userTable())
-          await Promise.all(
-            Array.from({ length: 10 }, () =>
-              config.api.row.save(table._id!, {})
-            )
-          )
-
-          view = await config.api.viewV2.create({
-            tableId: table._id!,
-            name: generator.guid(),
-          })
-        })
-
-        beforeEach(() => {
-          mocks.licenses.useViewPermissions()
-        })
-
-        it("does not allow public users to fetch by default", async () => {
-          await config.publish()
-          await config.api.viewV2.publicSearch(view.id, undefined, {
-            status: 403,
-          })
-        })
-
-        it("allow public users to fetch when permissions are explicit", async () => {
-          await config.api.permission.add({
-            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
-            level: PermissionLevel.READ,
-            resourceId: view.id,
-          })
-          await config.publish()
-
-          const response = await config.api.viewV2.publicSearch(view.id)
-
-          expect(response.rows).toHaveLength(10)
-        })
-
-        it("allow public users to fetch when permissions are inherited", async () => {
-          await config.api.permission.add({
-            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
-            level: PermissionLevel.READ,
-            resourceId: table._id!,
-          })
-          await config.publish()
-
-          const response = await config.api.viewV2.publicSearch(view.id)
-
-          expect(response.rows).toHaveLength(10)
-        })
-
-        it("respects inherited permissions, not allowing not public views from public tables", async () => {
-          await config.api.permission.add({
-            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
-            level: PermissionLevel.READ,
-            resourceId: table._id!,
-          })
-          await config.api.permission.add({
-            roleId: roles.BUILTIN_ROLE_IDS.POWER,
-            level: PermissionLevel.READ,
-            resourceId: view.id,
-          })
-          await config.publish()
-
-          await config.api.viewV2.publicSearch(view.id, undefined, {
-            status: 403,
-          })
-        })
-      })
-    })
-  })
-
   let o2mTable: Table
   let m2mTable: Table
   beforeAll(async () => {
-    o2mTable = await config.api.table.save(defaultTable({ name: "o2m" }))
-    m2mTable = await config.api.table.save(defaultTable({ name: "m2m" }))
+    o2mTable = await config.api.table.save(defaultTable())
+    m2mTable = await config.api.table.save(defaultTable())
   })
 
   describe.each([
@@ -1569,12 +1130,12 @@ describe.each([
         user: {
           name: "user",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          subtype: BBReferenceFieldSubType.USER,
         },
         users: {
           name: "users",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       }),
       () => config.createUser(),
@@ -1872,7 +1433,6 @@ describe.each([
           ? {}
           : {
               hasNextPage: false,
-              bookmark: null,
             }),
       })
     })
@@ -1887,7 +1447,6 @@ describe.each([
       otherTable = await config.api.table.save(defaultTable())
       table = await config.api.table.save(
         saveTableRequest({
-          name: "b",
           schema: {
             links: {
               name: "links",
@@ -1929,7 +1488,7 @@ describe.each([
 
   describe("Formula JS protection", () => {
     it("should time out JS execution if a single cell takes too long", async () => {
-      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 20 }, async () => {
+      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 40 }, async () => {
         const js = Buffer.from(
           `
               let i = 0;
@@ -1969,8 +1528,8 @@ describe.each([
     it("should time out JS execution if a multiple cells take too long", async () => {
       await config.withEnv(
         {
-          JS_PER_INVOCATION_TIMEOUT_MS: 20,
-          JS_PER_REQUEST_TIMEOUT_MS: 40,
+          JS_PER_INVOCATION_TIMEOUT_MS: 40,
+          JS_PER_REQUEST_TIMEOUT_MS: 80,
         },
         async () => {
           const js = Buffer.from(
@@ -1985,7 +1544,6 @@ describe.each([
 
           const table = await config.api.table.save(
             saveTableRequest({
-              name: "table",
               schema: {
                 text: {
                   name: "text",

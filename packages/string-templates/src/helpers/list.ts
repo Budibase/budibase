@@ -1,17 +1,42 @@
 import { date, duration } from "./date"
 
+/* 
+@budibase/handlebars-helpers is not treeshakeable, so we can't use the barrel files. 
+Otherwise, we have issues when generating the isolated-vm bundle because of the treeshaking
+*/
+/* eslint-disable local-rules/no-budibase-imports */
+// @ts-expect-error
+import math from "@budibase/handlebars-helpers/lib/math"
+// @ts-expect-error
+import array from "@budibase/handlebars-helpers/lib/array"
+// @ts-expect-error
+import number from "@budibase/handlebars-helpers/lib/number"
+// @ts-expect-error
+import url from "@budibase/handlebars-helpers/lib/url"
+// @ts-expect-error
+import string from "@budibase/handlebars-helpers/lib/string"
+// @ts-expect-error
+import comparison from "@budibase/handlebars-helpers/lib/comparison"
+// @ts-expect-error
+import object from "@budibase/handlebars-helpers/lib/object"
+// @ts-expect-error
+import regex from "@budibase/handlebars-helpers/lib/regex"
+// @ts-expect-error
+import uuid from "@budibase/handlebars-helpers/lib/uuid"
+/* eslint-enable local-rules/no-budibase-imports */
+
 // https://github.com/evanw/esbuild/issues/56
-const getExternalCollections = (): Record<string, () => any> => ({
-  math: require("@budibase/handlebars-helpers/lib/math"),
-  array: require("@budibase/handlebars-helpers/lib/array"),
-  number: require("@budibase/handlebars-helpers/lib/number"),
-  url: require("@budibase/handlebars-helpers/lib/url"),
-  string: require("@budibase/handlebars-helpers/lib/string"),
-  comparison: require("@budibase/handlebars-helpers/lib/comparison"),
-  object: require("@budibase/handlebars-helpers/lib/object"),
-  regex: require("@budibase/handlebars-helpers/lib/regex"),
-  uuid: require("@budibase/handlebars-helpers/lib/uuid"),
-})
+const externalCollections = {
+  math,
+  array,
+  number,
+  url,
+  string,
+  comparison,
+  object,
+  regex,
+  uuid,
+}
 
 export const helpersToRemoveForJs = ["sortBy"]
 
@@ -28,15 +53,15 @@ export function getJsHelperList() {
   }
 
   helpers = {}
-  for (let collection of Object.values(getExternalCollections())) {
-    for (let [key, func] of Object.entries(collection)) {
+  for (let collection of Object.values(externalCollections)) {
+    for (let [key, func] of Object.entries<any>(collection)) {
       // Handlebars injects the hbs options to the helpers by default. We are adding an empty {} as a last parameter to simulate it
       helpers[key] = (...props: any) => func(...props, {})
     }
   }
   helpers = {
     ...helpers,
-    addedHelpers,
+    ...addedHelpers,
   }
 
   for (const toRemove of helpersToRemoveForJs) {

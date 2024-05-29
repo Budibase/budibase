@@ -7,6 +7,7 @@ import {
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  AutomationCustomIOType,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -72,10 +73,10 @@ export const definition: AutomationStepSchema = {
           title: "Location",
           dependsOn: "addInvite",
         },
-        url: {
-          type: AutomationIOType.STRING,
-          title: "URL",
-          dependsOn: "addInvite",
+        attachments: {
+          type: AutomationIOType.ATTACHMENT,
+          customType: AutomationCustomIOType.MULTI_ATTACHMENTS,
+          title: "Attachments",
         },
       },
       required: ["to", "from", "subject", "contents"],
@@ -110,11 +111,13 @@ export async function run({ inputs }: AutomationStepInput) {
     summary,
     location,
     url,
+    attachments,
   } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"
   }
   to = to || undefined
+
   try {
     let response = await sendSmtpEmail({
       to,
@@ -124,6 +127,7 @@ export async function run({ inputs }: AutomationStepInput) {
       cc,
       bcc,
       automation: true,
+      attachments,
       invite: addInvite
         ? {
             startTime,

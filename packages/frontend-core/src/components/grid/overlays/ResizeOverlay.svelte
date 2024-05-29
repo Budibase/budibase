@@ -21,6 +21,7 @@
       class="resize-slider"
       class:visible={activeColumn === $stickyColumn.name}
       on:mousedown={e => resize.actions.startResizing($stickyColumn, e)}
+      on:touchstart={e => resize.actions.startResizing($stickyColumn, e)}
       on:dblclick={() => resize.actions.resetSize($stickyColumn)}
       style="left:{GutterWidth + $stickyColumn.width}px;"
     >
@@ -32,6 +33,7 @@
       class="resize-slider"
       class:visible={activeColumn === column.name}
       on:mousedown={e => resize.actions.startResizing(column, e)}
+      on:touchstart={e => resize.actions.startResizing(column, e)}
       on:dblclick={() => resize.actions.resetSize(column)}
       style={getStyle(column, offset, $scrollLeft)}
     >

@@ -25,6 +25,7 @@ export const getCouchInfo = (connection?: string) => {
   const authCookie = Buffer.from(`${username}:${password}`).toString("base64")
   return {
     url: urlInfo.url!,
+    sqlUrl: env.COUCH_DB_SQL_URL,
     auth: {
       username: username,
       password: password,

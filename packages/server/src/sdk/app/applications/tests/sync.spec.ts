@@ -6,7 +6,7 @@ import EventEmitter from "events"
 import { UserGroup, UserMetadata, UserRoles, User } from "@budibase/types"
 
 const config = new TestConfiguration()
-let app, group: UserGroup, groupUser: User
+let group: UserGroup, groupUser: User
 const ROLE_ID = roles.BUILTIN_ROLE_IDS.BASIC
 
 const emitter = new EventEmitter()
@@ -36,7 +36,7 @@ function waitForUpdate(opts: { group?: boolean }) {
 }
 
 beforeAll(async () => {
-  app = await config.init("syncApp")
+  await config.init("syncApp")
 })
 
 async function createUser(email: string, roles: UserRoles, builder?: boolean) {

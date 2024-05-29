@@ -40,11 +40,12 @@ export { default as sidepanel } from "./SidePanel.svelte"
 export { default as gridblock } from "./GridBlock.svelte"
 export * from "./charts"
 export * from "./forms"
-export * from "./table"
 export * from "./blocks"
 export * from "./dynamic-filter"
 
 // Deprecated component left for compatibility in old apps
+export * from "./deprecated/table"
+export { default as tableblock } from "./deprecated/TableBlock.svelte"
 export { default as navigation } from "./deprecated/Navigation.svelte"
 export { default as cardhorizontal } from "./deprecated/CardHorizontal.svelte"
 export { default as stackedlist } from "./deprecated/StackedList.svelte"

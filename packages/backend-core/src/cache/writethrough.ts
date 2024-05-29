@@ -8,7 +8,7 @@ const DEFAULT_WRITE_RATE_MS = 10000
 let CACHE: BaseCache | null = null
 
 interface CacheItem<T extends Document> {
-  doc: any
+  doc: T
   lastWrite: number
 }
 

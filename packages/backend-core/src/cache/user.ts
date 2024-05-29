@@ -69,7 +69,7 @@ async function populateUsersFromDB(
 export async function getUser(
   userId: string,
   tenantId?: string,
-  populateUser?: any
+  populateUser?: (userId: string, tenantId: string) => Promise<User>
 ) {
   if (!populateUser) {
     populateUser = populateFromDB
@@ -83,7 +83,7 @@ export async function getUser(
   }
   const client = await redis.getUserClient()
   // try cache
-  let user = await client.get(userId)
+  let user: User = await client.get(userId)
   if (!user) {
     user = await populateUser(userId, tenantId)
     await client.store(userId, user, EXPIRY_SECONDS)

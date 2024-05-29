@@ -34,6 +34,8 @@ import {
   LuceneUtils,
   Constants,
   RowUtils,
+  memo,
+  derivedMemo,
 } from "@budibase/frontend-core"
 
 export default {
@@ -71,6 +73,8 @@ export default {
   makePropSafe,
   createContextStore,
   generateGoldenSample: RowUtils.generateGoldenSample,
+  memo,
+  derivedMemo,
 
   // Components
   Provider,

@@ -133,8 +133,8 @@ describe("trimViewRowInfo middleware", () => {
     })
     expect(config.params.sourceId).toEqual(table._id)
 
-    expect(config.next).toBeCalledTimes(1)
-    expect(config.throw).not.toBeCalled()
+    expect(config.next).toHaveBeenCalledTimes(1)
+    expect(config.throw).not.toHaveBeenCalled()
   })
 
   it("when columns are defined, trimmed data is returned", async () => {
@@ -144,8 +144,12 @@ describe("trimViewRowInfo middleware", () => {
       name: generator.guid(),
       tableId: table._id!,
       schema: {
-        name: {},
-        address: {},
+        name: {
+          visible: true,
+        },
+        address: {
+          visible: true,
+        },
       },
     })
 
@@ -162,7 +166,7 @@ describe("trimViewRowInfo middleware", () => {
     })
     expect(config.params.sourceId).toEqual(table._id)
 
-    expect(config.next).toBeCalledTimes(1)
-    expect(config.throw).not.toBeCalled()
+    expect(config.next).toHaveBeenCalledTimes(1)
+    expect(config.throw).not.toHaveBeenCalled()
   })
 })

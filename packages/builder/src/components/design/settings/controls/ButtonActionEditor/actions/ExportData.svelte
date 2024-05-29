@@ -49,17 +49,20 @@
     },
   ]
 
-  $: tables = findAllMatchingComponents($selectedScreen?.props, component =>
-    component._component.endsWith("table")
-  )
-  $: tableBlocks = findAllMatchingComponents(
+  $: components = findAllMatchingComponents(
     $selectedScreen?.props,
-    component => component._component.endsWith("tableblock")
+    component => {
+      const type = component._component
+      return (
+        type.endsWith("/table") ||
+        type.endsWith("/tableblock") ||
+        type.endsWith("/gridblock")
+      )
+    }
   )
-  $: components = tables.concat(tableBlocks)
   $: componentOptions = components.map(table => ({
     label: table._instanceName,
-    value: table._component.includes("tableblock")
+    value: table._component.endsWith("/tableblock")
       ? `${table._id}-table`
       : table._id,
   }))
@@ -69,6 +72,7 @@
   $: selectedTable = components.find(
     component => component._id === selectedTableId
   )
+  $: parameters.rows = `{{ literal [${parameters.tableComponentId}].[selectedRows] }}`
 
   onMount(() => {
     if (!parameters.type) {

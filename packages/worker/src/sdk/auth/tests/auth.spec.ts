@@ -6,6 +6,8 @@ import { TestConfiguration } from "../../../tests"
 describe("auth", () => {
   const config = new TestConfiguration()
 
+  afterAll(config.afterAll)
+
   describe("resetUpdate", () => {
     it("providing a valid code will update the password", async () => {
       await context.doInTenant(structures.tenant.id(), async () => {

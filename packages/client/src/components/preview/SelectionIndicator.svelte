@@ -10,7 +10,6 @@
 <IndicatorSet
   componentId={$builderStore.selectedComponentId}
   {color}
-  zIndex="910"
-  transition
+  zIndex={900}
   allowResizeAnchors
 />

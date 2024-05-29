@@ -64,7 +64,6 @@ async function refreshOIDCAccessToken(
     }
     strategy = await oidc.strategyFactory(enrichedConfig, ssoSaveUserNoOp)
   } catch (err) {
-    console.error(err)
     throw new Error("Could not refresh OAuth Token")
   }
 
@@ -99,7 +98,6 @@ async function refreshGoogleAccessToken(
       ssoSaveUserNoOp
     )
   } catch (err: any) {
-    console.error(err)
     throw new Error(
       `Error constructing OIDC refresh strategy: message=${err.message}`
     )
@@ -133,7 +131,7 @@ export async function refreshOAuthToken(
   configId?: string
 ): Promise<RefreshResponse> {
   switch (providerType) {
-    case SSOProviderType.OIDC:
+    case SSOProviderType.OIDC: {
       if (!configId) {
         return { err: { data: "OIDC config id not provided" } }
       }
@@ -142,12 +140,14 @@ export async function refreshOAuthToken(
         return { err: { data: "OIDC configuration not found" } }
       }
       return refreshOIDCAccessToken(oidcConfig, refreshToken)
-    case SSOProviderType.GOOGLE:
+    }
+    case SSOProviderType.GOOGLE: {
       let googleConfig = await configs.getGoogleConfig()
       if (!googleConfig) {
         return { err: { data: "Google configuration not found" } }
       }
       return refreshGoogleAccessToken(googleConfig, refreshToken)
+    }
   }
 }
 

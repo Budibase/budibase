@@ -13,23 +13,25 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
-  FieldType,
-  FieldSubtype,
+  SqlQueryBinding,
+  SqlClient,
 } from "@budibase/types"
 import {
   getSqlQuery,
-  SqlClient,
   buildExternalTableId,
   generateColumnDefinition,
   finaliseExternalTables,
   checkExternalTables,
+  HOST_ADDRESS,
 } from "./utils"
 import dayjs from "dayjs"
 import { NUMBER_REGEX } from "../utilities"
-import Sql from "./base/sql"
 import { MySQLColumn } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
+import { sql } from "@budibase/backend-core"
 import mysql from "mysql2/promise"
+
+const Sql = sql.Sql
 
 interface MySQLConfig extends mysql.ConnectionOptions {
   database: string
@@ -51,7 +53,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
@@ -114,7 +116,7 @@ const defaultTypeCasting = function (field: any, next: any) {
   return next()
 }
 
-export function bindingTypeCoerce(bindings: any[]) {
+export function bindingTypeCoerce(bindings: SqlQueryBinding) {
   for (let i = 0; i < bindings.length; i++) {
     const binding = bindings[i]
     if (typeof binding !== "string") {
@@ -144,7 +146,7 @@ export function bindingTypeCoerce(bindings: any[]) {
 }
 
 class MySQLIntegration extends Sql implements DatasourcePlus {
-  private config: MySQLConfig
+  private readonly config: MySQLConfig
   private client?: mysql.Connection
 
   constructor(config: MySQLConfig) {
@@ -383,14 +385,18 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     return results.length ? results : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     await this.connect()
     try {
       const queryFn = (query: any) =>
         this.internalQuery(query, { connect: false, disableCoercion: true })
       const processFn = (result: any) => {
         if (json?.meta?.table && Array.isArray(result)) {
-          return this.convertJsonStringColumns(json.meta.table, result)
+          return this.convertJsonStringColumns(
+            json.meta.table,
+            result,
+            json.tableAliases
+          )
         }
         return result
       }

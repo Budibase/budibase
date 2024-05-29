@@ -1,17 +1,17 @@
 <script>
   import { onMount, tick } from "svelte"
   import { clickOutside } from "@budibase/bbui"
+  import GridPopover from "../overlays/GridPopover.svelte"
 
   export let value
   export let focused = false
   export let onChange
   export let readonly = false
   export let api
-  export let invertX = false
-  export let invertY = false
 
   let textarea
   let isOpen = false
+  let anchor
 
   $: editable = focused && !readonly
   $: {
@@ -52,25 +52,30 @@
   })
 </script>
 
-{#if isOpen}
-  <textarea
-    class:invertX
-    class:invertY
-    bind:this={textarea}
-    value={value || ""}
-    on:change={handleChange}
-    on:wheel|stopPropagation
-    spellcheck="false"
-    use:clickOutside={close}
-  />
-{:else}
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="long-form-cell" on:click={editable ? open : null} class:editable>
-    <div class="value">
-      {value || ""}
-    </div>
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div
+  class="long-form-cell"
+  on:click={editable ? open : null}
+  class:editable
+  bind:this={anchor}
+>
+  <div class="value">
+    {value || ""}
   </div>
+</div>
+
+{#if isOpen}
+  <GridPopover {anchor} on:close={close}>
+    <textarea
+      bind:this={textarea}
+      value={value || ""}
+      on:change={handleChange}
+      on:wheel|stopPropagation
+      spellcheck="false"
+      use:clickOutside={close}
+    />
+  </GridPopover>
 {/if}
 
 <style>
@@ -93,30 +98,20 @@
     line-height: 20px;
   }
   textarea {
+    border: none;
+    width: 320px;
+    flex: 1 1 auto;
+    height: var(--max-cell-render-overflow);
     padding: var(--cell-padding);
     margin: 0;
-    border: 2px solid var(--cell-color);
     background: var(--cell-background);
     font-size: var(--cell-font-size);
     font-family: var(--font-sans);
     color: inherit;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: calc(100% + var(--max-cell-render-width-overflow));
-    height: calc(var(--row-height) + var(--max-cell-render-height));
     z-index: 1;
-    border-radius: 2px;
     resize: none;
     line-height: 20px;
-  }
-  textarea.invertX {
-    left: auto;
-    right: 0;
-  }
-  textarea.invertY {
-    transform: translateY(-100%);
-    top: calc(100% + 1px);
+    overflow: auto;
   }
   textarea:focus {
     outline: none;

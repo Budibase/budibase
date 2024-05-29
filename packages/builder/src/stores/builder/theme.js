@@ -1,5 +1,6 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
+import { getBaseTheme } from "@budibase/frontend-core"
 
 const INITIAL_THEMES_STATE = {
   theme: "",
@@ -12,11 +13,15 @@ export const themes = () => {
   })
 
   const syncAppTheme = app => {
-    store.update(state => ({
-      ...state,
-      theme: app.theme || "spectrum--light",
-      customTheme: app.customTheme,
-    }))
+    store.update(state => {
+      const theme = app.theme || "spectrum--light"
+      return {
+        ...state,
+        theme,
+        baseTheme: getBaseTheme(theme),
+        customTheme: app.customTheme,
+      }
+    })
   }
 
   const save = async (theme, appId) => {

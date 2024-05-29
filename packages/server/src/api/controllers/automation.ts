@@ -274,21 +274,28 @@ export async function trigger(ctx: UserCtx) {
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
   if (hasCollectStep && (await features.isSyncAutomationsEnabled())) {
-    const response: AutomationResults = await triggers.externalTrigger(
-      automation,
-      {
-        fields: ctx.request.body.fields,
-        timeout:
-          ctx.request.body.timeout * 1000 ||
-          env.getDefaults().AUTOMATION_SYNC_TIMEOUT,
-      },
-      { getResponses: true }
-    )
+    try {
+      const response: AutomationResults = await triggers.externalTrigger(
+        automation,
+        {
+          fields: ctx.request.body.fields,
+          timeout:
+            ctx.request.body.timeout * 1000 || env.AUTOMATION_THREAD_TIMEOUT,
+        },
+        { getResponses: true }
+      )
 
-    let collectedValue = response.steps.find(
-      step => step.stepId === AutomationActionStepId.COLLECT
-    )
-    ctx.body = collectedValue?.outputs
+      let collectedValue = response.steps.find(
+        step => step.stepId === AutomationActionStepId.COLLECT
+      )
+      ctx.body = collectedValue?.outputs
+    } catch (err: any) {
+      if (err.message) {
+        ctx.throw(400, err.message)
+      } else {
+        throw err
+      }
+    }
   } else {
     if (ctx.appId && !dbCore.isProdAppID(ctx.appId)) {
       ctx.throw(400, "Only apps in production support this endpoint")

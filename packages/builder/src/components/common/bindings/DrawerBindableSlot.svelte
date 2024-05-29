@@ -4,6 +4,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "dataBinding"
+  import { FieldType } from "@budibase/types"
 
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
@@ -26,6 +27,12 @@
   const dispatch = createEventDispatcher()
   let bindingDrawer
   let currentVal = value
+
+  let attachmentTypes = [
+    FieldType.ATTACHMENT_SINGLE,
+    FieldType.ATTACHMENTS,
+    FieldType.SIGNATURE_SINGLE,
+  ]
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
@@ -102,6 +109,9 @@
     longform: value => !isJSBinding(value),
     json: value => !isJSBinding(value),
     boolean: isValidBoolean,
+    attachment: false,
+    attachment_single: false,
+    signature_single: false,
   }
 
   const isValid = value => {
@@ -116,7 +126,17 @@
     if (type === "json" && !isJSBinding(value)) {
       return "json-slot-icon"
     }
-    if (!["string", "number", "bigint", "barcodeqr"].includes(type)) {
+    if (
+      ![
+        "string",
+        "number",
+        "bigint",
+        "barcodeqr",
+        "attachment",
+        "signature_single",
+        "attachment_single",
+      ].includes(type)
+    ) {
       return "slot-icon"
     }
     return ""
@@ -157,7 +177,7 @@
       {updateOnChange}
     />
   {/if}
-  {#if !disabled && type !== "formula"}
+  {#if !disabled && type !== "formula" && !disabled && !attachmentTypes.includes(type)}
     <div
       class={`icon ${getIconClass(value, type)}`}
       on:click={() => {

@@ -14,6 +14,7 @@ import {
   TableSourceType,
   Row,
   DatasourcePlusQueryResponse,
+  SqlClient,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -21,9 +22,8 @@ import {
   generateColumnDefinition,
   finaliseExternalTables,
   getSqlQuery,
-  SqlClient,
+  HOST_ADDRESS,
 } from "./utils"
-import Sql from "./base/sql"
 import {
   BindParameters,
   Connection,
@@ -32,6 +32,9 @@ import {
   Result,
 } from "oracledb"
 import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
+import { sql } from "@budibase/backend-core"
+
+const Sql = sql.Sql
 
 let oracledb: any
 try {
@@ -63,7 +66,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
@@ -377,7 +380,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         try {
           await connection.close()
         } catch (err) {
-          console.error(err)
+          console.error("Error connecting to Oracle", err)
         }
       }
     }
@@ -422,7 +425,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json)
     const input = this._query(json, { disableReturning: true }) as SqlQuery
     if (Array.isArray(input)) {
@@ -455,7 +458,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           operation !== Operation.DELETE
         ) {
           const lastRow = await this.internalQuery({
-            sql: `SELECT * FROM \"${json.endpoint.entityId}\" WHERE ROWID = '${response.lastRowid}'`,
+            sql: `SELECT * FROM "${json.endpoint.entityId}" WHERE ROWID = '${response.lastRowid}'`,
           })
           return lastRow.rows as Row[]
         } else {

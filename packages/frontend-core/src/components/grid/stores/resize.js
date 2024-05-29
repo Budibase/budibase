@@ -1,11 +1,11 @@
 import { writable, get, derived } from "svelte/store"
 import { MinColumnWidth, DefaultColumnWidth } from "../lib/constants"
+import { parseEventLocation } from "../lib/utils"
 
 const initialState = {
   initialMouseX: null,
   initialWidth: null,
   column: null,
-  columnIdx: null,
   width: 0,
   left: 0,
 }
@@ -20,39 +20,39 @@ export const createStores = () => {
 }
 
 export const createActions = context => {
-  const { resize, columns, stickyColumn, ui } = context
+  const { resize, ui, datasource } = context
 
   // Starts resizing a certain column
   const startResizing = (column, e) => {
+    const { x } = parseEventLocation(e)
+
     // Prevent propagation to stop reordering triggering
     e.stopPropagation()
+    e.preventDefault()
     ui.actions.blur()
-
-    // Find and cache index
-    let columnIdx = get(columns).findIndex(col => col.name === column.name)
-    if (columnIdx === -1) {
-      columnIdx = "sticky"
-    }
 
     // Set initial store state
     resize.set({
       width: column.width,
       left: column.left,
       initialWidth: column.width,
-      initialMouseX: e.clientX,
+      initialMouseX: x,
       column: column.name,
-      columnIdx,
     })
 
     // Add mouse event listeners to handle resizing
     document.addEventListener("mousemove", onResizeMouseMove)
     document.addEventListener("mouseup", stopResizing)
+    document.addEventListener("touchmove", onResizeMouseMove)
+    document.addEventListener("touchend", stopResizing)
+    document.addEventListener("touchcancel", stopResizing)
   }
 
   // Handler for moving the mouse to resize columns
   const onResizeMouseMove = e => {
-    const { initialMouseX, initialWidth, width, columnIdx } = get(resize)
-    const dx = e.clientX - initialMouseX
+    const { initialMouseX, initialWidth, width, column } = get(resize)
+    const { x } = parseEventLocation(e)
+    const dx = x - initialMouseX
     const newWidth = Math.round(Math.max(MinColumnWidth, initialWidth + dx))
 
     // Ignore small changes
@@ -61,17 +61,7 @@ export const createActions = context => {
     }
 
     // Update column state
-    if (columnIdx === "sticky") {
-      stickyColumn.update(state => ({
-        ...state,
-        width: newWidth,
-      }))
-    } else {
-      columns.update(state => {
-        state[columnIdx].width = newWidth
-        return [...state]
-      })
-    }
+    datasource.actions.addSchemaMutation(column, { width })
 
     // Update state
     resize.update(state => ({
@@ -87,29 +77,22 @@ export const createActions = context => {
     resize.set(initialState)
     document.removeEventListener("mousemove", onResizeMouseMove)
     document.removeEventListener("mouseup", stopResizing)
+    document.removeEventListener("touchmove", onResizeMouseMove)
+    document.removeEventListener("touchend", stopResizing)
+    document.removeEventListener("touchcancel", stopResizing)
 
     // Persist width if it changed
     if ($resize.width !== $resize.initialWidth) {
-      await columns.actions.saveChanges()
+      await datasource.actions.saveSchemaMutations()
     }
   }
 
   // Resets a column size back to default
   const resetSize = async column => {
-    const $stickyColumn = get(stickyColumn)
-    if (column.name === $stickyColumn?.name) {
-      stickyColumn.update(state => ({
-        ...state,
-        width: DefaultColumnWidth,
-      }))
-    } else {
-      columns.update(state => {
-        const columnIdx = state.findIndex(x => x.name === column.name)
-        state[columnIdx].width = DefaultColumnWidth
-        return [...state]
-      })
-    }
-    await columns.actions.saveChanges()
+    datasource.actions.addSchemaMutation(column.name, {
+      width: DefaultColumnWidth,
+    })
+    await datasource.actions.saveSchemaMutations()
   }
 
   return {

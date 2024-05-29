@@ -1,6 +1,7 @@
 // @ts-ignore
 import fs from "fs"
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 module FetchMock {
   // @ts-ignore
   const fetch = jest.requireActual("node-fetch")
@@ -16,8 +17,10 @@ module FetchMock {
           raw: () => {
             return { "content-type": ["application/json"] }
           },
-          get: () => {
-            return ["application/json"]
+          get: (name: string) => {
+            if (name.toLowerCase() === "content-type") {
+              return ["application/json"]
+            }
           },
         },
         json: async () => {

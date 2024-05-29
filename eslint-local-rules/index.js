@@ -1,4 +1,25 @@
 module.exports = {
+  "no-console-error": {
+    create: function(context) {
+      return {
+        CallExpression(node) {
+          if (
+            node.callee.type === "MemberExpression" &&
+            node.callee.object.name === "console" &&
+            node.callee.property.name === "error" &&
+            node.arguments.length === 1 &&
+            node.arguments[0].name &&
+            node.arguments[0].name.startsWith("err")
+          ) {
+            context.report({
+              node,
+              message: 'Using console.error(err) on its own is not allowed. Either provide context to the error (console.error(msg, err)) or throw it.',
+            })
+          }
+        },
+      };
+    },
+  },
   "no-budibase-imports": {
     create: function (context) {
       return {
@@ -25,11 +46,9 @@ module.exports = {
       docs: {
         description:
           "disallow the use of 'test.com' in strings and replace it with 'example.com'",
-        category: "Possible Errors",
-        recommended: false,
       },
-      schema: [], // no options
-      fixable: "code", // Indicates that this rule supports automatic fixing
+      schema: [],
+      fixable: "code",
     },
     create: function (context) {
       return {
@@ -58,8 +77,6 @@ module.exports = {
       docs: {
         description:
           "enforce using the example.com domain for generator.email calls",
-        category: "Possible Errors",
-        recommended: false,
       },
       fixable: "code",
       schema: [],

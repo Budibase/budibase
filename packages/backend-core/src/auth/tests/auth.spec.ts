@@ -8,7 +8,7 @@ describe("platformLogout", () => {
     await testEnv.withTenant(async () => {
       const ctx = structures.koa.newContext()
       await auth.platformLogout({ ctx, userId: "test" })
-      expect(events.auth.logout).toBeCalledTimes(1)
+      expect(events.auth.logout).toHaveBeenCalledTimes(1)
     })
   })
 })

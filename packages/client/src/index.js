@@ -98,7 +98,7 @@ const loadBudibase = async () => {
         context: stringifiedContext,
       })
     } else if (type === "hover-component") {
-      hoverStore.actions.hoverComponent(data)
+      hoverStore.actions.hoverComponent(data, false)
     } else if (type === "builder-meta") {
       builderStore.actions.setMetadata(data)
     }

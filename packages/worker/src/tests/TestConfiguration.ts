@@ -19,7 +19,6 @@ import {
   users,
   context,
   sessions,
-  auth,
   constants,
   env as coreEnv,
   db as dbCore,

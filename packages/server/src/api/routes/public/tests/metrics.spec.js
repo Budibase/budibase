@@ -1,7 +1,5 @@
 const setup = require("../../tests/utilities")
 
-jest.setTimeout(30000)
-
 describe("/metrics", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()

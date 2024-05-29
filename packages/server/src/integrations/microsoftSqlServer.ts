@@ -1,40 +1,40 @@
 import {
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
+  DatasourcePlus,
+  DatasourcePlusQueryResponse,
   Integration,
   Operation,
-  Table,
-  TableSchema,
   QueryJson,
   QueryType,
-  SqlQuery,
-  DatasourcePlus,
-  DatasourceFeature,
-  ConnectionInfo,
-  SourceName,
   Schema,
+  SourceName,
+  SqlClient,
+  SqlQuery,
+  Table,
+  TableSchema,
   TableSourceType,
-  DatasourcePlusQueryResponse,
-  FieldType,
-  FieldSubtype,
 } from "@budibase/types"
 import {
-  getSqlQuery,
   buildExternalTableId,
-  generateColumnDefinition,
-  finaliseExternalTables,
-  SqlClient,
   checkExternalTables,
+  finaliseExternalTables,
+  generateColumnDefinition,
+  getSqlQuery,
+  HOST_ADDRESS,
 } from "./utils"
-import Sql from "./base/sql"
-import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
+import { MSSQLColumn, MSSQLTablesResponse } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import sqlServer from "mssql"
-
-const DEFAULT_SCHEMA = "dbo"
-
+import { sql } from "@budibase/backend-core"
 import { ConfidentialClientApplication } from "@azure/msal-node"
 
 import { utils } from "@budibase/shared-core"
+
+const Sql = sql.Sql
+
+const DEFAULT_SCHEMA = "dbo"
 
 enum MSSQLConfigAuthType {
   AZURE_ACTIVE_DIRECTORY = "Azure Active Directory",
@@ -90,7 +90,6 @@ const SCHEMA: Integration = {
     user: {
       type: DatasourceFieldType.STRING,
       required: true,
-      default: "localhost",
     },
     password: {
       type: DatasourceFieldType.PASSWORD,
@@ -98,7 +97,7 @@ const SCHEMA: Integration = {
     },
     server: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
     },
     port: {
       type: DatasourceFieldType.NUMBER,
@@ -254,7 +253,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       }
 
       switch (this.config.authType) {
-        case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY:
+        case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY: {
           const { clientId, tenantId, clientSecret } =
             this.config.adConfig || {}
           const clientApp = new ConfidentialClientApplication({
@@ -276,7 +275,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
             },
           }
           break
-        case MSSQLConfigAuthType.NTLM:
+        }
+        case MSSQLConfigAuthType.NTLM: {
           const { domain, trustServerCertificate } =
             this.config.ntlmConfig || {}
           clientCfg.authentication = {
@@ -288,6 +288,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           clientCfg.options ??= {}
           clientCfg.options.trustServerCertificate = !!trustServerCertificate
           break
+        }
         case null:
         case undefined:
           break
@@ -496,7 +497,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     return response.recordset || [{ deleted: true }]
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     const schema = this.config.schema
     await this.connect()
     if (schema && schema !== DEFAULT_SCHEMA && json?.endpoint) {
@@ -506,7 +507,11 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)
     const processFn = (result: any) => {
       if (json?.meta?.table && result.recordset) {
-        return this.convertJsonStringColumns(json.meta.table, result.recordset)
+        return this.convertJsonStringColumns(
+          json.meta.table,
+          result.recordset,
+          json.tableAliases
+        )
       } else if (result.recordset) {
         return result.recordset
       }
@@ -586,8 +591,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       scriptParts.push(createTableStatement)
     }
 
-    const schema = scriptParts.join("\n")
-    return schema
+    return scriptParts.join("\n")
   }
 }
 

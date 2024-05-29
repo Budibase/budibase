@@ -106,7 +106,7 @@ export const TYPE_TRANSFORM_MAP: any = {
       return date
     },
   },
-  [FieldType.ATTACHMENT]: {
+  [FieldType.ATTACHMENTS]: {
     //@ts-ignore
     [null]: [],
     //@ts-ignore

@@ -12,6 +12,13 @@ export default {
     format: "esm",
     file: "dist/bbui.es.js",
   },
+  onwarn(warning, warn) {
+    // suppress eval warnings
+    if (warning.code === "EVAL") {
+      return
+    }
+    warn(warning)
+  },
   plugins: [
     resolve(),
     commonjs(),

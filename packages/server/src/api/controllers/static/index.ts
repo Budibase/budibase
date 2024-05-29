@@ -1,10 +1,8 @@
 import { InvalidFileExtensions } from "@budibase/shared-core"
-
 import AppComponent from "./templates/BudibaseApp.svelte"
-
 import { join } from "../../../utilities/centralPath"
 import * as uuid from "uuid"
-import { ObjectStoreBuckets } from "../../../constants"
+import { devClientVersion, ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
   loadHandlebarsFile,
@@ -12,25 +10,32 @@ import {
   TOP_LEVEL_PATH,
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
-import { DocumentType } from "../../../db/utils"
 import {
+  BadRequestError,
+  configs,
   context,
   objectStore,
   utils,
-  configs,
-  BadRequestError,
 } from "@budibase/backend-core"
 import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import { App, Ctx, ProcessAttachmentResponse } from "@budibase/types"
+import {
+  App,
+  Ctx,
+  DocumentType,
+  Feature,
+  ProcessAttachmentResponse,
+  UserCtx,
+} from "@budibase/types"
 import {
   getAppMigrationVersion,
   getLatestMigrationId,
 } from "../../../appMigrations"
 
 import send from "koa-send"
+import { getThemeVariables } from "../../../constants/themes"
 
 export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`
@@ -122,13 +127,6 @@ export const uploadFile = async function (
   )
 }
 
-export const deleteObjects = async function (ctx: Ctx) {
-  ctx.body = await objectStore.deleteFiles(
-    ObjectStoreBuckets.APPS,
-    ctx.request.body.keys
-  )
-}
-
 const requiresMigration = async (ctx: Ctx) => {
   const appId = context.getAppId()
   if (!appId) {
@@ -142,11 +140,10 @@ const requiresMigration = async (ctx: Ctx) => {
 
   const latestMigrationApplied = await getAppMigrationVersion(appId)
 
-  const requiresMigrations = latestMigrationApplied !== latestMigration
-  return requiresMigrations
+  return latestMigrationApplied !== latestMigration
 }
 
-export const serveApp = async function (ctx: Ctx) {
+export const serveApp = async function (ctx: UserCtx) {
   const needMigrations = await requiresMigration(ctx)
 
   const bbHeaderEmbed =
@@ -165,12 +162,23 @@ export const serveApp = async function (ctx: Ctx) {
   try {
     db = context.getAppDB({ skip_setup: true })
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
+
     let appId = context.getAppId()
+    const hideDevTools = !!ctx.params.appUrl
+    const sideNav = appInfo.navigation.navigation === "Left"
+    const hideFooter =
+      ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
+    const themeVariables = getThemeVariables(appInfo?.theme)
 
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
+
       const { head, html, css } = AppComponent.render({
         title: branding?.platformTitle || `${appInfo.name}`,
+        showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
+        hideDevTools,
+        sideNav,
+        hideFooter,
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
@@ -195,7 +203,7 @@ export const serveApp = async function (ctx: Ctx) {
       ctx.body = await processString(appHbs, {
         head,
         body: html,
-        style: css.code,
+        css: `:root{${themeVariables}} ${css.code}`,
         appId,
         embedded: bbHeaderEmbed,
       })
@@ -247,18 +255,20 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
 }
 
 export const serveClientLibrary = async function (ctx: Ctx) {
+  const version = ctx.request.query.version
+
   const appId = context.getAppId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
-  if (env.isProd()) {
+  if (env.isProd() || (env.isDev() && version !== devClientVersion)) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
     )
     ctx.set("Content-Type", "application/javascript")
-  } else if (env.isDev()) {
+  } else if (env.isDev() && version === devClientVersion) {
     // incase running from TS directly
     const tsPath = join(require.resolve("@budibase/client"), "..")
     return send(ctx, "budibase-client.js", {
@@ -282,11 +292,6 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     ctx.throw(400, "The specified datasource could not be found")
   }
 
-  // Ensure we aren't using a custom endpoint
-  if (datasource?.config?.endpoint) {
-    ctx.throw(400, "S3 datasources with custom endpoints are not supported")
-  }
-
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
@@ -299,6 +304,7 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     try {
       const s3 = new AWS.S3({
         region: awsRegion,
+        endpoint: datasource?.config?.endpoint as string,
         accessKeyId: datasource?.config?.accessKeyId as string,
         secretAccessKey: datasource?.config?.secretAccessKey as string,
         apiVersion: "2006-03-01",
@@ -306,7 +312,11 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
       })
       const params = { Bucket: bucket, Key: key }
       signedUrl = s3.getSignedUrl("putObject", params)
-      publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
+      if (datasource?.config?.endpoint) {
+        publicUrl = `${datasource.config.endpoint}/${bucket}/${key}`
+      } else {
+        publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
+      }
     } catch (error: any) {
       ctx.throw(400, error)
     }

@@ -12,7 +12,7 @@ const getDefaultSchema = rows => {
       newSchema[column] = {
         name: column,
         type: "string",
-        constraints: FIELDS["STRING"].constraints,
+        constraints: FIELDS.STRING.constraints,
       }
     })
   })
