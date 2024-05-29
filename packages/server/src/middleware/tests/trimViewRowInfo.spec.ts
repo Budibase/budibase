@@ -144,8 +144,12 @@ describe("trimViewRowInfo middleware", () => {
       name: generator.guid(),
       tableId: table._id!,
       schema: {
-        name: {},
-        address: {},
+        name: {
+          visible: true,
+        },
+        address: {
+          visible: true,
+        },
       },
     })
 
