@@ -1,13 +1,7 @@
 import { Knex, knex } from "knex"
-import { db as dbCore } from "@budibase/backend-core"
-import { QueryOptions } from "../../definitions/datasource"
-import {
-  isIsoDateString,
-  SqlClient,
-  isValidFilter,
-  getNativeSql,
-  SqlStatements,
-} from "../utils"
+import * as dbCore from "../db"
+import { isIsoDateString, isValidFilter, getNativeSql } from "./utils"
+import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
   BBReferenceFieldMetadata,
@@ -24,8 +18,11 @@ import {
   Table,
   TableSourceType,
   INTERNAL_TABLE_SOURCE_ID,
+  SqlClient,
+  QueryOptions,
+  JsonTypes,
 } from "@budibase/types"
-import environment from "../../environment"
+import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
@@ -45,6 +42,7 @@ function likeKey(client: string, key: string): string {
     case SqlClient.MY_SQL:
       start = end = "`"
       break
+    case SqlClient.SQL_LITE:
     case SqlClient.ORACLE:
     case SqlClient.POSTGRES:
       start = end = '"'
@@ -52,9 +50,6 @@ function likeKey(client: string, key: string): string {
     case SqlClient.MS_SQL:
       start = "["
       end = "]"
-      break
-    case SqlClient.SQL_LITE:
-      start = end = "'"
       break
     default:
       throw new Error("Unknown client generating like key")
@@ -207,17 +202,20 @@ class InternalBuilder {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
-          fn(`${getTableAlias(tableName)}.${updatedKey}`, value)
+          const alias = getTableAlias(tableName)
+          fn(alias ? `${alias}.${updatedKey}` : updatedKey, value)
         }
         if (opts.relationship && isRelationshipField) {
           const [filterTableName, property] = updatedKey.split(".")
-          fn(`${getTableAlias(filterTableName)}.${property}`, value)
+          const alias = getTableAlias(filterTableName)
+          fn(alias ? `${alias}.${property}` : property, value)
         }
       }
     }
 
     const like = (key: string, value: any) => {
-      const fnc = allOr ? "orWhere" : "where"
+      const fuzzyOr = filters?.fuzzyOr
+      const fnc = fuzzyOr || allOr ? "orWhere" : "where"
       // postgres supports ilike, nothing else does
       if (this.client === SqlClient.POSTGRES) {
         query = query[fnc](key, "ilike", `%${value}%`)
@@ -788,11 +786,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
 
-  convertJsonStringColumns(
+  convertJsonStringColumns<T extends Record<string, any>>(
     table: Table,
-    results: Record<string, any>[],
+    results: T[],
     aliases?: Record<string, string>
-  ): Record<string, any>[] {
+  ): T[] {
     const tableName = getTableName(table)
     for (const [name, field] of Object.entries(table.schema)) {
       if (!this._isJsonColumn(field)) {
@@ -801,11 +799,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       const aliasedTableName = (tableName && aliases?.[tableName]) || tableName
       const fullName = `${aliasedTableName}.${name}`
       for (let row of results) {
-        if (typeof row[fullName] === "string") {
-          row[fullName] = JSON.parse(row[fullName])
+        if (typeof row[fullName as keyof T] === "string") {
+          row[fullName as keyof T] = JSON.parse(row[fullName])
         }
-        if (typeof row[name] === "string") {
-          row[name] = JSON.parse(row[name])
+        if (typeof row[name as keyof T] === "string") {
+          row[name as keyof T] = JSON.parse(row[name])
         }
       }
     }
@@ -816,9 +814,8 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     field: FieldSchema
   ): field is JsonFieldMetadata | BBReferenceFieldMetadata {
     return (
-      field.type === FieldType.JSON ||
-      (field.type === FieldType.BB_REFERENCE &&
-        !helpers.schema.isDeprecatedSingleUserColumn(field))
+      JsonTypes.includes(field.type) &&
+      !helpers.schema.isDeprecatedSingleUserColumn(field)
     )
   }
 
