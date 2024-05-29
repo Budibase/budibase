@@ -57,6 +57,7 @@
     class:fullWidth
     class="spectrum-ActionButton spectrum-ActionButton--size{size}"
     class:active
+    class:disabled
     {disabled}
     on:longPress
     on:click|preventDefault
@@ -121,6 +122,9 @@
   }
   .is-selected:not(.emphasized) .spectrum-Icon {
     color: var(--spectrum-global-color-gray-900);
+  }
+  .is-selected.disabled .spectrum-Icon {
+    color: var(--spectrum-global-color-gray-500);
   }
   .tooltip {
     position: absolute;
