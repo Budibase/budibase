@@ -19,6 +19,9 @@ export enum SearchFilterOperator {
 
 export interface SearchFilters {
   allOr?: boolean
+  // TODO: this is just around for now - we need a better way to do or/and
+  // allows just fuzzy to be or - all the fuzzy/like parameters
+  fuzzyOr?: boolean
   onEmptyFilter?: EmptyFilterOption
   [SearchFilterOperator.STRING]?: {
     [key: string]: string
@@ -60,6 +63,11 @@ export interface SearchFilters {
     [key: string]: any[]
   }
 }
+
+export type SearchFilterKey = keyof Omit<
+  SearchFilters,
+  "allOr" | "onEmptyFilter" | "fuzzyOr"
+>
 
 export type SearchQueryFields = Omit<SearchFilters, "allOr" | "onEmptyFilter">
 
@@ -117,6 +125,11 @@ export interface QueryJson {
   tableAliases?: Record<string, string>
 }
 
+export interface QueryOptions {
+  disableReturning?: boolean
+  disableBindings?: boolean
+}
+
 export type SqlQueryBinding = Knex.Value[]
 
 export interface SqlQuery {
@@ -127,4 +140,12 @@ export interface SqlQuery {
 export enum EmptyFilterOption {
   RETURN_ALL = "all",
   RETURN_NONE = "none",
+}
+
+export enum SqlClient {
+  MS_SQL = "mssql",
+  POSTGRES = "pg",
+  MY_SQL = "mysql2",
+  ORACLE = "oracledb",
+  SQL_LITE = "sqlite3",
 }

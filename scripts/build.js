@@ -3,11 +3,11 @@
 const start = Date.now()
 
 const fs = require("fs")
-const { cp, readdir, copyFile, mkdir } = require('node:fs/promises');
+const { cp, readdir, copyFile, mkdir } = require("node:fs/promises")
 const path = require("path")
 
 const { build } = require("esbuild")
-const { compile } = require('svelte/compiler')
+const { compile } = require("svelte/compiler")
 
 const {
   default: TsconfigPathsPlugin,
@@ -15,13 +15,13 @@ const {
 const { nodeExternalsPlugin } = require("esbuild-node-externals")
 
 const svelteCompilePlugin = {
-  name: 'svelteCompile',
+  name: "svelteCompile",
   setup(build) {
     // Compiles `.svelte` files into JS classes so that they can be directly imported into our
     // Typescript packages
-    build.onLoad({ filter: /\.svelte$/ }, async (args) => {
-      const source = await fs.promises.readFile(args.path, 'utf8')
-      const dir = path.dirname(args.path);
+    build.onLoad({ filter: /\.svelte$/ }, async args => {
+      const source = await fs.promises.readFile(args.path, "utf8")
+      const dir = path.dirname(args.path)
 
       try {
         const { js } = compile(source, { css: "injected", generate: "ssr" })
@@ -31,15 +31,15 @@ const svelteCompilePlugin = {
           contents: js.code,
           // The loader this is passed to, basically how the above provided content is "treated",
           // the contents provided above will be transpiled and bundled like any other JS file.
-          loader: 'js',
+          loader: "js",
           // Where to resolve any imports present in the loaded file
-          resolveDir: dir
+          resolveDir: dir,
         }
       } catch (e) {
         return { errors: [JSON.stringify(e)] }
       }
     })
-  }
+  },
 }
 
 var { argv } = require("yargs")
@@ -75,7 +75,7 @@ async function runBuild(entry, outfile) {
       svelteCompilePlugin,
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
       nodeExternalsPlugin({
-        allowList: ["@budibase/frontend-core", "svelte"]
+        allowList: ["@budibase/frontend-core", "svelte"],
       }),
     ],
     preserveSymlinks: true,
@@ -90,25 +90,39 @@ async function runBuild(entry, outfile) {
       "bcryptjs",
       "graphql/*",
       "bson",
+      "better-sqlite3",
+      "sqlite3",
+      "mysql",
+      "mysql2",
+      "oracle",
+      "pg",
+      "pg-query-stream",
+      "pg-native",
     ],
   }
 
-  await mkdir('dist', { recursive: true });
+  await mkdir("dist", { recursive: true })
 
   const hbsFiles = (async () => {
-    const dir = await readdir('./', { recursive: true });
-    const files = dir.filter(entry => entry.endsWith('.hbs') || entry.endsWith('ivm.bundle.js'));
-    const fileCopyPromises = files.map(file => copyFile(file, `dist/${path.basename(file)}`))
+    const dir = await readdir("./", { recursive: true })
+    const files = dir.filter(
+      entry => entry.endsWith(".hbs") || entry.endsWith("ivm.bundle.js")
+    )
+    const fileCopyPromises = files.map(file =>
+      copyFile(file, `dist/${path.basename(file)}`)
+    )
 
     await Promise.all(fileCopyPromises)
   })()
 
   const oldClientVersions = (async () => {
     try {
-      await cp('./build/oldClientVersions', './dist/oldClientVersions', { recursive: true });
+      await cp("./build/oldClientVersions", "./dist/oldClientVersions", {
+        recursive: true,
+      })
     } catch (e) {
       if (e.code !== "EEXIST" && e.code !== "ENOENT") {
-        throw e;
+        throw e
       }
     }
   })()

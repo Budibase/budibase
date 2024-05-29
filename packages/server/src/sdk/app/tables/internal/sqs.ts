@@ -1,32 +1,19 @@
-import { context, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
+import { context, sql, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import {
   FieldType,
   RelationshipFieldMetadata,
   SQLiteDefinition,
+  PreSaveSQLiteDefinition,
   SQLiteTable,
   SQLiteTables,
   SQLiteType,
   Table,
 } from "@budibase/types"
-import { cloneDeep } from "lodash"
 import tablesSdk from "../"
 import {
   CONSTANT_INTERNAL_ROW_COLS,
   generateJunctionTableID,
 } from "../../../../db/utils"
-
-type PreSaveSQLiteDefinition = Omit<SQLiteDefinition, "_rev">
-
-const BASIC_SQLITE_DOC: PreSaveSQLiteDefinition = {
-  _id: SQLITE_DESIGN_DOC_ID,
-  language: "sqlite",
-  sql: {
-    tables: {},
-    options: {
-      table_name: "tableId",
-    },
-  },
-}
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BOOLEAN]: SQLiteType.NUMERIC,
@@ -108,7 +95,7 @@ function mapTable(table: Table): SQLiteTables {
 // nothing exists, need to iterate though existing tables
 async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   const tables = await tablesSdk.getAllInternalTables()
-  const definition = cloneDeep(BASIC_SQLITE_DOC)
+  const definition = sql.designDoc.base("tableId")
   for (let table of tables) {
     definition.sql.tables = {
       ...definition.sql.tables,
