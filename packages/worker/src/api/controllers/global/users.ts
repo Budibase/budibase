@@ -10,6 +10,7 @@ import {
   CreateAdminUserRequest,
   CreateAdminUserResponse,
   Ctx,
+  DeleteInviteUserRequest,
   DeleteInviteUsersRequest,
   InviteUserRequest,
   InviteUsersRequest,
@@ -339,11 +340,11 @@ export const inviteMultiple = async (ctx: Ctx<InviteUsersRequest>) => {
 export const removeMultipleInvites = async (
   ctx: Ctx<DeleteInviteUsersRequest>
 ) => {
-  const invitesToRemove = await cache.invite.getExistingInvites(
-    ctx.request.body.map((user: any) => user.email)
+  const inviteCodesToRemove = ctx.request.body.map(
+    (invite: DeleteInviteUserRequest) => invite.code
   )
-  for (const invite of invitesToRemove) {
-    await cache.invite.deleteCode(invite.code)
+  for (const code of inviteCodesToRemove) {
+    await cache.invite.deleteCode(code)
   }
   ctx.body = {
     message: "User invites successfully removed.",

@@ -134,7 +134,7 @@
       const { admin, builder, userGroups, apps } = invite.info
 
       return {
-        _id: uuidv4(),
+        _id: invite.code,
         email: invite.email,
         builder,
         admin,
@@ -268,7 +268,11 @@
       }
 
       if (selectedInvites.length > 0) {
-        await users.removeInvites(selectedInvites)
+        await users.removeInvites(
+          selectedInvites.map(invite => ({
+            code: invite._id,
+          }))
+        )
         pendingInvites = await users.getInvites()
       }
 

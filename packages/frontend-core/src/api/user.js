@@ -237,10 +237,10 @@ export const buildUserEndpoints = API => ({
   /**
    * Removes multiple user invites from Redis cache
    */
-  removeUserInvites: async users => {
+  removeUserInvites: async inviteCodes => {
     return await API.post({
       url: "/api/global/users/multi/invite/delete",
-      body: users,
+      body: inviteCodes,
     })
   },
 
