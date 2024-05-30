@@ -24,6 +24,8 @@
       await datasource.actions.saveSchemaMutations()
     } catch (e) {
       notifications.error(e.message)
+    } finally {
+      datasource.actions.resetSchemaMutations()
     }
     dispatch(visible ? "show-column" : "hide-column")
   }
