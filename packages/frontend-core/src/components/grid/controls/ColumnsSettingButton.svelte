@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Popover, Icon, notifications } from "@budibase/bbui"
+  import { licensing } from "stores/portal"
   import { getColumnIcon } from "../lib/utils"
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
 
@@ -32,6 +33,8 @@
     return hidden ? `Columns (${hidden} restricted)` : "Columns"
   }
 
+  $: isViewReadonlyColumnsEnabled = $licensing.isViewReadonlyColumnsEnabled
+
   const PERMISSION_OPTIONS = {
     WRITABLE: "writable",
     READONLY: "readonly",
@@ -43,10 +46,13 @@
     value: PERMISSION_OPTIONS.WRITABLE,
     tooltip: "Writable",
   }
-  const READONLY_OPTION = {
+  $: READONLY_OPTION = {
     icon: "Visibility",
     value: PERMISSION_OPTIONS.READONLY,
-    tooltip: "Read only",
+    tooltip: isViewReadonlyColumnsEnabled
+      ? "Read only"
+      : "Read only (premium feature)",
+    disabled: !isViewReadonlyColumnsEnabled,
   }
   const HIDDEN_OPTION = {
     icon: "VisibilityOff",
