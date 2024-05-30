@@ -126,6 +126,9 @@
     display: flex;
     flex-direction: column;
   }
+  label {
+    word-wrap: break-word;
+  }
   label.hidden {
     padding: 0;
   }
