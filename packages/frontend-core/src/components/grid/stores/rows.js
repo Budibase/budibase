@@ -404,8 +404,11 @@ export const createActions = context => {
 
     // Save change
     try {
-      // Mark as in progress
-      inProgressChanges.update(state => ({ ...state, [rowId]: true }))
+      // Increment change count for this row
+      inProgressChanges.update(state => ({
+        ...state,
+        [rowId]: (state[rowId] || 0) + 1,
+      }))
 
       // Update row
       const changes = get(rowChangeCache)[rowId]
@@ -423,17 +426,25 @@ export const createActions = context => {
         await refreshRow(saved.id)
       }
 
-      // Wipe row change cache now that we've saved the row
+      // Wipe row change cache for any values which have been saved
+      const liveChanges = get(rowChangeCache)[rowId]
       rowChangeCache.update(state => {
-        delete state[rowId]
+        Object.keys(changes || {}).forEach(key => {
+          if (changes[key] === liveChanges?.[key]) {
+            delete state[rowId][key]
+          }
+        })
         return state
       })
     } catch (error) {
       handleValidationError(rowId, error)
     }
 
-    // Mark as completed
-    inProgressChanges.update(state => ({ ...state, [rowId]: false }))
+    // Decrement change count for this row
+    inProgressChanges.update(state => ({
+      ...state,
+      [rowId]: (state[rowId] || 1) - 1,
+    }))
   }
 
   // Updates a value of a row
@@ -553,7 +564,6 @@ export const initialise = context => {
     previousFocusedCellId,
     rows,
     validation,
-    focusedCellId,
   } = context
 
   // Wipe the row change cache when changing row
@@ -571,20 +581,12 @@ export const initialise = context => {
     if (!id) {
       return
     }
-    // Stop if we changed row
-    const split = parseCellID(id)
-    const oldRowId = split.id
-    const oldColumn = split.field
-    const { id: newRowId } = parseCellID(get(focusedCellId))
-    if (oldRowId !== newRowId) {
-      return
-    }
-    // Otherwise we just changed cell in the same row
-    const hasChanges = oldColumn in (get(rowChangeCache)[oldRowId] || {})
-    const hasErrors = validation.actions.rowHasErrors(oldRowId)
-    const isSavingChanges = get(inProgressChanges)[oldRowId]
-    if (oldRowId && !hasErrors && hasChanges && !isSavingChanges) {
-      await rows.actions.applyRowChanges(oldRowId)
+    const { id: rowId, field } = parseCellID(id)
+    const hasChanges = field in (get(rowChangeCache)[rowId] || {})
+    const hasErrors = validation.actions.rowHasErrors(rowId)
+    const isSavingChanges = get(inProgressChanges)[rowId]
+    if (rowId && !hasErrors && hasChanges && !isSavingChanges) {
+      await rows.actions.applyRowChanges(rowId)
     }
   })
 }

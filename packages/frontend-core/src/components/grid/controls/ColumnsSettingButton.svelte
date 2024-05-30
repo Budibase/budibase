@@ -1,7 +1,8 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Popover, Toggle, Icon } from "@budibase/bbui"
+  import { ActionButton, Popover, Icon } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
+  import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
 
   const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
 
@@ -11,31 +12,45 @@
   $: anyHidden = $columns.some(col => !col.visible)
   $: text = getText($columns)
 
-  const toggleColumn = async (column, visible) => {
-    datasource.actions.addSchemaMutation(column.name, { visible })
-    await datasource.actions.saveSchemaMutations()
-    dispatch(visible ? "show-column" : "hide-column")
-  }
+  const toggleColumn = async (column, permission) => {
+    const visible = permission !== PERMISSION_OPTIONS.HIDDEN
 
-  const toggleAll = async visible => {
-    let mutations = {}
-    $columns.forEach(column => {
-      mutations[column.name] = { visible }
-    })
-    datasource.actions.addSchemaMutations(mutations)
+    datasource.actions.addSchemaMutation(column.name, { visible })
     await datasource.actions.saveSchemaMutations()
     dispatch(visible ? "show-column" : "hide-column")
   }
 
   const getText = columns => {
     const hidden = columns.filter(col => !col.visible).length
-    return hidden ? `Hide columns (${hidden})` : "Hide columns"
+    return hidden ? `Columns (${hidden} restricted)` : "Columns"
+  }
+
+  const PERMISSION_OPTIONS = {
+    WRITABLE: "writable",
+    HIDDEN: "hidden",
+  }
+
+  const options = [
+    { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE, tooltip: "Writable" },
+    {
+      icon: "VisibilityOff",
+      value: PERMISSION_OPTIONS.HIDDEN,
+      tooltip: "Hidden",
+    },
+  ]
+
+  function columnToPermissionOptions(column) {
+    if (!column.visible) {
+      return PERMISSION_OPTIONS.HIDDEN
+    }
+
+    return PERMISSION_OPTIONS.WRITABLE
   }
 </script>
 
 <div bind:this={anchor}>
   <ActionButton
-    icon="VisibilityOff"
+    icon="ColumnSettings"
     quiet
     size="M"
     on:click={() => (open = !open)}
@@ -54,24 +69,24 @@
           <Icon size="S" name={getColumnIcon($stickyColumn)} />
           {$stickyColumn.label}
         </div>
-        <Toggle disabled size="S" value={true} />
+
+        <ToggleActionButtonGroup
+          disabled
+          value={PERMISSION_OPTIONS.WRITABLE}
+          {options}
+        />
       {/if}
       {#each $columns as column}
         <div class="column">
           <Icon size="S" name={getColumnIcon(column)} />
           {column.label}
         </div>
-        <Toggle
-          size="S"
-          value={column.visible}
-          on:change={e => toggleColumn(column, e.detail)}
-          disabled={column.primaryDisplay}
+        <ToggleActionButtonGroup
+          on:click={e => toggleColumn(column, e.detail)}
+          value={columnToPermissionOptions(column)}
+          {options}
         />
       {/each}
-    </div>
-    <div class="buttons">
-      <ActionButton on:click={() => toggleAll(true)}>Show all</ActionButton>
-      <ActionButton on:click={() => toggleAll(false)}>Hide all</ActionButton>
     </div>
   </div>
 </Popover>
@@ -83,15 +98,11 @@
     flex-direction: column;
     gap: 12px;
   }
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-  }
   .columns {
     display: grid;
     align-items: center;
     grid-template-columns: 1fr auto;
+    gap: 8px;
   }
   .columns :global(.spectrum-Switch) {
     margin-right: 0;
