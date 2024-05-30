@@ -92,7 +92,7 @@
         <ToggleActionButtonGroup
           disabled
           value={PERMISSION_OPTIONS.WRITABLE}
-          {options}
+          options={options.map(o => ({ ...o, disabled: true }))}
         />
       {/if}
       {#each $columns as column}
