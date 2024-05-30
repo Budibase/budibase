@@ -1,6 +1,11 @@
 import { Knex, knex } from "knex"
 import * as dbCore from "../db"
-import { isIsoDateString, isValidFilter, getNativeSql } from "./utils"
+import {
+  isIsoDateString,
+  isValidFilter,
+  getNativeSql,
+  isExternalTable,
+} from "./utils"
 import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
@@ -21,6 +26,7 @@ import {
   SqlClient,
   QueryOptions,
   JsonTypes,
+  prefixed,
 } from "@budibase/types"
 import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
@@ -391,6 +397,16 @@ class InternalBuilder {
       contains(filters.containsAny, true)
     }
 
+    // when searching internal tables make sure long looking for rows
+    if (filters.documentType && !isExternalTable(table)) {
+      const tableRef = opts?.aliases?.[table._id!] || table._id
+      // has to be its own option, must always be AND onto the search
+      query.andWhereLike(
+        `${tableRef}._id`,
+        `${prefixed(filters.documentType)}%`
+      )
+    }
+
     return query
   }
 
@@ -592,6 +608,7 @@ class InternalBuilder {
     query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
     })
+
     // add sorting to pre-query
     query = this.addSorting(query, json)
     const alias = tableAliases?.[tableName] || tableName
