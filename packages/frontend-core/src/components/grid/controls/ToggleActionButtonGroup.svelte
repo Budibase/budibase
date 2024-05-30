@@ -3,7 +3,7 @@
 
   let dispatch = createEventDispatcher()
 
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, AbsTooltip, TooltipType } from "@budibase/bbui"
 
   export let value
   export let options
@@ -12,16 +12,17 @@
 
 <div class="permissionPicker">
   {#each options as option}
-    <ActionButton
-      on:click={() => dispatch("click", option.value)}
-      {disabled}
-      size="S"
-      icon={option.icon}
-      quiet
-      selected={option.value === value}
-      noPadding
-      tooltip={option.tooltip}
-    />
+    <AbsTooltip text={option.tooltip} type={TooltipType.Info}>
+      <ActionButton
+        on:click={() => dispatch("click", option.value)}
+        {disabled}
+        size="S"
+        icon={option.icon}
+        quiet
+        selected={option.value === value}
+        noPadding
+      />
+    </AbsTooltip>
   {/each}
 </div>
 
