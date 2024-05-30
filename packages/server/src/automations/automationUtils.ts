@@ -101,9 +101,7 @@ export function getError(err: any) {
 
 export function validateAttachment(attachmentObject: any) {
   if (!("url" in attachmentObject) || !("filename" in attachmentObject)) {
-    throw new Error(
-      "Invalid key in array at property ${prop}. Object must have both URL and Filename keys"
-    )
+    throw new Error("Invalid key. Object must have both URL and Filename keys")
   }
 }
 
