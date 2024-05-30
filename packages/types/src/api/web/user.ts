@@ -92,6 +92,7 @@ export interface AcceptUserInviteResponse {
   _id: string
   _rev: string
   email: string
+  tenantId: string
 }
 
 export interface SyncUserRequest {

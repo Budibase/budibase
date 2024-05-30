@@ -18,7 +18,7 @@
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
   import SortButton from "../controls/SortButton.svelte"
-  import HideColumnsButton from "../controls/HideColumnsButton.svelte"
+  import ColumnsSettingButton from "../controls/ColumnsSettingButton.svelte"
   import SizeButton from "../controls/SizeButton.svelte"
   import NewRow from "./NewRow.svelte"
   import { createGridWebsocket } from "../lib/websocket"
@@ -29,6 +29,7 @@
     Padding,
     SmallRowHeight,
     ControlsHeight,
+    ScrollBarSize,
   } from "../lib/constants"
 
   export let API = null
@@ -145,14 +146,14 @@
   class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{ControlsHeight}px;"
+  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{ControlsHeight}px; --scroll-bar-size:{ScrollBarSize}px;"
 >
   {#if showControls}
     <div class="controls">
       <div class="controls-left">
         <slot name="filter" />
         <SortButton />
-        <HideColumnsButton />
+        <ColumnsSettingButton />
         <SizeButton />
         <slot name="controls" />
       </div>
