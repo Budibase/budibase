@@ -27,7 +27,6 @@
   export let clickOutsideOverride = false
   export let resizable = true
   export let wrap = false
-  export let overflow = false
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
@@ -105,7 +104,6 @@
       class="spectrum-Popover is-open"
       class:customZindex
       class:hidden={!showPopover}
-      class:overflow
       role="presentation"
       style="height: {customHeight}; --customZindex: {customZindex};"
       transition:fly|local={{ y: -20, duration: animate ? 260 : 0 }}
@@ -123,9 +121,6 @@
     border-color: var(--spectrum-global-color-gray-300);
     overflow: auto;
     transition: opacity 260ms ease-out;
-  }
-  .spectrum-Popover.overflow {
-    overflow: visible;
   }
   .hidden {
     opacity: 0;
