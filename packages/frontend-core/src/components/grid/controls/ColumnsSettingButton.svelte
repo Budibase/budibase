@@ -29,8 +29,10 @@
   }
 
   const getText = columns => {
-    const hidden = columns.filter(col => !col.visible).length
-    return hidden ? `Columns (${hidden} restricted)` : "Columns"
+    const restricted = columns.filter(
+      col => !col.visible || col.readonly
+    ).length
+    return restricted ? `Columns (${restricted} restricted)` : "Columns"
   }
 
   $: isViewReadonlyColumnsEnabled = $licensing.isViewReadonlyColumnsEnabled
