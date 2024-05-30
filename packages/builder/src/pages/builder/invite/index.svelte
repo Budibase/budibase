@@ -32,8 +32,14 @@
     onboarding = true
     try {
       const { password, firstName, lastName } = formData
-      await users.acceptInvite(inviteCode, password, firstName, lastName)
+      const user = await users.acceptInvite(
+        inviteCode,
+        password,
+        firstName,
+        lastName
+      )
       notifications.success("Invitation accepted successfully")
+      auth.setOrg(user.tenantId)
       await login()
     } catch (error) {
       notifications.error(error.message)
@@ -66,7 +72,7 @@
       notifications.success("Logged in successfully")
       $goto("../portal")
     } catch (err) {
-      notifications.error(err.message ? err.message : "Invalid credentials") //not likely, considering.
+      notifications.error(err.message ? err.message : "Something went wrong")
     }
   }
 
@@ -141,12 +147,19 @@
                   password: e.detail,
                 }
               }}
+              validateOn="blur"
               validate={() => {
                 let fieldError = {}
 
-                fieldError["password"] = !formData.password
-                  ? "Please enter a password"
-                  : undefined
+                function validatePassword() {
+                  if (!formData.password) {
+                    return "Please enter a password"
+                  } else if (formData.password.length < 8) {
+                    return "Please enter at least 8 characters"
+                  }
+                  return undefined
+                }
+                fieldError["password"] = validatePassword()
 
                 fieldError["confirmationPassword"] =
                   !passwordsMatch(
