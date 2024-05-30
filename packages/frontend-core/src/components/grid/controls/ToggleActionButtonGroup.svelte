@@ -37,6 +37,7 @@
     width: 14px;
   }
   .permissionPicker :global(.spectrum-ActionButton) {
-    width: 22px;
+    width: 28px;
+    height: 28px;
   }
 </style>
