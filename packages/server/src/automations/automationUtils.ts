@@ -99,6 +99,10 @@ export function getError(err: any) {
   return typeof err !== "string" ? err.toString() : err
 }
 
+function hasRequiredKeys(obj: any): boolean {
+  return "url" in obj && "filename" in obj
+}
+
 export async function sendAutomationAttachmentsToStorage(
   tableId: string,
   row: Row
@@ -116,9 +120,23 @@ export async function sendAutomationAttachmentsToStorage(
       schema?.type === FieldType.ATTACHMENT_SINGLE ||
       schema?.type === FieldType.SIGNATURE_SINGLE
     ) {
+      if (Array.isArray(value)) {
+        value.forEach(item => {
+          if (!hasRequiredKeys(item)) {
+            throw new Error(
+              `Invalid key in array at property ${prop}. Object must have both URL and Filename keys. `
+            )
+          }
+        })
+      } else if (!hasRequiredKeys(value)) {
+        throw new Error(
+          `Invalid key in array at property ${prop}. Object must have both URL and Filename keys. `
+        )
+      }
       attachmentRows[prop] = value
     }
   }
+
   for (const [prop, attachments] of Object.entries(attachmentRows)) {
     if (Array.isArray(attachments)) {
       if (attachments.length) {
@@ -133,7 +151,6 @@ export async function sendAutomationAttachmentsToStorage(
 
   return row
 }
-
 async function generateAttachmentRow(attachment: AutomationAttachment) {
   const prodAppId = context.getProdAppId()
 

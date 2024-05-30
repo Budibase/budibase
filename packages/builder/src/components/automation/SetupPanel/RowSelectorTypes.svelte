@@ -6,7 +6,6 @@
     TextArea,
     Toggle,
   } from "@budibase/bbui"
-  import { createEventDispatcher, tick } from "svelte"
   import { FieldType } from "@budibase/types"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
@@ -145,7 +144,6 @@
       <div class="attachment-field-spacing">
         <KeyValueBuilder
           on:change={async e => {
-            await tick()
             onChange(
               {
                 detail:
