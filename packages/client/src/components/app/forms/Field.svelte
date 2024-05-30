@@ -127,7 +127,7 @@
     flex-direction: column;
   }
   label {
-    white-space: nowrap;
+    word-wrap: break-word;
   }
   label.hidden {
     padding: 0;
