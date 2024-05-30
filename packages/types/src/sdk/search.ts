@@ -1,5 +1,5 @@
 import { Operation, SortDirection } from "./datasources"
-import { Row, Table } from "../documents"
+import { Row, Table, DocumentType } from "../documents"
 import { SortType } from "../api"
 import { Knex } from "knex"
 
@@ -62,11 +62,15 @@ export interface SearchFilters {
   [SearchFilterOperator.CONTAINS_ANY]?: {
     [key: string]: any[]
   }
+  // specific to SQS/SQLite search on internal tables this can be used
+  // to make sure the documents returned are always filtered down to a
+  // specific document type (such as just rows)
+  documentType?: DocumentType
 }
 
 export type SearchFilterKey = keyof Omit<
   SearchFilters,
-  "allOr" | "onEmptyFilter" | "fuzzyOr"
+  "allOr" | "onEmptyFilter" | "fuzzyOr" | "documentType"
 >
 
 export type SearchQueryFields = Omit<SearchFilters, "allOr" | "onEmptyFilter">
