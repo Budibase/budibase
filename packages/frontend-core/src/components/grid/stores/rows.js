@@ -404,7 +404,7 @@ export const createActions = context => {
 
     // Save change
     try {
-      // Incremenet change count for this row
+      // Increment change count for this row
       inProgressChanges.update(state => ({
         ...state,
         [rowId]: (state[rowId] || 0) + 1,
