@@ -61,7 +61,7 @@
   </ActionButton>
 </div>
 
-<Popover bind:open {anchor} align="left" overflow>
+<Popover bind:open {anchor} align="left">
   <div class="content">
     <div class="columns">
       {#if $stickyColumn}
