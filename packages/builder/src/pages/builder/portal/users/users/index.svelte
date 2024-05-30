@@ -38,7 +38,6 @@
   import { API } from "api"
   import { OnboardingType } from "constants"
   import { sdk } from "@budibase/shared-core"
-  import { v4 as uuidv4 } from "uuid"
 
   const fetch = fetchData({
     API,
