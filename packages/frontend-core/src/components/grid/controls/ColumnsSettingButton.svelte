@@ -31,7 +31,7 @@
   }
 
   const options = [
-    { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE, tooltip: "Writeable" },
+    { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE, tooltip: "Writable" },
     {
       icon: "VisibilityOff",
       value: PERMISSION_OPTIONS.HIDDEN,
