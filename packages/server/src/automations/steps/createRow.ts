@@ -90,7 +90,7 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
       tableId: inputs.row.tableId,
     },
   })
-
+  console.log(JSON.stringify(inputs.row))
   try {
     inputs.row = await cleanUpRow(inputs.row.tableId, inputs.row)
     inputs.row = await sendAutomationAttachmentsToStorage(

@@ -10,12 +10,12 @@
   import { TableNames } from "constants"
 
   const dispatch = createEventDispatcher()
-
   export let value
   export let meta
   export let bindings
   export let isTestModal
   export let isUpdateRow
+
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
     clone.icon = "ShareAndroid"
@@ -94,17 +94,22 @@
     dispatch("change", newValue)
   }
 
-  const onChangeSetting = (e, field) => {
-    let fields = {}
-    fields[field] = {
-      clearRelationships: e.detail,
+  const onChangeSetting = (e, field, setting) => {
+    let newField = {}
+    newField[field] = {
+      [setting]: e.detail,
     }
+
+    let updatedFields = {
+      ...meta?.fields,
+      ...newField,
+    }
+
     dispatch("change", {
       key: "meta",
-      fields,
+      fields: updatedFields,
     })
   }
-
   // Ensure any nullish tableId values get set to empty string so
   // that the select works
   $: if (value?.tableId == null) value = { tableId: "" }
@@ -157,6 +162,8 @@
                 bindings={parsedBindings}
                 {value}
                 {onChange}
+                {meta}
+                {onChangeSetting}
               />
             </DrawerBindableSlot>
           {/if}
@@ -167,7 +174,7 @@
                 value={meta.fields?.[field]?.clearRelationships}
                 text={"Clear relationships if empty?"}
                 size={"S"}
-                on:change={e => onChangeSetting(e, field)}
+                on:change={e => onChangeSetting(e, field, "clearRelationships")}
               />
             </div>
           {/if}
