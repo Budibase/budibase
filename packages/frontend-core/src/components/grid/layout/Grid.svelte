@@ -57,7 +57,8 @@
   export let buttons = null
   export let darkMode
   export let isCloud = null
-  export let allowReadonlyColumns = false
+  export let showReadonlyColumnsOptions = false
+  export let canSetReadonlyColumns = false
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -154,7 +155,10 @@
       <div class="controls-left">
         <slot name="filter" />
         <SortButton />
-        <ColumnsSettingButton {allowReadonlyColumns} />
+        <ColumnsSettingButton
+          {showReadonlyColumnsOptions}
+          {canSetReadonlyColumns}
+        />
         <SizeButton />
         <slot name="controls" />
       </div>

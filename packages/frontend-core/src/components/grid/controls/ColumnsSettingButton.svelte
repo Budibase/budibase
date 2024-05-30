@@ -1,11 +1,11 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Popover, Icon, notifications } from "@budibase/bbui"
-  import { licensing } from "stores/portal"
   import { getColumnIcon } from "../lib/utils"
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
 
-  export let allowReadonlyColumns = false
+  export let showReadonlyColumnsOptions = false
+  export let canSetReadonlyColumns = false
 
   const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
 
@@ -35,8 +35,6 @@
     return restricted ? `Columns (${restricted} restricted)` : "Columns"
   }
 
-  $: isViewReadonlyColumnsEnabled = $licensing.isViewReadonlyColumnsEnabled
-
   const PERMISSION_OPTIONS = {
     WRITABLE: "writable",
     READONLY: "readonly",
@@ -51,10 +49,10 @@
   $: READONLY_OPTION = {
     icon: "Visibility",
     value: PERMISSION_OPTIONS.READONLY,
-    tooltip: isViewReadonlyColumnsEnabled
+    tooltip: canSetReadonlyColumns
       ? "Read only"
       : "Read only (premium feature)",
-    disabled: !isViewReadonlyColumnsEnabled,
+    disabled: !canSetReadonlyColumns,
   }
   const HIDDEN_OPTION = {
     icon: "VisibilityOff",
@@ -62,7 +60,7 @@
     tooltip: "Hidden",
   }
 
-  $: options = allowReadonlyColumns
+  $: options = showReadonlyColumnsOptions
     ? [EDIT_OPTION, READONLY_OPTION, HIDDEN_OPTION]
     : [EDIT_OPTION, HIDDEN_OPTION]
 
