@@ -69,6 +69,10 @@
       return PERMISSION_OPTIONS.HIDDEN
     }
 
+    if (column.readonly) {
+      return PERMISSION_OPTIONS.READONLY
+    }
+
     return PERMISSION_OPTIONS.WRITABLE
   }
 </script>
