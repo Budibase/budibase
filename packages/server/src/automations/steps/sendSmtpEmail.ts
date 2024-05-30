@@ -118,6 +118,14 @@ export async function run({ inputs }: AutomationStepInput) {
   }
   to = to || undefined
 
+  if (attachments) {
+    if (Array.isArray(attachments)) {
+      attachments.forEach(item => automationUtils.validateAttachment(item))
+    } else {
+      automationUtils.validateAttachment(attachments)
+    }
+  }
+
   try {
     let response = await sendSmtpEmail({
       to,

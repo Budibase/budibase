@@ -99,8 +99,12 @@ export function getError(err: any) {
   return typeof err !== "string" ? err.toString() : err
 }
 
-function hasRequiredKeys(obj: any): boolean {
-  return "url" in obj && "filename" in obj
+export function validateAttachment(attachmentObject: any) {
+  if (!("url" in attachmentObject) || !("filename" in attachmentObject)) {
+    throw new Error(
+      "Invalid key in array at property ${prop}. Object must have both URL and Filename keys"
+    )
+  }
 }
 
 export async function sendAutomationAttachmentsToStorage(
@@ -121,17 +125,9 @@ export async function sendAutomationAttachmentsToStorage(
       schema?.type === FieldType.SIGNATURE_SINGLE
     ) {
       if (Array.isArray(value)) {
-        value.forEach(item => {
-          if (!hasRequiredKeys(item)) {
-            throw new Error(
-              `Invalid key in array at property ${prop}. Object must have both URL and Filename keys. `
-            )
-          }
-        })
-      } else if (!hasRequiredKeys(value)) {
-        throw new Error(
-          `Invalid key in array at property ${prop}. Object must have both URL and Filename keys. `
-        )
+        value.forEach(item => validateAttachment(item))
+      } else {
+        validateAttachment(value)
       }
       attachmentRows[prop] = value
     }
