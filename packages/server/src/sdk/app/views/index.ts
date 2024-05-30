@@ -55,10 +55,7 @@ async function guardViewSchema(
 
     if (viewSchema[field].readonly) {
       if (!(await features.isViewReadonlyColumnsEnabled())) {
-        throw new HTTPError(
-          `Readonly fields are not enabled for your tenant`,
-          400
-        )
+        throw new HTTPError(`Readonly fields are not enabled`, 400)
       }
 
       if (isRequired(tableSchemaField.constraints)) {
