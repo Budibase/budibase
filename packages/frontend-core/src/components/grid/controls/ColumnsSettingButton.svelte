@@ -1,8 +1,10 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Popover, Icon } from "@budibase/bbui"
+  import { ActionButton, Popover, Icon, notifications } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
+
+  export let allowReadonlyColumns = false
 
   const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
 
@@ -14,9 +16,14 @@
 
   const toggleColumn = async (column, permission) => {
     const visible = permission !== PERMISSION_OPTIONS.HIDDEN
+    const readonly = permission === PERMISSION_OPTIONS.READONLY
 
-    datasource.actions.addSchemaMutation(column.name, { visible })
-    await datasource.actions.saveSchemaMutations()
+    datasource.actions.addSchemaMutation(column.name, { visible, readonly })
+    try {
+      await datasource.actions.saveSchemaMutations()
+    } catch (e) {
+      notifications.error(e.message)
+    }
     dispatch(visible ? "show-column" : "hide-column")
   }
 
@@ -27,17 +34,29 @@
 
   const PERMISSION_OPTIONS = {
     WRITABLE: "writable",
+    READONLY: "readonly",
     HIDDEN: "hidden",
   }
 
-  const options = [
-    { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE, tooltip: "Writable" },
-    {
-      icon: "VisibilityOff",
-      value: PERMISSION_OPTIONS.HIDDEN,
-      tooltip: "Hidden",
-    },
-  ]
+  const EDIT_OPTION = {
+    icon: "Edit",
+    value: PERMISSION_OPTIONS.WRITABLE,
+    tooltip: "Writable",
+  }
+  const READONLY_OPTION = {
+    icon: "Visibility",
+    value: PERMISSION_OPTIONS.READONLY,
+    tooltip: "Read only",
+  }
+  const HIDDEN_OPTION = {
+    icon: "VisibilityOff",
+    value: PERMISSION_OPTIONS.HIDDEN,
+    tooltip: "Hidden",
+  }
+
+  $: options = allowReadonlyColumns
+    ? [EDIT_OPTION, READONLY_OPTION, HIDDEN_OPTION]
+    : [EDIT_OPTION, HIDDEN_OPTION]
 
   function columnToPermissionOptions(column) {
     if (!column.visible) {
