@@ -4,8 +4,7 @@
   import { getColumnIcon } from "../lib/utils"
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
 
-  export let showReadonlyColumnsOptions = false
-  export let canSetReadonlyColumns = false
+  export let allowViewReadonlyColumns = false
 
   const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
 
@@ -43,10 +42,10 @@
   $: READONLY_OPTION = {
     icon: "Visibility",
     value: PERMISSION_OPTIONS.READONLY,
-    tooltip: canSetReadonlyColumns
+    tooltip: allowViewReadonlyColumns
       ? "Read only"
       : "Read only (premium feature)",
-    disabled: !canSetReadonlyColumns,
+    disabled: !allowViewReadonlyColumns,
   }
   const HIDDEN_OPTION = {
     icon: "VisibilityOff",
@@ -54,9 +53,10 @@
     tooltip: "Hidden",
   }
 
-  $: options = showReadonlyColumnsOptions
-    ? [EDIT_OPTION, READONLY_OPTION, HIDDEN_OPTION]
-    : [EDIT_OPTION, HIDDEN_OPTION]
+  $: options =
+    $datasource.type === "viewV2"
+      ? [EDIT_OPTION, READONLY_OPTION, HIDDEN_OPTION]
+      : [EDIT_OPTION, HIDDEN_OPTION]
 
   function columnToPermissionOptions(column) {
     if (!column.visible) {
