@@ -124,7 +124,7 @@
       return {}
     }
     let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
-    pendingSchema.email.displayName = "Pending Invites"
+    pendingSchema.email.displayName = "Pending Users"
     return pendingSchema
   }
 
@@ -278,7 +278,7 @@
       notifications.success(
         `Successfully deleted ${
           selectedRows.length + selectedInvites.length
-        } rows`
+        } users`
       )
       selectedRows = []
       selectedInvites = []
