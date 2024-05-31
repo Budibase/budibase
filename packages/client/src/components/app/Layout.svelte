@@ -330,19 +330,30 @@
     </div>
   </div>
   <div
-    id="modal-container"
+    class="modal-scroll-container"
     class:open={$modalStore.open}
-    use:clickOutside={autoCloseModal ? modalStore.actions.close : null}
-    class:builder={$builderStore.inBuilder}
   >
-    <div class="modal-header">
-      <p>some content</p>
-      <Icon
-        color="var(--spectrum-global-color-gray-600)"
-        name="RailRightClose"
-        hoverable
-        on:click={modalStore.actions.close}
-      />
+    <div
+      class="modal-backdrop"
+    >
+      <div
+        class="modal"
+        class:open={$modalStore.open}
+        use:clickOutside={autoCloseModal ? modalStore.actions.close : null}
+        class:builder={$builderStore.inBuilder}
+      >
+        <div class="modal-header">
+          <Icon
+            color="var(--spectrum-global-color-gray-600)"
+            name="Close"
+            hoverable
+            on:click={modalStore.actions.close}
+          />
+        </div>
+        <div
+          id="modal-content"
+        />
+      </div>
     </div>
   </div>
   <div
@@ -449,40 +460,67 @@
     gap: var(--spacing-xl);
   }
 
-  #modal-container {
-    max-width: calc(100vw - 40px);
-    background: var(--spectrum-global-color-gray-50);
-    z-index: 3;
-    padding: var(--spacing-xl);
+  .modal-scroll-container {
+    background-color: #00000078;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: scroll;
+    position: absolute;
+    display: none;
+    z-index: 2;
+  }
+
+  .modal-scroll-container.open {
+    display: block
+  }
+
+  .modal-backdrop {
+    position: absolute;
     display: flex;
     flex-direction: column;
-    gap: 30px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: transform 130ms ease-out;
-    position: absolute;
-    width: 400px;
-    right: 0;
-    transform: translateX(100%);
-    height: 100%;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    top: 0;
+    left: 0;
+    padding: 20px 20px 20px;
+    box-sizing: border-box;
   }
-  #modal-container.builder {
-    transform: translateX(0);
-    opacity: 0;
-    pointer-events: none;
+
+  .modal {
+    background-color: var(--background);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 500px;
+    padding: 12px 0px 40px;
+    border-radius: 8px;
+    box-sizing: border-box;
   }
-  #modal-container.open {
-    transform: translateX(0);
-    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
+  .modal.builder {
   }
-  #modal-container.builder.open {
-    opacity: 1;
-    pointer-events: all;
+  .modal.open {
+  }
+  .modal.builder.open {
   }
   .modal-header {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+    flex-shrink: 0;
+    flex-grow: 0;
+    padding: 0 12px 12px;
+    box-sizing: border-box;
+  }
+
+  #modal-content {
+    padding: 0 40px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   #side-panel-container {

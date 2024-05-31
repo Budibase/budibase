@@ -29,10 +29,6 @@
     }
   }
 
-  // $: {
-
-  // }
-
   // Derive visibility
   $: open = $modalStore.contentId === $component.id
 
@@ -56,7 +52,7 @@
 
   const showInModal = (el, visible) => {
     const update = visible => {
-      const target = document.getElementById("modal-container")
+      const target = document.getElementById("modal-content")
       const node = el
       if (visible) {
         if (!target.contains(node)) {
