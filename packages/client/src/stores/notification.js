@@ -1,8 +1,6 @@
 import { writable, get } from "svelte/store"
 import { routeStore } from "./routes"
 
-const NOTIFICATION_TIMEOUT = 3000
-
 const createNotificationStore = () => {
   let block = false
 
@@ -18,13 +16,13 @@ const createNotificationStore = () => {
     type = "info",
     icon,
     autoDismiss = true,
+    duration = 3000,
     count = 1
   ) => {
     if (block) {
       return
     }
 
-    // If peeking, pass notifications back to parent window
     if (get(routeStore).queryParams?.peek) {
       window.parent.postMessage({
         type: "notification",
@@ -32,11 +30,13 @@ const createNotificationStore = () => {
           message,
           type,
           icon,
+          duration,
           autoDismiss,
         },
       })
       return
     }
+
     const _id = id()
     store.update(state => {
       const duplicateError = state.find(err => err.message === message)
@@ -52,6 +52,7 @@ const createNotificationStore = () => {
           message,
           icon,
           dismissable: !autoDismiss,
+          duration,
           delay: get(store) != null,
           count,
         },
@@ -60,7 +61,7 @@ const createNotificationStore = () => {
     if (autoDismiss) {
       setTimeout(() => {
         dismiss(_id)
-      }, NOTIFICATION_TIMEOUT)
+      }, duration)
     }
   }
 
@@ -74,14 +75,14 @@ const createNotificationStore = () => {
     subscribe: store.subscribe,
     actions: {
       send,
-      info: (msg, autoDismiss) =>
-        send(msg, "info", "Info", autoDismiss ?? true),
-      success: (msg, autoDismiss) =>
-        send(msg, "success", "CheckmarkCircle", autoDismiss ?? true),
-      warning: (msg, autoDismiss) =>
-        send(msg, "warning", "Alert", autoDismiss ?? true),
-      error: (msg, autoDismiss) =>
-        send(msg, "error", "Alert", autoDismiss ?? false),
+      info: (msg, autoDismiss, duration) =>
+        send(msg, "info", "Info", autoDismiss ?? true, duration),
+      success: (msg, autoDismiss, duration) =>
+        send(msg, "success", "CheckmarkCircle", autoDismiss ?? true, duration),
+      warning: (msg, autoDismiss, duration) =>
+        send(msg, "warning", "Alert", autoDismiss ?? true, duration),
+      error: (msg, autoDismiss, duration) =>
+        send(msg, "error", "Alert", autoDismiss ?? false, duration),
       blockNotifications,
       dismiss,
     },

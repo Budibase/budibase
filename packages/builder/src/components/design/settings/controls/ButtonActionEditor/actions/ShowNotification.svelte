@@ -47,6 +47,15 @@
   />
   <Label />
   <Checkbox text="Auto dismiss" bind:value={parameters.autoDismiss} />
+  {#if parameters.autoDismiss}
+    <Label>Duration (ms)</Label>
+    <DrawerBindableInput
+      title="Duration"
+      {bindings}
+      value={parameters.duration}
+      on:change={e => (parameters.duration = e.detail)}
+    />
+  {/if}
 </div>
 
 <style>
