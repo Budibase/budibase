@@ -181,7 +181,7 @@
       />
       <div
         class="drawer"
-        class:stacked={depth > 999}
+        class:stacked={depth > 0}
         class:modal={$modal}
         transition:drawerSlide|local
         {style}
