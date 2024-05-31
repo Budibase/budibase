@@ -28,8 +28,7 @@
     showAvatars={false}
     on:updatedatasource={handleGridViewUpdate}
     isCloud={$admin.cloud}
-    showReadonlyColumnsOptions
-    canSetReadonlyColumns={$licensing.isViewReadonlyColumnsEnabled}
+    allowViewReadonlyColumns={$licensing.isViewReadonlyColumnsEnabled}
   >
     <svelte:fragment slot="filter">
       <GridFilterButton />
