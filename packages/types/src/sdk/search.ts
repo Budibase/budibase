@@ -1,5 +1,5 @@
 import { Operation, SortDirection } from "./datasources"
-import { Row, Table } from "../documents"
+import { Row, Table, DocumentType } from "../documents"
 import { SortType } from "../api"
 import { Knex } from "knex"
 
@@ -19,6 +19,9 @@ export enum SearchFilterOperator {
 
 export interface SearchFilters {
   allOr?: boolean
+  // TODO: this is just around for now - we need a better way to do or/and
+  // allows just fuzzy to be or - all the fuzzy/like parameters
+  fuzzyOr?: boolean
   onEmptyFilter?: EmptyFilterOption
   [SearchFilterOperator.STRING]?: {
     [key: string]: string
@@ -59,7 +62,16 @@ export interface SearchFilters {
   [SearchFilterOperator.CONTAINS_ANY]?: {
     [key: string]: any[]
   }
+  // specific to SQS/SQLite search on internal tables this can be used
+  // to make sure the documents returned are always filtered down to a
+  // specific document type (such as just rows)
+  documentType?: DocumentType
 }
+
+export type SearchFilterKey = keyof Omit<
+  SearchFilters,
+  "allOr" | "onEmptyFilter" | "fuzzyOr" | "documentType"
+>
 
 export type SearchQueryFields = Omit<SearchFilters, "allOr" | "onEmptyFilter">
 
@@ -117,6 +129,11 @@ export interface QueryJson {
   tableAliases?: Record<string, string>
 }
 
+export interface QueryOptions {
+  disableReturning?: boolean
+  disableBindings?: boolean
+}
+
 export type SqlQueryBinding = Knex.Value[]
 
 export interface SqlQuery {
@@ -127,4 +144,12 @@ export interface SqlQuery {
 export enum EmptyFilterOption {
   RETURN_ALL = "all",
   RETURN_NONE = "none",
+}
+
+export enum SqlClient {
+  MS_SQL = "mssql",
+  POSTGRES = "pg",
+  MY_SQL = "mysql2",
+  ORACLE = "oracledb",
+  SQL_LITE = "sqlite3",
 }

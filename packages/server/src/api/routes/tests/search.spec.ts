@@ -1,6 +1,6 @@
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
-import { db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, utils } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
 import {
@@ -17,6 +17,7 @@ import {
   TableSchema,
   User,
   Row,
+  RelationshipType,
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
@@ -73,7 +74,7 @@ describe.each([
   })
 
   async function createTable(schema: TableSchema) {
-    table = await config.api.table.save(
+    return await config.api.table.save(
       tableForDatasource(datasource, { schema })
     )
   }
@@ -86,21 +87,67 @@ describe.each([
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
 
-    private popRow(expectedRow: any, foundRows: any[]) {
-      const row = foundRows.find(foundRow => _.isMatch(foundRow, expectedRow))
+    // We originally used _.isMatch to compare rows, but found that when
+    // comparing arrays it would return true if the source array was a subset of
+    // the target array. This would sometimes create false matches. This
+    // function is a more strict version of _.isMatch that only returns true if
+    // the source array is an exact match of the target.
+    //
+    // _.isMatch("100", "1") also returns true which is not what we want.
+    private isMatch<T extends Record<string, any>>(expected: T, found: T) {
+      if (!expected) {
+        throw new Error("Expected is undefined")
+      }
+      if (!found) {
+        return false
+      }
+
+      for (const key of Object.keys(expected)) {
+        if (Array.isArray(expected[key])) {
+          if (!Array.isArray(found[key])) {
+            return false
+          }
+          if (expected[key].length !== found[key].length) {
+            return false
+          }
+          if (!_.isMatch(found[key], expected[key])) {
+            return false
+          }
+        } else if (typeof expected[key] === "object") {
+          if (!this.isMatch(expected[key], found[key])) {
+            return false
+          }
+        } else {
+          if (expected[key] !== found[key]) {
+            return false
+          }
+        }
+      }
+      return true
+    }
+
+    // This function exists to ensure that the same row is not matched twice.
+    // When a row gets matched, we make sure to remove it from the list of rows
+    // we're matching against.
+    private popRow<T extends { [key: string]: any }>(
+      expectedRow: T,
+      foundRows: T[]
+    ): NonNullable<T> {
+      const row = foundRows.find(row => this.isMatch(expectedRow, row))
       if (!row) {
         const fields = Object.keys(expectedRow)
         // To make the error message more readable, we only include the fields
         // that are present in the expected row.
         const searchedObjects = foundRows.map(row => _.pick(row, fields))
         throw new Error(
-          `Failed to find row: ${JSON.stringify(
-            expectedRow
-          )} in ${JSON.stringify(searchedObjects)}`
+          `Failed to find row:\n\n${JSON.stringify(
+            expectedRow,
+            null,
+            2
+          )}\n\nin\n\n${JSON.stringify(searchedObjects, null, 2)}`
         )
       }
 
-      // Ensuring the same row is not matched twice
       foundRows.splice(foundRows.indexOf(row), 1)
       return row
     }
@@ -190,7 +237,7 @@ describe.each([
 
   describe("boolean", () => {
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         isTrue: { name: "isTrue", type: FieldType.BOOLEAN },
       })
       await createRows([{ isTrue: true }, { isTrue: false }])
@@ -320,7 +367,7 @@ describe.each([
           })
       )
 
-      await createTable({
+      table = await createTable({
         name: { name: "name", type: FieldType.STRING },
         appointment: { name: "appointment", type: FieldType.DATETIME },
         single_user: {
@@ -596,7 +643,7 @@ describe.each([
 
   describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         name: { name: "name", type: FieldType.STRING },
       })
       await createRows([{ name: "foo" }, { name: "bar" }])
@@ -716,6 +763,20 @@ describe.each([
         expectQuery({
           range: { name: { low: "g", high: "h" } },
         }).toFindNothing())
+
+      !isLucene &&
+        it("ignores low if it's an empty object", () =>
+          expectQuery({
+            // @ts-ignore
+            range: { name: { low: {}, high: "z" } },
+          }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
+
+      !isLucene &&
+        it("ignores high if it's an empty object", () =>
+          expectQuery({
+            // @ts-ignore
+            range: { name: { low: "a", high: {} } },
+          }).toContainExactly([{ name: "foo" }, { name: "bar" }]))
     })
 
     describe("empty", () => {
@@ -780,7 +841,7 @@ describe.each([
 
   describe("numbers", () => {
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         age: { name: "age", type: FieldType.NUMBER },
       })
       await createRows([{ age: 1 }, { age: 10 }])
@@ -889,7 +950,7 @@ describe.each([
     const JAN_10TH = "2020-01-10T00:00:00.000Z"
 
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         dob: { name: "dob", type: FieldType.DATETIME },
       })
 
@@ -1012,7 +1073,7 @@ describe.each([
       const NULL_TIME__ID = `null_time__id`
 
       beforeAll(async () => {
-        await createTable({
+        table = await createTable({
           timeid: { name: "timeid", type: FieldType.STRING },
           time: { name: "time", type: FieldType.DATETIME, timeOnly: true },
         })
@@ -1040,6 +1101,7 @@ describe.each([
       describe("notEqual", () => {
         it("successfully finds a row", () =>
           expectQuery({ notEqual: { time: T_1000 } }).toContainExactly([
+            { timeid: NULL_TIME__ID },
             { time: "10:45:00" },
             { time: "12:00:00" },
             { time: "15:30:00" },
@@ -1049,6 +1111,7 @@ describe.each([
         it("return all when requesting non-existing", () =>
           expectQuery({ notEqual: { time: UNEXISTING_TIME } }).toContainExactly(
             [
+              { timeid: NULL_TIME__ID },
               { time: "10:00:00" },
               { time: "10:45:00" },
               { time: "12:00:00" },
@@ -1154,7 +1217,7 @@ describe.each([
 
   describe.each([FieldType.ARRAY, FieldType.OPTIONS])("%s", () => {
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         numbers: {
           name: "numbers",
           type: FieldType.ARRAY,
@@ -1234,7 +1297,7 @@ describe.each([
     const BIG = "9223372036854775807"
 
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         num: { name: "num", type: FieldType.BIGINT },
       })
       await createRows([{ num: SMALL }, { num: MEDIUM }, { num: BIG }])
@@ -1325,7 +1388,7 @@ describe.each([
   isInternal &&
     describe("auto", () => {
       beforeAll(async () => {
-        await createTable({
+        table = await createTable({
           auto: {
             name: "auto",
             type: FieldType.AUTO,
@@ -1452,6 +1515,25 @@ describe.each([
               { auto: 2 },
               { auto: 1 },
             ]))
+
+          // This is important for pagination. The order of results must always
+          // be stable or pagination will break. We don't want the user to need
+          // to specify an order for pagination to work.
+          it("is stable without a sort specified", async () => {
+            let { rows } = await config.api.row.search(table._id!, {
+              tableId: table._id!,
+              query: {},
+            })
+
+            for (let i = 0; i < 10; i++) {
+              const response = await config.api.row.search(table._id!, {
+                tableId: table._id!,
+                limit: 1,
+                query: {},
+              })
+              expect(response.rows).toEqual(rows)
+            }
+          })
         })
 
       // TODO(samwho): fix for SQS
@@ -1490,20 +1572,222 @@ describe.each([
 
   describe("field name 1:name", () => {
     beforeAll(async () => {
-      await createTable({
+      table = await createTable({
         "1:name": { name: "1:name", type: FieldType.STRING },
       })
       await createRows([{ "1:name": "bar" }, { "1:name": "foo" }])
     })
 
+    it("successfully finds a row", () =>
+      expectQuery({ equal: { "1:1:name": "bar" } }).toContainExactly([
+        { "1:name": "bar" },
+      ]))
+
+    it("fails to find nonexistent row", () =>
+      expectQuery({ equal: { "1:1:name": "none" } }).toFindNothing())
+  })
+
+  describe("user", () => {
+    let user1: User
+    let user2: User
+
+    beforeAll(async () => {
+      user1 = await config.createUser({ _id: `us_${utils.newid()}` })
+      user2 = await config.createUser({ _id: `us_${utils.newid()}` })
+
+      table = await createTable({
+        user: {
+          name: "user",
+          type: FieldType.BB_REFERENCE_SINGLE,
+          subtype: BBReferenceFieldSubType.USER,
+        },
+      })
+
+      await createRows([
+        { user: JSON.stringify(user1) },
+        { user: JSON.stringify(user2) },
+        { user: null },
+      ])
+    })
+
     describe("equal", () => {
       it("successfully finds a row", () =>
-        expectQuery({ equal: { "1:1:name": "bar" } }).toContainExactly([
-          { "1:name": "bar" },
+        expectQuery({ equal: { user: user1._id } }).toContainExactly([
+          { user: { _id: user1._id } },
         ]))
 
       it("fails to find nonexistent row", () =>
-        expectQuery({ equal: { "1:1:name": "none" } }).toFindNothing())
+        expectQuery({ equal: { user: "us_none" } }).toFindNothing())
+    })
+
+    describe("notEqual", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ notEqual: { user: user1._id } }).toContainExactly([
+          { user: { _id: user2._id } },
+          {},
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ notEqual: { user: "us_none" } }).toContainExactly([
+          { user: { _id: user1._id } },
+          { user: { _id: user2._id } },
+          {},
+        ]))
+    })
+
+    describe("oneOf", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ oneOf: { user: [user1._id] } }).toContainExactly([
+          { user: { _id: user1._id } },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ oneOf: { user: ["us_none"] } }).toFindNothing())
+    })
+
+    describe("empty", () => {
+      it("finds empty rows", () =>
+        expectQuery({ empty: { user: null } }).toContainExactly([{}]))
+    })
+
+    describe("notEmpty", () => {
+      it("finds non-empty rows", () =>
+        expectQuery({ notEmpty: { user: null } }).toContainExactly([
+          { user: { _id: user1._id } },
+          { user: { _id: user2._id } },
+        ]))
     })
   })
+
+  describe("multi user", () => {
+    let user1: User
+    let user2: User
+
+    beforeAll(async () => {
+      user1 = await config.createUser({ _id: `us_${utils.newid()}` })
+      user2 = await config.createUser({ _id: `us_${utils.newid()}` })
+
+      table = await createTable({
+        users: {
+          name: "users",
+          type: FieldType.BB_REFERENCE,
+          subtype: BBReferenceFieldSubType.USER,
+          constraints: { type: "array" },
+        },
+        number: {
+          name: "number",
+          type: FieldType.NUMBER,
+        },
+      })
+
+      await createRows([
+        { number: 1, users: JSON.stringify([user1]) },
+        { number: 2, users: JSON.stringify([user2]) },
+        { number: 3, users: JSON.stringify([user1, user2]) },
+        { number: 4, users: JSON.stringify([]) },
+      ])
+    })
+
+    describe("contains", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ contains: { users: [user1._id] } }).toContainExactly([
+          { users: [{ _id: user1._id }] },
+          { users: [{ _id: user1._id }, { _id: user2._id }] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ contains: { users: ["us_none"] } }).toFindNothing())
+    })
+
+    describe("notContains", () => {
+      it("successfully finds a row", () =>
+        expectQuery({ notContains: { users: [user1._id] } }).toContainExactly([
+          { users: [{ _id: user2._id }] },
+          {},
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ notContains: { users: ["us_none"] } }).toContainExactly([
+          { users: [{ _id: user1._id }] },
+          { users: [{ _id: user2._id }] },
+          { users: [{ _id: user1._id }, { _id: user2._id }] },
+          {},
+        ]))
+    })
+
+    describe("containsAny", () => {
+      it("successfully finds rows", () =>
+        expectQuery({
+          containsAny: { users: [user1._id, user2._id] },
+        }).toContainExactly([
+          { users: [{ _id: user1._id }] },
+          { users: [{ _id: user2._id }] },
+          { users: [{ _id: user1._id }, { _id: user2._id }] },
+        ]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({ containsAny: { users: ["us_none"] } }).toFindNothing())
+    })
+
+    describe("multi-column equals", () => {
+      it("successfully finds a row", () =>
+        expectQuery({
+          equal: { number: 1 },
+          contains: { users: [user1._id] },
+        }).toContainExactly([{ users: [{ _id: user1._id }], number: 1 }]))
+
+      it("fails to find nonexistent row", () =>
+        expectQuery({
+          equal: { number: 2 },
+          contains: { users: [user1._id] },
+        }).toFindNothing())
+    })
+  })
+
+  // This will never work for Lucene.
+  !isLucene &&
+    describe("relations", () => {
+      let otherTable: Table
+      let rows: Row[]
+
+      beforeAll(async () => {
+        otherTable = await createTable({
+          one: { name: "one", type: FieldType.STRING },
+        })
+        table = await createTable({
+          two: { name: "two", type: FieldType.STRING },
+          other: {
+            type: FieldType.LINK,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            name: "other",
+            fieldName: "other",
+            tableId: otherTable._id!,
+            constraints: {
+              type: "array",
+            },
+          },
+        })
+
+        rows = await Promise.all([
+          config.api.row.save(otherTable._id!, { one: "foo" }),
+          config.api.row.save(otherTable._id!, { one: "bar" }),
+        ])
+
+        await Promise.all([
+          config.api.row.save(table._id!, {
+            two: "foo",
+            other: [rows[0]._id],
+          }),
+          config.api.row.save(table._id!, {
+            two: "bar",
+            other: [rows[1]._id],
+          }),
+        ])
+      })
+
+      it("can search through relations", () =>
+        expectQuery({
+          equal: { [`${otherTable.name}.one`]: "foo" },
+        }).toContainExactly([{ two: "foo", other: [{ _id: rows[0]._id }] }]))
+    })
 })

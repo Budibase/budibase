@@ -70,13 +70,18 @@ export const duplicateName = (name, allNames) => {
  * @param getName optional function to extract the name for an item, if not a
  *  flat array of strings
  */
-export const getSequentialName = (items, prefix, getName = x => x) => {
+export const getSequentialName = (
+  items,
+  prefix,
+  { getName = x => x, numberFirstItem = false } = {}
+) => {
   if (!prefix?.length || !getName) {
     return null
   }
   const trimmedPrefix = prefix.trim()
+  const firstName = numberFirstItem ? `${prefix}1` : trimmedPrefix
   if (!items?.length) {
-    return trimmedPrefix
+    return firstName
   }
   let max = 0
   items.forEach(item => {
@@ -96,5 +101,5 @@ export const getSequentialName = (items, prefix, getName = x => x) => {
       max = num
     }
   })
-  return max === 0 ? trimmedPrefix : `${prefix}${max + 1}`
+  return max === 0 ? firstName : `${prefix}${max + 1}`
 }

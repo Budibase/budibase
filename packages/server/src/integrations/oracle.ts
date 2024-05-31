@@ -14,6 +14,7 @@ import {
   TableSourceType,
   Row,
   DatasourcePlusQueryResponse,
+  SqlClient,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -21,10 +22,8 @@ import {
   generateColumnDefinition,
   finaliseExternalTables,
   getSqlQuery,
-  SqlClient,
   HOST_ADDRESS,
 } from "./utils"
-import Sql from "./base/sql"
 import {
   BindParameters,
   Connection,
@@ -33,6 +32,9 @@ import {
   Result,
 } from "oracledb"
 import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
+import { sql } from "@budibase/backend-core"
+
+const Sql = sql.Sql
 
 let oracledb: any
 try {

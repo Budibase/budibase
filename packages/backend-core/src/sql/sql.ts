@@ -1,13 +1,12 @@
 import { Knex, knex } from "knex"
-import { db as dbCore } from "@budibase/backend-core"
-import { QueryOptions } from "../../definitions/datasource"
+import * as dbCore from "../db"
 import {
   isIsoDateString,
-  SqlClient,
   isValidFilter,
   getNativeSql,
-  SqlStatements,
-} from "../utils"
+  isExternalTable,
+} from "./utils"
+import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
   BBReferenceFieldMetadata,
@@ -24,8 +23,12 @@ import {
   Table,
   TableSourceType,
   INTERNAL_TABLE_SOURCE_ID,
+  SqlClient,
+  QueryOptions,
+  JsonTypes,
+  prefixed,
 } from "@budibase/types"
-import environment from "../../environment"
+import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
@@ -45,6 +48,7 @@ function likeKey(client: string, key: string): string {
     case SqlClient.MY_SQL:
       start = end = "`"
       break
+    case SqlClient.SQL_LITE:
     case SqlClient.ORACLE:
     case SqlClient.POSTGRES:
       start = end = '"'
@@ -52,9 +56,6 @@ function likeKey(client: string, key: string): string {
     case SqlClient.MS_SQL:
       start = "["
       end = "]"
-      break
-    case SqlClient.SQL_LITE:
-      start = end = "'"
       break
     default:
       throw new Error("Unknown client generating like key")
@@ -207,17 +208,20 @@ class InternalBuilder {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
-          fn(`${getTableAlias(tableName)}.${updatedKey}`, value)
+          const alias = getTableAlias(tableName)
+          fn(alias ? `${alias}.${updatedKey}` : updatedKey, value)
         }
         if (opts.relationship && isRelationshipField) {
           const [filterTableName, property] = updatedKey.split(".")
-          fn(`${getTableAlias(filterTableName)}.${property}`, value)
+          const alias = getTableAlias(filterTableName)
+          fn(alias ? `${alias}.${property}` : property, value)
         }
       }
     }
 
     const like = (key: string, value: any) => {
-      const fnc = allOr ? "orWhere" : "where"
+      const fuzzyOr = filters?.fuzzyOr
+      const fnc = fuzzyOr || allOr ? "orWhere" : "where"
       // postgres supports ilike, nothing else does
       if (this.client === SqlClient.POSTGRES) {
         query = query[fnc](key, "ilike", `%${value}%`)
@@ -231,8 +235,7 @@ class InternalBuilder {
     }
 
     const contains = (mode: object, any: boolean = false) => {
-      const fnc = allOr ? "orWhere" : "where"
-      const rawFnc = `${fnc}Raw`
+      const rawFnc = allOr ? "orWhereRaw" : "whereRaw"
       const not = mode === filters?.notContains ? "NOT " : ""
       function stringifyArray(value: Array<any>, quoteStyle = '"'): string {
         for (let i in value) {
@@ -245,24 +248,24 @@ class InternalBuilder {
       if (this.client === SqlClient.POSTGRES) {
         iterate(mode, (key: string, value: Array<any>) => {
           const wrap = any ? "" : "'"
-          const containsOp = any ? "\\?| array" : "@>"
+          const op = any ? "\\?| array" : "@>"
           const fieldNames = key.split(/\./g)
-          const tableName = fieldNames[0]
-          const columnName = fieldNames[1]
-          // @ts-ignore
+          const table = fieldNames[0]
+          const col = fieldNames[1]
           query = query[rawFnc](
-            `${not}"${tableName}"."${columnName}"::jsonb ${containsOp} ${wrap}${stringifyArray(
+            `${not}COALESCE("${table}"."${col}"::jsonb ${op} ${wrap}${stringifyArray(
               value,
               any ? "'" : '"'
-            )}${wrap}`
+            )}${wrap}, FALSE)`
           )
         })
       } else if (this.client === SqlClient.MY_SQL) {
         const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
         iterate(mode, (key: string, value: Array<any>) => {
-          // @ts-ignore
           query = query[rawFnc](
-            `${not}${jsonFnc}(${key}, '${stringifyArray(value)}')`
+            `${not}COALESCE(${jsonFnc}(${key}, '${stringifyArray(
+              value
+            )}'), FALSE)`
           )
         })
       } else {
@@ -277,7 +280,7 @@ class InternalBuilder {
             }
             statement +=
               (statement ? andOr : "") +
-              `LOWER(${likeKey(this.client, key)}) LIKE ?`
+              `COALESCE(LOWER(${likeKey(this.client, key)}), '') LIKE ?`
           }
 
           if (statement === "") {
@@ -342,14 +345,34 @@ class InternalBuilder {
     }
     if (filters.equal) {
       iterate(filters.equal, (key, value) => {
-        const fnc = allOr ? "orWhere" : "where"
-        query = query[fnc]({ [key]: value })
+        const fnc = allOr ? "orWhereRaw" : "whereRaw"
+        if (this.client === SqlClient.MS_SQL) {
+          query = query[fnc](
+            `CASE WHEN ${likeKey(this.client, key)} = ? THEN 1 ELSE 0 END = 1`,
+            [value]
+          )
+        } else {
+          query = query[fnc](
+            `COALESCE(${likeKey(this.client, key)} = ?, FALSE)`,
+            [value]
+          )
+        }
       })
     }
     if (filters.notEqual) {
       iterate(filters.notEqual, (key, value) => {
-        const fnc = allOr ? "orWhereNot" : "whereNot"
-        query = query[fnc]({ [key]: value })
+        const fnc = allOr ? "orWhereRaw" : "whereRaw"
+        if (this.client === SqlClient.MS_SQL) {
+          query = query[fnc](
+            `CASE WHEN ${likeKey(this.client, key)} = ? THEN 1 ELSE 0 END = 0`,
+            [value]
+          )
+        } else {
+          query = query[fnc](
+            `COALESCE(${likeKey(this.client, key)} != ?, TRUE)`,
+            [value]
+          )
+        }
       })
     }
     if (filters.empty) {
@@ -372,6 +395,16 @@ class InternalBuilder {
     }
     if (filters.containsAny) {
       contains(filters.containsAny, true)
+    }
+
+    // when searching internal tables make sure long looking for rows
+    if (filters.documentType && !isExternalTable(table)) {
+      const tableRef = opts?.aliases?.[table._id!] || table._id
+      // has to be its own option, must always be AND onto the search
+      query.andWhereLike(
+        `${tableRef}._id`,
+        `${prefixed(filters.documentType)}%`
+      )
     }
 
     return query
@@ -575,6 +608,7 @@ class InternalBuilder {
     query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
     })
+
     // add sorting to pre-query
     query = this.addSorting(query, json)
     const alias = tableAliases?.[tableName] || tableName
@@ -769,11 +803,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
 
-  convertJsonStringColumns(
+  convertJsonStringColumns<T extends Record<string, any>>(
     table: Table,
-    results: Record<string, any>[],
+    results: T[],
     aliases?: Record<string, string>
-  ): Record<string, any>[] {
+  ): T[] {
     const tableName = getTableName(table)
     for (const [name, field] of Object.entries(table.schema)) {
       if (!this._isJsonColumn(field)) {
@@ -782,11 +816,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       const aliasedTableName = (tableName && aliases?.[tableName]) || tableName
       const fullName = `${aliasedTableName}.${name}`
       for (let row of results) {
-        if (typeof row[fullName] === "string") {
-          row[fullName] = JSON.parse(row[fullName])
+        if (typeof row[fullName as keyof T] === "string") {
+          row[fullName as keyof T] = JSON.parse(row[fullName])
         }
-        if (typeof row[name] === "string") {
-          row[name] = JSON.parse(row[name])
+        if (typeof row[name as keyof T] === "string") {
+          row[name as keyof T] = JSON.parse(row[name])
         }
       }
     }
@@ -797,9 +831,8 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     field: FieldSchema
   ): field is JsonFieldMetadata | BBReferenceFieldMetadata {
     return (
-      field.type === FieldType.JSON ||
-      (field.type === FieldType.BB_REFERENCE &&
-        !helpers.schema.isDeprecatedSingleUserColumn(field))
+      JsonTypes.includes(field.type) &&
+      !helpers.schema.isDeprecatedSingleUserColumn(field)
     )
   }
 

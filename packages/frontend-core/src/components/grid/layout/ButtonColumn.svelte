@@ -16,9 +16,10 @@
     scroll,
     isDragging,
     buttonColumnWidth,
+    showVScrollbar,
   } = getContext("grid")
 
-  let measureContainer
+  let container
 
   $: buttons = $props.buttons?.slice(0, 3) || []
   $: columnsWidth = $visibleColumns.reduce(
@@ -39,22 +40,9 @@
       const width = entries?.[0]?.contentRect?.width ?? 0
       buttonColumnWidth.set(width)
     })
-    observer.observe(measureContainer)
+    observer.observe(container)
   })
 </script>
-
-<!-- Hidden copy of buttons to measure -->
-<div class="measure" bind:this={measureContainer}>
-  <GridCell width="auto">
-    <div class="buttons">
-      {#each buttons as button}
-        <Button size="S">
-          {button.text || "Button"}
-        </Button>
-      {/each}
-    </div>
-  </GridCell>
-</div>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
@@ -63,7 +51,7 @@
   class:hidden={$buttonColumnWidth === 0}
 >
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
-    <GridScrollWrapper scrollVertically attachHandlers>
+    <GridScrollWrapper scrollVertically attachHandlers bind:ref={container}>
       {#each $renderedRows as row}
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
@@ -79,7 +67,7 @@
             selected={rowSelected}
             highlighted={rowHovered || rowFocused}
           >
-            <div class="buttons">
+            <div class="buttons" class:offset={$showVScrollbar}>
               {#each buttons as button}
                 <Button
                   newStyles
@@ -91,6 +79,9 @@
                   overBackground={button.type === "overBackground"}
                   on:click={() => handleClick(button, row)}
                 >
+                  {#if button.icon}
+                    <i class="{button.icon} S" />
+                  {/if}
                   {button.text || "Button"}
                 </Button>
               {/each}
@@ -130,16 +121,17 @@
     gap: var(--cell-padding);
     height: inherit;
   }
+  .buttons.offset {
+    padding-right: calc(var(--cell-padding) + 2 * var(--scroll-bar-size) - 2px);
+  }
+  .buttons :global(.spectrum-Button-Label) {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
 
   /* Add left cell border */
   .button-column :global(.cell) {
     border-left: var(--cell-border);
-  }
-
-  /* Hidden copy of buttons to measure width against */
-  .measure {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
   }
 </style>
