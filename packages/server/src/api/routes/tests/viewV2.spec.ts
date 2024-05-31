@@ -424,7 +424,7 @@ describe.each([
         await config.api.viewV2.create(newView, {
           status: 400,
           body: {
-            message: "Readonly fields are not enabled for your tenant",
+            message: "Readonly fields are not enabled",
             status: 400,
           },
         })
@@ -690,7 +690,7 @@ describe.each([
       await config.api.viewV2.update(view, {
         status: 400,
         body: {
-          message: "Readonly fields are not enabled for your tenant",
+          message: "Readonly fields are not enabled",
         },
       })
     })
