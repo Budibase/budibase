@@ -1,47 +1,70 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Popover, Icon } from "@budibase/bbui"
+  import { ActionButton, Popover, Icon, notifications } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
+
+  export let allowViewReadonlyColumns = false
 
   const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
 
   let open = false
   let anchor
 
-  $: anyHidden = $columns.some(col => !col.visible)
-  $: text = getText($columns)
+  $: restrictedColumns = $columns.filter(col => !col.visible || col.readonly)
+  $: anyRestricted = restrictedColumns.length
+  $: text = anyRestricted ? `Columns (${anyRestricted} restricted)` : "Columns"
 
   const toggleColumn = async (column, permission) => {
     const visible = permission !== PERMISSION_OPTIONS.HIDDEN
+    const readonly = permission === PERMISSION_OPTIONS.READONLY
 
-    datasource.actions.addSchemaMutation(column.name, { visible })
-    await datasource.actions.saveSchemaMutations()
+    datasource.actions.addSchemaMutation(column.name, { visible, readonly })
+    try {
+      await datasource.actions.saveSchemaMutations()
+    } catch (e) {
+      notifications.error(e.message)
+    }
     dispatch(visible ? "show-column" : "hide-column")
-  }
-
-  const getText = columns => {
-    const hidden = columns.filter(col => !col.visible).length
-    return hidden ? `Columns (${hidden} restricted)` : "Columns"
   }
 
   const PERMISSION_OPTIONS = {
     WRITABLE: "writable",
+    READONLY: "readonly",
     HIDDEN: "hidden",
   }
 
-  const options = [
-    { icon: "Edit", value: PERMISSION_OPTIONS.WRITABLE, tooltip: "Writable" },
-    {
-      icon: "VisibilityOff",
-      value: PERMISSION_OPTIONS.HIDDEN,
-      tooltip: "Hidden",
-    },
-  ]
+  const EDIT_OPTION = {
+    icon: "Edit",
+    value: PERMISSION_OPTIONS.WRITABLE,
+    tooltip: "Writable",
+  }
+  $: READONLY_OPTION = {
+    icon: "Visibility",
+    value: PERMISSION_OPTIONS.READONLY,
+    tooltip: allowViewReadonlyColumns
+      ? "Read only"
+      : "Read only (premium feature)",
+    disabled: !allowViewReadonlyColumns,
+  }
+  const HIDDEN_OPTION = {
+    icon: "VisibilityOff",
+    value: PERMISSION_OPTIONS.HIDDEN,
+    tooltip: "Hidden",
+  }
+
+  $: options =
+    $datasource.type === "viewV2"
+      ? [EDIT_OPTION, READONLY_OPTION, HIDDEN_OPTION]
+      : [EDIT_OPTION, HIDDEN_OPTION]
 
   function columnToPermissionOptions(column) {
     if (!column.visible) {
       return PERMISSION_OPTIONS.HIDDEN
+    }
+
+    if (column.readonly) {
+      return PERMISSION_OPTIONS.READONLY
     }
 
     return PERMISSION_OPTIONS.WRITABLE
@@ -54,7 +77,7 @@
     quiet
     size="M"
     on:click={() => (open = !open)}
-    selected={open || anyHidden}
+    selected={open || anyRestricted}
     disabled={!$columns.length}
   >
     {text}
@@ -73,7 +96,7 @@
         <ToggleActionButtonGroup
           disabled
           value={PERMISSION_OPTIONS.WRITABLE}
-          {options}
+          options={options.map(o => ({ ...o, disabled: true }))}
         />
       {/if}
       {#each $columns as column}
