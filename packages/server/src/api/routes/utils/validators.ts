@@ -1,13 +1,43 @@
 import { auth, permissions } from "@budibase/backend-core"
 import { DataSourceOperation } from "../../../constants"
-import { WebhookActionType } from "@budibase/types"
-import Joi from "joi"
+import { Table, WebhookActionType } from "@budibase/types"
+import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex } from "@budibase/shared-core"
+import { isRequired } from "../../../utilities/schema"
+import sdk from "../../../sdk"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_BOOLEAN = Joi.boolean().optional().allow(null)
 const APP_NAME_REGEX = /^[\w\s]+$/
+
+const validateViewSchemas: CustomValidator<Table> = (table, helpers) => {
+  if (table.views && Object.entries(table.views).length) {
+    const requiredFields = Object.entries(table.schema)
+      .filter(([_, v]) => isRequired(v.constraints))
+      .map(([key]) => key)
+    if (requiredFields.length) {
+      for (const view of Object.values(table.views)) {
+        if (!sdk.views.isV2(view)) {
+          continue
+        }
+
+        const editableViewFields = Object.entries(view.schema || {})
+          .filter(([_, f]) => f.visible && !f.readonly)
+          .map(([key]) => key)
+        const missingField = requiredFields.find(
+          f => !editableViewFields.includes(f)
+        )
+        if (missingField) {
+          return helpers.message({
+            custom: `Required field "${missingField}" is missing in view "${view.name}"`,
+          })
+        }
+      }
+    }
+  }
+  return table
+}
 
 export function tableValidator() {
   // prettier-ignore
@@ -20,7 +50,7 @@ export function tableValidator() {
     name: Joi.string().required(),
     views: Joi.object(),
     rows: Joi.array(),
-  }).unknown(true))
+  }).custom(validateViewSchemas).unknown(true))
 }
 
 export function nameValidator() {
