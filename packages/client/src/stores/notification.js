@@ -1,6 +1,8 @@
 import { writable, get } from "svelte/store"
 import { routeStore } from "./routes"
 
+const DEFAULT_NOTIFICATION_TIMEOUT = 3000
+
 const createNotificationStore = () => {
   let block = false
 
@@ -16,7 +18,7 @@ const createNotificationStore = () => {
     type = "info",
     icon,
     autoDismiss = true,
-    duration = 3000,
+    duration,
     count = 1
   ) => {
     if (block) {
@@ -52,7 +54,6 @@ const createNotificationStore = () => {
           message,
           icon,
           dismissable: !autoDismiss,
-          duration,
           delay: get(store) != null,
           count,
         },
@@ -61,7 +62,7 @@ const createNotificationStore = () => {
     if (autoDismiss) {
       setTimeout(() => {
         dismiss(_id)
-      }, duration)
+      }, duration || DEFAULT_NOTIFICATION_TIMEOUT)
     }
   }
 

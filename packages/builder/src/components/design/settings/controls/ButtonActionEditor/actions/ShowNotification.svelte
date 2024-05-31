@@ -53,6 +53,7 @@
       title="Duration"
       {bindings}
       value={parameters.duration}
+      placeholder="3000"
       on:change={e => (parameters.duration = e.detail)}
     />
   {/if}
