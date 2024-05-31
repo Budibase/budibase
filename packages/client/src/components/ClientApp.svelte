@@ -128,6 +128,7 @@
     class:builder={$builderStore.inBuilder}
     class:show={fontsLoaded && dataLoaded}
   >
+    <div class="modal-portal" />
     {#if $environmentStore.maintenance.length > 0}
       <MaintenanceScreen maintenanceList={$environmentStore.maintenance} />
     {:else}

@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
-  import { Icon } from "@budibase/bbui"
+  import { clickOutside, Icon } from "@budibase/bbui"
+  import Portal from "svelte-portal"
 
   const component = getContext("component")
   const { styleable, modalStore, builderStore, dndIsDragging } =
@@ -52,56 +53,69 @@
     }
   }
 
-  const showInModal = (el, visible) => {
-    const update = visible => {
-      const target = document.getElementById("modal-container")
-      const node = el
-      if (visible) {
-        if (!target.contains(node)) {
-          target.appendChild(node)
-        }
-      } else {
-        if (target.contains(node)) {
-          target.removeChild(node)
-          handleModalClose()
-        }
-      }
-    }
-
-    // Apply initial visibility
-    update(visible)
-
-    return {
-      update,
-      destroy: () => update(false),
-    }
-  }
+  $: autoCloseModal =
+    !$builderStore.inBuilder &&
+    $modalStore.open &&
+    !$modalStore.ignoreClicksOutside
 </script>
 
-<div
-  use:styleable={$component.styles}
-  use:showInModal={open}
-  class="modal {size}"
-  class:open
->
-  <div class="modal-header">
-    <Icon
-      color="var(--spectrum-global-color-gray-600)"
-      name="Close"
-      hoverable
-      on:click={modalStore.actions.close}
-    />
-  </div>
-  <div
-    class="modal-main"
-  >
-    {#key renderKey}
-      <slot />
-    {/key}
-  </div>
-</div>
+{#if open}
+  <Portal target=".modal-portal">
+    <div
+      class="modal-scroll-container"
+      class:open={$modalStore.open}
+    >
+      <div
+        class="modal-container"
+      >
+        <div
+          use:styleable={$component.styles}
+          use:clickOutside={autoCloseModal ? modalStore.actions.close : null}
+          class="modal {size}"
+        >
+          <div class="modal-header">
+            <Icon
+              color="var(--spectrum-global-color-gray-600)"
+              name="Close"
+              hoverable
+              on:click={modalStore.actions.close}
+            />
+          </div>
+          <div
+            class="modal-main"
+          >
+              <slot />
+          </div>
+        </div>
+      </div>
+    </div>
+  </Portal>
+{/if}
 
 <style>
+  .modal-scroll-container {
+    background-color: #00000078;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: scroll;
+    position: absolute;
+    display: block;
+    z-index: 3;
+  }
+
+  .modal-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px 20px 20px;
+    box-sizing: border-box;
+  }
+
   .modal {
     background-color: var(--background);
     display: flex;

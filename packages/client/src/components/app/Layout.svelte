@@ -330,15 +330,6 @@
     </div>
   </div>
   <div
-    class="modal-scroll-container"
-    class:open={$modalStore.open}
-  >
-    <div
-      id="modal-container"
-      on:click={autoCloseModal ? modalStore.actions.close : null}
-    />
-  </div>
-  <div
     id="side-panel-container"
     class:open={$sidePanelStore.open}
     use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
@@ -440,33 +431,6 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-xl);
-  }
-
-  .modal-scroll-container {
-    background-color: #00000078;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow-y: scroll;
-    position: absolute;
-    display: none;
-    z-index: 2;
-  }
-
-  .modal-scroll-container.open {
-    display: block
-  }
-
-  #modal-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    min-height: 100vh;
-    padding: 20px 20px 20px;
-    box-sizing: border-box;
   }
 
   #side-panel-container {
