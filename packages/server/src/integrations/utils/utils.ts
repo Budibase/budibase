@@ -368,13 +368,16 @@ export async function handleFileResponse(
       size = parseInt(contentLength, 10)
     }
 
-    await objectStore.streamUpload({
+    const details = await objectStore.streamUpload({
       bucket,
       filename: key,
       stream,
       ttl: 1,
       type: response.headers["content-type"],
     })
+    if (!size && details.ContentLength) {
+      size = details.ContentLength
+    }
   }
   presignedUrl = objectStore.getPresignedUrl(bucket, key)
   return {
