@@ -60,7 +60,7 @@ async function guardViewSchema(
 
       if (isRequired(tableSchemaField.constraints)) {
         throw new HTTPError(
-          `Field "${field}" cannot be readonly as it is a required field`,
+          `You can't make the required field "${field}" read only`,
           400
         )
       }
