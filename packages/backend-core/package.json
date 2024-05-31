@@ -79,7 +79,8 @@
     "pouchdb-adapter-memory": "7.2.2",
     "testcontainers": "^10.7.2",
     "timekeeper": "2.2.0",
-    "typescript": "5.2.2"
+    "typescript": "5.2.2",
+    "dayjs": "^1.10.8"
   },
   "nx": {
     "targets": {
