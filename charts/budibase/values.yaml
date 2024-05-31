@@ -138,6 +138,15 @@ globals:
     # -- The password to use when authenticating with your SMTP server.
     password: ""
 
+  sqs:
+    # -- Whether to use the CouchDB "structure query service" or not. This is disabled by
+    # default for now, but will become the default in a future release.
+    enabled: false
+    # @ignore
+    url: ""
+    # @ignore
+    port: "4984"
+
 services:
   # -- The DNS suffix to use for service discovery. You only need to change this
   # if you've configured your cluster to use a different DNS suffix.
