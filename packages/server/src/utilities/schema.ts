@@ -7,7 +7,7 @@ import {
   FieldConstraints,
 } from "@budibase/types"
 import { ValidColumnNameRegex, utils } from "@budibase/shared-core"
-import { db } from "@budibase/backend-core"
+import { db, utils as backendUtils } from "@budibase/backend-core"
 import { parseCsvExport } from "../api/controllers/view/exporters"
 
 type Rows = Array<Row>
@@ -99,7 +99,7 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
       } else if (
         // If provided must be a valid date
         columnType === FieldType.DATETIME &&
-        isNaN(new Date(columnData).getTime())
+        !backendUtils.isValidDate(columnData)
       ) {
         results.schemaValidation[columnName] = false
       } else if (
