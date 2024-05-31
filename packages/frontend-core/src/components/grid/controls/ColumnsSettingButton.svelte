@@ -12,8 +12,9 @@
   let open = false
   let anchor
 
-  $: anyHidden = $columns.some(col => !col.visible)
-  $: text = getText($columns)
+  $: restrictedColumns = $columns.filter(col => !col.visible || col.readonly)
+  $: anyRestricted = restrictedColumns.length
+  $: text = anyRestricted ? `Columns (${anyRestricted} restricted)` : "Columns"
 
   const toggleColumn = async (column, permission) => {
     const visible = permission !== PERMISSION_OPTIONS.HIDDEN
@@ -26,13 +27,6 @@
       notifications.error(e.message)
     }
     dispatch(visible ? "show-column" : "hide-column")
-  }
-
-  const getText = columns => {
-    const restricted = columns.filter(
-      col => !col.visible || col.readonly
-    ).length
-    return restricted ? `Columns (${restricted} restricted)` : "Columns"
   }
 
   const PERMISSION_OPTIONS = {
@@ -83,7 +77,7 @@
     quiet
     size="M"
     on:click={() => (open = !open)}
-    selected={open || anyHidden}
+    selected={open || anyRestricted}
     disabled={!$columns.length}
   >
     {text}
