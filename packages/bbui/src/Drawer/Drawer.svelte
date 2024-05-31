@@ -181,7 +181,7 @@
       />
       <div
         class="drawer"
-        class:stacked={depth > 0}
+        class:stacked={depth > 999}
         class:modal={$modal}
         transition:drawerSlide|local
         {style}
@@ -223,7 +223,7 @@
     height: 420px;
     background: var(--background);
     border: var(--border-light);
-    z-index: 100;
+    z-index: 1000;
     border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;
