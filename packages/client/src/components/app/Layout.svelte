@@ -334,27 +334,9 @@
     class:open={$modalStore.open}
   >
     <div
-      class="modal-backdrop"
-    >
-      <div
-        class="modal"
-        class:open={$modalStore.open}
-        use:clickOutside={autoCloseModal ? modalStore.actions.close : null}
-        class:builder={$builderStore.inBuilder}
-      >
-        <div class="modal-header">
-          <Icon
-            color="var(--spectrum-global-color-gray-600)"
-            name="Close"
-            hoverable
-            on:click={modalStore.actions.close}
-          />
-        </div>
-        <div
-          id="modal-content"
-        />
-      </div>
-    </div>
+      id="modal-container"
+      on:click={autoCloseModal ? modalStore.actions.close : null}
+    />
   </div>
   <div
     id="side-panel-container"
@@ -476,51 +458,15 @@
     display: block
   }
 
-  .modal-backdrop {
-    position: absolute;
+  #modal-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     width: 100%;
     min-height: 100vh;
-    top: 0;
-    left: 0;
     padding: 20px 20px 20px;
     box-sizing: border-box;
-  }
-
-  .modal {
-    background-color: var(--background);
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    min-height: 500px;
-    padding: 12px 0px 40px;
-    border-radius: 8px;
-    box-sizing: border-box;
-  }
-  .modal.builder {
-  }
-  .modal.open {
-  }
-  .modal.builder.open {
-  }
-  .modal-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    flex-shrink: 0;
-    flex-grow: 0;
-    padding: 0 12px 12px;
-    box-sizing: border-box;
-  }
-
-  #modal-content {
-    padding: 0 40px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
   }
 
   #side-panel-container {

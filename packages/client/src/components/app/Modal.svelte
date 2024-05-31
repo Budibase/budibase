@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import { Icon } from "@budibase/bbui"
 
   const component = getContext("component")
   const { styleable, modalStore, builderStore, dndIsDragging } =
@@ -7,6 +8,7 @@
 
   export let onClose
   export let ignoreClicksOutside
+  export let size
 
   // Automatically show and hide the side panel when inside the builder.
   // For some unknown reason, svelte reactivity breaks if we reference the
@@ -52,7 +54,7 @@
 
   const showInModal = (el, visible) => {
     const update = visible => {
-      const target = document.getElementById("modal-content")
+      const target = document.getElementById("modal-container")
       const node = el
       if (visible) {
         if (!target.contains(node)) {
@@ -79,27 +81,77 @@
 <div
   use:styleable={$component.styles}
   use:showInModal={open}
-  class="modal"
+  class="modal {size}"
   class:open
 >
-  {#key renderKey}
-    <slot />
-  {/key}
+  <div class="modal-header">
+    <Icon
+      color="var(--spectrum-global-color-gray-600)"
+      name="Close"
+      hoverable
+      on:click={modalStore.actions.close}
+    />
+  </div>
+  <div
+    class="modal-main"
+  >
+    {#key renderKey}
+      <slot />
+    {/key}
+  </div>
 </div>
 
 <style>
   .modal {
-    flex: 1 1 auto;
-    display: none;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: var(--spacing-xl);
-  }
-  .modal.open {
+    background-color: var(--background);
     display: flex;
-  }
-  .modal :global(.component > *) {
+    flex-direction: column;
+    padding: 12px 0px 40px;
+    border-radius: 8px;
+    box-sizing: border-box;
     max-width: 100%;
   }
+
+  .modal.small {
+    width: 400px;
+    min-height: 200px;
+  }
+
+  .modal.medium {
+    width: 600px;
+    min-height: 400px;
+  }
+
+  .modal.large {
+    width: 800px;
+    min-height: 600px;
+  }
+
+  .modal.fullscreen {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  .modal-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    flex-grow: 0;
+    padding: 0 12px 12px;
+    box-sizing: border-box;
+  }
+
+  .modal-main {
+    padding: 0 40px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    word-break: break-word;
+  }
+
+  .modal-main :global(.component > *) {
+    max-width: 100%;
+  }
+
 </style>
