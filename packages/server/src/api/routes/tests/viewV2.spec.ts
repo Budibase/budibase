@@ -117,6 +117,9 @@ describe.each([
       const newView: CreateViewRequest = {
         name: generator.name(),
         tableId: table._id!,
+        schema: {
+          id: { visible: true },
+        },
       }
       const res = await config.api.viewV2.create(newView)
 
@@ -145,6 +148,7 @@ describe.each([
           type: SortType.STRING,
         },
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
           },
@@ -155,6 +159,7 @@ describe.each([
       expect(res).toEqual({
         ...newView,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
           },
@@ -169,6 +174,11 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         schema: {
+          id: {
+            name: "id",
+            type: FieldType.NUMBER,
+            visible: true,
+          },
           Price: {
             name: "Price",
             type: FieldType.NUMBER,
@@ -190,6 +200,7 @@ describe.each([
       expect(createdView).toEqual({
         ...newView,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
             order: 1,
@@ -206,6 +217,12 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         schema: {
+          id: {
+            name: "id",
+            type: FieldType.AUTO,
+            autocolumn: true,
+            visible: true,
+          },
           Price: {
             name: "Price",
             type: FieldType.NUMBER,
@@ -229,6 +246,7 @@ describe.each([
         tableId: table._id!,
         primaryDisplay: generator.word(),
         schema: {
+          id: { visible: true },
           Price: { visible: true },
           Category: { visible: false },
         },
@@ -238,6 +256,7 @@ describe.each([
       expect(res).toEqual({
         ...newView,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
           },
@@ -252,6 +271,7 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         schema: {
+          id: { visible: true },
           nonExisting: {
             visible: true,
           },
@@ -290,6 +310,7 @@ describe.each([
           name: generator.name(),
           tableId: table._id!,
           schema: {
+            id: { visible: true },
             name: {
               visible: true,
               readonly: true,
@@ -303,6 +324,7 @@ describe.each([
 
         const res = await config.api.viewV2.create(newView)
         expect(res.schema).toEqual({
+          id: { visible: true },
           name: {
             visible: true,
             readonly: true,
@@ -335,6 +357,7 @@ describe.each([
           name: generator.name(),
           tableId: table._id!,
           schema: {
+            id: { visible: true },
             name: {
               visible: true,
               readonly: true,
@@ -371,6 +394,7 @@ describe.each([
           name: generator.name(),
           tableId: table._id!,
           schema: {
+            id: { visible: true },
             name: {
               visible: false,
               readonly: true,
@@ -409,6 +433,7 @@ describe.each([
           name: generator.name(),
           tableId: table._id!,
           schema: {
+            id: { visible: true },
             name: {
               visible: true,
               readonly: true,
@@ -436,6 +461,9 @@ describe.each([
       view = await config.api.viewV2.create({
         tableId: table._id!,
         name: generator.guid(),
+        schema: {
+          id: { visible: true },
+        },
       })
     })
 
@@ -484,6 +512,7 @@ describe.each([
           type: SortType.STRING,
         },
         schema: {
+          id: { visible: true },
           Category: {
             visible: false,
           },
@@ -501,7 +530,7 @@ describe.each([
           schema: {
             ...table.schema,
             id: expect.objectContaining({
-              visible: false,
+              visible: true,
             }),
             Category: expect.objectContaining({
               visible: false,
@@ -598,6 +627,9 @@ describe.each([
       const anotherView = await config.api.viewV2.create({
         tableId: table._id!,
         name: generator.guid(),
+        schema: {
+          id: { visible: true },
+        },
       })
       const result = await config
         .request!.put(`/api/v2/views/${anotherView.id}`)
@@ -616,6 +648,7 @@ describe.each([
       const updatedView = await config.api.viewV2.update({
         ...view,
         schema: {
+          ...view.schema,
           Price: {
             name: "Price",
             type: FieldType.NUMBER,
@@ -635,6 +668,7 @@ describe.each([
       expect(updatedView).toEqual({
         ...view,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
             order: 1,
@@ -651,6 +685,7 @@ describe.each([
         {
           ...view,
           schema: {
+            ...view.schema,
             Price: {
               name: "Price",
               type: FieldType.NUMBER,
@@ -674,6 +709,7 @@ describe.each([
       view = await config.api.viewV2.update({
         ...view,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
             readonly: true,
@@ -696,6 +732,7 @@ describe.each([
       view = await config.api.viewV2.update({
         ...view,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
             readonly: true,
@@ -710,6 +747,7 @@ describe.each([
       const res = await config.api.viewV2.update({
         ...view,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
             readonly: false,
@@ -720,6 +758,7 @@ describe.each([
         expect.objectContaining({
           ...view,
           schema: {
+            id: { visible: true },
             Price: {
               visible: true,
               readonly: false,
@@ -737,6 +776,9 @@ describe.each([
       view = await config.api.viewV2.create({
         tableId: table._id!,
         name: generator.guid(),
+        schema: {
+          id: { visible: true },
+        },
       })
     })
 
@@ -759,6 +801,7 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         schema: {
+          id: { visible: true },
           Price: { visible: false },
           Category: { visible: true },
         },
@@ -781,6 +824,7 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         schema: {
+          id: { visible: true },
           Price: { visible: true, readonly: true },
         },
       })
@@ -816,6 +860,7 @@ describe.each([
         tableId: table._id!,
         name: generator.guid(),
         schema: {
+          id: { visible: true },
           Country: {
             visible: true,
           },
@@ -850,6 +895,7 @@ describe.each([
         tableId: table._id!,
         name: generator.guid(),
         schema: {
+          id: { visible: true },
           two: { visible: true },
         },
       })
@@ -875,6 +921,7 @@ describe.each([
           tableId: table._id!,
           name: generator.guid(),
           schema: {
+            id: { visible: true },
             one: { visible: true, readonly: true },
             two: { visible: true },
           },
@@ -916,6 +963,7 @@ describe.each([
           tableId: table._id!,
           name: generator.guid(),
           schema: {
+            id: { visible: true },
             one: { visible: true, readonly: true },
             two: { visible: true },
           },
@@ -983,6 +1031,7 @@ describe.each([
             rows.map(r => ({
               _viewId: view.id,
               tableId: table._id,
+              id: r.id,
               _id: r._id,
               _rev: r._rev,
               ...(isInternal
@@ -1023,6 +1072,7 @@ describe.each([
             },
           ],
           schema: {
+            id: { visible: true },
             two: { visible: true },
           },
         })
@@ -1034,6 +1084,7 @@ describe.each([
             {
               _viewId: view.id,
               tableId: table._id,
+              id: two.id,
               two: two.two,
               _id: two._id,
               _rev: two._rev,
@@ -1187,7 +1238,11 @@ describe.each([
 
       describe("sorting", () => {
         let table: Table
-        const viewSchema = { age: { visible: true }, name: { visible: true } }
+        const viewSchema = {
+          id: { visible: true },
+          age: { visible: true },
+          name: { visible: true },
+        }
 
         beforeAll(async () => {
           table = await config.api.table.save(
