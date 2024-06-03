@@ -19,7 +19,6 @@ import {
   Query,
   SourceName,
   Row,
-  QueryParameter,
 } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
