@@ -7,11 +7,11 @@
   const { styleable, modalStore, builderStore, dndIsDragging } =
     getContext("sdk")
 
-  export let onClose
+  export let onClose = async () => {}
   export let ignoreClicksOutside
   export let size
 
-  // Automatically show and hide the side panel when inside the builder.
+  // Automatically show and hide the modal when inside the builder.
   // For some unknown reason, svelte reactivity breaks if we reference the
   // reactive variable "open" inside the following expression, or if we define
   // "open" above this expression.
@@ -35,28 +35,12 @@
   // Derive visibility
   $: open = $modalStore.contentId === $component.id
 
-  // Derive a render key which is only changed whenever this panel is made
-  // visible after being hidden. We need to key the content to avoid showing
-  // stale data when re-revealing a side panel that was closed, but we cannot
-  // hide the content altogether when hidden as this breaks ejection.
-  let renderKey = null
-  $: {
-    if (open) {
-      modalStore.actions.setIgnoreClicksOutside(ignoreClicksOutside)
-      renderKey = Math.random()
-    }
-  }
-
   const handleModalClose = async () => {
-    if (onClose) {
-      await onClose()
-    }
+    modalStore.actions.close()
+    await onClose()
   }
 
-  $: autoCloseModal =
-    !$builderStore.inBuilder &&
-    $modalStore.open &&
-    !$modalStore.ignoreClicksOutside
+
 </script>
 
 {#if open}
@@ -70,7 +54,7 @@
       >
         <div
           use:styleable={$component.styles}
-          use:clickOutside={autoCloseModal ? modalStore.actions.close : null}
+          use:clickOutside={!ignoreClicksOutside ? handleModalClose : null}
           class="modal {size}"
         >
           <div class="modal-header">
@@ -78,7 +62,7 @@
               color="var(--spectrum-global-color-gray-600)"
               name="Close"
               hoverable
-              on:click={modalStore.actions.close}
+              on:click={handleModalClose}
             />
           </div>
           <div
