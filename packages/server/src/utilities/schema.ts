@@ -4,7 +4,6 @@ import {
   TableSchema,
   FieldSchema,
   Row,
-  FieldConstraints,
 } from "@budibase/types"
 import { ValidColumnNameRegex, utils } from "@budibase/shared-core"
 import { db } from "@budibase/backend-core"
@@ -39,15 +38,6 @@ export function isSchema(schema: any): schema is TableSchema {
 
 export function isRows(rows: any): rows is Rows {
   return Array.isArray(rows) && rows.every(row => typeof row === "object")
-}
-
-export function isRequired(constraints: FieldConstraints | undefined) {
-  const isRequired =
-    !!constraints &&
-    ((typeof constraints.presence !== "boolean" &&
-      constraints.presence?.allowEmpty === false) ||
-      constraints.presence === true)
-  return isRequired
 }
 
 export function validate(rows: Rows, schema: TableSchema): ValidationResults {
