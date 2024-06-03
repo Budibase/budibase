@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 import { HTTPError, db as dbCore } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import { cloneDeep } from "lodash"
 
 import * as utils from "../../../db/utils"
@@ -16,7 +17,6 @@ import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
-import { isRequired } from "../../../utilities/schema"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {
@@ -58,7 +58,7 @@ async function guardViewSchema(
         throw new HTTPError(`Readonly fields are not enabled`, 400)
       }
 
-      if (isRequired(tableSchemaField.constraints)) {
+      if (helpers.schema.isRequired(tableSchemaField.constraints)) {
         throw new HTTPError(
           `Field "${field}" cannot be readonly as it is a required field`,
           400
