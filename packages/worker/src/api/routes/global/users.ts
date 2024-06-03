@@ -108,6 +108,11 @@ router
     buildInviteMultipleValidation(),
     controller.inviteMultiple
   )
+  .post(
+    "/api/global/users/multi/invite/delete",
+    auth.builderOrAdmin,
+    controller.removeMultipleInvites
+  )
 
   // non-global endpoints
   .get("/api/global/users/invite/:code", controller.checkInvite)
