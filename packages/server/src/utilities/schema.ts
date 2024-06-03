@@ -5,7 +5,7 @@ import {
   FieldSchema,
   Row,
 } from "@budibase/types"
-import { ValidColumnNameRegex, utils } from "@budibase/shared-core"
+import { ValidColumnNameRegex, helpers, utils } from "@budibase/shared-core"
 import { db } from "@budibase/backend-core"
 import { parseCsvExport } from "../api/controllers/view/exporters"
 
@@ -99,7 +99,7 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
           columnData,
           columnType,
           columnSubtype,
-          isRequired(constraints)
+          helpers.schema.isRequired(constraints)
         )
       ) {
         results.schemaValidation[columnName] = false
