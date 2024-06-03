@@ -19,13 +19,17 @@
     const visible = permission !== PERMISSION_OPTIONS.HIDDEN
     const readonly = permission === PERMISSION_OPTIONS.READONLY
 
-    datasource.actions.addSchemaMutation(column.name, { visible, readonly })
+    await datasource.actions.addSchemaMutation(column.name, {
+      visible,
+      readonly,
+    })
     try {
       await datasource.actions.saveSchemaMutations()
     } catch (e) {
       notifications.error(e.message)
     } finally {
-      datasource.actions.resetSchemaMutations()
+      await datasource.actions.resetSchemaMutations()
+      await datasource.actions.refreshDefinition()
     }
     dispatch(visible ? "show-column" : "hide-column")
   }
