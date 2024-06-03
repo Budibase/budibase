@@ -125,10 +125,9 @@ export class ScreenStore extends BudiStore {
         return
       }
 
-      if (type === "@budibase/standard-components/sidepanel") {
-        illegalChildren = []
-      }
-      if (type === "@budibase/standard-components/modal") {
+      // Sidepanels and modals can be nested anywhere in the component tree, but really they are always rendered at the top level.
+      // Because of this, it doesn't make sense to carry over any parent illegal children to them, so the array is reset here.
+      if (["@budibase/standard-components/sidepanel", "@budibase/standard-components/modal"].includes(type)) {
         illegalChildren = []
       }
 
