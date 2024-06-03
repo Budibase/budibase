@@ -149,13 +149,12 @@ class RestIntegration implements IntegrationBase {
       { downloadImages: this.config.downloadImages }
     )
     let contentLength = response.headers.get("content-length")
-    if (!contentLength && raw) {
-      contentLength = Buffer.byteLength(raw, "utf8").toString()
-    }
+    let isSuccess = response.status >= 200 && response.status < 300
     if (
-      contentDisposition.includes("filename") ||
-      contentDisposition.includes("attachment") ||
-      contentDisposition.includes("form-data")
+      (contentDisposition.includes("filename") ||
+        contentDisposition.includes("attachment") ||
+        contentDisposition.includes("form-data")) &&
+      isSuccess
     ) {
       filename =
         path.basename(parse(contentDisposition).parameters?.filename) || ""
@@ -168,6 +167,9 @@ class RestIntegration implements IntegrationBase {
         return handleFileResponse(response, filename, this.startTimeMs)
       } else {
         responseTxt = response.text ? await response.text() : ""
+        if (!contentLength && responseTxt) {
+          contentLength = Buffer.byteLength(responseTxt, "utf8").toString()
+        }
         const hasContent =
           (contentLength && parseInt(contentLength) > 0) ||
           responseTxt.length > 0
