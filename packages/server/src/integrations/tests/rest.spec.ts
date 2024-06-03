@@ -657,6 +657,7 @@ describe("REST Integration", () => {
       mockReadable.push(null)
       ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
         Promise.resolve({
+          status: 200,
           headers: {
             raw: () => ({
               "content-type": [contentType],
@@ -700,6 +701,7 @@ describe("REST Integration", () => {
       mockReadable.push(null)
       ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
         Promise.resolve({
+          status: 200,
           headers: {
             raw: () => ({
               "content-type": [contentType],
