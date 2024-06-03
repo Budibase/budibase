@@ -14,6 +14,7 @@ import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
 import { HeadObjectOutput } from "aws-sdk/clients/s3"
+import { ReadableStream } from "stream/web"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -259,14 +260,6 @@ export async function streamUpload({
     Body: stream,
     ContentType: contentType,
     ...extra,
-  }
-
-  // make sure we have the stream before we try to push it to object store
-  if (stream.on) {
-    await new Promise((resolve, reject) => {
-      stream.on("finish", resolve)
-      stream.on("error", reject)
-    })
   }
 
   const details = await objectStore.upload(params).promise()
