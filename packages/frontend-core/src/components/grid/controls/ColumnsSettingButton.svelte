@@ -3,6 +3,7 @@
   import { ActionButton, Popover, Icon, notifications } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
+  import { helpers } from "@budibase/shared-core"
 
   export let allowViewReadonlyColumns = false
 
@@ -37,13 +38,17 @@
   }
 
   $: displayColumns = allColumns.map(c => {
+    const isRequired = helpers.schema.isRequired(c.schema.constraints)
     const isDisplayColumn = $stickyColumn === c
+
+    const requiredTooltip = isRequired && "Required columns must be writable"
 
     const options = [
       {
         icon: "Edit",
         value: PERMISSION_OPTIONS.WRITABLE,
-        tooltip: "Writable",
+        tooltip: requiredTooltip || "Writable",
+        disabled: isRequired,
       },
     ]
     if ($datasource.type === "viewV2") {
@@ -51,17 +56,17 @@
         icon: "Visibility",
         value: PERMISSION_OPTIONS.READONLY,
         tooltip: allowViewReadonlyColumns
-          ? "Read only"
+          ? requiredTooltip || "Read only"
           : "Read only (premium feature)",
-        disabled: !allowViewReadonlyColumns,
+        disabled: !allowViewReadonlyColumns || isRequired,
       })
     }
 
     options.push({
       icon: "VisibilityOff",
       value: PERMISSION_OPTIONS.HIDDEN,
-      tooltip: "Hidden",
-      disabled: isDisplayColumn,
+      tooltip: requiredTooltip || "Hidden",
+      disabled: isDisplayColumn || isRequired,
       tooltip: isDisplayColumn && "Display column cannot be hidden",
     })
 
