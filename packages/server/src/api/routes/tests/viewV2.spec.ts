@@ -336,6 +336,7 @@ describe.each([
           tableId: table._id!,
           schema: {
             name: {
+              visible: true,
               readonly: true,
             },
           },
@@ -344,7 +345,7 @@ describe.each([
         await config.api.viewV2.create(newView, {
           status: 400,
           body: {
-            message: 'You can\'t make the required field "name" read only',
+            message: 'You can\'t make read only the required field "name"',
             status: 400,
           },
         })
