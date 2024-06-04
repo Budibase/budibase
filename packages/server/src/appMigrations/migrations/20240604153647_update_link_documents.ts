@@ -37,6 +37,8 @@ const migration = async () => {
   // at the end make sure design doc is ready
   await sdk.tables.sqs.syncDefinition()
   // only do initial search if environment is using SQS already
+  // initial search makes sure that all the indexes have been created
+  // and are ready to use, avoiding any initial waits for large tables
   if (env.SQS_SEARCH_ENABLE) {
     const tables = await sdk.tables.getAllInternalTables()
     // do these one by one - running in parallel could cause problems
