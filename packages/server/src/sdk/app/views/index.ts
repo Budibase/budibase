@@ -76,7 +76,7 @@ async function guardViewSchema(
     const viewSchemaField = viewSchema[field.name]
     if (viewSchemaField?.readonly) {
       throw new HTTPError(
-        `You can't make read only the required field "${field.name}"`,
+        `You can't make field "${field.name}" readonly because it is a required field.`,
         400
       )
     }
