@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 import { HTTPError, db as dbCore } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import { cloneDeep } from "lodash"
 
 import * as utils from "../../../db/utils"
@@ -16,7 +17,6 @@ import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./internal"
 import * as external from "./external"
 import sdk from "../../../sdk"
-import { isRequired } from "../../../utilities/schema"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {
@@ -37,9 +37,9 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
 
 async function guardViewSchema(
   tableId: string,
-  viewSchema?: Record<string, ViewUIFieldMetadata>
+  view: Omit<ViewV2, "id" | "version">
 ) {
-  viewSchema ??= {}
+  const viewSchema = view.schema || {}
   const table = await sdk.tables.getTable(tableId)
 
   for (const field of Object.keys(viewSchema)) {
@@ -69,7 +69,7 @@ async function guardViewSchema(
   }
 
   for (const field of Object.values(table.schema)) {
-    if (!isRequired(field.constraints)) {
+    if (!helpers.schema.isRequired(field.constraints)) {
       continue
     }
 
@@ -89,19 +89,30 @@ async function guardViewSchema(
       )
     }
   }
+
+  if (view.primaryDisplay) {
+    const viewSchemaField = viewSchema[view.primaryDisplay]
+
+    if (!viewSchemaField?.visible) {
+      throw new HTTPError(
+        `You can't hide "${view.primaryDisplay}" because it is the display column.`,
+        400
+      )
+    }
+  }
 }
 
 export async function create(
   tableId: string,
   viewRequest: Omit<ViewV2, "id" | "version">
 ): Promise<ViewV2> {
-  await guardViewSchema(tableId, viewRequest.schema)
+  await guardViewSchema(tableId, viewRequest)
 
   return pickApi(tableId).create(tableId, viewRequest)
 }
 
 export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
-  await guardViewSchema(tableId, view.schema)
+  await guardViewSchema(tableId, view)
 
   return pickApi(tableId).update(tableId, view)
 }
