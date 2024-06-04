@@ -77,7 +77,7 @@ async function guardViewSchema(
 
     if (!viewSchemaField?.visible) {
       throw new HTTPError(
-        `You can't hide "${field.name} because it is a required field."`,
+        `You can't hide "${field.name}" because it is a required field.`,
         400
       )
     }
