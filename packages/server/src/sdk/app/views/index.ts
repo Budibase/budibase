@@ -9,7 +9,7 @@ import {
 import { HTTPError, db as dbCore } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
-import { cloneDeep } from "lodash"
+import { cloneDeep } from "lodash/fp"
 
 import * as utils from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
@@ -68,12 +68,21 @@ async function guardViewSchema(
     }
   }
 
+  const existingView =
+    table?.views && (table.views[view.name] as ViewV2 | undefined)
+
   for (const field of Object.values(table.schema)) {
     if (!helpers.schema.isRequired(field.constraints)) {
       continue
     }
 
     const viewSchemaField = viewSchema[field.name]
+    const existingViewSchema =
+      existingView?.schema && existingView.schema[field.name]
+    if (!viewSchemaField && !existingViewSchema?.visible) {
+      // Supporting existing configs with required columns but hidden in views
+      continue
+    }
 
     if (!viewSchemaField?.visible) {
       throw new HTTPError(
