@@ -49,12 +49,15 @@
 
     const requiredTooltip = isRequired && "Required columns must be writable"
 
+    const editEnabled =
+      !isRequired ||
+      columnToPermissionOptions(c) !== PERMISSION_OPTIONS.WRITABLE
     const options = [
       {
         icon: "Edit",
         value: PERMISSION_OPTIONS.WRITABLE,
-        tooltip: requiredTooltip || "Writable",
-        disabled: isRequired,
+        tooltip: (!editEnabled && requiredTooltip) || "Writable",
+        disabled: !editEnabled,
       },
     ]
     if ($datasource.type === "viewV2") {
