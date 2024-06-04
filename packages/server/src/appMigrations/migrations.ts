@@ -2,12 +2,12 @@
 
 import { AppMigration } from "."
 
-import m20231229122514_update_link_documents from "./migrations/20231229122514_update_link_documents"
+import m20240604153647_update_link_documents from "./migrations/20240604153647_update_link_documents"
 
 export const MIGRATIONS: AppMigration[] = [
   // Migrations will be executed sorted by id
   {
-    id: "20231229122514_update_link_documents",
-    func: m20231229122514_update_link_documents
+    id: "20240604153647_update_link_documents",
+    func: m20240604153647_update_link_documents,
   },
 ]
