@@ -245,7 +245,7 @@ export type AutomationAttachment = {
 
 export type AutomationAttachmentContent = {
   filename: string
-  content: ReadStream | NodeJS.ReadableStream | ReadableStream<Uint8Array>
+  content: ReadStream | NodeJS.ReadableStream
 }
 
 export type BucketedContent = AutomationAttachmentContent & {
