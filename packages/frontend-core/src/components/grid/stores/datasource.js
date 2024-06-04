@@ -204,6 +204,10 @@ export const createActions = context => {
       ...$definition,
       schema: newSchema,
     })
+    resetSchemaMutations()
+  }
+
+  const resetSchemaMutations = () => {
     schemaMutations.set({})
   }
 
@@ -253,6 +257,7 @@ export const createActions = context => {
         addSchemaMutation,
         addSchemaMutations,
         saveSchemaMutations,
+        resetSchemaMutations,
       },
     },
   }
