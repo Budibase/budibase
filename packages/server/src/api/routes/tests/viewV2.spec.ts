@@ -368,7 +368,8 @@ describe.each([
         await config.api.viewV2.create(newView, {
           status: 400,
           body: {
-            message: 'You can\'t make read only the required field "name"',
+            message:
+              'You can\'t make field "name" readonly because it is a required field.',
             status: 400,
           },
         })
@@ -1479,7 +1480,7 @@ describe.each([
             body: {
               status: 400,
               message:
-                'Invalid body - Required field "name" is missing in view "view a"',
+                'To make field "name" required, this field must be present and writable in views: view a.',
             },
           }
         )
@@ -1510,7 +1511,7 @@ describe.each([
             body: {
               status: 400,
               message:
-                'Invalid body - Required field "name" is missing in view "view a"',
+                'To make field "name" required, this field must be present and writable in views: view a.',
             },
           }
         )
