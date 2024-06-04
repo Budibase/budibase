@@ -26,6 +26,7 @@ jobs:
   team-labeler:
     runs-on: ubuntu-latest
     name: Label the PR size
+    if: ${{ github.event.action == 'opened' }}
     steps:
       - uses: rodrigoarias/auto-label-per-user@v1.0.0
         with:
