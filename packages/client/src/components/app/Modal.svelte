@@ -1,4 +1,5 @@
 <script>
+  import { fade,fly  } from 'svelte/transition';
   import { getContext } from "svelte"
   import { clickOutside, Icon } from "@budibase/bbui"
   import Portal from "svelte-portal"
@@ -39,13 +40,12 @@
     modalStore.actions.close()
     await onClose()
   }
-
-
 </script>
 
 {#if open}
   <Portal target=".modal-portal">
     <div
+      transition:fade={{ duration: 300 }}
       class="modal-scroll-container"
       class:open={$modalStore.open}
     >
@@ -53,6 +53,7 @@
         class="modal-container"
       >
         <div
+          transition:fly={{ duration: 300, y: 300 }}
           use:styleable={$component.styles}
           use:clickOutside={!ignoreClicksOutside ? handleModalClose : null}
           class="modal {size}"
