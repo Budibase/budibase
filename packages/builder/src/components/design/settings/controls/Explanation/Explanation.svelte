@@ -18,14 +18,10 @@
   import subjects from "./subjects"
   import { appStore } from "stores/builder"
 
-  export let explanation
-  export let columnIcon
-  export let columnType
-  export let columnName
-
   export let tableHref = () => {}
-
   export let schema
+  export let name
+  export let explanation
 
   $: explanationWithPresets = getExplanationWithPresets(
     explanation,
@@ -55,9 +51,8 @@
 
 <div bind:this={root} class="tooltipContents">
   <Column
-    {columnName}
-    {columnIcon}
-    {columnType}
+    {name}
+    {schema}
     {tableHref}
     {setExplanationSubject}
   />
@@ -84,7 +79,7 @@
 
 {#if detailsModalSubject !== subjects.none}
   <DetailsModal
-    {columnName}
+    columnName={name}
     anchor={root}
     {schema}
     subject={detailsModalSubject}

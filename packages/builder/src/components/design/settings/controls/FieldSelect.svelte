@@ -109,9 +109,7 @@
     <Explanation
       tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
       schema={schema[currentOption]}
-      columnIcon={getOptionIcon(currentOption)}
-      columnName={currentOption}
-      columnType={getOptionIconTooltip(currentOption)}
+      name={currentOption}
       {explanation}
     />
   </ContextTooltip>

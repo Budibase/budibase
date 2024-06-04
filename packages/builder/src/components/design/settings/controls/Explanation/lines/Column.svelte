@@ -6,17 +6,28 @@
     Text,
     Period,
   } from "../typography"
+  import { FIELDS } from "constants/backend"
   import subjects from "../subjects"
 
-  export let columnName
-  export let columnIcon
-  export let columnType
+  export let schema
+  export let name
   export let tableHref
   export let setExplanationSubject
 
-  $: {
-    console.log(columnName, columnIcon, columnType)
-  }
+  const getTypeName = (schema) => {
+    const fieldDefinition = Object.values(FIELDS).find(f => f.type === schema?.type)
+
+    return fieldDefinition?.name || schema?.type || "Unknown"
+  };
+
+  const getTypeIcon = (schema) => {
+    const fieldDefinition = Object.values(FIELDS).find(f => f.type === schema?.type)
+
+    return fieldDefinition?.icon || "Circle"
+  };
+
+  $: columnType = getTypeName(schema)
+  $: columnIcon = getTypeIcon(schema)
 
   const getDocLink = columnType => {
     if (columnType === "Number") {
@@ -109,7 +120,7 @@
     on:mouseenter={() => setExplanationSubject(subjects.column)}
     on:mouseleave={() => setExplanationSubject(subjects.none)}
     href={tableHref}
-    text={columnName}
+    text={name}
   />
   <Text value=" is a " />
   <DocumentationLink
