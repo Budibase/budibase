@@ -105,6 +105,9 @@ export function processDates<T extends Row | Row[]>(
     if (schema.type !== FieldType.DATETIME) {
       continue
     }
+    if (schema.dateOnly) {
+      continue
+    }
     if (!schema.timeOnly && !schema.ignoreTimezones) {
       datesWithTZ.push(column)
     }

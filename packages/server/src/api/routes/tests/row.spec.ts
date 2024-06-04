@@ -309,6 +309,11 @@ describe.each([
           name: "attachments",
           constraints: { type: "array", presence: false },
         }
+        const signature: FieldSchema = {
+          type: FieldType.SIGNATURE_SINGLE,
+          name: "signature",
+          constraints: { presence: false },
+        }
         const bool: FieldSchema = {
           type: FieldType.BOOLEAN,
           name: "boolean",
@@ -375,6 +380,8 @@ describe.each([
               attachmentListUndefined: attachmentList,
               attachmentListEmpty: attachmentList,
               attachmentListEmptyArrayStr: attachmentList,
+              signatureNull: signature,
+              signatureUndefined: signature,
               arrayFieldEmptyArrayStr: arrayField,
               arrayFieldArrayStrKnown: arrayField,
               arrayFieldNull: arrayField,
@@ -416,6 +423,8 @@ describe.each([
           attachmentListUndefined: undefined,
           attachmentListEmpty: "",
           attachmentListEmptyArrayStr: "[]",
+          signatureNull: null,
+          signatureUndefined: undefined,
           arrayFieldEmptyArrayStr: "[]",
           arrayFieldUndefined: undefined,
           arrayFieldNull: null,
@@ -450,6 +459,8 @@ describe.each([
         expect(row.attachmentListUndefined).toBe(undefined)
         expect(row.attachmentListEmpty).toEqual([])
         expect(row.attachmentListEmptyArrayStr).toEqual([])
+        expect(row.signatureNull).toEqual(null)
+        expect(row.signatureUndefined).toBe(undefined)
         expect(row.arrayFieldEmptyArrayStr).toEqual([])
         expect(row.arrayFieldNull).toEqual([])
         expect(row.arrayFieldUndefined).toEqual(undefined)
@@ -474,6 +485,25 @@ describe.each([
         )
         expect(response.message).toBe("Cannot create new user entry.")
       })
+
+    it("should not mis-parse date string out of JSON", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+            },
+          },
+        })
+      )
+
+      const row = await config.api.row.save(table._id!, {
+        name: `{ "foo": "2023-01-26T11:48:57.000Z" }`,
+      })
+
+      expect(row.name).toEqual(`{ "foo": "2023-01-26T11:48:57.000Z" }`)
+    })
   })
 
   describe("get", () => {
@@ -894,70 +924,91 @@ describe.each([
   })
 
   isInternal &&
-    describe("attachments", () => {
-      it("should allow enriching single attachment rows", async () => {
-        const table = await config.api.table.save(
+    describe("attachments and signatures", () => {
+      const coreAttachmentEnrichment = async (
+        schema: any,
+        field: string,
+        attachmentCfg: string | string[]
+      ) => {
+        const testTable = await config.api.table.save(
           defaultTable({
-            schema: {
-              attachment: {
-                type: FieldType.ATTACHMENT_SINGLE,
-                name: "attachment",
-                constraints: { presence: false },
-              },
-            },
+            schema,
           })
         )
-        const attachmentId = `${uuid.v4()}.csv`
-        const row = await config.api.row.save(table._id!, {
+        const attachmentToStoreKey = (attachmentId: string) => {
+          return {
+            key: `${config.getAppId()}/attachments/${attachmentId}`,
+          }
+        }
+        const draftRow = {
           name: "test",
           description: "test",
-          attachment: {
-            key: `${config.getAppId()}/attachments/${attachmentId}`,
-          },
+          [field]:
+            typeof attachmentCfg === "string"
+              ? attachmentToStoreKey(attachmentCfg)
+              : attachmentCfg.map(attachmentToStoreKey),
+          tableId: testTable._id,
+        }
+        const row = await config.api.row.save(testTable._id!, draftRow)
 
-          tableId: table._id,
-        })
         await config.withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
-            const enriched = await outputProcessing(table, [row])
-            expect((enriched as Row[])[0].attachment.url.split("?")[0]).toBe(
-              `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
-            )
+            const enriched: Row[] = await outputProcessing(table, [row])
+            const [targetRow] = enriched
+            const attachmentEntries = Array.isArray(targetRow[field])
+              ? targetRow[field]
+              : [targetRow[field]]
+
+            for (const entry of attachmentEntries) {
+              const attachmentId = entry.key.split("/").pop()
+              expect(entry.url.split("?")[0]).toBe(
+                `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
+              )
+            }
           })
         })
+      }
+
+      it("should allow enriching single attachment rows", async () => {
+        await coreAttachmentEnrichment(
+          {
+            attachment: {
+              type: FieldType.ATTACHMENT_SINGLE,
+              name: "attachment",
+              constraints: { presence: false },
+            },
+          },
+          "attachment",
+          `${uuid.v4()}.csv`
+        )
       })
 
       it("should allow enriching attachment list rows", async () => {
-        const table = await config.api.table.save(
-          defaultTable({
-            schema: {
-              attachment: {
-                type: FieldType.ATTACHMENTS,
-                name: "attachment",
-                constraints: { type: "array", presence: false },
-              },
+        await coreAttachmentEnrichment(
+          {
+            attachments: {
+              type: FieldType.ATTACHMENTS,
+              name: "attachments",
+              constraints: { type: "array", presence: false },
             },
-          })
+          },
+          "attachments",
+          [`${uuid.v4()}.csv`]
         )
-        const attachmentId = `${uuid.v4()}.csv`
-        const row = await config.api.row.save(table._id!, {
-          name: "test",
-          description: "test",
-          attachment: [
-            {
-              key: `${config.getAppId()}/attachments/${attachmentId}`,
+      })
+
+      it("should allow enriching signature rows", async () => {
+        await coreAttachmentEnrichment(
+          {
+            signature: {
+              type: FieldType.SIGNATURE_SINGLE,
+              name: "signature",
+              constraints: { presence: false },
             },
-          ],
-          tableId: table._id,
-        })
-        await config.withEnv({ SELF_HOSTED: "true" }, async () => {
-          return context.doInAppContext(config.getAppId(), async () => {
-            const enriched = await outputProcessing(table, [row])
-            expect((enriched as Row[])[0].attachment[0].url.split("?")[0]).toBe(
-              `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
-            )
-          })
-        })
+          },
+          "signature",
+          `${uuid.v4()}.png`
+        )
       })
     })
 

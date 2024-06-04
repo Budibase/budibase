@@ -18,6 +18,7 @@
   export let scrollVertically = false
   export let scrollHorizontally = false
   export let attachHandlers = false
+  export let ref
 
   // Used for tracking touch events
   let initialTouchX
@@ -109,7 +110,7 @@
   on:touchmove={attachHandlers ? handleTouchMove : null}
   on:click|self={() => ($focusedCellId = null)}
 >
-  <div {style} class="inner">
+  <div {style} class="inner" bind:this={ref}>
     <slot />
   </div>
 </div>

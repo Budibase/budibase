@@ -166,9 +166,14 @@ export const stringifyDate = (
   const offsetForTimezone = (enableTime && ignoreTimezones) || timeOnly
   if (offsetForTimezone) {
     // Ensure we use the correct offset for the date
-    const referenceDate = timeOnly ? new Date() : value.toDate()
+    const referenceDate = value.toDate()
     const offset = referenceDate.getTimezoneOffset() * 60000
-    return new Date(value.valueOf() - offset).toISOString().slice(0, -1)
+    const date = new Date(value.valueOf() - offset)
+    if (timeOnly) {
+      // Extract HH:mm
+      return date.toISOString().slice(11, 16)
+    }
+    return date.toISOString().slice(0, -1)
   }
 
   // For date-only fields, construct a manual timestamp string without a time
@@ -177,7 +182,7 @@ export const stringifyDate = (
     const year = value.year()
     const month = `${value.month() + 1}`.padStart(2, "0")
     const day = `${value.date()}`.padStart(2, "0")
-    return `${year}-${month}-${day}T00:00:00.000`
+    return `${year}-${month}-${day}`
   }
 
   // Otherwise use a normal ISO string with time and timezone

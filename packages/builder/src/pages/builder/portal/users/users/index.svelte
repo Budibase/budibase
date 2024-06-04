@@ -60,6 +60,7 @@
     userLimitReachedModal
   let searchEmail = undefined
   let selectedRows = []
+  let selectedInvites = []
   let bulkSaveResponse
   let customRenderers = [
     { column: "email", component: EmailTableRenderer },
@@ -123,7 +124,7 @@
       return {}
     }
     let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
-    pendingSchema.email.displayName = "Pending Invites"
+    pendingSchema.email.displayName = "Pending Users"
     return pendingSchema
   }
 
@@ -132,6 +133,7 @@
       const { admin, builder, userGroups, apps } = invite.info
 
       return {
+        _id: invite.code,
         email: invite.email,
         builder,
         admin,
@@ -260,9 +262,26 @@
         return
       }
 
-      await users.bulkDelete(ids)
-      notifications.success(`Successfully deleted ${selectedRows.length} rows`)
+      if (ids.length > 0) {
+        await users.bulkDelete(ids)
+      }
+
+      if (selectedInvites.length > 0) {
+        await users.removeInvites(
+          selectedInvites.map(invite => ({
+            code: invite._id,
+          }))
+        )
+        pendingInvites = await users.getInvites()
+      }
+
+      notifications.success(
+        `Successfully deleted ${
+          selectedRows.length + selectedInvites.length
+        } users`
+      )
       selectedRows = []
+      selectedInvites = []
       await fetch.refresh()
     } catch (error) {
       notifications.error("Error deleting users")
@@ -328,15 +347,15 @@
       </div>
     {/if}
     <div class="controls-right">
-      <Search bind:value={searchEmail} placeholder="Search" />
-      {#if selectedRows.length > 0}
+      {#if selectedRows.length > 0 || selectedInvites.length > 0}
         <DeleteRowsButton
           item="user"
           on:updaterows
-          {selectedRows}
+          selectedRows={[...selectedRows, ...selectedInvites]}
           deleteRows={deleteUsers}
         />
       {/if}
+      <Search bind:value={searchEmail} placeholder="Search" />
     </div>
   </div>
   <Table
@@ -362,10 +381,12 @@
   </div>
 
   <Table
+    bind:selectedRows={selectedInvites}
     schema={pendingSchema}
     data={parsedInvites}
     allowEditColumns={false}
     allowEditRows={false}
+    allowSelectRows={!readonly}
     {customRenderers}
     loading={!invitesLoaded}
     allowClickRows={false}

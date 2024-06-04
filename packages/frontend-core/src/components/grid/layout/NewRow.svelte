@@ -24,8 +24,6 @@
     rowHeight,
     hasNextPage,
     maxScrollTop,
-    rowVerticalInversionIndex,
-    columnHorizontalInversionIndex,
     selectedRows,
     loaded,
     refreshing,
@@ -43,16 +41,8 @@
   $: firstColumn = $stickyColumn || $visibleColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $datasource, (visible = false)
-  $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
   $: selectedRowCount = Object.values($selectedRows).length
   $: hasNoRows = !$rows.length
-
-  const shouldInvertY = (offset, inversionIndex, rows) => {
-    if (offset === 0) {
-      return false
-    }
-    return rows.length >= inversionIndex
-  }
 
   const addRow = async () => {
     // Blur the active cell and tick to let final value updates propagate
@@ -205,7 +195,6 @@
           width={$stickyColumn.width}
           {updateValue}
           topRow={offset === 0}
-          {invertY}
         >
           {#if $stickyColumn?.schema?.autocolumn}
             <div class="readonly-overlay">Can't edit auto column</div>
@@ -219,8 +208,8 @@
     <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally attachHandlers>
         <div class="row">
-          {#each $visibleColumns as column, columnIdx}
-            {@const cellId = `new-${column.name}`}
+          {#each $visibleColumns as column}
+            {@const cellId = getCellID(NewRowID, column.name)}
             <DataCell
               {cellId}
               {column}
@@ -230,8 +219,6 @@
               focused={$focusedCellId === cellId}
               width={column.width}
               topRow={offset === 0}
-              invertX={columnIdx >= $columnHorizontalInversionIndex}
-              {invertY}
               hidden={!$columnRenderMap[column.name]}
             >
               {#if column?.schema?.autocolumn}

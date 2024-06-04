@@ -10,6 +10,8 @@ import {
   CreateAdminUserRequest,
   CreateAdminUserResponse,
   Ctx,
+  DeleteInviteUserRequest,
+  DeleteInviteUsersRequest,
   InviteUserRequest,
   InviteUsersRequest,
   InviteUsersResponse,
@@ -35,6 +37,7 @@ import {
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
+import { BpmStatusKey, BpmStatusValue } from "@budibase/shared-core"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -334,6 +337,20 @@ export const inviteMultiple = async (ctx: Ctx<InviteUsersRequest>) => {
   ctx.body = await userSdk.invite(ctx.request.body)
 }
 
+export const removeMultipleInvites = async (
+  ctx: Ctx<DeleteInviteUsersRequest>
+) => {
+  const inviteCodesToRemove = ctx.request.body.map(
+    (invite: DeleteInviteUserRequest) => invite.code
+  )
+  for (const code of inviteCodesToRemove) {
+    await cache.invite.deleteCode(code)
+  }
+  ctx.body = {
+    message: "User invites successfully removed.",
+  }
+}
+
 export const checkInvite = async (ctx: any) => {
   const { code } = ctx.params
   let invite
@@ -444,10 +461,16 @@ export const inviteAccept = async (
 
         await cache.invite.deleteCode(inviteCode)
 
+        // make sure onboarding flow is cleared
+        ctx.cookies.set(BpmStatusKey.ONBOARDING, BpmStatusValue.COMPLETED, {
+          expires: new Date(0),
+        })
+
         ctx.body = {
           _id: user._id!,
           _rev: user._rev!,
           email: user.email,
+          tenantId: user.tenantId,
         }
       }
     )

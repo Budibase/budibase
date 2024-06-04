@@ -6,6 +6,15 @@ export { Feature as Features } from "@budibase/types"
 import { BpmCorrelationKey } from "@budibase/shared-core"
 import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
 
+export const BannedSearchTypes = [
+  FieldType.LINK,
+  FieldType.ATTACHMENTS,
+  FieldType.FORMULA,
+  FieldType.JSON,
+  "jsonarray",
+  "queryarray",
+]
+
 // Cookie names
 export const Cookies = {
   Auth: "budibase:auth",
@@ -121,6 +130,7 @@ export const TypeIconMap = {
   [FieldType.OPTIONS]: "Dropdown",
   [FieldType.DATETIME]: "Calendar",
   [FieldType.BARCODEQR]: "Camera",
+  [FieldType.SIGNATURE_SINGLE]: "AnnotatePen",
   [FieldType.LONGFORM]: "TextAlignLeft",
   [FieldType.ARRAY]: "Duplicate",
   [FieldType.NUMBER]: "123",
@@ -140,3 +150,7 @@ export const TypeIconMap = {
     [BBReferenceFieldSubType.USER]: "User",
   },
 }
+
+export const OptionColours = [...new Array(12).keys()].map(idx => {
+  return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, 0.3)`
+})

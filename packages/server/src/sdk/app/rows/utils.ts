@@ -1,20 +1,23 @@
-import cloneDeep from "lodash/cloneDeep"
 import validateJs from "validate.js"
+import dayjs from "dayjs"
+import cloneDeep from "lodash/fp/cloneDeep"
 import {
   Datasource,
   DatasourcePlusQueryResponse,
+  FieldConstraints,
   FieldType,
   QueryJson,
   Row,
   SourceName,
   Table,
   TableSchema,
+  SqlClient,
 } from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { isRelationshipColumn } from "../../../db/utils"
-import { SqlClient, isSQL } from "../../../integrations/utils"
+import { isSQL } from "../../../integrations/utils"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.POSTGRES]: SqlClient.POSTGRES,
@@ -144,6 +147,10 @@ export async function validate({
     throw new Error("Unable to fetch table for validation")
   }
   const errors: Record<string, any> = {}
+  const disallowArrayTypes = [
+    FieldType.ATTACHMENT_SINGLE,
+    FieldType.BB_REFERENCE_SINGLE,
+  ]
   for (let fieldName of Object.keys(fetchedTable.schema)) {
     const column = fetchedTable.schema[fieldName]
     const constraints = cloneDeep(column.constraints)
@@ -159,6 +166,10 @@ export async function validate({
     // special case for options, need to always allow unselected (empty)
     if (type === FieldType.OPTIONS && constraints?.inclusion) {
       constraints.inclusion.push(null as any, "")
+    }
+
+    if (disallowArrayTypes.includes(type) && Array.isArray(row[fieldName])) {
+      errors[fieldName] = `Cannot accept arrays`
     }
     let res
 
@@ -197,10 +208,95 @@ export async function validate({
       } catch (err) {
         errors[fieldName] = [`Contains invalid JSON`]
       }
+    } else if (type === FieldType.DATETIME && column.timeOnly) {
+      res = validateTimeOnlyField(fieldName, row[fieldName], constraints)
     } else {
       res = validateJs.single(row[fieldName], constraints)
     }
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
+}
+
+function validateTimeOnlyField(
+  fieldName: string,
+  value: any,
+  constraints: FieldConstraints | undefined
+) {
+  let res
+  if (value && !value.match(/^(\d+)(:[0-5]\d){1,2}$/)) {
+    res = [`"${fieldName}" is not a valid time`]
+  } else if (constraints) {
+    let castedValue = value
+    const stringTimeToDate = (value: string) => {
+      const [hour, minute, second] = value.split(":").map((x: string) => +x)
+      let date = dayjs("2000-01-01T00:00:00.000Z").hour(hour).minute(minute)
+      if (!isNaN(second)) {
+        date = date.second(second)
+      }
+      return date
+    }
+
+    if (castedValue) {
+      castedValue = stringTimeToDate(castedValue)
+    }
+    let castedConstraints = cloneDeep(constraints)
+
+    let earliest, latest
+    let easliestTimeString: string, latestTimeString: string
+    if (castedConstraints.datetime?.earliest) {
+      easliestTimeString = castedConstraints.datetime.earliest
+      if (dayjs(castedConstraints.datetime.earliest).isValid()) {
+        easliestTimeString = dayjs(castedConstraints.datetime.earliest).format(
+          "HH:mm"
+        )
+      }
+      earliest = stringTimeToDate(easliestTimeString)
+    }
+    if (castedConstraints.datetime?.latest) {
+      latestTimeString = castedConstraints.datetime.latest
+      if (dayjs(castedConstraints.datetime.latest).isValid()) {
+        latestTimeString = dayjs(castedConstraints.datetime.latest).format(
+          "HH:mm"
+        )
+      }
+      latest = stringTimeToDate(latestTimeString)
+    }
+
+    if (earliest && latest && earliest.isAfter(latest)) {
+      latest = latest.add(1, "day")
+      if (earliest.isAfter(castedValue)) {
+        castedValue = castedValue.add(1, "day")
+      }
+    }
+
+    if (earliest || latest) {
+      castedConstraints.datetime = {
+        earliest: earliest?.toISOString() || "",
+        latest: latest?.toISOString() || "",
+      }
+    }
+
+    let jsValidation = validateJs.single(
+      castedValue?.toISOString(),
+      castedConstraints
+    )
+    jsValidation = jsValidation?.map((m: string) =>
+      m
+        ?.replace(
+          castedConstraints.datetime?.earliest || "",
+          easliestTimeString || ""
+        )
+        .replace(
+          castedConstraints.datetime?.latest || "",
+          latestTimeString || ""
+        )
+    )
+    if (jsValidation) {
+      res ??= []
+      res.push(...jsValidation)
+    }
+  }
+
+  return res
 }

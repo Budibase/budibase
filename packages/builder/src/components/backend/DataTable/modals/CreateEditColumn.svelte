@@ -9,7 +9,6 @@
     DatePicker,
     Modal,
     notifications,
-    OptionSelectDnD,
     Layout,
     AbsTooltip,
     ProgressCircle,
@@ -42,6 +41,7 @@
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
+  import OptionsEditor from "./OptionsEditor.svelte"
 
   const AUTO_TYPE = FieldType.AUTO
   const FORMULA_TYPE = FieldType.FORMULA
@@ -95,6 +95,7 @@
     },
   }
   let autoColumnInfo = getAutoColumnInformation()
+  let optionsValid = true
 
   $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
   $: if (primaryDisplay) {
@@ -138,7 +139,8 @@
   $: invalid =
     !editableColumn?.name ||
     (editableColumn?.type === LINK_TYPE && !editableColumn?.tableId) ||
-    Object.keys(errors).length !== 0
+    Object.keys(errors).length !== 0 ||
+    !optionsValid
   $: errors = checkErrors(editableColumn)
   $: datasource = $datasources.list.find(
     source => source._id === table?.sourceId
@@ -412,6 +414,7 @@
         FIELDS.FORMULA,
         FIELDS.JSON,
         FIELDS.BARCODEQR,
+        FIELDS.SIGNATURE_SINGLE,
         FIELDS.BIGINT,
         FIELDS.AUTO,
       ]
@@ -558,9 +561,10 @@
       bind:value={editableColumn.constraints.length.maximum}
     />
   {:else if editableColumn.type === FieldType.OPTIONS}
-    <OptionSelectDnD
+    <OptionsEditor
       bind:constraints={editableColumn.constraints}
       bind:optionColors={editableColumn.optionColors}
+      bind:valid={optionsValid}
     />
   {:else if editableColumn.type === FieldType.LONGFORM}
     <div>
@@ -581,17 +585,22 @@
       />
     </div>
   {:else if editableColumn.type === FieldType.ARRAY}
-    <OptionSelectDnD
+    <OptionsEditor
       bind:constraints={editableColumn.constraints}
       bind:optionColors={editableColumn.optionColors}
+      bind:valid={optionsValid}
     />
-  {:else if editableColumn.type === FieldType.DATETIME && !editableColumn.autocolumn}
+  {:else if editableColumn.type === DATE_TYPE && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
         <Label size="M">Earliest</Label>
       </div>
       <div class="input-length">
-        <DatePicker bind:value={editableColumn.constraints.datetime.earliest} />
+        <DatePicker
+          bind:value={editableColumn.constraints.datetime.earliest}
+          enableTime={!editableColumn.dateOnly}
+          timeOnly={editableColumn.timeOnly}
+        />
       </div>
     </div>
 
@@ -600,30 +609,36 @@
         <Label size="M">Latest</Label>
       </div>
       <div class="input-length">
-        <DatePicker bind:value={editableColumn.constraints.datetime.latest} />
-      </div>
-    </div>
-    {#if datasource?.source !== SourceName.ORACLE && datasource?.source !== SourceName.SQL_SERVER && !editableColumn.dateOnly}
-      <div>
-        <div class="row">
-          <Label>Time zones</Label>
-          <AbsTooltip
-            position="top"
-            type="info"
-            text={isCreating
-              ? null
-              : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
-          >
-            <Icon size="XS" name="InfoOutline" />
-          </AbsTooltip>
-        </div>
-        <Toggle
-          bind:value={editableColumn.ignoreTimezones}
-          text="Ignore time zones"
+        <DatePicker
+          bind:value={editableColumn.constraints.datetime.latest}
+          enableTime={!editableColumn.dateOnly}
+          timeOnly={editableColumn.timeOnly}
         />
       </div>
+    </div>
+    {#if !editableColumn.timeOnly}
+      {#if datasource?.source !== SourceName.ORACLE && datasource?.source !== SourceName.SQL_SERVER && !editableColumn.dateOnly}
+        <div>
+          <div class="row">
+            <Label>Time zones</Label>
+            <AbsTooltip
+              position="top"
+              type="info"
+              text={isCreating
+                ? null
+                : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
+            >
+              <Icon size="XS" name="InfoOutline" />
+            </AbsTooltip>
+          </div>
+          <Toggle
+            bind:value={editableColumn.ignoreTimezones}
+            text="Ignore time zones"
+          />
+        </div>
+      {/if}
+      <Toggle bind:value={editableColumn.dateOnly} text="Date only" />
     {/if}
-    <Toggle bind:value={editableColumn.dateOnly} text="Date only" />
   {:else if editableColumn.type === FieldType.NUMBER && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
