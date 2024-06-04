@@ -4,6 +4,7 @@ import {
   TableSchema,
   FieldSchema,
   Row,
+  FieldConstraints,
 } from "@budibase/types"
 import { ValidColumnNameRegex, utils } from "@budibase/shared-core"
 import { db } from "@budibase/backend-core"
@@ -40,6 +41,15 @@ export function isRows(rows: any): rows is Rows {
   return Array.isArray(rows) && rows.every(row => typeof row === "object")
 }
 
+export function isRequired(constraints: FieldConstraints | undefined) {
+  const isRequired =
+    !!constraints &&
+    ((typeof constraints.presence !== "boolean" &&
+      constraints.presence?.allowEmpty === false) ||
+      constraints.presence === true)
+  return isRequired
+}
+
 export function validate(rows: Rows, schema: TableSchema): ValidationResults {
   const results: ValidationResults = {
     schemaValidation: {},
@@ -61,12 +71,6 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
       if (results.schemaValidation[columnName] === false) {
         return
       }
-
-      const isRequired =
-        !!constraints &&
-        ((typeof constraints.presence !== "boolean" &&
-          !constraints.presence?.allowEmpty) ||
-          constraints.presence === true)
 
       // If the columnType is not a string, then it's not present in the schema, and should be added to the invalid columns array
       if (typeof columnType !== "string") {
@@ -101,7 +105,12 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
       } else if (
         (columnType === FieldType.BB_REFERENCE ||
           columnType === FieldType.BB_REFERENCE_SINGLE) &&
-        !isValidBBReference(columnData, columnType, columnSubtype, isRequired)
+        !isValidBBReference(
+          columnData,
+          columnType,
+          columnSubtype,
+          isRequired(constraints)
+        )
       ) {
         results.schemaValidation[columnName] = false
       } else {
@@ -129,11 +138,16 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
         return
       }
 
-      const { type: columnType } = schema[columnName]
+      const columnSchema = schema[columnName]
+      const { type: columnType } = columnSchema
       if (columnType === FieldType.NUMBER) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
-      } else if (columnType === FieldType.DATETIME) {
+      } else if (
+        columnType === FieldType.DATETIME &&
+        !columnSchema.timeOnly &&
+        !columnSchema.dateOnly
+      ) {
         // If provided must be a valid date
         parsedRow[columnName] = columnData
           ? new Date(columnData).toISOString()
@@ -151,7 +165,8 @@ export function parse(rows: Rows, schema: TableSchema): Rows {
         parsedRow[columnName] = parsedValue?._id
       } else if (
         (columnType === FieldType.ATTACHMENTS ||
-          columnType === FieldType.ATTACHMENT_SINGLE) &&
+          columnType === FieldType.ATTACHMENT_SINGLE ||
+          columnType === FieldType.SIGNATURE_SINGLE) &&
         typeof columnData === "string"
       ) {
         parsedRow[columnName] = parseCsvExport(columnData)

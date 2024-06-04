@@ -1,15 +1,27 @@
 jest.mock("node-fetch", () => {
+  const obj = {
+    my_next_cursor: 123,
+  }
+  const str = JSON.stringify(obj)
   return jest.fn(() => ({
     headers: {
       raw: () => {
-        return { "content-type": ["application/json"] }
+        return {
+          "content-type": ["application/json"],
+          "content-length": str.length,
+        }
       },
-      get: () => ["application/json"],
+      get: (name: string) => {
+        const lcName = name.toLowerCase()
+        if (lcName === "content-type") {
+          return ["application/json"]
+        } else if (lcName === "content-length") {
+          return str.length
+        }
+      },
     },
-    json: jest.fn(() => ({
-      my_next_cursor: 123,
-    })),
-    text: jest.fn(),
+    json: jest.fn(() => obj),
+    text: jest.fn(() => str),
   }))
 })
 
@@ -211,14 +223,24 @@ describe("REST Integration", () => {
         json: json ? async () => json : undefined,
         text: text ? async () => text : undefined,
         headers: {
-          get: (key: any) => (key === "content-length" ? 100 : header),
+          get: (key: string) => {
+            switch (key.toLowerCase()) {
+              case "content-length":
+                return 100
+              case "content-type":
+                return header
+              default:
+                return ""
+            }
+          },
           raw: () => ({ "content-type": header }),
         },
       }
     }
 
     it("should be able to parse JSON response", async () => {
-      const input = buildInput({ a: 1 }, null, "application/json")
+      const obj = { a: 1 }
+      const input = buildInput(obj, JSON.stringify(obj), "application/json")
       const output = await config.integration.parseResponse(input)
       expect(output.data).toEqual({ a: 1 })
       expect(output.info.code).toEqual(200)
@@ -248,7 +270,7 @@ describe("REST Integration", () => {
     test.each([...contentTypes, undefined])(
       "should not throw an error on 204 no content",
       async contentType => {
-        const input = buildInput(undefined, null, contentType, 204)
+        const input = buildInput(undefined, "", contentType, 204)
         const output = await config.integration.parseResponse(input)
         expect(output.data).toEqual([])
         expect(output.extra.raw).toEqual("")
@@ -635,6 +657,7 @@ describe("REST Integration", () => {
       mockReadable.push(null)
       ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
         Promise.resolve({
+          status: 200,
           headers: {
             raw: () => ({
               "content-type": [contentType],
@@ -642,6 +665,7 @@ describe("REST Integration", () => {
             }),
             get: (header: any) => {
               if (header === "content-type") return contentType
+              if (header === "content-length") return responseData.byteLength
               if (header === "content-disposition")
                 return `attachment; filename="${filename}"`
             },
@@ -677,6 +701,7 @@ describe("REST Integration", () => {
       mockReadable.push(null)
       ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
         Promise.resolve({
+          status: 200,
           headers: {
             raw: () => ({
               "content-type": [contentType],
@@ -687,6 +712,7 @@ describe("REST Integration", () => {
             }),
             get: (header: any) => {
               if (header === "content-type") return contentType
+              if (header === "content-length") return responseData.byteLength
               if (header === "content-disposition")
                 // eslint-disable-next-line no-useless-escape
                 return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`

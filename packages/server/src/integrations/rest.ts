@@ -1,20 +1,21 @@
 import {
-  Integration,
   DatasourceFieldType,
-  QueryType,
-  PaginationConfig,
+  HttpMethod,
+  Integration,
   IntegrationBase,
+  PaginationConfig,
   PaginationValues,
-  RestQueryFields as RestQuery,
-  RestConfig,
+  QueryType,
   RestAuthType,
   RestBasicAuthConfig,
   RestBearerAuthConfig,
-  HttpMethod,
+  RestConfig,
+  RestQueryFields as RestQuery,
 } from "@budibase/types"
 import get from "lodash/get"
 import * as https from "https"
 import qs from "querystring"
+import type { Response } from "node-fetch"
 import fetch from "node-fetch"
 import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
@@ -25,6 +26,7 @@ import { handleFileResponse, handleXml } from "./utils"
 import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
+import { getAttachmentHeaders } from "./utils/restUtils"
 
 enum BodyType {
   NONE = "none",
@@ -85,6 +87,12 @@ const SCHEMA: Integration = {
       default: true,
       required: false,
     },
+    downloadImages: {
+      display: "Download images",
+      type: DatasourceFieldType.BOOLEAN,
+      default: true,
+      required: false,
+    },
   },
   query: {
     create: {
@@ -130,52 +138,70 @@ class RestIntegration implements IntegrationBase {
     this.config = config
   }
 
-  async parseResponse(response: any, pagination: PaginationConfig | null) {
+  async parseResponse(response: Response, pagination: PaginationConfig | null) {
     let data: any[] | string | undefined,
       raw: string | undefined,
-      headers: Record<string, string> = {},
+      headers: Record<string, string[] | string> = {},
       filename: string | undefined
 
-    const contentType = response.headers.get("content-type") || ""
-    const contentDisposition = response.headers.get("content-disposition") || ""
+    const { contentType, contentDisposition } = getAttachmentHeaders(
+      response.headers,
+      { downloadImages: this.config.downloadImages }
+    )
+    let contentLength = response.headers.get("content-length")
+    let isSuccess = response.status >= 200 && response.status < 300
     if (
-      contentDisposition.includes("filename") ||
-      contentDisposition.includes("attachment") ||
-      contentDisposition.includes("form-data")
+      (contentDisposition.includes("filename") ||
+        contentDisposition.includes("attachment") ||
+        contentDisposition.includes("form-data")) &&
+      isSuccess
     ) {
       filename =
         path.basename(parse(contentDisposition).parameters?.filename) || ""
     }
+
+    let triedParsing: boolean = false,
+      responseTxt: string | undefined
     try {
       if (filename) {
         return handleFileResponse(response, filename, this.startTimeMs)
       } else {
+        responseTxt = response.text ? await response.text() : ""
+        if (!contentLength && responseTxt) {
+          contentLength = Buffer.byteLength(responseTxt, "utf8").toString()
+        }
+        const hasContent =
+          (contentLength && parseInt(contentLength) > 0) ||
+          responseTxt.length > 0
         if (response.status === 204) {
           data = []
           raw = ""
-        } else if (contentType.includes("application/json")) {
-          data = await response.json()
-          raw = JSON.stringify(data)
+        } else if (hasContent && contentType.includes("application/json")) {
+          triedParsing = true
+          data = JSON.parse(responseTxt)
+          raw = responseTxt
         } else if (
-          contentType.includes("text/xml") ||
+          (hasContent && contentType.includes("text/xml")) ||
           contentType.includes("application/xml")
         ) {
-          let xmlResponse = await handleXml(response)
+          triedParsing = true
+          let xmlResponse = await handleXml(responseTxt)
           data = xmlResponse.data
           raw = xmlResponse.rawXml
         } else {
-          data = await response.text()
+          data = responseTxt
           raw = data as string
         }
       }
     } catch (err) {
-      throw `Failed to parse response body: ${err}`
+      if (triedParsing) {
+        data = responseTxt
+        raw = data as string
+      } else {
+        throw new Error(`Failed to parse response body: ${err}`)
+      }
     }
 
-    let contentLength: string = response.headers.get("content-length")
-    if (!contentLength && raw) {
-      contentLength = Buffer.byteLength(raw, "utf8").toString()
-    }
     const size = formatBytes(contentLength || "0")
     const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
     headers = response.headers.raw()

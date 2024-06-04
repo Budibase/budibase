@@ -34,6 +34,7 @@ export const createActions = context => {
     stickyColumn,
     maxScrollLeft,
     width,
+    datasource,
   } = context
 
   let autoScrollInterval
@@ -173,20 +174,17 @@ export const createActions = context => {
     document.removeEventListener("touchend", stopReordering)
     document.removeEventListener("touchcancel", stopReordering)
 
-    // Ensure there's actually a change
-    let { sourceColumn, targetColumn } = get(reorder)
-    if (sourceColumn !== targetColumn) {
-      moveColumn(sourceColumn, targetColumn)
-      await columns.actions.saveChanges()
-    }
-
-    // Reset state
+    // Ensure there's actually a change before saving
+    const { sourceColumn, targetColumn } = get(reorder)
     reorder.set(reorderInitialState)
+    if (sourceColumn !== targetColumn) {
+      await moveColumn(sourceColumn, targetColumn)
+    }
   }
 
   // Moves a column after another columns.
   // An undefined target column will move the source to index 0.
-  const moveColumn = (sourceColumn, targetColumn) => {
+  const moveColumn = async (sourceColumn, targetColumn) => {
     let $columns = get(columns)
     let sourceIdx = $columns.findIndex(x => x.name === sourceColumn)
     let targetIdx = $columns.findIndex(x => x.name === targetColumn)
@@ -198,14 +196,21 @@ export const createActions = context => {
       }
       return state.toSpliced(targetIdx, 0, removed[0])
     })
+
+    // Extract new orders as schema mutations
+    let mutations = {}
+    get(columns).forEach((column, idx) => {
+      mutations[column.name] = { order: idx }
+    })
+    datasource.actions.addSchemaMutations(mutations)
+    await datasource.actions.saveSchemaMutations()
   }
 
   // Moves a column one place left (as appears visually)
   const moveColumnLeft = async column => {
     const $visibleColumns = get(visibleColumns)
     const sourceIdx = $visibleColumns.findIndex(x => x.name === column)
-    moveColumn(column, $visibleColumns[sourceIdx - 2]?.name)
-    await columns.actions.saveChanges()
+    await moveColumn(column, $visibleColumns[sourceIdx - 2]?.name)
   }
 
   // Moves a column one place right (as appears visually)
@@ -215,8 +220,7 @@ export const createActions = context => {
     if (sourceIdx === $visibleColumns.length - 1) {
       return
     }
-    moveColumn(column, $visibleColumns[sourceIdx + 1]?.name)
-    await columns.actions.saveChanges()
+    await moveColumn(column, $visibleColumns[sourceIdx + 1]?.name)
   }
 
   return {

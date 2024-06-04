@@ -21,7 +21,7 @@
   } from "@budibase/bbui"
   import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
-  import { isActive, goto, layout, redirect } from "@roxi/routify"
+  import { isActive, url, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
   import { onMount, onDestroy } from "svelte"
   import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
@@ -33,6 +33,7 @@
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import EnterpriseBasicTrialModal from "components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
+  import UpdateAppTopNav from "components/common/UpdateAppTopNav.svelte"
 
   export let application
 
@@ -68,7 +69,7 @@
   // e.g. if one of your screens is selected on front end, then
   // you browse to backend, when you click frontend, you will be
   // brought back to the same screen.
-  const topItemNavigate = path => () => {
+  const topItemNavigate = path => {
     const activeTopNav = $layout.children.find(c => $isActive(c.path))
     if (activeTopNav) {
       builderStore.setPreviousTopNavPath(
@@ -104,10 +105,6 @@
   }
 
   onMount(async () => {
-    document.fonts.onloadingdone = e => {
-      builderStore.loadFonts(e.fontfaces)
-    }
-
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
@@ -139,32 +136,31 @@
   <div class="top-nav">
     {#if $appStore.initialised}
       <div class="topleftnav">
-        <span class="back-to-apps">
-          <Icon
-            size="S"
-            hoverable
-            name="BackAndroid"
-            on:click={() => $goto("../../portal/apps")}
-          />
-        </span>
+        <a href={$url("../../portal/apps")} class="linkWrapper back-to-apps">
+          <Icon size="S" hoverable name="BackAndroid" />
+        </a>
         <Tabs {selected} size="M">
-          {#key $builderStore?.fonts}
-            {#each $layout.children as { path, title }}
-              <TourWrap stepKeys={[`builder-${title}-section`]}>
-                <Tab
-                  quiet
-                  selected={$isActive(path)}
-                  on:click={topItemNavigate(path)}
-                  title={capitalise(title)}
-                  id={`builder-${title}-tab`}
-                />
-              </TourWrap>
-            {/each}
-          {/key}
+          {#each $layout.children as { path, title }}
+            <TourWrap stepKeys={[`builder-${title}-section`]}>
+              <Tab
+                link
+                href={$url(path)}
+                quiet
+                selected={$isActive(path)}
+                on:click={() => topItemNavigate(path)}
+                title={capitalise(title)}
+                id={`builder-${title}-tab`}
+              />
+            </TourWrap>
+          {/each}
         </Tabs>
       </div>
       <div class="topcenternav">
-        <Heading size="XS">{$appStore.name}</Heading>
+        <div class="app-name">
+          <UpdateAppTopNav {application}>
+            <Heading noPadding size="XS">{$appStore.name}</Heading>
+          </UpdateAppTopNav>
+        </div>
       </div>
       <div class="toprightnav">
         <span>
@@ -202,6 +198,11 @@
 <EnterpriseBasicTrialModal />
 
 <style>
+  .linkWrapper {
+    text-decoration: none;
+    color: inherit;
+  }
+
   .back-to-apps {
     display: contents;
   }
@@ -253,7 +254,6 @@
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0px var(--spacing-m);
   }
 
   .topleftnav {

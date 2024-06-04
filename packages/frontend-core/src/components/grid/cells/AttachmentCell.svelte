@@ -8,11 +8,10 @@
   export let onChange
   export let readonly = false
   export let api
-  export let invertX = false
   export let schema
   export let maximum
 
-  const { API, notifications } = getContext("grid")
+  const { API, notifications, props } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
 
   let isOpen = false
@@ -92,13 +91,7 @@
 </div>
 
 {#if isOpen}
-  <GridPopover
-    open={isOpen}
-    {anchor}
-    {invertX}
-    maxHeight={null}
-    on:close={close}
-  >
+  <GridPopover open={isOpen} {anchor} maxHeight={null} on:close={close}>
     <div class="dropzone">
       <Dropzone
         {value}
@@ -106,7 +99,7 @@
         on:change={e => onChange(e.detail)}
         maximum={maximum || schema.constraints?.length?.maximum}
         {processFiles}
-        {handleFileTooLarge}
+        handleFileTooLarge={$props.isCloud ? handleFileTooLarge : null}
       />
     </div>
   </GridPopover>

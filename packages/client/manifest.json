@@ -13,6 +13,42 @@
     "sidePanel": true,
     "skeletonLoader": true
   },
+  "typeSupportPresets": {
+    "numberLike": {
+      "supported": ["number", "boolean"],
+      "partialSupport": [
+        { "type": "longform", "message": "stringAsNumber" },
+        { "type": "string", "message": "stringAsNumber" },
+        { "type": "bigint", "message": "stringAsNumber" },
+        { "type": "options", "message": "stringAsNumber" },
+        { "type": "formula", "message": "stringAsNumber" },
+        { "type": "datetime", "message": "dateAsNumber"}
+      ],
+      "unsupported": [
+        { "type": "json", "message": "jsonPrimitivesOnly" }
+      ]
+    },
+    "stringLike": {
+      "supported": ["string", "number", "bigint", "options", "longform", "boolean", "datetime"],
+      "unsupported": [
+        { "type": "json", "message": "jsonPrimitivesOnly" }
+      ]
+    },
+    "datetimeLike": {
+      "supported": ["datetime"],
+      "partialSupport": [
+        { "type": "longform", "message": "stringAsDate" },
+        { "type": "string", "message": "stringAsDate" },
+        { "type": "options", "message": "stringAsDate" },
+        { "type": "formula", "message": "stringAsDate" },
+        { "type": "bigint", "message": "stringAsDate" },
+        { "type": "number", "message": "numberAsDate"}
+      ],
+      "unsupported": [
+        { "type": "json", "message": "jsonPrimitivesOnly" }
+      ]
+    }
+  },
   "layout": {
     "name": "Layout",
     "description": "This component is specific only to layouts",
@@ -1602,6 +1638,7 @@
     ]
   },
   "bar": {
+    "documentationLink": "https://docs.budibase.com/docs/bar-chart",
     "name": "Bar Chart",
     "description": "Bar chart",
     "icon": "GraphBarVertical",
@@ -1626,6 +1663,11 @@
         "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
         "required": true
       },
       {
@@ -1633,6 +1675,11 @@
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -1760,6 +1807,7 @@
     ]
   },
   "line": {
+    "documentationLink": "https://docs.budibase.com/docs/line-chart",
     "name": "Line Chart",
     "description": "Line chart",
     "icon": "GraphTrend",
@@ -1784,6 +1832,11 @@
         "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
         "required": true
       },
       {
@@ -1791,6 +1844,11 @@
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -1913,6 +1971,7 @@
     ]
   },
   "area": {
+    "documentationLink": "https://docs.budibase.com/docs/area-chart",
     "name": "Area Chart",
     "description": "Line chart",
     "icon": "GraphAreaStacked",
@@ -1937,6 +1996,11 @@
         "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
         "required": true
       },
       {
@@ -1944,6 +2008,11 @@
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2078,6 +2147,7 @@
     ]
   },
   "pie": {
+    "documentationLink": "https://docs.budibase.com/docs/pie-donut-chart",
     "name": "Pie Chart",
     "description": "Pie chart",
     "icon": "GraphPie",
@@ -2102,13 +2172,23 @@
         "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
         "required": true
       },
       {
         "type": "field",
-        "label": "Data columns",
+        "label": "Data column",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2207,6 +2287,7 @@
     ]
   },
   "donut": {
+    "documentationLink": "https://docs.budibase.com/docs/pie-donut-chart",
     "name": "Donut Chart",
     "description": "Donut chart",
     "icon": "GraphDonut",
@@ -2231,6 +2312,11 @@
         "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "stringLike"
+          }
+        },
         "required": true
       },
       {
@@ -2238,6 +2324,11 @@
         "label": "Data columns",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2336,6 +2427,7 @@
     ]
   },
   "candlestick": {
+    "documentationLink": "https://docs.budibase.com/docs/candlestick-chart",
     "name": "Candlestick Chart",
     "description": "Candlestick chart",
     "icon": "GraphBarVerticalStacked",
@@ -2360,6 +2452,11 @@
         "label": "Date column",
         "key": "dateColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "datetimeLike"
+          }
+        },
         "required": true
       },
       {
@@ -2367,6 +2464,11 @@
         "label": "Open column",
         "key": "openColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2374,6 +2476,11 @@
         "label": "Close column",
         "key": "closeColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2381,6 +2488,11 @@
         "label": "High column",
         "key": "highColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2388,6 +2500,11 @@
         "label": "Low column",
         "key": "lowColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2427,6 +2544,7 @@
     ]
   },
   "histogram": {
+    "documentationLink": "https://docs.budibase.com/docs/histogram-chart",
     "name": "Histogram Chart",
     "description": "Histogram chart",
     "icon": "Histogram",
@@ -2434,7 +2552,6 @@
       "width": 600,
       "height": 400
     },
-    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -2452,6 +2569,11 @@
         "label": "Data column",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
+        "explanation": {
+          "typeSupport": {
+            "preset": "numberLike"
+          }
+        },
         "required": true
       },
       {
@@ -2746,6 +2868,14 @@
         "type": "plainText",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "number",
+        "label": "Initial width",
+        "key": "width",
+        "placeholder": "Auto",
+        "min": 80,
+        "max": 9999
       }
     ]
   },
@@ -4107,6 +4237,55 @@
       }
     ]
   },
+  "signaturesinglefield": {
+    "name": "Signature",
+    "icon": "AnnotatePen",
+    "styles": ["size"],
+    "size": {
+      "width": 400,
+      "height": 50
+    },
+    "settings": [
+      {
+        "type": "field/signature_single",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "validation/signature_single",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ]
+  },
   "embeddedmap": {
     "name": "Embedded Map",
     "icon": "Location",
@@ -4372,7 +4551,7 @@
         "defaultValue": false
       },
       {
-        "type": "validation/attachment",
+        "type": "validation/attachment_single",
         "label": "Validation",
         "key": "validation"
       },
@@ -5256,6 +5435,11 @@
             "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
             "required": true
           },
           {
@@ -5263,6 +5447,11 @@
             "label": "Data column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           }
         ]
@@ -5281,6 +5470,11 @@
             "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
             "required": true
           },
           {
@@ -5288,6 +5482,11 @@
             "label": "Data column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           }
         ]
@@ -5306,6 +5505,11 @@
             "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
             "required": true
           },
           {
@@ -5313,6 +5517,11 @@
             "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5360,6 +5569,11 @@
             "label": "Value column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5401,6 +5615,11 @@
             "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
             "required": true
           },
           {
@@ -5408,6 +5627,11 @@
             "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5450,6 +5674,11 @@
             "label": "Label columns",
             "key": "labelColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "stringLike"
+              }
+            },
             "required": true
           },
           {
@@ -5457,6 +5686,11 @@
             "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5511,6 +5745,11 @@
             "label": "Date column",
             "key": "dateColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "datetimeLike"
+              }
+            },
             "required": true
           },
           {
@@ -5518,6 +5757,11 @@
             "label": "Open column",
             "key": "openColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5525,6 +5769,11 @@
             "label": "Close column",
             "key": "closeColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5532,6 +5781,11 @@
             "label": "High column",
             "key": "highColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5539,6 +5793,11 @@
             "label": "Low column",
             "key": "lowColumn",
             "dependsOn": "dataSource",
+            "explanation": {
+              "typeSupport": {
+                "preset": "numberLike"
+              }
+            },
             "required": true
           },
           {
@@ -5984,27 +6243,28 @@
             "key": "cardTitle",
             "label": "Title",
             "nested": true,
-            "defaultValue": "Title"
+            "resetOn": "dataSource"
           },
           {
             "type": "text",
             "key": "cardSubtitle",
             "label": "Subtitle",
             "nested": true,
-            "defaultValue": "Subtitle"
+            "resetOn": "dataSource"
           },
           {
             "type": "text",
             "key": "cardDescription",
             "label": "Description",
             "nested": true,
-            "defaultValue": "Description"
+            "resetOn": "dataSource"
           },
           {
             "type": "text",
             "key": "cardImageURL",
             "label": "Image URL",
-            "nested": true
+            "nested": true,
+            "resetOn": "dataSource"
           },
           {
             "type": "boolean",

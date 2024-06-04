@@ -158,7 +158,10 @@ export async function inputProcessing(
           delete attachment.url
         })
       }
-    } else if (field.type === FieldType.ATTACHMENT_SINGLE) {
+    } else if (
+      field.type === FieldType.ATTACHMENT_SINGLE ||
+      field.type === FieldType.SIGNATURE_SINGLE
+    ) {
       const attachment = clonedRow[key]
       if (attachment?.url) {
         delete clonedRow[key].url
@@ -230,7 +233,8 @@ export async function outputProcessing<T extends Row[] | Row>(
   for (let [property, column] of Object.entries(table.schema)) {
     if (
       column.type === FieldType.ATTACHMENTS ||
-      column.type === FieldType.ATTACHMENT_SINGLE
+      column.type === FieldType.ATTACHMENT_SINGLE ||
+      column.type === FieldType.SIGNATURE_SINGLE
     ) {
       for (let row of enriched) {
         if (row[property] == null) {
@@ -242,7 +246,7 @@ export async function outputProcessing<T extends Row[] | Row>(
           }
           return attachment
         }
-        if (typeof row[property] === "string") {
+        if (typeof row[property] === "string" && row[property].length) {
           row[property] = JSON.parse(row[property])
         }
         if (Array.isArray(row[property])) {
