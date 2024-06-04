@@ -71,9 +71,11 @@
     options.push({
       icon: "VisibilityOff",
       value: PERMISSION_OPTIONS.HIDDEN,
-      tooltip: requiredTooltip || "Hidden",
       disabled: isDisplayColumn || isRequired,
-      tooltip: isDisplayColumn && "Display column cannot be hidden",
+      tooltip:
+        (isDisplayColumn && "Display column cannot be hidden") ||
+        requiredTooltip ||
+        "Hidden",
     })
 
     return { ...c, options }

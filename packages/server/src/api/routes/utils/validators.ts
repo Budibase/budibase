@@ -2,9 +2,10 @@ import { auth, permissions } from "@budibase/backend-core"
 import { DataSourceOperation } from "../../../constants"
 import { Table, WebhookActionType } from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
-import { ValidSnippetNameRegex } from "@budibase/shared-core"
-import { isRequired } from "../../../utilities/schema"
+import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
+
+const { isRequired } = helpers.schema
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
