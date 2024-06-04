@@ -22,7 +22,7 @@ import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { roles } from "@budibase/backend-core"
+import { db, roles } from "@budibase/backend-core"
 
 describe.each([
   ["internal", undefined],
@@ -840,6 +840,53 @@ describe.each([
         })
       )
     })
+
+    isInternal &&
+      it("updating schema will only validate modified field", async () => {
+        let view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+            },
+            Category: { visible: true },
+          },
+        })
+
+        // Update the view to an invalid state
+        const tableToUpdate = await config.api.table.get(table._id!)
+        ;(tableToUpdate.views![view.name] as ViewV2).schema!.id.visible = false
+        await db.getDB(config.appId!).put(tableToUpdate)
+
+        view = await config.api.viewV2.get(view.id)
+        await config.api.viewV2.update({
+          ...view,
+          schema: {
+            ...view.schema,
+            Price: {
+              visible: false,
+            },
+          },
+        })
+
+        expect(await config.api.viewV2.get(view.id)).toEqual(
+          expect.objectContaining({
+            schema: {
+              id: expect.objectContaining({
+                visible: false,
+              }),
+              Price: expect.objectContaining({
+                visible: false,
+              }),
+              Category: expect.objectContaining({
+                visible: true,
+              }),
+            },
+          })
+        )
+      })
   })
 
   describe("delete", () => {
