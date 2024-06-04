@@ -14,6 +14,10 @@
   export let tableHref
   export let setExplanationSubject
 
+  $: {
+    console.log(columnName, columnIcon, columnType)
+  }
+
   const getDocLink = columnType => {
     if (columnType === "Number") {
       return "https://docs.budibase.com/docs/number"
@@ -24,19 +28,27 @@
     if (columnType === "Attachment") {
       return "https://docs.budibase.com/docs/attachments"
     }
-    if (columnType === "Multi-select") {
+    if (columnType === "Multi attachment") {
+      // No distinct multi attachment docs, link to attachment instead
+      return "https://docs.budibase.com/docs/attachments"
+    }
+    if (columnType === "Multi select") {
       return "https://docs.budibase.com/docs/multi-select"
     }
     if (columnType === "JSON") {
       return "https://docs.budibase.com/docs/json"
     }
-    if (columnType === "Date/Time") {
+    if (columnType === "Date / time") {
       return "https://docs.budibase.com/docs/datetime"
     }
     if (columnType === "User") {
-      return "https://docs.budibase.com/docs/user"
+      return "https://docs.budibase.com/docs/users-1"
     }
-    if (columnType === "QR") {
+    if (columnType === "Multi user") {
+      // No distinct multi user docs, link to user instead
+      return "https://docs.budibase.com/docs/users-1"
+    }
+    if (columnType === "Barcode / QR") {
       return "https://docs.budibase.com/docs/barcodeqr"
     }
     if (columnType === "Relationship") {
@@ -45,7 +57,7 @@
     if (columnType === "Formula") {
       return "https://docs.budibase.com/docs/formula"
     }
-    if (columnType === "Options") {
+    if (columnType === "Single select") {
       return "https://docs.budibase.com/docs/options"
     }
     if (columnType === "BigInt") {
@@ -64,6 +76,32 @@
   }
 
   $: docLink = getDocLink(columnType)
+
+  const getColumnTypeName = columnType => {
+    if (!columnType) {
+      return "Unknown"
+    }
+    if (columnType === "Date / time") {
+      return "Date/Time"
+    }
+    if (columnType === "Barcode / QR") {
+      return "Barcode/QR"
+    }
+    if (columnType === "Single select") {
+      return "Options"
+    }
+    if (columnType === "Multi select") {
+      return "Multi-select"
+    }
+    if (columnType === "Multi attachment") {
+      return "Multi-attachment"
+    }
+    if (columnType === "Multi user") {
+      return "Multi-user"
+    }
+
+    return columnType
+  }
 </script>
 
 <Line noWrap>
@@ -78,7 +116,7 @@
     disabled={docLink === null}
     href={docLink}
     icon={columnIcon}
-    text={`${columnType} column`}
+    text={`${getColumnTypeName(columnType)} column`}
   />
   <Period />
 </Line>
