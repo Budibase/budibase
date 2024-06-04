@@ -61,7 +61,12 @@
     path.forEach(ancestor => {
       // Sidepanels and modals can be nested anywhere in the component tree, but really they are always rendered at the top level.
       // Because of this, it doesn't make sense to carry over any parent illegal children to them, so the array is reset here.
-      if (["@budibase/standard-components/sidepanel", "@budibase/standard-components/modal"].includes(ancestor._component)) {
+      if (
+        [
+          "@budibase/standard-components/sidepanel",
+          "@budibase/standard-components/modal",
+        ].includes(ancestor._component)
+      ) {
         illegalChildren = []
       }
       const def = componentStore.getDefinition(ancestor._component)

@@ -8,9 +8,8 @@
   $: modalOptions = getModalOptions($selectedScreen)
 
   const getModalOptions = screen => {
-    const modalComponents = findAllMatchingComponents(
-      screen.props,
-      component => component._component.endsWith("/modal")
+    const modalComponents = findAllMatchingComponents(screen.props, component =>
+      component._component.endsWith("/modal")
     )
     return modalComponents.map(modal => ({
       label: modal._instanceName,

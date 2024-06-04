@@ -57,7 +57,9 @@
       return
     }
     nextState.indicators[idx].visible =
-      nextState.indicators[idx].insideModal || nextState.indicators[idx].insideSidePanel || entries[0].isIntersecting
+      nextState.indicators[idx].insideModal ||
+      nextState.indicators[idx].insideSidePanel ||
+      entries[0].isIntersecting
     if (++callbackCount === observers.length) {
       state = nextState
       updating = false

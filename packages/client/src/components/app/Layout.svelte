@@ -79,11 +79,6 @@
     $sidePanelStore.open &&
     !$sidePanelStore.ignoreClicksOutside
 
-  $: autoCloseModal =
-    !$builderStore.inBuilder &&
-    $modalStore.open &&
-    !$modalStore.ignoreClicksOutside
-
   $: screenId = $builderStore.inBuilder
     ? `${$builderStore.screen?._id}-screen`
     : "screen"

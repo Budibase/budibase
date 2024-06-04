@@ -1,5 +1,5 @@
 <script>
-  import { fade,fly  } from 'svelte/transition';
+  import { fade, fly } from "svelte/transition"
   import { getContext } from "svelte"
   import { clickOutside, Icon } from "@budibase/bbui"
   import Portal from "svelte-portal"
@@ -49,9 +49,7 @@
       class="modal-scroll-container"
       class:open={$modalStore.open}
     >
-      <div
-        class="modal-container"
-      >
+      <div class="modal-container">
         <div
           transition:fly={{ duration: 300, y: 300 }}
           use:styleable={$component.styles}
@@ -66,10 +64,8 @@
               on:click={handleModalClose}
             />
           </div>
-          <div
-            class="modal-main"
-          >
-              <slot />
+          <div class="modal-main">
+            <slot />
           </div>
         </div>
       </div>
@@ -152,5 +148,4 @@
   .modal-main :global(.component > *) {
     max-width: 100%;
   }
-
 </style>

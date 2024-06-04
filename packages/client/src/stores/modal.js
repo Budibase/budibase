@@ -2,7 +2,7 @@ import { writable } from "svelte/store"
 
 export const createModalStore = () => {
   const initialState = {
-    contentId: null
+    contentId: null,
   }
   const store = writable(initialState)
 
@@ -24,7 +24,7 @@ export const createModalStore = () => {
     subscribe: store.subscribe,
     actions: {
       open,
-      close
+      close,
     },
   }
 }
