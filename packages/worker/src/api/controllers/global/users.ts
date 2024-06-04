@@ -10,6 +10,8 @@ import {
   CreateAdminUserRequest,
   CreateAdminUserResponse,
   Ctx,
+  DeleteInviteUserRequest,
+  DeleteInviteUsersRequest,
   InviteUserRequest,
   InviteUsersRequest,
   InviteUsersResponse,
@@ -333,6 +335,20 @@ export const invite = async (ctx: Ctx<InviteUserRequest>) => {
 
 export const inviteMultiple = async (ctx: Ctx<InviteUsersRequest>) => {
   ctx.body = await userSdk.invite(ctx.request.body)
+}
+
+export const removeMultipleInvites = async (
+  ctx: Ctx<DeleteInviteUsersRequest>
+) => {
+  const inviteCodesToRemove = ctx.request.body.map(
+    (invite: DeleteInviteUserRequest) => invite.code
+  )
+  for (const code of inviteCodesToRemove) {
+    await cache.invite.deleteCode(code)
+  }
+  ctx.body = {
+    message: "User invites successfully removed.",
+  }
 }
 
 export const checkInvite = async (ctx: any) => {
