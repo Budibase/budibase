@@ -1424,8 +1424,7 @@ describe.each([
             status: 400,
             body: {
               status: 400,
-              message:
-                'Invalid body - Required field "name" is missing in view "view a"',
+              message: 'Required field "name" is missing in view "view a"',
             },
           }
         )
@@ -1455,8 +1454,7 @@ describe.each([
             status: 400,
             body: {
               status: 400,
-              message:
-                'Invalid body - Required field "name" is missing in view "view a"',
+              message: 'Required field "name" is missing in view "view a"',
             },
           }
         )
