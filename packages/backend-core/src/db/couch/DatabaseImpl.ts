@@ -8,6 +8,7 @@ import {
   DatabaseOpts,
   DatabasePutOpts,
   DatabaseQueryOpts,
+  DBError,
   Document,
   isDocument,
   RowResponse,
@@ -41,7 +42,7 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
 
 type DBCall<T> = () => Promise<T>
 
-class CouchDBError extends Error {
+class CouchDBError extends Error implements DBError {
   status: number
   statusCode: number
   reason: string
