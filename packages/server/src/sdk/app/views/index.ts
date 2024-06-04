@@ -39,9 +39,7 @@ async function guardViewSchema(
   tableId: string,
   viewSchema?: Record<string, ViewUIFieldMetadata>
 ) {
-  if (!viewSchema || !Object.keys(viewSchema).length) {
-    return
-  }
+  viewSchema ??= {}
   const table = await sdk.tables.getTable(tableId)
 
   for (const field of Object.keys(viewSchema)) {
@@ -54,15 +52,11 @@ async function guardViewSchema(
     }
 
     if (viewSchema[field].readonly) {
-      if (!(await features.isViewReadonlyColumnsEnabled())) {
+      if (
+        !(await features.isViewReadonlyColumnsEnabled()) &&
+        !(tableSchemaField as ViewUIFieldMetadata).readonly
+      ) {
         throw new HTTPError(`Readonly fields are not enabled`, 400)
-      }
-
-      if (helpers.schema.isRequired(tableSchemaField.constraints)) {
-        throw new HTTPError(
-          `Field "${field}" cannot be readonly as it is a required field`,
-          400
-        )
       }
 
       if (!viewSchema[field].visible) {
@@ -71,6 +65,28 @@ async function guardViewSchema(
           400
         )
       }
+    }
+  }
+
+  for (const field of Object.values(table.schema)) {
+    if (!helpers.schema.isRequired(field.constraints)) {
+      continue
+    }
+
+    const viewSchemaField = viewSchema[field.name]
+
+    if (!viewSchemaField?.visible) {
+      throw new HTTPError(
+        `You can't hide "${field.name} because it is a required field."`,
+        400
+      )
+    }
+
+    if (viewSchemaField.readonly) {
+      throw new HTTPError(
+        `You can't make "${field.name}" readonly because it is a required field.`,
+        400
+      )
     }
   }
 }
