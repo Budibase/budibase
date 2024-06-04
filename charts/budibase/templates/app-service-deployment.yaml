@@ -214,6 +214,13 @@ spec:
         - name: {{ .name }}
           value: {{ .value | quote }}
         {{- end }}
+        {{- range .Values.services.apps.extraEnvFromSecret}}
+        - name: {{ .name }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .secretName }}
+              key: {{ .secretKey | quote }}
+        {{- end}}
         image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         {{- if .Values.services.apps.startupProbe }}
