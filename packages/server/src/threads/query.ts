@@ -196,12 +196,22 @@ class QueryRunner {
     return { rows, keys, info, extra, pagination }
   }
 
-  async runAnotherQuery(queryId: string, parameters: any) {
+  async runAnotherQuery(
+    queryId: string,
+    currentParameters: Record<string, any>
+  ) {
     const db = context.getAppDB()
     const query = await db.get<Query>(queryId)
     const datasource = await sdk.datasources.get(query.datasourceId, {
       enriched: true,
     })
+    // enrich parameters with dynamic queries defaults
+    const defaultParams = query.parameters || []
+    for (let param of defaultParams) {
+      if (!currentParameters[param.name]) {
+        currentParameters[param.name] = param.default
+      }
+    }
     return new QueryRunner(
       {
         schema: query.schema,
@@ -210,7 +220,7 @@ class QueryRunner {
         transformer: query.transformer,
         nullDefaultSupport: query.nullDefaultSupport,
         ctx: this.ctx,
-        parameters,
+        parameters: currentParameters,
         datasource,
         queryId,
       },
