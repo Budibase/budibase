@@ -12,15 +12,10 @@ jobs:
       - uses: codelytv/pr-size-labeler@v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          xs_label: "xs"
           xs_max_size: "10"
-          s_label: "s"
           s_max_size: "100"
-          m_label: "m"
           m_max_size: "500"
-          l_label: "l"
           l_max_size: "1000"
-          xl_label: "xl"
           fail_if_xl: "false"
           files_to_ignore: "yarn.lock"
 
