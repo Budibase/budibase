@@ -3,6 +3,7 @@
   import { ActionButton, Popover, Icon, notifications } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
+  import { helpers } from "@budibase/shared-core"
 
   export let allowViewReadonlyColumns = false
 
@@ -11,7 +12,9 @@
   let open = false
   let anchor
 
-  $: restrictedColumns = $columns.filter(col => !col.visible || col.readonly)
+  $: allColumns = $stickyColumn ? [$stickyColumn, ...$columns] : $columns
+
+  $: restrictedColumns = allColumns.filter(col => !col.visible || col.readonly)
   $: anyRestricted = restrictedColumns.length
   $: text = anyRestricted ? `Columns (${anyRestricted} restricted)` : "Columns"
 
@@ -40,36 +43,50 @@
     HIDDEN: "hidden",
   }
 
-  const EDIT_OPTION = {
-    icon: "Edit",
-    value: PERMISSION_OPTIONS.WRITABLE,
-    tooltip: "Writable",
-  }
-  $: READONLY_OPTION = {
-    icon: "Visibility",
-    value: PERMISSION_OPTIONS.READONLY,
-    tooltip: allowViewReadonlyColumns
-      ? "Read only"
-      : "Read only (premium feature)",
-    disabled: !allowViewReadonlyColumns,
-  }
-  const HIDDEN_OPTION = {
-    icon: "VisibilityOff",
-    value: PERMISSION_OPTIONS.HIDDEN,
-    tooltip: "Hidden",
-  }
+  $: displayColumns = allColumns.map(c => {
+    const isRequired = helpers.schema.isRequired(c.schema.constraints)
+    const isDisplayColumn = $stickyColumn === c
 
-  $: options =
-    $datasource.type === "viewV2"
-      ? [EDIT_OPTION, READONLY_OPTION, HIDDEN_OPTION]
-      : [EDIT_OPTION, HIDDEN_OPTION]
+    const requiredTooltip = isRequired && "Required columns must be writable"
+
+    const options = [
+      {
+        icon: "Edit",
+        value: PERMISSION_OPTIONS.WRITABLE,
+        tooltip: requiredTooltip || "Writable",
+        disabled: isRequired,
+      },
+    ]
+    if ($datasource.type === "viewV2") {
+      options.push({
+        icon: "Visibility",
+        value: PERMISSION_OPTIONS.READONLY,
+        tooltip: allowViewReadonlyColumns
+          ? requiredTooltip || "Read only"
+          : "Read only (premium feature)",
+        disabled: !allowViewReadonlyColumns || isRequired,
+      })
+    }
+
+    options.push({
+      icon: "VisibilityOff",
+      value: PERMISSION_OPTIONS.HIDDEN,
+      disabled: isDisplayColumn || isRequired,
+      tooltip:
+        (isDisplayColumn && "Display column cannot be hidden") ||
+        requiredTooltip ||
+        "Hidden",
+    })
+
+    return { ...c, options }
+  })
 
   function columnToPermissionOptions(column) {
-    if (!column.visible) {
+    if (!column.schema.visible) {
       return PERMISSION_OPTIONS.HIDDEN
     }
 
-    if (column.readonly) {
+    if (column.schema.readonly) {
       return PERMISSION_OPTIONS.READONLY
     }
 
@@ -93,19 +110,7 @@
 <Popover bind:open {anchor} align="left">
   <div class="content">
     <div class="columns">
-      {#if $stickyColumn}
-        <div class="column">
-          <Icon size="S" name={getColumnIcon($stickyColumn)} />
-          {$stickyColumn.label}
-        </div>
-
-        <ToggleActionButtonGroup
-          disabled
-          value={PERMISSION_OPTIONS.WRITABLE}
-          options={options.map(o => ({ ...o, disabled: true }))}
-        />
-      {/if}
-      {#each $columns as column}
+      {#each displayColumns as column}
         <div class="column">
           <Icon size="S" name={getColumnIcon(column)} />
           {column.label}
@@ -113,7 +118,7 @@
         <ToggleActionButtonGroup
           on:click={e => toggleColumn(column, e.detail)}
           value={columnToPermissionOptions(column)}
-          {options}
+          options={column.options}
         />
       {/each}
     </div>
