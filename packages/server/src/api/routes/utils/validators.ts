@@ -30,7 +30,7 @@ const validateViewSchemas: CustomValidator<Table> = (table, helpers) => {
         )
         if (missingField) {
           return helpers.message({
-            custom: `Required field "${missingField}" is missing in view "${view.name}"`,
+            custom: `To make field "${missingField}" required, this field must be present and writable in views: ${view.name}.`,
           })
         }
       }
