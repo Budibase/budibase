@@ -107,8 +107,17 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
 
 export async function syncDefinition(): Promise<void> {
   const db = context.getAppDB()
-  const definition = await buildBaseDefinition()
-  await db.put(definition)
+  let rev: string | undefined
+  try {
+    const existing = await db.get(SQLITE_DESIGN_DOC_ID)
+    rev = existing._rev
+  } finally {
+    const definition = await buildBaseDefinition()
+    if (rev) {
+      definition._rev = rev
+    }
+    await db.put(definition)
+  }
 }
 
 export async function addTable(table: Table) {
