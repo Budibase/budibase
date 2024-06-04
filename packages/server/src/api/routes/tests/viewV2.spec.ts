@@ -345,7 +345,8 @@ describe.each([
         await config.api.viewV2.create(newView, {
           status: 400,
           body: {
-            message: 'You can\'t make read only the required field "name"',
+            message:
+              'You can\'t make field "name" readonly because it is a required field.',
             status: 400,
           },
         })
