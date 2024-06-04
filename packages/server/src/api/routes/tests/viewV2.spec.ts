@@ -369,7 +369,7 @@ describe.each([
           status: 400,
           body: {
             message:
-              'You can\'t make field "name" readonly because it is a required field.',
+              'You can\'t make "name" readonly because it is a required field.',
             status: 400,
           },
         })
