@@ -134,7 +134,7 @@ describe.each([
       const newView: Required<CreateViewRequest> = {
         name: generator.name(),
         tableId: table._id!,
-        primaryDisplay: generator.word(),
+        primaryDisplay: "id",
         query: [
           {
             operator: SearchFilterOperator.EQUAL,
@@ -244,7 +244,7 @@ describe.each([
       const newView: CreateViewRequest = {
         name: generator.name(),
         tableId: table._id!,
-        primaryDisplay: generator.word(),
+        primaryDisplay: "id",
         schema: {
           id: { visible: true },
           Price: { visible: true },
@@ -451,6 +451,78 @@ describe.each([
         })
       })
     })
+
+    it("display fields must be visible", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+            description: {
+              name: "description",
+              type: FieldType.STRING,
+            },
+          },
+        })
+      )
+
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: table._id!,
+        primaryDisplay: "name",
+        schema: {
+          id: { visible: true },
+          name: {
+            visible: false,
+          },
+        },
+      }
+
+      await config.api.viewV2.create(newView, {
+        status: 400,
+        body: {
+          message: 'You can\'t hide "name" because it is the display column.',
+          status: 400,
+        },
+      })
+    })
+
+    it("display fields can be readonly", async () => {
+      mocks.licenses.useViewReadonlyColumns()
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+            description: {
+              name: "description",
+              type: FieldType.STRING,
+            },
+          },
+        })
+      )
+
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: table._id!,
+        primaryDisplay: "name",
+        schema: {
+          id: { visible: true },
+          name: {
+            visible: true,
+            readonly: true,
+          },
+        },
+      }
+
+      await config.api.viewV2.create(newView, {
+        status: 201,
+      })
+    })
   })
 
   describe("update", () => {
@@ -499,7 +571,7 @@ describe.each([
         id: view.id,
         tableId,
         name: view.name,
-        primaryDisplay: generator.word(),
+        primaryDisplay: "Price",
         query: [
           {
             operator: SearchFilterOperator.EQUAL,
