@@ -12,10 +12,7 @@
   export let ignoreClicksOutside
   export let size
 
-  // Automatically show and hide the modal when inside the builder.
-  // For some unknown reason, svelte reactivity breaks if we reference the
-  // reactive variable "open" inside the following expression, or if we define
-  // "open" above this expression.
+  // Open modal automatically in builder
   $: {
     if ($builderStore.inBuilder) {
       if (
@@ -33,7 +30,6 @@
     }
   }
 
-  // Derive visibility
   $: open = $modalStore.contentId === $component.id
 
   const handleModalClose = async () => {
