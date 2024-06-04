@@ -23,9 +23,6 @@ import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { roles } from "@budibase/backend-core"
-import * as schemaUtils from "../../../utilities/schema"
-
-jest.mock("../../../utilities/schema")
 
 describe.each([
   ["internal", undefined],
@@ -318,15 +315,13 @@ describe.each([
       })
 
       it("required fields cannot be marked as readonly", async () => {
-        const isRequiredSpy = jest.spyOn(schemaUtils, "isRequired")
-        isRequiredSpy.mockReturnValueOnce(true)
-
         const table = await config.api.table.save(
           saveTableRequest({
             schema: {
               name: {
                 name: "name",
                 type: FieldType.STRING,
+                constraints: { presence: true },
               },
               description: {
                 name: "description",
@@ -341,6 +336,7 @@ describe.each([
           tableId: table._id!,
           schema: {
             name: {
+              visible: true,
               readonly: true,
             },
           },
@@ -350,7 +346,7 @@ describe.each([
           status: 400,
           body: {
             message:
-              'Field "name" cannot be readonly as it is a required field',
+              'You can\'t make field "name" readonly because it is a required field.',
             status: 400,
           },
         })
@@ -1345,6 +1341,125 @@ describe.each([
         await config.api.viewV2.publicSearch(view.id, undefined, {
           status: 403,
         })
+      })
+    })
+  })
+
+  describe("updating table schema", () => {
+    describe("existing columns changed to required", () => {
+      beforeEach(async () => {
+        table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              id: {
+                name: "id",
+                type: FieldType.AUTO,
+                autocolumn: true,
+              },
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+      })
+
+      it("allows updating when no views constrains the field", async () => {
+        await config.api.viewV2.create({
+          name: "view a",
+          tableId: table._id!,
+          schema: {
+            id: { visible: true },
+            name: { visible: true },
+          },
+        })
+
+        table = await config.api.table.get(table._id!)
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: { allowEmpty: false } },
+              },
+            },
+          },
+          { status: 200 }
+        )
+      })
+
+      it("rejects if field is readonly in any view", async () => {
+        mocks.licenses.useViewReadonlyColumns()
+
+        await config.api.viewV2.create({
+          name: "view a",
+          tableId: table._id!,
+          schema: {
+            id: { visible: true },
+            name: {
+              visible: true,
+              readonly: true,
+            },
+          },
+        })
+
+        table = await config.api.table.get(table._id!)
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              status: 400,
+              message:
+                'To make field "name" required, this field must be present and writable in views: view a.',
+            },
+          }
+        )
+      })
+
+      it("rejects if field is hidden in any view", async () => {
+        await config.api.viewV2.create({
+          name: "view a",
+          tableId: table._id!,
+          schema: { id: { visible: true } },
+        })
+
+        table = await config.api.table.get(table._id!)
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              status: 400,
+              message:
+                'To make field "name" required, this field must be present and writable in views: view a.',
+            },
+          }
+        )
       })
     })
   })

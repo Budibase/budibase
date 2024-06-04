@@ -3,7 +3,8 @@ import { Ctx } from "@budibase/types"
 
 function validate(
   schema: Joi.ObjectSchema | Joi.ArraySchema,
-  property: string
+  property: string,
+  opts: { errorPrefix: string } = { errorPrefix: `Invalid ${property}` }
 ) {
   // Return a Koa middleware function
   return (ctx: Ctx, next: any) => {
@@ -29,16 +30,26 @@ function validate(
 
     const { error } = schema.validate(params)
     if (error) {
-      ctx.throw(400, `Invalid ${property} - ${error.message}`)
+      let message = error.message
+      if (opts.errorPrefix) {
+        message = `Invalid ${property} - ${message}`
+      }
+      ctx.throw(400, message)
     }
     return next()
   }
 }
 
-export function body(schema: Joi.ObjectSchema | Joi.ArraySchema) {
-  return validate(schema, "body")
+export function body(
+  schema: Joi.ObjectSchema | Joi.ArraySchema,
+  opts?: { errorPrefix: string }
+) {
+  return validate(schema, "body", opts)
 }
 
-export function params(schema: Joi.ObjectSchema | Joi.ArraySchema) {
-  return validate(schema, "params")
+export function params(
+  schema: Joi.ObjectSchema | Joi.ArraySchema,
+  opts?: { errorPrefix: string }
+) {
+  return validate(schema, "params", opts)
 }
