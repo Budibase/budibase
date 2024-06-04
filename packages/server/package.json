@@ -68,7 +68,6 @@
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.1.0",
     "bcryptjs": "2.4.3",
-    "bl": "^6.0.12",
     "bull": "4.10.1",
     "chokidar": "3.5.3",
     "content-disposition": "^0.5.4",
@@ -97,7 +96,7 @@
     "memorystream": "0.3.1",
     "mongodb": "^6.3.0",
     "mssql": "10.0.1",
-    "mysql2": "3.9.7",
+    "mysql2": "3.9.8",
     "node-fetch": "2.6.7",
     "object-sizeof": "2.6.1",
     "openai": "^3.2.1",
@@ -116,7 +115,8 @@
     "uuid": "^8.3.2",
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
-    "xml2js": "0.5.0"
+    "xml2js": "0.5.0",
+    "tmp": "0.2.3"
   },
   "devDependencies": {
     "@babel/preset-env": "7.16.11",
@@ -137,6 +137,7 @@
     "@types/supertest": "2.0.14",
     "@types/tar": "6.1.5",
     "@types/uuid": "8.3.4",
+    "@types/tmp": "0.2.6",
     "copyfiles": "2.4.1",
     "docker-compose": "0.23.17",
     "jest": "29.7.0",
