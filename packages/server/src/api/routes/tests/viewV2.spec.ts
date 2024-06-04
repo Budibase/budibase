@@ -1424,7 +1424,8 @@ describe.each([
             status: 400,
             body: {
               status: 400,
-              message: 'Required field "name" is missing in view "view a"',
+              message:
+                'To make field "name" required, this field must be present and writable in views: view a.',
             },
           }
         )
@@ -1454,7 +1455,8 @@ describe.each([
             status: 400,
             body: {
               status: 400,
-              message: 'Required field "name" is missing in view "view a"',
+              message:
+                'To make field "name" required, this field must be present and writable in views: view a.',
             },
           }
         )
