@@ -20,7 +20,6 @@
     "kill-port": "^1.6.1",
     "lerna": "8.1.3",
     "madge": "^6.0.0",
-    "nx": "16.4.3",
     "nx-cloud": "16.0.5",
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
