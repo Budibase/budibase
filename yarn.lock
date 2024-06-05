@@ -2035,7 +2035,7 @@
   version "0.0.0"
   dependencies:
     "@budibase/nano" "10.1.5"
-    "@budibase/pouchdb-replication-stream" "1.2.10"
+    "@budibase/pouchdb-replication-stream" "1.2.11"
     "@budibase/shared-core" "0.0.0"
     "@budibase/types" "0.0.0"
     "@govtechsg/passport-openidconnect" "^1.0.2"
@@ -2101,14 +2101,12 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
-"@budibase/pouchdb-replication-stream@1.2.10":
-  version "1.2.10"
-  resolved "https://registry.yarnpkg.com/@budibase/pouchdb-replication-stream/-/pouchdb-replication-stream-1.2.10.tgz#4100df2effd7c823edadddcdbdc380f6827eebf5"
-  integrity sha512-1zeorOwbelZ7HF5vFB+pKE8Mnh31om8k1M6T3AZXVULYTHLsyJrMTozSv5CJ1P8ZfOIJab09HDzCXDh2icFekg==
+"@budibase/pouchdb-replication-stream@1.2.11":
+  version "1.2.11"
+  resolved "https://registry.yarnpkg.com/@budibase/pouchdb-replication-stream/-/pouchdb-replication-stream-1.2.11.tgz#b437584471f2cf6976fa690c338f432a3ecd24c9"
+  integrity sha512-gHeMczCCIcxiv4EmG4uosHZvGIgInGwP8SaWKGY3g+m7XPdlM5UgRYhyPHqmOU9fdfTtR3LgAqED6NRWFYmqyw==
   dependencies:
-    argsarray "0.0.1"
     inherits "^2.0.3"
-    lodash.pick "^4.0.0"
     ndjson "^1.4.3"
     pouch-stream "^0.4.0"
     pouchdb-promise "^6.0.4"
