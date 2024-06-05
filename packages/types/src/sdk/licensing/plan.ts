@@ -1,5 +1,11 @@
 export enum PlanType {
   FREE = "free",
+  /** @deprecated */
+  PRO = "pro",
+  /** @deprecated */
+  TEAM = "team",
+  /** @deprecated */
+  PREMIUM = "premium",
   PREMIUM_PLUS = "premium_plus",
   PREMIUM_PLUS_TRIAL = "premium_plus_trial",
   /** @deprecated */
@@ -7,13 +13,6 @@ export enum PlanType {
   ENTERPRISE_BASIC = "enterprise_basic",
   ENTERPRISE_BASIC_TRIAL = "enterprise_basic_trial",
   ENTERPRISE = "enterprise",
-  // Deprecated plans
-  /** @deprecated */
-  PRO = "pro",
-  /** @deprecated */
-  TEAM = "team",
-  /** @deprecated */
-  PREMIUM = "premium",
 }
 
 export enum PriceDuration {
