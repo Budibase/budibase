@@ -112,7 +112,9 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | awsAlbIngress.enabled | bool | `false` | Whether to create an ALB Ingress resource pointing to the Budibase proxy. Requires the AWS ALB Ingress Controller. |
 | couchdb.clusterSize | int | `1` | The number of replicas to run in the CouchDB cluster. We set this to 1 by default to make things simpler, but you can set it to 3 if you need a high-availability CouchDB cluster. |
 | couchdb.couchdbConfig.couchdb.uuid | string | `"budibase-couchdb"` | Unique identifier for this CouchDB server instance. You shouldn't need to change this. |
+| couchdb.extraPorts[0] | object | `{"containerPort":4984,"name":"sqs"}` | Extra ports to expose on the CouchDB service. We expose the SQS port by default, but you can add more ports here if you need to. |
 | couchdb.image | object | `{}` | We use a custom CouchDB image for running Budibase and we don't support using any other CouchDB image. You shouldn't change this, and if you do we can't guarantee that Budibase will work. |
+| couchdb.service.extraPorts[0] | object | `{"name":"sqs","port":4984,"protocol":"TCP","targetPort":4984}` | Extra ports to expose on the CouchDB service. We expose the SQS port by default, but you can add more ports here if you need to. |
 | globals.apiEncryptionKey | string | `""` | Used for encrypting API keys and environment variables when stored in the database. You don't need to set this if `createSecrets` is true. |
 | globals.appVersion | string | `""` | The version of Budibase to deploy. Defaults to what's specified by {{ .Chart.AppVersion }}. Ends up being used as the image version tag for the apps, proxy, and worker images. |
 | globals.automationMaxIterations | string | `"200"` | The maximum number of iterations allows for an automation loop step. You can read more about looping here: <https://docs.budibase.com/docs/looping>. |
@@ -135,6 +137,8 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | globals.smtp.password | string | `""` | The password to use when authenticating with your SMTP server. |
 | globals.smtp.port | string | `"587"` | The port of your SMTP server. |
 | globals.smtp.user | string | `""` | The username to use when authenticating with your SMTP server. |
+| globals.sqs.enabled | bool | `false` | Whether to use the CouchDB "structured query service" or not. This is disabled by default for now, but will become the default in a future release. |
+| globals.tempBucketName | string | `""` |  |
 | globals.tenantFeatureFlags | string | `"*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"` | Sets what feature flags are enabled and for which tenants. Should not ordinarily need to be changed. |
 | imagePullSecrets | list | `[]` | Passed to all pods created by this chart. Should not ordinarily need to be changed. |
 | ingress.className | string | `""` | What ingress class to use. |
@@ -152,6 +156,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.apps.autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage for the apps service. Note that for autoscaling to work, you will need to have metrics-server configured, and resources set for the apps pods. |
 | services.apps.extraContainers | list | `[]` | Additional containers to be added to the apps pod. |
 | services.apps.extraEnv | list | `[]` | Extra environment variables to set for apps pods. Takes a list of name=value pairs. |
+| services.apps.extraEnvFromSecret | list | `[]` | Name of the K8s Secret in the same namespace which contains the extra environment variables. This can be used to avoid storing sensitive information in the values.yaml file. |
 | services.apps.extraVolumeMounts | list | `[]` | Additional volumeMounts to the main apps container. |
 | services.apps.extraVolumes | list | `[]` | Additional volumes to the apps pod. |
 | services.apps.httpLogging | int | `1` | Whether or not to log HTTP requests to the apps service. |
@@ -168,6 +173,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.automationWorkers.enabled | bool | `true` | Whether or not to enable the automation worker service. If you disable this, automations will be processed by the apps service. |
 | services.automationWorkers.extraContainers | list | `[]` | Additional containers to be added to the automationWorkers pod. |
 | services.automationWorkers.extraEnv | list | `[]` | Extra environment variables to set for automation worker pods. Takes a list of name=value pairs. |
+| services.automationWorkers.extraEnvFromSecret | list | `[]` | Name of the K8s Secret in the same namespace which contains the extra environment variables. This can be used to avoid storing sensitive information in the values.yaml file. |
 | services.automationWorkers.extraVolumeMounts | list | `[]` | Additional volumeMounts to the main automationWorkers container. |
 | services.automationWorkers.extraVolumes | list | `[]` | Additional volumes to the automationWorkers pod. |
 | services.automationWorkers.livenessProbe | object | HTTP health checks. | Liveness probe configuration for automation worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
@@ -195,7 +201,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.objectStore.region | string | `""` | AWS_REGION if using S3 |
 | services.objectStore.resources | object | `{}` | The resources to use for Minio pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
 | services.objectStore.secretKey | string | `""` | AWS_SECRET_ACCESS_KEY if using S3 |
-| services.objectStore.storage | string | `"100Mi"` | How much storage to give Minio in its PersistentVolumeClaim. |
+| services.objectStore.storage | string | `"2Gi"` | How much storage to give Minio in its PersistentVolumeClaim. |
 | services.objectStore.storageClass | string | `""` | If defined, storageClassName: <storageClass> If set to "-", storageClassName: "", which disables dynamic provisioning If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner. |
 | services.objectStore.url | string | `"http://minio-service:9000"` | URL to use for object storage. Only change this if you're using an external object store, such as S3. Remember to set `minio: false` if you do this. |
 | services.proxy.autoscaling.enabled | bool | `false` | Whether to enable horizontal pod autoscaling for the proxy service. |
@@ -227,6 +233,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.worker.autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage for the worker service. Note that for autoscaling to work, you will need to have metrics-server configured, and resources set for the worker pods. |
 | services.worker.extraContainers | list | `[]` | Additional containers to be added to the worker pod. |
 | services.worker.extraEnv | list | `[]` | Extra environment variables to set for worker pods. Takes a list of name=value pairs. |
+| services.worker.extraEnvFromSecret | list | `[]` | Name of the K8s Secret in the same namespace which contains the extra environment variables. This can be used to avoid storing sensitive information in the values.yaml file. |
 | services.worker.extraVolumeMounts | list | `[]` | Additional volumeMounts to the main worker container. |
 | services.worker.extraVolumes | list | `[]` | Additional volumes to the worker pod. |
 | services.worker.httpLogging | int | `1` | Whether or not to log HTTP requests to the worker service. |
