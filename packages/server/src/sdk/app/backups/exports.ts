@@ -18,7 +18,7 @@ import fsp from "fs/promises"
 import { join } from "path"
 import env from "../../../environment"
 import { v4 as uuid } from "uuid"
-import tar from "tar"
+import * as tar from "tar"
 
 const MemoryStream = require("memorystream")
 

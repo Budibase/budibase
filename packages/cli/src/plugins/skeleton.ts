@@ -3,7 +3,7 @@ import fs from "fs"
 import os from "os"
 import { join } from "path"
 import { processStringSync } from "@budibase/string-templates"
-import tar from "tar"
+import * as tar from "tar"
 
 import download from "download"
 

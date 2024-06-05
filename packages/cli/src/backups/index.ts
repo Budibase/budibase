@@ -14,7 +14,7 @@ import {
 } from "./utils"
 import { exportObjects, importObjects } from "./objectStore"
 
-import tar from "tar"
+import * as tar from "tar"
 
 type BackupOpts = { env?: string; import?: string; export?: string }
 

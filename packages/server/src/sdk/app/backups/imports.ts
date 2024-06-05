@@ -21,7 +21,7 @@ import fs from "fs"
 import fsp from "fs/promises"
 import sdk from "../../"
 import { v4 as uuid } from "uuid"
-import tar from "tar"
+import * as tar from "tar"
 
 type TemplateType = {
   file?: {
