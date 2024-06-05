@@ -728,7 +728,7 @@ const getRoleBindings = () => {
   return (get(rolesStore) || []).map(role => {
     return {
       type: "context",
-      runtimeBinding: `trim "${role._id}"`,
+      runtimeBinding: `'${role._id}'`,
       readableBinding: `Role.${role.name}`,
       category: "Role",
       icon: "UserGroup",

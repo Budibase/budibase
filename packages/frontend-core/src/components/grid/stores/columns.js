@@ -146,6 +146,7 @@ export const initialise = context => {
             schema: fieldSchema,
             width: fieldSchema.width || oldColumn?.width || DefaultColumnWidth,
             visible: fieldSchema.visible ?? true,
+            readonly: fieldSchema.readonly,
             order: fieldSchema.order ?? oldColumn?.order,
             primaryDisplay: field === primaryDisplay,
           }

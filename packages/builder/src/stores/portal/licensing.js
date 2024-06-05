@@ -138,6 +138,11 @@ export const createLicensingStore = () => {
       const isViewPermissionsEnabled = license.features.includes(
         Constants.Features.VIEW_PERMISSIONS
       )
+
+      const isViewReadonlyColumnsEnabled = license.features.includes(
+        Constants.Features.VIEW_READONLY_COLUMNS
+      )
+
       store.update(state => {
         return {
           ...state,
@@ -157,6 +162,7 @@ export const createLicensingStore = () => {
           triggerAutomationRunEnabled,
           isViewPermissionsEnabled,
           perAppBuildersEnabled,
+          isViewReadonlyColumnsEnabled,
         }
       })
     },
