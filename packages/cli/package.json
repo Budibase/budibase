@@ -36,6 +36,7 @@
     "yaml": "^2.1.1"
   },
   "devDependencies": {
+    "@types/download": "8.0.5",
     "@types/jest": "29.5.5",
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "^6.4.0",

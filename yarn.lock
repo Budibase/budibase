@@ -5693,6 +5693,13 @@
   dependencies:
     "@types/ms" "*"
 
+"@types/decompress@*":
+  version "4.2.7"
+  resolved "https://registry.yarnpkg.com/@types/decompress/-/decompress-4.2.7.tgz#604f69b69d519ecb74dea1ea0829f159b85e1332"
+  integrity sha512-9z+8yjKr5Wn73Pt17/ldnmQToaFHZxK0N1GHysuk/JIPT8RIdQeoInM01wWPgypRcvb6VH1drjuFpQ4zmY437g==
+  dependencies:
+    "@types/node" "*"
+
 "@types/docker-modem@*":
   version "3.0.6"
   resolved "https://registry.yarnpkg.com/@types/docker-modem/-/docker-modem-3.0.6.tgz#1f9262fcf85425b158ca725699a03eb23cddbf87"
@@ -5707,6 +5714,15 @@
   integrity sha512-679y69OYusf7Fr2HtdjXPUF6hnHxSA9K4EsuagsMuPno/XpJHjXxCOy2I5YL8POnWbzjsQAi0pyKIYM9HSpQog==
   dependencies:
     "@types/docker-modem" "*"
+    "@types/node" "*"
+
+"@types/download@8.0.5":
+  version "8.0.5"
+  resolved "https://registry.yarnpkg.com/@types/download/-/download-8.0.5.tgz#5d800d1268343b43189f5cd0c92cc914a7786ed3"
+  integrity sha512-Ad68goc/BsL3atP3OP/lWKAKhiC6FduN1mC5yg9lZuGYmUY7vyoWBcXgt8GE9OzVWRq5IBXwm4o/QiE+gipZAg==
+  dependencies:
+    "@types/decompress" "*"
+    "@types/got" "^9"
     "@types/node" "*"
 
 "@types/estree@*", "@types/estree@1.0.5", "@types/estree@^1.0.0", "@types/estree@^1.0.1":
@@ -5749,6 +5765,15 @@
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/@types/global-agent/-/global-agent-2.1.1.tgz#3f93185e48a3a36e377a52a8301320cd162a831b"
   integrity sha512-sVox8Phk1UKgP6LQPAdeRxfww6vHKt7Bf59dXzYLsQBUEMEn8S10a+ESp/yO0i4fJ3WS4+CIuz42hgJcuA+3mA==
+
+"@types/got@^9":
+  version "9.6.12"
+  resolved "https://registry.yarnpkg.com/@types/got/-/got-9.6.12.tgz#fd42a6e1f5f64cd6bb422279b08c30bb5a15a56f"
+  integrity sha512-X4pj/HGHbXVLqTpKjA2ahI4rV/nNBc9mGO2I/0CgAra+F2dKgMXnENv2SRpemScBzBAI4vMelIVYViQxlSE6xA==
+  dependencies:
+    "@types/node" "*"
+    "@types/tough-cookie" "*"
+    form-data "^2.5.0"
 
 "@types/graceful-fs@^4.1.3":
   version "4.1.6"
