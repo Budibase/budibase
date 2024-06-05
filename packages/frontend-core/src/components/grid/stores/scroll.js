@@ -109,6 +109,7 @@ export const initialise = context => {
     maxScrollTop,
     scrollLeft,
     maxScrollLeft,
+    buttonColumnWidth,
   } = context
 
   // Ensure scroll state never goes invalid, which can happen when changing
@@ -194,8 +195,10 @@ export const initialise = context => {
 
     // Ensure column is not cutoff on right edge
     else {
+      const $buttonColumnWidth = get(buttonColumnWidth)
       const rightEdge = column.left + column.width
-      const rightBound = $bounds.width + $scroll.left - FocusedCellMinOffset
+      const rightBound =
+        $bounds.width + $scroll.left - FocusedCellMinOffset - $buttonColumnWidth
       delta = rightEdge - rightBound
       if (delta > 0) {
         scroll.update(state => ({

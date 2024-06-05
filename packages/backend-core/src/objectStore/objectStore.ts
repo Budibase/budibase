@@ -14,6 +14,7 @@ import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
 import { HeadObjectOutput } from "aws-sdk/clients/s3"
+import { ReadableStream } from "stream/web"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -41,10 +42,7 @@ type UploadParams = BaseUploadParams & {
   path?: string | PathLike
 }
 
-export type StreamTypes =
-  | ReadStream
-  | NodeJS.ReadableStream
-  | ReadableStream<Uint8Array>
+export type StreamTypes = ReadStream | NodeJS.ReadableStream
 
 export type StreamUploadParams = BaseUploadParams & {
   stream?: StreamTypes
@@ -222,6 +220,9 @@ export async function streamUpload({
   extra,
   ttl,
 }: StreamUploadParams) {
+  if (!stream) {
+    throw new Error("Stream to upload is invalid/undefined")
+  }
   const extension = filename.split(".").pop()
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
@@ -251,14 +252,27 @@ export async function streamUpload({
       : CONTENT_TYPE_MAP.txt
   }
 
+  const bucket = sanitizeBucket(bucketName),
+    objKey = sanitizeKey(filename)
   const params = {
-    Bucket: sanitizeBucket(bucketName),
-    Key: sanitizeKey(filename),
+    Bucket: bucket,
+    Key: objKey,
     Body: stream,
     ContentType: contentType,
     ...extra,
   }
-  return objectStore.upload(params).promise()
+
+  const details = await objectStore.upload(params).promise()
+  const headDetails = await objectStore
+    .headObject({
+      Bucket: bucket,
+      Key: objKey,
+    })
+    .promise()
+  return {
+    ...details,
+    ContentLength: headDetails.ContentLength,
+  }
 }
 
 /**

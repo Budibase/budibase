@@ -33,7 +33,8 @@
     column.schema.autocolumn ||
     column.schema.disabled ||
     column.schema.type === "formula" ||
-    (!$config.canEditRows && !row._isNewRow)
+    (!$config.canEditRows && !row._isNewRow) ||
+    column.schema.readonly
 
   // Register this cell API if the row is focused
   $: {
