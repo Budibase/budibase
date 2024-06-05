@@ -645,6 +645,21 @@ couchdb:
     # @ignore
     pullPolicy: Always
 
+  extraPorts:
+    # -- Extra ports to expose on the CouchDB service. We expose the SQS port
+    # by default, but you can add more ports here if you need to.
+    - name: sqs
+      containerPort: 4984
+
+  service:
+    extraPorts:
+      # -- Extra ports to expose on the CouchDB service. We expose the SQS port
+      # by default, but you can add more ports here if you need to.
+      - name: sqs
+        port: 4984
+        targetPort: 4984
+        protocol: TCP
+
   # @ignore
   # This should remain false. We ship Clouseau ourselves as part of the
   # budibase/couchdb image, and it's not possible to disable it because it's a
