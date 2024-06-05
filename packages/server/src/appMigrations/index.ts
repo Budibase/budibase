@@ -14,16 +14,24 @@ export type AppMigration = {
   disabled?: boolean
 }
 
-// all migrations must be enabled for migrations to run
-export const migrationsEnabled = (): boolean =>
-  MIGRATIONS.find(m => m.disabled) == null
-
-export const getLatestMigrationId = () =>
-  MIGRATIONS.map(m => m.id)
+export function getLatestEnabledMigrationId() {
+  const enabledMigrations: AppMigration[] = []
+  for (let migration of MIGRATIONS) {
+    // if a migration is disabled, all migrations after it are disabled
+    if (migration.disabled) {
+      break
+    }
+    enabledMigrations.push(migration)
+  }
+  return enabledMigrations
+    .map(m => m.id)
     .sort()
     .reverse()[0]
+}
 
-const getTimestamp = (versionId: string) => versionId?.split("_")[0] || ""
+function getTimestamp(versionId: string) {
+  return versionId?.split("_")[0] || ""
+}
 
 export async function checkMissingMigrations(
   ctx: UserCtx,
@@ -31,7 +39,7 @@ export async function checkMissingMigrations(
   appId: string
 ) {
   const currentVersion = await getAppMigrationVersion(appId)
-  const latestMigration = getLatestMigrationId()
+  const latestMigration = getLatestEnabledMigrationId()
 
   if (getTimestamp(currentVersion) < getTimestamp(latestMigration)) {
     await queue.add(

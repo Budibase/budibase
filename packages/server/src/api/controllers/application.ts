@@ -361,7 +361,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     // Initialise the app migration version as the latest one
     await appMigrations.updateAppMigrationMetadata({
       appId,
-      version: appMigrations.getLatestMigrationId(),
+      version: appMigrations.getLatestEnabledMigrationId(),
     })
 
     await cache.app.invalidateAppMetadata(appId, newApplication)

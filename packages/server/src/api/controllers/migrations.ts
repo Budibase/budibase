@@ -3,7 +3,7 @@ import { migrate as migrationImpl, MIGRATIONS } from "../../migrations"
 import { Ctx } from "@budibase/types"
 import {
   getAppMigrationVersion,
-  getLatestMigrationId,
+  getLatestEnabledMigrationId,
 } from "../../appMigrations"
 
 export async function migrate(ctx: Ctx) {
@@ -27,7 +27,7 @@ export async function getMigrationStatus(ctx: Ctx) {
 
   const latestAppliedMigration = await getAppMigrationVersion(appId)
 
-  const migrated = latestAppliedMigration === getLatestMigrationId()
+  const migrated = latestAppliedMigration === getLatestEnabledMigrationId()
 
   ctx.body = { migrated }
   ctx.status = 200
