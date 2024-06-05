@@ -3,9 +3,9 @@ import fs from "fs"
 import os from "os"
 import { join } from "path"
 import { processStringSync } from "@budibase/string-templates"
+import tar from "tar"
 
 const download = require("download")
-const tar = require("tar")
 
 const HBS_FILES = ["package.json.hbs", "schema.json.hbs", "README.md.hbs"]
 
