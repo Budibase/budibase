@@ -1,7 +1,7 @@
 import { Header } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
-import { migrationsEnabled } from "../index"
+import { getLatestEnabledMigrationId } from "../index"
 import { getAppMigrationVersion } from "../appMigrationMetadata"
 
 jest.mock<typeof migrations>("../migrations", () => ({
@@ -55,12 +55,24 @@ describe("migrations", () => {
   })
 
   it("should disable migrations if any migration is disabled", () => {
+    // remove all migrations
+    migrations.MIGRATIONS.splice(0, migrations.MIGRATIONS.length)
+    migrations.MIGRATIONS.push({
+      id: "20231211105810_new-test",
+      func: async () => {},
+    })
+    migrations.MIGRATIONS.push({
+      id: "20231211105812_new-test",
+      func: async () => {},
+    })
     migrations.MIGRATIONS.push({
       id: "20231211105814_new-test",
       func: async () => {},
-      disabled: true,
     })
 
-    expect(migrationsEnabled()).toBe(false)
+    expect(getLatestEnabledMigrationId()).toBe("20231211105814_new-test")
+
+    migrations.MIGRATIONS[1].disabled = true
+    expect(getLatestEnabledMigrationId()).toBe("20231211105810_new-test")
   })
 })
