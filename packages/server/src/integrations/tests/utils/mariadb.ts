@@ -18,7 +18,7 @@ class MariaDBWaitStrategy extends AbstractWaitStrategy {
     await logs.waitUntilReady(container, boundPorts, startTime)
 
     const command = Wait.forSuccessfulCommand(
-      `mysqladmin ping -h localhost -P 3306 -u root -ppassword`
+      `/usr/local/bin/healthcheck.sh --innodb_initialized`
     )
     await command.waitUntilReady(container)
   }

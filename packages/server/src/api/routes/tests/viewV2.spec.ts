@@ -22,10 +22,7 @@ import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { roles } from "@budibase/backend-core"
-import * as schemaUtils from "../../../utilities/schema"
-
-jest.mock("../../../utilities/schema")
+import { db, roles } from "@budibase/backend-core"
 
 describe.each([
   ["internal", undefined],
@@ -120,6 +117,9 @@ describe.each([
       const newView: CreateViewRequest = {
         name: generator.name(),
         tableId: table._id!,
+        schema: {
+          id: { visible: true },
+        },
       }
       const res = await config.api.viewV2.create(newView)
 
@@ -134,7 +134,7 @@ describe.each([
       const newView: Required<CreateViewRequest> = {
         name: generator.name(),
         tableId: table._id!,
-        primaryDisplay: generator.word(),
+        primaryDisplay: "id",
         query: [
           {
             operator: SearchFilterOperator.EQUAL,
@@ -148,6 +148,7 @@ describe.each([
           type: SortType.STRING,
         },
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
           },
@@ -158,6 +159,7 @@ describe.each([
       expect(res).toEqual({
         ...newView,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
           },
@@ -172,6 +174,11 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         schema: {
+          id: {
+            name: "id",
+            type: FieldType.NUMBER,
+            visible: true,
+          },
           Price: {
             name: "Price",
             type: FieldType.NUMBER,
@@ -193,6 +200,7 @@ describe.each([
       expect(createdView).toEqual({
         ...newView,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
             order: 1,
@@ -209,6 +217,12 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         schema: {
+          id: {
+            name: "id",
+            type: FieldType.AUTO,
+            autocolumn: true,
+            visible: true,
+          },
           Price: {
             name: "Price",
             type: FieldType.NUMBER,
@@ -230,8 +244,9 @@ describe.each([
       const newView: CreateViewRequest = {
         name: generator.name(),
         tableId: table._id!,
-        primaryDisplay: generator.word(),
+        primaryDisplay: "id",
         schema: {
+          id: { visible: true },
           Price: { visible: true },
           Category: { visible: false },
         },
@@ -241,6 +256,7 @@ describe.each([
       expect(res).toEqual({
         ...newView,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
           },
@@ -255,6 +271,7 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         schema: {
+          id: { visible: true },
           nonExisting: {
             visible: true,
           },
@@ -293,6 +310,7 @@ describe.each([
           name: generator.name(),
           tableId: table._id!,
           schema: {
+            id: { visible: true },
             name: {
               visible: true,
               readonly: true,
@@ -306,6 +324,7 @@ describe.each([
 
         const res = await config.api.viewV2.create(newView)
         expect(res.schema).toEqual({
+          id: { visible: true },
           name: {
             visible: true,
             readonly: true,
@@ -318,15 +337,13 @@ describe.each([
       })
 
       it("required fields cannot be marked as readonly", async () => {
-        const isRequiredSpy = jest.spyOn(schemaUtils, "isRequired")
-        isRequiredSpy.mockReturnValueOnce(true)
-
         const table = await config.api.table.save(
           saveTableRequest({
             schema: {
               name: {
                 name: "name",
                 type: FieldType.STRING,
+                constraints: { presence: true },
               },
               description: {
                 name: "description",
@@ -340,7 +357,9 @@ describe.each([
           name: generator.name(),
           tableId: table._id!,
           schema: {
+            id: { visible: true },
             name: {
+              visible: true,
               readonly: true,
             },
           },
@@ -350,7 +369,7 @@ describe.each([
           status: 400,
           body: {
             message:
-              'Field "name" cannot be readonly as it is a required field',
+              'You can\'t make "name" readonly because it is a required field.',
             status: 400,
           },
         })
@@ -376,6 +395,7 @@ describe.each([
           name: generator.name(),
           tableId: table._id!,
           schema: {
+            id: { visible: true },
             name: {
               visible: false,
               readonly: true,
@@ -414,6 +434,7 @@ describe.each([
           name: generator.name(),
           tableId: table._id!,
           schema: {
+            id: { visible: true },
             name: {
               visible: true,
               readonly: true,
@@ -424,10 +445,82 @@ describe.each([
         await config.api.viewV2.create(newView, {
           status: 400,
           body: {
-            message: "Readonly fields are not enabled for your tenant",
+            message: "Readonly fields are not enabled",
             status: 400,
           },
         })
+      })
+    })
+
+    it("display fields must be visible", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+            description: {
+              name: "description",
+              type: FieldType.STRING,
+            },
+          },
+        })
+      )
+
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: table._id!,
+        primaryDisplay: "name",
+        schema: {
+          id: { visible: true },
+          name: {
+            visible: false,
+          },
+        },
+      }
+
+      await config.api.viewV2.create(newView, {
+        status: 400,
+        body: {
+          message: 'You can\'t hide "name" because it is the display column.',
+          status: 400,
+        },
+      })
+    })
+
+    it("display fields can be readonly", async () => {
+      mocks.licenses.useViewReadonlyColumns()
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+            description: {
+              name: "description",
+              type: FieldType.STRING,
+            },
+          },
+        })
+      )
+
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: table._id!,
+        primaryDisplay: "name",
+        schema: {
+          id: { visible: true },
+          name: {
+            visible: true,
+            readonly: true,
+          },
+        },
+      }
+
+      await config.api.viewV2.create(newView, {
+        status: 201,
       })
     })
   })
@@ -441,6 +534,9 @@ describe.each([
       view = await config.api.viewV2.create({
         tableId: table._id!,
         name: generator.guid(),
+        schema: {
+          id: { visible: true },
+        },
       })
     })
 
@@ -475,7 +571,7 @@ describe.each([
         id: view.id,
         tableId,
         name: view.name,
-        primaryDisplay: generator.word(),
+        primaryDisplay: "Price",
         query: [
           {
             operator: SearchFilterOperator.EQUAL,
@@ -489,6 +585,7 @@ describe.each([
           type: SortType.STRING,
         },
         schema: {
+          id: { visible: true },
           Category: {
             visible: false,
           },
@@ -506,7 +603,7 @@ describe.each([
           schema: {
             ...table.schema,
             id: expect.objectContaining({
-              visible: false,
+              visible: true,
             }),
             Category: expect.objectContaining({
               visible: false,
@@ -603,6 +700,9 @@ describe.each([
       const anotherView = await config.api.viewV2.create({
         tableId: table._id!,
         name: generator.guid(),
+        schema: {
+          id: { visible: true },
+        },
       })
       const result = await config
         .request!.put(`/api/v2/views/${anotherView.id}`)
@@ -621,6 +721,7 @@ describe.each([
       const updatedView = await config.api.viewV2.update({
         ...view,
         schema: {
+          ...view.schema,
           Price: {
             name: "Price",
             type: FieldType.NUMBER,
@@ -640,6 +741,7 @@ describe.each([
       expect(updatedView).toEqual({
         ...view,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
             order: 1,
@@ -656,6 +758,7 @@ describe.each([
         {
           ...view,
           schema: {
+            ...view.schema,
             Price: {
               name: "Price",
               type: FieldType.NUMBER,
@@ -679,6 +782,7 @@ describe.each([
       view = await config.api.viewV2.update({
         ...view,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
             readonly: true,
@@ -690,7 +794,7 @@ describe.each([
       await config.api.viewV2.update(view, {
         status: 400,
         body: {
-          message: "Readonly fields are not enabled for your tenant",
+          message: "Readonly fields are not enabled",
         },
       })
     })
@@ -701,6 +805,7 @@ describe.each([
       view = await config.api.viewV2.update({
         ...view,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
             readonly: true,
@@ -715,6 +820,7 @@ describe.each([
       const res = await config.api.viewV2.update({
         ...view,
         schema: {
+          id: { visible: true },
           Price: {
             visible: true,
             readonly: false,
@@ -725,6 +831,7 @@ describe.each([
         expect.objectContaining({
           ...view,
           schema: {
+            id: { visible: true },
             Price: {
               visible: true,
               readonly: false,
@@ -733,6 +840,53 @@ describe.each([
         })
       )
     })
+
+    isInternal &&
+      it("updating schema will only validate modified field", async () => {
+        let view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+            Price: {
+              visible: true,
+            },
+            Category: { visible: true },
+          },
+        })
+
+        // Update the view to an invalid state
+        const tableToUpdate = await config.api.table.get(table._id!)
+        ;(tableToUpdate.views![view.name] as ViewV2).schema!.id.visible = false
+        await db.getDB(config.appId!).put(tableToUpdate)
+
+        view = await config.api.viewV2.get(view.id)
+        await config.api.viewV2.update({
+          ...view,
+          schema: {
+            ...view.schema,
+            Price: {
+              visible: false,
+            },
+          },
+        })
+
+        expect(await config.api.viewV2.get(view.id)).toEqual(
+          expect.objectContaining({
+            schema: {
+              id: expect.objectContaining({
+                visible: false,
+              }),
+              Price: expect.objectContaining({
+                visible: false,
+              }),
+              Category: expect.objectContaining({
+                visible: true,
+              }),
+            },
+          })
+        )
+      })
   })
 
   describe("delete", () => {
@@ -742,6 +896,9 @@ describe.each([
       view = await config.api.viewV2.create({
         tableId: table._id!,
         name: generator.guid(),
+        schema: {
+          id: { visible: true },
+        },
       })
     })
 
@@ -764,6 +921,7 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         schema: {
+          id: { visible: true },
           Price: { visible: false },
           Category: { visible: true },
         },
@@ -786,6 +944,7 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         schema: {
+          id: { visible: true },
           Price: { visible: true, readonly: true },
         },
       })
@@ -821,6 +980,7 @@ describe.each([
         tableId: table._id!,
         name: generator.guid(),
         schema: {
+          id: { visible: true },
           Country: {
             visible: true,
           },
@@ -855,6 +1015,7 @@ describe.each([
         tableId: table._id!,
         name: generator.guid(),
         schema: {
+          id: { visible: true },
           two: { visible: true },
         },
       })
@@ -880,6 +1041,7 @@ describe.each([
           tableId: table._id!,
           name: generator.guid(),
           schema: {
+            id: { visible: true },
             one: { visible: true, readonly: true },
             two: { visible: true },
           },
@@ -921,6 +1083,7 @@ describe.each([
           tableId: table._id!,
           name: generator.guid(),
           schema: {
+            id: { visible: true },
             one: { visible: true, readonly: true },
             two: { visible: true },
           },
@@ -988,6 +1151,7 @@ describe.each([
             rows.map(r => ({
               _viewId: view.id,
               tableId: table._id,
+              id: r.id,
               _id: r._id,
               _rev: r._rev,
               ...(isInternal
@@ -1028,6 +1192,7 @@ describe.each([
             },
           ],
           schema: {
+            id: { visible: true },
             two: { visible: true },
           },
         })
@@ -1039,6 +1204,7 @@ describe.each([
             {
               _viewId: view.id,
               tableId: table._id,
+              id: two.id,
               two: two.two,
               _id: two._id,
               _rev: two._rev,
@@ -1192,7 +1358,11 @@ describe.each([
 
       describe("sorting", () => {
         let table: Table
-        const viewSchema = { age: { visible: true }, name: { visible: true } }
+        const viewSchema = {
+          id: { visible: true },
+          age: { visible: true },
+          name: { visible: true },
+        }
 
         beforeAll(async () => {
           table = await config.api.table.save(
@@ -1345,6 +1515,125 @@ describe.each([
         await config.api.viewV2.publicSearch(view.id, undefined, {
           status: 403,
         })
+      })
+    })
+  })
+
+  describe("updating table schema", () => {
+    describe("existing columns changed to required", () => {
+      beforeEach(async () => {
+        table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              id: {
+                name: "id",
+                type: FieldType.AUTO,
+                autocolumn: true,
+              },
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+      })
+
+      it("allows updating when no views constrains the field", async () => {
+        await config.api.viewV2.create({
+          name: "view a",
+          tableId: table._id!,
+          schema: {
+            id: { visible: true },
+            name: { visible: true },
+          },
+        })
+
+        table = await config.api.table.get(table._id!)
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: { allowEmpty: false } },
+              },
+            },
+          },
+          { status: 200 }
+        )
+      })
+
+      it("rejects if field is readonly in any view", async () => {
+        mocks.licenses.useViewReadonlyColumns()
+
+        await config.api.viewV2.create({
+          name: "view a",
+          tableId: table._id!,
+          schema: {
+            id: { visible: true },
+            name: {
+              visible: true,
+              readonly: true,
+            },
+          },
+        })
+
+        table = await config.api.table.get(table._id!)
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              status: 400,
+              message:
+                'To make field "name" required, this field must be present and writable in views: view a.',
+            },
+          }
+        )
+      })
+
+      it("rejects if field is hidden in any view", async () => {
+        await config.api.viewV2.create({
+          name: "view a",
+          tableId: table._id!,
+          schema: { id: { visible: true } },
+        })
+
+        table = await config.api.table.get(table._id!)
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: { presence: true },
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              status: 400,
+              message:
+                'To make field "name" required, this field must be present and writable in views: view a.',
+            },
+          }
+        )
       })
     })
   })
