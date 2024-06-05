@@ -6,12 +6,10 @@ import { AppMigration } from "."
 import m20240604153647_initial_sqs from "./migrations/20240604153647_initial_sqs"
 
 // Migrations will be executed sorted by ID
-export const MIGRATIONS: AppMigration[] = []
-
-// only run the SQS migration if SQS is enabled
-if (env.SQS_SEARCH_ENABLE) {
-  MIGRATIONS.push({
+export const MIGRATIONS: AppMigration[] = [
+  {
     id: "20240604153647_initial_sqs",
     func: m20240604153647_initial_sqs,
-  })
-}
+    disabled: !env.SQS_SEARCH_ENABLE,
+  },
+]

@@ -10,7 +10,13 @@ export * from "./appMigrationMetadata"
 export type AppMigration = {
   id: string
   func: () => Promise<void>
+  // disabled so that by default all migrations listed are enabled
+  disabled?: boolean
 }
+
+// all migrations must be enabled for migrations to run
+export const migrationsEnabled = (): boolean =>
+  MIGRATIONS.find(m => m.disabled) == null
 
 export const getLatestMigrationId = () =>
   MIGRATIONS.map(m => m.id)
