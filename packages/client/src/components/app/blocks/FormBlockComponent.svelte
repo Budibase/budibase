@@ -68,6 +68,11 @@
           maximum: schema?.constraints?.length?.maximum,
         }
       },
+      [FieldType.DATETIME]: (_field, schema) => {
+        return {
+          valueAsTimestamp: !schema?.timeOnly,
+        }
+      },
     }
 
     const fieldSchema = getFieldSchema(field)
