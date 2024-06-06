@@ -69,9 +69,13 @@
         }
       },
       [FieldType.DATETIME]: (_field, schema) => {
-        return {
+        const props = {
           valueAsTimestamp: !schema?.timeOnly,
         }
+        if (schema?.dateOnly) {
+          props.enableTime = false
+        }
+        return props
       },
     }
 
