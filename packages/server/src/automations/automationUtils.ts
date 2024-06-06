@@ -99,9 +99,12 @@ export function getError(err: any) {
   return typeof err !== "string" ? err.toString() : err
 }
 
-export function validateAttachment(attachmentObject: any) {
+export function guardAttachment(attachmentObject: any) {
   if (!("url" in attachmentObject) || !("filename" in attachmentObject)) {
-    throw new Error("Invalid key. Object must have both URL and Filename keys")
+    const providedKeys = Object.keys(attachmentObject).join(", ")
+    throw new Error(
+      `Attachments must have both "url" and "filename" keys. You have provided: ${providedKeys}`
+    )
   }
 }
 
@@ -123,9 +126,9 @@ export async function sendAutomationAttachmentsToStorage(
       schema?.type === FieldType.SIGNATURE_SINGLE
     ) {
       if (Array.isArray(value)) {
-        value.forEach(item => validateAttachment(item))
+        value.forEach(item => guardAttachment(item))
       } else {
-        validateAttachment(value)
+        guardAttachment(value)
       }
       attachmentRows[prop] = value
     }

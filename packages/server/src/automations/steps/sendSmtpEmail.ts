@@ -120,9 +120,9 @@ export async function run({ inputs }: AutomationStepInput) {
 
   if (attachments) {
     if (Array.isArray(attachments)) {
-      attachments.forEach(item => automationUtils.validateAttachment(item))
+      attachments.forEach(item => automationUtils.guardAttachment(item))
     } else {
-      automationUtils.validateAttachment(attachments)
+      automationUtils.guardAttachment(attachments)
     }
   }
 

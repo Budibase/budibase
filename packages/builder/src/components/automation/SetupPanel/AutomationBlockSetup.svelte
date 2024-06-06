@@ -385,6 +385,16 @@
     return params
   }
 
+  function toggleAttachmentBinding(e, key) {
+    onChange(
+      {
+        detail: "",
+      },
+      key
+    )
+    onChange({ detail: { useAttachmentBinding: e.detail } }, "meta")
+  }
+
   onMount(async () => {
     try {
       await environment.loadVariables()
@@ -467,18 +477,7 @@
                   value={inputData?.meta?.useAttachmentBinding}
                   text={"Use bindings"}
                   size={"XS"}
-                  on:change={e => {
-                    onChange(
-                      {
-                        detail: "",
-                      },
-                      key
-                    )
-                    onChange(
-                      { detail: { useAttachmentBinding: e.detail } },
-                      "meta"
-                    )
-                  }}
+                  on:change={e => toggleAttachmentBinding(e, key)}
                 />
               </div>
 

@@ -94,10 +94,10 @@
     dispatch("change", newValue)
   }
 
-  const onChangeSetting = (e, field, setting) => {
+  const onChangeSetting = (field, key, value) => {
     let newField = {}
     newField[field] = {
-      [setting]: e.detail,
+      [key]: value,
     }
 
     let updatedFields = {
@@ -162,7 +162,8 @@
                 bindings={parsedBindings}
                 {value}
                 {onChange}
-                {meta}
+                useAttachmentBinding={meta?.fields?.[field]
+                  ?.useAttachmentBinding}
                 {onChangeSetting}
               />
             </DrawerBindableSlot>
@@ -174,7 +175,8 @@
                 value={meta.fields?.[field]?.clearRelationships}
                 text={"Clear relationships if empty?"}
                 size={"S"}
-                on:change={e => onChangeSetting(e, field, "clearRelationships")}
+                on:change={e =>
+                  onChangeSetting(field, "clearRelationships", e.detail)}
               />
             </div>
           {/if}

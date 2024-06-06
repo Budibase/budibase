@@ -20,7 +20,7 @@
   export let value
   export let bindings
   export let isTestModal
-  export let meta
+  export let useAttachmentBinding
   export let onChangeSetting
 
   $: parsedBindings = bindings.map(binding => {
@@ -35,7 +35,7 @@
     FieldType.SIGNATURE_SINGLE,
   ]
 
-  let previousBindingState = meta?.fields?.[field]?.useAttachmentBinding
+  let previousBindingState = useAttachmentBinding
 
   function schemaHasOptions(schema) {
     return !!schema.constraints?.inclusion?.length
@@ -56,24 +56,24 @@
     return params
   }
 
-  async function handleToggleChange(event, fieldToggle) {
+  async function handleToggleChange(toggleField, event) {
     if (event.detail === true) {
-      value[fieldToggle] = []
+      value[toggleField] = []
     } else {
-      value[fieldToggle] = ""
+      value[toggleField] = ""
     }
     previousBindingState = event.detail
-    onChangeSetting(event, fieldToggle, "useAttachmentBinding")
-    onChange({ detail: value[fieldToggle] }, fieldToggle)
+    onChangeSetting(toggleField, "useAttachmentBinding", event.detail)
+    onChange({ detail: value[toggleField] }, toggleField)
   }
 
-  $: if (meta?.fields?.[field]?.useAttachmentBinding !== previousBindingState) {
-    if (meta?.fields?.[field]?.useAttachmentBinding) {
+  $: if (useAttachmentBinding !== previousBindingState) {
+    if (useAttachmentBinding) {
       value[field] = []
     } else {
       value[field] = ""
     }
-    previousBindingState = meta?.fields?.[field]?.useAttachmentBinding
+    previousBindingState = useAttachmentBinding
   }
 </script>
 
@@ -134,13 +134,13 @@
   <div class="attachment-field-container">
     <div class="toggle-container">
       <Toggle
-        value={meta?.fields?.[field]?.useAttachmentBinding}
+        value={useAttachmentBinding}
         text={"Use bindings"}
         size={"XS"}
-        on:change={e => handleToggleChange(e, field)}
+        on:change={e => handleToggleChange(field, e)}
       />
     </div>
-    {#if !meta?.fields?.[field]?.useAttachmentBinding}
+    {#if !useAttachmentBinding}
       <div class="attachment-field-spacing">
         <KeyValueBuilder
           on:change={async e => {
