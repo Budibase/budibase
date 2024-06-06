@@ -1,7 +1,7 @@
 import { Header } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
-import { getLatestEnabledMigrationId } from "../index"
+import { AppMigration, getLatestEnabledMigrationId } from "../index"
 import { getAppMigrationVersion } from "../appMigrationMetadata"
 
 jest.mock<typeof migrations>("../migrations", () => ({
@@ -54,25 +54,28 @@ describe("migrations", () => {
     })
   })
 
-  it("should disable migrations if any migration is disabled", () => {
-    // remove all migrations
-    migrations.MIGRATIONS.splice(0, migrations.MIGRATIONS.length)
-    migrations.MIGRATIONS.push({
-      id: "20231211105810_new-test",
-      func: async () => {},
-    })
-    migrations.MIGRATIONS.push({
-      id: "20231211105812_new-test",
-      func: async () => {},
-    })
-    migrations.MIGRATIONS.push({
-      id: "20231211105814_new-test",
-      func: async () => {},
-    })
+  it("should disable all migrations after one that is disabled", () => {
+    const MIGRATION_ID1 = "20231211105810_new-test",
+      MIGRATION_ID2 = "20231211105812_new-test",
+      MIGRATION_ID3 = "20231211105814_new-test"
+    // create some migrations to test with
+    const migrations: AppMigration[] = [
+      {
+        id: MIGRATION_ID1,
+        func: async () => {},
+      },
+      {
+        id: MIGRATION_ID2,
+        func: async () => {},
+      },
+      {
+        id: MIGRATION_ID3,
+        func: async () => {},
+      },
+    ]
 
-    expect(getLatestEnabledMigrationId()).toBe("20231211105814_new-test")
-
-    migrations.MIGRATIONS[1].disabled = true
-    expect(getLatestEnabledMigrationId()).toBe("20231211105810_new-test")
+    expect(getLatestEnabledMigrationId(migrations)).toBe(MIGRATION_ID3)
+    migrations[1].disabled = true
+    expect(getLatestEnabledMigrationId(migrations)).toBe(MIGRATION_ID1)
   })
 })

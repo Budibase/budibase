@@ -27,7 +27,7 @@ export async function getMigrationStatus(ctx: Ctx) {
 
   const latestAppliedMigration = await getAppMigrationVersion(appId)
 
-  const migrated = latestAppliedMigration === getLatestEnabledMigrationId()
+  const migrated = latestAppliedMigration >= getLatestEnabledMigrationId()
 
   ctx.body = { migrated }
   ctx.status = 200
