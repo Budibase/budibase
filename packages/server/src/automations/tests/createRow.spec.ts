@@ -152,7 +152,7 @@ describe("test the create row action", () => {
 
     expect(res.success).toEqual(false)
     expect(res.response).toEqual(
-      "Error: Invalid key. Object must have both URL and Filename keys"
+      'Error: Attachments must have both "url" and "filename" keys. You have provided: wrongKey, anotherWrongKey'
     )
   })
 })
