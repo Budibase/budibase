@@ -3,7 +3,6 @@ import { allLinkDocs } from "../../db/utils"
 import LinkDocumentImpl from "../../db/linkedRows/LinkDocument"
 import sdk from "../../sdk"
 import env from "../../environment"
-import { DBError } from "@budibase/types"
 
 const migration = async () => {
   const linkDocs = await allLinkDocs()
