@@ -15,18 +15,15 @@ export type AppMigration = {
 }
 
 export function getLatestEnabledMigrationId(migrations?: AppMigration[]) {
-  const enabledMigrations: AppMigration[] = []
+  let latestMigrationId: string | undefined
   for (let migration of migrations || MIGRATIONS) {
     // if a migration is disabled, all migrations after it are disabled
     if (migration.disabled) {
       break
     }
-    enabledMigrations.push(migration)
+    latestMigrationId = migration.id
   }
-  return enabledMigrations
-    .map(m => m.id)
-    .sort()
-    .reverse()[0]
+  return latestMigrationId
 }
 
 function getTimestamp(versionId: string) {
@@ -41,7 +38,10 @@ export async function checkMissingMigrations(
   const currentVersion = await getAppMigrationVersion(appId)
   const latestMigration = getLatestEnabledMigrationId()
 
-  if (getTimestamp(currentVersion) < getTimestamp(latestMigration)) {
+  if (
+    latestMigration &&
+    getTimestamp(currentVersion) < getTimestamp(latestMigration)
+  ) {
     await queue.add(
       {
         appId,
