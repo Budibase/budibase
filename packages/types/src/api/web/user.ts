@@ -45,7 +45,12 @@ export interface InviteUserRequest {
   userInfo: any
 }
 
+export interface DeleteInviteUserRequest {
+  code: string
+}
+
 export type InviteUsersRequest = InviteUserRequest[]
+export type DeleteInviteUsersRequest = DeleteInviteUserRequest[]
 
 export interface InviteUsersResponse {
   successful: { email: string }[]

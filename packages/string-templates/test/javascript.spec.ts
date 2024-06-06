@@ -149,4 +149,11 @@ describe("Javascript", () => {
       expect(output).toMatch(UUID_REGEX)
     })
   })
+
+  describe("JS literal strings", () => {
+    it("should be able to handle a literal string that is quoted (like role IDs)", () => {
+      const output = processJS(`return $("'Custom'")`)
+      expect(output).toBe("Custom")
+    })
+  })
 })

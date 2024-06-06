@@ -56,6 +56,14 @@ spec:
           {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
           {{ end }}
+        {{ if .Values.globals.sqs.enabled }}
+        - name: COUCH_DB_SQL_URL
+        {{ if .Values.globals.sqs.url }}
+          value: {{ .Values.globals.sqs.url }}
+        {{ else }}
+          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.globals.sqs.port }}
+        {{ end }}
+        {{ end }}
         - name: API_ENCRYPTION_KEY
           value: {{ .Values.globals.apiEncryptionKey | quote }}
         - name: HTTP_LOGGING
@@ -184,10 +192,21 @@ spec:
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
+        {{- if .Values.globals.sqs.enabled }}
+        - name: SQS_SEARCH_ENABLE
+          value: "true"
+        {{- end }}
         {{- range .Values.services.worker.extraEnv }}
         - name: {{ .name }}
           value: {{ .value | quote }}
         {{- end }}
+        {{- range .Values.services.worker.extraEnvFromSecret}}
+        - name: {{ .name }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .secretName }}
+              key: {{ .secretKey | quote }}
+        {{- end}}
         image: budibase/worker:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         {{- if .Values.services.worker.startupProbe }}
