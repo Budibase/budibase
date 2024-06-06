@@ -17,15 +17,17 @@ const migration = async () => {
 
     // it already has the junction table ID - no need to migrate
     if (!linkDoc.tableId) {
-      linkDoc.tableId = new LinkDocumentImpl(
+      const newLink = new LinkDocumentImpl(
         linkDoc.doc1.tableId,
         linkDoc.doc1.fieldName,
         linkDoc.doc1.rowId,
         linkDoc.doc2.tableId,
         linkDoc.doc2.fieldName,
         linkDoc.doc2.rowId
-      ).tableId
-      docsToUpdate.push(linkDoc)
+      )
+      newLink._id = linkDoc._id!
+      newLink._rev = linkDoc._rev
+      docsToUpdate.push(newLink)
     }
   }
 

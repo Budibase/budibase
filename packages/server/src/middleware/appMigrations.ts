@@ -1,13 +1,13 @@
 import { UserCtx } from "@budibase/types"
 import { checkMissingMigrations } from "../appMigrations"
-import { env } from "@budibase/backend-core"
+import env from "../environment"
 
 export default async (ctx: UserCtx, next: any) => {
   const { appId } = ctx
 
   // migrations can be disabled via environment variable if you
   // need to completely disable migrations, e.g. for testing
-  if (env.SKIP_APP_MIGRATIONS) {
+  if (env.DISABLE_APP_MIGRATIONS) {
     return next()
   }
 
