@@ -43,15 +43,7 @@ const migration = async () => {
     const tables = await sdk.tables.getAllInternalTables()
     // do these one by one - running in parallel could cause problems
     for (let table of tables) {
-      try {
-        await db.sql(`select * from ${table._id} limit 1`)
-      } catch (err) {
-        if (typeof err === "object") {
-          const dbErr = err as DBError
-          throw new Error(`Failed to run initial SQS search - ${dbErr.message}`)
-        }
-        throw err
-      }
+      await db.sql(`select * from ${table._id} limit 1`)
     }
   }
 }

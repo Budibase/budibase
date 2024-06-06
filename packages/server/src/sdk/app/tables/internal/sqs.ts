@@ -109,8 +109,12 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
 export async function syncDefinition(): Promise<void> {
   const db = context.getAppDB()
   let existing: SQLiteDefinition | undefined
-  if (await db.exists(SQLITE_DESIGN_DOC_ID)) {
+  try {
     existing = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+  } catch (err: any) {
+    if (err.status !== 404) {
+      throw err
+    }
   }
   const definition = await buildBaseDefinition()
   if (existing) {

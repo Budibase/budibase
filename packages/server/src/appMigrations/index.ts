@@ -14,9 +14,9 @@ export type AppMigration = {
   disabled?: boolean
 }
 
-export function getLatestEnabledMigrationId() {
+export function getLatestEnabledMigrationId(migrations?: AppMigration[]) {
   const enabledMigrations: AppMigration[] = []
-  for (let migration of MIGRATIONS) {
+  for (let migration of migrations || MIGRATIONS) {
     // if a migration is disabled, all migrations after it are disabled
     if (migration.disabled) {
       break
