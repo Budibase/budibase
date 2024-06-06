@@ -352,20 +352,15 @@ export class DatabaseImpl implements Database {
   }
 
   async destroy() {
+    if (env.SQS_SEARCH_ENABLE && (await this.exists(SQLITE_DESIGN_DOC_ID))) {
+      // delete the design document, then run the cleanup operation
+      const definition = await this.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+      // remove all tables - save the definition then trigger a cleanup
+      definition.sql.tables = {}
+      await this.put(definition)
+      await this.sqlDiskCleanup()
+    }
     try {
-      if (env.SQS_SEARCH_ENABLE) {
-        // delete the design document, then run the cleanup operation
-        try {
-          const definition = await this.get<SQLiteDefinition>(
-            SQLITE_DESIGN_DOC_ID
-          )
-          await this.remove(SQLITE_DESIGN_DOC_ID, definition._rev)
-        } catch (err: any) {
-          // design document doesn't exist, don't worry
-        } finally {
-          await this.sqlDiskCleanup()
-        }
-      }
       return await this.nano().db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
