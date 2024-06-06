@@ -331,8 +331,14 @@ describe("/applications", () => {
 
     it("should delete published app and dev app with prod app ID", async () => {
       await config.api.application.delete(app.appId.replace("_dev", ""))
-      expect(events.app.deleted).toHaveBeenCalledTimes(1)
+      expect(events.app.deleted).toHaveBeenCalledTmes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
+    })
+
+    it.only("should be able to delete an app after SQS_SEARCH_ENABLE has been set but app hasn't been migrated", async () => {
+      await config.withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, async () => {
+        await config.api.application.delete(app.appId)
+      })
     })
   })
 

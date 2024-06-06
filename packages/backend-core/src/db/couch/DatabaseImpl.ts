@@ -360,6 +360,8 @@ export class DatabaseImpl implements Database {
             SQLITE_DESIGN_DOC_ID
           )
           await this.remove(SQLITE_DESIGN_DOC_ID, definition._rev)
+        } catch (err: any) {
+          // design document doesn't exist, don't worry
         } finally {
           await this.sqlDiskCleanup()
         }
