@@ -38,6 +38,10 @@ export function createUsersStore() {
     return API.inviteUsers(payload)
   }
 
+  async function removeInvites(payload) {
+    return API.removeUserInvites(payload)
+  }
+
   async function acceptInvite(inviteCode, password, firstName, lastName) {
     return API.acceptInvite({
       inviteCode,
@@ -154,6 +158,7 @@ export function createUsersStore() {
     onboard,
     fetchInvite,
     getInvites,
+    removeInvites,
     updateInvite,
     getUserCountByApp,
     addAppBuilder,
