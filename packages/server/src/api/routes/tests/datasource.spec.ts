@@ -341,7 +341,7 @@ describe("/datasources", () => {
       )
 
       const persisted = await config.api.datasource.get(datasourceId)
-      await config.api.datasource.fetchSchema(datasourceId)
+      await config.api.datasource.fetchSchema({ datasourceId })
 
       const updated = await config.api.datasource.get(datasourceId)
       const expected: Datasource = {
