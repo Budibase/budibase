@@ -289,19 +289,25 @@ function copyExistingPropsOver(
           externalType:
             existingTableSchema[key].externalType ||
             table.schema[key]?.externalType,
-          autocolumn: !!fetchedColumnDefinition?.autocolumn,
+          autocolumn: fetchedColumnDefinition?.autocolumn,
         } as FieldSchema
         // check constraints which can be fetched from the DB (they could be updated)
         if (fetchedColumnDefinition?.constraints) {
           // inclusions are the enum values (select/options)
-          const fetchedInclusion = fetchedColumnDefinition.constraints.inclusion
-          const oldInclusion = table.schema[key].constraints?.inclusion
+          const fetchedConstraints = fetchedColumnDefinition.constraints
+          const oldConstraints = table.schema[key].constraints
           table.schema[key].constraints = {
             ...table.schema[key].constraints,
-            presence: !!fetchedColumnDefinition.constraints?.presence,
-            inclusion: fetchedInclusion?.length
-              ? fetchedInclusion
-              : oldInclusion,
+            inclusion: fetchedConstraints.inclusion?.length
+              ? fetchedConstraints.inclusion
+              : oldConstraints?.inclusion,
+          }
+          // true or undefined - consistent with old API
+          if (fetchedConstraints.presence) {
+            table.schema[key].constraints!.presence =
+              fetchedConstraints.presence
+          } else if (oldConstraints?.presence === true) {
+            delete table.schema[key].constraints?.presence
           }
         }
       }
