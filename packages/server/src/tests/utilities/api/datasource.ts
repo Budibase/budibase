@@ -6,6 +6,7 @@ import {
   UpdateDatasourceRequest,
   QueryJson,
   BuildSchemaFromSourceResponse,
+  FetchDatasourceInfoResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -89,6 +90,16 @@ export class DatasourceAPI extends TestAPI {
         body: {
           tablesFilter: tablesFilter,
         },
+      }
+    )
+  }
+
+  info = async (datasource: Datasource, expectations?: Expectations) => {
+    return await this._post<FetchDatasourceInfoResponse>(
+      `/api/datasources/info`,
+      {
+        body: { datasource },
+        expectations,
       }
     )
   }
