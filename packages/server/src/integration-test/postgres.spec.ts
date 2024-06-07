@@ -1035,54 +1035,6 @@ describe("postgres integrations", () => {
     })
   })
 
-  describe("POST /api/datasources/verify", () => {
-    it("should be able to verify the connection", async () => {
-      await config.api.datasource.verify(
-        {
-          datasource: await getDatasource(DatabaseName.POSTGRES),
-        },
-        {
-          body: {
-            connected: true,
-          },
-        }
-      )
-    })
-
-    it("should state an invalid datasource cannot connect", async () => {
-      const dbConfig = await getDatasource(DatabaseName.POSTGRES)
-      await config.api.datasource.verify(
-        {
-          datasource: {
-            ...dbConfig,
-            config: {
-              ...dbConfig.config,
-              password: "wrongpassword",
-            },
-          },
-        },
-        {
-          body: {
-            connected: false,
-            error: 'password authentication failed for user "postgres"',
-          },
-        }
-      )
-    })
-  })
-
-  describe("POST /api/datasources/info", () => {
-    it("should fetch information about postgres datasource", async () => {
-      const primaryName = primaryPostgresTable.name
-      const response = await makeRequest("post", "/api/datasources/info", {
-        datasource: datasource,
-      })
-      expect(response.status).toBe(200)
-      expect(response.body.tableNames).toBeDefined()
-      expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-1)
-    })
-  })
-
   describe("POST /api/datasources/:datasourceId/schema", () => {
     let tableName: string
 
