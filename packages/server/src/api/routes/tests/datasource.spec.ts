@@ -367,6 +367,7 @@ describe("/datasources", () => {
             ),
 
           _rev: expect.any(String),
+          updatedAt: expect.any(String),
         }
         expect(updated).toEqual(expected)
       })
