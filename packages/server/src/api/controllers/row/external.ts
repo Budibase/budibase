@@ -56,13 +56,18 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     throw { validation: validateResult.errors }
   }
 
+  const beforeRow = await sdk.rows.external.getRow(tableId, _id, {
+    relationships: true,
+  })
+
   const response = await handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(_id),
     row: dataToUpdate,
   })
 
   // The id might have been changed, so the refetching would fail. Recalculating the id just in case
-  const updatedId = generateIdForRow(ctx.request.body, table)
+  const updatedId =
+    generateIdForRow({ ...beforeRow, ...dataToUpdate }, table) || _id
   const row = await sdk.rows.external.getRow(tableId, updatedId, {
     relationships: true,
   })
