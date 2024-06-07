@@ -1265,4 +1265,48 @@ describe("postgres integrations", () => {
       expect(JSON.parse(decoded)[0]).toBe("1111")
     })
   })
+
+  describe("check fetching null/not null table", () => {
+    beforeAll(async () => {
+      await rawQuery(
+        rawDatasource,
+        `CREATE TABLE nullableTable (
+          order_id SERIAL PRIMARY KEY,
+          order_number INT NOT NULL
+        );
+      `
+      )
+    })
+
+    it("should be able to change the table to allow nullable and refetch this", async () => {
+      const response = await makeRequest(
+        "post",
+        `/api/datasources/${datasource._id}/schema`
+      )
+      const entities = response.body.datasource.entities
+      expect(entities).toBeDefined()
+      const nullableTable = entities["nullabletable"]
+      expect(nullableTable).toBeDefined()
+      expect(nullableTable.schema["order_number"].constraints.presence).toEqual(
+        true
+      )
+      await rawQuery(
+        rawDatasource,
+        `ALTER TABLE nullableTable
+             ALTER COLUMN order_number DROP NOT NULL;
+        `
+      )
+      const responseAfter = await makeRequest(
+        "post",
+        `/api/datasources/${datasource._id}/schema`
+      )
+      const entitiesAfter = responseAfter.body.datasource.entities
+      expect(entitiesAfter).toBeDefined()
+      const nullableTableAfter = entitiesAfter["nullabletable"]
+      expect(nullableTableAfter).toBeDefined()
+      expect(
+        nullableTableAfter.schema["order_number"].constraints.presence
+      ).toEqual(false)
+    })
+  })
 })
