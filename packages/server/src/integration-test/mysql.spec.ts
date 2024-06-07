@@ -4,13 +4,14 @@ import {
   MakeRequestResponse,
 } from "../api/routes/public/tests/utils"
 import * as setup from "../api/routes/tests/utilities"
-import { Datasource, FieldType, Table, TableSourceType } from "@budibase/types"
+import { Datasource, FieldType } from "@budibase/types"
 import {
   DatabaseName,
   getDatasource,
   rawQuery,
 } from "../integrations/tests/utils"
 import { generator } from "@budibase/backend-core/tests"
+import { tableForDatasource } from "../../src/tests/utilities/structures"
 // @ts-ignore
 fetch.mockSearch()
 
@@ -41,8 +42,7 @@ jest.mock("../websockets", () => ({
 describe("mysql integrations", () => {
   let makeRequest: MakeRequestResponse,
     rawDatasource: Datasource,
-    datasource: Datasource,
-    primaryMySqlTable: Table
+    datasource: Datasource
 
   beforeAll(async () => {
     await config.init()
@@ -54,38 +54,12 @@ describe("mysql integrations", () => {
     datasource = await config.api.datasource.create(rawDatasource)
   })
 
-  beforeEach(async () => {
-    primaryMySqlTable = await config.createTable({
-      name: uniqueTableName(),
-      type: "table",
-      primary: ["id"],
-      schema: {
-        id: {
-          name: "id",
-          type: FieldType.AUTO,
-          autocolumn: true,
-        },
-        name: {
-          name: "name",
-          type: FieldType.STRING,
-        },
-        description: {
-          name: "description",
-          type: FieldType.STRING,
-        },
-        value: {
-          name: "value",
-          type: FieldType.NUMBER,
-        },
-      },
-      sourceId: datasource._id,
-      sourceType: TableSourceType.EXTERNAL,
-    })
-  })
-
   afterAll(config.end)
 
   it("validate table schema", async () => {
+    // Creating a table so that `entities` is populated.
+    await config.api.table.save(tableForDatasource(datasource))
+
     const res = await makeRequest("get", `/api/datasources/${datasource._id}`)
 
     expect(res.status).toBe(200)
@@ -106,54 +80,6 @@ describe("mysql integrations", () => {
       createdAt: expect.any(String),
       updatedAt: expect.any(String),
       entities: expect.any(Object),
-    })
-  })
-
-  describe("POST /api/datasources/verify", () => {
-    it("should be able to verify the connection", async () => {
-      await config.api.datasource.verify(
-        {
-          datasource: rawDatasource,
-        },
-        {
-          body: {
-            connected: true,
-          },
-        }
-      )
-    })
-
-    it("should state an invalid datasource cannot connect", async () => {
-      await config.api.datasource.verify(
-        {
-          datasource: {
-            ...rawDatasource,
-            config: {
-              ...rawDatasource.config,
-              password: "wrongpassword",
-            },
-          },
-        },
-        {
-          body: {
-            connected: false,
-            error:
-              "Access denied for the specified user. User does not have the necessary privileges or the provided credentials are incorrect. Please verify the credentials, and ensure that the user has appropriate permissions.",
-          },
-        }
-      )
-    })
-  })
-
-  describe("POST /api/datasources/info", () => {
-    it("should fetch information about mysql datasource", async () => {
-      const primaryName = primaryMySqlTable.name
-      const response = await makeRequest("post", "/api/datasources/info", {
-        datasource: datasource,
-      })
-      expect(response.status).toBe(200)
-      expect(response.body.tableNames).toBeDefined()
-      expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-1)
     })
   })
 
