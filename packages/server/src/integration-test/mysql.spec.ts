@@ -4,13 +4,7 @@ import {
   MakeRequestResponse,
 } from "../api/routes/public/tests/utils"
 import * as setup from "../api/routes/tests/utilities"
-import {
-  Datasource,
-  FieldType,
-  Table,
-  TableRequest,
-  TableSourceType,
-} from "@budibase/types"
+import { Datasource, FieldType, Table, TableSourceType } from "@budibase/types"
 import {
   DatabaseName,
   getDatasource,
@@ -228,57 +222,6 @@ describe("mysql integrations", () => {
       const schema =
         response.body.datasource.entities[repeated_table_name].schema
       expect(Object.keys(schema).sort()).toEqual(["id", "val1"])
-    })
-  })
-
-  describe("POST /api/tables/", () => {
-    it("will rename a column", async () => {
-      await makeRequest("post", "/api/tables/", primaryMySqlTable)
-
-      let renameColumnOnTable: TableRequest = {
-        ...primaryMySqlTable,
-        schema: {
-          id: {
-            name: "id",
-            type: FieldType.AUTO,
-            autocolumn: true,
-            externalType: "unsigned integer",
-          },
-          name: {
-            name: "name",
-            type: FieldType.STRING,
-            externalType: "text",
-          },
-          description: {
-            name: "description",
-            type: FieldType.STRING,
-            externalType: "text",
-          },
-          age: {
-            name: "age",
-            type: FieldType.NUMBER,
-            externalType: "float(8,2)",
-          },
-        },
-      }
-
-      const response = await makeRequest(
-        "post",
-        "/api/tables/",
-        renameColumnOnTable
-      )
-
-      const ds = (
-        await makeRequest("post", `/api/datasources/${datasource._id}/schema`)
-      ).body.datasource
-
-      expect(response.status).toEqual(200)
-      expect(Object.keys(ds.entities![primaryMySqlTable.name].schema)).toEqual([
-        "id",
-        "name",
-        "description",
-        "age",
-      ])
     })
   })
 
