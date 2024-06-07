@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte"
   import active from "svelte-spa-router/active"
   import { Icon } from "@budibase/bbui"
+  import { showNavigationConfirmation } from "utils/confirmation"
 
   export let type
   export let url
@@ -20,7 +21,19 @@
   $: renderLeftNav = leftNav || mobile
   $: icon = !renderLeftNav || expanded ? "ChevronDown" : "ChevronRight"
 
-  const onClickLink = () => {
+  const onClickLink = event => {
+    // Check if navigation should be prevented
+    const shouldPreventNavigation = showNavigationConfirmation(
+      url,
+      false,
+      false,
+      "screen"
+    )
+    if (shouldPreventNavigation) {
+      event.preventDefault()
+      return
+    }
+
     dispatch("clickLink")
     renderKey = Math.random()
   }
