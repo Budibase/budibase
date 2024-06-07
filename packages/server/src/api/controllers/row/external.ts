@@ -25,6 +25,7 @@ import {
   outputProcessing,
 } from "../../../utilities/rowProcessor"
 import { cloneDeep } from "lodash"
+import { generateIdForRow } from "./utils"
 
 export async function handleRequest<T extends Operation>(
   operation: T,
@@ -59,7 +60,9 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     id: breakRowIdField(_id),
     row: dataToUpdate,
   })
-  const row = await sdk.rows.external.getRow(tableId, _id, {
+
+  const updatedId = generateIdForRow(dataToUpdate, table)
+  const row = await sdk.rows.external.getRow(tableId, updatedId, {
     relationships: true,
   })
   const enrichedRow = await outputProcessing(table, row, {
