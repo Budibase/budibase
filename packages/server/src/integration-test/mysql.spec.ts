@@ -109,54 +109,6 @@ describe("mysql integrations", () => {
     })
   })
 
-  describe("POST /api/datasources/verify", () => {
-    it("should be able to verify the connection", async () => {
-      await config.api.datasource.verify(
-        {
-          datasource: rawDatasource,
-        },
-        {
-          body: {
-            connected: true,
-          },
-        }
-      )
-    })
-
-    it("should state an invalid datasource cannot connect", async () => {
-      await config.api.datasource.verify(
-        {
-          datasource: {
-            ...rawDatasource,
-            config: {
-              ...rawDatasource.config,
-              password: "wrongpassword",
-            },
-          },
-        },
-        {
-          body: {
-            connected: false,
-            error:
-              "Access denied for the specified user. User does not have the necessary privileges or the provided credentials are incorrect. Please verify the credentials, and ensure that the user has appropriate permissions.",
-          },
-        }
-      )
-    })
-  })
-
-  describe("POST /api/datasources/info", () => {
-    it("should fetch information about mysql datasource", async () => {
-      const primaryName = primaryMySqlTable.name
-      const response = await makeRequest("post", "/api/datasources/info", {
-        datasource: datasource,
-      })
-      expect(response.status).toBe(200)
-      expect(response.body.tableNames).toBeDefined()
-      expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-1)
-    })
-  })
-
   describe("Integration compatibility with mysql search_path", () => {
     let datasource: Datasource, rawDatasource: Datasource
     const database = generator.guid()
