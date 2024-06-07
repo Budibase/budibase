@@ -20,8 +20,8 @@ export async function processMigrations(
       resource: appId,
     },
     async () => {
-      try {
-        await context.doInAppMigrationContext(appId, async () => {
+      await context.doInAppMigrationContext(appId, async () => {
+        try {
           let currentVersion = await getAppMigrationVersion(appId)
 
           const pendingMigrations = migrations
@@ -36,7 +36,9 @@ export async function processMigrations(
               migrationIds[migrationIds.indexOf(currentVersion) + 1]
 
             if (expectedMigration !== id) {
-              throw `Migration ${id} could not run, update for "${id}" is running but ${expectedMigration} is expected`
+              throw new Error(
+                `Migration ${id} could not run, update for "${id}" is running but ${expectedMigration} is expected`
+              )
             }
 
             const counter = `(${++index}/${pendingMigrations.length})`
@@ -51,11 +53,11 @@ export async function processMigrations(
             })
             currentVersion = id
           }
-        })
-      } catch (err) {
-        logging.logAlert("Failed to run app migration", err)
-        throw err
-      }
+        } catch (err) {
+          logging.logAlert("Failed to run app migration", err)
+          throw err
+        }
+      })
     }
   )
 
