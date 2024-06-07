@@ -334,6 +334,12 @@ describe("/applications", () => {
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
+
+    it("should be able to delete an app after SQS_SEARCH_ENABLE has been set but app hasn't been migrated", async () => {
+      await config.withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, async () => {
+        await config.api.application.delete(app.appId)
+      })
+    })
   })
 
   describe("POST /api/applications/:appId/duplicate", () => {
