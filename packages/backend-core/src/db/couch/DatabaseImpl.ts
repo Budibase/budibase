@@ -328,7 +328,14 @@ export class DatabaseImpl implements Database {
   async sqlDiskCleanup(): Promise<void> {
     const dbName = this.name
     const url = `/${dbName}/_cleanup`
-    return await this._sqlQuery<void>(url, "POST")
+    try {
+      await this._sqlQuery<void>(url, "POST")
+    } catch (err: any) {
+      // hack for now - SQS throws a 500 when there is nothing to clean-up
+      if (err.status !== 500) {
+        throw err
+      }
+    }
   }
 
   // removes a document from sqlite
@@ -352,18 +359,15 @@ export class DatabaseImpl implements Database {
   }
 
   async destroy() {
+    if (env.SQS_SEARCH_ENABLE && (await this.exists(SQLITE_DESIGN_DOC_ID))) {
+      // delete the design document, then run the cleanup operation
+      const definition = await this.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+      // remove all tables - save the definition then trigger a cleanup
+      definition.sql.tables = {}
+      await this.put(definition)
+      await this.sqlDiskCleanup()
+    }
     try {
-      if (env.SQS_SEARCH_ENABLE) {
-        // delete the design document, then run the cleanup operation
-        try {
-          const definition = await this.get<SQLiteDefinition>(
-            SQLITE_DESIGN_DOC_ID
-          )
-          await this.remove(SQLITE_DESIGN_DOC_ID, definition._rev)
-        } finally {
-          await this.sqlDiskCleanup()
-        }
-      }
       return await this.nano().db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
