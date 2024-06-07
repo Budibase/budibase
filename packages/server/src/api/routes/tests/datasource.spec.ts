@@ -156,8 +156,10 @@ describe("/datasources", () => {
     [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
     [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
   ])("%s", (_, dsProvider) => {
+    let rawDatasource: Datasource
     beforeEach(async () => {
-      datasource = await config.api.datasource.create(await dsProvider)
+      rawDatasource = await dsProvider
+      datasource = await config.api.datasource.create(rawDatasource)
     })
 
     describe("get", () => {
@@ -258,11 +260,12 @@ describe("/datasources", () => {
           })
         )
 
+        const stringName = "string"
         const fullSchema: {
           [type in SupportedSqlTypes]: FieldSchema & { type: type }
         } = {
           [FieldType.STRING]: {
-            name: "string",
+            name: stringName,
             type: FieldType.STRING,
             constraints: {
               presence: true,
@@ -337,7 +340,7 @@ describe("/datasources", () => {
         )
 
         const persisted = await config.api.datasource.get(datasourceId)
-        await config.api.datasource.fetchSchema(datasourceId)
+        await config.api.datasource.fetchSchema({ datasourceId })
 
         const updated = await config.api.datasource.get(datasourceId)
         const expected: Datasource = {
@@ -353,6 +356,10 @@ describe("/datasources", () => {
                   ),
                   schema: Object.entries(table.schema).reduce<TableSchema>(
                     (acc, [fieldName, field]) => {
+                      // the constraint will be unset - as the DB doesn't recognise it as not null
+                      if (fieldName === stringName) {
+                        field.constraints = {}
+                      }
                       acc[fieldName] = expect.objectContaining({
                         ...field,
                       })
@@ -370,6 +377,59 @@ describe("/datasources", () => {
           updatedAt: expect.any(String),
         }
         expect(updated).toEqual(expected)
+      })
+    })
+
+    describe("verify", () => {
+      it("should be able to verify the connection", async () => {
+        await config.api.datasource.verify(
+          {
+            datasource: rawDatasource,
+          },
+          {
+            body: {
+              connected: true,
+            },
+          }
+        )
+      })
+
+      it("should state an invalid datasource cannot connect", async () => {
+        await config.api.datasource.verify(
+          {
+            datasource: {
+              ...rawDatasource,
+              config: {
+                ...rawDatasource.config,
+                password: "wrongpassword",
+              },
+            },
+          },
+          {
+            body: {
+              connected: false,
+              error: /.*/, // error message differs between databases
+            },
+          }
+        )
+      })
+    })
+
+    describe("info", () => {
+      it("should fetch information about postgres datasource", async () => {
+        const table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        const info = await config.api.datasource.info(datasource)
+        expect(info.tableNames).toContain(table.name)
       })
     })
   })
