@@ -260,11 +260,12 @@ describe("/datasources", () => {
           })
         )
 
+        const stringName = "string"
         const fullSchema: {
           [type in SupportedSqlTypes]: FieldSchema & { type: type }
         } = {
           [FieldType.STRING]: {
-            name: "string",
+            name: stringName,
             type: FieldType.STRING,
             constraints: {
               presence: true,
@@ -339,7 +340,7 @@ describe("/datasources", () => {
         )
 
         const persisted = await config.api.datasource.get(datasourceId)
-        await config.api.datasource.fetchSchema(datasourceId)
+        await config.api.datasource.fetchSchema({ datasourceId })
 
         const updated = await config.api.datasource.get(datasourceId)
         const expected: Datasource = {
@@ -355,6 +356,10 @@ describe("/datasources", () => {
                   ),
                   schema: Object.entries(table.schema).reduce<TableSchema>(
                     (acc, [fieldName, field]) => {
+                      // the constraint will be unset - as the DB doesn't recognise it as not null
+                      if (fieldName === stringName) {
+                        field.constraints = {}
+                      }
                       acc[fieldName] = expect.objectContaining({
                         ...field,
                       })
