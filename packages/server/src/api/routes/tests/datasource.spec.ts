@@ -258,11 +258,12 @@ describe("/datasources", () => {
           })
         )
 
+        const stringName = "string"
         const fullSchema: {
           [type in SupportedSqlTypes]: FieldSchema & { type: type }
         } = {
           [FieldType.STRING]: {
-            name: "string",
+            name: stringName,
             type: FieldType.STRING,
             constraints: {
               presence: true,
@@ -353,6 +354,10 @@ describe("/datasources", () => {
                   ),
                   schema: Object.entries(table.schema).reduce<TableSchema>(
                     (acc, [fieldName, field]) => {
+                      // the constraint will be unset - as the DB doesn't recognise it as not null
+                      if (fieldName === stringName) {
+                        field.constraints = {}
+                      }
                       acc[fieldName] = expect.objectContaining({
                         ...field,
                       })
