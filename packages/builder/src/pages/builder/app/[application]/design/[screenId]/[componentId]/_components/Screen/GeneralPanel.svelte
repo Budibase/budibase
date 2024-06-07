@@ -124,6 +124,31 @@
         disabled: !!$selectedScreen.layoutId,
       },
     },
+    {
+      key: "restrictNavigation",
+      control: Checkbox,
+      props: {
+        text: "Restrict navigation",
+      },
+    },
+    {
+      key: "promptTitle",
+      label: "Title",
+      control: Input,
+      props: {
+        placeholder: "Confirm Navigation",
+      },
+      visible: $selectedScreen.restrictNavigation ?? false,
+    },
+    {
+      key: "promptDescription",
+      label: "Description",
+      control: Input,
+      props: {
+        placeholder: "Are you sure you want to navigate away from this page?",
+      },
+      visible: $selectedScreen.restrictNavigation ?? false,
+    },
   ]
 
   const removeCustomLayout = async () => {
@@ -142,13 +167,15 @@
   </Banner>
 {/if}
 {#each screenSettings as setting (setting.key)}
-  <PropertyControl
-    control={setting.control}
-    label={setting.label}
-    key={setting.key}
-    value={Helpers.deepGet($selectedScreen, setting.key)}
-    onChange={val => setScreenSetting(setting, val)}
-    props={{ ...setting.props, error: errors[setting.key] }}
-    {bindings}
-  />
+  {#if setting.visible !== false}
+    <PropertyControl
+      control={setting.control}
+      label={setting.label}
+      key={setting.key}
+      value={Helpers.deepGet($selectedScreen, setting.key)}
+      onChange={val => setScreenSetting(setting, val)}
+      props={{ ...setting.props, error: errors[setting.key] }}
+      {bindings}
+    />
+  {/if}
 {/each}
