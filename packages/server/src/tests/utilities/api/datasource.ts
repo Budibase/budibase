@@ -71,11 +71,20 @@ export class DatasourceAPI extends TestAPI {
     })
   }
 
-  fetchSchema = async (id: string, expectations?: Expectations) => {
+  fetchSchema = async (
+    {
+      datasourceId,
+      tablesFilter,
+    }: { datasourceId: string; tablesFilter?: string[] },
+    expectations?: Expectations
+  ) => {
     return await this._post<BuildSchemaFromSourceResponse>(
-      `/api/datasources/${id}/schema`,
+      `/api/datasources/${datasourceId}/schema`,
       {
-        expectations,
+        expectations: expectations,
+        body: {
+          tablesFilter: tablesFilter,
+        },
       }
     )
   }
