@@ -48,6 +48,7 @@ async function init() {
     HTTP_LOGGING: "0",
     VERSION: "0.0.0+local",
     PASSWORD_MIN_LENGTH: "1",
+    SQS_SEARCH_ENABLE: "1",
   }
 
   config = { ...config, ...existingConfig }
