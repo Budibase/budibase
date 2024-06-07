@@ -1297,7 +1297,7 @@ describe("postgres integrations", () => {
       expect(nullableTableAfter).toBeDefined()
       expect(
         nullableTableAfter?.schema["order_number"].constraints?.presence
-      ).toEqual(false)
+      ).toBeUndefined()
     })
   })
 })
