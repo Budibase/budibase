@@ -1280,6 +1280,8 @@ describe("postgres integrations", () => {
       expect(
         nullableTable?.schema["order_number"].constraints?.presence
       ).toEqual(true)
+      // need to perform these calls raw to the DB so that the external state of the DB differs to what Budibase
+      // is aware of - therefore we can try to fetch and make sure BB updates correctly
       await rawQuery(
         rawDatasource,
         `ALTER TABLE nullableTable
