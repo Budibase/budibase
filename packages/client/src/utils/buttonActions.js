@@ -17,6 +17,7 @@ import { API } from "api"
 import { ActionTypes } from "constants"
 import { enrichDataBindings } from "./enrichDataBinding"
 import { Helpers } from "@budibase/bbui"
+import { showNavigationConfirmation } from "utils/confirmation";
 
 // Default action handler, which extracts an action from context that was
 // provided by another component and executes it with all action parameters
@@ -237,8 +238,10 @@ const triggerAutomationHandler = async action => {
     return false
   }
 }
-const navigationHandler = action => {
-  let { url, peek, externalNewTab, type } = action.parameters
+const navigationHandler = ({ parameters: { url, peek, externalNewTab, type } }) => {
+  if (showNavigationConfirmation(url, peek, externalNewTab, type, closeSidePanelHandler)) {
+    return;
+  }
 
   // Ensure in-app navigation starts with a slash
   if (type === "screen" && url && !url.startsWith("/")) {
