@@ -61,6 +61,10 @@ export class DatasourceAPI extends TestAPI {
     })
   }
 
+  fetch = async (expectations?: Expectations) => {
+    return await this._get<Datasource[]>(`/api/datasources`, { expectations })
+  }
+
   query = async (
     query: Omit<QueryJson, "meta"> & Partial<Pick<QueryJson, "meta">>,
     expectations?: Expectations
