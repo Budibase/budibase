@@ -48,8 +48,6 @@ export async function checkMissingMigrations(
       },
       {
         jobId: `${appId}_${latestMigration}`,
-        removeOnComplete: true,
-        removeOnFail: true,
       }
     )
 
