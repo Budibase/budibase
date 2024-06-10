@@ -17,7 +17,7 @@ export function init() {
   if (!apiEnabled()) {
     return
   }
-  const appMigrationQueue = queue.createQueue<AppMigrationJob>(
+  appMigrationQueue = queue.createQueue<AppMigrationJob>(
     queue.JobQueue.APP_MIGRATION,
     {
       jobOptions: {
