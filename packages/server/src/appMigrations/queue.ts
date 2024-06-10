@@ -2,9 +2,10 @@ import { queue, logging } from "@budibase/backend-core"
 import { Job } from "bull"
 import { MIGRATIONS } from "./migrations"
 import { processMigrations } from "./migrationsProcessor"
-import { apiEnabled } from "../features"
 
-const MAX_ATTEMPTS = 1
+const MAX_ATTEMPTS = 3
+// max number of migrations to run at same time, per node
+const MIGRATION_CONCURRENCY = 5
 
 export type AppMigrationJob = {
   appId: string
@@ -13,10 +14,6 @@ export type AppMigrationJob = {
 let appMigrationQueue: queue.Queue<AppMigrationJob> | undefined
 
 export function init() {
-  // only run app migrations in main API services
-  if (!apiEnabled()) {
-    return
-  }
   appMigrationQueue = queue.createQueue<AppMigrationJob>(
     queue.JobQueue.APP_MIGRATION,
     {
@@ -34,10 +31,10 @@ export function init() {
     }
   )
 
-  return appMigrationQueue.process(processMessage)
+  return appMigrationQueue.process(MIGRATION_CONCURRENCY, processMessage)
 }
 
-async function processMessage(job: Job) {
+async function processMessage(job: Job<AppMigrationJob>) {
   const { appId } = job.data
 
   await processMigrations(appId, MIGRATIONS)
