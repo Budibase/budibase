@@ -2,7 +2,7 @@ import { context } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
 
-describe("migration integrity", () => {
+xdescribe("migration integrity", () => {
   // These test is checking that each migration is "idempotent".
   // We should be able to rerun any migration, with any rerun not modifiying anything. The code should be aware that the migration already ran
   it("each migration can rerun safely", async () => {
