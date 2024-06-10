@@ -1,10 +1,6 @@
 import * as setup from "../../../api/routes/tests/utilities"
 import { basicTable } from "../../../tests/utilities/structures"
-import {
-  db as dbCore,
-  SQLITE_DESIGN_DOC_ID,
-  context,
-} from "@budibase/backend-core"
+import { db as dbCore, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import {
   LinkDocument,
   DocumentType,
