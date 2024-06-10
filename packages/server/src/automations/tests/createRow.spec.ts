@@ -128,4 +128,31 @@ describe("test the create row action", () => {
     expect(objectData).toBeDefined()
     expect(objectData.ContentLength).toBeGreaterThan(0)
   })
+
+  it("should check that attachment without the correct keys throws an error", async () => {
+    let attachmentTable = await config.createTable(
+      basicTableWithAttachmentField()
+    )
+
+    let attachmentRow: any = {
+      tableId: attachmentTable._id,
+    }
+
+    let filename = "test2.txt"
+    let presignedUrl = await uploadTestFile(filename)
+    let attachmentObject = {
+      wrongKey: presignedUrl,
+      anotherWrongKey: filename,
+    }
+
+    attachmentRow.single_file_attachment = attachmentObject
+    const res = await setup.runStep(setup.actions.CREATE_ROW.stepId, {
+      row: attachmentRow,
+    })
+
+    expect(res.success).toEqual(false)
+    expect(res.response).toEqual(
+      'Error: Attachments must have both "url" and "filename" keys. You have provided: wrongKey, anotherWrongKey'
+    )
+  })
 })

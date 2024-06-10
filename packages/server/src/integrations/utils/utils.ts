@@ -9,10 +9,12 @@ import { context, objectStore, sql } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { parseStringPromise as xmlParser } from "xml2js"
 import { formatBytes } from "../../utilities"
-import bl from "bl"
 import env from "../../environment"
 import { InvalidColumns } from "../../constants"
 import { helpers, utils } from "@budibase/shared-core"
+import { pipeline } from "stream/promises"
+import tmp from "tmp"
+import fs from "fs"
 
 type PrimitiveTypes =
   | FieldType.STRING
@@ -278,12 +280,35 @@ function copyExistingPropsOver(
           utils.unreachable(existingColumnType)
       }
 
+      // copy the BB schema in case of special props
       if (shouldKeepSchema) {
+        const fetchedColumnDefinition: FieldSchema | undefined =
+          table.schema[key]
         table.schema[key] = {
           ...existingTableSchema[key],
           externalType:
             existingTableSchema[key].externalType ||
             table.schema[key]?.externalType,
+          autocolumn: fetchedColumnDefinition?.autocolumn,
+        } as FieldSchema
+        // check constraints which can be fetched from the DB (they could be updated)
+        if (fetchedColumnDefinition?.constraints) {
+          // inclusions are the enum values (select/options)
+          const fetchedConstraints = fetchedColumnDefinition.constraints
+          const oldConstraints = table.schema[key].constraints
+          table.schema[key].constraints = {
+            ...table.schema[key].constraints,
+            inclusion: fetchedConstraints.inclusion?.length
+              ? fetchedConstraints.inclusion
+              : oldConstraints?.inclusion,
+          }
+          // true or undefined - consistent with old API
+          if (fetchedConstraints.presence) {
+            table.schema[key].constraints!.presence =
+              fetchedConstraints.presence
+          } else if (oldConstraints?.presence === true) {
+            delete table.schema[key].constraints?.presence
+          }
         }
       }
     }
@@ -360,35 +385,44 @@ export async function handleFileResponse(
   const key = `${context.getProdAppId()}/${processedFileName}`
   const bucket = objectStore.ObjectStoreBuckets.TEMP
 
-  const stream = response.body.pipe(bl((error, data) => data))
+  // put the response stream to disk temporarily as a buffer
+  const tmpObj = tmp.fileSync()
+  try {
+    await pipeline(response.body, fs.createWriteStream(tmpObj.name))
+    if (response.body) {
+      const contentLength = response.headers.get("content-length")
+      if (contentLength) {
+        size = parseInt(contentLength, 10)
+      }
 
-  if (response.body) {
-    const contentLength = response.headers.get("content-length")
-    if (contentLength) {
-      size = parseInt(contentLength, 10)
+      const details = await objectStore.streamUpload({
+        bucket,
+        filename: key,
+        stream: fs.createReadStream(tmpObj.name),
+        ttl: 1,
+        type: response.headers["content-type"],
+      })
+      if (!size && details.ContentLength) {
+        size = details.ContentLength
+      }
     }
-
-    await objectStore.streamUpload({
-      bucket,
-      filename: key,
-      stream,
-      ttl: 1,
-      type: response.headers["content-type"],
-    })
-  }
-  presignedUrl = objectStore.getPresignedUrl(bucket, key)
-  return {
-    data: {
-      size,
-      name: processedFileName,
-      url: presignedUrl,
-      extension: fileExtension,
-      key: key,
-    },
-    info: {
-      code: response.status,
-      size: formatBytes(size.toString()),
-      time: `${Math.round(performance.now() - startTime)}ms`,
-    },
+    presignedUrl = objectStore.getPresignedUrl(bucket, key)
+    return {
+      data: {
+        size,
+        name: processedFileName,
+        url: presignedUrl,
+        extension: fileExtension,
+        key: key,
+      },
+      info: {
+        code: response.status,
+        size: formatBytes(size.toString()),
+        time: `${Math.round(performance.now() - startTime)}ms`,
+      },
+    }
+  } finally {
+    // cleanup tmp
+    tmpObj.removeCallback()
   }
 }
