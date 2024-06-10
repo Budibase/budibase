@@ -82,7 +82,7 @@ beforeAll(async () => {
   })
 })
 
-xdescribe("SQS migration", () => {
+describe.skip("SQS migration", () => {
   it("test migration runs as expected against an older DB", async () => {
     const db = dbCore.getDB(config.appId!)
     // confirm nothing exists initially
