@@ -2,6 +2,7 @@ import { queue, logging } from "@budibase/backend-core"
 import { Job } from "bull"
 import { MIGRATIONS } from "./migrations"
 import { processMigrations } from "./migrationsProcessor"
+import { apiEnabled } from "../features"
 
 const MAX_ATTEMPTS = 3
 
@@ -18,7 +19,11 @@ const appMigrationQueue = queue.createQueue(queue.JobQueue.APP_MIGRATION, {
     )
   },
 })
-appMigrationQueue.process(processMessage)
+
+// only run app migrations in main API services
+if (apiEnabled()) {
+  appMigrationQueue.process(processMessage)
+}
 
 async function processMessage(job: Job) {
   const { appId } = job.data
