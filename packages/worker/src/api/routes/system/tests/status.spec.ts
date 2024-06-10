@@ -27,6 +27,7 @@ describe("/api/system/status", () => {
         health: {
           passing: true,
         },
+        version: expect.any(String),
       })
       expect(accounts.getStatus).toHaveBeenCalledTimes(0)
       config.cloudHosted()
