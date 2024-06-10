@@ -12,17 +12,19 @@ export async function processMigrations(
   migrations: AppMigration[]
 ) {
   console.log(`Processing app migration for "${appId}"`)
-  // have to wrap in context, this gets the tenant from the app ID
-  await context.doInAppContext(appId, async () => {
-    await locks.doWithLock(
-      {
-        name: LockName.APP_MIGRATION,
-        type: LockType.AUTO_EXTEND,
-        resource: appId,
-      },
-      async () => {
-        try {
+  try {
+    // have to wrap in context, this gets the tenant from the app ID
+    await context.doInAppContext(appId, async () => {
+      console.log(`Acquiring app migration lock for "${appId}"`)
+      await locks.doWithLock(
+        {
+          name: LockName.APP_MIGRATION,
+          type: LockType.AUTO_EXTEND,
+          resource: appId,
+        },
+        async () => {
           await context.doInAppMigrationContext(appId, async () => {
+            console.log(`Lock acquired starting app migration for "${appId}"`)
             let currentVersion = await getAppMigrationVersion(appId)
 
             const pendingMigrations = migrations
@@ -30,6 +32,9 @@ export async function processMigrations(
               .sort((a, b) => a.id.localeCompare(b.id))
 
             const migrationIds = migrations.map(m => m.id).sort()
+            console.log(
+              `App migrations to run for "${appId}" - ${migrationIds.join(",")}`
+            )
 
             let index = 0
             for (const { id, func } of pendingMigrations) {
@@ -55,13 +60,13 @@ export async function processMigrations(
               currentVersion = id
             }
           })
-        } catch (err) {
-          logging.logAlert("Failed to run app migration", err)
-          throw err
         }
-      }
-    )
+      )
 
-    console.log(`App migration for "${appId}" processed`)
-  })
+      console.log(`App migration for "${appId}" processed`)
+    })
+  } catch (err) {
+    logging.logAlert("Failed to run app migration", err)
+    throw err
+  }
 }
