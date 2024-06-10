@@ -1,4 +1,4 @@
-import queue from "./queue"
+import { getAppMigrationQueue } from "./queue"
 import { Next } from "koa"
 import { getAppMigrationVersion } from "./appMigrationMetadata"
 import { MIGRATIONS } from "./migrations"
@@ -37,8 +37,10 @@ export async function checkMissingMigrations(
 ) {
   const currentVersion = await getAppMigrationVersion(appId)
   const latestMigration = getLatestEnabledMigrationId()
+  const queue = getAppMigrationQueue()
 
   if (
+    queue &&
     latestMigration &&
     getTimestamp(currentVersion) < getTimestamp(latestMigration)
   ) {
