@@ -1,10 +1,6 @@
 import * as setup from "../../../api/routes/tests/utilities"
 import { basicTable } from "../../../tests/utilities/structures"
-import {
-  db as dbCore,
-  SQLITE_DESIGN_DOC_ID,
-  context,
-} from "@budibase/backend-core"
+import { db as dbCore, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import {
   LinkDocument,
   DocumentType,
@@ -16,7 +12,17 @@ import {
   generateLinkID,
   generateRowID,
 } from "../../../db/utils"
+import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20240604153647_initial_sqs"
+import { AppMigration } from "src/appMigrations"
+
+const MIGRATIONS: AppMigration[] = [
+  {
+    id: "20240604153647_initial_sqs",
+    func: migration,
+    disabled: false,
+  },
+]
 
 const config = setup.getConfig()
 let tableId: string
@@ -91,9 +97,7 @@ describe("SQS migration", () => {
       expect(error.status).toBe(404)
     })
     await sqsEnabled(async () => {
-      await context.doInAppContext(config.appId!, async () => {
-        await migration()
-      })
+      await processMigrations(config.appId!, MIGRATIONS)
       const designDoc = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
       expect(designDoc.sql.tables).toBeDefined()
       const mainTableDef = designDoc.sql.tables[tableId]
