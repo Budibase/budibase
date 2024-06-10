@@ -15,6 +15,7 @@ export async function processMigrations(
   try {
     // have to wrap in context, this gets the tenant from the app ID
     await context.doInAppContext(appId, async () => {
+      console.log(`Acquiring app migration lock for "${appId}"`)
       await locks.doWithLock(
         {
           name: LockName.APP_MIGRATION,
@@ -23,6 +24,7 @@ export async function processMigrations(
         },
         async () => {
           await context.doInAppMigrationContext(appId, async () => {
+            console.log(`Lock acquired starting app migration for "${appId}"`)
             let currentVersion = await getAppMigrationVersion(appId)
 
             const pendingMigrations = migrations
@@ -30,6 +32,9 @@ export async function processMigrations(
               .sort((a, b) => a.id.localeCompare(b.id))
 
             const migrationIds = migrations.map(m => m.id).sort()
+            console.log(
+              `App migrations to run for "${appId}" - ${migrationIds.join(",")}`
+            )
 
             let index = 0
             for (const { id, func } of pendingMigrations) {
