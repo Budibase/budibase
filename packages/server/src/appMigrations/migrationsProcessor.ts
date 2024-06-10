@@ -12,16 +12,16 @@ export async function processMigrations(
   migrations: AppMigration[]
 ) {
   console.log(`Processing app migration for "${appId}"`)
-  // have to wrap in context, this gets the tenant from the app ID
-  await context.doInAppContext(appId, async () => {
-    await locks.doWithLock(
-      {
-        name: LockName.APP_MIGRATION,
-        type: LockType.AUTO_EXTEND,
-        resource: appId,
-      },
-      async () => {
-        try {
+  try {
+    // have to wrap in context, this gets the tenant from the app ID
+    await context.doInAppContext(appId, async () => {
+      await locks.doWithLock(
+        {
+          name: LockName.APP_MIGRATION,
+          type: LockType.AUTO_EXTEND,
+          resource: appId,
+        },
+        async () => {
           await context.doInAppMigrationContext(appId, async () => {
             let currentVersion = await getAppMigrationVersion(appId)
 
@@ -55,13 +55,13 @@ export async function processMigrations(
               currentVersion = id
             }
           })
-        } catch (err) {
-          logging.logAlert("Failed to run app migration", err)
-          throw err
         }
-      }
-    )
+      )
 
-    console.log(`App migration for "${appId}" processed`)
-  })
+      console.log(`App migration for "${appId}" processed`)
+    })
+  } catch (err) {
+    logging.logAlert("Failed to run app migration", err)
+    throw err
+  }
 }
