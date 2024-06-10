@@ -179,6 +179,8 @@ jobs:
 
       - run: yarn --frozen-lockfile
 
+      - run: df -h
+
       - name: Test server
         env:
           DD_CIVISIBILITY_AGENTLESS_ENABLED: true
