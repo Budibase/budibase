@@ -38,8 +38,14 @@ export async function checkMissingMigrations(
   next: Next,
   appId: string
 ) {
-  const currentVersion = await getAppMigrationVersion(appId)
   const latestMigration = getLatestEnabledMigrationId()
+
+  // no migrations set - edge case, don't try to do anything
+  if (!latestMigration) {
+    return
+  }
+
+  const currentVersion = await getAppMigrationVersion(appId)
   const queue = getAppMigrationQueue()
 
   if (
