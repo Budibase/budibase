@@ -6,7 +6,7 @@ import { AppMigration } from ".."
 
 const futureTimestamp = `20500101174029`
 
-xdescribe("migrationsProcessor", () => {
+describe.skip("migrationsProcessor", () => {
   it("running migrations will update the latest applied migration", async () => {
     const testMigrations: AppMigration[] = [
       { id: `${futureTimestamp}_123`, func: async () => {} },
