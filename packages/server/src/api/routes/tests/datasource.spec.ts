@@ -165,8 +165,17 @@ describe("/datasources", () => {
     describe("get", () => {
       it("should be able to get a datasource", async () => {
         const ds = await config.api.datasource.get(datasource._id!)
-        expect(ds._id).toEqual(datasource._id)
-        expect(ds._rev).toBeDefined()
+        expect(ds).toEqual({
+          config: expect.any(Object),
+          plus: datasource.plus,
+          source: datasource.source,
+          isSQL: true,
+          type: "datasource_plus",
+          _id: datasource._id,
+          _rev: expect.any(String),
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
+        })
       })
 
       it("should not return database password", async () => {
