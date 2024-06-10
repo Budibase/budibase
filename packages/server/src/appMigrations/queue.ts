@@ -4,25 +4,37 @@ import { MIGRATIONS } from "./migrations"
 import { processMigrations } from "./migrationsProcessor"
 import { apiEnabled } from "../features"
 
-const MAX_ATTEMPTS = 3
+const MAX_ATTEMPTS = 1
 
-const appMigrationQueue = queue.createQueue(queue.JobQueue.APP_MIGRATION, {
-  jobOptions: {
-    attempts: MAX_ATTEMPTS,
-    removeOnComplete: true,
-    removeOnFail: true,
-  },
-  maxStalledCount: MAX_ATTEMPTS,
-  removeStalledCb: async (job: Job) => {
-    logging.logAlert(
-      `App migration failed, queue job ID: ${job.id} - reason: ${job.failedReason}`
-    )
-  },
-})
+export type AppMigrationJob = {
+  appId: string
+}
 
-// only run app migrations in main API services
-if (apiEnabled()) {
-  appMigrationQueue.process(processMessage)
+let appMigrationQueue: queue.Queue<AppMigrationJob> | undefined
+
+export function init() {
+  // only run app migrations in main API services
+  if (!apiEnabled()) {
+    return
+  }
+  appMigrationQueue = queue.createQueue<AppMigrationJob>(
+    queue.JobQueue.APP_MIGRATION,
+    {
+      jobOptions: {
+        attempts: MAX_ATTEMPTS,
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+      maxStalledCount: MAX_ATTEMPTS,
+      removeStalledCb: async (job: Job) => {
+        logging.logAlert(
+          `App migration failed, queue job ID: ${job.id} - reason: ${job.failedReason}`
+        )
+      },
+    }
+  )
+
+  return appMigrationQueue.process(processMessage)
 }
 
 async function processMessage(job: Job) {
@@ -31,4 +43,6 @@ async function processMessage(job: Job) {
   await processMigrations(appId, MIGRATIONS)
 }
 
-export default appMigrationQueue
+export function getAppMigrationQueue() {
+  return appMigrationQueue
+}
