@@ -13,7 +13,7 @@ jest.mock<typeof migrations>("../migrations", () => ({
   ],
 }))
 
-describe.skip("migrations", () => {
+describe("migrations", () => {
   it("new apps are created with the latest app migration version set", async () => {
     const config = setup.getConfig()
     await config.init()
