@@ -7,7 +7,7 @@ export default async (ctx: UserCtx, next: any) => {
 
   // migrations can be disabled via environment variable if you
   // need to completely disable migrations, e.g. for testing
-  if (env.DISABLE_APP_MIGRATIONS) {
+  if (env.DISABLE_APP_MIGRATIONS || env.isTest()) {
     return next()
   }
 
