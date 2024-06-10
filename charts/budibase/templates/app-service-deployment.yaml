@@ -42,6 +42,14 @@ spec:
           {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
           {{ end }}
+        {{ if .Values.globals.sqs.enabled }}
+        - name: COUCH_DB_SQL_URL
+        {{ if .Values.globals.sqs.url }}
+          value: {{ .Values.globals.sqs.url }}
+        {{ else }}
+          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.globals.sqs.port }}
+        {{ end }}
+        {{ end }}
         {{ if .Values.services.couchdb.enabled }}
         - name: COUCH_DB_USER
           valueFrom:
@@ -198,10 +206,21 @@ spec:
         - name: APP_FEATURES
           value: "api"
         {{- end }}
+        {{- if .Values.globals.sqs.enabled }}
+        - name: SQS_SEARCH_ENABLE
+          value: "true"
+        {{- end }}
         {{- range .Values.services.apps.extraEnv }}
         - name: {{ .name }}
           value: {{ .value | quote }}
         {{- end }}
+        {{- range .Values.services.apps.extraEnvFromSecret}}
+        - name: {{ .name }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .secretName }}
+              key: {{ .secretKey | quote }}
+        {{- end}}
         image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         {{- if .Values.services.apps.startupProbe }}

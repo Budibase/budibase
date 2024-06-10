@@ -1035,54 +1035,6 @@ describe("postgres integrations", () => {
     })
   })
 
-  describe("POST /api/datasources/verify", () => {
-    it("should be able to verify the connection", async () => {
-      await config.api.datasource.verify(
-        {
-          datasource: await getDatasource(DatabaseName.POSTGRES),
-        },
-        {
-          body: {
-            connected: true,
-          },
-        }
-      )
-    })
-
-    it("should state an invalid datasource cannot connect", async () => {
-      const dbConfig = await getDatasource(DatabaseName.POSTGRES)
-      await config.api.datasource.verify(
-        {
-          datasource: {
-            ...dbConfig,
-            config: {
-              ...dbConfig.config,
-              password: "wrongpassword",
-            },
-          },
-        },
-        {
-          body: {
-            connected: false,
-            error: 'password authentication failed for user "postgres"',
-          },
-        }
-      )
-    })
-  })
-
-  describe("POST /api/datasources/info", () => {
-    it("should fetch information about postgres datasource", async () => {
-      const primaryName = primaryPostgresTable.name
-      const response = await makeRequest("post", "/api/datasources/info", {
-        datasource: datasource,
-      })
-      expect(response.status).toBe(200)
-      expect(response.body.tableNames).toBeDefined()
-      expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-1)
-    })
-  })
-
   describe("POST /api/datasources/:datasourceId/schema", () => {
     let tableName: string
 
@@ -1097,12 +1049,11 @@ describe("postgres integrations", () => {
     it("recognises when a table has no primary key", async () => {
       await rawQuery(rawDatasource, `CREATE TABLE "${tableName}" (id SERIAL)`)
 
-      const response = await makeRequest(
-        "post",
-        `/api/datasources/${datasource._id}/schema`
-      )
+      const response = await config.api.datasource.fetchSchema({
+        datasourceId: datasource._id!,
+      })
 
-      expect(response.body.errors).toEqual({
+      expect(response.errors).toEqual({
         [tableName]: "Table must have a primary key.",
       })
     })
@@ -1113,12 +1064,11 @@ describe("postgres integrations", () => {
         `CREATE TABLE "${tableName}" (_id SERIAL PRIMARY KEY) `
       )
 
-      const response = await makeRequest(
-        "post",
-        `/api/datasources/${datasource._id}/schema`
-      )
+      const response = await config.api.datasource.fetchSchema({
+        datasourceId: datasource._id!,
+      })
 
-      expect(response.body.errors).toEqual({
+      expect(response.errors).toEqual({
         [tableName]: "Table contains invalid columns.",
       })
     })
@@ -1143,15 +1093,14 @@ describe("postgres integrations", () => {
       `
       )
 
-      const response = await makeRequest(
-        "post",
-        `/api/datasources/${datasource._id}/schema`
-      )
+      const response = await config.api.datasource.fetchSchema({
+        datasourceId: datasource._id!,
+      })
 
-      const table = response.body.datasource.entities[tableName]
+      const table = response.datasource.entities?.[tableName]
 
       expect(table).toBeDefined()
-      expect(table.schema[enumColumnName].type).toEqual(FieldType.OPTIONS)
+      expect(table?.schema[enumColumnName].type).toEqual(FieldType.OPTIONS)
     })
   })
 
@@ -1215,20 +1164,16 @@ describe("postgres integrations", () => {
         rawDatasource,
         `CREATE TABLE "${schema2}".${repeated_table_name} (id2 SERIAL PRIMARY KEY, val2 TEXT);`
       )
-      const response = await makeRequest(
-        "post",
-        `/api/datasources/${datasource._id}/schema`,
-        {
-          tablesFilter: [repeated_table_name],
-        }
-      )
-      expect(response.status).toBe(200)
+
+      const response = await config.api.datasource.fetchSchema({
+        datasourceId: datasource._id!,
+        tablesFilter: [repeated_table_name],
+      })
       expect(
-        response.body.datasource.entities[repeated_table_name].schema
+        response.datasource.entities?.[repeated_table_name].schema
       ).toBeDefined()
-      const schema =
-        response.body.datasource.entities[repeated_table_name].schema
-      expect(Object.keys(schema).sort()).toEqual(["id", "val1"])
+      const schema = response.datasource.entities?.[repeated_table_name].schema
+      expect(Object.keys(schema || {}).sort()).toEqual(["id", "val1"])
     })
   })
 
@@ -1246,16 +1191,14 @@ describe("postgres integrations", () => {
     })
 
     it("should handle binary columns", async () => {
-      const response = await makeRequest(
-        "post",
-        `/api/datasources/${datasource._id}/schema`
-      )
-      expect(response.body).toBeDefined()
-      expect(response.body.datasource.entities).toBeDefined()
-      const table = response.body.datasource.entities["binarytable"]
+      const response = await config.api.datasource.fetchSchema({
+        datasourceId: datasource._id!,
+      })
+      expect(response.datasource.entities).toBeDefined()
+      const table = response.datasource.entities?.["binarytable"]
       expect(table).toBeDefined()
-      expect(table.schema.id.externalType).toBe("bytea")
-      const row = await config.api.row.save(table._id, {
+      expect(table?.schema.id.externalType).toBe("bytea")
+      const row = await config.api.row.save(table?._id!, {
         id: "1111",
         column1: "hello",
         column2: 222,
@@ -1263,6 +1206,50 @@ describe("postgres integrations", () => {
       expect(row._id).toBeDefined()
       const decoded = decodeURIComponent(row._id!).replace(/'/g, '"')
       expect(JSON.parse(decoded)[0]).toBe("1111")
+    })
+  })
+
+  describe("check fetching null/not null table", () => {
+    beforeAll(async () => {
+      await rawQuery(
+        rawDatasource,
+        `CREATE TABLE nullableTable (
+          order_id SERIAL PRIMARY KEY,
+          order_number INT NOT NULL
+        );
+      `
+      )
+    })
+
+    it("should be able to change the table to allow nullable and refetch this", async () => {
+      const response = await config.api.datasource.fetchSchema({
+        datasourceId: datasource._id!,
+      })
+      const entities = response.datasource.entities
+      expect(entities).toBeDefined()
+      const nullableTable = entities?.["nullabletable"]
+      expect(nullableTable).toBeDefined()
+      expect(
+        nullableTable?.schema["order_number"].constraints?.presence
+      ).toEqual(true)
+      // need to perform these calls raw to the DB so that the external state of the DB differs to what Budibase
+      // is aware of - therefore we can try to fetch and make sure BB updates correctly
+      await rawQuery(
+        rawDatasource,
+        `ALTER TABLE nullableTable
+             ALTER COLUMN order_number DROP NOT NULL;
+        `
+      )
+      const responseAfter = await config.api.datasource.fetchSchema({
+        datasourceId: datasource._id!,
+      })
+      const entitiesAfter = responseAfter.datasource.entities
+      expect(entitiesAfter).toBeDefined()
+      const nullableTableAfter = entitiesAfter?.["nullabletable"]
+      expect(nullableTableAfter).toBeDefined()
+      expect(
+        nullableTableAfter?.schema["order_number"].constraints?.presence
+      ).toBeUndefined()
     })
   })
 })

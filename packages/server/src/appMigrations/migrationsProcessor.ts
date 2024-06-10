@@ -1,4 +1,4 @@
-import { context, locks } from "@budibase/backend-core"
+import { context, locks, logging } from "@budibase/backend-core"
 import { LockName, LockType } from "@budibase/types"
 
 import {
@@ -12,47 +12,56 @@ export async function processMigrations(
   migrations: AppMigration[]
 ) {
   console.log(`Processing app migration for "${appId}"`)
+  // have to wrap in context, this gets the tenant from the app ID
+  await context.doInAppContext(appId, async () => {
+    await locks.doWithLock(
+      {
+        name: LockName.APP_MIGRATION,
+        type: LockType.AUTO_EXTEND,
+        resource: appId,
+      },
+      async () => {
+        try {
+          await context.doInAppMigrationContext(appId, async () => {
+            let currentVersion = await getAppMigrationVersion(appId)
 
-  await locks.doWithLock(
-    {
-      name: LockName.APP_MIGRATION,
-      type: LockType.AUTO_EXTEND,
-      resource: appId,
-    },
-    async () => {
-      await context.doInAppMigrationContext(appId, async () => {
-        let currentVersion = await getAppMigrationVersion(appId)
+            const pendingMigrations = migrations
+              .filter(m => m.id > currentVersion)
+              .sort((a, b) => a.id.localeCompare(b.id))
 
-        const pendingMigrations = migrations
-          .filter(m => m.id > currentVersion)
-          .sort((a, b) => a.id.localeCompare(b.id))
+            const migrationIds = migrations.map(m => m.id).sort()
 
-        const migrationIds = migrations.map(m => m.id).sort()
+            let index = 0
+            for (const { id, func } of pendingMigrations) {
+              const expectedMigration =
+                migrationIds[migrationIds.indexOf(currentVersion) + 1]
 
-        let index = 0
-        for (const { id, func } of pendingMigrations) {
-          const expectedMigration =
-            migrationIds[migrationIds.indexOf(currentVersion) + 1]
+              if (expectedMigration !== id) {
+                throw new Error(
+                  `Migration ${id} could not run, update for "${id}" is running but ${expectedMigration} is expected`
+                )
+              }
 
-          if (expectedMigration !== id) {
-            throw `Migration ${id} could not run, update for "${id}" is running but ${expectedMigration} is expected`
-          }
-
-          const counter = `(${++index}/${pendingMigrations.length})`
-          console.info(`Running migration ${id}... ${counter}`, {
-            migrationId: id,
-            appId,
+              const counter = `(${++index}/${pendingMigrations.length})`
+              console.info(`Running migration ${id}... ${counter}`, {
+                migrationId: id,
+                appId,
+              })
+              await func()
+              await updateAppMigrationMetadata({
+                appId,
+                version: id,
+              })
+              currentVersion = id
+            }
           })
-          await func()
-          await updateAppMigrationMetadata({
-            appId,
-            version: id,
-          })
-          currentVersion = id
+        } catch (err) {
+          logging.logAlert("Failed to run app migration", err)
+          throw err
         }
-      })
-    }
-  )
+      }
+    )
 
-  console.log(`App migration for "${appId}" processed`)
+    console.log(`App migration for "${appId}" processed`)
+  })
 }

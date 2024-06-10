@@ -10,14 +10,25 @@ export * from "./appMigrationMetadata"
 export type AppMigration = {
   id: string
   func: () => Promise<void>
+  // disabled so that by default all migrations listed are enabled
+  disabled?: boolean
 }
 
-export const getLatestMigrationId = () =>
-  MIGRATIONS.map(m => m.id)
-    .sort()
-    .reverse()[0]
+export function getLatestEnabledMigrationId(migrations?: AppMigration[]) {
+  let latestMigrationId: string | undefined
+  for (let migration of migrations || MIGRATIONS) {
+    // if a migration is disabled, all migrations after it are disabled
+    if (migration.disabled) {
+      break
+    }
+    latestMigrationId = migration.id
+  }
+  return latestMigrationId
+}
 
-const getTimestamp = (versionId: string) => versionId?.split("_")[0] || ""
+function getTimestamp(versionId: string) {
+  return versionId?.split("_")[0] || ""
+}
 
 export async function checkMissingMigrations(
   ctx: UserCtx,
@@ -25,17 +36,18 @@ export async function checkMissingMigrations(
   appId: string
 ) {
   const currentVersion = await getAppMigrationVersion(appId)
-  const latestMigration = getLatestMigrationId()
+  const latestMigration = getLatestEnabledMigrationId()
 
-  if (getTimestamp(currentVersion) < getTimestamp(latestMigration)) {
+  if (
+    latestMigration &&
+    getTimestamp(currentVersion) < getTimestamp(latestMigration)
+  ) {
     await queue.add(
       {
         appId,
       },
       {
         jobId: `${appId}_${latestMigration}`,
-        removeOnComplete: true,
-        removeOnFail: true,
       }
     )
 
