@@ -8,17 +8,9 @@ export function getTenantDB(tenantId: string) {
 
 export async function saveTenantInfo(tenantInfo: TenantInfo) {
   const db = getTenantDB(tenantInfo.id)
-  try {
-    // save the tenant info to db
-    await db.put({
-      _id: "tenant_info",
-      ...tenantInfo,
-    })
-  } catch (err: any) {
-    if (err.status === 409) {
-      throw "Tenant info exists already"
-    } else {
-      throw err
-    }
-  }
+  // save the tenant info to db
+  await db.put({
+    _id: "tenant_info",
+    ...tenantInfo,
+  })
 }
