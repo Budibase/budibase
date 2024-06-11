@@ -80,19 +80,16 @@ export async function startContainer(container: GenericContainer) {
     `${imageName.replaceAll("/", "-")}.lock`
   )
 
-  // The `proper-lockfile` library needs the file we're locking on to exist
-  // before it can lock it.
-  if (!fs.existsSync(lockPath)) {
-    fs.writeFileSync(lockPath, "")
-  }
-
-  const unlock = lockfile.lockSync(lockPath)
+  const unlock = await lockfile.lock(lockPath, {
+    retries: 10,
+    realpath: false,
+  })
 
   let startedContainer: StartedTestContainer
   try {
     startedContainer = await container.start()
   } finally {
-    unlock()
+    await unlock()
   }
 
   const info = testContainerUtils.getContainerById(startedContainer.getId())
