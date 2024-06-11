@@ -6,6 +6,9 @@ import * as mssql from "./mssql"
 import * as mariadb from "./mariadb"
 import { GenericContainer } from "testcontainers"
 import { testContainerUtils } from "@budibase/backend-core/tests"
+import lockfile from "proper-lockfile"
+import path from "path"
+import fs from "fs"
 
 export type DatasourceProvider = () => Promise<Datasource>
 
@@ -67,20 +70,44 @@ export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
 export async function startContainer(container: GenericContainer) {
   container = container.withReuse().withLabels({ "com.budibase": "true" })
 
-  const startedContainer = await container.start()
+  // If two tests try to spin up the same container at the same time, there's a
+  // possibility that two containers of the same type will be started. To avoid
+  // this, we use a filesystem lock to ensure that only one container of a given
+  // type is started at a time.
+  const imageName = (container as any).imageName.string as string
+  const lockPath = path.resolve(
+    __dirname,
+    `${imageName.replaceAll("/", "-")}.lock`
+  )
 
-  const info = testContainerUtils.getContainerById(startedContainer.getId())
-  if (!info) {
-    throw new Error("Container not found")
+  // The `proper-lockfile` library needs the file we're locking on to exist
+  // before it can lock it.
+  if (!fs.existsSync(lockPath)) {
+    fs.writeFileSync(lockPath, "")
   }
 
-  // Some Docker runtimes, when you expose a port, will bind it to both
-  // 127.0.0.1 and ::1, so ipv4 and ipv6. The port spaces of ipv4 and ipv6
-  // addresses are not shared, and testcontainers will sometimes give you back
-  // the ipv6 port. There's no way to know that this has happened, and if you
-  // try to then connect to `localhost:port` you may attempt to bind to the v4
-  // address which could be unbound or even an entirely different container. For
-  // that reason, we don't use testcontainers' `getExposedPort` function,
-  // preferring instead our own method that guaranteed v4 ports.
-  return testContainerUtils.getExposedV4Ports(info)
+  await lockfile.lock(lockPath, {
+    retries: 10,
+  })
+
+  try {
+    const startedContainer = await container.start()
+
+    const info = testContainerUtils.getContainerById(startedContainer.getId())
+    if (!info) {
+      throw new Error("Container not found")
+    }
+
+    // Some Docker runtimes, when you expose a port, will bind it to both
+    // 127.0.0.1 and ::1, so ipv4 and ipv6. The port spaces of ipv4 and ipv6
+    // addresses are not shared, and testcontainers will sometimes give you back
+    // the ipv6 port. There's no way to know that this has happened, and if you
+    // try to then connect to `localhost:port` you may attempt to bind to the v4
+    // address which could be unbound or even an entirely different container. For
+    // that reason, we don't use testcontainers' `getExposedPort` function,
+    // preferring instead our own method that guaranteed v4 ports.
+    return testContainerUtils.getExposedV4Ports(info)
+  } finally {
+    await lockfile.unlock(lockPath)
+  }
 }
