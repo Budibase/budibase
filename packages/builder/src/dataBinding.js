@@ -30,6 +30,7 @@ import ActionDefinitions from "components/design/settings/controls/ButtonActionE
 import { environment, licensing } from "stores/portal"
 import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
 import { FIELDS } from "constants/backend"
+import { FieldType } from "@budibase/types"
 
 const { ContextScopes } = Constants
 
@@ -555,6 +556,9 @@ const getComponentBindingCategory = (component, context, def) => {
 export const getUserBindings = () => {
   let bindings = []
   const { schema } = getSchemaForDatasourcePlus(TableNames.USERS)
+  // add props that are not in the user metadata table schema
+  // but will be there for logged-in user
+  schema["globalId"] = { type: FieldType.STRING }
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
 
@@ -728,7 +732,7 @@ const getRoleBindings = () => {
   return (get(rolesStore) || []).map(role => {
     return {
       type: "context",
-      runtimeBinding: `trim "${role._id}"`,
+      runtimeBinding: `'${role._id}'`,
       readableBinding: `Role.${role.name}`,
       category: "Role",
       icon: "UserGroup",
