@@ -28,8 +28,8 @@
       tabindex="0"
       on:click={() => onSelect(data)}
     >
-      <span class="spectrum-Menu-itemLabel">
-        {data.label}
+      <span class="spectum-Menu-itemLabel">
+        {data.datasource?.name ? `${data.datasource.name} -` : ""} {data.label}
       </span>
       <svg
         class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
