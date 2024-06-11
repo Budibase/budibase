@@ -6,10 +6,7 @@ import * as mssql from "./mssql"
 import * as mariadb from "./mariadb"
 import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { testContainerUtils } from "@budibase/backend-core/tests"
-import lockfile from "proper-lockfile"
-import path from "path"
-import fs from "fs"
-import _ from "lodash"
+import cloneDeep from "lodash/cloneDeep"
 
 export type DatasourceProvider = () => Promise<Datasource>
 
@@ -86,7 +83,7 @@ export async function startContainer(container: GenericContainer) {
       // the hash it uses to determine reuse changes. We need to clone the
       // container before calling start to ensure that we're using the same
       // reuse hash every time.
-      const containerCopy = _.cloneDeep(container)
+      const containerCopy = cloneDeep(container)
       startedContainer = await containerCopy.start()
       lastError = undefined
       break
