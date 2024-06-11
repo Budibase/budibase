@@ -7,22 +7,12 @@ import {
 } from "../automations/utils"
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
-import {
-  initializeTempOutput,
-  typecastLoopInput,
-  getLoopItems,
-  updateContext,
-  replaceFakeBindings,
-  checkMaxIterations,
-  handleMaxIterations,
-  checkFailureCondition,
-  handleFailureCondition,
-} from "../automations/loopUtils"
+import { replaceFakeBindings } from "../automations/loopUtils"
 
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { definitions as triggerDefs } from "../automations/triggerInfo"
-import { MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
+import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
 import {
   Automation,
@@ -35,6 +25,7 @@ import {
 } from "@budibase/types"
 import {
   AutomationContext,
+  LoopInput,
   LoopStep,
   TriggerOutput,
 } from "../definitions/automations"
@@ -203,57 +194,6 @@ class Orchestrator {
     }
   }
 
-  handleLooping(
-    loopSteps: LoopStep[] | undefined,
-    iterationCount: number,
-    loopStep: LoopStep | undefined,
-    loopStepNumber: number,
-    index: number,
-    originalStepInput: any,
-    step: any
-  ): void {
-    const tempOutput = initializeTempOutput(loopSteps, iterationCount)
-    const item = getLoopItems(loopStep?.inputs.binding, loopStep?.inputs.option)
-    updateContext(this._context, loopStepNumber, item, index)
-
-    if (
-      !typecastLoopInput(
-        loopStep,
-        loopStepNumber,
-        step,
-        tempOutput,
-        this.updateContextAndOutput.bind(this)
-      )
-    ) {
-      loopStep = undefined
-      loopSteps = undefined
-    }
-
-    originalStepInput = replaceFakeBindings(originalStepInput, loopStepNumber)
-
-    if (checkMaxIterations(index, loopStep?.inputs.iterations)) {
-      handleMaxIterations(
-        loopStepNumber,
-        step,
-        tempOutput,
-        this.updateContextAndOutput.bind(this)
-      )
-      loopStep = undefined
-      loopSteps = undefined
-    }
-
-    if (checkFailureCondition(this._context, loopStepNumber, loopStep)) {
-      handleFailureCondition(
-        loopStepNumber,
-        step,
-        tempOutput,
-        this.updateContextAndOutput.bind(this)
-      )
-      loopStep = undefined
-      loopSteps = undefined
-    }
-  }
-
   updateExecutionOutput(id: string, stepId: string, inputs: any, outputs: any) {
     const stepObj = { id, stepId, inputs, outputs }
     // replacing trigger when disabling CRON
@@ -276,15 +216,15 @@ class Orchestrator {
   }
 
   updateContextAndOutput(
-    loopStepNumber: number | undefined,
+    currentLoopStepIndex: number | undefined,
     step: AutomationStep,
     output: any,
     result: { success: boolean; status: string }
   ) {
-    if (!loopStepNumber) {
+    if (!currentLoopStepIndex) {
       throw new Error("No loop step number provided.")
     }
-    this.executionOutput.steps.splice(loopStepNumber, 0, {
+    this.executionOutput.steps.splice(currentLoopStepIndex, 0, {
       id: step.id,
       stepId: step.stepId,
       outputs: {
@@ -294,7 +234,7 @@ class Orchestrator {
       },
       inputs: step.inputs,
     })
-    this._context.steps.splice(loopStepNumber, 0, {
+    this._context.steps.splice(currentLoopStepIndex, 0, {
       ...output,
       success: result.success,
       status: result.status,
@@ -318,7 +258,7 @@ class Orchestrator {
         let loopStep: LoopStep | undefined = undefined
 
         let stepCount = 0
-        let loopStepNumber: any = undefined
+        let currentLoopStepIndex: number = 0
         let loopSteps: LoopStep[] | undefined = []
         let metadata
         let timeoutFlag = false
@@ -352,7 +292,7 @@ class Orchestrator {
             },
           })
 
-          let input: any,
+          let input: LoopInput | undefined,
             iterations = 1,
             iterationCount = 0
 
@@ -371,27 +311,104 @@ class Orchestrator {
             stepCount++
             if (step.stepId === LOOP_STEP_ID) {
               loopStep = step as LoopStep
-              loopStepNumber = stepCount
+              currentLoopStepIndex = stepCount
               continue
             }
 
             if (loopStep) {
               input = await processObject(loopStep.inputs, this._context)
-              iterations = getLoopIterations(loopStep as LoopStep)
+              iterations = getLoopIterations(loopStep)
               stepSpan?.addTags({ step: { iterations } })
             }
-            for (let index = 0; index < iterations; index++) {
+
+            for (let stepIndex = 0; stepIndex < iterations; stepIndex++) {
               let originalStepInput = cloneDeep(step.inputs)
-              if (loopStep && input.binding) {
-                this.handleLooping(
-                  loopSteps,
-                  iterationCount,
-                  loopStep,
-                  loopStepNumber,
-                  index,
+              if (loopStep && input?.binding) {
+                let tempOutput = {
+                  items: loopSteps,
+                  iterations: iterationCount,
+                }
+                try {
+                  loopStep.inputs.binding = automationUtils.typecastForLooping(
+                    loopStep.inputs as LoopInput
+                  )
+                } catch (err) {
+                  this.updateContextAndOutput(
+                    currentLoopStepIndex,
+                    step,
+                    tempOutput,
+                    {
+                      status: AutomationErrors.INCORRECT_TYPE,
+                      success: false,
+                    }
+                  )
+                  loopSteps = undefined
+                  loopStep = undefined
+                  break
+                }
+                let item: any[] = []
+                if (
+                  typeof loopStep.inputs.binding === "string" &&
+                  loopStep.inputs.option === "String"
+                ) {
+                  item = automationUtils.stringSplit(loopStep.inputs.binding)
+                } else if (Array.isArray(loopStep.inputs.binding)) {
+                  item = loopStep.inputs.binding
+                }
+                this._context.steps[currentLoopStepIndex] = {
+                  currentItem: item[stepIndex],
+                }
+
+                originalStepInput = replaceFakeBindings(
                   originalStepInput,
-                  step
+                  currentLoopStepIndex
                 )
+
+                if (
+                  stepIndex === env.AUTOMATION_MAX_ITERATIONS ||
+                  (loopStep.inputs.iterations &&
+                    stepIndex === parseInt(loopStep.inputs.iterations))
+                ) {
+                  this.updateContextAndOutput(
+                    currentLoopStepIndex,
+                    step,
+                    tempOutput,
+                    {
+                      status: AutomationErrors.MAX_ITERATIONS,
+                      success: true,
+                    }
+                  )
+                  loopSteps = undefined
+                  loopStep = undefined
+                  break
+                }
+
+                let isFailure = false
+                const currentItem =
+                  this._context.steps[currentLoopStepIndex]?.currentItem
+                if (currentItem && typeof currentItem === "object") {
+                  isFailure = Object.keys(currentItem).some(value => {
+                    return currentItem[value] === loopStep?.inputs.failure
+                  })
+                } else {
+                  isFailure =
+                    currentItem && currentItem === loopStep.inputs.failure
+                }
+
+                if (isFailure) {
+                  this.updateContextAndOutput(
+                    currentLoopStepIndex,
+                    step,
+                    tempOutput,
+                    {
+                      status: AutomationErrors.FAILURE_CONDITION,
+                      success: false,
+                    }
+                  )
+                  loopSteps = undefined
+                  loopStep = undefined
+                  break
+                }
               }
 
               // execution stopped, record state for that
@@ -453,9 +470,9 @@ class Orchestrator {
 
               if (loopStep) {
                 iterationCount++
-                if (index === iterations - 1) {
+                if (stepIndex === iterations - 1) {
                   loopStep = undefined
-                  this._context.steps.splice(loopStepNumber, 1)
+                  this._context.steps.splice(currentLoopStepIndex, 1)
                   break
                 }
               }
@@ -466,7 +483,7 @@ class Orchestrator {
 
           if (loopStep && iterations === 0) {
             loopStep = undefined
-            this.executionOutput.steps.splice(loopStepNumber + 1, 0, {
+            this.executionOutput.steps.splice(currentLoopStepIndex + 1, 0, {
               id: step.id,
               stepId: step.stepId,
               outputs: {
@@ -476,14 +493,14 @@ class Orchestrator {
               inputs: {},
             })
 
-            this._context.steps.splice(loopStepNumber, 1)
+            this._context.steps.splice(currentLoopStepIndex, 1)
             iterations = 1
           }
 
           // Delete the step after the loop step as it's irrelevant, since information is included
           // in the loop step
           if (wasLoopStep && !loopStep) {
-            this._context.steps.splice(loopStepNumber + 1, 1)
+            this._context.steps.splice(currentLoopStepIndex + 1, 1)
             wasLoopStep = false
           }
           if (loopSteps && loopSteps.length) {
@@ -492,13 +509,13 @@ class Orchestrator {
               items: loopSteps,
               iterations: iterationCount,
             }
-            this.executionOutput.steps.splice(loopStepNumber + 1, 0, {
+            this.executionOutput.steps.splice(currentLoopStepIndex + 1, 0, {
               id: step.id,
               stepId: step.stepId,
               outputs: tempOutput,
               inputs: step.inputs,
             })
-            this._context.steps[loopStepNumber] = tempOutput
+            this._context.steps[currentLoopStepIndex] = tempOutput
 
             wasLoopStep = true
             loopSteps = []

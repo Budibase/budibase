@@ -142,7 +142,7 @@ interface BaseIOStructure {
   required?: string[]
 }
 
-interface InputOutputBlock {
+export interface InputOutputBlock {
   properties: {
     [key: string]: BaseIOStructure
   }
