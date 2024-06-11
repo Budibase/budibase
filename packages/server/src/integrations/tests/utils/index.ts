@@ -86,9 +86,7 @@ export async function startContainer(container: GenericContainer) {
     fs.writeFileSync(lockPath, "")
   }
 
-  const unlock = lockfile.lockSync(lockPath, {
-    retries: 10,
-  })
+  const unlock = lockfile.lockSync(lockPath)
 
   let startedContainer: StartedTestContainer
   try {
