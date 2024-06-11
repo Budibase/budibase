@@ -15,6 +15,7 @@ import * as fileSystem from "../utilities/fileSystem"
 import { default as eventEmitter, init as eventInit } from "../events"
 import * as migrations from "../migrations"
 import * as bullboard from "../automations/bullboard"
+import * as appMigrations from "../appMigrations/queue"
 import * as pro from "@budibase/pro"
 import * as api from "../api"
 import sdk from "../sdk"
@@ -114,7 +115,9 @@ export async function startup(
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
+  // app migrations and automations on other service
   if (automationsEnabled()) {
+    queuePromises.push(appMigrations.init())
     queuePromises.push(automations.init())
   }
   queuePromises.push(initPro())
