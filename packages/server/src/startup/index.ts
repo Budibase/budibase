@@ -72,7 +72,11 @@ export async function startup(
   printFeatures()
   STARTUP_RAN = true
   if (app && server && !env.CLUSTER_MODE) {
-    console.log(`Budibase running on ${JSON.stringify(server.address())}`)
+    let startupLog = `Budibase running on ${JSON.stringify(server.address())}`
+    if (env.BUDIBASE_ENVIRONMENT) {
+      startupLog = `${startupLog} - environment: "${env.BUDIBASE_ENVIRONMENT}"`
+    }
+    console.log(startupLog)
     const address = server.address() as AddressInfo
     env._set("PORT", address.port)
   }

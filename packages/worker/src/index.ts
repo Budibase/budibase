@@ -88,7 +88,11 @@ const shutdown = () => {
 }
 
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
-  console.log(`Worker running on ${JSON.stringify(server.address())}`)
+  let startupLog = `Worker running on ${JSON.stringify(server.address())}`
+  if (env.BUDIBASE_ENVIRONMENT) {
+    startupLog = `${startupLog} - environment: "${env.BUDIBASE_ENVIRONMENT}"`
+  }
+  console.log(startupLog)
   await initPro()
   await redis.clients.init()
   cache.docWritethrough.init()
