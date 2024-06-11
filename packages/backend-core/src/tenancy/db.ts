@@ -7,9 +7,9 @@ export function getTenantDB(tenantId: string) {
 }
 
 export async function saveTenantInfo(tenantInfo: TenantInfo) {
-  const db = getTenantDB(tenantInfo.id)
+  const db = getTenantDB(tenantInfo.tenantId)
   // save the tenant info to db
-  await db.put({
+  return await db.put({
     _id: "tenant_info",
     ...tenantInfo,
   })

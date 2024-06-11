@@ -18,7 +18,7 @@ function buildTenantInfoValidation() {
         familyName: OPTIONAL_STRING,
         budibaseUserId: OPTIONAL_STRING,
       }).required(),
-      id: Joi.string().required(),
+      tenantId: Joi.string().required(),
     }).required()
   )
 }

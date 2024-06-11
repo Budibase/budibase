@@ -9,5 +9,5 @@ export interface TenantInfo extends Document {
     familyName?: string
     budibaseUserId?: string
   }
-  id: string
+  tenantId: string
 }
