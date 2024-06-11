@@ -93,15 +93,21 @@ function isApps() {
   return environment.SERVICE_TYPE === ServiceType.APPS
 }
 
+function isQA() {
+  return environment.BUDIBASE_ENVIRONMENT === "QA"
+}
+
 const environment = {
   isTest,
   isJest,
   isDev,
   isWorker,
   isApps,
+  isQA,
   isProd: () => {
     return !isDev()
   },
+  BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK,
