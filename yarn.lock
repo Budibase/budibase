@@ -3483,10 +3483,10 @@
   dependencies:
     lodash "^4.17.21"
 
-"@koa/cors@^3.1.0":
-  version "3.4.3"
-  resolved "https://registry.yarnpkg.com/@koa/cors/-/cors-3.4.3.tgz#d669ee6e8d6e4f0ec4a7a7b0a17e7a3ed3752ebb"
-  integrity sha512-WPXQUaAeAMVaLTEFpoq3T2O1C+FstkjJnDQqy95Ck1UdILajsRhu6mhJ8H2f4NFPRBoCNN+qywTJfq/gGki5mw==
+"@koa/cors@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@koa/cors/-/cors-5.0.0.tgz#0029b5f057fa0d0ae0e37dd2c89ece315a0daffd"
+  integrity sha512-x/iUDjcS90W69PryLDIMgFyV21YLTnG9zOpPXS7Bkt2b8AsY3zZsIpOLBkYr9fBcF3HbkKaER5hOBZLfpLgYNw==
   dependencies:
     vary "^1.1.2"
 
@@ -5797,10 +5797,10 @@
     "@types/koa-compose" "*"
     "@types/node" "*"
 
-"@types/koa__cors@^3.1.1":
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/@types/koa__cors/-/koa__cors-3.3.1.tgz#0ec7543c4c620fd23451bfdd3e21b9a6aadedccd"
-  integrity sha512-aFGYhTFW7651KhmZZ05VG0QZJre7QxBxDj2LF1lf6GA/wSXEfKVAJxiQQWzRV4ZoMzQIO8vJBXKsUcRuvYK9qw==
+"@types/koa__cors@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@types/koa__cors/-/koa__cors-5.0.0.tgz#74567a045b599266e2cd3940cef96cedecc2ef1f"
+  integrity sha512-LCk/n25Obq5qlernGOK/2LUwa/2YJb2lxHUkkvYFDOpLXlVI6tKcdfCHRBQnOY4LwH6el5WOLs6PD/a8Uzau6g==
   dependencies:
     "@types/koa" "*"
 
@@ -16299,10 +16299,10 @@ node-source-walk@^5.0.0:
   dependencies:
     "@babel/parser" "^7.0.0"
 
-nodemailer@6.7.2:
-  version "6.7.2"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-6.7.2.tgz#44b2ad5f7ed71b7067f7a21c4fedabaec62b85e0"
-  integrity sha512-Dz7zVwlef4k5R71fdmxwR8Q39fiboGbu3xgswkzGwczUfjp873rVxt1O46+Fh0j1ORnAC6L9+heI8uUpO6DT7Q==
+nodemailer@6.9.13:
+  version "6.9.13"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-6.9.13.tgz#5b292bf1e92645f4852ca872c56a6ba6c4a3d3d6"
+  integrity sha512-7o38Yogx6krdoBf3jCAqnIN4oSQFx+fMa0I7dK1D+me9kBxx12D+/33wSb+fhOCtIxvYJ+4x4IMEhmhCKfAiOA==
 
 nodemailer@6.9.9:
   version "6.9.9"
