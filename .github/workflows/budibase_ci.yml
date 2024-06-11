@@ -178,8 +178,6 @@ jobs:
 
       - run: yarn --frozen-lockfile
 
-      - uses: valeriangalliat/action-sshd-cloudflared@v2
-
       - name: Test server
         env:
           DD_CIVISIBILITY_AGENTLESS_ENABLED: true
