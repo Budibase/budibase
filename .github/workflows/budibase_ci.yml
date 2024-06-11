@@ -156,6 +156,8 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
+      - uses: valeriangalliat/action-sshd-cloudflared@v2
+
       - name: Use Node.js 20.x
         uses: actions/setup-node@v4
         with:
