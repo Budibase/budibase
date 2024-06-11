@@ -55,7 +55,7 @@
 
   // Handle no matching route
   $: {
-    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
+    if (dataLoaded && !$routeStore.activeRoute) {
       if ($screenStore.screens.length) {
         // If we have some available screens, use the first screen which
         // represents the best route based on rank

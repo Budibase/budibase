@@ -12,6 +12,7 @@ const createRouteStore = () => {
     routeSessionId: Math.random(),
     routerLoaded: false,
     queryParams: {},
+    confirmNavigation: false,
   }
   const store = writable(initialState)
 
@@ -43,12 +44,14 @@ const createRouteStore = () => {
       return state
     })
   }
+
   const setRouteParams = routeParams => {
     store.update(state => {
       state.routeParams = routeParams
       return state
     })
   }
+
   const setQueryParams = queryParams => {
     store.update(state => {
       state.queryParams = {
@@ -60,12 +63,14 @@ const createRouteStore = () => {
       return state
     })
   }
+
   const setActiveRoute = route => {
     store.update(state => {
       state.activeRoute = state.routes.find(x => x.path === route)
       return state
     })
   }
+
   const navigate = (url, peek, externalNewTab) => {
     if (get(builderStore).inBuilder) {
       return
@@ -90,9 +95,7 @@ const createRouteStore = () => {
       }
     }
   }
-  const setRouterLoaded = () => {
-    store.update(state => ({ ...state, routerLoaded: true }))
-  }
+
   const createFullURL = relativeURL => {
     if (!relativeURL?.startsWith("/")) {
       return relativeURL
@@ -104,6 +107,13 @@ const createRouteStore = () => {
     return `${base}#${relativeURL}`
   }
 
+  const requireNavigationConfirmation = confirm => {
+    store.update(state => ({
+      ...state,
+      confirmNavigation: confirm,
+    }))
+  }
+
   return {
     subscribe: store.subscribe,
     actions: {
@@ -113,7 +123,7 @@ const createRouteStore = () => {
       setRouteParams,
       setQueryParams,
       setActiveRoute,
-      setRouterLoaded,
+      requireNavigationConfirmation,
     },
   }
 }

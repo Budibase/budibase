@@ -1,9 +1,9 @@
 <script>
-  import { screenStore, routeStore, builderStore } from "stores"
+  import { screenStore, builderStore } from "stores"
   import { get } from "svelte/store"
   import Component from "./Component.svelte"
   import Provider from "./context/Provider.svelte"
-  import { onMount, getContext } from "svelte"
+  import { getContext } from "svelte"
   import { enrichButtonActions } from "../utils/buttonActions.js"
   import { memo } from "@budibase/frontend-core"
 
@@ -16,6 +16,7 @@
   $: screenDefinition = $screenStore.activeScreen?.props
   $: onLoadActions.set($screenStore.activeScreen?.onLoad)
   $: runOnLoadActions($onLoadActions, params)
+  $: screenId = screenDefinition?._id
 
   // Enrich and execute any on load actions.
   // We manually construct the full context here as this component is the
@@ -31,18 +32,11 @@
       }
     }
   }
-
-  onMount(() => {
-    // Mark the router as loaded whenever the screen mounts
-    if (!$routeStore.routerLoaded) {
-      routeStore.actions.setRouterLoaded()
-    }
-  })
 </script>
 
 <!-- Ensure to fully remount when screen changes -->
-{#if $routeStore.routerLoaded}
-  {#key screenDefinition?._id}
+{#if screenDefinition}
+  {#key screenId}
     <Provider key="url" data={params}>
       <Component isRoot instance={screenDefinition} />
     </Provider>

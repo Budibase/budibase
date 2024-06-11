@@ -11,6 +11,7 @@
   export let readonly = false
   export let actionType = "Create"
   export let initialFormStep = 1
+  export let requireNavigationConfirmation = false
 
   // Not exposed as a builder setting. Used internally to disable validation
   // for fields rendered in things like search blocks.
