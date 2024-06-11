@@ -20,7 +20,7 @@ import * as pro from "@budibase/pro"
 import * as api from "../api"
 import sdk from "../sdk"
 import { initialise as initialiseWebsockets } from "../websockets"
-import { automationsEnabled, printFeatures } from "../features"
+import { apiEnabled, automationsEnabled, printFeatures } from "../features"
 import * as jsRunner from "../jsRunner"
 import Koa from "koa"
 import { Server } from "http"
@@ -70,6 +70,9 @@ export async function startup(
     return
   }
   printFeatures()
+  if (env.BUDIBASE_ENVIRONMENT) {
+    console.log(`service running environment: "${env.BUDIBASE_ENVIRONMENT}"`)
+  }
   STARTUP_RAN = true
   if (app && server && !env.CLUSTER_MODE) {
     console.log(`Budibase running on ${JSON.stringify(server.address())}`)
@@ -117,8 +120,10 @@ export async function startup(
   queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
   // app migrations and automations on other service
   if (automationsEnabled()) {
-    queuePromises.push(appMigrations.init())
     queuePromises.push(automations.init())
+  }
+  if (apiEnabled()) {
+    queuePromises.push(appMigrations.init())
   }
   queuePromises.push(initPro())
   if (app) {
