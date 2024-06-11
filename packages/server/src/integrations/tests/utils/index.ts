@@ -86,7 +86,7 @@ export async function startContainer(container: GenericContainer) {
     fs.writeFileSync(lockPath, "")
   }
 
-  await lockfile.lock(lockPath, {
+  const unlock = await lockfile.lock(lockPath, {
     retries: 10,
   })
 
@@ -94,7 +94,7 @@ export async function startContainer(container: GenericContainer) {
   try {
     startedContainer = await container.start()
   } finally {
-    await lockfile.unlock(lockPath)
+    await unlock()
   }
 
   const info = testContainerUtils.getContainerById(startedContainer.getId())
