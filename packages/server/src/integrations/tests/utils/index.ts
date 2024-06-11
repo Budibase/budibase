@@ -9,6 +9,7 @@ import { testContainerUtils } from "@budibase/backend-core/tests"
 import lockfile from "proper-lockfile"
 import path from "path"
 import fs from "fs"
+import _ from "lodash"
 
 export type DatasourceProvider = () => Promise<Datasource>
 
@@ -68,28 +69,38 @@ export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
 }
 
 export async function startContainer(container: GenericContainer) {
-  container = container.withReuse().withLabels({ "com.budibase": "true" })
-
-  // If two tests try to spin up the same container at the same time, there's a
-  // possibility that two containers of the same type will be started. To avoid
-  // this, we use a filesystem lock to ensure that only one container of a given
-  // type is started at a time.
   const imageName = (container as any).imageName.string as string
-  const lockPath = path.resolve(
-    __dirname,
-    `${imageName.replaceAll("/", "-")}.lock`
-  )
+  const key = imageName.replaceAll("/", "-").replaceAll(":", "-")
 
-  const unlock = await lockfile.lock(lockPath, {
-    retries: 10,
-    realpath: false,
-  })
+  container = container
+    .withReuse()
+    .withLabels({ "com.budibase": "true" })
+    .withName(key)
 
-  let startedContainer: StartedTestContainer
-  try {
-    startedContainer = await container.start()
-  } finally {
-    await unlock()
+  let startedContainer: StartedTestContainer | undefined = undefined
+  let lastError = undefined
+  for (let i = 0; i < 10; i++) {
+    try {
+      // container.start() is not an idempotent operation, calling `start`
+      // modifies the internal state of a GenericContainer instance such that
+      // the hash it uses to determine reuse changes. We need to clone the
+      // container before calling start to ensure that we're using the same
+      // reuse hash every time.
+      const containerCopy = _.cloneDeep(container)
+      startedContainer = await containerCopy.start()
+      lastError = undefined
+      break
+    } catch (e: any) {
+      lastError = e
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+  }
+
+  if (!startedContainer) {
+    if (lastError) {
+      throw lastError
+    }
+    throw new Error(`failed to start container: ${imageName}`)
   }
 
   const info = testContainerUtils.getContainerById(startedContainer.getId())
