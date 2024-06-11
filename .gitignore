@@ -8,6 +8,8 @@ bb-airgapped.tar.gz
 packages/server/build/oldClientVersions/**/*
 packages/builder/src/components/deploy/clientVersions.json
 
+packages/server/src/integrations/tests/utils/*.lock
+
 # Logs
 logs
 *.log
