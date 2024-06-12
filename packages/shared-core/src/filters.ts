@@ -14,6 +14,7 @@ import {
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet, schema } from "./helpers"
+import _ from "lodash"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -339,15 +340,36 @@ export const runQuery = (
     }
   )
 
+  // This function exists to check that either the docValue is equal to the
+  // testValue, or if the docValue is an object or array of objects, that the
+  // _id of the docValue is equal to the testValue.
+  const _valueMatches = (docValue: any, testValue: any) => {
+    if (Array.isArray(docValue)) {
+      for (const item of docValue) {
+        if (_valueMatches(item, testValue)) {
+          return true
+        }
+      }
+      return false
+    }
+
+    if (typeof docValue === "object" && typeof testValue === "string") {
+      return docValue._id === testValue
+    }
+
+    return docValue === testValue
+  }
+
   const not =
     <T extends any[]>(f: (...args: T) => boolean) =>
     (...args: T): boolean =>
       !f(...args)
 
-  const _equal = (docValue: any, testValue: any) => docValue === testValue
-
-  const equalMatch = match(SearchFilterOperator.EQUAL, _equal)
-  const notEqualMatch = match(SearchFilterOperator.NOT_EQUAL, not(_equal))
+  const equalMatch = match(SearchFilterOperator.EQUAL, _valueMatches)
+  const notEqualMatch = match(
+    SearchFilterOperator.NOT_EQUAL,
+    not(_valueMatches)
+  )
 
   const _empty = (docValue: any) => {
     if (typeof docValue === "string") {
@@ -379,13 +401,12 @@ export const runQuery = (
         return false
       }
 
-      return testValue.includes(docValue)
+      return testValue.some(item => _valueMatches(docValue, item))
     }
   )
 
-  const containsAny = match(
-    SearchFilterOperator.CONTAINS_ANY,
-    (docValue: any, testValue: any) => {
+  const _contains =
+    (f: "some" | "every") => (docValue: any, testValue: any) => {
       if (!Array.isArray(docValue)) {
         return false
       }
@@ -401,31 +422,18 @@ export const runQuery = (
         return false
       }
 
-      return testValue.some(item => docValue.includes(item))
+      return testValue[f](item => _valueMatches(docValue, item))
     }
+
+  const contains = match(SearchFilterOperator.CONTAINS, _contains("every"))
+  const notContains = match(
+    SearchFilterOperator.NOT_CONTAINS,
+    not(_contains("every"))
   )
-
-  const _contains = (docValue: any, testValue: any) => {
-    if (!Array.isArray(docValue)) {
-      return false
-    }
-
-    if (typeof testValue === "string") {
-      testValue = testValue.split(",")
-      if (typeof docValue[0] === "number") {
-        testValue = testValue.map((item: string) => parseFloat(item))
-      }
-    }
-
-    if (!Array.isArray(testValue)) {
-      return false
-    }
-
-    return testValue.every(item => docValue.includes(item))
-  }
-
-  const contains = match(SearchFilterOperator.CONTAINS, _contains)
-  const notContains = match(SearchFilterOperator.NOT_CONTAINS, not(_contains))
+  const containsAny = match(
+    SearchFilterOperator.CONTAINS_ANY,
+    _contains("some")
+  )
 
   const docMatch = (doc: Record<string, any>) => {
     const filterFunctions = {

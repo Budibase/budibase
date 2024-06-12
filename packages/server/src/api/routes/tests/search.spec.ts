@@ -1706,7 +1706,7 @@ describe.each([
     })
 
     describe("contains", () => {
-      it.only("successfully finds a row", () =>
+      it("successfully finds a row", () =>
         expectQuery({ contains: { users: [user1._id] } }).toContainExactly([
           { users: [{ _id: user1._id }] },
           { users: [{ _id: user1._id }, { _id: user2._id }] },
@@ -1763,9 +1763,12 @@ describe.each([
 
   // This will never work for Lucene.
   !isLucene &&
+    // It also can't work for in-memory searching because the related table name
+    // isn't available.
+    !isInMemory &&
     describe("relations", () => {
       let otherTable: Table
-      let rows: Row[]
+      let otherRows: Row[]
 
       beforeAll(async () => {
         otherTable = await createTable({
@@ -1785,7 +1788,7 @@ describe.each([
           },
         })
 
-        rows = await Promise.all([
+        otherRows = await Promise.all([
           config.api.row.save(otherTable._id!, { one: "foo" }),
           config.api.row.save(otherTable._id!, { one: "bar" }),
         ])
@@ -1793,18 +1796,22 @@ describe.each([
         await Promise.all([
           config.api.row.save(table._id!, {
             two: "foo",
-            other: [rows[0]._id],
+            other: [otherRows[0]._id],
           }),
           config.api.row.save(table._id!, {
             two: "bar",
-            other: [rows[1]._id],
+            other: [otherRows[1]._id],
           }),
         ])
+
+        rows = await config.api.row.fetch(table._id!)
       })
 
       it("can search through relations", () =>
         expectQuery({
           equal: { [`${otherTable.name}.one`]: "foo" },
-        }).toContainExactly([{ two: "foo", other: [{ _id: rows[0]._id }] }]))
+        }).toContainExactly([
+          { two: "foo", other: [{ _id: otherRows[0]._id }] },
+        ]))
     })
 })
