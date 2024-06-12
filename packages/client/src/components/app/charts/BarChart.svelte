@@ -91,8 +91,6 @@
     },
   }
 
-  $: console.log(options);
-
   const getSeries = (dataProvider, valueColumns = []) => {
     const rows = dataProvider.rows ?? []
 

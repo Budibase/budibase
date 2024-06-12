@@ -3,8 +3,7 @@
     Line,
     InfoWord,
     DocumentationLink,
-    Text,
-    Period,
+    Text
   } from "../typography"
   import { FieldType } from "@budibase/types"
   import { FIELDS } from "constants/backend"

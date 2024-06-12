@@ -47,8 +47,6 @@
   $: color = getColor(support)
   $: text = getText(support)
   $: componentDefinition = getComponentDefinition(componentName)
-
-  $: console.log(componentDefinition);
 </script>
 
 {#if componentDefinition}

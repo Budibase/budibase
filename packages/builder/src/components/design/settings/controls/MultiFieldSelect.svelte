@@ -37,40 +37,6 @@
     dispatch("change", boundValue)
   }
 
-  const getOptionIcon = optionKey => {
-    const option = schema[optionKey]
-    if (!option) return ""
-
-    if (option.autocolumn) {
-      return "MagicWand"
-    }
-    const { type, subtype } = option
-
-    const result =
-      typeof Constants.TypeIconMap[type] === "object" && subtype
-        ? Constants.TypeIconMap[type][subtype]
-        : Constants.TypeIconMap[type]
-
-    return result || "Text"
-  }
-
-  const getOptionIconTooltip = optionKey => {
-    const option = schema[optionKey]
-
-    const type = option?.type
-    const field = Object.values(FIELDS).find(f => f.type === type)
-
-    if (field) {
-      return field.name
-    } else if (type === "jsonarray") {
-      // `jsonarray` isn't present in the above FIELDS constant
-
-      return "JSON Array"
-    }
-
-    return ""
-  }
-
   const updateTooltip = debounce((e, option) => {
     if (option == null) {
       contextTooltipVisible = false
