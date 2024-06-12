@@ -49,7 +49,7 @@
     exportFormat = Array.isArray(options) ? options[0]?.key : []
   }
 
-  $: luceneFilter = QueryUtils.buildQuery(appliedFilters)
+  $: query = QueryUtils.buildQuery(appliedFilters)
   $: exportOpDisplay = buildExportOpDisplay(
     sorting,
     filterDisplay,
@@ -139,7 +139,7 @@
           tableId: view,
           format: exportFormat,
           search: {
-            query: luceneFilter,
+            query,
             sort: sorting?.sortColumn,
             sortOrder: sorting?.sortOrder,
             paginate: false,

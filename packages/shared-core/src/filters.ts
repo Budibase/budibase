@@ -451,7 +451,7 @@ export const runQuery = (docs: any[], query?: SearchFilters) => {
  * @param sortOrder the sort order ("ascending" or "descending")
  * @param sortType the type of sort ("string" or "number")
  */
-export const luceneSort = (
+export const sort = (
   docs: any[],
   sort: string,
   sortOrder: SortDirection,
@@ -481,7 +481,7 @@ export const luceneSort = (
  * @param docs the data
  * @param limit the number of docs to limit to
  */
-export const luceneLimit = (docs: any[], limit: string) => {
+export const limit = (docs: any[], limit: string) => {
   const numLimit = parseFloat(limit)
   if (isNaN(numLimit)) {
     return docs
