@@ -22,6 +22,7 @@
   export let schema
   export let name
   export let explanation
+  export let componentName
 
   $: explanationWithPresets = getExplanationWithPresets(
     explanation,
@@ -56,7 +57,7 @@
     {tableHref}
     {setExplanationSubject}
   />
-  <Support {support} {setExplanationSubject} />
+  <Support {componentName} {support} {setExplanationSubject} />
   {#if messages.includes(messageConstants.stringAsNumber)}
     <StringAsNumber {setExplanationSubject} />
   {/if}

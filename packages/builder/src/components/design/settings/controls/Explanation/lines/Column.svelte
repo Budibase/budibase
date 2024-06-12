@@ -6,6 +6,7 @@
     Text,
     Period,
   } from "../typography"
+  import { FieldType } from "@budibase/types"
   import { FIELDS } from "constants/backend"
   import subjects from "../subjects"
 
@@ -17,102 +18,91 @@
   const getTypeName = (schema) => {
     const fieldDefinition = Object.values(FIELDS).find(f => f.type === schema?.type)
 
+    if (schema?.type === "jsonarray") {
+      return "JSON Array"
+    }
+    if (schema?.type === "options") {
+      return "Options"
+    }
+
     return fieldDefinition?.name || schema?.type || "Unknown"
   };
 
   const getTypeIcon = (schema) => {
     const fieldDefinition = Object.values(FIELDS).find(f => f.type === schema?.type)
 
+    if (schema?.type === "jsonarray") {
+      return "BracketsSquare"
+    }
+
     return fieldDefinition?.icon || "Circle"
   };
 
-  $: columnType = getTypeName(schema)
+  $: columnTypeName = getTypeName(schema)
   $: columnIcon = getTypeIcon(schema)
 
   const getDocLink = columnType => {
-    if (columnType === "Number") {
+    console.log(columnType);
+    if (columnType === FieldType.NUMBER) {
       return "https://docs.budibase.com/docs/number"
     }
-    if (columnType === "Text") {
+    if (columnType === FieldType.STRING) {
       return "https://docs.budibase.com/docs/text"
     }
-    if (columnType === "Attachment") {
+    if (columnType === FieldType.ATTACHMENT_SINGLE) {
       return "https://docs.budibase.com/docs/attachments"
     }
-    if (columnType === "Multi attachment") {
+    if (columnType === FieldType.ATTACHMENTS) {
       // No distinct multi attachment docs, link to attachment instead
       return "https://docs.budibase.com/docs/attachments"
     }
-    if (columnType === "Multi select") {
+    if (columnType === FieldType.ARRAY) {
       return "https://docs.budibase.com/docs/multi-select"
     }
-    if (columnType === "JSON") {
+    if (columnType === FieldType.JSON) {
       return "https://docs.budibase.com/docs/json"
     }
-    if (columnType === "Date / time") {
+    if (columnType === "jsonarray") {
+      return "https://docs.budibase.com/docs/json"
+    }
+    if (columnType === FieldType.DATETIME) {
       return "https://docs.budibase.com/docs/datetime"
     }
-    if (columnType === "User") {
+    if (columnType === FieldType.BB_REFERENCE_SINGLE) {
       return "https://docs.budibase.com/docs/users-1"
     }
-    if (columnType === "Multi user") {
-      // No distinct multi user docs, link to user instead
+    if (columnType === FieldType.BB_REFERENCE) {
       return "https://docs.budibase.com/docs/users-1"
     }
-    if (columnType === "Barcode / QR") {
+    if (columnType === FieldType.BARCODEQR) {
       return "https://docs.budibase.com/docs/barcodeqr"
     }
-    if (columnType === "Relationship") {
+    if (columnType === FieldType.LINK) {
       return "https://docs.budibase.com/docs/relationships"
     }
-    if (columnType === "Formula") {
+    if (columnType === FieldType.FORMULA) {
       return "https://docs.budibase.com/docs/formula"
     }
-    if (columnType === "Single select") {
+    if (columnType === FieldType.OPTIONS) {
       return "https://docs.budibase.com/docs/options"
     }
-    if (columnType === "BigInt") {
-      // No BigInt docs
-      return null
-    }
-    if (columnType === "Boolean") {
+    if (columnType === FieldType.BOOLEAN) {
       return "https://docs.budibase.com/docs/boolean-truefalse"
     }
-    if (columnType === "Signature") {
+    if (columnType === FieldType.SIGNATURE_SINGLE) {
       // No Signature docs
+      return null
+    }
+    if (columnType === FieldType.BIGINT) {
+      // No BigInt docs
       return null
     }
 
     return null
   }
 
-  $: docLink = getDocLink(columnType)
+  $: docLink = getDocLink(schema?.type)
 
-  const getColumnTypeName = columnType => {
-    if (!columnType) {
-      return "Unknown"
-    }
-    if (columnType === "Date / time") {
-      return "Date/Time"
-    }
-    if (columnType === "Barcode / QR") {
-      return "Barcode/QR"
-    }
-    if (columnType === "Single select") {
-      return "Options"
-    }
-    if (columnType === "Multi select") {
-      return "Multi-select"
-    }
-    if (columnType === "Multi attachment") {
-      return "Multi-attachment"
-    }
-    if (columnType === "Multi user") {
-      return "Multi-user"
-    }
-
-    return columnType
-  }
 </script>
 
 <Line noWrap>
@@ -127,7 +117,7 @@
     disabled={docLink === null}
     href={docLink}
     icon={columnIcon}
-    text={`${getColumnTypeName(columnType)} column`}
+    text={`${columnTypeName} column`}
   />
   <Period />
 </Line>

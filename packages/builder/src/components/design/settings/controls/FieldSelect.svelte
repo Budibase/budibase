@@ -111,6 +111,7 @@
       schema={schema[currentOption]}
       name={currentOption}
       {explanation}
+      componentName={componentInstance._component}
     />
   </ContextTooltip>
 {/if}
