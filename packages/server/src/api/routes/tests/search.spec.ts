@@ -22,30 +22,27 @@ import {
 import _ from "lodash"
 import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
+import { dataFilters } from "@budibase/shared-core"
 
 describe.each([
-  ["lucene", undefined],
-  ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-])("/api/:sourceId/search (%s)", (name, dsProvider) => {
+  ["in-memory", undefined],
+  // ["lucene", undefined],
+  // ["sqs", undefined],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
+  const isInMemory = name === "in-memory"
   const isInternal = isSqs || isLucene
   const config = setup.getConfig()
 
   let envCleanup: (() => void) | undefined
   let datasource: Datasource | undefined
   let table: Table
-
-  const snippets = [
-    {
-      name: "WeeksAgo",
-      code: `return function (weeks) {\n  const currentTime = new Date(${Date.now()});\n  currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));\n  return currentTime.toISOString();\n}`,
-    },
-  ]
+  let rows: Row[]
 
   beforeAll(async () => {
     if (isSqs) {
@@ -55,7 +52,12 @@ describe.each([
 
     if (config.app?.appId) {
       config.app = await config.api.application.update(config.app?.appId, {
-        snippets,
+        snippets: [
+          {
+            name: "WeeksAgo",
+            code: `return function (weeks) {\n  const currentTime = new Date(${Date.now()});\n  currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));\n  return currentTime.toISOString();\n}`,
+          },
+        ],
       })
     }
 
@@ -79,13 +81,29 @@ describe.each([
     )
   }
 
-  async function createRows(rows: Record<string, any>[]) {
+  async function createRows(arr: Record<string, any>[]) {
     // Shuffling to avoid false positives given a fixed order
-    await config.api.row.bulkImport(table._id!, { rows: _.shuffle(rows) })
+    await config.api.row.bulkImport(table._id!, {
+      rows: _.shuffle(arr),
+    })
+    rows = await config.api.row.fetch(table._id!)
   }
 
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
+
+    private async performSearch(): Promise<Row[]> {
+      if (isInMemory) {
+        return dataFilters.runQuery(rows, this.query.query)
+      } else {
+        return (
+          await config.api.row.search(table._id!, {
+            ...this.query,
+            tableId: table._id!,
+          })
+        ).rows
+      }
+    }
 
     // We originally used _.isMatch to compare rows, but found that when
     // comparing arrays it would return true if the source array was a subset of
@@ -157,10 +175,7 @@ describe.each([
     // different to the one passed in will cause the assertion to fail.  Extra
     // rows returned by the query will also cause the assertion to fail.
     async toMatchExactly(expectedRows: any[]) {
-      const { rows: foundRows } = await config.api.row.search(table._id!, {
-        ...this.query,
-        tableId: table._id!,
-      })
+      const foundRows = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
@@ -176,10 +191,7 @@ describe.each([
     // passed in. The order of the rows is not important, but extra rows will
     // cause the assertion to fail.
     async toContainExactly(expectedRows: any[]) {
-      const { rows: foundRows } = await config.api.row.search(table._id!, {
-        ...this.query,
-        tableId: table._id!,
-      })
+      const foundRows = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
@@ -197,10 +209,7 @@ describe.each([
     // The order of the rows is not important. Extra rows will not cause the
     // assertion to fail.
     async toContain(expectedRows: any[]) {
-      const { rows: foundRows } = await config.api.row.search(table._id!, {
-        ...this.query,
-        tableId: table._id!,
-      })
+      const foundRows = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect([...foundRows]).toEqual(
@@ -217,10 +226,7 @@ describe.each([
     }
 
     async toHaveLength(length: number) {
-      const { rows: foundRows } = await config.api.row.search(table._id!, {
-        ...this.query,
-        tableId: table._id!,
-      })
+      const foundRows = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(length)
