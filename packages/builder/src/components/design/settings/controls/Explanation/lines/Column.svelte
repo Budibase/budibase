@@ -42,7 +42,6 @@
   $: columnIcon = getTypeIcon(schema)
 
   const getDocLink = columnType => {
-    console.log(columnType);
     if (columnType === FieldType.NUMBER) {
       return "https://docs.budibase.com/docs/number"
     }
