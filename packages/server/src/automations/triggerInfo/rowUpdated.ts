@@ -27,6 +27,11 @@ export const definition: AutomationTriggerSchema = {
     },
     outputs: {
       properties: {
+        oldRow: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.ROW,
+          description: "The row that was updated",
+        },
         row: {
           type: AutomationIOType.OBJECT,
           customType: AutomationCustomIOType.ROW,

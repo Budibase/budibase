@@ -196,7 +196,8 @@
         (automation.trigger?.event === "row:update" ||
           automation.trigger?.event === "row:save")
       ) {
-        if (name !== "id" && name !== "revision") return `trigger.row.${name}`
+        if (name !== "id" && name !== "revision" && name !== "oldRow")
+          return `trigger.row.${name}`
       }
       /* End special cases for generating custom schemas based on triggers */
 
