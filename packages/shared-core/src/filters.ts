@@ -264,7 +264,10 @@ export const buildQuery = (filter: SearchFilter[]) => {
  * @param docs the data
  * @param query the JSON query
  */
-export const runQuery = (docs: any[], query?: SearchFilters) => {
+export const runQuery = (
+  docs: Record<string, any>[],
+  query?: SearchFilters
+) => {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -272,50 +275,48 @@ export const runQuery = (docs: any[], query?: SearchFilters) => {
     return docs
   }
 
-  // Make query consistent first
   query = cleanupQuery(query)
 
-  // Iterates over a set of filters and evaluates a fail function against a doc
   const match =
     (
       type: SearchFilterOperator,
-      failFn: (docValue: any, testValue: any) => boolean
+      test: (docValue: any, testValue: any) => boolean
     ) =>
-    (doc: any) => {
-      const filters = Object.entries(query![type] || {})
-      for (let i = 0; i < filters.length; i++) {
-        const [key, testValue] = filters[i]
-        const docValue = deepGet(doc, removeKeyNumbering(key))
-        if (failFn(docValue, testValue)) {
+    (doc: Record<string, any>) => {
+      for (const [key, testValue] of Object.entries(query[type] || {})) {
+        if (!test(deepGet(doc, removeKeyNumbering(key)), testValue)) {
           return false
         }
       }
       return true
     }
 
-  // Process a string match (fails if the value does not start with the string)
   const stringMatch = match(
     SearchFilterOperator.STRING,
-    (docValue: string, testValue: string) => {
-      return (
-        !docValue ||
-        !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
-      )
+    (docValue: any, testValue: any) => {
+      if (!(typeof docValue === "string")) {
+        return false
+      }
+      if (!(typeof testValue === "string")) {
+        return false
+      }
+      return docValue.toLowerCase().startsWith(testValue.toLowerCase())
     }
   )
 
-  // Process a fuzzy match (treat the same as starts with when running locally)
   const fuzzyMatch = match(
     SearchFilterOperator.FUZZY,
-    (docValue: string, testValue: string) => {
-      return (
-        !docValue ||
-        !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
-      )
+    (docValue: any, testValue: any) => {
+      if (!(typeof docValue === "string")) {
+        return false
+      }
+      if (!(typeof testValue === "string")) {
+        return false
+      }
+      return docValue.toLowerCase().includes(testValue.toLowerCase())
     }
   )
 
-  // Process a range match
   const rangeMatch = match(
     SearchFilterOperator.RANGE,
     (
@@ -323,54 +324,47 @@ export const runQuery = (docs: any[], query?: SearchFilters) => {
       testValue: { low: number; high: number }
     ) => {
       if (docValue == null || docValue === "") {
-        return true
+        return false
       }
       if (!isNaN(+docValue)) {
-        return +docValue < testValue.low || +docValue > testValue.high
+        return +docValue >= testValue.low || +docValue <= testValue.high
       }
       if (dayjs(docValue).isValid()) {
         return (
-          new Date(docValue).getTime() < new Date(testValue.low).getTime() ||
-          new Date(docValue).getTime() > new Date(testValue.high).getTime()
+          new Date(docValue).getTime() >= new Date(testValue.low).getTime() ||
+          new Date(docValue).getTime() <= new Date(testValue.high).getTime()
         )
       }
       return false
     }
   )
 
-  // Process an equal match (fails if the value is different)
-  const equalMatch = match(
-    SearchFilterOperator.EQUAL,
-    (docValue: any, testValue: string | null) => {
-      return testValue != null && testValue !== "" && docValue !== testValue
-    }
-  )
+  const not =
+    <T extends any[]>(f: (...args: T) => boolean) =>
+    (...args: T): boolean =>
+      !f(...args)
 
-  // Process a not-equal match (fails if the value is the same)
-  const notEqualMatch = match(
-    SearchFilterOperator.NOT_EQUAL,
-    (docValue: any, testValue: string | null) => {
-      return testValue != null && testValue !== "" && docValue === testValue
-    }
-  )
+  const _equal = (docValue: any, testValue: any) => docValue === testValue
 
-  // Process an empty match (fails if the value is not empty)
-  const emptyMatch = match(
-    SearchFilterOperator.EMPTY,
-    (docValue: string | null) => {
-      return docValue != null && docValue !== ""
-    }
-  )
+  const equalMatch = match(SearchFilterOperator.EQUAL, _equal)
+  const notEqualMatch = match(SearchFilterOperator.NOT_EQUAL, not(_equal))
 
-  // Process a not-empty match (fails is the value is empty)
-  const notEmptyMatch = match(
-    SearchFilterOperator.NOT_EMPTY,
-    (docValue: string | null) => {
-      return docValue == null || docValue === ""
+  const _empty = (docValue: any) => {
+    if (typeof docValue === "string") {
+      return docValue === ""
     }
-  )
+    if (Array.isArray(docValue)) {
+      return docValue.length === 0
+    }
+    if (typeof docValue === "object") {
+      return Object.keys(docValue).length === 0
+    }
+    return docValue == null
+  }
 
-  // Process an includes match (fails if the value is not included)
+  const emptyMatch = match(SearchFilterOperator.EMPTY, _empty)
+  const notEmptyMatch = match(SearchFilterOperator.NOT_EMPTY, not(_empty))
+
   const oneOf = match(
     SearchFilterOperator.ONE_OF,
     (docValue: any, testValue: any) => {
@@ -380,61 +374,86 @@ export const runQuery = (docs: any[], query?: SearchFilters) => {
           testValue = testValue.map((item: string) => parseFloat(item))
         }
       }
-      return !testValue?.includes(docValue)
+
+      if (!Array.isArray(testValue)) {
+        return false
+      }
+
+      return testValue.includes(docValue)
     }
   )
 
   const containsAny = match(
     SearchFilterOperator.CONTAINS_ANY,
     (docValue: any, testValue: any) => {
-      return !docValue?.includes(...testValue)
-    }
-  )
-
-  const contains = match(
-    SearchFilterOperator.CONTAINS,
-    (docValue: string | any[], testValue: any[]) => {
-      return !testValue?.every((item: any) => docValue?.includes(item))
-    }
-  )
-
-  const notContains = match(
-    SearchFilterOperator.NOT_CONTAINS,
-    (docValue: string | any[], testValue: any[]) => {
-      return testValue?.every((item: any) => docValue?.includes(item))
-    }
-  )
-
-  const docMatch = (doc: any) => {
-    const filterFunctions: Record<SearchFilterOperator, (doc: any) => boolean> =
-      {
-        string: stringMatch,
-        fuzzy: fuzzyMatch,
-        range: rangeMatch,
-        equal: equalMatch,
-        notEqual: notEqualMatch,
-        empty: emptyMatch,
-        notEmpty: notEmptyMatch,
-        oneOf: oneOf,
-        contains: contains,
-        containsAny: containsAny,
-        notContains: notContains,
+      if (!Array.isArray(docValue)) {
+        return false
       }
 
-    const activeFilterKeys: SearchFilterOperator[] = Object.entries(query || {})
+      if (typeof testValue === "string") {
+        testValue = testValue.split(",")
+        if (typeof docValue[0] === "number") {
+          testValue = testValue.map((item: string) => parseFloat(item))
+        }
+      }
+
+      if (!Array.isArray(testValue)) {
+        return false
+      }
+
+      return testValue.some(item => docValue.includes(item))
+    }
+  )
+
+  const _contains = (docValue: any, testValue: any) => {
+    if (!Array.isArray(docValue)) {
+      return false
+    }
+
+    if (typeof testValue === "string") {
+      testValue = testValue.split(",")
+      if (typeof docValue[0] === "number") {
+        testValue = testValue.map((item: string) => parseFloat(item))
+      }
+    }
+
+    if (!Array.isArray(testValue)) {
+      return false
+    }
+
+    return testValue.every(item => docValue.includes(item))
+  }
+
+  const contains = match(SearchFilterOperator.CONTAINS, _contains)
+  const notContains = match(SearchFilterOperator.NOT_CONTAINS, not(_contains))
+
+  const docMatch = (doc: Record<string, any>) => {
+    const filterFunctions = {
+      string: stringMatch,
+      fuzzy: fuzzyMatch,
+      range: rangeMatch,
+      equal: equalMatch,
+      notEqual: notEqualMatch,
+      empty: emptyMatch,
+      notEmpty: notEmptyMatch,
+      oneOf: oneOf,
+      contains: contains,
+      containsAny: containsAny,
+      notContains: notContains,
+    }
+
+    const results = Object.entries(query || {})
       .filter(
-        ([key, value]: [string, any]) =>
+        ([key, value]) =>
           !["allOr", "onEmptyFilter"].includes(key) &&
           value &&
-          Object.keys(value as Record<string, any>).length > 0
+          Object.keys(value).length > 0
       )
-      .map(([key]) => key as any)
+      .map(([key]) => {
+        return filterFunctions[key as SearchFilterOperator]?.(doc) ?? false
+      })
 
-    const results: boolean[] = activeFilterKeys.map(filterKey => {
-      return filterFunctions[filterKey]?.(doc) ?? false
-    })
-
-    if (query!.allOr) {
+    if (query.allOr) {
       return results.some(result => result === true)
     } else {
       return results.every(result => result === true)
