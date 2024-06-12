@@ -35,11 +35,6 @@ export const definition: AutomationStepSchema = {
           customType: AutomationCustomIOType.ROW,
           title: "Table",
         },
-        oldRow: {
-          type: AutomationIOType.OBJECT,
-          customType: AutomationCustomIOType.ROW,
-          title: "Row",
-        },
         rowId: {
           type: AutomationIOType.STRING,
           title: "Row ID",
