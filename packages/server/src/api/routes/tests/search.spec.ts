@@ -1279,6 +1279,8 @@ describe.each([
           { numbers: ["three"] },
         ]))
 
+      // Not sure if this is correct behaviour but changing it would be a
+      // breaking change.
       it("finds all with empty list", () =>
         expectQuery({ notContains: { numbers: [] } }).toContainExactly([
           { numbers: ["one", "two"] },

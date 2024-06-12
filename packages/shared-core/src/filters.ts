@@ -425,10 +425,26 @@ export const runQuery = (
       return testValue[f](item => _valueMatches(docValue, item))
     }
 
-  const contains = match(SearchFilterOperator.CONTAINS, _contains("every"))
+  const contains = match(
+    SearchFilterOperator.CONTAINS,
+    (docValue: any, testValue: any) => {
+      if (Array.isArray(testValue) && testValue.length === 0) {
+        return true
+      }
+      return _contains("every")(docValue, testValue)
+    }
+  )
   const notContains = match(
     SearchFilterOperator.NOT_CONTAINS,
-    not(_contains("every"))
+    (docValue: any, testValue: any) => {
+      // Not sure if this is logically correct, but at the time this code was
+      // written the search endpoint behaved this way and we wanted to make this
+      // local search match its behaviour, so we had to do this.
+      if (Array.isArray(testValue) && testValue.length === 0) {
+        return true
+      }
+      return not(_contains("every"))(docValue, testValue)
+    }
   )
   const containsAny = match(
     SearchFilterOperator.CONTAINS_ANY,
