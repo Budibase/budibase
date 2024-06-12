@@ -25,8 +25,8 @@ export async function getAppMigrationVersion(appId: string): Promise<string> {
 
   let metadata: AppMigrationDoc | undefined = await cache.get(cacheKey)
 
-  // We don't want to cache in dev or QA in order to be able to tweak it
-  if (metadata && !env.isDev() && !env.isQA()) {
+  // returned cached version if we found one
+  if (metadata?.version) {
     return metadata.version
   }
 
