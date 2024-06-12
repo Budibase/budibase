@@ -13,7 +13,7 @@
   } from "@budibase/bbui"
   import { FieldType, SearchFilterOperator } from "@budibase/types"
   import { generate } from "shortid"
-  import { LuceneUtils, Constants } from "@budibase/frontend-core"
+  import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import FilterUsers from "./FilterUsers.svelte"
   import { getFields } from "../utils/searchFields"
@@ -112,7 +112,7 @@
       return []
     }
 
-    return LuceneUtils.getValidOperatorsForType(
+    return QueryUtils.getValidOperatorsForType(
       filter,
       filter.field || filter.name,
       datasource

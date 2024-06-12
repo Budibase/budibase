@@ -3,7 +3,7 @@
   import { getContext, onDestroy } from "svelte"
   import { ModalContent, Modal } from "@budibase/bbui"
   import FilterModal from "./FilterModal.svelte"
-  import { LuceneUtils } from "@budibase/frontend-core"
+  import { QueryUtils } from "@budibase/frontend-core"
   import Button from "../Button.svelte"
 
   export let dataProvider
@@ -36,7 +36,7 @@
   // Add query extension to data provider
   $: {
     if (filters?.length) {
-      const queryExtension = LuceneUtils.buildLuceneQuery(filters)
+      const queryExtension = QueryUtils.buildQuery(filters)
       addExtension?.($component.id, queryExtension)
     } else {
       removeExtension?.($component.id)
