@@ -4,10 +4,8 @@
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import { Explanation } from "./Explanation"
-  import { FIELDS } from "constants/backend"
   import { params } from "@roxi/routify"
   import { debounce } from "lodash"
-  import { Constants } from "@budibase/frontend-core"
 
   export let componentInstance = {}
   export let value = ""

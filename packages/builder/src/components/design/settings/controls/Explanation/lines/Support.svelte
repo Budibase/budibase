@@ -8,7 +8,7 @@
   export let support
   export let componentName
 
-  const getComponentDefinition = (componentName) => {
+  const getComponentDefinition = componentName => {
     const components = $componentStore.components || {}
     return components[componentName] || null
   }

@@ -1,10 +1,5 @@
 <script>
-  import {
-    Line,
-    InfoWord,
-    DocumentationLink,
-    Text
-  } from "../typography"
+  import { Line, InfoWord, DocumentationLink, Text } from "../typography"
   import { FieldType } from "@budibase/types"
   import { FIELDS } from "constants/backend"
   import subjects from "../subjects"
@@ -14,8 +9,10 @@
   export let tableHref
   export let setExplanationSubject
 
-  const getTypeName = (schema) => {
-    const fieldDefinition = Object.values(FIELDS).find(f => f.type === schema?.type)
+  const getTypeName = schema => {
+    const fieldDefinition = Object.values(FIELDS).find(
+      f => f.type === schema?.type
+    )
 
     if (schema?.type === "jsonarray") {
       return "JSON Array"
@@ -25,17 +22,19 @@
     }
 
     return fieldDefinition?.name || schema?.type || "Unknown"
-  };
+  }
 
-  const getTypeIcon = (schema) => {
-    const fieldDefinition = Object.values(FIELDS).find(f => f.type === schema?.type)
+  const getTypeIcon = schema => {
+    const fieldDefinition = Object.values(FIELDS).find(
+      f => f.type === schema?.type
+    )
 
     if (schema?.type === "jsonarray") {
       return "BracketsSquare"
     }
 
     return fieldDefinition?.icon || "Circle"
-  };
+  }
 
   const getDocLink = columnType => {
     if (columnType === FieldType.NUMBER) {
@@ -102,11 +101,11 @@
   // NOTE The correct indefinite article is based on the pronounciation of the word it precedes, not the spelling. So simply checking if the word begins with a vowel is not sufficient.
 
   // e.g., `an honor`, `a user`
-  const getIndefiniteArticle = (schema) => {
+  const getIndefiniteArticle = schema => {
     const anTypes = [
       FieldType.OPTIONS,
       null, // `null` gets parsed as "unknown"
-      undefined // `undefined` gets parsed as "unknown"
+      undefined, // `undefined` gets parsed as "unknown"
     ]
 
     if (anTypes.includes(schema?.type)) {
@@ -120,7 +119,6 @@
   $: columnIcon = getTypeIcon(schema)
   $: docLink = getDocLink(schema?.type)
   $: indefiniteArticle = getIndefiniteArticle(schema)
-
 </script>
 
 <Line noWrap>
@@ -137,5 +135,5 @@
     icon={columnIcon}
     text={columnTypeName}
   />
-  <Text value=" column."/>
+  <Text value=" column." />
 </Line>

@@ -51,12 +51,7 @@
 </script>
 
 <div bind:this={root} class="tooltipContents">
-  <Column
-    {name}
-    {schema}
-    {tableHref}
-    {setExplanationSubject}
-  />
+  <Column {name} {schema} {tableHref} {setExplanationSubject} />
   <Support {componentName} {support} {setExplanationSubject} />
   {#if messages.includes(messageConstants.stringAsNumber)}
     <StringAsNumber {setExplanationSubject} />

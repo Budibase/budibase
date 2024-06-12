@@ -6,8 +6,6 @@
   import { Explanation } from "./Explanation"
   import { debounce } from "lodash"
   import { params } from "@roxi/routify"
-  import { Constants } from "@budibase/frontend-core"
-  import { FIELDS } from "constants/backend"
 
   export let componentInstance = {}
   export let value = ""
