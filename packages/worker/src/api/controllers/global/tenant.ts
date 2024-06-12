@@ -14,6 +14,6 @@ export const get = async (ctx: Ctx) => {
   if (response) {
     ctx.body = response
   } else {
-    ctx.throw(400, "Tenant info not found.")
+    ctx.throw(404, "Tenant info not found.")
   }
 }
