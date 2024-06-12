@@ -4,7 +4,6 @@ import { auth } from "@budibase/backend-core"
 import Joi from "joi"
 import cloudRestricted from "../../../middleware/cloudRestricted"
 import { users } from "../validation"
-import * as selfController from "../../controllers/global/self"
 
 const router: Router = new Router()
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
