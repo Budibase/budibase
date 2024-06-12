@@ -8,3 +8,12 @@ export const save = async (ctx: Ctx<TenantInfo>) => {
     _rev: response.rev,
   }
 }
+
+export const get = async (ctx: Ctx) => {
+  const response = await tenancy.getTenantInfo(ctx.params.id)
+  if (response) {
+    ctx.body = response
+  } else {
+    ctx.throw(400, "Tenant info not found.")
+  }
+}
