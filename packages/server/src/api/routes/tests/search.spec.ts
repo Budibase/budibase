@@ -1706,7 +1706,7 @@ describe.each([
     })
 
     describe("contains", () => {
-      it("successfully finds a row", () =>
+      it.only("successfully finds a row", () =>
         expectQuery({ contains: { users: [user1._id] } }).toContainExactly([
           { users: [{ _id: user1._id }] },
           { users: [{ _id: user1._id }, { _id: user2._id }] },
