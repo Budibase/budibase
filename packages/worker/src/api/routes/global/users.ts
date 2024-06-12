@@ -4,7 +4,6 @@ import { auth } from "@budibase/backend-core"
 import Joi from "joi"
 import cloudRestricted from "../../../middleware/cloudRestricted"
 import { users } from "../validation"
-import * as selfController from "../../controllers/global/self"
 
 const router: Router = new Router()
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
@@ -140,12 +139,5 @@ router
   .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
   // global endpoint but needs to come at end (blocks other endpoints otherwise)
   .get("/api/global/users/:id", auth.builderOrAdmin, controller.find)
-  // DEPRECATED - use new versions with self API
-  .get("/api/global/users/self", selfController.getSelf)
-  .post(
-    "/api/global/users/self",
-    users.buildUserSaveValidation(),
-    selfController.updateSelf
-  )
 
 export default router
