@@ -5,8 +5,6 @@
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
-  let handlingOnClick = false
-
   export let disabled = false
   export let text = ""
   export let onClick
@@ -19,17 +17,9 @@
   // For internal use only for now - not defined in the manifest
   export let active = false
 
-  const handleOnClick = async () => {
-    handlingOnClick = true
-
-    if (onClick) {
-      await onClick()
-    }
-
-    handlingOnClick = false
-  }
-
   let node
+  let touched = false
+  let handlingOnClick = false
 
   $: $component.editing && node?.focus()
   $: componentText = getComponentText(text, $builderStore, $component)
@@ -42,7 +32,18 @@
   }
 
   const updateText = e => {
-    builderStore.actions.updateProp("text", e.target.textContent)
+    if (touched) {
+      builderStore.actions.updateProp("text", e.target.textContent)
+    }
+    touched = false
+  }
+
+  const handleOnClick = async () => {
+    handlingOnClick = true
+    if (onClick) {
+      await onClick()
+    }
+    handlingOnClick = false
   }
 </script>
 
@@ -57,6 +58,7 @@
     on:blur={$component.editing ? updateText : null}
     bind:this={node}
     class:active
+    on:input={() => (touched = true)}
   >
     {#if icon}
       <i class="{icon} {size}" />
