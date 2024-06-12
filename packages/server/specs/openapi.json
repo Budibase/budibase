@@ -860,8 +860,10 @@
                         "json",
                         "internal",
                         "barcodeqr",
+                        "signature_single",
                         "bigint",
-                        "bb_reference"
+                        "bb_reference",
+                        "bb_reference_single"
                       ],
                       "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                     },
@@ -1067,8 +1069,10 @@
                             "json",
                             "internal",
                             "barcodeqr",
+                            "signature_single",
                             "bigint",
-                            "bb_reference"
+                            "bb_reference",
+                            "bb_reference_single"
                           ],
                           "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                         },
@@ -1285,8 +1289,10 @@
                               "json",
                               "internal",
                               "barcodeqr",
+                              "signature_single",
                               "bigint",
-                              "bb_reference"
+                              "bb_reference",
+                              "bb_reference_single"
                             ],
                             "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                           },
