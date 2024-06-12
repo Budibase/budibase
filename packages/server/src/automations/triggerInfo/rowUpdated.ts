@@ -35,7 +35,7 @@ export const definition: AutomationTriggerSchema = {
         row: {
           type: AutomationIOType.OBJECT,
           customType: AutomationCustomIOType.ROW,
-          description: "The row that was updated",
+          description: "The row before it was updated",
         },
         id: {
           type: AutomationIOType.STRING,

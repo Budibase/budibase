@@ -39,9 +39,15 @@ export async function handleRequest<T extends Operation>(
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = utils.getTableId(ctx)
-  const oldRow = ctx.request.body
+
   const { _id, ...rowData } = ctx.request.body
   const table = await sdk.tables.getTable(tableId)
+
+  let oldRow = await outputProcessing(
+    table,
+    await utils.findRow(ctx, tableId, _id)
+  )
+
   const { row: dataToUpdate } = await inputProcessing(
     ctx.user?._id,
     cloneDeep(table),
