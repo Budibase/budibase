@@ -121,8 +121,6 @@ export async function startup(
   // app migrations and automations on other service
   if (automationsEnabled()) {
     queuePromises.push(automations.init())
-  }
-  if (apiEnabled()) {
     queuePromises.push(appMigrations.init())
   }
   queuePromises.push(initPro())
