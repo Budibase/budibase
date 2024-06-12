@@ -1111,7 +1111,7 @@ describe.each([
         const createdRow = await config.api.row.save(table._id!, {})
         const rowUsage = await getRowUsage()
         await config.api.row.bulkDelete(view.id, { rows: [createdRow] })
-        await assertRowUsage(rowUsage - 1)
+        await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
         await config.api.row.get(table._id!, createdRow._id!, {
           status: 404,
         })
@@ -1127,7 +1127,7 @@ describe.each([
 
         await config.api.row.bulkDelete(view.id, { rows: [rows[0], rows[2]] })
 
-        await assertRowUsage(rowUsage - 2)
+        await assertRowUsage(isInternal ? rowUsage - 2 : rowUsage)
 
         await config.api.row.get(table._id!, rows[0]._id!, {
           status: 404,
