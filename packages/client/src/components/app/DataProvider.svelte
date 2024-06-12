@@ -19,7 +19,7 @@
 
   // We need to manage our lucene query manually as we want to allow components
   // to extend it
-  $: defaultQuery = LuceneUtils.buildLuceneQuery(filter)
+  $: defaultQuery = LuceneUtils.buildQuery(filter)
   $: query = extendQuery(defaultQuery, queryExtensions)
   $: fetch = createFetch(dataSource)
   $: fetch.update({

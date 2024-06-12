@@ -343,7 +343,7 @@
   }
 
   function saveFilters(key) {
-    const filters = LuceneUtils.buildLuceneQuery(tempFilters)
+    const filters = LuceneUtils.buildQuery(tempFilters)
     const defKey = `${key}-def`
     onChange({ detail: filters }, key)
     // need to store the builder definition in the automation

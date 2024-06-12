@@ -4,9 +4,9 @@ import {
   FieldType,
   SearchFilter,
 } from "@budibase/types"
-import { buildLuceneQuery, runLuceneQuery } from "../filters"
+import { buildQuery, runQuery } from "../filters"
 
-describe("runLuceneQuery", () => {
+describe("runQuery", () => {
   const docs = [
     {
       order_id: 1,
@@ -70,14 +70,14 @@ describe("runLuceneQuery", () => {
   }
 
   it("should return input docs if no search query is provided", () => {
-    expect(runLuceneQuery(docs)).toBe(docs)
+    expect(runQuery(docs)).toBe(docs)
   })
 
   it("should return matching rows for equal filter", () => {
     const query = buildQuery({
       equal: { order_status: 4 },
     })
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([1, 2])
+    expect(runQuery(docs, query).map(row => row.order_id)).toEqual([1, 2])
   })
 
   it("should return matching row for notEqual filter", () => {
@@ -85,12 +85,12 @@ describe("runLuceneQuery", () => {
       notEqual: { order_status: 4 },
     })
 
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([3])
+    expect(runQuery(docs, query).map(row => row.order_id)).toEqual([3])
   })
 
   it("should return starts with matching rows for fuzzy and string filters", () => {
     expect(
-      runLuceneQuery(
+      runQuery(
         docs,
         buildQuery({
           fuzzy: { description: "sm" },
@@ -98,7 +98,7 @@ describe("runLuceneQuery", () => {
       ).map(row => row.description)
     ).toEqual(["Small box"])
     expect(
-      runLuceneQuery(
+      runQuery(
         docs,
         buildQuery({
           string: { description: "SM" },
@@ -117,7 +117,7 @@ describe("runLuceneQuery", () => {
       },
     })
 
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([3])
+    expect(runQuery(docs, query).map(row => row.order_id)).toEqual([3])
   })
 
   it("should return rows with numeric strings within a range filter", () => {
@@ -129,7 +129,7 @@ describe("runLuceneQuery", () => {
         },
       },
     })
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([3])
+    expect(runQuery(docs, query).map(row => row.order_id)).toEqual([3])
   })
 
   it("should return rows with ISO date strings within a range filter", () => {
@@ -142,7 +142,7 @@ describe("runLuceneQuery", () => {
       },
     })
 
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2])
+    expect(runQuery(docs, query).map(row => row.order_id)).toEqual([2])
   })
 
   it("should return return all docs if an invalid doc value is passed into a range filter", async () => {
@@ -170,7 +170,7 @@ describe("runLuceneQuery", () => {
       },
     })
 
-    expect(runLuceneQuery(docs, query)).toEqual(docs)
+    expect(runQuery(docs, query)).toEqual(docs)
   })
 
   it("should return rows with matches on empty filter", () => {
@@ -180,7 +180,7 @@ describe("runLuceneQuery", () => {
       },
     })
 
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([1])
+    expect(runQuery(docs, query).map(row => row.order_id)).toEqual([1])
   })
 
   it("should return rows with matches on notEmpty filter", () => {
@@ -190,7 +190,7 @@ describe("runLuceneQuery", () => {
       },
     })
 
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2, 3])
+    expect(runQuery(docs, query).map(row => row.order_id)).toEqual([2, 3])
   })
 
   it.each([[523, 259], "523,259"])(
@@ -202,7 +202,7 @@ describe("runLuceneQuery", () => {
         },
       })
 
-      expect(runLuceneQuery(docs, query).map(row => row.customer_id)).toEqual([
+      expect(runQuery(docs, query).map(row => row.customer_id)).toEqual([
         259, 523,
       ])
     }
@@ -218,7 +218,7 @@ describe("runLuceneQuery", () => {
       contains: { description: ["box"] },
     })
 
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual(
+    expect(runQuery(docs, query).map(row => row.order_id)).toEqual(
       expectedResult
     )
   })
@@ -230,7 +230,7 @@ describe("runLuceneQuery", () => {
       oneOf: { label: ["FRAGILE"] },
     })
 
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([1, 2])
+    expect(runQuery(docs, query).map(row => row.order_id)).toEqual([1, 2])
   })
 
   it("should handle when a value is null or undefined", () => {
@@ -240,14 +240,14 @@ describe("runLuceneQuery", () => {
       oneOf: { label: ["FRAGILE"] },
     })
 
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2])
+    expect(runQuery(docs, query).map(row => row.order_id)).toEqual([2])
   })
 })
 
-describe("buildLuceneQuery", () => {
+describe("buildQuery", () => {
   it("should return a basic search query template if the input is not an array", () => {
     const filter: any = "NOT_AN_ARRAY"
-    expect(buildLuceneQuery(filter)).toEqual({
+    expect(buildQuery(filter)).toEqual({
       string: {},
       fuzzy: {},
       range: {},
@@ -277,7 +277,7 @@ describe("buildLuceneQuery", () => {
         value: "1000,1212,3400",
       },
     ]
-    expect(buildLuceneQuery(filter)).toEqual({
+    expect(buildQuery(filter)).toEqual({
       string: {},
       fuzzy: {},
       range: {},
@@ -311,7 +311,7 @@ describe("buildLuceneQuery", () => {
         value: "{{ list_of_customer_ids }}",
       },
     ]
-    expect(buildLuceneQuery(filter)).toEqual({
+    expect(buildQuery(filter)).toEqual({
       string: {},
       fuzzy: {},
       range: {},
@@ -351,7 +351,7 @@ describe("buildLuceneQuery", () => {
         value: "true",
       },
     ]
-    expect(buildLuceneQuery(filter)).toEqual({
+    expect(buildQuery(filter)).toEqual({
       string: {},
       fuzzy: {},
       range: {},
@@ -392,7 +392,7 @@ describe("buildLuceneQuery", () => {
         value: "Large box,Heavy box,Small box",
       },
     ]
-    expect(buildLuceneQuery(filter)).toEqual({
+    expect(buildQuery(filter)).toEqual({
       string: {},
       fuzzy: {},
       range: {},

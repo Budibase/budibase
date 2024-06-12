@@ -49,7 +49,7 @@
     exportFormat = Array.isArray(options) ? options[0]?.key : []
   }
 
-  $: luceneFilter = LuceneUtils.buildLuceneQuery(appliedFilters)
+  $: luceneFilter = LuceneUtils.buildQuery(appliedFilters)
   $: exportOpDisplay = buildExportOpDisplay(
     sorting,
     filterDisplay,

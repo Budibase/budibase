@@ -3,8 +3,7 @@ import { cloneDeep } from "lodash/fp"
 import { LuceneUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
 
-const { buildLuceneQuery, luceneLimit, runLuceneQuery, luceneSort } =
-  LuceneUtils
+const { buildQuery, luceneLimit, runQuery, luceneSort } = LuceneUtils
 
 /**
  * Parent class which handles the implementation of fetching data from an
@@ -180,7 +179,7 @@ export default class DataFetch {
     // Build the lucene query
     let query = this.options.query
     if (!query) {
-      query = buildLuceneQuery(filter)
+      query = buildQuery(filter)
     }
 
     // Update store
@@ -229,7 +228,7 @@ export default class DataFetch {
 
     // If we don't support searching, do a client search
     if (!this.features.supportsSearch && clientSideSearching) {
-      rows = runLuceneQuery(rows, query)
+      rows = runQuery(rows, query)
     }
 
     // If we don't support sorting, do a client-side sort
