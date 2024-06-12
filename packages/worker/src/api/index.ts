@@ -76,6 +76,10 @@ const PUBLIC_ENDPOINTS = [
     route: "/api/global/users/invite",
     method: "GET",
   },
+  {
+    route: "/api/global/tenant",
+    method: "POST",
+  },
 ]
 
 const NO_TENANCY_ENDPOINTS = [
@@ -120,6 +124,10 @@ const NO_TENANCY_ENDPOINTS = [
   {
     route: "/api/global/users/invite/:code",
     method: "GET",
+  },
+  {
+    route: "/api/global/tenant",
+    method: "POST",
   },
 ]
 

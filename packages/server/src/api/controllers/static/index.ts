@@ -31,7 +31,7 @@ import {
 } from "@budibase/types"
 import {
   getAppMigrationVersion,
-  getLatestMigrationId,
+  getLatestEnabledMigrationId,
 } from "../../../appMigrations"
 
 import send from "koa-send"
@@ -133,7 +133,7 @@ const requiresMigration = async (ctx: Ctx) => {
     ctx.throw("AppId could not be found")
   }
 
-  const latestMigration = getLatestMigrationId()
+  const latestMigration = getLatestEnabledMigrationId()
   if (!latestMigration) {
     return false
   }

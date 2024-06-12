@@ -148,7 +148,6 @@ export async function sendAutomationAttachmentsToStorage(
 
   return row
 }
-
 async function generateAttachmentRow(attachment: AutomationAttachment) {
   const prodAppId = context.getProdAppId()
 

@@ -38,7 +38,7 @@ describe.each([
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-])("/rows (%s)", (__, dsProvider) => {
+])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const config = setup.getConfig()
 
@@ -693,6 +693,49 @@ describe.each([
       })
       expect(resp.relationship.length).toBe(1)
     })
+
+    !isInternal &&
+      // TODO: SQL is having issues creating composite keys
+      providerType !== DatabaseName.SQL_SERVER &&
+      it("should support updating fields that are part of a composite key", async () => {
+        const tableRequest = saveTableRequest({
+          primary: ["number", "string"],
+          schema: {
+            string: {
+              type: FieldType.STRING,
+              name: "string",
+            },
+            number: {
+              type: FieldType.NUMBER,
+              name: "number",
+            },
+          },
+        })
+
+        delete tableRequest.schema.id
+
+        const table = await config.api.table.save(tableRequest)
+
+        const stringValue = generator.word()
+        const naturalValue = generator.integer({ min: 0, max: 1000 })
+
+        const existing = await config.api.row.save(table._id!, {
+          string: stringValue,
+          number: naturalValue,
+        })
+
+        expect(existing._id).toEqual(`%5B${naturalValue}%2C'${stringValue}'%5D`)
+
+        const row = await config.api.row.patch(table._id!, {
+          _id: existing._id!,
+          _rev: existing._rev!,
+          tableId: table._id!,
+          string: stringValue,
+          number: 1500,
+        })
+
+        expect(row._id).toEqual(`%5B${"1500"}%2C'${stringValue}'%5D`)
+      })
   })
 
   describe("destroy", () => {
@@ -713,13 +756,16 @@ describe.each([
 
     it("should be able to bulk delete rows, including a row that doesn't exist", async () => {
       const createdRow = await config.api.row.save(table._id!, {})
+      const createdRow2 = await config.api.row.save(table._id!, {})
 
       const res = await config.api.row.bulkDelete(table._id!, {
-        rows: [createdRow, { _id: "9999999" }],
+        rows: [createdRow, createdRow2, { _id: "9999999" }],
       })
 
-      expect(res[0]._id).toEqual(createdRow._id)
-      expect(res.length).toEqual(1)
+      expect(res.map(r => r._id)).toEqual(
+        expect.arrayContaining([createdRow._id, createdRow2._id])
+      )
+      expect(res.length).toEqual(2)
     })
   })
 
@@ -1637,3 +1683,5 @@ describe.each([
     })
   })
 })
+
+// todo: remove me

@@ -1,4 +1,4 @@
-import { Duration, cache, context, db, env } from "@budibase/backend-core"
+import { Duration, cache, db, env } from "@budibase/backend-core"
 import { Database, DocumentType, Document } from "@budibase/types"
 
 export interface AppMigrationDoc extends Document {
@@ -25,15 +25,15 @@ export async function getAppMigrationVersion(appId: string): Promise<string> {
 
   let metadata: AppMigrationDoc | undefined = await cache.get(cacheKey)
 
-  // We don't want to cache in dev, in order to be able to tweak it
-  if (metadata && !env.isDev()) {
+  // We don't want to cache in dev or QA in order to be able to tweak it
+  if (metadata && !env.isDev() && !env.isQA()) {
     return metadata.version
   }
 
   let version
   try {
     metadata = await getFromDB(appId)
-    version = metadata.version
+    version = metadata.version || ""
   } catch (err: any) {
     if (err.status !== 404) {
       throw err
@@ -42,7 +42,10 @@ export async function getAppMigrationVersion(appId: string): Promise<string> {
     version = ""
   }
 
-  await cache.store(cacheKey, version, EXPIRY_SECONDS)
+  // only cache if we have a valid version
+  if (version) {
+    await cache.store(cacheKey, version, EXPIRY_SECONDS)
+  }
 
   return version
 }
@@ -54,8 +57,7 @@ export async function updateAppMigrationMetadata({
   appId: string
   version: string
 }): Promise<void> {
-  const db = context.getAppDB()
-
+  const appDb = db.getDB(appId)
   let appMigrationDoc: AppMigrationDoc
 
   try {
@@ -70,7 +72,7 @@ export async function updateAppMigrationMetadata({
       version: "",
       history: {},
     }
-    await db.put(appMigrationDoc)
+    await appDb.put(appMigrationDoc)
     appMigrationDoc = await getFromDB(appId)
   }
 
@@ -82,7 +84,7 @@ export async function updateAppMigrationMetadata({
       [version]: { runAt: new Date().toISOString() },
     },
   }
-  await db.put(updatedMigrationDoc)
+  await appDb.put(updatedMigrationDoc)
 
   const cacheKey = getCacheKey(appId)
 

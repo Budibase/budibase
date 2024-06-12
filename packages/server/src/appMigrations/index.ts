@@ -1,4 +1,4 @@
-import queue from "./queue"
+import { getAppMigrationQueue } from "./queue"
 import { Next } from "koa"
 import { getAppMigrationVersion } from "./appMigrationMetadata"
 import { MIGRATIONS } from "./migrations"
@@ -10,32 +10,55 @@ export * from "./appMigrationMetadata"
 export type AppMigration = {
   id: string
   func: () => Promise<void>
+  // disabled so that by default all migrations listed are enabled
+  disabled?: boolean
 }
 
-export const getLatestMigrationId = () =>
-  MIGRATIONS.map(m => m.id)
-    .sort()
-    .reverse()[0]
+export function getLatestEnabledMigrationId(migrations?: AppMigration[]) {
+  let latestMigrationId: string | undefined
+  if (!migrations) {
+    migrations = MIGRATIONS
+  }
+  for (let migration of migrations) {
+    // if a migration is disabled, all migrations after it are disabled
+    if (migration.disabled) {
+      break
+    }
+    latestMigrationId = migration.id
+  }
+  return latestMigrationId
+}
 
-const getTimestamp = (versionId: string) => versionId?.split("_")[0] || ""
+function getTimestamp(versionId: string) {
+  return versionId?.split("_")[0] || ""
+}
 
 export async function checkMissingMigrations(
   ctx: UserCtx,
   next: Next,
   appId: string
 ) {
-  const currentVersion = await getAppMigrationVersion(appId)
-  const latestMigration = getLatestMigrationId()
+  const latestMigration = getLatestEnabledMigrationId()
 
-  if (getTimestamp(currentVersion) < getTimestamp(latestMigration)) {
+  // no migrations set - edge case, don't try to do anything
+  if (!latestMigration) {
+    return next()
+  }
+
+  const currentVersion = await getAppMigrationVersion(appId)
+  const queue = getAppMigrationQueue()
+
+  if (
+    queue &&
+    latestMigration &&
+    getTimestamp(currentVersion) < getTimestamp(latestMigration)
+  ) {
     await queue.add(
       {
         appId,
       },
       {
         jobId: `${appId}_${latestMigration}`,
-        removeOnComplete: true,
-        removeOnFail: true,
       }
     )
 

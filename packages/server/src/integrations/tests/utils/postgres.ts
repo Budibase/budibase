@@ -21,6 +21,9 @@ export async function getDatasource(): Promise<Datasource> {
   }
 
   const port = (await ports).find(x => x.container === 5432)?.host
+  if (!port) {
+    throw new Error("Postgres port not found")
+  }
 
   const datasource: Datasource = {
     type: "datasource_plus",
