@@ -334,7 +334,7 @@
     // Add in defaults and initial definition
     const definition = fieldDefinitions[type?.toUpperCase()]
     if (definition?.constraints) {
-      editableColumn.constraints = definition.constraints
+      editableColumn.constraints = cloneDeep(definition.constraints)
     }
 
     editableColumn.type = definition.type

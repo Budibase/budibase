@@ -26,6 +26,10 @@
   // Register field with form
   const formApi = formContext?.formApi
   const labelPos = fieldGroupContext?.labelPosition || "above"
+
+  let touched = false
+  let labelNode
+
   $: formStep = formStepContext ? $formStepContext || 1 : 1
   $: formField = formApi?.registerField(
     field,
@@ -36,14 +40,12 @@
     validation,
     formStep
   )
-
   $: schemaType =
     fieldSchema?.type !== "formula" && fieldSchema?.type !== "bigint"
       ? fieldSchema?.type
       : "string"
 
   // Focus label when editing
-  let labelNode
   $: $component.editing && labelNode?.focus()
 
   // Update form properties in parent component on every store change
@@ -57,7 +59,10 @@
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
 
   const updateLabel = e => {
-    builderStore.actions.updateProp("label", e.target.textContent)
+    if (touched) {
+      builderStore.actions.updateProp("label", e.target.textContent)
+    }
+    touched = false
   }
 
   onDestroy(() => {
@@ -79,6 +84,7 @@
       bind:this={labelNode}
       contenteditable={$component.editing}
       on:blur={$component.editing ? updateLabel : null}
+      on:input={() => (touched = true)}
       class:hidden={!label}
       class:readonly
       for={fieldState?.fieldId}
