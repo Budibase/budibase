@@ -5,6 +5,7 @@
     componentStore,
     selectedComponent,
   } from "stores/builder"
+  import { goto, params } from "@roxi/routify"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
@@ -55,6 +56,28 @@
   $: id = $selectedComponent?._id
   $: id, (section = tabs[0])
   $: componentName = getComponentName(componentInstance)
+
+  let nameField = null
+
+  const getShouldFocusNameField = params => {
+    const focus = !!params?.["?focusNameField"]
+
+    if (focus) {
+      $goto(`../${params.componentId}`)
+    }
+
+    return focus
+  }
+
+  // The call to `.focus()` is necessary to handle the cases where the user is already editing the component they wish to rename, in which case changes to the `autofocus` attribute have no effect as the input is already rendered.
+  // The use of the `autofocus` attribute below is necessary for the case where the user is not already editing the component they wish to rename, in which case the `.focus()` call have no effect as it happens before the input is even rendered seemingly.
+  const focusNameField = (shouldFocusNameField, nameField) => {
+    if (!shouldFocusNameField || !nameField) return
+    nameField.focus()
+  }
+
+  $: shouldFocusNameField = getShouldFocusNameField($params)
+  $: focusNameField(shouldFocusNameField, nameField)
 </script>
 
 {#if $selectedComponent}
@@ -67,10 +90,14 @@
       wide
     >
       <span class="panel-title-content" slot="panel-title-content">
+        <!-- I understand the possible usability concerns of using autofocus, but this is triggered directly by user action so it seems acceptable -->
+        <!-- svelte-ignore a11y-autofocus -->
         <input
+          autofocus={shouldFocusNameField}
+          bind:this={nameField}
           class="input"
           value={title}
-          {title}
+          title={componentName}
           placeholder={componentName}
           on:keypress={e => {
             if (e.key.toLowerCase() === "enter") {
@@ -158,7 +185,32 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    position: relative;
+    padding: 5px;
+    right: 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    transition: 150ms background-color, 150ms border-color, 150ms color;
   }
+
+  .input:hover,
+  .input:focus {
+    cursor: text;
+    background-color: var(
+      --spectrum-textfield-m-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    border: 1px solid white;
+    border-color: var(
+      --spectrum-textfield-m-border-color,
+      var(--spectrum-alias-border-color)
+    );
+    color: var(
+      --spectrum-textfield-m-text-color,
+      var(--spectrum-alias-text-color)
+    );
+  }
+
   .panel-title-content {
     display: contents;
   }

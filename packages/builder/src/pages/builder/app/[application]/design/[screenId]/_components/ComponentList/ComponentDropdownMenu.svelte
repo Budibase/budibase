@@ -86,6 +86,13 @@
   >
     Paste
   </MenuItem>
+  <MenuItem
+    icon="Rename"
+    keyBind="Ctrl+G"
+    on:click={() => keyboardEvent("g", true)}
+  >
+    Rename
+  </MenuItem>
 
   {#if component?._children?.length}
     <MenuItem
