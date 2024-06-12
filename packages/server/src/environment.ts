@@ -48,6 +48,7 @@ const environment = {
   MINIO_URL: process.env.MINIO_URL,
   WORKER_URL: process.env.WORKER_URL,
   AWS_REGION: process.env.AWS_REGION,
+  AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   REDIS_URL: process.env.REDIS_URL,
