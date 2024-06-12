@@ -116,7 +116,9 @@
       {#each displayColumns as column}
         <div class="column">
           <Icon size="S" name={getColumnIcon(column)} />
-          {column.label}
+          <div class="column-label" title={column.label}>
+            {column.label}
+          </div>
         </div>
         <ToggleActionButtonGroup
           on:click={e => toggleColumn(column, e.detail)}
@@ -139,7 +141,8 @@
     display: grid;
     align-items: center;
     grid-template-columns: 1fr auto;
-    gap: 8px;
+    grid-row-gap: 8px;
+    grid-column-gap: 24px;
   }
   .columns :global(.spectrum-Switch) {
     margin-right: 0;
@@ -147,5 +150,12 @@
   .column {
     display: flex;
     gap: 8px;
+  }
+  .column-label {
+    min-width: 80px;
+    max-width: 200px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
   }
 </style>
