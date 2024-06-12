@@ -36,7 +36,7 @@
   // Add query extension to data provider
   $: {
     if (filters?.length) {
-      const queryExtension = LuceneUtils.buildLuceneQuery(filters)
+      const queryExtension = LuceneUtils.buildQuery(filters)
       addExtension?.($component.id, queryExtension)
     } else {
       removeExtension?.($component.id)

@@ -138,10 +138,10 @@ export const removeKeyNumbering = (key: string): string => {
 }
 
 /**
- * Builds a lucene JSON query from the filter structure generated in the builder
+ * Builds a JSON query from the filter structure generated in the builder
  * @param filter the builder filter structure
  */
-export const buildLuceneQuery = (filter: SearchFilter[]) => {
+export const buildQuery = (filter: SearchFilter[]) => {
   let query: SearchFilters = {
     string: {},
     fuzzy: {},
@@ -260,11 +260,11 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
 }
 
 /**
- * Performs a client-side lucene search on an array of data
+ * Performs a client-side search on an array of data
  * @param docs the data
- * @param query the JSON lucene query
+ * @param query the JSON query
  */
-export const runLuceneQuery = (docs: any[], query?: SearchFilters) => {
+export const runQuery = (docs: any[], query?: SearchFilters) => {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
