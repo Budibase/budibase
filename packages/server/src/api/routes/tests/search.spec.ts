@@ -94,7 +94,18 @@ describe.each([
 
     private async performSearch(): Promise<Row[]> {
       if (isInMemory) {
-        return dataFilters.runQuery(rows, this.query.query)
+        let result = dataFilters.runQuery(rows, this.query.query)
+        if (this.query.sort) {
+          result = dataFilters.sort(
+            result,
+            this.query.sort,
+            this.query.sortOrder || SortOrder.ASCENDING
+          )
+        }
+        if (this.query.limit) {
+          result = dataFilters.limit(result, this.query.limit.toString())
+        }
+        return result
       } else {
         return (
           await config.api.row.search(table._id!, {

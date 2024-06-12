@@ -7,9 +7,9 @@ import {
   SearchFilters,
   SearchQueryFields,
   SearchFilterOperator,
-  SortDirection,
   SortType,
   FieldConstraints,
+  SortOrder,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -454,7 +454,7 @@ export const runQuery = (docs: any[], query?: SearchFilters) => {
 export const sort = (
   docs: any[],
   sort: string,
-  sortOrder: SortDirection,
+  sortOrder: SortOrder,
   sortType = SortType.STRING
 ) => {
   if (!sort || !sortOrder || !sortType) {
