@@ -129,6 +129,10 @@ const NO_TENANCY_ENDPOINTS = [
     route: "/api/global/tenant",
     method: "POST",
   },
+  {
+    route: "/api/global/tenant/:id",
+    method: "GET",
+  },
 ]
 
 // most public endpoints are gets, but some are posts
