@@ -38,14 +38,14 @@
     return fieldDefinition?.icon || "Circle"
   };
 
-  $: columnTypeName = getTypeName(schema)
-  $: columnIcon = getTypeIcon(schema)
-
   const getDocLink = columnType => {
     if (columnType === FieldType.NUMBER) {
       return "https://docs.budibase.com/docs/number"
     }
     if (columnType === FieldType.STRING) {
+      return "https://docs.budibase.com/docs/text"
+    }
+    if (columnType === FieldType.LONGFORM) {
       return "https://docs.budibase.com/docs/text"
     }
     if (columnType === FieldType.ATTACHMENT_SINGLE) {
@@ -100,7 +100,27 @@
     return null
   }
 
+  // NOTE The correct indefinite article is based on the pronounciation of the word it precedes, not the spelling. So simply checking if the word begins with a vowel is not sufficient.
+
+  // e.g., `an honor`, `a user`
+  const getIndefiniteArticle = (schema) => {
+    const anTypes = [
+      FieldType.OPTIONS,
+      null, // `null` gets parsed as "unknown"
+      undefined // `undefined` gets parsed as "unknown"
+    ]
+
+    if (anTypes.includes(schema?.type)) {
+      return "an"
+    }
+
+    return "a"
+  }
+
+  $: columnTypeName = getTypeName(schema)
+  $: columnIcon = getTypeIcon(schema)
   $: docLink = getDocLink(schema?.type)
+  $: indefiniteArticle = getIndefiniteArticle(schema)
 
 </script>
 
@@ -111,12 +131,12 @@
     href={tableHref}
     text={name}
   />
-  <Text value=" is a " />
+  <Text value={` is ${indefiniteArticle} `} />
   <DocumentationLink
     disabled={docLink === null}
     href={docLink}
     icon={columnIcon}
-    text={`${columnTypeName} column`}
+    text={columnTypeName}
   />
-  <Period />
+  <Text value=" column."/>
 </Line>
