@@ -24,6 +24,7 @@ const environment = {
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
+  AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
