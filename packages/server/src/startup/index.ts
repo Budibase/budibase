@@ -20,7 +20,7 @@ import * as pro from "@budibase/pro"
 import * as api from "../api"
 import sdk from "../sdk"
 import { initialise as initialiseWebsockets } from "../websockets"
-import { apiEnabled, automationsEnabled, printFeatures } from "../features"
+import { automationsEnabled, printFeatures } from "../features"
 import * as jsRunner from "../jsRunner"
 import Koa from "koa"
 import { Server } from "http"
@@ -121,8 +121,6 @@ export async function startup(
   // app migrations and automations on other service
   if (automationsEnabled()) {
     queuePromises.push(automations.init())
-  }
-  if (apiEnabled()) {
     queuePromises.push(appMigrations.init())
   }
   queuePromises.push(initPro())
