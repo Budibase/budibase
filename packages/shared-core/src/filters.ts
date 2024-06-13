@@ -325,17 +325,28 @@ export const runQuery = (
         return false
       }
 
+      if (_.isObject(testValue.low) && _.isEmpty(testValue.low)) {
+        testValue.low = undefined
+      }
+
+      if (_.isObject(testValue.high) && _.isEmpty(testValue.high)) {
+        testValue.high = undefined
+      }
+
       if (testValue.low == null && testValue.high == null) {
         return false
       }
 
-      if (!isNaN(+docValue)) {
-        if (!isNaN(+testValue.low) && !isNaN(+testValue.high)) {
-          return +docValue >= testValue.low && +docValue <= testValue.high
-        } else if (!isNaN(+testValue.low)) {
-          return +docValue >= testValue.low
-        } else if (!isNaN(+testValue.high)) {
-          return +docValue <= testValue.high
+      const docNum = +docValue
+      if (!isNaN(docNum)) {
+        const lowNum = +testValue.low
+        const highNum = +testValue.high
+        if (!isNaN(lowNum) && !isNaN(highNum)) {
+          return docNum >= lowNum && docNum <= highNum
+        } else if (!isNaN(lowNum)) {
+          return docNum >= lowNum
+        } else if (!isNaN(highNum)) {
+          return docNum <= highNum
         }
       }
 
