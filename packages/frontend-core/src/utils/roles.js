@@ -1,4 +1,4 @@
-import { Roles } from "../constants"
+import { Roles } from "@budibase/shared-core"
 
 const RolePriorities = {
   [Roles.ADMIN]: 5,
