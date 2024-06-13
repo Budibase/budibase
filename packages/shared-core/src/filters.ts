@@ -285,7 +285,10 @@ export const runQuery = (
     ) =>
     (doc: Record<string, any>) => {
       for (const [key, testValue] of Object.entries(query[type] || {})) {
-        if (!test(deepGet(doc, removeKeyNumbering(key)), testValue)) {
+        const result = test(deepGet(doc, removeKeyNumbering(key)), testValue)
+        if (query.allOr && result) {
+          return true
+        } else if (!query.allOr && !result) {
           return false
         }
       }
