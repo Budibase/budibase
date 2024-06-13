@@ -320,21 +320,33 @@ export const runQuery = (
 
   const rangeMatch = match(
     SearchFilterOperator.RANGE,
-    (
-      docValue: string | number | null,
-      testValue: { low: number; high: number }
-    ) => {
+    (docValue: any, testValue: any) => {
       if (docValue == null || docValue === "") {
         return false
       }
+      if (testValue.low == null && testValue.high == null) {
+        return false
+      }
       if (!isNaN(+docValue)) {
-        return +docValue >= testValue.low || +docValue <= testValue.high
+        if (!isNaN(+testValue.low) && !isNaN(+testValue.high)) {
+          return +docValue >= testValue.low && +docValue <= testValue.high
+        } else if (!isNaN(+testValue.low)) {
+          return +docValue >= testValue.low
+        } else if (!isNaN(+testValue.high)) {
+          return +docValue <= testValue.high
+        }
       }
       if (dayjs(docValue).isValid()) {
-        return (
-          new Date(docValue).getTime() >= new Date(testValue.low).getTime() ||
-          new Date(docValue).getTime() <= new Date(testValue.high).getTime()
-        )
+        if (dayjs(testValue.low).isValid() && dayjs(testValue.high).isValid()) {
+          return (
+            dayjs(docValue).isAfter(testValue.low) &&
+            dayjs(docValue).isBefore(testValue.high)
+          )
+        } else if (dayjs(testValue.low).isValid()) {
+          return dayjs(docValue).isAfter(testValue.low)
+        } else if (dayjs(testValue.high).isValid()) {
+          return dayjs(docValue).isBefore(testValue.high)
+        }
       }
       return false
     }
@@ -420,6 +432,10 @@ export const runQuery = (
 
       if (!Array.isArray(testValue)) {
         return false
+      }
+
+      if (testValue.length === 0) {
+        return true
       }
 
       return testValue[f](item => _valueMatches(docValue, item))
