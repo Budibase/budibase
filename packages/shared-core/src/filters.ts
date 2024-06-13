@@ -381,7 +381,11 @@ export const runQuery = (
       return false
     }
 
-    if (typeof docValue === "object" && typeof testValue === "string") {
+    if (
+      docValue &&
+      typeof docValue === "object" &&
+      typeof testValue === "string"
+    ) {
       return docValue._id === testValue
     }
 
