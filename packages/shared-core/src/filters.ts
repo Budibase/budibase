@@ -519,18 +519,29 @@ export const sort = (
   if (!sort || !sortOrder || !sortType) {
     return docs
   }
-  const parse =
-    sortType === "string" ? (x: any) => `${x}` : (x: string) => parseFloat(x)
+
+  const parse = (x: any) => {
+    if (x == null) {
+      return x
+    }
+    if (sortType === "string") {
+      return `${x}`
+    }
+    return parseFloat(x)
+  }
+
   return docs
     .slice()
     .sort((a: { [x: string]: any }, b: { [x: string]: any }) => {
       const colA = parse(a[sort])
       const colB = parse(b[sort])
+
+      const result = colB == null || colA > colB ? 1 : -1
       if (sortOrder.toLowerCase() === "descending") {
-        return colA > colB ? -1 : 1
-      } else {
-        return colA > colB ? 1 : -1
+        return result * -1
       }
+
+      return result
     })
 }
 
