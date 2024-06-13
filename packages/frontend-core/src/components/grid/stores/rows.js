@@ -4,11 +4,12 @@ import { NewRowID, RowPageSize } from "../lib/constants"
 import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
+import { createLocalStorageStore } from "../../../stores/localStorage"
 
-export const createStores = () => {
-  const rows = writable([])
+export const createStores = context => {
+  const rows = createLocalStorageStore(`${context.gridID}-rows`, [])
   const loading = writable(false)
-  const loaded = writable(false)
+  const loaded = writable(get(rows).length > 0)
   const refreshing = writable(false)
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
@@ -27,13 +28,15 @@ export const createStores = () => {
 
   // Mark loaded as true if we've ever stopped loading
   let hasStartedLoading = false
-  loading.subscribe($loading => {
-    if ($loading) {
-      hasStartedLoading = true
-    } else if (hasStartedLoading) {
-      loaded.set(true)
-    }
-  })
+  if (!get(loaded)) {
+    loading.subscribe($loading => {
+      if ($loading) {
+        hasStartedLoading = true
+      } else if (hasStartedLoading) {
+        loaded.set(true)
+      }
+    })
+  }
 
   // Enrich rows with an index property and any pending changes
   const enrichedRows = derived(

@@ -2,6 +2,7 @@ import { writable, derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
+import { createLocalStorageStore } from "../stores/localStorage"
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
@@ -47,10 +48,24 @@ export default class DataFetch {
       clientSideSearching: true,
       clientSideSorting: true,
       clientSideLimiting: true,
+
+      // Caching config
+      cache: false,
+      cacheId: null,
+    }
+
+    // Merge options with their default values
+    this.API = opts?.API
+    this.options = {
+      ...this.options,
+      ...opts,
+    }
+    if (!this.API) {
+      throw "An API client is required for fetching data"
     }
 
     // State of the fetch
-    this.store = writable({
+    const initialState = {
       rows: [],
       info: null,
       schema: null,
@@ -62,16 +77,11 @@ export default class DataFetch {
       cursors: [],
       resetKey: Math.random(),
       error: null,
-    })
-
-    // Merge options with their default values
-    this.API = opts?.API
-    this.options = {
-      ...this.options,
-      ...opts,
     }
-    if (!this.API) {
-      throw "An API client is required for fetching data"
+    if (this.options.cache && this.options.cacheId) {
+      this.store = createLocalStorageStore(this.options.cacheId, initialState)
+    } else {
+      this.store = writable(initialState)
     }
 
     // Bind all functions to properly scope "this"

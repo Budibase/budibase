@@ -1,10 +1,8 @@
 import { writable, get, derived } from "svelte/store"
+import { createLocalStorageStore } from "../stores/localStorage"
 
-// A simple svelte store which deeply compares all changes and ensures that
-// subscribed children will only fire when a new value is actually set
-export const memo = initialValue => {
-  const store = writable(initialValue)
-
+// Returns a memoized version of another store
+const memoize = store => {
   const tryUpdateValue = (newValue, currentValue) => {
     // Sanity check for primitive equality
     if (currentValue === newValue) {
@@ -32,6 +30,17 @@ export const memo = initialValue => {
       tryUpdateValue(newValue, currentValue)
     },
   }
+}
+
+// A simple svelte store which deeply compares all changes and ensures that
+// subscribed children will only fire when a new value is actually set
+export const memo = initialValue => {
+  return memoize(writable(initialValue))
+}
+
+// A memoized version of a store cached in local storage
+export const cachedMemo = (key, initialValue) => {
+  return memoize(createLocalStorageStore(key, initialValue))
 }
 
 // Enriched version of svelte's derived store which returns a memo

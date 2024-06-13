@@ -90,6 +90,8 @@
         sortOrder,
         limit,
         paginate,
+        cache: true,
+        cacheId: $component.id,
       },
     })
   }

@@ -155,6 +155,7 @@
 <div use:styleable={styles} class:in-builder={$builderStore.inBuilder}>
   <Grid
     bind:this={grid}
+    id={$component.id}
     datasource={table}
     {API}
     {stripeRows}

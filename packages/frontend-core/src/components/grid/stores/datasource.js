@@ -1,9 +1,9 @@
 import { derived, get } from "svelte/store"
 import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
-import { memo } from "../../../utils"
+import { memo, cachedMemo } from "../../../utils"
 
-export const createStores = () => {
-  const definition = memo(null)
+export const createStores = context => {
+  const definition = cachedMemo(`${context.gridID}-definition`, null)
   const schemaMutations = memo({})
 
   return {

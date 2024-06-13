@@ -58,9 +58,10 @@
   export let darkMode
   export let isCloud = null
   export let allowViewReadonlyColumns = false
+  export let id = null
 
   // Unique identifier for DOM nodes inside this instance
-  const gridID = `grid-${Math.random().toString().slice(2)}`
+  const gridID = `grid-${id || Math.random().toString().slice(2)}`
 
   // Store props in a store for reference in other stores
   const props = writable($$props)
@@ -86,6 +87,8 @@
     contentLines,
     gridFocused,
     error,
+    columns,
+    stickyColumn,
   } = context
 
   // Keep config store up to date with props
@@ -204,7 +207,7 @@
       </div>
     </div>
   {/if}
-  {#if $loading && !$error}
+  {#if !$loaded && $loading && !$error}
     <div in:fade|local={{ duration: 130 }} class="grid-loading">
       <ProgressCircle />
     </div>
