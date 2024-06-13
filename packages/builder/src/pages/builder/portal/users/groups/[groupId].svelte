@@ -20,8 +20,7 @@
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
-  import { sdk } from "@budibase/shared-core"
-  import { Constants } from "@budibase/frontend-core"
+  import { sdk, Roles } from "@budibase/shared-core"
 
   export let groupId
 
@@ -60,7 +59,7 @@
     .map(app => ({
       ...app,
       role: group?.builder?.apps.includes(appsStore.getProdAppID(app.devId))
-        ? Constants.Roles.CREATOR
+        ? Roles.CREATOR
         : group?.roles?.[appsStore.getProdAppID(app.devId)],
     }))
 

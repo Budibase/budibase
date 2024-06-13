@@ -1,7 +1,7 @@
 <script>
   import { Label, notifications, Select } from "@budibase/bbui"
   import { permissions, roles } from "stores/builder"
-  import { Constants } from "@budibase/frontend-core"
+  import { Roles } from "@budibase/shared-core"
 
   export let query
   export let label
@@ -35,14 +35,14 @@
     }
     fetched = queryToFetch
     if (!queryToFetch || !queryToFetch._id) {
-      roleId = Constants.Roles.BASIC
+      roleId = Roles.BASIC
       loaded = true
       return
     }
     try {
       roleId = (await permissions.forResource(queryToFetch._id))["read"].role
     } catch (err) {
-      roleId = Constants.Roles.BASIC
+      roleId = Roles.BASIC
     }
     loaded = true
   }

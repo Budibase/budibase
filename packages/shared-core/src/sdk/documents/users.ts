@@ -7,6 +7,7 @@ import {
 } from "@budibase/types"
 import { getProdAppID } from "./applications"
 import * as _ from "lodash/fp"
+import { Roles } from "../../constants/index"
 
 // checks if a user is specifically a builder, given an app ID
 export function isBuilder(user: User | ContextUser, appId?: string): boolean {
@@ -67,7 +68,7 @@ export function hasAppCreatorPermissions(user?: User | ContextUser): boolean {
   return _.flow(
     _.get("roles"),
     _.values,
-    _.find(x => ["CREATOR", "ADMIN"].includes(x)),
+    _.find(x => [Roles.CREATOR, Roles.ADMIN].includes(x)),
     x => !!x
   )(user)
 }

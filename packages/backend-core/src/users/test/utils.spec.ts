@@ -3,6 +3,7 @@ import { generator, structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
 import { getGlobalDB } from "../../context"
 import { isCreator } from "../utils"
+import { Roles } from "@budibase/shared-core"
 
 const config = new DBTestConfiguration()
 
@@ -28,12 +29,12 @@ describe("Users", () => {
   })
 
   it("User is a creator if it has CREATOR permission in some application", async () => {
-    const user: User = structures.users.user({ roles: { app1: "CREATOR" } })
+    const user: User = structures.users.user({ roles: { app1: Roles.CREATOR } })
     expect(await isCreator(user)).toBe(true)
   })
 
   it("User is a creator if it has ADMIN permission in some application", async () => {
-    const user: User = structures.users.user({ roles: { app1: "ADMIN" } })
+    const user: User = structures.users.user({ roles: { app1: Roles.ADMIN } })
     expect(await isCreator(user)).toBe(true)
   })
 
@@ -42,7 +43,7 @@ describe("Users", () => {
     const groupId = "gr_17abffe89e0b40268e755b952f101a59"
     const group: UserGroup = {
       ...structures.userGroups.userGroup(),
-      ...{ _id: groupId, roles: { app1: "ADMIN" } },
+      ...{ _id: groupId, roles: { app1: Roles.ADMIN } },
     }
     const users: User[] = []
     for (let i = 0; i < usersInGroup; i++) {

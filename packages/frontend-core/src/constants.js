@@ -77,16 +77,6 @@ export const PlanType = {
  */
 export const ApiVersion = "1"
 
-// Role IDs
-export const Roles = {
-  ADMIN: "ADMIN",
-  POWER: "POWER",
-  BASIC: "BASIC",
-  PUBLIC: "PUBLIC",
-  BUILDER: "BUILDER",
-  CREATOR: "CREATOR",
-}
-
 export const Themes = [
   {
     class: "lightest",
