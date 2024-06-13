@@ -1,25 +1,34 @@
 <script>
   import { tables } from "stores/builder"
-  import { Select, Checkbox, Label } from "@budibase/bbui"
+  import {
+    Label,
+    ActionButton,
+    Popover,
+    Icon,
+    TooltipPosition,
+    TooltipType,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { FieldType } from "@budibase/types"
 
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
-  import { TableNames } from "constants"
+  import { FIELDS } from "constants/backend"
+  import { capitalise } from "helpers"
+  import { memo } from "@budibase/frontend-core"
+  import PropField from "./PropField.svelte"
 
   const dispatch = createEventDispatcher()
 
-  export let value
+  export let row
   export let meta
   export let bindings
   export let isTestModal
-  export let isUpdateRow
-  $: parsedBindings = bindings.map(binding => {
-    let clone = Object.assign({}, binding)
-    clone.icon = "ShareAndroid"
-    return clone
+
+  const memoStore = memo({
+    row,
+    meta,
   })
 
   let table
@@ -30,32 +39,113 @@
     FieldType.SIGNATURE_SINGLE,
   ]
 
-  $: {
-    table = $tables.list.find(table => table._id === value?.tableId)
+  let customPopover
+  let popoverAnchor
+  let editableRow = {}
+  let columns = new Set()
 
-    // Just sorting attachment types to the bottom here for a cleaner UX
-    schemaFields = Object.entries(table?.schema ?? {}).sort(
-      ([, schemaA], [, schemaB]) =>
-        (schemaA.type === "attachment") - (schemaB.type === "attachment")
-    )
+  // Avoid unnecessary updates
+  $: memoStore.set({
+    row,
+    meta,
+  })
 
-    schemaFields.forEach(([, schema]) => {
-      if (!schema.autocolumn && !value[schema.name]) {
-        value[schema.name] = ""
+  // Legacy support
+  $: fields = $memoStore?.meta?.fields
+
+  $: if ($memoStore?.meta?.columns) {
+    columns = new Set(meta?.columns)
+  }
+
+  $: parsedBindings = bindings.map(binding => {
+    let clone = Object.assign({}, binding)
+    clone.icon = "ShareAndroid"
+    return clone
+  })
+
+  $: tableId = $memoStore?.row?.tableId
+  $: if (tableId) {
+    table = $tables.list.find(table => table._id === tableId)
+
+    if (table) {
+      editableRow["tableId"] = tableId
+
+      schemaFields = Object.entries(table?.schema ?? {})
+        .filter(entry => {
+          const [key, field] = entry
+          return field.type !== "formula" && !field.autocolumn
+        })
+        .sort(
+          ([, schemaA], [, schemaB]) =>
+            (schemaA.type === "attachment") - (schemaB.type === "attachment")
+        )
+
+      // Parse out any unused data.
+      if ($memoStore?.meta?.columns) {
+        for (const column of meta?.columns) {
+          if (!(column in table?.schema)) {
+            columns.delete(column)
+          }
+        }
+        columns = new Set(columns)
       }
-    })
-  }
-  const onChangeTable = e => {
-    value["tableId"] = e.detail
-    dispatch("change", value)
-  }
-
-  const coerce = (value, type) => {
-    const re = new RegExp(/{{([^{].*?)}}/g)
-    if (re.test(value)) {
-      return value
     }
 
+    if (columns.size) {
+      for (const key of columns) {
+        const entry = schemaFields.find(entry => {
+          const [fieldKey] = entry
+          return fieldKey == key
+        })
+
+        if (entry) {
+          const [_, fieldSchema] = entry
+          editableRow = {
+            ...editableRow,
+            [key]: coerce(
+              !(key in $memoStore?.row) ? "" : $memoStore?.row[key],
+              fieldSchema.type
+            ),
+          }
+        }
+      }
+    } else {
+      schemaFields.forEach(entry => {
+        const [key] = entry
+        if ($memoStore?.row?.[key] && !editableRow?.[key]) {
+          editableRow = {
+            ...editableRow,
+            [key]: $memoStore?.row[key],
+          }
+          columns.add(key)
+        }
+      })
+      columns = new Set(columns)
+    }
+  }
+
+  // Legacy - add explicitly cleared relationships to the request.
+  $: if (schemaFields?.length && fields) {
+    // Meta fields processing.
+    Object.keys(fields).forEach(key => {
+      if (fields[key]?.clearRelationships) {
+        columns.add(key)
+      }
+    })
+    columns = new Set(columns)
+  }
+
+  $: typeToField = Object.values(FIELDS).reduce((acc, field) => {
+    acc[field.type] = field
+    return acc
+  }, {})
+
+  // Row coerce
+  const coerce = (value, type) => {
+    const re = new RegExp(/{{([^{].*?)}}/g)
+    if (typeof value === "string" && re.test(value)) {
+      return value
+    }
     if (type === "number") {
       if (typeof value === "number") {
         return value
@@ -66,6 +156,9 @@
       return value
     }
     if (type === "array") {
+      if (!value) {
+        return []
+      }
       if (Array.isArray(value)) {
         return value
       }
@@ -73,7 +166,9 @@
     }
 
     if (type === "link") {
-      if (Array.isArray(value)) {
+      if (!value) {
+        return []
+      } else if (Array.isArray(value)) {
         return value
       }
       return value.split(",").map(x => x.trim())
@@ -86,65 +181,52 @@
     return value
   }
 
-  const onChange = (e, field, type) => {
-    let newValue = {
-      ...value,
-      [field]: coerce(e.detail, type),
+  const onChange = u => {
+    const update = {
+      _tableId: tableId,
+      row: { ...$memoStore.row },
+      meta: { ...$memoStore.meta },
+      ...u,
     }
-    dispatch("change", newValue)
+    dispatch("change", update)
   }
 
-  const onChangeSetting = (e, field) => {
-    let fields = {}
-    fields[field] = {
-      clearRelationships: e.detail,
+  const fieldUpdate = (e, field) => {
+    const update = {
+      row: {
+        ...$memoStore?.row,
+        [field]: e.detail,
+      },
     }
-    dispatch("change", {
-      key: "meta",
-      fields,
-    })
+    onChange(update)
   }
-
-  // Ensure any nullish tableId values get set to empty string so
-  // that the select works
-  $: if (value?.tableId == null) value = { tableId: "" }
 </script>
 
-<div class="schema-fields">
-  <Label>Table</Label>
-  <div class="field-width">
-    <Select
-      on:change={onChangeTable}
-      value={value.tableId}
-      options={$tables.list.filter(table => table._id !== TableNames.USERS)}
-      getOptionLabel={table => table.name}
-      getOptionValue={table => table._id}
-    />
-  </div>
-</div>
-{#if schemaFields.length}
+{#if columns.size}
   {#each schemaFields as [field, schema]}
-    {#if !schema.autocolumn}
-      <div class:schema-fields={!attachmentTypes.includes(schema.type)}>
-        <Label>{field}</Label>
-        <div class:field-width={!attachmentTypes.includes(schema.type)}>
+    {#if !schema.autocolumn && columns.has(field)}
+      <PropField
+        label={field}
+        fullWidth={attachmentTypes.includes(schema.type)}
+      >
+        <div class="prop-control-wrap">
           {#if isTestModal}
             <RowSelectorTypes
               {isTestModal}
               {field}
               {schema}
               bindings={parsedBindings}
-              {value}
-              {onChange}
+              value={$memoStore?.row}
+              onChange={fieldUpdate}
             />
           {:else}
             <DrawerBindableSlot
-              title={value.title || field}
+              title={$memoStore?.row?.title || field}
               panel={AutomationBindingPanel}
               type={schema.type}
               {schema}
-              value={value[field]}
-              on:change={e => onChange(e, field)}
+              value={editableRow[field]}
+              on:change={e => fieldUpdate(e, field)}
               {bindings}
               allowJS={true}
               updateOnChange={false}
@@ -155,52 +237,106 @@
                 {field}
                 {schema}
                 bindings={parsedBindings}
-                {value}
-                {onChange}
+                value={editableRow}
+                onChange={fieldUpdate}
               />
             </DrawerBindableSlot>
           {/if}
-
-          {#if isUpdateRow && schema.type === "link"}
-            <div class="checkbox-field">
-              <Checkbox
-                value={meta.fields?.[field]?.clearRelationships}
-                text={"Clear relationships if empty?"}
-                size={"S"}
-                on:change={e => onChangeSetting(e, field)}
-              />
-            </div>
-          {/if}
+          <Icon
+            hoverable
+            name="Close"
+            on:click={() => {
+              columns.delete(field)
+              const update = { ...editableRow }
+              delete update[field]
+              onChange({ row: update, meta: { columns: Array.from(columns) } })
+            }}
+          />
         </div>
-      </div>
+      </PropField>
     {/if}
   {/each}
 {/if}
 
+{#if table && schemaFields}
+  <div
+    class="add-fields-btn"
+    class:empty={!columns?.size}
+    bind:this={popoverAnchor}
+  >
+    <ActionButton
+      icon="Add"
+      fullWidth
+      on:click={() => {
+        customPopover.show()
+      }}
+      disabled={!schemaFields}
+      >Add fields
+    </ActionButton>
+  </div>
+{/if}
+
+<Popover
+  align="center"
+  bind:this={customPopover}
+  anchor={popoverAnchor}
+  minWidth={popoverAnchor?.getBoundingClientRect()?.width}
+  maxHeight={300}
+  resizable={false}
+  offset={10}
+>
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+  <ul class="spectrum-Menu" role="listbox">
+    {#each schemaFields || [] as [field, schema]}
+      {#if !schema.autocolumn}
+        <li
+          class="table_field spectrum-Menu-item"
+          class:is-selected={columns.has(field)}
+          on:click={e => {
+            if (columns.has(field)) {
+              columns.delete(field)
+            } else {
+              columns.add(field)
+            }
+            onChange({ meta: { columns: Array.from(columns) } })
+          }}
+        >
+          <Icon
+            name={typeToField?.[schema.type]?.icon}
+            color={"var(--spectrum-global-color-gray-600)"}
+            tooltip={capitalise(schema.type)}
+            tooltipType={TooltipType.Info}
+            tooltipPosition={TooltipPosition.Left}
+          />
+          <div class="field_name spectrum-Menu-itemLabel">{field}</div>
+          <svg
+            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+            focusable="false"
+            aria-hidden="true"
+          >
+            <use xlink:href="#spectrum-css-icon-Checkmark100" />
+          </svg>
+        </li>
+      {/if}
+    {/each}
+  </ul>
+</Popover>
+
 <style>
-  .field-width {
-    width: 320px;
+  .table_field {
+    display: flex;
+    padding: var(--spacing-s) var(--spacing-l);
+    gap: var(--spacing-s);
   }
 
-  .schema-fields {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-    margin-bottom: 10px;
+  li.is-selected .spectrum-Menu-itemLabel {
+    color: var(--spectrum-global-color-gray-500);
   }
-  .schema-fields :global(label) {
-    text-transform: capitalize;
-  }
-  .checkbox-field {
-    padding-bottom: var(--spacing-s);
-    padding-left: 1px;
-    padding-top: var(--spacing-s);
-  }
-  .checkbox-field :global(label) {
-    text-transform: none;
+
+  .prop-control-wrap {
+    display: grid;
+    grid-template-columns: 1fr min-content;
+    gap: var(--spacing-s);
   }
 </style>

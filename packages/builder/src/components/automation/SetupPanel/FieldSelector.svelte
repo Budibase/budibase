@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
+  import PropField from "./PropField.svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -88,27 +89,26 @@
 </script>
 
 {#if schemaFields.length && isTestModal}
-  <div class="schema-fields">
+  <div class="fields">
     {#each schemaFields as [field, schema]}
-      <RowSelectorTypes
-        {isTestModal}
-        {field}
-        {schema}
-        {bindings}
-        {value}
-        {onChange}
-      />
+      <PropField label={field}>
+        <RowSelectorTypes
+          {isTestModal}
+          {field}
+          {schema}
+          {bindings}
+          {value}
+          {onChange}
+        />
+      </PropField>
     {/each}
   </div>
 {/if}
 
 <style>
-  .schema-fields {
-    display: grid;
-    grid-gap: var(--spacing-s);
-    margin-top: var(--spacing-s);
-  }
-  .schema-fields :global(label) {
-    text-transform: capitalize;
+  .fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
   }
 </style>

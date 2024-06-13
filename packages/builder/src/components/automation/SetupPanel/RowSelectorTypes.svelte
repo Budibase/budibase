@@ -73,12 +73,12 @@
   />
 {:else if schemaHasOptions(schema) && schema.type === "array"}
   <Multiselect
-    bind:value={value[field]}
+    value={value[field]}
     options={schema.constraints.inclusion}
     on:change={e => onChange(e, field)}
   />
 {:else if schema.type === "longform"}
-  <TextArea bind:value={value[field]} on:change={e => onChange(e, field)} />
+  <TextArea value={value[field]} on:change={e => onChange(e, field)} />
 {:else if schema.type === "json"}
   <span>
     <Editor
@@ -108,7 +108,7 @@
     useLabel={false}
   />
 {:else if attachmentTypes.includes(schema.type)}
-  <div class="attachment-field-spacinng">
+  <div class="attachment-field-spacing">
     <KeyValueBuilder
       on:change={e =>
         onChange(
@@ -129,16 +129,18 @@
           },
           field
         )}
-      object={handleAttachmentParams(value[field])}
+      object={handleAttachmentParams(value[field] || {})}
       allowJS
       {bindings}
       keyBindings
-      customButtonText={"Add attachment"}
+      customButtonText={schema.type === FieldType.SIGNATURE_SINGLE
+        ? "Add signature"
+        : "Add attachment"}
       keyPlaceholder={"URL"}
       valuePlaceholder={"Filename"}
       actionButtonDisabled={(schema.type === FieldType.ATTACHMENT_SINGLE ||
-        schema.type === FieldType.SIGNATURE) &&
-        Object.keys(value[field]).length >= 1}
+        schema.type === FieldType.SIGNATURE_SINGLE) &&
+        Object.keys(value[field] || {}).length >= 1}
     />
   </div>
 {:else if ["string", "number", "bigint", "barcodeqr", "array"].includes(schema.type)}
@@ -152,12 +154,15 @@
     allowJS={true}
     updateOnChange={false}
     title={schema.name}
+    autocomplete="off"
   />
 {/if}
 
 <style>
-  .attachment-field-spacinng {
+  .attachment-field-spacing {
     margin-top: var(--spacing-s);
-    margin-bottom: var(--spacing-l);
+    border: 1px solid var(--spectrum-global-color-gray-400);
+    border-radius: 4px;
+    padding: var(--spacing-s);
   }
 </style>

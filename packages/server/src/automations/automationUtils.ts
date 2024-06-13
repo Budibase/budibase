@@ -120,7 +120,9 @@ export async function sendAutomationAttachmentsToStorage(
     }
   }
   for (const [prop, attachments] of Object.entries(attachmentRows)) {
-    if (Array.isArray(attachments)) {
+    if (!attachments) {
+      continue
+    } else if (Array.isArray(attachments)) {
       if (attachments.length) {
         row[prop] = await Promise.all(
           attachments.map(attachment => generateAttachmentRow(attachment))
