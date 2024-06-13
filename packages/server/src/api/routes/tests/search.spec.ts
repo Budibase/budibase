@@ -94,7 +94,7 @@ describe.each([
 
     private async performSearch(): Promise<Row[]> {
       if (isInMemory) {
-        let result = dataFilters.runQuery(rows, this.query.query)
+        let result = dataFilters.runQuery(_.cloneDeep(rows), this.query.query)
         if (this.query.sort) {
           result = dataFilters.sort(
             result,
