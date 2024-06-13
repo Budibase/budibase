@@ -324,9 +324,11 @@ export const runQuery = (
       if (docValue == null || docValue === "") {
         return false
       }
+
       if (testValue.low == null && testValue.high == null) {
         return false
       }
+
       if (!isNaN(+docValue)) {
         if (!isNaN(+testValue.low) && !isNaN(+testValue.high)) {
           return +docValue >= testValue.low && +docValue <= testValue.high
@@ -336,18 +338,32 @@ export const runQuery = (
           return +docValue <= testValue.high
         }
       }
-      if (dayjs(docValue).isValid()) {
-        if (dayjs(testValue.low).isValid() && dayjs(testValue.high).isValid()) {
+
+      const docDate = dayjs(docValue)
+      if (docDate.isValid()) {
+        const lowDate = dayjs(testValue.low)
+        const highDate = dayjs(testValue.high)
+        if (lowDate.isValid() && highDate.isValid()) {
           return (
-            dayjs(docValue).isAfter(testValue.low) &&
-            dayjs(docValue).isBefore(testValue.high)
+            (docDate.isAfter(lowDate) && docDate.isBefore(highDate)) ||
+            docDate.isSame(lowDate) ||
+            docDate.isSame(highDate)
           )
-        } else if (dayjs(testValue.low).isValid()) {
-          return dayjs(docValue).isAfter(testValue.low)
-        } else if (dayjs(testValue.high).isValid()) {
-          return dayjs(docValue).isBefore(testValue.high)
+        } else if (lowDate.isValid()) {
+          return docDate.isAfter(lowDate) || docDate.isSame(lowDate)
+        } else if (highDate.isValid()) {
+          return docDate.isBefore(highDate) || docDate.isSame(highDate)
         }
       }
+
+      if (testValue.low && testValue.high) {
+        return docValue >= testValue.low && docValue <= testValue.high
+      } else if (testValue.low) {
+        return docValue >= testValue.low
+      } else if (testValue.high) {
+        return docValue <= testValue.high
+      }
+
       return false
     }
   )
