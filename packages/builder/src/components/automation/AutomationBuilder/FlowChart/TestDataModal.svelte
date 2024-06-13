@@ -8,10 +8,41 @@
   import { automationStore, selectedAutomation } from "stores/builder"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
+  import { memo } from "@budibase/frontend-core"
+  import { AutomationEventType } from "@budibase/types"
 
   let failedParse = null
   let trigger = {}
   let schemaProperties = {}
+  let baseData = {}
+
+  let rowEvents = [
+    AutomationEventType.ROW_DELETE,
+    AutomationEventType.ROW_SAVE,
+    AutomationEventType.ROW_UPDATE,
+  ]
+
+  const memoTestData = memo($selectedAutomation.testData)
+  $: memoTestData.set($selectedAutomation.testData)
+
+  $: if (memoTestData) {
+    baseData = cloneDeep($selectedAutomation.testData)
+    // Reset the test data for row trigger data when the table is changed.
+    if (rowEvents.includes(trigger?.event)) {
+      if (
+        !baseData?.row?.tableId ||
+        baseData.row.tableId !== trigger.inputs?.tableId
+      ) {
+        baseData = {
+          ...baseData,
+          _tableId: trigger.inputs?.tableId,
+          row: { tableId: trigger.inputs?.tableId },
+          meta: {},
+          id: "",
+        }
+      }
+    }
+  }
 
   $: {
     // clone the trigger so we're not mutating the reference
@@ -20,19 +51,15 @@
     // get the outputs so we can define the fields
     let schema = Object.entries(trigger.schema?.outputs?.properties || {})
 
-    if (trigger?.event === "app:trigger") {
+    if (trigger?.event === AutomationEventType.APP_TRIGGER) {
       schema = [["fields", { customType: "fields" }]]
     }
-
     schemaProperties = schema
   }
 
-  // check to see if there is existing test data in the store
-  $: testData = $selectedAutomation.testData || {}
-
   // Check the schema to see if required fields have been entered
   $: isError = !trigger.schema.outputs.required.every(
-    required => testData[required] || required !== "row"
+    required => baseData?.[required] || required !== "row"
   )
 
   function parseTestJSON(e) {
@@ -47,7 +74,7 @@
 
   const testAutomation = async () => {
     try {
-      await automationStore.actions.test($selectedAutomation, testData)
+      await automationStore.actions.test($selectedAutomation, baseData)
       $automationStore.showTestPanel = true
     } catch (error) {
       notifications.error(error)
@@ -85,7 +112,7 @@
   {#if selectedValues}
     <div class="tab-content-padding">
       <AutomationBlockSetup
-        {testData}
+        testData={baseData}
         {schemaProperties}
         isTestModal
         block={trigger}

@@ -24,6 +24,7 @@ import {
   Query,
   Webhook,
   WebhookActionType,
+  AutomationEventType,
 } from "@budibase/types"
 import { LoopInput, LoopStepType } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -305,7 +306,7 @@ export function loopAutomation(
       trigger: {
         id: "a",
         type: "TRIGGER",
-        event: "row:save",
+        event: AutomationEventType.ROW_SAVE,
         stepId: AutomationTriggerStepId.ROW_SAVED,
         inputs: {
           tableId,
@@ -347,7 +348,7 @@ export function collectAutomation(tableId?: string): Automation {
       trigger: {
         id: "a",
         type: "TRIGGER",
-        event: "row:save",
+        event: AutomationEventType.ROW_SAVE,
         stepId: AutomationTriggerStepId.ROW_SAVED,
         inputs: {
           tableId,

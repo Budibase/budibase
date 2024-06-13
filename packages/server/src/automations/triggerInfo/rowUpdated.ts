@@ -4,11 +4,12 @@ import {
   AutomationStepType,
   AutomationTriggerSchema,
   AutomationTriggerStepId,
+  AutomationEventType,
 } from "@budibase/types"
 
 export const definition: AutomationTriggerSchema = {
   name: "Row Updated",
-  event: "row:update",
+  event: AutomationEventType.ROW_UPDATE,
   icon: "Refresh",
   tagline: "Row is updated in {{inputs.enriched.table.name}}",
   description: "Fired when a row is updated in your database",

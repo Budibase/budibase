@@ -82,39 +82,58 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   }
   const tableId = inputs.row.tableId
 
-  // clear any undefined, null or empty string properties so that they aren't updated
-  for (let propKey of Object.keys(inputs.row)) {
-    const clearRelationships =
-      inputs.meta?.fields?.[propKey]?.clearRelationships
-    if (
-      (inputs.row[propKey] == null || inputs.row[propKey]?.length === 0) &&
-      !clearRelationships
-    ) {
-      delete inputs.row[propKey]
+  // Base update
+  let rowUpdate: Record<string, any> = {
+    tableId,
+  }
+
+  // Column checking - explicit clearing of empty fields
+  if (inputs?.meta?.columns) {
+    rowUpdate = inputs?.meta?.columns.reduce(
+      (acc: Record<string, any>, key: string) => {
+        acc[key] =
+          !inputs.row[key] || inputs.row[key]?.length === 0
+            ? null
+            : inputs.row[key]
+        return acc
+      },
+      {}
+    )
+  } else {
+    // Legacy - clear any empty string column values so that they aren't updated
+    rowUpdate = {
+      ...inputs.row,
+    }
+    for (let propKey of Object.keys(rowUpdate)) {
+      const clearRelationships =
+        inputs.meta?.fields?.[propKey]?.clearRelationships
+      if (
+        (rowUpdate[propKey] == null || rowUpdate[propKey]?.length === 0) &&
+        !clearRelationships
+      ) {
+        delete rowUpdate[propKey]
+      }
     }
   }
 
   try {
     if (tableId) {
-      inputs.row = await automationUtils.cleanUpRow(
-        inputs.row.tableId,
-        inputs.row
-      )
+      rowUpdate = await automationUtils.cleanUpRow(tableId, rowUpdate)
 
-      inputs.row = await automationUtils.sendAutomationAttachmentsToStorage(
-        inputs.row.tableId,
-        inputs.row
+      rowUpdate = await automationUtils.sendAutomationAttachmentsToStorage(
+        tableId,
+        rowUpdate
       )
     }
     // have to clean up the row, remove the table from it
     const ctx: any = buildCtx(appId, emitter, {
       body: {
-        ...inputs.row,
+        ...rowUpdate,
         _id: inputs.rowId,
       },
       params: {
         rowId: inputs.rowId,
-        tableId: tableId,
+        tableId,
       },
     })
     await rowController.patch(ctx)

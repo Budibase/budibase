@@ -8,7 +8,13 @@ import { checkTestFlag } from "../utilities/redis"
 import * as utils from "./utils"
 import env from "../environment"
 import { context, db as dbCore } from "@budibase/backend-core"
-import { Automation, Row, AutomationData, AutomationJob } from "@budibase/types"
+import {
+  Automation,
+  Row,
+  AutomationData,
+  AutomationJob,
+  AutomationEventType,
+} from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 
 export const TRIGGER_DEFINITIONS = definitions
@@ -65,28 +71,28 @@ async function queueRelevantRowAutomations(
   })
 }
 
-emitter.on("row:save", async function (event) {
+emitter.on(AutomationEventType.ROW_SAVE, async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
   }
-  await queueRelevantRowAutomations(event, "row:save")
+  await queueRelevantRowAutomations(event, AutomationEventType.ROW_SAVE)
 })
 
-emitter.on("row:update", async function (event) {
+emitter.on(AutomationEventType.ROW_UPDATE, async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
   }
-  await queueRelevantRowAutomations(event, "row:update")
+  await queueRelevantRowAutomations(event, AutomationEventType.ROW_UPDATE)
 })
 
-emitter.on("row:delete", async function (event) {
+emitter.on(AutomationEventType.ROW_DELETE, async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
   }
-  await queueRelevantRowAutomations(event, "row:delete")
+  await queueRelevantRowAutomations(event, AutomationEventType.ROW_DELETE)
 })
 
 export async function externalTrigger(
@@ -112,7 +118,6 @@ export async function externalTrigger(
     }
     params.fields = coercedFields
   }
-
   const data: AutomationData = { automation, event: params as any }
   if (getResponses) {
     data.event = {
