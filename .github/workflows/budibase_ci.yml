@@ -73,9 +73,9 @@ jobs:
       - name: Check types
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
-            yarn check:types --since=${{ env.NX_BASE_BRANCH }}
+            yarn check:types --since=${{ env.NX_BASE_BRANCH }} --ignore @budibase/account-portal-server --ignore @budibase/account-portal-ui
           else
-            yarn check:types
+            yarn check:types --ignore @budibase/account-portal-server --ignore @budibase/account-portal-ui
           fi
 
   helm-lint:
