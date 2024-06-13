@@ -26,12 +26,12 @@ import { dataFilters } from "@budibase/shared-core"
 
 describe.each([
   ["in-memory", undefined],
-  // ["lucene", undefined],
-  // ["sqs", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  ["lucene", undefined],
+  ["sqs", undefined],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -94,18 +94,7 @@ describe.each([
 
     private async performSearch(): Promise<Row[]> {
       if (isInMemory) {
-        let result = dataFilters.runQuery(_.cloneDeep(rows), this.query.query)
-        if (this.query.sort) {
-          result = dataFilters.sort(
-            result,
-            this.query.sort,
-            this.query.sortOrder || SortOrder.ASCENDING
-          )
-        }
-        if (this.query.limit) {
-          result = dataFilters.limit(result, this.query.limit.toString())
-        }
-        return result
+        return dataFilters.search(_.cloneDeep(rows), this.query)
       } else {
         return (
           await config.api.row.search(table._id!, {
