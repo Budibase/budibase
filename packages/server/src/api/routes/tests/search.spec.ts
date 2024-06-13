@@ -1079,13 +1079,13 @@ describe.each([
 
   !isInternal &&
     describe("datetime - time only", () => {
-      const T_1000 = "10:00"
-      const T_1045 = "10:45"
-      const T_1200 = "12:00"
-      const T_1530 = "15:30"
-      const T_0000 = "00:00"
+      const T_1000 = "10:00:00"
+      const T_1045 = "10:45:00"
+      const T_1200 = "12:00:00"
+      const T_1530 = "15:30:00"
+      const T_0000 = "00:00:00"
 
-      const UNEXISTING_TIME = "10:01"
+      const UNEXISTING_TIME = "10:01:00"
 
       const NULL_TIME__ID = `null_time__id`
 
