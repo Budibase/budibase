@@ -3,7 +3,7 @@
   import { roles } from "stores/builder"
   import { licensing } from "stores/portal"
 
-  import { RoleUtils } from "@budibase/frontend-core"
+  import { Constants, RoleUtils } from "@budibase/frontend-core"
   import { Roles } from "@budibase/shared-core"
   import { createEventDispatcher } from "svelte"
   import { capitalise } from "helpers"
@@ -73,7 +73,9 @@
       options.unshift({
         _id: Roles.CREATOR,
         name: "Can edit",
-        tag: !$licensing.perAppBuildersEnabled && capitalise(PlanType.BUSINESS),
+        tag:
+          !$licensing.perAppBuildersEnabled &&
+          capitalise(Constants.PlanType.BUSINESS),
       })
     }
 
