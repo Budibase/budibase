@@ -10,6 +10,8 @@ import {
   SortType,
   FieldConstraints,
   SortOrder,
+  RowSearchParams,
+  EmptyFilterOption,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -260,6 +262,17 @@ export const buildQuery = (filter: SearchFilter[]) => {
   return query
 }
 
+export const search = (docs: Record<string, any>[], query: RowSearchParams) => {
+  let result = runQuery(docs, query.query)
+  if (query.sort) {
+    result = sort(result, query.sort, query.sortOrder || SortOrder.ASCENDING)
+  }
+  if (query.limit) {
+    result = limit(result, query.limit.toString())
+  }
+  return result
+}
+
 /**
  * Performs a client-side search on an array of data
  * @param docs the data
@@ -277,6 +290,13 @@ export const runQuery = (
   }
 
   query = cleanupQuery(query)
+
+  if (
+    !hasFilters(query) &&
+    query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
+  ) {
+    return []
+  }
 
   const match =
     (
