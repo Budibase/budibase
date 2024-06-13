@@ -341,8 +341,8 @@ export const runQuery = (
 
       const docDate = dayjs(docValue)
       if (docDate.isValid()) {
-        const lowDate = dayjs(testValue.low)
-        const highDate = dayjs(testValue.high)
+        const lowDate = dayjs(testValue.low || "0000-00-00T00:00:00.000Z")
+        const highDate = dayjs(testValue.high || "9999-00-00T00:00:00.000Z")
         if (lowDate.isValid() && highDate.isValid()) {
           return (
             (docDate.isAfter(lowDate) && docDate.isBefore(highDate)) ||
@@ -356,11 +356,11 @@ export const runQuery = (
         }
       }
 
-      if (testValue.low && testValue.high) {
+      if (testValue.low != null && testValue.high != null) {
         return docValue >= testValue.low && docValue <= testValue.high
-      } else if (testValue.low) {
+      } else if (testValue.low != null) {
         return docValue >= testValue.low
-      } else if (testValue.high) {
+      } else if (testValue.high != null) {
         return docValue <= testValue.high
       }
 
