@@ -29,7 +29,8 @@
     Utils,
     RoleUtils,
   } from "@budibase/frontend-core"
-  import { sdk, Roles } from "@budibase/shared-core"
+  import { sdk } from "@budibase/shared-core"
+  import { Roles } from "@budibase/types"
   import { API } from "api"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "components/common/RoleSelect.svelte"

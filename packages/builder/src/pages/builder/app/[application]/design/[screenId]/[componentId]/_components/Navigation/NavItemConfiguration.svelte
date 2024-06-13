@@ -4,7 +4,7 @@
   import NavItem from "./NavItem.svelte"
   import { generate } from "shortid"
   import { getSequentialName } from "helpers/duplicate"
-  import { Roles } from "@budibase/shared-core"
+  import { Roles } from "@budibase/types"
 
   export let bindings
 

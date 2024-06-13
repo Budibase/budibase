@@ -1,7 +1,7 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get, writable } from "svelte/store"
 import { API } from "api"
-import { Roles } from "@budibase/shared-core"
+import { Roles } from "@budibase/types"
 import { componentStore, appStore } from "stores/builder"
 import { INITIAL_SCREENS_STATE, ScreenStore } from "stores/builder/screens"
 import {

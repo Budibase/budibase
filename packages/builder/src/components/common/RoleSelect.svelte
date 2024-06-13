@@ -4,7 +4,7 @@
   import { licensing } from "stores/portal"
 
   import { Constants, RoleUtils } from "@budibase/frontend-core"
-  import { Roles } from "@budibase/shared-core"
+  import { Roles } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
   import { capitalise } from "helpers"
 

@@ -20,7 +20,8 @@
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
-  import { sdk, Roles } from "@budibase/shared-core"
+  import { sdk } from "@budibase/shared-core"
+  import { Roles } from "@budibase/types"
 
   export let groupId
 

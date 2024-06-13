@@ -3,7 +3,7 @@
   import { RoleUtils } from "@budibase/frontend-core"
   import { roles } from "stores/builder"
   import { capitalise } from "helpers"
-  import { Roles } from "@budibase/shared-core"
+  import { Roles } from "@budibase/types"
 
   export let value
 

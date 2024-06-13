@@ -1,7 +1,7 @@
 <script>
   import { Label, notifications, Select } from "@budibase/bbui"
   import { permissions, roles } from "stores/builder"
-  import { Roles } from "@budibase/shared-core"
+  import { Roles } from "@budibase/types"
 
   export let query
   export let label

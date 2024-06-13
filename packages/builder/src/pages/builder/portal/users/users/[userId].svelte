@@ -30,7 +30,8 @@
   import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
-  import { sdk, Roles } from "@budibase/shared-core"
+  import { sdk } from "@budibase/shared-core"
+  import { Roles } from "@budibase/types"
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
 
   export let userId

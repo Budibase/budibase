@@ -2,7 +2,7 @@
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
   import { Heading, Icon, clickOutside } from "@budibase/bbui"
-  import { Roles } from "@budibase/shared-core"
+  import { Roles } from "@budibase/types"
   import NavItem from "./NavItem.svelte"
 
   const sdk = getContext("sdk")

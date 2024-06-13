@@ -1,9 +1,8 @@
-import { User, UserGroup } from "@budibase/types"
+import { Roles, User, UserGroup } from "@budibase/types"
 import { generator, structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
 import { getGlobalDB } from "../../context"
 import { isCreator } from "../utils"
-import { Roles } from "@budibase/shared-core"
 
 const config = new DBTestConfiguration()
 
