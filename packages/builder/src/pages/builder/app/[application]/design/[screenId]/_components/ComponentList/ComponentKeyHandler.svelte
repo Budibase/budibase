@@ -83,13 +83,6 @@
       const childIds = getChildIdsForComponent(component)
       componentTreeNodesStore.collapseNodes(childIds)
     },
-    ["Ctrl+g"]: component => {
-      if (component?._id === $selectedScreen.props._id) {
-        return false
-      }
-
-      $goto(`./${component._id}?focusNameField=true`)
-    },
     ["Escape"]: () => {
       if ($isActive(`./:componentId/new`)) {
         $goto(`./${$componentStore.selectedComponentId}`)
