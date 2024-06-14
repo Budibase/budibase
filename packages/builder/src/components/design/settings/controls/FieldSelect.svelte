@@ -6,8 +6,6 @@
   import { Explanation } from "./Explanation"
   import { debounce } from "lodash"
   import { params } from "@roxi/routify"
-  import { Constants } from "@budibase/frontend-core"
-  import { FIELDS } from "constants/backend"
 
   export let componentInstance = {}
   export let value = ""
@@ -60,35 +58,6 @@
   const onOptionMouseleave = e => {
     updateTooltip(e, null)
   }
-  const getOptionIcon = optionKey => {
-    const option = schema[optionKey]
-    if (!option) return ""
-
-    if (option.autocolumn) {
-      return "MagicWand"
-    }
-    const { type, subtype } = option
-
-    const result =
-      typeof Constants.TypeIconMap[type] === "object" && subtype
-        ? Constants.TypeIconMap[type][subtype]
-        : Constants.TypeIconMap[type]
-
-    return result || "Text"
-  }
-
-  const getOptionIconTooltip = optionKey => {
-    const option = schema[optionKey]
-
-    const type = option?.type
-    const field = Object.values(FIELDS).find(f => f.type === type)
-
-    if (field) {
-      return field.name
-    }
-
-    return ""
-  }
 </script>
 
 <Select
@@ -109,10 +78,9 @@
     <Explanation
       tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
       schema={schema[currentOption]}
-      columnIcon={getOptionIcon(currentOption)}
-      columnName={currentOption}
-      columnType={getOptionIconTooltip(currentOption)}
+      name={currentOption}
       {explanation}
+      componentName={componentInstance._component}
     />
   </ContextTooltip>
 {/if}
