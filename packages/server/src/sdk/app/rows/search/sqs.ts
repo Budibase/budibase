@@ -8,7 +8,6 @@ import {
   RowSearchParams,
   SearchFilters,
   SearchResponse,
-  SortDirection,
   SortOrder,
   SortType,
   SqlClient,
@@ -170,8 +169,8 @@ export async function search(
       sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
     const sortDirection =
       params.sortOrder === SortOrder.ASCENDING
-        ? SortDirection.ASCENDING
-        : SortDirection.DESCENDING
+        ? SortOrder.ASCENDING
+        : SortOrder.DESCENDING
     request.sort = {
       [sortField.name]: {
         direction: sortDirection,
