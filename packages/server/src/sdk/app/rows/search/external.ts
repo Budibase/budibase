@@ -1,14 +1,14 @@
 import {
-  SortJson,
+  IncludeRelationship,
   Operation,
   PaginationJson,
-  IncludeRelationship,
   Row,
-  SearchFilters,
   RowSearchParams,
+  SearchFilters,
   SearchResponse,
-  Table,
+  SortJson,
   SortOrder,
+  Table,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import { handleRequest } from "../../../../api/controllers/row/external"
@@ -18,7 +18,7 @@ import {
 } from "../../../../integrations/utils"
 import { utils } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "./types"
-import { HTTPError, db } from "@budibase/backend-core"
+import { db, HTTPError } from "@budibase/backend-core"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
@@ -75,12 +75,17 @@ export async function search(
   }
 
   try {
-    let rows = await handleRequest(Operation.READ, tableId, {
+    const parameters = {
       filters: query,
       sort,
       paginate: paginateObj as PaginationJson,
       includeSqlRelationships: IncludeRelationship.INCLUDE,
-    })
+    }
+    let rows = await handleRequest(Operation.READ, tableId, parameters)
+    let totalRows: number | undefined
+    if (true) {
+      totalRows = await handleRequest(Operation.COUNT, tableId, parameters)
+    }
     let hasNextPage = false
     // remove the extra row if it's there
     if (paginate && limit && rows.length > limit) {
@@ -102,6 +107,9 @@ export async function search(
     const response: SearchResponse<Row> = { rows, hasNextPage }
     if (hasNextPage && bookmark != null) {
       response.bookmark = bookmark + 1
+    }
+    if (totalRows != null) {
+      response.totalRows = totalRows
     }
     return response
   } catch (err: any) {

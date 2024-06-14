@@ -599,7 +599,9 @@ class InternalBuilder {
       aliases: tableAliases,
     })
     // add sorting to pre-query
-    query = this.addSorting(query, json)
+    if (!counting) {
+      query = this.addSorting(query, json)
+    }
     const alias = tableAliases?.[tableName] || tableName
     let preQuery = knex({
       [alias]: query,
@@ -610,7 +612,7 @@ class InternalBuilder {
       preQuery = preQuery.select(selectStatement)
     }
     // have to add after as well (this breaks MS-SQL)
-    if (this.client !== SqlClient.MS_SQL) {
+    if (this.client !== SqlClient.MS_SQL && !counting) {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
