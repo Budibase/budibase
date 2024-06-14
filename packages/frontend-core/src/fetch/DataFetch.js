@@ -79,6 +79,7 @@ export default class DataFetch {
       error: null,
     }
     if (this.options.cache && this.options.cacheId) {
+      // Cache if required
       this.store = createLocalStorageStore(this.options.cacheId, initialState)
     } else {
       this.store = writable(initialState)

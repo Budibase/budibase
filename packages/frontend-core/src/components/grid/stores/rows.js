@@ -7,7 +7,7 @@ import { Helpers } from "@budibase/bbui"
 import { createLocalStorageStore } from "../../../stores/localStorage"
 
 export const createStores = context => {
-  const rows = createLocalStorageStore(`${context.gridID}-rows`, [])
+  const rows = createLocalStorageStore(`bb-grid-${context.gridID}-rows`, [])
   const loading = writable(false)
   const loaded = writable(get(rows).length > 0)
   const refreshing = writable(false)

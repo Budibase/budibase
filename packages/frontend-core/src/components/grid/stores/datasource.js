@@ -3,7 +3,7 @@ import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
 import { memo, cachedMemo } from "../../../utils"
 
 export const createStores = context => {
-  const definition = cachedMemo(`${context.gridID}-definition`, null)
+  const definition = cachedMemo(`bb-grid-${context.gridID}-definition`, null)
   const schemaMutations = memo({})
 
   return {

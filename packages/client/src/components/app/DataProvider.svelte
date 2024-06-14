@@ -91,7 +91,7 @@
         limit,
         paginate,
         cache: true,
-        cacheId: $component.id,
+        cacheId: `bb-dp-${$component.id}`,
       },
     })
   }
