@@ -14,13 +14,9 @@ import {
   EmptyFilterOption,
   SearchFilters,
   Table,
+  SortOrder,
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
-
-enum SortOrder {
-  ASCENDING = "ascending",
-  DESCENDING = "descending",
-}
 
 const SortOrderPretty = {
   [SortOrder.ASCENDING]: "Ascending",
