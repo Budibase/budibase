@@ -417,11 +417,11 @@ const continueIfHandler = action => {
 }
 
 const showNotificationHandler = action => {
-  const { message, type, autoDismiss } = action.parameters
+  const { message, type, autoDismiss, duration } = action.parameters
   if (!message || !type) {
     return
   }
-  notificationStore.actions[type]?.(message, autoDismiss)
+  notificationStore.actions[type]?.(message, autoDismiss, duration)
 }
 
 const promptUserHandler = () => {}

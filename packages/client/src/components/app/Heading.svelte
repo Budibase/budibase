@@ -14,6 +14,7 @@
   export let size
 
   let node
+  let touched = false
 
   $: $component.editing && node?.focus()
   $: placeholder = $builderStore.inBuilder && !text && !$component.editing
@@ -47,7 +48,10 @@
 
   // Convert contenteditable HTML to text and save
   const updateText = e => {
-    builderStore.actions.updateProp("text", e.target.textContent)
+    if (touched) {
+      builderStore.actions.updateProp("text", e.target.textContent)
+    }
+    touched = false
   }
 </script>
 
@@ -62,6 +66,7 @@
     class:underline
     class="spectrum-Heading {sizeClass} {alignClass}"
     on:blur={$component.editing ? updateText : null}
+    on:input={() => (touched = true)}
   >
     {componentText}
   </h1>

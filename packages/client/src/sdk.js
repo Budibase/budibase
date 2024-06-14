@@ -32,7 +32,7 @@ import { enrichButtonActions } from "./utils/buttonActions.js"
 import { processStringSync, makePropSafe } from "@budibase/string-templates"
 import {
   fetchData,
-  LuceneUtils,
+  QueryUtils,
   Constants,
   RowUtils,
   memo,
@@ -67,7 +67,7 @@ export default {
   getAction,
   fetchDatasourceSchema,
   fetchData,
-  LuceneUtils,
+  QueryUtils,
   ContextScopes: Constants.ContextScopes,
   getAPIKey,
   enrichButtonActions,

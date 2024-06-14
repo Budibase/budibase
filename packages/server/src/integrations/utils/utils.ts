@@ -280,12 +280,35 @@ function copyExistingPropsOver(
           utils.unreachable(existingColumnType)
       }
 
+      // copy the BB schema in case of special props
       if (shouldKeepSchema) {
+        const fetchedColumnDefinition: FieldSchema | undefined =
+          table.schema[key]
         table.schema[key] = {
           ...existingTableSchema[key],
           externalType:
             existingTableSchema[key].externalType ||
             table.schema[key]?.externalType,
+          autocolumn: fetchedColumnDefinition?.autocolumn,
+        } as FieldSchema
+        // check constraints which can be fetched from the DB (they could be updated)
+        if (fetchedColumnDefinition?.constraints) {
+          // inclusions are the enum values (select/options)
+          const fetchedConstraints = fetchedColumnDefinition.constraints
+          const oldConstraints = table.schema[key].constraints
+          table.schema[key].constraints = {
+            ...table.schema[key].constraints,
+            inclusion: fetchedConstraints.inclusion?.length
+              ? fetchedConstraints.inclusion
+              : oldConstraints?.inclusion,
+          }
+          // true or undefined - consistent with old API
+          if (fetchedConstraints.presence) {
+            table.schema[key].constraints!.presence =
+              fetchedConstraints.presence
+          } else if (oldConstraints?.presence === true) {
+            delete table.schema[key].constraints?.presence
+          }
         }
       }
     }

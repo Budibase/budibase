@@ -68,6 +68,15 @@
           maximum: schema?.constraints?.length?.maximum,
         }
       },
+      [FieldType.DATETIME]: (_field, schema) => {
+        const props = {
+          valueAsTimestamp: !schema?.timeOnly,
+        }
+        if (schema?.dateOnly) {
+          props.enableTime = false
+        }
+        return props
+      },
     }
 
     const fieldSchema = getFieldSchema(field)
