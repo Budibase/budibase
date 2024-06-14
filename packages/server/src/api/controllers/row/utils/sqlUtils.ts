@@ -1,4 +1,6 @@
 import {
+  DatasourcePlusQueryResponse,
+  DSPlusOperation,
   FieldType,
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
@@ -191,4 +193,12 @@ export function buildSqlFieldList(
     }
   }
   return fields
+}
+
+export function isKnexNoRowReadResponse(resp: DatasourcePlusQueryResponse) {
+  return (
+    !Array.isArray(resp) ||
+    resp.length === 0 ||
+    (DSPlusOperation.READ in resp[0] && resp[0].read === true)
+  )
 }

@@ -30,6 +30,7 @@ import {
   buildExternalRelationships,
   buildSqlFieldList,
   generateIdForRow,
+  isKnexNoRowReadResponse,
   isManyToMany,
   sqlOutputProcessing,
 } from "./utils"
@@ -433,8 +434,7 @@ export class ExternalRequest<T extends Operation> {
       })
       // this is the response from knex if no rows found
       const rows: Row[] =
-        !Array.isArray(response) ||
-        (response.length === 1 && "read" in response[0])
+        !Array.isArray(response) || isKnexNoRowReadResponse(response)
           ? []
           : response
       const storeTo = isManyToMany(field)

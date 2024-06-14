@@ -187,7 +187,7 @@ export interface Schema {
 }
 
 // return these when an operation occurred but we got no response
-enum DSPlusOperation {
+export enum DSPlusOperation {
   CREATE = "create",
   READ = "read",
   UPDATE = "update",
