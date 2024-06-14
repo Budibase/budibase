@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
 
   const component = getContext("component")
   const { styleable, sidePanelStore, builderStore, dndIsDragging } =
@@ -28,10 +28,6 @@
       }
     }
   }
-
-  // $: {
-
-  // }
 
   // Derive visibility
   $: open = $sidePanelStore.contentId === $component.id
@@ -78,6 +74,25 @@
       destroy: () => update(false),
     }
   }
+
+  onMount(() => {
+    // Define a function to handle the 'popstate' event. This function is triggered when the browser's history changes,
+    const handlePopState = () => {
+      if (open) {
+        sidePanelStore.actions.close()
+      }
+    }
+
+    // Add an event listener to the window object to listen for 'popstate' events. When such an event occurs,
+    // the handlePopState function will be executed.
+    window.addEventListener("popstate", handlePopState)
+
+    // Cleanup function, removes the 'popstate' event listener when the component is destroyed.
+    // Ensures that the event listener is properly cleaned up, avoids memory leaks.
+    return () => {
+      window.removeEventListener("popstate", handlePopState)
+    }
+  })
 </script>
 
 <div
