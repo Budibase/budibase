@@ -278,10 +278,7 @@ export const search = (docs: Record<string, any>[], query: RowSearchParams) => {
  * @param docs the data
  * @param query the JSON query
  */
-export const runQuery = (
-  docs: Record<string, any>[],
-  query?: SearchFilters
-) => {
+export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
