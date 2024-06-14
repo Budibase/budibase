@@ -39,6 +39,7 @@ import { cloneDeep } from "lodash/fp"
 import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import env from "../../../environment"
+import { makeExternalQuery } from "../../../integrations/base/query"
 
 export interface ManyRelationship {
   tableId?: string
@@ -517,7 +518,7 @@ export class ExternalRequest<T extends Operation> {
     // finally cleanup anything that needs to be removed
     for (let [colName, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
-      // if its not the foreign key skip it, nothing to do
+      // if it's not the foreign key skip it, nothing to do
       if (
         !table ||
         (!isMany && table.primary && table.primary.indexOf(colName) !== -1)
@@ -667,7 +668,7 @@ export class ExternalRequest<T extends Operation> {
       response = await getDatasourceAndQuery(json)
     } else {
       const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
-      response = await aliasing.queryWithAliasing(json)
+      response = await aliasing.queryWithAliasing(json, makeExternalQuery)
     }
 
     const responseRows = Array.isArray(response) ? response : []

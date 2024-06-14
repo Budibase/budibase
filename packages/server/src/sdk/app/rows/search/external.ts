@@ -28,7 +28,7 @@ export async function search(
   table: Table
 ): Promise<SearchResponse<Row>> {
   const { tableId } = options
-  const { paginate, query, ...params } = options
+  const { countRows, paginate, query, ...params } = options
   const { limit } = params
   let bookmark =
     (params.bookmark && parseInt(params.bookmark as string)) || undefined
@@ -37,10 +37,14 @@ export async function search(
   }
   let paginateObj = {}
 
-  if (paginate) {
+  if (paginate && !limit) {
+    throw new Error("Cannot paginate query without a limit")
+  }
+
+  if (paginate && limit) {
     paginateObj = {
       // add one so we can track if there is another page
-      limit: limit,
+      limit: limit + 1,
       page: bookmark,
     }
   } else if (params && limit) {
@@ -76,17 +80,10 @@ export async function search(
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     })
     let hasNextPage = false
-    if (paginate && rows.length === limit) {
-      const nextRows = await handleRequest(Operation.READ, tableId, {
-        filters: query,
-        sort,
-        paginate: {
-          limit: 1,
-          page: bookmark! * limit + 1,
-        },
-        includeSqlRelationships: IncludeRelationship.INCLUDE,
-      })
-      hasNextPage = nextRows.length > 0
+    // remove the extra row if it's there
+    if (paginate && limit && rows.length > limit) {
+      rows.pop()
+      hasNextPage = true
     }
 
     if (options.fields) {

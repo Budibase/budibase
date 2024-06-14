@@ -12,7 +12,6 @@ import {
   SortOrder,
   SortType,
   SqlClient,
-  SqlQuery,
   Table,
 } from "@budibase/types"
 import {
@@ -114,17 +113,13 @@ async function runSqlQuery(
   opts?: { countTotalRows?: boolean }
 ) {
   const alias = new AliasTables(tables.map(table => table.name))
+  if (opts?.countTotalRows) {
+    json.endpoint.operation = Operation.COUNT
+  }
   const processSQLQuery = async (json: QueryJson) => {
-    let query: SqlQuery | SqlQuery[]
-    if (opts?.countTotalRows) {
-      query = builder._count(json, {
-        disableReturning: true,
-      })
-    } else {
-      query = builder._query(json, {
-        disableReturning: true,
-      })
-    }
+    const query = builder._query(json, {
+      disableReturning: true,
+    })
 
     if (Array.isArray(query)) {
       throw new Error("SQS cannot currently handle multiple queries")
@@ -227,12 +222,16 @@ export async function search(
     )
 
     // check for pagination final row
-    let nextRow: Row | undefined, rowCount: number | undefined
+    let nextRow: Row | undefined
     if (paginate && params.limit && processed.length > params.limit) {
-      // get the total count of rows
-      rowCount = await runSqlQuery(request, allTables, { countTotalRows: true })
       // remove the extra row that confirmed if there is another row to move to
       nextRow = processed.pop()
+    }
+
+    let rowCount: number | undefined
+    if (options.countRows) {
+      // get the total count of rows
+      rowCount = await runSqlQuery(request, allTables, { countTotalRows: true })
     }
 
     // get the rows
@@ -255,8 +254,10 @@ export async function search(
       const hasNextPage = !!nextRow
       response.hasNextPage = hasNextPage
       if (hasNextPage) {
-        response.totalRows = rowCount
         response.bookmark = bookmark + 1
+      }
+      if (rowCount != null) {
+        response.totalRows = rowCount
       }
       return response
     } else {
