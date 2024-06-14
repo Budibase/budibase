@@ -7,6 +7,7 @@ import {
   FieldType,
   FilterType,
   IncludeRelationship,
+  isManyToOne,
   OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
@@ -16,22 +17,21 @@ import {
   SortJson,
   SortType,
   Table,
-  isManyToOne,
 } from "@budibase/types"
 import {
   breakExternalTableId,
   breakRowIdField,
   convertRowId,
+  generateRowIdField,
   isRowId,
   isSQL,
-  generateRowIdField,
 } from "../../../integrations/utils"
 import {
   buildExternalRelationships,
   buildSqlFieldList,
   generateIdForRow,
-  sqlOutputProcessing,
   isManyToMany,
+  sqlOutputProcessing,
 } from "./utils"
 import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
 import { processObjectSync } from "@budibase/string-templates"
@@ -60,6 +60,13 @@ export interface RunConfig {
   tables?: Record<string, Table>
   includeSqlRelationships?: IncludeRelationship
 }
+
+export type ExternalRequestReturnType<T extends Operation> =
+  T extends Operation.READ
+    ? Row[]
+    : T extends Operation.COUNT
+    ? number
+    : { row: Row; table: Table }
 
 function buildFilters(
   id: string | undefined | string[],
@@ -223,9 +230,6 @@ function isEditableColumn(column: FieldSchema) {
   const isFormula = column.type === FieldType.FORMULA
   return !(isExternalAutoColumn || isFormula)
 }
-
-export type ExternalRequestReturnType<T extends Operation> =
-  T extends Operation.READ ? Row[] : { row: Row; table: Table }
 
 export class ExternalRequest<T extends Operation> {
   private readonly operation: T
@@ -429,7 +433,10 @@ export class ExternalRequest<T extends Operation> {
       })
       // this is the response from knex if no rows found
       const rows: Row[] =
-        !Array.isArray(response) || response?.[0].read ? [] : response
+        !Array.isArray(response) ||
+        (response.length === 1 && "read" in response[0])
+          ? []
+          : response
       const storeTo = isManyToMany(field)
         ? field.throughFrom || linkPrimaryKey
         : fieldName
@@ -664,10 +671,15 @@ export class ExternalRequest<T extends Operation> {
 
     // aliasing can be disabled fully if desired
     let response
+    const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
     if (env.SQL_ALIASING_DISABLE) {
       response = await getDatasourceAndQuery(json)
+    } else if (this.operation === Operation.COUNT) {
+      return (await aliasing.countWithAliasing(
+        json,
+        makeExternalQuery
+      )) as ExternalRequestReturnType<T>
     } else {
-      const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
       response = await aliasing.queryWithAliasing(json, makeExternalQuery)
     }
 

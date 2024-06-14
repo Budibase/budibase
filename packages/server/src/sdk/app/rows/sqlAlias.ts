@@ -249,7 +249,8 @@ export default class AliasTables {
     json.endpoint.operation = Operation.COUNT
     let response = await this.queryWithAliasing(json, queryFn)
     if (response && response.length === 1 && "total" in response[0]) {
-      return response[0].total
+      const total = response[0].total
+      return typeof total === "number" ? total : parseInt(total)
     } else {
       throw new Error("Unable to count rows in query - no count response")
     }

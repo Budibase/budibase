@@ -197,6 +197,7 @@ enum DSPlusOperation {
 export type DatasourcePlusQueryResponse =
   | Row[]
   | Record<DSPlusOperation, boolean>[]
+  | { total: number }[]
   | void
 
 export interface DatasourcePlus extends IntegrationBase {
