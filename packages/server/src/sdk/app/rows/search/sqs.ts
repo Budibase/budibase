@@ -12,6 +12,7 @@ import {
   SortOrder,
   SortType,
   SqlClient,
+  SqlQuery,
   Table,
 } from "@budibase/types"
 import {
@@ -101,12 +102,29 @@ function buildTableMap(tables: Table[]) {
   return tableMap
 }
 
-async function runSqlQuery(json: QueryJson, tables: Table[]) {
+function runSqlQuery(json: QueryJson, tables: Table[]): Promise<Row[]>
+function runSqlQuery(
+  json: QueryJson,
+  tables: Table[],
+  opts: { countTotalRows: boolean }
+): Promise<number>
+async function runSqlQuery(
+  json: QueryJson,
+  tables: Table[],
+  opts?: { countTotalRows?: boolean }
+) {
   const alias = new AliasTables(tables.map(table => table.name))
-  return await alias.queryWithAliasing(json, async json => {
-    const query = builder._query(json, {
-      disableReturning: true,
-    })
+  const processSQLQuery = async (json: QueryJson) => {
+    let query: SqlQuery | SqlQuery[]
+    if (opts?.countTotalRows) {
+      query = builder._count(json, {
+        disableReturning: true,
+      })
+    } else {
+      query = builder._query(json, {
+        disableReturning: true,
+      })
+    }
 
     if (Array.isArray(query)) {
       throw new Error("SQS cannot currently handle multiple queries")
@@ -125,7 +143,12 @@ async function runSqlQuery(json: QueryJson, tables: Table[]) {
 
     const db = context.getAppDB()
     return await db.sql<Row>(sql, bindings)
-  })
+  }
+  if (opts?.countTotalRows) {
+    return await alias.countWithAliasing(json, processSQLQuery)
+  } else {
+    return await alias.queryWithAliasing(json, processSQLQuery)
+  }
 }
 
 export async function search(
@@ -204,8 +227,11 @@ export async function search(
     )
 
     // check for pagination final row
-    let nextRow: Row | undefined
+    let nextRow: Row | undefined, rowCount: number | undefined
     if (paginate && params.limit && processed.length > params.limit) {
+      // get the total count of rows
+      rowCount = await runSqlQuery(request, allTables, { countTotalRows: true })
+      // remove the extra row that confirmed if there is another row to move to
       nextRow = processed.pop()
     }
 
@@ -226,14 +252,10 @@ export async function search(
       const response: SearchResponse<Row> = {
         rows: finalRows,
       }
-      const prevLimit = request.paginate!.limit
-      request.paginate = {
-        limit: 1,
-        page: bookmark * prevLimit + 1,
-      }
       const hasNextPage = !!nextRow
       response.hasNextPage = hasNextPage
       if (hasNextPage) {
+        response.totalRows = rowCount
         response.bookmark = bookmark + 1
       }
       return response

@@ -65,7 +65,7 @@ export default class AliasTables {
     this.charSeq = new CharSequence()
   }
 
-  isAliasingEnabled(json: QueryJson, datasource: Datasource) {
+  isAliasingEnabled(json: QueryJson, datasource?: Datasource) {
     const operation = json.endpoint.operation
     const fieldLength = json.resource?.fields?.length
     if (
@@ -74,6 +74,10 @@ export default class AliasTables {
       DISABLED_OPERATIONS.includes(operation)
     ) {
       return false
+    }
+    // SQS - doesn't have a datasource
+    if (!datasource) {
+      return true
     }
     try {
       const sqlClient = getSQLClient(datasource)
@@ -173,7 +177,7 @@ export default class AliasTables {
     const isSqs = datasourceId === SQS_DATASOURCE_INTERNAL
     let aliasingEnabled: boolean, datasource: Datasource | undefined
     if (isSqs) {
-      aliasingEnabled = true
+      aliasingEnabled = this.isAliasingEnabled(json)
     } else {
       datasource = await datasources.get(datasourceId)
       aliasingEnabled = this.isAliasingEnabled(json, datasource)
@@ -237,6 +241,19 @@ export default class AliasTables {
       return this.reverse(response)
     } else {
       return response
+    }
+  }
+
+  // handles getting the count out of the query
+  async countWithAliasing(
+    json: QueryJson,
+    queryFn?: (json: QueryJson) => Promise<DatasourcePlusQueryResponse>
+  ): Promise<number> {
+    let response = await this.queryWithAliasing(json, queryFn)
+    if (response && response.length === 1 && "total" in response[0]) {
+      return response[0].total
+    } else {
+      throw new Error("Unable to count rows in query - no count response")
     }
   }
 }
