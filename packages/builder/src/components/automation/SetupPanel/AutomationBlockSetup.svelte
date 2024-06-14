@@ -41,7 +41,7 @@
     EditorModes,
   } from "components/common/CodeEditor"
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { LuceneUtils, Utils } from "@budibase/frontend-core"
+  import { QueryUtils, Utils } from "@budibase/frontend-core"
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
@@ -344,7 +344,7 @@
   }
 
   function saveFilters(key) {
-    const filters = LuceneUtils.buildLuceneQuery(tempFilters)
+    const filters = QueryUtils.buildQuery(tempFilters)
     const defKey = `${key}-def`
     onChange({ detail: filters }, key)
     // need to store the builder definition in the automation
