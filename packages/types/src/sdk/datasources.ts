@@ -8,6 +8,7 @@ export enum Operation {
   READ = "READ",
   UPDATE = "UPDATE",
   DELETE = "DELETE",
+  COUNT = "COUNT",
   BULK_CREATE = "BULK_CREATE",
   CREATE_TABLE = "CREATE_TABLE",
   UPDATE_TABLE = "UPDATE_TABLE",
