@@ -1,12 +1,10 @@
 import { outputProcessing } from "../../utilities/rowProcessor"
 import { InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
-import { roles, context, db as dbCore } from "@budibase/backend-core"
-import { ContextUser, Row, UserCtx } from "@budibase/types"
+import { context, db as dbCore } from "@budibase/backend-core"
+import { BuiltInRole, ContextUser, Row, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 import { processUser } from "../../utilities/global"
-
-const PUBLIC_ROLE = roles.BUILTIN_ROLE_IDS.PUBLIC
 
 /**
  * Add the attributes that are session based to the current user.
@@ -37,7 +35,7 @@ export async function fetchSelf(ctx: UserCtx) {
   if (appId) {
     const db = context.getAppDB()
     // check for group permissions
-    if (!user.roleId || user.roleId === PUBLIC_ROLE) {
+    if (!user.roleId || user.roleId === BuiltInRole.PUBLIC) {
       user = await processUser(user, { appId })
     }
     // remove the full roles structure
@@ -49,7 +47,7 @@ export async function fetchSelf(ctx: UserCtx) {
     } catch (err: any) {
       let response
       // user didn't exist in app, don't pretend they do
-      if (user.roleId === PUBLIC_ROLE) {
+      if (user.roleId === BuiltInRole.PUBLIC) {
         response = {}
       }
       // user has a role of some sort, return them
