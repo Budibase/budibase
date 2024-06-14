@@ -512,75 +512,63 @@ describe.each([
         ])
       })
 
-      // TODO(samwho): fix for SQS
-      !isSqs &&
-        it("should match the session user id in a multi user field", async () => {
-          const allUsers = [...globalUsers, config.getUser()].map(
-            (user: any) => {
+      it("should match the session user id in a multi user field", async () => {
+        const allUsers = [...globalUsers, config.getUser()].map((user: any) => {
+          return { _id: user._id }
+        })
+
+        await expectQuery({
+          contains: { multi_user: ["{{ [user]._id }}"] },
+        }).toContainExactly([
+          {
+            name: "multi user with session user",
+            multi_user: allUsers,
+          },
+        ])
+      })
+
+      it("should match the session user id in a deprecated multi user field", async () => {
+        const allUsers = [...globalUsers, config.getUser()].map((user: any) => {
+          return { _id: user._id }
+        })
+
+        await expectQuery({
+          contains: { deprecated_multi_user: ["{{ [user]._id }}"] },
+        }).toContainExactly([
+          {
+            name: "deprecated multi user with session user",
+            deprecated_multi_user: allUsers,
+          },
+        ])
+      })
+
+      it("should not match the session user id in a multi user field", async () => {
+        await expectQuery({
+          notContains: { multi_user: ["{{ [user]._id }}"] },
+          notEmpty: { multi_user: true },
+        }).toContainExactly([
+          {
+            name: "multi user",
+            multi_user: globalUsers.map((user: any) => {
               return { _id: user._id }
-            }
-          )
+            }),
+          },
+        ])
+      })
 
-          await expectQuery({
-            contains: { multi_user: ["{{ [user]._id }}"] },
-          }).toContainExactly([
-            {
-              name: "multi user with session user",
-              multi_user: allUsers,
-            },
-          ])
-        })
-
-      // TODO(samwho): fix for SQS
-      !isSqs &&
-        it("should match the session user id in a deprecated multi user field", async () => {
-          const allUsers = [...globalUsers, config.getUser()].map(
-            (user: any) => {
+      it("should not match the session user id in a deprecated multi user field", async () => {
+        await expectQuery({
+          notContains: { deprecated_multi_user: ["{{ [user]._id }}"] },
+          notEmpty: { deprecated_multi_user: true },
+        }).toContainExactly([
+          {
+            name: "deprecated multi user",
+            deprecated_multi_user: globalUsers.map((user: any) => {
               return { _id: user._id }
-            }
-          )
-
-          await expectQuery({
-            contains: { deprecated_multi_user: ["{{ [user]._id }}"] },
-          }).toContainExactly([
-            {
-              name: "deprecated multi user with session user",
-              deprecated_multi_user: allUsers,
-            },
-          ])
-        })
-
-      // TODO(samwho): fix for SQS
-      !isSqs &&
-        it("should not match the session user id in a multi user field", async () => {
-          await expectQuery({
-            notContains: { multi_user: ["{{ [user]._id }}"] },
-            notEmpty: { multi_user: true },
-          }).toContainExactly([
-            {
-              name: "multi user",
-              multi_user: globalUsers.map((user: any) => {
-                return { _id: user._id }
-              }),
-            },
-          ])
-        })
-
-      // TODO(samwho): fix for SQS
-      !isSqs &&
-        it("should not match the session user id in a deprecated multi user field", async () => {
-          await expectQuery({
-            notContains: { deprecated_multi_user: ["{{ [user]._id }}"] },
-            notEmpty: { deprecated_multi_user: true },
-          }).toContainExactly([
-            {
-              name: "deprecated multi user",
-              deprecated_multi_user: globalUsers.map((user: any) => {
-                return { _id: user._id }
-              }),
-            },
-          ])
-        })
+            }),
+          },
+        ])
+      })
 
       it("should match the session user id and a user table row id using helpers, user binding and a static user id.", async () => {
         await expectQuery({
@@ -1552,38 +1540,34 @@ describe.each([
           })
         })
 
-      // TODO(samwho): fix for SQS
-      !isSqs &&
-        describe("pagination", () => {
-          it("should paginate through all rows", async () => {
-            // @ts-ignore
-            let bookmark: string | number = undefined
-            let rows: Row[] = []
+      describe("pagination", () => {
+        it("should paginate through all rows", async () => {
+          // @ts-ignore
+          let bookmark: string | number = undefined
+          let rows: Row[] = []
 
-            // eslint-disable-next-line no-constant-condition
-            while (true) {
-              const response = await config.api.row.search(table._id!, {
-                tableId: table._id!,
-                limit: 3,
-                query: {},
-                bookmark,
-                paginate: true,
-              })
+          // eslint-disable-next-line no-constant-condition
+          while (true) {
+            const response = await config.api.row.search(table._id!, {
+              tableId: table._id!,
+              limit: 3,
+              query: {},
+              bookmark,
+              paginate: true,
+            })
 
-              rows.push(...response.rows)
+            rows.push(...response.rows)
 
-              if (!response.bookmark || !response.hasNextPage) {
-                break
-              }
-              bookmark = response.bookmark
+            if (!response.bookmark || !response.hasNextPage) {
+              break
             }
+            bookmark = response.bookmark
+          }
 
-            expect(rows).toHaveLength(10)
-            expect(rows.map(row => row.auto)).toEqual(
-              expect.arrayContaining([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-            )
-          })
+          const autoValues = rows.map(row => row.auto).sort((a, b) => a - b)
+          expect(autoValues).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         })
+      })
     })
 
   describe("field name 1:name", () => {

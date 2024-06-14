@@ -85,6 +85,7 @@ export interface SortJson {
 export interface PaginationJson {
   limit: number
   page?: string | number
+  offset?: number
 }
 
 export interface RenameColumn {
