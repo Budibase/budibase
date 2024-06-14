@@ -4,6 +4,7 @@ import {
   RowSearchParams,
   SearchFilters,
   SearchResponse,
+  SortOrder,
 } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
@@ -76,6 +77,10 @@ export async function search(
     return {
       rows: [],
     }
+  }
+
+  if (options.sortOrder) {
+    options.sortOrder = options.sortOrder.toLowerCase() as SortOrder
   }
 
   const table = await sdk.tables.getTable(options.tableId)

@@ -18,7 +18,6 @@ import {
   SqlQuery,
   RelationshipsJson,
   SearchFilters,
-  SortDirection,
   SqlQueryBinding,
   Table,
   TableSourceType,
@@ -27,6 +26,7 @@ import {
   QueryOptions,
   JsonTypes,
   prefixed,
+  SortOrder,
 } from "@budibase/types"
 import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
@@ -420,11 +420,11 @@ class InternalBuilder {
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
-          value.direction === SortDirection.ASCENDING ? "asc" : "desc"
+          value.direction === SortOrder.ASCENDING ? "asc" : "desc"
         let nulls
         if (this.client === SqlClient.POSTGRES) {
           // All other clients already sort this as expected by default, and adding this to the rest of the clients is causing issues
-          nulls = value.direction === SortDirection.ASCENDING ? "first" : "last"
+          nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
         query = query.orderBy(`${aliased}.${key}`, direction, nulls)
