@@ -72,7 +72,6 @@
     },
     // We can just always provide the categories to the xaxis and horizontal mode automatically handles "tranposing" the categories to the yaxis, but certain things like labels need to be manually put on a certain axis based on the selected mode. Titles do not need to be handled this way, they are exposed to the user as "X axis" and Y Axis" so flipping them would be confusing.
     xaxis: {
-      type: labelType,
       categories,
       labels: {
         formatter: xAxisFormatter,

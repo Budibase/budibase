@@ -4,10 +4,8 @@
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import { Explanation } from "./Explanation"
-  import { FIELDS } from "constants/backend"
   import { params } from "@roxi/routify"
   import { debounce } from "lodash"
-  import { Constants } from "@budibase/frontend-core"
 
   export let componentInstance = {}
   export let value = ""
@@ -35,40 +33,6 @@
   const setValue = value => {
     boundValue = getValidOptions(value.detail, options)
     dispatch("change", boundValue)
-  }
-
-  const getOptionIcon = optionKey => {
-    const option = schema[optionKey]
-    if (!option) return ""
-
-    if (option.autocolumn) {
-      return "MagicWand"
-    }
-    const { type, subtype } = option
-
-    const result =
-      typeof Constants.TypeIconMap[type] === "object" && subtype
-        ? Constants.TypeIconMap[type][subtype]
-        : Constants.TypeIconMap[type]
-
-    return result || "Text"
-  }
-
-  const getOptionIconTooltip = optionKey => {
-    const option = schema[optionKey]
-
-    const type = option?.type
-    const field = Object.values(FIELDS).find(f => f.type === type)
-
-    if (field) {
-      return field.name
-    } else if (type === "jsonarray") {
-      // `jsonarray` isn't present in the above FIELDS constant
-
-      return "JSON Array"
-    }
-
-    return ""
   }
 
   const updateTooltip = debounce((e, option) => {
@@ -110,10 +74,9 @@
     <Explanation
       tableHref={`/builder/app/${$params.application}/data/table/${datasource?.tableId}`}
       schema={schema[currentOption]}
-      columnIcon={getOptionIcon(currentOption)}
-      columnName={currentOption}
-      columnType={getOptionIconTooltip(currentOption)}
+      name={currentOption}
       {explanation}
+      componentName={componentInstance._component}
     />
   </ContextTooltip>
 {/if}
