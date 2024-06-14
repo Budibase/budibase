@@ -1,10 +1,10 @@
 import { Knex, knex } from "knex"
 import * as dbCore from "../db"
 import {
-  isIsoDateString,
-  isValidFilter,
   getNativeSql,
   isExternalTable,
+  isIsoDateString,
+  isValidFilter,
 } from "./utils"
 import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
@@ -12,21 +12,21 @@ import {
   BBReferenceFieldMetadata,
   FieldSchema,
   FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
   JsonFieldMetadata,
+  JsonTypes,
   Operation,
+  prefixed,
   QueryJson,
-  SqlQuery,
+  QueryOptions,
   RelationshipsJson,
   SearchFilters,
   SortDirection,
+  SqlClient,
+  SqlQuery,
   SqlQueryBinding,
   Table,
   TableSourceType,
-  INTERNAL_TABLE_SOURCE_ID,
-  SqlClient,
-  QueryOptions,
-  JsonTypes,
-  prefixed,
 } from "@budibase/types"
 import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
@@ -522,7 +522,7 @@ class InternalBuilder {
           })
       }
     }
-    return query.limit(BASE_LIMIT)
+    return query
   }
 
   knexWithAlias(
@@ -571,9 +571,15 @@ class InternalBuilder {
     return query.insert(parsedBody)
   }
 
-  read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
+  read(
+    knex: Knex,
+    json: QueryJson,
+    limit: number,
+    opts?: { counting?: boolean }
+  ): Knex.QueryBuilder {
     let { endpoint, resource, filters, paginate, relationships, tableAliases } =
       json
+    const counting = opts?.counting
 
     const tableName = endpoint.entityId
     // select all if not specified
@@ -582,28 +588,16 @@ class InternalBuilder {
     }
     let selectStatement: string | (string | Knex.Raw)[] = "*"
     // handle select
-    if (resource.fields && resource.fields.length > 0) {
+    if (!counting && resource.fields && resource.fields.length > 0) {
       // select the resources as the format "table.columnName" - this is what is provided
       // by the resource builder further up
       selectStatement = generateSelectStatement(json, knex)
     }
-    let foundLimit = limit || BASE_LIMIT
-    // handle pagination
-    let foundOffset: number | null = null
-    if (paginate && paginate.page && paginate.limit) {
-      // @ts-ignore
-      const page = paginate.page <= 1 ? 0 : paginate.page - 1
-      const offset = page * paginate.limit
-      foundLimit = paginate.limit
-      foundOffset = offset
-    } else if (paginate && paginate.limit) {
-      foundLimit = paginate.limit
-    }
     // start building the query
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
-    query = query.limit(foundLimit)
-    if (foundOffset) {
-      query = query.offset(foundOffset)
+    // add a base query over all
+    if (!counting) {
+      query = query.limit(BASE_LIMIT)
     }
     query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
@@ -614,7 +608,12 @@ class InternalBuilder {
     const alias = tableAliases?.[tableName] || tableName
     let preQuery = knex({
       [alias]: query,
-    } as any).select(selectStatement) as any
+    } as any)
+    if (counting) {
+      preQuery = preQuery.count("* as total")
+    } else {
+      preQuery = preQuery.select(selectStatement)
+    }
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClient.MS_SQL) {
       preQuery = this.addSorting(preQuery, json)
@@ -627,6 +626,30 @@ class InternalBuilder {
       endpoint.schema,
       tableAliases
     )
+
+    let foundLimit = limit || BASE_LIMIT
+    // handle pagination
+    let foundOffset: number | null = null
+    if (paginate && paginate.page && paginate.limit) {
+      let page =
+        typeof paginate.page === "string"
+          ? parseInt(paginate.page)
+          : paginate.page
+      page = page <= 1 ? 0 : page - 1
+      const offset = page * paginate.limit
+      foundLimit = paginate.limit
+      foundOffset = offset
+    } else if (paginate && paginate.limit) {
+      foundLimit = paginate.limit
+    }
+    if (!counting) {
+      query = query.limit(foundLimit)
+    }
+    // add overall pagination
+    if (!counting && foundOffset) {
+      query = query.offset(foundOffset)
+    }
+
     return this.addFilters(query, filters, json.meta.table, {
       relationship: true,
       aliases: tableAliases,
@@ -671,6 +694,19 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     this.limit = limit
   }
 
+  private convertToNative(query: Knex.QueryBuilder, opts: QueryOptions = {}) {
+    const sqlClient = this.getSqlClient()
+    if (opts?.disableBindings) {
+      return { sql: query.toString() }
+    } else {
+      let native = getNativeSql(query)
+      if (sqlClient === SqlClient.SQL_LITE) {
+        native = convertBooleans(native)
+      }
+      return native
+    }
+  }
+
   /**
    * @param json The JSON query DSL which is to be converted to SQL.
    * @param opts extra options which are to be passed into the query builder, e.g. disableReturning
@@ -713,15 +749,21 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         throw `Operation type is not supported by SQL query builder`
     }
 
-    if (opts?.disableBindings) {
-      return { sql: query.toString() }
-    } else {
-      let native = getNativeSql(query)
-      if (sqlClient === SqlClient.SQL_LITE) {
-        native = convertBooleans(native)
-      }
-      return native
+    return this.convertToNative(query, opts)
+  }
+
+  _count(json: QueryJson, opts: QueryOptions = {}) {
+    const sqlClient = this.getSqlClient()
+    const config: Knex.Config = {
+      client: sqlClient,
     }
+    if (sqlClient === SqlClient.SQL_LITE) {
+      config.useNullAsDefault = true
+    }
+    const client = knex(config)
+    const builder = new InternalBuilder(sqlClient)
+    const query = builder.read(client, json, this.limit, { counting: true })
+    return this.convertToNative(query, opts)
   }
 
   async getReturningRow(queryFn: QueryFunction, json: QueryJson) {
