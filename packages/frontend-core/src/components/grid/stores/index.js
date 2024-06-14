@@ -1,3 +1,4 @@
+import { createUtils } from "./utils"
 import * as Bounds from "./bounds"
 import * as Columns from "./columns"
 import * as Menu from "./menu"
@@ -47,6 +48,9 @@ const DependencyOrderedStores = [
 ]
 
 export const attachStores = context => {
+  // Utils
+  context = { ...context, ...createUtils(context) }
+
   // Atomic store creation
   for (let store of DependencyOrderedStores) {
     context = { ...context, ...store.createStores?.(context) }

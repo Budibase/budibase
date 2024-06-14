@@ -155,7 +155,6 @@
 <div use:styleable={styles} class:in-builder={$builderStore.inBuilder}>
   <Grid
     bind:this={grid}
-    id={$component.id}
     datasource={table}
     {API}
     {stripeRows}
@@ -179,6 +178,8 @@
     notifyError={notificationStore.actions.error}
     buttons={enrichedButtons}
     isCloud={$environmentStore.cloud}
+    id={$component.id}
+    cache
     on:rowclick={e => onRowClick?.({ row: e.detail })}
   />
 </div>

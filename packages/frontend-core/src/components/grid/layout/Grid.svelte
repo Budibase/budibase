@@ -58,10 +58,11 @@
   export let darkMode
   export let isCloud = null
   export let allowViewReadonlyColumns = false
-  export let id = null
+  export let id = Math.random().toString().slice(2)
+  export let cache = false
 
   // Unique identifier for DOM nodes inside this instance
-  const gridID = `grid-${id || Math.random().toString().slice(2)}`
+  const gridID = `grid-${id}`
 
   // Store props in a store for reference in other stores
   const props = writable($$props)
@@ -71,8 +72,8 @@
     API: API || createAPIClient(),
     gridID,
     props,
+    ...createEventManagers(),
   }
-  context = { ...context, ...createEventManagers() }
   context = attachStores(context)
 
   // Reference some stores for local use
@@ -87,8 +88,6 @@
     contentLines,
     gridFocused,
     error,
-    columns,
-    stickyColumn,
   } = context
 
   // Keep config store up to date with props
@@ -117,6 +116,8 @@
     buttons,
     darkMode,
     isCloud,
+    allowViewReadonlyColumns,
+    cache,
   })
 
   // Derive min height and make available in context
@@ -157,7 +158,7 @@
       <div class="controls-left">
         <slot name="filter" />
         <SortButton />
-        <ColumnsSettingButton {allowViewReadonlyColumns} />
+        <ColumnsSettingButton />
         <SizeButton />
         <slot name="controls" />
       </div>

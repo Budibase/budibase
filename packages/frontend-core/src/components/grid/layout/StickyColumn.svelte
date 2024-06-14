@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { Icon } from "@budibase/bbui"
+  import { Icon, ProgressCircle } from "@budibase/bbui"
   import GridCell from "../cells/GridCell.svelte"
   import DataCell from "../cells/DataCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
@@ -9,6 +9,7 @@
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
   import { getCellID } from "../lib/utils"
+  import { fade } from "svelte/transition"
 
   const {
     rows,
@@ -24,6 +25,7 @@
     dispatch,
     contentLines,
     isDragging,
+    loading,
   } = getContext("grid")
 
   $: rowCount = $rows.length
@@ -57,6 +59,21 @@
       rowSelected={selectedRowCount && selectedRowCount === rowCount}
       disabled={!$renderedRows.length}
     />
+
+    {#if $loading}
+      <div
+        class="loading-wrapper"
+        in:fade|local={{ duration: 130 }}
+        out:fade|local={{ duration: 130, delay: 500 }}
+      >
+        <GutterCell>
+          <div class="loading-content">
+            <ProgressCircle size="S" />
+          </div>
+        </GutterCell>
+      </div>
+    {/if}
+
     {#if $stickyColumn}
       <HeaderCell column={$stickyColumn} orderable={false} idx="sticky">
         <slot name="edit-column" />
@@ -133,6 +150,17 @@
     background: var(--cell-background);
   }
 
+  /* Loading spinner */
+  .loading-wrapper {
+    position: absolute;
+    display: flex;
+  }
+  .loading-content {
+    display: grid;
+    place-items: center;
+    padding-top: 2px;
+  }
+
   /* Add right border */
   .sticky-column:before {
     position: absolute;
@@ -158,16 +186,20 @@
   }
 
   /* Don't show borders between cells in the sticky column */
-  .sticky-column :global(.cell:not(:last-child)) {
+  .sticky-column :global(.cell:not(:last-child)),
+  .loading-wrapper :global(.cell) {
     border-right: none;
   }
 
+  /* Copy header styles */
   .header {
     z-index: 1;
   }
   .header :global(.cell) {
     background: var(--grid-background-alt);
   }
+
+  /* Copy body styles */
   .row {
     display: flex;
     flex-direction: row;

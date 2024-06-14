@@ -5,15 +5,14 @@
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
 
-  export let allowViewReadonlyColumns = false
-
-  const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
+  const { columns, datasource, stickyColumn, dispatch, props } =
+    getContext("grid")
 
   let open = false
   let anchor
 
+  $: allowViewReadonlyColumns = $props.allowViewReadonlyColumns
   $: allColumns = $stickyColumn ? [$stickyColumn, ...$columns] : $columns
-
   $: restrictedColumns = allColumns.filter(col => !col.visible || col.readonly)
   $: anyRestricted = restrictedColumns.length
   $: text = anyRestricted ? `Columns (${anyRestricted} restricted)` : "Columns"

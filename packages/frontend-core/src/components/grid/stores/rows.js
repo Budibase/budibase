@@ -4,10 +4,9 @@ import { NewRowID, RowPageSize } from "../lib/constants"
 import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
-import { createLocalStorageStore } from "../../../stores/localStorage"
 
 export const createStores = context => {
-  const rows = createLocalStorageStore(`bb-grid-${context.gridID}-rows`, [])
+  const rows = context.createCachedStore("rows", [])
   const loading = writable(false)
   const loaded = writable(get(rows).length > 0)
   const refreshing = writable(false)
