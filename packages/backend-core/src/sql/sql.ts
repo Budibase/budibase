@@ -12,21 +12,21 @@ import {
   BBReferenceFieldMetadata,
   FieldSchema,
   FieldType,
-  INTERNAL_TABLE_SOURCE_ID,
   JsonFieldMetadata,
-  JsonTypes,
   Operation,
-  prefixed,
   QueryJson,
-  QueryOptions,
   RelationshipsJson,
   SearchFilters,
-  SortDirection,
   SqlClient,
   SqlQuery,
   SqlQueryBinding,
   Table,
   TableSourceType,
+  INTERNAL_TABLE_SOURCE_ID,
+  QueryOptions,
+  JsonTypes,
+  prefixed,
+  SortOrder,
 } from "@budibase/types"
 import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
@@ -420,11 +420,11 @@ class InternalBuilder {
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
-          value.direction === SortDirection.ASCENDING ? "asc" : "desc"
+          value.direction === SortOrder.ASCENDING ? "asc" : "desc"
         let nulls
         if (this.client === SqlClient.POSTGRES) {
           // All other clients already sort this as expected by default, and adding this to the rest of the clients is causing issues
-          nulls = value.direction === SortDirection.ASCENDING ? "first" : "last"
+          nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
         query = query.orderBy(`${aliased}.${key}`, direction, nulls)
@@ -594,10 +594,10 @@ class InternalBuilder {
     if (!counting) {
       query = query.limit(BASE_LIMIT)
     }
+    // add filters to the query (where)
     query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
     })
-
     // add sorting to pre-query
     query = this.addSorting(query, json)
     const alias = tableAliases?.[tableName] || tableName
@@ -621,22 +621,22 @@ class InternalBuilder {
       endpoint.schema,
       tableAliases
     )
-
-    let foundLimit = limit || BASE_LIMIT
     // handle pagination
     let foundOffset: number | null = null
+    let foundLimit = limit || BASE_LIMIT
     if (paginate && paginate.page && paginate.limit) {
-      let page =
-        typeof paginate.page === "string"
-          ? parseInt(paginate.page)
-          : paginate.page
-      page = page <= 1 ? 0 : page - 1
+      // @ts-ignore
+      const page = paginate.page <= 1 ? 0 : paginate.page - 1
       const offset = page * paginate.limit
       foundLimit = paginate.limit
       foundOffset = offset
+    } else if (paginate && paginate.offset && paginate.limit) {
+      foundLimit = paginate.limit
+      foundOffset = paginate.offset
     } else if (paginate && paginate.limit) {
       foundLimit = paginate.limit
     }
+    // always add the found limit, unless counting
     if (!counting) {
       query = query.limit(foundLimit)
     }
