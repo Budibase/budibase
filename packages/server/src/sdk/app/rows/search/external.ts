@@ -33,9 +33,9 @@ export async function search(
   let bookmark =
     (params.bookmark && parseInt(params.bookmark as string)) || undefined
   if (paginate && !bookmark) {
-    bookmark = 1
+    bookmark = 0
   }
-  let paginateObj = {}
+  let paginateObj: PaginationJson | undefined
 
   if (paginate && !limit) {
     throw new Error("Cannot paginate query without a limit")
@@ -45,7 +45,9 @@ export async function search(
     paginateObj = {
       // add one so we can track if there is another page
       limit: limit + 1,
-      page: bookmark,
+    }
+    if (bookmark) {
+      paginateObj.offset = limit * bookmark
     }
   } else if (params && limit) {
     paginateObj = {
@@ -97,7 +99,11 @@ export async function search(
     })
 
     // need wrapper object for bookmarks etc when paginating
-    return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
+    const response: SearchResponse<Row> = { rows, hasNextPage }
+    if (hasNextPage && bookmark != null) {
+      response.bookmark = bookmark + 1
+    }
+    return response
   } catch (err: any) {
     if (err.message && err.message.includes("does not exist")) {
       throw new Error(
