@@ -15,6 +15,7 @@
     Checkbox,
     DatePicker,
     DrawerContent,
+    Toggle,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation, tables } from "stores/builder"
@@ -40,7 +41,7 @@
     EditorModes,
   } from "components/common/CodeEditor"
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { LuceneUtils, Utils } from "@budibase/frontend-core"
+  import { QueryUtils, Utils } from "@budibase/frontend-core"
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
@@ -118,7 +119,6 @@
         searchableSchema: true,
       }).schema
     }
-
     try {
       if (isTestModal) {
         let newTestData = { schema }
@@ -343,7 +343,7 @@
   }
 
   function saveFilters(key) {
-    const filters = LuceneUtils.buildLuceneQuery(tempFilters)
+    const filters = QueryUtils.buildQuery(tempFilters)
     const defKey = `${key}-def`
     onChange({ detail: filters }, key)
     // need to store the builder definition in the automation
@@ -383,6 +383,16 @@
       }
     }
     return params
+  }
+
+  function toggleAttachmentBinding(e, key) {
+    onChange(
+      {
+        detail: "",
+      },
+      key
+    )
+    onChange({ detail: { useAttachmentBinding: e.detail } }, "meta")
   }
 
   onMount(async () => {
@@ -462,26 +472,63 @@
               <div class="label-wrapper">
                 <Label>{label}</Label>
               </div>
-              <div class="attachment-field-width">
-                <KeyValueBuilder
-                  on:change={e =>
-                    onChange(
-                      {
-                        detail: e.detail.map(({ name, value }) => ({
-                          url: name,
-                          filename: value,
-                        })),
-                      },
-                      key
-                    )}
-                  object={handleAttachmentParams(inputData[key])}
-                  allowJS
-                  {bindings}
-                  keyBindings
-                  customButtonText={"Add attachment"}
-                  keyPlaceholder={"URL"}
-                  valuePlaceholder={"Filename"}
+              <div class="toggle-container">
+                <Toggle
+                  value={inputData?.meta?.useAttachmentBinding}
+                  text={"Use bindings"}
+                  size={"XS"}
+                  on:change={e => toggleAttachmentBinding(e, key)}
                 />
+              </div>
+
+              <div class="attachment-field-width">
+                {#if !inputData?.meta?.useAttachmentBinding}
+                  <KeyValueBuilder
+                    on:change={e =>
+                      onChange(
+                        {
+                          detail: e.detail.map(({ name, value }) => ({
+                            url: name,
+                            filename: value,
+                          })),
+                        },
+                        key
+                      )}
+                    object={handleAttachmentParams(inputData[key])}
+                    allowJS
+                    {bindings}
+                    keyBindings
+                    customButtonText={"Add attachment"}
+                    keyPlaceholder={"URL"}
+                    valuePlaceholder={"Filename"}
+                  />
+                {:else if isTestModal}
+                  <ModalBindableInput
+                    title={value.title || label}
+                    value={inputData[key]}
+                    panel={AutomationBindingPanel}
+                    type={value.customType}
+                    on:change={e => onChange(e, key)}
+                    {bindings}
+                    updateOnChange={false}
+                  />
+                {:else}
+                  <div class="test">
+                    <DrawerBindableInput
+                      title={value.title ?? label}
+                      panel={AutomationBindingPanel}
+                      type={value.customType}
+                      value={inputData[key]}
+                      on:change={e => onChange(e, key)}
+                      {bindings}
+                      updateOnChange={false}
+                      placeholder={value.customType === "queryLimit"
+                        ? queryLimit
+                        : ""}
+                      drawerLeft="260px"
+                    />
+                  </div>
+                {/if}
               </div>
             </div>
           {:else if value.customType === "filters"}

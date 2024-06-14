@@ -55,6 +55,9 @@
     label: m.name,
     tableId: m._id,
     type: "table",
+    datasource: $datasources.list.find(
+      ds => ds._id === m.sourceId || m.datasourceId
+    ),
   }))
   $: viewsV1 = $viewsStore.list.map(view => ({
     ...view,

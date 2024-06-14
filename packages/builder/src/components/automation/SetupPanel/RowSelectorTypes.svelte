@@ -1,5 +1,11 @@
 <script>
-  import { Select, DatePicker, Multiselect, TextArea } from "@budibase/bbui"
+  import {
+    Select,
+    DatePicker,
+    Multiselect,
+    TextArea,
+    Toggle,
+  } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
@@ -14,6 +20,8 @@
   export let value
   export let bindings
   export let isTestModal
+  export let useAttachmentBinding
+  export let onChangeSetting
 
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
@@ -27,6 +35,8 @@
     FieldType.SIGNATURE_SINGLE,
   ]
 
+  let previousBindingState = useAttachmentBinding
+
   function schemaHasOptions(schema) {
     return !!schema.constraints?.inclusion?.length
   }
@@ -34,13 +44,6 @@
   function handleAttachmentParams(keyValueObj) {
     let params = {}
 
-    if (
-      (schema.type === FieldType.ATTACHMENT_SINGLE ||
-        schema.type === FieldType.SIGNATURE_SINGLE) &&
-      Object.keys(keyValueObj).length === 0
-    ) {
-      return []
-    }
     if (!Array.isArray(keyValueObj) && keyValueObj) {
       keyValueObj = [keyValueObj]
     }
@@ -51,6 +54,26 @@
       }
     }
     return params
+  }
+
+  async function handleToggleChange(toggleField, event) {
+    if (event.detail === true) {
+      value[toggleField] = []
+    } else {
+      value[toggleField] = ""
+    }
+    previousBindingState = event.detail
+    onChangeSetting(toggleField, "useAttachmentBinding", event.detail)
+    onChange({ detail: value[toggleField] }, toggleField)
+  }
+
+  $: if (useAttachmentBinding !== previousBindingState) {
+    if (useAttachmentBinding) {
+      value[field] = []
+    } else {
+      value[field] = ""
+    }
+    previousBindingState = useAttachmentBinding
   }
 </script>
 
@@ -108,38 +131,65 @@
     useLabel={false}
   />
 {:else if attachmentTypes.includes(schema.type)}
-  <div class="attachment-field-spacinng">
-    <KeyValueBuilder
-      on:change={e =>
-        onChange(
-          {
-            detail:
-              schema.type === FieldType.ATTACHMENT_SINGLE ||
-              schema.type === FieldType.SIGNATURE_SINGLE
-                ? e.detail.length > 0
-                  ? {
-                      url: e.detail[0].name,
-                      filename: e.detail[0].value,
-                    }
-                  : {}
-                : e.detail.map(({ name, value }) => ({
-                    url: name,
-                    filename: value,
-                  })),
-          },
-          field
-        )}
-      object={handleAttachmentParams(value[field])}
-      allowJS
-      {bindings}
-      keyBindings
-      customButtonText={"Add attachment"}
-      keyPlaceholder={"URL"}
-      valuePlaceholder={"Filename"}
-      actionButtonDisabled={(schema.type === FieldType.ATTACHMENT_SINGLE ||
-        schema.type === FieldType.SIGNATURE) &&
-        Object.keys(value[field]).length >= 1}
-    />
+  <div class="attachment-field-container">
+    <div class="toggle-container">
+      <Toggle
+        value={useAttachmentBinding}
+        text={"Use bindings"}
+        size={"XS"}
+        on:change={e => handleToggleChange(field, e)}
+      />
+    </div>
+    {#if !useAttachmentBinding}
+      <div class="attachment-field-spacing">
+        <KeyValueBuilder
+          on:change={async e => {
+            onChange(
+              {
+                detail:
+                  schema.type === FieldType.ATTACHMENT_SINGLE ||
+                  schema.type === FieldType.SIGNATURE_SINGLE
+                    ? e.detail.length > 0
+                      ? {
+                          url: e.detail[0].name,
+                          filename: e.detail[0].value,
+                        }
+                      : {}
+                    : e.detail.map(({ name, value }) => ({
+                        url: name,
+                        filename: value,
+                      })),
+              },
+              field
+            )
+          }}
+          object={handleAttachmentParams(value[field])}
+          allowJS
+          {bindings}
+          keyBindings
+          customButtonText={"Add attachment"}
+          keyPlaceholder={"URL"}
+          valuePlaceholder={"Filename"}
+          actionButtonDisabled={(schema.type === FieldType.ATTACHMENT_SINGLE ||
+            schema.type === FieldType.SIGNATURE) &&
+            Object.keys(value[field]).length >= 1}
+        />
+      </div>
+    {:else}
+      <div class="json-input-spacing">
+        <svelte:component
+          this={isTestModal ? ModalBindableInput : DrawerBindableInput}
+          panel={AutomationBindingPanel}
+          value={value[field]}
+          on:change={e => onChange(e, field)}
+          type="string"
+          bindings={parsedBindings}
+          allowJS={true}
+          updateOnChange={false}
+          title={schema.name}
+        />
+      </div>
+    {/if}
   </div>
 {:else if ["string", "number", "bigint", "barcodeqr", "array"].includes(schema.type)}
   <svelte:component
@@ -156,7 +206,8 @@
 {/if}
 
 <style>
-  .attachment-field-spacinng {
+  .attachment-field-spacing,
+  .json-input-spacing {
     margin-top: var(--spacing-s);
     margin-bottom: var(--spacing-l);
   }

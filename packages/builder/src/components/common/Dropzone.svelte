@@ -38,4 +38,5 @@
   {processFiles}
   handleFileTooLarge={$admin.cloud ? handleFileTooLarge : null}
   {fileSizeLimit}
+  on:change
 />

@@ -30,4 +30,7 @@ export interface SQLiteDefinition {
   }
 }
 
-export type PreSaveSQLiteDefinition = Omit<SQLiteDefinition, "_rev">
+export interface PreSaveSQLiteDefinition
+  extends Omit<SQLiteDefinition, "_rev"> {
+  _rev?: string
+}
