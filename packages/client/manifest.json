@@ -5224,6 +5224,7 @@
     ]
   },
   "chartblock": {
+    "documentationLink": "https://docs.budibase.com/docs/chart",
     "block": true,
     "name": "Chart Block",
     "icon": "GraphPie",

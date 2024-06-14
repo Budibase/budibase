@@ -2,9 +2,16 @@
   import { Line, InfoWord, DocumentationLink, Text } from "../typography"
   import subjects from "../subjects"
   import * as explanation from "../explanation"
+  import { componentStore } from "stores/builder"
 
   export let setExplanationSubject
   export let support
+  export let componentName
+
+  const getComponentDefinition = componentName => {
+    const components = $componentStore.components || {}
+    return components[componentName] || null
+  }
 
   const getIcon = support => {
     if (support === explanation.support.unsupported) {
@@ -39,21 +46,24 @@
   $: icon = getIcon(support)
   $: color = getColor(support)
   $: text = getText(support)
+  $: componentDefinition = getComponentDefinition(componentName)
 </script>
 
-<Line>
-  <InfoWord
-    on:mouseenter={() => setExplanationSubject(subjects.support)}
-    on:mouseleave={() => setExplanationSubject(subjects.none)}
-    {icon}
-    {color}
-    {text}
-  />
-  <Text value=" with this " />
-  <DocumentationLink
-    href="https://docs.budibase.com/docs/chart"
-    icon="GraphPie"
-    text="Chart component"
-  />
-  <Text value=" input." />
-</Line>
+{#if componentDefinition}
+  <Line>
+    <InfoWord
+      on:mouseenter={() => setExplanationSubject(subjects.support)}
+      on:mouseleave={() => setExplanationSubject(subjects.none)}
+      {icon}
+      {color}
+      {text}
+    />
+    <Text value=" with this " />
+    <DocumentationLink
+      href={componentDefinition.documentationLink}
+      icon={componentDefinition.icon}
+      text={componentDefinition.name}
+    />
+    <Text value=" input." />
+  </Line>
+{/if}
