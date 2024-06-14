@@ -3,6 +3,7 @@ import { GenericContainer, Wait } from "testcontainers"
 import mssql from "mssql"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
+import knex from "knex"
 
 let ports: Promise<testContainerUtils.Port[]>
 
@@ -71,4 +72,18 @@ export async function rawQuery(ds: Datasource, sql: string) {
   } finally {
     await pool.close()
   }
+}
+
+export async function knexClient(ds: Datasource) {
+  if (!ds.config) {
+    throw new Error("Datasource config is missing")
+  }
+  if (ds.source !== SourceName.SQL_SERVER) {
+    throw new Error("Datasource source is not MSSQL")
+  }
+
+  return knex({
+    client: "mssql",
+    connection: ds.config,
+  })
 }

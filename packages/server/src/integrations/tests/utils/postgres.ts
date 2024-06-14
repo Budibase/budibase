@@ -3,6 +3,7 @@ import { GenericContainer, Wait } from "testcontainers"
 import pg from "pg"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
+import knex from "knex"
 
 let ports: Promise<testContainerUtils.Port[]>
 
@@ -65,4 +66,18 @@ export async function rawQuery(ds: Datasource, sql: string) {
   } finally {
     await client.end()
   }
+}
+
+export async function knexClient(ds: Datasource) {
+  if (!ds.config) {
+    throw new Error("Datasource config is missing")
+  }
+  if (ds.source !== SourceName.POSTGRES) {
+    throw new Error("Datasource source is not Postgres")
+  }
+
+  return knex({
+    client: "pg",
+    connection: ds.config,
+  })
 }
