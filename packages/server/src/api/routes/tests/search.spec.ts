@@ -22,30 +22,27 @@ import {
 import _ from "lodash"
 import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
+import { dataFilters } from "@budibase/shared-core"
 
 describe.each([
+  ["in-memory", undefined],
   ["lucene", undefined],
   ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-])("/api/:sourceId/search (%s)", (name, dsProvider) => {
+])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
+  const isInMemory = name === "in-memory"
   const isInternal = isSqs || isLucene
   const config = setup.getConfig()
 
   let envCleanup: (() => void) | undefined
   let datasource: Datasource | undefined
   let table: Table
-
-  const snippets = [
-    {
-      name: "WeeksAgo",
-      code: `return function (weeks) {\n  const currentTime = new Date(${Date.now()});\n  currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));\n  return currentTime.toISOString();\n}`,
-    },
-  ]
+  let rows: Row[]
 
   beforeAll(async () => {
     if (isSqs) {
@@ -55,7 +52,12 @@ describe.each([
 
     if (config.app?.appId) {
       config.app = await config.api.application.update(config.app?.appId, {
-        snippets,
+        snippets: [
+          {
+            name: "WeeksAgo",
+            code: `return function (weeks) {\n  const currentTime = new Date(${Date.now()});\n  currentTime.setDate(currentTime.getDate()-(7 * (weeks || 1)));\n  return currentTime.toISOString();\n}`,
+          },
+        ],
       })
     }
 
@@ -79,13 +81,29 @@ describe.each([
     )
   }
 
-  async function createRows(rows: Record<string, any>[]) {
+  async function createRows(arr: Record<string, any>[]) {
     // Shuffling to avoid false positives given a fixed order
-    await config.api.row.bulkImport(table._id!, { rows: _.shuffle(rows) })
+    await config.api.row.bulkImport(table._id!, {
+      rows: _.shuffle(arr),
+    })
+    rows = await config.api.row.fetch(table._id!)
   }
 
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
+
+    private async performSearch(): Promise<Row[]> {
+      if (isInMemory) {
+        return dataFilters.search(_.cloneDeep(rows), this.query)
+      } else {
+        return (
+          await config.api.row.search(table._id!, {
+            ...this.query,
+            tableId: table._id!,
+          })
+        ).rows
+      }
+    }
 
     // We originally used _.isMatch to compare rows, but found that when
     // comparing arrays it would return true if the source array was a subset of
@@ -157,10 +175,7 @@ describe.each([
     // different to the one passed in will cause the assertion to fail.  Extra
     // rows returned by the query will also cause the assertion to fail.
     async toMatchExactly(expectedRows: any[]) {
-      const { rows: foundRows } = await config.api.row.search(table._id!, {
-        ...this.query,
-        tableId: table._id!,
-      })
+      const foundRows = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
@@ -176,10 +191,7 @@ describe.each([
     // passed in. The order of the rows is not important, but extra rows will
     // cause the assertion to fail.
     async toContainExactly(expectedRows: any[]) {
-      const { rows: foundRows } = await config.api.row.search(table._id!, {
-        ...this.query,
-        tableId: table._id!,
-      })
+      const foundRows = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
@@ -197,10 +209,7 @@ describe.each([
     // The order of the rows is not important. Extra rows will not cause the
     // assertion to fail.
     async toContain(expectedRows: any[]) {
-      const { rows: foundRows } = await config.api.row.search(table._id!, {
-        ...this.query,
-        tableId: table._id!,
-      })
+      const foundRows = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect([...foundRows]).toEqual(
@@ -217,10 +226,7 @@ describe.each([
     }
 
     async toHaveLength(length: number) {
-      const { rows: foundRows } = await config.api.row.search(table._id!, {
-        ...this.query,
-        tableId: table._id!,
-      })
+      const foundRows = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(length)
@@ -296,350 +302,358 @@ describe.each([
     })
   })
 
-  // Ensure all bindings resolve and perform as expected
-  describe("bindings", () => {
-    let globalUsers: any = []
+  // We've decided not to try and support binding for in-memory search just now.
+  !isInMemory &&
+    describe("bindings", () => {
+      let globalUsers: any = []
 
-    const serverTime = new Date()
+      const serverTime = new Date()
 
-    // In MariaDB and MySQL we only store dates to second precision, so we need
-    // to remove milliseconds from the server time to ensure searches work as
-    // expected.
-    serverTime.setMilliseconds(0)
+      // In MariaDB and MySQL we only store dates to second precision, so we need
+      // to remove milliseconds from the server time to ensure searches work as
+      // expected.
+      serverTime.setMilliseconds(0)
 
-    const future = new Date(serverTime.getTime() + 1000 * 60 * 60 * 24 * 30)
+      const future = new Date(serverTime.getTime() + 1000 * 60 * 60 * 24 * 30)
 
-    const rows = (currentUser: User) => {
-      return [
-        { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
-        { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
-        { name: currentUser.firstName, appointment: future.toISOString() },
-        { name: "serverDate", appointment: serverTime.toISOString() },
-        {
-          name: "single user, session user",
-          single_user: JSON.stringify(currentUser),
-        },
-        {
-          name: "single user",
-          single_user: JSON.stringify(globalUsers[0]),
-        },
-        {
-          name: "deprecated single user, session user",
-          deprecated_single_user: JSON.stringify([currentUser]),
-        },
-        {
-          name: "deprecated single user",
-          deprecated_single_user: JSON.stringify([globalUsers[0]]),
-        },
-        {
-          name: "multi user",
-          multi_user: JSON.stringify(globalUsers),
-        },
-        {
-          name: "multi user with session user",
-          multi_user: JSON.stringify([...globalUsers, currentUser]),
-        },
-        {
-          name: "deprecated multi user",
-          deprecated_multi_user: JSON.stringify(globalUsers),
-        },
-        {
-          name: "deprecated multi user with session user",
-          deprecated_multi_user: JSON.stringify([...globalUsers, currentUser]),
-        },
-      ]
-    }
-
-    beforeAll(async () => {
-      // Set up some global users
-      globalUsers = await Promise.all(
-        Array(2)
-          .fill(0)
-          .map(async () => {
-            const globalUser = await config.globalUser()
-            const userMedataId = globalUser._id
-              ? dbCore.generateUserMetadataID(globalUser._id)
-              : null
-            return {
-              _id: globalUser._id,
-              _meta: userMedataId,
-            }
-          })
-      )
-
-      table = await createTable({
-        name: { name: "name", type: FieldType.STRING },
-        appointment: { name: "appointment", type: FieldType.DATETIME },
-        single_user: {
-          name: "single_user",
-          type: FieldType.BB_REFERENCE_SINGLE,
-          subtype: BBReferenceFieldSubType.USER,
-        },
-        deprecated_single_user: {
-          name: "deprecated_single_user",
-          type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USER,
-        },
-        multi_user: {
-          name: "multi_user",
-          type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USER,
-          constraints: {
-            type: "array",
+      const rows = (currentUser: User) => {
+        return [
+          { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
+          { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
+          { name: currentUser.firstName, appointment: future.toISOString() },
+          { name: "serverDate", appointment: serverTime.toISOString() },
+          {
+            name: "single user, session user",
+            single_user: JSON.stringify(currentUser),
           },
-        },
-        deprecated_multi_user: {
-          name: "deprecated_multi_user",
-          type: FieldType.BB_REFERENCE,
-          subtype: BBReferenceFieldSubType.USERS,
-          constraints: {
-            type: "array",
+          {
+            name: "single user",
+            single_user: JSON.stringify(globalUsers[0]),
           },
-        },
-      })
-      await createRows(rows(config.getUser()))
-    })
+          {
+            name: "deprecated single user, session user",
+            deprecated_single_user: JSON.stringify([currentUser]),
+          },
+          {
+            name: "deprecated single user",
+            deprecated_single_user: JSON.stringify([globalUsers[0]]),
+          },
+          {
+            name: "multi user",
+            multi_user: JSON.stringify(globalUsers),
+          },
+          {
+            name: "multi user with session user",
+            multi_user: JSON.stringify([...globalUsers, currentUser]),
+          },
+          {
+            name: "deprecated multi user",
+            deprecated_multi_user: JSON.stringify(globalUsers),
+          },
+          {
+            name: "deprecated multi user with session user",
+            deprecated_multi_user: JSON.stringify([
+              ...globalUsers,
+              currentUser,
+            ]),
+          },
+        ]
+      }
 
-    // !! Current User is auto generated per run
-    it("should return all rows matching the session user firstname", async () => {
-      await expectQuery({
-        equal: { name: "{{ [user].firstName }}" },
-      }).toContainExactly([
-        {
-          name: config.getUser().firstName,
-          appointment: future.toISOString(),
-        },
-      ])
-    })
+      beforeAll(async () => {
+        // Set up some global users
+        globalUsers = await Promise.all(
+          Array(2)
+            .fill(0)
+            .map(async () => {
+              const globalUser = await config.globalUser()
+              const userMedataId = globalUser._id
+                ? dbCore.generateUserMetadataID(globalUser._id)
+                : null
+              return {
+                _id: globalUser._id,
+                _meta: userMedataId,
+              }
+            })
+        )
 
-    it("should parse the date binding and return all rows after the resolved value", async () => {
-      await tk.withFreeze(serverTime, async () => {
-        await expectQuery({
-          range: {
-            appointment: {
-              low: "{{ [now] }}",
-              high: "9999-00-00T00:00:00.000Z",
+        table = await createTable({
+          name: { name: "name", type: FieldType.STRING },
+          appointment: { name: "appointment", type: FieldType.DATETIME },
+          single_user: {
+            name: "single_user",
+            type: FieldType.BB_REFERENCE_SINGLE,
+            subtype: BBReferenceFieldSubType.USER,
+          },
+          deprecated_single_user: {
+            name: "deprecated_single_user",
+            type: FieldType.BB_REFERENCE,
+            subtype: BBReferenceFieldSubType.USER,
+          },
+          multi_user: {
+            name: "multi_user",
+            type: FieldType.BB_REFERENCE,
+            subtype: BBReferenceFieldSubType.USER,
+            constraints: {
+              type: "array",
             },
           },
+          deprecated_multi_user: {
+            name: "deprecated_multi_user",
+            type: FieldType.BB_REFERENCE,
+            subtype: BBReferenceFieldSubType.USERS,
+            constraints: {
+              type: "array",
+            },
+          },
+        })
+        await createRows(rows(config.getUser()))
+      })
+
+      // !! Current User is auto generated per run
+      it("should return all rows matching the session user firstname", async () => {
+        await expectQuery({
+          equal: { name: "{{ [user].firstName }}" },
         }).toContainExactly([
           {
             name: config.getUser().firstName,
             appointment: future.toISOString(),
           },
+        ])
+      })
+
+      it("should parse the date binding and return all rows after the resolved value", async () => {
+        await tk.withFreeze(serverTime, async () => {
+          await expectQuery({
+            range: {
+              appointment: {
+                low: "{{ [now] }}",
+                high: "9999-00-00T00:00:00.000Z",
+              },
+            },
+          }).toContainExactly([
+            {
+              name: config.getUser().firstName,
+              appointment: future.toISOString(),
+            },
+            { name: "serverDate", appointment: serverTime.toISOString() },
+          ])
+        })
+      })
+
+      it("should parse the date binding and return all rows before the resolved value", async () => {
+        await expectQuery({
+          range: {
+            appointment: {
+              low: "0000-00-00T00:00:00.000Z",
+              high: "{{ [now] }}",
+            },
+          },
+        }).toContainExactly([
+          { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
+          { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
           { name: "serverDate", appointment: serverTime.toISOString() },
         ])
       })
-    })
 
-    it("should parse the date binding and return all rows before the resolved value", async () => {
-      await expectQuery({
-        range: {
-          appointment: {
-            low: "0000-00-00T00:00:00.000Z",
-            high: "{{ [now] }}",
+      it("should parse the encoded js snippet. Return rows with appointments up to 1 week in the past", async () => {
+        const jsBinding = "return snippets.WeeksAgo();"
+        const encodedBinding = encodeJSBinding(jsBinding)
+
+        await expectQuery({
+          range: {
+            appointment: {
+              low: "0000-00-00T00:00:00.000Z",
+              high: encodedBinding,
+            },
           },
-        },
-      }).toContainExactly([
-        { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
-        { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
-        { name: "serverDate", appointment: serverTime.toISOString() },
-      ])
-    })
+        }).toContainExactly([
+          { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
+          { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
+        ])
+      })
 
-    it("should parse the encoded js snippet. Return rows with appointments up to 1 week in the past", async () => {
-      const jsBinding = "return snippets.WeeksAgo();"
-      const encodedBinding = encodeJSBinding(jsBinding)
+      it("should parse the encoded js binding. Return rows with appointments 2 weeks in the past", async () => {
+        const jsBinding = `const currentTime = new Date(${Date.now()})\ncurrentTime.setDate(currentTime.getDate()-14);\nreturn currentTime.toISOString();`
+        const encodedBinding = encodeJSBinding(jsBinding)
 
-      await expectQuery({
-        range: {
-          appointment: {
-            low: "0000-00-00T00:00:00.000Z",
-            high: encodedBinding,
+        await expectQuery({
+          range: {
+            appointment: {
+              low: "0000-00-00T00:00:00.000Z",
+              high: encodedBinding,
+            },
           },
-        },
-      }).toContainExactly([
-        { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
-        { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
-      ])
-    })
+        }).toContainExactly([
+          { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
+          { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
+        ])
+      })
 
-    it("should parse the encoded js binding. Return rows with appointments 2 weeks in the past", async () => {
-      const jsBinding = `const currentTime = new Date(${Date.now()})\ncurrentTime.setDate(currentTime.getDate()-14);\nreturn currentTime.toISOString();`
-      const encodedBinding = encodeJSBinding(jsBinding)
-
-      await expectQuery({
-        range: {
-          appointment: {
-            low: "0000-00-00T00:00:00.000Z",
-            high: encodedBinding,
+      it("should match a single user row by the session user id", async () => {
+        await expectQuery({
+          equal: { single_user: "{{ [user]._id }}" },
+        }).toContainExactly([
+          {
+            name: "single user, session user",
+            single_user: { _id: config.getUser()._id },
           },
-        },
-      }).toContainExactly([
-        { name: "foo", appointment: "1982-01-05T00:00:00.000Z" },
-        { name: "bar", appointment: "1995-05-06T00:00:00.000Z" },
-      ])
-    })
+        ])
+      })
 
-    it("should match a single user row by the session user id", async () => {
-      await expectQuery({
-        equal: { single_user: "{{ [user]._id }}" },
-      }).toContainExactly([
-        {
-          name: "single user, session user",
-          single_user: { _id: config.getUser()._id },
-        },
-      ])
-    })
+      it("should match a deprecated single user row by the session user id", async () => {
+        await expectQuery({
+          equal: { deprecated_single_user: "{{ [user]._id }}" },
+        }).toContainExactly([
+          {
+            name: "deprecated single user, session user",
+            deprecated_single_user: [{ _id: config.getUser()._id }],
+          },
+        ])
+      })
 
-    it("should match a deprecated single user row by the session user id", async () => {
-      await expectQuery({
-        equal: { deprecated_single_user: "{{ [user]._id }}" },
-      }).toContainExactly([
-        {
-          name: "deprecated single user, session user",
-          deprecated_single_user: [{ _id: config.getUser()._id }],
-        },
-      ])
-    })
+      // TODO(samwho): fix for SQS
+      !isSqs &&
+        it("should match the session user id in a multi user field", async () => {
+          const allUsers = [...globalUsers, config.getUser()].map(
+            (user: any) => {
+              return { _id: user._id }
+            }
+          )
 
-    // TODO(samwho): fix for SQS
-    !isSqs &&
-      it("should match the session user id in a multi user field", async () => {
-        const allUsers = [...globalUsers, config.getUser()].map((user: any) => {
-          return { _id: user._id }
+          await expectQuery({
+            contains: { multi_user: ["{{ [user]._id }}"] },
+          }).toContainExactly([
+            {
+              name: "multi user with session user",
+              multi_user: allUsers,
+            },
+          ])
         })
 
-        await expectQuery({
-          contains: { multi_user: ["{{ [user]._id }}"] },
-        }).toContainExactly([
-          {
-            name: "multi user with session user",
-            multi_user: allUsers,
-          },
-        ])
-      })
+      // TODO(samwho): fix for SQS
+      !isSqs &&
+        it("should match the session user id in a deprecated multi user field", async () => {
+          const allUsers = [...globalUsers, config.getUser()].map(
+            (user: any) => {
+              return { _id: user._id }
+            }
+          )
 
-    // TODO(samwho): fix for SQS
-    !isSqs &&
-      it("should match the session user id in a deprecated multi user field", async () => {
-        const allUsers = [...globalUsers, config.getUser()].map((user: any) => {
-          return { _id: user._id }
+          await expectQuery({
+            contains: { deprecated_multi_user: ["{{ [user]._id }}"] },
+          }).toContainExactly([
+            {
+              name: "deprecated multi user with session user",
+              deprecated_multi_user: allUsers,
+            },
+          ])
         })
 
+      // TODO(samwho): fix for SQS
+      !isSqs &&
+        it("should not match the session user id in a multi user field", async () => {
+          await expectQuery({
+            notContains: { multi_user: ["{{ [user]._id }}"] },
+            notEmpty: { multi_user: true },
+          }).toContainExactly([
+            {
+              name: "multi user",
+              multi_user: globalUsers.map((user: any) => {
+                return { _id: user._id }
+              }),
+            },
+          ])
+        })
+
+      // TODO(samwho): fix for SQS
+      !isSqs &&
+        it("should not match the session user id in a deprecated multi user field", async () => {
+          await expectQuery({
+            notContains: { deprecated_multi_user: ["{{ [user]._id }}"] },
+            notEmpty: { deprecated_multi_user: true },
+          }).toContainExactly([
+            {
+              name: "deprecated multi user",
+              deprecated_multi_user: globalUsers.map((user: any) => {
+                return { _id: user._id }
+              }),
+            },
+          ])
+        })
+
+      it("should match the session user id and a user table row id using helpers, user binding and a static user id.", async () => {
         await expectQuery({
-          contains: { deprecated_multi_user: ["{{ [user]._id }}"] },
+          oneOf: {
+            single_user: [
+              "{{ default [user]._id '_empty_' }}",
+              globalUsers[0]._id,
+            ],
+          },
         }).toContainExactly([
           {
-            name: "deprecated multi user with session user",
-            deprecated_multi_user: allUsers,
+            name: "single user, session user",
+            single_user: { _id: config.getUser()._id },
+          },
+          {
+            name: "single user",
+            single_user: { _id: globalUsers[0]._id },
           },
         ])
       })
 
-    // TODO(samwho): fix for SQS
-    !isSqs &&
-      it("should not match the session user id in a multi user field", async () => {
+      it("should match the session user id and a user table row id using helpers, user binding and a static user id. (deprecated single user)", async () => {
         await expectQuery({
-          notContains: { multi_user: ["{{ [user]._id }}"] },
-          notEmpty: { multi_user: true },
+          oneOf: {
+            deprecated_single_user: [
+              "{{ default [user]._id '_empty_' }}",
+              globalUsers[0]._id,
+            ],
+          },
         }).toContainExactly([
           {
-            name: "multi user",
-            multi_user: globalUsers.map((user: any) => {
-              return { _id: user._id }
-            }),
+            name: "deprecated single user, session user",
+            deprecated_single_user: [{ _id: config.getUser()._id }],
+          },
+          {
+            name: "deprecated single user",
+            deprecated_single_user: [{ _id: globalUsers[0]._id }],
           },
         ])
       })
 
-    // TODO(samwho): fix for SQS
-    !isSqs &&
-      it("should not match the session user id in a deprecated multi user field", async () => {
+      it("should resolve 'default' helper to '_empty_' when binding resolves to nothing", async () => {
         await expectQuery({
-          notContains: { deprecated_multi_user: ["{{ [user]._id }}"] },
-          notEmpty: { deprecated_multi_user: true },
+          oneOf: {
+            single_user: [
+              "{{ default [user]._idx '_empty_' }}",
+              globalUsers[0]._id,
+            ],
+          },
         }).toContainExactly([
           {
-            name: "deprecated multi user",
-            deprecated_multi_user: globalUsers.map((user: any) => {
-              return { _id: user._id }
-            }),
+            name: "single user",
+            single_user: { _id: globalUsers[0]._id },
           },
         ])
       })
 
-    it("should match the session user id and a user table row id using helpers, user binding and a static user id.", async () => {
-      await expectQuery({
-        oneOf: {
-          single_user: [
-            "{{ default [user]._id '_empty_' }}",
-            globalUsers[0]._id,
-          ],
-        },
-      }).toContainExactly([
-        {
-          name: "single user, session user",
-          single_user: { _id: config.getUser()._id },
-        },
-        {
-          name: "single user",
-          single_user: { _id: globalUsers[0]._id },
-        },
-      ])
+      it("should resolve 'default' helper to '_empty_' when binding resolves to nothing (deprecated single user)", async () => {
+        await expectQuery({
+          oneOf: {
+            deprecated_single_user: [
+              "{{ default [user]._idx '_empty_' }}",
+              globalUsers[0]._id,
+            ],
+          },
+        }).toContainExactly([
+          {
+            name: "deprecated single user",
+            deprecated_single_user: [{ _id: globalUsers[0]._id }],
+          },
+        ])
+      })
     })
-
-    it("should match the session user id and a user table row id using helpers, user binding and a static user id. (deprecated single user)", async () => {
-      await expectQuery({
-        oneOf: {
-          deprecated_single_user: [
-            "{{ default [user]._id '_empty_' }}",
-            globalUsers[0]._id,
-          ],
-        },
-      }).toContainExactly([
-        {
-          name: "deprecated single user, session user",
-          deprecated_single_user: [{ _id: config.getUser()._id }],
-        },
-        {
-          name: "deprecated single user",
-          deprecated_single_user: [{ _id: globalUsers[0]._id }],
-        },
-      ])
-    })
-
-    it("should resolve 'default' helper to '_empty_' when binding resolves to nothing", async () => {
-      await expectQuery({
-        oneOf: {
-          single_user: [
-            "{{ default [user]._idx '_empty_' }}",
-            globalUsers[0]._id,
-          ],
-        },
-      }).toContainExactly([
-        {
-          name: "single user",
-          single_user: { _id: globalUsers[0]._id },
-        },
-      ])
-    })
-
-    it("should resolve 'default' helper to '_empty_' when binding resolves to nothing (deprecated single user)", async () => {
-      await expectQuery({
-        oneOf: {
-          deprecated_single_user: [
-            "{{ default [user]._idx '_empty_' }}",
-            globalUsers[0]._id,
-          ],
-        },
-      }).toContainExactly([
-        {
-          name: "deprecated single user",
-          deprecated_single_user: [{ _id: globalUsers[0]._id }],
-        },
-      ])
-    })
-  })
 
   describe.each([FieldType.STRING, FieldType.LONGFORM])("%s", () => {
     beforeAll(async () => {
@@ -1062,13 +1076,13 @@ describe.each([
 
   !isInternal &&
     describe("datetime - time only", () => {
-      const T_1000 = "10:00"
-      const T_1045 = "10:45"
-      const T_1200 = "12:00"
-      const T_1530 = "15:30"
-      const T_0000 = "00:00"
+      const T_1000 = "10:00:00"
+      const T_1045 = "10:45:00"
+      const T_1200 = "12:00:00"
+      const T_1530 = "15:30:00"
+      const T_0000 = "00:00:00"
 
-      const UNEXISTING_TIME = "10:01"
+      const UNEXISTING_TIME = "10:01:00"
 
       const NULL_TIME__ID = `null_time__id`
 
@@ -1262,6 +1276,8 @@ describe.each([
           { numbers: ["three"] },
         ]))
 
+      // Not sure if this is correct behaviour but changing it would be a
+      // breaking change.
       it("finds all with empty list", () =>
         expectQuery({ notContains: { numbers: [] } }).toContainExactly([
           { numbers: ["one", "two"] },
@@ -1746,9 +1762,12 @@ describe.each([
 
   // This will never work for Lucene.
   !isLucene &&
+    // It also can't work for in-memory searching because the related table name
+    // isn't available.
+    !isInMemory &&
     describe("relations", () => {
       let otherTable: Table
-      let rows: Row[]
+      let otherRows: Row[]
 
       beforeAll(async () => {
         otherTable = await createTable({
@@ -1768,7 +1787,7 @@ describe.each([
           },
         })
 
-        rows = await Promise.all([
+        otherRows = await Promise.all([
           config.api.row.save(otherTable._id!, { one: "foo" }),
           config.api.row.save(otherTable._id!, { one: "bar" }),
         ])
@@ -1776,18 +1795,22 @@ describe.each([
         await Promise.all([
           config.api.row.save(table._id!, {
             two: "foo",
-            other: [rows[0]._id],
+            other: [otherRows[0]._id],
           }),
           config.api.row.save(table._id!, {
             two: "bar",
-            other: [rows[1]._id],
+            other: [otherRows[1]._id],
           }),
         ])
+
+        rows = await config.api.row.fetch(table._id!)
       })
 
       it("can search through relations", () =>
         expectQuery({
           equal: { [`${otherTable.name}.one`]: "foo" },
-        }).toContainExactly([{ two: "foo", other: [{ _id: rows[0]._id }] }]))
+        }).toContainExactly([
+          { two: "foo", other: [{ _id: otherRows[0]._id }] },
+        ]))
     })
 })
