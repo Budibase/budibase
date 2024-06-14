@@ -63,7 +63,9 @@
             />
           </div>
           <div class="modal-main">
-            <slot />
+            <div class="modal-main-inner">
+              <slot />
+            </div>
           </div>
         </div>
       </div>
@@ -140,10 +142,21 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    word-break: break-word;
   }
 
   .modal-main :global(.component > *) {
     max-width: 100%;
+  }
+
+  .modal-main-inner {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    word-break: break-word;
+  }
+
+  .modal-main-inner:empty {
+    border-radius: 3px;
+    border: 2px dashed var(--spectrum-global-color-gray-400);
   }
 </style>
