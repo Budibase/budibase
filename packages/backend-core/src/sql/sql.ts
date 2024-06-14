@@ -571,15 +571,10 @@ class InternalBuilder {
     return query.insert(parsedBody)
   }
 
-  read(
-    knex: Knex,
-    json: QueryJson,
-    limit: number,
-    opts?: { counting?: boolean }
-  ): Knex.QueryBuilder {
+  read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
     let { endpoint, resource, filters, paginate, relationships, tableAliases } =
       json
-    const counting = opts?.counting
+    const counting = endpoint.operation === Operation.COUNT
 
     const tableName = endpoint.entityId
     // select all if not specified
@@ -730,6 +725,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         query = builder.create(client, json, opts)
         break
       case Operation.READ:
+      case Operation.COUNT:
         query = builder.read(client, json, this.limit)
         break
       case Operation.UPDATE:
@@ -749,20 +745,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         throw `Operation type is not supported by SQL query builder`
     }
 
-    return this.convertToNative(query, opts)
-  }
-
-  _count(json: QueryJson, opts: QueryOptions = {}) {
-    const sqlClient = this.getSqlClient()
-    const config: Knex.Config = {
-      client: sqlClient,
-    }
-    if (sqlClient === SqlClient.SQL_LITE) {
-      config.useNullAsDefault = true
-    }
-    const client = knex(config)
-    const builder = new InternalBuilder(sqlClient)
-    const query = builder.read(client, json, this.limit, { counting: true })
     return this.convertToNative(query, opts)
   }
 

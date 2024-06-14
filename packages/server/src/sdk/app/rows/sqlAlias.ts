@@ -11,7 +11,11 @@ import { SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
 import datasources from "../datasources"
-import { makeExternalQuery } from "../../../integrations/base/query"
+
+type PerformQueryFunction = (
+  json: QueryJson,
+  datasource?: Datasource
+) => Promise<DatasourcePlusQueryResponse>
 
 const WRITE_OPERATIONS: Operation[] = [
   Operation.CREATE,
@@ -171,7 +175,7 @@ export default class AliasTables {
 
   async queryWithAliasing(
     json: QueryJson,
-    queryFn?: (json: QueryJson) => Promise<DatasourcePlusQueryResponse>
+    queryFn: PerformQueryFunction
   ): Promise<DatasourcePlusQueryResponse> {
     const datasourceId = json.endpoint.datasourceId
     const isSqs = datasourceId === SQS_DATASOURCE_INTERNAL
@@ -229,14 +233,7 @@ export default class AliasTables {
       json.tableAliases = invertedTableAliases
     }
 
-    let response: DatasourcePlusQueryResponse
-    if (datasource && !isSqs) {
-      response = await makeExternalQuery(datasource, json)
-    } else if (queryFn) {
-      response = await queryFn(json)
-    } else {
-      throw new Error("No supplied method to perform aliased query")
-    }
+    let response: DatasourcePlusQueryResponse = await queryFn(json, datasource)
     if (Array.isArray(response) && aliasingEnabled) {
       return this.reverse(response)
     } else {
@@ -247,8 +244,9 @@ export default class AliasTables {
   // handles getting the count out of the query
   async countWithAliasing(
     json: QueryJson,
-    queryFn?: (json: QueryJson) => Promise<DatasourcePlusQueryResponse>
+    queryFn: PerformQueryFunction
   ): Promise<number> {
+    json.endpoint.operation = Operation.COUNT
     let response = await this.queryWithAliasing(json, queryFn)
     if (response && response.length === 1 && "total" in response[0]) {
       return response[0].total

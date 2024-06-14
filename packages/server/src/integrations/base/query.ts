@@ -8,8 +8,8 @@ import { getIntegration } from "../index"
 import sdk from "../../sdk"
 
 export async function makeExternalQuery(
-  datasource: Datasource,
-  json: QueryJson
+  json: QueryJson,
+  datasource?: Datasource
 ): Promise<DatasourcePlusQueryResponse> {
   const entityId = json.endpoint.entityId,
     tableName = json.meta.table.name,
@@ -21,6 +21,9 @@ export async function makeExternalQuery(
     entityId !== tableName
   ) {
     throw new Error("Entity ID and table metadata do not align")
+  }
+  if (!datasource) {
+    throw new Error("No datasource provided for external query")
   }
   datasource = await sdk.datasources.enrich(datasource)
   const Integration = await getIntegration(datasource.source)
