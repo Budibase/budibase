@@ -60,7 +60,7 @@ export async function searchView(
     user: sdk.users.getUserContextBindings(ctx.user),
   })
 
-  const searchOptions: RequiredKeys<SearchViewRowRequest> &
+  const searchOptions: RequiredKeys<Omit<SearchViewRowRequest, "countRows">> &
     RequiredKeys<Pick<RowSearchParams, "tableId" | "query" | "fields">> = {
     tableId: view.tableId,
     query: enrichedQuery,

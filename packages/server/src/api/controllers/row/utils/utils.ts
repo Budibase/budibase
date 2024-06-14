@@ -137,7 +137,7 @@ export async function sqlOutputProcessing(
   relationships: RelationshipsJson[],
   opts?: { sqs?: boolean }
 ): Promise<Row[]> {
-  if (!Array.isArray(rows) || rows.length === 0 || rows[0].read === true) {
+  if (!Array.isArray(rows) || rows.length === 0 || "read" in rows[0]) {
     return []
   }
   let finalRows: { [key: string]: Row } = {}
