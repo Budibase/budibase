@@ -70,7 +70,7 @@
         <input
           class="input"
           value={title}
-          {title}
+          title={componentName}
           placeholder={componentName}
           on:keypress={e => {
             if (e.key.toLowerCase() === "enter") {
@@ -158,7 +158,32 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    position: relative;
+    padding: 5px;
+    right: 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    transition: 150ms background-color, 150ms border-color, 150ms color;
   }
+
+  .input:hover,
+  .input:focus {
+    cursor: text;
+    background-color: var(
+      --spectrum-textfield-m-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    border: 1px solid white;
+    border-color: var(
+      --spectrum-textfield-m-border-color,
+      var(--spectrum-alias-border-color)
+    );
+    color: var(
+      --spectrum-textfield-m-text-color,
+      var(--spectrum-alias-text-color)
+    );
+  }
+
   .panel-title-content {
     display: contents;
   }
