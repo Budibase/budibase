@@ -359,6 +359,36 @@ export function collectAutomation(tableId?: string): Automation {
   return automation as Automation
 }
 
+export function filterAutomation(tableId?: string): Automation {
+  const automation: any = {
+    name: "looping",
+    type: "automation",
+    definition: {
+      steps: [
+        {
+          id: "b",
+          type: "ACTION",
+          internal: true,
+          stepId: AutomationActionStepId.FILTER,
+          inputs: {},
+          schema: BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT.schema,
+        },
+      ],
+      trigger: {
+        id: "a",
+        type: "TRIGGER",
+        event: "row:save",
+        stepId: AutomationTriggerStepId.ROW_SAVED,
+        inputs: {
+          tableId,
+        },
+        schema: TRIGGER_DEFINITIONS.ROW_SAVED.schema,
+      },
+    },
+  }
+  return automation as Automation
+}
+
 export function basicAutomationResults(
   automationId: string
 ): AutomationResults {
