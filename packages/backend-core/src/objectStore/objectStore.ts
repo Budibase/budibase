@@ -101,6 +101,11 @@ export function ObjectStore(
     }
   }
 
+  // for AWS Credentials using temporary session token
+  if (!env.MINIO_ENABLED && env.AWS_SESSION_TOKEN) {
+    config.sessionToken = env.AWS_SESSION_TOKEN
+  }
+
   // custom S3 is in use i.e. minio
   if (env.MINIO_URL) {
     if (opts.presigning && env.MINIO_ENABLED) {

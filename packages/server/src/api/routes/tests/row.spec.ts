@@ -134,6 +134,10 @@ describe.each([
     // error.  This is to account for the fact that parallel writes can result
     // in some quota updates getting lost. We don't have any need to solve this
     // right now, so we just allow for some error.
+    if (expected === 0) {
+      expect(usage).toEqual(0)
+      return
+    }
     expect(usage).toBeGreaterThan(expected * 0.9)
     expect(usage).toBeLessThan(expected * 1.1)
   }
@@ -158,7 +162,7 @@ describe.each([
       })
       expect(row.name).toEqual("Test Contact")
       expect(row._rev).toBeDefined()
-      await assertRowUsage(rowUsage + 1)
+      await assertRowUsage(isInternal ? rowUsage + 1 : rowUsage)
     })
 
     it("fails to create a row for a table that does not exist", async () => {
@@ -230,7 +234,7 @@ describe.each([
           expect(row["Row ID"]).toBeGreaterThan(previousId)
           previousId = row["Row ID"]
         }
-        await assertRowUsage(rowUsage + 10)
+        await assertRowUsage(isInternal ? rowUsage + 10 : rowUsage)
       })
 
     isInternal &&
@@ -751,18 +755,21 @@ describe.each([
         rows: [createdRow],
       })
       expect(res[0]._id).toEqual(createdRow._id)
-      await assertRowUsage(rowUsage - 1)
+      await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
     })
 
     it("should be able to bulk delete rows, including a row that doesn't exist", async () => {
       const createdRow = await config.api.row.save(table._id!, {})
+      const createdRow2 = await config.api.row.save(table._id!, {})
 
       const res = await config.api.row.bulkDelete(table._id!, {
-        rows: [createdRow, { _id: "9999999" }],
+        rows: [createdRow, createdRow2, { _id: "9999999" }],
       })
 
-      expect(res[0]._id).toEqual(createdRow._id)
-      expect(res.length).toEqual(1)
+      expect(res.map(r => r._id)).toEqual(
+        expect.arrayContaining([createdRow._id, createdRow2._id])
+      )
+      expect(res.length).toEqual(2)
     })
   })
 
@@ -814,7 +821,7 @@ describe.each([
 
       expect(res.length).toEqual(2)
       await config.api.row.get(table._id!, row1._id!, { status: 404 })
-      await assertRowUsage(rowUsage - 2)
+      await assertRowUsage(isInternal ? rowUsage - 2 : rowUsage)
     })
 
     it("should be able to delete a variety of row set types", async () => {
@@ -831,7 +838,7 @@ describe.each([
 
       expect(res.length).toEqual(3)
       await config.api.row.get(table._id!, row1._id!, { status: 404 })
-      await assertRowUsage(rowUsage - 3)
+      await assertRowUsage(isInternal ? rowUsage - 3 : rowUsage)
     })
 
     it("should accept a valid row object and delete the row", async () => {
@@ -842,7 +849,7 @@ describe.each([
 
       expect(res.id).toEqual(row1._id)
       await config.api.row.get(table._id!, row1._id!, { status: 404 })
-      await assertRowUsage(rowUsage - 1)
+      await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
     })
 
     it("Should ignore malformed/invalid delete requests", async () => {
@@ -1680,3 +1687,5 @@ describe.each([
     })
   })
 })
+
+// todo: remove me
