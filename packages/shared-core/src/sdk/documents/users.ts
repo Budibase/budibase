@@ -4,7 +4,7 @@ import {
   SEPARATOR,
   User,
   InternalTable,
-  Roles,
+  BuiltInRole,
 } from "@budibase/types"
 import { getProdAppID } from "./applications"
 import * as _ from "lodash/fp"
@@ -68,7 +68,7 @@ export function hasAppCreatorPermissions(user?: User | ContextUser): boolean {
   return _.flow(
     _.get("roles"),
     _.values,
-    _.find(x => [Roles.CREATOR, Roles.ADMIN].includes(x)),
+    _.find(x => [BuiltInRole.CREATOR, BuiltInRole.ADMIN].includes(x)),
     x => !!x
   )(user)
 }

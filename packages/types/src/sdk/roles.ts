@@ -1,5 +1,5 @@
 // Role IDs
-export enum Roles {
+export enum BuiltInRole {
   ADMIN = "ADMIN",
   POWER = "POWER",
   BASIC = "BASIC",

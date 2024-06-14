@@ -3,7 +3,7 @@ import {
   ContextUser,
   User,
   UserGroup,
-  Roles as BUILTIN_ROLE_IDS,
+  BuiltInRole as BUILTIN_ROLE_IDS,
 } from "@budibase/types"
 import * as accountSdk from "../accounts"
 import env from "../environment"

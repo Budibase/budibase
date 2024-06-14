@@ -7,11 +7,11 @@ import {
   doWithDB,
 } from "../db"
 import { getAppDB } from "../context"
-import { Screen, Role as RoleDoc, Roles } from "@budibase/types"
+import { Screen, Role as RoleDoc, BuiltInRole } from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"
 
 const BUILTIN_IDS = {
-  ...Roles,
+  ...BuiltInRole,
   BUILDER: "BUILDER",
 }
 

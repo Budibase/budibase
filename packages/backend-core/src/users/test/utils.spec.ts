@@ -1,4 +1,4 @@
-import { Roles, User, UserGroup } from "@budibase/types"
+import { BuiltInRole, User, UserGroup } from "@budibase/types"
 import { generator, structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
 import { getGlobalDB } from "../../context"
@@ -28,12 +28,16 @@ describe("Users", () => {
   })
 
   it("User is a creator if it has CREATOR permission in some application", async () => {
-    const user: User = structures.users.user({ roles: { app1: Roles.CREATOR } })
+    const user: User = structures.users.user({
+      roles: { app1: BuiltInRole.CREATOR },
+    })
     expect(await isCreator(user)).toBe(true)
   })
 
   it("User is a creator if it has ADMIN permission in some application", async () => {
-    const user: User = structures.users.user({ roles: { app1: Roles.ADMIN } })
+    const user: User = structures.users.user({
+      roles: { app1: BuiltInRole.ADMIN },
+    })
     expect(await isCreator(user)).toBe(true)
   })
 
@@ -42,7 +46,7 @@ describe("Users", () => {
     const groupId = "gr_17abffe89e0b40268e755b952f101a59"
     const group: UserGroup = {
       ...structures.userGroups.userGroup(),
-      ...{ _id: groupId, roles: { app1: Roles.ADMIN } },
+      ...{ _id: groupId, roles: { app1: BuiltInRole.ADMIN } },
     }
     const users: User[] = []
     for (let i = 0; i < usersInGroup; i++) {
