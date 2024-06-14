@@ -4,6 +4,7 @@ import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-
 import mysql from "mysql2/promise"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
+import knex from "knex"
 
 let ports: Promise<testContainerUtils.Port[]>
 
@@ -76,4 +77,18 @@ export async function rawQuery(ds: Datasource, sql: string) {
   } finally {
     connection.end()
   }
+}
+
+export async function knexClient(ds: Datasource) {
+  if (!ds.config) {
+    throw new Error("Datasource config is missing")
+  }
+  if (ds.source !== SourceName.MYSQL) {
+    throw new Error("Datasource source is not MySQL")
+  }
+
+  return knex({
+    client: "mysql",
+    connection: ds.config,
+  })
 }

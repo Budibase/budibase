@@ -65,6 +65,23 @@ export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
   }
 }
 
+export async function knexClient(ds: Datasource) {
+  switch (ds.source) {
+    case SourceName.POSTGRES: {
+      return postgres.knexClient(ds)
+    }
+    case SourceName.MYSQL: {
+      return mysql.knexClient(ds)
+    }
+    case SourceName.SQL_SERVER: {
+      return mssql.knexClient(ds)
+    }
+    default: {
+      throw new Error(`Unsupported source: ${ds.source}`)
+    }
+  }
+}
+
 export async function startContainer(container: GenericContainer) {
   const imageName = (container as any).imageName.string as string
   const key = imageName.replaceAll("/", "-").replaceAll(":", "-")
