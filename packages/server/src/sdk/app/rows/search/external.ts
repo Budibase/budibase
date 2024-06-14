@@ -1,6 +1,5 @@
 import {
   SortJson,
-  SortDirection,
   Operation,
   PaginationJson,
   IncludeRelationship,
@@ -9,6 +8,7 @@ import {
   RowSearchParams,
   SearchResponse,
   Table,
+  SortOrder,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import { handleRequest } from "../../../../api/controllers/row/external"
@@ -52,8 +52,8 @@ export async function search(
   if (params.sort) {
     const direction =
       params.sortOrder === "descending"
-        ? SortDirection.DESCENDING
-        : SortDirection.ASCENDING
+        ? SortOrder.DESCENDING
+        : SortOrder.ASCENDING
     sort = {
       [params.sort]: { direction },
     }

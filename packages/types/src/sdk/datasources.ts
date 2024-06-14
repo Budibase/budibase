@@ -22,11 +22,6 @@ export const RowOperations = [
   Operation.BULK_CREATE,
 ]
 
-export enum SortDirection {
-  ASCENDING = "ASCENDING",
-  DESCENDING = "DESCENDING",
-}
-
 export enum QueryType {
   SQL = "sql",
   JSON = "json",
