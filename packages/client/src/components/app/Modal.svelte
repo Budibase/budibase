@@ -33,10 +33,10 @@
   $: open = $modalStore.contentId === $component.id
 
   const handleModalClose = async () => {
-    modalStore.actions.close()
     if (onClose) {
       await onClose()
     }
+    modalStore.actions.close()
   }
 </script>
 
