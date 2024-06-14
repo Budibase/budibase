@@ -672,15 +672,16 @@ export class ExternalRequest<T extends Operation> {
     // aliasing can be disabled fully if desired
     let response
     const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
-    if (env.SQL_ALIASING_DISABLE) {
-      response = await getDatasourceAndQuery(json)
-    } else if (this.operation === Operation.COUNT) {
+    // if it's a counting operation there will be no more processing, just return the number
+    if (this.operation === Operation.COUNT) {
       return (await aliasing.countWithAliasing(
         json,
         makeExternalQuery
       )) as ExternalRequestReturnType<T>
     } else {
-      response = await aliasing.queryWithAliasing(json, makeExternalQuery)
+      response = env.SQL_ALIASING_DISABLE
+        ? await getDatasourceAndQuery(json)
+        : await aliasing.queryWithAliasing(json, makeExternalQuery)
     }
 
     const responseRows = Array.isArray(response) ? response : []
