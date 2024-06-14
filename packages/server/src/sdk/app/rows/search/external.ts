@@ -83,7 +83,7 @@ export async function search(
     }
     let rows = await handleRequest(Operation.READ, tableId, parameters)
     let totalRows: number | undefined
-    if (true) {
+    if (countRows) {
       totalRows = await handleRequest(Operation.COUNT, tableId, parameters)
     }
     let hasNextPage = false
