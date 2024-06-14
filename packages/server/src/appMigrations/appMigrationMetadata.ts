@@ -23,16 +23,15 @@ const getCacheKey = (appId: string) => `appmigrations_${env.VERSION}_${appId}`
 export async function getAppMigrationVersion(appId: string): Promise<string> {
   const cacheKey = getCacheKey(appId)
 
-  let metadata: AppMigrationDoc | undefined = await cache.get(cacheKey)
+  let version: string | undefined = await cache.get(cacheKey)
 
   // returned cached version if we found one
-  if (metadata?.version) {
-    return metadata.version
+  if (version) {
+    return version
   }
 
-  let version
   try {
-    metadata = await getFromDB(appId)
+    const metadata = await getFromDB(appId)
     version = metadata.version || ""
   } catch (err: any) {
     if (err.status !== 404) {
