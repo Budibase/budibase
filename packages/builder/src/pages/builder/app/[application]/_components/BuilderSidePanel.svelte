@@ -30,7 +30,7 @@
     RoleUtils,
   } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
-  import { Roles } from "@budibase/types"
+  import { BuiltInRole } from "@budibase/types"
   import { API } from "api"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "components/common/RoleSelect.svelte"
@@ -50,7 +50,7 @@
   let error
   let form
   let creationRoleType = Constants.BudibaseRoles.AppUser
-  let creationAccessType = Roles.BASIC
+  let creationAccessType = BuiltInRole.BASIC
 
   let appInvites = []
   let filteredInvites = []
@@ -134,9 +134,9 @@
         const isAppBuilder = user.builder?.apps?.includes(prodAppId)
         let role
         if (isAdminOrGlobalBuilder) {
-          role = Roles.ADMIN
+          role = BuiltInRole.ADMIN
         } else if (isAppBuilder) {
-          role = Roles.CREATOR
+          role = BuiltInRole.CREATOR
         } else {
           const appRole = user.roles[prodAppId]
           if (appRole) {
@@ -219,7 +219,7 @@
       if (user.isAppBuilder) {
         await removeAppBuilder(user._id, prodAppId)
       }
-      if (role === Roles.CREATOR) {
+      if (role === BuiltInRole.CREATOR) {
         await removeAppBuilder(user._id, prodAppId)
       }
       await updateAppUser(user, role)
@@ -297,7 +297,7 @@
     return {
       ...group,
       role: group?.builder?.apps.includes(prodAppId)
-        ? Roles.CREATOR
+        ? BuiltInRole.CREATOR
         : group.roles?.[
             groups.actions.getGroupAppIds(group).find(x => x === prodAppId)
           ],
@@ -377,7 +377,7 @@
     ]
 
     const notCreatingAdmin = creationRoleType !== Constants.BudibaseRoles.Admin
-    const isCreator = creationAccessType === Roles.CREATOR
+    const isCreator = creationAccessType === BuiltInRole.CREATOR
     if (notCreatingAdmin && isCreator) {
       payload[0].builder.apps = [prodAppId]
     } else if (notCreatingAdmin && !isCreator) {
@@ -447,11 +447,11 @@
       },
     }
 
-    if (role === Roles.CREATOR) {
+    if (role === BuiltInRole.CREATOR) {
       updateBody.builder = updateBody.builder || {}
       updateBody.builder.apps = [...(updateBody.builder.apps ?? []), prodAppId]
       delete updateBody?.apps?.[prodAppId]
-    } else if (role !== Roles.CREATOR && invite?.builder?.apps) {
+    } else if (role !== BuiltInRole.CREATOR && invite?.builder?.apps) {
       invite.builder.apps = []
     }
     await users.updateInvite(updateBody)
@@ -506,7 +506,7 @@
       (invite.info?.admin?.global && invite.info?.builder?.global) ||
       invite.info?.builder?.apps?.includes(prodAppId)
     ) {
-      return Roles.CREATOR
+      return BuiltInRole.CREATOR
     }
     return invite.info.apps?.[prodAppId]
   }
@@ -524,7 +524,7 @@
 
   const parseRole = user => {
     if (user.isAdminOrGlobalBuilder) {
-      return Roles.CREATOR
+      return BuiltInRole.CREATOR
     }
     return user.role
   }
@@ -533,11 +533,11 @@
     // Ensure we don't get into an invalid combo of tenant role and app access
     if (
       e.detail === Constants.BudibaseRoles.AppUser &&
-      creationAccessType === Roles.CREATOR
+      creationAccessType === BuiltInRole.CREATOR
     ) {
-      creationAccessType = Roles.BASIC
+      creationAccessType = BuiltInRole.BASIC
     } else if (e.detail === Constants.BudibaseRoles.Admin) {
-      creationAccessType = Roles.CREATOR
+      creationAccessType = BuiltInRole.CREATOR
     }
   }
 </script>
@@ -661,7 +661,7 @@
                       autoWidth
                       align="right"
                       allowedRoles={user.isAdminOrGlobalBuilder
-                        ? [Roles.CREATOR]
+                        ? [BuiltInRole.CREATOR]
                         : null}
                       labelPrefix="Can use as"
                     />
@@ -707,7 +707,7 @@
                       allowRemove={group.role}
                       allowPublic={false}
                       quiet={true}
-                      allowCreator={group.role === Roles.CREATOR}
+                      allowCreator={group.role === BuiltInRole.CREATOR}
                       on:change={e => {
                         onUpdateGroup(group, e.detail)
                       }}
@@ -748,7 +748,7 @@
                       quiet={true}
                       on:addcreator={() => {}}
                       on:change={e => {
-                        if (e.detail === Roles.CREATOR) {
+                        if (e.detail === BuiltInRole.CREATOR) {
                           addAppBuilder(user._id)
                         } else {
                           onUpdateUser(user, e.detail)
@@ -760,7 +760,7 @@
                       autoWidth
                       align="right"
                       allowedRoles={user.isAdminOrGlobalBuilder
-                        ? [Roles.CREATOR]
+                        ? [BuiltInRole.CREATOR]
                         : null}
                       labelPrefix="Can use as"
                     />
@@ -833,7 +833,7 @@
                 align="right"
                 fancySelect
                 allowedRoles={creationRoleType === Constants.BudibaseRoles.Admin
-                  ? [Roles.CREATOR]
+                  ? [BuiltInRole.CREATOR]
                   : null}
                 footer={getRoleFooter({
                   isAdminOrGlobalBuilder:

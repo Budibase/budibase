@@ -192,14 +192,6 @@ export const FILE_TYPES = {
 
 export const HostingTypes = Hosting
 
-export const Roles = {
-  ADMIN: "ADMIN",
-  POWER: "POWER",
-  BASIC: "BASIC",
-  PUBLIC: "PUBLIC",
-  BUILDER: "BUILDER",
-}
-
 export function isAutoColumnUserRelationship(subtype) {
   return (
     subtype === AUTO_COLUMN_SUB_TYPES.CREATED_BY ||

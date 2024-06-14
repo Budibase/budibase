@@ -1,7 +1,7 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get, writable } from "svelte/store"
 import { API } from "api"
-import { Roles } from "@budibase/types"
+import { BuiltInRole } from "@budibase/types"
 import { componentStore, appStore } from "stores/builder"
 import { INITIAL_SCREENS_STATE, ScreenStore } from "stores/builder/screens"
 import {
@@ -603,7 +603,7 @@ describe("Screens store", () => {
 
     const storeScreens = existingScreens
       .map(screen => screen.json())
-      .filter(screen => screen.routing.roleId == Roles.BASIC)
+      .filter(screen => screen.routing.roleId == BuiltInRole.BASIC)
 
     // All default screens have the BASIC role
     expect(storeScreens.length).toBe(3)
@@ -644,7 +644,12 @@ describe("Screens store", () => {
   })
 
   it("Ensure only one homescreen per role when updating screen setting. Multiple screen roles", async ctx => {
-    const expectedRoles = [Roles.BASIC, Roles.POWER, Roles.PUBLIC, Roles.ADMIN]
+    const expectedRoles = [
+      BuiltInRole.BASIC,
+      BuiltInRole.POWER,
+      BuiltInRole.PUBLIC,
+      BuiltInRole.ADMIN,
+    ]
 
     // Build 12 screens, 3 of each role
     const existingScreens = Array(12)
@@ -703,17 +708,17 @@ describe("Screens store", () => {
 
     const screens = ctx.test.store.screens
     // Should still only be one of each homescreen
-    expect(results[Roles.ADMIN].length).toBe(1)
+    expect(results[BuiltInRole.ADMIN].length).toBe(1)
     expect(screens[2].routing.homeScreen).toBe(true)
 
-    expect(results[Roles.BASIC].length).toBe(1)
+    expect(results[BuiltInRole.BASIC].length).toBe(1)
     expect(screens[4].routing.homeScreen).toBe(true)
 
-    expect(results[Roles.PUBLIC].length).toBe(1)
+    expect(results[BuiltInRole.PUBLIC].length).toBe(1)
     expect(screens[9].routing.homeScreen).toBe(true)
 
     // Homescreen was never set for POWER
-    expect(results[Roles.POWER]).not.toBeDefined()
+    expect(results[BuiltInRole.POWER]).not.toBeDefined()
 
     // Once to update the target screen, once to unset the existing homescreen.
     expect(patchSpy).toBeCalledTimes(2)

@@ -14,7 +14,7 @@
   import { auth } from "stores/portal"
   import { get } from "svelte/store"
   import getTemplates from "templates"
-  import { Roles } from "constants/backend"
+  import { BuiltInRole } from "@budibase/types"
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
@@ -32,7 +32,7 @@
   let formTypeModal
 
   // Cache variables for workflow
-  let screenAccessRole = Roles.BASIC
+  let screenAccessRole = BuiltInRole.BASIC
 
   let templates = null
   let screens = null
@@ -126,7 +126,7 @@
     blankScreenUrl = null
     screenMode = mode
     pendingScreen = null
-    screenAccessRole = Roles.BASIC
+    screenAccessRole = BuiltInRole.BASIC
     formType = null
 
     if (mode === "grid" || mode === "gridDetails" || mode === "form") {

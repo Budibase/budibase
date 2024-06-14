@@ -31,7 +31,7 @@
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
-  import { Roles } from "@budibase/types"
+  import { BuiltInRole } from "@budibase/types"
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
 
   export let userId
@@ -137,11 +137,11 @@
 
   const getRole = (prodAppId, roles) => {
     if (privileged) {
-      return Roles.ADMIN
+      return BuiltInRole.ADMIN
     }
 
     if (user?.builder?.apps?.includes(prodAppId)) {
-      return Roles.CREATOR
+      return BuiltInRole.CREATOR
     }
 
     return roles[prodAppId]

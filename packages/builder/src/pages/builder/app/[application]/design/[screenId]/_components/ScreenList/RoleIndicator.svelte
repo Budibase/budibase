@@ -2,7 +2,7 @@
   import { RoleUtils } from "@budibase/frontend-core"
   import { Tooltip, StatusLight } from "@budibase/bbui"
   import { roles } from "stores/builder"
-  import { Roles } from "constants/backend"
+  import { BuiltInRole } from "@budibase/types"
 
   export let roleId
 
@@ -11,7 +11,7 @@
   $: color = RoleUtils.getRoleColour(roleId)
   $: role = $roles.find(role => role._id === roleId)
   $: tooltip =
-    roleId === Roles.PUBLIC
+    roleId === BuiltInRole.PUBLIC
       ? "Open to the public"
       : `Requires ${role?.name} access`
 </script>

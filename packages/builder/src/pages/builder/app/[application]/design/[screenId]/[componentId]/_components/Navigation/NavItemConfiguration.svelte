@@ -4,7 +4,7 @@
   import NavItem from "./NavItem.svelte"
   import { generate } from "shortid"
   import { getSequentialName } from "helpers/duplicate"
-  import { Roles } from "@budibase/types"
+  import { BuiltInRole } from "@budibase/types"
 
   export let bindings
 
@@ -52,7 +52,7 @@
           getName: x => x.text,
         }),
         url: "",
-        roleId: Roles.BASIC,
+        roleId: BuiltInRole.BASIC,
         type: "link",
       },
     ])

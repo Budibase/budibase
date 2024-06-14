@@ -21,7 +21,7 @@
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
   import { sdk } from "@budibase/shared-core"
-  import { Roles } from "@budibase/types"
+  import { BuiltInRole } from "@budibase/types"
 
   export let groupId
 
@@ -60,7 +60,7 @@
     .map(app => ({
       ...app,
       role: group?.builder?.apps.includes(appsStore.getProdAppID(app.devId))
-        ? Roles.CREATOR
+        ? BuiltInRole.CREATOR
         : group?.roles?.[appsStore.getProdAppID(app.devId)],
     }))
 

@@ -2,7 +2,7 @@ import { derived } from "svelte/store"
 import { devToolsStore } from "../devTools.js"
 import { authStore } from "../auth.js"
 import { devToolsEnabled } from "./devToolsEnabled.js"
-import { Roles } from "@budibase/types"
+import { BuiltInRole } from "@budibase/types"
 
 // Derive the current role of the logged-in user
 export const currentRole = derived(
@@ -11,7 +11,7 @@ export const currentRole = derived(
     return (
       ($devToolsEnabled && $devToolsStore.role) ||
       $authStore?.roleId ||
-      Roles.PUBLIC
+      BuiltInRole.PUBLIC
     )
   }
 )

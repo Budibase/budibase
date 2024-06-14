@@ -4,7 +4,7 @@
   import { licensing } from "stores/portal"
 
   import { Constants, RoleUtils } from "@budibase/frontend-core"
-  import { Roles } from "@budibase/types"
+  import { BuiltInRole } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
   import { capitalise } from "helpers"
 
@@ -52,9 +52,9 @@
           name: enrichLabel(role.name),
           _id: role._id,
         }))
-      if (allowedRoles.includes(Roles.CREATOR)) {
+      if (allowedRoles.includes(BuiltInRole.CREATOR)) {
         options.push({
-          _id: Roles.CREATOR,
+          _id: BuiltInRole.CREATOR,
           name: "Can edit",
           enabled: false,
         })
@@ -71,7 +71,7 @@
     // Add creator if required
     if (allowCreator) {
       options.unshift({
-        _id: Roles.CREATOR,
+        _id: BuiltInRole.CREATOR,
         name: "Can edit",
         tag:
           !$licensing.perAppBuildersEnabled &&
@@ -89,7 +89,7 @@
 
     // Remove public if not allowed
     if (!allowPublic) {
-      options = options.filter(role => role._id !== Roles.PUBLIC)
+      options = options.filter(role => role._id !== BuiltInRole.PUBLIC)
     }
 
     return options
@@ -97,7 +97,7 @@
 
   const getColor = role => {
     // Creator and remove options have no colors
-    if (role._id === Roles.CREATOR || role._id === RemoveID) {
+    if (role._id === BuiltInRole.CREATOR || role._id === RemoveID) {
       return null
     }
     return RoleUtils.getRoleColour(role._id)
@@ -136,7 +136,7 @@
     getOptionColour={getColor}
     getOptionIcon={getIcon}
     isOptionEnabled={option =>
-      option._id !== Roles.CREATOR || $licensing.perAppBuildersEnabled}
+      option._id !== BuiltInRole.CREATOR || $licensing.perAppBuildersEnabled}
     {placeholder}
     {error}
   />
@@ -155,7 +155,8 @@
     getOptionColour={getColor}
     getOptionIcon={getIcon}
     isOptionEnabled={option =>
-      (option._id !== Roles.CREATOR || $licensing.perAppBuildersEnabled) &&
+      (option._id !== BuiltInRole.CREATOR ||
+        $licensing.perAppBuildersEnabled) &&
       option.enabled !== false}
     {placeholder}
     {error}

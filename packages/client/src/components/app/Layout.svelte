@@ -2,7 +2,7 @@
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
   import { Heading, Icon, clickOutside } from "@budibase/bbui"
-  import { Roles } from "@budibase/types"
+  import { BuiltInRole } from "@budibase/types"
   import NavItem from "./NavItem.svelte"
 
   const sdk = getContext("sdk")
@@ -130,7 +130,7 @@
         }
 
         // Filter to only links allowed by the current role
-        const role = navItem.roleId || Roles.BASIC
+        const role = navItem.roleId || BuiltInRole.BASIC
         return userRoleHierarchy?.find(roleId => roleId === role)
       })
       .map(navItem => {
