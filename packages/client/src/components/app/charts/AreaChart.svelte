@@ -74,7 +74,6 @@
       },
     },
     xaxis: {
-      type: labelType,
       categories,
       labels: {
         formatter: xAxisFormatter,
