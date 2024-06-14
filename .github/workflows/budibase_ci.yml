@@ -115,6 +115,13 @@ jobs:
 
       - run: yarn --frozen-lockfile
       - name: Test
+        env:
+          DD_CIVISIBILITY_AGENTLESS_ENABLED: true
+          DD_API_KEY: "${{ secrets.DATADOG_API_KEY }}"
+          DD_SITE: "datadoghq.eu"
+          NODE_OPTIONS: "-r dd-trace/ci/init"
+          DD_ENV: "ci"
+          DD_SERVICE: "budibase/packages/!{server,worker}"
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
             yarn test --ignore=@budibase/worker --ignore=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
@@ -139,6 +146,13 @@ jobs:
           cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test worker
+        env:
+          DD_CIVISIBILITY_AGENTLESS_ENABLED: true
+          DD_API_KEY: "${{ secrets.DATADOG_API_KEY }}"
+          DD_SITE: "datadoghq.eu"
+          NODE_OPTIONS: "-r dd-trace/ci/init"
+          DD_ENV: "ci"
+          DD_SERVICE: "budibase/packages/worker"
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
             yarn test --scope=@budibase/worker --since=${{ env.NX_BASE_BRANCH }}
