@@ -8,3 +8,7 @@ export const save = async (ctx: Ctx<TenantInfo>) => {
     _rev: response.rev,
   }
 }
+
+export const get = async (ctx: Ctx) => {
+  ctx.body = await tenancy.getTenantInfo(ctx.params.id)
+}
