@@ -18,14 +18,11 @@
   import subjects from "./subjects"
   import { appStore } from "stores/builder"
 
-  export let explanation
-  export let columnIcon
-  export let columnType
-  export let columnName
-
   export let tableHref = () => {}
-
   export let schema
+  export let name
+  export let explanation
+  export let componentName
 
   $: explanationWithPresets = getExplanationWithPresets(
     explanation,
@@ -54,14 +51,8 @@
 </script>
 
 <div bind:this={root} class="tooltipContents">
-  <Column
-    {columnName}
-    {columnIcon}
-    {columnType}
-    {tableHref}
-    {setExplanationSubject}
-  />
-  <Support {support} {setExplanationSubject} />
+  <Column {name} {schema} {tableHref} {setExplanationSubject} />
+  <Support {componentName} {support} {setExplanationSubject} />
   {#if messages.includes(messageConstants.stringAsNumber)}
     <StringAsNumber {setExplanationSubject} />
   {/if}
@@ -84,7 +75,7 @@
 
 {#if detailsModalSubject !== subjects.none}
   <DetailsModal
-    {columnName}
+    columnName={name}
     anchor={root}
     {schema}
     subject={detailsModalSubject}
