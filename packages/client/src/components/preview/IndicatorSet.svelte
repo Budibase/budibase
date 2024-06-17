@@ -141,7 +141,7 @@
         height: elBounds.height + 4,
         visible: false,
         insideSidePanel: !!child.closest(".side-panel"),
-        insideModal: !!child.closest(".modal"),
+        insideModal: !!child.closest(".modal-content"),
       })
     })
   }

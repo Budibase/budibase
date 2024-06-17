@@ -55,6 +55,7 @@
   customMargin="20px"
   on:cancel={handleModalClose}
   bind:this={modal}
+  disableCancel={$builderStore.inBuilder}
   zIndex={2}
 >
   <div use:styleable={$component.styles} class={`modal-content ${size}`}>
