@@ -33,13 +33,17 @@ import * as uuid from "uuid"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
-
-function waitForRowUpdateEvent(): Promise<UpdatedRowEventEmitter> {
-  return new Promise((resolve: any) => {
-    emitter.once("row:update", (event: any) => {
-      resolve(event)
-    })
-  })
+function waitForEvent(
+  name: "row:update",
+  callback: () => Promise<void>
+): Promise<UpdatedRowEventEmitter>
+async function waitForEvent(
+  name: string,
+  callback: () => Promise<void>
+): Promise<any> {
+  const p = new Promise((resolve: any) => emitter.once(name, resolve))
+  await callback()
+  return await p
 }
 
 describe.each([
@@ -624,19 +628,17 @@ describe.each([
         description: "test",
       })
 
-      const rowUpdateEventPromise = waitForRowUpdateEvent()
+      const event = await waitForEvent("row:update", async () => {
+        const row = await config.api.row.patch(table._id!, {
+          _id: beforeRow._id!,
+          _rev: beforeRow._rev!,
+          tableId: table._id!,
+          name: "Updated Name",
+        })
 
-      const row = await config.api.row.patch(table._id!, {
-        _id: beforeRow._id!,
-        _rev: beforeRow._rev!,
-        tableId: table._id!,
-        name: "Updated Name",
+        expect(row.name).toEqual("Updated Name")
+        expect(row.description).toEqual(beforeRow.description)
       })
-
-      expect(row.name).toEqual("Updated Name")
-      expect(row.description).toEqual(beforeRow.description)
-
-      const event = await rowUpdateEventPromise
 
       expect(event.oldRow).toBeDefined()
       expect(event.oldRow.name).toEqual("test")

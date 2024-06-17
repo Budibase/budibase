@@ -446,11 +446,13 @@ describe("/automations", () => {
 
   describe("Update Row Old / New Row comparison", () => {
     it.each([
-      { oldCity: "asdsadsadsad", newCity: "new", expectedResult: false },
-      { oldCity: "Belfast", newCity: "Belfast", expectedResult: true },
+      { oldCity: "asdsadsadsad", newCity: "new" },
+      { oldCity: "Belfast", newCity: "Belfast" },
     ])(
       "triggers an update row automation and compares new to old rows with old city '%s' and new city '%s'",
-      async ({ oldCity, newCity, expectedResult }) => {
+      async ({ oldCity, newCity }) => {
+        const expectedResult = oldCity === newCity
+
         let table = await config.createTable()
 
         let automation = await filterAutomation()
