@@ -43,13 +43,17 @@
 {#if open}
   <Portal target=".modal-container">
     <div
-      transition:fade={$builderStore.inBuilder ? { duration: 0 } : { duration: 200 }}
+      transition:fade={$builderStore.inBuilder
+        ? { duration: 0 }
+        : { duration: 200 }}
       class="modal-scroll-container"
       class:open={$modalStore.open}
     >
       <div class="modal-wrapper">
         <div
-          transition:fly={$builderStore.inBuilder ? { duration: 0 } : { duration: 200, y: 30 }}
+          transition:fly={$builderStore.inBuilder
+            ? { duration: 0 }
+            : { duration: 200, y: 30 }}
           use:styleable={$component.styles}
           use:clickOutside={!ignoreClicksOutside ? handleModalClose : null}
           class="modal {size}"
