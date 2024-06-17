@@ -1,6 +1,5 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
-import pg from "pg"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
 import knex from "knex"
@@ -44,28 +43,11 @@ export async function getDatasource(): Promise<Datasource> {
   }
 
   const database = generator.guid().replaceAll("-", "")
-  await rawQuery(datasource, `CREATE DATABASE "${database}"`)
+  const client = await knexClient(datasource)
+  await client.raw(`CREATE DATABASE "${database}"`)
   datasource.config!.database = database
 
   return datasource
-}
-
-export async function rawQuery(ds: Datasource, sql: string) {
-  if (!ds.config) {
-    throw new Error("Datasource config is missing")
-  }
-  if (ds.source !== SourceName.POSTGRES) {
-    throw new Error("Datasource source is not Postgres")
-  }
-
-  const client = new pg.Client(ds.config)
-  await client.connect()
-  try {
-    const { rows } = await client.query(sql)
-    return rows
-  } finally {
-    await client.end()
-  }
 }
 
 export async function knexClient(ds: Datasource) {

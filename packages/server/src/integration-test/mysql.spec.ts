@@ -18,13 +18,12 @@ function uniqueTableName(length?: number): string {
 const config = setup.getConfig()!
 
 describe("mysql integrations", () => {
-  let rawDatasource: Datasource
   let datasource: Datasource
   let client: Knex
 
   beforeAll(async () => {
     await config.init()
-    rawDatasource = await getDatasource(DatabaseName.MYSQL)
+    const rawDatasource = await getDatasource(DatabaseName.MYSQL)
     datasource = await config.api.datasource.create(rawDatasource)
     client = await knexClient(rawDatasource)
   })

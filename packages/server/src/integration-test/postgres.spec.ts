@@ -12,13 +12,12 @@ import { Knex } from "knex"
 const config = setup.getConfig()!
 
 describe("postgres integrations", () => {
-  let rawDatasource: Datasource
   let datasource: Datasource
   let client: Knex
 
   beforeAll(async () => {
     await config.init()
-    rawDatasource = await getDatasource(DatabaseName.POSTGRES)
+    const rawDatasource = await getDatasource(DatabaseName.POSTGRES)
     datasource = await config.api.datasource.create(rawDatasource)
     client = await knexClient(rawDatasource)
   })
@@ -91,17 +90,16 @@ describe("postgres integrations", () => {
   })
 
   describe("Integration compatibility with postgres search_path", () => {
-    let rawDatasource: Datasource,
-      datasource: Datasource,
-      client: Knex,
-      schema1: string,
-      schema2: string
+    let datasource: Datasource
+    let client: Knex
+    let schema1: string
+    let schema2: string
 
     beforeEach(async () => {
       schema1 = generator.guid().replaceAll("-", "")
       schema2 = generator.guid().replaceAll("-", "")
 
-      rawDatasource = await getDatasource(DatabaseName.POSTGRES)
+      const rawDatasource = await getDatasource(DatabaseName.POSTGRES)
       client = await knexClient(rawDatasource)
 
       await client.schema.createSchema(schema1)

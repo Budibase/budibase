@@ -48,23 +48,6 @@ export async function getDatasources(
   return Promise.all(sourceNames.map(sourceName => providers[sourceName]()))
 }
 
-export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
-  switch (ds.source) {
-    case SourceName.POSTGRES: {
-      return postgres.rawQuery(ds, sql)
-    }
-    case SourceName.MYSQL: {
-      return mysql.rawQuery(ds, sql)
-    }
-    case SourceName.SQL_SERVER: {
-      return mssql.rawQuery(ds, sql)
-    }
-    default: {
-      throw new Error(`Unsupported source: ${ds.source}`)
-    }
-  }
-}
-
 export async function knexClient(ds: Datasource) {
   switch (ds.source) {
     case SourceName.POSTGRES: {
