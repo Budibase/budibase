@@ -88,7 +88,7 @@ export async function knexClient(ds: Datasource) {
   }
 
   return knex({
-    client: "mysql",
+    client: "mysql2",
     connection: ds.config,
   })
 }

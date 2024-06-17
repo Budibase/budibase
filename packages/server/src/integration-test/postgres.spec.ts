@@ -93,7 +93,7 @@ describe("postgres integrations", () => {
   describe("Integration compatibility with postgres search_path", () => {
     let rawDatasource: Datasource,
       datasource: Datasource,
-      client: Knex<any, unknown[]>,
+      client: Knex,
       schema1: string,
       schema2: string
 
