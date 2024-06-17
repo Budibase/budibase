@@ -11,6 +11,7 @@
   export let disableCancel = false
   export let autoFocus = true
   export let zIndex = 999
+  export let customMargin = null
 
   const dispatch = createEventDispatcher()
   let visible = fixed || inline
@@ -119,6 +120,7 @@
               use:focusModal
               bind:this={modal}
               class="spectrum-Modal is-open"
+              style:margin={customMargin}
               in:fly={{ y: 30, duration: 200 }}
               out:fly|local={{ y: 30, duration: 200 }}
             >
