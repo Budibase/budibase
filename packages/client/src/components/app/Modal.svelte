@@ -79,7 +79,7 @@
 
 <style>
   .modal-scroll-container {
-    background-color: #000000bf;
+    background-color: var(--modal-background, rgba(0, 0, 0, 0.75));
     top: 0;
     left: 0;
     width: 100vw;
