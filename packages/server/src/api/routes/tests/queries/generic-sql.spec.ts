@@ -63,6 +63,7 @@ describe.each(
 
     client = await knexClient(rawDatasource)
 
+    await client.schema.dropTableIfExists("test_table")
     await client.schema.createTable("test_table", table => {
       table.increments("id").primary()
       table.string("name")
@@ -84,7 +85,6 @@ describe.each(
   afterEach(async () => {
     const ds = await config.api.datasource.get(datasource._id!)
     await config.api.datasource.delete(ds)
-    await client.schema.dropTable("test_table")
   })
 
   afterAll(async () => {
