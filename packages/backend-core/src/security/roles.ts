@@ -10,17 +10,12 @@ import { getAppDB } from "../context"
 import { Screen, Role as RoleDoc, BuiltInRole } from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"
 
-const BUILTIN_IDS = {
-  ...BuiltInRole,
-  BUILDER: "BUILDER",
-}
-
 // exclude internal roles like builder
 const EXTERNAL_BUILTIN_ROLE_IDS = [
-  BUILTIN_IDS.ADMIN,
-  BUILTIN_IDS.POWER,
-  BUILTIN_IDS.BASIC,
-  BUILTIN_IDS.PUBLIC,
+  BuiltInRole.ADMIN,
+  BuiltInRole.POWER,
+  BuiltInRole.BASIC,
+  BuiltInRole.PUBLIC,
 ]
 
 export const RoleIDVersion = {
@@ -55,22 +50,22 @@ export class Role implements RoleDoc {
 
 const BUILTIN_ROLES = {
   ADMIN: new Role(
-    BUILTIN_IDS.ADMIN,
+    BuiltInRole.ADMIN,
     "Admin",
     BuiltinPermissionID.ADMIN
-  ).addInheritance(BUILTIN_IDS.POWER),
+  ).addInheritance(BuiltInRole.POWER),
   POWER: new Role(
-    BUILTIN_IDS.POWER,
+    BuiltInRole.POWER,
     "Power",
     BuiltinPermissionID.POWER
-  ).addInheritance(BUILTIN_IDS.BASIC),
+  ).addInheritance(BuiltInRole.BASIC),
   BASIC: new Role(
-    BUILTIN_IDS.BASIC,
+    BuiltInRole.BASIC,
     "Basic",
     BuiltinPermissionID.WRITE
-  ).addInheritance(BUILTIN_IDS.PUBLIC),
-  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public", BuiltinPermissionID.PUBLIC),
-  BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder", BuiltinPermissionID.ADMIN),
+  ).addInheritance(BuiltInRole.PUBLIC),
+  PUBLIC: new Role(BuiltInRole.PUBLIC, "Public", BuiltinPermissionID.PUBLIC),
+  BUILDER: new Role(BuiltInRole.BUILDER, "Builder", BuiltinPermissionID.ADMIN),
 }
 
 export function getBuiltinRoles(): { [key: string]: RoleDoc } {
@@ -97,7 +92,7 @@ export function getBuiltinRole(roleId: string): Role | undefined {
 export function builtinRoleToNumber(id: string) {
   const builtins = getBuiltinRoles()
   const MAX = Object.values(builtins).length + 1
-  if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
+  if (id === BuiltInRole.ADMIN || id === BuiltInRole.BUILDER) {
     return MAX
   }
   let role = builtins[id],
@@ -189,7 +184,7 @@ async function getAllUserRoles(
   opts?: { defaultPublic?: boolean }
 ): Promise<RoleDoc[]> {
   // admins have access to all roles
-  if (userRoleId === BUILTIN_IDS.ADMIN) {
+  if (userRoleId === BuiltInRole.ADMIN) {
     return getAllRoles()
   }
   let currentRole = await getRole(userRoleId, opts)
@@ -331,8 +326,8 @@ export class AccessController {
       tryingRoleId == null ||
       tryingRoleId === "" ||
       tryingRoleId === userRoleId ||
-      tryingRoleId === BUILTIN_IDS.BUILDER ||
-      userRoleId === BUILTIN_IDS.BUILDER
+      tryingRoleId === BuiltInRole.BUILDER ||
+      userRoleId === BuiltInRole.BUILDER
     ) {
       return true
     }

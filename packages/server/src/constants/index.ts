@@ -1,9 +1,10 @@
-import { constants, objectStore, roles } from "@budibase/backend-core"
+import { constants, objectStore } from "@budibase/backend-core"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
   TableSourceType,
+  BuiltInRole,
 } from "@budibase/types"
 
 import env from "../environment"
@@ -113,7 +114,7 @@ export const USERS_TABLE_SCHEMA: Table = {
       constraints: {
         type: FieldType.STRING,
         presence: false,
-        inclusion: Object.values(roles.BUILTIN_ROLE_IDS),
+        inclusion: Object.values(BuiltInRole),
       },
     },
     status: {

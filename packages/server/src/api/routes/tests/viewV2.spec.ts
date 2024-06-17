@@ -1,5 +1,6 @@
 import * as setup from "./utilities"
 import {
+  BuiltInRole,
   CreateViewRequest,
   Datasource,
   FieldSchema,
@@ -22,7 +23,7 @@ import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { db, roles } from "@budibase/backend-core"
+import { db } from "@budibase/backend-core"
 
 describe.each([
   ["internal", undefined],
@@ -1475,7 +1476,7 @@ describe.each([
 
       it("allow public users to fetch when permissions are explicit", async () => {
         await config.api.permission.add({
-          roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+          roleId: BuiltInRole.PUBLIC,
           level: PermissionLevel.READ,
           resourceId: view.id,
         })
@@ -1488,7 +1489,7 @@ describe.each([
 
       it("allow public users to fetch when permissions are inherited", async () => {
         await config.api.permission.add({
-          roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+          roleId: BuiltInRole.PUBLIC,
           level: PermissionLevel.READ,
           resourceId: table._id!,
         })
@@ -1501,12 +1502,12 @@ describe.each([
 
       it("respects inherited permissions, not allowing not public views from public tables", async () => {
         await config.api.permission.add({
-          roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+          roleId: BuiltInRole.PUBLIC,
           level: PermissionLevel.READ,
           resourceId: table._id!,
         })
         await config.api.permission.add({
-          roleId: roles.BUILTIN_ROLE_IDS.POWER,
+          roleId: BuiltInRole.POWER,
           level: PermissionLevel.READ,
           resourceId: view.id,
         })

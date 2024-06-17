@@ -11,7 +11,7 @@ import { generateUserMetadataID, isDevAppID } from "../db/utils"
 import { getCachedSelf } from "../utilities/global"
 import env from "../environment"
 import { isWebhookEndpoint } from "./utils"
-import { UserCtx, ContextUser } from "@budibase/types"
+import { UserCtx, ContextUser, BuiltInRole } from "@budibase/types"
 import tracer from "dd-trace"
 
 export default async (ctx: UserCtx, next: any) => {
@@ -38,7 +38,7 @@ export default async (ctx: UserCtx, next: any) => {
   }
 
   let appId: string | undefined,
-    roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+    roleId = BuiltInRole.PUBLIC
   if (!ctx.user?._id) {
     // not logged in, try to set a cookie for public apps
     appId = requestAppId
@@ -47,7 +47,7 @@ export default async (ctx: UserCtx, next: any) => {
     const globalUser = await getCachedSelf(ctx, requestAppId)
     appId = requestAppId
     // retrieving global user gets the right role
-    roleId = globalUser.roleId || roleId
+    roleId = (globalUser.roleId as BuiltInRole) || roleId
 
     // Allow builders to specify their role via a header
     const isBuilder = users.isBuilder(globalUser, appId)
@@ -60,7 +60,7 @@ export default async (ctx: UserCtx, next: any) => {
       try {
         if (roleHeader) {
           await roles.getRole(roleHeader)
-          roleId = roleHeader
+          roleId = roleHeader as BuiltInRole
 
           // Delete admin and builder flags so that the specified role is honoured
           ctx.user = users.removePortalUserPermissions(ctx.user) as ContextUser
@@ -99,7 +99,7 @@ export default async (ctx: UserCtx, next: any) => {
     // clear out the user
     ctx.user = users.cleanseUserObject(ctx.user) as ContextUser
     ctx.isAuthenticated = false
-    roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+    roleId = BuiltInRole.PUBLIC
     // remove the cookie, so future calls are public
     await auth.platformLogout({
       ctx,

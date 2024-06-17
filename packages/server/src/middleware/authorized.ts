@@ -5,7 +5,12 @@ import {
   roles,
   users,
 } from "@budibase/backend-core"
-import { PermissionLevel, PermissionType, UserCtx } from "@budibase/types"
+import {
+  BuiltInRole,
+  PermissionLevel,
+  PermissionType,
+  UserCtx,
+} from "@budibase/types"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
 import { paramResource } from "./resourceId"
@@ -61,7 +66,7 @@ const checkAuthorizedResource = async (
   permLevel: PermissionLevel
 ) => {
   // get the user's roles
-  const roleId = ctx.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
+  const roleId = ctx.roleId || BuiltInRole.PUBLIC
   const userRoles = await roles.getUserRoleHierarchy(roleId)
   const permError = "User does not have permission"
   // check if the user has the required role
@@ -139,9 +144,8 @@ const authorized =
 
     // if the resource is public, proceed
     if (
-      resourceRoles.includes(roles.BUILTIN_ROLE_IDS.PUBLIC) ||
-      (otherLevelRoles &&
-        otherLevelRoles.includes(roles.BUILTIN_ROLE_IDS.PUBLIC))
+      resourceRoles.includes(BuiltInRole.PUBLIC) ||
+      (otherLevelRoles && otherLevelRoles.includes(BuiltInRole.PUBLIC))
     ) {
       return next()
     }

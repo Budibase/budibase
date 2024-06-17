@@ -1,6 +1,5 @@
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import {
-  roles,
   db as dbCore,
   cache,
   tenancy,
@@ -9,7 +8,13 @@ import {
 } from "@budibase/backend-core"
 import env from "../environment"
 import { groups } from "@budibase/pro"
-import { UserCtx, ContextUser, User, UserGroup } from "@budibase/types"
+import {
+  UserCtx,
+  ContextUser,
+  BuiltInRole,
+  User,
+  UserGroup,
+} from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 
 export async function processUser(
@@ -28,7 +33,7 @@ export async function processUser(
   // if in a multi-tenancy environment and in wrong tenant make sure roles are never updated
   if (env.MULTI_TENANCY && appId && !tenancy.isUserInAppTenant(appId, user)) {
     user = users.removePortalUserPermissions(user)
-    user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+    user.roleId = BuiltInRole.PUBLIC
     return user
   }
   let groupList: UserGroup[] = []
@@ -50,7 +55,7 @@ export async function processUser(
   }
   // builders are always admins within the app
   if (users.isBuilder(user, appId)) {
-    user.roleId = roles.BUILTIN_ROLE_IDS.ADMIN
+    user.roleId = BuiltInRole.ADMIN
   }
   // try to get the role from the user list
   if (!user.roleId && appId && user.roles) {
@@ -64,7 +69,7 @@ export async function processUser(
   }
   // final fallback, simply couldn't find a role - user must be public
   if (!user.roleId) {
-    user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+    user.roleId = BuiltInRole.PUBLIC
   }
   // remove the roles as it is now set
   delete user.roles
