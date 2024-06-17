@@ -29,10 +29,6 @@
     }
   }
 
-  // $: {
-
-  // }
-
   // Derive visibility
   $: open = $sidePanelStore.contentId === $component.id
 
