@@ -70,11 +70,6 @@ export enum DatasourceAuthTypes {
   GOOGLE = "google",
 }
 
-export enum SortDirection {
-  ASCENDING = "ASCENDING",
-  DESCENDING = "DESCENDING",
-}
-
 export const USERS_TABLE_SCHEMA: Table = {
   _id: "ta_users",
   type: "table",

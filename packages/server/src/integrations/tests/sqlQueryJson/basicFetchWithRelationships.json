@@ -29,7 +29,7 @@
   "filters": {},
   "sort": {
     "firstname": {
-      "direction": "ASCENDING"
+      "direction": "ascending"
     }
   },
   "paginate": {
@@ -65,9 +65,7 @@
     "table": {
       "type": "table",
       "_id": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__persons",
-      "primary": [
-        "personid"
-      ],
+      "primary": ["personid"],
       "name": "persons",
       "schema": {
         "year": {
@@ -122,12 +120,7 @@
           "name": "type",
           "constraints": {
             "presence": false,
-            "inclusion": [
-              "support",
-              "designer",
-              "programmer",
-              "qa"
-            ]
+            "inclusion": ["support", "designer", "programmer", "qa"]
           }
         },
         "city": {
