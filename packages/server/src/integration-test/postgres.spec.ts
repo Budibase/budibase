@@ -14,7 +14,7 @@ const config = setup.getConfig()!
 describe("postgres integrations", () => {
   let rawDatasource: Datasource
   let datasource: Datasource
-  let client: Knex<any, unknown[]>
+  let client: Knex
 
   beforeAll(async () => {
     await config.init()

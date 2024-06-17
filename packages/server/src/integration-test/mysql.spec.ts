@@ -1,8 +1,4 @@
 import fetch from "node-fetch"
-import {
-  generateMakeRequest,
-  MakeRequestResponse,
-} from "../api/routes/public/tests/utils"
 import * as setup from "../api/routes/tests/utilities"
 import { Datasource, FieldType } from "@budibase/types"
 import {
@@ -12,6 +8,7 @@ import {
 } from "../integrations/tests/utils"
 import { generator } from "@budibase/backend-core/tests"
 import { tableForDatasource } from "../../src/tests/utilities/structures"
+import { Knex } from "knex"
 // @ts-ignore
 fetch.mockSearch()
 
@@ -40,15 +37,12 @@ jest.mock("../websockets", () => ({
 }))
 
 describe("mysql integrations", () => {
-  let makeRequest: MakeRequestResponse,
-    rawDatasource: Datasource,
-    datasource: Datasource
+  let rawDatasource: Datasource
+  let datasource: Datasource
+  let client: Knex
 
   beforeAll(async () => {
     await config.init()
-    const apiKey = await config.generateApiKey()
-
-    makeRequest = generateMakeRequest(apiKey, true)
 
     rawDatasource = await getDatasource(DatabaseName.MYSQL)
     datasource = await config.api.datasource.create(rawDatasource)
@@ -59,11 +53,8 @@ describe("mysql integrations", () => {
   it("validate table schema", async () => {
     // Creating a table so that `entities` is populated.
     await config.api.table.save(tableForDatasource(datasource))
-
-    const res = await makeRequest("get", `/api/datasources/${datasource._id}`)
-
-    expect(res.status).toBe(200)
-    expect(res.body).toEqual({
+    const res = await config.api.datasource.get(datasource._id!)
+    expect(res).toEqual({
       config: {
         database: expect.any(String),
         host: datasource.config!.host,
@@ -114,14 +105,9 @@ describe("mysql integrations", () => {
         rawDatasource,
         `CREATE TABLE \`${database}\`.table1 (id1 SERIAL PRIMARY KEY);`
       )
-      const response = await makeRequest("post", "/api/datasources/info", {
-        datasource: datasource,
-      })
-      expect(response.status).toBe(200)
-      expect(response.body.tableNames).toBeDefined()
-      expect(response.body.tableNames).toEqual(
-        expect.arrayContaining(["table1"])
-      )
+      const res = await config.api.datasource.info(datasource)
+      expect(res.tableNames).toBeDefined()
+      expect(res.tableNames).toEqual(expect.arrayContaining(["table1"]))
     })
 
     it("does not mix columns from different tables", async () => {
@@ -134,19 +120,13 @@ describe("mysql integrations", () => {
         rawDatasource,
         `CREATE TABLE \`${database2}\`.${repeated_table_name} (id2 SERIAL PRIMARY KEY, val2 TEXT);`
       )
-      const response = await makeRequest(
-        "post",
-        `/api/datasources/${datasource._id}/schema`,
-        {
-          tablesFilter: [repeated_table_name],
-        }
-      )
-      expect(response.status).toBe(200)
-      expect(
-        response.body.datasource.entities[repeated_table_name].schema
-      ).toBeDefined()
-      const schema =
-        response.body.datasource.entities[repeated_table_name].schema
+
+      const res = await config.api.datasource.fetchSchema({
+        datasourceId: datasource._id!,
+        tablesFilter: [repeated_table_name],
+      })
+      expect(res.datasource.entities![repeated_table_name].schema).toBeDefined()
+      const schema = res.datasource.entities![repeated_table_name].schema
       expect(Object.keys(schema).sort()).toEqual(["id", "val1"])
     })
   })
@@ -175,12 +155,11 @@ describe("mysql integrations", () => {
 
       await rawQuery(rawDatasource, createTableQuery)
 
-      const response = await makeRequest(
-        "post",
-        `/api/datasources/${datasource._id}/schema`
-      )
+      const res = await config.api.datasource.fetchSchema({
+        datasourceId: datasource._id!,
+      })
 
-      const table = response.body.datasource.entities[tableName]
+      const table = res.datasource.entities![tableName]
 
       expect(table).toBeDefined()
       expect(table.schema[enumColumnName].type).toEqual(FieldType.OPTIONS)
