@@ -596,6 +596,9 @@ class InternalBuilder {
       const offset = page * paginate.limit
       foundLimit = paginate.limit
       foundOffset = offset
+    } else if (paginate && paginate.offset && paginate.limit) {
+      foundLimit = paginate.limit
+      foundOffset = paginate.offset
     } else if (paginate && paginate.limit) {
       foundLimit = paginate.limit
     }
