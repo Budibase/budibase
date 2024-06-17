@@ -19,6 +19,7 @@
     devToolsStore,
     devToolsEnabled,
     environmentStore,
+    sidePanelStore,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -101,6 +102,16 @@
       builderStore.actions.analyticsPing({
         embedded: !!$appStore.embedded,
       })
+    }
+    const handleHashChange = () => {
+      const { open } = $sidePanelStore
+      if (open) {
+        sidePanelStore.actions.close()
+      }
+    }
+    window.addEventListener("hashchange", handleHashChange)
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange)
     }
   })
 

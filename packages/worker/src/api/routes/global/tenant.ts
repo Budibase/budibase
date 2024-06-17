@@ -18,16 +18,19 @@ function buildTenantInfoValidation() {
         familyName: OPTIONAL_STRING,
         budibaseUserId: OPTIONAL_STRING,
       }).required(),
+      hosting: Joi.string().required(),
       tenantId: Joi.string().required(),
     }).required()
   )
 }
 
-router.post(
-  "/api/global/tenant",
-  cloudRestricted,
-  buildTenantInfoValidation(),
-  controller.save
-)
+router
+  .post(
+    "/api/global/tenant",
+    cloudRestricted,
+    buildTenantInfoValidation(),
+    controller.save
+  )
+  .get("/api/global/tenant/:id", controller.get)
 
 export default router
