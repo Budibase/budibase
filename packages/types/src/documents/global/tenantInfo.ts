@@ -1,3 +1,4 @@
+import { Hosting } from "../../sdk"
 import { Document } from "../document"
 
 export interface TenantInfo extends Document {
@@ -10,4 +11,5 @@ export interface TenantInfo extends Document {
     budibaseUserId?: string
   }
   tenantId: string
+  hosting: Hosting
 }
