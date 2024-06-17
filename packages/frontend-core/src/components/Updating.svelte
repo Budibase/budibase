@@ -1,18 +1,22 @@
 <script>
   export let isMigrationDone
   export let onMigrationDone
-  export let timeoutSeconds = 10 // 3 minutes
+  export let timeoutSeconds = 60 // 1 minute
+  export let minTimeSeconds = 3
 
   const loadTime = Date.now()
+  const intervalMs = 1000
   let timedOut = false
+  let secondsWaited = 0
 
   async function checkMigrationsFinished() {
     setTimeout(async () => {
       const isMigrated = await isMigrationDone()
 
       const timeoutMs = timeoutSeconds * 1000
-      if (!isMigrated) {
+      if (!isMigrated || secondsWaited <= minTimeSeconds) {
         if (loadTime + timeoutMs > Date.now()) {
+          secondsWaited += 1
           return checkMigrationsFinished()
         }
 
@@ -20,7 +24,7 @@
       }
 
       onMigrationDone()
-    }, 1000)
+    }, intervalMs)
   }
 
   checkMigrationsFinished()
@@ -41,6 +45,11 @@
   <span class="subtext">
     {#if !timedOut}
       Please wait and we will be back in a second!
+      <br />
+      Checkout the
+      <a href="https://docs.budibase.com/docs/app-migrations" target="_blank"
+        >documentation</a
+      > on app migrations.
     {:else}
       An error occurred, please try again later.
       <br />
