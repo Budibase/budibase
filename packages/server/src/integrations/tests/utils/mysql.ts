@@ -1,7 +1,6 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
-import mysql from "mysql2/promise"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
 import knex from "knex"
@@ -57,26 +56,10 @@ export async function getDatasource(): Promise<Datasource> {
   }
 
   const database = generator.guid().replaceAll("-", "")
-  await rawQuery(datasource, `CREATE DATABASE \`${database}\``)
+  const client = await knexClient(datasource)
+  await client.raw(`CREATE DATABASE \`${database}\``)
   datasource.config!.database = database
   return datasource
-}
-
-export async function rawQuery(ds: Datasource, sql: string) {
-  if (!ds.config) {
-    throw new Error("Datasource config is missing")
-  }
-  if (ds.source !== SourceName.MYSQL) {
-    throw new Error("Datasource source is not MySQL")
-  }
-
-  const connection = await mysql.createConnection(ds.config)
-  try {
-    const [rows] = await connection.query(sql)
-    return rows
-  } finally {
-    connection.end()
-  }
 }
 
 export async function knexClient(ds: Datasource) {
