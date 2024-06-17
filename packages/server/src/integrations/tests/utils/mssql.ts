@@ -7,7 +7,7 @@ import knex from "knex"
 
 let ports: Promise<testContainerUtils.Port[]>
 
-export async function getDatasource(): Promise<Datasource> {
+export async function GetDatasource(): Promise<Datasource> {
   if (!ports) {
     ports = startContainer(
       new GenericContainer("mcr.microsoft.com/mssql/server:2022-latest")
