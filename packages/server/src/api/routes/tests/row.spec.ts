@@ -1,6 +1,7 @@
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
+import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
 import { context, InternalTable, tenancy } from "@budibase/backend-core"
@@ -24,6 +25,7 @@ import {
   StaticQuotaName,
   Table,
   TableSourceType,
+  UpdatedRowEventEmitter,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -31,6 +33,14 @@ import * as uuid from "uuid"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
+
+function waitForRowUpdateEvent(): Promise<UpdatedRowEventEmitter> {
+  return new Promise((resolve: any) => {
+    emitter.once("row:update", (event: any) => {
+      resolve(event)
+    })
+  })
+}
 
 describe.each([
   ["internal", undefined],
@@ -608,6 +618,32 @@ describe.each([
       await assertRowUsage(rowUsage)
     })
 
+    it("should update only the fields that are supplied and emit the correct oldRow", async () => {
+      let beforeRow = await config.api.row.save(table._id!, {
+        name: "test",
+        description: "test",
+      })
+
+      const rowUpdateEventPromise = waitForRowUpdateEvent()
+
+      const row = await config.api.row.patch(table._id!, {
+        _id: beforeRow._id!,
+        _rev: beforeRow._rev!,
+        tableId: table._id!,
+        name: "Updated Name",
+      })
+
+      expect(row.name).toEqual("Updated Name")
+      expect(row.description).toEqual(beforeRow.description)
+
+      const event = await rowUpdateEventPromise
+
+      expect(event.oldRow).toBeDefined()
+      expect(event.oldRow.name).toEqual("test")
+      expect(event.row.name).toEqual("Updated Name")
+      expect(event.oldRow.description).toEqual(beforeRow.description)
+      expect(event.row.description).toEqual(beforeRow.description)
+    })
     it("should throw an error when given improper types", async () => {
       const existing = await config.api.row.save(table._id!, {})
       const rowUsage = await getRowUsage()

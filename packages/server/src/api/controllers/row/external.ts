@@ -43,11 +43,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const { _id, ...rowData } = ctx.request.body
   const table = await sdk.tables.getTable(tableId)
 
-  let oldRow = await outputProcessing(
-    table,
-    await utils.findRow(ctx, tableId, _id)
-  )
-
   const { row: dataToUpdate } = await inputProcessing(
     ctx.user?._id,
     cloneDeep(table),
@@ -85,7 +80,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     ...response,
     row: enrichedRow,
     table,
-    oldRow,
+    oldRow: beforeRow,
   }
 }
 
