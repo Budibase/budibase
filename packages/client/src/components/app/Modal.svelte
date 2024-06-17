@@ -41,22 +41,22 @@
 </script>
 
 {#if open}
-  <Portal target=".modal-portal">
+  <Portal target=".modal-container">
     <div
-      transition:fade={{ duration: 300 }}
+      transition:fade={$builderStore.inBuilder ? { duration: 0 } : { duration: 200 }}
       class="modal-scroll-container"
       class:open={$modalStore.open}
     >
-      <div class="modal-container">
+      <div class="modal-wrapper">
         <div
-          transition:fly={{ duration: 300, y: 300 }}
+          transition:fly={$builderStore.inBuilder ? { duration: 0 } : { duration: 200, y: 30 }}
           use:styleable={$component.styles}
           use:clickOutside={!ignoreClicksOutside ? handleModalClose : null}
           class="modal {size}"
         >
           <div class="modal-header">
             <Icon
-              color="var(--spectrum-global-color-gray-600)"
+              color="var(--spectrum-global-color-gray-800)"
               name="Close"
               hoverable
               on:click={handleModalClose}
@@ -75,7 +75,7 @@
 
 <style>
   .modal-scroll-container {
-    background-color: #00000078;
+    background-color: #000000bf;
     top: 0;
     left: 0;
     width: 100vw;
@@ -86,7 +86,7 @@
     z-index: 3;
   }
 
-  .modal-container {
+  .modal-wrapper {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -98,13 +98,14 @@
   }
 
   .modal {
-    background-color: var(--spectrum-global-color-gray-50);
+    background-color: var(--spectrum-alias-background-color-primary);
     display: flex;
     flex-direction: column;
     padding: 12px 0px 40px;
     border-radius: 8px;
     box-sizing: border-box;
     max-width: 100%;
+    border: 2px solid var(--spectrum-global-color-gray-200);
   }
 
   .modal.small {
