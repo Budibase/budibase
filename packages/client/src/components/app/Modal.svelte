@@ -9,7 +9,7 @@
   export let onClose
   export let ignoreClicksOutside
   export let size
-  let modal;
+  let modal
 
   // Open modal automatically in builder
   $: {
@@ -39,22 +39,25 @@
   }
 
   const handleOpen = (open, modal) => {
-    if (!modal) return;
+    if (!modal) return
 
     if (open) {
-      modal.show();
+      modal.show()
     } else {
-      modal.hide();
+      modal.hide()
     }
   }
 
   $: handleOpen(open, modal)
 </script>
 
-<Modal customMargin="20px" on:cancel={handleModalClose} bind:this={modal} zIndex={2}>
-  <div
-    use:styleable={$component.styles}
-    class={`modal-content ${size}`}>
+<Modal
+  customMargin="20px"
+  on:cancel={handleModalClose}
+  bind:this={modal}
+  zIndex={2}
+>
+  <div use:styleable={$component.styles} class={`modal-content ${size}`}>
     <div class="modal-header">
       <Icon
         color="var(--spectrum-global-color-gray-800)"
@@ -68,7 +71,8 @@
         <slot />
       </div>
     </div>
-</Modal>
+  </div></Modal
+>
 
 <style>
   .modal-content {
