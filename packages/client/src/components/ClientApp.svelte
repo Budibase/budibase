@@ -104,11 +104,9 @@
       })
     }
     const handleHashChange = () => {
-      if (sidePanelStore?.subscribe) {
-        const { open } = $sidePanelStore
-        if (open) {
-          sidePanelStore.actions.close()
-        }
+      const { open } = $sidePanelStore
+      if (open) {
+        sidePanelStore.actions.close()
       }
     }
     window.addEventListener("hashchange", handleHashChange)
