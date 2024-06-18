@@ -18,6 +18,7 @@
     menu,
     gridFocused,
     keyboardBlocked,
+    renderedRows,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -148,7 +149,7 @@
 
   // Focuses the first cell in the grid
   const focusFirstCell = () => {
-    const firstRow = $rows[0]
+    const firstRow = $renderedRows[0]
     if (!firstRow) {
       return
     }
@@ -188,7 +189,8 @@
     if (!$focusedRow) {
       return
     }
-    const newRow = $rows[$focusedRow.__idx + delta]
+    const idx = $renderedRows.findIndex(x => x._id === $focusedRow._id)
+    const newRow = $renderedRows[idx + delta]
     if (newRow) {
       const { field } = parseCellID($focusedCellId)
       $focusedCellId = getCellID(newRow._id, field)

@@ -1,16 +1,46 @@
 import { derived } from "svelte/store"
-import { MinColumnWidth } from "../lib/constants"
+import { RowPageSize, MinColumnWidth } from "../lib/constants"
 
 export const deriveStores = context => {
   const {
     rowHeight,
     visibleColumns,
-    rows,
     scrollTop,
     scrollLeft,
     width,
     height,
+    pages,
+    rowChangeCache,
+    loading,
   } = context
+
+  const pageHeight = derived(rowHeight, $rowHeight => $rowHeight * RowPageSize)
+  const firstVisiblePage = derived(
+    [scrollTop, pageHeight],
+    ([$scrollTop, $pageHeight]) => {
+      return Math.floor($scrollTop / $pageHeight)
+    },
+    0
+  )
+  const lastVisiblePage = derived(
+    [firstVisiblePage, pageHeight, scrollTop, height],
+    ([$firstVisiblePage, $pageHeight, $scrollTop, $height]) => {
+      const pageBottom = ($firstVisiblePage + 1) * $pageHeight
+      return pageBottom > $scrollTop + $height
+        ? $firstVisiblePage
+        : $firstVisiblePage + 1
+    }
+  )
+  const visiblePages = derived(
+    [firstVisiblePage, lastVisiblePage],
+    ([$firstVisiblePage, $lastVisiblePage]) => {
+      if ($lastVisiblePage === $firstVisiblePage) {
+        return [$firstVisiblePage]
+      } else {
+        return [$firstVisiblePage, $lastVisiblePage]
+      }
+    }
+  )
 
   // Derive visible rows
   // Split into multiple stores containing primitives to optimise invalidation
@@ -30,12 +60,37 @@ export const deriveStores = context => {
     0
   )
   const renderedRows = derived(
-    [rows, scrolledRowCount, visualRowCapacity],
-    ([$rows, $scrolledRowCount, $visualRowCapacity]) => {
-      return $rows.slice(
-        $scrolledRowCount,
-        $scrolledRowCount + $visualRowCapacity
-      )
+    [pages, visiblePages, scrolledRowCount, visualRowCapacity, rowChangeCache],
+    ([
+      $pages,
+      $visiblePages,
+      $scrolledRowCount,
+      $visualRowCapacity,
+      $rowChangeCache,
+    ]) => {
+      const prevPagesRowCount = $visiblePages[0] * RowPageSize
+      const scrolledInPage = $scrolledRowCount - prevPagesRowCount
+      let rows = $pages[$visiblePages[0]] || []
+      if ($visiblePages[1]) {
+        rows = rows.concat($pages[$visiblePages[1]] || [])
+      }
+      let rendered = rows
+        .slice(scrolledInPage, scrolledInPage + $visualRowCapacity)
+        .map(row => ({
+          ...row,
+          ...$rowChangeCache[row._id],
+        }))
+      if (rendered.length < $visualRowCapacity) {
+        rendered = new Array($visualRowCapacity)
+        for (let i = 0; i < $visualRowCapacity; i++) {
+          rendered[i] = {
+            _id: i,
+            __placeholder: true,
+            __idx: $scrolledRowCount + i,
+          }
+        }
+      }
+      return rendered
     },
     []
   )
@@ -82,6 +137,7 @@ export const deriveStores = context => {
   )
 
   return {
+    visiblePages,
     scrolledRowCount,
     visualRowCapacity,
     renderedRows,

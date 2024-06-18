@@ -42,7 +42,7 @@
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $datasource, (visible = false)
   $: selectedRowCount = Object.values($selectedRows).length
-  $: hasNoRows = !$rows.length
+  $: hasNoRows = !$renderedRows.length
 
   const addRow = async () => {
     // Blur the active cell and tick to let final value updates propagate

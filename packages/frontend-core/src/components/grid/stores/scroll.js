@@ -22,13 +22,13 @@ export const createStores = () => {
 
 export const deriveStores = context => {
   const {
-    rows,
     visibleColumns,
     stickyColumn,
     rowHeight,
     width,
     height,
     buttonColumnWidth,
+    totalRows,
   } = context
 
   // Memoize store primitives
@@ -36,8 +36,8 @@ export const deriveStores = context => {
 
   // Derive vertical limits
   const contentHeight = derived(
-    [rows, rowHeight],
-    ([$rows, $rowHeight]) => ($rows.length + 1) * $rowHeight + Padding,
+    [totalRows, rowHeight],
+    ([$totalRows, $rowHeight]) => ($totalRows + 1) * $rowHeight + Padding,
     0
   )
   const maxScrollTop = derived(

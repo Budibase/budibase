@@ -68,13 +68,12 @@ export const createStores = context => {
 }
 
 export const deriveStores = context => {
-  const { focusedCellId, rows, rowLookupMap, rowHeight, stickyColumn, width } =
-    context
+  const { focusedCellId, pages, rowHeight, stickyColumn, width, rows } = context
 
   // Derive the row that contains the selected cell
   const focusedRow = derived(
-    [focusedCellId, rowLookupMap, rows],
-    ([$focusedCellId, $rowLookupMap, $rows]) => {
+    [focusedCellId, pages],
+    ([$focusedCellId, $pages]) => {
       const rowId = parseCellID($focusedCellId)?.id
 
       // Edge case for new rows
@@ -83,8 +82,7 @@ export const deriveStores = context => {
       }
 
       // All normal rows
-      const index = $rowLookupMap[rowId]
-      return $rows[index]
+      return rows.actions.getRow(rowId, $pages)
     },
     null
   )
@@ -134,6 +132,7 @@ export const initialise = context => {
     focusedRowId,
     previousFocusedRowId,
     previousFocusedCellId,
+    pages,
     rows,
     focusedCellId,
     selectedRows,
@@ -144,7 +143,7 @@ export const initialise = context => {
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
-  rows.subscribe(async () => {
+  pages.subscribe(async () => {
     // We tick here to ensure other derived stores have properly updated.
     // We depend on the row lookup map which is a derived store,
     await tick()

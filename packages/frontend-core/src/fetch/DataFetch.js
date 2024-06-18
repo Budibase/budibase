@@ -42,6 +42,7 @@ export default class DataFetch {
 
       // Pagination config
       paginate: true,
+      countRows: false,
 
       // Client side feature customisation
       clientSideSearching: true,
@@ -205,6 +206,7 @@ export default class DataFetch {
       cursors: paginate && page.hasNextPage ? [null, page.cursor] : [null],
       error: page.error,
       resetKey: Math.random(),
+      totalRows: page.totalRows,
     }))
   }
 
@@ -224,7 +226,8 @@ export default class DataFetch {
     const { query } = get(this.store)
 
     // Get the actual data
-    let { rows, info, hasNextPage, cursor, error } = await this.getData()
+    let { rows, info, hasNextPage, cursor, error, totalRows } =
+      await this.getData()
 
     // If we don't support searching, do a client search
     if (!this.features.supportsSearch && clientSideSearching) {
@@ -247,6 +250,7 @@ export default class DataFetch {
       hasNextPage,
       cursor,
       error,
+      totalRows,
     }
   }
 
@@ -495,6 +499,36 @@ export default class DataFetch {
       loading: true,
       cursor: prevCursor,
       pageNumber: $store.pageNumber - 1,
+    }))
+    const { rows, info, error } = await this.getPage()
+
+    // Update state
+    this.store.update($store => {
+      return {
+        ...$store,
+        rows,
+        info,
+        loading: false,
+        error,
+      }
+    })
+  }
+
+  /**
+   * Fetches an exact page of data
+   */
+  async goToPage(number) {
+    const state = get(this.derivedStore)
+    if (state.loading || !this.options.paginate) {
+      return
+    }
+
+    // Fetch exact page
+    this.store.update($store => ({
+      ...$store,
+      loading: true,
+      cursor: number === 0 ? null : number,
+      pageNumber: number,
     }))
     const { rows, info, error } = await this.getPage()
 

@@ -124,14 +124,18 @@
       return readable([])
     }
     return derived(
-      [gridContext.selectedRows, gridContext.rowLookupMap, gridContext.rows],
-      ([$selectedRows, $rowLookupMap, $rows]) => {
+      [gridContext.selectedRows, gridContext.rowLookupMap, gridContext.data],
+      ([$selectedRows, $rowLookupMap, $data]) => {
         return Object.entries($selectedRows || {})
           .filter(([_, selected]) => selected)
           .map(([rowId]) => {
-            const idx = $rowLookupMap[rowId]
-            return gridContext.rows.actions.cleanRow($rows[idx])
+            const { page, pageIdx } = $rowLookupMap[rowId] || {}
+            if (page == null || pageIdx == null) {
+              return null
+            }
+            return gridContext.rows.actions.cleanRow($data[page][pageIdx])
           })
+          .filer(x => x != null)
       }
     )
   }

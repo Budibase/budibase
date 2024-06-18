@@ -2,10 +2,10 @@
   import ExportButton from "../ExportButton.svelte"
   import { getContext } from "svelte"
 
-  const { rows, columns, datasource, sort, selectedRows, filter } =
+  const { columns, datasource, sort, selectedRows, filter, loadedRows } =
     getContext("grid")
 
-  $: disabled = !$rows.length || !$columns.length
+  $: disabled = !$loadedRows || !$columns.length
   $: selectedRowArray = Object.keys($selectedRows).map(id => ({ _id: id }))
 </script>
 

@@ -53,7 +53,7 @@
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
-  const { dispatch: gridDispatch, rows } = getContext("grid")
+  const { dispatch: gridDispatch, renderedRows } = getContext("grid")
 
   export let field
 
@@ -97,7 +97,7 @@
   let autoColumnInfo = getAutoColumnInformation()
   let optionsValid = true
 
-  $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
+  $: rowGoldenSample = RowUtils.generateGoldenSample($renderedRows)
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }

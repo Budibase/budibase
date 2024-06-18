@@ -3,6 +3,7 @@
   import GridCell from "./GridCell.svelte"
   import { getCellRenderer } from "../lib/renderers"
   import { derived, writable } from "svelte/store"
+  import PlaceholderCell from "./PlaceholderCell.svelte"
 
   const { rows, focusedCellId, focusedCellAPI, menu, config, validation } =
     getContext("grid")
@@ -20,6 +21,7 @@
   export let updateValue = rows.actions.updateValue
   export let contentLines = 1
   export let hidden = false
+  export let placeholder = false
 
   const emptyError = writable(null)
 
@@ -84,15 +86,19 @@
   on:contextmenu={e => menu.actions.open(cellId, e)}
   width={column.width}
 >
-  <svelte:component
-    this={getCellRenderer(column)}
-    bind:api
-    value={row[column.name]}
-    schema={column.schema}
-    onChange={cellAPI.setValue}
-    {focused}
-    {readonly}
-    {contentLines}
-  />
+  {#if placeholder}
+    <PlaceholderCell {rowIdx} />
+  {:else}
+    <svelte:component
+      this={getCellRenderer(column)}
+      bind:api
+      value={row[column.name]}
+      schema={column.schema}
+      onChange={cellAPI.setValue}
+      {focused}
+      {readonly}
+      {contentLines}
+    />
+  {/if}
   <slot />
 </GridCell>

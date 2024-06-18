@@ -43,6 +43,7 @@
       {column}
       {row}
       {rowFocused}
+      placeholder={row.__placeholder}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
       selected={rowSelected}
       rowIdx={row.__idx}

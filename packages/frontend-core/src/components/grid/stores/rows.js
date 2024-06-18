@@ -6,7 +6,7 @@ import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 
 export const createStores = () => {
-  const rows = writable([])
+  const pages = writable({})
   const loading = writable(false)
   const loaded = writable(false)
   const refreshing = writable(false)
@@ -15,15 +15,42 @@ export const createStores = () => {
   const hasNextPage = writable(false)
   const error = writable(null)
   const fetch = writable(null)
+  const totalRows = writable(0)
+
+  // Derive how many rows we have loaded into memory
+  const loadedRows = derived(pages, $pages => {
+    let count = 0
+    for (let page of Object.keys($pages)) {
+      count += $pages[page]?.length || 0
+    }
+    return count
+  })
+
+  const enrichedPages = derived(pages, $pages => {
+    let enriched = {}
+    for (let page of Object.keys($pages)) {
+      enriched[page] = $pages[page].map((row, idx) => ({
+        ...row,
+        __idx: page * RowPageSize + idx,
+      }))
+    }
+    return enriched
+  })
 
   // Generate a lookup map to quick find a row by ID
-  const rowLookupMap = derived(rows, $rows => {
-    let map = {}
-    for (let i = 0; i < $rows.length; i++) {
-      map[$rows[i]._id] = i
-    }
-    return map
-  })
+  const rowLookupMap = derived(
+    enrichedPages,
+    $enrichedPages => {
+      let map = {}
+      for (let page of Object.keys($enrichedPages)) {
+        for (let row of $enrichedPages[page]) {
+          map[row._id] = row.__idx
+        }
+      }
+      return map
+    },
+    {}
+  )
 
   // Mark loaded as true if we've ever stopped loading
   let hasStartedLoading = false
@@ -35,22 +62,58 @@ export const createStores = () => {
     }
   })
 
-  // Enrich rows with an index property and any pending changes
-  const enrichedRows = derived(
-    [rows, rowChangeCache],
-    ([$rows, $rowChangeCache]) => {
-      return $rows.map((row, idx) => ({
-        ...row,
-        ...$rowChangeCache[row._id],
-        __idx: idx,
-      }))
+  // Simple state update actions
+  const hasPage = page => {
+    return page in get(pages)
+  }
+
+  const getRowLocation = id => {
+    const idx = get(rowLookupMap)[id]
+    if (idx == null) {
+      return null
     }
-  )
+    return {
+      page: Math.floor(idx / RowPageSize),
+      pageIdx: idx % RowPageSize,
+    }
+  }
+
+  const getRow = (id, pagedRows) => {
+    const location = getRowLocation(id)
+    if (!location) {
+      return null
+    }
+    if (!pagedRows) {
+      pagedRows = get(pages)
+    }
+    return pagedRows?.[location.page]?.[location.pageIdx]
+  }
+
+  const hasRow = id => {
+    if (id === NewRowID) {
+      return true
+    }
+    return getRow(id) != null
+  }
+
+  const updateRowState = (id, row) => {
+    const location = getRowLocation(id)
+    if (!location) {
+      return null
+    }
+    pages.update(state => {
+      state[location.page][location.pageIdx] = row
+      return { ...state }
+    })
+  }
 
   return {
     rows: {
-      ...rows,
-      subscribe: enrichedRows.subscribe,
+      actions: { hasRow, hasPage, getRow, getRowLocation, updateRowState },
+    },
+    pages: {
+      ...pages,
+      subscribe: enrichedPages.subscribe,
     },
     fetch,
     rowLookupMap,
@@ -61,13 +124,15 @@ export const createStores = () => {
     inProgressChanges,
     hasNextPage,
     error,
+    totalRows,
+    loadedRows,
   }
 }
 
 export const createActions = context => {
   const {
+    pages,
     rows,
-    rowLookupMap,
     definition,
     allFilters,
     loading,
@@ -86,6 +151,7 @@ export const createActions = context => {
     fetch,
     hasBudibaseIdentifiers,
     refreshing,
+    totalRows,
   } = context
   const instanceLoaded = writable(false)
 
@@ -125,6 +191,7 @@ export const createActions = context => {
         sortOrder: $sort.order,
         limit: RowPageSize,
         paginate: true,
+        countRows: true,
 
         // Disable client side limiting, so that for queries and custom data
         // sources we don't impose fake row limits. We want all the data.
@@ -155,7 +222,7 @@ export const createActions = context => {
         // derived stores to compute. This prevents stale data being passed
         // to cells when we save the new schema.
         if (!$instanceLoaded && previousResetKey) {
-          rows.set([])
+          pages.set({})
           await tick()
         }
 
@@ -175,7 +242,12 @@ export const createActions = context => {
         }
 
         // Process new rows
-        handleNewRows($fetch.rows, resetRows)
+        handleNewRows(
+          $fetch.rows,
+          $fetch.pageNumber,
+          $fetch.totalRows,
+          resetRows
+        )
 
         // Notify that we're loaded
         loading.set(false)
@@ -187,12 +259,6 @@ export const createActions = context => {
 
     fetch.set(newFetch)
   })
-
-  // Gets a row by ID
-  const getRow = id => {
-    const index = get(rowLookupMap)[id]
-    return index >= 0 ? get(rows)[index] : null
-  }
 
   // Handles validation errors from the rows API and updates local validation
   // state, storing error messages against relevant cells
@@ -274,7 +340,7 @@ export const createActions = context => {
   }
 
   // Adds a new row
-  const addRow = async (row, idx, bubble = false) => {
+  const addRow = async (row, page, idx, bubble = false) => {
     try {
       // Create row. Spread row so we can mutate and enrich safely.
       let newRow = { ...row }
@@ -283,9 +349,9 @@ export const createActions = context => {
       // Update state
       if (idx != null) {
         rowCacheMap[newRow._id] = true
-        rows.update(state => {
-          state.splice(idx, 0, newRow)
-          return state.slice()
+        pages.update(state => {
+          state[page][idx] = newRow
+          return { ...state }
         })
       } else {
         handleNewRows([newRow])
@@ -310,7 +376,7 @@ export const createActions = context => {
     delete clone._rev
     delete clone.__idx
     try {
-      return await addRow(clone, row.__idx + 1, true)
+      return await addRow(clone, row.__page, row.__idx + 1, true)
     } catch (error) {
       handleValidationError(row._id, error)
     }
@@ -320,25 +386,20 @@ export const createActions = context => {
   // addition and deletion
   const replaceRow = (id, row) => {
     // Get index of row to check if it exists
-    const $rows = get(rows)
-    const $rowLookupMap = get(rowLookupMap)
-    const index = $rowLookupMap[id]
+    const existingRow = rows.actions.getRow(id)
 
     // Process as either an update, addition or deletion
     if (row) {
-      if (index != null) {
+      if (existingRow) {
         // An existing row was updated
-        rows.update(state => {
-          state[index] = { ...row }
-          return state
-        })
+        rows.actions.updateRowState(id, { ...row })
       } else {
         // A new row was created
         handleNewRows([row])
       }
-    } else if (index != null) {
+    } else if (existingRow) {
       // A row was removed
-      handleRemoveRows([$rows[index]])
+      handleRemoveRows([existingRow])
     }
   }
 
@@ -371,12 +432,8 @@ export const createActions = context => {
   // Patches a row with some changes in local state, and returns whether a
   // valid pending change was made or not
   const stashRowChanges = (rowId, changes) => {
-    const $rows = get(rows)
-    const $rowLookupMap = get(rowLookupMap)
-    const index = $rowLookupMap[rowId]
-    const row = $rows[index]
-
     // Check this is a valid change
+    const row = rows.actions.getRow(rowId)
     if (!row || !changesAreValid(row, changes)) {
       return false
     }
@@ -394,10 +451,7 @@ export const createActions = context => {
 
   // Saves any pending changes to a row
   const applyRowChanges = async rowId => {
-    const $rows = get(rows)
-    const $rowLookupMap = get(rowLookupMap)
-    const index = $rowLookupMap[rowId]
-    const row = $rows[index]
+    const row = rows.actions.getRow(rowId)
     if (row == null) {
       return
     }
@@ -417,10 +471,7 @@ export const createActions = context => {
 
       // Update row state after a successful change
       if (saved?._id) {
-        rows.update(state => {
-          state[index] = saved
-          return state.slice()
-        })
+        rows.actions.updateRowState(rowId, saved)
       } else if (saved?.id) {
         // Handle users table edge case
         await refreshRow(saved.id)
@@ -471,15 +522,22 @@ export const createActions = context => {
 
   // Local handler to process new rows inside the fetch, and append any new
   // rows to state that we haven't encountered before
-  const handleNewRows = (newRows, resetRows) => {
+  const handleNewRows = (rows, page, totalRowCount, resetRows) => {
     if (resetRows) {
       rowCacheMap = {}
     }
-    let rowsToAppend = []
-    let newRow
+
+    // Enrich all rows before adding to state
+    let enrichedNewRows = []
     const $hasBudibaseIdentifiers = get(hasBudibaseIdentifiers)
-    for (let i = 0; i < newRows.length; i++) {
-      newRow = newRows[i]
+    for (let i = 0; i < rows.length; i++) {
+      // Skip if we've already cached this row
+      if (rowCacheMap[rows[i]._id]) {
+        return
+      }
+
+      // Enrich with idx
+      let newRow = { ...rows[i] }
 
       // Ensure we have a unique _id.
       // This means generating one for non DS+, overwriting any that may already
@@ -488,15 +546,22 @@ export const createActions = context => {
         newRow._id = Helpers.uuid()
       }
 
-      if (!rowCacheMap[newRow._id]) {
-        rowCacheMap[newRow._id] = true
-        rowsToAppend.push(newRow)
-      }
+      // Cache this ID
+      rowCacheMap[newRow._id] = true
+      enrichedNewRows.push(newRow)
     }
+
     if (resetRows) {
-      rows.set(rowsToAppend)
-    } else if (rowsToAppend.length) {
-      rows.update(state => [...state, ...rowsToAppend])
+      totalRows.set(totalRowCount || 0)
+      pages.set({
+        [page]: enrichedNewRows,
+      })
+    } else if (enrichedNewRows.length) {
+      // Otherwise append
+      pages.update(state => {
+        state[page] = [...(state[page] || []), ...enrichedNewRows]
+        return { ...state }
+      })
     }
   }
 
@@ -506,22 +571,32 @@ export const createActions = context => {
 
     // We deliberately do not remove IDs from the cache map as the data may
     // still exist inside the fetch, but we don't want to add it again
-    rows.update(state => {
-      return state.filter(row => !deletedIds.includes(row._id))
+    let removals = {}
+    deletedIds.forEach(id => {
+      const location = rows.actions.getRowLocation(id)
+      if (!location) {
+        return
+      }
+      removals[location.page] = [...(removals[location.page] || []), id]
+    })
+    pages.update(state => {
+      Object.keys(removals).forEach(page => {
+        state[page] = state[page].filter(
+          row => !removals[page].includes(row._id)
+        )
+      })
+      return { ...state }
     })
   }
 
   // Loads the next page of data if available
-  const loadNextPage = () => {
+  const loadNextPage = async () => {
     get(fetch)?.nextPage()
   }
 
-  // Checks if we have a row with a certain ID
-  const hasRow = id => {
-    if (id === NewRowID) {
-      return true
-    }
-    return get(rowLookupMap)[id] != null
+  const loadPage = async number => {
+    console.log("loading page", number)
+    await get(fetch)?.goToPage(number)
   }
 
   // Cleans a row by removing any internal grid metadata from it.
@@ -539,14 +614,14 @@ export const createActions = context => {
     rows: {
       ...rows,
       actions: {
+        ...rows.actions,
         addRow,
         duplicateRow,
-        getRow,
         updateValue,
         applyRowChanges,
         deleteRows,
-        hasRow,
         loadNextPage,
+        loadPage,
         refreshRow,
         replaceRow,
         refreshData,

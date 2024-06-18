@@ -1,23 +1,42 @@
-import { derived, get } from "svelte/store"
+import { debounce } from "../../../utils/utils"
 
 export const initialise = context => {
-  const { scrolledRowCount, rows, visualRowCapacity } = context
+  const { visiblePages, rows } = context
 
-  // Derive how many rows we have in total
-  const rowCount = derived(rows, $rows => $rows.length, 0)
+  // // Derive how many rows we have in total
+  // const renderedRowCount = derived(
+  //   renderedRows,
+  //   $renderedRows => $renderedRows.length,
+  //   0
+  // )
 
-  // Derive how many rows we have available to scroll
-  const remainingRows = derived(
-    [scrolledRowCount, rowCount, visualRowCapacity],
-    ([$scrolledRowCount, $rowCount, $visualRowCapacity]) => {
-      return Math.max(0, $rowCount - $scrolledRowCount - $visualRowCapacity)
+  // // Derive how many rows we have available to scroll
+  // const remainingRows = derived(
+  //   [scrolledRowCount, renderedRowCount, visualRowCapacity],
+  //   ([$scrolledRowCount, $renderedRowCount, $visualRowCapacity]) => {
+  //     return Math.max(
+  //       0,
+  //       $renderedRowCount - $scrolledRowCount - $visualRowCapacity
+  //     )
+  //   }
+  // )
+
+  // // Fetch next page when fewer than 25 remaining rows to scroll
+  // remainingRows.subscribe(remaining => {
+  //   console.log(remaining, "remaining")
+  //   if (remaining < 25 && get(renderedRowCount)) {
+  //     rows.actions.loadNextPage()
+  //   }
+  // })
+
+  const loadVisiblePages = async pages => {
+    for (let page of pages) {
+      if (!rows.actions.hasPage(page)) {
+        await rows.actions.loadPage(page)
+      }
     }
-  )
+  }
+  const throttledLoadVisiblePages = debounce(loadVisiblePages, 500)
 
-  // Fetch next page when fewer than 25 remaining rows to scroll
-  remainingRows.subscribe(remaining => {
-    if (remaining < 25 && get(rowCount)) {
-      rows.actions.loadNextPage()
-    }
-  })
+  visiblePages.subscribe(throttledLoadVisiblePages)
 }

@@ -3,12 +3,12 @@
   import { Modal, ActionButton, TooltipType, TempTooltip } from "@budibase/bbui"
   import GridCreateViewModal from "../../modals/grid/GridCreateViewModal.svelte"
 
-  const { rows, columns, filter } = getContext("grid")
+  const { columns, filter } = getContext("grid")
 
   let modal
   let firstFilterUsage = false
 
-  $: disabled = !$columns.length || !$rows.length
+  $: disabled = !$columns.length
   $: {
     if ($filter?.length && !firstFilterUsage) {
       firstFilterUsage = true

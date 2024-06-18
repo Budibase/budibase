@@ -24,24 +24,11 @@
     dispatch,
     contentLines,
     isDragging,
+    totalRows,
   } = getContext("grid")
 
-  $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).length
   $: width = GutterWidth + ($stickyColumn?.width || 0)
-
-  const selectAll = () => {
-    const allSelected = selectedRowCount === rowCount
-    if (allSelected) {
-      $selectedRows = {}
-    } else {
-      let allRows = {}
-      $rows.forEach(row => {
-        allRows[row._id] = true
-      })
-      $selectedRows = allRows
-    }
-  }
 </script>
 
 <div
@@ -52,9 +39,8 @@
   <div class="header row">
     <GutterCell
       disableNumber
-      on:select={selectAll}
       defaultHeight
-      rowSelected={selectedRowCount && selectedRowCount === rowCount}
+      rowSelected={selectedRowCount && selectedRowCount === totalRows}
       disabled={!$renderedRows.length}
     />
     {#if $stickyColumn}
@@ -85,6 +71,7 @@
               {row}
               {cellId}
               {rowFocused}
+              placeholder={row.__placeholder}
               selected={rowSelected}
               highlighted={rowHovered || rowFocused}
               rowIdx={row.__idx}

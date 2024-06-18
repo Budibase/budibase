@@ -1,9 +1,9 @@
 <script>
   import { getContext } from "svelte"
 
-  const { rows } = getContext("grid")
+  const { totalRows } = getContext("grid")
 </script>
 
 <div>
-  {$rows.length} row{$rows.length === 1 ? "" : "s"}
+  {$totalRows} row{$totalRows === 1 ? "" : "s"}
 </div>
