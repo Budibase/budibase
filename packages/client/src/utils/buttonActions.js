@@ -508,6 +508,7 @@ const confirmTextMap = {
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
   ["Prompt User"]: "Are you sure you want to continue?",
+  ["Duplicate Row"]: "Are you sure you want to duplicate this row?",
 }
 
 /**
