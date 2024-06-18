@@ -590,9 +590,28 @@ class InternalBuilder {
     }
     // start building the query
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
-    // add a base query over all
+    // handle pagination
+    let foundOffset: number | null = null
+    let foundLimit = limit || BASE_LIMIT
+    if (paginate && paginate.page && paginate.limit) {
+      // @ts-ignore
+      const page = paginate.page <= 1 ? 0 : paginate.page - 1
+      const offset = page * paginate.limit
+      foundLimit = paginate.limit
+      foundOffset = offset
+    } else if (paginate && paginate.offset && paginate.limit) {
+      foundLimit = paginate.limit
+      foundOffset = paginate.offset
+    } else if (paginate && paginate.limit) {
+      foundLimit = paginate.limit
+    }
+    // always add the found limit, unless counting
     if (!counting) {
-      query = query.limit(BASE_LIMIT)
+      query = query.limit(foundLimit)
+    }
+    // add overall pagination
+    if (!counting && foundOffset) {
+      query = query.offset(foundOffset)
     }
     // add filters to the query (where)
     query = this.addFilters(query, filters, json.meta.table, {
@@ -623,28 +642,10 @@ class InternalBuilder {
       endpoint.schema,
       tableAliases
     )
-    // handle pagination
-    let foundOffset: number | null = null
-    let foundLimit = limit || BASE_LIMIT
-    if (paginate && paginate.page && paginate.limit) {
-      // @ts-ignore
-      const page = paginate.page <= 1 ? 0 : paginate.page - 1
-      const offset = page * paginate.limit
-      foundLimit = paginate.limit
-      foundOffset = offset
-    } else if (paginate && paginate.offset && paginate.limit) {
-      foundLimit = paginate.limit
-      foundOffset = paginate.offset
-    } else if (paginate && paginate.limit) {
-      foundLimit = paginate.limit
-    }
-    // always add the found limit, unless counting
+
+    // add a base query over all
     if (!counting) {
-      query = query.limit(foundLimit)
-    }
-    // add overall pagination
-    if (!counting && foundOffset) {
-      query = query.offset(foundOffset)
+      query = query.limit(BASE_LIMIT)
     }
 
     return this.addFilters(query, filters, json.meta.table, {
