@@ -230,10 +230,12 @@ export async function search(
       nextRow = processed.pop()
     }
 
-    let rowCount: number | undefined
+    let totalRows: number | undefined
     if (options.countRows) {
       // get the total count of rows
-      rowCount = await runSqlQuery(request, allTables, { countTotalRows: true })
+      totalRows = await runSqlQuery(request, allTables, {
+        countTotalRows: true,
+      })
     }
 
     // get the rows
@@ -248,24 +250,18 @@ export async function search(
       finalRows = finalRows.map((r: any) => pick(r, fields))
     }
 
-    // check for pagination
-    if (paginate) {
-      const response: SearchResponse<Row> = {
-        rows: finalRows,
-      }
-      if (nextRow) {
-        response.hasNextPage = true
-        response.bookmark = bookmark + 1
-      }
-      if (rowCount != null) {
-        response.totalRows = rowCount
-      }
-      return response
-    } else {
-      return {
-        rows: finalRows,
-      }
+    const response: SearchResponse<Row> = {
+      rows: finalRows,
     }
+    if (totalRows) {
+      response.totalRows = totalRows
+    }
+    // check for pagination
+    if (paginate && nextRow) {
+      response.hasNextPage = true
+      response.bookmark = bookmark + 1
+    }
+    return response
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
     if (err.status === 404 && msg?.includes(SQLITE_DESIGN_DOC_ID)) {

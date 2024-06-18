@@ -12,21 +12,21 @@ import {
   BBReferenceFieldMetadata,
   FieldSchema,
   FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
   JsonFieldMetadata,
+  JsonTypes,
   Operation,
+  prefixed,
   QueryJson,
+  QueryOptions,
   RelationshipsJson,
   SearchFilters,
+  SortOrder,
   SqlClient,
   SqlQuery,
   SqlQueryBinding,
   Table,
   TableSourceType,
-  INTERNAL_TABLE_SOURCE_ID,
-  QueryOptions,
-  JsonTypes,
-  prefixed,
-  SortOrder,
 } from "@budibase/types"
 import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
@@ -823,6 +823,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       row = processFn(
         await this.getReturningRow(queryFn, this.checkLookupKeys(id, json))
       )
+    }
+    if (operation === Operation.COUNT) {
+      return results
     }
     if (operation !== Operation.READ) {
       return row
