@@ -571,6 +571,27 @@ class InternalBuilder {
     return query.insert(parsedBody)
   }
 
+  bulkUpsert(knex: Knex, json: QueryJson): Knex.QueryBuilder {
+    const { endpoint, body } = json
+    let query = this.knexWithAlias(knex, endpoint)
+    if (!Array.isArray(body)) {
+      return query
+    }
+    const parsedBody = body.map(row => parseBody(row))
+    if (
+      this.client === SqlClient.POSTGRES ||
+      this.client === SqlClient.SQL_LITE ||
+      this.client === SqlClient.MY_SQL
+    ) {
+      const primary = json.meta.table.primary
+      if (!primary) {
+        throw new Error("Primary key is required for upsert")
+      }
+      return query.insert(parsedBody).onConflict(primary).merge()
+    }
+    return query.upsert(parsedBody)
+  }
+
   read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
     let { endpoint, resource, filters, paginate, relationships, tableAliases } =
       json
@@ -707,6 +728,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         break
       case Operation.BULK_CREATE:
         query = builder.bulkCreate(client, json)
+        break
+      case Operation.BULK_UPSERT:
+        query = builder.bulkUpsert(client, json)
         break
       case Operation.CREATE_TABLE:
       case Operation.UPDATE_TABLE:
