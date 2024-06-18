@@ -95,6 +95,8 @@ function buildTableMap(tables: Table[]) {
     // update the table name, should never query by name for SQLite
     table.originalName = table.name
     table.name = table._id!
+    // need a primary for sorting, lookups etc
+    table.primary = ["_id"]
     tableMap[table._id!] = table
   }
   return tableMap
@@ -153,6 +155,10 @@ export async function search(
 
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
+  // make sure we have the mapped/latest table
+  if (table?._id) {
+    table = allTablesMap[table?._id]
+  }
   if (!table) {
     throw new Error("Unable to find table")
   }
