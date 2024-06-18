@@ -13,7 +13,14 @@ const initialState = {
 const createConfirmationStore = () => {
   const store = writable(initialState)
 
-  const showConfirmation = (title, text, onConfirm, onCancel, confirmButtonText, confirmCancelText) => {
+  const showConfirmation = (
+    title,
+    text,
+    onConfirm,
+    onCancel,
+    confirmButtonText,
+    confirmCancelText
+  ) => {
     store.set({
       showConfirmation: true,
       title,
