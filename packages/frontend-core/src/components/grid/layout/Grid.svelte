@@ -355,9 +355,9 @@
   }
 
   /* Overrides for quiet */
-  .grid.quiet :global(.grid-data-content .row .cell:not(:last-child)),
-  .grid.quiet :global(.sticky-column .row .cell),
-  .grid.quiet :global(.new-row .cell:not(:last-child)) {
+  .grid.quiet :global(.grid-data-content .row > .cell:not(:last-child)),
+  .grid.quiet :global(.sticky-column .row > .cell),
+  .grid.quiet :global(.new-row .row > .cell:not(:last-child)) {
     border-right: none;
   }
   .grid.quiet :global(.sticky-column:before) {
