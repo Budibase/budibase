@@ -618,12 +618,12 @@
           {:else if value.customType === "row"}
             {#if isTestModal}
               <div class="align-horizontally">
-                <Label size="XL">{label}</Label>
                 <Icon
                   name={testDataRowVisibility[key] ? "Remove" : "Add"}
                   hoverable
                   on:click={() => toggleTestDataRowVisibility(key)}
                 />
+                <Label size="XL">{label}</Label>
               </div>
               {#if testDataRowVisibility[key]}
                 <RowSelector
