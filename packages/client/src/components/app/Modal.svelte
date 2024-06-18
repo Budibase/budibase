@@ -102,8 +102,8 @@
   }
 
   .fullscreen {
-    width: calc(100vw - 40px);
-    min-height: calc(100vh - 40px);
+    width: calc(100vw - 80px);
+    min-height: calc(100vh - 80px);
   }
 
   .modal-header {
