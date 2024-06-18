@@ -1,9 +1,3 @@
-import fetch from "node-fetch"
-import {
-  generateMakeRequest,
-  MakeRequestResponse,
-} from "../api/routes/public/tests/utils"
-
 import * as setup from "../api/routes/tests/utilities"
 import { Datasource, FieldType } from "@budibase/types"
 import _ from "lodash"
@@ -11,29 +5,21 @@ import { generator } from "@budibase/backend-core/tests"
 import {
   DatabaseName,
   getDatasource,
-  rawQuery,
+  knexClient,
 } from "../integrations/tests/utils"
-
-// @ts-ignore
-fetch.mockSearch()
+import { Knex } from "knex"
 
 const config = setup.getConfig()!
 
-jest.mock("../websockets")
-
 describe("postgres integrations", () => {
-  let makeRequest: MakeRequestResponse,
-    rawDatasource: Datasource,
-    datasource: Datasource
+  let datasource: Datasource
+  let client: Knex
 
   beforeAll(async () => {
     await config.init()
-    const apiKey = await config.generateApiKey()
-
-    makeRequest = generateMakeRequest(apiKey, true)
-
-    rawDatasource = await getDatasource(DatabaseName.POSTGRES)
+    const rawDatasource = await getDatasource(DatabaseName.POSTGRES)
     datasource = await config.api.datasource.create(rawDatasource)
+    client = await knexClient(rawDatasource)
   })
 
   afterAll(config.end)
@@ -46,11 +32,13 @@ describe("postgres integrations", () => {
     })
 
     afterEach(async () => {
-      await rawQuery(rawDatasource, `DROP TABLE IF EXISTS "${tableName}"`)
+      await client.schema.dropTableIfExists(tableName)
     })
 
     it("recognises when a table has no primary key", async () => {
-      await rawQuery(rawDatasource, `CREATE TABLE "${tableName}" (id SERIAL)`)
+      await client.schema.createTable(tableName, table => {
+        table.increments("id", { primaryKey: false })
+      })
 
       const response = await config.api.datasource.fetchSchema({
         datasourceId: datasource._id!,
@@ -62,10 +50,9 @@ describe("postgres integrations", () => {
     })
 
     it("recognises when a table is using a reserved column name", async () => {
-      await rawQuery(
-        rawDatasource,
-        `CREATE TABLE "${tableName}" (_id SERIAL PRIMARY KEY) `
-      )
+      await client.schema.createTable(tableName, table => {
+        table.increments("_id").primary()
+      })
 
       const response = await config.api.datasource.fetchSchema({
         datasourceId: datasource._id!,
@@ -81,20 +68,15 @@ describe("postgres integrations", () => {
         .guid()
         .replaceAll("-", "")
         .substring(0, 6)}`
-      const enumColumnName = "status"
 
-      await rawQuery(
-        rawDatasource,
-        `
-        CREATE TYPE order_status AS ENUM ('pending', 'processing', 'shipped', 'delivered', 'cancelled');
-        
-        CREATE TABLE ${tableName} (
-          order_id SERIAL PRIMARY KEY,
-          customer_name VARCHAR(100) NOT NULL,
-          ${enumColumnName} order_status
-        );
-      `
-      )
+      await client.schema.createTable(tableName, table => {
+        table.increments("order_id").primary()
+        table.string("customer_name").notNullable()
+        table.enum("status", ["pending", "processing", "shipped"], {
+          useNative: true,
+          enumName: `${tableName}_status`,
+        })
+      })
 
       const response = await config.api.datasource.fetchSchema({
         datasourceId: datasource._id!,
@@ -103,69 +85,70 @@ describe("postgres integrations", () => {
       const table = response.datasource.entities?.[tableName]
 
       expect(table).toBeDefined()
-      expect(table?.schema[enumColumnName].type).toEqual(FieldType.OPTIONS)
+      expect(table?.schema["status"].type).toEqual(FieldType.OPTIONS)
     })
   })
 
   describe("Integration compatibility with postgres search_path", () => {
-    let rawDatasource: Datasource,
-      datasource: Datasource,
-      schema1: string,
-      schema2: string
+    let datasource: Datasource
+    let client: Knex
+    let schema1: string
+    let schema2: string
 
     beforeEach(async () => {
       schema1 = generator.guid().replaceAll("-", "")
       schema2 = generator.guid().replaceAll("-", "")
 
-      rawDatasource = await getDatasource(DatabaseName.POSTGRES)
-      const dbConfig = rawDatasource.config!
+      const rawDatasource = await getDatasource(DatabaseName.POSTGRES)
+      client = await knexClient(rawDatasource)
 
-      await rawQuery(rawDatasource, `CREATE SCHEMA "${schema1}";`)
-      await rawQuery(rawDatasource, `CREATE SCHEMA "${schema2}";`)
+      await client.schema.createSchema(schema1)
+      await client.schema.createSchema(schema2)
 
-      const pathConfig: any = {
-        ...rawDatasource,
-        config: {
-          ...dbConfig,
-          schema: `${schema1}, ${schema2}`,
-        },
-      }
-      datasource = await config.api.datasource.create(pathConfig)
+      rawDatasource.config!.schema = `${schema1}, ${schema2}`
+
+      client = await knexClient(rawDatasource)
+      datasource = await config.api.datasource.create(rawDatasource)
     })
 
     afterEach(async () => {
-      await rawQuery(rawDatasource, `DROP SCHEMA "${schema1}" CASCADE;`)
-      await rawQuery(rawDatasource, `DROP SCHEMA "${schema2}" CASCADE;`)
+      await client.schema.dropSchema(schema1, true)
+      await client.schema.dropSchema(schema2, true)
     })
 
     it("discovers tables from any schema in search path", async () => {
-      await rawQuery(
-        rawDatasource,
-        `CREATE TABLE "${schema1}".table1 (id1 SERIAL PRIMARY KEY);`
-      )
-      await rawQuery(
-        rawDatasource,
-        `CREATE TABLE "${schema2}".table2 (id2 SERIAL PRIMARY KEY);`
-      )
-      const response = await makeRequest("post", "/api/datasources/info", {
-        datasource: datasource,
+      await client.schema.createTable(`${schema1}.table1`, table => {
+        table.increments("id1").primary()
       })
-      expect(response.status).toBe(200)
-      expect(response.body.tableNames).toBeDefined()
-      expect(response.body.tableNames).toEqual(
+
+      await client.schema.createTable(`${schema2}.table2`, table => {
+        table.increments("id2").primary()
+      })
+
+      const response = await config.api.datasource.info(datasource)
+      expect(response.tableNames).toBeDefined()
+      expect(response.tableNames).toEqual(
         expect.arrayContaining(["table1", "table2"])
       )
     })
 
     it("does not mix columns from different tables", async () => {
       const repeated_table_name = "table_same_name"
-      await rawQuery(
-        rawDatasource,
-        `CREATE TABLE "${schema1}".${repeated_table_name} (id SERIAL PRIMARY KEY, val1 TEXT);`
+
+      await client.schema.createTable(
+        `${schema1}.${repeated_table_name}`,
+        table => {
+          table.increments("id").primary()
+          table.string("val1")
+        }
       )
-      await rawQuery(
-        rawDatasource,
-        `CREATE TABLE "${schema2}".${repeated_table_name} (id2 SERIAL PRIMARY KEY, val2 TEXT);`
+
+      await client.schema.createTable(
+        `${schema2}.${repeated_table_name}`,
+        table => {
+          table.increments("id2").primary()
+          table.string("val2")
+        }
       )
 
       const response = await config.api.datasource.fetchSchema({
@@ -182,15 +165,11 @@ describe("postgres integrations", () => {
 
   describe("check custom column types", () => {
     beforeAll(async () => {
-      await rawQuery(
-        rawDatasource,
-        `CREATE TABLE binaryTable (
-          id BYTEA PRIMARY KEY,
-          column1 TEXT,
-          column2 INT
-        );
-      `
-      )
+      await client.schema.createTable("binaryTable", table => {
+        table.binary("id").primary()
+        table.string("column1")
+        table.integer("column2")
+      })
     })
 
     it("should handle binary columns", async () => {
@@ -198,7 +177,7 @@ describe("postgres integrations", () => {
         datasourceId: datasource._id!,
       })
       expect(response.datasource.entities).toBeDefined()
-      const table = response.datasource.entities?.["binarytable"]
+      const table = response.datasource.entities?.["binaryTable"]
       expect(table).toBeDefined()
       expect(table?.schema.id.externalType).toBe("bytea")
       const row = await config.api.row.save(table?._id!, {
@@ -214,14 +193,10 @@ describe("postgres integrations", () => {
 
   describe("check fetching null/not null table", () => {
     beforeAll(async () => {
-      await rawQuery(
-        rawDatasource,
-        `CREATE TABLE nullableTable (
-          order_id SERIAL PRIMARY KEY,
-          order_number INT NOT NULL
-        );
-      `
-      )
+      await client.schema.createTable("nullableTable", table => {
+        table.increments("order_id").primary()
+        table.integer("order_number").notNullable()
+      })
     })
 
     it("should be able to change the table to allow nullable and refetch this", async () => {
@@ -230,25 +205,24 @@ describe("postgres integrations", () => {
       })
       const entities = response.datasource.entities
       expect(entities).toBeDefined()
-      const nullableTable = entities?.["nullabletable"]
+      const nullableTable = entities?.["nullableTable"]
       expect(nullableTable).toBeDefined()
       expect(
         nullableTable?.schema["order_number"].constraints?.presence
       ).toEqual(true)
+
       // need to perform these calls raw to the DB so that the external state of the DB differs to what Budibase
       // is aware of - therefore we can try to fetch and make sure BB updates correctly
-      await rawQuery(
-        rawDatasource,
-        `ALTER TABLE nullableTable
-             ALTER COLUMN order_number DROP NOT NULL;
-        `
-      )
+      await client.schema.alterTable("nullableTable", table => {
+        table.setNullable("order_number")
+      })
+
       const responseAfter = await config.api.datasource.fetchSchema({
         datasourceId: datasource._id!,
       })
       const entitiesAfter = responseAfter.datasource.entities
       expect(entitiesAfter).toBeDefined()
-      const nullableTableAfter = entitiesAfter?.["nullabletable"]
+      const nullableTableAfter = entitiesAfter?.["nullableTable"]
       expect(nullableTableAfter).toBeDefined()
       expect(
         nullableTableAfter?.schema["order_number"].constraints?.presence

@@ -167,13 +167,9 @@ export async function search(
     const sortField = table.schema[params.sort]
     const sortType =
       sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
-    const sortDirection =
-      params.sortOrder === SortOrder.ASCENDING
-        ? SortOrder.ASCENDING
-        : SortOrder.DESCENDING
     request.sort = {
       [sortField.name]: {
-        direction: sortDirection,
+        direction: params.sortOrder || SortOrder.DESCENDING,
         type: sortType as SortType,
       },
     }
@@ -182,14 +178,15 @@ export async function search(
   if (params.bookmark && typeof params.bookmark !== "number") {
     throw new Error("Unable to paginate with string based bookmarks")
   }
-  const bookmark: number = (params.bookmark as number) || 1
-  const limit = params.limit
+
+  const bookmark: number = (params.bookmark as number) || 0
   if (paginate && params.limit) {
     request.paginate = {
       limit: params.limit + 1,
-      page: bookmark,
+      offset: bookmark * params.limit,
     }
   }
+
   try {
     const rows = await runSqlQuery(request, allTables)
 
@@ -221,18 +218,12 @@ export async function search(
     }
 
     // check for pagination
-    if (paginate && limit) {
+    if (paginate) {
       const response: SearchResponse<Row> = {
         rows: finalRows,
       }
-      const prevLimit = request.paginate!.limit
-      request.paginate = {
-        limit: 1,
-        page: bookmark * prevLimit + 1,
-      }
-      const hasNextPage = !!nextRow
-      response.hasNextPage = hasNextPage
-      if (hasNextPage) {
+      if (nextRow) {
+        response.hasNextPage = true
         response.bookmark = bookmark + 1
       }
       return response

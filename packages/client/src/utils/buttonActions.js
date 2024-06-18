@@ -12,6 +12,7 @@ import {
   uploadStore,
   rowSelectionStore,
   sidePanelStore,
+  modalStore,
 } from "stores"
 import { API } from "api"
 import { ActionTypes } from "constants"
@@ -436,6 +437,17 @@ const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
+const openModalHandler = action => {
+  const { id } = action.parameters
+  if (id) {
+    modalStore.actions.open(id)
+  }
+}
+
+const closeModalHandler = () => {
+  modalStore.actions.close()
+}
+
 const downloadFileHandler = async action => {
   const { url, fileName } = action.parameters
   try {
@@ -499,6 +511,8 @@ const handlerMap = {
   ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: openSidePanelHandler,
   ["Close Side Panel"]: closeSidePanelHandler,
+  ["Open Modal"]: openModalHandler,
+  ["Close Modal"]: closeModalHandler,
   ["Download File"]: downloadFileHandler,
 }
 

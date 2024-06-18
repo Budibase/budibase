@@ -162,6 +162,7 @@
     max-height: 100%;
   }
   .modal-inner-wrapper {
+    padding: 40px;
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
@@ -176,7 +177,6 @@
     border: 2px solid var(--spectrum-global-color-gray-200);
     overflow: visible;
     max-height: none;
-    margin: 40px 0;
     transform: none;
     --spectrum-dialog-confirm-border-radius: var(
       --spectrum-global-dimension-size-100
