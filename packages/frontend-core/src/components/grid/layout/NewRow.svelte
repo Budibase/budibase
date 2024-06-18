@@ -177,39 +177,41 @@
 <!-- Only show new row functionality if we have any columns -->
 {#if visible}
   <div
-    class="container"
+    class="new-row"
     class:floating={offset > 0}
     style="--offset:{offset}px; --sticky-width:{width}px;"
   >
     <div class="underlay sticky" transition:fade|local={{ duration: 130 }} />
     <div class="underlay" transition:fade|local={{ duration: 130 }} />
     <div class="sticky-column" transition:fade|local={{ duration: 130 }}>
-      <GutterCell expandable on:expand={addViaModal} rowHovered>
-        <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
-        {#if isAdding}
-          <div in:fade={{ duration: 130 }} class="loading-overlay" />
-        {/if}
-      </GutterCell>
-      {#if $stickyColumn}
-        {@const cellId = getCellID(NewRowID, $stickyColumn.name)}
-        <DataCell
-          {cellId}
-          rowFocused
-          column={$stickyColumn}
-          row={newRow}
-          focused={$focusedCellId === cellId}
-          width={$stickyColumn.width}
-          {updateValue}
-          topRow={offset === 0}
-        >
-          {#if $stickyColumn?.schema?.autocolumn}
-            <div class="readonly-overlay">Can't edit auto column</div>
-          {/if}
+      <div class="row">
+        <GutterCell expandable on:expand={addViaModal} rowHovered>
+          <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
           {#if isAdding}
             <div in:fade={{ duration: 130 }} class="loading-overlay" />
           {/if}
-        </DataCell>
-      {/if}
+        </GutterCell>
+        {#if $stickyColumn}
+          {@const cellId = getCellID(NewRowID, $stickyColumn.name)}
+          <DataCell
+            {cellId}
+            rowFocused
+            column={$stickyColumn}
+            row={newRow}
+            focused={$focusedCellId === cellId}
+            width={$stickyColumn.width}
+            {updateValue}
+            topRow={offset === 0}
+          >
+            {#if $stickyColumn?.schema?.autocolumn}
+              <div class="readonly-overlay">Can't edit auto column</div>
+            {/if}
+            {#if isAdding}
+              <div in:fade={{ duration: 130 }} class="loading-overlay" />
+            {/if}
+          </DataCell>
+        {/if}
+      </div>
     </div>
     <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally attachHandlers>
@@ -276,7 +278,7 @@
     margin-left: -6px;
   }
 
-  .container {
+  .new-row {
     position: absolute;
     top: var(--default-row-height);
     left: 0;
@@ -286,10 +288,10 @@
     flex-direction: row;
     align-items: stretch;
   }
-  .container :global(.cell) {
+  .new-row :global(.cell) {
     --cell-background: var(--spectrum-global-color-gray-75) !important;
   }
-  .container.floating :global(.cell) {
+  .new-row.floating :global(.cell) {
     height: calc(var(--row-height) + 1px);
     border-top: var(--cell-border);
   }
