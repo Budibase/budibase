@@ -14,7 +14,7 @@ import {
   processDates,
   processFormulas,
 } from "../../../../utilities/rowProcessor"
-import { isKnexNoRowReadResponse, updateRelationshipColumns } from "./sqlUtils"
+import { isKnexEmptyReadResponse, updateRelationshipColumns } from "./sqlUtils"
 import {
   basicProcessing,
   generateIdForRow,
@@ -137,7 +137,7 @@ export async function sqlOutputProcessing(
   relationships: RelationshipsJson[],
   opts?: { sqs?: boolean }
 ): Promise<Row[]> {
-  if (isKnexNoRowReadResponse(rows)) {
+  if (isKnexEmptyReadResponse(rows)) {
     return []
   }
   let finalRows: { [key: string]: Row } = {}

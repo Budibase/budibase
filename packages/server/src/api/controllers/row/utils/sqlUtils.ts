@@ -195,7 +195,7 @@ export function buildSqlFieldList(
   return fields
 }
 
-export function isKnexNoRowReadResponse(resp: DatasourcePlusQueryResponse) {
+export function isKnexEmptyReadResponse(resp: DatasourcePlusQueryResponse) {
   return (
     !Array.isArray(resp) ||
     resp.length === 0 ||
