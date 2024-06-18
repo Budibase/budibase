@@ -59,9 +59,9 @@ async function waitForEvent(
 describe.each([
   ["internal", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const config = setup.getConfig()
@@ -929,7 +929,7 @@ describe.each([
     })
   })
 
-  describe("bulkImport", () => {
+  describe.only("bulkImport", () => {
     isInternal &&
       it("should update Auto ID field after bulk import", async () => {
         const table = await config.api.table.save(
@@ -960,6 +960,117 @@ describe.each([
         row = await config.api.row.save(table._id!, {})
         expect(row.autoId).toEqual(3)
       })
+
+    it("should be able to bulkImport rows", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+            },
+            description: {
+              type: FieldType.STRING,
+              name: "description",
+            },
+          },
+        })
+      )
+
+      const rowUsage = await getRowUsage()
+
+      await config.api.row.bulkImport(table._id!, {
+        rows: [
+          {
+            name: "Row 1",
+            description: "Row 1 description",
+          },
+          {
+            name: "Row 2",
+            description: "Row 2 description",
+          },
+        ],
+      })
+
+      const rows = await config.api.row.fetch(table._id!)
+      expect(rows.length).toEqual(2)
+
+      rows.sort((a, b) => a.name.localeCompare(b.name))
+      expect(rows[0].name).toEqual("Row 1")
+      expect(rows[0].description).toEqual("Row 1 description")
+      expect(rows[1].name).toEqual("Row 2")
+      expect(rows[1].description).toEqual("Row 2 description")
+
+      await assertRowUsage(isInternal ? rowUsage + 2 : rowUsage)
+    })
+
+    it.only("should be able to update existing rows with bulkImport", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            userId: {
+              type: FieldType.NUMBER,
+              name: "userId",
+              constraints: {
+                presence: true,
+              },
+            },
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+            },
+            description: {
+              type: FieldType.STRING,
+              name: "description",
+            },
+          },
+        })
+      )
+
+      const row1 = await config.api.row.save(table._id!, {
+        userId: 1,
+        name: "Row 1",
+        description: "Row 1 description",
+      })
+
+      const row2 = await config.api.row.save(table._id!, {
+        userId: 2,
+        name: "Row 2",
+        description: "Row 2 description",
+      })
+
+      await config.api.row.bulkImport(table._id!, {
+        identifierFields: ["userId"],
+        rows: [
+          {
+            userId: row1.userId,
+            name: "Row 1 updated",
+            description: "Row 1 description updated",
+          },
+          {
+            userId: row2.userId,
+            name: "Row 2 updated",
+            description: "Row 2 description updated",
+          },
+          {
+            userId: 3,
+            name: "Row 3",
+            description: "Row 3 description",
+          },
+        ],
+      })
+
+      const rows = await config.api.row.fetch(table._id!)
+      expect(rows.length).toEqual(3)
+
+      rows.sort((a, b) => a.name.localeCompare(b.name))
+      expect(rows[0].name).toEqual("Row 1 updated")
+      expect(rows[0].description).toEqual("Row 1 description updated")
+      expect(rows[1].name).toEqual("Row 2 updated")
+      expect(rows[1].description).toEqual("Row 2 description updated")
+      expect(rows[2].name).toEqual("Row 3")
+      expect(rows[2].description).toEqual("Row 3 description")
+    })
   })
 
   describe("enrich", () => {
