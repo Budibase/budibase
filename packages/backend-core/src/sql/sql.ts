@@ -411,8 +411,9 @@ class InternalBuilder {
   }
 
   addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
-    let { sort, paginate } = json
+    let { sort } = json
     const table = json.meta.table
+    const mainPrimaryKey = table.primary![0]
     const tableName = getTableName(table)
     const aliases = json.tableAliases
     const aliased =
@@ -429,10 +430,9 @@ class InternalBuilder {
 
         query = query.orderBy(`${aliased}.${key}`, direction, nulls)
       }
-    } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
-      // @ts-ignore
-      query = query.orderBy(`${aliased}.${table?.primary[0]}`)
     }
+    // always add sorting by the primary key - make sure result is deterministic
+    query = query.orderBy(`${aliased}.${mainPrimaryKey}`)
     return query
   }
 
