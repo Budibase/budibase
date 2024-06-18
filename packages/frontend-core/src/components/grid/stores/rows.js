@@ -41,19 +41,15 @@ export const createStores = () => {
   })
 
   // Generate a lookup map to quick find a row by ID
-  const rowLookupMap = derived(
-    enrichedPages,
-    $enrichedPages => {
-      let map = {}
-      for (let page of Object.keys($enrichedPages)) {
-        for (let row of $enrichedPages[page]) {
-          map[row._id] = row
-        }
+  const rowLookupMap = derived(enrichedPages, $enrichedPages => {
+    let map = {}
+    for (let page of Object.keys($enrichedPages)) {
+      for (let row of $enrichedPages[page]) {
+        map[row._id] = row
       }
-      return map
-    },
-    {}
-  )
+    }
+    return map
+  })
 
   // Mark loaded as true if we've ever stopped loading
   let hasStartedLoading = false
@@ -210,6 +206,7 @@ export const createActions = context => {
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
+          totalRows.set($fetch.totalRows || 0)
           definition.set($fetch.definition)
         }
 
@@ -224,12 +221,11 @@ export const createActions = context => {
         }
 
         // Process new rows
-        handleNewRows(
-          $fetch.rows,
-          $fetch.pageNumber,
-          $fetch.totalRows,
-          resetRows
-        )
+        handleNewRows({
+          rows: $fetch.rows,
+          page: $fetch.pageNumber,
+          reset: resetRows,
+        })
 
         // Notify that we're loaded
         loading.set(false)
@@ -329,15 +325,7 @@ export const createActions = context => {
       newRow = await datasource.actions.addRow(newRow)
 
       // Update state
-      if (idx != null) {
-        rowCacheMap[newRow._id] = true
-        pages.update(state => {
-          state[page][idx] = newRow
-          return { ...state }
-        })
-      } else {
-        handleNewRows([newRow])
-      }
+      handleNewRows({ rows: [newRow] })
 
       // Refresh row to ensure data is in the correct format
       get(notifications).success("Row created successfully")
@@ -377,7 +365,7 @@ export const createActions = context => {
         rows.actions.updateRowState(id, { ...row })
       } else {
         // A new row was created
-        handleNewRows([row])
+        handleNewRows({ rows: [row] })
       }
     } else if (existingRow) {
       // A row was removed
@@ -504,16 +492,19 @@ export const createActions = context => {
 
   // Local handler to process new rows inside the fetch, and append any new
   // rows to state that we haven't encountered before
-  const handleNewRows = (rows, page, totalRowCount, resetRows) => {
-    if (resetRows) {
+  const handleNewRows = ({ rows, page, idx, reset }) => {
+    if (reset) {
       rowCacheMap = {}
     }
+    if (page == null) {
+      page = 0
+    }
 
-    // Enrich all rows before adding to state
+    // Enrich all rows before adding to state, and strip out any rows we have
+    // already cached
     let enrichedNewRows = []
     const $hasBudibaseIdentifiers = get(hasBudibaseIdentifiers)
     for (let i = 0; i < rows.length; i++) {
-      // Skip if we've already cached this row
       if (rowCacheMap[rows[i]._id]) {
         return
       }
@@ -533,15 +524,20 @@ export const createActions = context => {
       enrichedNewRows.push(newRow)
     }
 
-    if (resetRows) {
-      totalRows.set(totalRowCount || 0)
+    if (reset) {
       pages.set({
         [page]: enrichedNewRows,
       })
-    } else if (enrichedNewRows.length) {
-      // Otherwise append
+    } else {
       pages.update(state => {
-        state[page] = [...(state[page] || []), ...enrichedNewRows]
+        if (!state[page]) {
+          state[page] = []
+        }
+        if (enrichedNewRows.length === 1 && idx != null) {
+          state[page].splice(idx, 0, enrichedNewRows[0])
+        } else {
+          state[page] = [...state[page], ...enrichedNewRows]
+        }
         return { ...state }
       })
     }

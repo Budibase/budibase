@@ -51,10 +51,9 @@
     await tick()
 
     // Create row
-    const newRowIndex = offset ? undefined : 0
     let rowToCreate = { ...newRow }
     delete rowToCreate._isNewRow
-    const savedRow = await rows.actions.addRow(rowToCreate, newRowIndex)
+    const savedRow = await rows.actions.addRow(rowToCreate, 0, 0)
     if (savedRow) {
       // Reset state
       clear()

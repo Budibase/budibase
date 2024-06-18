@@ -11,7 +11,7 @@ export const deriveStores = context => {
     height,
     pages,
     rowChangeCache,
-    loading,
+    pageLoadedMap,
   } = context
 
   const pageHeight = derived(rowHeight, $rowHeight => $rowHeight * RowPageSize)
@@ -41,6 +41,12 @@ export const deriveStores = context => {
       }
     }
   )
+  const visiblePageLoading = derived(
+    [visiblePages, pages],
+    ([$visiblePages, $pages]) => {
+      return $visiblePages.some(page => !(page in $pages))
+    }
+  )
 
   // Derive visible rows
   // Split into multiple stores containing primitives to optimise invalidation
@@ -60,13 +66,21 @@ export const deriveStores = context => {
     0
   )
   const renderedRows = derived(
-    [pages, visiblePages, scrolledRowCount, visualRowCapacity, rowChangeCache],
+    [
+      pages,
+      visiblePages,
+      scrolledRowCount,
+      visualRowCapacity,
+      rowChangeCache,
+      visiblePageLoading,
+    ],
     ([
       $pages,
       $visiblePages,
       $scrolledRowCount,
       $visualRowCapacity,
       $rowChangeCache,
+      $visiblePageLoading,
     ]) => {
       const prevPagesRowCount = $visiblePages[0] * RowPageSize
       const scrolledInPage = $scrolledRowCount - prevPagesRowCount
@@ -80,7 +94,7 @@ export const deriveStores = context => {
           ...row,
           ...$rowChangeCache[row._id],
         }))
-      if (rendered.length < $visualRowCapacity) {
+      if (rendered.length < $visualRowCapacity && $visiblePageLoading) {
         rendered = new Array($visualRowCapacity)
         for (let i = 0; i < $visualRowCapacity; i++) {
           rendered[i] = {

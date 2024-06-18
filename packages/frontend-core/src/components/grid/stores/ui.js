@@ -88,8 +88,6 @@ export const deriveStores = context => {
     null
   )
 
-  focusedRow.subscribe(console.log)
-
   // Derive the amount of content lines to show in cells depending on row height
   const contentLines = derived(rowHeight, $rowHeight => {
     if ($rowHeight >= LargeRowHeight) {
