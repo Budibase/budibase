@@ -26,7 +26,7 @@
     MaxCellRenderOverflow,
     GutterWidth,
     DefaultRowHeight,
-    Padding,
+    VPadding,
     SmallRowHeight,
     ControlsHeight,
     ScrollBarSize,
@@ -119,7 +119,7 @@
   // Derive min height and make available in context
   const minHeight = derived(rowHeight, $height => {
     const heightForControls = showControls ? ControlsHeight : 0
-    return Padding + SmallRowHeight + $height + heightForControls
+    return VPadding + SmallRowHeight + $height + heightForControls
   })
   context = { ...context, minHeight }
 
