@@ -31,11 +31,13 @@ export const definition: AutomationTriggerSchema = {
           type: AutomationIOType.OBJECT,
           customType: AutomationCustomIOType.ROW,
           description: "The row that was updated",
+          title: "Old Row",
         },
         row: {
           type: AutomationIOType.OBJECT,
           customType: AutomationCustomIOType.ROW,
           description: "The row before it was updated",
+          title: "Row",
         },
         id: {
           type: AutomationIOType.STRING,
