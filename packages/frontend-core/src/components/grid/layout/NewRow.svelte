@@ -31,6 +31,7 @@
     filter,
     inlineFilters,
     columnRenderMap,
+    scrollTop,
   } = getContext("grid")
 
   let visible = false
@@ -43,6 +44,21 @@
   $: $datasource, (visible = false)
   $: selectedRowCount = Object.values($selectedRows).length
   $: hasNoRows = !$rows.length
+  $: renderedRowCount = $renderedRows.length
+  $: offset = getOffset($hasNextPage, renderedRowCount, $rowHeight, $scrollTop)
+
+  const getOffset = (hasNextPage, rowCount, rowHeight, scrollTop) => {
+    // If we have a next page of data then we aren't truly at the bottom, so we
+    // render the add row component at the top
+    if (hasNextPage) {
+      return 0
+    }
+    offset = rowCount * rowHeight - (scrollTop % rowHeight)
+    if (rowCount !== 0) {
+      offset -= 1
+    }
+    return offset
+  }
 
   const addRow = async () => {
     // Blur the active cell and tick to let final value updates propagate
@@ -85,12 +101,6 @@
       return
     }
 
-    // If we have a next page of data then we aren't truly at the bottom, so we
-    // render the add row component at the top
-    if ($hasNextPage) {
-      offset = 0
-    }
-
     // If we don't have a next page then we're at the bottom and can scroll to
     // the max available offset
     else {
@@ -98,10 +108,6 @@
         ...state,
         top: $maxScrollTop,
       }))
-      offset = $renderedRows.length * $rowHeight - ($maxScrollTop % $rowHeight)
-      if ($renderedRows.length !== 0) {
-        offset -= 1
-      }
     }
 
     // Update state and select initial cell
@@ -312,8 +318,10 @@
     pointer-events: all;
     z-index: 3;
     position: absolute;
-    top: calc(var(--row-height) + var(--offset) + 24px);
-    left: 18px;
+    top: calc(
+      var(--row-height) + var(--offset) + var(--default-row-height) / 2
+    );
+    left: calc(var(--default-row-height) / 2);
   }
   .button-with-keys {
     display: flex;
