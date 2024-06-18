@@ -65,6 +65,7 @@ describe.each([
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
+  const isMSSQL = providerType === DatabaseName.SQL_SERVER
   const config = setup.getConfig()
 
   let table: Table
@@ -1013,74 +1014,77 @@ describe.each([
       await assertRowUsage(isInternal ? rowUsage + 2 : rowUsage)
     })
 
-    it("should be able to update existing rows with bulkImport", async () => {
-      const table = await config.api.table.save(
-        saveTableRequest({
-          primary: ["userId"],
-          schema: {
-            userId: {
-              type: FieldType.NUMBER,
-              name: "userId",
-              constraints: {
-                presence: true,
+    // Upserting isn't yet supported in MSSQL, see:
+    //   https://github.com/knex/knex/pull/6050
+    !isMSSQL &&
+      it("should be able to update existing rows with bulkImport", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            primary: ["userId"],
+            schema: {
+              userId: {
+                type: FieldType.NUMBER,
+                name: "userId",
+                constraints: {
+                  presence: true,
+                },
+              },
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+              },
+              description: {
+                type: FieldType.STRING,
+                name: "description",
               },
             },
-            name: {
-              type: FieldType.STRING,
-              name: "name",
-            },
-            description: {
-              type: FieldType.STRING,
-              name: "description",
-            },
-          },
+          })
+        )
+
+        const row1 = await config.api.row.save(table._id!, {
+          userId: 1,
+          name: "Row 1",
+          description: "Row 1 description",
         })
-      )
 
-      const row1 = await config.api.row.save(table._id!, {
-        userId: 1,
-        name: "Row 1",
-        description: "Row 1 description",
+        const row2 = await config.api.row.save(table._id!, {
+          userId: 2,
+          name: "Row 2",
+          description: "Row 2 description",
+        })
+
+        await config.api.row.bulkImport(table._id!, {
+          identifierFields: ["userId"],
+          rows: [
+            {
+              userId: row1.userId,
+              name: "Row 1 updated",
+              description: "Row 1 description updated",
+            },
+            {
+              userId: row2.userId,
+              name: "Row 2 updated",
+              description: "Row 2 description updated",
+            },
+            {
+              userId: 3,
+              name: "Row 3",
+              description: "Row 3 description",
+            },
+          ],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(3)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Row 1 updated")
+        expect(rows[0].description).toEqual("Row 1 description updated")
+        expect(rows[1].name).toEqual("Row 2 updated")
+        expect(rows[1].description).toEqual("Row 2 description updated")
+        expect(rows[2].name).toEqual("Row 3")
+        expect(rows[2].description).toEqual("Row 3 description")
       })
-
-      const row2 = await config.api.row.save(table._id!, {
-        userId: 2,
-        name: "Row 2",
-        description: "Row 2 description",
-      })
-
-      await config.api.row.bulkImport(table._id!, {
-        identifierFields: ["userId"],
-        rows: [
-          {
-            userId: row1.userId,
-            name: "Row 1 updated",
-            description: "Row 1 description updated",
-          },
-          {
-            userId: row2.userId,
-            name: "Row 2 updated",
-            description: "Row 2 description updated",
-          },
-          {
-            userId: 3,
-            name: "Row 3",
-            description: "Row 3 description",
-          },
-        ],
-      })
-
-      const rows = await config.api.row.fetch(table._id!)
-      expect(rows.length).toEqual(3)
-
-      rows.sort((a, b) => a.name.localeCompare(b.name))
-      expect(rows[0].name).toEqual("Row 1 updated")
-      expect(rows[0].description).toEqual("Row 1 description updated")
-      expect(rows[1].name).toEqual("Row 2 updated")
-      expect(rows[1].description).toEqual("Row 2 description updated")
-      expect(rows[2].name).toEqual("Row 3")
-      expect(rows[2].description).toEqual("Row 3 description")
-    })
   })
 
   describe("enrich", () => {

@@ -588,6 +588,10 @@ class InternalBuilder {
         throw new Error("Primary key is required for upsert")
       }
       return query.insert(parsedBody).onConflict(primary).merge()
+    } else if (this.client === SqlClient.MS_SQL) {
+      // No upsert or onConflict support in MSSQL yet, see:
+      //   https://github.com/knex/knex/pull/6050
+      return query.insert(parsedBody)
     }
     return query.upsert(parsedBody)
   }
