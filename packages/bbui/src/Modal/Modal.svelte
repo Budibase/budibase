@@ -11,7 +11,6 @@
   export let disableCancel = false
   export let autoFocus = true
   export let zIndex = 999
-  export let customMargin = null
 
   const dispatch = createEventDispatcher()
   let visible = fixed || inline
@@ -120,7 +119,6 @@
               use:focusModal
               bind:this={modal}
               class="spectrum-Modal is-open"
-              style:margin={customMargin}
               in:fly={{ y: 30, duration: 200 }}
               out:fly|local={{ y: 30, duration: 200 }}
             >
@@ -164,6 +162,7 @@
     max-height: 100%;
   }
   .modal-inner-wrapper {
+    padding: 40px;
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
@@ -178,7 +177,6 @@
     border: 2px solid var(--spectrum-global-color-gray-200);
     overflow: visible;
     max-height: none;
-    margin: 40px 0;
     transform: none;
     --spectrum-dialog-confirm-border-radius: var(
       --spectrum-global-dimension-size-100

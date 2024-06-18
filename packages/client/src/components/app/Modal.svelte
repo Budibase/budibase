@@ -51,29 +51,31 @@
   $: handleOpen(open, modal)
 </script>
 
-<Modal
-  customMargin="20px"
-  on:cancel={handleModalClose}
-  bind:this={modal}
-  disableCancel={$builderStore.inBuilder}
-  zIndex={2}
->
-  <div use:styleable={$component.styles} class={`modal-content ${size}`}>
-    <div class="modal-header">
-      <Icon
-        color="var(--spectrum-global-color-gray-800)"
-        name="Close"
-        hoverable
-        on:click={handleModalClose}
-      />
-    </div>
-    <div class="modal-main">
-      <div class="modal-main-inner">
-        <slot />
+<!-- Conditional displaying in the builder is necessary otherwise previews don't update properly upon component deletion -->
+{#if !$builderStore.inBuilder || open}
+  <Modal
+    on:cancel={handleModalClose}
+    bind:this={modal}
+    disableCancel={$builderStore.inBuilder}
+    zIndex={2}
+  >
+    <div use:styleable={$component.styles} class={`modal-content ${size}`}>
+      <div class="modal-header">
+        <Icon
+          color="var(--spectrum-global-color-gray-800)"
+          name="Close"
+          hoverable
+          on:click={handleModalClose}
+        />
+      </div>
+      <div class="modal-main">
+        <div class="modal-main-inner">
+          <slot />
+        </div>
       </div>
     </div>
-  </div></Modal
->
+  </Modal>
+{/if}
 
 <style>
   .modal-content {
