@@ -219,7 +219,7 @@ export async function search(
 
     // check for pagination final row
     let nextRow: Row | undefined
-    if (paginate && params.limit && processed.length > params.limit) {
+    if (paginate && params.limit && rows.length > params.limit) {
       // remove the extra row that confirmed if there is another row to move to
       nextRow = processed.pop()
     }
