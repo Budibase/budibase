@@ -68,12 +68,13 @@ export const createStores = context => {
 }
 
 export const deriveStores = context => {
-  const { focusedCellId, pages, rowHeight, stickyColumn, width, rows } = context
+  const { focusedCellId, rowLookupMap, rowHeight, stickyColumn, width } =
+    context
 
   // Derive the row that contains the selected cell
   const focusedRow = derived(
-    [focusedCellId, pages],
-    ([$focusedCellId, $pages]) => {
+    [focusedCellId, rowLookupMap],
+    ([$focusedCellId, $rowLookupMap]) => {
       const rowId = parseCellID($focusedCellId)?.id
 
       // Edge case for new rows
@@ -82,10 +83,12 @@ export const deriveStores = context => {
       }
 
       // All normal rows
-      return rows.actions.getRow(rowId, $pages)
+      return $rowLookupMap[rowId]
     },
     null
   )
+
+  focusedRow.subscribe(console.log)
 
   // Derive the amount of content lines to show in cells depending on row height
   const contentLines = derived(rowHeight, $rowHeight => {

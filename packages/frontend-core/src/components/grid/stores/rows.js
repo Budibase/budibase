@@ -29,9 +29,12 @@ export const createStores = () => {
   const enrichedPages = derived(pages, $pages => {
     let enriched = {}
     for (let page of Object.keys($pages)) {
+      page = parseInt(page)
       enriched[page] = $pages[page].map((row, idx) => ({
         ...row,
-        __idx: page * RowPageSize + idx,
+        __idx: page * RowPageSize + idx, // Overal index in dataset
+        __page: page, // Page number
+        __pageIdx: idx, // Index within the page
       }))
     }
     return enriched
@@ -44,7 +47,7 @@ export const createStores = () => {
       let map = {}
       for (let page of Object.keys($enrichedPages)) {
         for (let row of $enrichedPages[page]) {
-          map[row._id] = row.__idx
+          map[row._id] = row
         }
       }
       return map
@@ -67,49 +70,27 @@ export const createStores = () => {
     return page in get(pages)
   }
 
-  const getRowLocation = id => {
-    const idx = get(rowLookupMap)[id]
-    if (idx == null) {
-      return null
-    }
-    return {
-      page: Math.floor(idx / RowPageSize),
-      pageIdx: idx % RowPageSize,
-    }
-  }
-
-  const getRow = (id, pagedRows) => {
-    const location = getRowLocation(id)
-    if (!location) {
-      return null
-    }
-    if (!pagedRows) {
-      pagedRows = get(pages)
-    }
-    return pagedRows?.[location.page]?.[location.pageIdx]
-  }
-
   const hasRow = id => {
     if (id === NewRowID) {
       return true
     }
-    return getRow(id) != null
+    return get(rowLookupMap)[id] != null
   }
 
   const updateRowState = (id, row) => {
-    const location = getRowLocation(id)
-    if (!location) {
+    const oldRow = get(rowLookupMap)[id]
+    if (!oldRow) {
       return null
     }
     pages.update(state => {
-      state[location.page][location.pageIdx] = row
+      state[oldRow.__page][oldRow.__pageIdx] = row
       return { ...state }
     })
   }
 
   return {
     rows: {
-      actions: { hasRow, hasPage, getRow, getRowLocation, updateRowState },
+      actions: { hasRow, hasPage, updateRowState },
     },
     pages: {
       ...pages,
@@ -150,6 +131,7 @@ export const createActions = context => {
     notifications,
     fetch,
     hasBudibaseIdentifiers,
+    rowLookupMap,
     refreshing,
     totalRows,
   } = context
@@ -386,7 +368,7 @@ export const createActions = context => {
   // addition and deletion
   const replaceRow = (id, row) => {
     // Get index of row to check if it exists
-    const existingRow = rows.actions.getRow(id)
+    const existingRow = get(rowLookupMap)[id]
 
     // Process as either an update, addition or deletion
     if (row) {
@@ -433,7 +415,7 @@ export const createActions = context => {
   // valid pending change was made or not
   const stashRowChanges = (rowId, changes) => {
     // Check this is a valid change
-    const row = rows.actions.getRow(rowId)
+    const row = get(rowLookupMap)[rowId]
     if (!row || !changesAreValid(row, changes)) {
       return false
     }
@@ -451,7 +433,7 @@ export const createActions = context => {
 
   // Saves any pending changes to a row
   const applyRowChanges = async rowId => {
-    const row = rows.actions.getRow(rowId)
+    const row = get(rowLookupMap)[rowId]
     if (row == null) {
       return
     }
@@ -513,8 +495,8 @@ export const createActions = context => {
     }
 
     // Actually delete rows
-    rowsToDelete.forEach(row => delete row.__idx)
-    await datasource.actions.deleteRows(rowsToDelete)
+    const cleanedRows = rowsToDelete.map(cleanRow)
+    await datasource.actions.deleteRows(cleanedRows)
 
     // Update state
     handleRemoveRows(rowsToDelete)
@@ -567,17 +549,11 @@ export const createActions = context => {
 
   // Local handler to remove rows from state
   const handleRemoveRows = rowsToRemove => {
-    const deletedIds = rowsToRemove.map(row => row._id)
-
     // We deliberately do not remove IDs from the cache map as the data may
     // still exist inside the fetch, but we don't want to add it again
     let removals = {}
-    deletedIds.forEach(id => {
-      const location = rows.actions.getRowLocation(id)
-      if (!location) {
-        return
-      }
-      removals[location.page] = [...(removals[location.page] || []), id]
+    rowsToRemove.forEach(row => {
+      removals[row.__page] = [...(removals[row.__page] || []), row._id]
     })
     pages.update(state => {
       Object.keys(removals).forEach(page => {
@@ -595,7 +571,6 @@ export const createActions = context => {
   }
 
   const loadPage = async number => {
-    console.log("loading page", number)
     await get(fetch)?.goToPage(number)
   }
 
@@ -604,6 +579,8 @@ export const createActions = context => {
   const cleanRow = row => {
     let clone = { ...row }
     delete clone.__idx
+    delete clone.__page
+    delete clone.__pageIdx
     if (!get(hasBudibaseIdentifiers)) {
       delete clone._id
     }

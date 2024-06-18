@@ -87,7 +87,7 @@
   width={column.width}
 >
   {#if placeholder}
-    <PlaceholderCell {rowIdx} />
+    <PlaceholderCell {rowIdx} schema={column.schema} />
   {:else}
     <svelte:component
       this={getCellRenderer(column)}

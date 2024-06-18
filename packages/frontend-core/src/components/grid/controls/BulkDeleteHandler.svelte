@@ -2,13 +2,14 @@
   import { Modal, ModalContent } from "@budibase/bbui"
   import { getContext, onMount } from "svelte"
 
-  const { selectedRows, rows, subscribe, notifications } = getContext("grid")
+  const { selectedRows, rows, subscribe, notifications, rowLookupMap } =
+    getContext("grid")
 
   let modal
 
   $: selectedRowCount = Object.values($selectedRows).length
   $: rowsToDelete = Object.keys($selectedRows)
-    .map(id => rows.actions.getRow(id))
+    .map(id => $rowLookupMap[id])
     .filter(x => x != null)
 
   // Deletion callback when confirmed

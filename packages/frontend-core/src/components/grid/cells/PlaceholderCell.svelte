@@ -1,18 +1,31 @@
 <script>
-  export let rowIdx
+  import { OptionColours } from "../../../constants"
+  import { FieldType } from "@budibase/types"
 
-  $: idx = rowIdx + 1
-  $: width = 50 + ((idx * idx * 123) % 17) * 5
+  export let rowIdx
+  export let schema
+
+  const ColorfulTypes = [FieldType.OPTIONS, FieldType.ARRAY, FieldType.LINK]
+
+  $: rand = rowIdx + 1 + (schema?.name || "").length
+  $: width = 60 + ((rand * rand * 123) % 17) * 4
+  $: colorful = ColorfulTypes.includes(schema?.type)
+  $: alignRight = schema?.type === FieldType.NUMBER
+  $: color =
+    schema?.type === FieldType.LINK
+      ? OptionColours[0]
+      : OptionColours[rand % OptionColours.length]
 </script>
 
-<div class="placeholder-cell">
-  <div class="placeholder-outer" style="width:{width}px">
-    <div class="placeholder-inner" />
+<div class="placeholder-cell" class:right={alignRight}>
+  <div class="outer" class:colorful style="width:{width}px; --color:{color}">
+    <div class="inner" />
   </div>
 </div>
 
 <style>
   .placeholder-cell {
+    flex: 1 1 auto;
     display: flex;
     gap: 8px;
     height: var(--default-row-height);
@@ -20,7 +33,10 @@
     padding: var(--cell-padding);
     overflow: hidden;
   }
-  .placeholder-outer {
+  .placeholder-cell.right {
+    justify-content: flex-end;
+  }
+  .outer {
     position: relative;
     background-color: var(--spectrum-global-color-gray-300);
     overflow: hidden;
@@ -28,7 +44,11 @@
     height: 20px;
     max-width: 100%;
   }
-  .placeholder-inner {
+  .outer.colorful {
+    background-color: var(--color);
+    border-radius: var(--cell-padding);
+  }
+  .inner {
     position: absolute;
     left: -50%;
     height: 100%;
@@ -42,6 +62,15 @@
       var(--spectrum-global-color-gray-400) 40%,
       var(--spectrum-global-color-gray-400) 60%,
       var(--spectrum-global-color-gray-300) 100%
+    );
+  }
+  .outer.colorful .inner {
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 40%,
+      rgba(255, 255, 255, 0.1) 60%,
+      transparent 100%
     );
   }
 

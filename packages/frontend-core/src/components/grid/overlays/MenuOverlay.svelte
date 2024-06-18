@@ -32,6 +32,7 @@
   }
 
   const deleteRow = () => {
+    console.log($focusedRow)
     rows.actions.deleteRows([$focusedRow])
     menu.actions.close()
     $notifications.success("Deleted 1 row")
