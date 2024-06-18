@@ -26,6 +26,7 @@ import {
   Table,
   TableSourceType,
   UpdatedRowEventEmitter,
+  TableSchema,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -59,9 +60,9 @@ async function waitForEvent(
 describe.each([
   ["internal", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const config = setup.getConfig()
@@ -88,6 +89,23 @@ describe.each([
     // the table name they're writing to.
     ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
   ): SaveTableRequest {
+    const defaultSchema: TableSchema = {
+      id: {
+        type: FieldType.AUTO,
+        name: "id",
+        autocolumn: true,
+        constraints: {
+          presence: true,
+        },
+      },
+    }
+
+    for (const override of overrides) {
+      if (override.primary) {
+        delete defaultSchema.id
+      }
+    }
+
     const req: SaveTableRequest = {
       name: uuid.v4().substring(0, 10),
       type: "table",
@@ -96,16 +114,7 @@ describe.each([
         : TableSourceType.INTERNAL,
       sourceId: datasource ? datasource._id! : INTERNAL_TABLE_SOURCE_ID,
       primary: ["id"],
-      schema: {
-        id: {
-          type: FieldType.AUTO,
-          name: "id",
-          autocolumn: true,
-          constraints: {
-            presence: true,
-          },
-        },
-      },
+      schema: defaultSchema,
     }
     return merge(req, ...overrides)
   }
@@ -929,7 +938,7 @@ describe.each([
     })
   })
 
-  describe.only("bulkImport", () => {
+  describe("bulkImport", () => {
     isInternal &&
       it("should update Auto ID field after bulk import", async () => {
         const table = await config.api.table.save(
@@ -1004,9 +1013,10 @@ describe.each([
       await assertRowUsage(isInternal ? rowUsage + 2 : rowUsage)
     })
 
-    it.only("should be able to update existing rows with bulkImport", async () => {
+    it("should be able to update existing rows with bulkImport", async () => {
       const table = await config.api.table.save(
         saveTableRequest({
+          primary: ["userId"],
           schema: {
             userId: {
               type: FieldType.NUMBER,
