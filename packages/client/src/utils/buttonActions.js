@@ -568,6 +568,9 @@ export const enrichButtonActions = (actions, context) => {
             const defaultTitleText = action["##eventHandlerType"]
             const customTitleText =
               action.parameters?.customTitleText || defaultTitleText
+            const confirmCancelText = action.parameters?.confirmCancelText || 'Cancel'
+            const confirmButtonText = action.parameters?.confirmButtonText || 'Confirm'
+
             confirmationStore.actions.showConfirmation(
               customTitleText,
               confirmText,
@@ -598,7 +601,9 @@ export const enrichButtonActions = (actions, context) => {
               },
               () => {
                 resolve(false)
-              }
+              },
+              confirmButtonText,
+              confirmCancelText
             )
           })
         }
