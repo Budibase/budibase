@@ -12,6 +12,7 @@ import {
   SortType,
   SqlClient,
   Table,
+  Datasource,
 } from "@budibase/types"
 import {
   buildInternalRelationships,
@@ -28,6 +29,7 @@ import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
+import { processRowCountResponse } from "../utils"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 
@@ -106,7 +108,7 @@ function runSqlQuery(json: QueryJson, tables: Table[]): Promise<Row[]>
 function runSqlQuery(
   json: QueryJson,
   tables: Table[],
-  opts: { countTotalRows: boolean }
+  opts: { countTotalRows: true }
 ): Promise<number>
 async function runSqlQuery(
   json: QueryJson,
@@ -117,7 +119,7 @@ async function runSqlQuery(
   if (opts?.countTotalRows) {
     json.endpoint.operation = Operation.COUNT
   }
-  const processSQLQuery = async (json: QueryJson) => {
+  const processSQLQuery = async (_: Datasource, json: QueryJson) => {
     const query = builder._query(json, {
       disableReturning: true,
     })
@@ -140,10 +142,11 @@ async function runSqlQuery(
     const db = context.getAppDB()
     return await db.sql<Row>(sql, bindings)
   }
+  const response = await alias.queryWithAliasing(json, processSQLQuery)
   if (opts?.countTotalRows) {
-    return await alias.countWithAliasing(json, processSQLQuery)
+    return processRowCountResponse(response)
   } else {
-    return await alias.queryWithAliasing(json, processSQLQuery)
+    return response
   }
 }
 
@@ -212,7 +215,19 @@ export async function search(
   }
 
   try {
-    const rows = await runSqlQuery(request, allTables)
+    const queries: Promise<Row[] | number>[] = []
+    queries.push(runSqlQuery(request, allTables))
+    if (options.countRows) {
+      // get the total count of rows
+      queries.push(
+        runSqlQuery(request, allTables, {
+          countTotalRows: true,
+        })
+      )
+    }
+    const responses = await Promise.all(queries)
+    let rows = responses[0] as Row[]
+    const totalRows = responses[1] ? (responses[1] as number) : undefined
 
     // process from the format of tableId.column to expected format also
     // make sure JSON columns corrected
@@ -228,14 +243,6 @@ export async function search(
     if (paginate && params.limit && rows.length > params.limit) {
       // remove the extra row that confirmed if there is another row to move to
       nextRow = processed.pop()
-    }
-
-    let totalRows: number | undefined
-    if (options.countRows) {
-      // get the total count of rows
-      totalRows = await runSqlQuery(request, allTables, {
-        countTotalRows: true,
-      })
     }
 
     // get the rows

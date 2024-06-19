@@ -533,13 +533,12 @@ class InternalBuilder {
     const tableName = endpoint.entityId
     const tableAlias = aliases?.[tableName]
 
-    const query = knex(
+    return knex(
       this.tableNameWithSchema(tableName, {
         alias: tableAlias,
         schema: endpoint.schema,
       })
     )
-    return query
   }
 
   create(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
@@ -571,10 +570,42 @@ class InternalBuilder {
     return query.insert(parsedBody)
   }
 
-  read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
+  bulkUpsert(knex: Knex, json: QueryJson): Knex.QueryBuilder {
+    const { endpoint, body } = json
+    let query = this.knexWithAlias(knex, endpoint)
+    if (!Array.isArray(body)) {
+      return query
+    }
+    const parsedBody = body.map(row => parseBody(row))
+    if (
+      this.client === SqlClient.POSTGRES ||
+      this.client === SqlClient.SQL_LITE ||
+      this.client === SqlClient.MY_SQL
+    ) {
+      const primary = json.meta.table.primary
+      if (!primary) {
+        throw new Error("Primary key is required for upsert")
+      }
+      return query.insert(parsedBody).onConflict(primary).merge()
+    } else if (this.client === SqlClient.MS_SQL) {
+      // No upsert or onConflict support in MSSQL yet, see:
+      //   https://github.com/knex/knex/pull/6050
+      return query.insert(parsedBody)
+    }
+    return query.upsert(parsedBody)
+  }
+
+  read(
+    knex: Knex,
+    json: QueryJson,
+    opts: {
+      limits?: { base: number; query: number }
+      disableSorting?: boolean
+    } = {}
+  ): Knex.QueryBuilder {
     let { endpoint, resource, filters, paginate, relationships, tableAliases } =
       json
-    const counting = endpoint.operation === Operation.COUNT
+    const { limits, disableSorting } = opts
 
     const tableName = endpoint.entityId
     // select all if not specified
@@ -583,7 +614,7 @@ class InternalBuilder {
     }
     let selectStatement: string | (string | Knex.Raw)[] = "*"
     // handle select
-    if (!counting && resource.fields && resource.fields.length > 0) {
+    if (resource.fields && resource.fields.length > 0) {
       // select the resources as the format "table.columnName" - this is what is provided
       // by the resource builder further up
       selectStatement = generateSelectStatement(json, knex)
@@ -592,7 +623,7 @@ class InternalBuilder {
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
     // handle pagination
     let foundOffset: number | null = null
-    let foundLimit = limit || BASE_LIMIT
+    let foundLimit = limits?.query || limits?.base
     if (paginate && paginate.page && paginate.limit) {
       // @ts-ignore
       const page = paginate.page <= 1 ? 0 : paginate.page - 1
@@ -605,12 +636,12 @@ class InternalBuilder {
     } else if (paginate && paginate.limit) {
       foundLimit = paginate.limit
     }
-    // always add the found limit, unless counting
-    if (!counting) {
+    // add the found limit if supplied
+    if (foundLimit) {
       query = query.limit(foundLimit)
     }
     // add overall pagination
-    if (!counting && foundOffset) {
+    if (foundOffset) {
       query = query.offset(foundOffset)
     }
     // add filters to the query (where)
@@ -618,20 +649,22 @@ class InternalBuilder {
       aliases: tableAliases,
     })
     // add sorting to pre-query
-    if (!counting) {
+    // no point in sorting when counting
+    if (!disableSorting) {
       query = this.addSorting(query, json)
     }
+
     const alias = tableAliases?.[tableName] || tableName
-    let preQuery = knex({
-      [alias]: query,
-    } as any)
-    if (counting) {
-      preQuery = preQuery.count("* as total")
-    } else {
-      preQuery = preQuery.select(selectStatement)
-    }
+    let preQuery: Knex.QueryBuilder = knex({
+      // the typescript definition for the knex constructor doesn't support this
+      // syntax, but it is the only way to alias a pre-query result as part of
+      // a query - there is an alias dictionary type, but it assumes it can only
+      // be a table name, not a pre-query
+      [alias]: query as any,
+    })
+    preQuery = preQuery.select(selectStatement)
     // have to add after as well (this breaks MS-SQL)
-    if (this.client !== SqlClient.MS_SQL && !counting) {
+    if (this.client !== SqlClient.MS_SQL && !disableSorting) {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
@@ -643,15 +676,27 @@ class InternalBuilder {
       tableAliases
     )
 
-    // add a base query over all
-    if (!counting) {
-      query = query.limit(BASE_LIMIT)
+    // add a base limit over the whole query
+    // if counting we can't set this limit
+    if (limits?.base) {
+      query = query.limit(limits.base)
     }
 
     return this.addFilters(query, filters, json.meta.table, {
       relationship: true,
       aliases: tableAliases,
     })
+  }
+
+  count(knex: Knex, json: QueryJson) {
+    const readQuery = this.read(knex, json, {
+      disableSorting: true,
+    })
+    // have to alias the sub-query, this is a requirement for my-sql and ms-sql
+    // without this we get an error "Every derived table must have its own alias"
+    return knex({
+      subquery: readQuery as any,
+    }).count("* as total")
   }
 
   update(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
@@ -728,8 +773,15 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         query = builder.create(client, json, opts)
         break
       case Operation.READ:
+        query = builder.read(client, json, {
+          limits: {
+            query: this.limit,
+            base: BASE_LIMIT,
+          },
+        })
+        break
       case Operation.COUNT:
-        query = builder.read(client, json, this.limit)
+        query = builder.count(client, json)
         break
       case Operation.UPDATE:
         query = builder.update(client, json, opts)
@@ -739,6 +791,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         break
       case Operation.BULK_CREATE:
         query = builder.bulkCreate(client, json)
+        break
+      case Operation.BULK_UPSERT:
+        query = builder.bulkUpsert(client, json)
         break
       case Operation.CREATE_TABLE:
       case Operation.UPDATE_TABLE:
