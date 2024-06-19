@@ -12,6 +12,7 @@ import {
   SortType,
   SqlClient,
   Table,
+  Datasource,
 } from "@budibase/types"
 import {
   buildInternalRelationships,
@@ -117,7 +118,7 @@ async function runSqlQuery(
   if (opts?.countTotalRows) {
     json.endpoint.operation = Operation.COUNT
   }
-  const processSQLQuery = async (json: QueryJson) => {
+  const processSQLQuery = async (_: Datasource, json: QueryJson) => {
     const query = builder._query(json, {
       disableReturning: true,
     })

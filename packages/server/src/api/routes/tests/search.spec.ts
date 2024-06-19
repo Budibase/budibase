@@ -93,20 +93,7 @@ describe.each([
   class SearchAssertion {
     constructor(private readonly query: RowSearchParams) {}
 
-    private async performSearch(): Promise<Row[]> {
-      if (isInMemory) {
-        return dataFilters.search(_.cloneDeep(rows), this.query)
-      } else {
-        return (
-          await config.api.row.search(table._id!, {
-            ...this.query,
-            tableId: table._id!,
-          })
-        ).rows
-      }
-    }
-
-    private async performSearchFullResponse(): Promise<SearchResponse<Row>> {
+    private async performSearch(): Promise<SearchResponse<Row>> {
       if (isInMemory) {
         return { rows: dataFilters.search(_.cloneDeep(rows), this.query) }
       } else {
@@ -187,7 +174,7 @@ describe.each([
     // different to the one passed in will cause the assertion to fail.  Extra
     // rows returned by the query will also cause the assertion to fail.
     async toMatchExactly(expectedRows: any[]) {
-      const foundRows = await this.performSearch()
+      const { rows: foundRows } = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
@@ -203,7 +190,7 @@ describe.each([
     // passed in. The order of the rows is not important, but extra rows will
     // cause the assertion to fail.
     async toContainExactly(expectedRows: any[]) {
-      const foundRows = await this.performSearch()
+      const { rows: foundRows } = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
@@ -219,26 +206,23 @@ describe.each([
 
     // Asserts that the query returns some property values - this cannot be used
     // to check row values, however this shouldn't be important for checking properties
-    async toHaveProperty(
-      properties: {
-        key: keyof SearchResponse<Row>
-        value?: any
-      }[]
-    ) {
-      const response = await this.performSearchFullResponse()
-      for (let property of properties) {
+    // typing for this has to be any, Jest doesn't expose types for matchers like expect.any(...)
+    async toMatch(properties: Record<string, any>) {
+      const response = await this.performSearch()
+      const keys = Object.keys(properties) as Array<keyof SearchResponse<Row>>
+      for (let key of keys) {
         // eslint-disable-next-line jest/no-standalone-expect
-        expect(response[property.key]).toBeDefined()
-        if (property.value) {
+        expect(response[key]).toBeDefined()
+        if (properties[key]) {
           // eslint-disable-next-line jest/no-standalone-expect
-          expect(response[property.key]).toEqual(property.value)
+          expect(response[key]).toEqual(properties[key])
         }
       }
     }
 
     // Asserts that the query doesn't return a property, e.g. pagination parameters.
     async toNotHaveProperty(properties: (keyof SearchResponse<Row>)[]) {
-      const response = await this.performSearchFullResponse()
+      const response = await this.performSearch()
       for (let property of properties) {
         // eslint-disable-next-line jest/no-standalone-expect
         expect(response[property]).toBeUndefined()
@@ -249,7 +233,7 @@ describe.each([
     // The order of the rows is not important. Extra rows will not cause the
     // assertion to fail.
     async toContain(expectedRows: any[]) {
-      const foundRows = await this.performSearch()
+      const { rows: foundRows } = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect([...foundRows]).toEqual(
@@ -266,7 +250,7 @@ describe.each([
     }
 
     async toHaveLength(length: number) {
-      const foundRows = await this.performSearch()
+      const { rows: foundRows } = await this.performSearch()
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(length)
@@ -1860,7 +1844,7 @@ describe.each([
               name: true,
             },
           },
-        }).toHaveProperty([{ key: "totalRows", value: 2 }, { key: "rows" }]))
+        }).toMatch({ totalRows: 2, rows: expect.any(Array) }))
 
       it("shouldn't count rows when option is not set", () => {
         expectSearch({

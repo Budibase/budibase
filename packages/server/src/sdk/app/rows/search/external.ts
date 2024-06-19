@@ -81,11 +81,15 @@ export async function search(
       paginate: paginateObj as PaginationJson,
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     }
-    let rows = await handleRequest(Operation.READ, tableId, parameters)
-    let totalRows: number | undefined
+    const requests: Promise<Row[] | number>[] = []
+    requests.push(handleRequest(Operation.READ, tableId, parameters))
     if (countRows) {
-      totalRows = await handleRequest(Operation.COUNT, tableId, parameters)
+      requests.push(handleRequest(Operation.COUNT, tableId, parameters))
     }
+    const responses = await Promise.all(requests)
+    let rows = responses[0] as Row[]
+    const totalRows = responses[1] ? (responses[1] as number) : undefined
+
     let hasNextPage = false
     // remove the extra row if it's there
     if (paginate && limit && rows.length > limit) {
