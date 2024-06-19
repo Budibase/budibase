@@ -50,9 +50,11 @@
   }
   .inner {
     position: absolute;
-    left: -50%;
+    transform: translateX(-100%);
+    left: 0;
     height: 100%;
-    width: 50%;
+    width: 100%;
+    will-change: transform;
     animation: shimmer 1.5s infinite;
     position: relative;
     overflow: hidden;
@@ -76,10 +78,10 @@
 
   @keyframes shimmer {
     0% {
-      left: -50%;
+      transform: translateX(-100%);
     }
     100% {
-      left: 100%;
+      transform: translateX(100%);
     }
   }
 </style>
