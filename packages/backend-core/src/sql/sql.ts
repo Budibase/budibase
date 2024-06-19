@@ -595,19 +595,23 @@ class InternalBuilder {
     return query.upsert(parsedBody)
   }
 
-  read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
+  read(
+    knex: Knex,
+    json: QueryJson,
+    limits?: { base?: number; query?: number }
+  ): Knex.QueryBuilder {
     let { endpoint, resource, filters, paginate, relationships, tableAliases } =
       json
-    const counting = endpoint.operation === Operation.COUNT
 
     const tableName = endpoint.entityId
+    const counting = endpoint.operation === Operation.COUNT
     // select all if not specified
     if (!resource) {
       resource = { fields: [] }
     }
     let selectStatement: string | (string | Knex.Raw)[] = "*"
     // handle select
-    if (!counting && resource.fields && resource.fields.length > 0) {
+    if (resource.fields && resource.fields.length > 0) {
       // select the resources as the format "table.columnName" - this is what is provided
       // by the resource builder further up
       selectStatement = generateSelectStatement(json, knex)
@@ -616,7 +620,7 @@ class InternalBuilder {
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
     // handle pagination
     let foundOffset: number | null = null
-    let foundLimit = limit || BASE_LIMIT
+    let foundLimit = limits?.query || limits?.base
     if (paginate && paginate.page && paginate.limit) {
       // @ts-ignore
       const page = paginate.page <= 1 ? 0 : paginate.page - 1
@@ -629,12 +633,12 @@ class InternalBuilder {
     } else if (paginate && paginate.limit) {
       foundLimit = paginate.limit
     }
-    // always add the found limit, unless counting
-    if (!counting) {
+    // add the found limit if supplied
+    if (foundLimit) {
       query = query.limit(foundLimit)
     }
     // add overall pagination
-    if (!counting && foundOffset) {
+    if (foundOffset) {
       query = query.offset(foundOffset)
     }
     // add filters to the query (where)
@@ -642,9 +646,11 @@ class InternalBuilder {
       aliases: tableAliases,
     })
     // add sorting to pre-query
+    // no point in sorting when counting
     if (!counting) {
       query = this.addSorting(query, json)
     }
+
     const alias = tableAliases?.[tableName] || tableName
     let preQuery: Knex.QueryBuilder = knex({
       // the typescript definition for the knex constructor doesn't support this
@@ -653,11 +659,7 @@ class InternalBuilder {
       // be a table name, not a pre-query
       [alias]: query as any,
     })
-    if (counting) {
-      preQuery = preQuery.count("* as total")
-    } else {
-      preQuery = preQuery.select(selectStatement)
-    }
+    preQuery = preQuery.select(selectStatement)
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClient.MS_SQL && !counting) {
       preQuery = this.addSorting(preQuery, json)
@@ -672,14 +674,24 @@ class InternalBuilder {
     )
 
     // add a base limit over the whole query
-    if (!counting) {
-      query = query.limit(BASE_LIMIT)
+    // if counting we can't set this limit
+    if (limits?.base) {
+      query = query.limit(limits.base)
     }
 
     return this.addFilters(query, filters, json.meta.table, {
       relationship: true,
       aliases: tableAliases,
     })
+  }
+
+  count(knex: Knex, json: QueryJson) {
+    const readQuery = this.read(knex, json)
+    // have to alias the sub-query, this is a requirement for my-sql and ms-sql
+    // without this we get an error "Every derived table must have its own alias"
+    return knex({
+      subquery: readQuery as any,
+    }).count("* as total")
   }
 
   update(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
@@ -756,8 +768,13 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         query = builder.create(client, json, opts)
         break
       case Operation.READ:
+        query = builder.read(client, json, {
+          query: this.limit,
+          base: BASE_LIMIT,
+        })
+        break
       case Operation.COUNT:
-        query = builder.read(client, json, this.limit)
+        query = builder.count(client, json)
         break
       case Operation.UPDATE:
         query = builder.update(client, json, opts)
