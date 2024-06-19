@@ -96,7 +96,8 @@
     if (clientY != null) {
       const y = clientY - $bounds.top + (newScrollTop % $rowHeight)
       const hoveredRow = $renderedRows[Math.floor(y / $rowHeight)]
-      hoveredRowId.set(hoveredRow?._id)
+      const id = hoveredRow && !hoveredRow.__placeholder ? hoveredRow._id : null
+      hoveredRowId.set(id)
     }
   })
 </script>
