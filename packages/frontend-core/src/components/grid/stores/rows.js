@@ -88,28 +88,7 @@ export const createStores = () => {
     }
   })
 
-  const hasRow = id => {
-    if (id === NewRowID) {
-      return true
-    }
-    return get(rowLookupMap)[id] != null
-  }
-
-  const updateRowState = (id, row) => {
-    const oldRow = get(rowLookupMap)[id]
-    if (!oldRow) {
-      return null
-    }
-    pages.update(state => {
-      state[oldRow.__page][oldRow.__pageIdx] = row
-      return { ...state }
-    })
-  }
-
   return {
-    rows: {
-      actions: { hasRow, updateRowState },
-    },
     pages: {
       ...pages,
       subscribe: enrichedPages.subscribe,
@@ -248,6 +227,7 @@ export const createActions = context => {
           rows: $fetch.rows,
           page: $fetch.pageNumber,
           reset: resetRows,
+          updateTotal: false,
         })
 
         // Notify that we're loaded
@@ -349,6 +329,7 @@ export const createActions = context => {
 
       // Update state
       handleNewRows({ rows: [newRow] })
+      totalRows.update(total => total + 1)
 
       // Refresh row to ensure data is in the correct format
       get(notifications).success("Row created successfully")
@@ -385,7 +366,10 @@ export const createActions = context => {
     if (row) {
       if (existingRow) {
         // An existing row was updated
-        rows.actions.updateRowState(id, { ...row })
+        pages.update(state => {
+          state[existingRow.__page][existingRow.__pageIdx] = row
+          return { ...state }
+        })
       } else {
         // A new row was created
         handleNewRows({ rows: [row] })
@@ -464,7 +448,10 @@ export const createActions = context => {
 
       // Update row state after a successful change
       if (saved?._id) {
-        rows.actions.updateRowState(rowId, saved)
+        pages.update(state => {
+          state[row.__page][row.__pageIdx] = saved
+          return { ...state }
+        })
       } else if (saved?.id) {
         // Handle users table edge case
         await refreshRow(saved.id)
@@ -515,7 +502,7 @@ export const createActions = context => {
 
   // Local handler to process new rows inside the fetch, and append any new
   // rows to state that we haven't encountered before
-  const handleNewRows = ({ rows, page, idx, reset }) => {
+  const handleNewRows = ({ rows, page, idx, reset, updateTotal = true }) => {
     if (reset) {
       rowCacheMap = {}
     }
@@ -529,7 +516,7 @@ export const createActions = context => {
     const $hasBudibaseIdentifiers = get(hasBudibaseIdentifiers)
     for (let i = 0; i < rows.length; i++) {
       if (rowCacheMap[rows[i]._id]) {
-        return
+        continue
       }
 
       // Enrich with idx
@@ -547,6 +534,7 @@ export const createActions = context => {
       enrichedNewRows.push(newRow)
     }
 
+    // Add rows to state
     if (reset) {
       pages.set({
         [page]: enrichedNewRows,
@@ -564,24 +552,39 @@ export const createActions = context => {
         return { ...state }
       })
     }
+
+    // Update total if required
+    if (updateTotal) {
+      totalRows.update(total => (total += enrichedNewRows.length))
+    }
   }
 
   // Local handler to remove rows from state
   const handleRemoveRows = rowsToRemove => {
     // We deliberately do not remove IDs from the cache map as the data may
-    // still exist inside the fetch, but we don't want to add it again
+    // still exist inside the fetch, but we don't want to add it again.
+    // Split rows to be removed into their pages, so we can be performant by
+    // doing a single filter per page that requires a removal.
     let removals = {}
     rowsToRemove.forEach(row => {
       removals[row.__page] = [...(removals[row.__page] || []), row._id]
     })
+
+    // Remove rows from each page and count how many we actually remove
+    let rowsRemoved = 0
     pages.update(state => {
       Object.keys(removals).forEach(page => {
+        const oldLength = state[page].length
         state[page] = state[page].filter(
           row => !removals[page].includes(row._id)
         )
+        rowsRemoved += oldLength - state[page].length
       })
       return { ...state }
     })
+
+    // Update total
+    totalRows.update(state => state - rowsRemoved)
   }
 
   // Loads the next page of data if available
@@ -589,6 +592,7 @@ export const createActions = context => {
     get(fetch)?.nextPage()
   }
 
+  // Loads a specific page of data, assuming it hasn't been loaded already
   const loadPage = async number => {
     // Skip if we've already loaded this page
     if (number in get(pages)) {
@@ -612,9 +616,7 @@ export const createActions = context => {
 
   return {
     rows: {
-      ...rows,
       actions: {
-        ...rows.actions,
         addRow,
         duplicateRow,
         updateValue,

@@ -133,8 +133,7 @@ export const initialise = context => {
     focusedRowId,
     previousFocusedRowId,
     previousFocusedCellId,
-    pages,
-    rows,
+    rowLookupMap,
     focusedCellId,
     selectedRows,
     hoveredRowId,
@@ -144,14 +143,19 @@ export const initialise = context => {
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
-  pages.subscribe(async () => {
+  rowLookupMap.subscribe(async $rowLookupMap => {
     // We tick here to ensure other derived stores have properly updated.
     // We depend on the row lookup map which is a derived store,
     await tick()
     const $focusedCellId = get(focusedCellId)
     const $selectedRows = get(selectedRows)
     const $hoveredRowId = get(hoveredRowId)
-    const hasRow = rows.actions.hasRow
+    const hasRow = id => {
+      if (id === NewRowID) {
+        return true
+      }
+      return $rowLookupMap[id] != null
+    }
 
     // Check selected cell
     const selectedRowId = parseCellID($focusedCellId)?.id
