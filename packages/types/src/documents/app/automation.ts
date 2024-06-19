@@ -2,6 +2,8 @@ import { Document } from "../document"
 import { EventEmitter } from "events"
 import { User } from "../global"
 import { ReadStream } from "fs"
+import { Row } from "./row"
+import { Table } from "./table"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -251,4 +253,11 @@ export type AutomationAttachmentContent = {
 export type BucketedContent = AutomationAttachmentContent & {
   bucket: string
   path: string
+}
+
+export type UpdatedRowEventEmitter = {
+  row: Row
+  oldRow: Row
+  table: Table
+  appId: string
 }
