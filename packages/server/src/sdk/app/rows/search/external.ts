@@ -81,12 +81,12 @@ export async function search(
       paginate: paginateObj as PaginationJson,
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     }
-    const requests: Promise<Row[] | number>[] = []
-    requests.push(handleRequest(Operation.READ, tableId, parameters))
+    const queries: Promise<Row[] | number>[] = []
+    queries.push(handleRequest(Operation.READ, tableId, parameters))
     if (countRows) {
-      requests.push(handleRequest(Operation.COUNT, tableId, parameters))
+      queries.push(handleRequest(Operation.COUNT, tableId, parameters))
     }
-    const responses = await Promise.all(requests)
+    const responses = await Promise.all(queries)
     let rows = responses[0] as Row[]
     const totalRows = responses[1] ? (responses[1] as number) : undefined
 
