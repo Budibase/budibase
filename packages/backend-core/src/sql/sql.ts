@@ -533,13 +533,12 @@ class InternalBuilder {
     const tableName = endpoint.entityId
     const tableAlias = aliases?.[tableName]
 
-    const query = knex(
+    return knex(
       this.tableNameWithSchema(tableName, {
         alias: tableAlias,
         schema: endpoint.schema,
       })
     )
-    return query
   }
 
   create(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
@@ -643,7 +642,7 @@ class InternalBuilder {
       tableAliases
     )
 
-    // add a base query over all
+    // add a base limit over the whole query
     if (!counting) {
       query = query.limit(BASE_LIMIT)
     }
