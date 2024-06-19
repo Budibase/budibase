@@ -95,7 +95,7 @@ describe.each([
 
     private async performSearch(): Promise<SearchResponse<Row>> {
       if (isInMemory) {
-        return { rows: dataFilters.search(_.cloneDeep(rows), this.query) }
+        return dataFilters.search(_.cloneDeep(rows), this.query)
       } else {
         return config.api.row.search(table._id!, {
           ...this.query,
@@ -1822,9 +1822,8 @@ describe.each([
         ]))
     })
 
-  // lucene can't count, and in memory there is no point
+  // lucene can't count the total rows
   !isLucene &&
-    !isInMemory &&
     describe("row counting", () => {
       beforeAll(async () => {
         table = await createTable({
