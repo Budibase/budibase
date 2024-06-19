@@ -642,23 +642,24 @@ class InternalBuilder {
     } else if (paginate && paginate.limit) {
       foundLimit = paginate.limit
     }
-    // add the found limit if supplied
-    if (foundLimit) {
-      query = query.limit(foundLimit)
-    }
-    // add overall pagination
-    if (foundOffset) {
-      query = query.offset(foundOffset)
+    // counting should not sort, limit or offset
+    if (!counting) {
+      // add the found limit if supplied
+      if (foundLimit != null) {
+        query = query.limit(foundLimit)
+      }
+      // add overall pagination
+      if (foundOffset != null) {
+        query = query.offset(foundOffset)
+      }
+      // add sorting to pre-query
+      // no point in sorting when counting
+      query = this.addSorting(query, json)
     }
     // add filters to the query (where)
     query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
     })
-    // add sorting to pre-query
-    // no point in sorting when counting
-    if (!counting) {
-      query = this.addSorting(query, json)
-    }
 
     const alias = tableAliases?.[tableName] || tableName
     let preQuery: Knex.QueryBuilder = knex({
@@ -668,11 +669,10 @@ class InternalBuilder {
       // be a table name, not a pre-query
       [alias]: query as any,
     })
-    if (!counting) {
-      preQuery = preQuery.select(generateSelectStatement(json, knex))
-    } else {
-      preQuery = this.addDistinctCount(preQuery, json)
-    }
+    // if counting, use distinct count, else select
+    preQuery = !counting
+      ? preQuery.select(generateSelectStatement(json, knex))
+      : this.addDistinctCount(preQuery, json)
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClient.MS_SQL && !counting) {
       preQuery = this.addSorting(preQuery, json)

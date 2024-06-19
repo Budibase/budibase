@@ -227,7 +227,8 @@ export async function search(
     }
     const responses = await Promise.all(queries)
     let rows = responses[0] as Row[]
-    const totalRows = responses[1] ? (responses[1] as number) : undefined
+    const totalRows =
+      responses.length > 1 ? (responses[1] as number) : undefined
 
     // process from the format of tableId.column to expected format also
     // make sure JSON columns corrected
@@ -260,13 +261,16 @@ export async function search(
     const response: SearchResponse<Row> = {
       rows: finalRows,
     }
-    if (totalRows) {
+    if (totalRows != null) {
       response.totalRows = totalRows
     }
     // check for pagination
     if (paginate && nextRow) {
       response.hasNextPage = true
       response.bookmark = bookmark + 1
+    }
+    if (paginate && !nextRow) {
+      response.hasNextPage = false
     }
     return response
   } catch (err: any) {
