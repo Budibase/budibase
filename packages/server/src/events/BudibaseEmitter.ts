@@ -13,8 +13,14 @@ import { Table, Row } from "@budibase/types"
  * This is specifically quite important for template strings used in automations.
  */
 class BudibaseEmitter extends EventEmitter {
-  emitRow(eventName: string, appId: string, row: Row, table?: Table) {
-    rowEmission({ emitter: this, eventName, appId, row, table })
+  emitRow(
+    eventName: string,
+    appId: string,
+    row: Row,
+    table?: Table,
+    oldRow?: Row
+  ) {
+    rowEmission({ emitter: this, eventName, appId, row, table, oldRow })
   }
 
   emitTable(eventName: string, appId: string, table?: Table) {
