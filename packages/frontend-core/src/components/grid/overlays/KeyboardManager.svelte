@@ -59,6 +59,8 @@
         if (Object.keys($selectedRows).length && $config.canDeleteRows) {
           dispatch("request-bulk-delete")
         }
+      } else if (e.key === "Escape") {
+        selectedRows.set({})
       }
       return
     }
