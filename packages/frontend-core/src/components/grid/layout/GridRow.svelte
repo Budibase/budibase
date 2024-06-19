@@ -31,6 +31,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="row"
+  class:placeholder={row.__placeholder}
   on:focus
   on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
   on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
@@ -62,5 +63,8 @@
     width: 0;
     display: flex;
     height: var(--row-height);
+  }
+  .row.placeholder {
+    pointer-events: none;
   }
 </style>

@@ -53,7 +53,9 @@
     // Create row
     let rowToCreate = { ...newRow }
     delete rowToCreate._isNewRow
-    const savedRow = await rows.actions.addRow(rowToCreate, 0, 0)
+    const page = offset === 0 ? 0 : null
+    const idx = offset === 0 ? 0 : null
+    const savedRow = await rows.actions.addRow(rowToCreate, page, idx)
     if (savedRow) {
       // Reset state
       clear()

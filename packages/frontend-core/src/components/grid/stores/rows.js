@@ -323,15 +323,8 @@ export const createActions = context => {
   // Adds a new row
   const addRow = async (row, page, idx, bubble = false) => {
     try {
-      // Create row. Spread row so we can mutate and enrich safely.
-      let newRow = { ...row }
-      newRow = await datasource.actions.addRow(newRow)
-
-      // Update state
-      handleNewRows({ rows: [newRow] })
-      totalRows.update(total => total + 1)
-
-      // Refresh row to ensure data is in the correct format
+      const newRow = await datasource.actions.addRow({ ...row })
+      handleNewRows({ rows: [newRow], page, idx })
       get(notifications).success("Row created successfully")
       return newRow
     } catch (error) {
@@ -345,10 +338,12 @@ export const createActions = context => {
 
   // Duplicates a row, inserting the duplicate row after the existing one
   const duplicateRow = async row => {
-    let clone = { ...row }
+    let clone = cleanRow(row)
+
+    // Nuke identifiers so we create a new row
     delete clone._id
     delete clone._rev
-    delete clone.__idx
+
     try {
       return await addRow(clone, row.__page, row.__idx + 1, true)
     } catch (error) {
@@ -359,7 +354,6 @@ export const createActions = context => {
   // Replaces a row in state with the newly defined row, handling updates,
   // addition and deletion
   const replaceRow = (id, row) => {
-    // Get index of row to check if it exists
     const existingRow = get(rowLookupMap)[id]
 
     // Process as either an update, addition or deletion
@@ -502,12 +496,16 @@ export const createActions = context => {
 
   // Local handler to process new rows inside the fetch, and append any new
   // rows to state that we haven't encountered before
-  const handleNewRows = ({ rows, page, idx, reset, updateTotal = true }) => {
+  const handleNewRows = ({
+    rows,
+    page,
+    idx,
+    reset = false,
+    updateTotal = true,
+  }) => {
+    // Wipe cache if resetting
     if (reset) {
       rowCacheMap = {}
-    }
-    if (page == null) {
-      page = 0
     }
 
     // Enrich all rows before adding to state, and strip out any rows we have
@@ -515,12 +513,10 @@ export const createActions = context => {
     let enrichedNewRows = []
     const $hasBudibaseIdentifiers = get(hasBudibaseIdentifiers)
     for (let i = 0; i < rows.length; i++) {
-      if (rowCacheMap[rows[i]._id]) {
+      let newRow = { ...rows[i] }
+      if (rowCacheMap[newRow._id]) {
         continue
       }
-
-      // Enrich with idx
-      let newRow = { ...rows[i] }
 
       // Ensure we have a unique _id.
       // This means generating one for non DS+, overwriting any that may already
@@ -537,18 +533,18 @@ export const createActions = context => {
     // Add rows to state
     if (reset) {
       pages.set({
-        [page]: enrichedNewRows,
+        0: enrichedNewRows,
       })
     } else {
       pages.update(state => {
-        if (!state[page]) {
-          state[page] = []
+        // Default to end of dataset if unspecified
+        if (page == null || idx == null) {
+          let pageNumbers = Object.keys(state).map(parseInt)
+          pageNumbers.sort()
+          page = pageNumbers[pageNumbers.length - 1]
+          idx = state[page].length
         }
-        if (enrichedNewRows.length === 1 && idx != null) {
-          state[page].splice(idx, 0, enrichedNewRows[0])
-        } else {
-          state[page] = [...state[page], ...enrichedNewRows]
-        }
+        state[page].splice(idx, 0, ...enrichedNewRows)
         return { ...state }
       })
     }
@@ -604,6 +600,9 @@ export const createActions = context => {
   // Cleans a row by removing any internal grid metadata from it.
   // Call this before passing a row to any sort of external flow.
   const cleanRow = row => {
+    if (!row) {
+      return null
+    }
     let clone = { ...row }
     delete clone.__idx
     delete clone.__page

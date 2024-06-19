@@ -9,6 +9,7 @@
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
   import { getCellID } from "../lib/utils"
+  import { placeholder } from "lodash/fp"
 
   const {
     rows,
@@ -61,6 +62,7 @@
         {@const cellId = getCellID(row._id, $stickyColumn?.name)}
         <div
           class="row"
+          class:placeholder={row.__placeholder}
           on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
           on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
           on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
@@ -160,6 +162,9 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
+  }
+  .row.placeholder {
+    pointer-events: none;
   }
   .content {
     position: relative;

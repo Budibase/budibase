@@ -8,7 +8,7 @@
   const ColorfulTypes = [FieldType.OPTIONS, FieldType.ARRAY, FieldType.LINK]
 
   $: rand = rowIdx + 1 + (schema?.name || "").length
-  $: width = 60 + ((rand * rand * 123) % 17) * 4
+  $: width = 40 + ((rand * rand * 123) % 17) * 4
   $: colorful = ColorfulTypes.includes(schema?.type)
   $: alignRight = schema?.type === FieldType.NUMBER
   $: color =
