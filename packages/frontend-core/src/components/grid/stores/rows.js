@@ -17,6 +17,11 @@ export const createStores = () => {
   const fetch = writable(null)
   const totalRows = writable(0)
 
+  // Derive how many pages we will need for this amount of rows
+  const totalPages = derived(totalRows, $totalRows =>
+    Math.ceil($totalRows / RowPageSize)
+  )
+
   // Derive how many rows we have loaded into memory
   const loadedRows = derived(pages, $pages => {
     let count = 0
@@ -26,19 +31,30 @@ export const createStores = () => {
     return count
   })
 
-  const enrichedPages = derived(pages, $pages => {
-    let enriched = {}
-    for (let page of Object.keys($pages)) {
-      page = parseInt(page)
-      enriched[page] = $pages[page].map((row, idx) => ({
-        ...row,
-        __idx: page * RowPageSize + idx, // Overal index in dataset
-        __page: page, // Page number
-        __pageIdx: idx, // Index within the page
-      }))
+  const enrichedPages = derived(
+    [pages, totalPages],
+    ([$pages, $totalPages]) => {
+      let enriched = {}
+      let idx = 0
+
+      for (let i = 0; i < $totalPages; i++) {
+        if (i in $pages) {
+          // If we do have this page, enrich and count all rows that we have
+          enriched[i] = $pages[i].map((row, pageIdx) => ({
+            ...row,
+            __idx: idx++, // Overal index in dataset
+            __page: i, // Page number
+            __pageIdx: pageIdx, // Index within the page
+          }))
+        } else {
+          // If we haven't loaded this page, increment the idx by a full page size
+          idx += RowPageSize
+        }
+      }
+
+      return enriched
     }
-    return enriched
-  })
+  )
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(enrichedPages, $enrichedPages => {
@@ -46,6 +62,17 @@ export const createStores = () => {
     for (let page of Object.keys($enrichedPages)) {
       for (let row of $enrichedPages[page]) {
         map[row._id] = row
+      }
+    }
+    return map
+  })
+
+  // Generate a lookup map to quick find a row by ID
+  const rowIndexLookupMap = derived(enrichedPages, $enrichedPages => {
+    let map = {}
+    for (let page of Object.keys($enrichedPages)) {
+      for (let row of $enrichedPages[page]) {
+        map[row.__idx] = row
       }
     }
     return map
@@ -60,11 +87,6 @@ export const createStores = () => {
       loaded.set(true)
     }
   })
-
-  // Simple state update actions
-  const hasPage = page => {
-    return page in get(pages)
-  }
 
   const hasRow = id => {
     if (id === NewRowID) {
@@ -86,7 +108,7 @@ export const createStores = () => {
 
   return {
     rows: {
-      actions: { hasRow, hasPage, updateRowState },
+      actions: { hasRow, updateRowState },
     },
     pages: {
       ...pages,
@@ -94,6 +116,7 @@ export const createStores = () => {
     },
     fetch,
     rowLookupMap,
+    rowIndexLookupMap,
     loaded,
     refreshing,
     loading,
@@ -567,6 +590,10 @@ export const createActions = context => {
   }
 
   const loadPage = async number => {
+    // Skip if we've already loaded this page
+    if (number in get(pages)) {
+      return
+    }
     await get(fetch)?.goToPage(number)
   }
 

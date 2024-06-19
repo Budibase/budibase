@@ -11,46 +11,11 @@ export const deriveStores = context => {
     height,
     pages,
     rowChangeCache,
-    pageLoadedMap,
+    rowIndexLookupMap,
+    totalRows,
   } = context
 
-  const pageHeight = derived(rowHeight, $rowHeight => $rowHeight * RowPageSize)
-  const firstVisiblePage = derived(
-    [scrollTop, pageHeight],
-    ([$scrollTop, $pageHeight]) => {
-      return Math.floor($scrollTop / $pageHeight)
-    },
-    0
-  )
-  const lastVisiblePage = derived(
-    [firstVisiblePage, pageHeight, scrollTop, height],
-    ([$firstVisiblePage, $pageHeight, $scrollTop, $height]) => {
-      const pageBottom = ($firstVisiblePage + 1) * $pageHeight
-      return pageBottom > $scrollTop + $height
-        ? $firstVisiblePage
-        : $firstVisiblePage + 1
-    }
-  )
-  const visiblePages = derived(
-    [firstVisiblePage, lastVisiblePage],
-    ([$firstVisiblePage, $lastVisiblePage]) => {
-      if ($lastVisiblePage === $firstVisiblePage) {
-        return [$firstVisiblePage]
-      } else {
-        return [$firstVisiblePage, $lastVisiblePage]
-      }
-    }
-  )
-  const visiblePageLoading = derived(
-    [visiblePages, pages],
-    ([$visiblePages, $pages]) => {
-      return $visiblePages.some(page => !(page in $pages))
-    }
-  )
-
-  // Derive visible rows
-  // Split into multiple stores containing primitives to optimise invalidation
-  // as much as possible
+  // The amount of rows scrolled by the current scroll offset
   const scrolledRowCount = derived(
     [scrollTop, rowHeight],
     ([$scrollTop, $rowHeight]) => {
@@ -58,6 +23,8 @@ export const deriveStores = context => {
     },
     0
   )
+
+  // The amount of rows we can visually fit into the viewport
   const visualRowCapacity = derived(
     [height, rowHeight],
     ([$height, $rowHeight]) => {
@@ -65,48 +32,76 @@ export const deriveStores = context => {
     },
     0
   )
+
+  // The first page of data we require to display the desired rows
+  const firstVisiblePage = derived(scrolledRowCount, $scrolledRowCount => {
+    const firstDesiredRow = Math.max(0, $scrolledRowCount - RowPageSize / 3)
+    return Math.floor(firstDesiredRow / RowPageSize)
+  })
+
+  // The last page of data we require to display the desired rows
+  const lastVisiblePage = derived(
+    [scrolledRowCount, visualRowCapacity],
+    ([$scrolledRowCount, $visualRowCapacity]) => {
+      const lastDesiredRow =
+        $scrolledRowCount + $visualRowCapacity + RowPageSize / 3
+      return Math.floor(lastDesiredRow / RowPageSize)
+    }
+  )
+
+  // The array of all pages required to display the desired rows
+  const visiblePages = derived(
+    [firstVisiblePage, lastVisiblePage],
+    ([$firstVisiblePage, $lastVisiblePage]) => {
+      if ($lastVisiblePage === $firstVisiblePage) {
+        return [$firstVisiblePage]
+      } else {
+        let pages = []
+        for (let i = $firstVisiblePage; i <= $lastVisiblePage; i++) {
+          pages.push(i)
+        }
+        return pages
+      }
+    }
+  )
+
+  // The array of rows that will be rendered
   const renderedRows = derived(
     [
-      pages,
-      visiblePages,
+      rowIndexLookupMap,
+      rowChangeCache,
       scrolledRowCount,
       visualRowCapacity,
-      rowChangeCache,
-      visiblePageLoading,
+      totalRows,
     ],
     ([
-      $pages,
-      $visiblePages,
+      $rowIndexLookupMap,
+      $rowChangeCache,
       $scrolledRowCount,
       $visualRowCapacity,
-      $rowChangeCache,
-      $visiblePageLoading,
+      $totalRows,
     ]) => {
-      const prevPagesRowCount = $visiblePages[0] * RowPageSize
-      const scrolledInPage = $scrolledRowCount - prevPagesRowCount
-      let rows = $pages[$visiblePages[0]] || []
-      if ($visiblePages[1]) {
-        rows = rows.concat($pages[$visiblePages[1]] || [])
-      }
-      let rendered = rows
-        .slice(scrolledInPage, scrolledInPage + $visualRowCapacity)
-        .map(row => ({
-          ...row,
-          ...$rowChangeCache[row._id],
-        }))
-      if (rendered.length < $visualRowCapacity && $visiblePageLoading) {
-        rendered = new Array($visualRowCapacity)
-        for (let i = 0; i < $visualRowCapacity; i++) {
-          rendered[i] = {
+      let rows = []
+      const maxIdx = Math.min(
+        $totalRows - 1,
+        $scrolledRowCount + $visualRowCapacity
+      )
+      for (let i = $scrolledRowCount; i <= maxIdx; i++) {
+        if ($rowIndexLookupMap[i]) {
+          rows.push({
+            ...$rowIndexLookupMap[i],
+            ...$rowChangeCache[$rowIndexLookupMap[i]._id],
+          })
+        } else {
+          rows.push({
             _id: i,
+            __idx: i,
             __placeholder: true,
-            __idx: $scrolledRowCount + i,
-          }
+          })
         }
       }
-      return rendered
-    },
-    []
+      return rows
+    }
   )
 
   // Derive visible columns
