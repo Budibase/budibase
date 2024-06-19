@@ -9,7 +9,6 @@ export const deriveStores = context => {
     scrollLeft,
     width,
     height,
-    pages,
     rowChangeCache,
     rowIndexLookupMap,
     totalRows,

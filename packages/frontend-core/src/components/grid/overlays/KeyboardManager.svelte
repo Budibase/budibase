@@ -5,7 +5,6 @@
   import { getCellID, parseCellID } from "../lib/utils"
 
   const {
-    rows,
     focusedCellId,
     visibleColumns,
     focusedRow,

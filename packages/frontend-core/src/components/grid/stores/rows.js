@@ -31,6 +31,7 @@ export const createStores = () => {
     return count
   })
 
+  // Enrich rows with metadata about their location in the dataset
   const enrichedPages = derived(
     [pages, totalPages],
     ([$pages, $totalPages]) => {
@@ -111,7 +112,6 @@ export const createStores = () => {
 export const createActions = context => {
   const {
     pages,
-    rows,
     definition,
     allFilters,
     loading,
