@@ -98,7 +98,7 @@ export async function bulkImport(
     table = processed.table
   }
 
-  await handleRequest(Operation.BULK_CREATE, table._id!, {
+  await handleRequest(Operation.BULK_UPSERT, table._id!, {
     rows: parsedRows,
   })
   await events.rows.imported(table, parsedRows.length)
