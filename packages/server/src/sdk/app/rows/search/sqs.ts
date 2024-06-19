@@ -213,7 +213,19 @@ export async function search(
   }
 
   try {
-    const rows = await runSqlQuery(request, allTables)
+    const queries: Promise<Row[] | number>[] = []
+    queries.push(runSqlQuery(request, allTables))
+    if (options.countRows) {
+      // get the total count of rows
+      queries.push(
+        runSqlQuery(request, allTables, {
+          countTotalRows: true,
+        })
+      )
+    }
+    const responses = await Promise.all(queries)
+    let rows = responses[0] as Row[]
+    const totalRows = responses[1] ? (responses[1] as number) : undefined
 
     // process from the format of tableId.column to expected format also
     // make sure JSON columns corrected
@@ -229,14 +241,6 @@ export async function search(
     if (paginate && params.limit && rows.length > params.limit) {
       // remove the extra row that confirmed if there is another row to move to
       nextRow = processed.pop()
-    }
-
-    let totalRows: number | undefined
-    if (options.countRows) {
-      // get the total count of rows
-      totalRows = await runSqlQuery(request, allTables, {
-        countTotalRows: true,
-      })
     }
 
     // get the rows
