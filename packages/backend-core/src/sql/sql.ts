@@ -598,13 +598,16 @@ class InternalBuilder {
   read(
     knex: Knex,
     json: QueryJson,
-    limits?: { base?: number; query?: number }
+    opts: {
+      limits?: { base: number; query: number }
+      disableSorting?: boolean
+    } = {}
   ): Knex.QueryBuilder {
     let { endpoint, resource, filters, paginate, relationships, tableAliases } =
       json
+    const { limits, disableSorting } = opts
 
     const tableName = endpoint.entityId
-    const counting = endpoint.operation === Operation.COUNT
     // select all if not specified
     if (!resource) {
       resource = { fields: [] }
@@ -647,7 +650,7 @@ class InternalBuilder {
     })
     // add sorting to pre-query
     // no point in sorting when counting
-    if (!counting) {
+    if (!disableSorting) {
       query = this.addSorting(query, json)
     }
 
@@ -661,7 +664,7 @@ class InternalBuilder {
     })
     preQuery = preQuery.select(selectStatement)
     // have to add after as well (this breaks MS-SQL)
-    if (this.client !== SqlClient.MS_SQL && !counting) {
+    if (this.client !== SqlClient.MS_SQL && !disableSorting) {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
@@ -686,7 +689,9 @@ class InternalBuilder {
   }
 
   count(knex: Knex, json: QueryJson) {
-    const readQuery = this.read(knex, json)
+    const readQuery = this.read(knex, json, {
+      disableSorting: true,
+    })
     // have to alias the sub-query, this is a requirement for my-sql and ms-sql
     // without this we get an error "Every derived table must have its own alias"
     return knex({
@@ -769,8 +774,10 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         break
       case Operation.READ:
         query = builder.read(client, json, {
-          query: this.limit,
-          base: BASE_LIMIT,
+          limits: {
+            query: this.limit,
+            base: BASE_LIMIT,
+          },
         })
         break
       case Operation.COUNT:
