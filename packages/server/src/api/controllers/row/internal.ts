@@ -85,13 +85,15 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row as any
     await userController.updateMetadata(ctx as any)
-    return { row: ctx.body as Row, table }
+    return { row: ctx.body as Row, table, oldRow }
   }
 
-  return finaliseRow(table, row, {
+  const result = await finaliseRow(table, row, {
     oldTable: dbTable,
     updateFormula: true,
   })
+
+  return { ...result, oldRow }
 }
 
 export async function find(ctx: UserCtx): Promise<Row> {

@@ -18,6 +18,7 @@ import {
   User,
   Row,
   RelationshipType,
+  SearchResponse,
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
@@ -102,6 +103,17 @@ describe.each([
             tableId: table._id!,
           })
         ).rows
+      }
+    }
+
+    private async performSearchFullResponse(): Promise<SearchResponse<Row>> {
+      if (isInMemory) {
+        return { rows: dataFilters.search(_.cloneDeep(rows), this.query) }
+      } else {
+        return config.api.row.search(table._id!, {
+          ...this.query,
+          tableId: table._id!,
+        })
       }
     }
 
@@ -203,6 +215,34 @@ describe.each([
           )
         )
       )
+    }
+
+    // Asserts that the query returns some property values - this cannot be used
+    // to check row values, however this shouldn't be important for checking properties
+    async toHaveProperty(
+      properties: {
+        key: keyof SearchResponse<Row>
+        value?: any
+      }[]
+    ) {
+      const response = await this.performSearchFullResponse()
+      for (let property of properties) {
+        // eslint-disable-next-line jest/no-standalone-expect
+        expect(response[property.key]).toBeDefined()
+        if (property.value) {
+          // eslint-disable-next-line jest/no-standalone-expect
+          expect(response[property.key]).toEqual(property.value)
+        }
+      }
+    }
+
+    // Asserts that the query doesn't return a property, e.g. pagination parameters.
+    async toNotHaveProperty(properties: (keyof SearchResponse<Row>)[]) {
+      const response = await this.performSearchFullResponse()
+      for (let property of properties) {
+        // eslint-disable-next-line jest/no-standalone-expect
+        expect(response[property]).toBeUndefined()
+      }
     }
 
     // Asserts that the query returns rows matching the set of rows passed in.
@@ -1796,5 +1836,41 @@ describe.each([
         }).toContainExactly([
           { two: "foo", other: [{ _id: otherRows[0]._id }] },
         ]))
+    })
+
+  // lucene can't count, and in memory there is no point
+  !isLucene &&
+    !isInMemory &&
+    describe("row counting", () => {
+      beforeAll(async () => {
+        table = await createTable({
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+        })
+        await createRows([{ name: "a" }, { name: "b" }])
+      })
+
+      it("should be able to count rows when option set", () =>
+        expectSearch({
+          countRows: true,
+          query: {
+            notEmpty: {
+              name: true,
+            },
+          },
+        }).toHaveProperty([{ key: "totalRows", value: 2 }, { key: "rows" }]))
+
+      it("shouldn't count rows when option is not set", () => {
+        expectSearch({
+          countRows: false,
+          query: {
+            notEmpty: {
+              name: true,
+            },
+          },
+        }).toNotHaveProperty(["totalRows"])
+      })
     })
 })

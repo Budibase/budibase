@@ -158,6 +158,18 @@
       "dependsOnFeature": "sidePanel"
     },
     {
+      "name": "Open Modal",
+      "type": "application",
+      "component": "OpenModal",
+      "dependsOnFeature": "modal"
+    },
+    {
+      "name": "Close Modal",
+      "type": "application",
+      "component": "CloseModal",
+      "dependsOnFeature": "modal"
+    },
+    {
       "name": "Clear Row Selection",
       "type": "data",
       "component": "ClearRowSelection"

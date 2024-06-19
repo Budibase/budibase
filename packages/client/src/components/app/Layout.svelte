@@ -12,6 +12,7 @@
     linkable,
     builderStore,
     sidePanelStore,
+    modalStore,
     appStore,
   } = sdk
   const context = getContext("context")
@@ -77,6 +78,7 @@
     !$builderStore.inBuilder &&
     $sidePanelStore.open &&
     !$sidePanelStore.ignoreClicksOutside
+
   $: screenId = $builderStore.inBuilder
     ? `${$builderStore.screen?._id}-screen`
     : "screen"
@@ -198,6 +200,7 @@
   const handleClickLink = () => {
     mobileOpen = false
     sidePanelStore.actions.close()
+    modalStore.actions.close()
   }
 </script>
 
