@@ -653,6 +653,7 @@ export class ExternalRequest<T extends Operation> {
       },
       meta: {
         table,
+        id: config.id,
       },
     }
 

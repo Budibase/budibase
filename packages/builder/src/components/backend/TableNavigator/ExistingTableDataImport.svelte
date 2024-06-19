@@ -185,20 +185,22 @@
       </div>
     {/each}
   </div>
-  {#if tableType === DB_TYPE_INTERNAL}
-    <br />
-    <Toggle
-      bind:value={updateExistingRows}
-      on:change={() => (identifierFields = [])}
-      thin
-      text="Update existing rows"
-    />
-    {#if updateExistingRows}
+  <br />
+  <Toggle
+    bind:value={updateExistingRows}
+    on:change={() => (identifierFields = [])}
+    thin
+    text="Update existing rows"
+  />
+  {#if updateExistingRows}
+    {#if tableType === DB_TYPE_INTERNAL}
       <Multiselect
         label="Identifier field(s)"
         options={Object.keys(validation)}
         bind:value={identifierFields}
       />
+    {:else}
+      <p>Rows will be updated based on the table's primary key.</p>
     {/if}
   {/if}
   {#if invalidColumns.length > 0}
