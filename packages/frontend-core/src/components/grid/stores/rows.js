@@ -540,10 +540,15 @@ export const createActions = context => {
     } else {
       pages.update(state => {
         // Default to end of dataset if unspecified
-        if (page == null || idx == null) {
+        if (page == null) {
           let pageNumbers = Object.keys(state).map(parseInt)
           pageNumbers.sort()
           page = pageNumbers[pageNumbers.length - 1]
+        }
+        if (!state[page]) {
+          state[page] = []
+        }
+        if (idx == null) {
           idx = state[page].length
         }
         state[page].splice(idx, 0, ...enrichedNewRows)
