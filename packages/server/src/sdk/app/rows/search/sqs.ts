@@ -154,7 +154,7 @@ export async function search(
   options: RowSearchParams,
   table: Table
 ): Promise<SearchResponse<Row>> {
-  const { paginate, query, ...params } = options
+  let { paginate, query, ...params } = options
 
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
@@ -196,7 +196,7 @@ export async function search(
       sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
     request.sort = {
       [sortField.name]: {
-        direction: params.sortOrder || SortOrder.DESCENDING,
+        direction: params.sortOrder || SortOrder.ASCENDING,
         type: sortType as SortType,
       },
     }
@@ -207,7 +207,8 @@ export async function search(
   }
 
   const bookmark: number = (params.bookmark as number) || 0
-  if (paginate && params.limit) {
+  if (params.limit) {
+    paginate = true
     request.paginate = {
       limit: params.limit + 1,
       offset: bookmark * params.limit,
