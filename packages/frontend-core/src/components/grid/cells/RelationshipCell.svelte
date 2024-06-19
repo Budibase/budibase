@@ -233,11 +233,7 @@
   bind:this={anchor}
 >
   <div class="container" bind:this={container}>
-    <div
-      class="values"
-      class:wrap={editable || contentLines > 1}
-      on:wheel={e => (focused ? e.stopPropagation() : null)}
-    >
+    <div class="values" class:wrap={editable || contentLines > 1}>
       {#each value || [] as relationship}
         {#if relationship[primaryDisplay] || relationship.primaryDisplay}
           <div class="badge">

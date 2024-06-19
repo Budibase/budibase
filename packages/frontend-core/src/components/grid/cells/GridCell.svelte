@@ -43,7 +43,7 @@
   on:mouseup
   on:click
   on:contextmenu
-  on:touchstart
+  on:touchstart|passive
   on:touchend
   on:touchcancel
   {style}
