@@ -21,6 +21,7 @@ export const RowOperations = [
   Operation.UPDATE,
   Operation.DELETE,
   Operation.BULK_CREATE,
+  Operation.BULK_UPSERT,
 ]
 
 export enum QueryType {
