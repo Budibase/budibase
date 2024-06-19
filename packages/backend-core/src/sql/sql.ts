@@ -114,7 +114,7 @@ function generateSelectStatement(
 ): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
 
-  if (!resource) {
+  if (!resource || !resource.fields || resource.fields.length === 0) {
     return "*"
   }
 
@@ -410,14 +410,32 @@ class InternalBuilder {
     return query
   }
 
+  addDistinctCount(
+    query: Knex.QueryBuilder,
+    json: QueryJson
+  ): Knex.QueryBuilder {
+    const table = json.meta.table
+    const primary = table.primary
+    const aliases = json.tableAliases
+    const aliased =
+      table.name && aliases?.[table.name] ? aliases[table.name] : table.name
+    if (!primary) {
+      throw new Error("SQL counting requires primary key to be supplied")
+    }
+    return query.countDistinct(`${aliased}.${primary[0]} as total`)
+  }
+
   addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
     let { sort } = json
     const table = json.meta.table
-    const mainPrimaryKey = table.primary![0]
+    const primaryKey = table.primary
     const tableName = getTableName(table)
     const aliases = json.tableAliases
     const aliased =
       tableName && aliases?.[tableName] ? aliases[tableName] : table?.name
+    if (!Array.isArray(primaryKey)) {
+      throw new Error("Sorting requires primary key to be specified for table")
+    }
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
@@ -432,7 +450,7 @@ class InternalBuilder {
       }
     }
     // always add sorting by the primary key - make sure result is deterministic
-    query = query.orderBy(`${aliased}.${mainPrimaryKey}`)
+    query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     return query
   }
 
@@ -600,25 +618,13 @@ class InternalBuilder {
     json: QueryJson,
     opts: {
       limits?: { base: number; query: number }
-      disableSorting?: boolean
     } = {}
   ): Knex.QueryBuilder {
-    let { endpoint, resource, filters, paginate, relationships, tableAliases } =
-      json
-    const { limits, disableSorting } = opts
+    let { endpoint, filters, paginate, relationships, tableAliases } = json
+    const { limits } = opts
+    const counting = endpoint.operation === Operation.COUNT
 
     const tableName = endpoint.entityId
-    // select all if not specified
-    if (!resource) {
-      resource = { fields: [] }
-    }
-    let selectStatement: string | (string | Knex.Raw)[] = "*"
-    // handle select
-    if (resource.fields && resource.fields.length > 0) {
-      // select the resources as the format "table.columnName" - this is what is provided
-      // by the resource builder further up
-      selectStatement = generateSelectStatement(json, knex)
-    }
     // start building the query
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
     // handle pagination
@@ -650,7 +656,7 @@ class InternalBuilder {
     })
     // add sorting to pre-query
     // no point in sorting when counting
-    if (!disableSorting) {
+    if (!counting) {
       query = this.addSorting(query, json)
     }
 
@@ -662,9 +668,13 @@ class InternalBuilder {
       // be a table name, not a pre-query
       [alias]: query as any,
     })
-    preQuery = preQuery.select(selectStatement)
+    if (!counting) {
+      preQuery = preQuery.select(generateSelectStatement(json, knex))
+    } else {
+      preQuery = this.addDistinctCount(preQuery, json)
+    }
     // have to add after as well (this breaks MS-SQL)
-    if (this.client !== SqlClient.MS_SQL && !disableSorting) {
+    if (this.client !== SqlClient.MS_SQL && !counting) {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
@@ -686,17 +696,6 @@ class InternalBuilder {
       relationship: true,
       aliases: tableAliases,
     })
-  }
-
-  count(knex: Knex, json: QueryJson) {
-    const readQuery = this.read(knex, json, {
-      disableSorting: true,
-    })
-    // have to alias the sub-query, this is a requirement for my-sql and ms-sql
-    // without this we get an error "Every derived table must have its own alias"
-    return knex({
-      subquery: readQuery as any,
-    }).count("* as total")
   }
 
   update(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
@@ -781,7 +780,8 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         })
         break
       case Operation.COUNT:
-        query = builder.count(client, json)
+        // read without any limits to count
+        query = builder.read(client, json)
         break
       case Operation.UPDATE:
         query = builder.update(client, json, opts)
