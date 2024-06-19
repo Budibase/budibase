@@ -91,15 +91,13 @@
       {#if description}
         <BlockComponent type="text" props={{ text: description }} order={1} />
       {/if}
-      {#key fields}
-        <BlockComponent type="container">
-          <div class="form-block fields" class:mobile={$context.device.mobile}>
-            {#each fields as field, idx}
-              <FormBlockComponent {field} {schema} order={idx} />
-            {/each}
-          </div>
-        </BlockComponent>
-      {/key}
+      <BlockComponent type="container">
+        <div class="form-block fields" class:mobile={$context.device.mobile}>
+          {#each fields as field, idx}
+            <FormBlockComponent {field} {schema} order={idx} />
+          {/each}
+        </div>
+      </BlockComponent>
     </BlockComponent>
     {#if buttonPosition === "bottom"}
       <BlockComponent

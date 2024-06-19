@@ -16,6 +16,8 @@
     DatePicker,
     DrawerContent,
     Toggle,
+    Icon,
+    Divider,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation, tables } from "stores/builder"
@@ -88,6 +90,8 @@
     codeMode === EditorModes.Handlebars
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
+
+  let testDataRowVisibility = {}
 
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
@@ -196,7 +200,8 @@
         (automation.trigger?.event === "row:update" ||
           automation.trigger?.event === "row:save")
       ) {
-        if (name !== "id" && name !== "revision") return `trigger.row.${name}`
+        let noRowKeywordBindings = ["id", "revision", "oldRow"]
+        if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
       }
       /* End special cases for generating custom schemas based on triggers */
 
@@ -372,7 +377,11 @@
 
   function getFieldLabel(key, value) {
     const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
-    return `${value.title || (key === "row" ? "Table" : key)} ${requiredSuffix}`
+    return `${value.title || (key === "row" ? "Row" : key)} ${requiredSuffix}`
+  }
+
+  function toggleTestDataRowVisibility(key) {
+    testDataRowVisibility[key] = !testDataRowVisibility[key]
   }
 
   function handleAttachmentParams(keyValueObj) {
@@ -607,20 +616,48 @@
               on:change={e => onChange(e, key)}
             />
           {:else if value.customType === "row"}
-            <RowSelector
-              value={inputData[key]}
-              meta={inputData["meta"] || {}}
-              on:change={e => {
-                if (e.detail?.key) {
-                  onChange(e, e.detail.key)
-                } else {
-                  onChange(e, key)
-                }
-              }}
-              {bindings}
-              {isTestModal}
-              {isUpdateRow}
-            />
+            {#if isTestModal}
+              <div class="align-horizontally">
+                <Icon
+                  name={testDataRowVisibility[key] ? "Remove" : "Add"}
+                  hoverable
+                  on:click={() => toggleTestDataRowVisibility(key)}
+                />
+                <Label size="XL">{label}</Label>
+              </div>
+              {#if testDataRowVisibility[key]}
+                <RowSelector
+                  value={inputData[key]}
+                  meta={inputData["meta"] || {}}
+                  on:change={e => {
+                    if (e.detail?.key) {
+                      onChange(e, e.detail.key)
+                    } else {
+                      onChange(e, key)
+                    }
+                  }}
+                  {bindings}
+                  {isTestModal}
+                  {isUpdateRow}
+                />
+              {/if}
+              <Divider />
+            {:else}
+              <RowSelector
+                value={inputData[key]}
+                meta={inputData["meta"] || {}}
+                on:change={e => {
+                  if (e.detail?.key) {
+                    onChange(e, e.detail.key)
+                  } else {
+                    onChange(e, key)
+                  }
+                }}
+                {bindings}
+                {isTestModal}
+                {isUpdateRow}
+              />
+            {/if}
           {:else if value.customType === "webhookUrl"}
             <WebhookDisplay
               on:change={e => onChange(e, key)}
@@ -734,6 +771,12 @@
 <style>
   .field-width {
     width: 320px;
+  }
+
+  .align-horizontally {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
   }
 
   .fields {

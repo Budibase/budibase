@@ -92,7 +92,8 @@
         // differs to external, but the API is broadly the same
         "jest/no-conditional-expect": "off",
         // have to turn this off to allow function overloading in typescript
-        "no-dupe-class-members": "off"
+        "no-dupe-class-members": "off",
+        "no-redeclare": "off"
       }
     },
     {
