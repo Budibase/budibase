@@ -106,7 +106,7 @@ function runSqlQuery(json: QueryJson, tables: Table[]): Promise<Row[]>
 function runSqlQuery(
   json: QueryJson,
   tables: Table[],
-  opts: { countTotalRows: boolean }
+  opts: { countTotalRows: true }
 ): Promise<number>
 async function runSqlQuery(
   json: QueryJson,
