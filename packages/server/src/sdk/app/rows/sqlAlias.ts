@@ -11,10 +11,11 @@ import { SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
 import datasources from "../datasources"
+import { BudibaseInternalDB } from "../../../db/utils"
 
 type PerformQueryFunction = (
-  json: QueryJson,
-  datasource?: Datasource
+  datasource: Datasource,
+  json: QueryJson
 ) => Promise<DatasourcePlusQueryResponse>
 
 const WRITE_OPERATIONS: Operation[] = [
@@ -179,9 +180,10 @@ export default class AliasTables {
   ): Promise<DatasourcePlusQueryResponse> {
     const datasourceId = json.endpoint.datasourceId
     const isSqs = datasourceId === SQS_DATASOURCE_INTERNAL
-    let aliasingEnabled: boolean, datasource: Datasource | undefined
+    let aliasingEnabled: boolean, datasource: Datasource
     if (isSqs) {
       aliasingEnabled = this.isAliasingEnabled(json)
+      datasource = BudibaseInternalDB
     } else {
       datasource = await datasources.get(datasourceId)
       aliasingEnabled = this.isAliasingEnabled(json, datasource)
@@ -233,7 +235,7 @@ export default class AliasTables {
       json.tableAliases = invertedTableAliases
     }
 
-    let response: DatasourcePlusQueryResponse = await queryFn(json, datasource)
+    let response: DatasourcePlusQueryResponse = await queryFn(datasource, json)
     if (Array.isArray(response) && aliasingEnabled) {
       return this.reverse(response)
     } else {

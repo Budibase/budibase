@@ -33,5 +33,5 @@ export async function makeTableRequest(
   if (renamed) {
     json.meta!.renamed = renamed
   }
-  return makeExternalQuery(json, datasource)
+  return makeExternalQuery(datasource, json)
 }

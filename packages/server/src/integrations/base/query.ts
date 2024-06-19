@@ -8,8 +8,8 @@ import { getIntegration } from "../index"
 import sdk from "../../sdk"
 
 export async function makeExternalQuery(
-  json: QueryJson,
-  datasource?: Datasource
+  datasource: Datasource,
+  json: QueryJson
 ): Promise<DatasourcePlusQueryResponse> {
   const entityId = json.endpoint.entityId,
     tableName = json.meta.table.name,

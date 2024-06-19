@@ -61,7 +61,7 @@ export async function getDatasourceAndQuery(
       table,
     }
   }
-  return makeExternalQuery(json, datasource)
+  return makeExternalQuery(datasource, json)
 }
 
 export function cleanExportRows(
