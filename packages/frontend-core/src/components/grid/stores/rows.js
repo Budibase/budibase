@@ -134,6 +134,7 @@ export const createActions = context => {
     totalRows,
   } = context
   const instanceLoaded = writable(false)
+  let supportsRowCounting = false
 
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}
@@ -208,8 +209,9 @@ export const createActions = context => {
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
-          totalRows.set($fetch.totalRows || 0)
           definition.set($fetch.definition)
+          totalRows.set($fetch.totalRows ?? 0)
+          supportsRowCounting = $fetch.totalRows != null
         }
 
         // Reset scroll state when data changes
@@ -227,7 +229,7 @@ export const createActions = context => {
           rows: $fetch.rows,
           page: $fetch.pageNumber,
           reset: resetRows,
-          updateTotal: false,
+          updateTotal: !supportsRowCounting,
         })
 
         // Notify that we're loaded
