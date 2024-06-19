@@ -10,6 +10,7 @@
   export let rowSelected = false
   export let expandable = false
   export let disableNumber = false
+  export let disableSelect = false
   export let defaultHeight = false
   export let disabled = false
 
@@ -50,7 +51,7 @@
   <div class="gutter">
     {#if $$slots.default}
       <slot />
-    {:else}
+    {:else if !disableSelect}
       <div
         on:click={select}
         class="checkbox"

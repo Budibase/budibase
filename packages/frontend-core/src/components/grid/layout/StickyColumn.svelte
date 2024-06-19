@@ -9,7 +9,6 @@
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
   import { getCellID } from "../lib/utils"
-  import { placeholder } from "lodash/fp"
 
   const {
     rows,
@@ -25,10 +24,8 @@
     dispatch,
     contentLines,
     isDragging,
-    totalRows,
   } = getContext("grid")
 
-  $: selectedRowCount = Object.values($selectedRows).length
   $: width = GutterWidth + ($stickyColumn?.width || 0)
 </script>
 
@@ -38,12 +35,7 @@
   class:scrolled={$scrollLeft > 0}
 >
   <div class="header row">
-    <GutterCell
-      disableNumber
-      defaultHeight
-      rowSelected={selectedRowCount && selectedRowCount === totalRows}
-      disabled={!$renderedRows.length}
-    />
+    <GutterCell disableNumber disableSelect defaultHeight />
     {#if $stickyColumn}
       <HeaderCell column={$stickyColumn} orderable={false} idx="sticky">
         <slot name="edit-column" />
