@@ -621,9 +621,13 @@ class InternalBuilder {
       query = this.addSorting(query, json)
     }
     const alias = tableAliases?.[tableName] || tableName
-    let preQuery = knex({
-      [alias]: query,
-    } as any)
+    let preQuery: Knex.QueryBuilder = knex({
+      // the typescript definition for the knex constructor doesn't support this
+      // syntax, but it is the only way to alias a pre-query result as part of
+      // a query - there is an alias dictionary type, but it assumes it can only
+      // be a table name, not a pre-query
+      [alias]: query as any,
+    })
     if (counting) {
       preQuery = preQuery.count("* as total")
     } else {
