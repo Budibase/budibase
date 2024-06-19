@@ -18,7 +18,7 @@
   import FilterUsers from "./FilterUsers.svelte"
   import { getFields } from "../utils/searchFields"
 
-  const { OperatorOptions } = Constants
+  const { OperatorOptions, DEFAULT_BB_DATASOURCE_ID } = Constants
 
   export let schemaFields
   export let filters = []
@@ -33,7 +33,7 @@
       tables.find(
         table =>
           table._id === datasource.tableId &&
-          table.sourceId === "datasource_internal_bb_default"
+          table.sourceId === DEFAULT_BB_DATASOURCE_ID
       ) &&
       !schemaFields.some(field => field.name === "_id")
     ) {
