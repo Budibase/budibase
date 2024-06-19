@@ -34,7 +34,10 @@ import {
   isManyToMany,
   sqlOutputProcessing,
 } from "./utils"
-import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
+import {
+  getDatasourceAndQuery,
+  processRowCountResponse,
+} from "../../../sdk/app/rows/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { db as dbCore } from "@budibase/backend-core"
@@ -670,18 +673,14 @@ export class ExternalRequest<T extends Operation> {
     }
 
     // aliasing can be disabled fully if desired
-    let response
     const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
+    let response = env.SQL_ALIASING_DISABLE
+      ? await getDatasourceAndQuery(json)
+      : await aliasing.queryWithAliasing(json, makeExternalQuery)
+
     // if it's a counting operation there will be no more processing, just return the number
     if (this.operation === Operation.COUNT) {
-      return (await aliasing.countWithAliasing(
-        json,
-        makeExternalQuery
-      )) as ExternalRequestReturnType<T>
-    } else {
-      response = env.SQL_ALIASING_DISABLE
-        ? await getDatasourceAndQuery(json)
-        : await aliasing.queryWithAliasing(json, makeExternalQuery)
+      return processRowCountResponse(response) as ExternalRequestReturnType<T>
     }
 
     const responseRows = Array.isArray(response) ? response : []

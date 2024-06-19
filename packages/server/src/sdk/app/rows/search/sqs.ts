@@ -29,6 +29,7 @@ import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
+import { processRowCountResponse } from "../utils"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 
@@ -141,10 +142,11 @@ async function runSqlQuery(
     const db = context.getAppDB()
     return await db.sql<Row>(sql, bindings)
   }
+  const response = await alias.queryWithAliasing(json, processSQLQuery)
   if (opts?.countTotalRows) {
-    return await alias.countWithAliasing(json, processSQLQuery)
+    return processRowCountResponse(response)
   } else {
-    return await alias.queryWithAliasing(json, processSQLQuery)
+    return response
   }
 }
 
