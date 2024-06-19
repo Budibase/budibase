@@ -1,4 +1,8 @@
-import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import {
+  DatabaseName,
+  getDatasource,
+  knexClient,
+} from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
@@ -31,6 +35,7 @@ import {
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
 import * as uuid from "uuid"
+import { Knex } from "knex"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -70,13 +75,16 @@ describe.each([
 
   let table: Table
   let datasource: Datasource | undefined
+  let client: Knex | undefined
 
   beforeAll(async () => {
     await config.init()
     if (dsProvider) {
+      const rawDatasource = await dsProvider
       datasource = await config.createDatasource({
-        datasource: await dsProvider,
+        datasource: rawDatasource,
       })
+      client = await knexClient(rawDatasource)
     }
   })
 
@@ -1067,6 +1075,75 @@ describe.each([
               description: "Row 2 description updated",
             },
             {
+              userId: 3,
+              name: "Row 3",
+              description: "Row 3 description",
+            },
+          ],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(3)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Row 1 updated")
+        expect(rows[0].description).toEqual("Row 1 description updated")
+        expect(rows[1].name).toEqual("Row 2 updated")
+        expect(rows[1].description).toEqual("Row 2 description updated")
+        expect(rows[2].name).toEqual("Row 3")
+        expect(rows[2].description).toEqual("Row 3 description")
+      })
+
+    // Upserting isn't yet supported in MSSQL, see:
+    //   https://github.com/knex/knex/pull/6050
+    !isMSSQL &&
+      !isInternal &&
+      it("should be able to update existing rows with composite primary keys with bulkImport", async () => {
+        const tableName = uuid.v4()
+        await client?.schema.createTable(tableName, table => {
+          table.integer("companyId")
+          table.integer("userId")
+          table.string("name")
+          table.string("description")
+          table.primary(["companyId", "userId"])
+        })
+
+        const resp = await config.api.datasource.fetchSchema({
+          datasourceId: datasource!._id!,
+        })
+        const table = resp.datasource.entities![tableName]
+
+        const row1 = await config.api.row.save(table._id!, {
+          companyId: 1,
+          userId: 1,
+          name: "Row 1",
+          description: "Row 1 description",
+        })
+
+        const row2 = await config.api.row.save(table._id!, {
+          companyId: 1,
+          userId: 2,
+          name: "Row 2",
+          description: "Row 2 description",
+        })
+
+        await config.api.row.bulkImport(table._id!, {
+          identifierFields: ["companyId", "userId"],
+          rows: [
+            {
+              companyId: 1,
+              userId: row1.userId,
+              name: "Row 1 updated",
+              description: "Row 1 description updated",
+            },
+            {
+              companyId: 1,
+              userId: row2.userId,
+              name: "Row 2 updated",
+              description: "Row 2 description updated",
+            },
+            {
+              companyId: 1,
               userId: 3,
               name: "Row 3",
               description: "Row 3 description",
