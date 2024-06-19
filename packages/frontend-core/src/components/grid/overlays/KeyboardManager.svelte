@@ -190,7 +190,7 @@
     }
     const idx = $renderedRows.findIndex(x => x._id === $focusedRow._id)
     const newRow = $renderedRows[idx + delta]
-    if (newRow) {
+    if (newRow && !newRow.__placeholder) {
       const { field } = parseCellID($focusedCellId)
       $focusedCellId = getCellID(newRow._id, field)
     }
