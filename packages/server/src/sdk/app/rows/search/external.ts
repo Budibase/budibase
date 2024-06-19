@@ -88,7 +88,8 @@ export async function search(
     }
     const responses = await Promise.all(queries)
     let rows = responses[0] as Row[]
-    const totalRows = responses[1] ? (responses[1] as number) : undefined
+    const totalRows =
+      responses.length > 1 ? (responses[1] as number) : undefined
 
     let hasNextPage = false
     // remove the extra row if it's there
@@ -114,6 +115,9 @@ export async function search(
     }
     if (totalRows != null) {
       response.totalRows = totalRows
+    }
+    if (paginate && !hasNextPage) {
+      response.hasNextPage = false
     }
     return response
   } catch (err: any) {
