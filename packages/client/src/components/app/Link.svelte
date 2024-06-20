@@ -16,6 +16,7 @@
   export let size
 
   let node
+  let touched = false
 
   $: $component.editing && node?.focus()
   $: externalLink = url && typeof url === "string" && !url.startsWith("/")
@@ -62,7 +63,10 @@
   }
 
   const updateText = e => {
-    builderStore.actions.updateProp("text", e.target.textContent)
+    if (touched) {
+      builderStore.actions.updateProp("text", e.target.textContent)
+    }
+    touched = false
   }
 </script>
 
@@ -76,6 +80,7 @@
     class:underline
     class="align--{align || 'left'} size--{size || 'M'}"
     on:blur={$component.editing ? updateText : null}
+    on:input={() => (touched = true)}
   >
     {componentText}
   </div>

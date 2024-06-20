@@ -1,4 +1,4 @@
-export { dataFilters as LuceneUtils } from "@budibase/shared-core"
+export { dataFilters as QueryUtils } from "@budibase/shared-core"
 export * as JSONUtils from "./json"
 export * as CookieUtils from "./cookies"
 export * as RoleUtils from "./roles"

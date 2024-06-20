@@ -14,6 +14,7 @@ import {
   CONSTANT_INTERNAL_ROW_COLS,
   generateJunctionTableID,
 } from "../../../../db/utils"
+import { isEqual } from "lodash"
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BOOLEAN]: SQLiteType.NUMERIC,
@@ -107,8 +108,22 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
 
 export async function syncDefinition(): Promise<void> {
   const db = context.getAppDB()
+  let existing: SQLiteDefinition | undefined
+  try {
+    existing = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+  } catch (err: any) {
+    if (err.status !== 404) {
+      throw err
+    }
+  }
   const definition = await buildBaseDefinition()
-  await db.put(definition)
+  if (existing) {
+    definition._rev = existing._rev
+  }
+  // only write if something has changed
+  if (!existing || !isEqual(existing.sql, definition.sql)) {
+    await db.put(definition)
+  }
 }
 
 export async function addTable(table: Table) {

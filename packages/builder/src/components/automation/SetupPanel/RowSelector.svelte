@@ -18,6 +18,7 @@
   import { capitalise } from "helpers"
   import { memo } from "@budibase/frontend-core"
   import PropField from "./PropField.svelte"
+  import { cloneDeep, isPlainObject, mergeWith } from "lodash"
 
   const dispatch = createEventDispatcher()
 
@@ -42,20 +43,28 @@
   let customPopover
   let popoverAnchor
   let editableRow = {}
-  let columns = new Set()
 
-  // Avoid unnecessary updates
+  //??
+  let editableMeta = {}
+  let editableFields = {}
+  // let columns = new Set()
+
+  // Avoid unnecessary updates - DEAN double check after refactor
   $: memoStore.set({
     row,
     meta,
   })
 
-  // Legacy support
   $: fields = $memoStore?.meta?.fields
 
-  $: if ($memoStore?.meta?.columns) {
-    columns = new Set(meta?.columns)
+  $: if ($memoStore?.meta?.fields) {
+    editableFields = cloneDeep($memoStore?.meta?.fields)
   }
+
+  // Needs to go now... entirely
+  // $: if ($memoStore?.meta?.columns) {
+  //   columns = new Set(meta?.columns)
+  // }
 
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
@@ -73,59 +82,62 @@
       schemaFields = Object.entries(table?.schema ?? {})
         .filter(entry => {
           const [key, field] = entry
-          return field.type !== "formula" && !field.autocolumn
+          return field.type !== "formula" && !field.autocolumn // DEAN - revise autocolumn exclusion for testmodal
         })
         .sort(
           ([, schemaA], [, schemaB]) =>
             (schemaA.type === "attachment") - (schemaB.type === "attachment")
         )
 
-      // Parse out any unused data.
-      if ($memoStore?.meta?.columns) {
-        for (const column of meta?.columns) {
-          if (!(column in table?.schema)) {
-            columns.delete(column)
-          }
+      // Parse out any data not in the schema.
+      for (const column in editableFields) {
+        if (!(column in table?.schema)) {
+          delete editableFields[column]
         }
-        columns = new Set(columns)
+      }
+      editableFields = editableFields
+    }
+
+    // Go through the table schema and build out the editable content
+    // schemaFields.forEach(entry => {
+    for (const entry of schemaFields) {
+      const [key, fieldSchema] = entry
+      if ($memoStore?.row?.[key] && !editableRow?.[key]) {
+        editableRow = {
+          ...editableRow,
+          [key]: $memoStore?.row[key],
+        }
+      }
+
+      // Legacy
+      if (editableFields[key]?.clearRelationships) {
+        const emptyField = coerce(
+          !$memoStore?.row.hasOwnProperty(key) ? "" : $memoStore?.row[key],
+          fieldSchema.type
+        )
+
+        // remove this and place the field in the editable row.
+        delete editableFields[key]?.clearRelationships
+
+        // Default the field
+        editableRow = {
+          ...editableRow,
+          [key]: emptyField,
+        }
+
+        console.log("DEAN EMPTY - clearRelationships", emptyField)
       }
     }
 
-    if (columns.size) {
-      for (const key of columns) {
-        const entry = schemaFields.find(entry => {
-          const [fieldKey] = entry
-          return fieldKey == key
-        })
-
-        if (entry) {
-          const [_, fieldSchema] = entry
-          editableRow = {
-            ...editableRow,
-            [key]: coerce(
-              !(key in $memoStore?.row) ? "" : $memoStore?.row[key],
-              fieldSchema.type
-            ),
-          }
-        }
-      }
-    } else {
-      schemaFields.forEach(entry => {
-        const [key] = entry
-        if ($memoStore?.row?.[key] && !editableRow?.[key]) {
-          editableRow = {
-            ...editableRow,
-            [key]: $memoStore?.row[key],
-          }
-          columns.add(key)
-        }
-      })
-      columns = new Set(columns)
-    }
+    // Possible to go through the automation fields schema?
+    console.log("ACTUAL ROW", row)
+    console.log("EDITABLE FIELDS", editableFields)
+    console.log("EDITABLE ROW", editableRow)
   }
 
   // Legacy - add explicitly cleared relationships to the request.
-  $: if (schemaFields?.length && fields) {
+  // DEAN - review this
+  $: if (schemaFields?.length && fields && false) {
     // Meta fields processing.
     Object.keys(fields).forEach(key => {
       if (fields[key]?.clearRelationships) {
@@ -181,87 +193,121 @@
     return value
   }
 
-  const onChange = u => {
-    const update = {
-      _tableId: tableId,
-      row: { ...$memoStore.row },
-      meta: { ...$memoStore.meta },
-      ...u,
+  const onChange = update => {
+    const customizer = (objValue, srcValue, key) => {
+      if (isPlainObject(objValue) && isPlainObject(srcValue)) {
+        const result = mergeWith({}, objValue, srcValue, customizer)
+        let outcome = Object.keys(result).reduce((acc, key) => {
+          if (result[key] !== null) {
+            acc[key] = result[key]
+          } else {
+            console.log(key + " is null", objValue)
+          }
+          return acc
+        }, {})
+        return outcome
+      }
+      return srcValue
     }
-    dispatch("change", update)
-  }
 
-  const fieldUpdate = (e, field) => {
-    const update = {
-      row: {
-        ...$memoStore?.row,
-        [field]: e.detail,
+    const result = mergeWith(
+      {},
+      {
+        row: editableRow,
+        meta: {
+          fields: editableFields,
+        },
       },
-    }
-    onChange(update)
+      update,
+      customizer
+    )
+    console.log("Row Selector - MERGED", result)
+    dispatch("change", result)
   }
 </script>
 
-{#if columns.size}
-  {#each schemaFields as [field, schema]}
-    {#if !schema.autocolumn && columns.has(field)}
-      <PropField
-        label={field}
-        fullWidth={attachmentTypes.includes(schema.type)}
-      >
-        <div class="prop-control-wrap">
-          {#if isTestModal}
+{#each schemaFields || [] as [field, schema]}
+  {#if !schema.autocolumn && editableFields.hasOwnProperty(field)}
+    <PropField label={field} fullWidth={attachmentTypes.includes(schema.type)}>
+      <div class="prop-control-wrap">
+        {#if isTestModal}
+          <RowSelectorTypes
+            {isTestModal}
+            {field}
+            {schema}
+            bindings={parsedBindings}
+            value={editableRow}
+            meta={{
+              fields: editableFields,
+            }}
+            {onChange}
+          />
+        {:else}
+          <DrawerBindableSlot
+            title={$memoStore?.row?.title || field}
+            panel={AutomationBindingPanel}
+            type={schema.type}
+            {schema}
+            value={editableRow[field]}
+            on:change={e => {
+              onChange({
+                row: {
+                  [field]: e.detail.row[field],
+                },
+              })
+            }}
+            {bindings}
+            allowJS={true}
+            updateOnChange={false}
+            drawerLeft="260px"
+          >
             <RowSelectorTypes
               {isTestModal}
               {field}
               {schema}
               bindings={parsedBindings}
-              value={$memoStore?.row}
-              onChange={fieldUpdate}
+              value={editableRow}
+              meta={{
+                fields: editableFields,
+              }}
+              onChange={change => {
+                console.log("RowSelectorTypes > RowSelector > ", change)
+                onChange(change)
+              }}
             />
-          {:else}
-            <DrawerBindableSlot
-              title={$memoStore?.row?.title || field}
-              panel={AutomationBindingPanel}
-              type={schema.type}
-              {schema}
-              value={editableRow[field]}
-              on:change={e => fieldUpdate(e, field)}
-              {bindings}
-              allowJS={true}
-              updateOnChange={false}
-              drawerLeft="260px"
-            >
-              <RowSelectorTypes
-                {isTestModal}
-                {field}
-                {schema}
-                bindings={parsedBindings}
-                value={editableRow}
-                onChange={fieldUpdate}
-              />
-            </DrawerBindableSlot>
-          {/if}
-          <Icon
-            hoverable
-            name="Close"
-            on:click={() => {
-              columns.delete(field)
-              const update = { ...editableRow }
-              delete update[field]
-              onChange({ row: update, meta: { columns: Array.from(columns) } })
-            }}
-          />
-        </div>
-      </PropField>
-    {/if}
-  {/each}
-{/if}
+          </DrawerBindableSlot>
+        {/if}
+        <Icon
+          hoverable
+          name="Close"
+          on:click={() => {
+            // Clear row data
+            const update = { ...editableRow }
+            update[field] = null
+            // delete update[field]
+
+            // Clear any related metadata
+            // delete editableFields[field]
+            // editableFields[field] = null
+            console.log("REMOVE STATE", {
+              row: update,
+              meta: { fields: { ...editableFields, [field]: null } },
+            })
+            onChange({
+              row: update,
+              meta: { fields: { ...editableFields, [field]: null } },
+            })
+          }}
+        />
+      </div>
+    </PropField>
+  {/if}
+{/each}
 
 {#if table && schemaFields}
   <div
     class="add-fields-btn"
-    class:empty={!columns?.size}
+    class:empty={Object.is(editableFields, {})}
     bind:this={popoverAnchor}
   >
     <ActionButton
@@ -292,14 +338,14 @@
       {#if !schema.autocolumn}
         <li
           class="table_field spectrum-Menu-item"
-          class:is-selected={columns.has(field)}
+          class:is-selected={editableFields.hasOwnProperty(field)}
           on:click={e => {
-            if (columns.has(field)) {
-              columns.delete(field)
+            if (editableFields.hasOwnProperty(field)) {
+              editableFields[field] = null
             } else {
-              columns.add(field)
+              editableFields[field] = {}
             }
-            onChange({ meta: { columns: Array.from(columns) } })
+            onChange({ meta: { fields: editableFields } })
           }}
         >
           <Icon

@@ -2,6 +2,7 @@
   import TableSelector from "./TableSelector.svelte"
   import FieldSelector from "./FieldSelector.svelte"
   import SchemaSetup from "./SchemaSetup.svelte"
+  import RowSelector from "./RowSelector.svelte"
   import {
     Button,
     Select,
@@ -14,6 +15,8 @@
     DatePicker,
     DrawerContent,
     Helpers,
+    Toggle,
+    Divider,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation, tables } from "stores/builder"
@@ -40,7 +43,8 @@
     EditorModes,
   } from "components/common/CodeEditor"
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { LuceneUtils, Utils, memo } from "@budibase/frontend-core"
+  import { QueryUtils, Utils, memo } from "@budibase/frontend-core"
+
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
@@ -129,6 +133,7 @@
   $: customStepLayouts($memoBlock, schemaProperties)
 
   const customStepLayouts = block => {
+    console.log("BUILDING", inputData["row"])
     if (
       rowSteps.includes(block.stepId) ||
       (rowTriggers.includes(block.stepId) && isTestModal)
@@ -256,7 +261,6 @@
       }).schema
       delete request._tableId
     }
-
     try {
       if (isTestModal) {
         let newTestData = { schema }
@@ -489,7 +493,7 @@
   }
 
   function saveFilters(key) {
-    const filters = LuceneUtils.buildLuceneQuery(tempFilters)
+    const filters = QueryUtils.buildQuery(tempFilters)
 
     onChange({
       [key]: filters,
@@ -639,6 +643,24 @@
                 <div class="label-wrapper">
                   <Label>{label}</Label>
                 </div>
+                {JSON.stringify(inputData)}
+                <div class="toggle-container">
+                  <Toggle
+                    value={inputData?.meta?.useAttachmentBinding}
+                    text={"Use bindings"}
+                    size={"XS"}
+                    on:change={e => {
+                      // DEAN - review this
+                      onChange({
+                        row: { [key]: "" }, //null
+                        meta: {
+                          [key]: e.detail,
+                        },
+                      })
+                    }}
+                  />
+                </div>
+
                 <div class="attachment-field-width">
                   <KeyValueBuilder
                     on:change={e =>
