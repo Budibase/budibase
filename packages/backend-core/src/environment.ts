@@ -93,15 +93,21 @@ function isApps() {
   return environment.SERVICE_TYPE === ServiceType.APPS
 }
 
+function isQA() {
+  return environment.BUDIBASE_ENVIRONMENT === "QA"
+}
+
 const environment = {
   isTest,
   isJest,
   isDev,
   isWorker,
   isApps,
+  isQA,
   isProd: () => {
     return !isDev()
   },
+  BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK,
@@ -120,6 +126,7 @@ const environment = {
   REDIS_CLUSTERED: process.env.REDIS_CLUSTERED,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
+  AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN,
   AWS_REGION: process.env.AWS_REGION,
   MINIO_URL: process.env.MINIO_URL,
   MINIO_ENABLED: process.env.MINIO_ENABLED || 1,

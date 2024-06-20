@@ -165,3 +165,13 @@ export interface Database {
   deleteIndex(...args: any[]): Promise<any>
   getIndexes(...args: any[]): Promise<any>
 }
+
+export interface DBError extends Error {
+  status: number
+  statusCode: number
+  reason: string
+  name: string
+  errid: string
+  error: string
+  description: string
+}
