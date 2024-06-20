@@ -1,14 +1,14 @@
 import {
-  SortJson,
+  IncludeRelationship,
   Operation,
   PaginationJson,
-  IncludeRelationship,
   Row,
-  SearchFilters,
   RowSearchParams,
+  SearchFilters,
   SearchResponse,
-  Table,
+  SortJson,
   SortOrder,
+  Table,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import { handleRequest } from "../../../../api/controllers/row/external"
@@ -18,7 +18,7 @@ import {
 } from "../../../../integrations/utils"
 import { utils } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "./types"
-import { HTTPError, db } from "@budibase/backend-core"
+import { db, HTTPError } from "@budibase/backend-core"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
@@ -28,20 +28,26 @@ export async function search(
   table: Table
 ): Promise<SearchResponse<Row>> {
   const { tableId } = options
-  const { paginate, query, ...params } = options
+  const { countRows, paginate, query, ...params } = options
   const { limit } = params
   let bookmark =
     (params.bookmark && parseInt(params.bookmark as string)) || undefined
   if (paginate && !bookmark) {
-    bookmark = 1
+    bookmark = 0
   }
-  let paginateObj = {}
+  let paginateObj: PaginationJson | undefined
 
-  if (paginate) {
+  if (paginate && !limit) {
+    throw new Error("Cannot paginate query without a limit")
+  }
+
+  if (paginate && limit) {
     paginateObj = {
       // add one so we can track if there is another page
-      limit: limit,
-      page: bookmark,
+      limit: limit + 1,
+    }
+    if (bookmark) {
+      paginateObj.offset = limit * bookmark
     }
   } else if (params && limit) {
     paginateObj = {
@@ -69,24 +75,27 @@ export async function search(
   }
 
   try {
-    let rows = await handleRequest(Operation.READ, tableId, {
+    const parameters = {
       filters: query,
       sort,
       paginate: paginateObj as PaginationJson,
       includeSqlRelationships: IncludeRelationship.INCLUDE,
-    })
+    }
+    const queries: Promise<Row[] | number>[] = []
+    queries.push(handleRequest(Operation.READ, tableId, parameters))
+    if (countRows) {
+      queries.push(handleRequest(Operation.COUNT, tableId, parameters))
+    }
+    const responses = await Promise.all(queries)
+    let rows = responses[0] as Row[]
+    const totalRows =
+      responses.length > 1 ? (responses[1] as number) : undefined
+
     let hasNextPage = false
-    if (paginate && rows.length === limit) {
-      const nextRows = await handleRequest(Operation.READ, tableId, {
-        filters: query,
-        sort,
-        paginate: {
-          limit: 1,
-          page: bookmark! * limit + 1,
-        },
-        includeSqlRelationships: IncludeRelationship.INCLUDE,
-      })
-      hasNextPage = nextRows.length > 0
+    // remove the extra row if it's there
+    if (paginate && limit && rows.length > limit) {
+      rows.pop()
+      hasNextPage = true
     }
 
     if (options.fields) {
@@ -100,7 +109,17 @@ export async function search(
     })
 
     // need wrapper object for bookmarks etc when paginating
-    return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
+    const response: SearchResponse<Row> = { rows, hasNextPage }
+    if (hasNextPage && bookmark != null) {
+      response.bookmark = bookmark + 1
+    }
+    if (totalRows != null) {
+      response.totalRows = totalRows
+    }
+    if (paginate && !hasNextPage) {
+      response.hasNextPage = false
+    }
+    return response
   } catch (err: any) {
     if (err.message && err.message.includes("does not exist")) {
       throw new Error(
