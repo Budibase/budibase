@@ -55,13 +55,13 @@ export async function patch(
     return save(ctx)
   }
   try {
-    const { row, table } = await pickApi(tableId).patch(ctx)
+    const { row, table, oldRow } = await pickApi(tableId).patch(ctx)
     if (!row) {
       ctx.throw(404, "Row not found")
     }
     ctx.status = 200
     ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
+      ctx.eventEmitter.emitRow(`row:update`, appId, row, table, oldRow)
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
