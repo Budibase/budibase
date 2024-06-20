@@ -7,6 +7,7 @@ import {
   FieldType,
   FilterType,
   IncludeRelationship,
+  isManyToOne,
   OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
@@ -16,29 +17,33 @@ import {
   SortJson,
   SortType,
   Table,
-  isManyToOne,
 } from "@budibase/types"
 import {
   breakExternalTableId,
   breakRowIdField,
   convertRowId,
+  generateRowIdField,
   isRowId,
   isSQL,
-  generateRowIdField,
 } from "../../../integrations/utils"
 import {
   buildExternalRelationships,
   buildSqlFieldList,
   generateIdForRow,
-  sqlOutputProcessing,
+  isKnexEmptyReadResponse,
   isManyToMany,
+  sqlOutputProcessing,
 } from "./utils"
-import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
+import {
+  getDatasourceAndQuery,
+  processRowCountResponse,
+} from "../../../sdk/app/rows/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import env from "../../../environment"
+import { makeExternalQuery } from "../../../integrations/base/query"
 
 export interface ManyRelationship {
   tableId?: string
@@ -59,6 +64,13 @@ export interface RunConfig {
   tables?: Record<string, Table>
   includeSqlRelationships?: IncludeRelationship
 }
+
+export type ExternalRequestReturnType<T extends Operation> =
+  T extends Operation.READ
+    ? Row[]
+    : T extends Operation.COUNT
+    ? number
+    : { row: Row; table: Table }
 
 function buildFilters(
   id: string | undefined | string[],
@@ -222,9 +234,6 @@ function isEditableColumn(column: FieldSchema) {
   const isFormula = column.type === FieldType.FORMULA
   return !(isExternalAutoColumn || isFormula)
 }
-
-export type ExternalRequestReturnType<T extends Operation> =
-  T extends Operation.READ ? Row[] : { row: Row; table: Table }
 
 export class ExternalRequest<T extends Operation> {
   private readonly operation: T
@@ -428,7 +437,9 @@ export class ExternalRequest<T extends Operation> {
       })
       // this is the response from knex if no rows found
       const rows: Row[] =
-        !Array.isArray(response) || response?.[0].read ? [] : response
+        !Array.isArray(response) || isKnexEmptyReadResponse(response)
+          ? []
+          : response
       const storeTo = isManyToMany(field)
         ? field.throughFrom || linkPrimaryKey
         : fieldName
@@ -517,7 +528,7 @@ export class ExternalRequest<T extends Operation> {
     // finally cleanup anything that needs to be removed
     for (let [colName, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
-      // if its not the foreign key skip it, nothing to do
+      // if it's not the foreign key skip it, nothing to do
       if (
         !table ||
         (!isMany && table.primary && table.primary.indexOf(colName) !== -1)
@@ -662,12 +673,14 @@ export class ExternalRequest<T extends Operation> {
     }
 
     // aliasing can be disabled fully if desired
-    let response
-    if (env.SQL_ALIASING_DISABLE) {
-      response = await getDatasourceAndQuery(json)
-    } else {
-      const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
-      response = await aliasing.queryWithAliasing(json)
+    const aliasing = new sdk.rows.AliasTables(Object.keys(this.tables))
+    let response = env.SQL_ALIASING_DISABLE
+      ? await getDatasourceAndQuery(json)
+      : await aliasing.queryWithAliasing(json, makeExternalQuery)
+
+    // if it's a counting operation there will be no more processing, just return the number
+    if (this.operation === Operation.COUNT) {
+      return processRowCountResponse(response) as ExternalRequestReturnType<T>
     }
 
     const responseRows = Array.isArray(response) ? response : []

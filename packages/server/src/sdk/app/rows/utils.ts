@@ -50,6 +50,17 @@ export function getSQLClient(datasource: Datasource): SqlClient {
   throw new Error("Unable to determine client for SQL datasource")
 }
 
+export function processRowCountResponse(
+  response: DatasourcePlusQueryResponse
+): number {
+  if (response && response.length === 1 && "total" in response[0]) {
+    const total = response[0].total
+    return typeof total === "number" ? total : parseInt(total)
+  } else {
+    throw new Error("Unable to count rows in query - no count response")
+  }
+}
+
 export async function getDatasourceAndQuery(
   json: QueryJson
 ): Promise<DatasourcePlusQueryResponse> {
