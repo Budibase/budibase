@@ -23,14 +23,24 @@
     0
   )
 
+  const updateBounds = () => {
+    bounds.set(body.getBoundingClientRect())
+  }
+
   onMount(() => {
     // Observe and record the height of the body
-    const observer = new ResizeObserver(() => {
-      bounds.set(body.getBoundingClientRect())
-    })
-    observer.observe(body)
+    const resizeObserver = new ResizeObserver(updateBounds)
+    resizeObserver.observe(body)
+
+    // Capture any wheel events on the page to ensure our scroll offset is
+    // correct. We don't care about touch events as we only need this for
+    // hovering over rows with a mouse.
+    window.addEventListener("wheel", updateBounds, true)
+
+    // Clean up listeners
     return () => {
-      observer.disconnect()
+      resizeObserver.disconnect()
+      window.removeEventListener("wheel", updateBounds, true)
     }
   })
 </script>

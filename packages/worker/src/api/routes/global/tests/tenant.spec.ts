@@ -1,4 +1,4 @@
-import { TenantInfo } from "@budibase/types"
+import { Hosting, TenantInfo } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
 import { tenancy as _tenancy } from "@budibase/backend-core"
 
@@ -36,6 +36,7 @@ describe("/api/global/tenant", () => {
           budibaseUserId: "USER_ID",
         },
         tenantId: "tenant123",
+        hosting: Hosting.CLOUD,
       }
       const response = await config.api.tenants.saveTenantInfo(tenantInfo)
 

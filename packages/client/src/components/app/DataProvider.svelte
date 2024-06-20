@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { Pagination, ProgressCircle } from "@budibase/bbui"
-  import { fetchData, LuceneUtils } from "@budibase/frontend-core"
+  import { fetchData, QueryUtils } from "@budibase/frontend-core"
 
   export let dataSource
   export let filter
@@ -19,7 +19,7 @@
 
   // We need to manage our lucene query manually as we want to allow components
   // to extend it
-  $: defaultQuery = LuceneUtils.buildLuceneQuery(filter)
+  $: defaultQuery = QueryUtils.buildQuery(filter)
   $: query = extendQuery(defaultQuery, queryExtensions)
   $: fetch = createFetch(dataSource)
   $: fetch.update({

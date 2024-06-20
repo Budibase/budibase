@@ -29,7 +29,6 @@
   .permissionPicker {
     display: flex;
     gap: var(--spacing-xs);
-    padding-left: calc(var(--spacing-xl) * 2);
   }
 
   .permissionPicker :global(.spectrum-Icon) {

@@ -18,7 +18,6 @@ import {
   SqlQuery,
   RelationshipsJson,
   SearchFilters,
-  SortDirection,
   SqlQueryBinding,
   Table,
   TableSourceType,
@@ -27,6 +26,7 @@ import {
   QueryOptions,
   JsonTypes,
   prefixed,
+  SortOrder,
 } from "@budibase/types"
 import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
@@ -420,11 +420,11 @@ class InternalBuilder {
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
-          value.direction === SortDirection.ASCENDING ? "asc" : "desc"
+          value.direction === SortOrder.ASCENDING ? "asc" : "desc"
         let nulls
         if (this.client === SqlClient.POSTGRES) {
           // All other clients already sort this as expected by default, and adding this to the rest of the clients is causing issues
-          nulls = value.direction === SortDirection.ASCENDING ? "first" : "last"
+          nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
         query = query.orderBy(`${aliased}.${key}`, direction, nulls)
@@ -571,6 +571,31 @@ class InternalBuilder {
     return query.insert(parsedBody)
   }
 
+  bulkUpsert(knex: Knex, json: QueryJson): Knex.QueryBuilder {
+    const { endpoint, body } = json
+    let query = this.knexWithAlias(knex, endpoint)
+    if (!Array.isArray(body)) {
+      return query
+    }
+    const parsedBody = body.map(row => parseBody(row))
+    if (
+      this.client === SqlClient.POSTGRES ||
+      this.client === SqlClient.SQL_LITE ||
+      this.client === SqlClient.MY_SQL
+    ) {
+      const primary = json.meta.table.primary
+      if (!primary) {
+        throw new Error("Primary key is required for upsert")
+      }
+      return query.insert(parsedBody).onConflict(primary).merge()
+    } else if (this.client === SqlClient.MS_SQL) {
+      // No upsert or onConflict support in MSSQL yet, see:
+      //   https://github.com/knex/knex/pull/6050
+      return query.insert(parsedBody)
+    }
+    return query.upsert(parsedBody)
+  }
+
   read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
     let { endpoint, resource, filters, paginate, relationships, tableAliases } =
       json
@@ -596,6 +621,9 @@ class InternalBuilder {
       const offset = page * paginate.limit
       foundLimit = paginate.limit
       foundOffset = offset
+    } else if (paginate && paginate.offset && paginate.limit) {
+      foundLimit = paginate.limit
+      foundOffset = paginate.offset
     } else if (paginate && paginate.limit) {
       foundLimit = paginate.limit
     }
@@ -704,6 +732,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         break
       case Operation.BULK_CREATE:
         query = builder.bulkCreate(client, json)
+        break
+      case Operation.BULK_UPSERT:
+        query = builder.bulkUpsert(client, json)
         break
       case Operation.CREATE_TABLE:
       case Operation.UPDATE_TABLE:

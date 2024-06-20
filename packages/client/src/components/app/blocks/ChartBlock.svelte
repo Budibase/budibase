@@ -35,6 +35,7 @@
   export let valueUnits
   export let yAxisLabel
   export let xAxisLabel
+  export let yAxisUnits
   export let curve
 
   // Area
@@ -85,6 +86,7 @@
           valueUnits,
           yAxisLabel,
           xAxisLabel,
+          yAxisUnits,
           stacked,
           horizontal,
           curve,

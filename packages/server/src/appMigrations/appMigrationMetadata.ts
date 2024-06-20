@@ -23,16 +23,15 @@ const getCacheKey = (appId: string) => `appmigrations_${env.VERSION}_${appId}`
 export async function getAppMigrationVersion(appId: string): Promise<string> {
   const cacheKey = getCacheKey(appId)
 
-  let metadata: AppMigrationDoc | undefined = await cache.get(cacheKey)
+  let version: string | undefined = await cache.get(cacheKey)
 
-  // We don't want to cache in dev or QA in order to be able to tweak it
-  if (metadata && !env.isDev() && !env.isQA()) {
-    return metadata.version
+  // returned cached version if we found one
+  if (version) {
+    return version
   }
 
-  let version
   try {
-    metadata = await getFromDB(appId)
+    const metadata = await getFromDB(appId)
     version = metadata.version || ""
   } catch (err: any) {
     if (err.status !== 404) {
