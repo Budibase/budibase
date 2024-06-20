@@ -134,12 +134,6 @@
         case "Enter":
           focusCell()
           break
-        case " ":
-        case "Space":
-          if ($config.canDeleteRows) {
-            toggleSelectRow()
-          }
-          break
         default:
           startEnteringValue(e.key, e.which)
       }

@@ -32,20 +32,6 @@ export const createStores = context => {
     null
   )
 
-  // Toggles whether a certain row ID is selected or not
-  const toggleSelectedRow = id => {
-    selectedRows.update(state => {
-      let newState = {
-        ...state,
-        [id]: !state[id],
-      }
-      if (!newState[id]) {
-        delete newState[id]
-      }
-      return newState
-    })
-  }
-
   return {
     focusedCellId,
     focusedCellAPI,
@@ -58,12 +44,7 @@ export const createStores = context => {
     keyboardBlocked,
     isDragging,
     buttonColumnWidth,
-    selectedRows: {
-      ...selectedRows,
-      actions: {
-        toggleRow: toggleSelectedRow,
-      },
-    },
+    selectedRows,
   }
 }
 
@@ -112,7 +93,7 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { focusedCellId, hoveredRowId } = context
+  const { focusedCellId, hoveredRowId, selectedRows } = context
 
   // Callback when leaving the grid, deselecting all focussed or selected items
   const blur = () => {
@@ -120,10 +101,30 @@ export const createActions = context => {
     hoveredRowId.set(null)
   }
 
+  // Toggles whether a certain row ID is selected or not
+  const toggleSelectedRow = id => {
+    selectedRows.update(state => {
+      let newState = {
+        ...state,
+        [id]: !state[id],
+      }
+      if (!newState[id]) {
+        delete newState[id]
+      }
+      return newState
+    })
+  }
+
   return {
     ui: {
       actions: {
         blur,
+      },
+    },
+    selectedRows: {
+      ...selectedRows,
+      actions: {
+        toggleRow: toggleSelectedRow,
       },
     },
   }
@@ -186,17 +187,20 @@ export const initialise = context => {
     lastFocusedRowId = id
   })
 
-  // Remember the last focused cell ID so that we can store the previous one
   let lastFocusedCellId = null
   focusedCellId.subscribe(id => {
+    // Remember the last focused cell ID so that we can store the previous one
     previousFocusedCellId.set(lastFocusedCellId)
     lastFocusedCellId = id
-  })
 
-  // Remove hovered row when a cell is selected
-  focusedCellId.subscribe(cell => {
-    if (cell && get(hoveredRowId)) {
+    // Remove hovered row when a cell is selected
+    if (id && get(hoveredRowId)) {
       hoveredRowId.set(null)
+    }
+
+    // Clear row selection when focusing a cell
+    if (id && Object.keys(get(selectedRows)).length) {
+      selectedRows.set({})
     }
   })
 
@@ -213,6 +217,13 @@ export const initialise = context => {
       rowHeight.set(height)
     } else {
       rowHeight.set(get(definition)?.rowHeight || DefaultRowHeight)
+    }
+  })
+
+  // Clear focused cell when selecting rows
+  selectedRows.subscribe(rows => {
+    if (get(focusedCellId) && Object.keys(rows).length) {
+      focusedCellId.set(null)
     }
   })
 }
