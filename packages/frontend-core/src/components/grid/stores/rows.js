@@ -569,10 +569,12 @@ export const initialise = context => {
   // Wipe the row change cache when changing row
   previousFocusedRowId.subscribe(id => {
     if (id && !get(inProgressChanges)[id]) {
-      rowChangeCache.update(state => {
-        delete state[id]
-        return state
-      })
+      if (Object.keys(get(rowChangeCache)[id] || {}).length) {
+        rowChangeCache.update(state => {
+          delete state[id]
+          return state
+        })
+      }
     }
   })
 
