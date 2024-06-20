@@ -15,8 +15,14 @@ export const initialise = context => {
   )
 
   // Fetch next page when fewer than 25 remaining rows to scroll
-  remainingRows.subscribe(remaining => {
-    if (remaining < 25 && get(rowCount)) {
+  const needsNewPage = derived(
+    [remainingRows, rowCount],
+    ([$remainingRows, $rowCount]) => {
+      return $remainingRows < 25 && $rowCount
+    }
+  )
+  needsNewPage.subscribe($needsNewPage => {
+    if ($needsNewPage) {
       rows.actions.loadNextPage()
     }
   })
