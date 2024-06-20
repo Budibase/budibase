@@ -9,6 +9,7 @@ export enum Operation {
   UPDATE = "UPDATE",
   DELETE = "DELETE",
   BULK_CREATE = "BULK_CREATE",
+  BULK_UPSERT = "BULK_UPSERT",
   CREATE_TABLE = "CREATE_TABLE",
   UPDATE_TABLE = "UPDATE_TABLE",
   DELETE_TABLE = "DELETE_TABLE",
@@ -20,6 +21,7 @@ export const RowOperations = [
   Operation.UPDATE,
   Operation.DELETE,
   Operation.BULK_CREATE,
+  Operation.BULK_UPSERT,
 ]
 
 export enum QueryType {
