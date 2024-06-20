@@ -23,19 +23,9 @@ export const createStores = context => {
   const isDragging = writable(false)
   const buttonColumnWidth = writable(0)
 
-  // Derive the current focused row ID
-  const focusedRowId = derived(
-    focusedCellId,
-    $focusedCellId => {
-      return parseCellID($focusedCellId)?.id
-    },
-    null
-  )
-
   return {
     focusedCellId,
     focusedCellAPI,
-    focusedRowId,
     previousFocusedRowId,
     previousFocusedCellId,
     hoveredRowId,
@@ -49,25 +39,34 @@ export const createStores = context => {
 }
 
 export const deriveStores = context => {
-  const { focusedCellId, rows, rowLookupMap, rowHeight, stickyColumn, width } =
-    context
+  const {
+    focusedCellId,
+    rows,
+    rowLookupMap,
+    rowHeight,
+    stickyColumn,
+    width,
+    selectedRows,
+  } = context
+
+  // Derive the current focused row ID
+  const focusedRowId = derived(focusedCellId, $focusedCellId => {
+    return parseCellID($focusedCellId)?.id
+  })
 
   // Derive the row that contains the selected cell
   const focusedRow = derived(
-    [focusedCellId, rowLookupMap, rows],
-    ([$focusedCellId, $rowLookupMap, $rows]) => {
-      const rowId = parseCellID($focusedCellId)?.id
-
+    [focusedRowId, rowLookupMap, rows],
+    ([$focusedRowId, $rowLookupMap, $rows]) => {
       // Edge case for new rows
-      if (rowId === NewRowID) {
+      if ($focusedRowId === NewRowID) {
         return { _id: NewRowID }
       }
 
       // All normal rows
-      const index = $rowLookupMap[rowId]
+      const index = $rowLookupMap[$focusedRowId]
       return $rows[index]
-    },
-    null
+    }
   )
 
   // Derive the amount of content lines to show in cells depending on row height
@@ -85,15 +84,31 @@ export const deriveStores = context => {
     return ($stickyColumn?.width || 0) + $width + GutterWidth < 800
   })
 
+  // Derive we have any selected rows or not
+  const hasSelectedRows = derived(selectedRows, $selectedRows => {
+    return Object.keys($selectedRows).length
+  })
+
   return {
+    focusedRowId,
     focusedRow,
     contentLines,
     compact,
+    hasSelectedRows,
   }
 }
 
 export const createActions = context => {
-  const { focusedCellId, hoveredRowId, selectedRows } = context
+  const {
+    focusedCellId,
+    hoveredRowId,
+    selectedRows,
+    rowLookupMap,
+    rows,
+    hasSelectedRows,
+  } = context
+  // Keep the last selected index to use with bulk selection
+  let lastSelectedIndex = null
 
   // Callback when leaving the grid, deselecting all focussed or selected items
   const blur = () => {
@@ -110,8 +125,37 @@ export const createActions = context => {
       }
       if (!newState[id]) {
         delete newState[id]
+      } else {
+        lastSelectedIndex = get(rowLookupMap)[id]
       }
       return newState
+    })
+  }
+
+  const bulkSelectRows = id => {
+    if (!get(hasSelectedRows)) {
+      toggleSelectedRow(id)
+      return
+    }
+    // There should always be a last selected index
+    if (lastSelectedIndex == null) {
+      throw "NO LAST SELECTED INDEX"
+    }
+    const thisIndex = get(rowLookupMap)[id]
+
+    // Skip if indices are the same
+    if (lastSelectedIndex === thisIndex) {
+      return
+    }
+
+    const from = Math.min(lastSelectedIndex, thisIndex)
+    const to = Math.max(lastSelectedIndex, thisIndex)
+    const $rows = get(rows)
+    selectedRows.update(state => {
+      for (let i = from; i <= to; i++) {
+        state[$rows[i]._id] = true
+      }
+      return state
     })
   }
 
@@ -125,6 +169,7 @@ export const createActions = context => {
       ...selectedRows,
       actions: {
         toggleRow: toggleSelectedRow,
+        bulkSelectRows,
       },
     },
   }
@@ -142,6 +187,7 @@ export const initialise = context => {
     definition,
     rowHeight,
     fixedRowHeight,
+    hasSelectedRows,
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
@@ -199,7 +245,7 @@ export const initialise = context => {
     }
 
     // Clear row selection when focusing a cell
-    if (id && Object.keys(get(selectedRows)).length) {
+    if (id && get(hasSelectedRows)) {
       selectedRows.set({})
     }
   })
@@ -221,8 +267,8 @@ export const initialise = context => {
   })
 
   // Clear focused cell when selecting rows
-  selectedRows.subscribe(rows => {
-    if (get(focusedCellId) && Object.keys(rows).length) {
+  hasSelectedRows.subscribe(selected => {
+    if (get(focusedCellId) && selected) {
       focusedCellId.set(null)
     }
   })
