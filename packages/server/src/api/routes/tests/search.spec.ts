@@ -1548,19 +1548,32 @@ describe.each([
           // be stable or pagination will break. We don't want the user to need
           // to specify an order for pagination to work.
           it("is stable without a sort specified", async () => {
-            let { rows } = await config.api.row.search(table._id!, {
-              tableId: table._id!,
-              query: {},
-            })
+            let { rows: fullRowList } = await config.api.row.search(
+              table._id!,
+              {
+                tableId: table._id!,
+                query: {},
+              }
+            )
 
-            for (let i = 0; i < 10; i++) {
+            // repeat the search many times to check the first row is always the same
+            let bookmark: string | number | undefined,
+              hasNextPage: boolean | undefined = true,
+              rowCount: number = 0
+            do {
               const response = await config.api.row.search(table._id!, {
                 tableId: table._id!,
                 limit: 1,
+                paginate: true,
                 query: {},
+                bookmark,
               })
-              expect(response.rows).toEqual(rows)
-            }
+              bookmark = response.bookmark
+              hasNextPage = response.hasNextPage
+              expect(response.rows.length).toEqual(1)
+              const foundRow = response.rows[0]
+              expect(foundRow).toEqual(fullRowList[rowCount++])
+            } while (hasNextPage)
           })
         })
 
