@@ -69,6 +69,7 @@ export async function searchView(
     limit: body.limit,
     bookmark: body.bookmark,
     paginate: body.paginate,
+    countRows: body.countRows,
   }
 
   const result = await sdk.rows.search(searchOptions)

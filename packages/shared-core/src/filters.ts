@@ -12,6 +12,7 @@ import {
   SortOrder,
   RowSearchParams,
   EmptyFilterOption,
+  SearchResponse,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -262,15 +263,23 @@ export const buildQuery = (filter: SearchFilter[]) => {
   return query
 }
 
-export const search = (docs: Record<string, any>[], query: RowSearchParams) => {
+export const search = (
+  docs: Record<string, any>[],
+  query: RowSearchParams
+): SearchResponse<Record<string, any>> => {
   let result = runQuery(docs, query.query)
   if (query.sort) {
     result = sort(result, query.sort, query.sortOrder || SortOrder.ASCENDING)
   }
+  let totalRows = result.length
   if (query.limit) {
     result = limit(result, query.limit.toString())
   }
-  return result
+  const response: SearchResponse<Record<string, any>> = { rows: result }
+  if (query.countRows) {
+    response.totalRows = totalRows
+  }
+  return response
 }
 
 /**
