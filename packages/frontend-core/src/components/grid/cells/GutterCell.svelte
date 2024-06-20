@@ -23,7 +23,9 @@
     svelteDispatch("select")
     const id = row?._id
     if (id) {
+      // Bulk select with shift
       if (e.shiftKey) {
+        // Prevent default if already selected, to prevent checkbox clearing
         if (rowSelected) {
           e.preventDefault()
         } else {
