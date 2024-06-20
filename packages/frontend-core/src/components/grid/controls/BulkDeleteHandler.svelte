@@ -2,7 +2,8 @@
   import { Modal, ModalContent } from "@budibase/bbui"
   import { getContext, onMount } from "svelte"
 
-  const { selectedRows, rows, subscribe, notifications } = getContext("grid")
+  const { selectedRows, rows, subscribe, notifications, menu } =
+    getContext("grid")
 
   let modal
 
@@ -16,6 +17,9 @@
     const count = rowsToDelete.length
     await rows.actions.deleteRows(rowsToDelete)
     $notifications.success(`Deleted ${count} row${count === 1 ? "" : "s"}`)
+
+    // Ensure menu is closed, as we may have triggered this from there
+    menu.actions.close()
   }
 
   onMount(() => subscribe("request-bulk-delete", () => modal?.show()))

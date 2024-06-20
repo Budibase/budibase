@@ -85,7 +85,7 @@ export const deriveStores = context => {
   })
 
   // Derive we have any selected rows or not
-  const hasSelectedRows = derived(selectedRows, $selectedRows => {
+  const selectedRowCount = derived(selectedRows, $selectedRows => {
     return Object.keys($selectedRows).length
   })
 
@@ -94,7 +94,7 @@ export const deriveStores = context => {
     focusedRow,
     contentLines,
     compact,
-    hasSelectedRows,
+    selectedRowCount,
   }
 }
 
@@ -105,7 +105,7 @@ export const createActions = context => {
     selectedRows,
     rowLookupMap,
     rows,
-    hasSelectedRows,
+    selectedRowCount,
   } = context
   // Keep the last selected index to use with bulk selection
   let lastSelectedIndex = null
@@ -133,7 +133,7 @@ export const createActions = context => {
   }
 
   const bulkSelectRows = id => {
-    if (!get(hasSelectedRows)) {
+    if (!get(selectedRowCount)) {
       toggleSelectedRow(id)
       return
     }
@@ -187,7 +187,7 @@ export const initialise = context => {
     definition,
     rowHeight,
     fixedRowHeight,
-    hasSelectedRows,
+    selectedRowCount,
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
@@ -245,7 +245,7 @@ export const initialise = context => {
     }
 
     // Clear row selection when focusing a cell
-    if (id && get(hasSelectedRows)) {
+    if (id && get(selectedRowCount)) {
       selectedRows.set({})
     }
   })
@@ -267,8 +267,8 @@ export const initialise = context => {
   })
 
   // Clear focused cell when selecting rows
-  hasSelectedRows.subscribe(selected => {
-    if (get(focusedCellId) && selected) {
+  selectedRowCount.subscribe(count => {
+    if (get(focusedCellId) && count) {
       focusedCellId.set(null)
     }
   })

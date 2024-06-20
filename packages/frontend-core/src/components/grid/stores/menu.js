@@ -1,4 +1,5 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
+import { parseCellID } from "../lib/utils"
 
 export const createStores = () => {
   const menu = writable({
@@ -13,7 +14,8 @@ export const createStores = () => {
 }
 
 export const createActions = context => {
-  const { menu, focusedCellId, gridID } = context
+  const { menu, focusedCellId, gridID, selectedRows, selectedRowCount } =
+    context
 
   const open = (cellId, e) => {
     e.preventDefault()
@@ -29,11 +31,26 @@ export const createActions = context => {
     // Compute bounds of cell relative to outer data node
     const targetBounds = e.target.getBoundingClientRect()
     const dataBounds = dataNode.getBoundingClientRect()
-    focusedCellId.set(cellId)
+
+    // Check if there are multiple rows selected, and this is one of them
+    let multiRowMode = false
+    if (get(selectedRowCount) > 1) {
+      const rowId = parseCellID(cellId).id
+      if (get(selectedRows)[rowId]) {
+        multiRowMode = true
+      }
+    }
+
+    // Only focus this cell if not in multi row mode
+    if (!multiRowMode) {
+      focusedCellId.set(cellId)
+    }
+
     menu.set({
       left: targetBounds.left - dataBounds.left + e.offsetX,
       top: targetBounds.top - dataBounds.top + e.offsetY,
       visible: true,
+      multiRowMode,
     })
   }
 
