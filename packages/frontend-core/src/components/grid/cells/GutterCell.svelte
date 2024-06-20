@@ -23,7 +23,15 @@
     svelteDispatch("select")
     const id = row?._id
     if (id) {
-      selectedRows.actions.toggleRow(id)
+      if (e.shiftKey) {
+        if (rowSelected) {
+          e.preventDefault()
+        } else {
+          selectedRows.actions.bulkSelectRows(id)
+        }
+      } else {
+        selectedRows.actions.toggleRow(id)
+      }
     }
   }
 
