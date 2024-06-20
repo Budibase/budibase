@@ -1,4 +1,4 @@
-import { derived, get } from "svelte/store"
+import { derived } from "svelte/store"
 
 export const initialise = context => {
   const { scrolledRowCount, rows, visualRowCapacity } = context
