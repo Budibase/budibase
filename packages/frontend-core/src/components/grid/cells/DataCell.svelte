@@ -34,8 +34,10 @@
 
   let api
 
-  // Get the error for this cell if the row is focused
-  $: error = getErrorStore(rowFocused, cellId)
+  $: cellSelected = selectedCells[cellId]
+
+  // Get the error for this cell if the cell is focused or selected
+  $: error = getErrorStore(rowFocused || cellSelected, cellId)
 
   // Determine if the cell is editable
   $: readonly =
@@ -53,7 +55,6 @@
   }
 
   // Callbacks for cell selection
-  $: cellSelected = selectedCells[cellId]
   $: updateSelectionCallback = isSelectingCells ? updateSelection : null
   $: stopSelectionCallback = isSelectingCells ? stopSelection : null
 

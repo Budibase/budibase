@@ -1,5 +1,6 @@
 import { derived, writable, get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
+import { parseCellID } from "../lib/utils"
 
 export const createStores = () => {
   const clipboard = writable({
@@ -52,6 +53,8 @@ export const createActions = context => {
     focusedCellAPI,
     copyAllowed,
     pasteAllowed,
+    rows,
+    selectedCells,
   } = context
 
   const copy = () => {
@@ -84,7 +87,7 @@ export const createActions = context => {
     Helpers.copyToClipboard(stringified)
   }
 
-  const paste = () => {
+  const paste = async () => {
     if (!get(pasteAllowed)) {
       return
     }
@@ -95,8 +98,8 @@ export const createActions = context => {
     }
 
     // Check if we're pasting into one or more cells
-    const $selectedCellCount = get(selectedCellCount)
-    const multiCellPaste = $selectedCellCount > 1
+    const cellIds = Object.keys(get(selectedCells))
+    const multiCellPaste = cellIds.length > 1
 
     if ($clipboard.multiCellMode) {
       if (multiCellPaste) {
@@ -107,6 +110,15 @@ export const createActions = context => {
     } else {
       if (multiCellPaste) {
         // Single to multi (duplicate value in all selected cells)
+        let changeMap = {}
+        for (let cellId of cellIds) {
+          const { id, field } = parseCellID(cellId)
+          if (!changeMap[id]) {
+            changeMap[id] = {}
+          }
+          changeMap[id][field] = $clipboard.value
+        }
+        await rows.actions.bulkUpdate(changeMap)
       } else {
         // Single to single
         $focusedCellAPI.setValue($clipboard.value)
