@@ -522,6 +522,7 @@ const confirmTextMap = {
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
   ["Prompt User"]: "Are you sure you want to continue?",
+  ["Duplicate Row"]: "Are you sure you want to duplicate this row?",
 }
 
 /**
@@ -582,6 +583,11 @@ export const enrichButtonActions = (actions, context) => {
             const defaultTitleText = action["##eventHandlerType"]
             const customTitleText =
               action.parameters?.customTitleText || defaultTitleText
+            const cancelButtonText =
+              action.parameters?.cancelButtonText || "Cancel"
+            const confirmButtonText =
+              action.parameters?.confirmButtonText || "Confirm"
+
             confirmationStore.actions.showConfirmation(
               customTitleText,
               confirmText,
@@ -612,7 +618,9 @@ export const enrichButtonActions = (actions, context) => {
               },
               () => {
                 resolve(false)
-              }
+              },
+              confirmButtonText,
+              cancelButtonText
             )
           })
         }

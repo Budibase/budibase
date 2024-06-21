@@ -22,6 +22,9 @@ export async function makeExternalQuery(
   ) {
     throw new Error("Entity ID and table metadata do not align")
   }
+  if (!datasource) {
+    throw new Error("No datasource provided for external query")
+  }
   datasource = await sdk.datasources.enrich(datasource)
   const Integration = await getIntegration(datasource.source)
   // query is the opinionated function
