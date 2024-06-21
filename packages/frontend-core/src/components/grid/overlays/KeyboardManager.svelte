@@ -11,7 +11,6 @@
     focusedRow,
     stickyColumn,
     focusedCellAPI,
-    clipboard,
     dispatch,
     selectedRows,
     config,
@@ -97,12 +96,10 @@
     if (e.metaKey || e.ctrlKey) {
       switch (e.key) {
         case "c":
-          clipboard.actions.copy()
+          dispatch("copy")
           break
         case "v":
-          if (!api?.isReadonly()) {
-            clipboard.actions.paste()
-          }
+          dispatch("paste")
           break
         case "Enter":
           if ($config.canAddRows) {
