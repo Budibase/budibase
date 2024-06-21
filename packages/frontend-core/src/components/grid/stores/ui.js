@@ -188,6 +188,9 @@ export const initialise = context => {
     rowHeight,
     fixedRowHeight,
     selectedRowCount,
+    menu,
+    cellSelection,
+    selectedCellCount,
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
@@ -248,6 +251,14 @@ export const initialise = context => {
     if (id && get(selectedRowCount)) {
       selectedRows.set({})
     }
+
+    // Clear cell selection when focusing a cell
+    if (id && get(selectedCellCount)) {
+      cellSelection.actions.clear()
+    }
+
+    // Close the menu if it was open
+    menu.actions.close()
   })
 
   // Pull row height from table as long as we don't have a fixed height
@@ -268,8 +279,13 @@ export const initialise = context => {
 
   // Clear focused cell when selecting rows
   selectedRowCount.subscribe(count => {
-    if (get(focusedCellId) && count) {
-      focusedCellId.set(null)
+    if (count) {
+      if (get(focusedCellId)) {
+        focusedCellId.set(null)
+      }
+      if (get(selectedCellCount)) {
+        cellSelection.actions.clear()
+      }
     }
   })
 }

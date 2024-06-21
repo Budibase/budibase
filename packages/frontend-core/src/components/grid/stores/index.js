@@ -20,6 +20,7 @@ import * as Table from "./datasources/table"
 import * as ViewV2 from "./datasources/viewV2"
 import * as NonPlus from "./datasources/nonPlus"
 import * as Cache from "./cache"
+import * as Selection from "./selection"
 
 const DependencyOrderedStores = [
   Sort,
@@ -44,6 +45,7 @@ const DependencyOrderedStores = [
   Config,
   Notifications,
   Cache,
+  Selection,
 ]
 
 export const attachStores = context => {

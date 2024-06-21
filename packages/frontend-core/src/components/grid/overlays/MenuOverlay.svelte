@@ -21,7 +21,6 @@
     notifications,
     hasBudibaseIdentifiers,
     selectedRowCount,
-    selectedRows,
   } = getContext("grid")
 
   let anchor
@@ -82,6 +81,25 @@
             on:click={bulkDelete}
           >
             Delete {$selectedRowCount} rows
+          </MenuItem>
+        {:else if $menu.multiCellMode}
+          <MenuItem
+            icon="Copy"
+            on:click={clipboard.actions.copy}
+            on:click={menu.actions.close}
+          >
+            Copy
+          </MenuItem>
+          <MenuItem
+            icon="Paste"
+            disabled={$copiedCell == null || $focusedCellAPI?.isReadonly()}
+            on:click={clipboard.actions.paste}
+            on:click={menu.actions.close}
+          >
+            Paste
+          </MenuItem>
+          <MenuItem icon="Delete" disabled={isNewRow} on:click={() => {}}>
+            Delete
           </MenuItem>
         {:else}
           <MenuItem

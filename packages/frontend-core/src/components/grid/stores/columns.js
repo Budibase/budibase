@@ -45,7 +45,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { columns, stickyColumn } = context
+  const { columns, stickyColumn, visibleColumns } = context
 
   // Quick access to all columns
   const allColumns = derived(
@@ -67,9 +67,19 @@ export const deriveStores = context => {
     return normalCols.length > 0
   })
 
+  // Derive a lookup map for column indices by name
+  const columnLookupMap = derived(visibleColumns, $visibleColumns => {
+    let map = {}
+    $visibleColumns.forEach((column, idx) => {
+      map[column.name] = idx
+    })
+    return map
+  })
+
   return {
     allColumns,
     hasNonAutoColumn,
+    columnLookupMap,
   }
 }
 
