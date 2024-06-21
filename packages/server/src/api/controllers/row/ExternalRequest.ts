@@ -72,92 +72,6 @@ export type ExternalRequestReturnType<T extends Operation> =
     ? number
     : { row: Row; table: Table }
 
-function buildFilters(
-  id: string | undefined | string[],
-  filters: SearchFilters,
-  table: Table
-) {
-  const primary = table.primary
-  // if passed in array need to copy for shifting etc
-  let idCopy: undefined | string | any[] = cloneDeep(id)
-  if (filters) {
-    // need to map over the filters and make sure the _id field isn't present
-    let prefix = 1
-    for (let operator of Object.values(filters)) {
-      for (let field of Object.keys(operator || {})) {
-        if (dbCore.removeKeyNumbering(field) === "_id") {
-          if (primary) {
-            const parts = breakRowIdField(operator[field])
-            for (let field of primary) {
-              operator[`${prefix}:${field}`] = parts.shift()
-            }
-            prefix++
-          }
-          // make sure this field doesn't exist on any filter
-          delete operator[field]
-        }
-      }
-    }
-  }
-  // there is no id, just use the user provided filters
-  if (!idCopy || !table) {
-    return filters
-  }
-  // if used as URL parameter it will have been joined
-  if (!Array.isArray(idCopy)) {
-    idCopy = breakRowIdField(idCopy)
-  }
-  const equal: any = {}
-  if (primary && idCopy) {
-    for (let field of primary) {
-      // work through the ID and get the parts
-      equal[field] = idCopy.shift()
-    }
-  }
-  return {
-    equal,
-  }
-}
-
-async function removeManyToManyRelationships(
-  rowId: string,
-  table: Table,
-  colName: string
-) {
-  const tableId = table._id!
-  const filters = buildFilters(rowId, {}, table)
-  // safety check, if there are no filters on deletion bad things happen
-  if (Object.keys(filters).length !== 0) {
-    return getDatasourceAndQuery({
-      endpoint: getEndpoint(tableId, Operation.DELETE),
-      body: { [colName]: null },
-      filters,
-      meta: {
-        table,
-      },
-    })
-  } else {
-    return []
-  }
-}
-
-async function removeOneToManyRelationships(rowId: string, table: Table) {
-  const tableId = table._id!
-  const filters = buildFilters(rowId, {}, table)
-  // safety check, if there are no filters on deletion bad things happen
-  if (Object.keys(filters).length !== 0) {
-    return getDatasourceAndQuery({
-      endpoint: getEndpoint(tableId, Operation.UPDATE),
-      filters,
-      meta: {
-        table,
-      },
-    })
-  } else {
-    return []
-  }
-}
-
 /**
  * This function checks the incoming parameters to make sure all the inputs are
  * valid based on on the table schema. The main thing this is looking for is when a
@@ -240,6 +154,7 @@ export class ExternalRequest<T extends Operation> {
   private readonly tableId: string
   private datasource?: Datasource
   private tables: { [key: string]: Table } = {}
+  private tableList: Table[]
 
   constructor(operation: T, tableId: string, datasource?: Datasource) {
     this.operation = operation
@@ -247,6 +162,117 @@ export class ExternalRequest<T extends Operation> {
     this.datasource = datasource
     if (datasource && datasource.entities) {
       this.tables = datasource.entities
+    }
+    this.tableList = Object.values(this.tables)
+  }
+
+  private prepareFilters(
+    id: string | undefined | string[],
+    filters: SearchFilters,
+    table: Table
+  ) {
+    const tables = this.tableList
+    // replace any relationship columns initially, table names and relationship column names are acceptable
+    const relationshipColumns = sdk.rows.filters.getRelationshipColumns(table)
+    filters = sdk.rows.filters.updateFilterKeys(
+      filters,
+      relationshipColumns
+        .map(({ name, definition }) => {
+          const { tableName } = breakExternalTableId(definition.tableId)
+          return {
+            original: name,
+            updated: tableName!,
+          }
+        })
+        // don't update table names - include this for context incase a column would be replaced
+        .concat(
+          tables.map(table => {
+            const tableName = table.originalName || table.name
+            return {
+              original: tableName,
+              updated: tableName,
+            }
+          })
+        )
+    )
+    const primary = table.primary
+    // if passed in array need to copy for shifting etc
+    let idCopy: undefined | string | any[] = cloneDeep(id)
+    if (filters) {
+      // need to map over the filters and make sure the _id field isn't present
+      let prefix = 1
+      for (let operator of Object.values(filters)) {
+        for (let field of Object.keys(operator || {})) {
+          if (dbCore.removeKeyNumbering(field) === "_id") {
+            if (primary) {
+              const parts = breakRowIdField(operator[field])
+              for (let field of primary) {
+                operator[`${prefix}:${field}`] = parts.shift()
+              }
+              prefix++
+            }
+            // make sure this field doesn't exist on any filter
+            delete operator[field]
+          }
+        }
+      }
+    }
+    // there is no id, just use the user provided filters
+    if (!idCopy || !table) {
+      return filters
+    }
+    // if used as URL parameter it will have been joined
+    if (!Array.isArray(idCopy)) {
+      idCopy = breakRowIdField(idCopy)
+    }
+    const equal: any = {}
+    if (primary && idCopy) {
+      for (let field of primary) {
+        // work through the ID and get the parts
+        equal[field] = idCopy.shift()
+      }
+    }
+    return {
+      equal,
+    }
+  }
+
+  private async removeManyToManyRelationships(
+    rowId: string,
+    table: Table,
+    colName: string
+  ) {
+    const tableId = table._id!
+    const filters = this.prepareFilters(rowId, {}, table)
+    // safety check, if there are no filters on deletion bad things happen
+    if (Object.keys(filters).length !== 0) {
+      return getDatasourceAndQuery({
+        endpoint: getEndpoint(tableId, Operation.DELETE),
+        body: { [colName]: null },
+        filters,
+        meta: {
+          table,
+        },
+      })
+    } else {
+      return []
+    }
+  }
+
+  private async removeOneToManyRelationships(rowId: string, table: Table) {
+    const tableId = table._id!
+    const filters = this.prepareFilters(rowId, {}, table)
+    // safety check, if there are no filters on deletion bad things happen
+    if (Object.keys(filters).length !== 0) {
+      return getDatasourceAndQuery({
+        endpoint: getEndpoint(tableId, Operation.UPDATE),
+        filters,
+        meta: {
+          table,
+        },
+      })
+    } else {
+      return []
     }
   }
 
@@ -260,10 +286,22 @@ export class ExternalRequest<T extends Operation> {
     }
   }
 
+  // seeds the object with table and datasource information
+  async retrieveMetadata(datasourceId: string) {
+    if (!this.datasource) {
+      this.datasource = await sdk.datasources.get(datasourceId)
+      if (!this.datasource || !this.datasource.entities) {
+        throw "No tables found, fetch tables before query."
+      }
+      this.tables = this.datasource.entities
+      this.tableList = Object.values(this.tables)
+    }
+  }
+
   async getRow(table: Table, rowId: string): Promise<Row> {
     const response = await getDatasourceAndQuery({
       endpoint: getEndpoint(table._id!, Operation.READ),
-      filters: buildFilters(rowId, {}, table),
+      filters: this.prepareFilters(rowId, {}, table),
       meta: {
         table,
       },
@@ -514,7 +552,7 @@ export class ExternalRequest<T extends Operation> {
             endpoint: getEndpoint(tableId, operation),
             // if we're doing many relationships then we're writing, only one response
             body,
-            filters: buildFilters(id, {}, linkTable),
+            filters: this.prepareFilters(id, {}, linkTable),
             meta: {
               table: linkTable,
             },
@@ -538,8 +576,8 @@ export class ExternalRequest<T extends Operation> {
       for (let row of rows) {
         const rowId = generateIdForRow(row, table)
         const promise: Promise<any> = isMany
-          ? removeManyToManyRelationships(rowId, table, colName)
-          : removeOneToManyRelationships(rowId, table)
+          ? this.removeManyToManyRelationships(rowId, table, colName)
+          : this.removeOneToManyRelationships(rowId, table)
         if (promise) {
           promises.push(promise)
         }
@@ -562,12 +600,12 @@ export class ExternalRequest<T extends Operation> {
         rows.map(row => {
           const rowId = generateIdForRow(row, table)
           return isMany
-            ? removeManyToManyRelationships(
+            ? this.removeManyToManyRelationships(
                 rowId,
                 table,
                 relationshipColumn.fieldName
               )
-            : removeOneToManyRelationships(rowId, table)
+            : this.removeOneToManyRelationships(rowId, table)
         })
       )
     }
@@ -580,14 +618,10 @@ export class ExternalRequest<T extends Operation> {
       throw "Unable to run without a table name"
     }
     if (!this.datasource) {
-      this.datasource = await sdk.datasources.get(datasourceId!)
-      if (!this.datasource || !this.datasource.entities) {
-        throw "No tables found, fetch tables before query."
-      }
-      this.tables = this.datasource.entities
+      await this.retrieveMetadata(datasourceId!)
     }
     const table = this.tables[tableName]
-    let isSql = isSQL(this.datasource)
+    let isSql = isSQL(this.datasource!)
     if (!table) {
       throw `Unable to process query, table "${tableName}" not defined.`
     }
@@ -612,7 +646,7 @@ export class ExternalRequest<T extends Operation> {
           break
       }
     }
-    filters = buildFilters(id, filters || {}, table)
+    filters = this.prepareFilters(id, filters || {}, table)
     const relationships = buildExternalRelationships(table, this.tables)
 
     const incRelationships =
@@ -660,7 +694,11 @@ export class ExternalRequest<T extends Operation> {
       body: row || rows,
       // pass an id filter into extra, purely for mysql/returning
       extra: {
-        idFilter: buildFilters(id || generateIdForRow(row, table), {}, table),
+        idFilter: this.prepareFilters(
+          id || generateIdForRow(row, table),
+          {},
+          table
+        ),
       },
       meta: {
         table,
