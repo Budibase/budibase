@@ -264,11 +264,6 @@ export const createActions = context => {
       for (let column of missingColumns) {
         get(notifications).error(`${column} is required but is missing`)
       }
-
-      // Focus the first cell with an error
-      if (erroredColumns.length) {
-        focusedCellId.set(getCellID(rowId, erroredColumns[0]))
-      }
     } else {
       get(notifications).error(errorString || "An unknown error occurred")
     }
@@ -299,6 +294,7 @@ export const createActions = context => {
         throw error
       } else {
         handleValidationError(NewRowID, error)
+        validation.actions.focusFirstRowError(NewRowID)
       }
     }
   }
@@ -319,6 +315,7 @@ export const createActions = context => {
       return duped
     } catch (error) {
       handleValidationError(row._id, error)
+      validation.actions.focusFirstRowError(row._id)
     }
   }
 
@@ -447,8 +444,14 @@ export const createActions = context => {
     return true
   }
 
-  // Saves any pending changes to a row
-  const applyRowChanges = async rowId => {
+  // Saves any pending changes to a row, as well as any additional changes
+  // specified
+  const applyRowChanges = async ({
+    rowId,
+    changes = null,
+    updateState = true,
+    handleErrors = true,
+  }) => {
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[rowId]
@@ -456,6 +459,7 @@ export const createActions = context => {
     if (row == null) {
       return
     }
+    let savedRow
 
     // Save change
     try {
@@ -466,19 +470,24 @@ export const createActions = context => {
       }))
 
       // Update row
-      const changes = get(rowChangeCache)[rowId]
-      const newRow = { ...cleanRow(row), ...changes }
-      const saved = await datasource.actions.updateRow(newRow)
+      const newRow = {
+        ...cleanRow(row),
+        ...get(rowChangeCache)[rowId],
+        ...changes,
+      }
+      savedRow = await datasource.actions.updateRow(newRow)
 
       // Update row state after a successful change
-      if (saved?._id) {
-        rows.update(state => {
-          state[index] = saved
-          return state.slice()
-        })
-      } else if (saved?.id) {
+      if (savedRow?._id) {
+        if (updateState) {
+          rows.update(state => {
+            state[index] = savedRow
+            return state.slice()
+          })
+        }
+      } else if (savedRow?.id) {
         // Handle users table edge case
-        await refreshRow(saved.id)
+        await refreshRow(savedRow.id)
       }
 
       // Wipe row change cache for any values which have been saved
@@ -492,7 +501,10 @@ export const createActions = context => {
         return state
       })
     } catch (error) {
-      handleValidationError(rowId, error)
+      if (handleErrors) {
+        handleValidationError(rowId, error)
+        validation.actions.focusFirstRowError(rowId)
+      }
     }
 
     // Decrement change count for this row
@@ -500,6 +512,7 @@ export const createActions = context => {
       ...state,
       [rowId]: (state[rowId] || 1) - 1,
     }))
+    return savedRow
   }
 
   // Updates a value of a row
@@ -507,6 +520,63 @@ export const createActions = context => {
     const success = stashRowChanges(rowId, { [column]: value })
     if (success && apply) {
       await applyRowChanges(rowId)
+    }
+  }
+
+  const bulkUpdate = async changeMap => {
+    const rowIds = Object.keys(changeMap || {})
+    if (!rowIds.length) {
+      return
+    }
+
+    // Update rows
+    let updated = []
+    let failed = 0
+    for (let rowId of rowIds) {
+      if (!Object.keys(changeMap[rowId] || {}).length) {
+        continue
+      }
+      try {
+        const updatedRow = await applyRowChanges({
+          rowId,
+          changes: changeMap[rowId],
+          updateState: false,
+          handleErrors: false,
+        })
+        if (updatedRow) {
+          updated.push(updatedRow)
+        } else {
+          failed++
+        }
+        await sleep(50) // Small sleep to ensure we avoid rate limiting
+      } catch (error) {
+        failed++
+        console.error("Failed to update row", error)
+      }
+    }
+
+    // Update state
+    if (updated.length) {
+      const $rowLookupMap = get(rowLookupMap)
+      rows.update(state => {
+        for (let row of updated) {
+          const index = $rowLookupMap[row._id]
+          state[index] = row
+        }
+        return state.slice()
+      })
+    }
+
+    // Notify user
+    if (updated.length) {
+      get(notifications).success(
+        `Updated ${updated.length} row${updated.length === 1 ? "" : "s"}`
+      )
+    }
+    if (failed) {
+      get(notifications).error(
+        `Failed to update ${failed} row${failed === 1 ? "" : "s"}`
+      )
     }
   }
 
@@ -607,6 +677,7 @@ export const createActions = context => {
         replaceRow,
         refreshData,
         cleanRow,
+        bulkUpdate,
       },
     },
   }
