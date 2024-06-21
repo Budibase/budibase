@@ -8,6 +8,7 @@
   import { attachStores } from "../stores"
   import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
   import BulkDuplicationHandler from "../controls/BulkDuplicationHandler.svelte"
+  import ClipboardHandler from "../controls/ClipboardHandler.svelte"
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
@@ -216,6 +217,7 @@
   {#if $config.canAddRows}
     <BulkDuplicationHandler />
   {/if}
+  <ClipboardHandler />
   <KeyboardManager />
 </div>
 

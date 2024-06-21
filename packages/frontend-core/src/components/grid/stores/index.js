@@ -41,11 +41,11 @@ const DependencyOrderedStores = [
   Users,
   Menu,
   Pagination,
+  Selection,
   Clipboard,
   Config,
   Notifications,
   Cache,
-  Selection,
 ]
 
 export const attachStores = context => {

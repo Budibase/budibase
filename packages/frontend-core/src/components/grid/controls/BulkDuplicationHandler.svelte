@@ -10,7 +10,6 @@
     focusedCellId,
     stickyColumn,
     columns,
-    menu,
     selectedRowCount,
   } = getContext("grid")
 
@@ -18,7 +17,6 @@
 
   // Deletion callback when confirmed
   const performDuplication = async () => {
-    menu.actions.close()
     const rowsToDuplicate = Object.keys($selectedRows).map(id => {
       return rows.actions.getRow(id)
     })
@@ -27,9 +25,6 @@
       const column = $stickyColumn?.name || $columns[0].name
       $focusedCellId = getCellID(newRows[0]._id, column)
     }
-
-    // Ensure menu is closed, as we may have triggered this from there
-    menu.actions.close()
   }
 
   onMount(() => subscribe("request-bulk-duplicate", () => modal?.show()))

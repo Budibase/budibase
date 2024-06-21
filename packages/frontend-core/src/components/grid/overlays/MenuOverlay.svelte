@@ -13,14 +13,13 @@
     focusedCellId,
     stickyColumn,
     config,
-    copiedCell,
-    clipboard,
     dispatch,
-    focusedCellAPI,
     focusedRowId,
     notifications,
     hasBudibaseIdentifiers,
     selectedRowCount,
+    copyAllowed,
+    pasteAllowed,
   } = getContext("grid")
 
   let anchor
@@ -33,26 +32,18 @@
   }
 
   const deleteRow = () => {
-    rows.actions.deleteRows([$focusedRow])
     menu.actions.close()
+    rows.actions.deleteRows([$focusedRow])
     $notifications.success("Deleted 1 row")
   }
 
-  const bulkDelete = () => {
-    dispatch("request-bulk-delete")
-  }
-
-  const duplicate = async () => {
+  const duplicateRow = async () => {
     menu.actions.close()
     const newRow = await rows.actions.duplicateRow($focusedRow)
     if (newRow) {
       const column = $stickyColumn?.name || $columns[0].name
       $focusedCellId = getCellID(newRow._id, column)
     }
-  }
-
-  const bulkDuplicate = () => {
-    dispatch("request-bulk-duplicate")
   }
 
   const copyToClipboard = async value => {
@@ -71,29 +62,32 @@
           <MenuItem
             icon="Duplicate"
             disabled={!$config.canAddRows || $selectedRowCount > 50}
-            on:click={bulkDuplicate}
+            on:click={() => dispatch("request-bulk-duplicate")}
+            on:click={menu.actions.close}
           >
             Duplicate {$selectedRowCount} rows
           </MenuItem>
           <MenuItem
             icon="Delete"
             disabled={!$config.canDeleteRows}
-            on:click={bulkDelete}
+            on:click={() => dispatch("request-bulk-delete")}
+            on:click={menu.actions.close}
           >
             Delete {$selectedRowCount} rows
           </MenuItem>
         {:else if $menu.multiCellMode}
           <MenuItem
             icon="Copy"
-            on:click={clipboard.actions.copy}
+            disabled={!$copyAllowed}
+            on:click={() => dispatch("copy")}
             on:click={menu.actions.close}
           >
             Copy
           </MenuItem>
           <MenuItem
             icon="Paste"
-            disabled={$copiedCell == null || $focusedCellAPI?.isReadonly()}
-            on:click={clipboard.actions.paste}
+            disabled={!$pasteAllowed}
+            on:click={() => dispatch("paste")}
             on:click={menu.actions.close}
           >
             Paste
@@ -104,15 +98,16 @@
         {:else}
           <MenuItem
             icon="Copy"
-            on:click={clipboard.actions.copy}
+            disabled={!$copyAllowed}
+            on:click={() => dispatch("copy")}
             on:click={menu.actions.close}
           >
             Copy
           </MenuItem>
           <MenuItem
             icon="Paste"
-            disabled={$copiedCell == null || $focusedCellAPI?.isReadonly()}
-            on:click={clipboard.actions.paste}
+            disabled={!$pasteAllowed}
+            on:click={() => dispatch("paste")}
             on:click={menu.actions.close}
           >
             Paste
@@ -148,7 +143,7 @@
           <MenuItem
             icon="Duplicate"
             disabled={isNewRow || !$config.canAddRows}
-            on:click={duplicate}
+            on:click={duplicateRow}
           >
             Duplicate row
           </MenuItem>
