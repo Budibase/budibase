@@ -43,10 +43,23 @@
     }
 
     // Handle certain key presses regardless of selection state
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && $config.canAddRows) {
-      e.preventDefault()
-      dispatch("add-row-inline")
-      return
+    if (e.metaKey || e.ctrlKey) {
+      switch (e.key) {
+        case "c":
+          e.preventDefault()
+          dispatch("copy")
+          return
+        case "v":
+          e.preventDefault()
+          dispatch("paste")
+          return
+        case "Enter":
+          e.preventDefault()
+          if ($config.canAddRows) {
+            dispatch("add-row-inline")
+          }
+          return
+      }
     }
 
     // If nothing selected avoid processing further key presses
@@ -94,18 +107,7 @@
 
     // Handle the key ourselves
     if (e.metaKey || e.ctrlKey) {
-      switch (e.key) {
-        case "c":
-          dispatch("copy")
-          break
-        case "v":
-          dispatch("paste")
-          break
-        case "Enter":
-          if ($config.canAddRows) {
-            dispatch("add-row-inline")
-          }
-      }
+      //
     } else {
       switch (e.key) {
         case "ArrowLeft":

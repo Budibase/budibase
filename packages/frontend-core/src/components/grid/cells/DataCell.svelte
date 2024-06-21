@@ -88,11 +88,12 @@
     if (e.button !== 0) {
       return
     }
-    focusedCellId.set(cellId)
+    // focusedCellId.set(cellId)
     cellSelection.actions.start(cellId)
   }
 
   const updateSelection = e => {
+    focusedCellId.set(null)
     cellSelection.actions.update(cellId)
   }
 
@@ -115,6 +116,7 @@
   on:mousedown={startSelection}
   on:mouseenter={updateSelectionCallback}
   on:mouseup={stopSelectionCallback}
+  on:click={() => focusedCellId.set(cellId)}
   width={column.width}
 >
   <svelte:component
