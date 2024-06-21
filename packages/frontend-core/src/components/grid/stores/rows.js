@@ -4,6 +4,7 @@ import { NewRowID, RowPageSize } from "../lib/constants"
 import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
+import { sleep } from "../../../utils/utils"
 
 export const createStores = () => {
   const rows = writable([])
@@ -274,11 +275,9 @@ export const createActions = context => {
   }
 
   // Adds a new row
-  const addRow = async (row, idx, bubble = false) => {
+  const addRow = async ({ row, idx, bubble = false, notify = true }) => {
     try {
-      // Create row. Spread row so we can mutate and enrich safely.
-      let newRow = { ...row }
-      newRow = await datasource.actions.addRow(newRow)
+      const newRow = await datasource.actions.addRow(row)
 
       // Update state
       if (idx != null) {
@@ -291,8 +290,9 @@ export const createActions = context => {
         handleNewRows([newRow])
       }
 
-      // Refresh row to ensure data is in the correct format
-      get(notifications).success("Row created successfully")
+      if (notify) {
+        get(notifications).success("Row created successfully")
+      }
       return newRow
     } catch (error) {
       if (bubble) {
@@ -305,15 +305,70 @@ export const createActions = context => {
 
   // Duplicates a row, inserting the duplicate row after the existing one
   const duplicateRow = async row => {
-    let clone = { ...row }
+    let clone = cleanRow(row)
     delete clone._id
     delete clone._rev
-    delete clone.__idx
     try {
-      return await addRow(clone, row.__idx + 1, true)
+      const duped = await addRow({
+        row: clone,
+        idx: row.__idx + 1,
+        bubble: true,
+        notify: false,
+      })
+      get(notifications).success("Duplicated 1 row")
+      return duped
     } catch (error) {
       handleValidationError(row._id, error)
     }
+  }
+
+  // Duplicates multiple rows, inserting them after the last source row
+  const bulkDuplicate = async rowsToDupe => {
+    // Find index of last row
+    const $rowLookupMap = get(rowLookupMap)
+    const index = Math.max(...rowsToDupe.map(row => $rowLookupMap[row._id]))
+
+    // Clone and clean rows
+    const clones = rowsToDupe.map(row => {
+      let clone = cleanRow(row)
+      delete clone._id
+      delete clone._rev
+      return clone
+    })
+
+    // Create rows
+    let saved = []
+    let failed = 0
+    for (let clone of clones) {
+      try {
+        saved.push(await datasource.actions.addRow(clone))
+        rowCacheMap[saved._id] = true
+        await sleep(50) // Small sleep to ensure we avoid rate limiting
+      } catch (error) {
+        failed++
+        console.error("Duplicating row failed", error)
+      }
+    }
+
+    // Add to state
+    if (saved.length) {
+      rows.update(state => {
+        return state.toSpliced(index + 1, 0, ...saved)
+      })
+    }
+
+    // Notify user
+    if (saved.length) {
+      get(notifications).success(
+        `Duplicated ${saved.length} row${saved.length === 1 ? "" : "s"}`
+      )
+    }
+    if (failed) {
+      get(notifications).error(
+        `Failed to duplicate ${failed} row${failed === 1 ? "" : "s"}`
+      )
+    }
+    return saved
   }
 
   // Replaces a row in state with the newly defined row, handling updates,
@@ -541,6 +596,7 @@ export const createActions = context => {
       actions: {
         addRow,
         duplicateRow,
+        bulkDuplicate,
         getRow,
         updateValue,
         applyRowChanges,
