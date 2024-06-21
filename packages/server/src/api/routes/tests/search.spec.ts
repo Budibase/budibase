@@ -1950,10 +1950,7 @@ describe.each([
     })
   })
 
-  // This will never work for Lucene.
   !isLucene &&
-    // It also can't work for in-memory searching because the related table name
-    // isn't available.
     !isInMemory &&
     describe("relations", () => {
       let productCategoryTable: Table, productCatRows: Row[]
@@ -1996,6 +1993,10 @@ describe.each([
             name: "bar",
             productCat: [productCatRows[1]._id],
           }),
+          config.api.row.save(table._id!, {
+            name: "baz",
+            productCat: [],
+          }),
         ])
       })
 
@@ -2013,6 +2014,12 @@ describe.each([
         }).toContainExactly([
           { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
         ])
+      })
+
+      it("shouldn't return any relationship for last row", async () => {
+        await expectQuery({
+          equal: { ["name"]: "baz" },
+        }).toContainExactly([{ name: "baz", productCat: undefined }])
       })
     })
 
