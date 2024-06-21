@@ -10,7 +10,10 @@ export const createActions = context => {
   }
 
   const saveRow = async row => {
-    row.tableId = get(datasource)?.tableId
+    row = {
+      ...row,
+      tableId: get(datasource)?.tableId,
+    }
     return await API.saveRow(row, SuppressErrors)
   }
 

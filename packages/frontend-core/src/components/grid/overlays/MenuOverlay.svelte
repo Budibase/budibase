@@ -21,6 +21,7 @@
     notifications,
     hasBudibaseIdentifiers,
     selectedRowCount,
+    selectedRows,
   } = getContext("grid")
 
   let anchor
@@ -51,6 +52,18 @@
     }
   }
 
+  const bulkDuplicate = async () => {
+    menu.actions.close()
+    const rowsToDuplicate = Object.keys($selectedRows).map(id => {
+      return rows.actions.getRow(id)
+    })
+    const newRows = await rows.actions.bulkDuplicate(rowsToDuplicate)
+    if (newRows[0]) {
+      const column = $stickyColumn?.name || $columns[0].name
+      $focusedCellId = getCellID(newRows[0]._id, column)
+    }
+  }
+
   const copyToClipboard = async value => {
     await Helpers.copyToClipboard(value)
     $notifications.success("Copied to clipboard")
@@ -66,8 +79,8 @@
         {#if $menu.multiRowMode}
           <MenuItem
             icon="Duplicate"
-            disabled={isNewRow || !$config.canAddRows}
-            on:click={duplicate}
+            disabled={!$config.canAddRows}
+            on:click={bulkDuplicate}
           >
             Duplicate {$selectedRowCount} rows
           </MenuItem>

@@ -11,8 +11,11 @@ export const createActions = context => {
 
   const saveRow = async row => {
     const $datasource = get(datasource)
-    row.tableId = $datasource?.tableId
-    row._viewId = $datasource?.id
+    row = {
+      ...row,
+      tableId: $datasource?.tableId,
+      _viewId: $datasource?.id,
+    }
     return {
       ...(await API.saveRow(row, SuppressErrors)),
       _viewId: row._viewId,
