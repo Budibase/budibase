@@ -14,8 +14,13 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { cellSelection, rowLookupMap, columnLookupMap, rows, visibleColumns } =
-    context
+  const {
+    cellSelection,
+    rowLookupMap,
+    columnLookupMap,
+    rows,
+    allVisibleColumns,
+  } = context
 
   const isSelectingCells = derived(cellSelection, $cellSelection => {
     return $cellSelection.active
@@ -29,7 +34,7 @@ export const deriveStores = context => {
         return {}
       }
       const $rows = get(rows)
-      const $visibleColumns = get(visibleColumns)
+      const $allVisibleColumns = get(allVisibleColumns)
 
       // Get source and target row and column indices
       const sourceInfo = parseCellID(sourceCellId)
@@ -53,7 +58,7 @@ export const deriveStores = context => {
       for (let rowIdx = lowerRowIndex; rowIdx <= upperRowIndex; rowIdx++) {
         for (let colIdx = lowerColIndex; colIdx <= upperColIndex; colIdx++) {
           rowId = $rows[rowIdx]._id
-          colName = $visibleColumns[colIdx].name
+          colName = $allVisibleColumns[colIdx].name
           cellId = getCellID(rowId, colName)
           map[cellId] = true
         }
