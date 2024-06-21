@@ -7,6 +7,7 @@
   import { createAPIClient } from "../../../api"
   import { attachStores } from "../stores"
   import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
+  import BulkDuplicationHandler from "../controls/BulkDuplicationHandler.svelte"
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
@@ -211,6 +212,9 @@
   {/if}
   {#if $config.canDeleteRows}
     <BulkDeleteHandler />
+  {/if}
+  {#if $config.canAddRows}
+    <BulkDuplicationHandler />
   {/if}
   <KeyboardManager />
 </div>

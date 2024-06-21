@@ -52,16 +52,8 @@
     }
   }
 
-  const bulkDuplicate = async () => {
-    menu.actions.close()
-    const rowsToDuplicate = Object.keys($selectedRows).map(id => {
-      return rows.actions.getRow(id)
-    })
-    const newRows = await rows.actions.bulkDuplicate(rowsToDuplicate)
-    if (newRows[0]) {
-      const column = $stickyColumn?.name || $columns[0].name
-      $focusedCellId = getCellID(newRows[0]._id, column)
-    }
+  const bulkDuplicate = () => {
+    dispatch("request-bulk-duplicate")
   }
 
   const copyToClipboard = async value => {
@@ -79,7 +71,7 @@
         {#if $menu.multiRowMode}
           <MenuItem
             icon="Duplicate"
-            disabled={!$config.canAddRows}
+            disabled={!$config.canAddRows || $selectedRowCount > 50}
             on:click={bulkDuplicate}
           >
             Duplicate {$selectedRowCount} rows
