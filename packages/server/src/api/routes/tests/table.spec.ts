@@ -289,18 +289,17 @@ describe.each([
           status: 400,
           body: {
             message:
-              'Column "type" is duplicated - make sure there are no duplicate columns names, this is case insensitive.',
+              'Column(s) "type" are duplicated - check for other columns with these name (case in-sensitive)',
           },
         })
-        saveTableRequest.schema = {
-          foo: { type: FieldType.STRING, name: "foo" },
-          FOO: { type: FieldType.STRING, name: "FOO" },
-        }
+        saveTableRequest.schema.foo = { type: FieldType.STRING, name: "foo" }
+        saveTableRequest.schema.FOO = { type: FieldType.STRING, name: "FOO" }
+
         await config.api.table.save(saveTableRequest, {
           status: 400,
           body: {
             message:
-              'Column "foo" is duplicated - make sure there are no duplicate columns names, this is case insensitive.',
+              'Column(s) "type, foo" are duplicated - check for other columns with these name (case in-sensitive)',
           },
         })
       })

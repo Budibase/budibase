@@ -16,7 +16,7 @@ import { EventType, updateLinks } from "../../../../db/linkedRows"
 import { cloneDeep } from "lodash/fp"
 import isEqual from "lodash/isEqual"
 import { runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFormula"
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { findDuplicateInternalColumns } from "@budibase/shared-core"
 import { getTable } from "../getters"
 import { checkAutoColumns } from "./utils"
@@ -48,9 +48,11 @@ export async function save(
 
   // check for case sensitivity - we don't want to allow duplicated columns
   const duplicateColumn = findDuplicateInternalColumns(table)
-  if (duplicateColumn) {
+  if (duplicateColumn.length) {
     throw new Error(
-      `Column "${duplicateColumn}" is duplicated - make sure there are no duplicate columns names, this is case insensitive.`
+      `Column(s) "${duplicateColumn.join(
+        ", "
+      )}" are duplicated - check for other columns with these name (case in-sensitive)`
     )
   }
 
