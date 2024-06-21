@@ -53,21 +53,21 @@ export function canBeSortColumn(type: FieldType): boolean {
   return !!allowSortColumnByType[type]
 }
 
-export function findDuplicateInternalColumns(table: Table): string | undefined {
+export function findDuplicateInternalColumns(table: Table): string[] {
   // get the column names
   const columnNames = Object.keys(table.schema)
     .concat(CONSTANT_INTERNAL_ROW_COLS)
     .map(colName => colName.toLowerCase())
   // there are duplicates
   const set = new Set(columnNames)
-  let foundDuplicate: string | undefined
+  let duplicates: string[] = []
   if (set.size !== columnNames.length) {
     for (let key of set.keys()) {
       const count = columnNames.filter(name => name === key).length
       if (count > 1) {
-        foundDuplicate = key
+        duplicates.push(key)
       }
     }
   }
-  return foundDuplicate
+  return duplicates
 }

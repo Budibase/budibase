@@ -54,7 +54,6 @@
   const DATE_TYPE = FieldType.DATETIME
 
   const dispatch = createEventDispatcher()
-  const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
   const { dispatch: gridDispatch, rows } = getContext("grid")
 
   export let field
