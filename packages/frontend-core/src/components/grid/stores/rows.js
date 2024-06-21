@@ -470,9 +470,10 @@ export const createActions = context => {
       }))
 
       // Update row
+      const stashedChanges = get(rowChangeCache)[rowId]
       const newRow = {
         ...cleanRow(row),
-        ...get(rowChangeCache)[rowId],
+        ...stashedChanges,
         ...changes,
       }
       savedRow = await datasource.actions.updateRow(newRow)
@@ -493,8 +494,8 @@ export const createActions = context => {
       // Wipe row change cache for any values which have been saved
       const liveChanges = get(rowChangeCache)[rowId]
       rowChangeCache.update(state => {
-        Object.keys(changes || {}).forEach(key => {
-          if (changes[key] === liveChanges?.[key]) {
+        Object.keys(stashedChanges || {}).forEach(key => {
+          if (stashedChanges[key] === liveChanges?.[key]) {
             delete state[rowId][key]
           }
         })
@@ -519,7 +520,7 @@ export const createActions = context => {
   const updateValue = async ({ rowId, column, value, apply = true }) => {
     const success = stashRowChanges(rowId, { [column]: value })
     if (success && apply) {
-      await applyRowChanges(rowId)
+      await applyRowChanges({ rowId })
     }
   }
 
@@ -715,7 +716,7 @@ export const initialise = context => {
     const hasErrors = validation.actions.rowHasErrors(rowId)
     const isSavingChanges = get(inProgressChanges)[rowId]
     if (rowId && !hasErrors && hasChanges && !isSavingChanges) {
-      await rows.actions.applyRowChanges(rowId)
+      await rows.actions.applyRowChanges({ rowId })
     }
   })
 }
