@@ -60,7 +60,7 @@ export const deriveStores = context => {
           rowId = $rows[rowIdx]._id
           colName = $allVisibleColumns[colIdx].name
           cellId = getCellID(rowId, colName)
-          map[cellId] = true
+          map[cellId] = { rowIdx, colIdx }
         }
       }
       return map
