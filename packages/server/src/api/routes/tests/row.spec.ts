@@ -606,6 +606,35 @@ describe.each([
       expect(res.name).toEqual("Updated Name")
       await assertRowUsage(rowUsage)
     })
+
+    !isInternal &&
+      it("can update a row on an external table with a primary key", async () => {
+        const tableName = uuid.v4().substring(0, 10)
+        await client!.schema.createTable(tableName, table => {
+          table.increments("id").primary()
+          table.string("name")
+        })
+
+        const res = await config.api.datasource.fetchSchema({
+          datasourceId: datasource!._id!,
+        })
+        const table = res.datasource.entities![tableName]
+
+        const row = await config.api.row.save(table._id!, {
+          id: 1,
+          name: "Row 1",
+        })
+
+        const updatedRow = await config.api.row.save(table._id!, {
+          _id: row._id!,
+          name: "Row 1 Updated",
+        })
+
+        expect(updatedRow.name).toEqual("Row 1 Updated")
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows).toHaveLength(1)
+      })
   })
 
   describe("patch", () => {
@@ -675,6 +704,7 @@ describe.each([
       expect(event.oldRow.description).toEqual(beforeRow.description)
       expect(event.row.description).toEqual(beforeRow.description)
     })
+
     it("should throw an error when given improper types", async () => {
       const existing = await config.api.row.save(table._id!, {})
       const rowUsage = await getRowUsage()
@@ -766,7 +796,8 @@ describe.each([
     })
 
     !isInternal &&
-      // TODO: SQL is having issues creating composite keys
+      // MSSQL needs a setting called IDENTITY_INSERT to be set to ON to allow writing
+      // to identity columns. This is not something Budibase does currently.
       providerType !== DatabaseName.SQL_SERVER &&
       it("should support updating fields that are part of a composite key", async () => {
         const tableRequest = saveTableRequest({
