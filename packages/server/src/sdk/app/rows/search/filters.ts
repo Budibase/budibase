@@ -29,10 +29,8 @@ export function updateFilterKeys(
   filters: SearchFilters,
   updates: { original: string; updated: string }[]
 ): SearchFilters {
-  // sort the updates by length first - this is necessary to avoid replacing sub-strings
-  updates = updates.sort((a, b) => b.original.length - a.original.length)
   const makeFilterKeyRegex = (str: string) =>
-    new RegExp(`^${str}.|:${str}.`, "g")
+    new RegExp(`^${str}\\.|:${str}\\.`)
   for (let filter of Object.values(filters)) {
     if (typeof filter !== "object") {
       continue
