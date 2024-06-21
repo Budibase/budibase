@@ -4,12 +4,19 @@
   import { getCellRenderer } from "../lib/renderers"
   import { derived, writable } from "svelte/store"
 
-  const { rows, focusedCellId, focusedCellAPI, menu, config, validation } =
-    getContext("grid")
+  const {
+    rows,
+    focusedCellId,
+    focusedCellAPI,
+    menu,
+    config,
+    validation,
+    cellSelection,
+  } = getContext("grid")
 
   export let highlighted
-  export let selected
   export let rowFocused
+  export let rowSelected
   export let rowIdx
   export let topRow = false
   export let focused
@@ -20,6 +27,8 @@
   export let updateValue = rows.actions.updateValue
   export let contentLines = 1
   export let hidden = false
+  export let isSelectingCells = false
+  export let selectedCells = {}
 
   const emptyError = writable(null)
 
@@ -42,6 +51,11 @@
       focusedCellAPI.set(cellAPI)
     }
   }
+
+  // Callbacks for cell selection
+  $: cellSelected = selectedCells[cellId]
+  $: updateSelectionCallback = isSelectingCells ? updateSelection : null
+  $: stopSelectionCallback = isSelectingCells ? stopSelection : null
 
   const getErrorStore = (selected, cellId) => {
     if (!selected) {
@@ -68,20 +82,38 @@
       })
     },
   }
+
+  const startSelection = e => {
+    if (e.button !== 0) {
+      return
+    }
+    focusedCellId.set(cellId)
+    cellSelection.actions.start(cellId)
+  }
+
+  const updateSelection = e => {
+    cellSelection.actions.update(cellId)
+  }
+
+  const stopSelection = e => {
+    cellSelection.actions.stop()
+  }
 </script>
 
 <GridCell
   {highlighted}
-  {selected}
   {rowIdx}
   {topRow}
   {focused}
   {selectedUser}
   {readonly}
   {hidden}
+  selected={rowSelected || cellSelected}
   error={$error}
-  on:click={() => focusedCellId.set(cellId)}
   on:contextmenu={e => menu.actions.open(cellId, e)}
+  on:mousedown={startSelection}
+  on:mouseenter={updateSelectionCallback}
+  on:mouseup={stopSelectionCallback}
   width={column.width}
 >
   <svelte:component

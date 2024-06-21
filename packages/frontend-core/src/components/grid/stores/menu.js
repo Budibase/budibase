@@ -3,10 +3,11 @@ import { parseCellID } from "../lib/utils"
 
 export const createStores = () => {
   const menu = writable({
-    x: 0,
-    y: 0,
+    left: 0,
+    top: 0,
     visible: false,
-    selectedRow: null,
+    multiRowMode: false,
+    multiCellMode: false,
   })
   return {
     menu,
@@ -14,8 +15,15 @@ export const createStores = () => {
 }
 
 export const createActions = context => {
-  const { menu, focusedCellId, gridID, selectedRows, selectedRowCount } =
-    context
+  const {
+    menu,
+    focusedCellId,
+    gridID,
+    selectedRows,
+    selectedRowCount,
+    selectedCells,
+    selectedCellCount,
+  } = context
 
   const open = (cellId, e) => {
     e.preventDefault()
@@ -32,7 +40,7 @@ export const createActions = context => {
     const targetBounds = e.target.getBoundingClientRect()
     const dataBounds = dataNode.getBoundingClientRect()
 
-    // Check if there are multiple rows selected, and this is one of them
+    // Check if there are multiple rows selected, and if this is one of them
     let multiRowMode = false
     if (get(selectedRowCount) > 1) {
       const rowId = parseCellID(cellId).id
@@ -41,8 +49,16 @@ export const createActions = context => {
       }
     }
 
+    // Check if there are multiple cells selected, and if this is one of them
+    let multiCellMode = false
+    if (!multiRowMode && get(selectedCellCount) > 1) {
+      if (get(selectedCells)[cellId]) {
+        multiCellMode = true
+      }
+    }
+
     // Only focus this cell if not in multi row mode
-    if (!multiRowMode) {
+    if (!multiRowMode && !multiCellMode) {
       focusedCellId.set(cellId)
     }
 
@@ -51,6 +67,7 @@ export const createActions = context => {
       top: targetBounds.top - dataBounds.top + e.offsetY,
       visible: true,
       multiRowMode,
+      multiCellMode,
     })
   }
 

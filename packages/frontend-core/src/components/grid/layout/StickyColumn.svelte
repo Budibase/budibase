@@ -24,6 +24,9 @@
     dispatch,
     contentLines,
     isDragging,
+    isSelectingCells,
+    selectedCells,
+    selectedCellCount,
   } = getContext("grid")
 
   $: rowCount = $rows.length
@@ -70,7 +73,9 @@
     <GridScrollWrapper scrollVertically attachHandlers>
       {#each $renderedRows as row, idx}
         {@const rowSelected = !!$selectedRows[row._id]}
-        {@const rowHovered = $hoveredRowId === row._id}
+        {@const rowHovered =
+          $hoveredRowId === row._id &&
+          (!$selectedCellCount || !$isSelectingCells)}
         {@const rowFocused = $focusedRow?._id === row._id}
         {@const cellId = getCellID(row._id, $stickyColumn?.name)}
         <div
@@ -85,7 +90,7 @@
               {row}
               {cellId}
               {rowFocused}
-              selected={rowSelected}
+              {rowSelected}
               highlighted={rowHovered || rowFocused}
               rowIdx={row.__idx}
               topRow={idx === 0}
@@ -94,6 +99,8 @@
               width={$stickyColumn.width}
               column={$stickyColumn}
               contentLines={$contentLines}
+              isSelectingCells={$isSelectingCells}
+              selectedCells={$selectedCells}
             />
           {/if}
         </div>

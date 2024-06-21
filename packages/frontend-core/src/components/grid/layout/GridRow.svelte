@@ -19,10 +19,14 @@
     dispatch,
     rows,
     columnRenderMap,
+    isSelectingCells,
+    selectedCells,
+    selectedCellCount,
   } = getContext("grid")
 
   $: rowSelected = !!$selectedRows[row._id]
-  $: rowHovered = $hoveredRowId === row._id
+  $: rowHovered =
+    $hoveredRowId === row._id && (!$selectedCellCount || !$isSelectingCells)
   $: rowFocused = $focusedRow?._id === row._id
   $: reorderSource = $reorder.sourceColumn
 </script>
@@ -43,8 +47,8 @@
       {column}
       {row}
       {rowFocused}
+      {rowSelected}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
-      selected={rowSelected}
       rowIdx={row.__idx}
       topRow={top}
       focused={$focusedCellId === cellId}
@@ -52,6 +56,8 @@
       width={column.width}
       contentLines={$contentLines}
       hidden={!$columnRenderMap[column.name]}
+      isSelectingCells={$isSelectingCells}
+      selectedCells={$selectedCells}
     />
   {/each}
 </div>
