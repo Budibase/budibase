@@ -53,7 +53,19 @@ export const deriveStores = context => {
     ([$columns, $stickyColumn]) => {
       let allCols = $columns || []
       if ($stickyColumn) {
-        allCols = [...allCols, $stickyColumn]
+        allCols = [$stickyColumn, ...allCols]
+      }
+      return allCols
+    }
+  )
+
+  // Quick access to all visible columns
+  const allVisibleColumns = derived(
+    [visibleColumns, stickyColumn],
+    ([$visibleColumns, $stickyColumn]) => {
+      let allCols = $visibleColumns || []
+      if ($stickyColumn) {
+        allCols = [$stickyColumn, ...allCols]
       }
       return allCols
     }
@@ -68,9 +80,9 @@ export const deriveStores = context => {
   })
 
   // Derive a lookup map for column indices by name
-  const columnLookupMap = derived(visibleColumns, $visibleColumns => {
+  const columnLookupMap = derived(allVisibleColumns, $allVisibleColumns => {
     let map = {}
-    $visibleColumns.forEach((column, idx) => {
+    $allVisibleColumns.forEach((column, idx) => {
       map[column.name] = idx
     })
     return map
@@ -78,6 +90,7 @@ export const deriveStores = context => {
 
   return {
     allColumns,
+    allVisibleColumns,
     hasNonAutoColumn,
     columnLookupMap,
   }
