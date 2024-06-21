@@ -289,7 +289,13 @@ export class ExternalRequest<T extends Operation> {
       manyRelationships: ManyRelationship[] = []
     for (let [key, field] of Object.entries(table.schema)) {
       // if set already, or not set just skip it
-      if (row[key] === undefined || newRow[key] || !isEditableColumn(field)) {
+      if (row[key] === undefined || newRow[key]) {
+        continue
+      }
+      if (
+        !(this.operation === Operation.BULK_UPSERT) &&
+        !isEditableColumn(field)
+      ) {
         continue
       }
       // parse floats/numbers

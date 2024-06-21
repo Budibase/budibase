@@ -86,7 +86,11 @@ export async function bulkImport(
   const { rows, identifierFields } = ctx.request.body
   const schema = table.schema
 
-  if (identifierFields && !_.isEqual(identifierFields, table.primary)) {
+  if (
+    identifierFields &&
+    identifierFields.length > 0 &&
+    !_.isEqual(identifierFields, table.primary)
+  ) {
     // This is becuse we make use of the ON CONFLICT functionality in SQL
     // databases, which only triggers when there's a conflict against a unique
     // index. The only unique index we can count on atm in Budibase is the
@@ -102,7 +106,7 @@ export async function bulkImport(
   }
 
   const parsedRows = []
-  for (const row of parse(rows, schema)) {
+  for (const row of parse(rows, table)) {
     const processed = await inputProcessing(ctx.user?._id, table, row, {
       noAutoRelationships: true,
     })

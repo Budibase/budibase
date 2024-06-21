@@ -9,6 +9,7 @@ import {
   Row,
   RowAttachment,
   Table,
+  TableSourceType,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
