@@ -76,9 +76,9 @@ describe.each([
     }
   })
 
-  async function createTable(schema: TableSchema) {
+  async function createTable(schema: TableSchema, name?: string) {
     return await config.api.table.save(
-      tableForDatasource(datasource, { schema })
+      tableForDatasource(datasource, { schema, name })
     )
   }
 
@@ -1956,51 +1956,62 @@ describe.each([
     // isn't available.
     !isInMemory &&
     describe("relations", () => {
-      let otherTable: Table
-      let otherRows: Row[]
+      let productCategoryTable: Table, productCatRows: Row[]
 
       beforeAll(async () => {
-        otherTable = await createTable({
-          one: { name: "one", type: FieldType.STRING },
-        })
-        table = await createTable({
-          two: { name: "two", type: FieldType.STRING },
-          other: {
-            type: FieldType.LINK,
-            relationshipType: RelationshipType.ONE_TO_MANY,
-            name: "other",
-            fieldName: "other",
-            tableId: otherTable._id!,
-            constraints: {
-              type: "array",
+        productCategoryTable = await createTable(
+          {
+            name: { name: "name", type: FieldType.STRING },
+          },
+          "productCategory"
+        )
+        table = await createTable(
+          {
+            name: { name: "name", type: FieldType.STRING },
+            productCat: {
+              type: FieldType.LINK,
+              relationshipType: RelationshipType.ONE_TO_MANY,
+              name: "productCat",
+              fieldName: "product",
+              tableId: productCategoryTable._id!,
+              constraints: {
+                type: "array",
+              },
             },
           },
-        })
+          "product"
+        )
 
-        otherRows = await Promise.all([
-          config.api.row.save(otherTable._id!, { one: "foo" }),
-          config.api.row.save(otherTable._id!, { one: "bar" }),
+        productCatRows = await Promise.all([
+          config.api.row.save(productCategoryTable._id!, { name: "foo" }),
+          config.api.row.save(productCategoryTable._id!, { name: "bar" }),
         ])
 
         await Promise.all([
           config.api.row.save(table._id!, {
-            two: "foo",
-            other: [otherRows[0]._id],
+            name: "foo",
+            productCat: [productCatRows[0]._id],
           }),
           config.api.row.save(table._id!, {
-            two: "bar",
-            other: [otherRows[1]._id],
+            name: "bar",
+            productCat: [productCatRows[1]._id],
           }),
         ])
-
-        rows = await config.api.row.fetch(table._id!)
       })
 
-      it("can search through relations", async () => {
+      it("should be able to filter by relationship using column name", async () => {
         await expectQuery({
-          equal: { [`${otherTable.name}.one`]: "foo" },
+          equal: { ["productCat.name"]: "foo" },
         }).toContainExactly([
-          { two: "foo", other: [{ _id: otherRows[0]._id }] },
+          { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+        ])
+      })
+
+      it("should be able to filter by relationship using table name", async () => {
+        await expectQuery({
+          equal: { ["productCategory.name"]: "foo" },
+        }).toContainExactly([
+          { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
         ])
       })
     })
