@@ -5,7 +5,7 @@ const initialState = {
   title: null,
   text: null,
   confirmButtonText: null,
-  confirmCancelText: null,
+  cancelButtonText: null,
   onConfirm: null,
   onCancel: null,
 }
@@ -19,14 +19,14 @@ const createConfirmationStore = () => {
     onConfirm,
     onCancel,
     confirmButtonText,
-    confirmCancelText
+    cancelButtonText
   ) => {
     store.set({
       showConfirmation: true,
       title,
       text,
       confirmButtonText,
-      confirmCancelText,
+      cancelButtonText,
       onConfirm,
       onCancel,
     })

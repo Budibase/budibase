@@ -9,7 +9,7 @@
       title={$confirmationStore.title}
       onConfirm={confirmationStore.actions.confirm}
       confirmText={$confirmationStore.confirmButtonText}
-      cancelText={$confirmationStore.confirmCancelText}
+      cancelText={$confirmationStore.cancelButtonText}
     >
       {$confirmationStore.text}
     </ModalContent>

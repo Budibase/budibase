@@ -84,7 +84,7 @@
         <Input
           label="Cancel Text"
           placeholder="Cancel"
-          bind:value={parameters.confirmCancelText}
+          bind:value={parameters.cancelButtonText}
         />
       {/if}
 

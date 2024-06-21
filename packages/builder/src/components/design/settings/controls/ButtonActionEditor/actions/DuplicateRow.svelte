@@ -88,7 +88,7 @@
       <Input placeholder="Confirm" bind:value={parameters.confirmButtonText} />
 
       <Label small>Cancel Text</Label>
-      <Input placeholder="Cancel" bind:value={parameters.confirmCancelText} />
+      <Input placeholder="Cancel" bind:value={parameters.cancelButtonText} />
     {/if}
   </div>
 
