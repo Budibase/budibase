@@ -48,6 +48,7 @@
       {row}
       {rowFocused}
       {rowSelected}
+      cellSelected={$selectedCells[cellId]}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
       rowIdx={row.__idx}
       topRow={top}
@@ -57,7 +58,6 @@
       contentLines={$contentLines}
       hidden={!$columnRenderMap[column.name]}
       isSelectingCells={$isSelectingCells}
-      selectedCells={$selectedCells}
     />
   {/each}
 </div>

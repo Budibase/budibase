@@ -11,7 +11,7 @@
     menu,
     config,
     validation,
-    cellSelection,
+    selectedCells,
   } = getContext("grid")
 
   export let highlighted
@@ -28,13 +28,11 @@
   export let contentLines = 1
   export let hidden = false
   export let isSelectingCells = false
-  export let selectedCells = {}
+  export let cellSelected = false
 
   const emptyError = writable(null)
 
   let api
-
-  $: cellSelected = selectedCells[cellId]
 
   // Get the error for this cell if the cell is focused or selected
   $: error = getErrorStore(rowFocused || cellSelected, cellId)
@@ -89,16 +87,16 @@
       return
     }
     // focusedCellId.set(cellId)
-    cellSelection.actions.start(cellId)
+    selectedCells.actions.start(cellId)
   }
 
   const updateSelection = e => {
     focusedCellId.set(null)
-    cellSelection.actions.update(cellId)
+    selectedCells.actions.update(cellId)
   }
 
   const stopSelection = e => {
-    cellSelection.actions.stop()
+    selectedCells.actions.stop()
   }
 </script>
 

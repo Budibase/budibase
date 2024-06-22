@@ -5,7 +5,7 @@
   const {
     rowHeight,
     scroll,
-    focusedCellId,
+    ui,
     renderedRows,
     maxScrollTop,
     maxScrollLeft,
@@ -108,7 +108,7 @@
   on:wheel={attachHandlers ? handleWheel : null}
   on:touchstart={attachHandlers ? handleTouchStart : null}
   on:touchmove={attachHandlers ? handleTouchMove : null}
-  on:click|self={() => ($focusedCellId = null)}
+  on:click|self={ui.actions.blur}
 >
   <div {style} class="inner" bind:this={ref}>
     <slot />
