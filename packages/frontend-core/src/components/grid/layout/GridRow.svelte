@@ -12,15 +12,15 @@
     selectedRows,
     visibleColumns,
     hoveredRowId,
-    selectedCellMap,
     focusedRow,
     contentLines,
     isDragging,
     dispatch,
     rows,
     columnRenderMap,
+    userCellMap,
     isSelectingCells,
-    selectedCells,
+    selectedCellMap,
     selectedCellCount,
   } = getContext("grid")
 
@@ -48,12 +48,12 @@
       {row}
       {rowFocused}
       {rowSelected}
-      cellSelected={$selectedCells[cellId]}
+      cellSelected={$selectedCellMap[cellId]}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
       rowIdx={row.__idx}
       topRow={top}
       focused={$focusedCellId === cellId}
-      selectedUser={$selectedCellMap[cellId]}
+      selectedUser={$userCellMap[cellId]}
       width={column.width}
       contentLines={$contentLines}
       hidden={!$columnRenderMap[column.name]}

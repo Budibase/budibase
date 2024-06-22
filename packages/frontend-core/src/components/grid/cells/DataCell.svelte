@@ -86,17 +86,18 @@
     if (e.button !== 0) {
       return
     }
-    // focusedCellId.set(cellId)
-    selectedCells.actions.start(cellId)
+    selectedCells.actions.startSelecting(cellId)
   }
 
-  const updateSelection = e => {
-    focusedCellId.set(null)
-    selectedCells.actions.update(cellId)
+  const updateSelection = () => {
+    if ($focusedCellId) {
+      focusedCellId.set(null)
+    }
+    selectedCells.actions.updateTarget(cellId)
   }
 
-  const stopSelection = e => {
-    selectedCells.actions.stop()
+  const stopSelection = () => {
+    selectedCells.actions.stopSelecting()
   }
 </script>
 

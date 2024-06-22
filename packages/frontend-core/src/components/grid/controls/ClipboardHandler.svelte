@@ -40,6 +40,6 @@
     onConfirm={clipboard.actions.paste}
     size="M"
   >
-    Are you sure you want to paste values into {$selectedCellCount} cells?
+    Are you sure you want to paste? This will update multiple values.
   </ModalContent>
 </Modal>

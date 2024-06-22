@@ -13,22 +13,25 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { clipboard, focusedCellAPI, selectedCellCount } = context
+  const { clipboard, focusedCellAPI, selectedCellCount, config } = context
 
   // Derive whether or not we're able to copy
-  const copyAllowed = derived(focusedCellAPI, $focusedCellAPI => {
-    return $focusedCellAPI != null
-  })
+  const copyAllowed = derived(
+    [focusedCellAPI, selectedCellCount],
+    ([$focusedCellAPI, $selectedCellCount]) => {
+      return $focusedCellAPI || $selectedCellCount
+    }
+  )
 
   // Derive whether or not we're able to paste
   const pasteAllowed = derived(
-    [clipboard, focusedCellAPI, selectedCellCount],
-    ([$clipboard, $focusedCellAPI, $selectedCellCount]) => {
-      if ($clipboard.value == null || !$focusedCellAPI) {
+    [clipboard, focusedCellAPI, selectedCellCount, config],
+    ([$clipboard, $focusedCellAPI, $selectedCellCount, $config]) => {
+      if ($clipboard.value == null || !$config.canEditRows) {
         return false
       }
-      // Prevent pasting into a single cell, if we have a single cell value and
-      // this cell is readonly
+
+      // Prevent single-single pasting if the cell is readonly
       const multiCellPaste = $selectedCellCount > 1
       if (
         !$clipboard.multiCellCopy &&
@@ -37,7 +40,8 @@ export const deriveStores = context => {
       ) {
         return false
       }
-      return true
+
+      return $focusedCellAPI || $selectedCellCount
     }
   )
 
@@ -54,10 +58,10 @@ export const createActions = context => {
     copyAllowed,
     pasteAllowed,
     selectedCells,
+    selectedCellCount,
     rowLookupMap,
     rowChangeCache,
     rows,
-    columnLookupMap,
   } = context
 
   // Copies the currently selected value (or values)
@@ -65,52 +69,31 @@ export const createActions = context => {
     if (!get(copyAllowed)) {
       return
     }
-    const cellIds = Object.keys(get(selectedCells))
+    const $selectedCells = get(selectedCells)
     const $focusedCellAPI = get(focusedCellAPI)
-    const multiCellCopy = cellIds.length > 1
+    const $selectedCellCount = get(selectedCellCount)
+    const multiCellCopy = $selectedCellCount > 1
 
     // Multiple values to copy
     if (multiCellCopy) {
       const $rowLookupMap = get(rowLookupMap)
       const $rowChangeCache = get(rowChangeCache)
       const $rows = get(rows)
-      const $columnLookupMap = get(columnLookupMap)
 
-      // Go through each selected cell and group all selected cell values by
-      // their row ID. Order is important for pasting, so we store the index of
-      // both rows and values.
-      let map = {}
-      for (let cellId of cellIds) {
-        const { id, field } = parseCellID(cellId)
-        const index = $rowLookupMap[id]
-        if (!map[id]) {
-          map[id] = {
-            order: index,
-            values: [],
-          }
-        }
-        const row = {
-          ...$rows[index],
-          ...$rowChangeCache[id],
-        }
-        const columnIndex = $columnLookupMap[field]
-        map[id].values.push({
-          value: row[field],
-          order: columnIndex,
-        })
-      }
-
-      // Sort rows by order
+      // Extract value of each selected cell
       let value = []
-      const sortedRowValues = Object.values(map)
-        .toSorted((a, b) => a.order - b.order)
-        .map(x => x.values)
-
-      // Sort all values in each row by order
-      for (let rowValues of sortedRowValues) {
-        value.push(
-          rowValues.toSorted((a, b) => a.order - b.order).map(x => x.value)
-        )
+      for (let row of $selectedCells) {
+        const rowValues = []
+        for (let cellId of row) {
+          const { id, field } = parseCellID(cellId)
+          const rowIndex = $rowLookupMap[id]
+          const row = {
+            ...$rows[rowIndex],
+            ...$rowChangeCache[id],
+          }
+          rowValues.push(row[field])
+        }
+        value.push(rowValues)
       }
 
       // Update state
@@ -141,42 +124,26 @@ export const createActions = context => {
     if (!get(pasteAllowed)) {
       return
     }
-    const $clipboard = get(clipboard)
+    const { value, multiCellCopy } = get(clipboard)
     const $focusedCellAPI = get(focusedCellAPI)
-    if ($clipboard.value == null || !$focusedCellAPI) {
-      return
-    }
-
-    // Check if we're pasting into one or more cells
     const $selectedCells = get(selectedCells)
-    const cellIds = Object.keys($selectedCells)
-    const multiCellPaste = cellIds.length > 1
+    const $selectedCellCount = get(selectedCellCount)
+    const multiCellPaste = $selectedCellCount > 1
 
-    if ($clipboard.multiCellCopy) {
+    // Choose paste strategy
+    if (multiCellCopy) {
       if (multiCellPaste) {
         // Multi to multi (only paste selected cells)
-        const value = $clipboard.value
+        // Find the extent at which we can paste
+        const rowExtent = Math.min(value.length, $selectedCells.length)
+        const colExtent = Math.min(value[0].length, $selectedCells[0].length)
 
-        // Find the top left index so we can find the relative offset for each
-        // cell
-        let rowIndices = []
-        let columnIndices = []
-        for (let cellId of cellIds) {
-          rowIndices.push($selectedCells[cellId].rowIdx)
-          columnIndices.push($selectedCells[cellId].colIdx)
-        }
-        const minRowIdx = Math.min(...rowIndices)
-        const minColIdx = Math.min(...columnIndices)
-
-        // Build change map of values to patch
+        // Build change map
         let changeMap = {}
-        const $rowLookupMap = get(rowLookupMap)
-        const $columnLookupMap = get(columnLookupMap)
-        for (let cellId of cellIds) {
-          const { id, field } = parseCellID(cellId)
-          const rowIdx = $rowLookupMap[id] - minRowIdx
-          const colIdx = $columnLookupMap[field] - minColIdx
-          if (colIdx in (value[rowIdx] || [])) {
+        for (let rowIdx = 0; rowIdx < rowExtent; rowIdx++) {
+          for (let colIdx = 0; colIdx < colExtent; colIdx++) {
+            const cellId = $selectedCells[rowIdx][colIdx]
+            const { id, field } = parseCellID(cellId)
             if (!changeMap[id]) {
               changeMap[id] = {}
             }
@@ -192,17 +159,19 @@ export const createActions = context => {
       if (multiCellPaste) {
         // Single to multi (duplicate value in all selected cells)
         let changeMap = {}
-        for (let cellId of cellIds) {
-          const { id, field } = parseCellID(cellId)
-          if (!changeMap[id]) {
-            changeMap[id] = {}
+        for (let row of $selectedCells) {
+          for (let cellId of row) {
+            const { id, field } = parseCellID(cellId)
+            if (!changeMap[id]) {
+              changeMap[id] = {}
+            }
+            changeMap[id][field] = value
           }
-          changeMap[id][field] = $clipboard.value
         }
         await rows.actions.bulkUpdate(changeMap)
       } else {
         // Single to single
-        $focusedCellAPI.setValue($clipboard.value)
+        $focusedCellAPI.setValue(value)
       }
     }
   }

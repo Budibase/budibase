@@ -109,7 +109,7 @@ export const deriveStores = context => {
     ([$cellSelection, $rowLookupMap, $columnLookupMap]) => {
       const { sourceCellId, targetCellId } = $cellSelection
       if (!sourceCellId || !targetCellId || sourceCellId === targetCellId) {
-        return {}
+        return []
       }
       const $rows = get(rows)
       const $allVisibleColumns = get(allVisibleColumns)
@@ -130,24 +130,36 @@ export const deriveStores = context => {
       const lowerColIndex = Math.min(sourceColIndex, targetColIndex)
       const upperColIndex = Math.max(sourceColIndex, targetColIndex)
 
-      // Build map of all cells inside these bounds
-      let map = {}
-      let rowId, colName, cellId
+      // Build 2 dimensional array of all cells inside these bounds
+      let cells = []
+      let rowId, colName
       for (let rowIdx = lowerRowIndex; rowIdx <= upperRowIndex; rowIdx++) {
+        let rowCells = []
         for (let colIdx = lowerColIndex; colIdx <= upperColIndex; colIdx++) {
           rowId = $rows[rowIdx]._id
           colName = $allVisibleColumns[colIdx].name
-          cellId = getCellID(rowId, colName)
-          map[cellId] = { rowIdx, colIdx }
+          rowCells.push(getCellID(rowId, colName))
         }
+        cells.push(rowCells)
       }
-      return map
+      return cells
     }
   )
 
+  // Derive a quick lookup map of the selected cells
+  const selectedCellMap = derived(selectedCells, $selectedCells => {
+    let map = {}
+    for (let row of $selectedCells) {
+      for (let cell of row) {
+        map[cell] = true
+      }
+    }
+    return map
+  })
+
   // Derive the count of the selected cells
-  const selectedCellCount = derived(selectedCells, $selectedCells => {
-    return Object.keys($selectedCells).length
+  const selectedCellCount = derived(selectedCellMap, $selectedCellMap => {
+    return Object.keys($selectedCellMap).length
   })
 
   return {
@@ -158,6 +170,7 @@ export const deriveStores = context => {
     selectedRowCount,
     isSelectingCells,
     selectedCells,
+    selectedCellMap,
     selectedCellCount,
   }
 }
@@ -272,9 +285,9 @@ export const createActions = context => {
     selectedCells: {
       ...selectedCells,
       actions: {
-        start: startCellSelection,
-        update: updateCellSelection,
-        stop: stopCellSelection,
+        startSelecting: startCellSelection,
+        updateTarget: updateCellSelection,
+        stopSelecting: stopCellSelection,
         clear: clearCellSelection,
       },
     },
