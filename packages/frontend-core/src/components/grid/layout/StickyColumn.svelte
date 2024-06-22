@@ -91,6 +91,7 @@
               {cellId}
               {rowFocused}
               {rowSelected}
+              cellSelected={$selectedCells[cellId]}
               highlighted={rowHovered || rowFocused}
               rowIdx={row.__idx}
               topRow={idx === 0}
@@ -100,7 +101,6 @@
               column={$stickyColumn}
               contentLines={$contentLines}
               isSelectingCells={$isSelectingCells}
-              selectedCells={$selectedCells}
             />
           {/if}
         </div>
