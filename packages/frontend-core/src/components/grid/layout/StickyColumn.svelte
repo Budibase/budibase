@@ -19,6 +19,7 @@
     hoveredRowId,
     config,
     selectedCellMap,
+    userCellMap,
     focusedRow,
     scrollLeft,
     dispatch,
@@ -91,12 +92,12 @@
               {cellId}
               {rowFocused}
               {rowSelected}
-              cellSelected={$selectedCells[cellId]}
+              cellSelected={$selectedCellMap[cellId]}
               highlighted={rowHovered || rowFocused}
               rowIdx={row.__idx}
               topRow={idx === 0}
               focused={$focusedCellId === cellId}
-              selectedUser={$selectedCellMap[cellId]}
+              selectedUser={$userCellMap[cellId]}
               width={$stickyColumn.width}
               column={$stickyColumn}
               contentLines={$contentLines}

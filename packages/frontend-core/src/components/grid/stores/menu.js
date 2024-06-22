@@ -21,7 +21,7 @@ export const createActions = context => {
     gridID,
     selectedRows,
     selectedRowCount,
-    selectedCells,
+    selectedCellMap,
     selectedCellCount,
   } = context
 
@@ -52,7 +52,7 @@ export const createActions = context => {
     // Check if there are multiple cells selected, and if this is one of them
     let multiCellMode = false
     if (!multiRowMode && get(selectedCellCount) > 1) {
-      if (get(selectedCells)[cellId]) {
+      if (get(selectedCellMap)[cellId]) {
         multiCellMode = true
       }
     }

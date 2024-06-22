@@ -40,8 +40,8 @@ const DependencyOrderedStores = [
   Users,
   Menu,
   Pagination,
-  Clipboard,
   Config,
+  Clipboard,
   Notifications,
   Cache,
 ]
