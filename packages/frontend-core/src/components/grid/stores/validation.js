@@ -21,7 +21,7 @@ export const deriveStores = context => {
     Object.entries($validation).forEach(([key, error]) => {
       // Extract row ID from all errored cell IDs
       if (error) {
-        const rowId = parseCellID(key).id
+        const { rowId } = parseCellID(key)
         if (!map[rowId]) {
           map[rowId] = []
         }

@@ -711,7 +711,7 @@ export const initialise = context => {
     if (!id) {
       return
     }
-    const { id: rowId, field } = parseCellID(id)
+    const { rowId, field } = parseCellID(id)
     const hasChanges = field in (get(rowChangeCache)[rowId] || {})
     const hasErrors = validation.actions.rowHasErrors(rowId)
     const isSavingChanges = get(inProgressChanges)[rowId]

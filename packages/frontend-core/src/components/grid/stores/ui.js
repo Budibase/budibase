@@ -60,7 +60,7 @@ export const deriveStores = context => {
 
   // Derive the current focused row ID
   const focusedRowId = derived(focusedCellId, $focusedCellId => {
-    return parseCellID($focusedCellId)?.id
+    return parseCellID($focusedCellId).rowId
   })
 
   // Derive the row that contains the selected cell
@@ -119,8 +119,8 @@ export const deriveStores = context => {
       const targetInfo = parseCellID(targetCellId)
 
       // Row indices
-      const sourceRowIndex = $rowLookupMap[sourceInfo.id]
-      const targetRowIndex = $rowLookupMap[targetInfo.id]
+      const sourceRowIndex = $rowLookupMap[sourceInfo.rowId]
+      const targetRowIndex = $rowLookupMap[targetInfo.rowId]
       const lowerRowIndex = Math.min(sourceRowIndex, targetRowIndex)
       const upperRowIndex = Math.max(sourceRowIndex, targetRowIndex)
 
@@ -331,7 +331,7 @@ export const initialise = context => {
     const hasRow = rows.actions.hasRow
 
     // Check selected cell
-    const selectedRowId = parseCellID($focusedCellId)?.id
+    const selectedRowId = parseCellID($focusedCellId).rowId
     if (selectedRowId && !hasRow(selectedRowId)) {
       focusedCellId.set(null)
     }

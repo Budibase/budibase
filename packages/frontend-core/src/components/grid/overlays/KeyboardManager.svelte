@@ -158,7 +158,7 @@
       return
     }
     const cols = $visibleColumns
-    const { id, field: columnName } = parseCellID($focusedCellId)
+    const { rowId, field: columnName } = parseCellID($focusedCellId)
     let newColumnName
     if (columnName === $stickyColumn?.name) {
       const index = delta - 1
@@ -172,7 +172,7 @@
       }
     }
     if (newColumnName) {
-      $focusedCellId = getCellID(id, newColumnName)
+      $focusedCellId = getCellID(rowId, newColumnName)
     }
   }
 
@@ -225,14 +225,6 @@
         $focusedCellAPI.focus()
       }
     }
-  }
-
-  const toggleSelectRow = () => {
-    const id = $focusedRow?._id
-    if (!id || id === NewRowID) {
-      return
-    }
-    selectedRows.actions.toggleRow(id)
   }
 
   onMount(() => {

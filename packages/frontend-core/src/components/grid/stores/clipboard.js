@@ -88,11 +88,11 @@ export const createActions = context => {
       for (let row of $selectedCells) {
         const rowValues = []
         for (let cellId of row) {
-          const { id, field } = parseCellID(cellId)
-          const rowIndex = $rowLookupMap[id]
+          const { rowId, field } = parseCellID(cellId)
+          const rowIndex = $rowLookupMap[rowId]
           const row = {
             ...$rows[rowIndex],
-            ...$rowChangeCache[id],
+            ...$rowChangeCache[rowId],
           }
           rowValues.push(row[field])
         }
@@ -134,15 +134,32 @@ export const createActions = context => {
     if (multiCellCopy) {
       if (multiCellPaste) {
         // Multi to multi - try pasting into all selected cells
-        await pasteIntoSelectedCells(value)
+        let newValue = value
+
+        // If we are pasting into more rows than we copied, but the number of
+        // columns match, then repeat the copied values as required
+        const $selectedCells = get(selectedCells)
+        const selectedRows = $selectedCells.length
+        const selectedColumns = $selectedCells[0].length
+        const copiedRows = value.length
+        const copiedColumns = value[0].length
+        if (selectedRows > copiedRows && selectedColumns === copiedColumns) {
+          newValue = []
+          for (let i = 0; i < selectedRows; i++) {
+            newValue.push(value[i % copiedRows])
+          }
+        }
+
+        // Paste the new value
+        await pasteIntoSelectedCells(newValue)
       } else {
         // Multi to single - expand to paste all values
         // Get indices of focused cell
         const $focusedCellId = get(focusedCellId)
-        const { id, field } = parseCellID($focusedCellId)
+        const { rowId, field } = parseCellID($focusedCellId)
         const $rowLookupMap = get(rowLookupMap)
         const $columnLookupMap = get(columnLookupMap)
-        const rowIdx = $rowLookupMap[id]
+        const rowIdx = $rowLookupMap[rowId]
         const colIdx = $columnLookupMap[field]
 
         // Get limits of how many rows and columns we're able to paste into
@@ -195,11 +212,11 @@ export const createActions = context => {
     for (let rowIdx = 0; rowIdx < rowExtent; rowIdx++) {
       for (let colIdx = 0; colIdx < colExtent; colIdx++) {
         const cellId = $selectedCells[rowIdx][colIdx]
-        const { id, field } = parseCellID(cellId)
-        if (!changeMap[id]) {
-          changeMap[id] = {}
+        const { rowId, field } = parseCellID(cellId)
+        if (!changeMap[rowId]) {
+          changeMap[rowId] = {}
         }
-        changeMap[id][field] = value[rowIdx][colIdx]
+        changeMap[rowId][field] = value[rowIdx][colIdx]
       }
     }
     await rows.actions.bulkUpdate(changeMap)
