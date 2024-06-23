@@ -90,7 +90,11 @@
     selectedCells.actions.startSelecting(cellId)
   }
 
-  const updateSelection = () => {
+  const updateSelection = e => {
+    if (e.buttons !== 1) {
+      selectedCells.actions.stopSelecting()
+      return
+    }
     if ($focusedCellId) {
       focusedCellId.set(null)
     }
