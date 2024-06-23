@@ -260,7 +260,7 @@ export const createActions = context => {
     }))
   }
 
-  const setCellSelectionRange = (source, target) => {
+  const selectCellRange = (source, target) => {
     cellSelection.set({
       active: false,
       sourceCellId: source,
@@ -295,7 +295,7 @@ export const createActions = context => {
         startSelecting: startCellSelection,
         updateTarget: updateCellSelection,
         stopSelecting: stopCellSelection,
-        setRange: setCellSelectionRange,
+        selectRange: selectCellRange,
         clear: clearCellSelection,
       },
     },
@@ -318,6 +318,7 @@ export const initialise = context => {
     menu,
     selectedCellCount,
     selectedCells,
+    cellSelection,
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
@@ -422,9 +423,17 @@ export const initialise = context => {
       if (get(selectedRowCount)) {
         selectedRows.set({})
       }
-      if (get(focusedCellId)) {
-        focusedCellId.set(null)
-      }
+    }
+  })
+
+  // Ensure the source of cell selection is focused
+  cellSelection.subscribe(async ({ sourceCellId, targetCellId }) => {
+    if (
+      sourceCellId &&
+      sourceCellId !== targetCellId &&
+      get(focusedCellId) !== sourceCellId
+    ) {
+      focusedCellId.set(sourceCellId)
     }
   })
 }

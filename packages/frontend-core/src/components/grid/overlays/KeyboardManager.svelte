@@ -1,14 +1,13 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { debounce } from "../../../utils/utils"
-  import { NewRowID } from "../lib/constants"
   import { getCellID, parseCellID } from "../lib/utils"
 
   const {
     rows,
     focusedCellId,
     visibleColumns,
-    focusedRow,
+    rowLookupMap,
     stickyColumn,
     focusedCellAPI,
     dispatch,
@@ -17,6 +16,11 @@
     menu,
     gridFocused,
     keyboardBlocked,
+    selectedCellCount,
+    selectedCells,
+    cellSelection,
+    columnLookupMap,
+    allVisibleColumns,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -60,6 +64,26 @@
           }
           return
       }
+    }
+
+    // Handle certain key presses if we have cells selected
+    if ($selectedCellCount) {
+      e.preventDefault()
+      switch (e.key) {
+        case "ArrowLeft":
+          changeFocusedColumn(-1, e.shiftKey)
+          break
+        case "ArrowRight":
+          changeFocusedColumn(1, e.shiftKey)
+          break
+        case "ArrowUp":
+          changeFocusedRow(-1, e.shiftKey)
+          break
+        case "ArrowDown":
+          changeFocusedRow(1, e.shiftKey)
+          break
+      }
+      return
     }
 
     // If nothing selected avoid processing further key presses
@@ -111,16 +135,16 @@
     } else {
       switch (e.key) {
         case "ArrowLeft":
-          changeFocusedColumn(-1)
+          changeFocusedColumn(-1, e.shiftKey)
           break
         case "ArrowRight":
-          changeFocusedColumn(1)
+          changeFocusedColumn(1, e.shiftKey)
           break
         case "ArrowUp":
-          changeFocusedRow(-1)
+          changeFocusedRow(-1, e.shiftKey)
           break
         case "ArrowDown":
-          changeFocusedRow(1)
+          changeFocusedRow(1, e.shiftKey)
           break
         case "Delete":
         case "Backspace":
@@ -153,38 +177,82 @@
   }
 
   // Changes the focused cell by moving it left or right to a different column
-  const changeFocusedColumn = delta => {
-    if (!$focusedCellId) {
+  const changeFocusedColumn = (delta, shiftKey) => {
+    // Determine which cell we are working with
+    let sourceCellId = $focusedCellId
+    if (shiftKey && $selectedCellCount) {
+      sourceCellId = $cellSelection.targetCellId
+    }
+    if (!sourceCellId) {
       return
     }
-    const cols = $visibleColumns
-    const { rowId, field: columnName } = parseCellID($focusedCellId)
-    let newColumnName
-    if (columnName === $stickyColumn?.name) {
-      const index = delta - 1
-      newColumnName = cols[index]?.name
-    } else {
-      const index = cols.findIndex(col => col.name === columnName) + delta
-      if (index === -1) {
-        newColumnName = $stickyColumn?.name
-      } else {
-        newColumnName = cols[index]?.name
-      }
+
+    // Determine the new position for this cell
+    const { rowId, field } = parseCellID(sourceCellId)
+    const colIdx = $columnLookupMap[field]
+    const nextColumn = $allVisibleColumns[colIdx + delta]
+    if (!nextColumn) {
+      return
     }
-    if (newColumnName) {
-      $focusedCellId = getCellID(rowId, newColumnName)
+    const targetCellId = getCellID(rowId, nextColumn.name)
+
+    // Apply change
+    if (shiftKey) {
+      if ($selectedCellCount) {
+        // We have selected cells and still are holding shift - update selection
+        selectedCells.actions.updateTarget(targetCellId)
+
+        // Restore focused cell if this removes the selection
+        if (!$selectedCellCount) {
+          focusedCellId.set(targetCellId)
+        }
+      } else {
+        // We have no selection but are holding shift - select these cells
+        selectedCells.actions.selectRange(sourceCellId, targetCellId)
+      }
+    } else {
+      // We aren't holding shift - just focus this cell
+      focusedCellId.set(targetCellId)
     }
   }
 
   // Changes the focused cell by moving it up or down to a new row
-  const changeFocusedRow = delta => {
-    if (!$focusedRow) {
+  const changeFocusedRow = (delta, shiftKey) => {
+    // Determine which cell we are working with
+    let sourceCellId = $focusedCellId
+    if (shiftKey && $selectedCellCount) {
+      sourceCellId = $cellSelection.targetCellId
+    }
+    if (!sourceCellId) {
       return
     }
-    const newRow = $rows[$focusedRow.__idx + delta]
-    if (newRow) {
-      const { field } = parseCellID($focusedCellId)
-      $focusedCellId = getCellID(newRow._id, field)
+
+    // Determine the new position for this cell
+    const { rowId, field } = parseCellID(sourceCellId)
+    const rowIdx = $rowLookupMap[rowId]
+    const newRow = $rows[rowIdx + delta]
+    if (!newRow) {
+      return
+    }
+    const targetCellId = getCellID(newRow._id, field)
+
+    // Apply change
+    if (shiftKey) {
+      if ($selectedCellCount) {
+        // We have selected cells and still are holding shift - update selection
+        selectedCells.actions.updateTarget(targetCellId)
+
+        // Restore focused cell if this removes the selection
+        if (!$selectedCellCount) {
+          focusedCellId.set(targetCellId)
+        }
+      } else {
+        // We have no selection but are holding shift - select these cells
+        selectedCells.actions.selectRange(sourceCellId, targetCellId)
+      }
+    } else {
+      // We aren't holding shift - just focus this cell
+      focusedCellId.set(targetCellId)
     }
   }
 

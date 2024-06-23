@@ -105,7 +105,7 @@
   const handleClick = e => {
     if (e.shiftKey && $focusedCellId) {
       // If we have a focused cell, select the range from that cell to here
-      selectedCells.actions.setRange($focusedCellId, cellId)
+      selectedCells.actions.selectRange($focusedCellId, cellId)
     } else if (e.shiftKey && $selectedCellCount) {
       // If we already have a selected range of cell, update it
       selectedCells.actions.updateTarget(cellId)
