@@ -83,7 +83,7 @@ export const createActions = context => {
       const $rowChangeCache = get(rowChangeCache)
       const $rows = get(rows)
 
-      // Extract value of each selected cell
+      // Extract value of each selected cell, accounting for the change cache
       let value = []
       for (let row of $selectedCells) {
         const rowValues = []
@@ -133,10 +133,10 @@ export const createActions = context => {
     // Choose paste strategy
     if (multiCellCopy) {
       if (multiCellPaste) {
-        // Multi to multi (only paste selected cells)
+        // Multi to multi - try pasting into all selected cells
         await pasteIntoSelectedCells(value)
       } else {
-        // Multi to single (expand to paste all values)
+        // Multi to single - expand to paste all values
         // Get indices of focused cell
         const $focusedCellId = get(focusedCellId)
         const { id, field } = parseCellID($focusedCellId)
@@ -172,14 +172,11 @@ export const createActions = context => {
       }
     } else {
       if (multiCellPaste) {
-        // Single to multi (duplicate value in all selected cells)
-        const $selectedCells = get(selectedCells)
-        const pastableValue = $selectedCells.map(row => {
-          return row.map(() => value)
-        })
-        await pasteIntoSelectedCells(pastableValue)
+        // Single to multi - duplicate value to all selected cells
+        const newValue = get(selectedCells).map(row => row.map(() => value))
+        await pasteIntoSelectedCells(newValue)
       } else {
-        // Single to single
+        // Single to single - just update the cell's value
         get(focusedCellAPI).setValue(value)
       }
     }
