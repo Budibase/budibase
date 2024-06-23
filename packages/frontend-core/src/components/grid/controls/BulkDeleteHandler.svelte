@@ -1,7 +1,8 @@
 <script>
-  import { Modal, ModalContent } from "@budibase/bbui"
+  import { Modal, ModalContent, ProgressBar } from "@budibase/bbui"
   import { getContext, onMount } from "svelte"
   import { parseCellID } from "../lib/utils"
+  import { sleep } from "../../../utils/utils"
 
   const {
     selectedRows,
@@ -13,15 +14,20 @@
     selectedRowCount,
     selectedCells,
   } = getContext("grid")
+  const duration = 260
 
   let rowsModal
   let cellsModal
+  let processing = false
+  let progressPercentage = 0
 
   $: rowsToDelete = Object.entries($selectedRows)
     .map(entry => $rows.find(x => x._id === entry[0]))
     .filter(x => x != null)
 
   const handleBulkDeleteRequest = () => {
+    progressPercentage = 0
+    menu.actions.close()
     if ($selectedRowCount) {
       rowsModal?.show()
     } else if ($selectedCellCount) {
@@ -30,15 +36,18 @@
   }
 
   const bulkDeleteRows = async () => {
+    processing = true
     const count = rowsToDelete.length
-    await rows.actions.deleteRows(rowsToDelete)
+    await rows.actions.deleteRows(rowsToDelete, progress => {
+      progressPercentage = progress * 100
+    })
+    await sleep(duration)
     $notifications.success(`Deleted ${count} row${count === 1 ? "" : "s"}`)
-
-    // Ensure menu is closed, as we may have triggered this from there
-    menu.actions.close()
+    processing = false
   }
 
   const bulkDeleteCells = async () => {
+    processing = true
     let changeMap = {}
     for (let row of $selectedCells) {
       for (let cellId of row) {
@@ -49,10 +58,11 @@
         changeMap[rowId][field] = null
       }
     }
-    await rows.actions.bulkUpdate(changeMap)
-
-    // Ensure menu is closed, as we may have triggered this from there
-    menu.actions.close()
+    await rows.actions.bulkUpdate(changeMap, progress => {
+      progressPercentage = progress * 100
+    })
+    await sleep(duration)
+    processing = false
   }
 
   onMount(() => subscribe("request-bulk-delete", handleBulkDeleteRequest))
@@ -68,6 +78,14 @@
   >
     Are you sure you want to delete {$selectedRowCount}
     row{$selectedRowCount === 1 ? "" : "s"}?
+    {#if processing}
+      <ProgressBar
+        size="L"
+        value={progressPercentage}
+        {duration}
+        width="100%"
+      />
+    {/if}
   </ModalContent>
 </Modal>
 
@@ -81,5 +99,13 @@
   >
     Are you sure you want to delete {$selectedCellCount}
     cell{$selectedCellCount === 1 ? "" : "s"}?
+    {#if processing}
+      <ProgressBar
+        size="L"
+        value={progressPercentage}
+        {duration}
+        width="100%"
+      />
+    {/if}
   </ModalContent>
 </Modal>

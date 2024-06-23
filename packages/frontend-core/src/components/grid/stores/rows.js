@@ -320,7 +320,7 @@ export const createActions = context => {
   }
 
   // Duplicates multiple rows, inserting them after the last source row
-  const bulkDuplicate = async rowsToDupe => {
+  const bulkDuplicate = async (rowsToDupe, progressCallback) => {
     // Find index of last row
     const $rowLookupMap = get(rowLookupMap)
     const index = Math.max(...rowsToDupe.map(row => $rowLookupMap[row._id]))
@@ -336,15 +336,16 @@ export const createActions = context => {
     // Create rows
     let saved = []
     let failed = 0
-    for (let clone of clones) {
+    for (let i = 0; i < clones.length; i++) {
       try {
-        saved.push(await datasource.actions.addRow(clone))
+        saved.push(await datasource.actions.addRow(clones[i]))
         rowCacheMap[saved._id] = true
         await sleep(50) // Small sleep to ensure we avoid rate limiting
       } catch (error) {
         failed++
         console.error("Duplicating row failed", error)
       }
+      progressCallback?.((i + 1) / clones.length)
     }
 
     // Add to state
