@@ -20,6 +20,7 @@
     selectedRowCount,
     copyAllowed,
     pasteAllowed,
+    selectedCellCount,
   } = getContext("grid")
 
   let anchor
@@ -92,8 +93,12 @@
           >
             Paste
           </MenuItem>
-          <MenuItem icon="Delete" disabled={isNewRow} on:click={() => {}}>
-            Delete
+          <MenuItem
+            icon="Delete"
+            disabled={!$config.canEditRows}
+            on:click={() => dispatch("request-bulk-delete")}
+          >
+            Delete {$selectedCellCount} cells
           </MenuItem>
         {:else}
           <MenuItem
