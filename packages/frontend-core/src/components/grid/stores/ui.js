@@ -217,9 +217,8 @@ export const createActions = context => {
       toggleSelectedRow(id)
       return
     }
-    // There should always be a last selected index
     if (lastSelectedIndex == null) {
-      throw "NO LAST SELECTED INDEX"
+      return
     }
     const thisIndex = get(rowLookupMap)[id]
 
@@ -417,10 +416,15 @@ export const initialise = context => {
     }
   })
 
-  // Clear selected rows when selecting cells
+  // Clear state when selecting cells
   selectedCellCount.subscribe($selectedCellCount => {
-    if ($selectedCellCount && get(selectedRowCount)) {
-      selectedRows.set({})
+    if ($selectedCellCount) {
+      if (get(selectedRowCount)) {
+        selectedRows.set({})
+      }
+      if (get(focusedCellId)) {
+        focusedCellId.set(null)
+      }
     }
   })
 }

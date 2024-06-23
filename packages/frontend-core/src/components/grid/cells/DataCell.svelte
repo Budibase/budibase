@@ -95,9 +95,6 @@
       selectedCells.actions.stopSelecting()
       return
     }
-    if ($focusedCellId) {
-      focusedCellId.set(null)
-    }
     selectedCells.actions.updateTarget(cellId)
   }
 
@@ -109,7 +106,6 @@
     if (e.shiftKey && $focusedCellId) {
       // If we have a focused cell, select the range from that cell to here
       selectedCells.actions.setRange($focusedCellId, cellId)
-      focusedCellId.set(null)
     } else if (e.shiftKey && $selectedCellCount) {
       // If we already have a selected range of cell, update it
       selectedCells.actions.updateTarget(cellId)
