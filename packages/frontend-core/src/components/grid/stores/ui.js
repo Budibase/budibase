@@ -261,6 +261,14 @@ export const createActions = context => {
     }))
   }
 
+  const setCellSelectionRange = (source, target) => {
+    cellSelection.set({
+      active: false,
+      sourceCellId: source,
+      targetCellId: target,
+    })
+  }
+
   const clearCellSelection = () => {
     cellSelection.set({
       active: false,
@@ -288,6 +296,7 @@ export const createActions = context => {
         startSelecting: startCellSelection,
         updateTarget: updateCellSelection,
         stopSelecting: stopCellSelection,
+        setRange: setCellSelectionRange,
         clear: clearCellSelection,
       },
     },

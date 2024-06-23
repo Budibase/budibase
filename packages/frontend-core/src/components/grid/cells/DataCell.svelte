@@ -12,6 +12,7 @@
     config,
     validation,
     selectedCells,
+    selectedCellCount,
   } = getContext("grid")
 
   export let highlighted
@@ -83,7 +84,7 @@
   }
 
   const startSelection = e => {
-    if (e.button !== 0) {
+    if (e.button !== 0 || e.shiftKey) {
       return
     }
     selectedCells.actions.startSelecting(cellId)
@@ -98,6 +99,20 @@
 
   const stopSelection = () => {
     selectedCells.actions.stopSelecting()
+  }
+
+  const handleClick = e => {
+    if (e.shiftKey && $focusedCellId) {
+      // If we have a focused cell, select the range from that cell to here
+      selectedCells.actions.setRange($focusedCellId, cellId)
+      focusedCellId.set(null)
+    } else if (e.shiftKey && $selectedCellCount) {
+      // If we already have a selected range of cell, update it
+      selectedCells.actions.updateTarget(cellId)
+    } else {
+      // Otherwise just select this cell
+      focusedCellId.set(cellId)
+    }
   }
 </script>
 
@@ -115,7 +130,7 @@
   on:mousedown={startSelection}
   on:mouseenter={updateSelectionCallback}
   on:mouseup={stopSelectionCallback}
-  on:click={() => focusedCellId.set(cellId)}
+  on:click={handleClick}
   width={column.width}
 >
   <svelte:component
