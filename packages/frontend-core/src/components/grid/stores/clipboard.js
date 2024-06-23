@@ -16,18 +16,19 @@ export const deriveStores = context => {
   const { clipboard, focusedCellAPI, selectedCellCount, config } = context
 
   // Derive whether or not we're able to copy
-  const copyAllowed = derived(
-    [focusedCellAPI, selectedCellCount],
-    ([$focusedCellAPI, $selectedCellCount]) => {
-      return $focusedCellAPI || $selectedCellCount
-    }
-  )
+  const copyAllowed = derived(focusedCellAPI, $focusedCellAPI => {
+    return $focusedCellAPI != null
+  })
 
   // Derive whether or not we're able to paste
   const pasteAllowed = derived(
     [clipboard, focusedCellAPI, selectedCellCount, config],
     ([$clipboard, $focusedCellAPI, $selectedCellCount, $config]) => {
-      if ($clipboard.value == null || !$config.canEditRows) {
+      if (
+        $clipboard.value == null ||
+        !$config.canEditRows ||
+        !$focusedCellAPI
+      ) {
         return false
       }
 
@@ -40,8 +41,7 @@ export const deriveStores = context => {
       ) {
         return false
       }
-
-      return $focusedCellAPI || $selectedCellCount
+      return true
     }
   )
 
@@ -183,7 +183,7 @@ export const createActions = context => {
           get(focusedCellAPI).setValue(value[0][0])
         } else {
           // Select the new cells to paste into, then paste
-          selectedCells.actions.updateTarget(targetCellId)
+          selectedCells.actions.selectRange($focusedCellId, targetCellId)
           await pasteIntoSelectedCells(value)
         }
       }
