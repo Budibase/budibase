@@ -524,7 +524,7 @@ export const createActions = context => {
     }
   }
 
-  const bulkUpdate = async changeMap => {
+  const bulkUpdate = async (changeMap, progressCallback) => {
     const rowIds = Object.keys(changeMap || {})
     if (!rowIds.length) {
       return
@@ -533,8 +533,10 @@ export const createActions = context => {
     // Update rows
     let updated = []
     let failed = 0
-    for (let rowId of rowIds) {
+    for (let i = 0; i < rowIds.length; i++) {
+      const rowId = rowIds[i]
       if (!Object.keys(changeMap[rowId] || {}).length) {
+        progressCallback?.((i + 1) / rowIds.length)
         continue
       }
       try {
@@ -554,6 +556,7 @@ export const createActions = context => {
         failed++
         console.error("Failed to update row", error)
       }
+      progressCallback?.((i + 1) / rowIds.length)
     }
 
     // Update state
