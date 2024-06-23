@@ -43,7 +43,7 @@ export const createActions = context => {
     // Check if there are multiple rows selected, and if this is one of them
     let multiRowMode = false
     if (get(selectedRowCount) > 1) {
-      const rowId = parseCellID(cellId).id
+      const { rowId } = parseCellID(cellId)
       if (get(selectedRows)[rowId]) {
         multiRowMode = true
       }
