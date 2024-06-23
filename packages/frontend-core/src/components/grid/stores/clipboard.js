@@ -123,7 +123,7 @@ export const createActions = context => {
   }
 
   // Pastes the previously copied value(s) into the selected cell(s)
-  const paste = async () => {
+  const paste = async progressCallback => {
     if (!get(pasteAllowed)) {
       return
     }
@@ -151,7 +151,7 @@ export const createActions = context => {
         }
 
         // Paste the new value
-        await pasteIntoSelectedCells(newValue)
+        await pasteIntoSelectedCells(newValue, progressCallback)
       } else {
         // Multi to single - expand to paste all values
         // Get indices of focused cell
@@ -184,14 +184,14 @@ export const createActions = context => {
         } else {
           // Select the new cells to paste into, then paste
           selectedCells.actions.selectRange($focusedCellId, targetCellId)
-          await pasteIntoSelectedCells(value)
+          await pasteIntoSelectedCells(value, progressCallback)
         }
       }
     } else {
       if (multiCellPaste) {
         // Single to multi - duplicate value to all selected cells
         const newValue = get(selectedCells).map(row => row.map(() => value))
-        await pasteIntoSelectedCells(newValue)
+        await pasteIntoSelectedCells(newValue, progressCallback)
       } else {
         // Single to single - just update the cell's value
         get(focusedCellAPI).setValue(value)
@@ -200,7 +200,7 @@ export const createActions = context => {
   }
 
   // Paste the specified value into the currently selected cells
-  const pasteIntoSelectedCells = async value => {
+  const pasteIntoSelectedCells = async (value, progressCallback) => {
     const $selectedCells = get(selectedCells)
 
     // Find the extent at which we can paste
@@ -219,7 +219,7 @@ export const createActions = context => {
         changeMap[rowId][field] = value[rowIdx][colIdx]
       }
     }
-    await rows.actions.bulkUpdate(changeMap)
+    await rows.actions.bulkUpdate(changeMap, progressCallback)
   }
 
   return {
