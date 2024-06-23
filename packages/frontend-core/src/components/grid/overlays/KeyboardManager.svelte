@@ -46,56 +46,56 @@
       }
     }
 
+    // Sugar for preventing default
+    const handle = async fn => {
+      e.preventDefault()
+      await fn()
+    }
+
     // Handle certain key presses regardless of selection state
     if (e.metaKey || e.ctrlKey) {
       switch (e.key) {
         case "c":
-          e.preventDefault()
-          dispatch("copy")
-          return
+          return handle(() => dispatch("copy"))
         case "v":
-          e.preventDefault()
-          dispatch("paste")
-          return
+          return handle(() => dispatch("paste"))
         case "Enter":
-          e.preventDefault()
-          if ($config.canAddRows) {
-            dispatch("add-row-inline")
-          }
-          return
+          return handle(() => {
+            if ($config.canAddRows) {
+              dispatch("add-row-inline")
+            }
+          })
       }
     }
 
     // Handle certain key presses if we have cells selected
     if ($selectedCellCount) {
-      e.preventDefault()
       switch (e.key) {
         case "ArrowLeft":
-          changeFocusedColumn(-1, e.shiftKey)
-          break
+          return handle(() => changeFocusedColumn(-1, e.shiftKey))
         case "ArrowRight":
-          changeFocusedColumn(1, e.shiftKey)
-          break
+          return handle(() => changeFocusedColumn(1, e.shiftKey))
         case "ArrowUp":
-          changeFocusedRow(-1, e.shiftKey)
-          break
+          return handle(() => changeFocusedRow(-1, e.shiftKey))
         case "ArrowDown":
-          changeFocusedRow(1, e.shiftKey)
-          break
+          return handle(() => changeFocusedRow(1, e.shiftKey))
+        case "Escape":
+          return handle(selectedCells.actions.clear)
       }
-      return
     }
 
-    // If nothing selected avoid processing further key presses
+    // Handle certain key presses only if no cell focused
     if (!$focusedCellId) {
       if (e.key === "Tab" || e.key?.startsWith("Arrow")) {
-        e.preventDefault()
-        focusFirstCell()
+        handle(focusFirstCell)
       } else if (e.key === "Delete" || e.key === "Backspace") {
-        if (Object.keys($selectedRows).length && $config.canDeleteRows) {
-          dispatch("request-bulk-delete")
-        }
+        handle(() => {
+          if (Object.keys($selectedRows).length && $config.canDeleteRows) {
+            dispatch("request-bulk-delete")
+          }
+        })
       }
+      // Avoid processing anything else
       return
     }
 
@@ -105,18 +105,19 @@
       // By setting a tiny timeout here we can ensure that other listeners
       // which depend on being able to read cell state on an escape keypress
       // get a chance to observe the true state before we blur
-      if (api?.isActive()) {
-        setTimeout(api?.blur, 10)
-      } else {
-        $focusedCellId = null
-      }
-      menu.actions.close()
-      return
+      return handle(() => {
+        if (api?.isActive()) {
+          setTimeout(api?.blur, 10)
+        } else {
+          $focusedCellId = null
+        }
+        menu.actions.close()
+      })
     } else if (e.key === "Tab") {
-      e.preventDefault()
-      api?.blur?.()
-      changeFocusedColumn(1)
-      return
+      return handle(() => {
+        api?.blur?.()
+        changeFocusedColumn(1)
+      })
     }
 
     // Pass the key event to the selected cell and let it decide whether to
@@ -127,7 +128,6 @@
         return
       }
     }
-    e.preventDefault()
 
     // Handle the key ourselves
     if (e.metaKey || e.ctrlKey) {
@@ -135,30 +135,26 @@
     } else {
       switch (e.key) {
         case "ArrowLeft":
-          changeFocusedColumn(-1, e.shiftKey)
-          break
+          return handle(() => changeFocusedColumn(-1, e.shiftKey))
         case "ArrowRight":
-          changeFocusedColumn(1, e.shiftKey)
-          break
+          return handle(() => changeFocusedColumn(1, e.shiftKey))
         case "ArrowUp":
-          changeFocusedRow(-1, e.shiftKey)
-          break
+          return handle(() => changeFocusedRow(-1, e.shiftKey))
         case "ArrowDown":
-          changeFocusedRow(1, e.shiftKey)
-          break
+          return handle(() => changeFocusedRow(1, e.shiftKey))
         case "Delete":
         case "Backspace":
-          if (Object.keys($selectedRows).length && $config.canDeleteRows) {
-            dispatch("request-bulk-delete")
-          } else {
-            deleteSelectedCell()
-          }
-          break
+          return handle(() => {
+            if (Object.keys($selectedRows).length && $config.canDeleteRows) {
+              dispatch("request-bulk-delete")
+            } else {
+              deleteSelectedCell()
+            }
+          })
         case "Enter":
-          focusCell()
-          break
+          return handle(focusCell)
         default:
-          startEnteringValue(e.key, e.which)
+          return handle(() => startEnteringValue(e.key, e.which))
       }
     }
   }
