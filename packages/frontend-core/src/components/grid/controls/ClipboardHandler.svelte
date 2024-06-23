@@ -9,7 +9,7 @@
 
   let modal
   let progressPercentage = 0
-  let pasting = false
+  let processing = false
 
   const handleCopyRequest = () => {
     if (!$copyAllowed) {
@@ -34,12 +34,12 @@
   }
 
   const performBulkPaste = async () => {
-    pasting = true
+    processing = true
     await clipboard.actions.paste(progress => {
       progressPercentage = progress * 100
     })
     await sleep(duration)
-    pasting = false
+    processing = false
   }
 
   onMount(() => subscribe("copy", handleCopyRequest))
@@ -48,14 +48,14 @@
 
 <Modal bind:this={modal}>
   <ModalContent
-    title="Confirm bulk paste"
+    title="Confirm paste"
     confirmText="Continue"
     cancelText="Cancel"
     onConfirm={performBulkPaste}
     size="M"
   >
     Are you sure you want to paste? This will update multiple values.
-    {#if pasting}
+    {#if processing}
       <ProgressBar
         size="L"
         value={progressPercentage}

@@ -1,30 +1,51 @@
 <script>
-  import { Modal, ModalContent } from "@budibase/bbui"
+  import { Modal, ModalContent, ProgressBar } from "@budibase/bbui"
   import { getContext, onMount } from "svelte"
   import { getCellID } from "../lib/utils"
+  import { sleep } from "../../../utils/utils"
 
   const {
     selectedRows,
     rows,
     subscribe,
-    focusedCellId,
-    stickyColumn,
-    columns,
     selectedRowCount,
+    allVisibleColumns,
+    selectedCells,
   } = getContext("grid")
+  const duration = 260
 
   let modal
+  let progressPercentage = 0
+  let processing = false
 
   // Deletion callback when confirmed
   const performDuplication = async () => {
+    progressPercentage = 0
+    processing = true
+
+    // duplicate rows
     const rowsToDuplicate = Object.keys($selectedRows).map(id => {
       return rows.actions.getRow(id)
     })
-    const newRows = await rows.actions.bulkDuplicate(rowsToDuplicate)
-    if (newRows[0]) {
-      const column = $stickyColumn?.name || $columns[0].name
-      $focusedCellId = getCellID(newRows[0]._id, column)
+    const newRows = await rows.actions.bulkDuplicate(
+      rowsToDuplicate,
+      progress => {
+        progressPercentage = progress * 100
+      }
+    )
+
+    // Select new cells to highlight them
+    if (newRows.length) {
+      const firstRow = newRows[0]
+      const lastRow = newRows[newRows.length - 1]
+      const firstCol = $allVisibleColumns[0]
+      const lastCol = $allVisibleColumns[$allVisibleColumns.length - 1]
+      const startCellId = getCellID(firstRow._id, firstCol.name)
+      const endCellId = getCellID(lastRow._id, lastCol.name)
+      selectedCells.actions.selectRange(startCellId, endCellId)
     }
+    await sleep(duration)
+    processing = false
   }
 
   onMount(() => subscribe("request-bulk-duplicate", () => modal?.show()))
@@ -40,9 +61,13 @@
   >
     Are you sure you want to duplicate {$selectedRowCount}
     row{$selectedRowCount === 1 ? "" : "s"}?
-    {#if $selectedRowCount >= 10}
-      <br /><br />
-      This may take a few seconds.
+    {#if processing}
+      <ProgressBar
+        size="L"
+        value={progressPercentage}
+        {duration}
+        width="100%"
+      />
     {/if}
   </ModalContent>
 </Modal>

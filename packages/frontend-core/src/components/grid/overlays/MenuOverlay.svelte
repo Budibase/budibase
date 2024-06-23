@@ -9,9 +9,6 @@
     focusedRow,
     menu,
     rows,
-    columns,
-    focusedCellId,
-    stickyColumn,
     config,
     dispatch,
     focusedRowId,
@@ -21,6 +18,8 @@
     copyAllowed,
     pasteAllowed,
     selectedCellCount,
+    allVisibleColumns,
+    selectedCells,
   } = getContext("grid")
 
   let anchor
@@ -42,8 +41,11 @@
     menu.actions.close()
     const newRow = await rows.actions.duplicateRow($focusedRow)
     if (newRow) {
-      const column = $stickyColumn?.name || $columns[0].name
-      $focusedCellId = getCellID(newRow._id, column)
+      const firstCol = $allVisibleColumns[0]
+      const lastCol = $allVisibleColumns[$allVisibleColumns.length - 1]
+      const startCellId = getCellID(newRow._id, firstCol.name)
+      const endCellId = getCellID(newRow._id, lastCol.name)
+      selectedCells.actions.selectRange(startCellId, endCellId)
     }
   }
 
