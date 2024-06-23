@@ -81,6 +81,9 @@
           return handle(() => changeFocusedRow(1, e.shiftKey))
         case "Escape":
           return handle(selectedCells.actions.clear)
+        case "Delete":
+        case "Backspace":
+          return handle(() => dispatch("request-bulk-delete"))
       }
     }
 
