@@ -47,9 +47,9 @@
     }
 
     // Sugar for preventing default
-    const handle = async fn => {
+    const handle = fn => {
       e.preventDefault()
-      await fn()
+      fn()
     }
 
     // Handle certain key presses regardless of selection state
