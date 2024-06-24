@@ -4,6 +4,7 @@ import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
 export const createStores = () => {
   const columns = writable([])
 
+  // Enrich columns with metadata about their display position
   const enrichedColumns = derived(columns, $columns => {
     let offset = GutterWidth
     let idx = 0
