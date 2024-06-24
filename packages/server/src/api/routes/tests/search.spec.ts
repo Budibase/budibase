@@ -1,5 +1,9 @@
 import { tableForDatasource } from "../../../tests/utilities/structures"
-import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import {
+  DatabaseName,
+  getDatasource,
+  knexClient,
+} from "../../../integrations/tests/utils"
 import { db as dbCore, utils } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
@@ -24,6 +28,8 @@ import _ from "lodash"
 import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
 import { dataFilters } from "@budibase/shared-core"
+import { Knex } from "knex"
+import { structures } from "@budibase/backend-core/tests"
 
 describe.each([
   ["in-memory", undefined],
@@ -42,6 +48,7 @@ describe.each([
 
   let envCleanup: (() => void) | undefined
   let datasource: Datasource | undefined
+  let client: Knex | undefined
   let table: Table
   let rows: Row[]
 
@@ -63,8 +70,10 @@ describe.each([
     }
 
     if (dsProvider) {
+      const rawDatasource = await dsProvider
+      client = await knexClient(rawDatasource)
       datasource = await config.createDatasource({
-        datasource: await dsProvider,
+        datasource: rawDatasource,
       })
     }
   })
@@ -909,6 +918,44 @@ describe.each([
           }).toMatchExactly([{ name: "foo" }, { name: "bar" }])
         })
       })
+
+      !isInternal &&
+        !isInMemory &&
+        // This test was added because we automatically add in a sort by the
+        // primary key, and we used to do this unconditionally which caused
+        // problems because it was possible for the primary key to appear twice
+        // in the resulting SQL ORDER BY clause, resulting in an SQL error.
+        // We now check first to make sure that the primary key isn't already
+        // in the sort before adding it.
+        describe("sort on primary key", () => {
+          beforeAll(async () => {
+            const tableName = structures.uuid().substring(0, 10)
+            await client!.schema.createTable(tableName, t => {
+              t.string("name").primary()
+            })
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+
+            table = resp.datasource.entities![tableName]
+
+            await createRows([{ name: "foo" }, { name: "bar" }])
+          })
+
+          it("should be able to sort by a primary key column ascending", async () =>
+            expectSearch({
+              query: {},
+              sort: "name",
+              sortOrder: SortOrder.ASCENDING,
+            }).toMatchExactly([{ name: "bar" }, { name: "foo" }]))
+
+          it("should be able to sort by a primary key column descending", async () =>
+            expectSearch({
+              query: {},
+              sort: "name",
+              sortOrder: SortOrder.DESCENDING,
+            }).toMatchExactly([{ name: "foo" }, { name: "bar" }]))
+        })
     })
   })
 
