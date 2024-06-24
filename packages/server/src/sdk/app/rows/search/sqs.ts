@@ -1,4 +1,5 @@
 import {
+  Datasource,
   DocumentType,
   FieldType,
   Operation,
@@ -12,7 +13,6 @@ import {
   SortType,
   SqlClient,
   Table,
-  Datasource,
 } from "@budibase/types"
 import {
   buildInternalRelationships,
@@ -30,6 +30,11 @@ import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
 import { processRowCountResponse } from "../utils"
+import {
+  updateFilterKeys,
+  getRelationshipColumns,
+  getTableIDList,
+} from "./filters"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 
@@ -60,34 +65,31 @@ function buildInternalFieldList(
   return fieldList
 }
 
-function tableNameInFieldRegex(tableName: string) {
-  return new RegExp(`^${tableName}.|:${tableName}.`, "g")
-}
-
-function cleanupFilters(filters: SearchFilters, tables: Table[]) {
-  for (let filter of Object.values(filters)) {
-    if (typeof filter !== "object") {
-      continue
-    }
-    for (let [key, keyFilter] of Object.entries(filter)) {
-      if (keyFilter === "") {
-        delete filter[key]
-      }
-
-      // relationship, switch to table ID
-      const tableRelated = tables.find(
-        table =>
-          table.originalName &&
-          key.match(tableNameInFieldRegex(table.originalName))
+function cleanupFilters(
+  filters: SearchFilters,
+  table: Table,
+  allTables: Table[]
+) {
+  // get a list of all relationship columns in the table for updating
+  const relationshipColumns = getRelationshipColumns(table)
+  // get table names to ID map for relationships
+  const tableNameToID = getTableIDList(allTables)
+  // all should be applied at once
+  filters = updateFilterKeys(
+    filters,
+    relationshipColumns
+      .map(({ name, definition }) => ({
+        original: name,
+        updated: definition.tableId,
+      }))
+      .concat(
+        tableNameToID.map(({ name, id }) => ({
+          original: name,
+          updated: id,
+        }))
       )
-      if (tableRelated && tableRelated.originalName) {
-        // only replace the first, not replaceAll
-        filter[key.replace(tableRelated.originalName, tableRelated._id!)] =
-          filter[key]
-        delete filter[key]
-      }
-    }
-  }
+  )
+
   return filters
 }
 
@@ -176,7 +178,7 @@ export async function search(
       operation: Operation.READ,
     },
     filters: {
-      ...cleanupFilters(query, allTables),
+      ...cleanupFilters(query, table, allTables),
       documentType: DocumentType.ROW,
     },
     table,
