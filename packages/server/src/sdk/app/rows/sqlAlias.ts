@@ -11,7 +11,12 @@ import { SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
 import datasources from "../datasources"
-import { makeExternalQuery } from "../../../integrations/base/query"
+import { BudibaseInternalDB } from "../../../db/utils"
+
+type PerformQueryFunction = (
+  datasource: Datasource,
+  json: QueryJson
+) => Promise<DatasourcePlusQueryResponse>
 
 const WRITE_OPERATIONS: Operation[] = [
   Operation.CREATE,
@@ -65,7 +70,7 @@ export default class AliasTables {
     this.charSeq = new CharSequence()
   }
 
-  isAliasingEnabled(json: QueryJson, datasource: Datasource) {
+  isAliasingEnabled(json: QueryJson, datasource?: Datasource) {
     const operation = json.endpoint.operation
     const fieldLength = json.resource?.fields?.length
     if (
@@ -74,6 +79,10 @@ export default class AliasTables {
       DISABLED_OPERATIONS.includes(operation)
     ) {
       return false
+    }
+    // SQS - doesn't have a datasource
+    if (!datasource) {
+      return true
     }
     try {
       const sqlClient = getSQLClient(datasource)
@@ -167,13 +176,14 @@ export default class AliasTables {
 
   async queryWithAliasing(
     json: QueryJson,
-    queryFn?: (json: QueryJson) => Promise<DatasourcePlusQueryResponse>
+    queryFn: PerformQueryFunction
   ): Promise<DatasourcePlusQueryResponse> {
     const datasourceId = json.endpoint.datasourceId
     const isSqs = datasourceId === SQS_DATASOURCE_INTERNAL
-    let aliasingEnabled: boolean, datasource: Datasource | undefined
+    let aliasingEnabled: boolean, datasource: Datasource
     if (isSqs) {
-      aliasingEnabled = true
+      aliasingEnabled = this.isAliasingEnabled(json)
+      datasource = BudibaseInternalDB
     } else {
       datasource = await datasources.get(datasourceId)
       aliasingEnabled = this.isAliasingEnabled(json, datasource)
@@ -225,14 +235,7 @@ export default class AliasTables {
       json.tableAliases = invertedTableAliases
     }
 
-    let response: DatasourcePlusQueryResponse
-    if (datasource && !isSqs) {
-      response = await makeExternalQuery(datasource, json)
-    } else if (queryFn) {
-      response = await queryFn(json)
-    } else {
-      throw new Error("No supplied method to perform aliased query")
-    }
+    let response: DatasourcePlusQueryResponse = await queryFn(datasource, json)
     if (Array.isArray(response) && aliasingEnabled) {
       return this.reverse(response)
     } else {
