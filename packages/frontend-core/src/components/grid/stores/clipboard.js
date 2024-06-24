@@ -81,7 +81,6 @@ export const createActions = context => {
     if (multiCellCopy) {
       const $rowLookupMap = get(rowLookupMap)
       const $rowChangeCache = get(rowChangeCache)
-      const $rows = get(rows)
 
       // Extract value of each selected cell, accounting for the change cache
       let value = []
@@ -89,9 +88,8 @@ export const createActions = context => {
         const rowValues = []
         for (let cellId of row) {
           const { rowId, field } = parseCellID(cellId)
-          const rowIndex = $rowLookupMap[rowId]
           const row = {
-            ...$rows[rowIndex],
+            ...$rowLookupMap[rowId],
             ...$rowChangeCache[rowId],
           }
           rowValues.push(row[field])
@@ -159,7 +157,7 @@ export const createActions = context => {
         const { rowId, field } = parseCellID($focusedCellId)
         const $rowLookupMap = get(rowLookupMap)
         const $columnLookupMap = get(columnLookupMap)
-        const rowIdx = $rowLookupMap[rowId]
+        const rowIdx = $rowLookupMap[rowId].__idx
         const colIdx = $columnLookupMap[field]
 
         // Get limits of how many rows and columns we're able to paste into

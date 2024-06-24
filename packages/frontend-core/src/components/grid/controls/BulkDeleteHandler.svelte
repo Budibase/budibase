@@ -24,7 +24,7 @@
   let promptQuantity = 0
 
   $: rowsToDelete = Object.keys($selectedRows)
-    .map(rowId => $rows[$rowLookupMap[rowId]])
+    .map(rowId => $rowLookupMap[rowId])
     .filter(x => x != null)
 
   const handleBulkDeleteRequest = () => {
