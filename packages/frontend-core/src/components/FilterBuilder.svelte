@@ -16,7 +16,6 @@
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import FilterUsers from "./FilterUsers.svelte"
-  import { getFields } from "../utils/searchFields"
 
   const { OperatorOptions, DEFAULT_BB_DATASOURCE_ID } = Constants
 
