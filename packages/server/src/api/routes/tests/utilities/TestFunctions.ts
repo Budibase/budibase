@@ -158,15 +158,16 @@ export const getDB = () => {
   return context.getAppDB()
 }
 
-export const testAutomation = async (config: any, automation: any) => {
+export const testAutomation = async (
+  config: any,
+  automation: any,
+  triggerInputs: any
+) => {
   return runRequest(automation.appId, async () => {
     return await config.request
       .post(`/api/automations/${automation._id}/test`)
       .send({
-        row: {
-          name: "Test",
-          description: "TEST",
-        },
+        ...triggerInputs,
       })
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)

@@ -12,6 +12,7 @@ import {
   SortType,
   SqlClient,
   Table,
+  Datasource,
 } from "@budibase/types"
 import {
   buildInternalRelationships,
@@ -28,6 +29,7 @@ import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
+import { processRowCountResponse } from "../utils"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 
@@ -95,14 +97,29 @@ function buildTableMap(tables: Table[]) {
     // update the table name, should never query by name for SQLite
     table.originalName = table.name
     table.name = table._id!
+    // need a primary for sorting, lookups etc
+    table.primary = ["_id"]
     tableMap[table._id!] = table
   }
   return tableMap
 }
 
-async function runSqlQuery(json: QueryJson, tables: Table[]) {
+function runSqlQuery(json: QueryJson, tables: Table[]): Promise<Row[]>
+function runSqlQuery(
+  json: QueryJson,
+  tables: Table[],
+  opts: { countTotalRows: true }
+): Promise<number>
+async function runSqlQuery(
+  json: QueryJson,
+  tables: Table[],
+  opts?: { countTotalRows?: boolean }
+) {
   const alias = new AliasTables(tables.map(table => table.name))
-  return await alias.queryWithAliasing(json, async json => {
+  if (opts?.countTotalRows) {
+    json.endpoint.operation = Operation.COUNT
+  }
+  const processSQLQuery = async (_: Datasource, json: QueryJson) => {
     const query = builder._query(json, {
       disableReturning: true,
     })
@@ -124,17 +141,27 @@ async function runSqlQuery(json: QueryJson, tables: Table[]) {
 
     const db = context.getAppDB()
     return await db.sql<Row>(sql, bindings)
-  })
+  }
+  const response = await alias.queryWithAliasing(json, processSQLQuery)
+  if (opts?.countTotalRows) {
+    return processRowCountResponse(response)
+  } else {
+    return response
+  }
 }
 
 export async function search(
   options: RowSearchParams,
   table: Table
 ): Promise<SearchResponse<Row>> {
-  const { paginate, query, ...params } = options
+  let { paginate, query, ...params } = options
 
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
+  // make sure we have the mapped/latest table
+  if (table?._id) {
+    table = allTablesMap[table?._id]
+  }
   if (!table) {
     throw new Error("Unable to find table")
   }
@@ -167,13 +194,9 @@ export async function search(
     const sortField = table.schema[params.sort]
     const sortType =
       sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
-    const sortDirection =
-      params.sortOrder === SortOrder.ASCENDING
-        ? SortOrder.ASCENDING
-        : SortOrder.DESCENDING
     request.sort = {
       [sortField.name]: {
-        direction: sortDirection,
+        direction: params.sortOrder || SortOrder.ASCENDING,
         type: sortType as SortType,
       },
     }
@@ -182,16 +205,31 @@ export async function search(
   if (params.bookmark && typeof params.bookmark !== "number") {
     throw new Error("Unable to paginate with string based bookmarks")
   }
-  const bookmark: number = (params.bookmark as number) || 1
-  const limit = params.limit
-  if (paginate && params.limit) {
+
+  const bookmark: number = (params.bookmark as number) || 0
+  if (params.limit) {
+    paginate = true
     request.paginate = {
       limit: params.limit + 1,
-      page: bookmark,
+      offset: bookmark * params.limit,
     }
   }
+
   try {
-    const rows = await runSqlQuery(request, allTables)
+    const queries: Promise<Row[] | number>[] = []
+    queries.push(runSqlQuery(request, allTables))
+    if (options.countRows) {
+      // get the total count of rows
+      queries.push(
+        runSqlQuery(request, allTables, {
+          countTotalRows: true,
+        })
+      )
+    }
+    const responses = await Promise.all(queries)
+    let rows = responses[0] as Row[]
+    const totalRows =
+      responses.length > 1 ? (responses[1] as number) : undefined
 
     // process from the format of tableId.column to expected format also
     // make sure JSON columns corrected
@@ -204,7 +242,8 @@ export async function search(
 
     // check for pagination final row
     let nextRow: Row | undefined
-    if (paginate && params.limit && processed.length > params.limit) {
+    if (paginate && params.limit && rows.length > params.limit) {
+      // remove the extra row that confirmed if there is another row to move to
       nextRow = processed.pop()
     }
 
@@ -220,27 +259,21 @@ export async function search(
       finalRows = finalRows.map((r: any) => pick(r, fields))
     }
 
-    // check for pagination
-    if (paginate && limit) {
-      const response: SearchResponse<Row> = {
-        rows: finalRows,
-      }
-      const prevLimit = request.paginate!.limit
-      request.paginate = {
-        limit: 1,
-        page: bookmark * prevLimit + 1,
-      }
-      const hasNextPage = !!nextRow
-      response.hasNextPage = hasNextPage
-      if (hasNextPage) {
-        response.bookmark = bookmark + 1
-      }
-      return response
-    } else {
-      return {
-        rows: finalRows,
-      }
+    const response: SearchResponse<Row> = {
+      rows: finalRows,
     }
+    if (totalRows != null) {
+      response.totalRows = totalRows
+    }
+    // check for pagination
+    if (paginate && nextRow) {
+      response.hasNextPage = true
+      response.bookmark = bookmark + 1
+    }
+    if (paginate && !nextRow) {
+      response.hasNextPage = false
+    }
+    return response
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
     if (err.status === 404 && msg?.includes(SQLITE_DESIGN_DOC_ID)) {

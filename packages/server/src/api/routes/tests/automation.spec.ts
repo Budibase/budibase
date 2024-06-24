@@ -13,6 +13,7 @@ import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { Automation } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
+import { FilterConditions } from "../../../automations/steps/filter"
 
 const MAX_RETRIES = 4
 let {
@@ -21,6 +22,7 @@ let {
   automationTrigger,
   automationStep,
   collectAutomation,
+  filterAutomation,
 } = setup.structures
 
 describe("/automations", () => {
@@ -155,7 +157,12 @@ describe("/automations", () => {
       automation.appId = config.appId
       automation = await config.createAutomation(automation)
       await setup.delay(500)
-      const res = await testAutomation(config, automation)
+      const res = await testAutomation(config, automation, {
+        row: {
+          name: "Test",
+          description: "TEST",
+        },
+      })
       expect(events.automation.tested).toHaveBeenCalledTimes(1)
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
       // know that it has finished all of its actions - this is currently the best way
@@ -435,5 +442,39 @@ describe("/automations", () => {
       let res = await sdk.automations.utils.checkForCollectStep(automation)
       expect(res).toEqual(true)
     })
+  })
+
+  describe("Update Row Old / New Row comparison", () => {
+    it.each([
+      { oldCity: "asdsadsadsad", newCity: "new" },
+      { oldCity: "Belfast", newCity: "Belfast" },
+    ])(
+      "triggers an update row automation and compares new to old rows with old city '%s' and new city '%s'",
+      async ({ oldCity, newCity }) => {
+        const expectedResult = oldCity === newCity
+
+        let table = await config.createTable()
+
+        let automation = await filterAutomation()
+        automation.definition.trigger.inputs.tableId = table._id
+        automation.definition.steps[0].inputs = {
+          condition: FilterConditions.EQUAL,
+          field: "{{ trigger.row.City }}",
+          value: "{{ trigger.oldRow.City }}",
+        }
+        automation.appId = config.appId!
+        automation = await config.createAutomation(automation)
+        let triggerInputs = {
+          oldRow: {
+            City: oldCity,
+          },
+          row: {
+            City: newCity,
+          },
+        }
+        const res = await testAutomation(config, automation, triggerInputs)
+        expect(res.body.steps[1].outputs.result).toEqual(expectedResult)
+      }
+    )
   })
 })
