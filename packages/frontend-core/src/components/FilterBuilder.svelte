@@ -62,9 +62,7 @@
   ]
   const context = getContext("context")
 
-  $: fieldOptions = getFields(tables, schemaFields || [], {
-    allowLinks: true,
-  }).map(field => ({
+  $: fieldOptions = (schemaFields || []).map(field => ({
     label: field.displayName || field.name,
     value: field.name,
   }))
