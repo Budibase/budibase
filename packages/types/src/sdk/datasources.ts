@@ -8,6 +8,7 @@ export enum Operation {
   READ = "READ",
   UPDATE = "UPDATE",
   DELETE = "DELETE",
+  COUNT = "COUNT",
   BULK_CREATE = "BULK_CREATE",
   BULK_UPSERT = "BULK_UPSERT",
   CREATE_TABLE = "CREATE_TABLE",
@@ -188,7 +189,7 @@ export interface Schema {
 }
 
 // return these when an operation occurred but we got no response
-enum DSPlusOperation {
+export enum DSPlusOperation {
   CREATE = "create",
   READ = "read",
   UPDATE = "update",
@@ -198,6 +199,7 @@ enum DSPlusOperation {
 export type DatasourcePlusQueryResponse =
   | Row[]
   | Record<DSPlusOperation, boolean>[]
+  | { total: number }[]
   | void
 
 export interface DatasourcePlus extends IntegrationBase {

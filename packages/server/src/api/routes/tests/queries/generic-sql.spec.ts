@@ -795,6 +795,7 @@ describe.each(
             name: entityId,
             schema: {},
             type: "table",
+            primary: ["id"],
             sourceId: datasource._id!,
             sourceType: TableSourceType.EXTERNAL,
           },

@@ -7,6 +7,7 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
   PermissionLevel,
   QuotaUsageType,
+  Row,
   SaveTableRequest,
   SearchFilterOperator,
   SortOrder,
@@ -17,6 +18,7 @@ import {
   UpdateViewRequest,
   ViewUIFieldMetadata,
   ViewV2,
+  SearchResponse,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -25,17 +27,21 @@ import { quotas } from "@budibase/pro"
 import { db, roles } from "@budibase/backend-core"
 
 describe.each([
-  ["internal", undefined],
+  ["lucene", undefined],
+  ["sqs", undefined],
   [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-])("/v2/views (%s)", (_, dsProvider) => {
+])("/v2/views (%s)", (name, dsProvider) => {
   const config = setup.getConfig()
-  const isInternal = !dsProvider
+  const isSqs = name === "sqs"
+  const isLucene = name === "lucene"
+  const isInternal = isSqs || isLucene
 
   let table: Table
   let datasource: Datasource
+  let envCleanup: (() => void) | undefined
 
   function saveTableRequest(
     ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
@@ -82,6 +88,9 @@ describe.each([
   }
 
   beforeAll(async () => {
+    if (isSqs) {
+      envCleanup = config.setEnv({ SQS_SEARCH_ENABLE: "true" })
+    }
     await config.init()
 
     if (dsProvider) {
@@ -94,6 +103,9 @@ describe.each([
 
   afterAll(async () => {
     setup.afterAll()
+    if (envCleanup) {
+      envCleanup()
+    }
   })
 
   beforeEach(() => {
@@ -1252,12 +1264,13 @@ describe.each([
           paginate: true,
           limit: 4,
           query: {},
+          countRows: true,
         })
         expect(page1).toEqual({
           rows: expect.arrayContaining(rows.slice(0, 4)),
-          totalRows: isInternal ? 10 : undefined,
           hasNextPage: true,
           bookmark: expect.anything(),
+          totalRows: 10,
         })
 
         const page2 = await config.api.viewV2.search(view.id, {
@@ -1265,12 +1278,13 @@ describe.each([
           limit: 4,
           bookmark: page1.bookmark,
           query: {},
+          countRows: true,
         })
         expect(page2).toEqual({
           rows: expect.arrayContaining(rows.slice(4, 8)),
-          totalRows: isInternal ? 10 : undefined,
           hasNextPage: true,
           bookmark: expect.anything(),
+          totalRows: 10,
         })
 
         const page3 = await config.api.viewV2.search(view.id, {
@@ -1278,13 +1292,17 @@ describe.each([
           limit: 4,
           bookmark: page2.bookmark,
           query: {},
+          countRows: true,
         })
-        expect(page3).toEqual({
+        const expectation: SearchResponse<Row> = {
           rows: expect.arrayContaining(rows.slice(8)),
-          totalRows: isInternal ? 10 : undefined,
           hasNextPage: false,
-          bookmark: expect.anything(),
-        })
+          totalRows: 10,
+        }
+        if (isLucene) {
+          expectation.bookmark = expect.anything()
+        }
+        expect(page3).toEqual(expectation)
       })
 
       const sortTestOptions: [
