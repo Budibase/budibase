@@ -14,6 +14,7 @@
     selectedRowCount,
     selectedCells,
     rowLookupMap,
+    config,
   } = getContext("grid")
   const duration = 260
 
@@ -30,14 +31,14 @@
   const handleBulkDeleteRequest = () => {
     progressPercentage = 0
     menu.actions.close()
-    if ($selectedRowCount) {
+    if ($selectedRowCount && $config.canDeleteRows) {
       if ($selectedRowCount === 1) {
         bulkDeleteRows()
       } else {
         promptQuantity = $selectedRowCount
         rowsModal?.show()
       }
-    } else if ($selectedCellCount) {
+    } else if ($selectedCellCount && $config.canEditRows) {
       promptQuantity = $selectedCellCount
       cellsModal?.show()
     }
