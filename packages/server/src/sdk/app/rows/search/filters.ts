@@ -4,24 +4,32 @@ import {
   SearchFilters,
   Table,
 } from "@budibase/types"
+import { isPlainObject } from "lodash"
 
 export function getRelationshipColumns(table: Table): {
   name: string
   definition: RelationshipFieldMetadata
 }[] {
-  return Object.entries(table.schema)
-    .filter(entry => entry[1].type === FieldType.LINK)
-    .map(entry => ({
-      name: entry[0],
-      definition: entry[1] as RelationshipFieldMetadata,
-    }))
+  // performing this with a for loop rather than an array filter improves
+  // type guarding, as no casts are required
+  const linkEntries: [string, RelationshipFieldMetadata][] = []
+  for (let entry of Object.entries(table.schema)) {
+    if (entry[1].type === FieldType.LINK) {
+      const linkColumn: RelationshipFieldMetadata = entry[1]
+      linkEntries.push([entry[0], linkColumn])
+    }
+  }
+  return linkEntries.map(entry => ({
+    name: entry[0],
+    definition: entry[1],
+  }))
 }
 
 export function getTableIDList(
   tables: Table[]
 ): { name: string; id: string }[] {
   return tables
-    .filter(table => table.originalName)
+    .filter(table => table.originalName && table._id)
     .map(table => ({ id: table._id!, name: table.originalName! }))
 }
 
@@ -32,7 +40,7 @@ export function updateFilterKeys(
   const makeFilterKeyRegex = (str: string) =>
     new RegExp(`^${str}\\.|:${str}\\.`)
   for (let filter of Object.values(filters)) {
-    if (typeof filter !== "object") {
+    if (!isPlainObject(filter)) {
       continue
     }
     for (let [key, keyFilter] of Object.entries(filter)) {
