@@ -180,3 +180,5 @@ export enum BpmStatusValue {
   VERIFYING_EMAIL = "verifying_email",
   COMPLETED = "completed",
 }
+
+export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
