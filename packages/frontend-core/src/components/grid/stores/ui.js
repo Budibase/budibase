@@ -117,8 +117,11 @@ export const deriveStores = context => {
       }
 
       // Row indices
-      const sourceRowIndex = $rowLookupMap[sourceInfo.rowId].__idx
-      const targetRowIndex = $rowLookupMap[targetInfo.rowId].__idx
+      const sourceRowIndex = $rowLookupMap[sourceInfo.rowId]?.__idx
+      const targetRowIndex = $rowLookupMap[targetInfo.rowId]?.__idx
+      if (sourceRowIndex == null || targetRowIndex == null) {
+        return []
+      }
       const lowerRowIndex = Math.min(sourceRowIndex, targetRowIndex)
       const upperRowIndex = Math.max(sourceRowIndex, targetRowIndex)
 
@@ -305,7 +308,7 @@ export const initialise = context => {
     focusedRowId,
     previousFocusedRowId,
     previousFocusedCellId,
-    rows,
+    rowLookupMap,
     focusedCellId,
     selectedRows,
     hoveredRowId,
@@ -320,18 +323,17 @@ export const initialise = context => {
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
-  rows.subscribe(async () => {
+  rowLookupMap.subscribe(async $rowLookupMap => {
     // We tick here to ensure other derived stores have properly updated.
     // We depend on the row lookup map which is a derived store,
     await tick()
-    const $focusedCellId = get(focusedCellId)
+    const $focusedRowId = get(focusedRowId)
     const $selectedRows = get(selectedRows)
     const $hoveredRowId = get(hoveredRowId)
-    const hasRow = rows.actions.hasRow
+    const hasRow = id => $rowLookupMap[id] != null
 
-    // Check selected cell
-    const selectedRowId = parseCellID($focusedCellId).rowId
-    if (selectedRowId && !hasRow(selectedRowId)) {
+    // Check focused cell
+    if ($focusedRowId && !hasRow($focusedRowId)) {
       focusedCellId.set(null)
     }
 
@@ -341,17 +343,19 @@ export const initialise = context => {
     }
 
     // Check selected rows
-    let newSelectedRows = { ...$selectedRows }
-    let selectedRowsNeedsUpdate = false
     const selectedIds = Object.keys($selectedRows)
-    for (let i = 0; i < selectedIds.length; i++) {
-      if (!hasRow(selectedIds[i])) {
-        delete newSelectedRows[selectedIds[i]]
-        selectedRowsNeedsUpdate = true
+    if (selectedIds.length) {
+      let newSelectedRows = { ...$selectedRows }
+      let selectedRowsNeedsUpdate = false
+      for (let i = 0; i < selectedIds.length; i++) {
+        if (!hasRow(selectedIds[i])) {
+          delete newSelectedRows[selectedIds[i]]
+          selectedRowsNeedsUpdate = true
+        }
       }
-    }
-    if (selectedRowsNeedsUpdate) {
-      selectedRows.set(newSelectedRows)
+      if (selectedRowsNeedsUpdate) {
+        selectedRows.set(newSelectedRows)
+      }
     }
   })
 
