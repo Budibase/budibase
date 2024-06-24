@@ -450,8 +450,8 @@ class InternalBuilder {
       }
     }
 
-    // add sorting by the primary key if the result isn't isn't already sorted
-    // by it, to make sure result is deterministic
+    // add sorting by the primary key if the result isn't already sorted by it,
+    // to make sure result is deterministic
     if (!sort || sort[primaryKey[0]] === undefined) {
       query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     }
