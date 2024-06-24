@@ -8,7 +8,13 @@ import { checkTestFlag } from "../utilities/redis"
 import * as utils from "./utils"
 import env from "../environment"
 import { context, db as dbCore } from "@budibase/backend-core"
-import { Automation, Row, AutomationData, AutomationJob } from "@budibase/types"
+import {
+  Automation,
+  Row,
+  AutomationData,
+  AutomationJob,
+  UpdatedRowEventEmitter,
+} from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 
 export const TRIGGER_DEFINITIONS = definitions
@@ -65,7 +71,7 @@ async function queueRelevantRowAutomations(
   })
 }
 
-emitter.on("row:save", async function (event) {
+emitter.on("row:save", async function (event: UpdatedRowEventEmitter) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return

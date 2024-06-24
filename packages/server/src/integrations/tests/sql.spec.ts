@@ -142,7 +142,7 @@ describe("SQL query builder", () => {
     const query = sql._query(generateRelationshipJson({ schema: "production" }))
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" limit $1) as "brands" left join "production"."products" as "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
+      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" order by "test"."id" asc limit $1) as "brands" left join "production"."products" as "products" on "brands"."brand_id" = "products"."brand_id" order by "test"."id" asc limit $2`,
     })
   })
 
@@ -150,7 +150,7 @@ describe("SQL query builder", () => {
     const query = sql._query(generateRelationshipJson())
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" limit $1) as "brands" left join "products" as "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
+      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" order by "test"."id" asc limit $1) as "brands" left join "products" as "products" on "brands"."brand_id" = "products"."brand_id" order by "test"."id" asc limit $2`,
     })
   })
 
@@ -160,7 +160,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" limit $1) as "stores" left join "production"."stocks" as "stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" as "products" on "products"."product_id" = "stocks"."product_id" limit $2`,
+      sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" order by "test"."id" asc limit $1) as "stores" left join "production"."stocks" as "stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" as "products" on "products"."product_id" = "stocks"."product_id" order by "test"."id" asc limit $2`,
     })
   })
 
@@ -175,8 +175,8 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: ["john%", limit],
-      sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
+      bindings: ["john%", limit, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -190,8 +190,8 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit],
-      sql: `select * from (select * from (select * from "test" where (COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2) and (COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4)) where rownum <= :5) "test"`,
+      bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where (COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2) and (COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4) order by "test"."id" asc) where rownum <= :5) "test" order by "test"."id" asc) where rownum <= :6`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -204,8 +204,8 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: [`%jo%`, limit],
-      sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
+      bindings: [`%jo%`, limit, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
   })
 })

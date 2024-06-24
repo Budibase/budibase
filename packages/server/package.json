@@ -109,7 +109,7 @@
     "serialize-error": "^7.0.1",
     "server-destroy": "1.0.1",
     "snowflake-promise": "^4.5.0",
-    "socket.io": "4.6.1",
+    "socket.io": "4.6.2",
     "tar": "6.2.1",
     "to-json-schema": "0.2.5",
     "uuid": "^8.3.2",

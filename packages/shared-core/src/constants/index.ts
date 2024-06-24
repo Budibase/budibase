@@ -1,5 +1,6 @@
 export * from "./api"
 export * from "./fields"
+export * from "./rows"
 
 export const OperatorOptions = {
   Equals: {
@@ -179,3 +180,5 @@ export enum BpmStatusValue {
   VERIFYING_EMAIL = "verifying_email",
   COMPLETED = "completed",
 }
+
+export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"

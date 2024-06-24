@@ -99,7 +99,7 @@ export function basicProcessing({
         row,
         tableName: table._id!,
         fieldName: internalColumn,
-        isLinked: false,
+        isLinked,
       })
     }
   }

@@ -57,7 +57,9 @@
       return
     }
     nextState.indicators[idx].visible =
-      nextState.indicators[idx].insideSidePanel || entries[0].isIntersecting
+      nextState.indicators[idx].insideModal ||
+      nextState.indicators[idx].insideSidePanel ||
+      entries[0].isIntersecting
     if (++callbackCount === observers.length) {
       state = nextState
       updating = false
@@ -139,6 +141,7 @@
         height: elBounds.height + 4,
         visible: false,
         insideSidePanel: !!child.closest(".side-panel"),
+        insideModal: !!child.closest(".modal-content"),
       })
     })
   }

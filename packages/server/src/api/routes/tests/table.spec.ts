@@ -276,6 +276,34 @@ describe.each([
         })
     })
 
+    isInternal &&
+      it("shouldn't allow duplicate column names", async () => {
+        const saveTableRequest: SaveTableRequest = {
+          ...basicTable(),
+        }
+        saveTableRequest.schema["Type"] = {
+          type: FieldType.STRING,
+          name: "Type",
+        }
+        await config.api.table.save(saveTableRequest, {
+          status: 400,
+          body: {
+            message:
+              'Column(s) "type" are duplicated - check for other columns with these name (case in-sensitive)',
+          },
+        })
+        saveTableRequest.schema.foo = { type: FieldType.STRING, name: "foo" }
+        saveTableRequest.schema.FOO = { type: FieldType.STRING, name: "FOO" }
+
+        await config.api.table.save(saveTableRequest, {
+          status: 400,
+          body: {
+            message:
+              'Column(s) "type, foo" are duplicated - check for other columns with these name (case in-sensitive)',
+          },
+        })
+      })
+
     it("should add a new column for an internal DB table", async () => {
       const saveTableRequest: SaveTableRequest = {
         ...basicTable(),
