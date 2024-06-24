@@ -90,10 +90,10 @@ export async function getExternalTable(
 export async function getTable(tableId: string): Promise<Table> {
   const db = context.getAppDB()
   let output: Table
-  if (isExternalTableID(tableId)) {
+  if (tableId && isExternalTableID(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
-    const datasource = await datasources.get(datasourceId!)
-    const table = await getExternalTable(datasourceId!, tableName!)
+    const datasource = await datasources.get(datasourceId)
+    const table = await getExternalTable(datasourceId, tableName)
     output = { ...table, sql: isSQL(datasource) }
   } else {
     output = await db.get<Table>(tableId)
