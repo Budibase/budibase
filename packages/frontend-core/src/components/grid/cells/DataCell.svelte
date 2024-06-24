@@ -37,7 +37,7 @@
   let api
 
   // Get the error for this cell if the cell is focused or selected
-  $: error = getErrorStore(rowFocused || cellSelected, cellId)
+  $: error = getErrorStore(rowFocused, cellId)
 
   // Determine if the cell is editable
   $: readonly =
