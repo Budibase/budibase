@@ -21,7 +21,6 @@
   $: visible = $isReordering && left >= $bodyLeft
 
   const getLeft = (targetColumn, insertAfter, scrollLeft) => {
-    console.log(targetColumn)
     if (!targetColumn) {
       return 0
     }
