@@ -226,10 +226,10 @@ export const createActions = context => {
   const moveColumnLeft = async column => {
     const $visibleColumns = get(visibleColumns)
     const $columnLookupMap = get(columnLookupMap)
-    const sourceIdx = $columnLookupMap[column]
+    const sourceIdx = $columnLookupMap[column].__idx
     await moveColumn({
       sourceColumn: column,
-      targetColumn: $visibleColumns[sourceIdx - 2]?.name,
+      targetColumn: $visibleColumns[sourceIdx - 1]?.name,
     })
   }
 
@@ -237,13 +237,14 @@ export const createActions = context => {
   const moveColumnRight = async column => {
     const $visibleColumns = get(visibleColumns)
     const $columnLookupMap = get(columnLookupMap)
-    const sourceIdx = $columnLookupMap[column]
+    const sourceIdx = $columnLookupMap[column].__idx
     if (sourceIdx === $visibleColumns.length - 1) {
       return
     }
     await moveColumn({
       sourceColumn: column,
       targetColumn: $visibleColumns[sourceIdx + 1]?.name,
+      insertAfter: true,
     })
   }
 
