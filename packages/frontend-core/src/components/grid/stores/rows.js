@@ -17,11 +17,23 @@ export const createStores = () => {
   const error = writable(null)
   const fetch = writable(null)
 
+  // Enrich rows with an index property and any pending changes
+  const enrichedRows = derived(
+    [rows, rowChangeCache],
+    ([$rows, $rowChangeCache]) => {
+      return $rows.map((row, idx) => ({
+        ...row,
+        ...$rowChangeCache[row._id],
+        __idx: idx,
+      }))
+    }
+  )
+
   // Generate a lookup map to quick find a row by ID
-  const rowLookupMap = derived(rows, $rows => {
+  const rowLookupMap = derived(enrichedRows, $enrichedRows => {
     let map = {}
-    for (let i = 0; i < $rows.length; i++) {
-      map[$rows[i]._id] = i
+    for (let i = 0; i < $enrichedRows.length; i++) {
+      map[$enrichedRows[i]._id] = $enrichedRows[i]
     }
     return map
   })
@@ -35,18 +47,6 @@ export const createStores = () => {
       loaded.set(true)
     }
   })
-
-  // Enrich rows with an index property and any pending changes
-  const enrichedRows = derived(
-    [rows, rowChangeCache],
-    ([$rows, $rowChangeCache]) => {
-      return $rows.map((row, idx) => ({
-        ...row,
-        ...$rowChangeCache[row._id],
-        __idx: idx,
-      }))
-    }
-  )
 
   return {
     rows: {
@@ -189,12 +189,6 @@ export const createActions = context => {
     fetch.set(newFetch)
   })
 
-  // Gets a row by ID
-  const getRow = id => {
-    const index = get(rowLookupMap)[id]
-    return index >= 0 ? get(rows)[index] : null
-  }
-
   // Handles validation errors from the rows API and updates local validation
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
@@ -323,7 +317,8 @@ export const createActions = context => {
   const bulkDuplicate = async (rowsToDupe, progressCallback) => {
     // Find index of last row
     const $rowLookupMap = get(rowLookupMap)
-    const index = Math.max(...rowsToDupe.map(row => $rowLookupMap[row._id]))
+    const indices = rowsToDupe.map(row => $rowLookupMap[row._id]?.__idx)
+    const index = Math.max(...indices)
     const count = rowsToDupe.length
 
     // Clone and clean rows
@@ -371,7 +366,7 @@ export const createActions = context => {
     // Get index of row to check if it exists
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
-    const index = $rowLookupMap[id]
+    const index = $rowLookupMap[id].__idx
 
     // Process as either an update, addition or deletion
     if (row) {
@@ -420,10 +415,8 @@ export const createActions = context => {
   // Patches a row with some changes in local state, and returns whether a
   // valid pending change was made or not
   const stashRowChanges = (rowId, changes) => {
-    const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
-    const index = $rowLookupMap[rowId]
-    const row = $rows[index]
+    const row = $rowLookupMap[rowId]
 
     // Check this is a valid change
     if (!row || !changesAreValid(row, changes)) {
@@ -449,10 +442,8 @@ export const createActions = context => {
     updateState = true,
     handleErrors = true,
   }) => {
-    const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
-    const index = $rowLookupMap[rowId]
-    const row = $rows[index]
+    const row = $rowLookupMap[rowId]
     if (row == null) {
       return
     }
@@ -479,7 +470,7 @@ export const createActions = context => {
       if (savedRow?._id) {
         if (updateState) {
           rows.update(state => {
-            state[index] = savedRow
+            state[row.__idx] = savedRow
             return state.slice()
           })
         }
@@ -562,7 +553,7 @@ export const createActions = context => {
       const $rowLookupMap = get(rowLookupMap)
       rows.update(state => {
         for (let row of updated) {
-          const index = $rowLookupMap[row._id]
+          const index = $rowLookupMap[row._id].__idx
           state[index] = row
         }
         return state.slice()
@@ -664,7 +655,6 @@ export const createActions = context => {
         addRow,
         duplicateRow,
         bulkDuplicate,
-        getRow,
         updateValue,
         applyRowChanges,
         deleteRows,

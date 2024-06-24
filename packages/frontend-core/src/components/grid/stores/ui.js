@@ -65,16 +65,12 @@ export const deriveStores = context => {
 
   // Derive the row that contains the selected cell
   const focusedRow = derived(
-    [focusedRowId, rowLookupMap, rows],
-    ([$focusedRowId, $rowLookupMap, $rows]) => {
-      // Edge case for new rows
+    [focusedRowId, rowLookupMap],
+    ([$focusedRowId, $rowLookupMap]) => {
       if ($focusedRowId === NewRowID) {
         return { _id: NewRowID }
       }
-
-      // All normal rows
-      const index = $rowLookupMap[$focusedRowId]
-      return $rows[index]
+      return $rowLookupMap[$focusedRowId]
     }
   )
 
@@ -119,8 +115,8 @@ export const deriveStores = context => {
       const targetInfo = parseCellID(targetCellId)
 
       // Row indices
-      const sourceRowIndex = $rowLookupMap[sourceInfo.rowId]
-      const targetRowIndex = $rowLookupMap[targetInfo.rowId]
+      const sourceRowIndex = $rowLookupMap[sourceInfo.rowId].__idx
+      const targetRowIndex = $rowLookupMap[targetInfo.rowId].__idx
       const lowerRowIndex = Math.min(sourceRowIndex, targetRowIndex)
       const upperRowIndex = Math.max(sourceRowIndex, targetRowIndex)
 
@@ -206,7 +202,7 @@ export const createActions = context => {
       if (!newState[id]) {
         delete newState[id]
       } else {
-        lastSelectedIndex = get(rowLookupMap)[id]
+        lastSelectedIndex = get(rowLookupMap)[id].__idx
       }
       return newState
     })
@@ -220,7 +216,7 @@ export const createActions = context => {
     if (lastSelectedIndex == null) {
       return
     }
-    const thisIndex = get(rowLookupMap)[id]
+    const thisIndex = get(rowLookupMap)[id].__idx
 
     // Skip if indices are the same
     if (lastSelectedIndex === thisIndex) {

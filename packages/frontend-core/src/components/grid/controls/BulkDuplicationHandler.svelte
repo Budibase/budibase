@@ -11,6 +11,7 @@
     selectedRowCount,
     allVisibleColumns,
     selectedCells,
+    rowLookupMap,
   } = getContext("grid")
   const duration = 260
 
@@ -26,7 +27,7 @@
 
     // duplicate rows
     const rowsToDuplicate = Object.keys($selectedRows).map(id => {
-      return rows.actions.getRow(id)
+      return $rowLookupMap[id]
     })
     const newRows = await rows.actions.bulkDuplicate(
       rowsToDuplicate,

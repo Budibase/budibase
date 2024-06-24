@@ -228,7 +228,7 @@
 
     // Determine the new position for this cell
     const { rowId, field } = parseCellID(sourceCellId)
-    const rowIdx = $rowLookupMap[rowId]
+    const rowIdx = $rowLookupMap[rowId].__idx
     const newRow = $rows[rowIdx + delta]
     if (!newRow) {
       return
