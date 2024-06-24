@@ -126,8 +126,8 @@ function getEndpoint(tableId: string | undefined, operation: string) {
   }
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   return {
-    datasourceId: datasourceId!,
-    entityId: tableName!,
+    datasourceId: datasourceId,
+    entityId: tableName,
     operation: operation as Operation,
   }
 }
@@ -180,7 +180,7 @@ export class ExternalRequest<T extends Operation> {
         const { tableName } = breakExternalTableId(definition.tableId)
         return {
           original: name,
-          updated: tableName!,
+          updated: tableName,
         }
       })
     )
@@ -267,12 +267,10 @@ export class ExternalRequest<T extends Operation> {
 
   getTable(tableId: string | undefined): Table | undefined {
     if (!tableId) {
-      throw "Table ID is unknown, cannot find table"
+      throw new Error("Table ID is unknown, cannot find table")
     }
     const { tableName } = breakExternalTableId(tableId)
-    if (tableName) {
-      return this.tables[tableName]
-    }
+    return this.tables[tableName]
   }
 
   // seeds the object with table and datasource information
@@ -323,9 +321,7 @@ export class ExternalRequest<T extends Operation> {
       if (field.type === FieldType.NUMBER && !isNaN(parseFloat(row[key]))) {
         newRow[key] = parseFloat(row[key])
       } else if (field.type === FieldType.LINK) {
-        const { tableName: linkTableName } = breakExternalTableId(
-          field?.tableId
-        )
+        const { tableName: linkTableName } = breakExternalTableId(field.tableId)
         // table has to exist for many to many
         if (!linkTableName || !this.tables[linkTableName]) {
           continue
@@ -406,9 +402,6 @@ export class ExternalRequest<T extends Operation> {
       [key: string]: { rows: Row[]; isMany: boolean; tableId: string }
     } = {}
     const { tableName } = breakExternalTableId(tableId)
-    if (!tableName) {
-      return related
-    }
     const table = this.tables[tableName]
     // @ts-ignore
     const primaryKey = table.primary[0]
@@ -602,17 +595,19 @@ export class ExternalRequest<T extends Operation> {
 
   async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
     const { operation, tableId } = this
-    let { datasourceId, tableName } = breakExternalTableId(tableId)
-    if (!tableName) {
-      throw "Unable to run without a table name"
+    if (!tableId) {
+      throw new Error("Unable to run without a table ID")
     }
+    let { datasourceId, tableName } = breakExternalTableId(tableId)
     if (!this.datasource) {
-      await this.retrieveMetadata(datasourceId!)
+      await this.retrieveMetadata(datasourceId)
     }
     const table = this.tables[tableName]
     let isSql = isSQL(this.datasource!)
     if (!table) {
-      throw `Unable to process query, table "${tableName}" not defined.`
+      throw new Error(
+        `Unable to process query, table "${tableName}" not defined.`
+      )
     }
     // look for specific components of config which may not be considered acceptable
     let { id, row, filters, sort, paginate, rows } = cleanupConfig(

@@ -10,9 +10,9 @@ export async function get(viewId: string): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  const ds = await sdk.datasources.get(datasourceId!)
+  const ds = await sdk.datasources.get(datasourceId)
 
-  const table = ds.entities![tableName!]
+  const table = ds.entities![tableName]
   const views = Object.values(table.views!).filter(isV2)
   const found = views.find(v => v.id === viewId)
   if (!found) {
@@ -25,9 +25,9 @@ export async function getEnriched(viewId: string): Promise<ViewV2Enriched> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  const ds = await sdk.datasources.get(datasourceId!)
+  const ds = await sdk.datasources.get(datasourceId)
 
-  const table = ds.entities![tableName!]
+  const table = ds.entities![tableName]
   const views = Object.values(table.views!).filter(isV2)
   const found = views.find(v => v.id === viewId)
   if (!found) {
@@ -49,9 +49,9 @@ export async function create(
   const db = context.getAppDB()
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  const ds = await sdk.datasources.get(datasourceId!)
-  ds.entities![tableName!].views ??= {}
-  ds.entities![tableName!].views![view.name] = view
+  const ds = await sdk.datasources.get(datasourceId)
+  ds.entities![tableName].views ??= {}
+  ds.entities![tableName].views![view.name] = view
   await db.put(ds)
   return view
 }
@@ -60,9 +60,9 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
   const db = context.getAppDB()
 
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  const ds = await sdk.datasources.get(datasourceId!)
-  ds.entities![tableName!].views ??= {}
-  const views = ds.entities![tableName!].views!
+  const ds = await sdk.datasources.get(datasourceId)
+  ds.entities![tableName].views ??= {}
+  const views = ds.entities![tableName].views!
 
   const existingView = Object.values(views).find(
     v => isV2(v) && v.id === view.id
@@ -87,9 +87,9 @@ export async function remove(viewId: string): Promise<ViewV2> {
   }
 
   const { datasourceId, tableName } = breakExternalTableId(view.tableId)
-  const ds = await sdk.datasources.get(datasourceId!)
+  const ds = await sdk.datasources.get(datasourceId)
 
-  delete ds.entities![tableName!].views![view?.name]
+  delete ds.entities![tableName].views![view?.name]
   await db.put(ds)
   return view
 }
