@@ -176,24 +176,13 @@ export class ExternalRequest<T extends Operation> {
     const relationshipColumns = sdk.rows.filters.getRelationshipColumns(table)
     filters = sdk.rows.filters.updateFilterKeys(
       filters,
-      relationshipColumns
-        .map(({ name, definition }) => {
-          const { tableName } = breakExternalTableId(definition.tableId)
-          return {
-            original: name,
-            updated: tableName!,
-          }
-        })
-        // don't update table names - include this for context incase a column would be replaced
-        .concat(
-          tables.map(table => {
-            const tableName = table.originalName || table.name
-            return {
-              original: tableName,
-              updated: tableName,
-            }
-          })
-        )
+      relationshipColumns.map(({ name, definition }) => {
+        const { tableName } = breakExternalTableId(definition.tableId)
+        return {
+          original: name,
+          updated: tableName!,
+        }
+      })
     )
     const primary = table.primary
     // if passed in array need to copy for shifting etc
