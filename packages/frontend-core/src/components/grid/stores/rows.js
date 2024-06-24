@@ -324,6 +324,7 @@ export const createActions = context => {
     // Find index of last row
     const $rowLookupMap = get(rowLookupMap)
     const index = Math.max(...rowsToDupe.map(row => $rowLookupMap[row._id]))
+    const count = rowsToDupe.length
 
     // Clone and clean rows
     const clones = rowsToDupe.map(row => {
@@ -336,7 +337,7 @@ export const createActions = context => {
     // Create rows
     let saved = []
     let failed = 0
-    for (let i = 0; i < clones.length; i++) {
+    for (let i = 0; i < count; i++) {
       try {
         saved.push(await datasource.actions.addRow(clones[i]))
         rowCacheMap[saved._id] = true
@@ -345,7 +346,7 @@ export const createActions = context => {
         failed++
         console.error("Duplicating row failed", error)
       }
-      progressCallback?.((i + 1) / clones.length)
+      progressCallback?.((i + 1) / count)
     }
 
     // Add to state
@@ -356,15 +357,10 @@ export const createActions = context => {
     }
 
     // Notify user
-    if (saved.length) {
-      get(notifications).success(
-        `Duplicated ${saved.length} row${saved.length === 1 ? "" : "s"}`
-      )
-    }
     if (failed) {
-      get(notifications).error(
-        `Failed to duplicate ${failed} row${failed === 1 ? "" : "s"}`
-      )
+      get(notifications).error(`Failed to duplicate ${failed} of ${count} rows`)
+    } else if (saved.length) {
+      get(notifications).success(`Duplicated ${saved.length} rows`)
     }
     return saved
   }
@@ -527,17 +523,18 @@ export const createActions = context => {
 
   const bulkUpdate = async (changeMap, progressCallback) => {
     const rowIds = Object.keys(changeMap || {})
-    if (!rowIds.length) {
+    const count = rowIds.length
+    if (!count) {
       return
     }
 
     // Update rows
     let updated = []
     let failed = 0
-    for (let i = 0; i < rowIds.length; i++) {
+    for (let i = 0; i < count; i++) {
       const rowId = rowIds[i]
       if (!Object.keys(changeMap[rowId] || {}).length) {
-        progressCallback?.((i + 1) / rowIds.length)
+        progressCallback?.((i + 1) / count)
         continue
       }
       try {
@@ -557,7 +554,7 @@ export const createActions = context => {
         failed++
         console.error("Failed to update row", error)
       }
-      progressCallback?.((i + 1) / rowIds.length)
+      progressCallback?.((i + 1) / count)
     }
 
     // Update state
@@ -573,15 +570,10 @@ export const createActions = context => {
     }
 
     // Notify user
-    if (updated.length) {
-      get(notifications).success(
-        `Updated ${updated.length} row${updated.length === 1 ? "" : "s"}`
-      )
-    }
     if (failed) {
-      get(notifications).error(
-        `Failed to update ${failed} row${failed === 1 ? "" : "s"}`
-      )
+      get(notifications).error(`Failed to update ${failed} of ${count} rows`)
+    } else if (updated.length) {
+      get(notifications).success(`Updated ${updated.length} rows`)
     }
   }
 

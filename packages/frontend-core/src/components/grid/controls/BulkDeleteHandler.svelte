@@ -13,6 +13,7 @@
     selectedCellCount,
     selectedRowCount,
     selectedCells,
+    rowLookupMap,
   } = getContext("grid")
   const duration = 260
 
@@ -20,17 +21,24 @@
   let cellsModal
   let processing = false
   let progressPercentage = 0
+  let promptQuantity = 0
 
-  $: rowsToDelete = Object.entries($selectedRows)
-    .map(entry => $rows.find(x => x._id === entry[0]))
+  $: rowsToDelete = Object.keys($selectedRows)
+    .map(rowId => $rows[$rowLookupMap[rowId]])
     .filter(x => x != null)
 
   const handleBulkDeleteRequest = () => {
     progressPercentage = 0
     menu.actions.close()
     if ($selectedRowCount) {
-      rowsModal?.show()
+      if ($selectedRowCount === 1) {
+        bulkDeleteRows()
+      } else {
+        promptQuantity = $selectedRowCount
+        rowsModal?.show()
+      }
     } else if ($selectedCellCount) {
+      promptQuantity = $selectedCellCount
       cellsModal?.show()
     }
   }
@@ -38,9 +46,11 @@
   const bulkDeleteRows = async () => {
     processing = true
     const count = rowsToDelete.length
-    await rows.actions.deleteRows(rowsToDelete, progress => {
-      progressPercentage = progress * 100
-    })
+    await rows.actions.deleteRows(rowsToDelete)
+    // This is a real bulk delete endpoint so we don't need progress.
+    // We just animate it uo to 100 when we're done for consistency with other
+    // prompts.
+    progressPercentage = 100
     await sleep(duration)
     $notifications.success(`Deleted ${count} row${count === 1 ? "" : "s"}`)
     processing = false
@@ -76,8 +86,7 @@
     onConfirm={bulkDeleteRows}
     size="M"
   >
-    Are you sure you want to delete {$selectedRowCount}
-    row{$selectedRowCount === 1 ? "" : "s"}?
+    Are you sure you want to delete {promptQuantity} rows?
     {#if processing}
       <ProgressBar
         size="L"
@@ -97,8 +106,7 @@
     onConfirm={bulkDeleteCells}
     size="M"
   >
-    Are you sure you want to delete {$selectedCellCount}
-    cell{$selectedCellCount === 1 ? "" : "s"}?
+    Are you sure you want to delete {promptQuantity} cells?
     {#if processing}
       <ProgressBar
         size="L"

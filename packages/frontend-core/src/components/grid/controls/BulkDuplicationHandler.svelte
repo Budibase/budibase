@@ -17,6 +17,7 @@
   let modal
   let progressPercentage = 0
   let processing = false
+  let promptQuantity = 0
 
   // Deletion callback when confirmed
   const performDuplication = async () => {
@@ -48,7 +49,12 @@
     processing = false
   }
 
-  onMount(() => subscribe("request-bulk-duplicate", () => modal?.show()))
+  const handleBulkDuplicateRequest = () => {
+    promptQuantity = $selectedRowCount
+    modal?.show()
+  }
+
+  onMount(() => subscribe("request-bulk-duplicate", handleBulkDuplicateRequest))
 </script>
 
 <Modal bind:this={modal}>
@@ -59,8 +65,7 @@
     onConfirm={performDuplication}
     size="M"
   >
-    Are you sure you want to duplicate {$selectedRowCount}
-    row{$selectedRowCount === 1 ? "" : "s"}?
+    Are you sure you want to duplicate {promptQuantity} rows?
     {#if processing}
       <ProgressBar
         size="L"
