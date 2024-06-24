@@ -136,10 +136,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   const id = ctx.params.rowId
   const tableId = utils.getTableId(ctx)
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  const datasource: Datasource = await sdk.datasources.get(datasourceId!)
-  if (!tableName) {
-    ctx.throw(400, "Unable to find table.")
-  }
+  const datasource: Datasource = await sdk.datasources.get(datasourceId)
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
@@ -163,7 +160,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
     }
     const links = row[fieldName]
     const linkedTableId = field.tableId
-    const linkedTableName = breakExternalTableId(linkedTableId).tableName!
+    const linkedTableName = breakExternalTableId(linkedTableId).tableName
     const linkedTable = tables[linkedTableName]
     // don't support composite keys right now
     const linkedIds = links.map((link: Row) => breakRowIdField(link._id!)[0])

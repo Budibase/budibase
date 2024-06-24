@@ -18,8 +18,8 @@ import { builderSocket } from "../../../websockets"
 import { inputProcessing } from "../../../utilities/rowProcessor"
 
 function getDatasourceId(table: Table) {
-  if (!table) {
-    throw "No table supplied"
+  if (!table || !table._id) {
+    throw new Error("No table/table ID supplied")
   }
   if (table.sourceId) {
     return table.sourceId
