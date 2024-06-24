@@ -87,6 +87,7 @@ export const createActions = context => {
     fetch,
     hasBudibaseIdentifiers,
     refreshing,
+    columnLookupMap,
   } = context
   const instanceLoaded = writable(false)
 
@@ -443,6 +444,7 @@ export const createActions = context => {
     handleErrors = true,
   }) => {
     const $rowLookupMap = get(rowLookupMap)
+    const $columnLookupMap = get(columnLookupMap)
     const row = $rowLookupMap[rowId]
     if (row == null) {
       return
@@ -457,13 +459,18 @@ export const createActions = context => {
         [rowId]: (state[rowId] || 0) + 1,
       }))
 
-      // Update row
+      // Strip any readonly fields from the change set
       const stashedChanges = get(rowChangeCache)[rowId]
-      const newRow = {
-        ...cleanRow(row),
-        ...stashedChanges,
-        ...changes,
+      let allChanges = { ...stashedChanges, ...changes }
+      for (let field of Object.keys(allChanges)) {
+        const column = $columnLookupMap[field]
+        if (columns.actions.isReadonly(column)) {
+          delete allChanges[field]
+        }
       }
+
+      // Update row
+      const newRow = { ...cleanRow(row), ...allChanges }
       savedRow = await datasource.actions.updateRow(newRow)
 
       // Update row state after a successful change
@@ -561,10 +568,11 @@ export const createActions = context => {
     }
 
     // Notify user
+    const unit = `row${count === 1 ? "" : "s"}`
     if (failed) {
-      get(notifications).error(`Failed to update ${failed} of ${count} rows`)
-    } else if (updated.length) {
-      get(notifications).success(`Updated ${updated.length} rows`)
+      get(notifications).error(`Failed to update ${failed} of ${count} ${unit}`)
+    } else {
+      get(notifications).success(`Updated ${count} ${unit}`)
     }
   }
 
