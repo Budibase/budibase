@@ -145,6 +145,10 @@ export async function exportRows(
     delimiter,
     customHeaders,
   } = options
+
+  if (!tableId) {
+    throw new HTTPError("No table ID for search provided.", 400)
+  }
   const { datasourceId, tableName } = breakExternalTableId(tableId)
 
   let requestQuery: SearchFilters = {}
@@ -167,7 +171,7 @@ export async function exportRows(
     requestQuery = query || {}
   }
 
-  const datasource = await sdk.datasources.get(datasourceId!)
+  const datasource = await sdk.datasources.get(datasourceId)
   const table = await sdk.tables.getTable(tableId)
   if (!datasource || !datasource.entities) {
     throw new HTTPError("Datasource has not been configured for plus API.", 400)
@@ -179,10 +183,6 @@ export async function exportRows(
   )
   let rows: Row[] = []
   let headers
-
-  if (!tableName) {
-    throw new HTTPError("Could not find table name.", 400)
-  }
 
   // Filter data to only specified columns if required
   if (columns && columns.length) {
