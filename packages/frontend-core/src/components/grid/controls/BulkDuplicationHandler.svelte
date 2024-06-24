@@ -9,7 +9,7 @@
     rows,
     subscribe,
     selectedRowCount,
-    allVisibleColumns,
+    visibleColumns,
     selectedCells,
     rowLookupMap,
   } = getContext("grid")
@@ -40,8 +40,8 @@
     if (newRows.length) {
       const firstRow = newRows[0]
       const lastRow = newRows[newRows.length - 1]
-      const firstCol = $allVisibleColumns[0]
-      const lastCol = $allVisibleColumns[$allVisibleColumns.length - 1]
+      const firstCol = $visibleColumns[0]
+      const lastCol = $visibleColumns[$visibleColumns.length - 1]
       const startCellId = getCellID(firstRow._id, firstCol.name)
       const endCellId = getCellID(lastRow._id, lastCol.name)
       selectedCells.actions.selectRange(startCellId, endCellId)

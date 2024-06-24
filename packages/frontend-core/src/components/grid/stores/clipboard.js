@@ -64,7 +64,7 @@ export const createActions = context => {
     rows,
     focusedCellId,
     columnLookupMap,
-    allVisibleColumns,
+    visibleColumns,
   } = context
 
   // Copies the currently selected value (or values)
@@ -162,8 +162,8 @@ export const createActions = context => {
 
         // Get limits of how many rows and columns we're able to paste into
         const $rows = get(rows)
-        const $allVisibleColumns = get(allVisibleColumns)
-        const colCount = $allVisibleColumns.length
+        const $visibleColumns = get(visibleColumns)
+        const colCount = $visibleColumns.length
         const rowCount = $rows.length
         const selectedRows = value.length
         const selectedColumns = value[0].length
@@ -172,7 +172,7 @@ export const createActions = context => {
 
         // Get the target cell ID (bottom right of our pastable extent)
         const targetRowId = $rows[rowIdx + rowExtent]._id
-        const targetColName = $allVisibleColumns[colIdx + colExtent].name
+        const targetColName = $visibleColumns[colIdx + colExtent].name
         const targetCellId = getCellID(targetRowId, targetColName)
 
         // Paste into target cell range

@@ -18,7 +18,7 @@
     copyAllowed,
     pasteAllowed,
     selectedCellCount,
-    allVisibleColumns,
+    visibleColumns,
     selectedCells,
   } = getContext("grid")
 
@@ -41,8 +41,8 @@
     menu.actions.close()
     const newRow = await rows.actions.duplicateRow($focusedRow)
     if (newRow) {
-      const firstCol = $allVisibleColumns[0]
-      const lastCol = $allVisibleColumns[$allVisibleColumns.length - 1]
+      const firstCol = $visibleColumns[0]
+      const lastCol = $visibleColumns[$visibleColumns.length - 1]
       const startCellId = getCellID(newRow._id, firstCol.name)
       const endCellId = getCellID(newRow._id, lastCol.name)
       selectedCells.actions.selectRange(startCellId, endCellId)

@@ -19,7 +19,6 @@
     selectedCells,
     cellSelection,
     columnLookupMap,
-    allVisibleColumns,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -188,7 +187,7 @@
     // Determine the new position for this cell
     const { rowId, field } = parseCellID(sourceCellId)
     const colIdx = $columnLookupMap[field]
-    const nextColumn = $allVisibleColumns[colIdx + delta]
+    const nextColumn = $visibleColumns[colIdx + delta]
     if (!nextColumn) {
       return
     }
