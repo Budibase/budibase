@@ -6,14 +6,14 @@
   const {
     isReordering,
     reorder,
-    visibleColumnLookupMap,
+    columnLookupMap,
     rowHeight,
     renderedRows,
     scrollLeft,
     bodyLeft,
   } = getContext("grid")
 
-  $: targetColumn = $visibleColumnLookupMap[$reorder.targetColumn]
+  $: targetColumn = $columnLookupMap[$reorder.targetColumn]
   $: insertAfter = $reorder.insertAfter
   $: left = getLeft(targetColumn, insertAfter, $scrollLeft)
   $: height = $rowHeight * $renderedRows.length + DefaultRowHeight
@@ -21,6 +21,7 @@
   $: visible = $isReordering && left >= $bodyLeft
 
   const getLeft = (targetColumn, insertAfter, scrollLeft) => {
+    console.log(targetColumn)
     if (!targetColumn) {
       return 0
     }

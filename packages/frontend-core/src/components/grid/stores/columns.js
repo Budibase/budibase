@@ -5,10 +5,21 @@ export const createStores = () => {
   const columns = writable([])
 
   const enrichedColumns = derived(columns, $columns => {
-    return $columns.map((col, idx) => ({
-      ...col,
-      __idx: idx,
-    }))
+    let offset = GutterWidth
+    let visibleIdx = 0
+    return $columns.map((col, idx) => {
+      const enriched = {
+        ...col,
+        __idx: idx, // Overall column index
+        __visibleIdx: visibleIdx, // Index within the visible columns
+        __left: offset, // Left offset relative to all visible columns
+      }
+      if (col.visible) {
+        visibleIdx++
+        offset += col.width
+      }
+      return enriched
+    })
   })
 
   return {
@@ -22,11 +33,6 @@ export const createStores = () => {
 export const deriveStores = context => {
   const { columns } = context
 
-  // Derive the primary display column
-  const displayColumn = derived(columns, $columns => {
-    return $columns.find(col => col.primaryDisplay)
-  })
-
   // Derive a lookup map for all columns by name
   const columnLookupMap = derived(columns, $columns => {
     let map = {}
@@ -36,33 +42,15 @@ export const deriveStores = context => {
     return map
   })
 
-  // Derived list of columns which have not been explicitly hidden, and enrich
-  // with an index so we can easily select nearby columns
+  // Derived list of columns which have not been explicitly hidden
   const visibleColumns = derived(columns, $columns => {
-    let offset = GutterWidth
-    return $columns
-      .filter(col => col.visible)
-      .map((col, idx) => {
-        const enriched = {
-          ...col,
-          __left: offset,
-          __idx: idx,
-        }
-        offset += col.width
-        return enriched
-      })
+    return $columns.filter(col => col.visible)
   })
 
-  // Derive a lookup map for visible columns by name
-  const visibleColumnLookupMap = derived(visibleColumns, $visibleColumns => {
-    let map = {}
-    $visibleColumns.forEach(column => {
-      map[column.name] = column
-    })
-    return map
+  // Split visible columns into their discrete types
+  const displayColumn = derived(visibleColumns, $visibleColumns => {
+    return $visibleColumns.find(col => col.primaryDisplay)
   })
-
-  // Derive scrollable columns
   const scrollableColumns = derived(visibleColumns, $visibleColumns => {
     return $visibleColumns.filter(col => !col.primaryDisplay)
   })
@@ -79,7 +67,6 @@ export const deriveStores = context => {
     displayColumn,
     columnLookupMap,
     visibleColumns,
-    visibleColumnLookupMap,
     scrollableColumns,
     hasNonAutoColumn,
   }

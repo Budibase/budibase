@@ -30,14 +30,14 @@ export const createActions = context => {
     columns,
     columnLookupMap,
     scrollableColumns,
-    visibleColumnLookupMap,
     scroll,
     bounds,
     visibleColumns,
-    maxScrollLeft,
     datasource,
     bodyLeft,
     width,
+    scrollLeft,
+    maxScrollLeft,
   } = context
   let latestX = 0
   let autoScrollInterval
@@ -94,17 +94,19 @@ export const createActions = context => {
     considerReorderPosition()
 
     // Check if we need to start auto-scrolling
+    const $scrollLeft = get(scrollLeft)
+    const $maxScrollLeft = get(maxScrollLeft)
     const $reorder = get(reorder)
     const proximityCutoff = Math.min(140, get(width) / 6)
     const speedFactor = 16
     const rightProximity = Math.max(0, $reorder.gridLeft + $reorder.width - x)
     const leftProximity = Math.max(0, x - $reorder.gridLeft)
-    if (rightProximity < proximityCutoff) {
+    if (rightProximity < proximityCutoff && $scrollLeft < $maxScrollLeft) {
       const weight = proximityCutoff - rightProximity
       const increment = (weight / proximityCutoff) * speedFactor
       reorder.update(state => ({ ...state, increment }))
       startAutoScroll()
-    } else if (leftProximity < proximityCutoff) {
+    } else if (leftProximity < proximityCutoff && $scrollLeft > 0) {
       const weight = -1 * (proximityCutoff - leftProximity)
       const increment = (weight / proximityCutoff) * speedFactor
       reorder.update(state => ({ ...state, increment }))
@@ -180,20 +182,26 @@ export const createActions = context => {
     document.removeEventListener("touchcancel", stopReordering)
 
     // Ensure there's actually a change before saving
-    const { sourceColumn, targetColumn } = get(reorder)
+    const { sourceColumn, targetColumn, insertAfter } = get(reorder)
     reorder.set(reorderInitialState)
     if (sourceColumn !== targetColumn) {
-      await moveColumn(sourceColumn, targetColumn)
+      await moveColumn({ sourceColumn, targetColumn, insertAfter })
     }
   }
 
   // Moves a column after another columns.
   // An undefined target column will move the source to index 0.
-  const moveColumn = async (sourceColumn, targetColumn) => {
+  const moveColumn = async ({
+    sourceColumn,
+    targetColumn,
+    insertAfter = false,
+  }) => {
     const $columnLookupMap = get(columnLookupMap)
-    let sourceIdx = $columnLookupMap[sourceColumn]
-    let targetIdx = $columnLookupMap[targetColumn]
-    targetIdx++
+    let sourceIdx = $columnLookupMap[sourceColumn].__idx
+    let targetIdx = $columnLookupMap[targetColumn].__idx
+    if (insertAfter) {
+      targetIdx++
+    }
     columns.update(state => {
       const removed = state.splice(sourceIdx, 1)
       if (--targetIdx < sourceIdx) {
@@ -214,20 +222,26 @@ export const createActions = context => {
   // Moves a column one place left (as appears visually)
   const moveColumnLeft = async column => {
     const $visibleColumns = get(visibleColumns)
-    const $visibleColumnLookupMap = get(visibleColumnLookupMap)
-    const sourceIdx = $visibleColumnLookupMap[column]
-    await moveColumn(column, $visibleColumns[sourceIdx - 2]?.name)
+    const $columnLookupMap = get(columnLookupMap)
+    const sourceIdx = $columnLookupMap[column]
+    await moveColumn({
+      sourceColumn: column,
+      targetColumn: $visibleColumns[sourceIdx - 2]?.name,
+    })
   }
 
   // Moves a column one place right (as appears visually)
   const moveColumnRight = async column => {
     const $visibleColumns = get(visibleColumns)
-    const $visibleColumnLookupMap = get(visibleColumnLookupMap)
-    const sourceIdx = $visibleColumnLookupMap[column]
+    const $columnLookupMap = get(columnLookupMap)
+    const sourceIdx = $columnLookupMap[column]
     if (sourceIdx === $visibleColumns.length - 1) {
       return
     }
-    await moveColumn(column, $visibleColumns[sourceIdx + 1]?.name)
+    await moveColumn({
+      sourceColumn: column,
+      targetColumn: $visibleColumns[sourceIdx + 1]?.name,
+    })
   }
 
   return {
