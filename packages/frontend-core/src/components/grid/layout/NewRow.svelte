@@ -12,7 +12,7 @@
   const {
     hoveredRowId,
     focusedCellId,
-    stickyColumn,
+    displayColumn,
     scroll,
     dispatch,
     rows,
@@ -38,8 +38,8 @@
   let newRow
   let offset = 0
 
-  $: firstColumn = $stickyColumn || $visibleColumns[0]
-  $: width = GutterWidth + ($stickyColumn?.width || 0)
+  $: firstColumn = $visibleColumns[0]
+  $: width = GutterWidth + ($displayColumn?.width || 0)
   $: $datasource, (visible = false)
   $: selectedRowCount = Object.values($selectedRows).length
   $: hasNoRows = !$rows.length
@@ -164,7 +164,7 @@
       class="new-row-fab"
       on:click={() => dispatch("add-row-inline")}
       transition:fade|local={{ duration: 130 }}
-      class:offset={!$stickyColumn}
+      class:offset={!$displayColumn}
     >
       <Icon name="Add" size="S" />
     </div>
@@ -187,19 +187,19 @@
           <div in:fade={{ duration: 130 }} class="loading-overlay" />
         {/if}
       </GutterCell>
-      {#if $stickyColumn}
-        {@const cellId = getCellID(NewRowID, $stickyColumn.name)}
+      {#if $displayColumn}
+        {@const cellId = getCellID(NewRowID, $displayColumn.name)}
         <DataCell
           {cellId}
           rowFocused
-          column={$stickyColumn}
+          column={$displayColumn}
           row={newRow}
           focused={$focusedCellId === cellId}
-          width={$stickyColumn.width}
+          width={$displayColumn.width}
           {updateValue}
           topRow={offset === 0}
         >
-          {#if $stickyColumn?.schema?.autocolumn}
+          {#if $displayColumn?.schema?.autocolumn}
             <div class="readonly-overlay">Can't edit auto column</div>
           {/if}
           {#if isAdding}

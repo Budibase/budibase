@@ -8,7 +8,6 @@
     focusedCellId,
     visibleColumns,
     rowLookupMap,
-    stickyColumn,
     focusedCellAPI,
     dispatch,
     selectedRowCount,
@@ -168,7 +167,7 @@
     if (!firstRow) {
       return
     }
-    const firstColumn = $stickyColumn || $visibleColumns[0]
+    const firstColumn = $visibleColumns[0]
     if (!firstColumn) {
       return
     }

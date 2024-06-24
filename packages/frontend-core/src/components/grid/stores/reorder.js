@@ -28,10 +28,12 @@ export const createActions = context => {
   const {
     reorder,
     columns,
-    visibleColumns,
+    columnLookupMap,
+    scrollableColumns,
+    visibleColumnLookupMap,
     scroll,
     bounds,
-    stickyColumn,
+    visibleColumns,
     maxScrollLeft,
     width,
     datasource,
@@ -42,26 +44,14 @@ export const createActions = context => {
 
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (column, e) => {
-    const $visibleColumns = get(visibleColumns)
+    const $scrollableColumns = get(scrollableColumns)
     const $bounds = get(bounds)
-    const $stickyColumn = get(stickyColumn)
 
     // Generate new breakpoints for the current columns
-    let breakpoints = $visibleColumns.map(col => ({
-      x: col.left + col.width,
+    const breakpoints = $scrollableColumns.map(col => ({
+      x: col.__left + col.width,
       column: col.name,
     }))
-    if ($stickyColumn) {
-      breakpoints.unshift({
-        x: 0,
-        column: $stickyColumn.name,
-      })
-    } else if (!$visibleColumns[0].primaryDisplay) {
-      breakpoints.unshift({
-        x: 0,
-        column: null,
-      })
-    }
 
     // Update state
     reorder.set({
@@ -185,9 +175,9 @@ export const createActions = context => {
   // Moves a column after another columns.
   // An undefined target column will move the source to index 0.
   const moveColumn = async (sourceColumn, targetColumn) => {
-    let $columns = get(columns)
-    let sourceIdx = $columns.findIndex(x => x.name === sourceColumn)
-    let targetIdx = $columns.findIndex(x => x.name === targetColumn)
+    const $columnLookupMap = get(columnLookupMap)
+    let sourceIdx = $columnLookupMap[sourceColumn]
+    let targetIdx = $columnLookupMap[targetColumn]
     targetIdx++
     columns.update(state => {
       const removed = state.splice(sourceIdx, 1)
@@ -209,14 +199,16 @@ export const createActions = context => {
   // Moves a column one place left (as appears visually)
   const moveColumnLeft = async column => {
     const $visibleColumns = get(visibleColumns)
-    const sourceIdx = $visibleColumns.findIndex(x => x.name === column)
+    const $visibleColumnLookupMap = get(visibleColumnLookupMap)
+    const sourceIdx = $visibleColumnLookupMap[column]
     await moveColumn(column, $visibleColumns[sourceIdx - 2]?.name)
   }
 
   // Moves a column one place right (as appears visually)
   const moveColumnRight = async column => {
     const $visibleColumns = get(visibleColumns)
-    const sourceIdx = $visibleColumns.findIndex(x => x.name === column)
+    const $visibleColumnLookupMap = get(visibleColumnLookupMap)
+    const sourceIdx = $visibleColumnLookupMap[column]
     if (sourceIdx === $visibleColumns.length - 1) {
       return
     }

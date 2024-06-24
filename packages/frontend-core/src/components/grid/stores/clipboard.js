@@ -63,7 +63,7 @@ export const createActions = context => {
     rowChangeCache,
     rows,
     focusedCellId,
-    columnLookupMap,
+    visibleColumnLookupMap,
     allVisibleColumns,
   } = context
 
@@ -156,9 +156,9 @@ export const createActions = context => {
         const $focusedCellId = get(focusedCellId)
         const { rowId, field } = parseCellID($focusedCellId)
         const $rowLookupMap = get(rowLookupMap)
-        const $columnLookupMap = get(columnLookupMap)
+        const $visibleColumnLookupMap = get(visibleColumnLookupMap)
         const rowIdx = $rowLookupMap[rowId].__idx
-        const colIdx = $columnLookupMap[field]
+        const colIdx = $visibleColumnLookupMap[field].__idx
 
         // Get limits of how many rows and columns we're able to paste into
         const $rows = get(rows)

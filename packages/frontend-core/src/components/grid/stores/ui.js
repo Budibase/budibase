@@ -50,7 +50,6 @@ export const deriveStores = context => {
     rows,
     rowLookupMap,
     rowHeight,
-    stickyColumn,
     width,
     selectedRows,
     cellSelection,
@@ -85,8 +84,8 @@ export const deriveStores = context => {
   })
 
   // Derive whether we should use the compact UI, depending on width
-  const compact = derived([stickyColumn, width], ([$stickyColumn, $width]) => {
-    return ($stickyColumn?.width || 0) + $width + GutterWidth < 800
+  const compact = derived(width, $width => {
+    return $width < 600
   })
 
   // Derive we have any selected rows or not

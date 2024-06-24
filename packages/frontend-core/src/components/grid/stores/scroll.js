@@ -24,7 +24,7 @@ export const deriveStores = context => {
   const {
     rows,
     visibleColumns,
-    stickyColumn,
+    displayColumn,
     rowHeight,
     width,
     height,
@@ -32,7 +32,7 @@ export const deriveStores = context => {
   } = context
 
   // Memoize store primitives
-  const stickyColumnWidth = derived(stickyColumn, $col => $col?.width || 0, 0)
+  const stickyColumnWidth = derived(displayColumn, $col => $col?.width || 0, 0)
 
   // Derive vertical limits
   const contentHeight = derived(
@@ -196,7 +196,7 @@ export const initialise = context => {
     // Ensure column is not cutoff on right edge
     else {
       const $buttonColumnWidth = get(buttonColumnWidth)
-      const rightEdge = column.left + column.width
+      const rightEdge = column.__left + column.width
       const rightBound =
         $bounds.width + $scroll.left - FocusedCellMinOffset - $buttonColumnWidth
       delta = rightEdge - rightBound
