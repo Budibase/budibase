@@ -20,7 +20,7 @@
     datasource,
     subscribe,
     renderedRows,
-    visibleColumns,
+    scrollableColumns,
     rowHeight,
     hasNextPage,
     maxScrollTop,
@@ -31,6 +31,7 @@
     filter,
     inlineFilters,
     columnRenderMap,
+    visibleColumns,
   } = getContext("grid")
 
   let visible = false
@@ -211,7 +212,7 @@
     <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally attachHandlers>
         <div class="row">
-          {#each $visibleColumns as column}
+          {#each $scrollableColumns as column}
             {@const cellId = getCellID(NewRowID, column.name)}
             <DataCell
               {cellId}
