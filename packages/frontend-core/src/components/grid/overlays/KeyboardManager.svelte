@@ -186,7 +186,7 @@
 
     // Determine the new position for this cell
     const { rowId, field } = parseCellID(sourceCellId)
-    const colIdx = $columnLookupMap[field]
+    const colIdx = $columnLookupMap[field].__idx
     const nextColumn = $visibleColumns[colIdx + delta]
     if (!nextColumn) {
       return
