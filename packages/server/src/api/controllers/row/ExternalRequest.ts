@@ -170,8 +170,7 @@ export class ExternalRequest<T extends Operation> {
     id: string | undefined | string[],
     filters: SearchFilters,
     table: Table
-  ) {
-    const tables = this.tableList
+  ): SearchFilters {
     // replace any relationship columns initially, table names and relationship column names are acceptable
     const relationshipColumns = sdk.rows.filters.getRelationshipColumns(table)
     filters = sdk.rows.filters.updateFilterKeys(
@@ -214,7 +213,7 @@ export class ExternalRequest<T extends Operation> {
     if (!Array.isArray(idCopy)) {
       idCopy = breakRowIdField(idCopy)
     }
-    const equal: any = {}
+    const equal: SearchFilters["equal"] = {}
     if (primary && idCopy) {
       for (let field of primary) {
         // work through the ID and get the parts
@@ -274,7 +273,9 @@ export class ExternalRequest<T extends Operation> {
   }
 
   // seeds the object with table and datasource information
-  async retrieveMetadata(datasourceId: string) {
+  async retrieveMetadata(
+    datasourceId: string
+  ): Promise<{ tables: Record<string, Table>; datasource: Datasource }> {
     if (!this.datasource) {
       this.datasource = await sdk.datasources.get(datasourceId)
       if (!this.datasource || !this.datasource.entities) {
@@ -283,6 +284,7 @@ export class ExternalRequest<T extends Operation> {
       this.tables = this.datasource.entities
       this.tableList = Object.values(this.tables)
     }
+    return { tables: this.tables, datasource: this.datasource }
   }
 
   async getRow(table: Table, rowId: string): Promise<Row> {
@@ -599,11 +601,13 @@ export class ExternalRequest<T extends Operation> {
       throw new Error("Unable to run without a table ID")
     }
     let { datasourceId, tableName } = breakExternalTableId(tableId)
-    if (!this.datasource) {
-      await this.retrieveMetadata(datasourceId)
+    let datasource = this.datasource
+    if (!datasource) {
+      const { datasource: ds } = await this.retrieveMetadata(datasourceId)
+      datasource = ds
     }
     const table = this.tables[tableName]
-    let isSql = isSQL(this.datasource!)
+    let isSql = isSQL(datasource)
     if (!table) {
       throw new Error(
         `Unable to process query, table "${tableName}" not defined.`
