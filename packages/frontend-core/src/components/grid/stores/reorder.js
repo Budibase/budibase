@@ -34,7 +34,7 @@ export const createActions = context => {
     bounds,
     visibleColumns,
     datasource,
-    bodyLeft,
+    stickyWidth,
     width,
     scrollLeft,
     maxScrollLeft,
@@ -47,11 +47,11 @@ export const createActions = context => {
   const startReordering = (column, e) => {
     const $scrollableColumns = get(scrollableColumns)
     const $bounds = get(bounds)
-    const $bodyLeft = get(bodyLeft)
+    const $stickyWidth = get(stickyWidth)
 
     // Generate new breakpoints for the current columns
     const breakpoints = $scrollableColumns.map(col => ({
-      x: col.__left - $bodyLeft,
+      x: col.__left - $stickyWidth,
       column: col.name,
       insertAfter: false,
     }))
@@ -60,7 +60,7 @@ export const createActions = context => {
     const lastCol = $scrollableColumns[$scrollableColumns.length - 1]
     if (lastCol) {
       breakpoints.push({
-        x: lastCol.__left + lastCol.width - $bodyLeft,
+        x: lastCol.__left + lastCol.width - $stickyWidth,
         column: lastCol.name,
         insertAfter: true,
       })

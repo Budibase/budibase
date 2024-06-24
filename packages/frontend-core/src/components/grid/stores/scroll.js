@@ -32,7 +32,7 @@ export const deriveStores = context => {
   } = context
 
   // Memoize store primitives
-  const bodyLeft = derived(displayColumn, $displayColumn => {
+  const stickyWidth = derived(displayColumn, $displayColumn => {
     return ($displayColumn?.width || 0) + GutterWidth
   })
 
@@ -58,9 +58,12 @@ export const deriveStores = context => {
       return width
     }
   )
-  const screenWidth = derived([width, bodyLeft], ([$width, $bodyLeft]) => {
-    return $width + $bodyLeft
-  })
+  const screenWidth = derived(
+    [width, stickyWidth],
+    ([$width, $stickyWidth]) => {
+      return $width + $stickyWidth
+    }
+  )
   const maxScrollLeft = derived(
     [contentWidth, screenWidth],
     ([$contentWidth, $screenWidth]) => {
@@ -83,7 +86,7 @@ export const deriveStores = context => {
   )
 
   return {
-    bodyLeft,
+    stickyWidth,
     contentHeight,
     contentWidth,
     screenWidth,
@@ -101,12 +104,13 @@ export const initialise = context => {
     scroll,
     bounds,
     rowHeight,
-    visibleColumns,
+    stickyWidth,
     scrollTop,
     maxScrollTop,
     scrollLeft,
     maxScrollLeft,
     buttonColumnWidth,
+    columnLookupMap,
   } = context
 
   // Ensure scroll state never goes invalid, which can happen when changing
@@ -174,15 +178,16 @@ export const initialise = context => {
 
     // Ensure horizontal position is viewable
     // Check horizontal position of columns next
-    const $visibleColumns = get(visibleColumns)
-    const { field: columnName } = parseCellID($focusedCellId)
-    const column = $visibleColumns.find(col => col.name === columnName)
+    const { field } = parseCellID($focusedCellId)
+    const column = get(columnLookupMap)[field]
     if (!column) {
       return
     }
 
     // Ensure column is not cutoff on left edge
-    let delta = $scroll.left - column.left + FocusedCellMinOffset
+    const $stickyWidth = get(stickyWidth)
+    let delta =
+      $scroll.left - column.__left + FocusedCellMinOffset + $stickyWidth
     if (delta > 0) {
       scroll.update(state => ({
         ...state,
@@ -196,7 +201,7 @@ export const initialise = context => {
       const rightEdge = column.__left + column.width
       const rightBound =
         $bounds.width + $scroll.left - FocusedCellMinOffset - $buttonColumnWidth
-      delta = rightEdge - rightBound
+      delta = rightEdge - rightBound - $stickyWidth
       if (delta > 0) {
         scroll.update(state => ({
           ...state,
