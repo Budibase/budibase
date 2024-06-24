@@ -11,7 +11,7 @@
     stickyColumn,
     focusedCellAPI,
     dispatch,
-    selectedRows,
+    selectedRowCount,
     config,
     menu,
     gridFocused,
@@ -93,7 +93,7 @@
         handle(focusFirstCell)
       } else if (e.key === "Delete" || e.key === "Backspace") {
         handle(() => {
-          if (Object.keys($selectedRows).length && $config.canDeleteRows) {
+          if ($selectedRowCount && $config.canDeleteRows) {
             dispatch("request-bulk-delete")
           }
         })
@@ -148,7 +148,7 @@
         case "Delete":
         case "Backspace":
           return handle(() => {
-            if (Object.keys($selectedRows).length && $config.canDeleteRows) {
+            if ($selectedRowCount && $config.canDeleteRows) {
               dispatch("request-bulk-delete")
             } else {
               deleteSelectedCell()
