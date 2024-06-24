@@ -4,6 +4,7 @@ import {
   TableSchema,
   FieldSchema,
   Row,
+  Table,
 } from "@budibase/types"
 import { ValidColumnNameRegex, helpers, utils } from "@budibase/shared-core"
 import { db } from "@budibase/backend-core"
@@ -118,13 +119,23 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
   return results
 }
 
-export function parse(rows: Rows, schema: TableSchema): Rows {
+export function parse(rows: Rows, table: Table): Rows {
   return rows.map(row => {
     const parsedRow: Row = {}
 
     Object.entries(row).forEach(([columnName, columnData]) => {
-      if (!(columnName in schema) || schema[columnName]?.autocolumn) {
+      const schema = table.schema
+      if (!(columnName in schema)) {
         // Objects can be present in the row data but not in the schema, so make sure we don't proceed in such a case
+        return
+      }
+
+      if (
+        schema[columnName].autocolumn &&
+        !table.primary?.includes(columnName)
+      ) {
+        // Don't want the user specifying values for autocolumns unless they're updating
+        // a row through its primary key.
         return
       }
 
