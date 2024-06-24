@@ -16,7 +16,7 @@ import {
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 import { inputProcessing } from "../../../utilities/rowProcessor"
-import _ from "lodash"
+import { isEqual } from "lodash"
 
 function getDatasourceId(table: Table) {
   if (!table) {
@@ -89,7 +89,7 @@ export async function bulkImport(
   if (
     identifierFields &&
     identifierFields.length > 0 &&
-    !_.isEqual(identifierFields, table.primary)
+    !isEqual(identifierFields, table.primary)
   ) {
     // This is becuse we make use of the ON CONFLICT functionality in SQL
     // databases, which only triggers when there's a conflict against a unique
