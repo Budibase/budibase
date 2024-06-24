@@ -4,10 +4,10 @@ import { parseEventLocation } from "../lib/utils"
 const reorderInitialState = {
   sourceColumn: null,
   targetColumn: null,
+  insertAfter: false,
   breakpoints: [],
   gridLeft: 0,
   width: 0,
-  latestX: 0,
   increment: 0,
 }
 
@@ -35,10 +35,11 @@ export const createActions = context => {
     bounds,
     visibleColumns,
     maxScrollLeft,
-    width,
     datasource,
+    bodyLeft,
+    width,
   } = context
-
+  let latestX = 0
   let autoScrollInterval
   let isAutoScrolling
 
@@ -46,12 +47,24 @@ export const createActions = context => {
   const startReordering = (column, e) => {
     const $scrollableColumns = get(scrollableColumns)
     const $bounds = get(bounds)
+    const $bodyLeft = get(bodyLeft)
 
     // Generate new breakpoints for the current columns
     const breakpoints = $scrollableColumns.map(col => ({
-      x: col.__left + col.width,
+      x: col.__left - $bodyLeft,
       column: col.name,
+      insertAfter: false,
     }))
+
+    // Add a very left breakpoint as well
+    const lastCol = $scrollableColumns[$scrollableColumns.length - 1]
+    if (lastCol) {
+      breakpoints.push({
+        x: lastCol.__left + lastCol.width - $bodyLeft,
+        column: lastCol.name,
+        insertAfter: true,
+      })
+    }
 
     // Update state
     reorder.set({
@@ -77,10 +90,7 @@ export const createActions = context => {
   const onReorderMouseMove = e => {
     // Immediately handle the current position
     const { x } = parseEventLocation(e)
-    reorder.update(state => ({
-      ...state,
-      latestX: x,
-    }))
+    latestX = x
     considerReorderPosition()
 
     // Check if we need to start auto-scrolling
@@ -110,20 +120,25 @@ export const createActions = context => {
     const $scroll = get(scroll)
 
     // Compute the closest breakpoint to the current position
-    let targetColumn
+    let breakpoint
     let minDistance = Number.MAX_SAFE_INTEGER
-    const mouseX = $reorder.latestX - $reorder.gridLeft + $scroll.left
+    const mouseX = latestX - $reorder.gridLeft + $scroll.left
     $reorder.breakpoints.forEach(point => {
       const distance = Math.abs(point.x - mouseX)
       if (distance < minDistance) {
         minDistance = distance
-        targetColumn = point.column
+        breakpoint = point
       }
     })
-    if (targetColumn !== $reorder.targetColumn) {
+    if (
+      breakpoint &&
+      (breakpoint.column !== $reorder.targetColumn ||
+        breakpoint.insertAfter !== $reorder.insertAfter)
+    ) {
       reorder.update(state => ({
         ...state,
-        targetColumn,
+        targetColumn: breakpoint.column,
+        insertAfter: breakpoint.insertAfter,
       }))
     }
   }

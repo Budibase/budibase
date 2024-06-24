@@ -1,5 +1,5 @@
 import { derived, get, writable } from "svelte/store"
-import { DefaultColumnWidth } from "../lib/constants"
+import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
 
 export const createStores = () => {
   const columns = writable([])
@@ -39,16 +39,16 @@ export const deriveStores = context => {
   // Derived list of columns which have not been explicitly hidden, and enrich
   // with an index so we can easily select nearby columns
   const visibleColumns = derived(columns, $columns => {
-    let offset = 0
+    let offset = GutterWidth
     return $columns
       .filter(col => col.visible)
-      .map((column, idx) => {
+      .map((col, idx) => {
         const enriched = {
-          ...column,
+          ...col,
           __left: offset,
           __idx: idx,
         }
-        offset += column.width
+        offset += col.width
         return enriched
       })
   })

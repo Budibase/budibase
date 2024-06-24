@@ -32,44 +32,40 @@ export const deriveStores = context => {
   } = context
 
   // Memoize store primitives
-  const stickyColumnWidth = derived(displayColumn, $col => $col?.width || 0, 0)
+  const bodyLeft = derived(displayColumn, $displayColumn => {
+    return ($displayColumn?.width || 0) + GutterWidth
+  })
 
   // Derive vertical limits
   const contentHeight = derived(
     [rows, rowHeight],
-    ([$rows, $rowHeight]) => ($rows.length + 1) * $rowHeight + Padding,
-    0
+    ([$rows, $rowHeight]) => ($rows.length + 1) * $rowHeight + Padding
   )
   const maxScrollTop = derived(
     [height, contentHeight],
-    ([$height, $contentHeight]) => Math.max($contentHeight - $height, 0),
-    0
+    ([$height, $contentHeight]) => Math.max($contentHeight - $height, 0)
   )
 
   // Derive horizontal limits
   const contentWidth = derived(
-    [visibleColumns, stickyColumnWidth, buttonColumnWidth],
-    ([$visibleColumns, $stickyColumnWidth, $buttonColumnWidth]) => {
+    [visibleColumns, buttonColumnWidth],
+    ([$visibleColumns, $buttonColumnWidth]) => {
       const space = Math.max(Padding, $buttonColumnWidth - 1)
-      let width = GutterWidth + space + $stickyColumnWidth
+      let width = GutterWidth + space
       $visibleColumns.forEach(col => {
         width += col.width
       })
       return width
-    },
-    0
+    }
   )
-  const screenWidth = derived(
-    [width, stickyColumnWidth],
-    ([$width, $stickyColumnWidth]) => $width + GutterWidth + $stickyColumnWidth,
-    0
-  )
+  const screenWidth = derived([width, bodyLeft], ([$width, $bodyLeft]) => {
+    return $width + $bodyLeft
+  })
   const maxScrollLeft = derived(
     [contentWidth, screenWidth],
     ([$contentWidth, $screenWidth]) => {
       return Math.max($contentWidth - $screenWidth, 0)
-    },
-    0
+    }
   )
 
   // Derive whether to show scrollbars or not
@@ -87,6 +83,7 @@ export const deriveStores = context => {
   )
 
   return {
+    bodyLeft,
     contentHeight,
     contentWidth,
     screenWidth,
