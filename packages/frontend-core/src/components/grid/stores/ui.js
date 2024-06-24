@@ -112,6 +112,9 @@ export const deriveStores = context => {
       // Get source and target row and column indices
       const sourceInfo = parseCellID(sourceCellId)
       const targetInfo = parseCellID(targetCellId)
+      if (sourceInfo.rowId === NewRowID) {
+        return []
+      }
 
       // Row indices
       const sourceRowIndex = $rowLookupMap[sourceInfo.rowId].__idx
