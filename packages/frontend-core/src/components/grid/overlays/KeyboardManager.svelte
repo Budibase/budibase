@@ -2,6 +2,7 @@
   import { getContext, onMount } from "svelte"
   import { debounce } from "../../../utils/utils"
   import { getCellID, parseCellID } from "../lib/utils"
+  import { NewRowID } from "../lib/constants"
 
   const {
     rows,
@@ -19,6 +20,7 @@
     selectedCells,
     cellSelection,
     columnLookupMap,
+    focusedRowId,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -69,14 +71,6 @@
     // Handle certain key presses if we have cells selected
     if ($selectedCellCount) {
       switch (e.key) {
-        case "ArrowLeft":
-          return handle(() => changeFocusedColumn(-1, e.shiftKey))
-        case "ArrowRight":
-          return handle(() => changeFocusedColumn(1, e.shiftKey))
-        case "ArrowUp":
-          return handle(() => changeFocusedRow(-1, e.shiftKey))
-        case "ArrowDown":
-          return handle(() => changeFocusedRow(1, e.shiftKey))
         case "Escape":
           return handle(selectedCells.actions.clear)
         case "Delete":
@@ -215,6 +209,11 @@
 
   // Changes the focused cell by moving it up or down to a new row
   const changeFocusedRow = (delta, shiftKey) => {
+    // Ignore for new row component
+    if ($focusedRowId === NewRowID) {
+      return
+    }
+
     // Determine which cell we are working with
     let sourceCellId = $focusedCellId
     if (shiftKey && $selectedCellCount) {
