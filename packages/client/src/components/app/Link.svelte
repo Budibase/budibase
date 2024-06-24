@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
 
-  const { linkable, styleable, builderStore, sidePanelStore } =
+  const { linkable, styleable, builderStore, sidePanelStore, modalStore } =
     getContext("sdk")
   const component = getContext("component")
 
@@ -28,6 +28,11 @@
   // Add color styles to main styles object, otherwise the styleable helper
   // overrides the color when it's passed as inline style.
   $: styles = enrichStyles($component.styles, color)
+
+  const handleUrlChange = () => {
+    sidePanelStore.actions.close()
+    modalStore.actions.close()
+  }
 
   const getSanitizedUrl = (url, externalLink, newTab) => {
     if (!url) {
@@ -109,7 +114,7 @@
         class:italic
         class:underline
         class="align--{align || 'left'} size--{size || 'M'}"
-        on:click={sidePanelStore.actions.close}
+        on:click={handleUrlChange}
       >
         {componentText}
       </a>

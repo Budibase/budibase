@@ -161,6 +161,9 @@ export const buildFormBlockButtonConfig = props => {
     {
       "##eventHandlerType": "Close Side Panel",
     },
+    {
+      "##eventHandlerType": "Close Modal",
+    },
     // Clear a create form once submitted
     ...(actionType !== "Create"
       ? []
