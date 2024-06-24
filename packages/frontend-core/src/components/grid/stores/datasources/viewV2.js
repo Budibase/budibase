@@ -3,7 +3,7 @@ import { get } from "svelte/store"
 const SuppressErrors = true
 
 export const createActions = context => {
-  const { API, datasource, columns, stickyColumn } = context
+  const { API, datasource, columns } = context
 
   const saveDefinition = async newDefinition => {
     await API.viewV2.update(newDefinition)
@@ -40,12 +40,7 @@ export const createActions = context => {
   }
 
   const canUseColumn = name => {
-    const $columns = get(columns)
-    const $sticky = get(stickyColumn)
-    return (
-      $columns.some(col => col.name === name && col.visible) ||
-      $sticky?.name === name
-    )
+    return get(columns).some(col => col.name === name && col.visible)
   }
 
   return {

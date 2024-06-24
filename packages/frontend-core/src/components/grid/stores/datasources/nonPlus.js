@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
 
 export const createActions = context => {
-  const { columns, stickyColumn, table, viewV2 } = context
+  const { columns, table, viewV2 } = context
 
   const saveDefinition = async () => {
     throw "This datasource does not support updating the definition"
@@ -30,9 +30,7 @@ export const createActions = context => {
   }
 
   const canUseColumn = name => {
-    const $columns = get(columns)
-    const $sticky = get(stickyColumn)
-    return $columns.some(col => col.name === name) || $sticky?.name === name
+    return get(columns).some(col => col.name === name)
   }
 
   return {

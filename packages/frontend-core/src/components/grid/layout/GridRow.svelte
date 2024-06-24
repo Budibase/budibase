@@ -10,7 +10,7 @@
     focusedCellId,
     reorder,
     selectedRows,
-    visibleColumns,
+    scrollableColumns,
     hoveredRowId,
     focusedRow,
     contentLines,
@@ -40,7 +40,7 @@
   on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
   on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
 >
-  {#each $visibleColumns as column}
+  {#each $scrollableColumns as column}
     {@const cellId = getCellID(row._id, column.name)}
     <DataCell
       {cellId}

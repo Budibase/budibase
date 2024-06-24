@@ -2,28 +2,28 @@
   import { getContext } from "svelte"
   import { GutterWidth } from "../lib/constants"
 
-  const { resize, visibleColumns, stickyColumn, isReordering, scrollLeft } =
+  const { resize, visibleColumns, displayColumn, isReordering, scrollLeft } =
     getContext("grid")
 
-  $: offset = GutterWidth + ($stickyColumn?.width || 0)
+  $: offset = GutterWidth + ($displayColumn?.width || 0)
   $: activeColumn = $resize.column
 
   const getStyle = (column, offset, scrollLeft) => {
-    const left = offset + column.left + column.width - scrollLeft
+    const left = offset + column.__left + column.width - scrollLeft
     return `left:${left}px;`
   }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 {#if !$isReordering}
-  {#if $stickyColumn}
+  {#if $displayColumn}
     <div
       class="resize-slider"
-      class:visible={activeColumn === $stickyColumn.name}
-      on:mousedown={e => resize.actions.startResizing($stickyColumn, e)}
-      on:touchstart={e => resize.actions.startResizing($stickyColumn, e)}
-      on:dblclick={() => resize.actions.resetSize($stickyColumn)}
-      style="left:{GutterWidth + $stickyColumn.width}px;"
+      class:visible={activeColumn === $displayColumn.name}
+      on:mousedown={e => resize.actions.startResizing($displayColumn, e)}
+      on:touchstart={e => resize.actions.startResizing($displayColumn, e)}
+      on:dblclick={() => resize.actions.resetSize($displayColumn)}
+      style="left:{GutterWidth + $displayColumn.width}px;"
     >
       <div class="resize-indicator" />
     </div>

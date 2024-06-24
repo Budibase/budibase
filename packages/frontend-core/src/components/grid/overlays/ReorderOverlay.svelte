@@ -6,30 +6,30 @@
   const {
     isReordering,
     reorder,
-    visibleColumns,
-    stickyColumn,
+    visibleColumnLookupMap,
+    displayColumn,
     rowHeight,
     renderedRows,
     scrollLeft,
   } = getContext("grid")
 
-  $: targetColumn = $reorder.targetColumn
-  $: minLeft = GutterWidth + ($stickyColumn?.width || 0)
-  $: left = getLeft(targetColumn, $stickyColumn, $visibleColumns, $scrollLeft)
+  $: targetColumn = $visibleColumnLookupMap[$reorder.targetColumn]
+  $: console.log(targetColumn)
+  $: minLeft = GutterWidth + ($displayColumn?.width || 0)
+  $: left = getLeft(targetColumn, $displayColumn, $scrollLeft)
   $: height = $rowHeight * $renderedRows.length + DefaultRowHeight
   $: style = `left:${left}px; height:${height}px;`
   $: visible = $isReordering && left >= minLeft
 
-  const getLeft = (targetColumn, stickyColumn, visibleColumns, scrollLeft) => {
-    let left = GutterWidth + (stickyColumn?.width || 0) - scrollLeft
+  const getLeft = (targetColumn, displayColumn, scrollLeft) => {
+    if (!targetColumn) {
+      return 0
+    }
+    let left = GutterWidth + (displayColumn?.width || 0) - scrollLeft
 
     // If this is not the sticky column, add additional left space
-    if (targetColumn !== stickyColumn?.name) {
-      const column = visibleColumns.find(x => x.name === targetColumn)
-      if (!column) {
-        return left
-      }
-      left += column.left + column.width
+    if (!targetColumn.primaryDisplay) {
+      left += targetColumn.__left + targetColumn.width
     }
 
     return left

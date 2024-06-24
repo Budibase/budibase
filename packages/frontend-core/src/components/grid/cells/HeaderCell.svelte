@@ -270,7 +270,7 @@
     on:touchcancel={onMouseUp}
     on:contextmenu={onContextMenu}
     width={column.width}
-    left={column.left}
+    left={column.__left}
     defaultHeight
     center
   >

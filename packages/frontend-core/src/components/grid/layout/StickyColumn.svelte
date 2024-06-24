@@ -13,7 +13,7 @@
   const {
     rows,
     selectedRows,
-    stickyColumn,
+    displayColumn,
     renderedRows,
     focusedCellId,
     hoveredRowId,
@@ -26,13 +26,12 @@
     contentLines,
     isDragging,
     isSelectingCells,
-    selectedCells,
     selectedCellCount,
   } = getContext("grid")
 
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).length
-  $: width = GutterWidth + ($stickyColumn?.width || 0)
+  $: width = GutterWidth + ($displayColumn?.width || 0)
 
   const selectAll = () => {
     const allSelected = selectedRowCount === rowCount
@@ -61,8 +60,8 @@
       rowSelected={selectedRowCount && selectedRowCount === rowCount}
       disabled={!$renderedRows.length}
     />
-    {#if $stickyColumn}
-      <HeaderCell column={$stickyColumn} orderable={false} idx="sticky">
+    {#if $displayColumn}
+      <HeaderCell column={$displayColumn} orderable={false} idx="sticky">
         <slot name="edit-column" />
       </HeaderCell>
     {/if}
@@ -78,7 +77,7 @@
           $hoveredRowId === row._id &&
           (!$selectedCellCount || !$isSelectingCells)}
         {@const rowFocused = $focusedRow?._id === row._id}
-        {@const cellId = getCellID(row._id, $stickyColumn?.name)}
+        {@const cellId = getCellID(row._id, $displayColumn?.name)}
         <div
           class="row"
           on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
@@ -86,7 +85,7 @@
           on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
         >
           <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
-          {#if $stickyColumn}
+          {#if $displayColumn}
             <DataCell
               {row}
               {cellId}
@@ -98,8 +97,8 @@
               topRow={idx === 0}
               focused={$focusedCellId === cellId}
               selectedUser={$userCellMap[cellId]}
-              width={$stickyColumn.width}
-              column={$stickyColumn}
+              width={$displayColumn.width}
+              column={$displayColumn}
               contentLines={$contentLines}
               isSelectingCells={$isSelectingCells}
             />
@@ -118,9 +117,9 @@
           <GutterCell rowHovered={$hoveredRowId === BlankRowID}>
             <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
           </GutterCell>
-          {#if $stickyColumn}
+          {#if $displayColumn}
             <GridCell
-              width={$stickyColumn.width}
+              width={$displayColumn.width}
               highlighted={$hoveredRowId === BlankRowID}
             >
               <KeyboardShortcut padded keybind="Ctrl+Enter" />
