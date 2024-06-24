@@ -638,14 +638,6 @@ export const createActions = context => {
     get(fetch)?.nextPage()
   }
 
-  // Checks if we have a row with a certain ID
-  const hasRow = id => {
-    if (id === NewRowID) {
-      return true
-    }
-    return get(rowLookupMap)[id] != null
-  }
-
   // Cleans a row by removing any internal grid metadata from it.
   // Call this before passing a row to any sort of external flow.
   const cleanRow = row => {
@@ -667,7 +659,6 @@ export const createActions = context => {
         updateValue,
         applyRowChanges,
         deleteRows,
-        hasRow,
         loadNextPage,
         refreshRow,
         replaceRow,
