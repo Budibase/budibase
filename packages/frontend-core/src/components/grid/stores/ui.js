@@ -2,7 +2,6 @@ import { writable, get, derived } from "svelte/store"
 import { tick } from "svelte"
 import {
   DefaultRowHeight,
-  GutterWidth,
   LargeRowHeight,
   MediumRowHeight,
   NewRowID,
