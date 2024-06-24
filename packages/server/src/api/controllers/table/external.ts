@@ -19,10 +19,13 @@ import { inputProcessing } from "../../../utilities/rowProcessor"
 
 function getDatasourceId(table: Table) {
   if (!table) {
-    throw "No table supplied"
+    throw new Error("No table supplied")
   }
   if (table.sourceId) {
     return table.sourceId
+  }
+  if (!table._id) {
+    throw new Error("No table ID supplied")
   }
   return breakExternalTableId(table._id).datasourceId
 }
