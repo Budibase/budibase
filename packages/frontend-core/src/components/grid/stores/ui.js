@@ -54,7 +54,7 @@ export const deriveStores = context => {
     selectedRows,
     cellSelection,
     columnLookupMap,
-    allVisibleColumns,
+    visibleColumns,
   } = context
 
   // Derive the current focused row ID
@@ -107,7 +107,7 @@ export const deriveStores = context => {
         return []
       }
       const $rows = get(rows)
-      const $allVisibleColumns = get(allVisibleColumns)
+      const $visibleColumns = get(visibleColumns)
 
       // Get source and target row and column indices
       const sourceInfo = parseCellID(sourceCellId)
@@ -120,8 +120,8 @@ export const deriveStores = context => {
       const upperRowIndex = Math.max(sourceRowIndex, targetRowIndex)
 
       // Column indices
-      const sourceColIndex = $columnLookupMap[sourceInfo.field]
-      const targetColIndex = $columnLookupMap[targetInfo.field]
+      const sourceColIndex = $columnLookupMap[sourceInfo.field].__idx
+      const targetColIndex = $columnLookupMap[targetInfo.field].__idx
       const lowerColIndex = Math.min(sourceColIndex, targetColIndex)
       const upperColIndex = Math.max(sourceColIndex, targetColIndex)
 
@@ -132,7 +132,7 @@ export const deriveStores = context => {
         let rowCells = []
         for (let colIdx = lowerColIndex; colIdx <= upperColIndex; colIdx++) {
           rowId = $rows[rowIdx]._id
-          colName = $allVisibleColumns[colIdx].name
+          colName = $visibleColumns[colIdx].name
           rowCells.push(getCellID(rowId, colName))
         }
         cells.push(rowCells)

@@ -196,12 +196,15 @@ export const createActions = context => {
     targetColumn,
     insertAfter = false,
   }) => {
-    const $columnLookupMap = get(columnLookupMap)
-    let sourceIdx = $columnLookupMap[sourceColumn].__idx
-    let targetIdx = $columnLookupMap[targetColumn].__idx
+    // Find the indices in the overall columns array
+    const $columns = get(columns)
+    let sourceIdx = $columns.findIndex(col => col.name === sourceColumn)
+    let targetIdx = $columns.findIndex(col => col.name === targetColumn)
     if (insertAfter) {
       targetIdx++
     }
+
+    // Reorder columns
     columns.update(state => {
       const removed = state.splice(sourceIdx, 1)
       if (--targetIdx < sourceIdx) {

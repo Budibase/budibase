@@ -6,16 +6,15 @@ export const createStores = () => {
 
   const enrichedColumns = derived(columns, $columns => {
     let offset = GutterWidth
-    let visibleIdx = 0
-    return $columns.map((col, idx) => {
+    let idx = 0
+    return $columns.map(col => {
       const enriched = {
         ...col,
-        __idx: idx, // Overall column index
-        __visibleIdx: visibleIdx, // Index within the visible columns
-        __left: offset, // Left offset relative to all visible columns
+        __idx: idx,
+        __left: offset,
       }
       if (col.visible) {
-        visibleIdx++
+        idx++
         offset += col.width
       }
       return enriched
