@@ -444,7 +444,6 @@ export const createActions = context => {
     handleErrors = true,
   }) => {
     const $rowLookupMap = get(rowLookupMap)
-    const $columnLookupMap = get(columnLookupMap)
     const row = $rowLookupMap[rowId]
     if (row == null) {
       return
@@ -459,18 +458,9 @@ export const createActions = context => {
         [rowId]: (state[rowId] || 0) + 1,
       }))
 
-      // Strip any readonly fields from the change set
-      const stashedChanges = get(rowChangeCache)[rowId]
-      let allChanges = { ...stashedChanges, ...changes }
-      for (let field of Object.keys(allChanges)) {
-        const column = $columnLookupMap[field]
-        if (columns.actions.isReadonly(column)) {
-          delete allChanges[field]
-        }
-      }
-
       // Update row
-      const newRow = { ...cleanRow(row), ...allChanges }
+      const stashedChanges = get(rowChangeCache)[rowId]
+      const newRow = { ...cleanRow(row), ...stashedChanges, ...changes }
       savedRow = await datasource.actions.updateRow(newRow)
 
       // Update row state after a successful change
@@ -527,11 +517,21 @@ export const createActions = context => {
     }
 
     // Update rows
+    const $columnLookupMap = get(columnLookupMap)
     let updated = []
     let failed = 0
     for (let i = 0; i < count; i++) {
       const rowId = rowIds[i]
-      if (!Object.keys(changeMap[rowId] || {}).length) {
+      let changes = changeMap[rowId] || {}
+
+      // Strip any readonly fields from the change set
+      for (let field of Object.keys(changes)) {
+        const column = $columnLookupMap[field]
+        if (columns.actions.isReadonly(column)) {
+          delete changes[field]
+        }
+      }
+      if (!Object.keys(changes).length) {
         progressCallback?.((i + 1) / count)
         continue
       }
@@ -568,11 +568,12 @@ export const createActions = context => {
     }
 
     // Notify user
-    const unit = `row${count === 1 ? "" : "s"}`
     if (failed) {
+      const unit = `row${count === 1 ? "" : "s"}`
       get(notifications).error(`Failed to update ${failed} of ${count} ${unit}`)
-    } else {
-      get(notifications).success(`Updated ${count} ${unit}`)
+    } else if (updated.length) {
+      const unit = `row${updated.length === 1 ? "" : "s"}`
+      get(notifications).success(`Updated ${updated.length} ${unit}`)
     }
   }
 
