@@ -1950,8 +1950,10 @@ describe.each([
     })
   })
 
+  // This will never work for Lucene.
   !isLucene &&
-    !isInMemory &&
+    // It also can't work for in-memory searching because the related table name
+    // isn't available.
     describe("relations", () => {
       let productCategoryTable: Table, productCatRows: Row[]
 
