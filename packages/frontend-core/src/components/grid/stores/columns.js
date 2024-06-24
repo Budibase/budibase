@@ -110,11 +110,24 @@ export const createActions = context => {
     await datasource.actions.saveSchemaMutations()
   }
 
+  const isReadonly = column => {
+    if (!column?.schema) {
+      return false
+    }
+    return (
+      column.schema.autocolumn ||
+      column.schema.disabled ||
+      column.schema.type === "formula" ||
+      column.schema.readonly
+    )
+  }
+
   return {
     columns: {
       ...columns,
       actions: {
         changeAllColumnWidths,
+        isReadonly,
       },
     },
   }

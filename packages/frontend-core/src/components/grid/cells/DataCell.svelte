@@ -6,6 +6,7 @@
 
   const {
     rows,
+    columns,
     focusedCellId,
     focusedCellAPI,
     menu,
@@ -40,13 +41,10 @@
 
   // Determine if the cell is editable
   $: readonly =
-    column.schema.autocolumn ||
-    column.schema.disabled ||
-    column.schema.type === "formula" ||
-    (!$config.canEditRows && !row._isNewRow) ||
-    column.schema.readonly
+    columns.actions.isReadonly(column) ||
+    (!$config.canEditRows && !row._isNewRow)
 
-  // Register this cell API if the row is focused
+  // Register this cell API if this cell is focused
   $: {
     if (focused) {
       focusedCellAPI.set(cellAPI)
