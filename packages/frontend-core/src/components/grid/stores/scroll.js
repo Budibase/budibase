@@ -180,7 +180,7 @@ export const initialise = context => {
     // Check horizontal position of columns next
     const { field } = parseCellID($focusedCellId)
     const column = get(columnLookupMap)[field]
-    if (!column) {
+    if (!column || column.primaryDisplay) {
       return
     }
 
