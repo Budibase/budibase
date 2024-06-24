@@ -16,8 +16,6 @@
   const { config, dispatch, selectedRows } = getContext("grid")
   const svelteDispatch = createEventDispatcher()
 
-  $: selectionEnabled = $config.canSelectRows || $config.canDeleteRows
-
   const select = e => {
     e.stopPropagation()
     svelteDispatch("select")
@@ -64,16 +62,14 @@
       <div
         on:click={select}
         class="checkbox"
-        class:visible={selectionEnabled &&
-          (disableNumber || rowSelected || rowHovered || rowFocused)}
+        class:visible={disableNumber || rowSelected || rowHovered || rowFocused}
       >
         <Checkbox value={rowSelected} {disabled} />
       </div>
       {#if !disableNumber}
         <div
           class="number"
-          class:visible={!selectionEnabled ||
-            !(rowSelected || rowHovered || rowFocused)}
+          class:visible={!(rowSelected || rowHovered || rowFocused)}
         >
           {row.__idx + 1}
         </div>
