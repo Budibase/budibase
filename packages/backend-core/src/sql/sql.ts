@@ -449,8 +449,12 @@ class InternalBuilder {
         query = query.orderBy(`${aliased}.${key}`, direction, nulls)
       }
     }
-    // always add sorting by the primary key - make sure result is deterministic
-    query = query.orderBy(`${aliased}.${primaryKey[0]}`)
+
+    // add sorting by the primary key if the result isn't already sorted by it,
+    // to make sure result is deterministic
+    if (!sort || sort[primaryKey[0]] === undefined) {
+      query = query.orderBy(`${aliased}.${primaryKey[0]}`)
+    }
     return query
   }
 
@@ -604,7 +608,8 @@ class InternalBuilder {
       if (!primary) {
         throw new Error("Primary key is required for upsert")
       }
-      return query.insert(parsedBody).onConflict(primary).merge()
+      const ret = query.insert(parsedBody).onConflict(primary).merge()
+      return ret
     } else if (this.client === SqlClient.MS_SQL) {
       // No upsert or onConflict support in MSSQL yet, see:
       //   https://github.com/knex/knex/pull/6050
