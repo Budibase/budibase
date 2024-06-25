@@ -52,7 +52,8 @@ export const processors = [
   }),
 
   new Preprocessor(PreprocessorNames.NORMALIZE_SPACES, (statement: string) => {
-    return statement.replace(/\s+/g, " ")
+    // this replaces whitespaces with only one, apart from if it's inside quotes
+    return statement.replace(/\s{2,}(?=(?:[^'"]*['"][^'"]*['"])*[^'"]*$)/g, " ")
   }),
   new Preprocessor(
     PreprocessorNames.FINALISE,
