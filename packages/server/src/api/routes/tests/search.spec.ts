@@ -1,5 +1,9 @@
 import { tableForDatasource } from "../../../tests/utilities/structures"
-import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import {
+  DatabaseName,
+  getDatasource,
+  knexClient,
+} from "../../../integrations/tests/utils"
 import { db as dbCore, utils } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
@@ -24,6 +28,8 @@ import _ from "lodash"
 import tk from "timekeeper"
 import { encodeJSBinding } from "@budibase/string-templates"
 import { dataFilters } from "@budibase/shared-core"
+import { Knex } from "knex"
+import { structures } from "@budibase/backend-core/tests"
 
 describe.each([
   ["in-memory", undefined],
@@ -42,6 +48,7 @@ describe.each([
 
   let envCleanup: (() => void) | undefined
   let datasource: Datasource | undefined
+  let client: Knex | undefined
   let table: Table
   let rows: Row[]
 
@@ -63,8 +70,10 @@ describe.each([
     }
 
     if (dsProvider) {
+      const rawDatasource = await dsProvider
+      client = await knexClient(rawDatasource)
       datasource = await config.createDatasource({
-        datasource: await dsProvider,
+        datasource: rawDatasource,
       })
     }
   })
@@ -76,9 +85,9 @@ describe.each([
     }
   })
 
-  async function createTable(schema: TableSchema) {
+  async function createTable(schema: TableSchema, name?: string) {
     return await config.api.table.save(
-      tableForDatasource(datasource, { schema })
+      tableForDatasource(datasource, { schema, name })
     )
   }
 
@@ -909,6 +918,44 @@ describe.each([
           }).toMatchExactly([{ name: "foo" }, { name: "bar" }])
         })
       })
+
+      !isInternal &&
+        !isInMemory &&
+        // This test was added because we automatically add in a sort by the
+        // primary key, and we used to do this unconditionally which caused
+        // problems because it was possible for the primary key to appear twice
+        // in the resulting SQL ORDER BY clause, resulting in an SQL error.
+        // We now check first to make sure that the primary key isn't already
+        // in the sort before adding it.
+        describe("sort on primary key", () => {
+          beforeAll(async () => {
+            const tableName = structures.uuid().substring(0, 10)
+            await client!.schema.createTable(tableName, t => {
+              t.string("name").primary()
+            })
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+
+            table = resp.datasource.entities![tableName]
+
+            await createRows([{ name: "foo" }, { name: "bar" }])
+          })
+
+          it("should be able to sort by a primary key column ascending", async () =>
+            expectSearch({
+              query: {},
+              sort: "name",
+              sortOrder: SortOrder.ASCENDING,
+            }).toMatchExactly([{ name: "bar" }, { name: "foo" }]))
+
+          it("should be able to sort by a primary key column descending", async () =>
+            expectSearch({
+              query: {},
+              sort: "name",
+              sortOrder: SortOrder.DESCENDING,
+            }).toMatchExactly([{ name: "foo" }, { name: "bar" }]))
+        })
     })
   })
 
@@ -1956,52 +2003,73 @@ describe.each([
     // isn't available.
     !isInMemory &&
     describe("relations", () => {
-      let otherTable: Table
-      let otherRows: Row[]
+      let productCategoryTable: Table, productCatRows: Row[]
 
       beforeAll(async () => {
-        otherTable = await createTable({
-          one: { name: "one", type: FieldType.STRING },
-        })
-        table = await createTable({
-          two: { name: "two", type: FieldType.STRING },
-          other: {
-            type: FieldType.LINK,
-            relationshipType: RelationshipType.ONE_TO_MANY,
-            name: "other",
-            fieldName: "other",
-            tableId: otherTable._id!,
-            constraints: {
-              type: "array",
+        productCategoryTable = await createTable(
+          {
+            name: { name: "name", type: FieldType.STRING },
+          },
+          "productCategory"
+        )
+        table = await createTable(
+          {
+            name: { name: "name", type: FieldType.STRING },
+            productCat: {
+              type: FieldType.LINK,
+              relationshipType: RelationshipType.ONE_TO_MANY,
+              name: "productCat",
+              fieldName: "product",
+              tableId: productCategoryTable._id!,
+              constraints: {
+                type: "array",
+              },
             },
           },
-        })
+          "product"
+        )
 
-        otherRows = await Promise.all([
-          config.api.row.save(otherTable._id!, { one: "foo" }),
-          config.api.row.save(otherTable._id!, { one: "bar" }),
+        productCatRows = await Promise.all([
+          config.api.row.save(productCategoryTable._id!, { name: "foo" }),
+          config.api.row.save(productCategoryTable._id!, { name: "bar" }),
         ])
 
         await Promise.all([
           config.api.row.save(table._id!, {
-            two: "foo",
-            other: [otherRows[0]._id],
+            name: "foo",
+            productCat: [productCatRows[0]._id],
           }),
           config.api.row.save(table._id!, {
-            two: "bar",
-            other: [otherRows[1]._id],
+            name: "bar",
+            productCat: [productCatRows[1]._id],
+          }),
+          config.api.row.save(table._id!, {
+            name: "baz",
+            productCat: [],
           }),
         ])
-
-        rows = await config.api.row.fetch(table._id!)
       })
 
-      it("can search through relations", async () => {
+      it("should be able to filter by relationship using column name", async () => {
         await expectQuery({
-          equal: { [`${otherTable.name}.one`]: "foo" },
+          equal: { ["productCat.name"]: "foo" },
         }).toContainExactly([
-          { two: "foo", other: [{ _id: otherRows[0]._id }] },
+          { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
         ])
+      })
+
+      it("should be able to filter by relationship using table name", async () => {
+        await expectQuery({
+          equal: { ["productCategory.name"]: "foo" },
+        }).toContainExactly([
+          { name: "foo", productCat: [{ _id: productCatRows[0]._id }] },
+        ])
+      })
+
+      it("shouldn't return any relationship for last row", async () => {
+        await expectQuery({
+          equal: { ["name"]: "baz" },
+        }).toContainExactly([{ name: "baz", productCat: undefined }])
       })
     })
 

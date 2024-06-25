@@ -137,6 +137,67 @@ describe("/queries", () => {
       })
     })
 
+    it("should update schema when structure changes from object to array", async () => {
+      const name = generator.guid()
+
+      await withCollection(async collection => {
+        await collection.insertOne({ name, field: { subfield: "value" } })
+      })
+
+      const firstPreview = await config.api.query.preview({
+        name: "Test Query",
+        datasourceId: datasource._id!,
+        fields: {
+          json: { name: { $eq: name } },
+          extra: {
+            collection,
+            actionType: "findOne",
+          },
+        },
+        schema: {},
+        queryVerb: "read",
+        parameters: [],
+        transformer: "return data",
+        readable: true,
+      })
+
+      expect(firstPreview.schema).toEqual(
+        expect.objectContaining({
+          field: { type: "json", name: "field" },
+        })
+      )
+
+      await withCollection(async collection => {
+        await collection.updateOne(
+          { name },
+          { $set: { field: ["value1", "value2"] } }
+        )
+      })
+
+      const secondPreview = await config.api.query.preview({
+        name: "Test Query",
+        datasourceId: datasource._id!,
+        fields: {
+          json: { name: { $eq: name } },
+          extra: {
+            collection,
+            actionType: "findOne",
+          },
+        },
+        schema: firstPreview.schema,
+        queryVerb: "read",
+        parameters: [],
+        transformer: "return data",
+        readable: true,
+      })
+
+      expect(secondPreview.schema).toEqual(
+        expect.objectContaining({
+          field: { type: "array", name: "field" },
+        })
+      )
+    })
+
     it("should generate a nested schema based on all of the nested items", async () => {
       const name = generator.guid()
       const item = {
