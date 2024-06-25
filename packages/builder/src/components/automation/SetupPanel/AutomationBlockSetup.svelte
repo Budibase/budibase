@@ -120,6 +120,8 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
+  let testDataRowVisibility = {}
+
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
@@ -417,7 +419,8 @@
         (automation.trigger?.event === AutomationEventType.ROW_UPDATE ||
           automation.trigger?.event === AutomationEventType.ROW_SAVE)
       ) {
-        if (name !== "id" && name !== "revision") return `trigger.row.${name}`
+        let noRowKeywordBindings = ["id", "revision", "oldRow"]
+        if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
       }
       /* End special cases for generating custom schemas based on triggers */
 
@@ -601,7 +604,7 @@
   function getFieldLabel(key, value) {
     const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
     const label = `${
-      value.title || (key === "row" ? "Table" : key)
+      value.title || (key === "row" ? "Row" : key)
     } ${requiredSuffix}`
     return Helpers.capitalise(label)
   }

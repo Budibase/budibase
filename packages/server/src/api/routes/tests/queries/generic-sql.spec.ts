@@ -10,37 +10,11 @@ import * as setup from "../utilities"
 import {
   DatabaseName,
   getDatasource,
-  rawQuery,
+  knexClient,
 } from "../../../../integrations/tests/utils"
 import { Expectations } from "src/tests/utilities/api/base"
 import { events } from "@budibase/backend-core"
-
-const createTableSQL: Record<string, string> = {
-  [SourceName.POSTGRES]: `
-    CREATE TABLE test_table (
-        id serial PRIMARY KEY,
-        name VARCHAR ( 50 ) NOT NULL,
-        birthday TIMESTAMP,
-        number INT
-    );`,
-  [SourceName.MYSQL]: `
-    CREATE TABLE test_table (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(50) NOT NULL,
-        birthday TIMESTAMP,
-        number INT
-    );`,
-  [SourceName.SQL_SERVER]: `
-    CREATE TABLE test_table (
-        id INT IDENTITY(1,1) PRIMARY KEY,
-        name NVARCHAR(50) NOT NULL,
-        birthday DATETIME,
-        number INT
-    );`,
-}
-
-const insertSQL = `INSERT INTO test_table (name) VALUES ('one'), ('two'), ('three'), ('four'), ('five')`
-const dropTableSQL = `DROP TABLE test_table;`
+import { Knex } from "knex"
 
 describe.each(
   [
@@ -53,6 +27,7 @@ describe.each(
   const config = setup.getConfig()
   let rawDatasource: Datasource
   let datasource: Datasource
+  let client: Knex
 
   async function createQuery(
     query: Partial<Query>,
@@ -82,21 +57,34 @@ describe.each(
     rawDatasource = await dsProvider
     datasource = await config.api.datasource.create(rawDatasource)
 
-    // The Datasource API does not return the password, but we need
-    // it later to connect to the underlying database, so we fill it
-    // back in here.
+    // The Datasource API doesn ot return the password, but we need it later to
+    // connect to the underlying database, so we fill it back in here.
     datasource.config!.password = rawDatasource.config!.password
 
-    await rawQuery(datasource, createTableSQL[datasource.source])
-    await rawQuery(datasource, insertSQL)
+    client = await knexClient(rawDatasource)
+
+    await client.schema.dropTableIfExists("test_table")
+    await client.schema.createTable("test_table", table => {
+      table.increments("id").primary()
+      table.string("name")
+      table.timestamp("birthday")
+      table.integer("number")
+    })
+
+    await client("test_table").insert([
+      { name: "one" },
+      { name: "two" },
+      { name: "three" },
+      { name: "four" },
+      { name: "five" },
+    ])
 
     jest.clearAllMocks()
   })
 
   afterEach(async () => {
     const ds = await config.api.datasource.get(datasource._id!)
-    config.api.datasource.delete(ds)
-    await rawQuery(datasource, dropTableSQL)
+    await config.api.datasource.delete(ds)
   })
 
   afterAll(async () => {
@@ -207,7 +195,7 @@ describe.each(
           },
         })
 
-        await config.publish()
+        await config.api.application.publish(config.getAppId())
         const prodQuery = await config.api.query.getProd(query._id!)
 
         expect(prodQuery._id).toEqual(query._id)
@@ -262,6 +250,67 @@ describe.each(
       expect(events.query.previewed).toHaveBeenCalledTimes(1)
     })
 
+    it("should update schema when column type changes from number to string", async () => {
+      const tableName = "schema_change_test"
+      await client.schema.dropTableIfExists(tableName)
+
+      await client.schema.createTable(tableName, table => {
+        table.increments("id").primary()
+        table.string("name")
+        table.integer("data")
+      })
+
+      await client(tableName).insert({
+        name: "test",
+        data: 123,
+      })
+
+      const firstPreview = await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: "Test Query",
+        queryVerb: "read",
+        fields: {
+          sql: `SELECT * FROM ${tableName}`,
+        },
+        parameters: [],
+        transformer: "return data",
+        schema: {},
+        readable: true,
+      })
+
+      expect(firstPreview.schema).toEqual(
+        expect.objectContaining({
+          data: { type: "number", name: "data" },
+        })
+      )
+
+      await client.schema.alterTable(tableName, table => {
+        table.string("data").alter()
+      })
+
+      await client(tableName).update({
+        data: "string value",
+      })
+
+      const secondPreview = await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: "Test Query",
+        queryVerb: "read",
+        fields: {
+          sql: `SELECT * FROM ${tableName}`,
+        },
+        parameters: [],
+        transformer: "return data",
+        schema: firstPreview.schema,
+        readable: true,
+      })
+
+      expect(secondPreview.schema).toEqual(
+        expect.objectContaining({
+          data: { type: "string", name: "data" },
+        })
+      )
+    })
     it("should work with static variables", async () => {
       await config.api.datasource.update({
         ...datasource,
@@ -429,11 +478,11 @@ describe.each(
           },
         ])
 
-        const rows = await rawQuery(
-          datasource,
-          "SELECT * FROM test_table WHERE name = 'baz'"
-        )
+        const rows = await client("test_table").where({ name: "baz" }).select()
         expect(rows).toHaveLength(1)
+        for (const row of rows) {
+          expect(row).toMatchObject({ name: "baz" })
+        }
       })
 
       it("should not allow handlebars as parameters", async () => {
@@ -490,11 +539,14 @@ describe.each(
 
           expect(result.data).toEqual([{ created: true }])
 
-          const rows = await rawQuery(
-            datasource,
-            `SELECT * FROM test_table WHERE birthday = '${date.toISOString()}'`
-          )
+          const rows = await client("test_table")
+            .where({ birthday: datetimeStr })
+            .select()
           expect(rows).toHaveLength(1)
+
+          for (const row of rows) {
+            expect(new Date(row.birthday)).toEqual(date)
+          }
         }
       )
 
@@ -522,10 +574,9 @@ describe.each(
 
           expect(result.data).toEqual([{ created: true }])
 
-          const rows = await rawQuery(
-            datasource,
-            `SELECT * FROM test_table WHERE name = '${notDateStr}'`
-          )
+          const rows = await client("test_table")
+            .where({ name: notDateStr })
+            .select()
           expect(rows).toHaveLength(1)
         }
       )
@@ -660,10 +711,7 @@ describe.each(
           },
         ])
 
-        const rows = await rawQuery(
-          datasource,
-          "SELECT * FROM test_table WHERE id = 1"
-        )
+        const rows = await client("test_table").where({ id: 1 }).select()
         expect(rows).toEqual([
           { id: 1, name: "foo", birthday: null, number: null },
         ])
@@ -731,10 +779,7 @@ describe.each(
           },
         ])
 
-        const rows = await rawQuery(
-          datasource,
-          "SELECT * FROM test_table WHERE id = 1"
-        )
+        const rows = await client("test_table").where({ id: 1 }).select()
         expect(rows).toHaveLength(0)
       })
     })
@@ -750,6 +795,7 @@ describe.each(
             name: entityId,
             schema: {},
             type: "table",
+            primary: ["id"],
             sourceId: datasource._id!,
             sourceType: TableSourceType.EXTERNAL,
           },

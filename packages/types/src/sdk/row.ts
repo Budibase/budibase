@@ -17,6 +17,7 @@ export interface SearchParams {
   fields?: string[]
   indexer?: () => Promise<any>
   rows?: Row[]
+  countRows?: boolean
 }
 
 // when searching for rows we want a more extensive search type that requires certain properties

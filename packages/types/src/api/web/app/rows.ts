@@ -25,6 +25,7 @@ export interface SearchViewRowRequest
     | "bookmark"
     | "paginate"
     | "query"
+    | "countRows"
   > {}
 
 export interface SearchRowResponse {
