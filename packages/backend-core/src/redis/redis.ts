@@ -1,15 +1,6 @@
 import env from "../environment"
 import Redis, { Cluster } from "ioredis"
 // mock-redis doesn't have any typing
-let MockRedis: any | undefined
-if (env.MOCK_REDIS) {
-  try {
-    // ioredis mock is all in memory
-    MockRedis = require("ioredis-mock")
-  } catch (err) {
-    console.log("Mock redis unavailable")
-  }
-}
 import {
   addDbPrefix,
   removeDbPrefix,
@@ -28,13 +19,8 @@ const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 
 // for testing just generate the client once
 let CLOSED = false
-const CLIENTS: Record<number, Redis> = {}
+const CLIENTS: Record<number, Redis | Cluster> = {}
 let CONNECTED = false
-
-// mock redis always connected
-if (env.MOCK_REDIS) {
-  CONNECTED = true
-}
 
 function pickClient(selectDb: number) {
   return CLIENTS[selectDb]
@@ -60,17 +46,12 @@ function connectionError(timeout: NodeJS.Timeout, err: Error | string) {
  * will return the ioredis client which will be ready to use.
  */
 function init(selectDb = DEFAULT_SELECT_DB) {
-  const RedisCore = env.MOCK_REDIS && MockRedis ? MockRedis : Redis
   let timeout: NodeJS.Timeout
   CLOSED = false
   let client = pickClient(selectDb)
   // already connected, ignore
   if (client && CONNECTED) {
     return
-  }
-  // testing uses a single in memory client
-  if (env.MOCK_REDIS) {
-    CLIENTS[selectDb] = new RedisCore(getRedisOptions())
   }
   // start the timer - only allowed 5 seconds to connect
   timeout = setTimeout(() => {
@@ -87,9 +68,9 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   const opts = getRedisOptions()
 
   if (CLUSTERED) {
-    client = new RedisCore.Cluster([{ host, port }], opts)
+    client = new Cluster([{ host, port }], opts)
   } else {
-    client = new RedisCore(opts)
+    client = new Redis(opts)
   }
   // attach handlers
   client.on("end", (err: Error) => {
@@ -109,6 +90,12 @@ function init(selectDb = DEFAULT_SELECT_DB) {
     CONNECTED = true
   })
   CLIENTS[selectDb] = client
+}
+
+export function close() {
+  for (let key in CLIENTS) {
+    CLIENTS[key].disconnect()
+  }
 }
 
 function waitForConnection(selectDb: number = DEFAULT_SELECT_DB) {

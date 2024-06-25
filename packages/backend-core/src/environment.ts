@@ -157,7 +157,6 @@ const environment = {
     process.env.PLUGIN_BUCKET_NAME || DefaultBucketName.PLUGINS,
   TEMP_BUCKET_NAME: process.env.TEMP_BUCKET_NAME || DefaultBucketName.TEMP,
   USE_COUCH: process.env.USE_COUCH || true,
-  MOCK_REDIS: process.env.MOCK_REDIS,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
   SERVICE: process.env.SERVICE || "budibase",
   LOG_LEVEL: process.env.LOG_LEVEL || "info",

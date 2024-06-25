@@ -14,14 +14,17 @@ import Koa from "koa"
 import { Server } from "http"
 import { startup } from "./startup"
 
-let app: Koa, server: Server
+let app: Koa, server: Server, started: Promise<void>
 
 async function start() {
   const koa = createKoaApp()
-  app = koa.app
-  server = koa.server
-  // startup includes automation runner - if enabled
-  await startup({ app, server })
+  started = new Promise(resolve => {
+    app = koa.app
+    server = koa.server
+    // startup includes automation runner - if enabled
+    startup({ app, server }).then(resolve)
+  })
+  await started
 }
 
 start().catch(err => {
@@ -29,6 +32,7 @@ start().catch(err => {
   throw err
 })
 
-export function getServer(): Server {
+export async function getServer(): Promise<Server> {
+  await started
   return server
 }

@@ -110,7 +110,7 @@ export abstract class TestAPI {
       ? this.config.publicHeaders.bind(this.config)
       : this.config.defaultHeaders.bind(this.config)
 
-    const app = getServer()
+    const app = await getServer()
     let req = request(app)[method](url)
     req = req.set(
       headersFn({
