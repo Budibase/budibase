@@ -2,7 +2,6 @@ import "./core/logging"
 import env from "../src/environment"
 import { cleanup } from "../src/timers"
 import { mocks, testContainerUtils } from "./core/utilities"
-import { close } from "../src/redis/redis"
 
 // must explicitly enable fetch mock
 mocks.fetch.enable()
@@ -27,5 +26,4 @@ testContainerUtils.setupEnv(env)
 
 afterAll(() => {
   cleanup()
-  close()
 })

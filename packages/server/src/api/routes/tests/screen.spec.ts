@@ -1,24 +1,29 @@
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
-const { basicScreen } = setup.structures
-const { events } = require("@budibase/backend-core")
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { structures } from "./utilities"
+import { events } from "@budibase/backend-core"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { Screen } from "@budibase/types"
+
+const { basicScreen } = structures
 
 describe("/screens", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-  let screen
+  const config = new TestConfiguration()
 
-  afterAll(setup.afterAll)
+  let screen: Screen
 
   beforeAll(async () => {
     await config.init()
     screen = await config.createScreen()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   describe("fetch", () => {
     it("should be able to create a layout", async () => {
-      const res = await request
-        .get(`/api/screens`)
+      const res = await config
+        .request!.get(`/api/screens`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -37,8 +42,8 @@ describe("/screens", () => {
 
   describe("save", () => {
     const saveScreen = async screen => {
-      const res = await request
-        .post(`/api/screens`)
+      const res = await config
+        .request!.post(`/api/screens`)
         .send(screen)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
@@ -54,7 +59,7 @@ describe("/screens", () => {
 
       expect(res.body._rev).toBeDefined()
       expect(res.body.name).toEqual(screen.name)
-      expect(events.screen.created).toBeCalledTimes(1)
+      expect(events.screen.created).toHaveBeenCalledTimes(1)
     })
 
     it("should be able to update a screen", async () => {
@@ -69,7 +74,7 @@ describe("/screens", () => {
 
       expect(res.body._rev).toBeDefined()
       expect(res.body.name).toEqual(screen.name)
-      expect(events.screen.created).not.toBeCalled()
+      expect(events.screen.created).not.toHaveBeenCalled()
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -83,13 +88,13 @@ describe("/screens", () => {
 
   describe("destroy", () => {
     it("should be able to delete the screen", async () => {
-      const res = await request
-        .delete(`/api/screens/${screen._id}/${screen._rev}`)
+      const res = await config
+        .request!.delete(`/api/screens/${screen._id}/${screen._rev}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toBeDefined()
-      expect(events.screen.deleted).toBeCalledTimes(1)
+      expect(events.screen.deleted).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

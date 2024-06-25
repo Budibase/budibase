@@ -1,14 +1,11 @@
-import * as setup from "./utilities"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 import { roles, db as dbCore } from "@budibase/backend-core"
 
 describe("/api/applications/:appId/sync", () => {
-  let config = setup.getConfig()
-  let app
-
-  afterAll(setup.afterAll)
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
-    app = await config.init()
+    const app = await config.init()
     // create some users which we will use throughout the tests
     await config.createUser({
       email: "sync1@example.com",
@@ -16,6 +13,10 @@ describe("/api/applications/:appId/sync", () => {
         [app._id!]: roles.BUILTIN_ROLE_IDS.BASIC,
       },
     })
+  })
+
+  afterAll(() => {
+    config.end()
   })
 
   async function getUserMetadata() {

@@ -1,13 +1,14 @@
-import * as setup from "./utilities"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 import path from "path"
 
 const PASSWORD = "testtest"
 
 describe("/applications/:appId/import", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   beforeAll(async () => {
     await config.init()
@@ -15,8 +16,8 @@ describe("/applications/:appId/import", () => {
 
   it("should be able to perform import", async () => {
     const appId = config.getAppId()
-    await request
-      .post(`/api/applications/${appId}/import`)
+    await config
+      .request!.post(`/api/applications/${appId}/import`)
       .field("encryptionPassword", PASSWORD)
       .attach("appExport", path.join(__dirname, "assets", "export.tar.gz"))
       .set(config.defaultHeaders())

@@ -1,8 +1,8 @@
 import { Header } from "@budibase/backend-core"
-import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
 import { AppMigration, getLatestEnabledMigrationId } from "../index"
 import { getAppMigrationVersion } from "../appMigrationMetadata"
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 
 jest.mock<typeof migrations>("../migrations", () => ({
   MIGRATIONS: [
@@ -14,10 +14,17 @@ jest.mock<typeof migrations>("../migrations", () => ({
 }))
 
 describe("migrations", () => {
-  it("new apps are created with the latest app migration version set", async () => {
-    const config = setup.getConfig()
-    await config.init()
+  const config = new TestConfiguration()
 
+  beforeAll(async () => {
+    await config.init()
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("new apps are created with the latest app migration version set", async () => {
     await config.doInContext(config.getAppId(), async () => {
       const migrationVersion = await getAppMigrationVersion(config.getAppId())
 
@@ -26,9 +33,6 @@ describe("migrations", () => {
   })
 
   it("accessing an app that has no pending migrations will not attach the migrating header", async () => {
-    const config = setup.getConfig()
-    await config.init()
-
     const appId = config.getAppId()
 
     await config.api.application.get(appId, {
@@ -37,9 +41,6 @@ describe("migrations", () => {
   })
 
   it("accessing an app that has pending migrations will attach the migrating header", async () => {
-    const config = setup.getConfig()
-    await config.init()
-
     const appId = config.getAppId()
 
     migrations.MIGRATIONS.push({

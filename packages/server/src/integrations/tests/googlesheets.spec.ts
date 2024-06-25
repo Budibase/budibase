@@ -38,19 +38,12 @@ describe("Google Sheets Integration", () => {
     config = new TestConfiguration()
   let cleanupEnv: () => void
 
-  beforeAll(() => {
+  beforeAll(async () => {
     cleanupEnv = config.setCoreEnv({
       GOOGLE_CLIENT_ID: "test",
       GOOGLE_CLIENT_SECRET: "test",
     })
-  })
 
-  afterAll(async () => {
-    cleanupEnv()
-    config.end()
-  })
-
-  beforeEach(async () => {
     integration = new GoogleSheetsIntegration.integration({
       spreadsheetId: "randomId",
       auth: {
@@ -60,7 +53,14 @@ describe("Google Sheets Integration", () => {
       },
     })
     await config.init()
+  })
 
+  afterAll(async () => {
+    cleanupEnv()
+    config.end()
+  })
+
+  beforeEach(async () => {
     jest.clearAllMocks()
   })
 

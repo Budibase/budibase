@@ -1,23 +1,25 @@
 import jestOpenAPI from "jest-openapi"
 import { run as generateSchema } from "../../../../../specs/generate"
-import * as setup from "../../tests/utilities"
 import { generateMakeRequest } from "./utils"
 import { Table, App, Row, User } from "@budibase/types"
+import TestConfiguration from "../../../../../src/tests/utilities/TestConfiguration"
 
 const yamlPath = generateSchema()
 jestOpenAPI(yamlPath!)
 
-let config = setup.getConfig()
+const config = new TestConfiguration()
 let apiKey: string, table: Table, app: App, makeRequest: any
 
 beforeAll(async () => {
   app = await config.init()
   table = await config.upsertTable()
   apiKey = await config.generateApiKey()
-  makeRequest = generateMakeRequest(apiKey)
+  makeRequest = generateMakeRequest(config, apiKey)
 })
 
-afterAll(setup.afterAll)
+afterAll(() => {
+  config.end()
+})
 
 describe("check the applications endpoints", () => {
   it("should allow retrieving applications through search", async () => {

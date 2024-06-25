@@ -11,29 +11,29 @@ jest.mock("pg", () => {
     on: jest.fn(),
   }
 })
-import * as setup from "./utilities"
+import { structures } from "./utilities"
 import { mocks } from "@budibase/backend-core/tests"
 import { env, events } from "@budibase/backend-core"
 import { QueryPreview } from "@budibase/types"
-
-const structures = setup.structures
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 env._set("ENCRYPTION_KEY", "budibase")
 mocks.licenses.useEnvironmentVariables()
 
 describe("/api/env/variables", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-
-  afterAll(setup.afterAll)
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   it("should be able check the status of env var API", async () => {
-    const res = await request
-      .get(`/api/env/variables/status`)
+    const res = await config
+      .request!.get(`/api/env/variables/status`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
@@ -42,16 +42,16 @@ describe("/api/env/variables", () => {
   })
 
   it("should be able to create an environment variable", async () => {
-    await request
-      .post(`/api/env/variables`)
+    await config
+      .request!.post(`/api/env/variables`)
       .send(structures.basicEnvironmentVariable("test", "test"))
       .set(config.defaultHeaders())
       .expect(200)
   })
 
   it("should be able to fetch the 'test' variable name", async () => {
-    const res = await request
-      .get(`/api/env/variables`)
+    const res = await config
+      .request!.get(`/api/env/variables`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
@@ -61,8 +61,8 @@ describe("/api/env/variables", () => {
 
   it("should be able to update the environment variable 'test'", async () => {
     const varName = "test"
-    await request
-      .patch(`/api/env/variables/${varName}`)
+    await config
+      .request!.patch(`/api/env/variables/${varName}`)
       .send(structures.basicEnvironmentVariable("test", "test1"))
       .set(config.defaultHeaders())
       .expect(200)
@@ -70,32 +70,32 @@ describe("/api/env/variables", () => {
 
   it("should be able to delete the environment variable 'test'", async () => {
     const varName = "test"
-    await request
-      .delete(`/api/env/variables/${varName}`)
+    await config
+      .request!.delete(`/api/env/variables/${varName}`)
       .set(config.defaultHeaders())
       .expect(200)
   })
 
   it("should create a datasource (using the environment variable) and query", async () => {
     const datasourceBase = structures.basicDatasource()
-    await request
-      .post(`/api/env/variables`)
+    await config
+      .request!.post(`/api/env/variables`)
       .send(structures.basicEnvironmentVariable("test", "test"))
       .set(config.defaultHeaders())
 
     datasourceBase.datasource.config = {
       password: "{{ env.test }}",
     }
-    const response = await request
-      .post(`/api/datasources`)
+    const response = await config
+      .request!.post(`/api/datasources`)
       .send(datasourceBase)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
     expect(response.body.datasource._id).toBeDefined()
 
-    const response2 = await request
-      .post(`/api/queries`)
+    const response2 = await config
+      .request!.post(`/api/queries`)
       .send(structures.basicQuery(response.body.datasource._id))
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
@@ -105,16 +105,16 @@ describe("/api/env/variables", () => {
 
   it("should run a query preview and check the mocked results", async () => {
     const datasourceBase = structures.basicDatasource()
-    await request
-      .post(`/api/env/variables`)
+    await config
+      .request!.post(`/api/env/variables`)
       .send(structures.basicEnvironmentVariable("test", "test"))
       .set(config.defaultHeaders())
 
     datasourceBase.datasource.config = {
       password: "{{ env.test }}",
     }
-    const response = await request
-      .post(`/api/datasources`)
+    const response = await config
+      .request!.post(`/api/datasources`)
       .send(datasourceBase)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
@@ -131,8 +131,8 @@ describe("/api/env/variables", () => {
       schema: {},
       readable: true,
     }
-    const res = await request
-      .post(`/api/queries/preview`)
+    const res = await config
+      .request!.post(`/api/queries/preview`)
       .send(queryPreview)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)

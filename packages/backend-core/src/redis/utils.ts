@@ -89,6 +89,7 @@ export function getRedisConnectionDetails() {
 export function getRedisOptions() {
   const { host, password, port } = getRedisConnectionDetails()
   let redisOpts: Redis.RedisOptions = {
+    enableReadyCheck: true,
     connectTimeout: CONNECT_TIMEOUT_MS,
     port: port,
     host,

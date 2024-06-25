@@ -1,4 +1,3 @@
-import * as setup from "../utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { Datasource, SourceName } from "@budibase/types"
 import { getCachedVariable } from "../../../../threads/utils"
@@ -8,7 +7,7 @@ import { generator } from "@budibase/backend-core/tests"
 jest.unmock("node-fetch")
 
 describe("rest", () => {
-  let config: TestConfiguration
+  const config = new TestConfiguration()
   let datasource: Datasource
 
   async function createQuery(fields: any) {
@@ -25,7 +24,6 @@ describe("rest", () => {
   }
 
   beforeAll(async () => {
-    config = setup.getConfig()
     await config.init()
     datasource = await config.api.datasource.create({
       name: generator.guid(),
@@ -33,6 +31,10 @@ describe("rest", () => {
       source: SourceName.REST,
       config: {},
     })
+  })
+
+  afterAll(() => {
+    config.end()
   })
 
   afterEach(() => {

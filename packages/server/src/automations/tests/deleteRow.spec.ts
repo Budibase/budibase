@@ -1,12 +1,14 @@
-const setup = require("./utilities")
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
+import { actions, runStep } from "./utilities"
 
 describe("test the delete row action", () => {
   let table: any
   let row: any
   let inputs: any
-  let config = setup.getConfig()
+  let config: TestConfiguration
 
   beforeEach(async () => {
+    config = new TestConfiguration()
     await config.init()
     table = await config.createTable()
     row = await config.createRow()
@@ -17,10 +19,12 @@ describe("test the delete row action", () => {
     }
   })
 
-  afterAll(setup.afterAll)
+  afterEach(() => {
+    config.end()
+  })
 
   it("should be able to run the action", async () => {
-    const res = await setup.runStep(setup.actions.DELETE_ROW.stepId, inputs)
+    const res = await runStep(actions.DELETE_ROW.stepId, inputs)
     expect(res.success).toEqual(true)
     expect(res.response).toBeDefined()
     expect(res.row._id).toEqual(row._id)

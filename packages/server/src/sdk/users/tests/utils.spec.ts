@@ -6,13 +6,16 @@ import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { rawUserMetadata, syncGlobalUsers } from "../utils"
 
 describe("syncGlobalUsers", () => {
-  const config = new TestConfiguration()
+  let config: TestConfiguration
 
   beforeEach(async () => {
+    config = new TestConfiguration()
     await config.init()
   })
 
-  afterAll(config.end)
+  afterEach(() => {
+    config.end()
+  })
 
   it("the default user is synced", async () => {
     await config.doInContext(config.appId, async () => {

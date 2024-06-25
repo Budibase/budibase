@@ -14,25 +14,26 @@ jest.mock("@budibase/backend-core", () => {
 })
 
 import { events, objectStore } from "@budibase/backend-core"
-import * as setup from "./utilities"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
 
 describe("/plugins", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-
-  afterAll(setup.afterAll)
+  const config = new TestConfiguration()
 
   beforeEach(async () => {
     await config.init()
     jest.clearAllMocks()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   const createPlugin = async (status?: number) => {
-    return request
-      .post(`/api/plugin/upload`)
+    return config
+      .request!.post(`/api/plugin/upload`)
       .attach("file", "src/api/routes/tests/data/comment-box-1.0.2.tar.gz")
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
@@ -40,8 +41,8 @@ describe("/plugins", () => {
   }
 
   const getPlugins = async (status?: number) => {
-    return request
-      .get(`/api/plugin`)
+    return config
+      .request!.get(`/api/plugin`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status ? status : 200)
@@ -78,8 +79,8 @@ describe("/plugins", () => {
   describe("destroy", () => {
     it("should be able to delete a plugin", async () => {
       await createPlugin()
-      const res = await request
-        .delete(`/api/plugin/plg_comment-box`)
+      const res = await config
+        .request!.delete(`/api/plugin/plg_comment-box`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -97,8 +98,8 @@ describe("/plugins", () => {
       })
 
       await createPlugin()
-      const res = await request
-        .delete(`/api/plugin/plg_comment-box`)
+      const res = await config
+        .request!.delete(`/api/plugin/plg_comment-box`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(400)
@@ -113,8 +114,8 @@ describe("/plugins", () => {
 
   describe("github", () => {
     const createGithubPlugin = async (status?: number, url?: string) => {
-      return await request
-        .post(`/api/plugin`)
+      return await config
+        .request!.post(`/api/plugin`)
         .send({
           source: "Github",
           url,
@@ -145,8 +146,8 @@ describe("/plugins", () => {
   })
   describe("npm", () => {
     it("should be able to create a plugin from npm", async () => {
-      const res = await request
-        .post(`/api/plugin`)
+      const res = await config
+        .request!.post(`/api/plugin`)
         .send({
           source: "NPM",
           url: "https://www.npmjs.com/package/budibase-component",
@@ -162,8 +163,8 @@ describe("/plugins", () => {
 
   describe("url", () => {
     it("should be able to create a plugin from a URL", async () => {
-      const res = await request
-        .post(`/api/plugin`)
+      const res = await config
+        .request!.post(`/api/plugin`)
         .send({
           source: "URL",
           url: "https://www.someurl.com/comment-box/comment-box-1.0.2.tar.gz",

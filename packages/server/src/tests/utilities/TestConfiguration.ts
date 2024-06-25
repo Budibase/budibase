@@ -97,7 +97,7 @@ export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
 export default class TestConfiguration {
   server?: Server
   request?: supertest.SuperTest<supertest.Test>
-  started: boolean = false
+  initialised: boolean = false
   appId?: string
   allApps: App[]
   app?: App
@@ -224,35 +224,31 @@ export default class TestConfiguration {
 
   // use a new id as the name to avoid name collisions
   async init(appName = newid()) {
-    if (this.openServer && !this.started) {
+    if (this.initialised) {
+      throw new Error("config has already been initialised")
+    }
+
+    if (this.openServer) {
       // use a random port because it doesn't matter
       env.PORT = "0"
       this.server = await getServer()
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
       this._api = new API(this)
-      this.started = true
-    }
-
-    if (!this.started) {
+    } else {
       await startup()
-      this.started = true
     }
 
-    return await this.newTenant(appName)
+    const app = await this.newTenant(appName)
+
+    this.initialised = true
+    return app
   }
 
-  end(): Promise<void> {
-    return new Promise(resolve => {
-      if (this.allApps) {
-        cleanup(this.allApps.map(app => app.appId))
-      }
-      if (this.server) {
-        this.server.close(() => resolve())
-      } else {
-        resolve()
-      }
-    })
+  end() {
+    if (this.allApps) {
+      cleanup(this.allApps.map(app => app.appId))
+    }
   }
 
   async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {

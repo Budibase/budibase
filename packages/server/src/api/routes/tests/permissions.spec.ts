@@ -15,27 +15,30 @@ import {
   Table,
   ViewV2,
 } from "@budibase/types"
-import * as setup from "./utilities"
+import { structures } from "./utilities"
 import { generator, mocks } from "@budibase/backend-core/tests"
+import TestConfiguration from "src/tests/utilities/TestConfiguration"
 
-const { basicRow } = setup.structures
+const { basicRow } = structures
 const { BUILTIN_ROLE_IDS } = roles
 
 const HIGHER_ROLE_ID = BUILTIN_ROLE_IDS.BASIC
 const STD_ROLE_ID = BUILTIN_ROLE_IDS.PUBLIC
 
 describe("/permission", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
+
   let table: Table & { _id: string }
   let perms: Document[]
   let row: Row
   let view: ViewV2
 
-  afterAll(setup.afterAll)
-
   beforeAll(async () => {
     await config.init()
+  })
+
+  afterAll(() => {
+    config.end()
   })
 
   beforeEach(async () => {
@@ -57,8 +60,8 @@ describe("/permission", () => {
 
   describe("levels", () => {
     it("should be able to get levels", async () => {
-      const res = await request
-        .get(`/api/permission/levels`)
+      const res = await config
+        .request!.get(`/api/permission/levels`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -77,8 +80,8 @@ describe("/permission", () => {
     })
 
     it("should get the resource permissions", async () => {
-      const res = await request
-        .get(`/api/permission/${table._id}`)
+      const res = await config
+        .request!.get(`/api/permission/${table._id}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -104,8 +107,8 @@ describe("/permission", () => {
         },
       })
 
-      const allRes = await request
-        .get(`/api/permission`)
+      const allRes = await config
+        .request!.get(`/api/permission`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -178,8 +181,8 @@ describe("/permission", () => {
       // replicate changes before checking permissions
       await config.publish()
 
-      const res = await request
-        .get(`/api/${table._id}/rows`)
+      const res = await config
+        .request!.get(`/api/${table._id}/rows`)
         .set(config.publicHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -245,8 +248,8 @@ describe("/permission", () => {
     })
 
     it("shouldn't allow writing from a public user", async () => {
-      const res = await request
-        .post(`/api/${table._id}/rows`)
+      const res = await config
+        .request!.post(`/api/${table._id}/rows`)
         .send(basicRow(table._id))
         .set(config.publicHeaders())
         .expect("Content-Type", /json/)
@@ -257,8 +260,8 @@ describe("/permission", () => {
 
   describe("fetch builtins", () => {
     it("should be able to fetch builtin definitions", async () => {
-      const res = await request
-        .get(`/api/permission/builtin`)
+      const res = await config
+        .request!.get(`/api/permission/builtin`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)

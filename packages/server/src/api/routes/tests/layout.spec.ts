@@ -1,14 +1,14 @@
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
-const { basicLayout } = setup.structures
-const { events } = require("@budibase/backend-core")
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { structures } from "./utilities"
+import { events } from "@budibase/backend-core"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
+import { SaveLayoutResponse } from "@budibase/types"
+
+const { basicLayout } = structures
 
 describe("/layouts", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-  let layout
-
-  afterAll(setup.afterAll)
+  const config = new TestConfiguration()
+  let layout: SaveLayoutResponse
 
   beforeAll(async () => {
     await config.init()
@@ -16,16 +16,20 @@ describe("/layouts", () => {
     jest.clearAllMocks()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   describe("save", () => {
     it("should be able to create a layout", async () => {
-      const res = await request
-        .post(`/api/layouts`)
+      const res = await config
+        .request!.post(`/api/layouts`)
         .send(basicLayout())
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._rev).toBeDefined()
-      expect(events.layout.created).toBeCalledTimes(1)
+      expect(events.layout.created).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -39,13 +43,13 @@ describe("/layouts", () => {
 
   describe("destroy", () => {
     it("should be able to delete the layout", async () => {
-      const res = await request
-        .delete(`/api/layouts/${layout._id}/${layout._rev}`)
+      const res = await config
+        .request!.delete(`/api/layouts/${layout._id}/${layout._rev}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toBeDefined()
-      expect(events.layout.deleted).toBeCalledTimes(1)
+      expect(events.layout.deleted).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

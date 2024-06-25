@@ -4,7 +4,7 @@ import {
   clearAllAutomations,
   testAutomation,
 } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
+import { structures, delay } from "./utilities"
 import {
   TRIGGER_DEFINITIONS,
   BUILTIN_ACTION_DEFINITIONS,
@@ -14,6 +14,7 @@ import sdk from "../../../sdk"
 import { Automation } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
+import TestConfiguration from "src/tests/utilities/TestConfiguration"
 
 const MAX_RETRIES = 4
 let {
@@ -23,16 +24,17 @@ let {
   automationStep,
   collectAutomation,
   filterAutomation,
-} = setup.structures
+} = structures
 
 describe("/automations", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-
-  afterAll(setup.afterAll)
+  let config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
+  })
+
+  afterAll(() => {
+    config.end()
   })
 
   beforeEach(() => {
@@ -42,8 +44,8 @@ describe("/automations", () => {
 
   describe("get definitions", () => {
     it("returns a list of definitions for actions", async () => {
-      const res = await request
-        .get(`/api/automations/action/list`)
+      const res = await config
+        .request!.get(`/api/automations/action/list`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -52,8 +54,8 @@ describe("/automations", () => {
     })
 
     it("returns a list of definitions for triggerInfo", async () => {
-      const res = await request
-        .get(`/api/automations/trigger/list`)
+      const res = await config
+        .request!.get(`/api/automations/trigger/list`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -62,8 +64,8 @@ describe("/automations", () => {
     })
 
     it("returns all of the definitions in one", async () => {
-      const res = await request
-        .get(`/api/automations/definitions/list`)
+      const res = await config
+        .request!.get(`/api/automations/definitions/list`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -85,8 +87,8 @@ describe("/automations", () => {
       const automation = newAutomation()
       automation.definition.steps = []
 
-      const res = await request
-        .post(`/api/automations`)
+      const res = await config
+        .request!.post(`/api/automations`)
         .set(config.defaultHeaders())
         .send(automation)
         .expect("Content-Type", /json/)
@@ -104,8 +106,8 @@ describe("/automations", () => {
       automation.definition.steps.push(automationStep())
       jest.clearAllMocks()
 
-      const res = await request
-        .post(`/api/automations`)
+      const res = await config
+        .request!.post(`/api/automations`)
         .set(config.defaultHeaders())
         .send(automation)
         .expect("Content-Type", /json/)
@@ -132,8 +134,8 @@ describe("/automations", () => {
   describe("find", () => {
     it("should be able to find the automation", async () => {
       const automation = await config.createAutomation()
-      const res = await request
-        .get(`/api/automations/${automation._id}`)
+      const res = await config
+        .request!.get(`/api/automations/${automation._id}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -156,7 +158,7 @@ describe("/automations", () => {
       }
       automation.appId = config.appId
       automation = await config.createAutomation(automation)
-      await setup.delay(500)
+      await delay(500)
       const res = await testAutomation(config, automation, {
         row: {
           name: "Test",
@@ -170,7 +172,7 @@ describe("/automations", () => {
       // TODO: update when workflow logs are a thing
       for (let tries = 0; tries < MAX_RETRIES; tries++) {
         expect(res.body).toBeDefined()
-        await setup.delay(500)
+        await delay(500)
         let elements = await getAllTableRows(config)
         // don't test it unless there are values to test
         if (elements.length > 1) {
@@ -188,8 +190,8 @@ describe("/automations", () => {
     it("does not trigger an automation when not synchronous and in dev", async () => {
       let automation = newAutomation()
       automation = await config.createAutomation(automation)
-      const res = await request
-        .post(`/api/automations/${automation._id}/trigger`)
+      const res = await config
+        .request!.post(`/api/automations/${automation._id}/trigger`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(400)
@@ -203,8 +205,8 @@ describe("/automations", () => {
       mocks.licenses.useSyncAutomations()
       let automation = collectAutomation()
       automation = await config.createAutomation(automation)
-      const res = await request
-        .post(`/api/automations/${automation._id}/trigger`)
+      const res = await config
+        .request!.post(`/api/automations/${automation._id}/trigger`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -221,8 +223,8 @@ describe("/automations", () => {
         disabled: true,
       })
 
-      const res = await request
-        .post(`/api/automations/${automation._id}/trigger`)
+      const res = await config
+        .request!.post(`/api/automations/${automation._id}/trigger`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(400)
@@ -235,8 +237,8 @@ describe("/automations", () => {
       automation = await config.createAutomation(automation)
       await config.publish()
 
-      const res = await request
-        .post(`/api/automations/${automation._id}/trigger`)
+      const res = await config
+        .request!.post(`/api/automations/${automation._id}/trigger`)
         .set(config.defaultHeaders({}, true))
         .expect("Content-Type", /json/)
         .expect(200)
@@ -249,8 +251,8 @@ describe("/automations", () => {
 
   describe("update", () => {
     const update = async (automation: Automation) => {
-      return request
-        .put(`/api/automations`)
+      return config
+        .request!.put(`/api/automations`)
         .set(config.defaultHeaders())
         .send(automation)
         .expect("Content-Type", /json/)
@@ -258,8 +260,8 @@ describe("/automations", () => {
     }
 
     const updateWithPost = async (automation: Automation) => {
-      return request
-        .post(`/api/automations`)
+      return config
+        .request!.post(`/api/automations`)
         .set(config.defaultHeaders())
         .send(automation)
         .expect("Content-Type", /json/)
@@ -394,8 +396,8 @@ describe("/automations", () => {
       await clearAllAutomations(config)
       const autoConfig = basicAutomation()
       await config.createAutomation(autoConfig)
-      const res = await request
-        .get(`/api/automations`)
+      const res = await config
+        .request!.get(`/api/automations`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -415,8 +417,10 @@ describe("/automations", () => {
   describe("destroy", () => {
     it("deletes a automation by its ID", async () => {
       const automation = await config.createAutomation()
-      const res = await request
-        .delete(`/api/automations/${automation._id}/${automation._rev}`)
+      const res = await config
+        .request!.delete(
+          `/api/automations/${automation._id}/${automation._rev}`
+        )
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)

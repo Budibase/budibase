@@ -1,4 +1,3 @@
-import * as setup from "../../../api/routes/tests/utilities"
 import { basicTable } from "../../../tests/utilities/structures"
 import { db as dbCore, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import {
@@ -15,6 +14,7 @@ import {
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20240604153647_initial_sqs"
 import { AppMigration } from "src/appMigrations"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 const MIGRATIONS: AppMigration[] = [
   {
@@ -24,7 +24,7 @@ const MIGRATIONS: AppMigration[] = [
   },
 ]
 
-const config = setup.getConfig()
+const config = new TestConfiguration()
 let tableId: string
 
 function oldLinkDocInfo() {
@@ -80,6 +80,10 @@ beforeAll(async () => {
     // old link document
     await db.put(oldLinkDocument())
   })
+})
+
+afterAll(() => {
+  config.end()
 })
 
 describe("SQS migration", () => {

@@ -63,11 +63,11 @@ async function waitForEvent(
 }
 
 describe.each([
-  // ["internal", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  ["internal", undefined],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
@@ -90,7 +90,7 @@ describe.each([
   })
 
   afterAll(async () => {
-    await config.end()
+    config.end()
   })
 
   function saveTableRequest(

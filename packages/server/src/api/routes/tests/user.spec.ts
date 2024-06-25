@@ -1,7 +1,7 @@
 import { roles, utils } from "@budibase/backend-core"
 import { checkPermissionsEndpoint } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
 import { UserMetadata } from "@budibase/types"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {
@@ -14,13 +14,14 @@ jest.mock("../../../utilities/workerRequests", () => ({
 }))
 
 describe("/users", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-
-  afterAll(setup.afterAll)
+  let config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
+  })
+
+  afterAll(() => {
+    config.end()
   })
 
   describe("fetch", () => {
@@ -42,7 +43,6 @@ describe("/users", () => {
       await config.createUser()
       await checkPermissionsEndpoint({
         config,
-        request,
         method: "GET",
         url: `/api/users/metadata`,
         passRole: roles.BUILTIN_ROLE_IDS.ADMIN,
@@ -114,8 +114,8 @@ describe("/users", () => {
   describe("setFlag", () => {
     it("should throw an error if a flag is not provided", async () => {
       await config.createUser()
-      const res = await request
-        .post(`/api/users/flags`)
+      const res = await config
+        .request!.post(`/api/users/flags`)
         .set(config.defaultHeaders())
         .send({ value: "test" })
         .expect(400)

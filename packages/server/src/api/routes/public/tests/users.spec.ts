@@ -1,26 +1,28 @@
-import * as setup from "../../tests/utilities"
 import { generateMakeRequest, MakeRequestResponse } from "./utils"
 import { User } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 
 import * as workerRequests from "../../../../utilities/workerRequests"
+import TestConfiguration from "../../../../../src/tests/utilities/TestConfiguration"
 
 const mockedWorkerReq = jest.mocked(workerRequests)
 
-let config = setup.getConfig()
+const config = new TestConfiguration()
 let apiKey: string, globalUser: User, makeRequest: MakeRequestResponse
 
 beforeAll(async () => {
   await config.init()
   globalUser = await config.globalUser()
   apiKey = await config.generateApiKey(globalUser._id)
-  makeRequest = generateMakeRequest(apiKey)
+  makeRequest = generateMakeRequest(config, apiKey)
   mockedWorkerReq.readGlobalUser.mockImplementation(() =>
     Promise.resolve(globalUser)
   )
 })
 
-afterAll(setup.afterAll)
+afterAll(() => {
+  config.end()
+})
 
 function base() {
   return {

@@ -1,4 +1,3 @@
-import * as setup from "../api/routes/tests/utilities"
 import { Datasource, FieldType } from "@budibase/types"
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
@@ -8,10 +7,10 @@ import {
   knexClient,
 } from "../integrations/tests/utils"
 import { Knex } from "knex"
-
-const config = setup.getConfig()!
+import TestConfiguration from "../../src/tests/utilities/TestConfiguration"
 
 describe("postgres integrations", () => {
+  const config = new TestConfiguration()
   let datasource: Datasource
   let client: Knex
 
@@ -22,7 +21,9 @@ describe("postgres integrations", () => {
     client = await knexClient(rawDatasource)
   })
 
-  afterAll(config.end)
+  afterAll(() => {
+    config.end()
+  })
 
   describe("POST /api/datasources/:datasourceId/schema", () => {
     let tableName: string

@@ -18,12 +18,14 @@ let app: Koa, server: Server, started: Promise<void>
 
 async function start() {
   const koa = createKoaApp()
-  started = new Promise(resolve => {
-    app = koa.app
-    server = koa.server
-    // startup includes automation runner - if enabled
-    startup({ app, server }).then(resolve)
-  })
+  if (!started) {
+    started = new Promise((resolve, reject) => {
+      app = koa.app
+      server = koa.server
+      // startup includes automation runner - if enabled
+      startup({ app, server }).then(resolve).catch(reject)
+    })
+  }
   await started
 }
 

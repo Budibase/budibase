@@ -6,7 +6,6 @@ import {
 } from "../../../integrations/tests/utils"
 import { db as dbCore, utils } from "@budibase/backend-core"
 
-import * as setup from "./utilities"
 import {
   AutoFieldSubType,
   Datasource,
@@ -30,6 +29,7 @@ import { encodeJSBinding } from "@budibase/string-templates"
 import { dataFilters } from "@budibase/shared-core"
 import { Knex } from "knex"
 import { structures } from "@budibase/backend-core/tests"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 describe.each([
   ["in-memory", undefined],
@@ -44,7 +44,7 @@ describe.each([
   const isLucene = name === "lucene"
   const isInMemory = name === "in-memory"
   const isInternal = isSqs || isLucene
-  const config = setup.getConfig()
+  const config = new TestConfiguration()
 
   let envCleanup: (() => void) | undefined
   let datasource: Datasource | undefined
@@ -79,7 +79,7 @@ describe.each([
   })
 
   afterAll(async () => {
-    setup.afterAll()
+    config.end()
     if (envCleanup) {
       envCleanup()
     }

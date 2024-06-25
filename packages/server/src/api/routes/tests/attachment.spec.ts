@@ -1,14 +1,14 @@
-import * as setup from "./utilities"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 import { APIError } from "@budibase/types"
 
 describe("/api/applications/:appId/sync", () => {
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
   })
-  afterAll(async () => {
-    setup.afterAll()
+  afterAll(() => {
+    config.end()
   })
 
   describe("/api/attachments/process", () => {

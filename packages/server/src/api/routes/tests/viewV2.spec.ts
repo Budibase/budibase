@@ -1,4 +1,3 @@
-import * as setup from "./utilities"
 import {
   CreateViewRequest,
   Datasource,
@@ -25,6 +24,7 @@ import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { db, roles } from "@budibase/backend-core"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 describe.each([
   ["lucene", undefined],
@@ -34,7 +34,7 @@ describe.each([
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("/v2/views (%s)", (name, dsProvider) => {
-  const config = setup.getConfig()
+  const config = new TestConfiguration()
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
   const isInternal = isSqs || isLucene
@@ -102,7 +102,7 @@ describe.each([
   })
 
   afterAll(async () => {
-    setup.afterAll()
+    config.end()
     if (envCleanup) {
       envCleanup()
     }
