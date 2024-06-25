@@ -311,8 +311,8 @@ export async function preview(
 
   // if existing schema, update to include any previous schema keys
   if (existingSchema) {
-    for (let key of Object.keys(previewSchema)) {
-      if (existingSchema[key]) {
+    for (let key of Object.keys(existingSchema)) {
+      if (!previewSchema[key]) {
         previewSchema[key] = existingSchema[key]
       }
     }
