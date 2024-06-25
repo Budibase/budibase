@@ -1,9 +1,14 @@
 <script>
-  import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
+  import {
+    FieldType,
+    BBReferenceFieldSubType,
+    SourceName,
+  } from "@budibase/types"
   import { Select, Toggle, Multiselect } from "@budibase/bbui"
   import { DB_TYPE_INTERNAL } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
+  import { tables, datasources } from "stores/builder"
 
   let error = null
   let fileName = null
@@ -79,6 +84,9 @@
   $: {
     schema = fetchSchema(tableId)
   }
+
+  $: table = $tables.list.find(table => table._id === tableId)
+  $: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
 
   async function fetchSchema(tableId) {
     try {
@@ -185,20 +193,25 @@
       </div>
     {/each}
   </div>
-  {#if tableType === DB_TYPE_INTERNAL}
-    <br />
+  <br />
+  <!-- SQL Server doesn't yet support overwriting rows by existing keys -->
+  {#if datasource?.source !== SourceName.SQL_SERVER}
     <Toggle
       bind:value={updateExistingRows}
       on:change={() => (identifierFields = [])}
       thin
       text="Update existing rows"
     />
-    {#if updateExistingRows}
+  {/if}
+  {#if updateExistingRows}
+    {#if tableType === DB_TYPE_INTERNAL}
       <Multiselect
         label="Identifier field(s)"
         options={Object.keys(validation)}
         bind:value={identifierFields}
       />
+    {:else}
+      <p>Rows will be updated based on the table's primary key.</p>
     {/if}
   {/if}
   {#if invalidColumns.length > 0}

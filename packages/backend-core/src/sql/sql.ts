@@ -1,10 +1,10 @@
 import { Knex, knex } from "knex"
 import * as dbCore from "../db"
 import {
-  isIsoDateString,
-  isValidFilter,
   getNativeSql,
   isExternalTable,
+  isIsoDateString,
+  isValidFilter,
 } from "./utils"
 import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
@@ -12,21 +12,21 @@ import {
   BBReferenceFieldMetadata,
   FieldSchema,
   FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
   JsonFieldMetadata,
+  JsonTypes,
   Operation,
+  prefixed,
   QueryJson,
-  SqlQuery,
+  QueryOptions,
   RelationshipsJson,
   SearchFilters,
+  SortOrder,
+  SqlClient,
+  SqlQuery,
   SqlQueryBinding,
   Table,
   TableSourceType,
-  INTERNAL_TABLE_SOURCE_ID,
-  SqlClient,
-  QueryOptions,
-  JsonTypes,
-  prefixed,
-  SortOrder,
 } from "@budibase/types"
 import environment from "../environment"
 import { helpers } from "@budibase/shared-core"
@@ -114,7 +114,7 @@ function generateSelectStatement(
 ): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
 
-  if (!resource) {
+  if (!resource || !resource.fields || resource.fields.length === 0) {
     return "*"
   }
 
@@ -410,13 +410,32 @@ class InternalBuilder {
     return query
   }
 
-  addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
-    let { sort, paginate } = json
+  addDistinctCount(
+    query: Knex.QueryBuilder,
+    json: QueryJson
+  ): Knex.QueryBuilder {
     const table = json.meta.table
+    const primary = table.primary
+    const aliases = json.tableAliases
+    const aliased =
+      table.name && aliases?.[table.name] ? aliases[table.name] : table.name
+    if (!primary) {
+      throw new Error("SQL counting requires primary key to be supplied")
+    }
+    return query.countDistinct(`${aliased}.${primary[0]} as total`)
+  }
+
+  addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
+    let { sort } = json
+    const table = json.meta.table
+    const primaryKey = table.primary
     const tableName = getTableName(table)
     const aliases = json.tableAliases
     const aliased =
       tableName && aliases?.[tableName] ? aliases[tableName] : table?.name
+    if (!Array.isArray(primaryKey)) {
+      throw new Error("Sorting requires primary key to be specified for table")
+    }
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
@@ -429,9 +448,12 @@ class InternalBuilder {
 
         query = query.orderBy(`${aliased}.${key}`, direction, nulls)
       }
-    } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
-      // @ts-ignore
-      query = query.orderBy(`${aliased}.${table?.primary[0]}`)
+    }
+
+    // add sorting by the primary key if the result isn't already sorted by it,
+    // to make sure result is deterministic
+    if (!sort || sort[primaryKey[0]] === undefined) {
+      query = query.orderBy(`${aliased}.${primaryKey[0]}`)
     }
     return query
   }
@@ -522,7 +544,7 @@ class InternalBuilder {
           })
       }
     }
-    return query.limit(BASE_LIMIT)
+    return query
   }
 
   knexWithAlias(
@@ -533,13 +555,12 @@ class InternalBuilder {
     const tableName = endpoint.entityId
     const tableAlias = aliases?.[tableName]
 
-    const query = knex(
+    return knex(
       this.tableNameWithSchema(tableName, {
         alias: tableAlias,
         schema: endpoint.schema,
       })
     )
-    return query
   }
 
   create(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
@@ -587,7 +608,8 @@ class InternalBuilder {
       if (!primary) {
         throw new Error("Primary key is required for upsert")
       }
-      return query.insert(parsedBody).onConflict(primary).merge()
+      const ret = query.insert(parsedBody).onConflict(primary).merge()
+      return ret
     } else if (this.client === SqlClient.MS_SQL) {
       // No upsert or onConflict support in MSSQL yet, see:
       //   https://github.com/knex/knex/pull/6050
@@ -596,25 +618,23 @@ class InternalBuilder {
     return query.upsert(parsedBody)
   }
 
-  read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
-    let { endpoint, resource, filters, paginate, relationships, tableAliases } =
-      json
+  read(
+    knex: Knex,
+    json: QueryJson,
+    opts: {
+      limits?: { base: number; query: number }
+    } = {}
+  ): Knex.QueryBuilder {
+    let { endpoint, filters, paginate, relationships, tableAliases } = json
+    const { limits } = opts
+    const counting = endpoint.operation === Operation.COUNT
 
     const tableName = endpoint.entityId
-    // select all if not specified
-    if (!resource) {
-      resource = { fields: [] }
-    }
-    let selectStatement: string | (string | Knex.Raw)[] = "*"
-    // handle select
-    if (resource.fields && resource.fields.length > 0) {
-      // select the resources as the format "table.columnName" - this is what is provided
-      // by the resource builder further up
-      selectStatement = generateSelectStatement(json, knex)
-    }
-    let foundLimit = limit || BASE_LIMIT
+    // start building the query
+    let query = this.knexWithAlias(knex, endpoint, tableAliases)
     // handle pagination
     let foundOffset: number | null = null
+    let foundLimit = limits?.query || limits?.base
     if (paginate && paginate.page && paginate.limit) {
       // @ts-ignore
       const page = paginate.page <= 1 ? 0 : paginate.page - 1
@@ -627,24 +647,39 @@ class InternalBuilder {
     } else if (paginate && paginate.limit) {
       foundLimit = paginate.limit
     }
-    // start building the query
-    let query = this.knexWithAlias(knex, endpoint, tableAliases)
-    query = query.limit(foundLimit)
-    if (foundOffset) {
-      query = query.offset(foundOffset)
+    // counting should not sort, limit or offset
+    if (!counting) {
+      // add the found limit if supplied
+      if (foundLimit != null) {
+        query = query.limit(foundLimit)
+      }
+      // add overall pagination
+      if (foundOffset != null) {
+        query = query.offset(foundOffset)
+      }
+      // add sorting to pre-query
+      // no point in sorting when counting
+      query = this.addSorting(query, json)
     }
+    // add filters to the query (where)
     query = this.addFilters(query, filters, json.meta.table, {
       aliases: tableAliases,
     })
 
-    // add sorting to pre-query
-    query = this.addSorting(query, json)
     const alias = tableAliases?.[tableName] || tableName
-    let preQuery = knex({
-      [alias]: query,
-    } as any).select(selectStatement) as any
+    let preQuery: Knex.QueryBuilder = knex({
+      // the typescript definition for the knex constructor doesn't support this
+      // syntax, but it is the only way to alias a pre-query result as part of
+      // a query - there is an alias dictionary type, but it assumes it can only
+      // be a table name, not a pre-query
+      [alias]: query as any,
+    })
+    // if counting, use distinct count, else select
+    preQuery = !counting
+      ? preQuery.select(generateSelectStatement(json, knex))
+      : this.addDistinctCount(preQuery, json)
     // have to add after as well (this breaks MS-SQL)
-    if (this.client !== SqlClient.MS_SQL) {
+    if (this.client !== SqlClient.MS_SQL && !counting) {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
@@ -655,6 +690,13 @@ class InternalBuilder {
       endpoint.schema,
       tableAliases
     )
+
+    // add a base limit over the whole query
+    // if counting we can't set this limit
+    if (limits?.base) {
+      query = query.limit(limits.base)
+    }
+
     return this.addFilters(query, filters, json.meta.table, {
       relationship: true,
       aliases: tableAliases,
@@ -699,6 +741,19 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     this.limit = limit
   }
 
+  private convertToNative(query: Knex.QueryBuilder, opts: QueryOptions = {}) {
+    const sqlClient = this.getSqlClient()
+    if (opts?.disableBindings) {
+      return { sql: query.toString() }
+    } else {
+      let native = getNativeSql(query)
+      if (sqlClient === SqlClient.SQL_LITE) {
+        native = convertBooleans(native)
+      }
+      return native
+    }
+  }
+
   /**
    * @param json The JSON query DSL which is to be converted to SQL.
    * @param opts extra options which are to be passed into the query builder, e.g. disableReturning
@@ -722,7 +777,16 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         query = builder.create(client, json, opts)
         break
       case Operation.READ:
-        query = builder.read(client, json, this.limit)
+        query = builder.read(client, json, {
+          limits: {
+            query: this.limit,
+            base: BASE_LIMIT,
+          },
+        })
+        break
+      case Operation.COUNT:
+        // read without any limits to count
+        query = builder.read(client, json)
         break
       case Operation.UPDATE:
         query = builder.update(client, json, opts)
@@ -744,15 +808,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         throw `Operation type is not supported by SQL query builder`
     }
 
-    if (opts?.disableBindings) {
-      return { sql: query.toString() }
-    } else {
-      let native = getNativeSql(query)
-      if (sqlClient === SqlClient.SQL_LITE) {
-        native = convertBooleans(native)
-      }
-      return native
-    }
+    return this.convertToNative(query, opts)
   }
 
   async getReturningRow(queryFn: QueryFunction, json: QueryJson) {
@@ -827,6 +883,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       row = processFn(
         await this.getReturningRow(queryFn, this.checkLookupKeys(id, json))
       )
+    }
+    if (operation === Operation.COUNT) {
+      return results
     }
     if (operation !== Operation.READ) {
       return row
