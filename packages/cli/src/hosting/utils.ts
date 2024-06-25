@@ -46,8 +46,7 @@ export function setServiceImage(service: string, image: string) {
 export async function downloadDockerCompose() {
   const filename = composeFilename()
   try {
-    fs.copyFileSync("../../hosting/docker-compose.yaml", `./${filename}`)
-    //await downloadFile(COMPOSE_URL, `./${filename}`)
+    await downloadFile(COMPOSE_URL, `./${filename}`)
   } catch (err) {
     console.error(error(`Failed to retrieve compose file - ${err}`))
   }
