@@ -14,35 +14,9 @@
   let failedParse = null
   let trigger = {}
   let schemaProperties = {}
-  let baseData = {}
-
-  let rowEvents = [
-    AutomationEventType.ROW_DELETE,
-    AutomationEventType.ROW_SAVE,
-    AutomationEventType.ROW_UPDATE,
-  ]
 
   const memoTestData = memo($selectedAutomation.testData)
   $: memoTestData.set($selectedAutomation.testData)
-
-  $: if (memoTestData) {
-    baseData = cloneDeep($selectedAutomation.testData)
-    // Reset the test data for row trigger data when the table is changed.
-    if (rowEvents.includes(trigger?.event)) {
-      if (
-        !baseData?.row?.tableId ||
-        baseData.row.tableId !== trigger.inputs?.tableId
-      ) {
-        baseData = {
-          ...baseData,
-          _tableId: trigger.inputs?.tableId,
-          row: { tableId: trigger.inputs?.tableId },
-          meta: {},
-          id: "",
-        }
-      }
-    }
-  }
 
   $: {
     // clone the trigger so we're not mutating the reference
@@ -59,7 +33,7 @@
 
   // Check the schema to see if required fields have been entered
   $: isError = !trigger.schema.outputs.required.every(
-    required => baseData?.[required] || required !== "row"
+    required => $memoTestData?.[required] || required !== "row"
   )
 
   function parseTestJSON(e) {
@@ -74,7 +48,7 @@
 
   const testAutomation = async () => {
     try {
-      await automationStore.actions.test($selectedAutomation, baseData)
+      await automationStore.actions.test($selectedAutomation, $memoTestData)
       $automationStore.showTestPanel = true
     } catch (error) {
       notifications.error(error)
@@ -112,7 +86,7 @@
   {#if selectedValues}
     <div class="tab-content-padding">
       <AutomationBlockSetup
-        testData={baseData}
+        testData={$memoTestData}
         {schemaProperties}
         isTestModal
         block={trigger}

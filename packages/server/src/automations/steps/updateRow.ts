@@ -29,6 +29,17 @@ export const definition: AutomationStepSchema = {
         meta: {
           type: AutomationIOType.OBJECT,
           title: "Field settings",
+          // DEAN - REVIEW THIS - add in some record of these types
+
+          // properties: {
+          //   fields: {
+          //     properties: {
+          //       useAttachmentBinding: {
+          //         type: AutomationIOType.BOOLEAN,
+          //       },
+          //     },
+          //   },
+          // },
         },
         row: {
           type: AutomationIOType.OBJECT,
@@ -83,37 +94,53 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   const tableId = inputs.row.tableId
 
   // Base update
-  let rowUpdate: Record<string, any> = {
-    tableId,
-  }
+  let rowUpdate: Record<string, any>
 
-  // Column checking - explicit clearing of empty fields
-  if (inputs?.meta?.columns) {
-    rowUpdate = inputs?.meta?.columns.reduce(
-      (acc: Record<string, any>, key: string) => {
-        acc[key] =
-          !inputs.row[key] || inputs.row[key]?.length === 0
-            ? null
-            : inputs.row[key]
-        return acc
-      },
-      {}
-    )
-  } else {
-    // Legacy - clear any empty string column values so that they aren't updated
-    rowUpdate = {
-      ...inputs.row,
-    }
-    for (let propKey of Object.keys(rowUpdate)) {
-      const clearRelationships =
-        inputs.meta?.fields?.[propKey]?.clearRelationships
-      if (
-        (rowUpdate[propKey] == null || rowUpdate[propKey]?.length === 0) &&
-        !clearRelationships
-      ) {
-        delete rowUpdate[propKey]
+  // Legacy - find any empty values in the row that need to be cleared
+  const legacyUpdated = Object.keys(inputs.row || {}).reduce(
+    (acc: Record<string, any>, key: string) => {
+      const isEmpty = inputs.row[key] == null || inputs.row[key]?.length === 0
+      const fieldConfig = inputs.meta?.fields?.[key]
+
+      if (isEmpty) {
+        if (
+          inputs.meta?.fields.hasOwnProperty(key) &&
+          fieldConfig?.clearRelationships === true
+        ) {
+          // Explicitly clear the field on update
+          acc[key] = []
+        }
+      } else {
+        // Keep non-empty values
+        acc[key] = inputs.row[key]
       }
-    }
+      return acc
+    },
+    {}
+  )
+
+  // The source of truth for inclusion in the update is: inputs.meta?.fields
+  const parsedUpdate = Object.keys(inputs.meta?.fields || {}).reduce(
+    (acc: Record<string, any>, key: string) => {
+      const fieldConfig = inputs.meta?.fields?.[key]
+      // Ignore legacy config.
+      if (fieldConfig.hasOwnProperty("clearRelationships")) {
+        return acc
+      }
+      acc[key] =
+        inputs.row.hasOwnProperty(key) &&
+        (inputs.row[key] == null || inputs.row[key]?.length === 0)
+          ? undefined
+          : inputs.row[key]
+      return acc
+    },
+    {}
+  )
+
+  rowUpdate = {
+    tableId,
+    ...parsedUpdate,
+    ...legacyUpdated,
   }
 
   try {

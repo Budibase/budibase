@@ -1,20 +1,38 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import PropField from "./PropField.svelte"
+  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+  import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
+  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import { DatePicker, Select } from "@budibase/bbui"
 
   const dispatch = createEventDispatcher()
 
-  export let value
+  export let value = {}
   export let bindings
   export let block
   export let isTestModal
 
   let schemaFields
+  let editableValue
+
+  $: processValue(value)
+
+  const processValue = value => {
+    editableValue = { ...value }
+    // DEAN - review this
+    // const fieldKeys = Object.keys(block?.inputs?.fields)
+    // // Purge orphaned keys
+    // Object.keys(editableValue || {}).forEach(key => {
+    //   if (!fieldKeys.includes(key)) {
+    //     delete editableValue[key]
+    //   }
+    // })
+  }
 
   $: {
     let fields = {}
-
+    // DEAN - review this
     for (const [key, type] of Object.entries(block?.inputs?.fields ?? {})) {
       fields = {
         ...fields,
@@ -26,8 +44,8 @@
         },
       }
 
-      if (value[key] === type) {
-        value[key] = INITIAL_VALUES[type.toUpperCase()]
+      if (editableValue[key] === type) {
+        editableValue[key] = INITIAL_VALUES[type.toUpperCase()]
       }
     }
 
@@ -39,52 +57,14 @@
     NUMBER: null,
     DATETIME: null,
     STRING: "",
-    OPTIONS: [],
-    ARRAY: [],
-  }
-
-  const coerce = (value, type) => {
-    const re = new RegExp(/{{([^{].*?)}}/g)
-    if (re.test(value)) {
-      return value
-    }
-
-    if (type === "boolean") {
-      if (typeof value === "boolean") {
-        return value
-      }
-      return value === "true"
-    }
-    if (type === "number") {
-      if (typeof value === "number") {
-        return value
-      }
-      return Number(value)
-    }
-    if (type === "options") {
-      return [value]
-    }
-    if (type === "array") {
-      if (Array.isArray(value)) {
-        return value
-      }
-      return value.split(",").map(x => x.trim())
-    }
-
-    if (type === "link") {
-      if (Array.isArray(value)) {
-        return value
-      }
-
-      return [value]
-    }
-
-    return value
+    ARRAY: "",
   }
 
   const onChange = (e, field, type) => {
-    value[field] = coerce(e.detail, type)
-    dispatch("change", value)
+    if (e.detail !== editableValue[field]) {
+      editableValue[field] = e.detail
+      dispatch("change", editableValue)
+    }
   }
 </script>
 
@@ -92,14 +72,34 @@
   <div class="fields">
     {#each schemaFields as [field, schema]}
       <PropField label={field}>
-        <RowSelectorTypes
-          {isTestModal}
-          {field}
-          {schema}
-          {bindings}
-          {value}
-          {onChange}
-        />
+        {#if ["string", "number", "array"].includes(schema.type)}
+          <svelte:component
+            this={isTestModal ? ModalBindableInput : DrawerBindableInput}
+            panel={AutomationBindingPanel}
+            value={editableValue[field]}
+            on:change={e => onChange(e, field)}
+            type="string"
+            {bindings}
+            allowJS={true}
+            updateOnChange={false}
+            title={schema.name}
+            autocomplete="off"
+          />
+        {:else if schema.type === "boolean"}
+          <Select
+            on:change={e => onChange(e, field)}
+            value={editableValue[field]}
+            options={[
+              { label: "True", value: "true" },
+              { label: "False", value: "false" },
+            ]}
+          />
+        {:else if schema.type === "datetime"}
+          <DatePicker
+            value={editableValue[field]}
+            on:change={e => onChange(e, field)}
+          />
+        {/if}
       </PropField>
     {/each}
   </div>
