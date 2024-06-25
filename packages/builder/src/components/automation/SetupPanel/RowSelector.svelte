@@ -43,13 +43,9 @@
   let customPopover
   let popoverAnchor
   let editableRow = {}
-
-  //??
-  let editableMeta = {}
   let editableFields = {}
-  // let columns = new Set()
 
-  // Avoid unnecessary updates - DEAN double check after refactor
+  // Avoid unnecessary updates
   $: memoStore.set({
     row,
     meta,
@@ -61,11 +57,6 @@
     editableFields = cloneDeep($memoStore?.meta?.fields)
   }
 
-  // Needs to go now... entirely
-  // $: if ($memoStore?.meta?.columns) {
-  //   columns = new Set(meta?.columns)
-  // }
-
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
     clone.icon = "ShareAndroid"
@@ -74,6 +65,9 @@
 
   $: tableId = $memoStore?.row?.tableId
   $: if (tableId) {
+    // Refresh all the row data
+    editableRow = cloneDeep($memoStore?.row)
+
     table = $tables.list.find(table => table._id === tableId)
 
     if (table) {
@@ -97,12 +91,11 @@
       }
       editableFields = editableFields
     }
-
     // Go through the table schema and build out the editable content
-    // schemaFields.forEach(entry => {
     for (const entry of schemaFields) {
       const [key, fieldSchema] = entry
-      if ($memoStore?.row?.[key] && !editableRow?.[key]) {
+      if ($memoStore?.row?.[key]) {
+        // DEAN - review this
         editableRow = {
           ...editableRow,
           [key]: $memoStore?.row[key],
@@ -110,7 +103,23 @@
       }
 
       // Legacy
-      if (editableFields[key]?.clearRelationships) {
+      const emptyField =
+        !$memoStore?.row[key] || $memoStore?.row[key]?.length === 0
+
+      // Legacy
+      // Put non-empty elements into the update and add their key to the fields list.
+      if (!emptyField && !editableFields.hasOwnProperty(key)) {
+        //DEAN - review this - IF THEY ADDED A NEW ONE IT WOULD BE MISSING FROM editableFields + editableFields
+        console.log("EMPTY STATE DETECTED")
+        editableFields = {
+          ...editableFields,
+          [key]: key,
+        }
+      }
+
+      // Legacy - clearRelationships
+      // Init the field and add it to the update.
+      if (emptyField && editableFields[key]?.clearRelationships === true) {
         const emptyField = coerce(
           !$memoStore?.row.hasOwnProperty(key) ? "" : $memoStore?.row[key],
           fieldSchema.type
@@ -124,8 +133,6 @@
           ...editableRow,
           [key]: emptyField,
         }
-
-        console.log("DEAN EMPTY - clearRelationships", emptyField)
       }
     }
 
@@ -193,6 +200,14 @@
     return value
   }
 
+  const isFullWidth = type => {
+    return (
+      attachmentTypes.includes(type) ||
+      type === FieldType.JSON ||
+      type === FieldType.LONGFORM
+    )
+  }
+
   const onChange = update => {
     const customizer = (objValue, srcValue, key) => {
       if (isPlainObject(objValue) && isPlainObject(srcValue)) {
@@ -201,7 +216,6 @@
           if (result[key] !== null) {
             acc[key] = result[key]
           } else {
-            console.log(key + " is null", objValue)
           }
           return acc
         }, {})
@@ -228,7 +242,7 @@
 
 {#each schemaFields || [] as [field, schema]}
   {#if !schema.autocolumn && editableFields.hasOwnProperty(field)}
-    <PropField label={field} fullWidth={attachmentTypes.includes(schema.type)}>
+    <PropField label={field} fullWidth={isFullWidth(schema.type)}>
       <div class="prop-control-wrap">
         {#if isTestModal}
           <RowSelectorTypes
@@ -249,13 +263,12 @@
             type={schema.type}
             {schema}
             value={editableRow[field]}
-            on:change={e => {
+            on:change={e =>
               onChange({
                 row: {
-                  [field]: e.detail.row[field],
+                  [field]: e.detail,
                 },
-              })
-            }}
+              })}
             {bindings}
             allowJS={true}
             updateOnChange={false}
@@ -280,24 +293,11 @@
         <Icon
           hoverable
           name="Close"
-          on:click={() => {
-            // Clear row data
-            const update = { ...editableRow }
-            update[field] = null
-            // delete update[field]
-
-            // Clear any related metadata
-            // delete editableFields[field]
-            // editableFields[field] = null
-            console.log("REMOVE STATE", {
-              row: update,
-              meta: { fields: { ...editableFields, [field]: null } },
-            })
+          on:click={() =>
             onChange({
-              row: update,
-              meta: { fields: { ...editableFields, [field]: null } },
-            })
-          }}
+              row: { [field]: null },
+              meta: { fields: { [field]: null } },
+            })}
         />
       </div>
     </PropField>
@@ -327,6 +327,7 @@
   bind:this={customPopover}
   anchor={popoverAnchor}
   minWidth={popoverAnchor?.getBoundingClientRect()?.width}
+  maxWidth={popoverAnchor?.getBoundingClientRect()?.width}
   maxHeight={300}
   resizable={false}
   offset={10}
@@ -384,5 +385,10 @@
     display: grid;
     grid-template-columns: 1fr min-content;
     gap: var(--spacing-s);
+  }
+
+  /* Override for general json field override */
+  .prop-control-wrap :global(.icon.json-slot-icon) {
+    right: 1px !important;
   }
 </style>

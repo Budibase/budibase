@@ -157,7 +157,8 @@ const automationActions = store => ({
       )
     }
   },
-  updateBlockInputs: async (block, data) => {
+
+  processBlockInputs: async (block, data) => {
     // Create new modified block
     let newBlock = {
       ...block,
@@ -184,6 +185,14 @@ const automationActions = store => ({
 
     // Don't save if no changes were made
     if (JSON.stringify(newAutomation) === JSON.stringify(automation)) {
+      return false
+    }
+
+    return newAutomation
+  },
+  updateBlockInputs: async (block, data) => {
+    const newAutomation = await store.actions.processBlockInputs(block, data)
+    if (newAutomation === false) {
       return
     }
     await store.actions.save(newAutomation)

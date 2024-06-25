@@ -11,7 +11,7 @@
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
-  import Editor from "components/integration/QueryEditor.svelte"
+  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
 
   export let onChange
@@ -22,7 +22,7 @@
   export let bindings
   export let isTestModal
 
-  $: console.log(field + "VALUE???", value[field])
+  $: fieldData = value[field]
 
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
@@ -56,7 +56,6 @@
         params[param.url || ""] = param.filename || ""
       }
     }
-    console.log("handleAttachmentParams ", params)
     return params
   }
 </script>
@@ -69,12 +68,12 @@
           [field]: e.detail,
         },
       })}
-    value={value[field]}
+    value={fieldData}
     options={schema.constraints.inclusion}
   />
 {:else if schema.type === "datetime"}
   <DatePicker
-    value={value[field]}
+    value={fieldData}
     on:change={e =>
       onChange({
         row: {
@@ -90,7 +89,7 @@
           [field]: e.detail,
         },
       })}
-    value={value[field]}
+    value={fieldData}
     options={[
       { label: "True", value: "true" },
       { label: "False", value: "false" },
@@ -98,7 +97,7 @@
   />
 {:else if schemaHasOptions(schema) && schema.type === "array"}
   <Multiselect
-    value={value[field]}
+    value={fieldData}
     options={schema.constraints.inclusion}
     on:change={e =>
       onChange({
@@ -109,7 +108,7 @@
   />
 {:else if schema.type === "longform"}
   <TextArea
-    value={value[field]}
+    value={fieldData}
     on:change={e =>
       onChange({
         row: {
@@ -119,24 +118,25 @@
   />
 {:else if schema.type === "json"}
   <span>
-    <Editor
-      editorHeight="150"
-      mode="json"
-      on:change={e => {
-        if (e.detail?.value !== value[field]) {
-          onChange({
-            row: {
-              [field]: e.detail,
-            },
-          })
-        }
-      }}
-      value={value[field]}
-    />
+    <div class="field-wrap">
+      <CodeEditor
+        value={fieldData}
+        on:change={e => {
+          console.log("JSON change", e.detail?.value, fieldData)
+          if (e.detail?.value !== fieldData) {
+            onChange({
+              row: {
+                [field]: e.detail,
+              },
+            })
+          }
+        }}
+      />
+    </div>
   </span>
 {:else if schema.type === "link"}
   <LinkedRowSelector
-    linkedRows={value[field]}
+    linkedRows={fieldData}
     {schema}
     on:change={e =>
       onChange({
@@ -148,7 +148,7 @@
   />
 {:else if schema.type === "bb_reference" || schema.type === "bb_reference_single"}
   <LinkedRowSelector
-    linkedRows={value[field]}
+    linkedRows={fieldData}
     {schema}
     linkedTableId={"ta_users"}
     on:change={e =>
@@ -167,16 +167,10 @@
         text={"Use bindings"}
         size={"XS"}
         on:change={e => {
-          const fromFalse =
-            !meta?.fields?.[field]?.useAttachmentBinding && e.detail === true
           onChange({
-            ...(fromFalse
-              ? {
-                  row: {
-                    [field]: "", //clear the value if switching
-                  },
-                }
-              : {}),
+            row: {
+              [field]: null,
+            },
             meta: {
               fields: {
                 [field]: {
@@ -192,7 +186,7 @@
     {#if !meta?.fields?.[field]?.useAttachmentBinding}
       <div class="attachment-field-spacing">
         <KeyValueBuilder
-          on:change={e =>
+          on:change={e => {
             onChange({
               row: {
                 [field]:
@@ -203,14 +197,15 @@
                           url: e.detail[0].name,
                           filename: e.detail[0].value,
                         }
-                      : {}
+                      : null
                     : e.detail.map(({ name, value }) => ({
                         url: name,
                         filename: value,
                       })),
               },
-            })}
-          object={handleAttachmentParams(value[field], false)}
+            })
+          }}
+          object={handleAttachmentParams(fieldData)}
           allowJS
           {bindings}
           keyBindings
@@ -221,16 +216,15 @@
           valuePlaceholder={"Filename"}
           actionButtonDisabled={(schema.type === FieldType.ATTACHMENT_SINGLE ||
             schema.type === FieldType.SIGNATURE_SINGLE) &&
-            Object.keys(value[field] || {}).length >= 1}
+            Object.keys(fieldData || {}).length >= 1}
         />
       </div>
     {:else}
       <div class="json-input-spacing">
-        {JSON.stringify(value[field])}
         <svelte:component
           this={isTestModal ? ModalBindableInput : DrawerBindableInput}
           panel={AutomationBindingPanel}
-          value={value[field]}
+          value={fieldData}
           on:change={e =>
             onChange({
               row: {
@@ -247,11 +241,10 @@
     {/if}
   </div>
 {:else if ["string", "number", "bigint", "barcodeqr", "array"].includes(schema.type)}
-  {JSON.stringify(value[field])}
   <svelte:component
     this={isTestModal ? ModalBindableInput : DrawerBindableInput}
     panel={AutomationBindingPanel}
-    value={value[field]}
+    value={fieldData}
     on:change={e =>
       onChange({
         row: {
@@ -268,11 +261,20 @@
 {/if}
 
 <style>
-  .attachment-field-spacing,
-  .json-input-spacing {
-    margin-top: var(--spacing-s);
+  .attachment-field-spacing {
     border: 1px solid var(--spectrum-global-color-gray-400);
     border-radius: 4px;
     padding: var(--spacing-s);
+  }
+
+  .field-wrap {
+    box-sizing: border-box;
+    border: 1px solid var(--spectrum-global-color-gray-400);
+    border-radius: 4px;
+  }
+
+  .field-wrap :global(.cm-editor),
+  .field-wrap :global(.cm-scroller) {
+    border-radius: 4px;
   }
 </style>

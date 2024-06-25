@@ -52,7 +52,11 @@
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { AutomationEventType } from "@budibase/types"
+  import {
+    AutomationEventType,
+    AutomationStepType,
+    AutomationActionStepId,
+  } from "@budibase/types"
   import { FIELDS } from "constants/backend"
   import PropField from "./PropField.svelte"
 
@@ -69,6 +73,13 @@
     TriggerStepID.ROW_SAVED,
     TriggerStepID.ROW_DELETED,
   ]
+
+  let rowEvents = [
+    AutomationEventType.ROW_DELETE,
+    AutomationEventType.ROW_SAVE,
+    AutomationEventType.ROW_UPDATE,
+  ]
+
   const rowSteps = [ActionStepID.UPDATE_ROW, ActionStepID.CREATE_ROW]
 
   let webhookModal
@@ -92,9 +103,11 @@
   }).schema
   $: schemaFields = Object.values(schema || {})
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
-  $: isTrigger = block?.type === "TRIGGER"
+  $: isTrigger = block?.type === AutomationStepType.TRIGGER
   $: codeMode =
-    stepId === "EXECUTE_BASH" ? EditorModes.Handlebars : EditorModes.JS
+    stepId === AutomationActionStepId.EXECUTE_BASH
+      ? EditorModes.Handlebars
+      : EditorModes.JS
   $: bindingsHelpers = new BindingHelpers(getCaretPosition, insertAtPos, {
     disableWrapping: true,
   })
@@ -133,7 +146,6 @@
   $: customStepLayouts($memoBlock, schemaProperties)
 
   const customStepLayouts = block => {
-    console.log("BUILDING", inputData["row"])
     if (
       rowSteps.includes(block.stepId) ||
       (rowTriggers.includes(block.stepId) && isTestModal)
@@ -157,14 +169,16 @@
               {
                 type: DrawerBindableInput,
                 title: rowRevlabel,
-                panel: AutomationBindingPanel,
-                value: inputData["revision"],
-                onChange: e => {
-                  onChange({ ["revision"]: e.detail })
+                props: {
+                  panel: AutomationBindingPanel,
+                  value: inputData["revision"],
+                  onChange: e => {
+                    onChange({ ["revision"]: e.detail })
+                  },
+                  bindings,
+                  updateOnChange: false,
+                  forceModal: true,
                 },
-                bindings,
-                updateOnChange: false,
-                forceModal: true,
               },
             ]
           : []
@@ -248,12 +262,73 @@
     }
   }
 
+  /**
+   * Handler for row trigger automation updates.
+    @param {object} update - An automation block.inputs update object
+    @example
+    onRowTriggerUpdate({ 
+      "tableId" : "ta_bb_employee"
+    })
+   */
+  const onRowTriggerUpdate = async update => {
+    if (
+      update.hasOwnProperty("tableId") &&
+      $selectedAutomation.testData.row.tableId !== update.tableId
+    ) {
+      try {
+        const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
+          searchableSchema: true,
+        }).schema
+
+        // Parse the block inputs as usual
+        const updatedAutomation =
+          await automationStore.actions.processBlockInputs(block, {
+            schema: reqSchema,
+            ...update,
+          })
+
+        // Save the entire automation and reset the testData
+        await automationStore.actions.save({
+          ...updatedAutomation,
+          testData: {
+            // Reset Core fields
+            row: { tableId: update.tableId },
+            meta: {},
+            id: "",
+            revision: "",
+          },
+        })
+
+        return
+      } catch (e) {
+        console.error("Error saving automation", error)
+        notifications.error("Error saving automation")
+      }
+    }
+  }
+
+  /**
+   * Handler for automation block input updates.
+    @param {object} update - An automation inputs update object
+    @example
+    onChange({ 
+      meta: { fields : { "Photo": { useAttachmentBinding: false }} }
+      row: { "Active": true, "Order Id" : 14, ... }
+    })
+   */
   const onChange = Utils.sequential(async update => {
+    const request = cloneDeep(update)
+
+    // Process row trigger updates
+    if (isTrigger && !isTestModal) {
+      await onRowTriggerUpdate(request)
+      return
+    }
+
     // We need to cache the schema as part of the definition because it is
     // used in the server to detect relationships. It would be far better to
     // instead fetch the schema in the backend at runtime.
-    const request = cloneDeep(update)
-
+    // If _tableId is explicitly included in the update request, the schema will be requested
     let schema
     if (request?._tableId) {
       schema = getSchemaForDatasourcePlus(request._tableId, {
@@ -643,18 +718,16 @@
                 <div class="label-wrapper">
                   <Label>{label}</Label>
                 </div>
-                {JSON.stringify(inputData)}
                 <div class="toggle-container">
                   <Toggle
                     value={inputData?.meta?.useAttachmentBinding}
                     text={"Use bindings"}
                     size={"XS"}
                     on:change={e => {
-                      // DEAN - review this
                       onChange({
-                        row: { [key]: "" }, //null
+                        [key]: null,
                         meta: {
-                          [key]: e.detail,
+                          useAttachmentBinding: e.detail,
                         },
                       })
                     }}
@@ -662,24 +735,50 @@
                 </div>
 
                 <div class="attachment-field-width">
-                  <KeyValueBuilder
-                    on:change={e =>
-                      onChange({
-                        [key]: e.detail.map(({ name, value }) => ({
-                          url: name,
-                          filename: value,
-                        })),
-                      })}
-                    object={handleAttachmentParams(inputData[key])}
-                    allowJS
-                    {bindings}
-                    keyBindings
-                    customButtonText={value.type === "attachment"
-                      ? "Add attachment"
-                      : "Add signature"}
-                    keyPlaceholder={"URL"}
-                    valuePlaceholder={"Filename"}
-                  />
+                  {#if !inputData?.meta?.useAttachmentBinding}
+                    <KeyValueBuilder
+                      on:change={e =>
+                        onChange({
+                          [key]: e.detail.map(({ name, value }) => ({
+                            url: name,
+                            filename: value,
+                          })),
+                        })}
+                      object={handleAttachmentParams(inputData[key])}
+                      allowJS
+                      {bindings}
+                      keyBindings
+                      customButtonText={value.type === "attachment"
+                        ? "Add attachment"
+                        : "Add signature"}
+                      keyPlaceholder={"URL"}
+                      valuePlaceholder={"Filename"}
+                    />
+                  {:else if isTestModal}
+                    <ModalBindableInput
+                      title={value.title || label}
+                      value={inputData[key]}
+                      panel={AutomationBindingPanel}
+                      type={value.customType}
+                      on:change={e => onChange({ [key]: e.detail })}
+                      {bindings}
+                      updateOnChange={false}
+                    />
+                  {:else}
+                    <DrawerBindableInput
+                      title={value.title ?? label}
+                      panel={AutomationBindingPanel}
+                      type={value.customType}
+                      value={inputData[key]}
+                      on:change={e => onChange({ [key]: e.detail })}
+                      {bindings}
+                      updateOnChange={false}
+                      placeholder={value.customType === "queryLimit"
+                        ? queryLimit
+                        : ""}
+                      drawerLeft="260px"
+                    />
+                  {/if}
                 </div>
               </div>
             {:else if value.customType === "filters"}
