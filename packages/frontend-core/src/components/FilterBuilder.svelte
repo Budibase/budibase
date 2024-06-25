@@ -18,7 +18,7 @@
   import FilterUsers from "./FilterUsers.svelte"
   import { getFields } from "../utils/searchFields"
 
-  const { OperatorOptions } = Constants
+  const { OperatorOptions, DEFAULT_BB_DATASOURCE_ID } = Constants
 
   export let schemaFields
   export let filters = []
@@ -28,6 +28,23 @@
   export let allowBindings = false
   export let filtersLabel = "Filters"
 
+  $: {
+    if (
+      tables.find(
+        table =>
+          table._id === datasource.tableId &&
+          table.sourceId === DEFAULT_BB_DATASOURCE_ID
+      ) &&
+      !schemaFields.some(field => field.name === "_id")
+    ) {
+      schemaFields = [
+        ...schemaFields,
+        { name: "_id", type: "string" },
+        { name: "_rev", type: "string" },
+      ]
+    }
+  }
+
   $: matchAny = filters?.find(filter => filter.operator === "allOr") != null
   $: onEmptyFilter =
     filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
@@ -35,7 +52,6 @@
   $: fieldFilters = filters.filter(
     filter => filter.operator !== "allOr" && !filter.onEmptyFilter
   )
-
   const behaviourOptions = [
     { value: "and", label: "Match all filters" },
     { value: "or", label: "Match any filter" },
@@ -44,7 +60,6 @@
     { value: "all", label: "Return all table rows" },
     { value: "none", label: "Return no rows" },
   ]
-
   const context = getContext("context")
 
   $: fieldOptions = getFields(tables, schemaFields || [], {

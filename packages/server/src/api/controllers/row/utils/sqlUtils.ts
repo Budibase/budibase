@@ -1,5 +1,9 @@
 import {
+  DatasourcePlusQueryResponse,
+  DSPlusOperation,
   FieldType,
+  isManyToOne,
+  isOneToMany,
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
@@ -91,12 +95,12 @@ export function buildExternalRelationships(
 ): RelationshipsJson[] {
   const relationships = []
   for (let [fieldName, field] of Object.entries(table.schema)) {
-    if (field.type !== FieldType.LINK) {
+    if (field.type !== FieldType.LINK || !field.tableId) {
       continue
     }
     const { tableName: linkTableName } = breakExternalTableId(field.tableId)
     // no table to link to, this is not a valid relationships
-    if (!linkTableName || !tables[linkTableName]) {
+    if (!tables[linkTableName]) {
       continue
     }
     const linkTable = tables[linkTableName]
@@ -108,7 +112,7 @@ export function buildExternalRelationships(
       // need to specify where to put this back into
       column: fieldName,
     }
-    if (isManyToMany(field)) {
+    if (isManyToMany(field) && field.through) {
       const { tableName: throughTableName } = breakExternalTableId(
         field.through
       )
@@ -118,7 +122,7 @@ export function buildExternalRelationships(
       definition.to = field.throughFrom || linkTable.primary[0]
       definition.fromPrimary = table.primary[0]
       definition.toPrimary = linkTable.primary[0]
-    } else {
+    } else if (isManyToOne(field) || isOneToMany(field)) {
       // if no foreign key specified then use the name of the field in other table
       definition.from = field.foreignKey || table.primary[0]
       definition.to = field.fieldName
@@ -178,17 +182,27 @@ export function buildSqlFieldList(
   }
   let fields = extractRealFields(table)
   for (let field of Object.values(table.schema)) {
-    if (field.type !== FieldType.LINK || !opts?.relationships) {
+    if (
+      field.type !== FieldType.LINK ||
+      !opts?.relationships ||
+      !field.tableId
+    ) {
       continue
     }
     const { tableName: linkTableName } = breakExternalTableId(field.tableId)
-    if (linkTableName) {
-      const linkTable = tables[linkTableName]
-      if (linkTable) {
-        const linkedFields = extractRealFields(linkTable, fields)
-        fields = fields.concat(linkedFields)
-      }
+    const linkTable = tables[linkTableName]
+    if (linkTable) {
+      const linkedFields = extractRealFields(linkTable, fields)
+      fields = fields.concat(linkedFields)
     }
   }
   return fields
+}
+
+export function isKnexEmptyReadResponse(resp: DatasourcePlusQueryResponse) {
+  return (
+    !Array.isArray(resp) ||
+    resp.length === 0 ||
+    (DSPlusOperation.READ in resp[0] && resp[0].read === true)
+  )
 }

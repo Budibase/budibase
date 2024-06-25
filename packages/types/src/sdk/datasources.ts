@@ -8,7 +8,9 @@ export enum Operation {
   READ = "READ",
   UPDATE = "UPDATE",
   DELETE = "DELETE",
+  COUNT = "COUNT",
   BULK_CREATE = "BULK_CREATE",
+  BULK_UPSERT = "BULK_UPSERT",
   CREATE_TABLE = "CREATE_TABLE",
   UPDATE_TABLE = "UPDATE_TABLE",
   DELETE_TABLE = "DELETE_TABLE",
@@ -20,12 +22,8 @@ export const RowOperations = [
   Operation.UPDATE,
   Operation.DELETE,
   Operation.BULK_CREATE,
+  Operation.BULK_UPSERT,
 ]
-
-export enum SortDirection {
-  ASCENDING = "ASCENDING",
-  DESCENDING = "DESCENDING",
-}
 
 export enum QueryType {
   SQL = "sql",
@@ -191,7 +189,7 @@ export interface Schema {
 }
 
 // return these when an operation occurred but we got no response
-enum DSPlusOperation {
+export enum DSPlusOperation {
   CREATE = "create",
   READ = "read",
   UPDATE = "update",
@@ -201,6 +199,7 @@ enum DSPlusOperation {
 export type DatasourcePlusQueryResponse =
   | Row[]
   | Record<DSPlusOperation, boolean>[]
+  | { total: number }[]
   | void
 
 export interface DatasourcePlus extends IntegrationBase {

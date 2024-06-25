@@ -14,6 +14,7 @@ import {
   AutomationData,
   AutomationJob,
   AutomationEventType,
+  UpdatedRowEventEmitter,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 
@@ -71,13 +72,16 @@ async function queueRelevantRowAutomations(
   })
 }
 
-emitter.on(AutomationEventType.ROW_SAVE, async function (event) {
-  /* istanbul ignore next */
-  if (!event || !event.row || !event.row.tableId) {
-    return
+emitter.on(
+  AutomationEventType.ROW_SAVE,
+  async function (event: UpdatedRowEventEmitter) {
+    /* istanbul ignore next */
+    if (!event || !event.row || !event.row.tableId) {
+      return
+    }
+    await queueRelevantRowAutomations(event, AutomationEventType.ROW_SAVE)
   }
-  await queueRelevantRowAutomations(event, AutomationEventType.ROW_SAVE)
-})
+)
 
 emitter.on(AutomationEventType.ROW_UPDATE, async function (event) {
   /* istanbul ignore next */

@@ -73,7 +73,12 @@ export async function run({ inputs }: AutomationStepInput) {
   try {
     let { field, condition, value } = inputs
     // coerce types so that we can use them
-    if (!isNaN(value) && !isNaN(field)) {
+    if (
+      !isNaN(value) &&
+      !isNaN(field) &&
+      typeof field !== "boolean" &&
+      typeof value !== "boolean"
+    ) {
       value = parseFloat(value)
       field = parseFloat(field)
     } else if (!isNaN(Date.parse(value)) && !isNaN(Date.parse(field))) {
