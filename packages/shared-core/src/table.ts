@@ -1,5 +1,4 @@
-import { FieldType, Table } from "@budibase/types"
-import { CONSTANT_INTERNAL_ROW_COLS } from "./constants"
+import { FieldType } from "@budibase/types"
 
 const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.STRING]: true,
@@ -51,23 +50,4 @@ export function canBeDisplayColumn(type: FieldType): boolean {
 
 export function canBeSortColumn(type: FieldType): boolean {
   return !!allowSortColumnByType[type]
-}
-
-export function findDuplicateInternalColumns(table: Table): string[] {
-  // get the column names
-  const columnNames = Object.keys(table.schema)
-    .concat(CONSTANT_INTERNAL_ROW_COLS)
-    .map(colName => colName.toLowerCase())
-  // there are duplicates
-  const set = new Set(columnNames)
-  let duplicates: string[] = []
-  if (set.size !== columnNames.length) {
-    for (let key of set.keys()) {
-      const count = columnNames.filter(name => name === key).length
-      if (count > 1) {
-        duplicates.push(key)
-      }
-    }
-  }
-  return duplicates
 }
