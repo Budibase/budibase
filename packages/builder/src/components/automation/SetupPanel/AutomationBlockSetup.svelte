@@ -272,7 +272,7 @@
    */
   const onRowTriggerUpdate = async update => {
     if (
-      update.hasOwnProperty("tableId") &&
+      Object.hasOwn(update, "tableId") &&
       $selectedAutomation.testData?.row?.tableId !== update.tableId
     ) {
       try {
@@ -301,7 +301,7 @@
 
         return
       } catch (e) {
-        console.error("Error saving automation", error)
+        console.error("Error saving automation", e)
         notifications.error("Error saving automation")
       }
     }
@@ -328,7 +328,7 @@
       // Exclude default or invalid data from the test data
       let updatedFields = {}
       for (const key of Object.keys(block?.inputs?.fields || {})) {
-        if (update.fields.hasOwnProperty(key)) {
+        if (Object.hasOwn(update.fields, key)) {
           if (key !== "") {
             updatedFields[key] = updatedAutomation.testData?.fields?.[key]
           }
@@ -343,7 +343,7 @@
         },
       })
     } catch (e) {
-      console.error("Error saving automation", error)
+      console.error("Error saving automation", e)
       notifications.error("Error saving automation")
     }
   }

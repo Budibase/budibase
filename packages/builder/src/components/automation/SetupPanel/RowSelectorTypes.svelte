@@ -42,7 +42,6 @@
 
   function handleAttachmentParams(keyValueObj) {
     let params = {}
-    // DEAN - review this
     if (!keyValueObj) {
       return null
     }

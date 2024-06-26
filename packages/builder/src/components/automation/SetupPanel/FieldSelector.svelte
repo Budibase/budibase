@@ -20,7 +20,6 @@
 
   $: {
     let fields = {}
-    // DEAN - review this
     for (const [key, type] of Object.entries(block?.inputs?.fields ?? {})) {
       fields = {
         ...fields,

@@ -1,7 +1,6 @@
 <script>
   import { tables } from "stores/builder"
   import {
-    Label,
     ActionButton,
     Popover,
     Icon,
@@ -74,8 +73,8 @@
 
       schemaFields = Object.entries(table?.schema ?? {})
         .filter(entry => {
-          const [key, field] = entry
-          return field.type !== "formula" && !field.autocolumn // DEAN - revise autocolumn exclusion for testmodal
+          const [, field] = entry
+          return field.type !== "formula" && !field.autocolumn
         })
         .sort(
           ([, schemaA], [, schemaB]) =>
@@ -84,7 +83,7 @@
 
       // Parse out any data not in the schema.
       for (const column in editableFields) {
-        if (!(column in table?.schema)) {
+        if (!Object.hasOwn(table?.schema, column)) {
           delete editableFields[column]
         }
       }
@@ -99,7 +98,7 @@
         editableRow[key] == null || editableRow[key]?.length === 0
 
       // Put non-empty elements into the update and add their key to the fields list.
-      if (!emptyField && !editableFields.hasOwnProperty(key)) {
+      if (!emptyField && !Object.hasOwn(editableFields, key)) {
         editableFields = {
           ...editableFields,
           [key]: key,
@@ -111,7 +110,7 @@
       if (emptyField) {
         if (editableFields[key]?.clearRelationships === true) {
           const emptyField = coerce(
-            !$memoStore?.row.hasOwnProperty(key) ? "" : $memoStore?.row[key],
+            !Object.hasOwn($memoStore?.row, key) ? "" : $memoStore?.row[key],
             fieldSchema.type
           )
 
@@ -209,7 +208,6 @@
         let outcome = Object.keys(result).reduce((acc, key) => {
           if (result[key] !== null) {
             acc[key] = result[key]
-          } else {
           }
           return acc
         }, {})
@@ -234,7 +232,7 @@
 </script>
 
 {#each schemaFields || [] as [field, schema]}
-  {#if !schema.autocolumn && editableFields.hasOwnProperty(field)}
+  {#if !schema.autocolumn && Object.hasOwn(editableFields, field)}
     <PropField label={field} fullWidth={isFullWidth(schema.type)}>
       <div class="prop-control-wrap">
         {#if isTestModal}
@@ -329,9 +327,9 @@
       {#if !schema.autocolumn}
         <li
           class="table_field spectrum-Menu-item"
-          class:is-selected={editableFields.hasOwnProperty(field)}
-          on:click={e => {
-            if (editableFields.hasOwnProperty(field)) {
+          class:is-selected={Object.hasOwn(editableFields, field)}
+          on:click={() => {
+            if (Object.hasOwn(editableFields, field)) {
               editableFields[field] = null
             } else {
               editableFields[field] = {}

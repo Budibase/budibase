@@ -93,7 +93,7 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
 
       if (isEmpty) {
         if (
-          inputs.meta?.fields.hasOwnProperty(key) &&
+          Object.hasOwn(inputs.meta?.fields, key) &&
           fieldConfig?.clearRelationships === true
         ) {
           // Explicitly clear the field on update
@@ -113,11 +113,11 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
     (acc: Record<string, any>, key: string) => {
       const fieldConfig = inputs.meta?.fields?.[key]
       // Ignore legacy config.
-      if (fieldConfig.hasOwnProperty("clearRelationships")) {
+      if (Object.hasOwn(fieldConfig, "clearRelationships")) {
         return acc
       }
       acc[key] =
-        inputs.row.hasOwnProperty(key) &&
+        Object.hasOwn(inputs.row, key) &&
         (!inputs.row[key] || inputs.row[key]?.length === 0)
           ? null
           : inputs.row[key]

@@ -21,7 +21,6 @@ const parseArrayString = (value: any) => {
  */
 export const TYPE_TRANSFORM_MAP: any = {
   [FieldType.LINK]: {
-    null: [],
     "": [],
     //@ts-ignore
     [null]: [],
