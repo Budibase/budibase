@@ -397,9 +397,9 @@ class InternalBuilder {
       contains(filters.containsAny, true)
     }
 
+    const tableRef = opts?.aliases?.[table._id!] || table._id
     // when searching internal tables make sure long looking for rows
-    if (filters.documentType && !isExternalTable(table)) {
-      const tableRef = opts?.aliases?.[table._id!] || table._id
+    if (filters.documentType && !isExternalTable(table) && tableRef) {
       // has to be its own option, must always be AND onto the search
       query.andWhereLike(
         `${tableRef}._id`,
