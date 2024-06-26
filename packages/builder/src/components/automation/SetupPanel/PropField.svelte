@@ -49,4 +49,12 @@
     white-space: nowrap;
     overflow: hidden;
   }
+
+  .prop-control {
+    margin-left: var(--spacing-s);
+  }
+
+  .prop-field.fullWidth .prop-control {
+    margin-left: 0px;
+  }
 </style>

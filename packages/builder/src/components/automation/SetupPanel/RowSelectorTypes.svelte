@@ -122,7 +122,6 @@
       <CodeEditor
         value={fieldData}
         on:change={e => {
-          console.log("JSON change", e.detail?.value, fieldData)
           if (e.detail?.value !== fieldData) {
             onChange({
               row: {

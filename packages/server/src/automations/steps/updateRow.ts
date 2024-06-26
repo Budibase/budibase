@@ -29,17 +29,6 @@ export const definition: AutomationStepSchema = {
         meta: {
           type: AutomationIOType.OBJECT,
           title: "Field settings",
-          // DEAN - REVIEW THIS - add in some record of these types
-
-          // properties: {
-          //   fields: {
-          //     properties: {
-          //       useAttachmentBinding: {
-          //         type: AutomationIOType.BOOLEAN,
-          //       },
-          //     },
-          //   },
-          // },
         },
         row: {
           type: AutomationIOType.OBJECT,
@@ -129,8 +118,8 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
       }
       acc[key] =
         inputs.row.hasOwnProperty(key) &&
-        (inputs.row[key] == null || inputs.row[key]?.length === 0)
-          ? undefined
+        (!inputs.row[key] || inputs.row[key]?.length === 0)
+          ? null
           : inputs.row[key]
       return acc
     },
