@@ -109,6 +109,7 @@ export function internalSearchValidator() {
       sortOrder: OPTIONAL_STRING,
       sortType: OPTIONAL_STRING,
       paginate: Joi.boolean(),
+      countRows: Joi.boolean(),
       bookmark: Joi.alternatives()
         .try(OPTIONAL_STRING, OPTIONAL_NUMBER)
         .optional(),

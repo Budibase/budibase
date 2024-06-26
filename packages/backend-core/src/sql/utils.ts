@@ -55,10 +55,7 @@ export function buildExternalTableId(datasourceId: string, tableName: string) {
   return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
 }
 
-export function breakExternalTableId(tableId: string | undefined) {
-  if (!tableId) {
-    return {}
-  }
+export function breakExternalTableId(tableId: string) {
   const parts = tableId.split(DOUBLE_SEPARATOR)
   let datasourceId = parts.shift()
   // if they need joined
@@ -66,6 +63,9 @@ export function breakExternalTableId(tableId: string | undefined) {
   // if contains encoded spaces, decode it
   if (tableName.includes(ENCODED_SPACE)) {
     tableName = decodeURIComponent(tableName)
+  }
+  if (!datasourceId || !tableName) {
+    throw new Error("Unable to get datasource/table name from table ID")
   }
   return { datasourceId, tableName }
 }

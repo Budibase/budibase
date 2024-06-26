@@ -4,6 +4,8 @@ const initialState = {
   showConfirmation: false,
   title: null,
   text: null,
+  confirmButtonText: null,
+  cancelButtonText: null,
   onConfirm: null,
   onCancel: null,
 }
@@ -11,11 +13,20 @@ const initialState = {
 const createConfirmationStore = () => {
   const store = writable(initialState)
 
-  const showConfirmation = (title, text, onConfirm, onCancel) => {
+  const showConfirmation = (
+    title,
+    text,
+    onConfirm,
+    onCancel,
+    confirmButtonText,
+    cancelButtonText
+  ) => {
     store.set({
       showConfirmation: true,
       title,
       text,
+      confirmButtonText,
+      cancelButtonText,
       onConfirm,
       onCancel,
     })

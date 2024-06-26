@@ -250,6 +250,67 @@ describe.each(
       expect(events.query.previewed).toHaveBeenCalledTimes(1)
     })
 
+    it("should update schema when column type changes from number to string", async () => {
+      const tableName = "schema_change_test"
+      await client.schema.dropTableIfExists(tableName)
+
+      await client.schema.createTable(tableName, table => {
+        table.increments("id").primary()
+        table.string("name")
+        table.integer("data")
+      })
+
+      await client(tableName).insert({
+        name: "test",
+        data: 123,
+      })
+
+      const firstPreview = await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: "Test Query",
+        queryVerb: "read",
+        fields: {
+          sql: `SELECT * FROM ${tableName}`,
+        },
+        parameters: [],
+        transformer: "return data",
+        schema: {},
+        readable: true,
+      })
+
+      expect(firstPreview.schema).toEqual(
+        expect.objectContaining({
+          data: { type: "number", name: "data" },
+        })
+      )
+
+      await client.schema.alterTable(tableName, table => {
+        table.string("data").alter()
+      })
+
+      await client(tableName).update({
+        data: "string value",
+      })
+
+      const secondPreview = await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: "Test Query",
+        queryVerb: "read",
+        fields: {
+          sql: `SELECT * FROM ${tableName}`,
+        },
+        parameters: [],
+        transformer: "return data",
+        schema: firstPreview.schema,
+        readable: true,
+      })
+
+      expect(secondPreview.schema).toEqual(
+        expect.objectContaining({
+          data: { type: "string", name: "data" },
+        })
+      )
+    })
     it("should work with static variables", async () => {
       await config.api.datasource.update({
         ...datasource,
@@ -734,6 +795,7 @@ describe.each(
             name: entityId,
             schema: {},
             type: "table",
+            primary: ["id"],
             sourceId: datasource._id!,
             sourceType: TableSourceType.EXTERNAL,
           },

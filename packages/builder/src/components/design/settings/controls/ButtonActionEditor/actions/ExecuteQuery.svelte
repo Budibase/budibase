@@ -74,6 +74,18 @@
           placeholder="Are you sure you want to execute this query?"
           bind:value={parameters.confirmText}
         />
+
+        <Input
+          label="Confirm Text"
+          placeholder="Confirm"
+          bind:value={parameters.confirmButtonText}
+        />
+
+        <Input
+          label="Cancel Text"
+          placeholder="Cancel"
+          bind:value={parameters.cancelButtonText}
+        />
       {/if}
 
       {#if query?.parameters?.length > 0}

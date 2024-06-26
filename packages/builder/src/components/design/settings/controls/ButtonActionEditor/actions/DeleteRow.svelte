@@ -53,6 +53,12 @@
         placeholder="Are you sure you want to delete?"
         bind:value={parameters.confirmText}
       />
+
+      <Label small>Confirm Text</Label>
+      <Input placeholder="Confirm" bind:value={parameters.confirmButtonText} />
+
+      <Label small>Cancel Text</Label>
+      <Input placeholder="Cancel" bind:value={parameters.cancelButtonText} />
     {/if}
   </div>
 </div>
