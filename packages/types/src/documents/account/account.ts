@@ -42,10 +42,7 @@ export interface Account extends CreateAccount {
   verified: boolean
   verificationSent: boolean
   // licensing
-  tier: string // deprecated
   planType?: PlanType
-  /** @deprecated */
-  planTier?: number
   license?: License
   installId?: string
   installTenantId?: string
