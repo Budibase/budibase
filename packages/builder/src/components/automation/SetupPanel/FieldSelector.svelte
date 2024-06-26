@@ -16,19 +16,7 @@
   let schemaFields
   let editableValue
 
-  $: processValue(value)
-
-  const processValue = value => {
-    editableValue = { ...value }
-    // DEAN - review this
-    // const fieldKeys = Object.keys(block?.inputs?.fields)
-    // // Purge orphaned keys
-    // Object.keys(editableValue || {}).forEach(key => {
-    //   if (!fieldKeys.includes(key)) {
-    //     delete editableValue[key]
-    //   }
-    // })
-  }
+  $: editableValue = { ...value }
 
   $: {
     let fields = {}
@@ -60,7 +48,7 @@
     ARRAY: "",
   }
 
-  const onChange = (e, field, type) => {
+  const onChange = (e, field) => {
     if (e.detail !== editableValue[field]) {
       editableValue[field] = e.detail
       dispatch("change", editableValue)

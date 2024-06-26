@@ -120,8 +120,6 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
-  let testDataRowVisibility = {}
-
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
@@ -275,7 +273,7 @@
   const onRowTriggerUpdate = async update => {
     if (
       update.hasOwnProperty("tableId") &&
-      $selectedAutomation.testData.row.tableId !== update.tableId
+      $selectedAutomation.testData?.row?.tableId !== update.tableId
     ) {
       try {
         const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
@@ -310,6 +308,47 @@
   }
 
   /**
+   * Handler for App trigger automation updates.
+   * Ensure updates to the field list are reflected in testData
+    @param {object} update - An app trigger update object
+    @example
+    onAppTriggerUpdate({ 
+      "fields" : {"myField": "123", "myArray": "cat,dog,badger"}
+    })
+   */
+  const onAppTriggerUpdate = async update => {
+    try {
+      // Parse the block inputs as usual
+      const updatedAutomation =
+        await automationStore.actions.processBlockInputs(block, {
+          schema: {},
+          ...update,
+        })
+
+      // Exclude default or invalid data from the test data
+      let updatedFields = {}
+      for (const key of Object.keys(block?.inputs?.fields || {})) {
+        if (update.fields.hasOwnProperty(key)) {
+          if (key !== "") {
+            updatedFields[key] = updatedAutomation.testData?.fields?.[key]
+          }
+        }
+      }
+
+      // Save the entire automation and reset the testData
+      await automationStore.actions.save({
+        ...updatedAutomation,
+        testData: {
+          fields: updatedFields,
+        },
+      })
+    } catch (e) {
+      console.error("Error saving automation", error)
+      notifications.error("Error saving automation")
+    }
+  }
+
+  /**
    * Handler for automation block input updates.
     @param {object} update - An automation inputs update object
     @example
@@ -321,10 +360,18 @@
   const onChange = Utils.sequential(async update => {
     const request = cloneDeep(update)
 
-    // Process row trigger updates
+    // Process app trigger updates
     if (isTrigger && !isTestModal) {
-      await onRowTriggerUpdate(request)
-      return
+      // Row trigger
+      if (rowEvents.includes(block.event)) {
+        await onRowTriggerUpdate(request)
+        return
+      }
+      // App trigger
+      if (block.event === AutomationEventType.APP_TRIGGER) {
+        await onAppTriggerUpdate(request)
+        return
+      }
     }
 
     // We need to cache the schema as part of the definition because it is

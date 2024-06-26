@@ -33,6 +33,7 @@
   })
 
   let table
+  // Row Schema Field
   let schemaFields
   let attachmentTypes = [
     FieldType.ATTACHMENTS,
@@ -50,8 +51,6 @@
     row,
     meta,
   })
-
-  $: fields = $memoStore?.meta?.fields
 
   $: if ($memoStore?.meta?.fields) {
     editableFields = cloneDeep($memoStore?.meta?.fields)
@@ -91,26 +90,16 @@
       }
       editableFields = editableFields
     }
+
     // Go through the table schema and build out the editable content
     for (const entry of schemaFields) {
       const [key, fieldSchema] = entry
-      if ($memoStore?.row?.[key]) {
-        // DEAN - review this
-        editableRow = {
-          ...editableRow,
-          [key]: $memoStore?.row[key],
-        }
-      }
 
-      // Legacy
       const emptyField =
-        !$memoStore?.row[key] || $memoStore?.row[key]?.length === 0
+        editableRow[key] == null || editableRow[key]?.length === 0
 
-      // Legacy
       // Put non-empty elements into the update and add their key to the fields list.
       if (!emptyField && !editableFields.hasOwnProperty(key)) {
-        //DEAN - review this - IF THEY ADDED A NEW ONE IT WOULD BE MISSING FROM editableFields + editableFields
-        console.log("EMPTY STATE DETECTED")
         editableFields = {
           ...editableFields,
           [key]: key,
@@ -119,39 +108,44 @@
 
       // Legacy - clearRelationships
       // Init the field and add it to the update.
-      if (emptyField && editableFields[key]?.clearRelationships === true) {
-        const emptyField = coerce(
-          !$memoStore?.row.hasOwnProperty(key) ? "" : $memoStore?.row[key],
-          fieldSchema.type
-        )
+      if (emptyField) {
+        if (editableFields[key]?.clearRelationships === true) {
+          const emptyField = coerce(
+            !$memoStore?.row.hasOwnProperty(key) ? "" : $memoStore?.row[key],
+            fieldSchema.type
+          )
 
-        // remove this and place the field in the editable row.
-        delete editableFields[key]?.clearRelationships
+          // remove this and place the field in the editable row.
+          delete editableFields[key]?.clearRelationships
 
-        // Default the field
-        editableRow = {
-          ...editableRow,
-          [key]: emptyField,
+          // Default the field
+          editableRow = {
+            ...editableRow,
+            [key]: emptyField,
+          }
+        } else {
+          // Purge from the update as it's presence is not necessary.
+          delete editableRow[key]
         }
       }
     }
 
-    // Possible to go through the automation fields schema?
-    console.log("ACTUAL ROW", row)
-    console.log("EDITABLE FIELDS", editableFields)
-    console.log("EDITABLE ROW", editableRow)
-  }
+    // Parse all known row schema keys
+    const schemaKeys = [
+      "tableId",
+      ...schemaFields.map(entry => {
+        const [key] = entry
+        return key
+      }),
+    ]
 
-  // Legacy - add explicitly cleared relationships to the request.
-  // DEAN - review this
-  $: if (schemaFields?.length && fields && false) {
-    // Meta fields processing.
-    Object.keys(fields).forEach(key => {
-      if (fields[key]?.clearRelationships) {
-        columns.add(key)
+    // Purge any row keys that are not present in the schema.
+    for (const rowKey of Object.keys(editableRow)) {
+      if (!schemaKeys.includes(rowKey)) {
+        delete editableRow[rowKey]
+        delete editableFields[rowKey]
       }
-    })
-    columns = new Set(columns)
+    }
   }
 
   $: typeToField = Object.values(FIELDS).reduce((acc, field) => {
@@ -209,7 +203,7 @@
   }
 
   const onChange = update => {
-    const customizer = (objValue, srcValue, key) => {
+    const customizer = (objValue, srcValue) => {
       if (isPlainObject(objValue) && isPlainObject(srcValue)) {
         const result = mergeWith({}, objValue, srcValue, customizer)
         let outcome = Object.keys(result).reduce((acc, key) => {
@@ -235,7 +229,6 @@
       update,
       customizer
     )
-    console.log("Row Selector - MERGED", result)
     dispatch("change", result)
   }
 </script>
@@ -283,10 +276,7 @@
               meta={{
                 fields: editableFields,
               }}
-              onChange={change => {
-                console.log("RowSelectorTypes > RowSelector > ", change)
-                onChange(change)
-              }}
+              onChange={change => onChange(change)}
             />
           </DrawerBindableSlot>
         {/if}
