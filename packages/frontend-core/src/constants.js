@@ -1,7 +1,11 @@
 /**
  * Operator options for lucene queries
  */
-export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
+export {
+  OperatorOptions,
+  SqlNumberTypeRangeMap,
+  DEFAULT_BB_DATASOURCE_ID,
+} from "@budibase/shared-core"
 export { Feature as Features } from "@budibase/types"
 import { BpmCorrelationKey } from "@budibase/shared-core"
 import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
