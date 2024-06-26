@@ -92,6 +92,61 @@ describe("rest", () => {
     expect(cached.rows[0].name).toEqual("one")
   })
 
+  it("should update schema when structure changes from JSON to array", async () => {
+    const datasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: {},
+    })
+
+    nock("http://www.example.com")
+      .get("/")
+      .reply(200, [{ obj: {}, id: "1" }])
+
+    const firstResponse = await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: "test query",
+      parameters: [],
+      queryVerb: "read",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+      },
+    })
+
+    expect(firstResponse.schema).toEqual({
+      obj: { type: "json", name: "obj" },
+      id: { type: "string", name: "id" },
+    })
+
+    nock.cleanAll()
+
+    nock("http://www.example.com")
+      .get("/")
+      .reply(200, [{ obj: [], id: "1" }])
+
+    const secondResponse = await config.api.query.preview({
+      datasourceId: datasource._id!,
+      name: "test query",
+      parameters: [],
+      queryVerb: "read",
+      transformer: "",
+      schema: firstResponse.schema,
+      readable: true,
+      fields: {
+        path: "www.example.com",
+      },
+    })
+
+    expect(secondResponse.schema).toEqual({
+      obj: { type: "array", name: "obj" },
+      id: { type: "string", name: "id" },
+    })
+  })
+
   it("should parse global and query level header mappings", async () => {
     const datasource = await config.api.datasource.create({
       name: generator.guid(),
