@@ -24,7 +24,6 @@ export const account = (partial: Partial<Account> = {}): Account => {
     createdAt: Date.now(),
     verified: true,
     verificationSent: true,
-    tier: "FREE", // DEPRECATED
     authType: AuthType.PASSWORD,
     name: generator.name(),
     size: "10+",
