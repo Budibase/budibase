@@ -85,16 +85,18 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   // Base update
   let rowUpdate: Record<string, any>
 
-  // Legacy - find any empty values in the row that need to be cleared
+  // Legacy
+  // Find previously set values and add them to the update. Ensure empty relationships
+  // are added to the update is clearRelationships is true
   const legacyUpdated = Object.keys(inputs.row || {}).reduce(
     (acc: Record<string, any>, key: string) => {
       const isEmpty = inputs.row[key] == null || inputs.row[key]?.length === 0
-      const fieldConfig = inputs.meta?.fields?.[key]
+      const fieldConfig = inputs.meta?.fields || {}
 
       if (isEmpty) {
         if (
-          Object.hasOwn(inputs.meta?.fields, key) &&
-          fieldConfig?.clearRelationships === true
+          Object.hasOwn(fieldConfig, key) &&
+          fieldConfig[key].clearRelationships === true
         ) {
           // Explicitly clear the field on update
           acc[key] = []
@@ -111,13 +113,13 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   // The source of truth for inclusion in the update is: inputs.meta?.fields
   const parsedUpdate = Object.keys(inputs.meta?.fields || {}).reduce(
     (acc: Record<string, any>, key: string) => {
-      const fieldConfig = inputs.meta?.fields?.[key]
+      const fieldConfig = inputs.meta?.fields?.[key] || {}
       // Ignore legacy config.
       if (Object.hasOwn(fieldConfig, "clearRelationships")) {
         return acc
       }
       acc[key] =
-        Object.hasOwn(inputs.row, key) &&
+        Object.hasOwn(inputs.row || {}, key) &&
         (!inputs.row[key] || inputs.row[key]?.length === 0)
           ? null
           : inputs.row[key]
