@@ -18,6 +18,7 @@ import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../api/controllers/row/utils"
+import { mapToUserColumn, USER_COLUMN_PREFIX } from "../../tables/internal/sqs"
 import sdk from "../../../index"
 import {
   context,
@@ -59,7 +60,7 @@ function buildInternalFieldList(
         buildInternalFieldList(relatedTable, tables, { relationships: false })
       )
     } else {
-      fieldList.push(`${table._id}.${col.name}`)
+      fieldList.push(`${table._id}.${mapToUserColumn(col.name)}`)
     }
   }
   return fieldList
@@ -90,6 +91,28 @@ function cleanupFilters(
       )
   )
 
+  // generate a map of all possible column names (these can be duplicated across tables
+  // the map of them will always be the same
+  const userColumnMap: Record<string, string> = {}
+  allTables.forEach(table =>
+    Object.keys(table.schema).forEach(
+      key => (userColumnMap[key] = mapToUserColumn(key))
+    )
+  )
+  // update the keys of filters to manage user columns
+  for (let filter of Object.values(filters)) {
+    for (let key of Object.keys(filter)) {
+      const found = Object.keys(userColumnMap).find(possibleColumn =>
+        key.endsWith(possibleColumn)
+      )
+      if (found) {
+        const newKey = key.replace(found, userColumnMap[found])
+        filter[newKey] = filter[key]
+        delete filter[key]
+      }
+    }
+  }
+
   return filters
 }
 
@@ -104,6 +127,26 @@ function buildTableMap(tables: Table[]) {
     tableMap[table._id!] = table
   }
   return tableMap
+}
+
+function reverseUserColumnMapping(rows: Row[]) {
+  const prefixLength = USER_COLUMN_PREFIX.length
+  return rows.map(row => {
+    const finalRow: Row = {}
+    for (let key of Object.keys(row)) {
+      // it should be the last prefix
+      const lastIndex = key.lastIndexOf(USER_COLUMN_PREFIX)
+      if (lastIndex !== -1 && lastIndex < key.length - prefixLength) {
+        // cut out the prefix
+        const newKey =
+          key.slice(0, lastIndex) + key.slice(lastIndex + prefixLength)
+        finalRow[newKey] = row[key]
+      } else {
+        finalRow[key] = row[key]
+      }
+    }
+    return finalRow
+  })
 }
 
 function runSqlQuery(json: QueryJson, tables: Table[]): Promise<Row[]>
@@ -147,6 +190,8 @@ async function runSqlQuery(
   const response = await alias.queryWithAliasing(json, processSQLQuery)
   if (opts?.countTotalRows) {
     return processRowCountResponse(response)
+  } else if (Array.isArray(response)) {
+    return reverseUserColumnMapping(response)
   } else {
     return response
   }
@@ -197,7 +242,7 @@ export async function search(
     const sortType =
       sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
     request.sort = {
-      [sortField.name]: {
+      [mapToUserColumn(sortField.name)]: {
         direction: params.sortOrder || SortOrder.ASCENDING,
         type: sortType as SortType,
       },
