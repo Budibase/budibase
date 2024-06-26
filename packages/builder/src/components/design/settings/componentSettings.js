@@ -30,6 +30,7 @@ import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte
 import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
 import FormStepControls from "./controls/FormStepControls.svelte"
 import PaywalledSetting from "./controls/PaywalledSetting.svelte"
+import CellConditionEditor from "./controls/CellConditionEditor.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -61,6 +62,7 @@ const componentMap = {
   columns: ColumnEditor,
   "columns/basic": BasicColumnEditor,
   "columns/grid": GridColumnEditor,
+  cellConditions: CellConditionEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
