@@ -122,7 +122,10 @@ export const deriveStores = context => {
         return []
       }
       const lowerRowIndex = Math.min(sourceRowIndex, targetRowIndex)
-      const upperRowIndex = Math.max(sourceRowIndex, targetRowIndex)
+      let upperRowIndex = Math.max(sourceRowIndex, targetRowIndex)
+
+      // Cap rows at 50
+      upperRowIndex = Math.min(upperRowIndex, lowerRowIndex + 49)
 
       // Column indices
       const sourceColIndex = $columnLookupMap[sourceInfo.field].__idx

@@ -35,6 +35,7 @@
         progressPercentage = progress * 100
       }
     )
+    await sleep(duration)
 
     // Select new cells to highlight them
     if (newRows.length) {
@@ -46,7 +47,6 @@
       const endCellId = getCellID(lastRow._id, lastCol.name)
       selectedCells.actions.selectRange(startCellId, endCellId)
     }
-    await sleep(duration)
     processing = false
   }
 
