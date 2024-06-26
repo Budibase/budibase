@@ -23,17 +23,21 @@
         { "type": "bigint", "message": "stringAsNumber" },
         { "type": "options", "message": "stringAsNumber" },
         { "type": "formula", "message": "stringAsNumber" },
-        { "type": "datetime", "message": "dateAsNumber"}
+        { "type": "datetime", "message": "dateAsNumber" }
       ],
-      "unsupported": [
-        { "type": "json", "message": "jsonPrimitivesOnly" }
-      ]
+      "unsupported": [{ "type": "json", "message": "jsonPrimitivesOnly" }]
     },
     "stringLike": {
-      "supported": ["string", "number", "bigint", "options", "longform", "boolean", "datetime"],
-      "unsupported": [
-        { "type": "json", "message": "jsonPrimitivesOnly" }
-      ]
+      "supported": [
+        "string",
+        "number",
+        "bigint",
+        "options",
+        "longform",
+        "boolean",
+        "datetime"
+      ],
+      "unsupported": [{ "type": "json", "message": "jsonPrimitivesOnly" }]
     },
     "datetimeLike": {
       "supported": ["datetime"],
@@ -43,11 +47,9 @@
         { "type": "options", "message": "stringAsDate" },
         { "type": "formula", "message": "stringAsDate" },
         { "type": "bigint", "message": "stringAsDate" },
-        { "type": "number", "message": "numberAsDate"}
+        { "type": "number", "message": "numberAsDate" }
       ],
-      "unsupported": [
-        { "type": "json", "message": "jsonPrimitivesOnly" }
-      ]
+      "unsupported": [{ "type": "json", "message": "jsonPrimitivesOnly" }]
     }
   },
   "layout": {
