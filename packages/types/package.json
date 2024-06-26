@@ -11,7 +11,7 @@
     "build": "node ../../scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null"
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020"
   },
   "jest": {},
   "devDependencies": {
@@ -20,7 +20,7 @@
     "@types/pouchdb": "6.4.0",
     "@types/redlock": "4.0.7",
     "rimraf": "3.0.2",
-    "typescript": "5.2.2"
+    "typescript": "5.5.2"
   },
   "dependencies": {
     "scim-patch": "^0.8.1"
