@@ -2879,6 +2879,11 @@
         "placeholder": "Auto",
         "min": 80,
         "max": 9999
+      },
+      {
+        "type": "cellConditions",
+        "label": "Conditions",
+        "key": "conditions"
       }
     ]
   },
