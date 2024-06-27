@@ -144,6 +144,7 @@ export const initialise = context => {
             visible: fieldSchema.visible ?? true,
             readonly: fieldSchema.readonly,
             order: fieldSchema.order ?? oldColumn?.order,
+            conditions: fieldSchema.conditions,
           }
           // Override a few properties for primary display
           if (field === primaryDisplay) {
