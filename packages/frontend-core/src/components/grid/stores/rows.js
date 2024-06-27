@@ -12,41 +12,46 @@ const evaluateConditions = (row, column) => {
     return
   }
   for (let condition of column.conditions) {
-    let value = row[column.name]
-    let referenceValue = condition.referenceValue
+    try {
+      const type = column.schema.type
+      let value = row[column.name]
+      let referenceValue = condition.referenceValue
 
-    // Parse values into correct types
-    if (condition.valueType === "number") {
-      referenceValue = parseFloat(referenceValue)
-      value = parseFloat(value)
-    } else if (condition.valueType === "datetime") {
-      if (referenceValue) {
-        referenceValue = new Date(referenceValue).toISOString()
+      // Coerce values into correct types for primitives
+      if (type === "number") {
+        referenceValue = parseFloat(referenceValue)
+        value = parseFloat(value)
+      } else if (type === "datetime") {
+        if (referenceValue) {
+          referenceValue = new Date(referenceValue).toISOString()
+        }
+        if (value) {
+          value = new Date(value).toISOString()
+        }
+      } else if (type === "boolean") {
+        referenceValue = `${referenceValue}`.toLowerCase() === "true"
+        value = `${value}`.toLowerCase() === "true"
       }
-      if (value) {
-        value = new Date(value).toISOString()
-      }
-    } else if (condition.valueType === "boolean") {
-      referenceValue = `${referenceValue}`.toLowerCase() === "true"
-      value = `${value}`.toLowerCase() === "true"
-    }
 
-    // Build lucene compatible condition expression
-    const luceneCondition = {
-      operator: condition.operator,
-      type: condition.valueType,
-      field: "value",
-      value: referenceValue,
-    }
-    const query = QueryUtils.buildQuery([luceneCondition])
-    const result = QueryUtils.runQuery([{ value }], query)
-    if (result.length > 0) {
-      if (!row.__metadata) {
-        row.__metadata = {}
+      // Build lucene compatible condition expression
+      const luceneFilter = {
+        operator: condition.operator,
+        type,
+        field: "value",
+        value: referenceValue,
       }
-      row.__metadata[column.name] = {
-        background: condition.color,
+      const query = QueryUtils.buildQuery([luceneFilter])
+      const result = QueryUtils.runQuery([{ value }], query)
+      if (result.length > 0) {
+        if (!row.__metadata) {
+          row.__metadata = {}
+        }
+        row.__metadata[column.name] = {
+          background: condition.color,
+        }
       }
+    } catch {
+      // Swallow
     }
   }
 }
@@ -92,6 +97,10 @@ export const deriveStores = context => {
   const enrichedRows = derived(
     [rows, rowChangeCache, columns],
     ([$rows, $rowChangeCache, $columns]) => {
+      if (!$rows?.length || !$columns?.length) {
+        return []
+      }
+      console.log("ENRICH ROWS", $rows, $rowChangeCache, $columns)
       return $rows.map((row, idx) => {
         let enriched = {
           ...row,
