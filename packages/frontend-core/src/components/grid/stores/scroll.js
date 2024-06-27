@@ -16,8 +16,8 @@ export const createStores = () => {
   })
 
   // Derive height and width as primitives to avoid wasted computation
-  const scrollTop = derived(scroll, $scroll => $scroll.top, 0)
-  const scrollLeft = derived(scroll, $scroll => $scroll.left, 0)
+  const scrollTop = derived(scroll, $scroll => Math.round($scroll.top))
+  const scrollLeft = derived(scroll, $scroll => Math.round($scroll.left))
 
   return {
     scroll,
@@ -46,11 +46,11 @@ export const deriveStores = context => {
   const contentWidth = derived(
     [visibleColumns, buttonColumnWidth],
     ([$visibleColumns, $buttonColumnWidth]) => {
-      let width = GutterWidth + $buttonColumnWidth
+      let width = GutterWidth + Math.max($buttonColumnWidth, HPadding)
       $visibleColumns.forEach(col => {
         width += col.width
       })
-      return width + HPadding
+      return width
     }
   )
   const screenWidth = derived(
@@ -62,7 +62,7 @@ export const deriveStores = context => {
   const maxScrollLeft = derived(
     [contentWidth, screenWidth],
     ([$contentWidth, $screenWidth]) => {
-      return Math.max($contentWidth - $screenWidth, 0)
+      return Math.round(Math.max($contentWidth - $screenWidth, 0))
     }
   )
   const showHScrollbar = derived(
@@ -85,7 +85,8 @@ export const deriveStores = context => {
   )
   const maxScrollTop = derived(
     [height, contentHeight],
-    ([$height, $contentHeight]) => Math.max($contentHeight - $height, 0)
+    ([$height, $contentHeight]) =>
+      Math.round(Math.max($contentHeight - $height, 0))
   )
   const showVScrollbar = derived(
     [contentHeight, height],
