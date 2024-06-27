@@ -119,12 +119,12 @@ export const createActions = context => {
   // Actual logic to consider the current position and determine the new order
   const considerReorderPosition = () => {
     const $reorder = get(reorder)
-    const $scroll = get(scroll)
+    const $scrollLeft = get(scrollLeft)
 
     // Compute the closest breakpoint to the current position
     let breakpoint
     let minDistance = Number.MAX_SAFE_INTEGER
-    const mouseX = latestX - $reorder.gridLeft + $scroll.left
+    const mouseX = latestX - $reorder.gridLeft + $scrollLeft
     $reorder.breakpoints.forEach(point => {
       const distance = Math.abs(point.x - mouseX)
       if (distance < minDistance) {

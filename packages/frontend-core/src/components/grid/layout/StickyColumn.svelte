@@ -69,66 +69,62 @@
 
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="content">
-    <GridScrollWrapper scrollVertically attachHandlers>
-      {#each $renderedRows as row, idx}
-        {@const rowSelected = !!$selectedRows[row._id]}
-        {@const rowHovered =
-          $hoveredRowId === row._id &&
-          (!$selectedCellCount || !$isSelectingCells)}
-        {@const rowFocused = $focusedRow?._id === row._id}
-        {@const cellId = getCellID(row._id, $displayColumn?.name)}
-        <div
-          class="row"
-          on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
-          on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
-          on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
-        >
-          <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
-          {#if $displayColumn}
-            <DataCell
-              {row}
-              {cellId}
-              {rowFocused}
-              {rowSelected}
-              cellSelected={$selectedCellMap[cellId]}
-              highlighted={rowHovered || rowFocused}
-              rowIdx={row.__idx}
-              topRow={idx === 0}
-              focused={$focusedCellId === cellId}
-              selectedUser={$userCellMap[cellId]}
-              width={$displayColumn.width}
-              column={$displayColumn}
-              contentLines={$contentLines}
-              isSelectingCells={$isSelectingCells}
-            />
-          {/if}
-        </div>
-      {/each}
-      {#if $config.canAddRows}
-        <div
-          class="row new"
-          on:mouseenter={$isDragging
-            ? null
-            : () => ($hoveredRowId = BlankRowID)}
-          on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
-          on:click={() => dispatch("add-row-inline")}
-        >
-          <GutterCell rowHovered={$hoveredRowId === BlankRowID}>
-            <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
-          </GutterCell>
-          {#if $displayColumn}
-            <GridCell
-              width={$displayColumn.width}
-              highlighted={$hoveredRowId === BlankRowID}
-            >
-              <KeyboardShortcut padded keybind="Ctrl+Enter" />
-            </GridCell>
-          {/if}
-        </div>
-      {/if}
-    </GridScrollWrapper>
-  </div>
+  <GridScrollWrapper scrollVertically attachHandlers>
+    {#each $renderedRows as row, idx}
+      {@const rowSelected = !!$selectedRows[row._id]}
+      {@const rowHovered =
+        $hoveredRowId === row._id &&
+        (!$selectedCellCount || !$isSelectingCells)}
+      {@const rowFocused = $focusedRow?._id === row._id}
+      {@const cellId = getCellID(row._id, $displayColumn?.name)}
+      <div
+        class="row"
+        on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
+        on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+        on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
+      >
+        <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
+        {#if $displayColumn}
+          <DataCell
+            {row}
+            {cellId}
+            {rowFocused}
+            {rowSelected}
+            cellSelected={$selectedCellMap[cellId]}
+            highlighted={rowHovered || rowFocused}
+            rowIdx={row.__idx}
+            topRow={idx === 0}
+            focused={$focusedCellId === cellId}
+            selectedUser={$userCellMap[cellId]}
+            width={$displayColumn.width}
+            column={$displayColumn}
+            contentLines={$contentLines}
+            isSelectingCells={$isSelectingCells}
+          />
+        {/if}
+      </div>
+    {/each}
+    {#if $config.canAddRows}
+      <div
+        class="row blank"
+        on:mouseenter={$isDragging ? null : () => ($hoveredRowId = BlankRowID)}
+        on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+        on:click={() => dispatch("add-row-inline")}
+      >
+        <GutterCell rowHovered={$hoveredRowId === BlankRowID}>
+          <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
+        </GutterCell>
+        {#if $displayColumn}
+          <GridCell
+            width={$displayColumn.width}
+            highlighted={$hoveredRowId === BlankRowID}
+          >
+            <KeyboardShortcut padded keybind="Ctrl+Enter" />
+          </GridCell>
+        {/if}
+      </div>
+    {/if}
+  </GridScrollWrapper>
 </div>
 
 <style>
@@ -184,11 +180,7 @@
     justify-content: flex-start;
     align-items: stretch;
   }
-  .content {
-    position: relative;
-    flex: 1 1 auto;
-  }
-  .row.new :global(*:hover) {
+  .blank :global(.cell:hover) {
     cursor: pointer;
   }
 </style>
