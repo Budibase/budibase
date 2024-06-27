@@ -12,7 +12,7 @@
     rows,
     focusedRow,
     selectedRows,
-    visibleColumns,
+    scrollableColumns,
     scroll,
     isDragging,
     buttonColumnWidth,
@@ -22,12 +22,13 @@
   let container
 
   $: buttons = $props.buttons?.slice(0, 3) || []
-  $: columnsWidth = $visibleColumns.reduce(
+  $: columnsWidth = $scrollableColumns.reduce(
     (total, col) => (total += col.width),
     0
   )
-  $: end = columnsWidth - 1 - $scroll.left
-  $: left = Math.min($width - $buttonColumnWidth, end)
+  $: columnEnd = columnsWidth - $scroll.left - 1
+  $: gridEnd = $width - $buttonColumnWidth
+  $: left = Math.min(columnEnd, gridEnd)
 
   const handleClick = async (button, row) => {
     await button.onClick?.(rows.actions.cleanRow(row))
@@ -49,6 +50,7 @@
   class="button-column"
   style="left:{left}px"
   class:hidden={$buttonColumnWidth === 0}
+  class:right-border={left !== gridEnd}
 >
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
     <GridScrollWrapper scrollVertically attachHandlers bind:ref={container}>
@@ -133,5 +135,8 @@
   /* Add left cell border */
   .button-column :global(.cell) {
     border-left: var(--cell-border);
+  }
+  .button-column:not(.right-border) :global(.cell) {
+    border-right-color: transparent;
   }
 </style>
