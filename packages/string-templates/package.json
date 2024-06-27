@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsc --emitDeclarationOnly && rollup -c",
     "dev": "rollup -cw",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
     "test": "jest",
     "manifest": "ts-node ./scripts/gen-collection-info.ts"
   },
@@ -45,6 +45,6 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^7.0.2",
     "ts-jest": "29.1.1",
-    "typescript": "5.2.2"
+    "typescript": "5.5.2"
   }
 }

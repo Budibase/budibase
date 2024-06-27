@@ -179,13 +179,6 @@ jobs:
       - run: yarn --frozen-lockfile
 
       - name: Test server
-        env:
-          DD_CIVISIBILITY_AGENTLESS_ENABLED: true
-          DD_API_KEY: "${{ secrets.DATADOG_API_KEY }}"
-          DD_SITE: "datadoghq.eu"
-          NODE_OPTIONS: "-r dd-trace/ci/init"
-          DD_ENV: "ci"
-          DD_SERVICE: "budibase/packages/server"
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
             yarn test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
@@ -233,10 +226,11 @@ jobs:
         if: ${{ steps.get_pro_commits.outputs.base_commit_excluding_merges != '' }}
         run: |
           cd packages/pro
+          base_commit='${{ steps.get_pro_commits.outputs.base_commit }}'
           base_commit_excluding_merges='${{ steps.get_pro_commits.outputs.base_commit_excluding_merges }}'
           pro_commit='${{ steps.get_pro_commits.outputs.pro_commit }}'
 
-          any_commit=$(git log --no-merges $base_commit_excluding_merges...$pro_commit)
+          any_commit=$(git log --no-merges $base_commit...$pro_commit)
 
           if [ -n "$any_commit" ]; then
             echo $any_commit
