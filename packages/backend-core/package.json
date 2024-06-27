@@ -16,7 +16,7 @@
     "prepack": "cp package.json dist",
     "build": "tsc -p tsconfig.build.json --paths null && node ./scripts/build.js",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
   },
@@ -79,7 +79,7 @@
     "pouchdb-adapter-memory": "7.2.2",
     "testcontainers": "^10.7.2",
     "timekeeper": "2.2.0",
-    "typescript": "5.2.2"
+    "typescript": "5.5.2"
   },
   "nx": {
     "targets": {
