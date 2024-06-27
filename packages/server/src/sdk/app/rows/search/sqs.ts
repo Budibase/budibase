@@ -235,6 +235,7 @@ export async function search(
     meta: {
       table,
       tables: allTablesMap,
+      columnPrefix: USER_COLUMN_PREFIX,
     },
     resource: {
       fields: buildInternalFieldList(table, allTables),
