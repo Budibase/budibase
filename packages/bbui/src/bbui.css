@@ -134,8 +134,8 @@ a {
 .spectrum--light,
 .spectrum--lightest {
   --drop-shadow: rgba(0, 0, 0, 0.075);
-  --spectrum-global-color-red-100: #ffebe7;
-  --spectrum-global-color-orange-100: #ffeccc;
+  --spectrum-global-color-red-100: #ffddd6;
+  --spectrum-global-color-orange-100: #ffdfad;
   --spectrum-global-color-yellow-100: #fbf198;
   --spectrum-global-color-green-100: #cef8e0;
   --spectrum-global-color-seafoam-100: #cef7f3;
