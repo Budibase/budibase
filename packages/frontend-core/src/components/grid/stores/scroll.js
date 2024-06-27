@@ -1,6 +1,12 @@
 import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
-import { Padding, GutterWidth, FocusedCellMinOffset } from "../lib/constants"
+import {
+  GutterWidth,
+  FocusedCellMinOffset,
+  ScrollBarSize,
+  HPadding,
+  VPadding,
+} from "../lib/constants"
 import { parseCellID } from "../lib/utils"
 
 export const createStores = () => {
@@ -36,26 +42,15 @@ export const deriveStores = context => {
     return ($displayColumn?.width || 0) + GutterWidth
   })
 
-  // Derive vertical limits
-  const contentHeight = derived(
-    [rows, rowHeight],
-    ([$rows, $rowHeight]) => ($rows.length + 1) * $rowHeight + Padding
-  )
-  const maxScrollTop = derived(
-    [height, contentHeight],
-    ([$height, $contentHeight]) => Math.max($contentHeight - $height, 0)
-  )
-
   // Derive horizontal limits
   const contentWidth = derived(
     [visibleColumns, buttonColumnWidth],
     ([$visibleColumns, $buttonColumnWidth]) => {
-      const space = Math.max(Padding, $buttonColumnWidth - 1)
-      let width = GutterWidth + space
+      let width = GutterWidth + $buttonColumnWidth
       $visibleColumns.forEach(col => {
         width += col.width
       })
-      return width
+      return width + HPadding
     }
   )
   const screenWidth = derived(
@@ -70,18 +65,32 @@ export const deriveStores = context => {
       return Math.max($contentWidth - $screenWidth, 0)
     }
   )
-
-  // Derive whether to show scrollbars or not
-  const showVScrollbar = derived(
-    [contentHeight, height],
-    ([$contentHeight, $height]) => {
-      return $contentHeight > $height
-    }
-  )
   const showHScrollbar = derived(
     [contentWidth, screenWidth],
     ([$contentWidth, $screenWidth]) => {
       return $contentWidth > $screenWidth
+    }
+  )
+
+  // Derive vertical limits
+  const contentHeight = derived(
+    [rows, rowHeight, showHScrollbar],
+    ([$rows, $rowHeight, $showHScrollbar]) => {
+      let height = ($rows.length + 1) * $rowHeight + VPadding
+      if ($showHScrollbar) {
+        height += ScrollBarSize * 2
+      }
+      return height
+    }
+  )
+  const maxScrollTop = derived(
+    [height, contentHeight],
+    ([$height, $contentHeight]) => Math.max($contentHeight - $height, 0)
+  )
+  const showVScrollbar = derived(
+    [contentHeight, height],
+    ([$contentHeight, $height]) => {
+      return $contentHeight > $height
     }
   )
 

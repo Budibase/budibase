@@ -32,6 +32,7 @@
     inlineFilters,
     columnRenderMap,
     visibleColumns,
+    scrollTop,
   } = getContext("grid")
 
   let visible = false
@@ -44,6 +45,21 @@
   $: $datasource, (visible = false)
   $: selectedRowCount = Object.values($selectedRows).length
   $: hasNoRows = !$rows.length
+  $: renderedRowCount = $renderedRows.length
+  $: offset = getOffset($hasNextPage, renderedRowCount, $rowHeight, $scrollTop)
+
+  const getOffset = (hasNextPage, rowCount, rowHeight, scrollTop) => {
+    // If we have a next page of data then we aren't truly at the bottom, so we
+    // render the add row component at the top
+    if (hasNextPage) {
+      return 0
+    }
+    offset = rowCount * rowHeight - (scrollTop % rowHeight)
+    if (rowCount !== 0) {
+      offset -= 1
+    }
+    return offset
+  }
 
   const addRow = async () => {
     // Blur the active cell and tick to let final value updates propagate
@@ -89,12 +105,6 @@
       return
     }
 
-    // If we have a next page of data then we aren't truly at the bottom, so we
-    // render the add row component at the top
-    if ($hasNextPage) {
-      offset = 0
-    }
-
     // If we don't have a next page then we're at the bottom and can scroll to
     // the max available offset
     else {
@@ -102,10 +112,6 @@
         ...state,
         top: $maxScrollTop,
       }))
-      offset = $renderedRows.length * $rowHeight - ($maxScrollTop % $rowHeight)
-      if ($renderedRows.length !== 0) {
-        offset -= 1
-      }
     }
 
     // Update state and select initial cell
@@ -175,39 +181,41 @@
 <!-- Only show new row functionality if we have any columns -->
 {#if visible}
   <div
-    class="container"
+    class="new-row"
     class:floating={offset > 0}
     style="--offset:{offset}px; --sticky-width:{width}px;"
   >
     <div class="underlay sticky" transition:fade|local={{ duration: 130 }} />
     <div class="underlay" transition:fade|local={{ duration: 130 }} />
     <div class="sticky-column" transition:fade|local={{ duration: 130 }}>
-      <GutterCell expandable on:expand={addViaModal} rowHovered>
-        <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
-        {#if isAdding}
-          <div in:fade={{ duration: 130 }} class="loading-overlay" />
-        {/if}
-      </GutterCell>
-      {#if $displayColumn}
-        {@const cellId = getCellID(NewRowID, $displayColumn.name)}
-        <DataCell
-          {cellId}
-          rowFocused
-          column={$displayColumn}
-          row={newRow}
-          focused={$focusedCellId === cellId}
-          width={$displayColumn.width}
-          {updateValue}
-          topRow={offset === 0}
-        >
-          {#if $displayColumn?.schema?.autocolumn}
-            <div class="readonly-overlay">Can't edit auto column</div>
-          {/if}
+      <div class="row">
+        <GutterCell expandable on:expand={addViaModal} rowHovered>
+          <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
           {#if isAdding}
             <div in:fade={{ duration: 130 }} class="loading-overlay" />
           {/if}
-        </DataCell>
-      {/if}
+        </GutterCell>
+        {#if $displayColumn}
+          {@const cellId = getCellID(NewRowID, $displayColumn.name)}
+          <DataCell
+            {cellId}
+            rowFocused
+            column={$displayColumn}
+            row={newRow}
+            focused={$focusedCellId === cellId}
+            width={$displayColumn.width}
+            {updateValue}
+            topRow={offset === 0}
+          >
+            {#if $displayColumn?.schema?.autocolumn}
+              <div class="readonly-overlay">Can't edit auto column</div>
+            {/if}
+            {#if isAdding}
+              <div in:fade={{ duration: 130 }} class="loading-overlay" />
+            {/if}
+          </DataCell>
+        {/if}
+      </div>
     </div>
     <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally attachHandlers>
@@ -274,7 +282,7 @@
     margin-left: -6px;
   }
 
-  .container {
+  .new-row {
     position: absolute;
     top: var(--default-row-height);
     left: 0;
@@ -284,10 +292,10 @@
     flex-direction: row;
     align-items: stretch;
   }
-  .container :global(.cell) {
+  .new-row :global(.cell) {
     --cell-background: var(--spectrum-global-color-gray-75) !important;
   }
-  .container.floating :global(.cell) {
+  .new-row.floating :global(.cell) {
     height: calc(var(--row-height) + 1px);
     border-top: var(--cell-border);
   }
@@ -316,8 +324,10 @@
     pointer-events: all;
     z-index: 3;
     position: absolute;
-    top: calc(var(--row-height) + var(--offset) + 24px);
-    left: 18px;
+    top: calc(
+      var(--row-height) + var(--offset) + var(--default-row-height) / 2
+    );
+    left: calc(var(--default-row-height) / 2);
   }
   .button-with-keys {
     display: flex;
