@@ -1,6 +1,7 @@
 import * as setup from "./utilities"
 import { FilterConditions } from "../steps/filter"
-import TestConfiguration from "src/tests/utilities/TestConfiguration"
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
+import { AutomationActionStepId } from "@budibase/types"
 
 describe("test the filter logic", () => {
   const config = new TestConfiguration()
@@ -19,7 +20,7 @@ describe("test the filter logic", () => {
     value: any,
     pass = true
   ) {
-    let res = await setup.runStep(config, setup.actions.FILTER.stepId, {
+    let res = await setup.runStep(config, AutomationActionStepId.FILTER, {
       field,
       condition,
       value,

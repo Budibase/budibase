@@ -1,9 +1,47 @@
+import TestConfiguration from "../../../../../src/tests/utilities/TestConfiguration"
 import { generateMakeRequest, MakeRequestResponse } from "./utils"
 import { User } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 
 import * as workerRequests from "../../../../utilities/workerRequests"
-import TestConfiguration from "../../../../../src/tests/utilities/TestConfiguration"
+
+function user() {
+  return {
+    _id: "user",
+    _rev: "rev",
+    createdAt: Date.now(),
+    email: "test@example.com",
+    roles: {},
+    tenantId: "default",
+    status: "active",
+  }
+}
+
+jest.mock("../../../../utilities/workerRequests", () => ({
+  getGlobalUsers: jest.fn(() => {
+    return {
+      _id: "us_uuid1",
+    }
+  }),
+  getGlobalSelf: jest.fn(() => {
+    return {
+      _id: "us_uuid1",
+    }
+  }),
+  allGlobalUsers: jest.fn(() => {
+    return [user()]
+  }),
+  readGlobalUser: jest.fn(() => {
+    return user()
+  }),
+  saveGlobalUser: jest.fn(() => {
+    return { _id: "user", _rev: "rev" }
+  }),
+  deleteGlobalUser: jest.fn(() => {
+    return { message: "deleted user" }
+  }),
+  removeAppFromUserRoles: jest.fn(),
+}))
 
 const mockedWorkerReq = jest.mocked(workerRequests)
 

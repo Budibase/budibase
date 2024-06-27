@@ -1,4 +1,5 @@
 import {
+  AutomationActionStepId,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -9,7 +10,7 @@ import {
   TableSourceType,
 } from "@budibase/types"
 
-import { runStep, actions } from "./utilities"
+import { runStep } from "./utilities"
 import * as uuid from "uuid"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 
@@ -37,7 +38,7 @@ describe("test the update row action", () => {
   })
 
   it("should be able to run the action", async () => {
-    const res = await runStep(config, actions.UPDATE_ROW.stepId, inputs)
+    const res = await runStep(config, AutomationActionStepId.UPDATE_ROW, inputs)
     expect(res.success).toEqual(true)
     const updatedRow = await config.api.row.get(table._id!, res.id)
     expect(updatedRow.name).toEqual("Updated name")
@@ -45,12 +46,12 @@ describe("test the update row action", () => {
   })
 
   it("should check invalid inputs return an error", async () => {
-    const res = await runStep(config, actions.UPDATE_ROW.stepId, {})
+    const res = await runStep(config, AutomationActionStepId.UPDATE_ROW, {})
     expect(res.success).toEqual(false)
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const res = await runStep(config, actions.UPDATE_ROW.stepId, {
+    const res = await runStep(config, AutomationActionStepId.UPDATE_ROW, {
       row: { _id: "invalid" },
       rowId: "invalid",
     })
@@ -93,7 +94,7 @@ describe("test the update row action", () => {
     expect(getResp.user1[0]._id).toEqual(user1._id)
     expect(getResp.user2[0]._id).toEqual(user2._id)
 
-    let stepResp = await runStep(config, actions.UPDATE_ROW.stepId, {
+    let stepResp = await runStep(config, AutomationActionStepId.UPDATE_ROW, {
       rowId: row._id,
       row: {
         _id: row._id,
@@ -146,7 +147,7 @@ describe("test the update row action", () => {
     expect(getResp.user1[0]._id).toEqual(user1._id)
     expect(getResp.user2[0]._id).toEqual(user2._id)
 
-    let stepResp = await runStep(config, actions.UPDATE_ROW.stepId, {
+    let stepResp = await runStep(config, AutomationActionStepId.UPDATE_ROW, {
       rowId: row._id,
       row: {
         _id: row._id,

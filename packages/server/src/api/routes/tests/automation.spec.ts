@@ -14,7 +14,7 @@ import sdk from "../../../sdk"
 import { Automation } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
-import TestConfiguration from "src/tests/utilities/TestConfiguration"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 const MAX_RETRIES = 4
 let {

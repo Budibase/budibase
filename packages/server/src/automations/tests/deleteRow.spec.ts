@@ -1,5 +1,6 @@
+import { AutomationActionStepId } from "@budibase/types"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
-import { actions, runStep } from "./utilities"
+import { runStep } from "./utilities"
 
 describe("test the delete row action", () => {
   let table: any
@@ -24,11 +25,17 @@ describe("test the delete row action", () => {
   })
 
   it("should be able to run the action", async () => {
-    const res = await runStep(config, actions.DELETE_ROW.stepId, inputs)
-    expect(res).toEqual({ success: true })
-    expect(res.success).toEqual(true)
-    expect(res.response).toBeDefined()
-    expect(res.row._id).toEqual(row._id)
+    const res = await runStep(config, AutomationActionStepId.DELETE_ROW, inputs)
+    expect(res).toEqual(
+      expect.objectContaining({
+        success: true,
+        response: expect.any(Object),
+        row: expect.objectContaining({
+          _id: row._id,
+        }),
+      })
+    )
+
     await config.api.row.get(table._id, res.row._id, {
       status: 404,
     })
@@ -36,21 +43,21 @@ describe("test the delete row action", () => {
 
   it("check usage quota attempts", async () => {
     await config.withEnv({ NODE_ENV: "production" }, async () => {
-      await runStep(config, actions.DELETE_ROW.stepId, inputs)
+      await runStep(config, AutomationActionStepId.DELETE_ROW, inputs)
     })
   })
 
   it("should check invalid inputs return an error", async () => {
-    const res = await runStep(config, actions.DELETE_ROW.stepId, {})
-    expect(res.success).toEqual(false)
+    const res = await runStep(config, AutomationActionStepId.DELETE_ROW, {})
+    expect(res).toEqual(expect.objectContaining({ success: false }))
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const res = await runStep(config, actions.DELETE_ROW.stepId, {
+    const res = await runStep(config, AutomationActionStepId.DELETE_ROW, {
       tableId: "invalid",
       id: "invalid",
       revision: "invalid",
     })
-    expect(res.success).toEqual(false)
+    expect(res).toEqual(expect.objectContaining({ success: false }))
   })
 })

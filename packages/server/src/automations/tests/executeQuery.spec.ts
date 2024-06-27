@@ -1,20 +1,13 @@
-import { Datasource, Query, SourceName } from "@budibase/types"
-import * as setup from "./utilities"
-import { DatabaseName, getDatasource } from "../../integrations/tests/utils"
-import knex, { Knex } from "knex"
+import { AutomationActionStepId, Datasource, Query } from "@budibase/types"
+import { runStep } from "./utilities"
+import {
+  DatabaseName,
+  getDatasource,
+  knexClient,
+} from "../../integrations/tests/utils"
+import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
-
-function getKnexClientName(source: SourceName) {
-  switch (source) {
-    case SourceName.MYSQL:
-      return "mysql2"
-    case SourceName.SQL_SERVER:
-      return "mssql"
-    case SourceName.POSTGRES:
-      return "pg"
-  }
-  throw new Error(`Unsupported source: ${source}`)
-}
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 
 describe.each(
   [
@@ -24,21 +17,19 @@ describe.each(
     DatabaseName.MARIADB,
   ].map(name => [name, getDatasource(name)])
 )("execute query action (%s)", (_, dsProvider) => {
+  const config = new TestConfiguration()
+
   let tableName: string
   let client: Knex
   let datasource: Datasource
   let query: Query
-  let config = setup.getConfig()
 
   beforeAll(async () => {
     await config.init()
 
     const ds = await dsProvider
     datasource = await config.api.datasource.create(ds)
-    client = knex({
-      client: getKnexClientName(ds.source),
-      connection: ds.config,
-    })
+    client = await knexClient(ds)
   })
 
   beforeEach(async () => {
@@ -66,10 +57,12 @@ describe.each(
     await client.schema.dropTable(tableName)
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to execute a query", async () => {
-    let res = await setup.runStep(config, setup.actions.EXECUTE_QUERY.stepId, {
+    let res = await runStep(config, AutomationActionStepId.EXECUTE_QUERY, {
       query: { queryId: query._id },
     })
     expect(res.response).toEqual([{ a: "string", b: 1 }])
@@ -77,7 +70,7 @@ describe.each(
   })
 
   it("should handle a null query value", async () => {
-    let res = await setup.runStep(config, setup.actions.EXECUTE_QUERY.stepId, {
+    let res = await runStep(config, AutomationActionStepId.EXECUTE_QUERY, {
       query: null,
     })
     expect(res.response.message).toEqual("Invalid inputs")
@@ -85,7 +78,7 @@ describe.each(
   })
 
   it("should handle an error executing a query", async () => {
-    let res = await setup.runStep(config, setup.actions.EXECUTE_QUERY.stepId, {
+    let res = await runStep(config, AutomationActionStepId.EXECUTE_QUERY, {
       query: { queryId: "wrong_id" },
     })
     expect(res.response).toBeDefined()

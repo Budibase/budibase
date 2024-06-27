@@ -51,6 +51,7 @@ const ACTION_IMPLS: Record<
   integromat: make.run,
   n8n: n8n.run,
 }
+
 export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
   {
     SEND_EMAIL_SMTP: sendSmtpEmail.definition,

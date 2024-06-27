@@ -17,7 +17,7 @@ import {
 } from "@budibase/types"
 import { structures } from "./utilities"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import TestConfiguration from "src/tests/utilities/TestConfiguration"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 const { basicRow } = structures
 const { BUILTIN_ROLE_IDS } = roles

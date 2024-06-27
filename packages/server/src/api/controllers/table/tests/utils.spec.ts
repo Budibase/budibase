@@ -3,13 +3,16 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { importToRows } from "../utils"
 
 describe("utils", () => {
-  const config = new TestConfiguration()
+  let config: TestConfiguration
 
   beforeEach(async () => {
+    config = new TestConfiguration()
     await config.init()
   })
 
-  afterAll(config.end)
+  afterEach(() => {
+    config.end()
+  })
 
   describe("importToRows", () => {
     it("consecutive row have consecutive auto ids", async () => {

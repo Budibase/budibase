@@ -1,21 +1,23 @@
 jest.spyOn(global.console, "error")
 
-import * as setup from "./utilities"
-import * as automation from "../index"
+import { runStep } from "./utilities"
+import { init, shutdown } from "../index"
 import { serverLogAutomation } from "../../tests/utilities/structures"
 import env from "../../environment"
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
+import { AutomationActionStepId } from "@budibase/types"
 
 describe("Test triggering an automation from another automation", () => {
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
-    await automation.init()
+    await init()
     await config.init()
   })
 
   afterAll(async () => {
-    await automation.shutdown()
-    setup.afterAll()
+    await shutdown()
+    config.end()
   })
 
   it("should trigger an other server log automation", async () => {
@@ -28,9 +30,9 @@ describe("Test triggering an automation from another automation", () => {
         timeout: env.getDefaults().AUTOMATION_THREAD_TIMEOUT,
       },
     }
-    const res = await setup.runStep(
+    const res = await runStep(
       config,
-      setup.actions.TRIGGER_AUTOMATION_RUN.stepId,
+      AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
       inputs
     )
     // Check if the SERVER_LOG step was successful
@@ -44,9 +46,9 @@ describe("Test triggering an automation from another automation", () => {
         timeout: env.getDefaults().AUTOMATION_THREAD_TIMEOUT,
       },
     }
-    const res = await setup.runStep(
+    const res = await runStep(
       config,
-      setup.actions.TRIGGER_AUTOMATION_RUN.stepId,
+      AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
       inputs
     )
     expect(res.success).toBe(false)

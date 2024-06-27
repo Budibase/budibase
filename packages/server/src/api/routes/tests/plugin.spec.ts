@@ -20,14 +20,15 @@ const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
 
 describe("/plugins", () => {
-  const config = new TestConfiguration()
+  let config: TestConfiguration
 
   beforeEach(async () => {
+    config = new TestConfiguration()
     await config.init()
     jest.clearAllMocks()
   })
 
-  afterAll(() => {
+  afterEach(() => {
     config.end()
   })
 

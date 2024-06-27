@@ -7,11 +7,12 @@ import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration
 const { basicWebhook, basicAutomation, collectAutomation } = structures
 
 describe("/webhooks", () => {
-  const config = new TestConfiguration()
+  let config: TestConfiguration
   let webhook: Webhook
   let cleanupEnv: () => void
 
-  const setupTest = async () => {
+  beforeEach(async () => {
+    config = new TestConfiguration()
     cleanupEnv = config.setEnv({ SELF_HOSTED: "true" })
     await config.init()
     const autoConfig = basicAutomation()
@@ -22,11 +23,9 @@ describe("/webhooks", () => {
     autoConfig.definition.trigger.inputs = {}
     await config.createAutomation(autoConfig)
     webhook = await config.createWebhook()
-  }
+  })
 
-  beforeAll(setupTest)
-
-  afterAll(() => {
+  afterEach(() => {
     config.end()
     cleanupEnv()
   })
@@ -55,8 +54,6 @@ describe("/webhooks", () => {
   })
 
   describe("fetch", () => {
-    beforeAll(setupTest)
-
     it("returns the correct routing for basic user", async () => {
       const res = await config
         .request!.get(`/api/webhooks`)
@@ -77,8 +74,6 @@ describe("/webhooks", () => {
   })
 
   describe("delete", () => {
-    beforeAll(setupTest)
-
     it("should successfully delete", async () => {
       const res = await config
         .request!.delete(`/api/webhooks/${webhook._id}/${webhook._rev}`)
@@ -99,8 +94,6 @@ describe("/webhooks", () => {
   })
 
   describe("build schema", () => {
-    beforeAll(setupTest)
-
     it("should allow building a schema", async () => {
       const res = await config
         .request!.post(

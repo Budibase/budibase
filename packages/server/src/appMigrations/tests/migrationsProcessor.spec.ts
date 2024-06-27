@@ -7,14 +7,10 @@ import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 const futureTimestamp = `20500101174029`
 
 describe("migrationsProcessor", () => {
-  const config = new TestConfiguration()
-
-  beforeAll(async () => {
-    await config.init()
-  })
+  let config: TestConfiguration | undefined = undefined
 
   afterAll(() => {
-    config.end()
+    config?.end()
   })
 
   it("running migrations will update the latest applied migration", async () => {
@@ -23,6 +19,9 @@ describe("migrationsProcessor", () => {
       { id: `${futureTimestamp}_124`, func: async () => {} },
       { id: `${futureTimestamp}_125`, func: async () => {} },
     ]
+
+    config = new TestConfiguration()
+    await config.init()
 
     const appId = config.getAppId()
 
@@ -44,6 +43,9 @@ describe("migrationsProcessor", () => {
         },
       },
     ]
+
+    config = new TestConfiguration()
+    await config.init()
 
     const appId = config.getAppId()
 

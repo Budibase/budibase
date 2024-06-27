@@ -1,16 +1,20 @@
-import { getConfig, afterAll, runStep, actions } from "./utilities"
+import { AutomationActionStepId } from "@budibase/types"
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
+import { runStep } from "./utilities"
 
 describe("test the outgoing webhook action", () => {
-  let config = getConfig()
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
   })
 
-  afterAll()
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to run the action and default to 'get'", async () => {
-    const res = await runStep(config, actions.n8n.stepId, {
+    const res = await runStep(config, AutomationActionStepId.n8n, {
       url: "http://www.example.com",
       body: {
         test: "IGNORE_ME",
@@ -24,7 +28,7 @@ describe("test the outgoing webhook action", () => {
 
   it("should add the payload props when a JSON string is provided", async () => {
     const payload = `{ "name": "Adam", "age": 9 }`
-    const res = await runStep(config, actions.n8n.stepId, {
+    const res = await runStep(config, AutomationActionStepId.n8n, {
       body: {
         value: payload,
       },
@@ -39,7 +43,7 @@ describe("test the outgoing webhook action", () => {
 
   it("should return a 400 if the JSON payload string is malformed", async () => {
     const payload = `{ value1 1 }`
-    const res = await runStep(config, actions.n8n.stepId, {
+    const res = await runStep(config, AutomationActionStepId.n8n, {
       value1: "ONE",
       body: {
         value: payload,
@@ -53,7 +57,7 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should not append the body if the method is HEAD", async () => {
-    const res = await runStep(config, actions.n8n.stepId, {
+    const res = await runStep(config, AutomationActionStepId.n8n, {
       url: "http://www.example.com",
       method: "HEAD",
       body: {

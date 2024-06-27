@@ -1,5 +1,6 @@
+import { AutomationActionStepId } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { runStep, actions } from "./utilities"
+import { runStep } from "./utilities"
 
 describe("test the server log action", () => {
   const config = new TestConfiguration()
@@ -13,7 +14,7 @@ describe("test the server log action", () => {
   })
 
   it("should be able to log the text", async () => {
-    let res = await runStep(config, actions.SERVER_LOG.stepId, {
+    let res = await runStep(config, AutomationActionStepId.SERVER_LOG, {
       text: "log message",
     })
     expect(res.message).toEqual(`App ${config.getAppId()} - log message`)

@@ -1,5 +1,6 @@
+import { AutomationActionStepId } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { runStep, actions } from "./utilities"
+import { runStep } from "./utilities"
 
 describe("test the outgoing webhook action", () => {
   const config = new TestConfiguration()
@@ -13,7 +14,7 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should be able to run the action", async () => {
-    const res = await runStep(config, actions.OUTGOING_WEBHOOK.stepId, {
+    const res = await runStep(config, AutomationActionStepId.OUTGOING_WEBHOOK, {
       requestMethod: "POST",
       url: "www.example.com",
       requestBody: JSON.stringify({
@@ -27,7 +28,7 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should return an error if something goes wrong in fetch", async () => {
-    const res = await runStep(config, actions.OUTGOING_WEBHOOK.stepId, {
+    const res = await runStep(config, AutomationActionStepId.OUTGOING_WEBHOOK, {
       requestMethod: "GET",
       url: "www.invalid.com",
     })

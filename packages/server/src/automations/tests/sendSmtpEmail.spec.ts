@@ -1,4 +1,7 @@
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 import * as workerRequests from "../../utilities/workerRequests"
+import { runStep } from "./utilities"
+import { AutomationActionStepId } from "@budibase/types"
 
 jest.mock("../../utilities/workerRequests", () => ({
   sendSmtpEmail: jest.fn(),
@@ -18,16 +21,16 @@ function generateResponse(to: string, from: string) {
   }
 }
 
-const setup = require("./utilities")
-
 describe("test the outgoing webhook action", () => {
-  let inputs
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
+
   beforeAll(async () => {
     await config.init()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to run the action", async () => {
     jest
@@ -42,7 +45,7 @@ describe("test the outgoing webhook action", () => {
       location: "location",
       url: "url",
     }
-    inputs = {
+    const inputs = {
       to: "user1@example.com",
       from: "admin@example.com",
       subject: "hello",
@@ -57,9 +60,9 @@ describe("test the outgoing webhook action", () => {
       ...invite,
     }
     let resp = generateResponse(inputs.to, inputs.from)
-    const res = await setup.runStep(
+    const res = await runStep(
       config,
-      setup.actions.SEND_EMAIL_SMTP.stepId,
+      AutomationActionStepId.SEND_EMAIL_SMTP,
       inputs
     )
     expect(res.response).toEqual(resp)

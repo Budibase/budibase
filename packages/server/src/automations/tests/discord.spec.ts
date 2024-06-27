@@ -1,5 +1,6 @@
+import { AutomationActionStepId } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { runStep, actions } from "./utilities"
+import { runStep } from "./utilities"
 
 jest.mock("node-fetch")
 
@@ -15,7 +16,7 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should be able to run the action", async () => {
-    const res = await runStep(config, actions.discord.stepId, {
+    const res = await runStep(config, AutomationActionStepId.discord, {
       username: "joe_bloggs",
       url: "http://www.example.com",
     })

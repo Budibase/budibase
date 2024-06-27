@@ -1,5 +1,6 @@
+import { AutomationActionStepId } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { runStep, actions } from "./utilities"
+import { runStep } from "./utilities"
 
 describe("test the execute script action", () => {
   const config = new TestConfiguration()
@@ -13,7 +14,7 @@ describe("test the execute script action", () => {
   })
 
   it("should be able to execute a script", async () => {
-    const res = await runStep(config, actions.EXECUTE_SCRIPT.stepId, {
+    const res = await runStep(config, AutomationActionStepId.EXECUTE_SCRIPT, {
       code: "return 1 + 1",
     })
     expect(res.value).toEqual(2)
@@ -21,7 +22,7 @@ describe("test the execute script action", () => {
   })
 
   it("should handle a null value", async () => {
-    const res = await runStep(config, actions.EXECUTE_SCRIPT.stepId, {
+    const res = await runStep(config, AutomationActionStepId.EXECUTE_SCRIPT, {
       code: null,
     })
     expect(res.response.message).toEqual("Invalid inputs")
@@ -31,7 +32,7 @@ describe("test the execute script action", () => {
   it("should be able to get a value from context", async () => {
     const res = await runStep(
       config,
-      actions.EXECUTE_SCRIPT.stepId,
+      AutomationActionStepId.EXECUTE_SCRIPT,
       {
         code: "return steps.map(d => d.value)",
       },
@@ -45,7 +46,7 @@ describe("test the execute script action", () => {
   })
 
   it("should be able to handle an error gracefully", async () => {
-    const res = await runStep(config, actions.EXECUTE_SCRIPT.stepId, {
+    const res = await runStep(config, AutomationActionStepId.EXECUTE_SCRIPT, {
       code: "return something.map(x => x.name)",
     })
     expect(res.response).toEqual("ReferenceError: something is not defined")
