@@ -122,6 +122,8 @@ export interface QueryJson {
     table: Table
     tables?: Record<string, Table>
     renamed?: RenameColumn
+    // can specify something that columns could be prefixed with
+    columnPrefix?: string
   }
   extra?: {
     idFilter?: SearchFilters
