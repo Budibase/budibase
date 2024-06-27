@@ -41,7 +41,7 @@
         allSettings.push(setting)
       }
     })
-    return allSettings.filter(setting => setting.showInBar)
+    return allSettings.filter(setting => setting.showInBar && !setting.hidden)
   }
 
   const updatePosition = () => {
