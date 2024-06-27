@@ -1,17 +1,15 @@
 import { runStep } from "./utilities"
 
 import environment from "../../environment"
-import openai from "openai"
+import { OpenAI } from "openai"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 import { AutomationActionStepId } from "@budibase/types"
 
-jest.mock(
-  "openai",
-  jest.fn(() => ({
-    Configuration: jest.fn(),
-    OpenAIApi: jest.fn(() => ({
-      createChatCompletion: jest.fn(() => ({
-        data: {
+jest.mock("openai", () => ({
+  OpenAI: jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: jest.fn(() => ({
           choices: [
             {
               message: {
@@ -19,15 +17,13 @@ jest.mock(
               },
             },
           ],
-        },
-      })),
-    })),
-  }))
-)
+        })),
+      },
+    },
+  })),
+}))
 
-const mockedOpenAIApi = openai.OpenAIApi as jest.MockedClass<
-  typeof openai.OpenAIApi
->
+const mockedOpenAI = OpenAI as jest.MockedClass<typeof OpenAI>
 
 const OPENAI_PROMPT = "What is the meaning of life?"
 
@@ -77,14 +73,18 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when an error is thrown from the createChatCompletion call", async () => {
-    mockedOpenAIApi.mockImplementation(
+    mockedOpenAI.mockImplementation(
       () =>
         ({
-          createChatCompletion: jest.fn(() => {
-            throw new Error(
-              "An error occurred while calling createChatCompletion"
-            )
-          }),
+          chat: {
+            completions: {
+              create: jest.fn(() => {
+                throw new Error(
+                  "An error occurred while calling createChatCompletion"
+                )
+              }),
+            },
+          },
         } as any)
     )
 
