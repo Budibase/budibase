@@ -130,6 +130,7 @@
   on:mouseup={stopSelectionCallback}
   on:click={handleClick}
   width={column.width}
+  metadata={row.__metadata?.[column.name]}
 >
   <svelte:component
     this={getCellRenderer(column)}

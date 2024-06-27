@@ -5,6 +5,51 @@ import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
+import { QueryUtils } from "../../../utils"
+
+const evaluateConditions = (row, column) => {
+  if (!column.conditions?.length) {
+    return
+  }
+  for (let condition of column.conditions) {
+    let value = row[column.name]
+    let referenceValue = condition.referenceValue
+
+    // Parse values into correct types
+    if (condition.valueType === "number") {
+      referenceValue = parseFloat(referenceValue)
+      value = parseFloat(value)
+    } else if (condition.valueType === "datetime") {
+      if (referenceValue) {
+        referenceValue = new Date(referenceValue).toISOString()
+      }
+      if (value) {
+        value = new Date(value).toISOString()
+      }
+    } else if (condition.valueType === "boolean") {
+      referenceValue = `${referenceValue}`.toLowerCase() === "true"
+      value = `${value}`.toLowerCase() === "true"
+    }
+
+    // Build lucene compatible condition expression
+    const luceneCondition = {
+      operator: condition.operator,
+      type: condition.valueType,
+      field: "value",
+      value: referenceValue,
+    }
+    const query = QueryUtils.buildQuery([luceneCondition])
+    const result = QueryUtils.runQuery([{ value }], query)
+    if (result.length > 0) {
+      if (!row.__metadata) {
+        row.__metadata = {}
+      }
+      row.__metadata[column.name] = {
+        background: condition.color,
+      }
+    }
+  }
+}
 
 export const createStores = () => {
   const rows = writable([])
@@ -17,15 +62,47 @@ export const createStores = () => {
   const error = writable(null)
   const fetch = writable(null)
 
+  // Mark loaded as true if we've ever stopped loading
+  let hasStartedLoading = false
+  loading.subscribe($loading => {
+    if ($loading) {
+      hasStartedLoading = true
+    } else if (hasStartedLoading) {
+      loaded.set(true)
+    }
+  })
+
+  return {
+    rows,
+    fetch,
+    loaded,
+    refreshing,
+    loading,
+    rowChangeCache,
+    inProgressChanges,
+    hasNextPage,
+    error,
+  }
+}
+
+export const deriveStores = context => {
+  const { rows, columns, rowChangeCache } = context
+
   // Enrich rows with an index property and any pending changes
   const enrichedRows = derived(
-    [rows, rowChangeCache],
-    ([$rows, $rowChangeCache]) => {
-      return $rows.map((row, idx) => ({
-        ...row,
-        ...$rowChangeCache[row._id],
-        __idx: idx,
-      }))
+    [rows, rowChangeCache, columns],
+    ([$rows, $rowChangeCache, $columns]) => {
+      return $rows.map((row, idx) => {
+        let enriched = {
+          ...row,
+          ...$rowChangeCache[row._id],
+          __idx: idx,
+        }
+        for (let column of $columns) {
+          evaluateConditions(enriched, column)
+        }
+        return enriched
+      })
     }
   )
 
@@ -38,30 +115,12 @@ export const createStores = () => {
     return map
   })
 
-  // Mark loaded as true if we've ever stopped loading
-  let hasStartedLoading = false
-  loading.subscribe($loading => {
-    if ($loading) {
-      hasStartedLoading = true
-    } else if (hasStartedLoading) {
-      loaded.set(true)
-    }
-  })
-
   return {
     rows: {
       ...rows,
       subscribe: enrichedRows.subscribe,
     },
-    fetch,
     rowLookupMap,
-    loaded,
-    refreshing,
-    loading,
-    rowChangeCache,
-    inProgressChanges,
-    hasNextPage,
-    error,
   }
 }
 
@@ -643,6 +702,7 @@ export const createActions = context => {
   const cleanRow = row => {
     let clone = { ...row }
     delete clone.__idx
+    delete clone.__metadata
     if (!get(hasBudibaseIdentifiers)) {
       delete clone._id
     }

@@ -91,6 +91,7 @@
       overrides[column.field] = {
         displayName: column.label,
         order: idx,
+        conditions: column.conditions,
       }
       if (column.width) {
         overrides[column.field].width = column.width
