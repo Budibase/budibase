@@ -14,7 +14,7 @@
     focusedRow,
     selectedRows,
     scrollableColumns,
-    scroll,
+    scrollLeft,
     isDragging,
     buttonColumnWidth,
     showVScrollbar,
@@ -28,8 +28,8 @@
     (total, col) => (total += col.width),
     0
   )
-  $: columnEnd = columnsWidth - $scroll.left - 1
-  $: gridEnd = $width - $buttonColumnWidth
+  $: columnEnd = columnsWidth - $scrollLeft - 1
+  $: gridEnd = $width - $buttonColumnWidth - 1
   $: left = Math.min(columnEnd, gridEnd)
 
   const handleClick = async (button, row) => {
@@ -41,7 +41,7 @@
   onMount(() => {
     const observer = new ResizeObserver(entries => {
       const width = entries?.[0]?.contentRect?.width ?? 0
-      buttonColumnWidth.set(width)
+      buttonColumnWidth.set(Math.floor(width) - 1)
     })
     observer.observe(container)
   })
