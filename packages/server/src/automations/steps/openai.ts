@@ -89,7 +89,7 @@ export async function run({ inputs }: AutomationStepInput) {
         },
       ],
     })
-    const response = completion?.choices[0].message.content
+    const response = completion?.choices[0]?.message?.content
 
     return {
       response,
