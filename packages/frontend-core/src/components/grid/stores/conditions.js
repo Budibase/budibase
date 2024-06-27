@@ -91,6 +91,7 @@ export const initialise = context => {
 
   // Recompute all metadata if conditions change
   conditions.subscribe($conditions => {
+    console.log($conditions)
     console.log("recomputing all conditions")
     let metadata = {}
     if ($conditions.length) {
