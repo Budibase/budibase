@@ -87,7 +87,7 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
 
   // Legacy
   // Find previously set values and add them to the update. Ensure empty relationships
-  // are added to the update is clearRelationships is true
+  // are added to the update if clearRelationships is true
   const legacyUpdated = Object.keys(inputs.row || {}).reduce(
     (acc: Record<string, any>, key: string) => {
       const isEmpty = inputs.row[key] == null || inputs.row[key]?.length === 0
@@ -119,10 +119,7 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
         return acc
       }
       acc[key] =
-        Object.hasOwn(inputs.row || {}, key) &&
-        (!inputs.row[key] || inputs.row[key]?.length === 0)
-          ? null
-          : inputs.row[key]
+        !inputs.row[key] || inputs.row[key]?.length === 0 ? "" : inputs.row[key]
       return acc
     },
     {}
