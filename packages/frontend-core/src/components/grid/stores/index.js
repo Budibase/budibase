@@ -20,6 +20,7 @@ import * as Table from "./datasources/table"
 import * as ViewV2 from "./datasources/viewV2"
 import * as NonPlus from "./datasources/nonPlus"
 import * as Cache from "./cache"
+import * as Conditions from "./conditions"
 
 const DependencyOrderedStores = [
   Sort,
@@ -33,6 +34,7 @@ const DependencyOrderedStores = [
   Scroll,
   Validation,
   Rows,
+  Conditions,
   UI,
   Resize,
   Viewport,

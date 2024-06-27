@@ -5,56 +5,6 @@ import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
-import { QueryUtils } from "../../../utils"
-
-const evaluateConditions = (row, column) => {
-  if (!column.conditions?.length) {
-    return
-  }
-  for (let condition of column.conditions) {
-    try {
-      const type = column.schema.type
-      let value = row[column.name]
-      let referenceValue = condition.referenceValue
-
-      // Coerce values into correct types for primitives
-      if (type === "number") {
-        referenceValue = parseFloat(referenceValue)
-        value = parseFloat(value)
-      } else if (type === "datetime") {
-        if (referenceValue) {
-          referenceValue = new Date(referenceValue).toISOString()
-        }
-        if (value) {
-          value = new Date(value).toISOString()
-        }
-      } else if (type === "boolean") {
-        referenceValue = `${referenceValue}`.toLowerCase() === "true"
-        value = `${value}`.toLowerCase() === "true"
-      }
-
-      // Build lucene compatible condition expression
-      const luceneFilter = {
-        operator: condition.operator,
-        type,
-        field: "value",
-        value: referenceValue,
-      }
-      const query = QueryUtils.buildQuery([luceneFilter])
-      const result = QueryUtils.runQuery([{ value }], query)
-      if (result.length > 0) {
-        if (!row.__metadata) {
-          row.__metadata = {}
-        }
-        row.__metadata[column.name] = {
-          background: condition.color,
-        }
-      }
-    } catch {
-      // Swallow
-    }
-  }
-}
 
 export const createStores = () => {
   const rows = writable([])
@@ -91,29 +41,15 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { rows, columns, rowChangeCache } = context
+  const { rows } = context
 
   // Enrich rows with an index property and any pending changes
-  const enrichedRows = derived(
-    [rows, rowChangeCache, columns],
-    ([$rows, $rowChangeCache, $columns]) => {
-      if (!$rows?.length || !$columns?.length) {
-        return []
-      }
-      console.log("ENRICH ROWS", $rows, $rowChangeCache, $columns)
-      return $rows.map((row, idx) => {
-        let enriched = {
-          ...row,
-          ...$rowChangeCache[row._id],
-          __idx: idx,
-        }
-        for (let column of $columns) {
-          evaluateConditions(enriched, column)
-        }
-        return enriched
-      })
-    }
-  )
+  const enrichedRows = derived(rows, $rows => {
+    return $rows.map((row, idx) => ({
+      ...row,
+      __idx: idx,
+    }))
+  })
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(enrichedRows, $enrichedRows => {

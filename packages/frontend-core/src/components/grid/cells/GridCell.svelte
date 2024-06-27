@@ -20,8 +20,11 @@
     if (selectedUser) {
       style += `--user-color :${selectedUser.color};`
     }
-    if (metadata?.background) {
-      style += `--cell-background: ${metadata.background};`
+    if (metadata?.backgroundColor) {
+      style += `--cell-background: ${metadata.backgroundColor};`
+    }
+    if (metadata?.textColor) {
+      style += `--cell-font-color: ${metadata.textColor};`
     }
     return style
   }
@@ -76,7 +79,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: flex-start;
-    color: var(--spectrum-global-color-gray-800);
+    color: var(--cell-font-color);
     font-size: var(--cell-font-size);
     gap: var(--cell-spacing);
     background: var(--cell-background);

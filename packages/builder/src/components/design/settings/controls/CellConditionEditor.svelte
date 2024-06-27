@@ -24,6 +24,16 @@
 
   const dispatch = createEventDispatcher()
   const flipDuration = 130
+  const conditionOptions = [
+    {
+      label: "Update background color",
+      value: "backgroundColor",
+    },
+    {
+      label: "Update text color",
+      value: "textColor",
+    },
+  ]
 
   let tempValue = []
   let drawer
@@ -57,6 +67,7 @@
   const addCondition = () => {
     const condition = {
       id: generate(),
+      metadataKey: conditionOptions[0].value,
       operator: Constants.OperatorOptions.Equals.value,
       valueType: FieldType.STRING,
     }
@@ -132,10 +143,15 @@
                 >
                   <Icon name="DragHandle" size="XL" />
                 </div>
-                <span>Set background color to</span>
+                <Select
+                  placeholder={null}
+                  options={conditionOptions}
+                  bind:value={condition.metadataKey}
+                />
+                <span>to</span>
                 <ColorPicker
-                  value={condition.color}
-                  on:change={e => (condition.color = e.detail)}
+                  value={condition.metadataValue}
+                  on:change={e => (condition.metadataValue = e.detail)}
                 />
                 <span>if value</span>
                 <Select
@@ -197,7 +213,7 @@
   }
   .condition {
     display: grid;
-    grid-template-columns: auto auto auto auto 1fr 1fr 1fr auto auto;
+    grid-template-columns: auto 1fr auto auto auto 1fr 1fr 1fr auto auto;
     align-items: center;
     grid-column-gap: var(--spacing-l);
   }

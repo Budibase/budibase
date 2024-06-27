@@ -166,7 +166,7 @@
 
   /* Don't show borders between cells in the sticky column */
   .sticky-column :global(.cell:not(:last-child)) {
-    border-right: none;
+    border-right-color: transparent;
   }
 
   .header {
