@@ -117,17 +117,15 @@
   />
 {:else if schema.type === "json"}
   <span>
-    <div class="field-wrap">
+    <div class="field-wrap json-field">
       <CodeEditor
         value={fieldData}
         on:change={e => {
-          if (e.detail?.value !== fieldData) {
-            onChange({
-              row: {
-                [field]: e.detail,
-              },
-            })
-          }
+          onChange({
+            row: {
+              [field]: e.detail,
+            },
+          })
         }}
       />
     </div>
@@ -263,6 +261,10 @@
     border: 1px solid var(--spectrum-global-color-gray-400);
     border-radius: 4px;
     padding: var(--spacing-s);
+  }
+
+  .field-wrap.json-field {
+    height: 80px;
   }
 
   .field-wrap {
