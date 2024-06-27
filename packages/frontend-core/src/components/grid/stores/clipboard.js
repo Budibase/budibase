@@ -1,6 +1,7 @@
 import { derived, writable, get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 import { parseCellID, getCellID } from "../lib/utils"
+import { NewRowID } from "../lib/constants"
 
 export const createStores = () => {
   const clipboard = writable({
@@ -13,7 +14,8 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { clipboard, focusedCellAPI, selectedCellCount, config } = context
+  const { clipboard, focusedCellAPI, selectedCellCount, config, focusedRowId } =
+    context
 
   // Derive whether or not we're able to copy
   const copyAllowed = derived(focusedCellAPI, $focusedCellAPI => {
@@ -22,12 +24,19 @@ export const deriveStores = context => {
 
   // Derive whether or not we're able to paste
   const pasteAllowed = derived(
-    [clipboard, focusedCellAPI, selectedCellCount, config],
-    ([$clipboard, $focusedCellAPI, $selectedCellCount, $config]) => {
+    [clipboard, focusedCellAPI, selectedCellCount, config, focusedRowId],
+    ([
+      $clipboard,
+      $focusedCellAPI,
+      $selectedCellCount,
+      $config,
+      $focusedRowId,
+    ]) => {
       if (
         $clipboard.value == null ||
         !$config.canEditRows ||
-        !$focusedCellAPI
+        !$focusedCellAPI ||
+        $focusedRowId === NewRowID
       ) {
         return false
       }
