@@ -74,7 +74,7 @@
     TriggerStepID.ROW_DELETED,
   ]
 
-  let rowEvents = [
+  const rowEvents = [
     AutomationEventType.ROW_DELETE,
     AutomationEventType.ROW_SAVE,
     AutomationEventType.ROW_UPDATE,
