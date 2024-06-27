@@ -99,10 +99,15 @@ function cleanupFilters(
       key => (userColumnMap[key] = mapToUserColumn(key))
     )
   )
+
+  // sort longest first, don't find substrings
+  const userColumnList = Object.keys(userColumnMap).sort(
+    (a, b) => b.length - a.length
+  )
   // update the keys of filters to manage user columns
   for (let filter of Object.values(filters)) {
     for (let key of Object.keys(filter)) {
-      const found = Object.keys(userColumnMap).find(possibleColumn =>
+      const found = userColumnList.find(possibleColumn =>
         key.endsWith(possibleColumn)
       )
       if (found) {
