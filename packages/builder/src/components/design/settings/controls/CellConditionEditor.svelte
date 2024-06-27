@@ -7,6 +7,7 @@
     Layout,
     Select,
     Icon,
+    DatePicker,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
@@ -167,13 +168,28 @@
                   placeholder={null}
                   on:change={() => onValueTypeChange(condition)}
                 />
-                <DrawerBindableInput
-                  {bindings}
-                  disabled={condition.noValue}
-                  placeholder="Value"
-                  value={condition.referenceValue}
-                  on:change={e => (condition.referenceValue = e.detail)}
-                />
+                {#if type === FieldType.DATETIME && condition.valueType === type}
+                  <DatePicker
+                    placeholder="Value"
+                    disabled={condition.noValue}
+                    bind:value={condition.referenceValue}
+                  />
+                {:else if type === FieldType.BOOLEAN && condition.valueType === type}
+                  <Select
+                    placeholder="Value"
+                    disabled={condition.noValue}
+                    options={["True", "False"]}
+                    bind:value={condition.referenceValue}
+                  />
+                {:else}
+                  <DrawerBindableInput
+                    {bindings}
+                    placeholder="Value"
+                    disabled={condition.noValue}
+                    value={condition.referenceValue}
+                    on:change={e => (condition.referenceValue = e.detail)}
+                  />
+                {/if}
                 <Icon
                   name="Duplicate"
                   hoverable

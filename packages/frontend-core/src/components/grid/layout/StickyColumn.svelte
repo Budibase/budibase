@@ -175,6 +175,9 @@
   .header :global(.cell) {
     background: var(--grid-background-alt);
   }
+  .header :global(.cell::before) {
+    display: none;
+  }
   .row {
     display: flex;
     flex-direction: row;
