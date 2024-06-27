@@ -3,6 +3,7 @@
   import { Button } from "@budibase/bbui"
   import GridCell from "../cells/GridCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
+  import { BlankRowID } from "../lib/constants"
 
   const {
     renderedRows,
@@ -17,6 +18,7 @@
     isDragging,
     buttonColumnWidth,
     showVScrollbar,
+    dispatch,
   } = getContext("grid")
 
   let container
@@ -89,6 +91,17 @@
           </GridCell>
         </div>
       {/each}
+      <div
+        class="row blank"
+        on:mouseenter={$isDragging ? null : () => ($hoveredRowId = BlankRowID)}
+        on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+      >
+        <GridCell
+          width={$buttonColumnWidth}
+          highlighted={$hoveredRowId === BlankRowID}
+          on:click={() => dispatch("add-row-inline")}
+        />
+      </div>
     </GridScrollWrapper>
   </div>
 </div>
@@ -129,8 +142,11 @@
     align-items: center;
     gap: 4px;
   }
+  .blank :global(.cell:hover) {
+    cursor: pointer;
+  }
 
-  /* Add left cell border */
+  /* Add left cell border to all cells */
   .button-column :global(.cell) {
     border-left: var(--cell-border);
   }
