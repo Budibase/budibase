@@ -21,15 +21,13 @@ export const deriveStores = context => {
     [scrollTop, rowHeight],
     ([$scrollTop, $rowHeight]) => {
       return Math.floor($scrollTop / $rowHeight)
-    },
-    0
+    }
   )
   const visualRowCapacity = derived(
     [height, rowHeight],
     ([$height, $rowHeight]) => {
       return Math.ceil($height / $rowHeight) + 1
-    },
-    0
+    }
   )
   const renderedRows = derived(
     [
@@ -53,8 +51,7 @@ export const deriveStores = context => {
           ...$rowChangeCache[row._id],
           __metadata: $conditionMetadata[row._id],
         }))
-    },
-    []
+    }
   )
 
   // Derive visible columns
