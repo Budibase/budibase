@@ -2,6 +2,7 @@
   import { getContext, onMount } from "svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import GridRow from "./GridRow.svelte"
+  import GridCell from "../cells/GridCell.svelte"
   import { BlankRowID } from "../lib/constants"
   import ButtonColumn from "./ButtonColumn.svelte"
 
@@ -46,7 +47,6 @@
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div bind:this={body} class="grid-body">
   <GridScrollWrapper scrollHorizontally scrollVertically attachHandlers>
     {#each $renderedRows as row, idx}
@@ -54,13 +54,16 @@
     {/each}
     {#if $config.canAddRows}
       <div
-        class="blank"
-        class:highlighted={$hoveredRowId === BlankRowID}
-        style="width:{columnsWidth}px"
+        class="row blank"
         on:mouseenter={$isDragging ? null : () => ($hoveredRowId = BlankRowID)}
         on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
-        on:click={() => dispatch("add-row-inline")}
-      />
+      >
+        <GridCell
+          width={columnsWidth}
+          highlighted={$hoveredRowId === BlankRowID}
+          on:click={() => dispatch("add-row-inline")}
+        />
+      </div>
     {/if}
   </GridScrollWrapper>
   {#if $props.buttons?.length}
@@ -76,15 +79,13 @@
     overflow: hidden;
     flex: 1 1 auto;
   }
-  .blank {
-    height: var(--row-height);
-    background: var(--cell-background);
-    border-bottom: var(--cell-border);
-    border-right: var(--cell-border);
-    position: absolute;
+  .row {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
   }
-  .blank.highlighted {
-    background: var(--cell-background-hover);
+  .blank :global(.cell:hover) {
     cursor: pointer;
   }
 </style>

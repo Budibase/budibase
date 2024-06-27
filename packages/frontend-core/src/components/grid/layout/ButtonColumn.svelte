@@ -3,6 +3,7 @@
   import { Button } from "@budibase/bbui"
   import GridCell from "../cells/GridCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
+  import { BlankRowID } from "../lib/constants"
 
   const {
     renderedRows,
@@ -13,10 +14,11 @@
     focusedRow,
     selectedRows,
     scrollableColumns,
-    scroll,
+    scrollLeft,
     isDragging,
     buttonColumnWidth,
     showVScrollbar,
+    dispatch,
   } = getContext("grid")
 
   let container
@@ -26,8 +28,8 @@
     (total, col) => (total += col.width),
     0
   )
-  $: columnEnd = columnsWidth - $scroll.left - 1
-  $: gridEnd = $width - $buttonColumnWidth
+  $: columnEnd = columnsWidth - $scrollLeft - 1
+  $: gridEnd = $width - $buttonColumnWidth - 1
   $: left = Math.min(columnEnd, gridEnd)
 
   const handleClick = async (button, row) => {
@@ -39,7 +41,7 @@
   onMount(() => {
     const observer = new ResizeObserver(entries => {
       const width = entries?.[0]?.contentRect?.width ?? 0
-      buttonColumnWidth.set(width)
+      buttonColumnWidth.set(Math.floor(width) - 1)
     })
     observer.observe(container)
   })
@@ -91,6 +93,17 @@
           </GridCell>
         </div>
       {/each}
+      <div
+        class="row blank"
+        on:mouseenter={$isDragging ? null : () => ($hoveredRowId = BlankRowID)}
+        on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+      >
+        <GridCell
+          width={$buttonColumnWidth}
+          highlighted={$hoveredRowId === BlankRowID}
+          on:click={() => dispatch("add-row-inline")}
+        />
+      </div>
     </GridScrollWrapper>
   </div>
 </div>
@@ -131,8 +144,11 @@
     align-items: center;
     gap: 4px;
   }
+  .blank :global(.cell:hover) {
+    cursor: pointer;
+  }
 
-  /* Add left cell border */
+  /* Add left cell border to all cells */
   .button-column :global(.cell) {
     border-left: var(--cell-border);
   }
