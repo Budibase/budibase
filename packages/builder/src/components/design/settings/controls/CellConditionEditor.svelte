@@ -15,21 +15,36 @@
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { generate } from "shortid"
   import { FieldType } from "@budibase/types"
+  import { dndzone } from "svelte-dnd-action"
+  import { flip } from "svelte/animate"
 
   export let componentInstance
   export let bindings
   export let value
 
   const dispatch = createEventDispatcher()
+  const flipDuration = 130
 
   let tempValue = []
   let drawer
+  let dragDisabled = true
 
   $: conditionCount = value?.length
   $: conditionText = `${conditionCount || "No"} condition${
     conditionCount !== 1 ? "s" : ""
   } set`
-  $: valueTypeOptions = getValueTypeOptions(componentInstance.columnType)
+  $: type = componentInstance.columnType
+  $: valueTypeOptions = [
+    {
+      label: "Binding",
+      value: FieldType.STRING,
+    },
+    {
+      label: "Value",
+      value: type,
+    },
+  ]
+  $: operatorOptions = QueryUtils.getValidOperatorsForType({ type })
 
   const openDrawer = () => {
     tempValue = cloneDeep(value || [])
@@ -39,23 +54,6 @@
   const save = async () => {
     dispatch("change", tempValue)
     drawer.hide()
-  }
-
-  const getValueTypeOptions = type => {
-    let options = [
-      {
-        label: "Binding",
-        value: FieldType.STRING,
-      },
-    ]
-    const operatorOptions = QueryUtils.getValidOperatorsForType({ type })
-    if (operatorOptions.length) {
-      options.push({
-        label: "Value",
-        value: type,
-      })
-    }
-    return options
   }
 
   const addCondition = () => {
@@ -76,10 +74,6 @@
     tempValue = tempValue.filter(c => c.id !== condition.id)
   }
 
-  const getOperatorOptions = condition => {
-    return QueryUtils.getValidOperatorsForType({ type: condition.valueType })
-  }
-
   const onOperatorChange = (condition, newOperator) => {
     const noValueOptions = [
       Constants.OperatorOptions.Empty.value,
@@ -92,68 +86,93 @@
     }
   }
 
-  const onValueTypeChange = (condition, newType) => {
+  const onValueTypeChange = condition => {
     condition.referenceValue = null
+  }
 
-    // Ensure a valid operator is set
-    const validOperators = QueryUtils.getValidOperatorsForType({
-      type: newType,
-    }).map(x => x.value)
-    if (!validOperators.includes(condition.operator)) {
-      condition.operator =
-        validOperators[0] ?? Constants.OperatorOptions.Equals.value
-      onOperatorChange(condition, condition.operator)
-    }
+  const updateConditions = e => {
+    tempValue = e.detail.items
+  }
+
+  const handleFinalize = e => {
+    updateConditions(e)
+    dragDisabled = true
   }
 </script>
 
 <ActionButton on:click={openDrawer}>{conditionText}</ActionButton>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <Drawer bind:this={drawer} title="Conditions" on:drawerShow on:drawerHide>
   <Button cta slot="buttons" on:click={save}>Save</Button>
   <DrawerContent slot="body">
     <div class="container">
       <Layout noPadding>
         {#if tempValue.length}
-          <div class="conditions">
-            {#each tempValue as condition}
-              <span>Set background color to</span>
-              <ColorPicker
-                value={condition.color}
-                on:change={e => (condition.color = e.detail)}
-              />
-              <span>if value</span>
-              <Select
-                placeholder={null}
-                options={getOperatorOptions(condition)}
-                bind:value={condition.operator}
-                on:change={e => onOperatorChange(condition, e.detail)}
-              />
-              <Select
-                disabled={condition.noValue || condition.operator === "oneOf"}
-                options={valueTypeOptions}
-                bind:value={condition.valueType}
-                placeholder={null}
-                on:change={e => onValueTypeChange(condition, e.detail)}
-              />
-              <DrawerBindableInput
-                {bindings}
-                placeholder="Value"
-                value={condition.referenceValue}
-                on:change={e => (condition.referenceValue = e.detail)}
-              />
-              <Icon
-                name="Duplicate"
-                hoverable
-                size="S"
-                on:click={() => duplicateCondition(condition)}
-              />
-              <Icon
-                name="Close"
-                hoverable
-                size="S"
-                on:click={() => removeCondition(condition)}
-              />
+          <div
+            class="conditions"
+            use:dndzone={{
+              items: tempValue,
+              flipDurationMs: flipDuration,
+              dropTargetStyle: { outline: "none" },
+              dragDisabled,
+            }}
+            on:consider={updateConditions}
+            on:finalize={handleFinalize}
+          >
+            {#each tempValue as condition (condition.id)}
+              <div
+                class="condition"
+                class:update={condition.action === "update"}
+                animate:flip={{ duration: flipDuration }}
+              >
+                <div
+                  class="handle"
+                  aria-label="drag-handle"
+                  style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
+                  on:mousedown={() => (dragDisabled = false)}
+                >
+                  <Icon name="DragHandle" size="XL" />
+                </div>
+                <span>Set background color to</span>
+                <ColorPicker
+                  value={condition.color}
+                  on:change={e => (condition.color = e.detail)}
+                />
+                <span>if value</span>
+                <Select
+                  placeholder={null}
+                  options={operatorOptions}
+                  bind:value={condition.operator}
+                  on:change={e => onOperatorChange(condition, e.detail)}
+                />
+                <Select
+                  disabled={condition.noValue || condition.operator === "oneOf"}
+                  options={valueTypeOptions}
+                  bind:value={condition.valueType}
+                  placeholder={null}
+                  on:change={() => onValueTypeChange(condition)}
+                />
+                <DrawerBindableInput
+                  {bindings}
+                  disabled={condition.noValue}
+                  placeholder="Value"
+                  value={condition.referenceValue}
+                  on:change={e => (condition.referenceValue = e.detail)}
+                />
+                <Icon
+                  name="Duplicate"
+                  hoverable
+                  size="S"
+                  on:click={() => duplicateCondition(condition)}
+                />
+                <Icon
+                  name="Close"
+                  hoverable
+                  size="S"
+                  on:click={() => removeCondition(condition)}
+                />
+              </div>
             {/each}
           </div>
         {/if}
@@ -174,10 +193,14 @@
     margin: 0 auto;
   }
   .conditions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+  }
+  .condition {
     display: grid;
-    grid-template-columns: auto auto auto 1fr 1fr 1fr auto auto;
+    grid-template-columns: auto auto auto auto 1fr 1fr 1fr auto auto;
     align-items: center;
     grid-column-gap: var(--spacing-l);
-    grid-row-gap: var(--spacing-l);
   }
 </style>
