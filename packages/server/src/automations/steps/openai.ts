@@ -1,4 +1,5 @@
-import { Configuration, OpenAIApi } from "openai"
+import { OpenAI } from "openai"
+
 import {
   AutomationActionStepId,
   AutomationStepSchema,
@@ -75,13 +76,11 @@ export async function run({ inputs }: AutomationStepInput) {
   }
 
   try {
-    const configuration = new Configuration({
+    const openai = new OpenAI({
       apiKey: environment.OPENAI_API_KEY,
     })
 
-    const openai = new OpenAIApi(configuration)
-
-    const completion = await openai.createChatCompletion({
+    const completion = await openai.chat.completions.create({
       model: inputs.model,
       messages: [
         {
@@ -90,8 +89,7 @@ export async function run({ inputs }: AutomationStepInput) {
         },
       ],
     })
-
-    const response = completion?.data?.choices[0]?.message?.content
+    const response = completion?.choices[0]?.message?.content
 
     return {
       response,
