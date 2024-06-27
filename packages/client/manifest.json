@@ -7308,7 +7308,6 @@
           {
             "type": "columns/grid",
             "key": "columns",
-            "nested": true,
             "resetOn": "table"
           }
         ]

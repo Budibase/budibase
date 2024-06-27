@@ -7,6 +7,7 @@
 
   export let item
   export let anchor
+  export let bindings
 
   const dispatch = createEventDispatcher()
 
@@ -39,8 +40,9 @@
 <div class="list-item-body">
   <div class="list-item-left">
     <EditComponentPopover
-      {anchor}
       componentInstance={item}
+      {bindings}
+      {anchor}
       {parseSettings}
       on:change
     >
