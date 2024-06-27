@@ -1,15 +1,19 @@
-const setup = require("./utilities")
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
+import { runStep, actions } from "./utilities"
 
 describe("test the execute script action", () => {
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
   })
-  afterAll(setup.afterAll)
+
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to execute a script", async () => {
-    const res = await setup.runStep(setup.actions.EXECUTE_SCRIPT.stepId, {
+    const res = await runStep(config, actions.EXECUTE_SCRIPT.stepId, {
       code: "return 1 + 1",
     })
     expect(res.value).toEqual(2)
@@ -17,7 +21,7 @@ describe("test the execute script action", () => {
   })
 
   it("should handle a null value", async () => {
-    const res = await setup.runStep(setup.actions.EXECUTE_SCRIPT.stepId, {
+    const res = await runStep(config, actions.EXECUTE_SCRIPT.stepId, {
       code: null,
     })
     expect(res.response.message).toEqual("Invalid inputs")
@@ -25,8 +29,9 @@ describe("test the execute script action", () => {
   })
 
   it("should be able to get a value from context", async () => {
-    const res = await setup.runStep(
-      setup.actions.EXECUTE_SCRIPT.stepId,
+    const res = await runStep(
+      config,
+      actions.EXECUTE_SCRIPT.stepId,
       {
         code: "return steps.map(d => d.value)",
       },
@@ -40,7 +45,7 @@ describe("test the execute script action", () => {
   })
 
   it("should be able to handle an error gracefully", async () => {
-    const res = await setup.runStep(setup.actions.EXECUTE_SCRIPT.stepId, {
+    const res = await runStep(config, actions.EXECUTE_SCRIPT.stepId, {
       code: "return something.map(x => x.name)",
     })
     expect(res.response).toEqual("ReferenceError: something is not defined")

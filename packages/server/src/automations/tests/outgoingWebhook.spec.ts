@@ -1,30 +1,25 @@
-const setup = require("./utilities")
-const fetch = require("node-fetch")
-
-jest.mock("node-fetch")
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
+import { runStep, actions } from "./utilities"
 
 describe("test the outgoing webhook action", () => {
-  let inputs
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
-    inputs = {
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("should be able to run the action", async () => {
+    const res = await runStep(config, actions.OUTGOING_WEBHOOK.stepId, {
       requestMethod: "POST",
       url: "www.example.com",
       requestBody: JSON.stringify({
         a: 1,
       }),
-    }
-  })
-
-  afterAll(setup.afterAll)
-
-  it("should be able to run the action", async () => {
-    const res = await setup.runStep(
-      setup.actions.OUTGOING_WEBHOOK.stepId,
-      inputs
-    )
+    })
     expect(res.success).toEqual(true)
     expect(res.response.url).toEqual("http://www.example.com")
     expect(res.response.method).toEqual("POST")
@@ -32,7 +27,7 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should return an error if something goes wrong in fetch", async () => {
-    const res = await setup.runStep(setup.actions.OUTGOING_WEBHOOK.stepId, {
+    const res = await runStep(config, actions.OUTGOING_WEBHOOK.stepId, {
       requestMethod: "GET",
       url: "www.invalid.com",
     })

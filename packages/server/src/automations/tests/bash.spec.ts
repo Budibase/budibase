@@ -1,15 +1,19 @@
-const setup = require("./utilities")
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
+import { runStep } from "./utilities"
 
 describe("test the bash action", () => {
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
   })
-  afterAll(setup.afterAll)
+
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to execute a script", async () => {
-    let res = await setup.runStep("EXECUTE_BASH", {
+    let res = await runStep(config, "EXECUTE_BASH", {
       code: "echo 'test'",
     })
     expect(res.stdout).toEqual("test\n")
@@ -17,7 +21,7 @@ describe("test the bash action", () => {
   })
 
   it("should handle a null value", async () => {
-    let res = await setup.runStep("EXECUTE_BASH", {
+    let res = await runStep(config, "EXECUTE_BASH", {
       code: null,
     })
     expect(res.stdout).toEqual(

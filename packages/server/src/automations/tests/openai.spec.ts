@@ -45,7 +45,7 @@ describe("test the openai action", () => {
   it("should present the correct error message when the OPENAI_API_KEY variable isn't set", async () => {
     delete environment.OPENAI_API_KEY
 
-    let res = await setup.runStep("OPENAI", {
+    let res = await setup.runStep(config, "OPENAI", {
       prompt: OPENAI_PROMPT,
     })
     expect(res.response).toEqual(
@@ -55,7 +55,7 @@ describe("test the openai action", () => {
   })
 
   it("should be able to receive a response from ChatGPT given a prompt", async () => {
-    const res = await setup.runStep("OPENAI", {
+    const res = await setup.runStep(config, "OPENAI", {
       prompt: OPENAI_PROMPT,
     })
     expect(res.response).toEqual("This is a test")
@@ -63,7 +63,7 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when a prompt is not provided", async () => {
-    const res = await setup.runStep("OPENAI", {
+    const res = await setup.runStep(config, "OPENAI", {
       prompt: null,
     })
     expect(res.response).toEqual(
@@ -84,7 +84,7 @@ describe("test the openai action", () => {
         } as any)
     )
 
-    const res = await setup.runStep("OPENAI", {
+    const res = await setup.runStep(config, "OPENAI", {
       prompt: OPENAI_PROMPT,
     })
 

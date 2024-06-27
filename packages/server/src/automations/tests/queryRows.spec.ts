@@ -1,11 +1,13 @@
 import { Table } from "@budibase/types"
-import * as setup from "./utilities"
+import { runStep, actions } from "./utilities"
+import TestConfiguration from "src/tests/utilities/TestConfiguration"
 
 const NAME = "Test"
 
 describe("Test a query step automation", () => {
+  const config = new TestConfiguration()
+
   let table: Table
-  let config = setup.getConfig()
 
   beforeAll(async () => {
     await config.init()
@@ -19,7 +21,9 @@ describe("Test a query step automation", () => {
     await config.createRow(row)
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to run the query step", async () => {
     const inputs = {
@@ -33,7 +37,7 @@ describe("Test a query step automation", () => {
       sortOrder: "ascending",
       limit: 10,
     }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    const res = await runStep(config, actions.QUERY_ROWS.stepId, inputs)
     expect(res.success).toBe(true)
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(2)
@@ -48,7 +52,7 @@ describe("Test a query step automation", () => {
       sortOrder: "ascending",
       limit: 10,
     }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    const res = await runStep(config, actions.QUERY_ROWS.stepId, inputs)
     expect(res.success).toBe(true)
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(2)
@@ -65,7 +69,7 @@ describe("Test a query step automation", () => {
       limit: 10,
       onEmptyFilter: "none",
     }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    const res = await runStep(config, actions.QUERY_ROWS.stepId, inputs)
     expect(res.success).toBe(false)
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(0)
@@ -85,7 +89,7 @@ describe("Test a query step automation", () => {
       sortOrder: "ascending",
       limit: 10,
     }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    const res = await runStep(config, actions.QUERY_ROWS.stepId, inputs)
     expect(res.success).toBe(false)
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(0)
@@ -100,7 +104,7 @@ describe("Test a query step automation", () => {
       sortOrder: "ascending",
       limit: 10,
     }
-    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    const res = await runStep(config, actions.QUERY_ROWS.stepId, inputs)
     expect(res.success).toBe(true)
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(2)

@@ -1,24 +1,24 @@
-const setup = require("./utilities")
-const fetch = require("node-fetch")
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
+import { runStep, actions } from "./utilities"
 
 jest.mock("node-fetch")
 
 describe("test the outgoing webhook action", () => {
-  let inputs
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
-    inputs = {
-      username: "joe_bloggs",
-      url: "http://www.example.com",
-    }
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should be able to run the action", async () => {
-    const res = await setup.runStep(setup.actions.discord.stepId, inputs)
+    const res = await runStep(config, actions.discord.stepId, {
+      username: "joe_bloggs",
+      url: "http://www.example.com",
+    })
     expect(res.response.url).toEqual("http://www.example.com")
     expect(res.response.method).toEqual("post")
     expect(res.success).toEqual(true)

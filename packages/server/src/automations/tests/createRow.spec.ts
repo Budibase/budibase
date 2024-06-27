@@ -31,7 +31,7 @@ describe("test the create row action", () => {
   afterAll(setup.afterAll)
 
   it("should be able to run the action", async () => {
-    const res = await setup.runStep(setup.actions.CREATE_ROW.stepId, {
+    const res = await setup.runStep(config, setup.actions.CREATE_ROW.stepId, {
       row,
     })
     expect(res.id).toBeDefined()
@@ -43,7 +43,7 @@ describe("test the create row action", () => {
   })
 
   it("should return an error (not throw) when bad info provided", async () => {
-    const res = await setup.runStep(setup.actions.CREATE_ROW.stepId, {
+    const res = await setup.runStep(config, setup.actions.CREATE_ROW.stepId, {
       row: {
         tableId: "invalid",
         invalid: "invalid",
@@ -53,7 +53,7 @@ describe("test the create row action", () => {
   })
 
   it("should check invalid inputs return an error", async () => {
-    const res = await setup.runStep(setup.actions.CREATE_ROW.stepId, {})
+    const res = await setup.runStep(config, setup.actions.CREATE_ROW.stepId, {})
     expect(res.success).toEqual(false)
   })
 
@@ -76,7 +76,7 @@ describe("test the create row action", () => {
     ]
 
     attachmentRow.file_attachment = attachmentObject
-    const res = await setup.runStep(setup.actions.CREATE_ROW.stepId, {
+    const res = await setup.runStep(config, setup.actions.CREATE_ROW.stepId, {
       row: attachmentRow,
     })
 
@@ -111,7 +111,7 @@ describe("test the create row action", () => {
     }
 
     attachmentRow.single_file_attachment = attachmentObject
-    const res = await setup.runStep(setup.actions.CREATE_ROW.stepId, {
+    const res = await setup.runStep(config, setup.actions.CREATE_ROW.stepId, {
       row: attachmentRow,
     })
 
@@ -146,7 +146,7 @@ describe("test the create row action", () => {
     }
 
     attachmentRow.single_file_attachment = attachmentObject
-    const res = await setup.runStep(setup.actions.CREATE_ROW.stepId, {
+    const res = await setup.runStep(config, setup.actions.CREATE_ROW.stepId, {
       row: attachmentRow,
     })
 

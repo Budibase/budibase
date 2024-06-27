@@ -24,32 +24,29 @@ describe("test the delete row action", () => {
   })
 
   it("should be able to run the action", async () => {
-    const res = await runStep(actions.DELETE_ROW.stepId, inputs)
+    const res = await runStep(config, actions.DELETE_ROW.stepId, inputs)
+    expect(res).toEqual({ success: true })
     expect(res.success).toEqual(true)
     expect(res.response).toBeDefined()
     expect(res.row._id).toEqual(row._id)
-    let error
-    try {
-      await config.getRow(table._id, res.row._id)
-    } catch (err) {
-      error = err
-    }
-    expect(error).toBeDefined()
+    await config.api.row.get(table._id, res.row._id, {
+      status: 404,
+    })
   })
 
   it("check usage quota attempts", async () => {
-    await setup.runInProd(async () => {
-      await setup.runStep(setup.actions.DELETE_ROW.stepId, inputs)
+    await config.withEnv({ NODE_ENV: "production" }, async () => {
+      await runStep(config, actions.DELETE_ROW.stepId, inputs)
     })
   })
 
   it("should check invalid inputs return an error", async () => {
-    const res = await setup.runStep(setup.actions.DELETE_ROW.stepId, {})
+    const res = await runStep(config, actions.DELETE_ROW.stepId, {})
     expect(res.success).toEqual(false)
   })
 
   it("should return an error when table doesn't exist", async () => {
-    const res = await setup.runStep(setup.actions.DELETE_ROW.stepId, {
+    const res = await runStep(config, actions.DELETE_ROW.stepId, {
       tableId: "invalid",
       id: "invalid",
       revision: "invalid",
