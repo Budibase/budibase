@@ -1,12 +1,4 @@
 jest.mock("../../threads/automation")
-jest.mock("../../utilities/redis", () => ({
-  init: jest.fn(),
-  checkTestFlag: () => {
-    return false
-  },
-  shutdown: jest.fn(),
-}))
-
 jest.spyOn(global.console, "error")
 
 import "../../environment"
@@ -36,6 +28,7 @@ describe("Run through some parts of the automations system", () => {
   it("should be able to init in builder", async () => {
     const automation: Automation = {
       ...basicAutomation(),
+      _id: "test",
       appId: config.appId!,
     }
     const fields: any = { a: 1, appId: config.appId }
@@ -47,6 +40,7 @@ describe("Run through some parts of the automations system", () => {
   it("should check coercion", async () => {
     const table = await config.createTable()
     const automation: any = basicAutomation()
+    automation._id = "test"
     automation.definition.trigger.inputs.tableId = table._id
     automation.definition.trigger.stepId = "APP"
     automation.definition.trigger.inputs.fields = { a: "number" }

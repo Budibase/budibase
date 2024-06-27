@@ -1,16 +1,3 @@
-jest.mock("../../../utilities/redis", () => ({
-  init: jest.fn(),
-  getLocksById: () => {
-    return {}
-  },
-  doesUserHaveLock: () => {
-    return true
-  },
-  updateLock: jest.fn(),
-  setDebounce: jest.fn(),
-  checkDebounce: jest.fn(),
-  shutdown: jest.fn(),
-}))
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { AppStatus } from "../../../db/utils"
 import { events, utils, context } from "@budibase/backend-core"
