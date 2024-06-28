@@ -321,11 +321,15 @@
           class:is-selected={Object.hasOwn(editableFields, field)}
           on:click={() => {
             if (Object.hasOwn(editableFields, field)) {
-              editableFields[field] = null
+              delete editableFields[field]
+              onChange({
+                meta: { fields: editableFields },
+                row: { [field]: null },
+              })
             } else {
               editableFields[field] = {}
+              onChange({ meta: { fields: editableFields } })
             }
-            onChange({ meta: { fields: editableFields } })
           }}
         >
           <Icon
