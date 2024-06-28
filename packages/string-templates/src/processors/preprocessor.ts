@@ -52,30 +52,7 @@ export const processors = [
   }),
 
   new Preprocessor(PreprocessorNames.NORMALIZE_SPACES, (statement: string) => {
-    let result = ""
-    let inQuotes = false
-    let quoteChar = ""
-
-    for (let i = 0; i < statement.length; i++) {
-      const char = statement[i]
-
-      if (!inQuotes && (char === '"' || char === "'")) {
-        inQuotes = true
-        quoteChar = char
-        result += char
-      } else if (inQuotes && char === quoteChar) {
-        inQuotes = false
-        result += char
-      } else if (!inQuotes && char === " ") {
-        if (result[result.length - 1] !== " ") {
-          result += char
-        }
-      } else {
-        result += char
-      }
-    }
-
-    return result
+    return statement.replace(/{{(\s{2,})/g, "{{ ")
   }),
   new Preprocessor(
     PreprocessorNames.FINALISE,
