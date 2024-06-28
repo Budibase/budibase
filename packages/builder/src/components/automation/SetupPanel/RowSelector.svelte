@@ -234,36 +234,8 @@
 {#each schemaFields || [] as [field, schema]}
   {#if !schema.autocolumn && Object.hasOwn(editableFields, field)}
     <PropField label={field} fullWidth={isFullWidth(schema.type)}>
-      {#if isTestModal}
-        <RowSelectorTypes
-          {isTestModal}
-          {field}
-          {schema}
-          bindings={parsedBindings}
-          value={editableRow}
-          meta={{
-            fields: editableFields,
-          }}
-          {onChange}
-        />
-      {:else}
-        <DrawerBindableSlot
-          title={$memoStore?.row?.title || field}
-          panel={AutomationBindingPanel}
-          type={schema.type}
-          {schema}
-          value={editableRow[field]}
-          on:change={e =>
-            onChange({
-              row: {
-                [field]: e.detail,
-              },
-            })}
-          {bindings}
-          allowJS={true}
-          updateOnChange={false}
-          drawerLeft="260px"
-        >
+      <div class="prop-control-wrap">
+        {#if isTestModal}
           <RowSelectorTypes
             {isTestModal}
             {field}
@@ -273,10 +245,40 @@
             meta={{
               fields: editableFields,
             }}
-            onChange={change => onChange(change)}
+            {onChange}
           />
-        </DrawerBindableSlot>
-      {/if}
+        {:else}
+          <DrawerBindableSlot
+            title={$memoStore?.row?.title || field}
+            panel={AutomationBindingPanel}
+            type={schema.type}
+            {schema}
+            value={editableRow[field]}
+            on:change={e =>
+              onChange({
+                row: {
+                  [field]: e.detail,
+                },
+              })}
+            {bindings}
+            allowJS={true}
+            updateOnChange={false}
+            drawerLeft="260px"
+          >
+            <RowSelectorTypes
+              {isTestModal}
+              {field}
+              {schema}
+              bindings={parsedBindings}
+              value={editableRow}
+              meta={{
+                fields: editableFields,
+              }}
+              onChange={change => onChange(change)}
+            />
+          </DrawerBindableSlot>
+        {/if}
+      </div>
     </PropField>
   {/if}
 {/each}
