@@ -2108,4 +2108,26 @@ describe.each([
         }).toNotHaveProperty(["totalRows"])
       })
     })
+
+  describe("special data_ case", () => {
+    beforeAll(async () => {
+      table = await createTable({
+        name_data_test: {
+          name: "name_data_test",
+          type: FieldType.STRING,
+        },
+      })
+      await createRows([{ name_data_test: "a" }, { name_data_test: "b" }])
+    })
+
+    it("should be able to query a column with data_ in it", async () => {
+      await expectSearch({
+        query: {
+          equal: {
+            ["1:name_data_test"]: "a",
+          },
+        },
+      }).toContainExactly([{ name_data_test: "a" }])
+    })
+  })
 })

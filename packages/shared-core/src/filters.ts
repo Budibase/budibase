@@ -131,13 +131,22 @@ const cleanupQuery = (query: SearchFilters) => {
  * Removes a numeric prefix on field names designed to give fields uniqueness
  */
 export const removeKeyNumbering = (key: string): string => {
+  return getKeyNumbering(key).key
+}
+
+/**
+ * Gets the part of the keys, returning the numeric prefix and the field name
+ */
+export const getKeyNumbering = (
+  key: string
+): { prefix?: string; key: string } => {
   if (typeof key === "string" && key.match(/\d[0-9]*:/g) != null) {
     const parts = key.split(":")
     // remove the number
-    parts.shift()
-    return parts.join(":")
+    const number = parts.shift()
+    return { prefix: `${number}:`, key: parts.join(":") }
   } else {
-    return key
+    return { key }
   }
 }
 
