@@ -22,13 +22,18 @@ export class ConfigAPI extends TestAPI {
       .expect("Content-Type", /json/)
   }
 
-  saveConfig = (data: any) => {
-    return this.request
+  saveConfig = async (data: any) => {
+    const resp = await this.request
       .post(`/api/global/configs`)
       .send(data)
       .set(this.config.defaultHeaders())
-      .expect(200)
       .expect("Content-Type", /json/)
+
+    if (resp.status !== 200) {
+      throw new Error(`Failed to save config: ${resp.text}`)
+    }
+
+    return resp
   }
 
   OIDCCallback = (configId: string, preAuthRes: any) => {

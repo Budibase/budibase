@@ -61,12 +61,6 @@ class TestConfiguration {
     return this._api
   }
 
-  async useNewTenant() {
-    this.tenantId = structures.tenant.id()
-
-    await this.beforeAll()
-  }
-
   getRequest() {
     return this.request
   }
@@ -216,6 +210,7 @@ class TestConfiguration {
       Accept: "application/json",
       ...this.cookieHeader([`${constants.Cookie.Auth}=${authCookie}`]),
       [constants.Header.CSRF_TOKEN]: CSRF_TOKEN,
+      "x-budibase-include-stacktrace": "true",
     }
   }
 
