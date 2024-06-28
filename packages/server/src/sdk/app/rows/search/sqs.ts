@@ -140,12 +140,11 @@ function reverseUserColumnMapping(rows: Row[]) {
   return rows.map(row => {
     const finalRow: Row = {}
     for (let key of Object.keys(row)) {
-      // it should be the last prefix
-      const lastIndex = key.lastIndexOf(USER_COLUMN_PREFIX)
-      if (lastIndex !== -1 && lastIndex < key.length - prefixLength) {
+      // it should be the first prefix
+      const index = key.indexOf(USER_COLUMN_PREFIX)
+      if (index !== -1) {
         // cut out the prefix
-        const newKey =
-          key.slice(0, lastIndex) + key.slice(lastIndex + prefixLength)
+        const newKey = key.slice(0, index) + key.slice(index + prefixLength)
         finalRow[newKey] = row[key]
       } else {
         finalRow[key] = row[key]
@@ -198,9 +197,8 @@ async function runSqlQuery(
     return processRowCountResponse(response)
   } else if (Array.isArray(response)) {
     return reverseUserColumnMapping(response)
-  } else {
-    return response
   }
+  return response
 }
 
 export async function search(
