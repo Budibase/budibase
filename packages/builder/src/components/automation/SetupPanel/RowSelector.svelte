@@ -234,8 +234,36 @@
 {#each schemaFields || [] as [field, schema]}
   {#if !schema.autocolumn && Object.hasOwn(editableFields, field)}
     <PropField label={field} fullWidth={isFullWidth(schema.type)}>
-      <div class="prop-control-wrap">
-        {#if isTestModal}
+      {#if isTestModal}
+        <RowSelectorTypes
+          {isTestModal}
+          {field}
+          {schema}
+          bindings={parsedBindings}
+          value={editableRow}
+          meta={{
+            fields: editableFields,
+          }}
+          {onChange}
+        />
+      {:else}
+        <DrawerBindableSlot
+          title={$memoStore?.row?.title || field}
+          panel={AutomationBindingPanel}
+          type={schema.type}
+          {schema}
+          value={editableRow[field]}
+          on:change={e =>
+            onChange({
+              row: {
+                [field]: e.detail,
+              },
+            })}
+          {bindings}
+          allowJS={true}
+          updateOnChange={false}
+          drawerLeft="260px"
+        >
           <RowSelectorTypes
             {isTestModal}
             {field}
@@ -245,49 +273,10 @@
             meta={{
               fields: editableFields,
             }}
-            {onChange}
+            onChange={change => onChange(change)}
           />
-        {:else}
-          <DrawerBindableSlot
-            title={$memoStore?.row?.title || field}
-            panel={AutomationBindingPanel}
-            type={schema.type}
-            {schema}
-            value={editableRow[field]}
-            on:change={e =>
-              onChange({
-                row: {
-                  [field]: e.detail,
-                },
-              })}
-            {bindings}
-            allowJS={true}
-            updateOnChange={false}
-            drawerLeft="260px"
-          >
-            <RowSelectorTypes
-              {isTestModal}
-              {field}
-              {schema}
-              bindings={parsedBindings}
-              value={editableRow}
-              meta={{
-                fields: editableFields,
-              }}
-              onChange={change => onChange(change)}
-            />
-          </DrawerBindableSlot>
-        {/if}
-        <Icon
-          hoverable
-          name="Close"
-          on:click={() =>
-            onChange({
-              row: { [field]: null },
-              meta: { fields: { [field]: null } },
-            })}
-        />
-      </div>
+        </DrawerBindableSlot>
+      {/if}
     </PropField>
   {/if}
 {/each}
@@ -367,12 +356,6 @@
 
   li.is-selected .spectrum-Menu-itemLabel {
     color: var(--spectrum-global-color-gray-500);
-  }
-
-  .prop-control-wrap {
-    display: grid;
-    grid-template-columns: 1fr min-content;
-    gap: var(--spacing-s);
   }
 
   /* Override for general json field override */
