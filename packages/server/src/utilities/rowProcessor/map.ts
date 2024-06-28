@@ -57,13 +57,6 @@ export const TYPE_TRANSFORM_MAP: any = {
     [undefined]: undefined,
     parse: parseArrayString,
   },
-  [FieldType.BB_REFERENCE_SINGLE]: {
-    "": null,
-    //@ts-ignore
-    [null]: null,
-    //@ts-ignore
-    [undefined]: undefined,
-  },
   [FieldType.STRING]: {
     "": null,
     //@ts-ignore
@@ -126,9 +119,6 @@ export const TYPE_TRANSFORM_MAP: any = {
     //@ts-ignore
     [undefined]: undefined,
     parse: parseArrayString,
-  },
-  [FieldType.ATTACHMENT_SINGLE]: {
-    "": null,
   },
   [FieldType.BOOLEAN]: {
     "": null,
