@@ -7329,6 +7329,18 @@
             ]
           }
         ]
+      },
+      {
+        "section": true,
+        "tag": "condition",
+        "name": "Row conditions",
+        "settings": [
+          {
+            "type": "rowConditions",
+            "key": "rowConditions",
+            "nested": true
+          }
+        ]
       }
     ],
     "context": [

@@ -7,20 +7,19 @@
     Layout,
     Select,
     Icon,
-    DatePicker,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
   import ColorPicker from "./ColorPicker.svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { QueryUtils, Constants } from "@budibase/frontend-core"
+  import { Constants } from "@budibase/frontend-core"
   import { generate } from "shortid"
-  import { FieldType } from "@budibase/types"
   import { dndzone } from "svelte-dnd-action"
   import { flip } from "svelte/animate"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+  import { selectedScreen, selectedComponent } from "stores/builder"
+  import { makePropSafe } from "@budibase/string-templates"
 
-  export let componentInstance
-  export let bindings
   export let value
 
   const dispatch = createEventDispatcher()
@@ -42,18 +41,25 @@
 
   $: count = value?.length
   $: conditionText = `${count || "No"} condition${count !== 1 ? "s" : ""} set`
-  $: type = componentInstance.columnType
-  $: valueTypeOptions = [
-    {
-      label: "Binding",
-      value: FieldType.STRING,
-    },
-    {
-      label: "Value",
-      value: type,
-    },
-  ]
-  $: operatorOptions = QueryUtils.getValidOperatorsForType({ type })
+  $: datasource = getDatasourceForProvider($selectedScreen, $selectedComponent)
+  $: schema = getSchemaForDatasource($selectedScreen, datasource)?.schema
+  $: rowBindings = generateRowBindings(schema)
+
+  const generateRowBindings = schema => {
+    let bindings = []
+    for (let key of Object.keys(schema || {})) {
+      bindings.push({
+        type: "context",
+        runtimeBinding: `${makePropSafe("row")}.${makePropSafe(key)}`,
+        readableBinding: `Row.${key}`,
+        category: "Row",
+        icon: "RailTop",
+        display: { name: key },
+      })
+    }
+
+    return bindings
+  }
 
   const openDrawer = () => {
     tempValue = cloneDeep(value || [])
@@ -70,7 +76,7 @@
       id: generate(),
       metadataKey: conditionOptions[0].value,
       operator: Constants.OperatorOptions.Equals.value,
-      valueType: FieldType.STRING,
+      referenceValue: true,
     }
     tempValue = [...tempValue, condition]
   }
@@ -82,22 +88,6 @@
 
   const removeCondition = condition => {
     tempValue = tempValue.filter(c => c.id !== condition.id)
-  }
-
-  const onOperatorChange = (condition, newOperator) => {
-    const noValueOptions = [
-      Constants.OperatorOptions.Empty.value,
-      Constants.OperatorOptions.NotEmpty.value,
-    ]
-    condition.noValue = noValueOptions.includes(newOperator)
-    if (condition.noValue || newOperator === "oneOf") {
-      condition.referenceValue = null
-      condition.valueType = "string"
-    }
-  }
-
-  const onValueTypeChange = condition => {
-    condition.referenceValue = null
   }
 
   const updateConditions = e => {
@@ -113,17 +103,12 @@
 <ActionButton on:click={openDrawer}>{conditionText}</ActionButton>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<Drawer
-  bind:this={drawer}
-  title="{componentInstance.field} conditions"
-  on:drawerShow
-  on:drawerHide
->
+<Drawer bind:this={drawer} title="Row conditions" on:drawerShow on:drawerHide>
   <Button cta slot="buttons" on:click={save}>Save</Button>
   <DrawerContent slot="body">
     <div class="container">
       <Layout noPadding>
-        Update the appearance of cells based on their value.
+        Update the appearance of rows based on the entire row value.
         {#if tempValue.length}
           <div
             class="conditions"
@@ -160,42 +145,15 @@
                   value={condition.metadataValue}
                   on:change={e => (condition.metadataValue = e.detail)}
                 />
-                <span>if value</span>
-                <Select
-                  placeholder={null}
-                  options={operatorOptions}
-                  bind:value={condition.operator}
-                  on:change={e => onOperatorChange(condition, e.detail)}
+                <span>if</span>
+                <DrawerBindableInput
+                  bindings={rowBindings}
+                  allowHBS={false}
+                  placeholder="Expression"
+                  value={condition.value}
+                  on:change={e => (condition.value = e.detail)}
                 />
-                <Select
-                  disabled={condition.noValue || condition.operator === "oneOf"}
-                  options={valueTypeOptions}
-                  bind:value={condition.valueType}
-                  placeholder={null}
-                  on:change={() => onValueTypeChange(condition)}
-                />
-                {#if type === FieldType.DATETIME && condition.valueType === type}
-                  <DatePicker
-                    placeholder="Value"
-                    disabled={condition.noValue}
-                    bind:value={condition.referenceValue}
-                  />
-                {:else if type === FieldType.BOOLEAN && condition.valueType === type}
-                  <Select
-                    placeholder="Value"
-                    disabled={condition.noValue}
-                    options={["True", "False"]}
-                    bind:value={condition.referenceValue}
-                  />
-                {:else}
-                  <DrawerBindableInput
-                    {bindings}
-                    placeholder="Value"
-                    disabled={condition.noValue}
-                    value={condition.referenceValue}
-                    on:change={e => (condition.referenceValue = e.detail)}
-                  />
-                {/if}
+                <span>returns true</span>
                 <Icon
                   name="Duplicate"
                   hoverable
@@ -225,7 +183,7 @@
 <style>
   .container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 800px;
     margin: 0 auto;
   }
   .conditions {
@@ -235,7 +193,7 @@
   }
   .condition {
     display: grid;
-    grid-template-columns: auto 1fr auto auto auto 1fr 1fr 1fr auto auto;
+    grid-template-columns: auto 1fr auto auto auto 1fr auto auto auto;
     align-items: center;
     grid-column-gap: var(--spacing-l);
   }

@@ -19,6 +19,7 @@
   export let columns = null
   export let onRowClick = null
   export let buttons = null
+  export let rowConditions = null
 
   const context = getContext("context")
   const component = getContext("component")
@@ -62,7 +63,13 @@
     const goldenRow = generateGoldenSample(rows)
     const id = get(component).id
     return {
+      // Not sure what this one is for...
       [id]: goldenRow,
+
+      // For row conditions context
+      row: goldenRow,
+
+      // For button action context
       eventContext: {
         row: goldenRow,
       },
@@ -166,6 +173,7 @@
     {fixedRowHeight}
     {columnWhitelist}
     {schemaOverrides}
+    {rowConditions}
     canAddRows={allowAddRows}
     canEditRows={allowEditRows}
     canDeleteRows={allowDeleteRows}
