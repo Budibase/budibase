@@ -91,8 +91,6 @@ export const initialise = context => {
 
   // Recompute all metadata if conditions change
   conditions.subscribe($conditions => {
-    console.log($conditions)
-    console.log("recomputing all conditions")
     let metadata = {}
     if ($conditions.length) {
       for (let row of get(rows)) {
@@ -112,7 +110,6 @@ export const initialise = context => {
     let updates = {}
     for (let row of $rows) {
       if (!row._rev || metadata[row._id]?.version !== row._rev) {
-        console.log("recompute row", row._id)
         updates[row._id] = evaluateConditions(row, $conditions)
       }
     }
