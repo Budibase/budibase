@@ -172,6 +172,8 @@ export class ColumnSplitter {
     this.relationships = this.tableNames
       .concat(this.tableIds)
       .concat(this.relationshipColumnNames)
+      // sort by length - makes sure there's no mis-matches due to similarities (sub column names)
+      .sort((a, b) => b.length - a.length)
   }
 
   run(key: string): {
