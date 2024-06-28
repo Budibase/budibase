@@ -13,6 +13,7 @@ import {
   RowSearchParams,
   EmptyFilterOption,
   SearchResponse,
+  Table,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -147,6 +148,54 @@ export const getKeyNumbering = (
     return { prefix: `${number}:`, key: parts.join(":") }
   } else {
     return { key }
+  }
+}
+
+/**
+ * Generates a splitter which can be used to split columns from a context into
+ * their components (number prefix, relationship column/table, column name)
+ */
+export class ColumnSplitter {
+  tableNames: string[]
+  tableIds: string[]
+  relationshipColumnNames: string[]
+  relationships: string[]
+
+  constructor(tables: Table[]) {
+    this.tableNames = tables.map(table => table.name)
+    this.tableIds = tables.map(table => table._id!)
+    this.relationshipColumnNames = tables.flatMap(table =>
+      Object.keys(table.schema).filter(
+        columnName => table.schema[columnName].type === FieldType.LINK
+      )
+    )
+    this.relationships = this.tableNames
+      .concat(this.tableIds)
+      .concat(this.relationshipColumnNames)
+  }
+
+  run(key: string): {
+    numberPrefix?: string
+    relationshipPrefix?: string
+    column: string
+  } {
+    let { prefix, key: splitKey } = getKeyNumbering(key)
+    let relationship: string | undefined
+    for (let possibleRelationship of this.relationships) {
+      const withDot = `${possibleRelationship}.`
+      if (splitKey.startsWith(withDot)) {
+        const finalKeyParts = splitKey.split(withDot)
+        finalKeyParts.shift()
+        relationship = withDot
+        splitKey = finalKeyParts.join(".")
+        break
+      }
+    }
+    return {
+      numberPrefix: prefix,
+      relationshipPrefix: relationship,
+      column: splitKey,
+    }
   }
 }
 
