@@ -26,7 +26,7 @@
     MaxCellRenderOverflow,
     GutterWidth,
     DefaultRowHeight,
-    Padding,
+    VPadding,
     SmallRowHeight,
     ControlsHeight,
     ScrollBarSize,
@@ -119,7 +119,7 @@
   // Derive min height and make available in context
   const minHeight = derived(rowHeight, $height => {
     const heightForControls = showControls ? ControlsHeight : 0
-    return Padding + SmallRowHeight + $height + heightForControls
+    return VPadding + SmallRowHeight + $height + heightForControls
   })
   context = { ...context, minHeight }
 
@@ -354,8 +354,13 @@
     transition: none;
   }
 
-  /* Overrides */
-  .grid.quiet :global(.grid-data-content .row > .cell:not(:last-child)) {
+  /* Overrides for quiet */
+  .grid.quiet :global(.grid-data-content .row > .cell:not(:last-child)),
+  .grid.quiet :global(.sticky-column .row > .cell),
+  .grid.quiet :global(.new-row .row > .cell:not(:last-child)) {
     border-right: none;
+  }
+  .grid.quiet :global(.sticky-column:before) {
+    display: none;
   }
 </style>

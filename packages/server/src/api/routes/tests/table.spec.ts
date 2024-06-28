@@ -285,12 +285,9 @@ describe.each([
           type: FieldType.STRING,
           name: "Type",
         }
+        // allow the "Type" column - internal columns aren't case sensitive
         await config.api.table.save(saveTableRequest, {
-          status: 400,
-          body: {
-            message:
-              'Column(s) "type" are duplicated - check for other columns with these name (case in-sensitive)',
-          },
+          status: 200,
         })
         saveTableRequest.schema.foo = { type: FieldType.STRING, name: "foo" }
         saveTableRequest.schema.FOO = { type: FieldType.STRING, name: "FOO" }
@@ -299,7 +296,7 @@ describe.each([
           status: 400,
           body: {
             message:
-              'Column(s) "type, foo" are duplicated - check for other columns with these name (case in-sensitive)',
+              'Column(s) "foo" are duplicated - check for other columns with these name (case in-sensitive)',
           },
         })
       })
