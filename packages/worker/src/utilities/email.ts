@@ -8,7 +8,7 @@ import { configs, cache, objectStore } from "@budibase/backend-core"
 import ical from "ical-generator"
 import _ from "lodash"
 
-const nodemailer = require("nodemailer")
+import nodemailer from "nodemailer"
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
 const TYPE = TemplateType.EMAIL

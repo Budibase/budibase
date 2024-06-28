@@ -12,13 +12,10 @@ describe("configs", () => {
   beforeEach(async () => {
     config = new TestConfiguration()
     await config.beforeAll()
-  })
-
-  beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await config.afterAll()
   })
 

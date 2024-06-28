@@ -1,4 +1,3 @@
-import { getServer } from "../index"
 import mocks from "./mocks"
 
 // init the licensing mock
@@ -13,7 +12,7 @@ dbConfig.init()
 import env from "../environment"
 import * as controllers from "./controllers"
 
-const supertest = require("supertest")
+import supertest from "supertest"
 
 import { Config } from "../constants"
 import {
@@ -110,10 +109,14 @@ class TestConfiguration {
       throw new Error("Already initialised")
     }
 
+    // We use a require here to avoid importing the server at the top level,
+    // which would make it impossible to mock various things in tests.
+    const main = require("../index")
+
     this.initialised = true
 
     env.PORT = "0" // random port
-    this.server = await getServer()
+    this.server = await main.getServer()
     // we need the request for logging in, involves cookies, hard to fake
     this.request = supertest(this.server)
 
