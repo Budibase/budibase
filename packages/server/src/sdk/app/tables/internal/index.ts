@@ -17,6 +17,7 @@ import { cloneDeep } from "lodash/fp"
 import isEqual from "lodash/isEqual"
 import { runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFormula"
 import { context } from "@budibase/backend-core"
+import { findDuplicateInternalColumns } from "@budibase/shared-core"
 import { getTable } from "../getters"
 import { checkAutoColumns } from "./utils"
 import * as viewsSdk from "../../views"
@@ -44,6 +45,17 @@ export async function save(
   if (hasTypeChanged(table, oldTable)) {
     throw new Error("A column type has changed.")
   }
+
+  // check for case sensitivity - we don't want to allow duplicated columns
+  const duplicateColumn = findDuplicateInternalColumns(table)
+  if (duplicateColumn.length) {
+    throw new Error(
+      `Column(s) "${duplicateColumn.join(
+        ", "
+      )}" are duplicated - check for other columns with these name (case in-sensitive)`
+    )
+  }
+
   // check that subtypes have been maintained
   table = checkAutoColumns(table, oldTable)
 
