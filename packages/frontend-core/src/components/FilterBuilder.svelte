@@ -16,7 +16,6 @@
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import FilterUsers from "./FilterUsers.svelte"
-  import { getFields } from "../utils/searchFields"
 
   const { OperatorOptions, DEFAULT_BB_DATASOURCE_ID } = Constants
 
@@ -62,9 +61,7 @@
   ]
   const context = getContext("context")
 
-  $: fieldOptions = getFields(tables, schemaFields || [], {
-    allowLinks: true,
-  }).map(field => ({
+  $: fieldOptions = (schemaFields || []).map(field => ({
     label: field.displayName || field.name,
     value: field.name,
   }))
