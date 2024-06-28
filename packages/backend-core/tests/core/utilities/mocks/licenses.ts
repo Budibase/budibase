@@ -33,18 +33,20 @@ export interface UseLicenseOpts {
 // LICENSES
 
 export const useLicense = (license: License, opts?: UseLicenseOpts) => {
+  const clonedLicense = cloneDeep(license)
+
   if (opts) {
     if (opts.features) {
-      license.features.push(...opts.features)
+      clonedLicense.features.push(...opts.features)
     }
     if (opts.quotas) {
-      license.quotas = opts.quotas
+      clonedLicense.quotas = opts.quotas
     }
   }
 
-  getCachedLicense.mockReturnValue(license)
+  getCachedLicense.mockReturnValue(clonedLicense)
 
-  return license
+  return clonedLicense
 }
 
 export const useUnlimited = (opts?: UseLicenseOpts) => {

@@ -1,6 +1,7 @@
 import { mocks, testContainerUtils } from "@budibase/backend-core/tests"
 import env from "../environment"
 import { env as coreEnv, timers } from "@budibase/backend-core"
+import { shutdown } from "../"
 
 // must explicitly enable fetch mock
 mocks.fetch.enable()
@@ -21,6 +22,7 @@ if (!process.env.CI) {
 
 testContainerUtils.setupEnv(env, coreEnv)
 
-afterAll(() => {
+afterAll(async () => {
   timers.cleanup()
+  await shutdown()
 })

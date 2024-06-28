@@ -1,3 +1,4 @@
+import { getServer } from "../index"
 import mocks from "./mocks"
 
 // init the licensing mock
@@ -40,26 +41,24 @@ import cloneDeep from "lodash/fp/cloneDeep"
 class TestConfiguration {
   server: any
   request: any
-  api: API
+  _api?: API
   tenantId: string
   user?: User
   apiKey?: string
   userPassword = "password"
+  initialised = false
 
-  constructor(opts: { openServer: boolean } = { openServer: true }) {
+  constructor() {
     // default to cloud hosting
     this.cloudHosted()
-
     this.tenantId = structures.tenant.id()
+  }
 
-    if (opts.openServer) {
-      env.PORT = "0" // random port
-      this.server = require("../index").default
-      // we need the request for logging in, involves cookies, hard to fake
-      this.request = supertest(this.server)
+  get api(): API {
+    if (!this._api) {
+      throw new Error("API not initialized, call beforeAll first")
     }
-
-    this.api = new API(this)
+    return this._api
   }
 
   async useNewTenant() {
@@ -113,22 +112,24 @@ class TestConfiguration {
   // SETUP / TEARDOWN
 
   async beforeAll() {
-    try {
-      await this.createDefaultUser()
-      await this.createSession(this.user!)
-    } catch (e: any) {
-      console.error(e)
-      throw new Error(e.message)
+    if (this.initialised) {
+      throw new Error("Already initialised")
     }
+
+    this.initialised = true
+
+    env.PORT = "0" // random port
+    this.server = await getServer()
+    // we need the request for logging in, involves cookies, hard to fake
+    this.request = supertest(this.server)
+
+    this._api = new API(this)
+
+    await this.createDefaultUser()
+    await this.createSession(this.user!)
   }
 
-  async afterAll() {
-    if (this.server) {
-      await this.server.close()
-    } else {
-      await require("../index").default.close()
-    }
-  }
+  async afterAll() {}
 
   // TENANCY
 

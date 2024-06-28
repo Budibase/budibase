@@ -13,6 +13,12 @@ function isJest() {
   )
 }
 
+function isJestGlobal() {
+  // @ts-ignore
+  // eslint-disable-next-line
+  return !!globalThis.describe
+}
+
 function isDev() {
   return process.env.NODE_ENV !== "production"
 }
@@ -100,6 +106,7 @@ function isQA() {
 const environment = {
   isTest,
   isJest,
+  isJestGlobal,
   isDev,
   isWorker,
   isApps,
