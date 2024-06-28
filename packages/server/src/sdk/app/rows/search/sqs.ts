@@ -36,6 +36,7 @@ import {
   getRelationshipColumns,
   getTableIDList,
 } from "./filters"
+import { dataFilters } from "@budibase/shared-core"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const NO_SUCH_COLUMN_REGEX = new RegExp(`no such colum.+${USER_COLUMN_PREFIX}`)
@@ -101,19 +102,14 @@ function cleanupFilters(
     )
   )
 
-  // sort longest first, don't find substrings
-  const userColumnList = Object.keys(userColumnMap).sort(
-    (a, b) => b.length - a.length
-  )
   // update the keys of filters to manage user columns
-  for (let filter of Object.values(filters)) {
-    for (let key of Object.keys(filter)) {
-      const found = userColumnList.find(possibleColumn =>
-        key.endsWith(possibleColumn)
-      )
-      if (found) {
-        const newKey = key.replace(found, userColumnMap[found])
-        filter[newKey] = filter[key]
+  const keyInAnyTable = (key: string): boolean =>
+    allTables.some(table => table.schema[key])
+  for (const filter of Object.values(filters)) {
+    for (const key of Object.keys(filter)) {
+      const { prefix, key: rawKey } = dataFilters.getKeyNumbering(key)
+      if (keyInAnyTable(rawKey)) {
+        filter[`${prefix || ""}${mapToUserColumn(rawKey)}`] = filter[key]
         delete filter[key]
       }
     }
