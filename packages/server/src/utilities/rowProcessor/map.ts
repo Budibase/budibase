@@ -120,6 +120,9 @@ export const TYPE_TRANSFORM_MAP: any = {
     [undefined]: undefined,
     parse: parseArrayString,
   },
+  [FieldType.ATTACHMENT_SINGLE]: {
+    "": null,
+  },
   [FieldType.BOOLEAN]: {
     "": null,
     //@ts-ignore
