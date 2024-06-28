@@ -103,7 +103,7 @@
 
     // If we don't have a next page then we're at the bottom and can scroll to
     // the max available offset
-    else {
+    if (!$hasNextPage) {
       scroll.update(state => ({
         ...state,
         top: $maxScrollTop,
