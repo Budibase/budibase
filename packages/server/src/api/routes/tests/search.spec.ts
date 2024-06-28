@@ -2109,25 +2109,28 @@ describe.each([
       })
     })
 
-  describe("special data_ case", () => {
-    beforeAll(async () => {
-      table = await createTable({
-        name_data_test: {
-          name: "name_data_test",
-          type: FieldType.STRING,
-        },
-      })
-      await createRows([{ name_data_test: "a" }, { name_data_test: "b" }])
-    })
-
-    it("should be able to query a column with data_ in it", async () => {
-      await expectSearch({
-        query: {
-          equal: {
-            ["1:name_data_test"]: "a",
+  describe.each(["data_name_test", "name_data_test", "name_test_data_"])(
+    "special (%s) case",
+    column => {
+      beforeAll(async () => {
+        table = await createTable({
+          [column]: {
+            name: column,
+            type: FieldType.STRING,
           },
-        },
-      }).toContainExactly([{ name_data_test: "a" }])
-    })
-  })
+        })
+        await createRows([{ [column]: "a" }, { [column]: "b" }])
+      })
+
+      it("should be able to query a column with data_ in it", async () => {
+        await expectSearch({
+          query: {
+            equal: {
+              [`1:${column}`]: "a",
+            },
+          },
+        }).toContainExactly([{ [column]: "a" }])
+      })
+    }
+  )
 })
