@@ -105,11 +105,17 @@ function cleanupFilters(
   // update the keys of filters to manage user columns
   const keyInAnyTable = (key: string): boolean =>
     allTables.some(table => table.schema[key])
+
+  const splitter = new dataFilters.ColumnSplitter(allTables)
   for (const filter of Object.values(filters)) {
     for (const key of Object.keys(filter)) {
-      const { prefix, key: rawKey } = dataFilters.getKeyNumbering(key)
-      if (keyInAnyTable(rawKey)) {
-        filter[`${prefix || ""}${mapToUserColumn(rawKey)}`] = filter[key]
+      const { numberPrefix, relationshipPrefix, column } = splitter.run(key)
+      if (keyInAnyTable(column)) {
+        filter[
+          `${numberPrefix || ""}${relationshipPrefix || ""}${mapToUserColumn(
+            column
+          )}`
+        ] = filter[key]
         delete filter[key]
       }
     }
