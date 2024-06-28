@@ -79,7 +79,6 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
       } else if (
         // If there's no data for this field don't bother with further checks
         // If the field is already marked as invalid there's no need for further checks
-        results.schemaValidation[columnName] === false ||
         columnData == null ||
         isAutoColumn
       ) {
