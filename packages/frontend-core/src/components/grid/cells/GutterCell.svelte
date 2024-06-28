@@ -54,6 +54,7 @@
   selected={rowSelected}
   {defaultHeight}
   rowIdx={row?.__idx}
+  metadata={row?.__metadata}
 >
   <div class="gutter">
     {#if $$slots.default}

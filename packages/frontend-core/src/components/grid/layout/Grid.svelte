@@ -59,6 +59,7 @@
   export let darkMode
   export let isCloud = null
   export let allowViewReadonlyColumns = false
+  export let rowConditions = null
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -114,6 +115,8 @@
     buttons,
     darkMode,
     isCloud,
+    allowViewReadonlyColumns,
+    rowConditions,
   })
 
   // Derive min height and make available in context

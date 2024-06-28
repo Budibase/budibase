@@ -11,7 +11,8 @@ export const deriveStores = context => {
     width,
     height,
     rowChangeCache,
-    conditionMetadata,
+    cellMetadata,
+    rowMetadata,
   } = context
 
   // Derive visible rows
@@ -35,21 +36,24 @@ export const deriveStores = context => {
       scrolledRowCount,
       visualRowCapacity,
       rowChangeCache,
-      conditionMetadata,
+      cellMetadata,
+      rowMetadata,
     ],
     ([
       $rows,
       $scrolledRowCount,
       $visualRowCapacity,
       $rowChangeCache,
-      $conditionMetadata,
+      $cellMetadata,
+      $rowMetadata,
     ]) => {
       return $rows
         .slice($scrolledRowCount, $scrolledRowCount + $visualRowCapacity)
         .map(row => ({
           ...row,
           ...$rowChangeCache[row._id],
-          __metadata: $conditionMetadata[row._id],
+          __metadata: $rowMetadata[row._id],
+          __cellMetadata: $cellMetadata[row._id],
         }))
     }
   )

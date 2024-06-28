@@ -15,6 +15,7 @@ export const createStores = context => {
   const columnWhitelist = getProp("columnWhitelist")
   const notifySuccess = getProp("notifySuccess")
   const notifyError = getProp("notifyError")
+  const rowConditions = getProp("rowConditions")
 
   return {
     datasource,
@@ -26,6 +27,7 @@ export const createStores = context => {
     columnWhitelist,
     notifySuccess,
     notifyError,
+    rowConditions,
   }
 }
 
