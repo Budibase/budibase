@@ -1940,6 +1940,8 @@ describe.each([
 
       it("successfully finds a row searching with a string", async () => {
         await expectQuery({
+          // @ts-expect-error this test specifically goes against the type to
+          // test that we coerce the string to an array.
           contains: { "1:users": user1._id },
         }).toContainExactly([
           { users: [{ _id: user1._id }] },
