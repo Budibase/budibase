@@ -164,14 +164,17 @@ export const InvalidFileExtensions = [
 
 export enum BpmCorrelationKey {
   ONBOARDING = "budibase:onboarding:correlationkey",
+  VERIFY_SSO_LOGIN = "budibase:verify_sso_login:correlationkey",
 }
 
 export enum BpmInstanceKey {
   ONBOARDING = "budibase:onboarding:instancekey",
+  VERIFY_SSO_LOGIN = "budibase:verify_sso_login:instancekey",
 }
 
 export enum BpmStatusKey {
   ONBOARDING = "budibase:onboarding:status",
+  VERIFY_SSO_LOGIN = "budibase:verify_sso_login:status",
 }
 
 export enum BpmStatusValue {
