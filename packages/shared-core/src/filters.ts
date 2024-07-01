@@ -13,6 +13,7 @@ import {
   RowSearchParams,
   EmptyFilterOption,
   SearchResponse,
+  Table,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -131,13 +132,72 @@ const cleanupQuery = (query: SearchFilters) => {
  * Removes a numeric prefix on field names designed to give fields uniqueness
  */
 export const removeKeyNumbering = (key: string): string => {
+  return getKeyNumbering(key).key
+}
+
+/**
+ * Gets the part of the keys, returning the numeric prefix and the field name
+ */
+export const getKeyNumbering = (
+  key: string
+): { prefix?: string; key: string } => {
   if (typeof key === "string" && key.match(/\d[0-9]*:/g) != null) {
     const parts = key.split(":")
     // remove the number
-    parts.shift()
-    return parts.join(":")
+    const number = parts.shift()
+    return { prefix: `${number}:`, key: parts.join(":") }
   } else {
-    return key
+    return { key }
+  }
+}
+
+/**
+ * Generates a splitter which can be used to split columns from a context into
+ * their components (number prefix, relationship column/table, column name)
+ */
+export class ColumnSplitter {
+  tableNames: string[]
+  tableIds: string[]
+  relationshipColumnNames: string[]
+  relationships: string[]
+
+  constructor(tables: Table[]) {
+    this.tableNames = tables.map(table => table.name)
+    this.tableIds = tables.map(table => table._id!)
+    this.relationshipColumnNames = tables.flatMap(table =>
+      Object.keys(table.schema).filter(
+        columnName => table.schema[columnName].type === FieldType.LINK
+      )
+    )
+    this.relationships = this.tableNames
+      .concat(this.tableIds)
+      .concat(this.relationshipColumnNames)
+      // sort by length - makes sure there's no mis-matches due to similarities (sub column names)
+      .sort((a, b) => b.length - a.length)
+  }
+
+  run(key: string): {
+    numberPrefix?: string
+    relationshipPrefix?: string
+    column: string
+  } {
+    let { prefix, key: splitKey } = getKeyNumbering(key)
+    let relationship: string | undefined
+    for (let possibleRelationship of this.relationships) {
+      const withDot = `${possibleRelationship}.`
+      if (splitKey.startsWith(withDot)) {
+        const finalKeyParts = splitKey.split(withDot)
+        finalKeyParts.shift()
+        relationship = withDot
+        splitKey = finalKeyParts.join(".")
+        break
+      }
+    }
+    return {
+      numberPrefix: prefix,
+      relationshipPrefix: relationship,
+      column: splitKey,
+    }
   }
 }
 

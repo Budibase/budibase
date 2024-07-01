@@ -184,7 +184,11 @@ class InternalBuilder {
     query: Knex.QueryBuilder,
     filters: SearchFilters | undefined,
     table: Table,
-    opts: { aliases?: Record<string, string>; relationship?: boolean }
+    opts: {
+      aliases?: Record<string, string>
+      relationship?: boolean
+      columnPrefix?: string
+    }
   ): Knex.QueryBuilder {
     if (!filters) {
       return query
@@ -192,7 +196,10 @@ class InternalBuilder {
     filters = parseFilters(filters)
     // if all or specified in filters, then everything is an or
     const allOr = filters.allOr
-    const sqlStatements = new SqlStatements(this.client, table, { allOr })
+    const sqlStatements = new SqlStatements(this.client, table, {
+      allOr,
+      columnPrefix: opts.columnPrefix,
+    })
     const tableName =
       this.client === SqlClient.SQL_LITE ? table._id! : table.name
 
@@ -663,6 +670,7 @@ class InternalBuilder {
     }
     // add filters to the query (where)
     query = this.addFilters(query, filters, json.meta.table, {
+      columnPrefix: json.meta.columnPrefix,
       aliases: tableAliases,
     })
 
@@ -698,6 +706,7 @@ class InternalBuilder {
     }
 
     return this.addFilters(query, filters, json.meta.table, {
+      columnPrefix: json.meta.columnPrefix,
       relationship: true,
       aliases: tableAliases,
     })
@@ -708,6 +717,7 @@ class InternalBuilder {
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
     const parsedBody = parseBody(body)
     query = this.addFilters(query, filters, json.meta.table, {
+      columnPrefix: json.meta.columnPrefix,
       aliases: tableAliases,
     })
     // mysql can't use returning
@@ -722,6 +732,7 @@ class InternalBuilder {
     const { endpoint, filters, tableAliases } = json
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
     query = this.addFilters(query, filters, json.meta.table, {
+      columnPrefix: json.meta.columnPrefix,
       aliases: tableAliases,
     })
     // mysql can't use returning
