@@ -495,11 +495,7 @@
       newError.name = `Column name cannot start with an underscore.`
     } else if (fieldInfo.name && !fieldInfo.name.match(ValidColumnNameRegex)) {
       newError.name = `Illegal character; must be alpha-numeric.`
-    } else if (
-      prohibited.some(
-        name => fieldInfo?.name?.toLowerCase() === name.toLowerCase()
-      )
-    ) {
+    } else if (prohibited.some(name => fieldInfo?.name === name)) {
       newError.name = `${prohibited.join(
         ", "
       )} are not allowed as column names - case insensitive.`
