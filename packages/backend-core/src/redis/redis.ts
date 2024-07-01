@@ -9,6 +9,7 @@ import {
   SelectableDatabase,
   getRedisConnectionDetails,
 } from "./utils"
+import { randomInt } from "crypto"
 
 const CLUSTERED = env.REDIS_CLUSTERED
 const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
@@ -43,6 +44,13 @@ async function init(selectDb = DEFAULT_SELECT_DB): Promise<Redis | Cluster> {
     })
   })
   return CLIENTS[selectDb]
+}
+
+export async function shutdownAll() {
+  for (const client of Object.values(CLIENTS)) {
+    const c = await client
+    await c.quit()
+  }
 }
 
 /**
@@ -112,10 +120,6 @@ class RedisWrapper {
       throw new Error("Redis client not ready, status: " + this._client.status)
     }
     return this._client
-  }
-
-  async finish() {
-    this._client?.disconnect()
   }
 
   async scan(key = ""): Promise<any> {

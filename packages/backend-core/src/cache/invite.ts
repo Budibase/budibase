@@ -74,7 +74,7 @@ export async function getInviteCodes(): Promise<InviteWithCode[]> {
     return results
   }
   const tenantId = getTenantId()
-  return results.filter(invite => tenantId === invite.info.tenantId)
+  return results.filter(invite => tenantId === invite.info?.tenantId)
 }
 
 export async function getExistingInvites(

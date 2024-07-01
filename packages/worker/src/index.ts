@@ -30,7 +30,7 @@ const koaSession = require("koa-session")
 import { userAgent } from "koa-useragent"
 
 import destroyable from "server-destroy"
-import { initPro } from "./initPro"
+import { initPro, shutdownPro } from "./initPro"
 import { handleScimBody } from "./middleware/handleScimBody"
 
 if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
@@ -76,7 +76,10 @@ server.on("close", async () => {
   console.log("Server Closed")
   timers.cleanup()
   events.shutdown()
+  await cache.docWritethrough.shutdown()
+  await events.processors.shutdown()
   await redis.clients.shutdown()
+  await shutdownPro()
   await queue.shutdown()
   if (!env.isTest()) {
     process.exit(errCode)
@@ -89,7 +92,7 @@ export async function shutdown() {
   }
 
   return new Promise<void>((resolve, reject) => {
-    server.close(err => {
+    server.destroy(err => {
       if (err) {
         reject(err)
       } else {

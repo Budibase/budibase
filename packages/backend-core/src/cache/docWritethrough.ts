@@ -48,6 +48,10 @@ export class DocWritethroughProcessor {
     return this
   }
 
+  async shutdown() {
+    await DocWritethroughProcessor.queue.close()
+  }
+
   private async persistToDb({
     dbName,
     docId,
@@ -95,6 +99,12 @@ export class DocWritethrough {
 export function init(): DocWritethroughProcessor {
   processor = new DocWritethroughProcessor().init()
   return processor
+}
+
+export async function shutdown() {
+  if (processor) {
+    await processor.shutdown()
+  }
 }
 
 export function getProcessor(): DocWritethroughProcessor {

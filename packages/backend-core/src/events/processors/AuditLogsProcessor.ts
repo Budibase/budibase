@@ -18,7 +18,7 @@ export default class AuditLogsProcessor implements EventProcessor {
   static auditLogQueue: BullQueue.Queue<AuditLogQueueEvent>
 
   // can't use constructor as need to return promise
-  static init(fn: AuditLogFn) {
+  static async init(fn: AuditLogFn) {
     AuditLogsProcessor.auditLogsEnabled = true
     const writeAuditLogs = fn
     AuditLogsProcessor.auditLogQueue = createQueue<AuditLogQueueEvent>(
@@ -51,6 +51,12 @@ export default class AuditLogsProcessor implements EventProcessor {
         })
       })
     })
+  }
+
+  static async shutdown() {
+    if (AuditLogsProcessor.auditLogQueue) {
+      await AuditLogsProcessor.auditLogQueue.close()
+    }
   }
 
   async processEvent(
@@ -86,7 +92,9 @@ export default class AuditLogsProcessor implements EventProcessor {
     // no-op
   }
 
-  shutdown(): void {
-    AuditLogsProcessor.auditLogQueue?.close()
+  async shutdown() {
+    if (AuditLogsProcessor.auditLogQueue) {
+      await AuditLogsProcessor.auditLogQueue.close()
+    }
   }
 }

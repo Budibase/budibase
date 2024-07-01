@@ -12,6 +12,10 @@ export function init(auditingFn: AuditLogFn) {
   return AuditLogsProcessor.init(auditingFn)
 }
 
+export async function shutdown() {
+  return await AuditLogsProcessor.shutdown()
+}
+
 export const processors = new Processors([
   analyticsProcessor,
   loggingProcessor,

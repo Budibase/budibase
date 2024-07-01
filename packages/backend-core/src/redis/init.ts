@@ -1,4 +1,4 @@
-import Client from "./redis"
+import Client, { shutdownAll } from "./redis"
 import * as utils from "./utils"
 
 let userClient: Client,
@@ -9,8 +9,7 @@ let userClient: Client,
   lockClient: Client,
   socketClient: Client,
   inviteClient: Client,
-  passwordResetClient: Client,
-  docWritethroughClient: Client
+  passwordResetClient: Client
 
 export async function init() {
   userClient = await new Client(utils.Databases.USER_CACHE).init()
@@ -25,22 +24,10 @@ export async function init() {
     utils.Databases.SOCKET_IO,
     utils.SelectableDatabase.SOCKET_IO
   ).init()
-  docWritethroughClient = await new Client(
-    utils.Databases.DOC_WRITE_THROUGH
-  ).init()
 }
 
 export async function shutdown() {
-  if (userClient) await userClient.finish()
-  if (sessionClient) await sessionClient.finish()
-  if (appClient) await appClient.finish()
-  if (cacheClient) await cacheClient.finish()
-  if (writethroughClient) await writethroughClient.finish()
-  if (lockClient) await lockClient.finish()
-  if (inviteClient) await inviteClient.finish()
-  if (passwordResetClient) await passwordResetClient.finish()
-  if (socketClient) await socketClient.finish()
-  if (docWritethroughClient) await docWritethroughClient.finish()
+  await shutdownAll()
 }
 
 process.on("exit", async () => {
