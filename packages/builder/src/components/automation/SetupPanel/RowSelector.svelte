@@ -319,6 +319,7 @@
       {#if !schema.autocolumn}
         <li
           class="table_field spectrum-Menu-item"
+          class:is-selected={Object.hasOwn(editableFields, field)}
           on:click={() => {
             if (Object.hasOwn(editableFields, field)) {
               delete editableFields[field]
