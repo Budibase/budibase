@@ -340,8 +340,7 @@ export async function search(
       await sdk.tables.sqs.syncDefinition()
       return search(options, table)
     }
-    // previously the internal table didn't error when
-    console.log(JSON.stringify(err))
+    // previously the internal table didn't error when a column didn't exist in search
     if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {
       return { rows: [] }
     }
