@@ -18,7 +18,7 @@
   <div class="params">
     <Label small>Title</Label>
     <DrawerBindableInput
-      placeholder="Title"
+      placeholder="Prompt User"
       value={parameters.customTitleText}
       on:change={e => (parameters.customTitleText = e.detail)}
       {bindings}
@@ -28,6 +28,22 @@
       placeholder="Are you sure you want to continue?"
       value={parameters.confirmText}
       on:change={e => (parameters.confirmText = e.detail)}
+      {bindings}
+    />
+
+    <Label small>Confirm Text</Label>
+    <DrawerBindableInput
+      placeholder="Confirm"
+      value={parameters.confirmButtonText}
+      on:change={e => (parameters.confirmButtonText = e.detail)}
+      {bindings}
+    />
+
+    <Label small>Cancel Text</Label>
+    <DrawerBindableInput
+      placeholder="Cancel"
+      value={parameters.cancelButtonText}
+      on:change={e => (parameters.cancelButtonText = e.detail)}
       {bindings}
     />
   </div>
