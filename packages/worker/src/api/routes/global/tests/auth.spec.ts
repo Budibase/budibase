@@ -312,7 +312,7 @@ describe("/api/global/auth", () => {
     })
 
     describe("GET /api/global/auth/:tenantId/oidc/callback", () => {
-      it.only("logs in", async () => {
+      it("logs in", async () => {
         nock("http://someconfigurl").get("/").times(2).reply(200, {
           issuer: "test",
           authorization_endpoint: "http://localhost/auth",
