@@ -305,8 +305,7 @@
   align="center"
   bind:this={customPopover}
   anchor={popoverAnchor}
-  minWidth={popoverAnchor?.getBoundingClientRect()?.width}
-  maxWidth={popoverAnchor?.getBoundingClientRect()?.width}
+  useAnchorWidth
   maxHeight={300}
   resizable={false}
   offset={10}
