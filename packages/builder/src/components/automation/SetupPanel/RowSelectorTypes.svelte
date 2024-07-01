@@ -57,6 +57,31 @@
     }
     return params
   }
+
+  const handleMediaUpdate = e => {
+    const media = e.detail || []
+    const isSingle =
+      schema.type === FieldType.ATTACHMENT_SINGLE ||
+      schema.type === FieldType.SIGNATURE_SINGLE
+    const parsedMedia = media.map(({ name, value }) => ({
+      url: name,
+      filename: value,
+    }))
+
+    if (isSingle) {
+      const [singleMedia] = parsedMedia
+      // Return only the first entry
+      return singleMedia
+        ? {
+            url: singleMedia.url,
+            filename: singleMedia.filename,
+          }
+        : null
+    }
+
+    // Return the entire array
+    return parsedMedia
+  }
 </script>
 
 {#if schemaHasOptions(schema) && schema.type !== "array"}
@@ -185,19 +210,7 @@
           on:change={e => {
             onChange({
               row: {
-                [field]:
-                  schema.type === FieldType.ATTACHMENT_SINGLE ||
-                  schema.type === FieldType.SIGNATURE_SINGLE
-                    ? e.detail.length > 0
-                      ? {
-                          url: e.detail[0].name,
-                          filename: e.detail[0].value,
-                        }
-                      : null
-                    : e.detail.map(({ name, value }) => ({
-                        url: name,
-                        filename: value,
-                      })),
+                [field]: handleMediaUpdate(e),
               },
             })
           }}
@@ -212,7 +225,7 @@
           valuePlaceholder={"Filename"}
           actionButtonDisabled={(schema.type === FieldType.ATTACHMENT_SINGLE ||
             schema.type === FieldType.SIGNATURE_SINGLE) &&
-            Object.keys(fieldData || {}).length >= 1}
+            fieldData}
         />
       </div>
     {:else}
