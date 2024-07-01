@@ -319,7 +319,6 @@
       {#if !schema.autocolumn}
         <li
           class="table_field spectrum-Menu-item"
-          class:is-selected={Object.hasOwn(editableFields, field)}
           on:click={() => {
             if (Object.hasOwn(editableFields, field)) {
               delete editableFields[field]
@@ -359,10 +358,6 @@
     display: flex;
     padding: var(--spacing-s) var(--spacing-l);
     gap: var(--spacing-s);
-  }
-
-  li.is-selected .spectrum-Menu-itemLabel {
-    color: var(--spectrum-global-color-gray-500);
   }
 
   /* Override for general json field override */
