@@ -5,6 +5,7 @@
   import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { DatePicker, Select } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
 
   const dispatch = createEventDispatcher()
 
@@ -13,7 +14,9 @@
   export let block
   export let isTestModal
 
-  let schemaFields
+  const { STRING, NUMBER, ARRAY } = FieldType
+
+  let schemaFields = []
   let editableValue
 
   $: editableValue = { ...value }
@@ -55,11 +58,11 @@
   }
 </script>
 
-{#if schemaFields.length && isTestModal}
+{#if schemaFields?.length && isTestModal}
   <div class="fields">
     {#each schemaFields as [field, schema]}
       <PropField label={field}>
-        {#if ["string", "number", "array"].includes(schema.type)}
+        {#if [STRING, NUMBER, ARRAY].includes(schema.type)}
           <svelte:component
             this={isTestModal ? ModalBindableInput : DrawerBindableInput}
             panel={AutomationBindingPanel}
