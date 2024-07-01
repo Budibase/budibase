@@ -54,7 +54,7 @@ export interface SearchFilters {
     [key: string]: any[]
   }
   [SearchFilterOperator.CONTAINS]?: {
-    [key: string]: any[]
+    [key: string]: any[] | any
   }
   [SearchFilterOperator.NOT_CONTAINS]?: {
     [key: string]: any[]
