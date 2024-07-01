@@ -246,11 +246,7 @@ class InternalBuilder {
         return `[${value.join(",")}]`
       }
       if (this.client === SqlClient.POSTGRES) {
-        iterate(mode, (key: string, value: any) => {
-          if (!Array.isArray(value)) {
-            value = [value]
-          }
-
+        iterate(mode, (key: string, value: Array<any>) => {
           const wrap = any ? "" : "'"
           const op = any ? "\\?| array" : "@>"
           const fieldNames = key.split(/\./g)
@@ -265,11 +261,7 @@ class InternalBuilder {
         })
       } else if (this.client === SqlClient.MY_SQL) {
         const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
-        iterate(mode, (key: string, value: any) => {
-          if (!Array.isArray(value)) {
-            value = [value]
-          }
-
+        iterate(mode, (key: string, value: Array<any>) => {
           query = query[rawFnc](
             `${not}COALESCE(${jsonFnc}(${key}, '${stringifyArray(
               value
@@ -278,11 +270,7 @@ class InternalBuilder {
         })
       } else {
         const andOr = mode === filters?.containsAny ? " OR " : " AND "
-        iterate(mode, (key: string, value: any) => {
-          if (!Array.isArray(value)) {
-            value = [value]
-          }
-
+        iterate(mode, (key: string, value: Array<any>) => {
           let statement = ""
           for (let i in value) {
             if (typeof value[i] === "string") {
