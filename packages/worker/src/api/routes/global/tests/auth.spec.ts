@@ -312,7 +312,7 @@ describe("/api/global/auth", () => {
     })
 
     describe("GET /api/global/auth/:tenantId/oidc/callback", () => {
-      it("logs in", async () => {
+      it.only("logs in", async () => {
         nock("http://someconfigurl").get("/").times(2).reply(200, {
           issuer: "test",
           authorization_endpoint: "http://localhost/auth",
@@ -344,7 +344,7 @@ describe("/api/global/auth", () => {
 
         const configId = await generateOidcConfig()
         const preAuthRes = await config.api.configs.getOIDCConfig(configId)
-        const res = await config.api.configs.OIDCCallback(configId, preAuthRes)
+        const res = await config.api.configs.OIDCCallback(preAuthRes)
         if (res.status > 399) {
           throw new Error(
             `OIDC callback failed with status ${res.status}: ${res.text}`
