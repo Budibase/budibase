@@ -56,10 +56,6 @@
     meta,
   })
 
-  $: if ($memoStore?.meta?.fields) {
-    editableFields = cloneDeep($memoStore?.meta?.fields)
-  }
-
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
     clone.icon = "ShareAndroid"
@@ -68,9 +64,18 @@
 
   $: tableId = $memoStore?.row?.tableId
 
-  $: if (tableId) {
+  $: initData(tableId, $memoStore?.meta?.fields, $memoStore?.row)
+
+  const initData = (tableId, metaFields, row) => {
+    if (!tableId) {
+      return
+    }
+
+    // Refesh the editable fields
+    editableFields = cloneDeep(metaFields || {})
+
     // Refresh all the row data
-    editableRow = cloneDeep($memoStore?.row)
+    editableRow = cloneDeep(row || {})
 
     table = $tables.list.find(table => table._id === tableId)
 
@@ -106,7 +111,7 @@
       if (!emptyField && !Object.hasOwn(editableFields, key)) {
         editableFields = {
           ...editableFields,
-          [key]: key,
+          [key]: {},
         }
       }
 
