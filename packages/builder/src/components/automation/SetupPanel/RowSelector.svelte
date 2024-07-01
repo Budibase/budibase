@@ -26,13 +26,18 @@
   export let bindings
   export let isTestModal
 
+  const typeToField = Object.values(FIELDS).reduce((acc, field) => {
+    acc[field.type] = field
+    return acc
+  }, {})
+
   const memoStore = memo({
     row,
     meta,
   })
 
   let table
-  // Row Schema Field
+  // Row Schema Fields
   let schemaFields
   let attachmentTypes = [
     FieldType.ATTACHMENTS,
@@ -62,6 +67,7 @@
   })
 
   $: tableId = $memoStore?.row?.tableId
+
   $: if (tableId) {
     // Refresh all the row data
     editableRow = cloneDeep($memoStore?.row)
@@ -146,11 +152,6 @@
       }
     }
   }
-
-  $: typeToField = Object.values(FIELDS).reduce((acc, field) => {
-    acc[field.type] = field
-    return acc
-  }, {})
 
   // Row coerce
   const coerce = (value, type) => {
