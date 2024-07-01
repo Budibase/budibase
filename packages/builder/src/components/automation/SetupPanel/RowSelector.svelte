@@ -82,10 +82,9 @@
           const [, field] = entry
           return field.type !== "formula" && !field.autocolumn
         })
-        .sort(
-          ([, schemaA], [, schemaB]) =>
-            (schemaA.type === "attachment") - (schemaB.type === "attachment")
-        )
+        .sort(([nameA], [nameB]) => {
+          return nameA < nameB ? -1 : 1
+        })
 
       // Parse out any data not in the schema.
       for (const column in editableFields) {
