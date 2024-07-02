@@ -1,6 +1,6 @@
 <script>
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
-  import { Modal, notifications, Layout, Icon } from "@budibase/bbui"
+  import { Modal, notifications, Layout } from "@budibase/bbui"
   import NavHeader from "components/common/NavHeader.svelte"
   import { onMount } from "svelte"
   import {
@@ -33,7 +33,7 @@
   $: groupedAutomations = filteredAutomations.reduce((acc, auto) => {
     acc[auto.definition.trigger.event] = acc[auto.definition.trigger.event] || {
       icon: auto.definition.trigger.icon,
-      name: auto.definition.trigger.name,
+      name: (auto.definition.trigger?.name || "").toUpperCase(),
       entries: [],
     }
     acc[auto.definition.trigger.event].entries.push(auto)
@@ -67,8 +67,8 @@
   <div class="side-bar-nav">
     {#each Object.values(groupedAutomations || {}) as triggerGroup}
       <div class="nav-group">
-        <div class="nav-group-header" title={triggerGroup?.name.toUpperCase()}>
-          {triggerGroup?.name.toUpperCase()}
+        <div class="nav-group-header" title={triggerGroup?.name}>
+          {triggerGroup?.name}
         </div>
         {#each triggerGroup.entries as automation}
           <NavItem
