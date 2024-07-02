@@ -43,7 +43,7 @@
     EditorModes,
   } from "components/common/CodeEditor"
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { QueryUtils, Utils } from "@budibase/frontend-core"
+  import { QueryUtils, Utils, search } from "@budibase/frontend-core"
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
@@ -75,7 +75,11 @@
   $: schema = getSchemaForDatasourcePlus(tableId, {
     searchableSchema: true,
   }).schema
-  $: schemaFields = Object.values(schema || {})
+  $: schemaFields = search.getFields(
+    $tables.list,
+    Object.values(schema || {}),
+    { allowLinks: true }
+  )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW

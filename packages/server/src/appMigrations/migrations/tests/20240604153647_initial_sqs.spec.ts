@@ -15,6 +15,7 @@ import {
 import { processMigrations } from "../../migrationsProcessor"
 import migration from "../20240604153647_initial_sqs"
 import { AppMigration } from "src/appMigrations"
+import sdk from "../../../sdk"
 
 const MIGRATIONS: AppMigration[] = [
   {
@@ -26,6 +27,8 @@ const MIGRATIONS: AppMigration[] = [
 
 const config = setup.getConfig()
 let tableId: string
+
+const prefix = sdk.tables.sqs.mapToUserColumn
 
 function oldLinkDocInfo() {
   const tableId1 = `${DocumentType.TABLE}_a`,
@@ -102,8 +105,14 @@ describe("SQS migration", () => {
       expect(designDoc.sql.tables).toBeDefined()
       const mainTableDef = designDoc.sql.tables[tableId]
       expect(mainTableDef).toBeDefined()
-      expect(mainTableDef.fields.name).toEqual(SQLiteType.TEXT)
-      expect(mainTableDef.fields.description).toEqual(SQLiteType.TEXT)
+      expect(mainTableDef.fields[prefix("name")]).toEqual({
+        field: "name",
+        type: SQLiteType.TEXT,
+      })
+      expect(mainTableDef.fields[prefix("description")]).toEqual({
+        field: "description",
+        type: SQLiteType.TEXT,
+      })
 
       const { tableId1, tableId2, rowId1, rowId2 } = oldLinkDocInfo()
       const linkDoc = await db.get<LinkDocument>(oldLinkDocID())
