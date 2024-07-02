@@ -13,7 +13,7 @@ export type AppMigrationJob = {
 
 // always create app migration queue - so that events can be pushed and read from it
 // across the different api and automation services
-let appMigrationQueue = queue.createQueue<AppMigrationJob>(
+const appMigrationQueue = queue.createQueue<AppMigrationJob>(
   queue.JobQueue.APP_MIGRATION,
   {
     jobOptions: {
