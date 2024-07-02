@@ -3,12 +3,6 @@ import env from "../../../environment"
 import { env as coreEnv } from "@budibase/backend-core"
 import nodeFetch from "node-fetch"
 
-// When we come to move to SQS fully and move away from Clouseau, we will need
-// to flip this to true (or remove it entirely). This will then be used to
-// determine if we should show the maintenance page that links to the SQS
-// migration docs.
-const sqsRequired = false
-
 let sqsAvailable: boolean
 async function isSqsAvailable() {
   // We cache this value for the duration of the Node process because we don't
@@ -30,7 +24,7 @@ async function isSqsAvailable() {
 }
 
 async function isSqsMissing() {
-  return sqsRequired && !(await isSqsAvailable())
+  return env.SQS_SEARCH_ENABLE && !(await isSqsAvailable())
 }
 
 export const fetch = async (ctx: Ctx) => {
