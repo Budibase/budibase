@@ -16,12 +16,6 @@ if (!process.env.DEBUG) {
   console.log = jest.fn() // console.log are ignored in tests
 }
 
-if (!process.env.CI) {
-  // set a longer timeout in dev for debugging
-  // 100 seconds
-  jest.setTimeout(100000)
-}
-
 testContainerUtils.setupEnv(env)
 
 afterAll(() => {

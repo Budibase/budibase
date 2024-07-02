@@ -56,6 +56,7 @@ export type LockOptions = {
     }
   | {
       type: LockType.AUTO_EXTEND
+      autoExtendTtl?: number
       onExtend?: () => void
     }
 )
