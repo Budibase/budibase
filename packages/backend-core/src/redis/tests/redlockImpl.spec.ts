@@ -1,14 +1,8 @@
 import { LockName, LockType, LockOptions } from "@budibase/types"
 import { doWithLock } from "../redlockImpl"
 import { DBTestConfiguration, generator } from "../../../tests"
-import { getLockClient } from "../init"
 
 describe("redlockImpl", () => {
-  afterAll(async () => {
-    const client = await getLockClient()
-    client._client?.quit()
-  })
-
   describe("doWithLock", () => {
     const config = new DBTestConfiguration()
     const lockTtl = 500
