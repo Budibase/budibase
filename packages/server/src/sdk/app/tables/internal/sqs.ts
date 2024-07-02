@@ -62,10 +62,18 @@ function buildRelationshipDefinitions(
   }
 }
 
+export const USER_COLUMN_PREFIX = "data_"
+
+// utility function to denote that columns in SQLite are mapped to avoid overlap issues
+// the overlaps can occur due to case insensitivity and some of the columns which Budibase requires
+export function mapToUserColumn(key: string) {
+  return `${USER_COLUMN_PREFIX}${key}`
+}
+
 // this can generate relationship tables as part of the mapping
 function mapTable(table: Table): SQLiteTables {
   const tables: SQLiteTables = {}
-  const fields: Record<string, SQLiteType> = {}
+  const fields: Record<string, { field: string; type: SQLiteType }> = {}
   for (let [key, column] of Object.entries(table.schema)) {
     // relationships should be handled differently
     if (column.type === FieldType.LINK) {
@@ -78,7 +86,10 @@ function mapTable(table: Table): SQLiteTables {
     if (!FieldTypeMap[column.type]) {
       throw new Error(`Unable to map type "${column.type}" to SQLite type`)
     }
-    fields[key] = FieldTypeMap[column.type]
+    fields[mapToUserColumn(key)] = {
+      field: key,
+      type: FieldTypeMap[column.type],
+    }
   }
   // there are some extra columns to map - add these in
   const constantMap: Record<string, SQLiteType> = {}

@@ -1,12 +1,12 @@
 {
-  "version": "2.29.2",
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "version": "2.29.6",
   "npmClient": "yarn",
   "packages": [
     "packages/*",
     "!packages/account-portal",
     "packages/account-portal/packages/*"
   ],
-  "useNx": true,
   "concurrency": 20,
   "command": {
     "publish": {

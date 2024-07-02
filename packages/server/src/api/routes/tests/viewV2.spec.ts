@@ -218,6 +218,10 @@ describe.each([
             order: 1,
             width: 100,
           },
+          Category: {
+            visible: false,
+            icon: "ic",
+          },
         },
         id: createdView.id,
         version: 2,
@@ -269,9 +273,8 @@ describe.each([
         ...newView,
         schema: {
           id: { visible: true },
-          Price: {
-            visible: true,
-          },
+          Price: { visible: true },
+          Category: { visible: false },
         },
         id: expect.any(String),
         version: 2,
@@ -759,6 +762,7 @@ describe.each([
             order: 1,
             width: 100,
           },
+          Category: { visible: false, icon: "ic" },
         },
         id: view.id,
         version: 2,
@@ -873,30 +877,23 @@ describe.each([
         await db.getDB(config.appId!).put(tableToUpdate)
 
         view = await config.api.viewV2.get(view.id)
-        await config.api.viewV2.update({
-          ...view,
-          schema: {
-            ...view.schema,
-            Price: {
-              visible: false,
+        await config.api.viewV2.update(
+          {
+            ...view,
+            schema: {
+              ...view.schema,
+              Price: {
+                visible: false,
+              },
             },
           },
-        })
-
-        expect(await config.api.viewV2.get(view.id)).toEqual(
-          expect.objectContaining({
-            schema: {
-              id: expect.objectContaining({
-                visible: false,
-              }),
-              Price: expect.objectContaining({
-                visible: false,
-              }),
-              Category: expect.objectContaining({
-                visible: true,
-              }),
+          {
+            status: 400,
+            body: {
+              message: 'You can\'t hide "id" because it is a required field.',
+              status: 400,
             },
-          })
+          }
         )
       })
   })
@@ -938,7 +935,6 @@ describe.each([
           Category: { visible: true },
         },
       })
-      expect(res.schema?.Price).toBeUndefined()
 
       const view = await config.api.viewV2.get(res.id)
       const updatedTable = await config.api.table.get(table._id!)
@@ -1205,6 +1201,7 @@ describe.each([
           ],
           schema: {
             id: { visible: true },
+            one: { visible: false },
             two: { visible: true },
           },
         })

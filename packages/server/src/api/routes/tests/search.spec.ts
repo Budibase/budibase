@@ -9,20 +9,20 @@ import { db as dbCore, utils } from "@budibase/backend-core"
 import * as setup from "./utilities"
 import {
   AutoFieldSubType,
+  BBReferenceFieldSubType,
   Datasource,
   EmptyFilterOption,
-  BBReferenceFieldSubType,
   FieldType,
+  RelationshipType,
+  Row,
   RowSearchParams,
   SearchFilters,
+  SearchResponse,
   SortOrder,
   SortType,
   Table,
   TableSchema,
   User,
-  Row,
-  RelationshipType,
-  SearchResponse,
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
@@ -1938,6 +1938,17 @@ describe.each([
         ])
       })
 
+      it("successfully finds a row searching with a string", async () => {
+        await expectQuery({
+          // @ts-expect-error this test specifically goes against the type to
+          // test that we coerce the string to an array.
+          contains: { "1:users": user1._id },
+        }).toContainExactly([
+          { users: [{ _id: user1._id }] },
+          { users: [{ _id: user1._id }, { _id: user2._id }] },
+        ])
+      })
+
       it("fails to find nonexistent row", async () => {
         await expectQuery({ contains: { users: ["us_none"] } }).toFindNothing()
       })
@@ -2073,6 +2084,28 @@ describe.each([
       })
     })
 
+  isInternal &&
+    describe("no column error backwards compat", () => {
+      beforeAll(async () => {
+        table = await createTable({
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+        })
+      })
+
+      it("shouldn't error when column doesn't exist", async () => {
+        await expectSearch({
+          query: {
+            string: {
+              "1:something": "a",
+            },
+          },
+        }).toMatch({ rows: [] })
+      })
+    })
+
   // lucene can't count the total rows
   !isLucene &&
     describe("row counting", () => {
@@ -2108,4 +2141,29 @@ describe.each([
         }).toNotHaveProperty(["totalRows"])
       })
     })
+
+  describe.each(["data_name_test", "name_data_test", "name_test_data_"])(
+    "special (%s) case",
+    column => {
+      beforeAll(async () => {
+        table = await createTable({
+          [column]: {
+            name: column,
+            type: FieldType.STRING,
+          },
+        })
+        await createRows([{ [column]: "a" }, { [column]: "b" }])
+      })
+
+      it("should be able to query a column with data_ in it", async () => {
+        await expectSearch({
+          query: {
+            equal: {
+              [`1:${column}`]: "a",
+            },
+          },
+        }).toContainExactly([{ [column]: "a" }])
+      })
+    }
+  )
 })

@@ -7,6 +7,7 @@ export const PreprocessorNames = {
   SWAP_TO_DOT: "swap-to-dot-notation",
   FIX_FUNCTIONS: "fix-functions",
   FINALISE: "finalise",
+  NORMALIZE_SPACES: "normalize-spaces",
 }
 
 class Preprocessor {
@@ -50,6 +51,9 @@ export const processors = [
     return statement
   }),
 
+  new Preprocessor(PreprocessorNames.NORMALIZE_SPACES, (statement: string) => {
+    return statement.replace(/{{(\s{2,})/g, "{{ ")
+  }),
   new Preprocessor(
     PreprocessorNames.FINALISE,
     (statement: string, opts: { noHelpers: any }) => {
