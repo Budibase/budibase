@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
 
-  const { linkable, styleable, builderStore, sidePanelStore } =
+  const { linkable, styleable, builderStore, sidePanelStore, modalStore } =
     getContext("sdk")
   const component = getContext("component")
 
@@ -16,6 +16,7 @@
   export let size
 
   let node
+  let touched = false
 
   $: $component.editing && node?.focus()
   $: externalLink = url && typeof url === "string" && !url.startsWith("/")
@@ -27,6 +28,11 @@
   // Add color styles to main styles object, otherwise the styleable helper
   // overrides the color when it's passed as inline style.
   $: styles = enrichStyles($component.styles, color)
+
+  const handleUrlChange = () => {
+    sidePanelStore.actions.close()
+    modalStore.actions.close()
+  }
 
   const getSanitizedUrl = (url, externalLink, newTab) => {
     if (!url) {
@@ -62,7 +68,10 @@
   }
 
   const updateText = e => {
-    builderStore.actions.updateProp("text", e.target.textContent)
+    if (touched) {
+      builderStore.actions.updateProp("text", e.target.textContent)
+    }
+    touched = false
   }
 </script>
 
@@ -76,6 +85,7 @@
     class:underline
     class="align--{align || 'left'} size--{size || 'M'}"
     on:blur={$component.editing ? updateText : null}
+    on:input={() => (touched = true)}
   >
     {componentText}
   </div>
@@ -104,7 +114,7 @@
         class:italic
         class:underline
         class="align--{align || 'left'} size--{size || 'M'}"
-        on:click={sidePanelStore.actions.close}
+        on:click={handleUrlChange}
       >
         {componentText}
       </a>

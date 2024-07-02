@@ -25,6 +25,7 @@ import {
   outputProcessing,
 } from "../../../utilities/rowProcessor"
 import { cloneDeep } from "lodash"
+import { generateIdForRow } from "./utils"
 
 export async function handleRequest<T extends Operation>(
   operation: T,
@@ -38,9 +39,10 @@ export async function handleRequest<T extends Operation>(
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = utils.getTableId(ctx)
-  const { _id, ...rowData } = ctx.request.body
 
+  const { _id, ...rowData } = ctx.request.body
   const table = await sdk.tables.getTable(tableId)
+
   const { row: dataToUpdate } = await inputProcessing(
     ctx.user?._id,
     cloneDeep(table),
@@ -55,11 +57,19 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     throw { validation: validateResult.errors }
   }
 
+  const beforeRow = await sdk.rows.external.getRow(tableId, _id, {
+    relationships: true,
+  })
+
   const response = await handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(_id),
     row: dataToUpdate,
   })
-  const row = await sdk.rows.external.getRow(tableId, _id, {
+
+  // The id might have been changed, so the refetching would fail. Recalculating the id just in case
+  const updatedId =
+    generateIdForRow({ ...beforeRow, ...dataToUpdate }, table) || _id
+  const row = await sdk.rows.external.getRow(tableId, updatedId, {
     relationships: true,
   })
   const enrichedRow = await outputProcessing(table, row, {
@@ -70,6 +80,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     ...response,
     row: enrichedRow,
     table,
+    oldRow: beforeRow,
   }
 }
 
@@ -125,10 +136,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   const id = ctx.params.rowId
   const tableId = utils.getTableId(ctx)
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  const datasource: Datasource = await sdk.datasources.get(datasourceId!)
-  if (!tableName) {
-    ctx.throw(400, "Unable to find table.")
-  }
+  const datasource: Datasource = await sdk.datasources.get(datasourceId)
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
@@ -152,7 +160,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
     }
     const links = row[fieldName]
     const linkedTableId = field.tableId
-    const linkedTableName = breakExternalTableId(linkedTableId).tableName!
+    const linkedTableName = breakExternalTableId(linkedTableId).tableName
     const linkedTable = tables[linkedTableName]
     // don't support composite keys right now
     const linkedIds = links.map((link: Row) => breakRowIdField(link._id!)[0])

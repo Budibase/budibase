@@ -7,7 +7,6 @@
 
   export let value
   export let options
-  export let disabled
 </script>
 
 <div class="permissionPicker">
@@ -15,7 +14,7 @@
     <AbsTooltip text={option.tooltip} type={TooltipType.Info}>
       <ActionButton
         on:click={() => dispatch("click", option.value)}
-        {disabled}
+        disabled={option.disabled}
         size="S"
         icon={option.icon}
         quiet
@@ -30,7 +29,6 @@
   .permissionPicker {
     display: flex;
     gap: var(--spacing-xs);
-    padding-left: calc(var(--spacing-xl) * 2);
   }
 
   .permissionPicker :global(.spectrum-Icon) {

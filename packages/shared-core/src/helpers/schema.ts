@@ -1,5 +1,6 @@
 import {
   BBReferenceFieldSubType,
+  FieldConstraints,
   FieldSchema,
   FieldType,
 } from "@budibase/types"
@@ -15,4 +16,13 @@ export function isDeprecatedSingleUserColumn(
     schema.subtype === BBReferenceFieldSubType.USER &&
     schema.constraints?.type !== "array"
   return result
+}
+
+export function isRequired(constraints: FieldConstraints | undefined) {
+  const isRequired =
+    !!constraints &&
+    ((typeof constraints.presence !== "boolean" &&
+      constraints.presence?.allowEmpty === false) ||
+      constraints.presence === true)
+  return isRequired
 }

@@ -138,6 +138,15 @@ globals:
     # -- The password to use when authenticating with your SMTP server.
     password: ""
 
+  sqs:
+    # -- Whether to use the CouchDB "structured query service" or not. This is disabled by
+    # default for now, but will become the default in a future release.
+    enabled: false
+    # @ignore
+    url: ""
+    # @ignore
+    port: "4984"
+
 services:
   # -- The DNS suffix to use for service discovery. You only need to change this
   # if you've configured your cluster to use a different DNS suffix.
@@ -240,6 +249,13 @@ services:
     # -- Extra environment variables to set for apps pods. Takes a list of
     # name=value pairs.
     extraEnv: []
+    # -- Name of the K8s Secret in the same namespace which contains the extra environment variables.
+    # This can be used to avoid storing sensitive information in the values.yaml file.
+    extraEnvFromSecret: []
+    #  - name: MY_SECRET_KEY
+    #    secretName : my-secret
+    #    secretKey: my-secret-key
+
     # -- Startup probe configuration for apps pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -323,6 +339,13 @@ services:
     # -- Extra environment variables to set for automation worker pods. Takes a list of
     # name=value pairs.
     extraEnv: []
+    # -- Name of the K8s Secret in the same namespace which contains the extra environment variables.
+    # This can be used to avoid storing sensitive information in the values.yaml file.
+    extraEnvFromSecret: []
+    #  - name: MY_SECRET_KEY
+    #    secretName : my-secret
+    #    secretKey: my-secret-key
+
     # -- Startup probe configuration for automation worker pods. You shouldn't
     # need to change this, but if you want to you can find more information
     # here:
@@ -408,6 +431,13 @@ services:
     # -- Extra environment variables to set for worker pods. Takes a list of
     # name=value pairs.
     extraEnv: []
+    # -- Name of the K8s Secret in the same namespace which contains the extra environment variables.
+    # This can be used to avoid storing sensitive information in the values.yaml file.
+    extraEnvFromSecret: []
+    #  - name: MY_SECRET_KEY
+    #    secretName : my-secret
+    #    secretKey: my-secret-key
+
     # -- Startup probe configuration for worker pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -611,9 +641,24 @@ couchdb:
     # @ignore
     repository: budibase/couchdb
     # @ignore
-    tag: v3.2.1
+    tag: v3.3.3
     # @ignore
     pullPolicy: Always
+
+  extraPorts:
+    # -- Extra ports to expose on the CouchDB service. We expose the SQS port
+    # by default, but you can add more ports here if you need to.
+    - name: sqs
+      containerPort: 4984
+
+  service:
+    extraPorts:
+      # -- Extra ports to expose on the CouchDB service. We expose the SQS port
+      # by default, but you can add more ports here if you need to.
+      - name: sqs
+        port: 4984
+        targetPort: 4984
+        protocol: TCP
 
   # @ignore
   # This should remain false. We ship Clouseau ourselves as part of the

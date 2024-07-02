@@ -4,8 +4,9 @@ import * as mongodb from "./mongodb"
 import * as mysql from "./mysql"
 import * as mssql from "./mssql"
 import * as mariadb from "./mariadb"
-import { GenericContainer } from "testcontainers"
+import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { testContainerUtils } from "@budibase/backend-core/tests"
+import cloneDeep from "lodash/cloneDeep"
 
 export type DatasourceProvider = () => Promise<Datasource>
 
@@ -47,16 +48,16 @@ export async function getDatasources(
   return Promise.all(sourceNames.map(sourceName => providers[sourceName]()))
 }
 
-export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
+export async function knexClient(ds: Datasource) {
   switch (ds.source) {
     case SourceName.POSTGRES: {
-      return postgres.rawQuery(ds, sql)
+      return postgres.knexClient(ds)
     }
     case SourceName.MYSQL: {
-      return mysql.rawQuery(ds, sql)
+      return mysql.knexClient(ds)
     }
     case SourceName.SQL_SERVER: {
-      return mssql.rawQuery(ds, sql)
+      return mssql.knexClient(ds)
     }
     default: {
       throw new Error(`Unsupported source: ${ds.source}`)
@@ -65,9 +66,39 @@ export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
 }
 
 export async function startContainer(container: GenericContainer) {
-  container = container.withReuse().withLabels({ "com.budibase": "true" })
+  const imageName = (container as any).imageName.string as string
+  const key = imageName.replaceAll("/", "-").replaceAll(":", "-")
 
-  const startedContainer = await container.start()
+  container = container
+    .withReuse()
+    .withLabels({ "com.budibase": "true" })
+    .withName(key)
+
+  let startedContainer: StartedTestContainer | undefined = undefined
+  let lastError = undefined
+  for (let i = 0; i < 10; i++) {
+    try {
+      // container.start() is not an idempotent operation, calling `start`
+      // modifies the internal state of a GenericContainer instance such that
+      // the hash it uses to determine reuse changes. We need to clone the
+      // container before calling start to ensure that we're using the same
+      // reuse hash every time.
+      const containerCopy = cloneDeep(container)
+      startedContainer = await containerCopy.start()
+      lastError = undefined
+      break
+    } catch (e: any) {
+      lastError = e
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+  }
+
+  if (!startedContainer) {
+    if (lastError) {
+      throw lastError
+    }
+    throw new Error(`failed to start container: ${imageName}`)
+  }
 
   const info = testContainerUtils.getContainerById(startedContainer.getId())
   if (!info) {

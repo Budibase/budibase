@@ -15,6 +15,9 @@
     Checkbox,
     DatePicker,
     DrawerContent,
+    Toggle,
+    Icon,
+    Divider,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation, tables } from "stores/builder"
@@ -40,7 +43,7 @@
     EditorModes,
   } from "components/common/CodeEditor"
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { LuceneUtils, Utils } from "@budibase/frontend-core"
+  import { QueryUtils, Utils, search } from "@budibase/frontend-core"
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
@@ -72,7 +75,11 @@
   $: schema = getSchemaForDatasourcePlus(tableId, {
     searchableSchema: true,
   }).schema
-  $: schemaFields = Object.values(schema || {})
+  $: schemaFields = search.getFields(
+    $tables.list,
+    Object.values(schema || {}),
+    { allowLinks: true }
+  )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
@@ -87,6 +94,8 @@
     codeMode === EditorModes.Handlebars
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
+
+  let testDataRowVisibility = {}
 
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
@@ -118,7 +127,6 @@
         searchableSchema: true,
       }).schema
     }
-
     try {
       if (isTestModal) {
         let newTestData = { schema }
@@ -196,7 +204,8 @@
         (automation.trigger?.event === "row:update" ||
           automation.trigger?.event === "row:save")
       ) {
-        if (name !== "id" && name !== "revision") return `trigger.row.${name}`
+        let noRowKeywordBindings = ["id", "revision", "oldRow"]
+        if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
       }
       /* End special cases for generating custom schemas based on triggers */
 
@@ -343,7 +352,7 @@
   }
 
   function saveFilters(key) {
-    const filters = LuceneUtils.buildLuceneQuery(tempFilters)
+    const filters = QueryUtils.buildQuery(tempFilters)
     const defKey = `${key}-def`
     onChange({ detail: filters }, key)
     // need to store the builder definition in the automation
@@ -372,7 +381,11 @@
 
   function getFieldLabel(key, value) {
     const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
-    return `${value.title || (key === "row" ? "Table" : key)} ${requiredSuffix}`
+    return `${value.title || (key === "row" ? "Row" : key)} ${requiredSuffix}`
+  }
+
+  function toggleTestDataRowVisibility(key) {
+    testDataRowVisibility[key] = !testDataRowVisibility[key]
   }
 
   function handleAttachmentParams(keyValueObj) {
@@ -383,6 +396,16 @@
       }
     }
     return params
+  }
+
+  function toggleAttachmentBinding(e, key) {
+    onChange(
+      {
+        detail: "",
+      },
+      key
+    )
+    onChange({ detail: { useAttachmentBinding: e.detail } }, "meta")
   }
 
   onMount(async () => {
@@ -462,26 +485,63 @@
               <div class="label-wrapper">
                 <Label>{label}</Label>
               </div>
-              <div class="attachment-field-width">
-                <KeyValueBuilder
-                  on:change={e =>
-                    onChange(
-                      {
-                        detail: e.detail.map(({ name, value }) => ({
-                          url: name,
-                          filename: value,
-                        })),
-                      },
-                      key
-                    )}
-                  object={handleAttachmentParams(inputData[key])}
-                  allowJS
-                  {bindings}
-                  keyBindings
-                  customButtonText={"Add attachment"}
-                  keyPlaceholder={"URL"}
-                  valuePlaceholder={"Filename"}
+              <div class="toggle-container">
+                <Toggle
+                  value={inputData?.meta?.useAttachmentBinding}
+                  text={"Use bindings"}
+                  size={"XS"}
+                  on:change={e => toggleAttachmentBinding(e, key)}
                 />
+              </div>
+
+              <div class="attachment-field-width">
+                {#if !inputData?.meta?.useAttachmentBinding}
+                  <KeyValueBuilder
+                    on:change={e =>
+                      onChange(
+                        {
+                          detail: e.detail.map(({ name, value }) => ({
+                            url: name,
+                            filename: value,
+                          })),
+                        },
+                        key
+                      )}
+                    object={handleAttachmentParams(inputData[key])}
+                    allowJS
+                    {bindings}
+                    keyBindings
+                    customButtonText={"Add attachment"}
+                    keyPlaceholder={"URL"}
+                    valuePlaceholder={"Filename"}
+                  />
+                {:else if isTestModal}
+                  <ModalBindableInput
+                    title={value.title || label}
+                    value={inputData[key]}
+                    panel={AutomationBindingPanel}
+                    type={value.customType}
+                    on:change={e => onChange(e, key)}
+                    {bindings}
+                    updateOnChange={false}
+                  />
+                {:else}
+                  <div class="test">
+                    <DrawerBindableInput
+                      title={value.title ?? label}
+                      panel={AutomationBindingPanel}
+                      type={value.customType}
+                      value={inputData[key]}
+                      on:change={e => onChange(e, key)}
+                      {bindings}
+                      updateOnChange={false}
+                      placeholder={value.customType === "queryLimit"
+                        ? queryLimit
+                        : ""}
+                      drawerLeft="260px"
+                    />
+                  </div>
+                {/if}
               </div>
             </div>
           {:else if value.customType === "filters"}
@@ -560,20 +620,48 @@
               on:change={e => onChange(e, key)}
             />
           {:else if value.customType === "row"}
-            <RowSelector
-              value={inputData[key]}
-              meta={inputData["meta"] || {}}
-              on:change={e => {
-                if (e.detail?.key) {
-                  onChange(e, e.detail.key)
-                } else {
-                  onChange(e, key)
-                }
-              }}
-              {bindings}
-              {isTestModal}
-              {isUpdateRow}
-            />
+            {#if isTestModal}
+              <div class="align-horizontally">
+                <Icon
+                  name={testDataRowVisibility[key] ? "Remove" : "Add"}
+                  hoverable
+                  on:click={() => toggleTestDataRowVisibility(key)}
+                />
+                <Label size="XL">{label}</Label>
+              </div>
+              {#if testDataRowVisibility[key]}
+                <RowSelector
+                  value={inputData[key]}
+                  meta={inputData["meta"] || {}}
+                  on:change={e => {
+                    if (e.detail?.key) {
+                      onChange(e, e.detail.key)
+                    } else {
+                      onChange(e, key)
+                    }
+                  }}
+                  {bindings}
+                  {isTestModal}
+                  {isUpdateRow}
+                />
+              {/if}
+              <Divider />
+            {:else}
+              <RowSelector
+                value={inputData[key]}
+                meta={inputData["meta"] || {}}
+                on:change={e => {
+                  if (e.detail?.key) {
+                    onChange(e, e.detail.key)
+                  } else {
+                    onChange(e, key)
+                  }
+                }}
+                {bindings}
+                {isTestModal}
+                {isUpdateRow}
+              />
+            {/if}
           {:else if value.customType === "webhookUrl"}
             <WebhookDisplay
               on:change={e => onChange(e, key)}
@@ -687,6 +775,12 @@
 <style>
   .field-width {
     width: 320px;
+  }
+
+  .align-horizontally {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
   }
 
   .fields {

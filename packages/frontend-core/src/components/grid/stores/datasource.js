@@ -94,6 +94,7 @@ export const createActions = context => {
     nonPlus,
     schemaMutations,
     schema,
+    notifications,
   } = context
 
   // Gets the appropriate API for the configured datasource type
@@ -125,16 +126,25 @@ export const createActions = context => {
   // Saves the datasource definition
   const saveDefinition = async newDefinition => {
     // Update local state
+    const originalDefinition = get(definition)
     definition.set(newDefinition)
 
     // Update server
     if (get(config).canSaveSchema) {
-      await getAPI()?.actions.saveDefinition(newDefinition)
+      try {
+        await getAPI()?.actions.saveDefinition(newDefinition)
 
-      // Broadcast change so external state can be updated, as this change
-      // will not be received by the builder websocket because we caused it
-      // ourselves
-      dispatch("updatedatasource", newDefinition)
+        // Broadcast change so external state can be updated, as this change
+        // will not be received by the builder websocket because we caused it
+        // ourselves
+        dispatch("updatedatasource", newDefinition)
+      } catch (error) {
+        const msg = error?.message || error || "Unknown error"
+        get(notifications).error(`Error saving schema: ${msg}`)
+
+        // Reset the definition if saving failed
+        definition.set(originalDefinition)
+      }
     }
   }
 
@@ -204,6 +214,10 @@ export const createActions = context => {
       ...$definition,
       schema: newSchema,
     })
+    resetSchemaMutations()
+  }
+
+  const resetSchemaMutations = () => {
     schemaMutations.set({})
   }
 
@@ -253,6 +267,7 @@ export const createActions = context => {
         addSchemaMutation,
         addSchemaMutations,
         saveSchemaMutations,
+        resetSchemaMutations,
       },
     },
   }

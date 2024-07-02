@@ -14,6 +14,7 @@ import {
   CONSTANT_INTERNAL_ROW_COLS,
   generateJunctionTableID,
 } from "../../../../db/utils"
+import { isEqual } from "lodash"
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BOOLEAN]: SQLiteType.NUMERIC,
@@ -61,10 +62,18 @@ function buildRelationshipDefinitions(
   }
 }
 
+export const USER_COLUMN_PREFIX = "data_"
+
+// utility function to denote that columns in SQLite are mapped to avoid overlap issues
+// the overlaps can occur due to case insensitivity and some of the columns which Budibase requires
+export function mapToUserColumn(key: string) {
+  return `${USER_COLUMN_PREFIX}${key}`
+}
+
 // this can generate relationship tables as part of the mapping
 function mapTable(table: Table): SQLiteTables {
   const tables: SQLiteTables = {}
-  const fields: Record<string, SQLiteType> = {}
+  const fields: Record<string, { field: string; type: SQLiteType }> = {}
   for (let [key, column] of Object.entries(table.schema)) {
     // relationships should be handled differently
     if (column.type === FieldType.LINK) {
@@ -77,7 +86,10 @@ function mapTable(table: Table): SQLiteTables {
     if (!FieldTypeMap[column.type]) {
       throw new Error(`Unable to map type "${column.type}" to SQLite type`)
     }
-    fields[key] = FieldTypeMap[column.type]
+    fields[mapToUserColumn(key)] = {
+      field: key,
+      type: FieldTypeMap[column.type],
+    }
   }
   // there are some extra columns to map - add these in
   const constantMap: Record<string, SQLiteType> = {}
@@ -107,8 +119,22 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
 
 export async function syncDefinition(): Promise<void> {
   const db = context.getAppDB()
+  let existing: SQLiteDefinition | undefined
+  try {
+    existing = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+  } catch (err: any) {
+    if (err.status !== 404) {
+      throw err
+    }
+  }
   const definition = await buildBaseDefinition()
-  await db.put(definition)
+  if (existing) {
+    definition._rev = existing._rev
+  }
+  // only write if something has changed
+  if (!existing || !isEqual(existing.sql, definition.sql)) {
+    await db.put(definition)
+  }
 }
 
 export async function addTable(table: Table) {

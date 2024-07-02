@@ -11,7 +11,7 @@
   "scripts": {
     "tsc": "node ../../scripts/build.js",
     "build": "yarn tsc",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
     "start": "ts-node ./src/index.ts"
   },
   "dependencies": {
@@ -32,7 +32,7 @@
     "pouchdb": "7.3.0",
     "pouchdb-replication-stream": "1.2.9",
     "randomstring": "1.1.5",
-    "tar": "6.1.15",
+    "tar": "6.2.1",
     "yaml": "^2.1.1"
   },
   "devDependencies": {
@@ -40,6 +40,6 @@
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "^6.4.0",
     "ts-node": "10.8.1",
-    "typescript": "5.2.2"
+    "typescript": "5.5.2"
   }
 }

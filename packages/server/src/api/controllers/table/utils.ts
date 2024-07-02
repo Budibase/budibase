@@ -178,7 +178,7 @@ export async function handleDataImport(
   }
 
   const db = context.getAppDB()
-  const data = parse(importRows, schema)
+  const data = parse(importRows, table)
 
   let finalData: any = await importToRows(data, table, user)
 

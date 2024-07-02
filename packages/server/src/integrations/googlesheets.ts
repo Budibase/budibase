@@ -566,7 +566,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
         }
       }
-      let filtered = dataFilters.runLuceneQuery(rows, query.filters)
+      let filtered = dataFilters.runQuery(rows, query.filters || {})
       if (hasFilters && query.paginate) {
         filtered = filtered.slice(offset, offset + limit)
       }
@@ -585,7 +585,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           })
         }
         const [sortField, sortInfo] = Object.entries(query.sort)[0]
-        response = dataFilters.luceneSort(
+        response = dataFilters.sort(
           response,
           sortField,
           sortInfo.direction,

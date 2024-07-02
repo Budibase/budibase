@@ -1,8 +1,8 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
-import mssql from "mssql"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
+import knex from "knex"
 
 let ports: Promise<testContainerUtils.Port[]>
 
@@ -29,6 +29,9 @@ export async function getDatasource(): Promise<Datasource> {
   }
 
   const port = (await ports).find(x => x.container === 1433)?.host
+  if (!port) {
+    throw new Error("SQL Server port not found")
+  }
 
   const datasource: Datasource = {
     type: "datasource_plus",
@@ -46,26 +49,23 @@ export async function getDatasource(): Promise<Datasource> {
   }
 
   const database = generator.guid().replaceAll("-", "")
-  await rawQuery(datasource, `CREATE DATABASE "${database}"`)
+  const client = await knexClient(datasource)
+  await client.raw(`CREATE DATABASE "${database}"`)
   datasource.config!.database = database
 
   return datasource
 }
 
-export async function rawQuery(ds: Datasource, sql: string) {
+export async function knexClient(ds: Datasource) {
   if (!ds.config) {
     throw new Error("Datasource config is missing")
   }
   if (ds.source !== SourceName.SQL_SERVER) {
-    throw new Error("Datasource source is not SQL Server")
+    throw new Error("Datasource source is not MSSQL")
   }
 
-  const pool = new mssql.ConnectionPool(ds.config! as mssql.config)
-  const client = await pool.connect()
-  try {
-    const { recordset } = await client.query(sql)
-    return recordset
-  } finally {
-    await pool.close()
-  }
+  return knex({
+    client: "mssql",
+    connection: ds.config,
+  })
 }

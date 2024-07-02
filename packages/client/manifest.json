@@ -11,6 +11,7 @@
     "continueIfAction": true,
     "showNotificationAction": true,
     "sidePanel": true,
+    "modal": true,
     "skeletonLoader": true
   },
   "typeSupportPresets": {
@@ -22,17 +23,21 @@
         { "type": "bigint", "message": "stringAsNumber" },
         { "type": "options", "message": "stringAsNumber" },
         { "type": "formula", "message": "stringAsNumber" },
-        { "type": "datetime", "message": "dateAsNumber"}
+        { "type": "datetime", "message": "dateAsNumber" }
       ],
-      "unsupported": [
-        { "type": "json", "message": "jsonPrimitivesOnly" }
-      ]
+      "unsupported": [{ "type": "json", "message": "jsonPrimitivesOnly" }]
     },
     "stringLike": {
-      "supported": ["string", "number", "bigint", "options", "longform", "boolean", "datetime"],
-      "unsupported": [
-        { "type": "json", "message": "jsonPrimitivesOnly" }
-      ]
+      "supported": [
+        "string",
+        "number",
+        "bigint",
+        "options",
+        "longform",
+        "boolean",
+        "datetime"
+      ],
+      "unsupported": [{ "type": "json", "message": "jsonPrimitivesOnly" }]
     },
     "datetimeLike": {
       "supported": ["datetime"],
@@ -42,11 +47,9 @@
         { "type": "options", "message": "stringAsDate" },
         { "type": "formula", "message": "stringAsDate" },
         { "type": "bigint", "message": "stringAsDate" },
-        { "type": "number", "message": "numberAsDate"}
+        { "type": "number", "message": "numberAsDate" }
       ],
-      "unsupported": [
-        { "type": "json", "message": "jsonPrimitivesOnly" }
-      ]
+      "unsupported": [{ "type": "json", "message": "jsonPrimitivesOnly" }]
     }
   },
   "layout": {
@@ -5223,6 +5226,7 @@
     ]
   },
   "chartblock": {
+    "documentationLink": "https://docs.budibase.com/docs/chart",
     "block": true,
     "name": "Chart Block",
     "icon": "GraphPie",
@@ -6974,7 +6978,7 @@
     "name": "Side Panel",
     "icon": "RailRight",
     "hasChildren": true,
-    "illegalChildren": ["section", "sidepanel"],
+    "illegalChildren": ["section", "sidepanel", "modal"],
     "showEmptyState": false,
     "draggable": false,
     "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
@@ -6989,6 +6993,52 @@
         "type": "event",
         "key": "onClose",
         "label": "On close"
+      }
+    ]
+  },
+  "modal": {
+    "name": "Modal",
+    "icon": "MBox",
+    "hasChildren": true,
+    "illegalChildren": ["section", "modal", "sidepanel"],
+    "showEmptyState": false,
+    "draggable": false,
+    "info": "Modals are hidden by default. They will only be revealed when triggered by the 'Open Modal' action.",
+    "settings": [
+      {
+        "type": "boolean",
+        "key": "ignoreClicksOutside",
+        "label": "Ignore clicks outside",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "key": "onClose",
+        "label": "On close"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "small",
+        "options": [
+          {
+            "label": "Small",
+            "value": "small"
+          },
+          {
+            "label": "Medium",
+            "value": "medium"
+          },
+          {
+            "label": "Large",
+            "value": "large"
+          },
+          {
+            "label": "Fullscreen",
+            "value": "fullscreen"
+          }
+        ]
       }
     ]
   },

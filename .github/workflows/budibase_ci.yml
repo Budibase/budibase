@@ -73,9 +73,9 @@ jobs:
       - name: Check types
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
-            yarn check:types --since=${{ env.NX_BASE_BRANCH }}
+            yarn check:types --since=${{ env.NX_BASE_BRANCH }} --ignore @budibase/account-portal-server
           else
-            yarn check:types
+            yarn check:types --ignore @budibase/account-portal-server
           fi
 
   helm-lint:
@@ -226,10 +226,11 @@ jobs:
         if: ${{ steps.get_pro_commits.outputs.base_commit_excluding_merges != '' }}
         run: |
           cd packages/pro
+          base_commit='${{ steps.get_pro_commits.outputs.base_commit }}'
           base_commit_excluding_merges='${{ steps.get_pro_commits.outputs.base_commit_excluding_merges }}'
           pro_commit='${{ steps.get_pro_commits.outputs.pro_commit }}'
 
-          any_commit=$(git log --no-merges $base_commit_excluding_merges...$pro_commit)
+          any_commit=$(git log --no-merges $base_commit...$pro_commit)
 
           if [ -n "$any_commit" ]; then
             echo $any_commit

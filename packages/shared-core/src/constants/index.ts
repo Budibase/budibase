@@ -1,5 +1,6 @@
 export * from "./api"
 export * from "./fields"
+export * from "./rows"
 
 export const OperatorOptions = {
   Equals: {
@@ -163,14 +164,17 @@ export const InvalidFileExtensions = [
 
 export enum BpmCorrelationKey {
   ONBOARDING = "budibase:onboarding:correlationkey",
+  VERIFY_SSO_LOGIN = "budibase:verify_sso_login:correlationkey",
 }
 
 export enum BpmInstanceKey {
   ONBOARDING = "budibase:onboarding:instancekey",
+  VERIFY_SSO_LOGIN = "budibase:verify_sso_login:instancekey",
 }
 
 export enum BpmStatusKey {
   ONBOARDING = "budibase:onboarding:status",
+  VERIFY_SSO_LOGIN = "budibase:verify_sso_login:status",
 }
 
 export enum BpmStatusValue {
@@ -179,3 +183,5 @@ export enum BpmStatusValue {
   VERIFYING_EMAIL = "verifying_email",
   COMPLETED = "completed",
 }
+
+export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"

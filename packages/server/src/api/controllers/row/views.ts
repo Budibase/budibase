@@ -31,7 +31,7 @@ export async function searchView(
   // Enrich saved query with ephemeral query params.
   // We prevent searching on any fields that are saved as part of the query, as
   // that could let users find rows they should not be allowed to access.
-  let query = dataFilters.buildLuceneQuery(view.query || [])
+  let query = dataFilters.buildQuery(view.query || [])
   if (body.query) {
     // Extract existing fields
     const existingFields =
@@ -69,6 +69,7 @@ export async function searchView(
     limit: body.limit,
     bookmark: body.bookmark,
     paginate: body.paginate,
+    countRows: body.countRows,
   }
 
   const result = await sdk.rows.search(searchOptions)

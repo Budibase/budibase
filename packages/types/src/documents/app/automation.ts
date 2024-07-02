@@ -2,6 +2,8 @@ import { Document } from "../document"
 import { EventEmitter } from "events"
 import { User } from "../global"
 import { ReadStream } from "fs"
+import { Row } from "./row"
+import { Table } from "./table"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -142,7 +144,7 @@ interface BaseIOStructure {
   required?: string[]
 }
 
-interface InputOutputBlock {
+export interface InputOutputBlock {
   properties: {
     [key: string]: BaseIOStructure
   }
@@ -245,10 +247,17 @@ export type AutomationAttachment = {
 
 export type AutomationAttachmentContent = {
   filename: string
-  content: ReadStream | NodeJS.ReadableStream | ReadableStream<Uint8Array>
+  content: ReadStream | NodeJS.ReadableStream
 }
 
 export type BucketedContent = AutomationAttachmentContent & {
   bucket: string
   path: string
+}
+
+export type UpdatedRowEventEmitter = {
+  row: Row
+  oldRow: Row
+  table: Table
+  appId: string
 }

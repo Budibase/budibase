@@ -4,9 +4,9 @@ import {
   TableSchema,
   FieldSchema,
   Row,
-  FieldConstraints,
+  Table,
 } from "@budibase/types"
-import { ValidColumnNameRegex, utils } from "@budibase/shared-core"
+import { ValidColumnNameRegex, helpers, utils } from "@budibase/shared-core"
 import { db } from "@budibase/backend-core"
 import { parseCsvExport } from "../api/controllers/view/exporters"
 
@@ -39,15 +39,6 @@ export function isSchema(schema: any): schema is TableSchema {
 
 export function isRows(rows: any): rows is Rows {
   return Array.isArray(rows) && rows.every(row => typeof row === "object")
-}
-
-export function isRequired(constraints: FieldConstraints | undefined) {
-  const isRequired =
-    !!constraints &&
-    ((typeof constraints.presence !== "boolean" &&
-      constraints.presence?.allowEmpty === false) ||
-      constraints.presence === true)
-  return isRequired
 }
 
 export function validate(rows: Rows, schema: TableSchema): ValidationResults {
@@ -88,7 +79,6 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
       } else if (
         // If there's no data for this field don't bother with further checks
         // If the field is already marked as invalid there's no need for further checks
-        results.schemaValidation[columnName] === false ||
         columnData == null ||
         isAutoColumn
       ) {
@@ -109,7 +99,7 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
           columnData,
           columnType,
           columnSubtype,
-          isRequired(constraints)
+          helpers.schema.isRequired(constraints)
         )
       ) {
         results.schemaValidation[columnName] = false
@@ -128,13 +118,23 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
   return results
 }
 
-export function parse(rows: Rows, schema: TableSchema): Rows {
+export function parse(rows: Rows, table: Table): Rows {
   return rows.map(row => {
     const parsedRow: Row = {}
 
     Object.entries(row).forEach(([columnName, columnData]) => {
-      if (!(columnName in schema) || schema[columnName]?.autocolumn) {
+      const schema = table.schema
+      if (!(columnName in schema)) {
         // Objects can be present in the row data but not in the schema, so make sure we don't proceed in such a case
+        return
+      }
+
+      if (
+        schema[columnName].autocolumn &&
+        !table.primary?.includes(columnName)
+      ) {
+        // Don't want the user specifying values for autocolumns unless they're updating
+        // a row through its primary key.
         return
       }
 

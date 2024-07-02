@@ -12,6 +12,7 @@ import {
   uploadStore,
   rowSelectionStore,
   sidePanelStore,
+  modalStore,
 } from "stores"
 import { API } from "api"
 import { ActionTypes } from "constants"
@@ -416,11 +417,11 @@ const continueIfHandler = action => {
 }
 
 const showNotificationHandler = action => {
-  const { message, type, autoDismiss } = action.parameters
+  const { message, type, autoDismiss, duration } = action.parameters
   if (!message || !type) {
     return
   }
-  notificationStore.actions[type]?.(message, autoDismiss)
+  notificationStore.actions[type]?.(message, autoDismiss, duration)
 }
 
 const promptUserHandler = () => {}
@@ -434,6 +435,17 @@ const openSidePanelHandler = action => {
 
 const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
+}
+
+const openModalHandler = action => {
+  const { id } = action.parameters
+  if (id) {
+    modalStore.actions.open(id)
+  }
+}
+
+const closeModalHandler = () => {
+  modalStore.actions.close()
 }
 
 const downloadFileHandler = async action => {
@@ -499,6 +511,8 @@ const handlerMap = {
   ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: openSidePanelHandler,
   ["Close Side Panel"]: closeSidePanelHandler,
+  ["Open Modal"]: openModalHandler,
+  ["Close Modal"]: closeModalHandler,
   ["Download File"]: downloadFileHandler,
 }
 
@@ -508,6 +522,7 @@ const confirmTextMap = {
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
   ["Prompt User"]: "Are you sure you want to continue?",
+  ["Duplicate Row"]: "Are you sure you want to duplicate this row?",
 }
 
 /**
@@ -568,6 +583,11 @@ export const enrichButtonActions = (actions, context) => {
             const defaultTitleText = action["##eventHandlerType"]
             const customTitleText =
               action.parameters?.customTitleText || defaultTitleText
+            const cancelButtonText =
+              action.parameters?.cancelButtonText || "Cancel"
+            const confirmButtonText =
+              action.parameters?.confirmButtonText || "Confirm"
+
             confirmationStore.actions.showConfirmation(
               customTitleText,
               confirmText,
@@ -598,7 +618,9 @@ export const enrichButtonActions = (actions, context) => {
               },
               () => {
                 resolve(false)
-              }
+              },
+              confirmButtonText,
+              cancelButtonText
             )
           })
         }
