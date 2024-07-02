@@ -1,12 +1,17 @@
+/***
+ * Running lerna with since and scope is not working as expected.
+ * For example, running the command `yarn test --scope=@budibase/worker --since=master`, with changes only on @budibase/backend-core will not work, as it does not analyse the dependencies properly.
+ *
+ * This script is using `lerna ls` to detect all the affected projects from a given commit, and if the scoped package is affected, the actual command will be executed
+ *
+ * The current version of the script only supports a single project in the scope.
+ */
+
 const { execSync } = require("child_process")
 
-const argv = require("yargs").demandOption([
-  "task",
-  "since",
-  "package-name",
-]).argv
+const argv = require("yargs").demandOption(["task", "since", "scope"]).argv
 
-const { task, since, packageName } = argv
+const { task, since, scope } = argv
 
 const affectedPackages = execSync(
   `yarn --silent lerna ls --since=${since} --json`,
@@ -17,13 +22,13 @@ const affectedPackages = execSync(
 
 const packages = JSON.parse(affectedPackages)
 
-const isAffected = packages.some(pkg => pkg.name === packageName)
+const isAffected = packages.some(pkg => pkg.name === scope)
 
 if (isAffected) {
-  console.log(`${packageName} is affected. Running ${task}...`)
-  execSync(`yarn ${task} --scope=${packageName}`, {
+  console.log(`${scope} is affected. Running task "${task}"`)
+  execSync(`yarn ${task} --scope=${scope}`, {
     stdio: "inherit",
   })
 } else {
-  console.log(`${packageName} is not affected. Skipping ${task}...`)
+  console.log(`${scope} is not affected. Skipping task "${task}"`)
 }
