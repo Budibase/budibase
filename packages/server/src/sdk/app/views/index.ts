@@ -160,14 +160,10 @@ export function enrichSchema(
   for (const key of Object.keys(schema)) {
     // if nothing specified in view, then it is not visible
     const ui = view.schema?.[key] || { visible: false }
-    if (ui.visible === false) {
-      schema[key].visible = false
-    } else {
-      schema[key] = {
-        ...schema[key],
-        ...ui,
-        order: anyViewOrder ? ui?.order ?? undefined : schema[key].order,
-      }
+    schema[key] = {
+      ...schema[key],
+      ...ui,
+      order: anyViewOrder ? ui?.order ?? undefined : schema[key].order,
     }
   }
 
