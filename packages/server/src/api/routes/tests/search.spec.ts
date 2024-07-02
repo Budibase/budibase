@@ -9,20 +9,20 @@ import { db as dbCore, utils } from "@budibase/backend-core"
 import * as setup from "./utilities"
 import {
   AutoFieldSubType,
+  BBReferenceFieldSubType,
   Datasource,
   EmptyFilterOption,
-  BBReferenceFieldSubType,
   FieldType,
+  RelationshipType,
+  Row,
   RowSearchParams,
   SearchFilters,
+  SearchResponse,
   SortOrder,
   SortType,
   Table,
   TableSchema,
   User,
-  Row,
-  RelationshipType,
-  SearchResponse,
 } from "@budibase/types"
 import _ from "lodash"
 import tk from "timekeeper"
@@ -2081,6 +2081,28 @@ describe.each([
         await expectQuery({
           equal: { ["name"]: "baz" },
         }).toContainExactly([{ name: "baz", productCat: undefined }])
+      })
+    })
+
+  isInternal &&
+    describe("no column error backwards compat", () => {
+      beforeAll(async () => {
+        table = await createTable({
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+        })
+      })
+
+      it("shouldn't error when column doesn't exist", async () => {
+        await expectSearch({
+          query: {
+            string: {
+              "1:something": "a",
+            },
+          },
+        }).toMatch({ rows: [] })
       })
     })
 
