@@ -1,8 +1,8 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
-import pg from "pg"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
+import knex from "knex"
 
 let ports: Promise<testContainerUtils.Port[]>
 
@@ -21,6 +21,9 @@ export async function getDatasource(): Promise<Datasource> {
   }
 
   const port = (await ports).find(x => x.container === 5432)?.host
+  if (!port) {
+    throw new Error("Postgres port not found")
+  }
 
   const datasource: Datasource = {
     type: "datasource_plus",
@@ -40,13 +43,14 @@ export async function getDatasource(): Promise<Datasource> {
   }
 
   const database = generator.guid().replaceAll("-", "")
-  await rawQuery(datasource, `CREATE DATABASE "${database}"`)
+  const client = await knexClient(datasource)
+  await client.raw(`CREATE DATABASE "${database}"`)
   datasource.config!.database = database
 
   return datasource
 }
 
-export async function rawQuery(ds: Datasource, sql: string) {
+export async function knexClient(ds: Datasource) {
   if (!ds.config) {
     throw new Error("Datasource config is missing")
   }
@@ -54,12 +58,8 @@ export async function rawQuery(ds: Datasource, sql: string) {
     throw new Error("Datasource source is not Postgres")
   }
 
-  const client = new pg.Client(ds.config)
-  await client.connect()
-  try {
-    const { rows } = await client.query(sql)
-    return rows
-  } finally {
-    await client.end()
-  }
+  return knex({
+    client: "pg",
+    connection: ds.config,
+  })
 }

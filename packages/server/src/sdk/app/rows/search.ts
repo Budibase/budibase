@@ -2,8 +2,10 @@ import {
   EmptyFilterOption,
   Row,
   RowSearchParams,
+  SearchFilterOperator,
   SearchFilters,
   SearchResponse,
+  SortOrder,
 } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
@@ -64,11 +66,37 @@ export function removeEmptyFilters(filters: SearchFilters) {
   return filters
 }
 
+// The frontend can send single values for array fields sometimes, so to handle
+// this we convert them to arrays at the controller level so that nothing below
+// this has to worry about the non-array values.
+function fixupFilterArrays(filters: SearchFilters) {
+  const arrayFields = [
+    SearchFilterOperator.ONE_OF,
+    SearchFilterOperator.CONTAINS,
+    SearchFilterOperator.NOT_CONTAINS,
+    SearchFilterOperator.CONTAINS_ANY,
+  ]
+  for (const searchField of arrayFields) {
+    const field = filters[searchField]
+    if (field == null) {
+      continue
+    }
+
+    for (const key of Object.keys(field)) {
+      if (!Array.isArray(field[key])) {
+        field[key] = [field[key]]
+      }
+    }
+  }
+  return filters
+}
+
 export async function search(
   options: RowSearchParams
 ): Promise<SearchResponse<Row>> {
   const isExternalTable = isExternalTableID(options.tableId)
   options.query = removeEmptyFilters(options.query || {})
+  options.query = fixupFilterArrays(options.query)
   if (
     !dataFilters.hasFilters(options.query) &&
     options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
@@ -76,6 +104,10 @@ export async function search(
     return {
       rows: [],
     }
+  }
+
+  if (options.sortOrder) {
+    options.sortOrder = options.sortOrder.toLowerCase() as SortOrder
   }
 
   const table = await sdk.tables.getTable(options.tableId)

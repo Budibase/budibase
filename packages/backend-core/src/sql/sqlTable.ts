@@ -109,8 +109,10 @@ function generateSchema(
           const { tableName } = breakExternalTableId(column.tableId)
           // @ts-ignore
           const relatedTable = tables[tableName]
-          if (!relatedTable) {
-            throw new Error("Referenced table doesn't exist")
+          if (!relatedTable || !relatedTable.primary) {
+            throw new Error(
+              "Referenced table doesn't exist or has no primary keys"
+            )
           }
           const relatedPrimary = relatedTable.primary[0]
           const externalType = relatedTable.schema[relatedPrimary].externalType

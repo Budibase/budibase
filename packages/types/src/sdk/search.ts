@@ -1,6 +1,6 @@
-import { Operation, SortDirection } from "./datasources"
+import { Operation } from "./datasources"
 import { Row, Table, DocumentType } from "../documents"
-import { SortType } from "../api"
+import { SortOrder, SortType } from "../api"
 import { Knex } from "knex"
 
 export enum SearchFilterOperator {
@@ -77,7 +77,7 @@ export type SearchQueryFields = Omit<SearchFilters, "allOr" | "onEmptyFilter">
 
 export interface SortJson {
   [key: string]: {
-    direction: SortDirection
+    direction: SortOrder
     type?: SortType
   }
 }
@@ -85,6 +85,7 @@ export interface SortJson {
 export interface PaginationJson {
   limit: number
   page?: string | number
+  offset?: number
 }
 
 export interface RenameColumn {
@@ -121,6 +122,8 @@ export interface QueryJson {
     table: Table
     tables?: Record<string, Table>
     renamed?: RenameColumn
+    // can specify something that columns could be prefixed with
+    columnPrefix?: string
   }
   extra?: {
     idFilter?: SearchFilters

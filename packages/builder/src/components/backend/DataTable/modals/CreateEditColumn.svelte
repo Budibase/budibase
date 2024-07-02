@@ -17,6 +17,8 @@
     SWITCHABLE_TYPES,
     ValidColumnNameRegex,
     helpers,
+    CONSTANT_INTERNAL_ROW_COLS,
+    CONSTANT_EXTERNAL_ROW_COLS,
   } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
@@ -52,7 +54,6 @@
   const DATE_TYPE = FieldType.DATETIME
 
   const dispatch = createEventDispatcher()
-  const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
   const { dispatch: gridDispatch, rows } = getContext("grid")
 
   export let field
@@ -334,7 +335,7 @@
     // Add in defaults and initial definition
     const definition = fieldDefinitions[type?.toUpperCase()]
     if (definition?.constraints) {
-      editableColumn.constraints = definition.constraints
+      editableColumn.constraints = cloneDeep(definition.constraints)
     }
 
     editableColumn.type = definition.type
@@ -487,20 +488,23 @@
       })
     }
     const newError = {}
+    const prohibited = externalTable
+      ? CONSTANT_EXTERNAL_ROW_COLS
+      : CONSTANT_INTERNAL_ROW_COLS
     if (!externalTable && fieldInfo.name?.startsWith("_")) {
       newError.name = `Column name cannot start with an underscore.`
     } else if (fieldInfo.name && !fieldInfo.name.match(ValidColumnNameRegex)) {
       newError.name = `Illegal character; must be alpha-numeric.`
-    } else if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
-      newError.name = `${PROHIBITED_COLUMN_NAMES.join(
+    } else if (prohibited.some(name => fieldInfo?.name === name)) {
+      newError.name = `${prohibited.join(
         ", "
-      )} are not allowed as column names`
+      )} are not allowed as column names - case insensitive.`
     } else if (inUse($tables.selected, fieldInfo.name, originalName)) {
       newError.name = `Column name already in use.`
     }
 
     if (fieldInfo.type === FieldType.AUTO && !fieldInfo.subtype) {
-      newError.subtype = `Auto Column requires a type`
+      newError.subtype = `Auto Column requires a type.`
     }
 
     if (fieldInfo.fieldName && fieldInfo.tableId) {

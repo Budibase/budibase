@@ -90,8 +90,10 @@
     columns.forEach((column, idx) => {
       overrides[column.field] = {
         displayName: column.label,
-        width: column.width,
         order: idx,
+      }
+      if (column.width) {
+        overrides[column.field].width = column.width
       }
     })
     return overrides

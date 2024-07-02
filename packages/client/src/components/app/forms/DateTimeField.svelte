@@ -16,15 +16,37 @@
   export let onChange
   export let span
   export let helpText = null
+  export let valueAsTimestamp = false
 
   let fieldState
   let fieldApi
 
   const handleChange = e => {
-    const changed = fieldApi.setValue(e.detail)
-    if (onChange && changed) {
-      onChange({ value: e.detail })
+    let value = e.detail
+    if (timeOnly && valueAsTimestamp) {
+      if (!isValidDate(value)) {
+        // Handle time only fields that are timestamps under the hood
+        value = timeToDateISOString(value)
+      }
     }
+
+    const changed = fieldApi.setValue(value)
+    if (onChange && changed) {
+      onChange({ value })
+    }
+  }
+
+  const isValidDate = value => !isNaN(new Date(value))
+
+  const timeToDateISOString = value => {
+    let [hours, minutes] = value.split(":").map(Number)
+
+    const date = new Date()
+    date.setHours(hours)
+    date.setMinutes(minutes)
+    date.setSeconds(0)
+    date.setMilliseconds(0)
+    return date.toISOString()
   }
 </script>
 

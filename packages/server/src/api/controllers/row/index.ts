@@ -55,13 +55,13 @@ export async function patch(
     return save(ctx)
   }
   try {
-    const { row, table } = await pickApi(tableId).patch(ctx)
+    const { row, table, oldRow } = await pickApi(tableId).patch(ctx)
     if (!row) {
       ctx.throw(404, "Row not found")
     }
     ctx.status = 200
     ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
+      ctx.eventEmitter.emitRow(`row:update`, appId, row, table, oldRow)
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
@@ -84,9 +84,11 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
   if (body && body._id) {
     return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
-  const { row, table, squashed } = await quotas.addRow(() =>
-    sdk.rows.save(tableId, ctx.request.body, ctx.user?._id)
-  )
+  const { row, table, squashed } = tableId.includes("datasource_plus")
+    ? await sdk.rows.save(tableId, ctx.request.body, ctx.user?._id)
+    : await quotas.addRow(() =>
+        sdk.rows.save(tableId, ctx.request.body, ctx.user?._id)
+      )
   ctx.status = 200
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
   ctx.message = `${table.name} saved successfully`
@@ -152,7 +154,9 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   deleteRequest.rows = await processDeleteRowsRequest(ctx)
 
   const { rows } = await pickApi(tableId).bulkDestroy(ctx)
-  await quotas.removeRows(rows.length)
+  if (!tableId.includes("datasource_plus")) {
+    await quotas.removeRows(rows.length)
+  }
 
   for (let row of rows) {
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
@@ -167,7 +171,9 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   const tableId = utils.getTableId(ctx)
 
   const resp = await pickApi(tableId).destroy(ctx)
-  await quotas.removeRow()
+  if (!tableId.includes("datasource_plus")) {
+    await quotas.removeRow()
+  }
 
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
   gridSocket?.emitRowDeletion(ctx, resp.row)

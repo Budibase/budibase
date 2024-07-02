@@ -31,41 +31,23 @@
 
   let schema
 
-  $: formattedFields = convertOldFieldFormat(fields)
-  $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
   $: fetchSchema(dataSource)
   $: id = $component.id
-  // We could simply spread $$props into the inner form and append our
-  // additions, but that would create svelte warnings about unused props and
-  // make maintenance in future more confusing as we typically always have a
-  // proper mapping of schema settings to component exports, without having to
-  // search multiple files
-  $: innerProps = {
-    dataSource,
-    actionUrl,
-    actionType,
-    size,
-    disabled,
-    fields: fieldsOrDefault,
-    title,
-    description,
-    schema,
-    notificationOverride,
-    buttons:
-      buttons ||
-      Utils.buildFormBlockButtonConfig({
-        _id: id,
-        showDeleteButton,
-        showSaveButton,
-        saveButtonLabel,
-        deleteButtonLabel,
-        notificationOverride,
-        actionType,
-        actionUrl,
-        dataSource,
-      }),
-    buttonPosition: buttons ? buttonPosition : "top",
-  }
+  $: formattedFields = convertOldFieldFormat(fields)
+  $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
+  $: buttonsOrDefault =
+    buttons ||
+    Utils.buildFormBlockButtonConfig({
+      _id: id,
+      showDeleteButton,
+      showSaveButton,
+      saveButtonLabel,
+      deleteButtonLabel,
+      notificationOverride,
+      actionType,
+      actionUrl,
+      dataSource,
+    })
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
@@ -123,5 +105,18 @@
 </script>
 
 <FormBlockWrapper {actionType} {dataSource} {rowId} {noRowsMessage}>
-  <InnerFormBlock {...innerProps} />
+  <InnerFormBlock
+    {dataSource}
+    {actionUrl}
+    {actionType}
+    {size}
+    {disabled}
+    fields={fieldsOrDefault}
+    {title}
+    {description}
+    {schema}
+    {notificationOverride}
+    buttons={buttonsOrDefault}
+    buttonPosition={buttons ? buttonPosition : "top"}
+  />
 </FormBlockWrapper>

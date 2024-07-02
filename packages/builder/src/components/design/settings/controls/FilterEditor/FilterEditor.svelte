@@ -9,7 +9,8 @@
   import { createEventDispatcher } from "svelte"
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import FilterBuilder from "./FilterBuilder.svelte"
-  import { selectedScreen } from "stores/builder"
+  import { tables, selectedScreen } from "stores/builder"
+  import { search } from "@budibase/frontend-core"
 
   const dispatch = createEventDispatcher()
 
@@ -23,7 +24,11 @@
   $: tempValue = value
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
   $: dsSchema = getSchemaForDatasource($selectedScreen, datasource)?.schema
-  $: schemaFields = Object.values(schema || dsSchema || {})
+  $: schemaFields = search.getFields(
+    $tables.list,
+    Object.values(schema || dsSchema || {}),
+    { allowLinks: true }
+  )
   $: text = getText(value?.filter(filter => filter.field))
 
   async function saveFilter() {
