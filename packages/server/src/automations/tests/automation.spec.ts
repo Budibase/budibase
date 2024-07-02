@@ -1,12 +1,4 @@
 jest.mock("../../threads/automation")
-jest.mock("../../utilities/redis", () => ({
-  init: jest.fn(),
-  checkTestFlag: () => {
-    return false
-  },
-  shutdown: jest.fn(),
-}))
-
 jest.spyOn(global.console, "error")
 
 import "../../environment"
@@ -17,11 +9,11 @@ import { basicAutomation } from "../../tests/utilities/structures"
 import { wait } from "../../utilities"
 import { makePartial } from "../../tests/utilities"
 import { cleanInputValues } from "../automationUtils"
-import * as setup from "./utilities"
 import { Automation } from "@budibase/types"
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 
 describe("Run through some parts of the automations system", () => {
-  let config = setup.getConfig()
+  let config = new TestConfiguration()
 
   beforeAll(async () => {
     await automation.init()
@@ -30,12 +22,13 @@ describe("Run through some parts of the automations system", () => {
 
   afterAll(async () => {
     await automation.shutdown()
-    setup.afterAll()
+    config.end()
   })
 
   it("should be able to init in builder", async () => {
     const automation: Automation = {
       ...basicAutomation(),
+      _id: "test",
       appId: config.appId!,
     }
     const fields: any = { a: 1, appId: config.appId }
@@ -47,6 +40,7 @@ describe("Run through some parts of the automations system", () => {
   it("should check coercion", async () => {
     const table = await config.createTable()
     const automation: any = basicAutomation()
+    automation._id = "test"
     automation.definition.trigger.inputs.tableId = table._id
     automation.definition.trigger.stepId = "APP"
     automation.definition.trigger.inputs.fields = { a: "number" }

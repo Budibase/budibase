@@ -1,11 +1,12 @@
-import * as setup from "./utilities"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 describe("/component", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   beforeAll(async () => {
     await config.init()
@@ -13,8 +14,8 @@ describe("/component", () => {
 
   describe("/api/debug", () => {
     it("should return debug information to the frontend", async () => {
-      const res = await request
-        .get(`/api/debug/diagnostics`)
+      const res = await config
+        .request!.get(`/api/debug/diagnostics`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)

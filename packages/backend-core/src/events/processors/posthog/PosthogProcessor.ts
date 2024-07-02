@@ -24,7 +24,7 @@ const EXCLUDED_EVENTS: Event[] = [
 export default class PosthogProcessor implements EventProcessor {
   posthog: PostHog
 
-  constructor(token: string | undefined) {
+  constructor(token?: string) {
     if (!token) {
       throw new Error("Posthog token is not defined")
     }

@@ -1,18 +1,18 @@
 import { Datasource, Query } from "@budibase/types"
-import * as setup from "../utilities"
 import {
   DatabaseName,
   getDatasource,
 } from "../../../../integrations/tests/utils"
 import { MongoClient, type Collection, BSON, Db } from "mongodb"
 import { generator } from "@budibase/backend-core/tests"
+import TestConfiguration from "../../../../../src/tests/utilities/TestConfiguration"
 
 const expectValidId = expect.stringMatching(/^\w{24}$/)
 const expectValidBsonObjectId = expect.any(BSON.ObjectId)
 
 describe("/queries", () => {
   let collection: string
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
   let datasource: Datasource
 
   async function createQuery(query: Partial<Query>): Promise<Query> {
@@ -63,15 +63,15 @@ describe("/queries", () => {
     })
   }
 
-  afterAll(async () => {
-    setup.afterAll()
-  })
-
   beforeAll(async () => {
     await config.init()
     datasource = await config.api.datasource.create(
       await getDatasource(DatabaseName.MONGODB)
     )
+  })
+
+  afterAll(() => {
+    config.end()
   })
 
   beforeEach(async () => {

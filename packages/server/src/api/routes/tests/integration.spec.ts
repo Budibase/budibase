@@ -1,20 +1,21 @@
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 describe("/integrations", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-
-  afterAll(setup.afterAll)
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   describe("fetch", () => {
     it("should be able to get all integration definitions", async () => {
-      const res = await request
-        .get(`/api/integrations`)
+      const res = await config
+        .request!.get(`/api/integrations`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -33,8 +34,8 @@ describe("/integrations", () => {
 
   describe("find", () => {
     it("should be able to get postgres definition", async () => {
-      const res = await request
-        .get(`/api/integrations/POSTGRES`)
+      const res = await config
+        .request!.get(`/api/integrations/POSTGRES`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)

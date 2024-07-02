@@ -1,7 +1,7 @@
-import * as setup from "./utilities"
 import path from "path"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 interface App {
   background: string
@@ -61,12 +61,16 @@ function mockAgencyClientPortal() {
 }
 
 describe("/templates", () => {
-  let config = setup.getConfig()
+  let config = new TestConfiguration()
 
-  afterAll(setup.afterAll)
   beforeAll(async () => {
     await config.init()
   })
+
+  afterAll(() => {
+    config.end()
+  })
+
   beforeEach(() => {
     nock.cleanAll()
     mockAgencyClientPortal()

@@ -1,28 +1,8 @@
-import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { generator, structures } from "../../../tests"
 import RedisWrapper from "../redis"
-import { env } from "../.."
-
-jest.setTimeout(30000)
 
 describe("redis", () => {
   let redis: RedisWrapper
-  let container: StartedTestContainer
-
-  beforeAll(async () => {
-    const container = await new GenericContainer("redis")
-      .withExposedPorts(6379)
-      .start()
-
-    env._set(
-      "REDIS_URL",
-      `${container.getHost()}:${container.getMappedPort(6379)}`
-    )
-    env._set("MOCK_REDIS", 0)
-    env._set("REDIS_PASSWORD", 0)
-  })
-
-  afterAll(() => container?.stop())
 
   beforeEach(async () => {
     redis = new RedisWrapper(structures.db.id())

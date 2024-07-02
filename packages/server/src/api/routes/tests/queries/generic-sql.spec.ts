@@ -6,7 +6,6 @@ import {
   SourceName,
   TableSourceType,
 } from "@budibase/types"
-import * as setup from "../utilities"
 import {
   DatabaseName,
   getDatasource,
@@ -15,6 +14,7 @@ import {
 import { Expectations } from "src/tests/utilities/api/base"
 import { events } from "@budibase/backend-core"
 import { Knex } from "knex"
+import TestConfiguration from "../../../../../src/tests/utilities/TestConfiguration"
 
 describe.each(
   [
@@ -24,7 +24,7 @@ describe.each(
     DatabaseName.MARIADB,
   ].map(name => [name, getDatasource(name)])
 )("queries (%s)", (dbName, dsProvider) => {
-  const config = setup.getConfig()
+  const config = new TestConfiguration()
   let rawDatasource: Datasource
   let datasource: Datasource
   let client: Knex
@@ -88,7 +88,7 @@ describe.each(
   })
 
   afterAll(async () => {
-    setup.afterAll()
+    config.end()
   })
 
   describe("query admin", () => {

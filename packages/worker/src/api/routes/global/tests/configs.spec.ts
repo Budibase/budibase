@@ -1,23 +1,21 @@
 // mock the email system
 jest.mock("nodemailer")
-import { TestConfiguration, structures, mocks } from "../../../../tests"
-
 mocks.email.mock()
+
+import { TestConfiguration, structures, mocks } from "../../../../tests"
 import { events } from "@budibase/backend-core"
 import { GetPublicSettingsResponse, Config, ConfigType } from "@budibase/types"
 
 describe("configs", () => {
-  const config = new TestConfiguration()
+  let config: TestConfiguration
 
   beforeEach(async () => {
+    config = new TestConfiguration()
     await config.beforeAll()
-  })
-
-  beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await config.afterAll()
   })
 
@@ -242,7 +240,6 @@ describe("configs", () => {
           expect(events.org.nameUpdated).toHaveBeenCalledTimes(1)
           expect(events.org.logoUpdated).toHaveBeenCalledTimes(1)
           expect(events.org.platformURLUpdated).toHaveBeenCalledTimes(1)
-          config.cloudHosted()
         })
       })
 
@@ -264,7 +261,6 @@ describe("configs", () => {
           expect(events.org.nameUpdated).toHaveBeenCalledTimes(1)
           expect(events.org.logoUpdated).toHaveBeenCalledTimes(1)
           expect(events.org.platformURLUpdated).toHaveBeenCalledTimes(1)
-          config.cloudHosted()
         })
       })
     })

@@ -1,60 +1,29 @@
-import TestConfig from "../../../tests/utilities/TestConfiguration"
-import { context } from "@budibase/backend-core"
-import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../../actions"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { getAction } from "../../actions"
 import emitter from "../../../events/index"
-import env from "../../../environment"
+import { AutomationActionStepId, AutomationStepInput } from "@budibase/types"
 
-let config: TestConfig
-
-export function getConfig(): TestConfig {
-  if (!config) {
-    config = new TestConfig(true)
-  }
-  return config
-}
-
-export function afterAll() {
-  config.end()
-}
-
-export async function runInProd(fn: any) {
-  env._set("NODE_ENV", "production")
-  let error
-  try {
-    await fn()
-  } catch (err) {
-    error = err
-  }
-  env._set("NODE_ENV", "jest")
-  if (error) {
-    throw error
-  }
-}
-
-export async function runStep(stepId: string, inputs: any, stepContext?: any) {
+export async function runStep(
+  config: TestConfiguration,
+  stepId: AutomationActionStepId,
+  inputs: AutomationStepInput["inputs"],
+  stepContext?: AutomationStepInput["context"]
+) {
   async function run() {
-    let step = await getAction(stepId)
-    expect(step).toBeDefined()
-    if (!step) {
-      throw new Error("No step found")
-    }
-    return step({
-      context: stepContext || {},
-      inputs,
-      appId: config ? config.getAppId() : null,
-      // don't really need an API key, mocked out usage quota, not being tested here
-      apiKey,
-      emitter,
+    return await config.doInContext(config.getAppId(), async () => {
+      let step = await getAction(stepId)
+      if (!step) {
+        throw new Error("No step found")
+      }
+      return step({
+        context: stepContext || {},
+        inputs,
+        appId: config.getAppId(),
+        // don't really need an API key, mocked out usage quota, not being tested here
+        apiKey: "test",
+        emitter,
+      })
     })
   }
-  if (config?.appId) {
-    return context.doInContext(config?.appId, async () => {
-      return run()
-    })
-  } else {
-    return run()
-  }
+  return run()
 }
-
-export const apiKey = "test"
-export const actions = BUILTIN_ACTION_DEFINITIONS

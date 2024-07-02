@@ -1,7 +1,6 @@
 import { redis, RedisClient } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import { ContextUser } from "@budibase/types"
-import env from "../environment"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
@@ -25,9 +24,7 @@ export async function init() {
 
   // Duplicate the socket client for pub/sub
   socketClient = await redis.clients.getSocketClient()
-  if (!env.isTest()) {
-    socketSubClient = socketClient.getClient().duplicate()
-  }
+  socketSubClient = socketClient.getClient().duplicate()
 }
 
 export async function shutdown() {

@@ -1,20 +1,21 @@
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 describe("/component", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-
-  afterAll(setup.afterAll)
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   describe("fetch definitions", () => {
     it("should be able to fetch definitions", async () => {
-      const res = await request
-        .get(`/api/${config.getAppId()}/components/definitions`)
+      const res = await config
+        .request!.get(`/api/${config.getAppId()}/components/definitions`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)

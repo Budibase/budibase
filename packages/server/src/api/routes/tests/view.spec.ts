@@ -1,5 +1,4 @@
 import { events } from "@budibase/backend-core"
-import * as setup from "./utilities"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -12,6 +11,7 @@ import {
   ViewCalculation,
 } from "@budibase/types"
 import { quotas } from "@budibase/pro"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 const priceTable: SaveTableRequest = {
   name: "table",
@@ -34,10 +34,12 @@ const priceTable: SaveTableRequest = {
 }
 
 describe("/views", () => {
-  let config = setup.getConfig()
+  let config = new TestConfiguration()
   let table: Table
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   beforeAll(async () => {
     await config.init()

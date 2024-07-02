@@ -12,6 +12,8 @@ const nodemailer = require("nodemailer")
 // for the real email tests give them a long time to try complete/fail
 jest.setTimeout(30000)
 
+const timeouts: NodeJS.Timeout[] = []
+
 describe("/api/global/email", () => {
   const config = new TestConfiguration()
 
@@ -22,6 +24,7 @@ describe("/api/global/email", () => {
 
   afterAll(async () => {
     await config.afterAll()
+    timeouts.forEach(timeout => clearTimeout(timeout))
   })
 
   async function sendRealEmail(
@@ -32,13 +35,15 @@ describe("/api/global/email", () => {
     try {
       const timeout = () =>
         new Promise((resolve, reject) =>
-          setTimeout(
-            () =>
-              reject({
-                status: 301,
-                errno: "ETIME",
-              }),
-            20000
+          timeouts.push(
+            setTimeout(
+              () =>
+                reject({
+                  status: 301,
+                  errno: "ETIME",
+                }),
+              20000
+            )
           )
         )
       await Promise.race([config.saveEtherealSmtpConfig(), timeout()])

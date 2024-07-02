@@ -1,22 +1,18 @@
 import { Webhook } from "@budibase/types"
-import * as setup from "./utilities"
+import { structures } from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { mocks } from "@budibase/backend-core/tests"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
-const { basicWebhook, basicAutomation, collectAutomation } = setup.structures
+const { basicWebhook, basicAutomation, collectAutomation } = structures
 
 describe("/webhooks", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  let config: TestConfiguration
   let webhook: Webhook
   let cleanupEnv: () => void
 
-  afterAll(() => {
-    setup.afterAll()
-    cleanupEnv()
-  })
-
-  const setupTest = async () => {
+  beforeEach(async () => {
+    config = new TestConfiguration()
     cleanupEnv = config.setEnv({ SELF_HOSTED: "true" })
     await config.init()
     const autoConfig = basicAutomation()
@@ -27,15 +23,18 @@ describe("/webhooks", () => {
     autoConfig.definition.trigger.inputs = {}
     await config.createAutomation(autoConfig)
     webhook = await config.createWebhook()
-  }
+  })
 
-  beforeAll(setupTest)
+  afterEach(() => {
+    config.end()
+    cleanupEnv()
+  })
 
   describe("create", () => {
     it("should create a webhook successfully", async () => {
       const automation = await config.createAutomation()
-      const res = await request
-        .put(`/api/webhooks`)
+      const res = await config
+        .request!.put(`/api/webhooks`)
         .send(basicWebhook(automation._id!))
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
@@ -55,11 +54,9 @@ describe("/webhooks", () => {
   })
 
   describe("fetch", () => {
-    beforeAll(setupTest)
-
     it("returns the correct routing for basic user", async () => {
-      const res = await request
-        .get(`/api/webhooks`)
+      const res = await config
+        .request!.get(`/api/webhooks`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -77,11 +74,9 @@ describe("/webhooks", () => {
   })
 
   describe("delete", () => {
-    beforeAll(setupTest)
-
     it("should successfully delete", async () => {
-      const res = await request
-        .delete(`/api/webhooks/${webhook._id}/${webhook._rev}`)
+      const res = await config
+        .request!.delete(`/api/webhooks/${webhook._id}/${webhook._rev}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -99,11 +94,11 @@ describe("/webhooks", () => {
   })
 
   describe("build schema", () => {
-    beforeAll(setupTest)
-
     it("should allow building a schema", async () => {
-      const res = await request
-        .post(`/api/webhooks/schema/${config.getAppId()}/${webhook._id}`)
+      const res = await config
+        .request!.post(
+          `/api/webhooks/schema/${config.getAppId()}/${webhook._id}`
+        )
         .send({
           a: 1,
         })
@@ -112,8 +107,8 @@ describe("/webhooks", () => {
         .expect(200)
       expect(res.body).toBeDefined()
       // fetch to see if the schema has been updated
-      const fetch = await request
-        .get(`/api/webhooks`)
+      const fetch = await config
+        .request!.get(`/api/webhooks`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -132,8 +127,10 @@ describe("/webhooks", () => {
       // replicate changes before checking webhook
       await config.publish()
 
-      const res = await request
-        .post(`/api/webhooks/trigger/${config.prodAppId}/${webhook._id}`)
+      const res = await config
+        .request!.post(
+          `/api/webhooks/trigger/${config.prodAppId}/${webhook._id}`
+        )
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toBeDefined()
@@ -151,8 +148,10 @@ describe("/webhooks", () => {
     // replicate changes before checking webhook
     await config.publish()
 
-    const res = await request
-      .post(`/api/webhooks/trigger/${config.prodAppId}/${syncWebhook._id}`)
+    const res = await config
+      .request!.post(
+        `/api/webhooks/trigger/${config.prodAppId}/${syncWebhook._id}`
+      )
       .expect("Content-Type", /json/)
       .expect(200)
     expect(res.body.success).toEqual(true)

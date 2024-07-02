@@ -12,7 +12,7 @@ dbConfig.init()
 import env from "../environment"
 import * as controllers from "./controllers"
 
-const supertest = require("supertest")
+import supertest from "supertest"
 
 import { Config } from "../constants"
 import {
@@ -40,32 +40,24 @@ import cloneDeep from "lodash/fp/cloneDeep"
 class TestConfiguration {
   server: any
   request: any
-  api: API
+  _api?: API
   tenantId: string
   user?: User
   apiKey?: string
   userPassword = "password"
+  initialised = false
 
-  constructor(opts: { openServer: boolean } = { openServer: true }) {
+  constructor() {
     // default to cloud hosting
     this.cloudHosted()
-
     this.tenantId = structures.tenant.id()
-
-    if (opts.openServer) {
-      env.PORT = "0" // random port
-      this.server = require("../index").default
-      // we need the request for logging in, involves cookies, hard to fake
-      this.request = supertest(this.server)
-    }
-
-    this.api = new API(this)
   }
 
-  async useNewTenant() {
-    this.tenantId = structures.tenant.id()
-
-    await this.beforeAll()
+  get api(): API {
+    if (!this._api) {
+      throw new Error("API not initialized, call beforeAll first")
+    }
+    return this._api
   }
 
   getRequest() {
@@ -113,22 +105,28 @@ class TestConfiguration {
   // SETUP / TEARDOWN
 
   async beforeAll() {
-    try {
-      await this.createDefaultUser()
-      await this.createSession(this.user!)
-    } catch (e: any) {
-      console.error(e)
-      throw new Error(e.message)
+    if (this.initialised) {
+      throw new Error("Already initialised")
     }
+
+    // We use a require here to avoid importing the server at the top level,
+    // which would make it impossible to mock various things in tests.
+    const main = require("../index")
+
+    this.initialised = true
+
+    env.PORT = "0" // random port
+    this.server = await main.getServer()
+    // we need the request for logging in, involves cookies, hard to fake
+    this.request = supertest(this.server)
+
+    this._api = new API(this)
+
+    await this.createDefaultUser()
+    await this.createSession(this.user!)
   }
 
-  async afterAll() {
-    if (this.server) {
-      await this.server.close()
-    } else {
-      await require("../index").default.close()
-    }
-  }
+  async afterAll() {}
 
   // TENANCY
 
@@ -215,6 +213,7 @@ class TestConfiguration {
       Accept: "application/json",
       ...this.cookieHeader([`${constants.Cookie.Auth}=${authCookie}`]),
       [constants.Header.CSRF_TOKEN]: CSRF_TOKEN,
+      "x-budibase-include-stacktrace": "true",
     }
   }
 

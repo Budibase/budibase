@@ -1,4 +1,3 @@
-import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { getCachedVariable } from "../../../threads/utils"
 import { context, events } from "@budibase/backend-core"
@@ -18,15 +17,18 @@ import {
 } from "@budibase/types"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 describe("/datasources", () => {
-  const config = setup.getConfig()
+  const config = new TestConfiguration()
   let datasource: Datasource
 
   beforeAll(async () => {
     await config.init()
   })
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   beforeEach(async () => {
     datasource = await config.api.datasource.create({

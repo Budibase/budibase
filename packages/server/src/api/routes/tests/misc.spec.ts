@@ -1,20 +1,27 @@
-const setup = require("./utilities")
-const tableUtils = require("../../controllers/table/utils")
+import {
+  AutoFieldSubType,
+  FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  TableSourceType,
+} from "@budibase/types"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { handleDataImport } from "../../controllers/table/utils"
 
 describe("run misc tests", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-
-  afterAll(setup.afterAll)
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   describe("/bbtel", () => {
     it("check if analytics enabled", async () => {
-      const res = await request
-        .get(`/api/bbtel`)
+      const res = await config
+        .request!.get(`/api/bbtel`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -24,13 +31,13 @@ describe("run misc tests", () => {
 
   describe("/health", () => {
     it("should confirm healthy", async () => {
-      await request.get("/health").expect(200)
+      await config.request!.get("/health").expect(200)
     })
   })
 
   describe("/version", () => {
     it("should confirm version", async () => {
-      const res = await request.get("/version").expect(200)
+      const res = await config.request!.get("/version").expect(200)
       const text = res.text
       if (text.includes("alpha")) {
         expect(text.split(".").length).toEqual(4)
@@ -42,40 +49,45 @@ describe("run misc tests", () => {
 
   describe("test table utilities", () => {
     it("should be able to import data", async () => {
-      return config.doInContext(null, async () => {
-        const table = await config.createTable({
+      return config.doInContext(undefined, async () => {
+        const table = await config.api.table.save({
           name: "table",
           type: "table",
-          key: "name",
+          sourceType: TableSourceType.INTERNAL,
+          sourceId: INTERNAL_TABLE_SOURCE_ID,
           schema: {
             a: {
-              type: "string",
+              name: "a",
+              type: FieldType.STRING,
               constraints: {
                 type: "string",
               },
             },
             b: {
-              type: "string",
+              name: "b",
+              type: FieldType.STRING,
               constraints: {
                 type: "string",
               },
             },
             c: {
-              type: "string",
+              name: "c",
+              type: FieldType.STRING,
               constraints: {
                 type: "string",
               },
             },
             d: {
-              type: "string",
+              name: "d",
+              type: FieldType.STRING,
               constraints: {
                 type: "string",
               },
             },
             e: {
               name: "Auto ID",
-              type: "number",
-              subtype: "autoID",
+              type: FieldType.NUMBER,
+              subtype: AutoFieldSubType.AUTO_ID,
               icon: "ri-magic-line",
               autocolumn: true,
               constraints: {
@@ -88,7 +100,7 @@ describe("run misc tests", () => {
               },
             },
             f: {
-              type: "array",
+              type: FieldType.ARRAY,
               constraints: {
                 type: "array",
                 presence: {
@@ -100,7 +112,7 @@ describe("run misc tests", () => {
               sortable: false,
             },
             g: {
-              type: "options",
+              type: FieldType.OPTIONS,
               constraints: {
                 type: "string",
                 presence: false,
@@ -118,17 +130,17 @@ describe("run misc tests", () => {
           { a: "13", b: "14", c: "15", d: "16", g: "Omega" },
         ]
         // Shift specific row tests to the row spec
-        await tableUtils.handleDataImport(table, {
+        await handleDataImport(table, {
           importRows,
-          user: { userId: "test" },
+          user: { userId: "test" } as any,
         })
 
         // 4 rows imported, the auto ID starts at 1
         // We expect the handleDataImport function to update the lastID
-        expect(table.schema.e.lastID).toEqual(4)
+        expect((table.schema.e as any).lastID).toEqual(4)
 
         // Array/Multi - should have added a new value to the inclusion.
-        expect(table.schema.f.constraints.inclusion).toEqual([
+        expect(table.schema.f.constraints!.inclusion).toEqual([
           "Four",
           "One",
           "Three",
@@ -136,32 +148,32 @@ describe("run misc tests", () => {
         ])
 
         // Options - should have a new value in the inclusion
-        expect(table.schema.g.constraints.inclusion).toEqual([
+        expect(table.schema.g.constraints!.inclusion).toEqual([
           "Alpha",
           "Beta",
           "Gamma",
           "Omega",
         ])
 
-        const rows = await config.getRows()
+        const rows = await config.api.row.fetch(table._id!)
         expect(rows.length).toEqual(4)
 
-        const rowOne = rows.find(row => row.e === 1)
+        const rowOne = rows.find(row => row.e === 1)!
         expect(rowOne.a).toEqual("1")
         expect(rowOne.f).toEqual(["One"])
         expect(rowOne.g).toEqual("Alpha")
 
-        const rowTwo = rows.find(row => row.e === 2)
+        const rowTwo = rows.find(row => row.e === 2)!
         expect(rowTwo.a).toEqual("5")
         expect(rowTwo.f).toEqual([])
         expect(rowTwo.g).toEqual(undefined)
 
-        const rowThree = rows.find(row => row.e === 3)
+        const rowThree = rows.find(row => row.e === 3)!
         expect(rowThree.a).toEqual("9")
         expect(rowThree.f).toEqual(["Two", "Four"])
         expect(rowThree.g).toEqual(null)
 
-        const rowFour = rows.find(row => row.e === 4)
+        const rowFour = rows.find(row => row.e === 4)!
         expect(rowFour.a).toEqual("13")
         expect(rowFour.f).toEqual(undefined)
         expect(rowFour.g).toEqual("Omega")

@@ -30,7 +30,7 @@ const koaSession = require("koa-session")
 import { userAgent } from "koa-useragent"
 
 import destroyable from "server-destroy"
-import { initPro } from "./initPro"
+import { initPro, shutdownPro } from "./initPro"
 import { handleScimBody } from "./middleware/handleScimBody"
 
 if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
@@ -65,41 +65,74 @@ app.use(api.routes())
 const server = http.createServer(app.callback())
 destroyable(server)
 
-let shuttingDown = false,
-  errCode = 0
+let errCode = 0
+let closed = false
 server.on("close", async () => {
-  if (shuttingDown) {
+  if (closed) {
     return
   }
-  shuttingDown = true
+  closed = true
+
   console.log("Server Closed")
   timers.cleanup()
   events.shutdown()
+  await cache.docWritethrough.shutdown()
+  await events.processors.shutdown()
   await redis.clients.shutdown()
+  await shutdownPro()
   await queue.shutdown()
   if (!env.isTest()) {
     process.exit(errCode)
   }
 })
 
-const shutdown = () => {
-  server.close()
-  server.destroy()
+export async function shutdown() {
+  if (!initialised) {
+    return
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    server.destroy(err => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve()
+      }
+    })
+  })
 }
 
-export default server.listen(parseInt(env.PORT || "4002"), async () => {
-  let startupLog = `Worker running on ${JSON.stringify(server.address())}`
-  if (env.BUDIBASE_ENVIRONMENT) {
-    startupLog = `${startupLog} - environment: "${env.BUDIBASE_ENVIRONMENT}"`
+let init: Promise<void>
+let initialised = false
+
+export async function getServer() {
+  if (!init) {
+    init = new Promise<void>(resolve => {
+      server.listen(parseInt(env.PORT || "4002"), async () => {
+        let startupLog = `Worker running on ${JSON.stringify(server.address())}`
+        if (env.BUDIBASE_ENVIRONMENT) {
+          startupLog = `${startupLog} - environment: "${env.BUDIBASE_ENVIRONMENT}"`
+        }
+        console.log(startupLog)
+        await initPro()
+        await redis.clients.init()
+        cache.docWritethrough.init()
+        // configure events to use the pro audit log write
+        // can't integrate directly into backend-core due to cyclic issues
+        await events.processors.init(proSdk.auditLogs.write)
+        initialised = true
+        resolve()
+      })
+    })
   }
-  console.log(startupLog)
-  await initPro()
-  await redis.clients.init()
-  cache.docWritethrough.init()
-  // configure events to use the pro audit log write
-  // can't integrate directly into backend-core due to cyclic issues
-  await events.processors.init(proSdk.auditLogs.write)
-})
+
+  await init
+  return server
+}
+
+if (!env.isTest()) {
+  getServer()
+}
 
 process.on("uncaughtException", err => {
   errCode = -1

@@ -1,18 +1,4 @@
-jest.mock("../../../utilities/redis", () => ({
-  init: jest.fn(),
-  getLocksById: () => {
-    return {}
-  },
-  doesUserHaveLock: () => {
-    return true
-  },
-  updateLock: jest.fn(),
-  setDebounce: jest.fn(),
-  checkDebounce: jest.fn(),
-  shutdown: jest.fn(),
-}))
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
 import { events, utils, context } from "@budibase/backend-core"
 import env from "../../../environment"
@@ -20,13 +6,17 @@ import { type App } from "@budibase/types"
 import tk from "timekeeper"
 import * as uuid from "uuid"
 import { structures } from "@budibase/backend-core/tests"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 describe("/applications", () => {
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
   let app: App
 
-  afterAll(setup.afterAll)
   beforeAll(async () => await config.init())
+
+  afterAll(() => {
+    config.end()
+  })
 
   beforeEach(async () => {
     app = await config.api.application.create({ name: utils.newid() })

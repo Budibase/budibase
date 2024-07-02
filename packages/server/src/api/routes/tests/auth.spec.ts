@@ -1,37 +1,38 @@
-const setup = require("./utilities")
-const {
+import {
   generateUserMetadataID,
   getGlobalIDFromUserMetadataID,
-} = require("../../../db/utils")
+} from "../../../db/utils"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 describe("/authenticate", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-
-  afterAll(setup.afterAll)
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   describe("fetch self", () => {
     it("should be able to fetch self", async () => {
-      const res = await request
-        .get(`/api/self`)
+      const res = await config
+        .request!.get(`/api/self`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body._id).toEqual(generateUserMetadataID(config.user._id))
+      expect(res.body._id).toEqual(generateUserMetadataID(config.getUser()._id))
     })
 
     it("should container the global user ID", async () => {
-      const res = await request
-        .get(`/api/self`)
+      const res = await config
+        .request!.get(`/api/self`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.globalId).toEqual(
-        getGlobalIDFromUserMetadataID(config.user._id)
+        getGlobalIDFromUserMetadataID(config.getUser()._id)
       )
     })
   })

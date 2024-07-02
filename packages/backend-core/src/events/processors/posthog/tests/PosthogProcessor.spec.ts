@@ -18,15 +18,27 @@ const newIdentity = () => {
 }
 
 describe("PosthogProcessor", () => {
+  const appId1 = "app_1"
+  const appId2 = "app_2"
+
   beforeAll(() => {
     testEnv.singleTenant()
   })
 
   beforeEach(async () => {
     jest.clearAllMocks()
-    await cache.bustCache(
-      `${CacheKey.EVENTS_RATE_LIMIT}:${Event.SERVED_BUILDER}`
-    )
+
+    const events = [
+      Event.SERVED_BUILDER,
+      Event.SERVED_APP,
+      Event.SERVED_APP_PREVIEW,
+    ]
+
+    for (const event of events) {
+      await cache.bustCache(`${CacheKey.EVENTS_RATE_LIMIT}:${event}`)
+      await cache.bustCache(`${CacheKey.EVENTS_RATE_LIMIT}:${event}:${appId1}`)
+      await cache.bustCache(`${CacheKey.EVENTS_RATE_LIMIT}:${event}:${appId2}`)
+    }
   })
 
   describe("processEvent", () => {
@@ -130,7 +142,7 @@ describe("PosthogProcessor", () => {
 
         const runAppEvents = async (appId: string) => {
           await context.doInAppContext(appId, async () => {
-            tk.freeze(new Date(2022, 0, 1, 14, 0))
+            tk.freeze(new Date(2023, 0, 1, 14, 0))
             await processor.processEvent(Event.SERVED_APP, identity, properties)
             await processor.processEvent(
               Event.SERVED_APP_PREVIEW,
@@ -139,7 +151,7 @@ describe("PosthogProcessor", () => {
             )
 
             // go forward one hour - should be ignored
-            tk.freeze(new Date(2022, 0, 1, 15, 0))
+            tk.freeze(new Date(2023, 0, 1, 15, 0))
             await processor.processEvent(Event.SERVED_APP, identity, properties)
             await processor.processEvent(
               Event.SERVED_APP_PREVIEW,
@@ -148,7 +160,7 @@ describe("PosthogProcessor", () => {
             )
 
             // go forward into next day
-            tk.freeze(new Date(2022, 0, 2, 9, 0))
+            tk.freeze(new Date(2023, 0, 2, 9, 0))
 
             await processor.processEvent(Event.SERVED_APP, identity, properties)
             await processor.processEvent(
@@ -159,10 +171,10 @@ describe("PosthogProcessor", () => {
           })
         }
 
-        await runAppEvents("app_1")
+        await runAppEvents(appId1)
         expect(processor.posthog.capture).toHaveBeenCalledTimes(4)
 
-        await runAppEvents("app_2")
+        await runAppEvents(appId2)
         expect(processor.posthog.capture).toHaveBeenCalledTimes(8)
       })
     })

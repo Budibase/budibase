@@ -1,12 +1,18 @@
-import * as setup from "../../api/routes/tests/utilities"
 import { processMigrations } from "../migrationsProcessor"
 import { getAppMigrationVersion } from "../appMigrationMetadata"
 import { context } from "@budibase/backend-core"
 import { AppMigration } from ".."
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 
 const futureTimestamp = `20500101174029`
 
 describe("migrationsProcessor", () => {
+  let config: TestConfiguration | undefined = undefined
+
+  afterAll(() => {
+    config?.end()
+  })
+
   it("running migrations will update the latest applied migration", async () => {
     const testMigrations: AppMigration[] = [
       { id: `${futureTimestamp}_123`, func: async () => {} },
@@ -14,7 +20,7 @@ describe("migrationsProcessor", () => {
       { id: `${futureTimestamp}_125`, func: async () => {} },
     ]
 
-    const config = setup.getConfig()
+    config = new TestConfiguration()
     await config.init()
 
     const appId = config.getAppId()
@@ -38,7 +44,7 @@ describe("migrationsProcessor", () => {
       },
     ]
 
-    const config = setup.getConfig()
+    config = new TestConfiguration()
     await config.init()
 
     const appId = config.getAppId()

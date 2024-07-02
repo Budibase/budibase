@@ -129,9 +129,11 @@ describe("/api/global/groups", () => {
           name: generator.word(),
         }
         await config.api.groups.saveGroup(updatedGroup, {
-          expect: {
-            message: 'Invalid body - "scimInfo" is not allowed',
-            status: 400,
+          expect: (res: any) => {
+            expect(res.status).toEqual(400)
+            expect(res.body.message).toEqual(
+              'Invalid body - "scimInfo" is not allowed'
+            )
           },
         })
 

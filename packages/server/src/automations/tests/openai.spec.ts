@@ -1,7 +1,9 @@
-const setup = require("./utilities")
+import { runStep } from "./utilities"
 
 import environment from "../../environment"
 import { OpenAI } from "openai"
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
+import { AutomationActionStepId } from "@budibase/types"
 
 jest.mock("openai", () => ({
   OpenAI: jest.fn().mockImplementation(() => ({
@@ -26,7 +28,7 @@ const mockedOpenAI = OpenAI as jest.MockedClass<typeof OpenAI>
 const OPENAI_PROMPT = "What is the meaning of life?"
 
 describe("test the openai action", () => {
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
@@ -36,12 +38,14 @@ describe("test the openai action", () => {
     environment.OPENAI_API_KEY = "abc123"
   })
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    config.end()
+  })
 
   it("should present the correct error message when the OPENAI_API_KEY variable isn't set", async () => {
     delete environment.OPENAI_API_KEY
 
-    let res = await setup.runStep("OPENAI", {
+    let res = await runStep(config, AutomationActionStepId.OPENAI, {
       prompt: OPENAI_PROMPT,
     })
     expect(res.response).toEqual(
@@ -51,7 +55,7 @@ describe("test the openai action", () => {
   })
 
   it("should be able to receive a response from ChatGPT given a prompt", async () => {
-    const res = await setup.runStep("OPENAI", {
+    const res = await runStep(config, AutomationActionStepId.OPENAI, {
       prompt: OPENAI_PROMPT,
     })
     expect(res.response).toEqual("This is a test")
@@ -59,7 +63,7 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when a prompt is not provided", async () => {
-    const res = await setup.runStep("OPENAI", {
+    const res = await runStep(config, AutomationActionStepId.OPENAI, {
       prompt: null,
     })
     expect(res.response).toEqual(
@@ -84,7 +88,7 @@ describe("test the openai action", () => {
         } as any)
     )
 
-    const res = await setup.runStep("OPENAI", {
+    const res = await runStep(config, AutomationActionStepId.OPENAI, {
       prompt: OPENAI_PROMPT,
     })
 

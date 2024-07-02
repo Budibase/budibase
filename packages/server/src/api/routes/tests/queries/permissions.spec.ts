@@ -1,15 +1,13 @@
-import * as setup from "../utilities"
 import { checkBuilderEndpoint } from "../utilities/TestFunctions"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { Datasource, Query, SourceName } from "@budibase/types"
 
 describe("query permissions", () => {
-  let config: TestConfiguration
+  const config = new TestConfiguration()
   let datasource: Datasource
   let query: Query
 
   beforeAll(async () => {
-    config = setup.getConfig()
     await config.init()
     datasource = await config.api.datasource.create({
       name: "test datasource",
@@ -27,6 +25,10 @@ describe("query permissions", () => {
       readable: true,
       queryVerb: "read",
     })
+  })
+
+  afterAll(() => {
+    config.end()
   })
 
   it("delete should require builder", async () => {

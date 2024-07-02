@@ -2,22 +2,25 @@ import * as automation from "../index"
 import * as triggers from "../triggers"
 import { loopAutomation } from "../../tests/utilities/structures"
 import { context } from "@budibase/backend-core"
-import * as setup from "./utilities"
 import { Table } from "@budibase/types"
 import { LoopInput, LoopStepType } from "../../definitions/automations"
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 
 describe("Attempt to run a basic loop automation", () => {
-  let config = setup.getConfig(),
-    table: Table
+  let config: TestConfiguration
+  let table: Table
 
   beforeEach(async () => {
     await automation.init()
+    config = new TestConfiguration()
     await config.init()
     table = await config.createTable()
     await config.createRow()
   })
 
-  afterAll(setup.afterAll)
+  afterEach(() => {
+    config.end()
+  })
 
   async function runLoop(loopOpts?: LoopInput) {
     const appId = config.getAppId()

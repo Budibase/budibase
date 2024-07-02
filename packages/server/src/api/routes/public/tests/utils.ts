@@ -1,6 +1,6 @@
-import * as setup from "../../tests/utilities"
 import { checkSlashesInUrl } from "../../../../utilities"
 import supertest from "supertest"
+import TestConfiguration from "../../../../../src/tests/utilities/TestConfiguration"
 
 export type HttpMethod = "post" | "get" | "put" | "delete" | "patch"
 
@@ -38,11 +38,10 @@ function base(
 }
 
 export function generateMakeRequest(
+  config: TestConfiguration,
   apiKey: string,
   isInternal = false
 ): MakeRequestResponse {
-  const request = setup.getRequest()!
-  const config = setup.getConfig()!
   return async (
     method: HttpMethod,
     endpoint: string,
@@ -50,7 +49,7 @@ export function generateMakeRequest(
     intAppId: string | null = config.getAppId()
   ) => {
     const { headers, url } = base(apiKey, endpoint, intAppId, isInternal)
-    const req = request[method](url).set(config.defaultHeaders(headers))
+    const req = config.request![method](url).set(config.defaultHeaders(headers))
     if (body) {
       req.send(body)
     }
@@ -61,11 +60,10 @@ export function generateMakeRequest(
 }
 
 export function generateMakeRequestWithFormData(
+  config: TestConfiguration,
   apiKey: string,
   isInternal = false
 ): MakeRequestWithFormDataResponse {
-  const request = setup.getRequest()!
-  const config = setup.getConfig()!
   return async (
     method: HttpMethod,
     endpoint: string,
@@ -73,7 +71,7 @@ export function generateMakeRequestWithFormData(
     intAppId: string | null = config.getAppId()
   ) => {
     const { headers, url } = base(apiKey, endpoint, intAppId, isInternal)
-    const req = request[method](url).set(config.defaultHeaders(headers))
+    const req = config.request![method](url).set(config.defaultHeaders(headers))
     for (let [field, value] of Object.entries(fields)) {
       if (typeof value === "string") {
         req.field(field, value)

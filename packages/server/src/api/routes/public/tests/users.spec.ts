@@ -1,26 +1,66 @@
-import * as setup from "../../tests/utilities"
+import TestConfiguration from "../../../../../src/tests/utilities/TestConfiguration"
 import { generateMakeRequest, MakeRequestResponse } from "./utils"
 import { User } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 
 import * as workerRequests from "../../../../utilities/workerRequests"
 
+function user() {
+  return {
+    _id: "user",
+    _rev: "rev",
+    createdAt: Date.now(),
+    email: "test@example.com",
+    roles: {},
+    tenantId: "default",
+    status: "active",
+  }
+}
+
+jest.mock("../../../../utilities/workerRequests", () => ({
+  getGlobalUsers: jest.fn(() => {
+    return {
+      _id: "us_uuid1",
+    }
+  }),
+  getGlobalSelf: jest.fn(() => {
+    return {
+      _id: "us_uuid1",
+    }
+  }),
+  allGlobalUsers: jest.fn(() => {
+    return [user()]
+  }),
+  readGlobalUser: jest.fn(() => {
+    return user()
+  }),
+  saveGlobalUser: jest.fn(() => {
+    return { _id: "user", _rev: "rev" }
+  }),
+  deleteGlobalUser: jest.fn(() => {
+    return { message: "deleted user" }
+  }),
+  removeAppFromUserRoles: jest.fn(),
+}))
+
 const mockedWorkerReq = jest.mocked(workerRequests)
 
-let config = setup.getConfig()
+const config = new TestConfiguration()
 let apiKey: string, globalUser: User, makeRequest: MakeRequestResponse
 
 beforeAll(async () => {
   await config.init()
   globalUser = await config.globalUser()
   apiKey = await config.generateApiKey(globalUser._id)
-  makeRequest = generateMakeRequest(apiKey)
+  makeRequest = generateMakeRequest(config, apiKey)
   mockedWorkerReq.readGlobalUser.mockImplementation(() =>
     Promise.resolve(globalUser)
   )
 })
 
-afterAll(setup.afterAll)
+afterAll(() => {
+  config.end()
+})
 
 function base() {
   return {

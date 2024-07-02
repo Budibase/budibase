@@ -1,20 +1,19 @@
-const setup = require("./utilities")
-const { basicScreen, powerScreen } = setup.structures
-const { checkBuilderEndpoint, runInProd } = require("./utilities/TestFunctions")
-const { roles } = require("@budibase/backend-core")
-const { BUILTIN_ROLE_IDS } = roles
+import { Screen } from "@budibase/types"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { structures } from "./utilities"
+import { checkBuilderEndpoint, runInProd } from "./utilities/TestFunctions"
+import { roles } from "@budibase/backend-core"
 
+const { BUILTIN_ROLE_IDS } = roles
+const { basicScreen, powerScreen } = structures
 const route = "/test"
 
 // there are checks which are disabled in test env,
 // these checks need to be enabled for this test
 
 describe("/routing", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-  let basic, power
-
-  afterAll(setup.afterAll)
+  const config = new TestConfiguration()
+  let basic: Screen, power: Screen
 
   beforeAll(async () => {
     await config.init()
@@ -23,11 +22,15 @@ describe("/routing", () => {
     await config.publish()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   describe("fetch", () => {
     it("prevents a public user from accessing development app", async () => {
       await runInProd(() => {
-        return request
-          .get(`/api/routing/client`)
+        return config
+          .request!.get(`/api/routing/client`)
           .set(config.publicHeaders({ prodApp: false }))
           .expect(302)
       })
@@ -35,8 +38,8 @@ describe("/routing", () => {
 
     it("prevents a non builder from accessing development app", async () => {
       await runInProd(async () => {
-        return request
-          .get(`/api/routing/client`)
+        return config
+          .request!.get(`/api/routing/client`)
           .set(
             await config.roleHeaders({
               roleId: BUILTIN_ROLE_IDS.BASIC,
@@ -47,8 +50,8 @@ describe("/routing", () => {
       })
     })
     it("returns the correct routing for basic user", async () => {
-      const res = await request
-        .get(`/api/routing/client`)
+      const res = await config
+        .request!.get(`/api/routing/client`)
         .set(
           await config.roleHeaders({
             roleId: BUILTIN_ROLE_IDS.BASIC,
@@ -68,8 +71,8 @@ describe("/routing", () => {
     })
 
     it("returns the correct routing for power user", async () => {
-      const res = await request
-        .get(`/api/routing/client`)
+      const res = await config
+        .request!.get(`/api/routing/client`)
         .set(
           await config.roleHeaders({
             roleId: BUILTIN_ROLE_IDS.POWER,
@@ -91,8 +94,8 @@ describe("/routing", () => {
 
   describe("fetch all", () => {
     it("should fetch all routes for builder", async () => {
-      const res = await request
-        .get(`/api/routing`)
+      const res = await config
+        .request!.get(`/api/routing`)
         .set(
           await config.roleHeaders({
             roleId: BUILTIN_ROLE_IDS.POWER,

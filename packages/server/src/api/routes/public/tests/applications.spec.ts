@@ -1,4 +1,3 @@
-import * as setup from "../../tests/utilities"
 import {
   generateMakeRequest,
   generateMakeRequestWithFormData,
@@ -8,11 +7,12 @@ import {
 import { User } from "@budibase/types"
 import { join } from "path"
 import { mocks } from "@budibase/backend-core/tests"
+import TestConfiguration from "../../../../../src/tests/utilities/TestConfiguration"
 
 const PASSWORD = "testtest"
 const NO_LICENSE_MSG = "Endpoint unavailable, license required."
 
-let config = setup.getConfig()
+const config = new TestConfiguration()
 let apiKey: string,
   globalUser: User,
   makeRequest: MakeRequestResponse,
@@ -22,11 +22,13 @@ beforeAll(async () => {
   await config.init()
   globalUser = await config.globalUser()
   apiKey = await config.generateApiKey(globalUser._id)
-  makeRequest = generateMakeRequest(apiKey)
-  makeRequestFormData = generateMakeRequestWithFormData(apiKey)
+  makeRequest = generateMakeRequest(config, apiKey)
+  makeRequestFormData = generateMakeRequestWithFormData(config, apiKey)
 })
 
-afterAll(setup.afterAll)
+afterAll(() => {
+  config.end()
+})
 
 describe("check export/import", () => {
   async function runExport() {

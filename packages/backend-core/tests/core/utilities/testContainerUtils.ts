@@ -44,6 +44,9 @@ export function getContainerByImage(image: string) {
     }
     throw new Error(errorMessage)
   }
+  if (containers.length === 0) {
+    return undefined
+  }
   return containers[0]
 }
 
@@ -87,10 +90,23 @@ export function setupEnv(...envs: any[]) {
   }
 
   const minio = getContainerByImage("minio/minio")
+  if (!minio) {
+    throw new Error("Minio container not found")
+  }
 
   const minioPort = getExposedV4Port(minio, 9000)
   if (!minioPort) {
     throw new Error("Minio port not found")
+  }
+
+  const redis = getContainerByImage("redis")
+  if (!redis) {
+    throw new Error("Redis container not found")
+  }
+
+  const redisPort = getExposedV4Port(redis, 6379)
+  if (!redisPort) {
+    throw new Error("Redis port not found")
   }
 
   const configs = [
@@ -98,6 +114,7 @@ export function setupEnv(...envs: any[]) {
     { key: "COUCH_DB_URL", value: `http://127.0.0.1:${couchPort}` },
     { key: "COUCH_DB_SQL_URL", value: `http://127.0.0.1:${couchSqlPort}` },
     { key: "MINIO_URL", value: `http://127.0.0.1:${minioPort}` },
+    { key: "REDIS_URL", value: `redis://127.0.0.1:${redisPort}` },
   ]
 
   for (const config of configs.filter(x => !!x.value)) {

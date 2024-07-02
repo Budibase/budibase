@@ -5,16 +5,8 @@ import {
   Integration,
   QueryType,
 } from "@budibase/types"
-import Redis from "ioredis"
+import Redis, { RedisOptions } from "ioredis"
 import { HOST_ADDRESS } from "./utils"
-
-interface RedisConfig {
-  host: string
-  port: number
-  username: string
-  password?: string
-  db?: number
-}
 
 const SCHEMA: Integration = {
   docs: "https://redis.io/docs/",
@@ -95,19 +87,13 @@ const SCHEMA: Integration = {
   },
 }
 
-class RedisIntegration {
-  private readonly config: RedisConfig
+export class RedisIntegration {
+  private readonly config: RedisOptions
   private client
 
-  constructor(config: RedisConfig) {
+  constructor(config: RedisOptions) {
     this.config = config
-    this.client = new Redis({
-      host: this.config.host,
-      port: this.config.port,
-      username: this.config.username,
-      password: this.config.password,
-      db: this.config.db,
-    })
+    this.client = new Redis(this.config)
   }
 
   async testConnection() {
@@ -163,21 +149,19 @@ class RedisIntegration {
 
   async command(query: { json: string }) {
     return this.redisContext(async () => {
-      // commands split line by line
       const commands = query.json.trim().split("\n")
       let pipelineCommands = []
       let tokenised
 
-      // process each command separately
       for (let command of commands) {
-        const valueToken = command.trim().match(/".*"/)
-        if (valueToken?.[0]) {
+        const valueToken = command.trim().match(/"(.*)"/)
+        if (valueToken?.[1]) {
           tokenised = [
             ...command
               .substring(0, command.indexOf(valueToken[0]) - 1)
               .trim()
               .split(" "),
-            valueToken?.[0],
+            valueToken?.[1],
           ]
         } else {
           tokenised = command.trim().split(" ")

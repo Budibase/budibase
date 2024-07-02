@@ -36,10 +36,12 @@ describe("/api/global/tenants", () => {
         headers: config.authHeaders(user2),
       })
 
-      expect(res.body).toEqual({
-        message: "Tenant ID does not match current user",
-        status,
-      })
+      expect(res.body).toEqual(
+        expect.objectContaining({
+          message: "Tenant ID does not match current user",
+          status,
+        })
+      )
     })
 
     it("rejects non-admin", async () => {
@@ -55,7 +57,9 @@ describe("/api/global/tenants", () => {
         headers: config.authHeaders(user2),
       })
 
-      expect(res.body).toEqual(config.adminOnlyResponse())
+      expect(res.body).toEqual(
+        expect.objectContaining(config.adminOnlyResponse())
+      )
     })
   })
 })

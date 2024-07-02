@@ -1,25 +1,28 @@
-const { testAutomation } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
-const { MetadataTypes } = require("../../../constants")
+import { testAutomation } from "./utilities/TestFunctions"
+import { MetadataTypes } from "../../../constants"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { Automation } from "@budibase/types"
 
 describe("/metadata", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-  let automation
+  const config = new TestConfiguration()
 
-  afterAll(setup.afterAll)
+  let automation: Automation
 
   beforeAll(async () => {
     await config.init()
     automation = await config.createAutomation()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   async function createMetadata(
-    data,
+    data: any,
     type = MetadataTypes.AUTOMATION_TEST_INPUT
   ) {
-    const res = await request
-      .post(`/api/metadata/${type}/${automation._id}`)
+    const res = await config
+      .request!.post(`/api/metadata/${type}/${automation._id}`)
       .send(data)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
@@ -28,8 +31,8 @@ describe("/metadata", () => {
   }
 
   async function getMetadata(type) {
-    const res = await request
-      .get(`/api/metadata/${type}/${automation._id}`)
+    const res = await config
+      .request!.get(`/api/metadata/${type}/${automation._id}`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
@@ -45,7 +48,7 @@ describe("/metadata", () => {
 
     it("should save history metadata on automation run", async () => {
       // this should have created some history
-      await testAutomation(config, automation)
+      await testAutomation(config, automation, {})
       const metadata = await getMetadata(MetadataTypes.AUTOMATION_TEST_HISTORY)
       expect(metadata).toBeDefined()
       expect(metadata.history.length).toBe(1)
@@ -55,8 +58,8 @@ describe("/metadata", () => {
 
   describe("destroy", () => {
     it("should be able to delete some test inputs", async () => {
-      const res = await request
-        .delete(
+      const res = await config
+        .request!.delete(
           `/api/metadata/${MetadataTypes.AUTOMATION_TEST_INPUT}/${automation._id}`
         )
         .set(config.defaultHeaders())

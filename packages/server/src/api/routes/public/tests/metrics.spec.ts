@@ -1,20 +1,20 @@
-const setup = require("../../tests/utilities")
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe("/metrics", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const config = new TestConfiguration()
 
-  afterAll(setup.afterAll)
-
-  // For some reason this cannot be a beforeAll or the test "should be able to update the user" fail
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  afterAll(() => {
+    config.end()
   })
 
   describe("get", () => {
     it("returns a list of metrics", async () => {
-      const res = await request
-        .get(`/api/public/v1/metrics`)
+      const res = await config
+        .request!.get(`/api/public/v1/metrics`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /text\/plain/)
         .expect(200)
@@ -22,8 +22,8 @@ describe("/metrics", () => {
     })
 
     it("endpoint should not be publicly exposed", async () => {
-      await request
-        .get(`/api/public/v1/metrics`)
+      await config
+        .request!.get(`/api/public/v1/metrics`)
         .set(config.publicHeaders())
         .expect(403)
     })

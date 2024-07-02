@@ -320,13 +320,15 @@ describe("/api/global/auth", () => {
           userinfo_endpoint: "http://localhost/userinfo",
         })
 
+        const email = `${generator.guid()}@example.com`
+
         const token = jwt.sign(
           {
             iss: "test",
             sub: "sub",
             aud: "clientId",
             exp: Math.floor(Date.now() / 1000) + 60 * 60,
-            email: "oauth@example.com",
+            email,
           },
           "secret"
         )
@@ -339,22 +341,19 @@ describe("/api/global/auth", () => {
 
         nock("http://localhost").get("/userinfo?schema=openid").reply(200, {
           sub: "sub",
-          email: "oauth@example.com",
+          email,
         })
 
         const configId = await generateOidcConfig()
         const preAuthRes = await config.api.configs.getOIDCConfig(configId)
-        const res = await config.api.configs.OIDCCallback(configId, preAuthRes)
+        const res = await config.api.configs.OIDCCallback(preAuthRes)
         if (res.status > 399) {
           throw new Error(
             `OIDC callback failed with status ${res.status}: ${res.text}`
           )
         }
 
-        expect(events.auth.login).toHaveBeenCalledWith(
-          "oidc",
-          "oauth@example.com"
-        )
+        expect(events.auth.login).toHaveBeenCalledWith("oidc", email)
         expect(events.auth.login).toHaveBeenCalledTimes(1)
         expect(res.status).toBe(302)
         const location: string = res.get("location")

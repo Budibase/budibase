@@ -69,6 +69,8 @@ import {
   WithRequired,
 } from "@budibase/types"
 
+import { getServer } from "../../../src/app"
+
 import API from "./api"
 import { cloneDeep } from "lodash"
 import jwt, { Secret } from "jsonwebtoken"
@@ -95,7 +97,7 @@ export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
 export default class TestConfiguration {
   server?: Server
   request?: supertest.SuperTest<supertest.Test>
-  started: boolean
+  initialised: boolean = false
   appId?: string
   allApps: App[]
   app?: App
@@ -107,24 +109,21 @@ export default class TestConfiguration {
   automation?: Automation
   datasource?: Datasource
   tenantId?: string
-  api: API
   csrfToken?: string
+  openServer: boolean
+
+  private _api?: API
 
   constructor(openServer = true) {
-    if (openServer) {
-      // use a random port because it doesn't matter
-      env.PORT = "0"
-      this.server = require("../../app").getServer()
-      // we need the request for logging in, involves cookies, hard to fake
-      this.request = supertest(this.server)
-      this.started = true
-    } else {
-      this.started = false
-    }
-    this.appId = undefined
+    this.openServer = openServer
     this.allApps = []
+  }
 
-    this.api = new API(this)
+  get api(): API {
+    if (!this._api) {
+      throw new Error("API has not been initialised, call config.init() first")
+    }
+    return this._api
   }
 
   getRequest() {
@@ -225,21 +224,28 @@ export default class TestConfiguration {
 
   // use a new id as the name to avoid name collisions
   async init(appName = newid()) {
-    if (!this.started) {
+    if (this.initialised) {
+      throw new Error("config has already been initialised")
+    }
+
+    if (this.openServer) {
+      // use a random port because it doesn't matter
+      env.PORT = "0"
+      this.server = await getServer()
+      // we need the request for logging in, involves cookies, hard to fake
+      this.request = supertest(this.server)
+      this._api = new API(this)
+    } else {
       await startup()
     }
-    return this.newTenant(appName)
+
+    const app = await this.newTenant(appName)
+
+    this.initialised = true
+    return app
   }
 
   end() {
-    if (!this) {
-      return
-    }
-    if (this.server) {
-      this.server.close()
-    } else {
-      require("../../app").getServer().close()
-    }
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
     }

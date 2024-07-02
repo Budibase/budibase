@@ -1,22 +1,23 @@
 import { mocks } from "@budibase/backend-core/tests"
 import tk from "timekeeper"
-import * as setup from "./utilities"
 import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 mocks.licenses.useBackups()
 
 describe("/backups", () => {
-  let config = setup.getConfig()
-
-  afterAll(async () => {
-    setup.afterAll()
-  })
+  let config: TestConfiguration
 
   beforeEach(async () => {
     tk.reset()
+    config = new TestConfiguration()
     await config.init()
+  })
+
+  afterEach(async () => {
+    config.end()
   })
 
   describe("/api/backups/export", () => {

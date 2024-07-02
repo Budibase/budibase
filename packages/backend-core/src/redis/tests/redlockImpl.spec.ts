@@ -1,15 +1,11 @@
 import { LockName, LockType, LockOptions } from "@budibase/types"
-import { AUTO_EXTEND_POLLING_MS, doWithLock } from "../redlockImpl"
+import { doWithLock } from "../redlockImpl"
 import { DBTestConfiguration, generator } from "../../../tests"
 
 describe("redlockImpl", () => {
-  beforeEach(() => {
-    jest.useFakeTimers()
-  })
-
   describe("doWithLock", () => {
     const config = new DBTestConfiguration()
-    const lockTtl = AUTO_EXTEND_POLLING_MS
+    const lockTtl = 500
 
     function runLockWithExecutionTime({
       opts,
@@ -25,7 +21,7 @@ describe("redlockImpl", () => {
           // Run in multiple intervals until hitting the expected time
           const interval = lockTtl / 10
           for (let i = executionTimeMs; i > 0; i -= interval) {
-            await jest.advanceTimersByTimeAsync(interval)
+            await new Promise(resolve => setTimeout(resolve, interval))
           }
           return task()
         })
@@ -64,6 +60,7 @@ describe("redlockImpl", () => {
       const opts: LockOptions = {
         name: LockName.PERSIST_WRITETHROUGH,
         type: LockType.AUTO_EXTEND,
+        autoExtendTtl: lockTtl,
         onExtend: mockOnExtend,
       }
 

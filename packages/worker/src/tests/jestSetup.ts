@@ -21,6 +21,11 @@ if (!process.env.CI) {
 
 testContainerUtils.setupEnv(env, coreEnv)
 
-afterAll(() => {
+afterAll(async () => {
   timers.cleanup()
+
+  // We don't import the index at the top level because it will import a lot of
+  // things, ruining the potential to mock them in tests.
+  const main = require("../")
+  await main.shutdown()
 })

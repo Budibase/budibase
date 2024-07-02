@@ -6,7 +6,13 @@ import { TestConfiguration } from "../../../tests"
 describe("auth", () => {
   const config = new TestConfiguration()
 
-  afterAll(config.afterAll)
+  beforeAll(async () => {
+    await config.beforeAll()
+  })
+
+  afterAll(async () => {
+    await config.afterAll()
+  })
 
   describe("resetUpdate", () => {
     it("providing a valid code will update the password", async () => {

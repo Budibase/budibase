@@ -16,15 +16,16 @@ import {
   ViewV2Enriched,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
+import { structures } from "./utilities"
 import * as uuid from "uuid"
 
 import { generator } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import timekeeper from "timekeeper"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
-const { basicTable } = setup.structures
+const { basicTable } = structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 describe.each([
@@ -36,15 +37,17 @@ describe.each([
 ])("/tables (%s)", (_, dsProvider) => {
   const isInternal: boolean = !dsProvider
   let datasource: Datasource | undefined
-  let config = setup.getConfig()
-
-  afterAll(setup.afterAll)
+  let config = new TestConfiguration()
 
   beforeAll(async () => {
     await config.init()
     if (dsProvider) {
       datasource = await config.api.datasource.create(await dsProvider)
     }
+  })
+
+  afterAll(() => {
+    config.end()
   })
 
   describe("create", () => {

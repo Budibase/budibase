@@ -7,7 +7,6 @@ import {
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import * as setup from "./utilities"
 import { context, InternalTable, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
@@ -36,6 +35,7 @@ import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
 import * as uuid from "uuid"
 import { Knex } from "knex"
+import TestConfiguration from "../../../../src/tests/utilities/TestConfiguration"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -71,13 +71,14 @@ describe.each([
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
-  const config = setup.getConfig()
 
   let table: Table
   let datasource: Datasource | undefined
   let client: Knex | undefined
+  let config: TestConfiguration
 
   beforeAll(async () => {
+    config = new TestConfiguration()
     await config.init()
     if (dsProvider) {
       const rawDatasource = await dsProvider
@@ -89,7 +90,7 @@ describe.each([
   })
 
   afterAll(async () => {
-    setup.afterAll()
+    config.end()
   })
 
   function saveTableRequest(

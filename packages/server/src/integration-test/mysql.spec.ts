@@ -1,4 +1,3 @@
-import * as setup from "../api/routes/tests/utilities"
 import { Datasource, FieldType } from "@budibase/types"
 import {
   DatabaseName,
@@ -7,6 +6,7 @@ import {
 } from "../integrations/tests/utils"
 import { generator } from "@budibase/backend-core/tests"
 import { Knex } from "knex"
+import TestConfiguration from "../../src/tests/utilities/TestConfiguration"
 
 function uniqueTableName(length?: number): string {
   return generator
@@ -15,9 +15,8 @@ function uniqueTableName(length?: number): string {
     .substring(0, length || 10)
 }
 
-const config = setup.getConfig()!
-
 describe("mysql integrations", () => {
+  const config = new TestConfiguration()
   let datasource: Datasource
   let client: Knex
 
@@ -28,7 +27,9 @@ describe("mysql integrations", () => {
     client = await knexClient(rawDatasource)
   })
 
-  afterAll(config.end)
+  afterAll(() => {
+    config.end()
+  })
 
   describe("Integration compatibility with mysql search_path", () => {
     let datasource: Datasource

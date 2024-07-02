@@ -5,8 +5,12 @@ import {
   isErrorInOutput,
   isRecurring,
 } from "../automations/utils"
-import * as actions from "../automations/actions"
-import * as automationUtils from "../automations/automationUtils"
+import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../automations/actions"
+import {
+  stringSplit,
+  typecastForLooping,
+  cleanInputValues,
+} from "../automations/automationUtils"
 import { replaceFakeBindings } from "../automations/loopUtils"
 
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
@@ -39,9 +43,6 @@ import env from "../environment"
 import tracer from "dd-trace"
 
 threadUtils.threadSetup()
-const FILTER_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.FILTER.stepId
-const LOOP_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.LOOP.stepId
-const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
 function getLoopIterations(loopStep: LoopStep) {
@@ -58,7 +59,7 @@ function getLoopIterations(loopStep: LoopStep) {
     // ignore error - wasn't able to parse
   }
   if (typeof binding === "string") {
-    return automationUtils.stringSplit(binding).length
+    return stringSplit(binding).length
   }
   return 0
 }
@@ -102,14 +103,14 @@ class Orchestrator {
   }
 
   cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
-    if (stepId === CRON_STEP_ID && !triggerOutput.timestamp) {
+    if (stepId === triggerDefs.CRON.stepId && !triggerOutput.timestamp) {
       triggerOutput.timestamp = Date.now()
     }
     return triggerOutput
   }
 
   async getStepFunctionality(stepId: string) {
-    let step = await actions.getAction(stepId)
+    let step = await getAction(stepId)
     if (step == null) {
       throw `Cannot find automation step by name ${stepId}`
     }
@@ -198,7 +199,7 @@ class Orchestrator {
     const stepObj = { id, stepId, inputs, outputs }
     // replacing trigger when disabling CRON
     if (
-      stepId === CRON_STEP_ID &&
+      stepId === triggerDefs.CRON.stepId &&
       outputs.status === AutomationStatus.STOPPED_ERROR
     ) {
       this.executionOutput.trigger = stepObj
@@ -309,7 +310,7 @@ class Orchestrator {
             }
 
             stepCount++
-            if (step.stepId === LOOP_STEP_ID) {
+            if (step.stepId === BUILTIN_ACTION_DEFINITIONS.LOOP.stepId) {
               loopStep = step as LoopStep
               currentLoopStepIndex = stepCount
               continue
@@ -329,7 +330,7 @@ class Orchestrator {
                   iterations: iterationCount,
                 }
                 try {
-                  loopStep.inputs.binding = automationUtils.typecastForLooping(
+                  loopStep.inputs.binding = typecastForLooping(
                     loopStep.inputs as LoopInput
                   )
                 } catch (err) {
@@ -351,7 +352,7 @@ class Orchestrator {
                   typeof loopStep.inputs.binding === "string" &&
                   loopStep.inputs.option === "String"
                 ) {
-                  item = automationUtils.stringSplit(loopStep.inputs.binding)
+                  item = stringSplit(loopStep.inputs.binding)
                 } else if (Array.isArray(loopStep.inputs.binding)) {
                   item = loopStep.inputs.binding
                 }
@@ -424,10 +425,7 @@ class Orchestrator {
 
               let stepFn = await this.getStepFunctionality(step.stepId)
               let inputs = await processObject(originalStepInput, this._context)
-              inputs = automationUtils.cleanInputValues(
-                inputs,
-                step.schema.inputs
-              )
+              inputs = cleanInputValues(inputs, step.schema.inputs)
               try {
                 // appId is always passed
                 const outputs = await stepFn({
@@ -440,7 +438,10 @@ class Orchestrator {
                 this._context.steps[stepCount] = outputs
                 // if filter causes us to stop execution don't break the loop, set a var
                 // so that we can finish iterating through the steps and record that it stopped
-                if (step.stepId === FILTER_STEP_ID && !outputs.result) {
+                if (
+                  step.stepId === BUILTIN_ACTION_DEFINITIONS.FILTER.stepId &&
+                  !outputs.result
+                ) {
                   stopped = true
                   this.updateExecutionOutput(
                     step.id,

@@ -14,36 +14,71 @@ import { events } from "@budibase/backend-core"
 jest.setTimeout(30000)
 
 describe("scim", () => {
-  async function setup() {
-    jest.resetAllMocks()
-    tk.freeze(mocks.date.MOCK_DATE)
-    mocks.licenses.useScimIntegration()
-    mocks.licenses.useGroups()
-
-    await config.setSCIMConfig(true)
-  }
-
-  beforeAll(setup)
-  beforeEach(setup)
-
   const config = new TestConfiguration()
 
-  const unauthorisedTests = (fn: (...params: any) => Promise<any>) => {
+  beforeAll(async () => {
+    await config.beforeAll()
+
+    tk.freeze(mocks.date.MOCK_DATE)
+
+    mocks.licenses.useScimIntegration()
+    mocks.licenses.useGroups()
+    await config.setSCIMConfig(true)
+  })
+
+  afterAll(async () => {
+    await config.afterAll()
+  })
+
+  beforeEach(async () => {
+    jest.resetAllMocks()
+    mocks.licenses.useUnlimited()
+    mocks.licenses.useScimIntegration()
+    mocks.licenses.useGroups()
+    await config.setSCIMConfig(true)
+  })
+
+  const unauthorisedTests = (
+    fn: (config: TestConfiguration) => (...params: any) => Promise<any>
+  ) => {
     describe("unauthorised calls", () => {
+      const config = new TestConfiguration()
+
+      let requestFn: (...params: any) => Promise<any>
+      beforeAll(async () => {
+        jest.resetAllMocks()
+        mocks.licenses.useUnlimited()
+        mocks.licenses.useScimIntegration()
+        mocks.licenses.useGroups()
+        await config.beforeAll()
+        await config.setSCIMConfig(true)
+        requestFn = fn(config)
+      })
+
+      afterAll(async () => {
+        await config.afterAll()
+      })
+
       it("unauthorised calls are not allowed", async () => {
-        const response = await fn(...Array(fn.length - 1).fill({}), {
-          setHeaders: false,
-          expect: 403,
-        })
+        const response = await requestFn(
+          ...Array(requestFn.length - 1).fill({}),
+          {
+            setHeaders: false,
+            expect: 403,
+          }
+        )
 
         expect(response).toEqual({ message: "Tenant id not set", status: 403 })
       })
 
       it("cannot be called when feature is disabled", async () => {
         mocks.licenses.useCloudFree()
-        const response = await fn(...Array(fn.length - 1).fill({}), {
-          expect: 400,
-        })
+        const response = await requestFn(
+          ...Array(requestFn.length - 1).fill({}),
+          {
+            expect: 400,
+          }
+        )
 
         expect(response).toEqual({
           error: {
@@ -57,9 +92,12 @@ describe("scim", () => {
 
       it("cannot be called when feature is enabled but the config disabled", async () => {
         await config.setSCIMConfig(false)
-        const response = await fn(...Array(fn.length - 1).fill({}), {
-          expect: 400,
-        })
+        const response = await requestFn(
+          ...Array(requestFn.length - 1).fill({}),
+          {
+            expect: 400,
+          }
+        )
 
         expect(response).toEqual({
           error: {
@@ -73,23 +111,13 @@ describe("scim", () => {
     })
   }
 
-  beforeAll(async () => {
-    await config.beforeAll()
-  })
-
-  afterAll(async () => {
-    await config.afterAll()
-  })
-
   describe("/api/global/scim/v2/users", () => {
     describe("GET /api/global/scim/v2/users", () => {
-      const getScimUsers = config.api.scimUsersAPI.get
-
-      unauthorisedTests(getScimUsers)
+      unauthorisedTests(config => config.api.scimUsersAPI.get)
 
       describe("no users exist", () => {
         it("should retrieve empty list", async () => {
-          const response = await getScimUsers()
+          const response = await config.api.scimUsersAPI.get()
 
           expect(response).toEqual({
             Resources: [],
@@ -117,7 +145,7 @@ describe("scim", () => {
         })
 
         it("fetches full first page", async () => {
-          const response = await getScimUsers()
+          const response = await config.api.scimUsersAPI.get()
 
           expect(response).toEqual({
             Resources: expect.arrayContaining(users.slice(0, 20)),
@@ -129,7 +157,9 @@ describe("scim", () => {
         })
 
         it("fetches second page", async () => {
-          const response = await getScimUsers({ params: { startIndex: 20 } })
+          const response = await config.api.scimUsersAPI.get({
+            params: { startIndex: 20 },
+          })
 
           expect(response).toEqual({
             Resources: users.slice(20),
@@ -143,7 +173,7 @@ describe("scim", () => {
         it("can filter by user name", async () => {
           const userToFetch = _.sample(users)
 
-          const response = await getScimUsers({
+          const response = await config.api.scimUsersAPI.get({
             params: {
               filter: encodeURI(`userName eq "${userToFetch?.userName}"`),
             },
@@ -161,7 +191,7 @@ describe("scim", () => {
         it("can filter by external id", async () => {
           const userToFetch = _.sample(users)
 
-          const response = await getScimUsers({
+          const response = await config.api.scimUsersAPI.get({
             params: {
               filter: encodeURI(`externalId eq "${userToFetch?.externalId}"`),
             },
@@ -179,7 +209,7 @@ describe("scim", () => {
         it("can filter by email", async () => {
           const userToFetch = _.sample(users)
 
-          const response = await getScimUsers({
+          const response = await config.api.scimUsersAPI.get({
             params: {
               filter: encodeURI(
                 `emails[type eq "work"].value eq "${
@@ -201,19 +231,23 @@ describe("scim", () => {
     })
 
     describe("POST /api/global/scim/v2/users", () => {
-      const postScimUser = config.api.scimUsersAPI.post
+      const config = new TestConfiguration()
 
       beforeAll(async () => {
-        await config.useNewTenant()
+        await config.beforeAll()
+        mocks.licenses.useScimIntegration()
+        mocks.licenses.useGroups()
+        await config.setSCIMConfig(true)
       })
 
-      unauthorisedTests(postScimUser)
+      afterAll(async () => {
+        await config.afterAll()
+      })
+
+      unauthorisedTests(config => config.api.scimUsersAPI.post)
 
       describe("no users exist", () => {
         it("a new user can be created and persisted", async () => {
-          const mockedTime = new Date(structures.generator.timestamp())
-          tk.freeze(mockedTime)
-
           const userData = {
             externalId: structures.uuid(),
             email: structures.generator.email(),
@@ -223,7 +257,7 @@ describe("scim", () => {
           }
           const body = structures.scim.createUserRequest(userData)
 
-          const response = await postScimUser({ body })
+          const response = await config.api.scimUsersAPI.post({ body })
 
           const expectedScimUser = {
             schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
@@ -231,8 +265,8 @@ describe("scim", () => {
             externalId: userData.externalId,
             meta: {
               resourceType: "User",
-              created: mockedTime.toISOString(),
-              lastModified: mockedTime.toISOString(),
+              created: mocks.date.MOCK_DATE.toISOString(),
+              lastModified: mocks.date.MOCK_DATE.toISOString(),
             },
             userName: userData.username,
             name: {
@@ -270,7 +304,7 @@ describe("scim", () => {
           }
           const body = structures.scim.createUserRequest(userData)
 
-          const response = await postScimUser({ body })
+          const response = await config.api.scimUsersAPI.post({ body })
 
           const expectedScimUser = {
             schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
@@ -302,7 +336,7 @@ describe("scim", () => {
         it("an event is dispatched", async () => {
           const body = structures.scim.createUserRequest()
 
-          await postScimUser({ body })
+          await config.api.scimUsersAPI.post({ body })
 
           expect(events.user.created).toHaveBeenCalledTimes(1)
         })
@@ -315,7 +349,7 @@ describe("scim", () => {
           )
           delete body.emails
 
-          await postScimUser({ body })
+          await config.api.scimUsersAPI.post({ body })
 
           const user = await config.getUser(email)
           expect(user).toBeDefined()
@@ -346,7 +380,7 @@ describe("scim", () => {
             ],
           }
 
-          await postScimUser({ body })
+          await config.api.scimUsersAPI.post({ body })
 
           const user = await config.getUser(email)
           expect(user).toBeDefined()
@@ -359,7 +393,7 @@ describe("scim", () => {
           )
           delete body.emails
 
-          await postScimUser({ body }, { expect: 500 })
+          await config.api.scimUsersAPI.post({ body }, { expect: 500 })
         })
       })
 
@@ -377,7 +411,7 @@ describe("scim", () => {
         }
         const scimUserRequest = structures.scim.createUserRequest(scimUserData)
 
-        const res = await postScimUser(
+        const res = await config.api.scimUsersAPI.post(
           { body: scimUserRequest },
           { expect: 200 }
         )
@@ -417,7 +451,7 @@ describe("scim", () => {
           structures.users.user()
         )
 
-        await postScimUser(
+        await config.api.scimUsersAPI.post(
           {
             body: structures.scim.createUserRequest({
               email: internalUser.email,
@@ -426,7 +460,7 @@ describe("scim", () => {
           { expect: 200 }
         )
 
-        await postScimUser(
+        await config.api.scimUsersAPI.post(
           {
             body: structures.scim.createUserRequest({
               email: internalUser.email,
@@ -446,18 +480,18 @@ describe("scim", () => {
         user = await config.api.scimUsersAPI.post({ body })
       })
 
-      const findScimUser = config.api.scimUsersAPI.find
-
-      unauthorisedTests(findScimUser)
+      unauthorisedTests(config => config.api.scimUsersAPI.find)
 
       it("should return existing user", async () => {
-        const response = await findScimUser(user.id)
+        const response = await config.api.scimUsersAPI.find(user.id)
 
         expect(response).toEqual(user)
       })
 
       it("should return 404 when requesting unexisting user id", async () => {
-        const response = await findScimUser(structures.uuid(), { expect: 404 })
+        const response = await config.api.scimUsersAPI.find(structures.uuid(), {
+          expect: 404,
+        })
 
         expect(response).toEqual(
           expect.objectContaining({
@@ -468,8 +502,6 @@ describe("scim", () => {
     })
 
     describe("PATCH /api/global/scim/v2/users/:id", () => {
-      const patchScimUser = config.api.scimUsersAPI.patch
-
       let user: ScimUserResponse
 
       beforeEach(async () => {
@@ -478,7 +510,7 @@ describe("scim", () => {
         user = await config.api.scimUsersAPI.post({ body })
       })
 
-      unauthorisedTests(patchScimUser)
+      unauthorisedTests(config => config.api.scimUsersAPI.patch)
 
       it("an existing user can be updated", async () => {
         const newUserName = structures.generator.name()
@@ -499,7 +531,10 @@ describe("scim", () => {
           ],
         }
 
-        const response = await patchScimUser({ id: user.id, body })
+        const response = await config.api.scimUsersAPI.patch({
+          id: user.id,
+          body,
+        })
 
         const expectedScimUser: ScimUserResponse = {
           ...user,
@@ -524,7 +559,7 @@ describe("scim", () => {
             Operations: [{ op: "Replace", path: "active", value: activeValue }],
           }
 
-          await patchScimUser(
+          await config.api.scimUsersAPI.patch(
             { id: user.id, body },
             { expect: 204, skipContentTypeCheck: true }
           )
@@ -546,7 +581,10 @@ describe("scim", () => {
           ],
         }
 
-        const response = await patchScimUser({ id: user.id, body })
+        const response = await config.api.scimUsersAPI.patch({
+          id: user.id,
+          body,
+        })
 
         const expectedScimUser = {
           ...user,
@@ -570,15 +608,13 @@ describe("scim", () => {
           ],
         }
 
-        await patchScimUser({ id: user.id, body })
+        await config.api.scimUsersAPI.patch({ id: user.id, body })
 
         expect(events.user.updated).toHaveBeenCalledTimes(1)
       })
     })
 
     describe("DELETE /api/global/scim/v2/users/:id", () => {
-      const deleteScimUser = config.api.scimUsersAPI.delete
-
       let user: ScimUserResponse
 
       beforeEach(async () => {
@@ -587,10 +623,12 @@ describe("scim", () => {
         user = await config.api.scimUsersAPI.post({ body })
       })
 
-      unauthorisedTests(deleteScimUser)
+      unauthorisedTests(config => config.api.scimUsersAPI.delete)
 
       it("an existing user can be deleted", async () => {
-        const response = await deleteScimUser(user.id, { expect: 204 })
+        const response = await config.api.scimUsersAPI.delete(user.id, {
+          expect: 204,
+        })
 
         expect(response).toEqual({})
 
@@ -598,11 +636,11 @@ describe("scim", () => {
       })
 
       it("an non existing user can not be deleted", async () => {
-        await deleteScimUser(structures.uuid(), { expect: 404 })
+        await config.api.scimUsersAPI.delete(structures.uuid(), { expect: 404 })
       })
 
       it("an event is dispatched", async () => {
-        await deleteScimUser(user.id, { expect: 204 })
+        await config.api.scimUsersAPI.delete(user.id, { expect: 204 })
 
         expect(events.user.deleted).toHaveBeenCalledTimes(1)
       })
@@ -615,7 +653,7 @@ describe("scim", () => {
         }
         mocks.accounts.getAccount.mockResolvedValue(account)
 
-        await deleteScimUser(user.id, {
+        await config.api.scimUsersAPI.delete(user.id, {
           expect: {
             message: "Account holder cannot be deleted",
             status: 400,
@@ -630,13 +668,11 @@ describe("scim", () => {
 
   describe("/api/global/scim/v2/groups", () => {
     describe("GET /api/global/scim/v2/groups", () => {
-      const getScimGroups = config.api.scimGroupsAPI.get
-
-      unauthorisedTests(getScimGroups)
+      unauthorisedTests(config => config.api.scimGroupsAPI.get)
 
       describe("no groups exist", () => {
         it("should retrieve empty list", async () => {
-          const response = await getScimGroups()
+          const response = await config.api.scimGroupsAPI.get()
 
           expect(response).toEqual({
             Resources: [],
@@ -671,7 +707,7 @@ describe("scim", () => {
         })
 
         it("can fetch all groups without filters", async () => {
-          const response = await getScimGroups()
+          const response = await config.api.scimGroupsAPI.get()
 
           expect(response).toEqual({
             Resources: expect.arrayContaining(groups),
@@ -684,7 +720,7 @@ describe("scim", () => {
 
         it("can fetch groups using displayName filters", async () => {
           const groupToFetch = _.sample(groups)
-          const response = await getScimGroups({
+          const response = await config.api.scimGroupsAPI.get({
             params: { filter: `displayName eq "${groupToFetch!.displayName}"` },
           })
 
@@ -698,7 +734,7 @@ describe("scim", () => {
         })
 
         it("can fetch groups excluding members", async () => {
-          const response = await getScimGroups({
+          const response = await config.api.scimGroupsAPI.get({
             params: { excludedAttributes: "members" },
           })
 
@@ -717,7 +753,7 @@ describe("scim", () => {
         })
 
         it("can fetch groups excluding multiple fields", async () => {
-          const response = await getScimGroups({
+          const response = await config.api.scimGroupsAPI.get({
             params: { excludedAttributes: "members,displayName" },
           })
 
@@ -739,7 +775,7 @@ describe("scim", () => {
           await config.api.groups.saveGroup(structures.userGroups.userGroup())
           await config.api.groups.saveGroup(structures.userGroups.userGroup())
 
-          const response = await getScimGroups()
+          const response = await config.api.scimGroupsAPI.get()
 
           expect(response).toEqual({
             Resources: expect.arrayContaining(groups),
@@ -757,26 +793,43 @@ describe("scim", () => {
     })
 
     describe("POST /api/global/scim/v2/groups", () => {
-      const postScimGroup = config.api.scimGroupsAPI.post
+      const config = new TestConfiguration()
 
       beforeAll(async () => {
-        await config.useNewTenant()
+        await config.beforeAll()
+        mocks.licenses.useScimIntegration()
+        mocks.licenses.useGroups()
+        await config.setSCIMConfig(true)
       })
 
-      unauthorisedTests(postScimGroup)
+      afterAll(async () => {
+        await config.afterAll()
+      })
+
+      unauthorisedTests(config => config.api.scimGroupsAPI.post)
 
       describe("no groups exist", () => {
-        it("a new group can be created and persisted", async () => {
-          const mockedTime = new Date(structures.generator.timestamp())
-          tk.freeze(mockedTime)
+        const config = new TestConfiguration()
 
+        beforeAll(async () => {
+          await config.beforeAll()
+          mocks.licenses.useScimIntegration()
+          mocks.licenses.useGroups()
+          await config.setSCIMConfig(true)
+        })
+
+        afterAll(async () => {
+          await config.afterAll()
+        })
+
+        it("a new group can be created and persisted", async () => {
           const groupData = {
             externalId: structures.uuid(),
             displayName: structures.generator.word(),
           }
           const body = structures.scim.createGroupRequest(groupData)
 
-          const response = await postScimGroup({ body })
+          const response = await config.api.scimGroupsAPI.post({ body })
 
           const expectedScimGroup = {
             schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"],
@@ -785,8 +838,8 @@ describe("scim", () => {
             displayName: groupData.displayName,
             meta: {
               resourceType: "Group",
-              created: mockedTime.toISOString(),
-              lastModified: mockedTime.toISOString(),
+              created: mocks.date.MOCK_DATE.toISOString(),
+              lastModified: mocks.date.MOCK_DATE.toISOString(),
             },
             members: [],
           }
@@ -813,7 +866,7 @@ describe("scim", () => {
           displayName: groupToSave.name,
         }
 
-        const res = await postScimGroup(
+        const res = await config.api.scimGroupsAPI.post(
           { body: structures.scim.createGroupRequest(scimGroupData) },
           { expect: 200 }
         )
@@ -834,9 +887,15 @@ describe("scim", () => {
         const createGroupRequest = structures.scim.createGroupRequest({
           displayName: groupToSave.name,
         })
-        await postScimGroup({ body: createGroupRequest }, { expect: 200 })
+        await config.api.scimGroupsAPI.post(
+          { body: createGroupRequest },
+          { expect: 200 }
+        )
 
-        await postScimGroup({ body: createGroupRequest }, { expect: 409 })
+        await config.api.scimGroupsAPI.post(
+          { body: createGroupRequest },
+          { expect: 409 }
+        )
       })
     })
 
@@ -849,18 +908,19 @@ describe("scim", () => {
         group = await config.api.scimGroupsAPI.post({ body })
       })
 
-      const findScimGroup = config.api.scimGroupsAPI.find
-
-      unauthorisedTests(findScimGroup)
+      unauthorisedTests(config => config.api.scimGroupsAPI.find)
 
       it("should return existing group", async () => {
-        const response = await findScimGroup(group.id)
+        const response = await config.api.scimGroupsAPI.find(group.id)
 
         expect(response).toEqual(group)
       })
 
       it("should return 404 when requesting unexisting group id", async () => {
-        const response = await findScimGroup(structures.uuid(), { expect: 404 })
+        const response = await config.api.scimGroupsAPI.find(
+          structures.uuid(),
+          { expect: 404 }
+        )
 
         expect(response).toEqual(
           expect.objectContaining({
@@ -870,7 +930,7 @@ describe("scim", () => {
       })
 
       it("should allow excluding members", async () => {
-        const response = await findScimGroup(group.id, {
+        const response = await config.api.scimGroupsAPI.find(group.id, {
           qs: "excludedAttributes=members",
         })
 
@@ -881,8 +941,6 @@ describe("scim", () => {
     })
 
     describe("DELETE /api/global/scim/v2/groups/:id", () => {
-      const deleteScimGroup = config.api.scimGroupsAPI.delete
-
       let group: ScimGroupResponse
 
       beforeAll(async () => {
@@ -891,10 +949,12 @@ describe("scim", () => {
         group = await config.api.scimGroupsAPI.post({ body })
       })
 
-      unauthorisedTests(deleteScimGroup)
+      unauthorisedTests(config => config.api.scimGroupsAPI.delete)
 
       it("an existing group can be deleted", async () => {
-        const response = await deleteScimGroup(group.id, { expect: 204 })
+        const response = await config.api.scimGroupsAPI.delete(group.id, {
+          expect: 204,
+        })
 
         expect(response).toEqual({})
 
@@ -902,13 +962,13 @@ describe("scim", () => {
       })
 
       it("an non existing group can not be deleted", async () => {
-        await deleteScimGroup(structures.uuid(), { expect: 404 })
+        await config.api.scimGroupsAPI.delete(structures.uuid(), {
+          expect: 404,
+        })
       })
     })
 
     describe("PATCH /api/global/scim/v2/groups/:id", () => {
-      const patchScimGroup = config.api.scimGroupsAPI.patch
-
       let group: ScimGroupResponse
       let users: ScimUserResponse[]
 
@@ -925,7 +985,7 @@ describe("scim", () => {
         group = await config.api.scimGroupsAPI.post({ body })
       })
 
-      unauthorisedTests(patchScimGroup)
+      unauthorisedTests(config => config.api.scimGroupsAPI.patch)
 
       it("an existing group can be updated", async () => {
         const newDisplayName = structures.generator.word()
@@ -941,7 +1001,10 @@ describe("scim", () => {
           ],
         }
 
-        const response = await patchScimGroup({ id: group.id, body })
+        const response = await config.api.scimGroupsAPI.patch({
+          id: group.id,
+          body,
+        })
 
         const expectedScimGroup = {
           ...group,
@@ -978,7 +1041,10 @@ describe("scim", () => {
             ],
           }
 
-          const response = await patchScimGroup({ id: group.id, body })
+          const response = await config.api.scimGroupsAPI.patch({
+            id: group.id,
+            body,
+          })
 
           const expectedScimGroup: ScimGroupResponse = {
             ...group,
@@ -1019,7 +1085,10 @@ describe("scim", () => {
             ],
           }
 
-          const response = await patchScimGroup({ id: group.id, body })
+          const response = await config.api.scimGroupsAPI.patch({
+            id: group.id,
+            body,
+          })
 
           const expectedScimGroup: ScimGroupResponse = {
             ...group,
@@ -1065,7 +1134,10 @@ describe("scim", () => {
             ],
           }
 
-          const response = await patchScimGroup({ id: group.id, body })
+          const response = await config.api.scimGroupsAPI.patch({
+            id: group.id,
+            body,
+          })
 
           const expectedScimGroup: ScimGroupResponse = {
             ...group,
@@ -1111,7 +1183,10 @@ describe("scim", () => {
             ],
           }
 
-          const response = await patchScimGroup({ id: group.id, body })
+          const response = await config.api.scimGroupsAPI.patch({
+            id: group.id,
+            body,
+          })
 
           const expectedScimGroup: ScimGroupResponse = {
             ...group,
@@ -1154,7 +1229,10 @@ describe("scim", () => {
             ],
           }
 
-          const response = await patchScimGroup({ id: group.id, body })
+          const response = await config.api.scimGroupsAPI.patch({
+            id: group.id,
+            body,
+          })
 
           const expectedScimGroup: ScimGroupResponse = {
             ...group,

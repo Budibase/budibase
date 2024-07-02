@@ -8,23 +8,23 @@ jest.mock("aws-sdk", () => ({
   })),
 }))
 
-const setup = require("./utilities")
-const { constants } = require("@budibase/backend-core")
+import { constants } from "@budibase/backend-core"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { SourceName } from "@budibase/types"
 
 describe("/static", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-  let app
-  let cleanupEnv
+  const config = new TestConfiguration()
 
-  afterAll(() => {
-    setup.afterAll()
-    cleanupEnv()
-  })
+  let cleanupEnv: () => void
 
   beforeAll(async () => {
     cleanupEnv = config.setEnv({ SELF_HOSTED: "true" })
-    app = await config.init()
+    await config.init()
+  })
+
+  afterAll(() => {
+    config.end()
+    cleanupEnv()
   })
 
   describe("/app", () => {
@@ -36,8 +36,8 @@ describe("/static", () => {
       const headers = config.defaultHeaders()
       delete headers[constants.Header.APP_ID]
 
-      const res = await request
-        .get(`/${config.prodAppId}`)
+      const res = await config
+        .request!.get(`/${config.prodAppId}`)
         .set(headers)
         .expect(200)
 
@@ -48,8 +48,8 @@ describe("/static", () => {
       const headers = config.defaultHeaders()
       delete headers[constants.Header.APP_ID]
 
-      const res = await request
-        .get(`/app${config.prodApp.url}`)
+      const res = await config
+        .request!.get(`/app${config.getProdApp().url}`)
         .set(headers)
         .expect(200)
 
@@ -57,8 +57,8 @@ describe("/static", () => {
     })
 
     it("should serve the app preview by id", async () => {
-      const res = await request
-        .get(`/${config.appId}`)
+      const res = await config
+        .request!.get(`/${config.appId}`)
         .set(config.defaultHeaders())
         .expect(200)
 
@@ -75,7 +75,7 @@ describe("/static", () => {
           datasource: {
             type: "datasource",
             name: "Test",
-            source: "S3",
+            source: SourceName.S3,
             config: {},
           },
         })
@@ -84,8 +84,8 @@ describe("/static", () => {
       it("should be able to generate a signed upload URL", async () => {
         const bucket = "foo"
         const key = "bar"
-        const res = await request
-          .post(`/api/attachments/${datasource._id}/url`)
+        const res = await config
+          .request!.post(`/api/attachments/${datasource._id}/url`)
           .send({ bucket, key })
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
@@ -97,8 +97,8 @@ describe("/static", () => {
       })
 
       it("should handle an invalid datasource ID", async () => {
-        const res = await request
-          .post(`/api/attachments/foo/url`)
+        const res = await config
+          .request!.post(`/api/attachments/foo/url`)
           .send({
             bucket: "foo",
             key: "bar",
@@ -112,8 +112,8 @@ describe("/static", () => {
       })
 
       it("should require a bucket parameter", async () => {
-        const res = await request
-          .post(`/api/attachments/${datasource._id}/url`)
+        const res = await config
+          .request!.post(`/api/attachments/${datasource._id}/url`)
           .send({
             bucket: undefined,
             key: "bar",
@@ -125,8 +125,8 @@ describe("/static", () => {
       })
 
       it("should require a key parameter", async () => {
-        const res = await request
-          .post(`/api/attachments/${datasource._id}/url`)
+        const res = await config
+          .request!.post(`/api/attachments/${datasource._id}/url`)
           .send({
             bucket: "foo",
           })
@@ -145,7 +145,10 @@ describe("/static", () => {
 
     it("should serve the builder preview", async () => {
       const headers = config.defaultHeaders()
-      const res = await request.get(`/app/preview`).set(headers).expect(200)
+      const res = await config
+        .request!.get(`/app/preview`)
+        .set(headers)
+        .expect(200)
 
       expect(res.body.appId).toBe(config.appId)
       expect(res.body.builderPreview).toBe(true)

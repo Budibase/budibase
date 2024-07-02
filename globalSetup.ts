@@ -82,7 +82,20 @@ export default async function setup() {
         Wait.forHttp("/minio/health/ready", 9000).withStartupTimeout(10000)
       )
 
-    await Promise.all([couchdb.start(), minio.start()])
+    const redis = new GenericContainer("redis")
+      .withExposedPorts(6379)
+      .withReuse()
+      .withEnvironment({
+        REDIS_PASSWORD: "budibase",
+      })
+      .withLabels({ "com.budibase": "true" })
+      .withWaitStrategy(
+        Wait.forLogMessage("Ready to accept connections", 1).withStartupTimeout(
+          20000
+        )
+      )
+
+    await Promise.all([couchdb.start(), minio.start(), redis.start()])
   } finally {
     lockfile.unlockSync(lockPath)
   }

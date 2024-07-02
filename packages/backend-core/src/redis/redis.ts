@@ -1,15 +1,6 @@
 import env from "../environment"
-import Redis, { Cluster } from "ioredis"
+import Redis, { Cluster, ScanStream } from "ioredis"
 // mock-redis doesn't have any typing
-let MockRedis: any | undefined
-if (env.MOCK_REDIS) {
-  try {
-    // ioredis mock is all in memory
-    MockRedis = require("ioredis-mock")
-  } catch (err) {
-    console.log("Mock redis unavailable")
-  }
-}
 import {
   addDbPrefix,
   removeDbPrefix,
@@ -18,115 +9,47 @@ import {
   SelectableDatabase,
   getRedisConnectionDetails,
 } from "./utils"
-import { logAlert } from "../logging"
-import * as timers from "../timers"
 
-const RETRY_PERIOD_MS = 2000
-const STARTUP_TIMEOUT_MS = 5000
 const CLUSTERED = env.REDIS_CLUSTERED
 const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 
-// for testing just generate the client once
-let CLOSED = false
-const CLIENTS: Record<number, Redis> = {}
-let CONNECTED = false
-
-// mock redis always connected
-if (env.MOCK_REDIS) {
-  CONNECTED = true
-}
-
-function pickClient(selectDb: number) {
-  return CLIENTS[selectDb]
-}
-
-function connectionError(timeout: NodeJS.Timeout, err: Error | string) {
-  // manually shut down, ignore errors
-  if (CLOSED) {
-    return
-  }
-  CLOSED = true
-  // always clear this on error
-  clearTimeout(timeout)
-  CONNECTED = false
-  logAlert("Redis connection failed", err)
-  setTimeout(() => {
-    init()
-  }, RETRY_PERIOD_MS)
-}
+const CLIENTS: Record<number, Promise<Redis | Cluster>> = {}
 
 /**
  * Inits the system, will error if unable to connect to redis cluster (may take up to 10 seconds) otherwise
  * will return the ioredis client which will be ready to use.
  */
-function init(selectDb = DEFAULT_SELECT_DB) {
-  const RedisCore = env.MOCK_REDIS && MockRedis ? MockRedis : Redis
-  let timeout: NodeJS.Timeout
-  CLOSED = false
-  let client = pickClient(selectDb)
-  // already connected, ignore
-  if (client && CONNECTED) {
-    return
+async function init(selectDb = DEFAULT_SELECT_DB): Promise<Redis | Cluster> {
+  if (CLIENTS[selectDb] !== undefined) {
+    return CLIENTS[selectDb]
   }
-  // testing uses a single in memory client
-  if (env.MOCK_REDIS) {
-    CLIENTS[selectDb] = new RedisCore(getRedisOptions())
-  }
-  // start the timer - only allowed 5 seconds to connect
-  timeout = setTimeout(() => {
-    if (!CONNECTED) {
-      connectionError(timeout, "Did not successfully connect in timeout")
-    }
-  }, STARTUP_TIMEOUT_MS)
 
-  // disconnect any lingering client
-  if (client) {
-    client.disconnect()
-  }
-  const { host, port } = getRedisConnectionDetails()
-  const opts = getRedisOptions()
+  CLIENTS[selectDb] = new Promise((resolve, reject) => {
+    const { host, port } = getRedisConnectionDetails()
+    const opts = getRedisOptions()
 
-  if (CLUSTERED) {
-    client = new RedisCore.Cluster([{ host, port }], opts)
-  } else {
-    client = new RedisCore(opts)
-  }
-  // attach handlers
-  client.on("end", (err: Error) => {
-    if (env.isTest()) {
-      // don't try to re-connect in test env
-      // allow the process to exit
-      return
+    let client: Redis | Cluster
+    if (CLUSTERED) {
+      client = new Cluster([{ host, port }], opts)
+    } else {
+      client = new Redis(opts)
     }
-    connectionError(timeout, err)
+
+    client.on("end", reject)
+    client.on("error", reject)
+    client.on("ready", () => {
+      console.log(`Connected to Redis DB: ${selectDb}`)
+      resolve(client)
+    })
   })
-  client.on("error", (err: Error) => {
-    connectionError(timeout, err)
-  })
-  client.on("connect", () => {
-    console.log(`Connected to Redis DB: ${selectDb}`)
-    clearTimeout(timeout)
-    CONNECTED = true
-  })
-  CLIENTS[selectDb] = client
+  return CLIENTS[selectDb]
 }
 
-function waitForConnection(selectDb: number = DEFAULT_SELECT_DB) {
-  return new Promise(resolve => {
-    if (pickClient(selectDb) == null) {
-      init()
-    } else if (CONNECTED) {
-      resolve("")
-      return
-    }
-    // check if the connection is ready
-    const interval = timers.set(() => {
-      if (CONNECTED) {
-        timers.clear(interval)
-        resolve("")
-      }
-    }, 500)
-  })
+export async function shutdownAll() {
+  for (const client of Object.values(CLIENTS)) {
+    const c = await client
+    await c.quit()
+  }
 }
 
 /**
@@ -136,7 +59,7 @@ function waitForConnection(selectDb: number = DEFAULT_SELECT_DB) {
  * @param client The client to use for further lookups.
  * @return The final output of the stream
  */
-function promisifyStream(stream: any, client: RedisWrapper) {
+function promisifyStream(stream: ScanStream, client: RedisWrapper) {
   return new Promise((resolve, reject) => {
     const outputKeys = new Set()
     stream.on("data", (keys: string[]) => {
@@ -171,35 +94,37 @@ function promisifyStream(stream: any, client: RedisWrapper) {
 class RedisWrapper {
   _db: string
   _select: number
+  _client?: Redis | Cluster
 
-  constructor(db: string, selectDb: number | null = null) {
+  constructor(db: string, selectDb?: number) {
     this._db = db
     this._select = selectDb || DEFAULT_SELECT_DB
   }
 
-  getClient() {
-    return pickClient(this._select)
-  }
-
   async init() {
-    CLOSED = false
-    init(this._select)
-    await waitForConnection(this._select)
-    if (this._select && !env.isTest()) {
-      this.getClient().select(this._select)
+    if (this._client) {
+      return this
     }
+
+    this._client = await init(this._select)
+    this._client.select(this._select)
     return this
   }
 
-  async finish() {
-    CLOSED = true
-    this.getClient().disconnect()
+  getClient() {
+    if (!this._client) {
+      throw new Error("Redis client not initialized")
+    }
+    if (this._client.status !== "ready") {
+      throw new Error("Redis client not ready, status: " + this._client.status)
+    }
+    return this._client
   }
 
   async scan(key = ""): Promise<any> {
     const db = this._db
     key = `${db}${SEPARATOR}${key}`
-    let stream
+    let stream: ScanStream
     if (CLUSTERED) {
       let node = (this.getClient() as never as Cluster).nodes("master")
       stream = node[0].scanStream({ match: key + "*", count: 100 })

@@ -1,106 +1,68 @@
-const Redis = require("ioredis-mock")
-
-import { default as RedisIntegration } from "../redis"
-
-class TestConfiguration {
-  integration: any
-
-  constructor(config: any = {}) {
-    this.integration = new RedisIntegration.integration(config)
-    // have to kill the basic integration before replacing it
-    this.integration.client.quit()
-    this.integration.client = new Redis({
-      data: {
-        test: "test",
-        result: "1",
-      },
-    })
-  }
-}
+import { redis } from "@budibase/backend-core"
+import { RedisIntegration } from "../redis"
+import { Redis, RedisOptions } from "ioredis"
+import { randomUUID } from "crypto"
 
 describe("Redis Integration", () => {
-  let config: any
+  let integration: RedisIntegration
+  let client: Redis
 
   beforeEach(() => {
-    config = new TestConfiguration()
-  })
-
-  afterAll(() => {
-    config.integration.disconnect()
-  })
-
-  it("calls the create method with the correct params", async () => {
-    const body = {
-      key: "key",
-      value: "value",
+    const { host, password, port } = redis.utils.getRedisConnectionDetails()
+    if (!host) {
+      throw new Error("Redis host not found")
     }
-    await config.integration.create(body)
-    expect(await config.integration.client.get("key")).toEqual("value")
+    if (!port) {
+      throw new Error("Redis port not found")
+    }
+    if (!password) {
+      throw new Error("Redis password not found")
+    }
+
+    const config: RedisOptions = {
+      host,
+      port,
+      password,
+    }
+
+    integration = new RedisIntegration(config)
+    client = new Redis(config)
   })
 
-  it("calls the read method with the correct params", async () => {
-    const body = {
-      key: "test",
-    }
-    const response = await config.integration.read(body)
+  afterEach(async () => {
+    await client.flushall()
+    await client.quit()
+  })
+
+  it("can write", async () => {
+    const key = randomUUID()
+    await integration.create({ key, value: "value", ttl: 100 })
+    expect(await client.get(key)).toEqual("value")
+  })
+
+  it("can read", async () => {
+    const key = randomUUID()
+    await client.set(key, "test")
+    const response = await integration.read({ key })
     expect(response).toEqual("test")
   })
 
-  it("calls the delete method with the correct params", async () => {
-    const body = {
-      key: "test",
-    }
-    await config.integration.delete(body)
-    expect(await config.integration.client.get(body.key)).toEqual(null)
+  it("can delete", async () => {
+    const key = randomUUID()
+    await client.set(key, "test")
+    expect(await client.get(key)).toEqual("test")
+
+    await integration.delete({ key })
+    expect(await client.get(key)).toEqual(null)
   })
 
-  it("calls the pipeline method with the correct params", async () => {
-    const body = {
-      json: "KEYS *",
-    }
-
-    // ioredis-mock doesn't support pipelines
-    config.integration.client.pipeline = jest.fn(() => ({
-      exec: jest.fn(() => [[]]),
-    }))
-
-    await config.integration.command(body)
-    expect(config.integration.client.pipeline).toHaveBeenCalledWith([
-      ["keys", "*"],
-    ])
-  })
-
-  it("calls the pipeline method with several separated commands when there are newlines", async () => {
-    const body = {
-      json: 'SET foo "bar"\nGET foo',
-    }
-
-    // ioredis-mock doesn't support pipelines
-    config.integration.client.pipeline = jest.fn(() => ({
-      exec: jest.fn(() => [[]]),
-    }))
-
-    await config.integration.command(body)
-    expect(config.integration.client.pipeline).toHaveBeenCalledWith([
-      ["set", "foo", '"bar"'],
-      ["get", "foo"],
-    ])
-  })
-
-  it("calls the pipeline method with double quoted phrase values", async () => {
-    const body = {
-      json: 'SET foo "What a wonderful world!"\nGET foo',
-    }
-
-    // ioredis-mock doesn't support pipelines
-    config.integration.client.pipeline = jest.fn(() => ({
-      exec: jest.fn(() => [[]]),
-    }))
-
-    await config.integration.command(body)
-    expect(config.integration.client.pipeline).toHaveBeenCalledWith([
-      ["set", "foo", '"What a wonderful world!"'],
-      ["get", "foo"],
-    ])
+  it("can run pipelines commands", async () => {
+    const key1 = randomUUID()
+    const key2 = randomUUID()
+    await integration.command({
+      json: `SET ${key1} "bar"\n SET ${key2} "hello world"`,
+    })
+    expect(await client.get(key1)).toEqual("bar")
+    expect(await client.get(key2)).toEqual("hello world")
   })
 })
