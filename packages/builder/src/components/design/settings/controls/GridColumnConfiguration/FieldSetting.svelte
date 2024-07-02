@@ -99,4 +99,11 @@
       );
     align-items: center;
   }
+  .type-icon span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 0;
+    flex: 1 1 auto;
+  }
 </style>

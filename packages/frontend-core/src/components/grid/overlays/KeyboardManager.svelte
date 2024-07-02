@@ -1,23 +1,26 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { debounce } from "../../../utils/utils"
-  import { NewRowID } from "../lib/constants"
   import { getCellID, parseCellID } from "../lib/utils"
+  import { NewRowID } from "../lib/constants"
 
   const {
     rows,
     focusedCellId,
     visibleColumns,
-    focusedRow,
-    stickyColumn,
+    rowLookupMap,
     focusedCellAPI,
-    clipboard,
     dispatch,
-    selectedRows,
+    selectedRowCount,
     config,
     menu,
     gridFocused,
     keyboardBlocked,
+    selectedCellCount,
+    selectedCells,
+    cellSelection,
+    columnLookupMap,
+    focusedRowId,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -43,23 +46,51 @@
       }
     }
 
-    // Handle certain key presses regardless of selection state
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && $config.canAddRows) {
+    // Sugar for preventing default
+    const handle = fn => {
       e.preventDefault()
-      dispatch("add-row-inline")
-      return
+      fn()
     }
 
-    // If nothing selected avoid processing further key presses
+    // Handle certain key presses regardless of selection state
+    if (e.metaKey || e.ctrlKey) {
+      switch (e.key) {
+        case "c":
+          return handle(() => dispatch("copy"))
+        case "v":
+          return handle(() => dispatch("paste"))
+        case "Enter":
+          return handle(() => {
+            if ($config.canAddRows) {
+              dispatch("add-row-inline")
+            }
+          })
+      }
+    }
+
+    // Handle certain key presses if we have cells selected
+    if ($selectedCellCount) {
+      switch (e.key) {
+        case "Escape":
+          return handle(selectedCells.actions.clear)
+        case "Delete":
+        case "Backspace":
+          return handle(() => dispatch("request-bulk-delete"))
+      }
+    }
+
+    // Handle certain key presses only if no cell focused
     if (!$focusedCellId) {
       if (e.key === "Tab" || e.key?.startsWith("Arrow")) {
-        e.preventDefault()
-        focusFirstCell()
+        handle(focusFirstCell)
       } else if (e.key === "Delete" || e.key === "Backspace") {
-        if (Object.keys($selectedRows).length && $config.canDeleteRows) {
-          dispatch("request-bulk-delete")
-        }
+        handle(() => {
+          if ($selectedRowCount && $config.canDeleteRows) {
+            dispatch("request-bulk-delete")
+          }
+        })
       }
+      // Avoid processing anything else
       return
     }
 
@@ -69,18 +100,19 @@
       // By setting a tiny timeout here we can ensure that other listeners
       // which depend on being able to read cell state on an escape keypress
       // get a chance to observe the true state before we blur
-      if (api?.isActive()) {
-        setTimeout(api?.blur, 10)
-      } else {
-        $focusedCellId = null
-      }
-      menu.actions.close()
-      return
+      return handle(() => {
+        if (api?.isActive()) {
+          setTimeout(api?.blur, 10)
+        } else {
+          $focusedCellId = null
+        }
+        menu.actions.close()
+      })
     } else if (e.key === "Tab") {
-      e.preventDefault()
-      api?.blur?.()
-      changeFocusedColumn(1)
-      return
+      return handle(() => {
+        api?.blur?.()
+        changeFocusedColumn(1)
+      })
     }
 
     // Pass the key event to the selected cell and let it decide whether to
@@ -91,57 +123,33 @@
         return
       }
     }
-    e.preventDefault()
 
     // Handle the key ourselves
     if (e.metaKey || e.ctrlKey) {
-      switch (e.key) {
-        case "c":
-          clipboard.actions.copy()
-          break
-        case "v":
-          if (!api?.isReadonly()) {
-            clipboard.actions.paste()
-          }
-          break
-        case "Enter":
-          if ($config.canAddRows) {
-            dispatch("add-row-inline")
-          }
-      }
+      //
     } else {
       switch (e.key) {
         case "ArrowLeft":
-          changeFocusedColumn(-1)
-          break
+          return handle(() => changeFocusedColumn(-1, e.shiftKey))
         case "ArrowRight":
-          changeFocusedColumn(1)
-          break
+          return handle(() => changeFocusedColumn(1, e.shiftKey))
         case "ArrowUp":
-          changeFocusedRow(-1)
-          break
+          return handle(() => changeFocusedRow(-1, e.shiftKey))
         case "ArrowDown":
-          changeFocusedRow(1)
-          break
+          return handle(() => changeFocusedRow(1, e.shiftKey))
         case "Delete":
         case "Backspace":
-          if (Object.keys($selectedRows).length && $config.canDeleteRows) {
-            dispatch("request-bulk-delete")
-          } else {
-            deleteSelectedCell()
-          }
-          break
+          return handle(() => {
+            if ($selectedRowCount && $config.canDeleteRows) {
+              dispatch("request-bulk-delete")
+            } else {
+              deleteSelectedCell()
+            }
+          })
         case "Enter":
-          focusCell()
-          break
-        case " ":
-        case "Space":
-          if ($config.canDeleteRows) {
-            toggleSelectRow()
-          }
-          break
+          return handle(focusCell)
         default:
-          startEnteringValue(e.key, e.which)
+          return handle(() => startEnteringValue(e.key, e.which))
       }
     }
   }
@@ -152,7 +160,7 @@
     if (!firstRow) {
       return
     }
-    const firstColumn = $stickyColumn || $visibleColumns[0]
+    const firstColumn = $visibleColumns[0]
     if (!firstColumn) {
       return
     }
@@ -160,38 +168,87 @@
   }
 
   // Changes the focused cell by moving it left or right to a different column
-  const changeFocusedColumn = delta => {
-    if (!$focusedCellId) {
+  const changeFocusedColumn = (delta, shiftKey) => {
+    // Determine which cell we are working with
+    let sourceCellId = $focusedCellId
+    if (shiftKey && $selectedCellCount) {
+      sourceCellId = $cellSelection.targetCellId
+    }
+    if (!sourceCellId) {
       return
     }
-    const cols = $visibleColumns
-    const { id, field: columnName } = parseCellID($focusedCellId)
-    let newColumnName
-    if (columnName === $stickyColumn?.name) {
-      const index = delta - 1
-      newColumnName = cols[index]?.name
-    } else {
-      const index = cols.findIndex(col => col.name === columnName) + delta
-      if (index === -1) {
-        newColumnName = $stickyColumn?.name
-      } else {
-        newColumnName = cols[index]?.name
-      }
+
+    // Determine the new position for this cell
+    const { rowId, field } = parseCellID(sourceCellId)
+    const colIdx = $columnLookupMap[field].__idx
+    const nextColumn = $visibleColumns[colIdx + delta]
+    if (!nextColumn) {
+      return
     }
-    if (newColumnName) {
-      $focusedCellId = getCellID(id, newColumnName)
+    const targetCellId = getCellID(rowId, nextColumn.name)
+
+    // Apply change
+    if (shiftKey) {
+      if ($selectedCellCount) {
+        // We have selected cells and still are holding shift - update selection
+        selectedCells.actions.updateTarget(targetCellId)
+
+        // Restore focused cell if this removes the selection
+        if (!$selectedCellCount) {
+          focusedCellId.set(targetCellId)
+        }
+      } else {
+        // We have no selection but are holding shift - select these cells
+        selectedCells.actions.selectRange(sourceCellId, targetCellId)
+      }
+    } else {
+      // We aren't holding shift - just focus this cell
+      focusedCellId.set(targetCellId)
     }
   }
 
   // Changes the focused cell by moving it up or down to a new row
-  const changeFocusedRow = delta => {
-    if (!$focusedRow) {
+  const changeFocusedRow = (delta, shiftKey) => {
+    // Ignore for new row component
+    if ($focusedRowId === NewRowID) {
       return
     }
-    const newRow = $rows[$focusedRow.__idx + delta]
-    if (newRow) {
-      const { field } = parseCellID($focusedCellId)
-      $focusedCellId = getCellID(newRow._id, field)
+
+    // Determine which cell we are working with
+    let sourceCellId = $focusedCellId
+    if (shiftKey && $selectedCellCount) {
+      sourceCellId = $cellSelection.targetCellId
+    }
+    if (!sourceCellId) {
+      return
+    }
+
+    // Determine the new position for this cell
+    const { rowId, field } = parseCellID(sourceCellId)
+    const rowIdx = $rowLookupMap[rowId].__idx
+    const newRow = $rows[rowIdx + delta]
+    if (!newRow) {
+      return
+    }
+    const targetCellId = getCellID(newRow._id, field)
+
+    // Apply change
+    if (shiftKey) {
+      if ($selectedCellCount) {
+        // We have selected cells and still are holding shift - update selection
+        selectedCells.actions.updateTarget(targetCellId)
+
+        // Restore focused cell if this removes the selection
+        if (!$selectedCellCount) {
+          focusedCellId.set(targetCellId)
+        }
+      } else {
+        // We have no selection but are holding shift - select these cells
+        selectedCells.actions.selectRange(sourceCellId, targetCellId)
+      }
+    } else {
+      // We aren't holding shift - just focus this cell
+      focusedCellId.set(targetCellId)
     }
   }
 
@@ -232,14 +289,6 @@
         $focusedCellAPI.focus()
       }
     }
-  }
-
-  const toggleSelectRow = () => {
-    const id = $focusedRow?._id
-    if (!id || id === NewRowID) {
-      return
-    }
-    selectedRows.actions.toggleRow(id)
   }
 
   onMount(() => {

@@ -1,5 +1,5 @@
 import { writable, get, derived } from "svelte/store"
-import { getCellID, parseCellID } from "../lib/utils"
+import { parseCellID } from "../lib/utils"
 
 // Normally we would break out actions into the explicit "createActions"
 // function, but for validation all these actions are pure so can go into
@@ -7,17 +7,37 @@ import { getCellID, parseCellID } from "../lib/utils"
 export const createStores = () => {
   const validation = writable({})
 
+  return {
+    validation,
+  }
+}
+
+export const deriveStores = context => {
+  const { validation } = context
+
   // Derive which rows have errors so that we can use that info later
-  const rowErrorMap = derived(validation, $validation => {
+  const validationRowLookupMap = derived(validation, $validation => {
     let map = {}
     Object.entries($validation).forEach(([key, error]) => {
       // Extract row ID from all errored cell IDs
       if (error) {
-        map[parseCellID(key).id] = true
+        const { rowId } = parseCellID(key)
+        if (!map[rowId]) {
+          map[rowId] = []
+        }
+        map[rowId].push(key)
       }
     })
     return map
   })
+
+  return {
+    validationRowLookupMap,
+  }
+}
+
+export const createActions = context => {
+  const { validation, focusedCellId, validationRowLookupMap } = context
 
   const setError = (cellId, error) => {
     if (!cellId) {
@@ -30,7 +50,15 @@ export const createStores = () => {
   }
 
   const rowHasErrors = rowId => {
-    return get(rowErrorMap)[rowId]
+    return get(validationRowLookupMap)[rowId]?.length > 0
+  }
+
+  const focusFirstRowError = rowId => {
+    const errorCells = get(validationRowLookupMap)[rowId]
+    const cellId = errorCells?.[0]
+    if (cellId) {
+      focusedCellId.set(cellId)
+    }
   }
 
   return {
@@ -39,28 +67,27 @@ export const createStores = () => {
       actions: {
         setError,
         rowHasErrors,
+        focusFirstRowError,
       },
     },
   }
 }
 
 export const initialise = context => {
-  const { validation, previousFocusedRowId, columns, stickyColumn } = context
+  const { validation, previousFocusedRowId, validationRowLookupMap } = context
 
-  // Remove validation errors from previous focused row
+  // Remove validation errors when changing rows
   previousFocusedRowId.subscribe(id => {
     if (id) {
-      const $columns = get(columns)
-      const $stickyColumn = get(stickyColumn)
-      validation.update(state => {
-        $columns.forEach(column => {
-          state[getCellID(id, column.name)] = null
+      const errorCells = get(validationRowLookupMap)[id]
+      if (errorCells?.length) {
+        validation.update(state => {
+          for (let cellId of errorCells) {
+            delete state[cellId]
+          }
+          return state
         })
-        if ($stickyColumn) {
-          state[getCellID(id, stickyColumn.name)] = null
-        }
-        return state
-      })
+      }
     }
   })
 }

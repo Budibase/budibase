@@ -9,7 +9,7 @@
   const {
     bounds,
     renderedRows,
-    visibleColumns,
+    scrollableColumns,
     hoveredRowId,
     dispatch,
     isDragging,
@@ -19,7 +19,7 @@
 
   let body
 
-  $: columnsWidth = $visibleColumns.reduce(
+  $: columnsWidth = $scrollableColumns.reduce(
     (total, col) => (total += col.width),
     0
   )

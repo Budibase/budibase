@@ -4,7 +4,7 @@ import { MinColumnWidth } from "../lib/constants"
 export const deriveStores = context => {
   const {
     rowHeight,
-    visibleColumns,
+    scrollableColumns,
     rows,
     scrollTop,
     scrollLeft,
@@ -46,33 +46,31 @@ export const deriveStores = context => {
     return Math.round($scrollLeft / interval) * interval
   })
   const columnRenderMap = derived(
-    [visibleColumns, scrollLeftRounded, width],
-    ([$visibleColumns, $scrollLeft, $width]) => {
-      if (!$visibleColumns.length) {
+    [scrollableColumns, scrollLeftRounded, width],
+    ([$scrollableColumns, $scrollLeft, $width]) => {
+      if (!$scrollableColumns.length) {
         return {}
       }
       let startColIdx = 0
-      let rightEdge = $visibleColumns[0].width
+      let rightEdge = $scrollableColumns[0].width
       while (
         rightEdge < $scrollLeft &&
-        startColIdx < $visibleColumns.length - 1
+        startColIdx < $scrollableColumns.length - 1
       ) {
         startColIdx++
-        rightEdge += $visibleColumns[startColIdx].width
+        rightEdge += $scrollableColumns[startColIdx].width
       }
       let endColIdx = startColIdx + 1
       let leftEdge = rightEdge
       while (
         leftEdge < $width + $scrollLeft &&
-        endColIdx < $visibleColumns.length
+        endColIdx < $scrollableColumns.length
       ) {
-        leftEdge += $visibleColumns[endColIdx].width
+        leftEdge += $scrollableColumns[endColIdx].width
         endColIdx++
       }
-
-      // Only update the store if different
       let next = {}
-      $visibleColumns
+      $scrollableColumns
         .slice(Math.max(0, startColIdx), endColIdx)
         .forEach(col => {
           next[col.name] = true

@@ -3,33 +3,19 @@
   import { ActionButton, Popover, Select } from "@budibase/bbui"
   import { canBeSortColumn } from "@budibase/shared-core"
 
-  const { sort, columns, stickyColumn } = getContext("grid")
+  const { sort, columns } = getContext("grid")
 
   let open = false
   let anchor
 
-  $: columnOptions = getColumnOptions($stickyColumn, $columns)
+  $: columnOptions = $columns
+    .map(col => ({
+      label: col.label || col.name,
+      value: col.name,
+      type: col.schema?.type,
+    }))
+    .filter(col => canBeSortColumn(col.type))
   $: orderOptions = getOrderOptions($sort.column, columnOptions)
-
-  const getColumnOptions = (stickyColumn, columns) => {
-    let options = []
-    if (stickyColumn) {
-      options.push({
-        label: stickyColumn.label || stickyColumn.name,
-        value: stickyColumn.name,
-        type: stickyColumn.schema?.type,
-      })
-    }
-    options = [
-      ...options,
-      ...columns.map(col => ({
-        label: col.label || col.name,
-        value: col.name,
-        type: col.schema?.type,
-      })),
-    ]
-    return options.filter(col => canBeSortColumn(col.type))
-  }
 
   const getOrderOptions = (column, columnOptions) => {
     const type = columnOptions.find(col => col.value === column)?.type

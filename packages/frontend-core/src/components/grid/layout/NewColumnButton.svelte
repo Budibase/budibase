@@ -3,17 +3,23 @@
   import { Icon } from "@budibase/bbui"
   import GridPopover from "../overlays/GridPopover.svelte"
 
-  const { visibleColumns, scroll, width, subscribe, ui, keyboardBlocked } =
-    getContext("grid")
+  const {
+    scrollableColumns,
+    scrollLeft,
+    width,
+    subscribe,
+    ui,
+    keyboardBlocked,
+  } = getContext("grid")
 
   let anchor
   let isOpen = false
 
-  $: columnsWidth = $visibleColumns.reduce(
+  $: columnsWidth = $scrollableColumns.reduce(
     (total, col) => (total += col.width),
     0
   )
-  $: end = columnsWidth - 1 - $scroll.left
+  $: end = columnsWidth - 1 - $scrollLeft
   $: left = Math.min($width - 40, end)
   $: keyboardBlocked.set(isOpen)
 
@@ -43,7 +49,7 @@
 {#if isOpen}
   <GridPopover
     {anchor}
-    align={$visibleColumns.length ? "right" : "left"}
+    align={$scrollableColumns.length ? "right" : "left"}
     on:close={close}
     maxHeight={null}
     resizable

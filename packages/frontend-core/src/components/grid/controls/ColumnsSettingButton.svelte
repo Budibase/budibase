@@ -7,14 +7,12 @@
 
   export let allowViewReadonlyColumns = false
 
-  const { columns, datasource, stickyColumn, dispatch } = getContext("grid")
+  const { columns, datasource, dispatch } = getContext("grid")
 
   let open = false
   let anchor
 
-  $: allColumns = $stickyColumn ? [$stickyColumn, ...$columns] : $columns
-
-  $: restrictedColumns = allColumns.filter(col => !col.visible || col.readonly)
+  $: restrictedColumns = $columns.filter(col => !col.visible || col.readonly)
   $: anyRestricted = restrictedColumns.length
   $: text = anyRestricted ? `Columns (${anyRestricted} restricted)` : "Columns"
 
@@ -43,12 +41,9 @@
     HIDDEN: "hidden",
   }
 
-  $: displayColumns = allColumns.map(c => {
+  $: displayColumns = $columns.map(c => {
     const isRequired = helpers.schema.isRequired(c.schema.constraints)
-    const isDisplayColumn = $stickyColumn === c
-
     const requiredTooltip = isRequired && "Required columns must be writable"
-
     const editEnabled =
       !isRequired ||
       columnToPermissionOptions(c) !== PERMISSION_OPTIONS.WRITABLE
@@ -74,9 +69,9 @@
     options.push({
       icon: "VisibilityOff",
       value: PERMISSION_OPTIONS.HIDDEN,
-      disabled: isDisplayColumn || isRequired,
+      disabled: c.primaryDisplay || isRequired,
       tooltip:
-        (isDisplayColumn && "Display column cannot be hidden") ||
+        (c.primaryDisplay && "Display column cannot be hidden") ||
         requiredTooltip ||
         "Hidden",
     })

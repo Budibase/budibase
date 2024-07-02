@@ -124,13 +124,12 @@
       return readable([])
     }
     return derived(
-      [gridContext.selectedRows, gridContext.rowLookupMap, gridContext.rows],
-      ([$selectedRows, $rowLookupMap, $rows]) => {
+      [gridContext.selectedRows, gridContext.rowLookupMap],
+      ([$selectedRows, $rowLookupMap]) => {
         return Object.entries($selectedRows || {})
           .filter(([_, selected]) => selected)
           .map(([rowId]) => {
-            const idx = $rowLookupMap[rowId]
-            return gridContext.rows.actions.cleanRow($rows[idx])
+            return gridContext.rows.actions.cleanRow($rowLookupMap[rowId])
           })
       }
     )
@@ -172,7 +171,6 @@
     canEditColumns={false}
     canExpandRows={false}
     canSaveSchema={false}
-    canSelectRows={true}
     showControls={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
