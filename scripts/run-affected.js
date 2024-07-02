@@ -14,7 +14,7 @@ const argv = require("yargs").demandOption(["task", "since", "scope"]).argv
 const { task, since, scope } = argv
 
 const affectedPackages = execSync(
-  `yarn --silent lerna ls --since=${since} --json`,
+  `yarn --silent nx show projects --affected -t ${task} --base=${since} --json`,
   {
     encoding: "utf-8",
   }
@@ -22,7 +22,7 @@ const affectedPackages = execSync(
 
 const packages = JSON.parse(affectedPackages)
 
-const isAffected = packages.some(pkg => pkg.name === scope)
+const isAffected = packages.includes(scope)
 
 if (isAffected) {
   console.log(`${scope} is affected. Running task "${task}"`)
