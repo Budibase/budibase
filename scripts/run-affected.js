@@ -1,8 +1,8 @@
 /***
  * Running lerna with since and scope is not working as expected.
- * For example, running the command `yarn test --scope=@budibase/worker --since=master`, with changes only on @budibase/backend-core will not work, as it does not analyse the dependencies properly.
+ * For example, running the command `yarn test --scope=@budibase/worker --since=master`, with changes only on `@budibase/backend-core` will not work as expected, as it does not analyse the dependencies properly. The actual `@budibase/worker` task will not be triggered.
  *
- * This script is using `lerna ls` to detect all the affected projects from a given commit, and if the scoped package is affected, the actual command will be executed
+ * This script is using `lerna ls` to detect all the affected projects from a given commit, and if the scoped package is affected, the actual command will be executed.
  *
  * The current version of the script only supports a single project in the scope.
  */
