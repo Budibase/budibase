@@ -879,13 +879,13 @@ describe.each([
         view = await config.api.viewV2.get(view.id)
         await config.api.viewV2.update(
           {
-          ...view,
-          schema: {
-            ...view.schema,
-            Price: {
-              visible: false,
+            ...view,
+            schema: {
+              ...view.schema,
+              Price: {
+                visible: false,
+              },
             },
-          },
           },
           {
             status: 400,
@@ -1201,6 +1201,7 @@ describe.each([
           ],
           schema: {
             id: { visible: true },
+            one: { visible: false },
             two: { visible: true },
           },
         })
