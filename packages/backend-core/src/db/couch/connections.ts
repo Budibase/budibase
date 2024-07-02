@@ -1,5 +1,4 @@
 import env from "../../environment"
-import url from "url"
 
 export const getCouchInfo = (connection?: string) => {
   const urlInfo = getUrlInfo(connection)
