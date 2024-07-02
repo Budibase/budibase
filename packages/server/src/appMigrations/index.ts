@@ -49,7 +49,6 @@ export async function checkMissingMigrations(
   const queue = getAppMigrationQueue()
 
   if (
-    queue &&
     latestMigration &&
     getTimestamp(currentVersion) < getTimestamp(latestMigration)
   ) {
