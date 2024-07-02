@@ -5,19 +5,27 @@ export class SqlStatements {
   client: string
   table: Table
   allOr: boolean | undefined
+  columnPrefix: string | undefined
+
   constructor(
     client: string,
     table: Table,
-    { allOr }: { allOr?: boolean } = {}
+    { allOr, columnPrefix }: { allOr?: boolean; columnPrefix?: string } = {}
   ) {
     this.client = client
     this.table = table
     this.allOr = allOr
+    this.columnPrefix = columnPrefix
   }
 
   getField(key: string): FieldSchema | undefined {
     const fieldName = key.split(".")[1]
-    return this.table.schema[fieldName]
+    let found = this.table.schema[fieldName]
+    if (!found && this.columnPrefix) {
+      const prefixRemovedFieldName = fieldName.replace(this.columnPrefix, "")
+      found = this.table.schema[prefixRemovedFieldName]
+    }
+    return found
   }
 
   between(
