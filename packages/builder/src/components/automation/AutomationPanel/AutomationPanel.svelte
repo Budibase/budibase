@@ -40,8 +40,6 @@
     return acc
   }, {})
 
-  $: console.log("grouped ", Object.entries(groupedAutomations))
-
   $: showNoResults = searchString && !filteredAutomations.length
 
   onMount(async () => {
