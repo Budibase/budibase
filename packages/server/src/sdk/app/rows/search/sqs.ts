@@ -18,6 +18,7 @@ import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../api/controllers/row/utils"
+import { mapToUserColumn, USER_COLUMN_PREFIX } from "../../tables/internal/sqs"
 import sdk from "../../../index"
 import {
   context,
@@ -35,8 +36,13 @@ import {
   getRelationshipColumns,
   getTableIDList,
 } from "./filters"
+import { dataFilters } from "@budibase/shared-core"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
+const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
+const USER_COLUMN_PREFIX_REGEX = new RegExp(
+  `no such column: .+${USER_COLUMN_PREFIX}`
+)
 
 function buildInternalFieldList(
   table: Table,
@@ -59,7 +65,7 @@ function buildInternalFieldList(
         buildInternalFieldList(relatedTable, tables, { relationships: false })
       )
     } else {
-      fieldList.push(`${table._id}.${col.name}`)
+      fieldList.push(`${table._id}.${mapToUserColumn(col.name)}`)
     }
   }
   return fieldList
@@ -90,6 +96,34 @@ function cleanupFilters(
       )
   )
 
+  // generate a map of all possible column names (these can be duplicated across tables
+  // the map of them will always be the same
+  const userColumnMap: Record<string, string> = {}
+  allTables.forEach(table =>
+    Object.keys(table.schema).forEach(
+      key => (userColumnMap[key] = mapToUserColumn(key))
+    )
+  )
+
+  // update the keys of filters to manage user columns
+  const keyInAnyTable = (key: string): boolean =>
+    allTables.some(table => table.schema[key])
+
+  const splitter = new dataFilters.ColumnSplitter(allTables)
+  for (const filter of Object.values(filters)) {
+    for (const key of Object.keys(filter)) {
+      const { numberPrefix, relationshipPrefix, column } = splitter.run(key)
+      if (keyInAnyTable(column)) {
+        filter[
+          `${numberPrefix || ""}${relationshipPrefix || ""}${mapToUserColumn(
+            column
+          )}`
+        ] = filter[key]
+        delete filter[key]
+      }
+    }
+  }
+
   return filters
 }
 
@@ -104,6 +138,25 @@ function buildTableMap(tables: Table[]) {
     tableMap[table._id!] = table
   }
   return tableMap
+}
+
+function reverseUserColumnMapping(rows: Row[]) {
+  const prefixLength = USER_COLUMN_PREFIX.length
+  return rows.map(row => {
+    const finalRow: Row = {}
+    for (let key of Object.keys(row)) {
+      // it should be the first prefix
+      const index = key.indexOf(USER_COLUMN_PREFIX)
+      if (index !== -1) {
+        // cut out the prefix
+        const newKey = key.slice(0, index) + key.slice(index + prefixLength)
+        finalRow[newKey] = row[key]
+      } else {
+        finalRow[key] = row[key]
+      }
+    }
+    return finalRow
+  })
 }
 
 function runSqlQuery(json: QueryJson, tables: Table[]): Promise<Row[]>
@@ -147,9 +200,10 @@ async function runSqlQuery(
   const response = await alias.queryWithAliasing(json, processSQLQuery)
   if (opts?.countTotalRows) {
     return processRowCountResponse(response)
-  } else {
-    return response
+  } else if (Array.isArray(response)) {
+    return reverseUserColumnMapping(response)
   }
+  return response
 }
 
 export async function search(
@@ -185,6 +239,7 @@ export async function search(
     meta: {
       table,
       tables: allTablesMap,
+      columnPrefix: USER_COLUMN_PREFIX,
     },
     resource: {
       fields: buildInternalFieldList(table, allTables),
@@ -197,7 +252,7 @@ export async function search(
     const sortType =
       sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
     request.sort = {
-      [sortField.name]: {
+      [mapToUserColumn(sortField.name)]: {
         direction: params.sortOrder || SortOrder.ASCENDING,
         type: sortType as SortType,
       },
@@ -278,9 +333,16 @@ export async function search(
     return response
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
-    if (err.status === 404 && msg?.includes(SQLITE_DESIGN_DOC_ID)) {
+    const syncAndRepeat =
+      (err.status === 400 && msg?.match(USER_COLUMN_PREFIX_REGEX)) ||
+      (err.status === 404 && msg?.includes(SQLITE_DESIGN_DOC_ID))
+    if (syncAndRepeat) {
       await sdk.tables.sqs.syncDefinition()
       return search(options, table)
+    }
+    // previously the internal table didn't error when a column didn't exist in search
+    if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {
+      return { rows: [] }
     }
     throw new Error(`Unable to search by SQL - ${msg}`, { cause: err })
   }
