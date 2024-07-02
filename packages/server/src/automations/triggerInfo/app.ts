@@ -4,11 +4,12 @@ import {
   AutomationStepType,
   AutomationTriggerSchema,
   AutomationTriggerStepId,
+  AutomationEventType,
 } from "@budibase/types"
 
 export const definition: AutomationTriggerSchema = {
   name: "App Action",
-  event: "app:trigger",
+  event: AutomationEventType.APP_TRIGGER,
   icon: "Apps",
   tagline: "Automation fired from the frontend",
   description: "Trigger an automation from an action inside your app",

@@ -11,7 +11,7 @@
     notifications,
   } from "@budibase/bbui"
   import { AUTH_TYPE_LABELS, AUTH_TYPES } from "./authTypes"
-  import BindableCombobox from "components/common/bindings/BindableCombobox.svelte"
+  import { BindableCombobox } from "components/common/bindings"
   import { getAuthBindings, getEnvironmentBindings } from "dataBinding"
   import { environment, licensing, auth } from "stores/portal"
   import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"

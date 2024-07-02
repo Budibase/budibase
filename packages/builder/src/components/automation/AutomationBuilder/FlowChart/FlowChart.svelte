@@ -112,7 +112,7 @@
   This action cannot be undone.
 </ConfirmDialog>
 
-<Modal bind:this={testDataModal} width="30%">
+<Modal bind:this={testDataModal} width="30%" zIndex={5}>
   <TestDataModal />
 </Modal>
 
@@ -148,7 +148,6 @@
   .header.scrolling {
     background: var(--background);
     border-bottom: var(--border-light);
-    border-left: var(--border-light);
     z-index: 1;
   }
 

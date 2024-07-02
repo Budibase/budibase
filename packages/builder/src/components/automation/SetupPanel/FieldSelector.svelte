@@ -1,19 +1,28 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import RowSelectorTypes from "./RowSelectorTypes.svelte"
+  import PropField from "./PropField.svelte"
+  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+  import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
+  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import { DatePicker, Select } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
 
   const dispatch = createEventDispatcher()
 
-  export let value
+  export let value = {}
   export let bindings
   export let block
   export let isTestModal
 
-  let schemaFields
+  const { STRING, NUMBER, ARRAY } = FieldType
+
+  let schemaFields = []
+  let editableValue
+
+  $: editableValue = { ...value }
 
   $: {
     let fields = {}
-
     for (const [key, type] of Object.entries(block?.inputs?.fields ?? {})) {
       fields = {
         ...fields,
@@ -25,8 +34,8 @@
         },
       }
 
-      if (value[key] === type) {
-        value[key] = INITIAL_VALUES[type.toUpperCase()]
+      if (editableValue[key] === type) {
+        editableValue[key] = INITIAL_VALUES[type.toUpperCase()]
       }
     }
 
@@ -38,77 +47,58 @@
     NUMBER: null,
     DATETIME: null,
     STRING: "",
-    OPTIONS: [],
-    ARRAY: [],
+    ARRAY: "",
   }
 
-  const coerce = (value, type) => {
-    const re = new RegExp(/{{([^{].*?)}}/g)
-    if (re.test(value)) {
-      return value
+  const onChange = (e, field) => {
+    if (e.detail !== editableValue[field]) {
+      editableValue[field] = e.detail
+      dispatch("change", editableValue)
     }
-
-    if (type === "boolean") {
-      if (typeof value === "boolean") {
-        return value
-      }
-      return value === "true"
-    }
-    if (type === "number") {
-      if (typeof value === "number") {
-        return value
-      }
-      return Number(value)
-    }
-    if (type === "options") {
-      return [value]
-    }
-    if (type === "array") {
-      if (Array.isArray(value)) {
-        return value
-      }
-      return value.split(",").map(x => x.trim())
-    }
-
-    if (type === "link") {
-      if (Array.isArray(value)) {
-        return value
-      }
-
-      return [value]
-    }
-
-    return value
-  }
-
-  const onChange = (e, field, type) => {
-    value[field] = coerce(e.detail, type)
-    dispatch("change", value)
   }
 </script>
 
-{#if schemaFields.length && isTestModal}
-  <div class="schema-fields">
+{#if schemaFields?.length && isTestModal}
+  <div class="fields">
     {#each schemaFields as [field, schema]}
-      <RowSelectorTypes
-        {isTestModal}
-        {field}
-        {schema}
-        {bindings}
-        {value}
-        {onChange}
-      />
+      <PropField label={field}>
+        {#if [STRING, NUMBER, ARRAY].includes(schema.type)}
+          <svelte:component
+            this={isTestModal ? ModalBindableInput : DrawerBindableInput}
+            panel={AutomationBindingPanel}
+            value={editableValue[field]}
+            on:change={e => onChange(e, field)}
+            type="string"
+            {bindings}
+            allowJS={true}
+            updateOnChange={false}
+            title={schema.name}
+            autocomplete="off"
+          />
+        {:else if schema.type === "boolean"}
+          <Select
+            on:change={e => onChange(e, field)}
+            value={editableValue[field]}
+            options={[
+              { label: "True", value: "true" },
+              { label: "False", value: "false" },
+            ]}
+          />
+        {:else if schema.type === "datetime"}
+          <DatePicker
+            value={editableValue[field]}
+            on:change={e => onChange(e, field)}
+          />
+        {/if}
+      </PropField>
     {/each}
   </div>
 {/if}
 
 <style>
-  .schema-fields {
-    display: grid;
-    grid-gap: var(--spacing-s);
-    margin-top: var(--spacing-s);
-  }
-  .schema-fields :global(label) {
-    text-transform: capitalize;
+  .fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
   }
 </style>
