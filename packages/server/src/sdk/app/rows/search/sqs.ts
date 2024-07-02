@@ -39,7 +39,10 @@ import {
 import { dataFilters } from "@budibase/shared-core"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
-const NO_SUCH_COLUMN_REGEX = new RegExp(`no such colum.+${USER_COLUMN_PREFIX}`)
+const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
+const USER_COLUMN_PREFIX_REGEX = new RegExp(
+  `no such column: .+${USER_COLUMN_PREFIX}`
+)
 
 function buildInternalFieldList(
   table: Table,
@@ -331,11 +334,15 @@ export async function search(
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
     const syncAndRepeat =
-      (err.status === 400 && msg?.match(NO_SUCH_COLUMN_REGEX)) ||
+      (err.status === 400 && msg?.match(USER_COLUMN_PREFIX_REGEX)) ||
       (err.status === 404 && msg?.includes(SQLITE_DESIGN_DOC_ID))
     if (syncAndRepeat) {
       await sdk.tables.sqs.syncDefinition()
       return search(options, table)
+    }
+    // previously the internal table didn't error when a column didn't exist in search
+    if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {
+      return { rows: [] }
     }
     throw new Error(`Unable to search by SQL - ${msg}`, { cause: err })
   }
