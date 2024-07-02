@@ -9,7 +9,6 @@ import {
   SelectableDatabase,
   getRedisConnectionDetails,
 } from "./utils"
-import { randomInt } from "crypto"
 
 const CLUSTERED = env.REDIS_CLUSTERED
 const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
