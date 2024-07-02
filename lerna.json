@@ -1,4 +1,5 @@
 {
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "version": "2.29.5",
   "npmClient": "yarn",
   "packages": [
@@ -6,7 +7,6 @@
     "!packages/account-portal",
     "packages/account-portal/packages/*"
   ],
-  "useNx": true,
   "concurrency": 20,
   "command": {
     "publish": {
