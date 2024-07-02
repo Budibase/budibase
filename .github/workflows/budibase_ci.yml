@@ -141,7 +141,7 @@ jobs:
       - name: Test worker
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            yarn test --scope=@budibase/worker --since=${{ env.NX_BASE_BRANCH }}
+            node scripts/run-affected.js --task=test --scope=@budibase/worker --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn test --scope=@budibase/worker
           fi
@@ -181,7 +181,7 @@ jobs:
       - name: Test server
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            yarn test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
+            node scripts/run-affected.js --task=test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn test --scope=@budibase/server
           fi
