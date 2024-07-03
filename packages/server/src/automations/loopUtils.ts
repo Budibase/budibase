@@ -8,7 +8,6 @@ export function replaceFakeBindings(
   originalStepInput: Record<string, any>,
   loopStepNumber: number
 ) {
-  console.log(originalStepInput)
   for (const [key, value] of Object.entries(originalStepInput)) {
     originalStepInput[key] = replaceBindingsRecursive(value, loopStepNumber)
   }
