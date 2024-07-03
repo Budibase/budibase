@@ -288,21 +288,23 @@
 {/each}
 
 {#if table && schemaFields}
-  <div
-    class="add-fields-btn"
-    class:empty={Object.is(editableFields, {})}
-    bind:this={popoverAnchor}
-  >
-    <ActionButton
-      icon="Add"
-      fullWidth
-      on:click={() => {
-        customPopover.show()
-      }}
-      disabled={!schemaFields}
-      >Add fields
-    </ActionButton>
-  </div>
+  {#key editableFields}
+    <div
+      class="add-fields-btn"
+      class:empty={Object.is(editableFields, {})}
+      bind:this={popoverAnchor}
+    >
+      <ActionButton
+        icon="Add"
+        fullWidth
+        on:click={() => {
+          customPopover.show()
+        }}
+        disabled={!schemaFields}
+        >Add fields
+      </ActionButton>
+    </div>
+  {/key}
 {/if}
 
 <Popover
