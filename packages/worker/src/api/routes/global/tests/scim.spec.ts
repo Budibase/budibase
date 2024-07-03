@@ -574,6 +574,41 @@ describe("scim", () => {
 
         expect(events.user.updated).toHaveBeenCalledTimes(1)
       })
+
+      it("an existing user's email can be updated", async () => {
+        const newEmail = structures.generator.email()
+        const body: ScimUpdateRequest = {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          Operations: [
+            {
+              op: "Replace",
+              path: 'emails[type eq "work"].value',
+              value: newEmail,
+            },
+          ],
+        }
+
+        const response = await patchScimUser({ id: user.id, body })
+
+        const expectedScimUser: ScimUserResponse = {
+          ...user,
+          emails: [
+            {
+              value: newEmail,
+              type: "work",
+              primary: true,
+            },
+          ],
+        }
+        expect(response).toEqual(expectedScimUser)
+
+        const persistedUser = await config.api.scimUsersAPI.find(user.id)
+        expect(persistedUser).toEqual(expectedScimUser)
+
+        expect((await config.api.users.getUser(user.id)).body).toEqual(
+          expect.objectContaining({ _id: user.id, email: newEmail })
+        )
+      })
     })
 
     describe("DELETE /api/global/scim/v2/users/:id", () => {
