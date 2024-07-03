@@ -29,7 +29,12 @@ function replaceBindingsRecursive(
           innerValue,
           `steps.${loopStepNumber}`
         )
-      } else if (typeof innerValue === "object" && innerValue !== null) {
+      } else if (
+        innerValue &&
+        typeof innerValue === "object" &&
+        !Array.isArray(innerValue) &&
+        Object.keys(innerValue).length > 0
+      ) {
         value[innerKey] = replaceBindingsRecursive(innerValue, loopStepNumber)
       }
     }
