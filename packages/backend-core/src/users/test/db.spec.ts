@@ -32,55 +32,97 @@ describe("UserDB", () => {
     db.init(quotas, groups, features)
   })
 
-  it("creating a new user will persist it", async () => {
-    const email = generator.email({})
-    const user: User = structures.users.user({
-      email,
-      tenantId: config.getTenantId(),
-    })
+  describe("save", () => {
+    describe("create", () => {
+      it("creating a new user will persist it", async () => {
+        const email = generator.email({})
+        const user: User = structures.users.user({
+          email,
+          tenantId: config.getTenantId(),
+        })
 
-    await config.doInTenant(async () => {
-      const saveUserResponse = await db.save(user)
+        await config.doInTenant(async () => {
+          const saveUserResponse = await db.save(user)
 
-      const persistedUser = await db.getUserByEmail(email)
-      expect(persistedUser).toEqual({
-        ...user,
-        _id: saveUserResponse._id,
-        _rev: expect.stringMatching(/^1-\w+/),
-        password: expect.not.stringMatching(user.password!),
-        status: UserStatus.ACTIVE,
-        createdAt: Date.now(),
-        updatedAt: new Date().toISOString(),
+          const persistedUser = await db.getUserByEmail(email)
+          expect(persistedUser).toEqual({
+            ...user,
+            _id: saveUserResponse._id,
+            _rev: expect.stringMatching(/^1-\w+/),
+            password: expect.not.stringMatching(user.password!),
+            status: UserStatus.ACTIVE,
+            createdAt: Date.now(),
+            updatedAt: new Date().toISOString(),
+          })
+        })
+      })
+
+      it("the same email cannot be used twice in the same tenant", async () => {
+        const email = generator.email({})
+        const user: User = structures.users.user({
+          email,
+          tenantId: config.getTenantId(),
+        })
+
+        await config.doInTenant(() => db.save(user))
+
+        await config.doInTenant(() =>
+          expect(db.save(user)).rejects.toThrow(
+            `Email already in use: '${email}'`
+          )
+        )
+      })
+
+      it("the same email cannot be used twice in different tenants", async () => {
+        const email = generator.email({})
+        const user: User = structures.users.user({
+          email,
+          tenantId: config.getTenantId(),
+        })
+
+        await config.doInTenant(() => db.save(user))
+
+        config.newTenant()
+        await config.doInTenant(() =>
+          expect(db.save(user)).rejects.toThrow(
+            `Email already in use: '${email}'`
+          )
+        )
       })
     })
-  })
 
-  it("the same email cannot be used twice in the same tenant", async () => {
-    const email = generator.email({})
-    const user: User = structures.users.user({
-      email,
-      tenantId: config.getTenantId(),
+    describe("update", () => {
+      let user: User
+
+      beforeEach(async () => {
+        user = await config.doInTenant(() =>
+          db.save(
+            structures.users.user({
+              email: generator.email({}),
+              tenantId: config.getTenantId(),
+            })
+          )
+        )
+      })
+
+      it("can update user properties", async () => {
+        await config.doInTenant(async () => {
+          const updatedName = generator.first()
+          user.firstName = updatedName
+
+          await db.save(user)
+
+          const persistedUser = await db.getUserByEmail(user.email)
+          expect(persistedUser).toEqual(
+            expect.objectContaining({
+              _id: user._id,
+              email: user.email,
+              firstName: updatedName,
+              lastName: user.lastName,
+            })
+          )
+        })
+      })
     })
-
-    await config.doInTenant(() => db.save(user))
-
-    await config.doInTenant(() =>
-      expect(db.save(user)).rejects.toThrow(`Email already in use: '${email}'`)
-    )
-  })
-
-  it("the same email cannot be used twice in different tenants", async () => {
-    const email = generator.email({})
-    const user: User = structures.users.user({
-      email,
-      tenantId: config.getTenantId(),
-    })
-
-    await config.doInTenant(() => db.save(user))
-
-    config.newTenant()
-    await config.doInTenant(() =>
-      expect(db.save(user)).rejects.toThrow(`Email already in use: '${email}'`)
-    )
   })
 })
