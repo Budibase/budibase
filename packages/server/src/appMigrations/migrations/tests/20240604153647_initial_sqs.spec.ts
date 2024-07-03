@@ -67,11 +67,11 @@ function oldLinkDocument(): Omit<LinkDocument, "tableId"> {
 }
 
 async function sqsDisabled(cb: () => Promise<void>) {
-  await config.withEnv({ SQS_SEARCH_ENABLE: "" }, cb)
+  await config.withEnv({ SQS_MIGRATION_ENABLE: "" }, cb)
 }
 
 async function sqsEnabled(cb: () => Promise<void>) {
-  await config.withEnv({ SQS_SEARCH_ENABLE: "1" }, cb)
+  await config.withEnv({ SQS_MIGRATION_ENABLE: "1" }, cb)
 }
 
 beforeAll(async () => {
