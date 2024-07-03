@@ -7,7 +7,7 @@ export function stringContainsSecret(str: string) {
 
   for (const key of SECRETS) {
     const value = environment[key]
-    if (typeof value !== "string") {
+    if (typeof value !== "string" || value === "") {
       continue
     }
 
