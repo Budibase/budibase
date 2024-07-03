@@ -116,8 +116,7 @@
     disableWrapping: true,
   })
   $: editingJs = codeMode === EditorModes.JS
-  $: requiredProperties =
-    block.schema[isTestModal ? "outputs" : "inputs"].required || []
+  $: requiredProperties = isTestModal ? [] : block.schema["inputs"].required
 
   $: stepCompletions =
     codeMode === EditorModes.Handlebars

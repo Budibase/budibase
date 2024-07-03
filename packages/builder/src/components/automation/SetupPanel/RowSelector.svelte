@@ -97,7 +97,6 @@
           delete editableFields[column]
         }
       }
-      editableFields = editableFields
     }
 
     // Go through the table schema and build out the editable content
@@ -133,7 +132,7 @@
             [key]: emptyField,
           }
         } else {
-          // Purge from the update as it's presence is not necessary.
+          // Purge from the update as its presence is not necessary.
           delete editableRow[key]
         }
       }
