@@ -43,9 +43,7 @@ describe("test the openai action", () => {
 
   it("should present the correct error message when the OPENAI_API_KEY variable isn't set", async () => {
     await config.withCoreEnv({ OPENAI_API_KEY: "" }, async () => {
-      let res = await runStep("OPENAI", {
-        prompt: OPENAI_PROMPT,
-      })
+      let res = await runStep("OPENAI", { prompt: OPENAI_PROMPT })
       expect(res.response).toEqual(
         "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable."
       )
@@ -54,17 +52,13 @@ describe("test the openai action", () => {
   })
 
   it("should be able to receive a response from ChatGPT given a prompt", async () => {
-    const res = await runStep("OPENAI", {
-      prompt: OPENAI_PROMPT,
-    })
+    const res = await runStep("OPENAI", { prompt: OPENAI_PROMPT })
     expect(res.response).toEqual("This is a test")
     expect(res.success).toBeTruthy()
   })
 
   it("should present the correct error message when a prompt is not provided", async () => {
-    const res = await runStep("OPENAI", {
-      prompt: null,
-    })
+    const res = await runStep("OPENAI", { prompt: null })
     expect(res.response).toEqual(
       "Budibase OpenAI Automation Failed: No prompt supplied"
     )
