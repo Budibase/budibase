@@ -33,11 +33,6 @@ async function parseSchema(view: CreateViewRequest) {
       p[fieldName] = fieldSchema
       return p
     }, {} as Record<string, RequiredKeys<ViewUIFieldMetadata>>)
-  for (let [key, column] of Object.entries(finalViewSchema)) {
-    if (!column.visible && !column.readonly) {
-      delete finalViewSchema[key]
-    }
-  }
   return finalViewSchema
 }
 
