@@ -131,6 +131,23 @@ describe("UserDB", () => {
           ).rejects.toThrow("Email address cannot be changed")
         })
       })
+
+      it("email can be updated if specified", async () => {
+        await config.doInTenant(async () => {
+          user.email = generator.email({})
+
+          await db.save(user, { allowChangingEmail: true })
+
+          const persistedUser = await db.getUserByEmail(user.email)
+          expect(persistedUser).toEqual(
+            expect.objectContaining({
+              _id: user._id,
+              email: user.email,
+              lastName: user.lastName,
+            })
+          )
+        })
+      })
     })
   })
 })
