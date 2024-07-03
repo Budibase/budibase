@@ -221,7 +221,7 @@ export class UserDB {
     const tenantId = getTenantId()
     const db = getGlobalDB()
 
-    let { email, _id, userGroups = [], roles } = user
+    const { email, _id, userGroups = [], roles } = user
 
     if (!email && !_id) {
       throw new Error("_id or email is required")
@@ -231,11 +231,10 @@ export class UserDB {
     if (_id) {
       // try to get existing user from db
       try {
-        dbUser = (await db.get(_id)) as User
-        if (email && dbUser.email !== email) {
-          throw "Email address cannot be changed"
+        dbUser = await usersCore.getById(_id)
+        if (email && dbUser.email !== email && !opts.allowChangingEmail) {
+          throw new Error("Email address cannot be changed")
         }
-        email = dbUser.email
       } catch (e: any) {
         if (e.status === 404) {
           // do nothing, save this new user with the id specified - required for SSO auth
@@ -271,13 +270,13 @@ export class UserDB {
 
       // make sure we set the _id field for a new user
       // Also if this is a new user, associate groups with them
-      let groupPromises = []
+      const groupPromises = []
       if (!_id) {
-        _id = builtUser._id!
-
         if (userGroups.length > 0) {
           for (let groupId of userGroups) {
-            groupPromises.push(UserDB.groups.addUsers(groupId, [_id!]))
+            groupPromises.push(
+              UserDB.groups.addUsers(groupId, [builtUser._id!])
+            )
           }
         }
       }
@@ -288,6 +287,11 @@ export class UserDB {
         builtUser._rev = response.rev
 
         await eventHelpers.handleSaveEvents(builtUser, dbUser)
+        if (dbUser && builtUser.email !== dbUser.email) {
+          // Remove the plaform email reference if the email changed
+          await platform.users.removeUser({ email: dbUser.email } as User)
+        }
+
         await platform.users.addUser(
           tenantId,
           builtUser._id!,
