@@ -50,6 +50,7 @@
   } from "dataBinding"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
+  import { writable } from "svelte/store"
   import { cloneDeep } from "lodash/fp"
   import {
     AutomationEventType,
@@ -146,7 +147,11 @@
     }
   }
 
-  $: customStepLayouts($memoBlock, schemaProperties)
+  // Store for any UX related data
+  const stepStore = writable({})
+  $: currentStep = $stepStore?.[block.id]
+
+  $: customStepLayouts($memoBlock, schemaProperties, currentStep)
 
   const customStepLayouts = block => {
     if (
@@ -215,6 +220,99 @@
         ]
       }
 
+      // A select to switch from `row` to `oldRow`
+      const getRowTypeConfig = () => {
+        if (!isTestModal || block.event !== AutomationEventType.ROW_UPDATE) {
+          return []
+        }
+
+        if (!$stepStore?.[block.id]) {
+          stepStore.update(state => ({
+            ...state,
+            [block.id]: {
+              rowType: "row",
+            },
+          }))
+        }
+
+        return [
+          {
+            type: Select,
+            tooltip: `You can configure test data for both the updated row and 
+              the old row, if you need it. Just select the one you wish to alter`,
+            title: "Row data",
+            props: {
+              value: $stepStore?.[block.id].rowType,
+              onChange: e => {
+                stepStore.update(state => ({
+                  ...state,
+                  [block.id]: {
+                    rowType: e.detail,
+                  },
+                }))
+              },
+              getOptionLabel: type => type.name,
+              getOptionValue: type => type.id,
+              options: [
+                {
+                  id: "row",
+                  name: "Updated row",
+                },
+                { id: "oldRow", name: "Old row" },
+              ],
+            },
+          },
+        ]
+      }
+
+      const getRowSelector = () => {
+        const baseProps = {
+          bindings,
+          isTestModal,
+          isUpdateRow: block.stepId === ActionStepID.UPDATE_ROW,
+        }
+
+        if (currentStep?.rowType === "oldRow") {
+          return [
+            {
+              type: RowSelector,
+              props: {
+                row: inputData["oldRow"] || {
+                  tableId: inputData["row"].tableId,
+                },
+                meta: {
+                  fields: inputData["meta"].oldFields || {},
+                },
+                onChange: e => {
+                  onChange({
+                    oldRow: e.detail.row,
+                    meta: {
+                      fields: inputData["meta"].fields,
+                      oldFields: e.detail.meta.fields,
+                    },
+                  })
+                },
+                ...baseProps,
+              },
+            },
+          ]
+        }
+
+        return [
+          {
+            type: RowSelector,
+            props: {
+              row: inputData["row"],
+              meta: inputData["meta"] || {},
+              onChange: e => {
+                onChange(e.detail)
+              },
+              ...baseProps,
+            },
+          },
+        ]
+      }
+
       stepLayouts[block.stepId] = {
         row: {
           schema: schema["row"],
@@ -230,7 +328,7 @@
                   onChange({
                     _tableId: e.detail,
                     meta: {},
-                    ["row"]: {
+                    [$stepStore?.[block.id]?.rowType]: {
                       tableId: e.detail,
                     },
                   })
@@ -240,25 +338,14 @@
             },
             ...getIdConfig(),
             ...getRevConfig(),
+            ...getRowTypeConfig(),
             {
               type: Divider,
               props: {
                 noMargin: true,
               },
             },
-            {
-              type: RowSelector,
-              props: {
-                row: inputData["row"],
-                meta: inputData["meta"] || {},
-                onChange: e => {
-                  onChange(e.detail)
-                },
-                bindings,
-                isTestModal,
-                isUpdateRow: block.stepId === ActionStepID.UPDATE_ROW,
-              },
-            },
+            ...getRowSelector(),
           ],
         },
       }
@@ -296,6 +383,7 @@
           testData: {
             // Reset Core fields
             row: { tableId: update.tableId },
+            oldRow: { tableId: update.tableId },
             meta: {},
             id: "",
             revision: "",
@@ -685,7 +773,7 @@
       {#if canShowField(key, stepLayouts[block.stepId].schema)}
         {#each stepLayouts[block.stepId][key].content as config}
           {#if config.title}
-            <PropField label={config.title}>
+            <PropField label={config.title} labelTooltip={config.tooltip}>
               <svelte:component
                 this={config.type}
                 {...config.props}
