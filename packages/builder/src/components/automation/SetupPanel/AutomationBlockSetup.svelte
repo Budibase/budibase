@@ -272,7 +272,7 @@
           isUpdateRow: block.stepId === ActionStepID.UPDATE_ROW,
         }
 
-        if (currentStep?.rowType === "oldRow") {
+        if (isTestModal && currentStep?.rowType === "oldRow") {
           return [
             {
               type: RowSelector,
@@ -325,12 +325,15 @@
                 isTrigger,
                 value: inputData["row"]?.tableId ?? "",
                 onChange: e => {
+                  const rowKey = $stepStore?.[block.id]?.rowType || "row"
                   onChange({
                     _tableId: e.detail,
                     meta: {},
-                    [$stepStore?.[block.id]?.rowType]: {
-                      tableId: e.detail,
-                    },
+                    [rowKey]: e.detail
+                      ? {
+                          tableId: e.detail,
+                        }
+                      : {},
                   })
                 },
                 disabled: isTestModal,
