@@ -123,6 +123,14 @@ describe("UserDB", () => {
           )
         })
       })
+
+      it("email cannot be updated by default", async () => {
+        await config.doInTenant(async () => {
+          await expect(
+            db.save({ ...user, email: generator.email({}) })
+          ).rejects.toThrow("Email address cannot be changed")
+        })
+      })
     })
   })
 })
