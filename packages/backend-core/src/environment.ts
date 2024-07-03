@@ -208,6 +208,7 @@ const environment = {
 type EnvironmentKey = keyof typeof environment
 export const SECRETS: EnvironmentKey[] = [
   "API_ENCRYPTION_KEY",
+  "BB_ADMIN_USER_PASSWORD",
   "COUCH_DB_PASSWORD",
   "COUCH_DB_SQL_URL",
   "COUCH_DB_URL",
@@ -217,6 +218,7 @@ export const SECRETS: EnvironmentKey[] = [
   "JWT_SECRET",
   "MINIO_ACCESS_KEY",
   "MINIO_SECRET_KEY",
+  "OPENAI_API_KEY",
   "REDIS_PASSWORD",
 ]
 
