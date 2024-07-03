@@ -7,8 +7,8 @@ import {
   AutomationStepType,
   AutomationIOType,
 } from "@budibase/types"
+import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
-import environment from "../../environment"
 
 enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
@@ -60,7 +60,7 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  if (!environment.OPENAI_API_KEY) {
+  if (!env.OPENAI_API_KEY) {
     return {
       success: false,
       response:
@@ -77,7 +77,7 @@ export async function run({ inputs }: AutomationStepInput) {
 
   try {
     const openai = new OpenAI({
-      apiKey: environment.OPENAI_API_KEY,
+      apiKey: env.OPENAI_API_KEY,
     })
 
     const completion = await openai.chat.completions.create({

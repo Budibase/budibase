@@ -14,20 +14,27 @@ describe("check BB_ADMIN environment variables", () => {
     await tenancy.doInTenant(tenancy.DEFAULT_TENANT_ID, async () => {
       await config.withEnv(
         {
-          BB_ADMIN_USER_EMAIL: EMAIL,
-          BB_ADMIN_USER_PASSWORD: PASSWORD,
           MULTI_TENANCY: "0",
           SELF_HOSTED: "1",
         },
-        async () => {
-          await startup({ rerun: true })
-          const user = await users.getGlobalUserByEmail(EMAIL, {
-            cleanup: false,
-          })
-          expect(user).toBeDefined()
-          expect(user?.password).toBeDefined()
-          expect(await utils.compare(PASSWORD, user?.password!)).toEqual(true)
-        }
+        () =>
+          config.withCoreEnv(
+            {
+              BB_ADMIN_USER_EMAIL: EMAIL,
+              BB_ADMIN_USER_PASSWORD: PASSWORD,
+            },
+            async () => {
+              await startup({ rerun: true })
+              const user = await users.getGlobalUserByEmail(EMAIL, {
+                cleanup: false,
+              })
+              expect(user).toBeDefined()
+              expect(user?.password).toBeDefined()
+              expect(await utils.compare(PASSWORD, user?.password!)).toEqual(
+                true
+              )
+            }
+          )
       )
     })
   })
