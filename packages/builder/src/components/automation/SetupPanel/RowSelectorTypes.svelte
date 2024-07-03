@@ -277,7 +277,7 @@
   }
 
   .field-wrap.json-field {
-    height: 80px;
+    height: 120px;
   }
 
   .field-wrap {
