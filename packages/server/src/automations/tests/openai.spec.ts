@@ -1,6 +1,4 @@
-const setup = require("./utilities")
-
-import environment from "../../environment"
+import { getConfig, runStep, afterAll as _afterAll } from "./utilities"
 import { OpenAI } from "openai"
 
 jest.mock("openai", () => ({
@@ -26,32 +24,37 @@ const mockedOpenAI = OpenAI as jest.MockedClass<typeof OpenAI>
 const OPENAI_PROMPT = "What is the meaning of life?"
 
 describe("test the openai action", () => {
-  let config = setup.getConfig()
+  let config = getConfig()
+  let resetEnv: () => void | undefined
 
   beforeAll(async () => {
     await config.init()
   })
 
   beforeEach(() => {
-    environment.OPENAI_API_KEY = "abc123"
+    resetEnv = config.setCoreEnv({ OPENAI_API_KEY: "abc123" })
   })
 
-  afterAll(setup.afterAll)
+  afterEach(() => {
+    resetEnv()
+  })
+
+  afterAll(_afterAll)
 
   it("should present the correct error message when the OPENAI_API_KEY variable isn't set", async () => {
-    delete environment.OPENAI_API_KEY
-
-    let res = await setup.runStep("OPENAI", {
-      prompt: OPENAI_PROMPT,
+    await config.withCoreEnv({ OPENAI_API_KEY: "" }, async () => {
+      let res = await runStep("OPENAI", {
+        prompt: OPENAI_PROMPT,
+      })
+      expect(res.response).toEqual(
+        "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable."
+      )
+      expect(res.success).toBeFalsy()
     })
-    expect(res.response).toEqual(
-      "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable."
-    )
-    expect(res.success).toBeFalsy()
   })
 
   it("should be able to receive a response from ChatGPT given a prompt", async () => {
-    const res = await setup.runStep("OPENAI", {
+    const res = await runStep("OPENAI", {
       prompt: OPENAI_PROMPT,
     })
     expect(res.response).toEqual("This is a test")
@@ -59,7 +62,7 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when a prompt is not provided", async () => {
-    const res = await setup.runStep("OPENAI", {
+    const res = await runStep("OPENAI", {
       prompt: null,
     })
     expect(res.response).toEqual(
@@ -84,7 +87,7 @@ describe("test the openai action", () => {
         } as any)
     )
 
-    const res = await setup.runStep("OPENAI", {
+    const res = await runStep("OPENAI", {
       prompt: OPENAI_PROMPT,
     })
 
