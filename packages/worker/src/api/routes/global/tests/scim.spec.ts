@@ -577,7 +577,6 @@ describe("scim", () => {
 
       it("an existing user's email can be updated", async () => {
         const newEmail = structures.generator.email()
-
         const body: ScimUpdateRequest = {
           schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
           Operations: [
@@ -605,6 +604,10 @@ describe("scim", () => {
 
         const persistedUser = await config.api.scimUsersAPI.find(user.id)
         expect(persistedUser).toEqual(expectedScimUser)
+
+        expect((await config.api.users.getUser(user.id)).body).toEqual(
+          expect.objectContaining({ _id: user.id, email: newEmail })
+        )
       })
     })
 
