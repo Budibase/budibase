@@ -82,23 +82,11 @@ class CouchDBIntegration implements IntegrationBase {
       connected: false,
     }
     try {
-      response.connected = await this.query(
-        () => this.client.exists(),
-        "validation error"
-      )
+      response.connected = await this.client.exists()
     } catch (e: any) {
       response.error = e.message as string
     }
     return response
-  }
-
-  async query<T>(operation: () => Promise<T>, errorMsg: string) {
-    try {
-      return await operation()
-    } catch (err) {
-      console.error(errorMsg, err)
-      throw err
-    }
   }
 
   private parse(query: { json: string | object }) {
@@ -107,7 +95,7 @@ class CouchDBIntegration implements IntegrationBase {
 
   async create(query: { json: string | object }) {
     const parsed = this.parse(query)
-    return this.query(() => this.client.put(parsed), "Error writing to couchDB")
+    return await this.client.put(parsed)
   }
 
   async read(query: { json: string | object }) {
@@ -116,10 +104,7 @@ class CouchDBIntegration implements IntegrationBase {
       include_docs: true,
       ...parsed,
     }
-    const result = await this.query(
-      () => this.client.allDocs(params),
-      "Error querying couchDB"
-    )
+    const result = await this.client.allDocs(params)
     return result.rows.map(row => row.doc)
   }
 
@@ -129,24 +114,15 @@ class CouchDBIntegration implements IntegrationBase {
       const oldDoc = await this.get({ id: parsed._id })
       parsed._rev = oldDoc._rev
     }
-    return this.query(
-      () => this.client.put(parsed),
-      "Error updating couchDB document"
-    )
+    return await this.client.put(parsed)
   }
 
   async get(query: { id: string }) {
-    return this.query(
-      () => this.client.get(query.id),
-      "Error retrieving couchDB document by ID"
-    )
+    return await this.client.get(query.id)
   }
 
   async delete(query: { id: string }) {
-    return this.query(
-      () => this.client.remove(query.id),
-      "Error deleting couchDB document"
-    )
+    return await this.client.remove(query.id)
   }
 }
 
