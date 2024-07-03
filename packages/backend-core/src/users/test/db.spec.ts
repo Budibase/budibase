@@ -68,4 +68,19 @@ describe("UserDB", () => {
       expect(db.save(user)).rejects.toThrow(`Email already in use: '${email}'`)
     )
   })
+
+  it("the same email cannot be used twice in different tenants", async () => {
+    const email = generator.email({})
+    const user: User = structures.users.user({
+      email,
+      tenantId: config.getTenantId(),
+    })
+
+    await config.doInTenant(() => db.save(user))
+
+    config.newTenant()
+    await config.doInTenant(() =>
+      expect(db.save(user)).rejects.toThrow(`Email already in use: '${email}'`)
+    )
+  })
 })
