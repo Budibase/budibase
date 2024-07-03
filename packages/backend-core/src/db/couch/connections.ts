@@ -1,6 +1,7 @@
 import env from "../../environment"
 
 export const getCouchInfo = (connection?: string) => {
+  // clean out any auth credentials
   const urlInfo = getUrlInfo(connection)
   let username
   let password
@@ -23,9 +24,16 @@ export const getCouchInfo = (connection?: string) => {
     throw new Error("CouchDB password not set")
   }
   const authCookie = Buffer.from(`${username}:${password}`).toString("base64")
+  let sqlUrl = env.COUCH_DB_SQL_URL
+  if (!sqlUrl && urlInfo.url) {
+    const parsed = new URL(urlInfo.url)
+    // attempt to connect on default port
+    sqlUrl = urlInfo.url.replace(parsed.port, "4984")
+  }
   return {
     url: urlInfo.url!,
-    sqlUrl: env.COUCH_DB_SQL_URL,
+    // clean out any auth credentials
+    sqlUrl: getUrlInfo(sqlUrl).url,
     auth: {
       username: username,
       password: password,
