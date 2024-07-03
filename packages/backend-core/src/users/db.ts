@@ -232,8 +232,8 @@ export class UserDB {
       // try to get existing user from db
       try {
         dbUser = (await db.get(_id)) as User
-        if (email && dbUser.email !== email) {
-          throw "Email address cannot be changed"
+        if (email && dbUser.email !== email && !opts.allowChangingEmail) {
+          throw new Error("Email address cannot be changed")
         }
         email = dbUser.email
       } catch (e: any) {
