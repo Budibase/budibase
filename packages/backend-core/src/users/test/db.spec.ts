@@ -1,6 +1,7 @@
 import { User, UserStatus } from "@budibase/types"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import { UserDB } from "../db"
+import { searchExistingEmails } from "../lookup"
 
 const db = UserDB
 
@@ -134,17 +135,51 @@ describe("UserDB", () => {
 
       it("email can be updated if specified", async () => {
         await config.doInTenant(async () => {
-          user.email = generator.email({})
+          const newEmail = generator.email({})
 
-          await db.save(user, { allowChangingEmail: true })
+          await db.save(
+            { ...user, email: newEmail },
+            { allowChangingEmail: true }
+          )
 
-          const persistedUser = await db.getUserByEmail(user.email)
+          const persistedUser = await db.getUserByEmail(newEmail)
           expect(persistedUser).toEqual(
             expect.objectContaining({
               _id: user._id,
-              email: user.email,
+              email: newEmail,
               lastName: user.lastName,
+              _rev: expect.stringMatching(/^2-\w+/),
             })
+          )
+        })
+      })
+
+      it("updating emails frees previous emails", async () => {
+        await config.doInTenant(async () => {
+          const previousEmail = user.email
+          const newEmail = generator.email({})
+          expect(await searchExistingEmails([previousEmail, newEmail])).toEqual(
+            [previousEmail]
+          )
+
+          await db.save(
+            { ...user, email: newEmail },
+            { allowChangingEmail: true }
+          )
+
+          expect(await searchExistingEmails([previousEmail, newEmail])).toEqual(
+            [newEmail]
+          )
+
+          await db.save(
+            structures.users.user({
+              email: previousEmail,
+              tenantId: config.getTenantId(),
+            })
+          )
+
+          expect(await searchExistingEmails([previousEmail, newEmail])).toEqual(
+            [previousEmail, newEmail]
           )
         })
       })
