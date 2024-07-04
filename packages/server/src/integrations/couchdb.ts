@@ -71,6 +71,9 @@ class CouchDBIntegration implements IntegrationBase {
   private readonly client: Database
 
   constructor(config: CouchDBConfig) {
+    if (!config.url || !config.database) {
+      throw new Error("Unable to connect without URL or database")
+    }
     this.client = dbCore.DatabaseWithConnection(config.database, config.url)
   }
 
@@ -79,25 +82,11 @@ class CouchDBIntegration implements IntegrationBase {
       connected: false,
     }
     try {
-      const result = await this.query("exists", "validation error", {})
-      response.connected = result === true
+      response.connected = await this.client.exists()
     } catch (e: any) {
       response.error = e.message as string
     }
     return response
-  }
-
-  async query(
-    command: string,
-    errorMsg: string,
-    query: { json?: object; id?: string }
-  ) {
-    try {
-      return await (this.client as any)[command](query.id || query.json)
-    } catch (err) {
-      console.error(errorMsg, err)
-      throw err
-    }
   }
 
   private parse(query: { json: string | object }) {
@@ -106,18 +95,17 @@ class CouchDBIntegration implements IntegrationBase {
 
   async create(query: { json: string | object }) {
     const parsed = this.parse(query)
-    return this.query("post", "Error writing to couchDB", { json: parsed })
+    return await this.client.put(parsed)
   }
 
   async read(query: { json: string | object }) {
     const parsed = this.parse(query)
-    const result = await this.query("allDocs", "Error querying couchDB", {
-      json: {
-        include_docs: true,
-        ...parsed,
-      },
-    })
-    return result.rows.map((row: { doc: object }) => row.doc)
+    const params = {
+      include_docs: true,
+      ...parsed,
+    }
+    const result = await this.client.allDocs(params)
+    return result.rows.map(row => row.doc)
   }
 
   async update(query: { json: string | object }) {
@@ -126,22 +114,15 @@ class CouchDBIntegration implements IntegrationBase {
       const oldDoc = await this.get({ id: parsed._id })
       parsed._rev = oldDoc._rev
     }
-    return this.query("put", "Error updating couchDB document", {
-      json: parsed,
-    })
+    return await this.client.put(parsed)
   }
 
   async get(query: { id: string }) {
-    return this.query("get", "Error retrieving couchDB document by ID", {
-      id: query.id,
-    })
+    return await this.client.get(query.id)
   }
 
   async delete(query: { id: string }) {
-    const doc = await this.query("get", "Cannot find doc to be deleted", query)
-    return this.query("remove", "Error deleting couchDB document", {
-      json: doc,
-    })
+    return await this.client.remove(query.id)
   }
 }
 
