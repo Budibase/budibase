@@ -200,6 +200,9 @@ const environment = {
   },
   ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
   DISABLE_SCIM_CALLS: process.env.DISABLE_SCIM_CALLS,
+  BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
+  BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 }
 
 // clean up any environment variable edge cases

@@ -10,6 +10,6 @@ export const MIGRATIONS: AppMigration[] = [
   {
     id: "20240604153647_initial_sqs",
     func: m20240604153647_initial_sqs,
-    disabled: !env.SQS_SEARCH_ENABLE,
+    disabled: !(env.SQS_MIGRATION_ENABLE || env.SQS_SEARCH_ENABLE),
   },
 ]

@@ -255,6 +255,15 @@ export type BucketedContent = AutomationAttachmentContent & {
   path: string
 }
 
+export enum AutomationEventType {
+  ROW_SAVE = "row:save",
+  ROW_UPDATE = "row:update",
+  ROW_DELETE = "row:delete",
+  APP_TRIGGER = "app:trigger",
+  CRON_TRIGGER = "cron:trigger",
+  WEBHOOK_TRIGGER = "web:trigger",
+}
+
 export type UpdatedRowEventEmitter = {
   row: Row
   oldRow: Row
