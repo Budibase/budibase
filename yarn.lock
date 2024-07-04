@@ -5388,18 +5388,7 @@
   dependencies:
     defer-to-connect "^2.0.0"
 
-"@techpass/passport-openidconnect@0.3.2":
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/@techpass/passport-openidconnect/-/passport-openidconnect-0.3.2.tgz#f8fd5d97256286665dbf26dac92431f977ab1e63"
-  integrity sha512-fnCtEiexXSHA029B//hJcCJlLJrT3lhpNCyA0rnz58Qttz0BLGCVv6yMT8HmOnGThH6vcDOVwdgKM3kbCQtEhw==
-  dependencies:
-    base64url "^3.0.1"
-    oauth "^0.9.15"
-    passport-strategy "^1.0.0"
-    request "^2.88.0"
-    webfinger "^0.4.2"
-
-"@techpass/passport-openidconnect@^0.3.0":
+"@techpass/passport-openidconnect@0.3.3", "@techpass/passport-openidconnect@^0.3.0":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@techpass/passport-openidconnect/-/passport-openidconnect-0.3.3.tgz#6c01c78bd8da0ca8917378dfbe18024702620352"
   integrity sha512-i2X/CofjnGBqpTmw6b+Ex3Co/NrR2xjnIHvnOJk62XIlJJHNSTwmhJ1PkXoA5RGKlxZWchADFGjLTJnebvRj7A==
