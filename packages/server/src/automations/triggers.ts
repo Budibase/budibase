@@ -2,6 +2,7 @@ import emitter from "../events/index"
 import { getAutomationParams, isDevAppID } from "../db/utils"
 import { coerce } from "../utilities/rowProcessor"
 import { definitions } from "./triggerInfo"
+import { logging } from "@budibase/backend-core"
 // need this to call directly, so we can get a response
 import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"
@@ -69,7 +70,7 @@ async function queueRelevantRowAutomations(
         try {
           await automationQueue.add({ automation, event }, JOB_OPTS)
         } catch (e) {
-          console.error("Failed to queue automation", e)
+          logging.logAlert("Failed to queue automation", e)
         }
       }
     }
