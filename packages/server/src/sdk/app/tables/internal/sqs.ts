@@ -64,10 +64,29 @@ function buildRelationshipDefinitions(
 
 export const USER_COLUMN_PREFIX = "data_"
 
+// SQS does not support non-ASCII characters in column names, so we need to
+// replace them with unicode escape sequences.
+function encodeNonAscii(str: string): string {
+  return str
+    .split("")
+    .map(char => {
+      return char.charCodeAt(0) > 127
+        ? "\\u" + char.charCodeAt(0).toString(16).padStart(4, "0")
+        : char
+    })
+    .join("")
+}
+
+export function decodeNonAscii(str: string): string {
+  return str.replace(/\\u([0-9a-fA-F]{4})/g, (match, p1) =>
+    String.fromCharCode(parseInt(p1, 16))
+  )
+}
+
 // utility function to denote that columns in SQLite are mapped to avoid overlap issues
 // the overlaps can occur due to case insensitivity and some of the columns which Budibase requires
 export function mapToUserColumn(key: string) {
-  return `${USER_COLUMN_PREFIX}${key}`
+  return `${USER_COLUMN_PREFIX}${encodeNonAscii(key)}`
 }
 
 // this can generate relationship tables as part of the mapping

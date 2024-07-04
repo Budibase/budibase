@@ -22,10 +22,9 @@
   },
   "dependencies": {
     "@budibase/nano": "10.1.5",
-    "@budibase/pouchdb-replication-stream": "1.2.10",
+    "@budibase/pouchdb-replication-stream": "1.2.11",
     "@budibase/shared-core": "0.0.0",
     "@budibase/types": "0.0.0",
-    "@govtechsg/passport-openidconnect": "^1.0.2",
     "aws-cloudfront-sign": "3.0.2",
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.1.0",
