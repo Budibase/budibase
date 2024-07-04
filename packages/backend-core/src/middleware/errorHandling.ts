@@ -23,17 +23,17 @@ export async function errorHandling(ctx: any, next: any) {
       error: errors.getPublicError(err),
     }
 
-    if (environment.isTest() && ctx.headers["x-budibase-include-stacktrace"]) {
-      // @ts-ignore
-      error.stack = err.stack
-    }
-
     if (stringContainsSecret(JSON.stringify(error))) {
       error = {
         message: "Unexpected error",
         status,
         error: "Unexpected error",
       }
+    }
+
+    if (environment.isTest() && ctx.headers["x-budibase-include-stacktrace"]) {
+      // @ts-ignore
+      error.stack = err.stack
     }
 
     ctx.body = error
