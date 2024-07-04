@@ -82,7 +82,7 @@ export default defineConfig(({ mode }) => {
       ...(isProduction ? [] : devOnlyPlugins),
     ],
     optimizeDeps: {
-      exclude: ["@roxi/routify"],
+      exclude: ["@roxi/routify", "fsevents"],
     },
     resolve: {
       dedupe: ["@roxi/routify"],
