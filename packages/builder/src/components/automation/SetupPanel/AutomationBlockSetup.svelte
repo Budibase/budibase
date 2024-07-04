@@ -1,11 +1,10 @@
 <script>
   import TableSelector from "./TableSelector.svelte"
-  import RowSelector from "./RowSelector.svelte"
   import FieldSelector from "./FieldSelector.svelte"
   import SchemaSetup from "./SchemaSetup.svelte"
+  import RowSelector from "./RowSelector.svelte"
   import {
     Button,
-    Input,
     Select,
     Label,
     ActionButton,
@@ -15,26 +14,27 @@
     Checkbox,
     DatePicker,
     DrawerContent,
+    Helpers,
     Toggle,
-    Icon,
     Divider,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation, tables } from "stores/builder"
   import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
-  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
-  import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
-  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import {
+    BindingSidePanel,
+    DrawerBindableSlot,
+    DrawerBindableInput,
+    ServerBindingPanel as AutomationBindingPanel,
+    ModalBindableInput,
+  } from "components/common/bindings"
   import CodeEditorModal from "./CodeEditorModal.svelte"
-  import QuerySelector from "./QuerySelector.svelte"
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import AutomationSelector from "./AutomationSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
-  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import BindingSidePanel from "components/common/bindings/BindingSidePanel.svelte"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { BindingHelpers, BindingType } from "components/common/bindings/utils"
   import {
@@ -43,31 +43,57 @@
     EditorModes,
   } from "components/common/CodeEditor"
   import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { QueryUtils, Utils, search } from "@budibase/frontend-core"
+  import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
   } from "dataBinding"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
+  import { writable } from "svelte/store"
   import { cloneDeep } from "lodash/fp"
+  import {
+    AutomationEventType,
+    AutomationStepType,
+    AutomationActionStepId,
+  } from "@budibase/types"
   import { FIELDS } from "constants/backend"
+  import PropField from "./PropField.svelte"
 
   export let block
   export let testData
   export let schemaProperties
   export let isTestModal = false
 
+  // Stop unnecessary rendering
+  const memoBlock = memo(block)
+
+  const rowTriggers = [
+    TriggerStepID.ROW_UPDATED,
+    TriggerStepID.ROW_SAVED,
+    TriggerStepID.ROW_DELETED,
+  ]
+
+  const rowEvents = [
+    AutomationEventType.ROW_DELETE,
+    AutomationEventType.ROW_SAVE,
+    AutomationEventType.ROW_UPDATE,
+  ]
+
+  const rowSteps = [ActionStepID.UPDATE_ROW, ActionStepID.CREATE_ROW]
+
   let webhookModal
   let drawer
   let inputData
   let insertAtPos, getCaretPosition
+  let stepLayouts = {}
 
+  $: memoBlock.set(block)
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
-  $: getInputData(testData, block.inputs)
+  $: getInputData(testData, $memoBlock.inputs)
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
@@ -81,31 +107,33 @@
     { allowLinks: true }
   )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
-  $: isTrigger = block?.type === "TRIGGER"
-  $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
+  $: isTrigger = block?.type === AutomationStepType.TRIGGER
   $: codeMode =
-    stepId === "EXECUTE_BASH" ? EditorModes.Handlebars : EditorModes.JS
+    stepId === AutomationActionStepId.EXECUTE_BASH
+      ? EditorModes.Handlebars
+      : EditorModes.JS
   $: bindingsHelpers = new BindingHelpers(getCaretPosition, insertAtPos, {
     disableWrapping: true,
   })
   $: editingJs = codeMode === EditorModes.JS
-  $: requiredProperties = block.schema.inputs.required || []
+  $: requiredProperties = isTestModal ? [] : block.schema["inputs"].required
+
   $: stepCompletions =
     codeMode === EditorModes.Handlebars
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
-
-  let testDataRowVisibility = {}
 
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
 
     // Ensures the app action fields are populated
-    if (block.event === "app:trigger" && !newInputData?.fields) {
+    if (
+      block.event === AutomationEventType.APP_TRIGGER &&
+      !newInputData?.fields
+    ) {
       newInputData = cloneDeep(blockInputs)
     }
-
     inputData = newInputData
     setDefaultEnumValues()
   }
@@ -117,15 +145,338 @@
       }
     }
   }
-  const onChange = Utils.sequential(async (e, key) => {
+
+  // Store for any UX related data
+  const stepStore = writable({})
+  $: currentStep = $stepStore?.[block.id]
+
+  $: customStepLayouts($memoBlock, schemaProperties, currentStep)
+
+  const customStepLayouts = block => {
+    if (
+      rowSteps.includes(block.stepId) ||
+      (rowTriggers.includes(block.stepId) && isTestModal)
+    ) {
+      const schema = schemaProperties.reduce((acc, entry) => {
+        const [key, val] = entry
+        acc[key] = val
+        return acc
+      }, {})
+
+      // Optionally build the rev field config when its needed.
+      const getRevConfig = () => {
+        const rowRevEntry = schema["revision"]
+        if (!rowRevEntry) {
+          return []
+        }
+        const rowRevlabel = getFieldLabel("revision", rowRevEntry)
+
+        return isTestModal
+          ? [
+              {
+                type: DrawerBindableInput,
+                title: rowRevlabel,
+                props: {
+                  panel: AutomationBindingPanel,
+                  value: inputData["revision"],
+                  onChange: e => {
+                    onChange({ ["revision"]: e.detail })
+                  },
+                  bindings,
+                  updateOnChange: false,
+                  forceModal: true,
+                },
+              },
+            ]
+          : []
+      }
+
+      const getIdConfig = () => {
+        const rowIdentifier = isTestModal ? "id" : "rowId"
+
+        const rowIdEntry = schema[rowIdentifier]
+        if (!rowIdEntry) {
+          return []
+        }
+
+        const rowIdlabel = getFieldLabel(rowIdentifier, rowIdEntry)
+
+        return [
+          {
+            type: DrawerBindableInput,
+            title: rowIdlabel,
+            props: {
+              panel: AutomationBindingPanel,
+              value: inputData[rowIdentifier],
+              onChange: e => {
+                onChange({ [rowIdentifier]: e.detail })
+              },
+              bindings,
+              updateOnChange: false,
+              forceModal: true,
+            },
+          },
+        ]
+      }
+
+      // A select to switch from `row` to `oldRow`
+      const getRowTypeConfig = () => {
+        if (!isTestModal || block.event !== AutomationEventType.ROW_UPDATE) {
+          return []
+        }
+
+        if (!$stepStore?.[block.id]) {
+          stepStore.update(state => ({
+            ...state,
+            [block.id]: {
+              rowType: "row",
+            },
+          }))
+        }
+
+        return [
+          {
+            type: Select,
+            tooltip: `You can configure test data for both the updated row and 
+              the old row, if you need it. Just select the one you wish to alter`,
+            title: "Row data",
+            props: {
+              value: $stepStore?.[block.id].rowType,
+              onChange: e => {
+                stepStore.update(state => ({
+                  ...state,
+                  [block.id]: {
+                    rowType: e.detail,
+                  },
+                }))
+              },
+              getOptionLabel: type => type.name,
+              getOptionValue: type => type.id,
+              options: [
+                {
+                  id: "row",
+                  name: "Updated row",
+                },
+                { id: "oldRow", name: "Old row" },
+              ],
+            },
+          },
+        ]
+      }
+
+      const getRowSelector = () => {
+        const baseProps = {
+          bindings,
+          isTestModal,
+          isUpdateRow: block.stepId === ActionStepID.UPDATE_ROW,
+        }
+
+        if (isTestModal && currentStep?.rowType === "oldRow") {
+          return [
+            {
+              type: RowSelector,
+              props: {
+                row: inputData["oldRow"] || {
+                  tableId: inputData["row"].tableId,
+                },
+                meta: {
+                  fields: inputData["meta"].oldFields || {},
+                },
+                onChange: e => {
+                  onChange({
+                    oldRow: e.detail.row,
+                    meta: {
+                      fields: inputData["meta"].fields,
+                      oldFields: e.detail.meta.fields,
+                    },
+                  })
+                },
+                ...baseProps,
+              },
+            },
+          ]
+        }
+
+        return [
+          {
+            type: RowSelector,
+            props: {
+              row: inputData["row"],
+              meta: inputData["meta"] || {},
+              onChange: e => {
+                onChange(e.detail)
+              },
+              ...baseProps,
+            },
+          },
+        ]
+      }
+
+      stepLayouts[block.stepId] = {
+        row: {
+          schema: schema["row"],
+          //?layout: RowLayoutStepComponent.
+          content: [
+            {
+              type: TableSelector,
+              title: "Table",
+              props: {
+                isTrigger,
+                value: inputData["row"]?.tableId ?? "",
+                onChange: e => {
+                  const rowKey = $stepStore?.[block.id]?.rowType || "row"
+                  onChange({
+                    _tableId: e.detail,
+                    meta: {},
+                    [rowKey]: e.detail
+                      ? {
+                          tableId: e.detail,
+                        }
+                      : {},
+                  })
+                },
+                disabled: isTestModal,
+              },
+            },
+            ...getIdConfig(),
+            ...getRevConfig(),
+            ...getRowTypeConfig(),
+            {
+              type: Divider,
+              props: {
+                noMargin: true,
+              },
+            },
+            ...getRowSelector(),
+          ],
+        },
+      }
+    }
+  }
+
+  /**
+   * Handler for row trigger automation updates.
+    @param {object} update - An automation block.inputs update object
+    @example
+    onRowTriggerUpdate({ 
+      "tableId" : "ta_bb_employee"
+    })
+   */
+  const onRowTriggerUpdate = async update => {
+    if (
+      Object.hasOwn(update, "tableId") &&
+      $selectedAutomation.testData?.row?.tableId !== update.tableId
+    ) {
+      try {
+        const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
+          searchableSchema: true,
+        }).schema
+
+        // Parse the block inputs as usual
+        const updatedAutomation =
+          await automationStore.actions.processBlockInputs(block, {
+            schema: reqSchema,
+            ...update,
+          })
+
+        // Save the entire automation and reset the testData
+        await automationStore.actions.save({
+          ...updatedAutomation,
+          testData: {
+            // Reset Core fields
+            row: { tableId: update.tableId },
+            oldRow: { tableId: update.tableId },
+            meta: {},
+            id: "",
+            revision: "",
+          },
+        })
+
+        return
+      } catch (e) {
+        console.error("Error saving automation", e)
+        notifications.error("Error saving automation")
+      }
+    }
+  }
+
+  /**
+   * Handler for App trigger automation updates.
+   * Ensure updates to the field list are reflected in testData
+    @param {object} update - An app trigger update object
+    @example
+    onAppTriggerUpdate({ 
+      "fields" : {"myField": "123", "myArray": "cat,dog,badger"}
+    })
+   */
+  const onAppTriggerUpdate = async update => {
+    try {
+      // Parse the block inputs as usual
+      const updatedAutomation =
+        await automationStore.actions.processBlockInputs(block, {
+          schema: {},
+          ...update,
+        })
+
+      // Exclude default or invalid data from the test data
+      let updatedFields = {}
+      for (const key of Object.keys(block?.inputs?.fields || {})) {
+        if (Object.hasOwn(update.fields, key)) {
+          if (key !== "") {
+            updatedFields[key] = updatedAutomation.testData?.fields?.[key]
+          }
+        }
+      }
+
+      // Save the entire automation and reset the testData
+      await automationStore.actions.save({
+        ...updatedAutomation,
+        testData: {
+          fields: updatedFields,
+        },
+      })
+    } catch (e) {
+      console.error("Error saving automation", e)
+      notifications.error("Error saving automation")
+    }
+  }
+
+  /**
+   * Handler for automation block input updates.
+    @param {object} update - An automation inputs update object
+    @example
+    onChange({ 
+      meta: { fields : { "Photo": { useAttachmentBinding: false }} }
+      row: { "Active": true, "Order Id" : 14, ... }
+    })
+   */
+  const onChange = Utils.sequential(async update => {
+    const request = cloneDeep(update)
+
+    // Process app trigger updates
+    if (isTrigger && !isTestModal) {
+      // Row trigger
+      if (rowEvents.includes(block.event)) {
+        await onRowTriggerUpdate(request)
+        return
+      }
+      // App trigger
+      if (block.event === AutomationEventType.APP_TRIGGER) {
+        await onAppTriggerUpdate(request)
+        return
+      }
+    }
+
     // We need to cache the schema as part of the definition because it is
     // used in the server to detect relationships. It would be far better to
     // instead fetch the schema in the backend at runtime.
+    // If _tableId is explicitly included in the update request, the schema will be requested
     let schema
-    if (e.detail?.tableId) {
-      schema = getSchemaForDatasourcePlus(e.detail.tableId, {
+    if (request?._tableId) {
+      schema = getSchemaForDatasourcePlus(request._tableId, {
         searchableSchema: true,
       }).schema
+      delete request._tableId
     }
     try {
       if (isTestModal) {
@@ -136,21 +487,22 @@
           newTestData = {
             ...newTestData,
             body: {
-              [key]: e.detail,
+              ...update,
               ...$selectedAutomation.testData?.body,
             },
           }
         }
         newTestData = {
           ...newTestData,
-          [key]: e.detail,
+          ...request,
         }
         await automationStore.actions.addTestDataToAutomation(newTestData)
       } else {
-        const data = { schema, [key]: e.detail }
+        const data = { schema, ...request }
         await automationStore.actions.updateBlockInputs(block, data)
       }
     } catch (error) {
+      console.error("Error saving automation", error)
       notifications.error("Error saving automation")
     }
   })
@@ -195,14 +547,17 @@
       let runtimeName
 
       /* Begin special cases for generating custom schemas based on triggers */
-      if (idx === 0 && automation.trigger?.event === "app:trigger") {
+      if (
+        idx === 0 &&
+        automation.trigger?.event === AutomationEventType.APP_TRIGGER
+      ) {
         return `trigger.fields.${name}`
       }
 
       if (
         idx === 0 &&
-        (automation.trigger?.event === "row:update" ||
-          automation.trigger?.event === "row:save")
+        (automation.trigger?.event === AutomationEventType.ROW_UPDATE ||
+          automation.trigger?.event === AutomationEventType.ROW_SAVE)
       ) {
         let noRowKeywordBindings = ["id", "revision", "oldRow"]
         if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
@@ -277,7 +632,10 @@
         }
       }
 
-      if (idx === 0 && automation.trigger?.event === "app:trigger") {
+      if (
+        idx === 0 &&
+        automation.trigger?.event === AutomationEventType.APP_TRIGGER
+      ) {
         schema = Object.fromEntries(
           Object.keys(automation.trigger.inputs.fields || []).map(key => [
             key,
@@ -286,8 +644,9 @@
         )
       }
       if (
-        (idx === 0 && automation.trigger.event === "row:update") ||
-        (idx === 0 && automation.trigger.event === "row:save")
+        (idx === 0 &&
+          automation.trigger.event === AutomationEventType.ROW_UPDATE) ||
+        (idx === 0 && automation.trigger.event === AutomationEventType.ROW_SAVE)
       ) {
         let table = $tables.list.find(
           table => table._id === automation.trigger.inputs.tableId
@@ -353,10 +712,12 @@
 
   function saveFilters(key) {
     const filters = QueryUtils.buildQuery(tempFilters)
-    const defKey = `${key}-def`
-    onChange({ detail: filters }, key)
-    // need to store the builder definition in the automation
-    onChange({ detail: tempFilters }, defKey)
+
+    onChange({
+      [key]: filters,
+      [`${key}-def`]: tempFilters, // need to store the builder definition in the automation
+    })
+
     drawer.hide()
   }
 
@@ -373,6 +734,7 @@
       value.customType !== "cron" &&
       value.customType !== "triggerSchema" &&
       value.customType !== "automationFields" &&
+      value.customType !== "fields" &&
       value.type !== "signature_single" &&
       value.type !== "attachment" &&
       value.type !== "attachment_single"
@@ -381,11 +743,10 @@
 
   function getFieldLabel(key, value) {
     const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
-    return `${value.title || (key === "row" ? "Row" : key)} ${requiredSuffix}`
-  }
-
-  function toggleTestDataRowVisibility(key) {
-    testDataRowVisibility[key] = !testDataRowVisibility[key]
+    const label = `${
+      value.title || (key === "row" ? "Row" : key)
+    } ${requiredSuffix}`
+    return Helpers.capitalise(label)
   }
 
   function handleAttachmentParams(keyValueObj) {
@@ -398,16 +759,6 @@
     return params
   }
 
-  function toggleAttachmentBinding(e, key) {
-    onChange(
-      {
-        detail: "",
-      },
-      key
-    )
-    onChange({ detail: { useAttachmentBinding: e.detail } }, "meta")
-  }
-
   onMount(async () => {
     try {
       await environment.loadVariables()
@@ -417,122 +768,152 @@
   })
 </script>
 
-<div class="fields">
-  {#each schemaProperties as [key, value]}
-    {#if canShowField(key, value)}
-      {@const label = getFieldLabel(key, value)}
-      <div class:block-field={shouldRenderField(value)}>
-        {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
-          <Label
-            tooltip={value.title === "Binding / Value"
-              ? "If using the String input type, please use a comma or newline separated string"
-              : null}>{label}</Label
-          >
-        {/if}
-        <div class:field-width={shouldRenderField(value)}>
-          {#if value.type === "string" && value.enum && canShowField(key, value)}
-            <Select
-              on:change={e => onChange(e, key)}
-              value={inputData[key]}
-              placeholder={false}
-              options={value.enum}
-              getOptionLabel={(x, idx) =>
-                value.pretty ? value.pretty[idx] : x}
-            />
-          {:else if value.type === "json"}
-            <Editor
-              editorHeight="250"
-              editorWidth="448"
-              mode="json"
-              value={inputData[key]?.value}
-              on:change={e => {
-                onChange(e, key)
-              }}
-            />
-          {:else if value.type === "boolean"}
-            <div style="margin-top: 10px">
-              <Checkbox
-                text={value.title}
-                value={inputData[key]}
-                on:change={e => onChange(e, key)}
+<div class="step-fields">
+  <!-- Custom Layouts -->
+  {#if stepLayouts[block.stepId]}
+    {#each Object.keys(stepLayouts[block.stepId] || {}) as key}
+      {#if canShowField(key, stepLayouts[block.stepId].schema)}
+        {#each stepLayouts[block.stepId][key].content as config}
+          {#if config.title}
+            <PropField label={config.title} labelTooltip={config.tooltip}>
+              <svelte:component
+                this={config.type}
+                {...config.props}
+                on:change={config.props.onChange}
               />
-            </div>
-          {:else if value.type === "date"}
-            <DrawerBindableSlot
-              title={value.title ?? label}
-              panel={AutomationBindingPanel}
-              type={"date"}
-              value={inputData[key]}
-              on:change={e => onChange(e, key)}
-              {bindings}
-              allowJS={true}
-              updateOnChange={false}
-              drawerLeft="260px"
+            </PropField>
+          {:else}
+            <svelte:component
+              this={config.type}
+              {...config.props}
+              on:change={config.props.onChange}
+            />
+          {/if}
+        {/each}
+      {/if}
+    {/each}
+  {:else}
+    <!-- Default Schema Property Layout -->
+    {#each schemaProperties as [key, value]}
+      {#if canShowField(key, value)}
+        {@const label = getFieldLabel(key, value)}
+        <div class:block-field={shouldRenderField(value)}>
+          {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
+            <Label
+              tooltip={value.title === "Binding / Value"
+                ? "If using the String input type, please use a comma or newline separated string"
+                : null}
             >
-              <DatePicker
+              {label}
+            </Label>
+          {/if}
+          <div class:field-width={shouldRenderField(value)}>
+            {#if value.type === "string" && value.enum && canShowField(key, value)}
+              <Select
+                on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
-                on:change={e => onChange(e, key)}
+                placeholder={false}
+                options={value.enum}
+                getOptionLabel={(x, idx) =>
+                  value.pretty ? value.pretty[idx] : x}
               />
-            </DrawerBindableSlot>
-          {:else if value.customType === "column"}
-            <Select
-              on:change={e => onChange(e, key)}
-              value={inputData[key]}
-              options={Object.keys(table?.schema || {})}
-            />
-          {:else if value.type === "attachment" || value.type === "signature_single"}
-            <div class="attachment-field-wrapper">
-              <div class="label-wrapper">
-                <Label>{label}</Label>
-              </div>
-              <div class="toggle-container">
-                <Toggle
-                  value={inputData?.meta?.useAttachmentBinding}
-                  text={"Use bindings"}
-                  size={"XS"}
-                  on:change={e => toggleAttachmentBinding(e, key)}
+            {:else if value.type === "json"}
+              <Editor
+                editorHeight="250"
+                editorWidth="448"
+                mode="json"
+                value={inputData[key]?.value}
+                on:change={e => onChange({ [key]: e.detail })}
+              />
+            {:else if value.type === "boolean"}
+              <div style="margin-top: 10px">
+                <Checkbox
+                  text={value.title}
+                  value={inputData[key]}
+                  on:change={e => onChange({ [key]: e.detail })}
                 />
               </div>
+            {:else if value.type === "date"}
+              <DrawerBindableSlot
+                title={value.title ?? label}
+                panel={AutomationBindingPanel}
+                type={"date"}
+                value={inputData[key]}
+                on:change={e => onChange({ [key]: e.detail })}
+                {bindings}
+                allowJS={true}
+                updateOnChange={false}
+                drawerLeft="260px"
+              >
+                <DatePicker
+                  value={inputData[key]}
+                  on:change={e => onChange({ [key]: e.detail })}
+                />
+              </DrawerBindableSlot>
+            {:else if value.customType === "column"}
+              <Select
+                on:change={e => onChange({ [key]: e.detail })}
+                value={inputData[key]}
+                options={Object.keys(table?.schema || {})}
+              />
+            {:else if value.type === "attachment" || value.type === "signature_single"}
+              <div class="attachment-field-wrapper">
+                <div class="label-wrapper">
+                  <Label>{label}</Label>
+                </div>
+                <div class="toggle-container">
+                  <Toggle
+                    value={inputData?.meta?.useAttachmentBinding}
+                    text={"Use bindings"}
+                    size={"XS"}
+                    on:change={e => {
+                      onChange({
+                        [key]: null,
+                        meta: {
+                          useAttachmentBinding: e.detail,
+                        },
+                      })
+                    }}
+                  />
+                </div>
 
-              <div class="attachment-field-width">
-                {#if !inputData?.meta?.useAttachmentBinding}
-                  <KeyValueBuilder
-                    on:change={e =>
-                      onChange(
-                        {
-                          detail: e.detail.map(({ name, value }) => ({
+                <div class="attachment-field-width">
+                  {#if !inputData?.meta?.useAttachmentBinding}
+                    <KeyValueBuilder
+                      on:change={e =>
+                        onChange({
+                          [key]: e.detail.map(({ name, value }) => ({
                             url: name,
                             filename: value,
                           })),
-                        },
-                        key
-                      )}
-                    object={handleAttachmentParams(inputData[key])}
-                    allowJS
-                    {bindings}
-                    keyBindings
-                    customButtonText={"Add attachment"}
-                    keyPlaceholder={"URL"}
-                    valuePlaceholder={"Filename"}
-                  />
-                {:else if isTestModal}
-                  <ModalBindableInput
-                    title={value.title || label}
-                    value={inputData[key]}
-                    panel={AutomationBindingPanel}
-                    type={value.customType}
-                    on:change={e => onChange(e, key)}
-                    {bindings}
-                    updateOnChange={false}
-                  />
-                {:else}
-                  <div class="test">
+                        })}
+                      object={handleAttachmentParams(inputData[key])}
+                      allowJS
+                      {bindings}
+                      keyBindings
+                      customButtonText={value.type === "attachment"
+                        ? "Add attachment"
+                        : "Add signature"}
+                      keyPlaceholder={"URL"}
+                      valuePlaceholder={"Filename"}
+                    />
+                  {:else if isTestModal}
+                    <ModalBindableInput
+                      title={value.title || label}
+                      value={inputData[key]}
+                      panel={AutomationBindingPanel}
+                      type={value.customType}
+                      on:change={e => onChange({ [key]: e.detail })}
+                      {bindings}
+                      updateOnChange={false}
+                    />
+                  {:else}
                     <DrawerBindableInput
                       title={value.title ?? label}
                       panel={AutomationBindingPanel}
                       type={value.customType}
                       value={inputData[key]}
-                      on:change={e => onChange(e, key)}
+                      on:change={e => onChange({ [key]: e.detail })}
                       {bindings}
                       updateOnChange={false}
                       placeholder={value.customType === "queryLimit"
@@ -540,235 +921,158 @@
                         : ""}
                       drawerLeft="260px"
                     />
-                  </div>
-                {/if}
+                  {/if}
+                </div>
               </div>
-            </div>
-          {:else if value.customType === "filters"}
-            <ActionButton on:click={drawer.show}>Define filters</ActionButton>
-            <Drawer bind:this={drawer} title="Filtering">
-              <Button cta slot="buttons" on:click={() => saveFilters(key)}>
-                Save
-              </Button>
-              <DrawerContent slot="body">
-                <FilterBuilder
-                  {filters}
-                  {bindings}
-                  {schemaFields}
-                  datasource={{ type: "table", tableId }}
-                  panel={AutomationBindingPanel}
-                  on:change={e => (tempFilters = e.detail)}
-                />
-              </DrawerContent>
-            </Drawer>
-          {:else if value.customType === "password"}
-            <Input
-              type="password"
-              on:change={e => onChange(e, key)}
-              value={inputData[key]}
-            />
-          {:else if value.customType === "email"}
-            {#if isTestModal}
-              <ModalBindableInput
-                title={value.title ?? label}
+            {:else if value.customType === "filters"}
+              <ActionButton on:click={drawer.show}>Define filters</ActionButton>
+              <Drawer bind:this={drawer} title="Filtering">
+                <Button cta slot="buttons" on:click={() => saveFilters(key)}>
+                  Save
+                </Button>
+                <DrawerContent slot="body">
+                  <FilterBuilder
+                    {filters}
+                    {bindings}
+                    {schemaFields}
+                    datasource={{ type: "table", tableId }}
+                    panel={AutomationBindingPanel}
+                    on:change={e => (tempFilters = e.detail)}
+                  />
+                </DrawerContent>
+              </Drawer>
+            {:else if value.customType === "cron"}
+              <CronBuilder
+                on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
-                panel={AutomationBindingPanel}
-                type="email"
-                on:change={e => onChange(e, key)}
-                {bindings}
-                updateOnChange={false}
               />
-            {:else}
-              <DrawerBindableInput
-                title={value.title ?? label}
-                panel={AutomationBindingPanel}
-                type="email"
+            {:else if value.customType === "automationFields"}
+              <AutomationSelector
+                on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
-                on:change={e => onChange(e, key)}
                 {bindings}
-                allowJS={false}
-                updateOnChange={false}
-                drawerLeft="260px"
               />
-            {/if}
-          {:else if value.customType === "query"}
-            <QuerySelector
-              on:change={e => onChange(e, key)}
-              value={inputData[key]}
-            />
-          {:else if value.customType === "cron"}
-            <CronBuilder
-              on:change={e => onChange(e, key)}
-              value={inputData[key]}
-            />
-          {:else if value.customType === "automationFields"}
-            <AutomationSelector
-              on:change={e => onChange(e, key)}
-              value={inputData[key]}
-              {bindings}
-            />
-          {:else if value.customType === "queryParams"}
-            <QueryParamSelector
-              on:change={e => onChange(e, key)}
-              value={inputData[key]}
-              {bindings}
-            />
-          {:else if value.customType === "table"}
-            <TableSelector
-              {isTrigger}
-              value={inputData[key]}
-              on:change={e => onChange(e, key)}
-            />
-          {:else if value.customType === "row"}
-            {#if isTestModal}
-              <div class="align-horizontally">
-                <Icon
-                  name={testDataRowVisibility[key] ? "Remove" : "Add"}
-                  hoverable
-                  on:click={() => toggleTestDataRowVisibility(key)}
-                />
-                <Label size="XL">{label}</Label>
-              </div>
-              {#if testDataRowVisibility[key]}
-                <RowSelector
-                  value={inputData[key]}
-                  meta={inputData["meta"] || {}}
-                  on:change={e => {
-                    if (e.detail?.key) {
-                      onChange(e, e.detail.key)
-                    } else {
-                      onChange(e, key)
-                    }
-                  }}
-                  {bindings}
-                  {isTestModal}
-                  {isUpdateRow}
-                />
-              {/if}
-              <Divider />
-            {:else}
-              <RowSelector
+            {:else if value.customType === "queryParams"}
+              <QueryParamSelector
+                on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
-                meta={inputData["meta"] || {}}
-                on:change={e => {
-                  if (e.detail?.key) {
-                    onChange(e, e.detail.key)
-                  } else {
-                    onChange(e, key)
-                  }
-                }}
+                {bindings}
+              />
+            {:else if value.customType === "table"}
+              <TableSelector
+                {isTrigger}
+                value={inputData[key]}
+                on:change={e => onChange({ [key]: e.detail })}
+              />
+            {:else if value.customType === "webhookUrl"}
+              <WebhookDisplay value={inputData[key]} />
+            {:else if value.customType === "fields"}
+              <FieldSelector
+                {block}
+                value={inputData[key]}
+                on:change={e => onChange({ [key]: e.detail })}
                 {bindings}
                 {isTestModal}
-                {isUpdateRow}
               />
-            {/if}
-          {:else if value.customType === "webhookUrl"}
-            <WebhookDisplay
-              on:change={e => onChange(e, key)}
-              value={inputData[key]}
-            />
-          {:else if value.customType === "fields"}
-            <FieldSelector
-              {block}
-              value={inputData[key]}
-              on:change={e => onChange(e, key)}
-              {bindings}
-              {isTestModal}
-            />
-          {:else if value.customType === "triggerSchema"}
-            <SchemaSetup
-              on:change={e => onChange(e, key)}
-              value={inputData[key]}
-            />
-          {:else if value.customType === "code"}
-            <CodeEditorModal>
-              <div class:js-editor={editingJs}>
-                <div class:js-code={editingJs} style="width:100%;height:500px;">
-                  <CodeEditor
-                    value={inputData[key]}
-                    on:change={e => {
-                      // need to pass without the value inside
-                      onChange({ detail: e.detail }, key)
-                      inputData[key] = e.detail
-                    }}
-                    completions={stepCompletions}
-                    mode={codeMode}
-                    autocompleteEnabled={codeMode !== EditorModes.JS}
-                    bind:getCaretPosition
-                    bind:insertAtPos
-                    placeholder={codeMode === EditorModes.Handlebars
-                      ? "Add bindings by typing {{"
-                      : null}
-                  />
-                </div>
-                {#if editingJs}
-                  <div class="js-binding-picker">
-                    <BindingSidePanel
-                      {bindings}
-                      allowHelpers={false}
-                      addBinding={binding =>
-                        bindingsHelpers.onSelectBinding(
-                          inputData[key],
-                          binding,
-                          {
-                            js: true,
-                            dontDecode: true,
-                            type: BindingType.RUNTIME,
-                          }
-                        )}
-                      mode="javascript"
+            {:else if value.customType === "triggerSchema"}
+              <SchemaSetup
+                on:change={e => onChange({ [key]: e.detail })}
+                value={inputData[key]}
+              />
+            {:else if value.customType === "code"}
+              <CodeEditorModal>
+                <div class:js-editor={editingJs}>
+                  <div
+                    class:js-code={editingJs}
+                    style="width:100%;height:500px;"
+                  >
+                    <CodeEditor
+                      value={inputData[key]}
+                      on:change={e => {
+                        // need to pass without the value inside
+                        onChange({ [key]: e.detail })
+                        inputData[key] = e.detail
+                      }}
+                      completions={stepCompletions}
+                      mode={codeMode}
+                      autocompleteEnabled={codeMode !== EditorModes.JS}
+                      bind:getCaretPosition
+                      bind:insertAtPos
+                      placeholder={codeMode === EditorModes.Handlebars
+                        ? "Add bindings by typing {{"
+                        : null}
                     />
                   </div>
-                {/if}
-              </div>
-            </CodeEditorModal>
-          {:else if value.customType === "loopOption"}
-            <Select
-              on:change={e => onChange(e, key)}
-              autoWidth
-              value={inputData[key]}
-              options={["Array", "String"]}
-              defaultValue={"Array"}
-            />
-          {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
-            {#if isTestModal}
-              <ModalBindableInput
-                title={value.title || label}
+                  {#if editingJs}
+                    <div class="js-binding-picker">
+                      <BindingSidePanel
+                        {bindings}
+                        allowHelpers={false}
+                        addBinding={binding =>
+                          bindingsHelpers.onSelectBinding(
+                            inputData[key],
+                            binding,
+                            {
+                              js: true,
+                              dontDecode: true,
+                              type: BindingType.RUNTIME,
+                            }
+                          )}
+                        mode="javascript"
+                      />
+                    </div>
+                  {/if}
+                </div>
+              </CodeEditorModal>
+            {:else if value.customType === "loopOption"}
+              <Select
+                on:change={e => onChange({ [key]: e.detail })}
+                autoWidth
                 value={inputData[key]}
-                panel={AutomationBindingPanel}
-                type={value.customType}
-                on:change={e => onChange(e, key)}
-                {bindings}
-                updateOnChange={false}
+                options={["Array", "String"]}
+                defaultValue={"Array"}
               />
-            {:else}
-              <div class="test">
-                <DrawerBindableInput
-                  title={value.title ?? label}
+            {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
+              {#if isTestModal}
+                <ModalBindableInput
+                  title={value.title || label}
+                  value={inputData[key]}
                   panel={AutomationBindingPanel}
                   type={value.customType}
-                  value={inputData[key]}
-                  on:change={e => onChange(e, key)}
+                  on:change={e => onChange({ [key]: e.detail })}
                   {bindings}
                   updateOnChange={false}
-                  placeholder={value.customType === "queryLimit"
-                    ? queryLimit
-                    : ""}
-                  drawerLeft="260px"
                 />
-              </div>
+              {:else}
+                <div>
+                  <DrawerBindableInput
+                    title={value.title ?? label}
+                    panel={AutomationBindingPanel}
+                    type={value.customType}
+                    value={inputData[key]}
+                    on:change={e => onChange({ [key]: e.detail })}
+                    {bindings}
+                    updateOnChange={false}
+                    placeholder={value.customType === "queryLimit"
+                      ? queryLimit
+                      : ""}
+                    drawerLeft="260px"
+                  />
+                </div>
+              {/if}
             {/if}
-          {/if}
+          </div>
         </div>
-      </div>
-    {/if}
-  {/each}
+      {/if}
+    {/each}
+  {/if}
 </div>
+
 <Modal bind:this={webhookModal} width="30%">
   <CreateWebhookModal />
 </Modal>
 
-{#if stepId === TriggerStepID.WEBHOOK}
+{#if stepId === TriggerStepID.WEBHOOK && !isTestModal}
   <Button secondary on:click={() => webhookModal.show()}>Set Up Webhook</Button>
 {/if}
 
@@ -777,18 +1081,12 @@
     width: 320px;
   }
 
-  .align-horizontally {
-    display: flex;
-    gap: var(--spacing-s);
-    align-items: center;
-  }
-
-  .fields {
+  .step-fields {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-s);
+    gap: var(--spacing-l);
   }
 
   .block-field {
@@ -806,10 +1104,6 @@
 
   .label-wrapper {
     margin-top: var(--spacing-s);
-  }
-
-  .test :global(.drawer) {
-    width: 10000px !important;
   }
 
   .js-editor {
