@@ -2166,4 +2166,47 @@ describe.each([
       })
     }
   )
+
+  describe.each([
+    "名前", // Japanese for "name"
+    "Benutzer-ID", // German for "user ID", includes a hyphen
+    "numéro", // French for "number", includes an accent
+    "år", // Swedish for "year", includes a ring above
+    "naïve", // English word borrowed from French, includes an umlaut
+    "الاسم", // Arabic for "name"
+    "оплата", // Russian for "payment"
+    "पता", // Hindi for "address"
+    "用戶名", // Chinese for "username"
+    "çalışma_zamanı", // Turkish for "runtime", includes an underscore and a cedilla
+    "preço", // Portuguese for "price", includes a cedilla
+    "사용자명", // Korean for "username"
+    "usuario_ñoño", // Spanish, uses an underscore and includes "ñ"
+    "файл", // Bulgarian for "file"
+    "δεδομένα", // Greek for "data"
+    "geändert_am", // German for "modified on", includes an umlaut
+    "ব্যবহারকারীর_নাম", // Bengali for "user name", includes an underscore
+    "São_Paulo", // Portuguese, includes an underscore and a tilde
+    "età", // Italian for "age", includes an accent
+    "ชื่อผู้ใช้", // Thai for "username"
+  ])("non-ascii column name: %s", name => {
+    beforeAll(async () => {
+      table = await createTable({
+        [name]: {
+          name,
+          type: FieldType.STRING,
+        },
+      })
+      await createRows([{ [name]: "a" }, { [name]: "b" }])
+    })
+
+    it("should be able to query a column with non-ascii characters", async () => {
+      await expectSearch({
+        query: {
+          equal: {
+            [`1:${name}`]: "a",
+          },
+        },
+      }).toContainExactly([{ [name]: "a" }])
+    })
+  })
 })
