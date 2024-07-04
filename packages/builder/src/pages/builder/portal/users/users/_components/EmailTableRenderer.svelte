@@ -5,7 +5,17 @@
   export let row
 </script>
 
-{value}
+<span class="email">
+  {value}
+</span>
 {#if row.scimInfo?.isSync}
   <ActiveDirectoryInfo iconSize="XS" />
 {/if}
+
+<style>
+  .email {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+</style>
