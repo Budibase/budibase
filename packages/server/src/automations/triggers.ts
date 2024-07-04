@@ -2,13 +2,12 @@ import emitter from "../events/index"
 import { getAutomationParams, isDevAppID } from "../db/utils"
 import { coerce } from "../utilities/rowProcessor"
 import { definitions } from "./triggerInfo"
-import { logging } from "@budibase/backend-core"
 // need this to call directly, so we can get a response
 import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"
 import * as utils from "./utils"
 import env from "../environment"
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, logging, db as dbCore } from "@budibase/backend-core"
 import {
   Automation,
   Row,
