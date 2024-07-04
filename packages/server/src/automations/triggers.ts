@@ -66,7 +66,11 @@ async function queueRelevantRowAutomations(
         automationTrigger?.inputs &&
         automationTrigger.inputs.tableId === event.row.tableId
       ) {
-        await automationQueue.add({ automation, event }, JOB_OPTS)
+        try {
+          await automationQueue.add({ automation, event }, JOB_OPTS)
+        } catch (e) {
+          console.error("Failed to queue automation", e)
+        }
       }
     }
   })
