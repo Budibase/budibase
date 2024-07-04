@@ -1,5 +1,12 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "vcs": {
+    "enabled": false,
+    "clientKind": "git",
+    "defaultBranch": "master",
+    "useIgnoreFile": true,
+    "root": "."
+  },
   "files": {
     "include": ["packages/**/*.ts", "packages/**/*.js"],
     "ignore": [
