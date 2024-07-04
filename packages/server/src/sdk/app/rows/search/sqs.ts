@@ -18,7 +18,11 @@ import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../api/controllers/row/utils"
-import { mapToUserColumn, USER_COLUMN_PREFIX } from "../../tables/internal/sqs"
+import {
+  decodeNonAscii,
+  mapToUserColumn,
+  USER_COLUMN_PREFIX,
+} from "../../tables/internal/sqs"
 import sdk from "../../../index"
 import {
   context,
@@ -150,7 +154,8 @@ function reverseUserColumnMapping(rows: Row[]) {
       if (index !== -1) {
         // cut out the prefix
         const newKey = key.slice(0, index) + key.slice(index + prefixLength)
-        finalRow[newKey] = row[key]
+        const decoded = decodeNonAscii(newKey)
+        finalRow[decoded] = row[key]
       } else {
         finalRow[key] = row[key]
       }
