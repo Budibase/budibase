@@ -2065,7 +2065,6 @@
     "@budibase/pouchdb-replication-stream" "1.2.11"
     "@budibase/shared-core" "0.0.0"
     "@budibase/types" "0.0.0"
-    "@govtechsg/passport-openidconnect" "^1.0.2"
     aws-cloudfront-sign "3.0.2"
     aws-sdk "2.1030.0"
     bcrypt "5.1.0"
@@ -2778,14 +2777,6 @@
     retry-request "^5.0.0"
     teeny-request "^8.0.0"
     uuid "^8.0.0"
-
-"@govtechsg/passport-openidconnect@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@govtechsg/passport-openidconnect/-/passport-openidconnect-1.0.2.tgz#a29e3468f828d89ed77ef0340cef09e4638d8148"
-  integrity sha512-uE685U40/mUHw189D9HNwu2EDb53bhNan7jDO0k3DElLTvmZVl2je49lI5+f1w8qR39xYKBgwMPFQk0WIvZVrQ==
-  dependencies:
-    oauth "^0.10.0"
-    passport-strategy "^1.0.0"
 
 "@grpc/grpc-js@1.10.9":
   version "1.10.9"
@@ -16697,11 +16688,6 @@ oauth@0.9.x, oauth@^0.9.15:
   resolved "https://registry.yarnpkg.com/oauth/-/oauth-0.9.15.tgz#bd1fefaf686c96b75475aed5196412ff60cfb9c1"
   integrity sha512-a5ERWK1kh38ExDEfoO6qUHJb32rd7aYmPHuyCu3Fta/cnICvYmgd2uhuKXvPD+PXB+gCEYYEaQdIRAjCOwAKNA==
 
-oauth@^0.10.0:
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/oauth/-/oauth-0.10.0.tgz#3551c4c9b95c53ea437e1e21e46b649482339c58"
-  integrity sha512-1orQ9MT1vHFGQxhuy7E/0gECD3fd2fCC+PIX+/jgmU/gI3EpRocXtmtvxCO5x3WZ443FLTLFWNDjl5MPJf9u+Q==
-
 object-assign@^2.0.0:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-2.1.1.tgz#43c36e5d569ff8e4816c4efa8be02d26967c18aa"
@@ -21519,17 +21505,7 @@ tsconfig-paths@4.0.0:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
-tsconfig-paths@^3.10.1, tsconfig-paths@^3.14.2:
-  version "3.14.2"
-  resolved "https://registry.yarnpkg.com/tsconfig-paths/-/tsconfig-paths-3.14.2.tgz#6e32f1f79412decd261f92d633a9dc1cfa99f088"
-  integrity sha512-o/9iXgCYc5L/JxCHPe3Hvh8Q/2xm5Z+p18PESBU6Ff33695QnCHBEjcytY2q19ua7Mbl/DavtBOLq+oG0RCL+g==
-  dependencies:
-    "@types/json5" "^0.0.29"
-    json5 "^1.0.2"
-    minimist "^1.2.6"
-    strip-bom "^3.0.0"
-
-tsconfig-paths@^3.15.0:
+tsconfig-paths@^3.10.1, tsconfig-paths@^3.14.2, tsconfig-paths@^3.15.0:
   version "3.15.0"
   resolved "https://registry.yarnpkg.com/tsconfig-paths/-/tsconfig-paths-3.15.0.tgz#5299ec605e55b1abb23ec939ef15edaf483070d4"
   integrity sha512-2Ac2RgzDe/cn48GvOe3M+o82pEFewD3UPbyoUHHdKasHwJKjds4fLXWf/Ux5kATBKN20oaFGu+jbElp1pos0mg==
