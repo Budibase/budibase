@@ -2167,7 +2167,7 @@ describe.each([
     }
   )
 
-  describe.only.each([
+  describe.each([
     "名前", // Japanese for "name"
     "Benutzer-ID", // German for "user ID", includes a hyphen
     "numéro", // French for "number", includes an accent
