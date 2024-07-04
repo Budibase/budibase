@@ -3,8 +3,10 @@ import * as dbCore from "../db"
 import {
   getNativeSql,
   isExternalTable,
-  isIsoDateString,
+  isValidISODateString,
   isValidFilter,
+  sqlLog,
+  isInvalidISODateString,
 } from "./utils"
 import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
@@ -37,10 +39,6 @@ const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
   : null
 const BASE_LIMIT = envLimit || 5000
-
-// these are invalid dates sent by the client, need to convert them to a real max date
-const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
-const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
 
 function likeKey(client: string, key: string): string {
   let start: string, end: string
@@ -75,10 +73,10 @@ function parse(input: any) {
   if (typeof input !== "string") {
     return input
   }
-  if (input === MAX_ISO_DATE || input === MIN_ISO_DATE) {
+  if (isInvalidISODateString(input)) {
     return null
   }
-  if (isIsoDateString(input)) {
+  if (isValidISODateString(input)) {
     return new Date(input.trim())
   }
   return input
@@ -938,15 +936,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   }
 
   log(query: string, values?: SqlQueryBinding) {
-    if (!environment.SQL_LOGGING_ENABLE) {
-      return
-    }
-    const sqlClient = this.getSqlClient()
-    let string = `[SQL] [${sqlClient.toUpperCase()}] query="${query}"`
-    if (values) {
-      string += ` values="${values.join(", ")}"`
-    }
-    console.log(string)
+    sqlLog(this.getSqlClient(), query, values)
   }
 }
 
