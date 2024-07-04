@@ -1,11 +1,11 @@
 <script>
-  import { Select } from "@budibase/bbui"
-  import { roles } from "stores/builder"
-  import { RoleUtils } from "@budibase/frontend-core"
+import { Select } from "@budibase/bbui"
+import { RoleUtils } from "@budibase/frontend-core"
+import { roles } from "stores/builder"
 
-  export let value
-  export let error
-  export let placeholder = null
+export let value
+export let error
+export let placeholder = null
 </script>
 
 <Select

@@ -1,16 +1,16 @@
 <script>
-  import { Body, Label } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { Body, Label } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { onMount } from "svelte"
 
-  export let parameters
-  export let bindings
+export let parameters
+export let bindings
 
-  onMount(() => {
-    if (!parameters.confirm) {
-      parameters.confirm = true
-    }
-  })
+onMount(() => {
+  if (!parameters.confirm) {
+    parameters.confirm = true
+  }
+})
 </script>
 
 <div class="root">

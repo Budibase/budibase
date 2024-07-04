@@ -1,5 +1,5 @@
 import { HelperNames } from "../helpers"
-import { swapStrings, isAlphaNumeric } from "../utilities"
+import { isAlphaNumeric, swapStrings } from "../utilities"
 
 const FUNCTION_CASES = ["#", "else", "/"]
 

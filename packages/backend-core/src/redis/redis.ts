@@ -1,25 +1,25 @@
-import env from "../environment"
 import Redis, { Cluster } from "ioredis"
+import env from "../environment"
 // mock-redis doesn't have any typing
 let MockRedis: any | undefined
 if (env.MOCK_REDIS) {
   try {
     // ioredis mock is all in memory
     MockRedis = require("ioredis-mock")
-  } catch (err) {
+  } catch (_err) {
     console.log("Mock redis unavailable")
   }
 }
-import {
-  addDbPrefix,
-  removeDbPrefix,
-  getRedisOptions,
-  SEPARATOR,
-  SelectableDatabase,
-  getRedisConnectionDetails,
-} from "./utils"
 import { logAlert } from "../logging"
 import * as timers from "../timers"
+import {
+  SEPARATOR,
+  SelectableDatabase,
+  addDbPrefix,
+  getRedisConnectionDetails,
+  getRedisOptions,
+  removeDbPrefix,
+} from "./utils"
 
 const RETRY_PERIOD_MS = 2000
 const STARTUP_TIMEOUT_MS = 5000
@@ -234,7 +234,7 @@ class RedisWrapper {
     // if its not an object just return the response
     try {
       return JSON.parse(response!)
-    } catch (err) {
+    } catch (_err) {
       return response
     }
   }
@@ -254,7 +254,7 @@ class RedisWrapper {
           let parsed
           try {
             parsed = JSON.parse(result)
-          } catch (err) {
+          } catch (_err) {
             parsed = result
           }
           final[keys[count]] = parsed
@@ -285,11 +285,14 @@ class RedisWrapper {
   ) {
     const client = this.getClient()
 
-    const dataToStore = Object.entries(data).reduce((acc, [key, value]) => {
-      acc[addDbPrefix(this._db, key)] =
-        typeof value === "object" ? JSON.stringify(value) : value
-      return acc
-    }, {} as Record<string, any>)
+    const dataToStore = Object.entries(data).reduce(
+      (acc, [key, value]) => {
+        acc[addDbPrefix(this._db, key)] =
+          typeof value === "object" ? JSON.stringify(value) : value
+        return acc
+      },
+      {} as Record<string, any>
+    )
 
     const pipeline = client.pipeline()
     pipeline.mset(dataToStore)

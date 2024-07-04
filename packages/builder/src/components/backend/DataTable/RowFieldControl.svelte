@@ -1,54 +1,54 @@
 <script>
-  import { API } from "api"
-  import {
-    Input,
-    Select,
-    DatePicker,
-    Toggle,
-    Multiselect,
-    Label,
-    RichTextField,
-    TextArea,
-    CoreSignature,
-    ActionButton,
-    notifications,
-  } from "@budibase/bbui"
-  import Dropzone from "components/common/Dropzone.svelte"
-  import { capitalise } from "helpers"
-  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
-  import Editor from "../../integration/QueryEditor.svelte"
-  import { SignatureModal } from "@budibase/frontend-core/src/components"
-  import { themeStore } from "stores/portal"
+import {
+  ActionButton,
+  CoreSignature,
+  DatePicker,
+  Input,
+  Label,
+  Multiselect,
+  RichTextField,
+  Select,
+  TextArea,
+  Toggle,
+  notifications,
+} from "@budibase/bbui"
+import { SignatureModal } from "@budibase/frontend-core/src/components"
+import { API } from "api"
+import Dropzone from "components/common/Dropzone.svelte"
+import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
+import { capitalise } from "helpers"
+import { themeStore } from "stores/portal"
+import Editor from "../../integration/QueryEditor.svelte"
 
-  export let meta
-  export let value
-  export let readonly
-  export let error
+export let meta
+export let value
+export let readonly
+export let error
 
-  const resolveTimeStamp = timestamp => {
-    if (!timestamp) {
-      return null
-    }
-    let maskedDate = new Date(`0-${timestamp}`)
-    if (maskedDate instanceof Date && !isNaN(maskedDate.getTime())) {
-      return maskedDate
-    } else {
-      return null
-    }
+const resolveTimeStamp = timestamp => {
+  if (!timestamp) {
+    return null
   }
+  let maskedDate = new Date(`0-${timestamp}`)
+  if (maskedDate instanceof Date && !isNaN(maskedDate.getTime())) {
+    return maskedDate
+  } else {
+    return null
+  }
+}
 
-  $: stringVal =
-    typeof value === "object" ? JSON.stringify(value, null, 2) : value
-  $: type = meta?.type
-  $: label = meta.name ? capitalise(meta.name) : ""
+$: stringVal =
+  typeof value === "object" ? JSON.stringify(value, null, 2) : value
+$: type = meta?.type
+$: label = meta.name ? capitalise(meta.name) : ""
 
-  const timeStamp = resolveTimeStamp(value)
-  const isTimeStamp = !!timeStamp || meta?.timeOnly
+const timeStamp = resolveTimeStamp(value)
+const isTimeStamp = !!timeStamp || meta?.timeOnly
 
-  $: currentTheme = $themeStore?.theme
-  $: darkMode = !currentTheme.includes("light")
+$: currentTheme = $themeStore?.theme
+$: darkMode = !currentTheme.includes("light")
 
-  let signatureModal
+let signatureModal
 </script>
 
 <SignatureModal

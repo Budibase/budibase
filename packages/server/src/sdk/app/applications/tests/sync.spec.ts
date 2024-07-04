@@ -1,9 +1,9 @@
-import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { events, context, roles, constants } from "@budibase/backend-core"
-import { init } from "../../../../events"
-import { rawUserMetadata } from "../../../users/utils"
 import EventEmitter from "events"
-import { UserGroup, UserMetadata, UserRoles, User } from "@budibase/types"
+import { constants, events, context, roles } from "@budibase/backend-core"
+import { User, UserGroup, UserMetadata, UserRoles } from "@budibase/types"
+import { init } from "../../../../events"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { rawUserMetadata } from "../../../users/utils"
 
 const config = new TestConfiguration()
 let group: UserGroup, groupUser: User

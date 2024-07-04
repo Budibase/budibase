@@ -1,11 +1,11 @@
 import { db as dbCore } from "@budibase/backend-core"
 import {
-  DocumentTypesToImport,
-  Document,
-  Database,
-  RowValue,
-  DocumentType,
   App,
+  Database,
+  Document,
+  DocumentType,
+  DocumentTypesToImport,
+  RowValue,
 } from "@budibase/types"
 import backups from "../backups"
 

@@ -1,9 +1,9 @@
 <script>
-  import { themeStore } from "stores"
-  import { setContext } from "svelte"
-  import { Context } from "@budibase/bbui"
+import { Context } from "@budibase/bbui"
+import { themeStore } from "stores"
+import { setContext } from "svelte"
 
-  setContext(Context.PopoverRoot, "#theme-root")
+setContext(Context.PopoverRoot, "#theme-root")
 </script>
 
 <div style={$themeStore.customThemeCss} id="theme-root">

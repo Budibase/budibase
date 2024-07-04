@@ -1,14 +1,14 @@
-import { FileType, Plugin, PluginSource, PluginType } from "@budibase/types"
 import {
   db as dbCore,
   objectStore,
   plugins as pluginCore,
   tenancy,
 } from "@budibase/backend-core"
+import { sdk as pro } from "@budibase/pro"
+import { FileType, Plugin, PluginSource, PluginType } from "@budibase/types"
 import { fileUpload } from "../../api/controllers/plugin/file"
 import env from "../../environment"
 import { clientAppSocket } from "../../websockets"
-import { sdk as pro } from "@budibase/pro"
 
 export async function fetch(type?: PluginType) {
   const db = tenancy.getGlobalDB()

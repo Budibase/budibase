@@ -1,4 +1,6 @@
+import { context } from "@budibase/backend-core"
 import {
+  AutoFieldSubType,
   FieldType,
   Operation,
   RelationshipType,
@@ -6,29 +8,27 @@ import {
   Table,
   TableRequest,
   ViewV2,
-  AutoFieldSubType,
 } from "@budibase/types"
-import { context } from "@budibase/backend-core"
-import { buildExternalTableId } from "../../../../integrations/utils"
+import { cloneDeep } from "lodash/fp"
+import { makeTableRequest } from "../../../../api/controllers/table/ExternalRequest"
 import {
   foreignKeyStructure,
   hasTypeChanged,
   setStaticSchemas,
 } from "../../../../api/controllers/table/utils"
-import { cloneDeep } from "lodash/fp"
-import { makeTableRequest } from "../../../../api/controllers/table/ExternalRequest"
+import { buildExternalTableId } from "../../../../integrations/utils"
 import {
-  isRelationshipSetup,
   cleanupRelationships,
   generateLinkSchema,
   generateManyLinkSchema,
   generateRelatedSchema,
+  isRelationshipSetup,
 } from "./utils"
 
-import { getTable } from "../getters"
-import { populateExternalTableSchemas } from "../validation"
 import datasourceSdk from "../../datasources"
 import * as viewSdk from "../../views"
+import { getTable } from "../getters"
+import { populateExternalTableSchemas } from "../validation"
 
 const DEFAULT_PRIMARY_COLUMN = "id"
 

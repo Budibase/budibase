@@ -1,45 +1,45 @@
 <script>
-  import { get } from "svelte/store"
-  import { datasources, integrations } from "stores/builder"
-  import { notifications, Input, ModalContent, Modal } from "@budibase/bbui"
-  import { integrationForDatasource } from "stores/selectors"
+import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
+import { datasources, integrations } from "stores/builder"
+import { integrationForDatasource } from "stores/selectors"
+import { get } from "svelte/store"
 
-  let error = ""
-  let modal
-  let name
+let error = ""
+let modal
+let name
 
-  export let datasource
-  export let onCancel = undefined
+export let datasource
+export let onCancel = undefined
 
-  export const show = () => {
-    name = datasource?.name
-    modal.show()
+export const show = () => {
+  name = datasource?.name
+  modal.show()
+}
+export const hide = () => {
+  modal.hide()
+}
+
+function checkValid(evt) {
+  const datasourceName = evt.target.value
+  if ($datasources?.list.some(ds => ds.name === datasourceName)) {
+    error = `Datasource with name ${datasourceName} already exists. Please choose another name.`
+    return
   }
-  export const hide = () => {
-    modal.hide()
-  }
+  error = ""
+}
 
-  function checkValid(evt) {
-    const datasourceName = evt.target.value
-    if ($datasources?.list.some(ds => ds.name === datasourceName)) {
-      error = `Datasource with name ${datasourceName} already exists. Please choose another name.`
-      return
-    }
-    error = ""
+async function updateDatasource() {
+  const updatedDatasource = {
+    ...datasource,
+    name,
   }
-
-  async function updateDatasource() {
-    const updatedDatasource = {
-      ...datasource,
-      name,
-    }
-    await datasources.update({
-      datasource: updatedDatasource,
-      integration: integrationForDatasource(get(integrations), datasource),
-    })
-    notifications.success(`Datasource ${name} updated successfully.`)
-    hide()
-  }
+  await datasources.update({
+    datasource: updatedDatasource,
+    integration: integrationForDatasource(get(integrations), datasource),
+  })
+  notifications.success(`Datasource ${name} updated successfully.`)
+  hide()
+}
 </script>
 
 <Modal bind:this={modal} on:hide={onCancel}>

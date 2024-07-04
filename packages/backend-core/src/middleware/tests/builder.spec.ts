@@ -1,10 +1,10 @@
+import { ContextUser, ServiceType } from "@budibase/types"
+import { structures } from "../../../tests"
+import { doInAppContext } from "../../context"
+import env from "../../environment"
 import adminOnly from "../adminOnly"
 import builderOnly from "../builderOnly"
 import builderOrAdmin from "../builderOrAdmin"
-import { structures } from "../../../tests"
-import { ContextUser, ServiceType } from "@budibase/types"
-import { doInAppContext } from "../../context"
-import env from "../../environment"
 
 env._set("SERVICE_TYPE", ServiceType.APPS)
 

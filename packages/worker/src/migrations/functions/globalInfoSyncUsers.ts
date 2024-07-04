@@ -1,6 +1,6 @@
+import { platform } from "@budibase/backend-core"
 import { User } from "@budibase/types"
 import * as usersSdk from "../../sdk/users"
-import { platform } from "@budibase/backend-core"
 
 /**
  * Date:

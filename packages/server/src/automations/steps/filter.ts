@@ -1,9 +1,9 @@
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
-  AutomationStepType,
   AutomationIOType,
+  AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
 } from "@budibase/types"
 
 export const FilterConditions = {
@@ -105,7 +105,7 @@ export async function run({ inputs }: AutomationStepInput) {
       result = false
     }
     return { success: true, result, refValue: field, comparisonValue: value }
-  } catch (err) {
+  } catch (_err) {
     return { success: false, result: false }
   }
 }

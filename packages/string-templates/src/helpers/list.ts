@@ -1,5 +1,9 @@
 import { date, duration } from "./date"
 
+// @ts-expect-error
+import array from "@budibase/handlebars-helpers/lib/array"
+// @ts-expect-error
+import comparison from "@budibase/handlebars-helpers/lib/comparison"
 /* 
 @budibase/handlebars-helpers is not treeshakeable, so we can't use the barrel files. 
 Otherwise, we have issues when generating the isolated-vm bundle because of the treeshaking
@@ -8,19 +12,15 @@ Otherwise, we have issues when generating the isolated-vm bundle because of the 
 // @ts-expect-error
 import math from "@budibase/handlebars-helpers/lib/math"
 // @ts-expect-error
-import array from "@budibase/handlebars-helpers/lib/array"
-// @ts-expect-error
 import number from "@budibase/handlebars-helpers/lib/number"
-// @ts-expect-error
-import url from "@budibase/handlebars-helpers/lib/url"
-// @ts-expect-error
-import string from "@budibase/handlebars-helpers/lib/string"
-// @ts-expect-error
-import comparison from "@budibase/handlebars-helpers/lib/comparison"
 // @ts-expect-error
 import object from "@budibase/handlebars-helpers/lib/object"
 // @ts-expect-error
 import regex from "@budibase/handlebars-helpers/lib/regex"
+// @ts-expect-error
+import string from "@budibase/handlebars-helpers/lib/string"
+// @ts-expect-error
+import url from "@budibase/handlebars-helpers/lib/url"
 // @ts-expect-error
 import uuid from "@budibase/handlebars-helpers/lib/uuid"
 /* eslint-enable local-rules/no-budibase-imports */

@@ -1,8 +1,8 @@
-import path from "path"
-import env from "./environment"
-import chokidar from "chokidar"
 import fs from "fs"
+import path from "path"
 import { constants, tenancy } from "@budibase/backend-core"
+import chokidar from "chokidar"
+import env from "./environment"
 import pluginsSdk from "./sdk/plugins"
 
 export function watch() {
@@ -17,7 +17,7 @@ export function watch() {
       usePolling: true,
       interval: 250,
     })
-    .on("all", async (event: string, path: string) => {
+    .on("all", async (_event: string, path: string) => {
       // Sanity checks
       if (!path?.endsWith(".tar.gz") || !fs.existsSync(path)) {
         return

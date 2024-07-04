@@ -1,11 +1,11 @@
 <script>
-  import { Icon, Detail } from "@budibase/bbui"
+import { Detail, Icon } from "@budibase/bbui"
 
-  export let title = ""
-  export let actionIcon
-  export let action
+export let title = ""
+export let actionIcon
+export let action
 
-  $: actionDefined = typeof action === "function"
+$: actionDefined = typeof action === "function"
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -1,30 +1,30 @@
 <script>
-  import "@spectrum-css/card/dist/index-vars.css"
-  import { getContext } from "svelte"
-  import { Button } from "@budibase/bbui"
+import "@spectrum-css/card/dist/index-vars.css"
+import { Button } from "@budibase/bbui"
+import { getContext } from "svelte"
 
-  export let title
-  export let subtitle
-  export let description
-  export let imageURL
-  export let linkURL
-  export let linkPeek
-  export let horizontal
-  export let showButton
-  export let buttonText
-  export let buttonOnClick
+export let title
+export let subtitle
+export let description
+export let imageURL
+export let linkURL
+export let linkPeek
+export let horizontal
+export let showButton
+export let buttonText
+export let buttonOnClick
 
-  const { styleable, routeStore } = getContext("sdk")
-  const component = getContext("component")
+const { styleable, routeStore } = getContext("sdk")
+const component = getContext("component")
 
-  const handleLink = e => {
-    if (!linkURL) {
-      return false
-    }
-    e.preventDefault()
-    e.stopPropagation()
-    routeStore.actions.navigate(linkURL, linkPeek)
+const handleLink = e => {
+  if (!linkURL) {
+    return false
   }
+  e.preventDefault()
+  e.stopPropagation()
+  routeStore.actions.navigate(linkURL, linkPeek)
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

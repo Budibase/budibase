@@ -1,7 +1,7 @@
-import Router from "@koa/router"
-import * as controller from "../controllers/role"
-import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
+import Router from "@koa/router"
+import authorized from "../../middleware/authorized"
+import * as controller from "../controllers/role"
 import { roleValidator } from "./utils/validators"
 
 const router: Router = new Router()

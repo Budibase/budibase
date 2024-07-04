@@ -1,48 +1,48 @@
 <script>
-  import CreateAutomationModal from "./CreateAutomationModal.svelte"
-  import { Modal, notifications, Layout } from "@budibase/bbui"
-  import NavHeader from "components/common/NavHeader.svelte"
-  import { onMount } from "svelte"
-  import {
-    automationStore,
-    selectedAutomation,
-    userSelectedResourceMap,
-  } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
-  import EditAutomationPopover from "./EditAutomationPopover.svelte"
+import { Layout, Modal, notifications } from "@budibase/bbui"
+import NavHeader from "components/common/NavHeader.svelte"
+import NavItem from "components/common/NavItem.svelte"
+import {
+  automationStore,
+  selectedAutomation,
+  userSelectedResourceMap,
+} from "stores/builder"
+import { onMount } from "svelte"
+import CreateAutomationModal from "./CreateAutomationModal.svelte"
+import EditAutomationPopover from "./EditAutomationPopover.svelte"
 
-  export let modal
-  export let webhookModal
-  let searchString
+export let modal
+export let webhookModal
+let searchString
 
-  $: selectedAutomationId = $selectedAutomation?._id
+$: selectedAutomationId = $selectedAutomation?._id
 
-  $: filteredAutomations = $automationStore.automations
-    .filter(automation => {
-      return (
-        !searchString ||
-        automation.name.toLowerCase().includes(searchString.toLowerCase())
-      )
-    })
-    .sort((a, b) => {
-      const lowerA = a.name.toLowerCase()
-      const lowerB = b.name.toLowerCase()
-      return lowerA > lowerB ? 1 : -1
-    })
-
-  $: showNoResults = searchString && !filteredAutomations.length
-
-  onMount(async () => {
-    try {
-      await automationStore.actions.fetch()
-    } catch (error) {
-      notifications.error("Error getting automations list")
-    }
+$: filteredAutomations = $automationStore.automations
+  .filter(automation => {
+    return (
+      !searchString ||
+      automation.name.toLowerCase().includes(searchString.toLowerCase())
+    )
+  })
+  .sort((a, b) => {
+    const lowerA = a.name.toLowerCase()
+    const lowerB = b.name.toLowerCase()
+    return lowerA > lowerB ? 1 : -1
   })
 
-  function selectAutomation(id) {
-    automationStore.actions.select(id)
+$: showNoResults = searchString && !filteredAutomations.length
+
+onMount(async () => {
+  try {
+    await automationStore.actions.fetch()
+  } catch (error) {
+    notifications.error("Error getting automations list")
   }
+})
+
+function selectAutomation(id) {
+  automationStore.actions.select(id)
+}
 </script>
 
 <div class="side-bar">

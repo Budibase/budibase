@@ -1,13 +1,13 @@
 <script>
-  import "@spectrum-css/pagination/dist/index-vars.css"
-  import "@spectrum-css/actionbutton/dist/index-vars.css"
-  import "@spectrum-css/typography/dist/index-vars.css"
+import "@spectrum-css/pagination/dist/index-vars.css"
+import "@spectrum-css/actionbutton/dist/index-vars.css"
+import "@spectrum-css/typography/dist/index-vars.css"
 
-  export let page
-  export let goToPrevPage
-  export let goToNextPage
-  export let hasPrevPage = true
-  export let hasNextPage = true
+export let page
+export let goToPrevPage
+export let goToNextPage
+export let hasPrevPage = true
+export let hasNextPage = true
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

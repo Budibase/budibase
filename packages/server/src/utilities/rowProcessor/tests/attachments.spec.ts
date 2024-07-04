@@ -1,8 +1,8 @@
-import { AttachmentCleanup } from "../attachments"
-import { FieldType, Table, Row, TableSourceType } from "@budibase/types"
-import { DEFAULT_BB_DATASOURCE_ID } from "../../../constants"
-import { objectStore, db, context } from "@budibase/backend-core"
+import { context, db, objectStore } from "@budibase/backend-core"
+import { FieldType, Row, Table, TableSourceType } from "@budibase/types"
 import * as uuid from "uuid"
+import { DEFAULT_BB_DATASOURCE_ID } from "../../../constants"
+import { AttachmentCleanup } from "../attachments"
 
 const BUCKET = "prod-budi-app-assets"
 const FILE_NAME = "file/thing.jpg"
@@ -41,7 +41,7 @@ const rowGenerators: [
     | FieldType.SIGNATURE_SINGLE
   ),
   string,
-  (fileKey?: string) => Row
+  (fileKey?: string) => Row,
 ][] = [
   [
     "row with a attachment list column",

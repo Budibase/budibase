@@ -1,43 +1,43 @@
 <script>
-  import "@spectrum-css/progresscircle/dist/index-vars.css"
+import "@spectrum-css/progresscircle/dist/index-vars.css"
 
-  export let size = "M"
-  function convertSize(size) {
-    switch (size) {
-      case "S":
-        return "small"
-      case "L":
-        return "large"
-      default:
-        return
+export let size = "M"
+function convertSize(size) {
+  switch (size) {
+    case "S":
+      return "small"
+    case "L":
+      return "large"
+    default:
+      return
+  }
+}
+
+export let value = null
+export let minValue = 0
+export let maxValue = 100
+
+let subMask1Style
+let subMask2Style
+$: calculateSubMasks(value)
+
+function calculateSubMasks(value) {
+  if (value) {
+    let percentage = ((value - minValue) / (maxValue - minValue)) * 100
+    let angle
+    if (percentage > 0 && percentage <= 50) {
+      angle = -180 + (percentage / 50) * 180
+      subMask1Style = `transform: rotate(${angle}deg);`
+      subMask2Style = "transform: rotate(-180deg);"
+    } else if (percentage > 50) {
+      angle = -180 + ((percentage - 50) / 50) * 180
+      subMask1Style = "transform: rotate(0deg);"
+      subMask2Style = `transform: rotate(${angle}deg);`
     }
   }
+}
 
-  export let value = null
-  export let minValue = 0
-  export let maxValue = 100
-
-  let subMask1Style
-  let subMask2Style
-  $: calculateSubMasks(value)
-
-  function calculateSubMasks(value) {
-    if (value) {
-      let percentage = ((value - minValue) / (maxValue - minValue)) * 100
-      let angle
-      if (percentage > 0 && percentage <= 50) {
-        angle = -180 + (percentage / 50) * 180
-        subMask1Style = `transform: rotate(${angle}deg);`
-        subMask2Style = "transform: rotate(-180deg);"
-      } else if (percentage > 50) {
-        angle = -180 + ((percentage - 50) / 50) * 180
-        subMask1Style = "transform: rotate(0deg);"
-        subMask2Style = `transform: rotate(${angle}deg);`
-      }
-    }
-  }
-
-  export let overBackground
+export let overBackground
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

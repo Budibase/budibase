@@ -1,27 +1,27 @@
 <script>
-  import { onMount } from "svelte"
-  import {
-    automationStore,
-    selectedAutomation,
-    userSelectedResourceMap,
-  } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
-  import EditAutomationPopover from "./EditAutomationPopover.svelte"
-  import { notifications } from "@budibase/bbui"
+import { notifications } from "@budibase/bbui"
+import NavItem from "components/common/NavItem.svelte"
+import {
+  automationStore,
+  selectedAutomation,
+  userSelectedResourceMap,
+} from "stores/builder"
+import { onMount } from "svelte"
+import EditAutomationPopover from "./EditAutomationPopover.svelte"
 
-  $: selectedAutomationId = $selectedAutomation?._id
+$: selectedAutomationId = $selectedAutomation?._id
 
-  onMount(async () => {
-    try {
-      await automationStore.actions.fetch()
-    } catch (error) {
-      notifications.error("Error getting automations list")
-    }
-  })
-
-  function selectAutomation(id) {
-    automationStore.actions.select(id)
+onMount(async () => {
+  try {
+    await automationStore.actions.fetch()
+  } catch (error) {
+    notifications.error("Error getting automations list")
   }
+})
+
+function selectAutomation(id) {
+  automationStore.actions.select(id)
+}
 </script>
 
 <div class="automations-list">

@@ -1,15 +1,15 @@
 <script>
-  import { Icon, Modal } from "@budibase/bbui"
-  import ChooseIconModal from "components/start/ChooseIconModal.svelte"
+import { Icon, Modal } from "@budibase/bbui"
+import ChooseIconModal from "components/start/ChooseIconModal.svelte"
 
-  export let name
-  export let size = "M"
-  export let app
-  export let color
-  export let autoSave = false
-  export let disabled = false
+export let name
+export let size = "M"
+export let app
+export let color
+export let autoSave = false
+export let disabled = false
 
-  let modal
+let modal
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

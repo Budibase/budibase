@@ -1,21 +1,21 @@
 <script>
-  import { Layout } from "@budibase/bbui"
-  import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
-  import Panel from "components/design/Panel.svelte"
-  import { isActive, redirect, goto, params } from "@roxi/routify"
-  import { datasources } from "stores/builder"
-  import NavHeader from "components/common/NavHeader.svelte"
+import { Layout } from "@budibase/bbui"
+import { goto, isActive, params, redirect } from "@roxi/routify"
+import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
+import NavHeader from "components/common/NavHeader.svelte"
+import Panel from "components/design/Panel.svelte"
+import { datasources } from "stores/builder"
 
-  let searchValue
+let searchValue
 
-  $: {
-    // If we ever don't have any data other than the users table, prompt the
-    // user to add some
-    // Don't redirect if setting up google sheets, or we lose the query parameter
-    if (!$datasources.hasData && !$params["?continue_google_setup"]) {
-      $redirect("./new")
-    }
+$: {
+  // If we ever don't have any data other than the users table, prompt the
+  // user to add some
+  // Don't redirect if setting up google sheets, or we lose the query parameter
+  if (!$datasources.hasData && !$params["?continue_google_setup"]) {
+    $redirect("./new")
   }
+}
 </script>
 
 <!-- routify:options index=1 -->

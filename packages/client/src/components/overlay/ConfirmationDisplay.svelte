@@ -1,6 +1,6 @@
 <script>
-  import { confirmationStore } from "stores"
-  import { Modal, ModalContent } from "@budibase/bbui"
+import { Modal, ModalContent } from "@budibase/bbui"
+import { confirmationStore } from "stores"
 </script>
 
 {#if $confirmationStore.showConfirmation}

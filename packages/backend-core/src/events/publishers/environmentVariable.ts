@@ -1,8 +1,8 @@
 import {
-  Event,
   EnvironmentVariableCreatedEvent,
   EnvironmentVariableDeletedEvent,
   EnvironmentVariableUpgradePanelOpenedEvent,
+  Event,
 } from "@budibase/types"
 import { publishEvent } from "../events"
 

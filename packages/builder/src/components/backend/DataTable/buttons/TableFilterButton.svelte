@@ -1,47 +1,45 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import { ActionButton, Drawer, DrawerContent, Button } from "@budibase/bbui"
-  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { getUserBindings } from "dataBinding"
-  import { makePropSafe } from "@budibase/string-templates"
-  import { search } from "@budibase/frontend-core"
-  import { tables } from "stores/builder"
+import { ActionButton, Button, Drawer, DrawerContent } from "@budibase/bbui"
+import { search } from "@budibase/frontend-core"
+import { makePropSafe } from "@budibase/string-templates"
+import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
+import { getUserBindings } from "dataBinding"
+import { tables } from "stores/builder"
+import { createEventDispatcher } from "svelte"
 
-  export let schema
-  export let filters
-  export let disabled = false
-  export let tableId
+export let schema
+export let filters
+export let disabled = false
+export let tableId
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let drawer
+let drawer
 
-  $: tempValue = filters || []
-  $: schemaFields = search.getFields(
-    $tables.list,
-    Object.values(schema || {}),
-    { allowLinks: true }
-  )
+$: tempValue = filters || []
+$: schemaFields = search.getFields($tables.list, Object.values(schema || {}), {
+  allowLinks: true,
+})
 
-  $: text = getText(filters)
-  $: selected = tempValue.filter(x => !x.onEmptyFilter)?.length > 0
-  $: bindings = [
-    {
-      type: "context",
-      runtimeBinding: `${makePropSafe("now")}`,
-      readableBinding: `Date`,
-      category: "Date",
-      icon: "Date",
-      display: {
-        name: "Server date",
-      },
+$: text = getText(filters)
+$: selected = tempValue.filter(x => !x.onEmptyFilter)?.length > 0
+$: bindings = [
+  {
+    type: "context",
+    runtimeBinding: `${makePropSafe("now")}`,
+    readableBinding: `Date`,
+    category: "Date",
+    icon: "Date",
+    display: {
+      name: "Server date",
     },
-    ...getUserBindings(),
-  ]
-  const getText = filters => {
-    const count = filters?.filter(filter => filter.field)?.length
-    return count ? `Filter (${count})` : "Filter"
-  }
+  },
+  ...getUserBindings(),
+]
+const getText = filters => {
+  const count = filters?.filter(filter => filter.field)?.length
+  return count ? `Filter (${count})` : "Filter"
+}
 </script>
 
 <ActionButton icon="Filter" quiet {disabled} on:click={drawer.show} {selected}>

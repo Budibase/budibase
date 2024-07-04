@@ -1,12 +1,12 @@
-import * as setup from "../api/routes/tests/utilities"
+import { generator } from "@budibase/backend-core/tests"
 import { Datasource, FieldType } from "@budibase/types"
+import { Knex } from "knex"
+import * as setup from "../api/routes/tests/utilities"
 import {
   DatabaseName,
   getDatasource,
   knexClient,
 } from "../integrations/tests/utils"
-import { generator } from "@budibase/backend-core/tests"
-import { Knex } from "knex"
 
 function uniqueTableName(length?: number): string {
   return generator

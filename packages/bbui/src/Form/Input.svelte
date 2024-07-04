@@ -1,27 +1,27 @@
 <script>
-  import Field from "./Field.svelte"
-  import TextField from "./Core/TextField.svelte"
-  import { createEventDispatcher } from "svelte"
+import { createEventDispatcher } from "svelte"
+import TextField from "./Core/TextField.svelte"
+import Field from "./Field.svelte"
 
-  export let value = null
-  export let label = null
-  export let labelPosition = "above"
-  export let placeholder = null
-  export let type = "text"
-  export let disabled = false
-  export let readonly = false
-  export let error = null
-  export let updateOnChange = true
-  export let quiet = false
-  export let autofocus
-  export let autocomplete
-  export let helpText = null
+export let value = null
+export let label = null
+export let labelPosition = "above"
+export let placeholder = null
+export let type = "text"
+export let disabled = false
+export let readonly = false
+export let error = null
+export let updateOnChange = true
+export let quiet = false
+export let autofocus
+export let autocomplete
+export let helpText = null
 
-  const dispatch = createEventDispatcher()
-  const onChange = e => {
-    value = e.detail
-    dispatch("change", e.detail)
-  }
+const dispatch = createEventDispatcher()
+const onChange = e => {
+  value = e.detail
+  dispatch("change", e.detail)
+}
 </script>
 
 <Field {helpText} {label} {labelPosition} {error}>

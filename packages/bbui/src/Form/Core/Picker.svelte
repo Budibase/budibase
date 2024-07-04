@@ -1,109 +1,109 @@
 <script>
-  import "@spectrum-css/picker/dist/index-vars.css"
-  import "@spectrum-css/popover/dist/index-vars.css"
-  import "@spectrum-css/menu/dist/index-vars.css"
-  import { createEventDispatcher, onDestroy } from "svelte"
-  import clickOutside from "../../Actions/click_outside"
-  import Search from "./Search.svelte"
-  import Icon from "../../Icon/Icon.svelte"
-  import StatusLight from "../../StatusLight/StatusLight.svelte"
-  import Popover from "../../Popover/Popover.svelte"
-  import Tags from "../../Tags/Tags.svelte"
-  import Tag from "../../Tags/Tag.svelte"
-  import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
+import "@spectrum-css/picker/dist/index-vars.css"
+import "@spectrum-css/popover/dist/index-vars.css"
+import "@spectrum-css/menu/dist/index-vars.css"
+import { createEventDispatcher, onDestroy } from "svelte"
+import clickOutside from "../../Actions/click_outside"
+import Icon from "../../Icon/Icon.svelte"
+import Popover from "../../Popover/Popover.svelte"
+import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
+import StatusLight from "../../StatusLight/StatusLight.svelte"
+import Tag from "../../Tags/Tag.svelte"
+import Tags from "../../Tags/Tags.svelte"
+import Search from "./Search.svelte"
 
-  export let id = null
-  export let disabled = false
-  export let fieldText = ""
-  export let fieldIcon = ""
-  export let fieldColour = ""
-  export let isPlaceholder = false
-  export let placeholderOption = null
-  export let options = []
-  export let isOptionSelected = () => false
-  export let isOptionEnabled = () => true
-  export let onSelectOption = () => {}
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
-  export let getOptionIcon = () => null
-  export let useOptionIconImage = false
-  export let getOptionColour = () => null
-  export let getOptionSubtitle = () => null
-  export let open = false
-  export let readonly = false
-  export let quiet = false
-  export let autoWidth = false
-  export let autocomplete = false
-  export let sort = false
-  export let searchTerm = null
-  export let customPopoverHeight
-  export let align = "left"
-  export let footer = null
-  export let customAnchor = null
-  export let loading
-  export let onOptionMouseenter = () => {}
-  export let onOptionMouseleave = () => {}
+export let id = null
+export let disabled = false
+export let fieldText = ""
+export let fieldIcon = ""
+export let fieldColour = ""
+export let isPlaceholder = false
+export let placeholderOption = null
+export let options = []
+export let isOptionSelected = () => false
+export let isOptionEnabled = () => true
+export let onSelectOption = () => {}
+export let getOptionLabel = option => option
+export let getOptionValue = option => option
+export let getOptionIcon = () => null
+export let useOptionIconImage = false
+export let getOptionColour = () => null
+export let getOptionSubtitle = () => null
+export let open = false
+export let readonly = false
+export let quiet = false
+export let autoWidth = false
+export let autocomplete = false
+export let sort = false
+export let searchTerm = null
+export let customPopoverHeight
+export let align = "left"
+export let footer = null
+export let customAnchor = null
+export let loading
+export let onOptionMouseenter = () => {}
+export let onOptionMouseleave = () => {}
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let button
-  let component
+let button
+let component
 
-  $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
-  $: filteredOptions = getFilteredOptions(
-    sortedOptions,
-    searchTerm,
-    getOptionLabel
-  )
+$: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
+$: filteredOptions = getFilteredOptions(
+  sortedOptions,
+  searchTerm,
+  getOptionLabel
+)
 
-  const onClick = e => {
-    e.preventDefault()
-    e.stopPropagation()
-    dispatch("click")
-    if (readonly) {
-      return
-    }
-    searchTerm = null
-    open = !open
+const onClick = e => {
+  e.preventDefault()
+  e.stopPropagation()
+  dispatch("click")
+  if (readonly) {
+    return
   }
+  searchTerm = null
+  open = !open
+}
 
-  const getSortedOptions = (options, getLabel, sort) => {
-    if (!options?.length || !Array.isArray(options)) {
-      return []
-    }
-    if (!sort) {
-      return options
-    }
-    return options.sort((a, b) => {
-      const labelA = getLabel(a)
-      const labelB = getLabel(b)
-      return labelA > labelB ? 1 : -1
-    })
+const getSortedOptions = (options, getLabel, sort) => {
+  if (!options?.length || !Array.isArray(options)) {
+    return []
   }
-
-  const getFilteredOptions = (options, term, getLabel) => {
-    if (autocomplete && term) {
-      const lowerCaseTerm = term.toLowerCase()
-      return options.filter(option => {
-        return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
-      })
-    }
+  if (!sort) {
     return options
   }
-
-  const onScroll = e => {
-    const scrollPxThreshold = 100
-    const scrollPositionFromBottom =
-      e.target.scrollHeight - e.target.clientHeight - e.target.scrollTop
-    if (scrollPositionFromBottom < scrollPxThreshold) {
-      dispatch("loadMore")
-    }
-  }
-
-  $: component?.addEventListener("scroll", onScroll)
-  onDestroy(() => {
-    component?.removeEventListener("scroll", null)
+  return options.sort((a, b) => {
+    const labelA = getLabel(a)
+    const labelB = getLabel(b)
+    return labelA > labelB ? 1 : -1
   })
+}
+
+const getFilteredOptions = (options, term, getLabel) => {
+  if (autocomplete && term) {
+    const lowerCaseTerm = term.toLowerCase()
+    return options.filter(option => {
+      return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
+    })
+  }
+  return options
+}
+
+const onScroll = e => {
+  const scrollPxThreshold = 100
+  const scrollPositionFromBottom =
+    e.target.scrollHeight - e.target.clientHeight - e.target.scrollTop
+  if (scrollPositionFromBottom < scrollPxThreshold) {
+    dispatch("loadMore")
+  }
+}
+
+$: component?.addEventListener("scroll", onScroll)
+onDestroy(() => {
+  component?.removeEventListener("scroll", null)
+})
 </script>
 
 <button

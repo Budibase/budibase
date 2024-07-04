@@ -1,10 +1,10 @@
 <script>
-  import Icon from "../Icon/Icon.svelte"
-  import AbsTooltip from "./AbsTooltip.svelte"
+import Icon from "../Icon/Icon.svelte"
+import AbsTooltip from "./AbsTooltip.svelte"
 
-  export let tooltip = ""
-  export let size = "M"
-  export let disabled = true
+export let tooltip = ""
+export let size = "M"
+export let disabled = true
 </script>
 
 <div class:container={!!tooltip}>

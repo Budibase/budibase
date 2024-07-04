@@ -1,8 +1,8 @@
 import {
   AppBackup,
   AppBackupRestoreEvent,
-  AppBackupTriggeredEvent,
   AppBackupTrigger,
+  AppBackupTriggeredEvent,
   AppBackupType,
   Event,
 } from "@budibase/types"

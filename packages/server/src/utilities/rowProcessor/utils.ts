@@ -1,16 +1,16 @@
-import { AutoFieldDefaultNames } from "../../constants"
+import { context } from "@budibase/backend-core"
 import { processStringSync } from "@budibase/string-templates"
 import {
   AutoColumnFieldMetadata,
+  AutoFieldSubType,
   FieldSchema,
+  FieldType,
+  FormulaType,
   Row,
   Table,
-  FormulaType,
-  AutoFieldSubType,
-  FieldType,
 } from "@budibase/types"
 import tracer from "dd-trace"
-import { context } from "@budibase/backend-core"
+import { AutoFieldDefaultNames } from "../../constants"
 
 interface FormulaOpts {
   dynamic?: boolean

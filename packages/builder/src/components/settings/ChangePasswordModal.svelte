@@ -1,19 +1,19 @@
 <script>
-  import { ModalContent, Body, notifications } from "@budibase/bbui"
-  import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
-  import { auth } from "stores/portal"
+import { Body, ModalContent, notifications } from "@budibase/bbui"
+import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
+import { auth } from "stores/portal"
 
-  let password
-  let error
+let password
+let error
 
-  const updatePassword = async () => {
-    try {
-      await auth.updateSelf({ password })
-      notifications.success("Password changed successfully")
-    } catch (error) {
-      notifications.error("Failed to update password")
-    }
+const updatePassword = async () => {
+  try {
+    await auth.updateSelf({ password })
+    notifications.success("Password changed successfully")
+  } catch (error) {
+    notifications.error("Failed to update password")
   }
+}
 </script>
 
 <ModalContent

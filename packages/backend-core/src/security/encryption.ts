@@ -1,8 +1,8 @@
 import crypto from "crypto"
 import fs from "fs"
+import { join } from "path"
 import zlib from "zlib"
 import env from "../environment"
-import { join } from "path"
 
 const ALGO = "aes-256-ctr"
 const SEPARATOR = "-"

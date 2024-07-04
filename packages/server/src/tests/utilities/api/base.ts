@@ -1,7 +1,7 @@
-import TestConfiguration from "../TestConfiguration"
-import request, { SuperTest, Test, Response } from "supertest"
 import { ReadStream } from "fs"
+import request, { SuperTest, Test, Response } from "supertest"
 import { getServer } from "../../../app"
+import TestConfiguration from "../TestConfiguration"
 
 type Headers = Record<string, string | string[] | undefined>
 type Method = "get" | "post" | "put" | "patch" | "delete"

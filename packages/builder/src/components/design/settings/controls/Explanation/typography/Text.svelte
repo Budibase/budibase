@@ -1,43 +1,43 @@
 <script>
-  import Comma from "./Comma.svelte"
-  import Period from "./Period.svelte"
-  import Space from "./Space.svelte"
+import Comma from "./Comma.svelte"
+import Period from "./Period.svelte"
+import Space from "./Space.svelte"
 
-  export let value = null
+export let value = null
 
-  const punctuation = [" ", ",", "."]
+const punctuation = [" ", ",", "."]
 
-  // TODO regex might work here now
-  const getWords = value => {
-    if (typeof value !== "string") {
-      return []
-    }
-
-    const newWords = []
-    let lastIndex = 0
-
-    const makeWord = i => {
-      // No word to make, multiple spaces, spaces at start of text etc
-      if (i - lastIndex > 0) {
-        newWords.push(value.substring(lastIndex, i))
-      }
-
-      lastIndex = i + 1
-    }
-
-    value.split("").forEach((character, i) => {
-      if (punctuation.includes(character)) {
-        makeWord(i)
-        newWords.push(character)
-      }
-    })
-
-    makeWord(value.length)
-
-    return newWords
+// TODO regex might work here now
+const getWords = value => {
+  if (typeof value !== "string") {
+    return []
   }
 
-  $: words = getWords(value)
+  const newWords = []
+  let lastIndex = 0
+
+  const makeWord = i => {
+    // No word to make, multiple spaces, spaces at start of text etc
+    if (i - lastIndex > 0) {
+      newWords.push(value.substring(lastIndex, i))
+    }
+
+    lastIndex = i + 1
+  }
+
+  value.split("").forEach((character, i) => {
+    if (punctuation.includes(character)) {
+      makeWord(i)
+      newWords.push(character)
+    }
+  })
+
+  makeWord(value.length)
+
+  return newWords
+}
+
+$: words = getWords(value)
 </script>
 
 {#each words as word}

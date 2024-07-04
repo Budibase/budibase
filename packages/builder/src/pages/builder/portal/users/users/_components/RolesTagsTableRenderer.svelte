@@ -1,9 +1,9 @@
 <script>
-  import TagsTableRenderer from "./TagsTableRenderer.svelte"
+import TagsTableRenderer from "./TagsTableRenderer.svelte"
 
-  export let value
+export let value
 
-  $: roles = value?.filter(role => role != null).map(role => role.name) ?? []
+$: roles = value?.filter(role => role != null).map(role => role.name) ?? []
 </script>
 
 <TagsTableRenderer value={roles} />

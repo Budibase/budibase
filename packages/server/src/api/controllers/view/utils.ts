@@ -1,19 +1,19 @@
+import { context } from "@budibase/backend-core"
 import {
+  DBView,
+  Database,
+  DesignDocument,
+  DocumentType,
+  InMemoryView,
+} from "@budibase/types"
+import {
+  SEPARATOR,
   ViewName,
   generateMemoryViewID,
   getMemoryViewParams,
-  SEPARATOR,
 } from "../../../db/utils"
 import env from "../../../environment"
-import { context } from "@budibase/backend-core"
 import viewBuilder from "./viewBuilder"
-import {
-  Database,
-  DBView,
-  DocumentType,
-  DesignDocument,
-  InMemoryView,
-} from "@budibase/types"
 
 export async function getView(viewName: string) {
   const db = context.getAppDB()
@@ -112,7 +112,7 @@ export async function saveView(
       if (old && old._rev) {
         viewDoc._rev = old._rev
       }
-    } catch (err) {
+    } catch (_err) {
       // didn't exist, just skip
     }
     await db.put(viewDoc)

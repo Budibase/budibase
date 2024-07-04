@@ -1,27 +1,27 @@
 <script context="module">
-  export const EditorModes = {
-    JS: {
-      name: "javascript",
-      json: false,
-    },
-    JSON: {
-      name: "javascript",
-      json: true,
-    },
-    XML: {
-      name: "xml",
-    },
-    SQL: {
-      name: "sql",
-    },
-    Handlebars: {
-      name: "handlebars",
-      base: "text/html",
-    },
-    Text: {
-      name: "text/html",
-    },
-  }
+export const EditorModes = {
+  JS: {
+    name: "javascript",
+    json: false,
+  },
+  JSON: {
+    name: "javascript",
+    json: true,
+  },
+  XML: {
+    name: "xml",
+  },
+  SQL: {
+    name: "sql",
+  },
+  Handlebars: {
+    name: "handlebars",
+    base: "text/html",
+  },
+  Text: {
+    name: "text/html",
+  },
+}
 </script>
 
 <script>

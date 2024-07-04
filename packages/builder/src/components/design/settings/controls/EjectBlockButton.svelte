@@ -1,11 +1,11 @@
 <script>
-  import { ActionButton } from "@budibase/bbui"
+import { ActionButton } from "@budibase/bbui"
 
-  const eject = () => {
-    document.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "e", ctrlKey: true })
-    )
-  }
+const eject = () => {
+  document.dispatchEvent(
+    new KeyboardEvent("keydown", { key: "e", ctrlKey: true })
+  )
+}
 </script>
 
 <div>

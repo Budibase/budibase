@@ -1,6 +1,6 @@
-import env from "../environment"
 import { constants, utils } from "@budibase/backend-core"
 import { BBContext } from "@budibase/types"
+import env from "../environment"
 
 /**
  * This is a restricted endpoint in the cloud.

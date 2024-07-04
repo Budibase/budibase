@@ -1,5 +1,5 @@
-import util from "util"
 import childProcess from "child_process"
+import util from "util"
 
 const runCommand = util.promisify(childProcess.exec)
 
@@ -12,7 +12,7 @@ export async function utilityInstalled(utilName: string) {
   try {
     await exec(`${utilName} --version`)
     return true
-  } catch (err) {
+  } catch (_err) {
     return false
   }
 }

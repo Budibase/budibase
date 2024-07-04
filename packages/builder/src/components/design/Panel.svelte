@@ -1,25 +1,25 @@
 <script>
-  import { AbsTooltip, Icon, Body } from "@budibase/bbui"
+import { AbsTooltip, Body, Icon } from "@budibase/bbui"
 
-  export let title
-  export let icon
-  export let iconTooltip
-  export let showAddButton = false
-  export let showBackButton = false
-  export let showCloseButton = false
-  export let onClickAddButton
-  export let onClickBackButton
-  export let onClickCloseButton
-  export let borderLeft = false
-  export let borderRight = false
-  export let borderBottomHeader = true
-  export let wide = false
-  export let extraWide = false
-  export let closeButtonIcon = "Close"
-  export let noHeaderBorder = false
-  export let titleCSS = true
-  $: customHeaderContent = $$slots["panel-header-content"]
-  $: customTitleContent = $$slots["panel-title-content"]
+export let title
+export let icon
+export let iconTooltip
+export let showAddButton = false
+export let showBackButton = false
+export let showCloseButton = false
+export let onClickAddButton
+export let onClickBackButton
+export let onClickCloseButton
+export let borderLeft = false
+export let borderRight = false
+export let borderBottomHeader = true
+export let wide = false
+export let extraWide = false
+export let closeButtonIcon = "Close"
+export let noHeaderBorder = false
+export let titleCSS = true
+$: customHeaderContent = $$slots["panel-header-content"]
+$: customTitleContent = $$slots["panel-title-content"]
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

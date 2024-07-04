@@ -1,9 +1,9 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
-import { createSortedIntegrationsStore } from "stores/builder/sortedIntegrations"
 import { DatasourceTypes } from "constants/backend"
+import { createSortedIntegrationsStore } from "stores/builder/sortedIntegrations"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { derived } from "svelte/store"
 import { integrations } from "stores/builder/integrations"
+import { derived } from "svelte/store"
 
 vi.mock("svelte/store", () => ({
   derived: vi.fn(),

@@ -1,5 +1,5 @@
-import { APP_DEV_PREFIX, APP_PREFIX } from "../constants"
 import { App } from "@budibase/types"
+import { APP_DEV_PREFIX, APP_PREFIX } from "../constants"
 
 const NO_APP_ERROR = "No app provided"
 

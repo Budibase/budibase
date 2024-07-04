@@ -1,8 +1,8 @@
-import { ImportInfo } from "./base"
+import { URL } from "url"
 import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPIV2 } from "openapi-types"
+import { ImportInfo } from "./base"
 import { OpenAPISource } from "./base/openapi"
-import { URL } from "url"
 
 const parameterNotRef = (
   param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject
@@ -51,7 +51,7 @@ export class OpenAPI2 extends OpenAPISource {
       } else {
         return false
       }
-    } catch (err) {
+    } catch (_err) {
       return false
     }
   }

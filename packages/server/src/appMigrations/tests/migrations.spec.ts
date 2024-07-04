@@ -1,8 +1,8 @@
 import { Header } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
-import * as migrations from "../migrations"
-import { AppMigration, getLatestEnabledMigrationId } from "../index"
 import { getAppMigrationVersion } from "../appMigrationMetadata"
+import { AppMigration, getLatestEnabledMigrationId } from "../index"
+import * as migrations from "../migrations"
 
 jest.mock<typeof migrations>("../migrations", () => ({
   MIGRATIONS: [
@@ -62,15 +62,21 @@ describe("migrations", () => {
     const migrations: AppMigration[] = [
       {
         id: MIGRATION_ID1,
-        func: async () => {},
+        func: async () => {
+          /* empty on purpose */
+        },
       },
       {
         id: MIGRATION_ID2,
-        func: async () => {},
+        func: async () => {
+          /* empty on purpose */
+        },
       },
       {
         id: MIGRATION_ID3,
-        func: async () => {},
+        func: async () => {
+          /* empty on purpose */
+        },
       },
     ]
 

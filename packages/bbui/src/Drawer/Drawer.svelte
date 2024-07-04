@@ -1,59 +1,59 @@
 <script context="module">
-  import { writable, get } from "svelte/store"
+import { get, writable } from "svelte/store"
 
-  // Observe this class name if possible in order to know how to size the
-  // drawer. If this doesn't exist we'll use a fixed size.
-  const drawerContainer = "drawer-container"
+// Observe this class name if possible in order to know how to size the
+// drawer. If this doesn't exist we'll use a fixed size.
+const drawerContainer = "drawer-container"
 
-  // Context level stores to keep drawers in sync
-  const openDrawers = writable([])
-  const modal = writable(false)
-  const resizable = writable(true)
-  const drawerLeft = writable(null)
-  const drawerWidth = writable(null)
+// Context level stores to keep drawers in sync
+const openDrawers = writable([])
+const modal = writable(false)
+const resizable = writable(true)
+const drawerLeft = writable(null)
+const drawerWidth = writable(null)
 
-  // Resize observer to keep track of size changes
-  let observer
+// Resize observer to keep track of size changes
+let observer
 
-  // Starts observing the target node to watching to size changes.
-  // Invoked when the first drawer of a chain is rendered.
-  const observe = () => {
-    const target = document.getElementsByClassName(drawerContainer)[0]
-    if (observer || !target) {
+// Starts observing the target node to watching to size changes.
+// Invoked when the first drawer of a chain is rendered.
+const observe = () => {
+  const target = document.getElementsByClassName(drawerContainer)[0]
+  if (observer || !target) {
+    return
+  }
+  observer = new ResizeObserver(entries => {
+    if (!entries?.[0]) {
       return
     }
-    observer = new ResizeObserver(entries => {
-      if (!entries?.[0]) {
-        return
-      }
-      const bounds = entries[0].target.getBoundingClientRect()
-      drawerLeft.set(bounds.left)
-      drawerWidth.set(bounds.width)
-    })
-    observer.observe(target)
-
-    // Manually measure once to ensure that we have dimensions for the initial
-    // paint
-    const bounds = target.getBoundingClientRect()
+    const bounds = entries[0].target.getBoundingClientRect()
     drawerLeft.set(bounds.left)
     drawerWidth.set(bounds.width)
-  }
+  })
+  observer.observe(target)
 
-  // Stops observing the target node.
-  // Invoked when the last drawer of a chain is removed.
-  const unobserve = () => {
-    if (get(openDrawers).length) {
-      return
-    }
-    observer?.disconnect()
+  // Manually measure once to ensure that we have dimensions for the initial
+  // paint
+  const bounds = target.getBoundingClientRect()
+  drawerLeft.set(bounds.left)
+  drawerWidth.set(bounds.width)
+}
 
-    // Reset state
-    observer = null
-    modal.set(false)
-    resizable.set(true)
-    drawerLeft.set(null)
-    drawerWidth.set(null)
+// Stops observing the target node.
+// Invoked when the last drawer of a chain is removed.
+const unobserve = () => {
+  if (get(openDrawers).length) {
+    return
   }
+  observer?.disconnect()
+
+  // Reset state
+  observer = null
+  modal.set(false)
+  resizable.set(true)
+  drawerLeft.set(null)
+  drawerWidth.set(null)
+}
 </script>
 
 <script>

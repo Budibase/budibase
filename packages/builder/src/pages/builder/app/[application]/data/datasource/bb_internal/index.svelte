@@ -1,26 +1,26 @@
 <script>
-  import { Button, Heading, Body, Layout, Modal, Divider } from "@budibase/bbui"
-  import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
-  import ICONS from "components/backend/DatasourceNavigator/icons"
-  import { tables, datasources, builderStore } from "stores/builder"
-  import { goto } from "@roxi/routify"
-  import { onMount } from "svelte"
-  import { BUDIBASE_INTERNAL_DB_ID, DB_TYPE_EXTERNAL } from "constants/backend"
-  import { TableNames } from "constants"
+import { TableNames } from "constants"
+import { Body, Button, Divider, Heading, Layout, Modal } from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import ICONS from "components/backend/DatasourceNavigator/icons"
+import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
+import { BUDIBASE_INTERNAL_DB_ID, DB_TYPE_EXTERNAL } from "constants/backend"
+import { builderStore, datasources, tables } from "stores/builder"
+import { onMount } from "svelte"
 
-  let modal
+let modal
 
-  $: builderStore.selectResource(BUDIBASE_INTERNAL_DB_ID)
-  $: internalTablesBySourceId = $tables.list.filter(
-    table =>
-      table.sourceType !== DB_TYPE_EXTERNAL &&
-      table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
-      table._id !== TableNames.USERS
-  )
+$: builderStore.selectResource(BUDIBASE_INTERNAL_DB_ID)
+$: internalTablesBySourceId = $tables.list.filter(
+  table =>
+    table.sourceType !== DB_TYPE_EXTERNAL &&
+    table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+    table._id !== TableNames.USERS
+)
 
-  onMount(() => {
-    datasources.select(BUDIBASE_INTERNAL_DB_ID)
-  })
+onMount(() => {
+  datasources.select(BUDIBASE_INTERNAL_DB_ID)
+})
 </script>
 
 <Modal bind:this={modal}>

@@ -1,9 +1,9 @@
 <script>
-  import Icon from "../Icon/Icon.svelte"
-  import FancyField from "./FancyField.svelte"
+import Icon from "../Icon/Icon.svelte"
+import FancyField from "./FancyField.svelte"
 
-  export let icon
-  export let disabled
+export let icon
+export let disabled
 </script>
 
 <FancyField on:click clickable {disabled}>

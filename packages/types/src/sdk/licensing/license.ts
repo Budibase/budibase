@@ -1,4 +1,4 @@
-import { PurchasedPlan, Quotas, Feature, Billing } from "."
+import { Billing, Feature, PurchasedPlan, Quotas } from "."
 import { ISO8601 } from "../../shared"
 
 export interface OfflineIdentifier {

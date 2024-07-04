@@ -1,7 +1,4 @@
-import { IncludeDocs, getLinkDocuments } from "./linkUtils"
-import { InternalTables, getUserMetadataParams } from "../utils"
 import { context, logging } from "@budibase/backend-core"
-import LinkDocument from "./LinkDocument"
 import {
   Database,
   FieldSchema,
@@ -12,6 +9,9 @@ import {
   Row,
   Table,
 } from "@budibase/types"
+import { InternalTables, getUserMetadataParams } from "../utils"
+import LinkDocument from "./LinkDocument"
+import { IncludeDocs, getLinkDocuments } from "./linkUtils"
 
 type LinkControllerOpts = {
   tableId?: string
@@ -231,7 +231,7 @@ class LinkController {
             // first check the doc we're linking to exists
             try {
               await this._db.get(linkId)
-            } catch (err) {
+            } catch (_err) {
               // skip links that don't exist
               continue
             }
@@ -359,7 +359,7 @@ class LinkController {
         let linkedTable
         try {
           linkedTable = await this._db.get<Table>(field.tableId)
-        } catch (err) {
+        } catch (_err) {
           /* istanbul ignore next */
           continue
         }

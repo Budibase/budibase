@@ -1,6 +1,6 @@
-import { enrichDataBindings } from "./enrichDataBinding"
-import { enrichButtonActions } from "./buttonActions"
 import { decodeJSBinding } from "@budibase/string-templates"
+import { enrichButtonActions } from "./buttonActions"
+import { enrichDataBindings } from "./enrichDataBinding"
 
 /**
  * Deeply compares 2 props using JSON.stringify.

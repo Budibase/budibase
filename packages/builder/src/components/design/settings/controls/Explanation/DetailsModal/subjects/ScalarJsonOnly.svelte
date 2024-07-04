@@ -1,43 +1,42 @@
 <script>
-  import {
-    ExampleSection,
-    ExampleLine,
-    Block,
-    Subject,
-    Section,
-  } from "./components"
+import {
+  Block,
+  ExampleLine,
+  ExampleSection,
+  Section,
+  Subject,
+} from "./components"
 
-  export let schema
-  export let columnName
+export let schema
+export let columnName
 
-  const maxScalarDescendantsToFind = 3
+const maxScalarDescendantsToFind = 3
 
-  const getScalarDescendants = schema => {
-    const newScalarDescendants = []
+const getScalarDescendants = schema => {
+  const newScalarDescendants = []
 
-    const getScalarDescendantFromSchema = (path, schema) => {
-      if (newScalarDescendants.length >= maxScalarDescendantsToFind) {
-        return
-      }
-
-      if (["string", "number", "boolean"].includes(schema.type)) {
-        newScalarDescendants.push({ name: path.join("."), type: schema.type })
-      } else if (schema.type === "json") {
-        Object.entries(schema.schema ?? {}).forEach(
-          ([childName, childSchema]) =>
-            getScalarDescendantFromSchema([...path, childName], childSchema)
-        )
-      }
+  const getScalarDescendantFromSchema = (path, schema) => {
+    if (newScalarDescendants.length >= maxScalarDescendantsToFind) {
+      return
     }
 
-    Object.entries(schema?.schema ?? {}).forEach(([childName, childSchema]) =>
-      getScalarDescendantFromSchema([columnName, childName], childSchema)
-    )
-
-    return newScalarDescendants
+    if (["string", "number", "boolean"].includes(schema.type)) {
+      newScalarDescendants.push({ name: path.join("."), type: schema.type })
+    } else if (schema.type === "json") {
+      Object.entries(schema.schema ?? {}).forEach(([childName, childSchema]) =>
+        getScalarDescendantFromSchema([...path, childName], childSchema)
+      )
+    }
   }
 
-  $: scalarDescendants = getScalarDescendants(schema)
+  Object.entries(schema?.schema ?? {}).forEach(([childName, childSchema]) =>
+    getScalarDescendantFromSchema([columnName, childName], childSchema)
+  )
+
+  return newScalarDescendants
+}
+
+$: scalarDescendants = getScalarDescendants(schema)
 </script>
 
 <Subject heading="Using Scalar JSON Values">

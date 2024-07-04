@@ -1,5 +1,5 @@
-import { Document } from "../document"
 import { SourceName } from "../../sdk"
+import { Document } from "../document"
 import { Table } from "./table"
 
 export interface Datasource extends Document {

@@ -1,17 +1,17 @@
 import {
+  AuditLogFn,
+  AuditLogQueueEvent,
   Event,
+  HostInfo,
   Identity,
   IdentityType,
-  AuditLogQueueEvent,
-  AuditLogFn,
-  HostInfo,
 } from "@budibase/types"
-import { EventProcessor } from "./types"
-import { getAppId, doInTenant, getTenantId } from "../../context"
 import BullQueue from "bull"
-import { createQueue, JobQueue } from "../../queue"
-import { isAudited } from "../../utils"
+import { doInTenant, getAppId, getTenantId } from "../../context"
 import env from "../../environment"
+import { JobQueue, createQueue } from "../../queue"
+import { isAudited } from "../../utils"
+import { EventProcessor } from "./types"
 
 export default class AuditLogsProcessor implements EventProcessor {
   static auditLogsEnabled = false

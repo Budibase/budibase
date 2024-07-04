@@ -1,16 +1,16 @@
 <script>
-  import RestAuthenticationBuilder from "./RestAuthenticationBuilder.svelte"
-  import { cloneDeep } from "lodash/fp"
-  import SaveDatasourceButton from "../SaveDatasourceButton.svelte"
-  import Panel from "../Panel.svelte"
-  import Tooltip from "../Tooltip.svelte"
+import { cloneDeep } from "lodash/fp"
+import Panel from "../Panel.svelte"
+import SaveDatasourceButton from "../SaveDatasourceButton.svelte"
+import Tooltip from "../Tooltip.svelte"
+import RestAuthenticationBuilder from "./RestAuthenticationBuilder.svelte"
 
-  export let datasource
-  $: updatedDatasource = cloneDeep(datasource)
+export let datasource
+$: updatedDatasource = cloneDeep(datasource)
 
-  const updateAuthConfigs = newAuthConfigs => {
-    updatedDatasource.config.authConfigs = newAuthConfigs
-  }
+const updateAuthConfigs = newAuthConfigs => {
+  updatedDatasource.config.authConfigs = newAuthConfigs
+}
 </script>
 
 <Panel>

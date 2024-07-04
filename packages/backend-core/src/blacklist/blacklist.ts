@@ -1,7 +1,7 @@
 import dns from "dns"
 import net from "net"
-import env from "../environment"
 import { promisify } from "util"
+import env from "../environment"
 
 let blackListArray: string[] | undefined
 const performLookup = promisify(dns.lookup)

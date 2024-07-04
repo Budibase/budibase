@@ -1,20 +1,20 @@
 const sanitize = require("sanitize-s3-objectkey")
 
-import AWS from "aws-sdk"
-import stream, { Readable } from "stream"
-import fetch from "node-fetch"
-import tar from "tar-fs"
-import zlib from "zlib"
-import { promisify } from "util"
-import { join } from "path"
 import fs, { PathLike, ReadStream } from "fs"
+import { join } from "path"
+import stream, { Readable } from "stream"
+import { promisify } from "util"
+import zlib from "zlib"
+import AWS from "aws-sdk"
+import { HeadObjectOutput } from "aws-sdk/clients/s3"
+import fsp from "fs/promises"
+import fetch from "node-fetch"
+import { ReadableStream } from "stream/web"
+import tar from "tar-fs"
+import { v4 } from "uuid"
+import { APP_DEV_PREFIX, APP_PREFIX } from "../db"
 import env from "../environment"
 import { bucketTTLConfig, budibaseTempDir } from "./utils"
-import { v4 } from "uuid"
-import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
-import fsp from "fs/promises"
-import { HeadObjectOutput } from "aws-sdk/clients/s3"
-import { ReadableStream } from "stream/web"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -557,7 +557,7 @@ export async function getObjectMetadata(
 
   try {
     return await client.headObject(params).promise()
-  } catch (err: any) {
+  } catch (_err: any) {
     throw new Error("Unable to retrieve metadata from object")
   }
 }

@@ -1,13 +1,13 @@
-import { API } from "api"
-import TableFetch from "@budibase/frontend-core/src/fetch/TableFetch.js"
-import ViewFetch from "@budibase/frontend-core/src/fetch/ViewFetch.js"
-import QueryFetch from "@budibase/frontend-core/src/fetch/QueryFetch.js"
-import RelationshipFetch from "@budibase/frontend-core/src/fetch/RelationshipFetch.js"
-import NestedProviderFetch from "@budibase/frontend-core/src/fetch/NestedProviderFetch.js"
 import FieldFetch from "@budibase/frontend-core/src/fetch/FieldFetch.js"
 import JSONArrayFetch from "@budibase/frontend-core/src/fetch/JSONArrayFetch.js"
-import ViewV2Fetch from "@budibase/frontend-core/src/fetch/ViewV2Fetch.js"
+import NestedProviderFetch from "@budibase/frontend-core/src/fetch/NestedProviderFetch.js"
 import QueryArrayFetch from "@budibase/frontend-core/src/fetch/QueryArrayFetch"
+import QueryFetch from "@budibase/frontend-core/src/fetch/QueryFetch.js"
+import RelationshipFetch from "@budibase/frontend-core/src/fetch/RelationshipFetch.js"
+import TableFetch from "@budibase/frontend-core/src/fetch/TableFetch.js"
+import ViewFetch from "@budibase/frontend-core/src/fetch/ViewFetch.js"
+import ViewV2Fetch from "@budibase/frontend-core/src/fetch/ViewV2Fetch.js"
+import { API } from "api"
 
 /**
  * Fetches the schema of any kind of datasource.

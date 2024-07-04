@@ -1,9 +1,9 @@
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
 import {
   ActivateLicenseKeyRequest,
   ActivateOfflineLicenseTokenRequest,
 } from "@budibase/types"
+import TestConfiguration from "../TestConfiguration"
+import { TestAPI } from "./base"
 
 export class LicenseAPI extends TestAPI {
   constructor(config: TestConfiguration) {

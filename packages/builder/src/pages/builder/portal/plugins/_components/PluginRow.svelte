@@ -1,32 +1,32 @@
 <script>
-  import {
-    Icon,
-    Body,
-    Modal,
-    ModalContent,
-    Button,
-    Label,
-    Input,
-  } from "@budibase/bbui"
-  import DeletePluginModal from "../_components/DeletePluginModal.svelte"
+import {
+  Body,
+  Button,
+  Icon,
+  Input,
+  Label,
+  Modal,
+  ModalContent,
+} from "@budibase/bbui"
+import DeletePluginModal from "../_components/DeletePluginModal.svelte"
 
-  export let plugin
+export let plugin
 
-  let detailsModal
-  let deleteModal
+let detailsModal
+let deleteModal
 
-  let icon =
-    plugin.schema.type === "component"
-      ? plugin.schema.schema.icon || "Book"
-      : plugin.schema.schema.icon || "Beaker"
+let icon =
+  plugin.schema.type === "component"
+    ? plugin.schema.schema.icon || "Book"
+    : plugin.schema.schema.icon || "Beaker"
 
-  $: friendlyName = plugin?.schema?.schema?.friendlyName
+$: friendlyName = plugin?.schema?.schema?.friendlyName
 
-  function pluginDeleted() {
-    if (detailsModal) {
-      detailsModal.hide()
-    }
+function pluginDeleted() {
+  if (detailsModal) {
+    detailsModal.hide()
   }
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

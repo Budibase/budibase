@@ -1,11 +1,11 @@
+import path from "path"
+import { ContainerInfo } from "dockerode"
+import lockfile from "proper-lockfile"
 import {
   GenericContainer,
   Wait,
   getContainerRuntimeClient,
 } from "testcontainers"
-import { ContainerInfo } from "dockerode"
-import path from "path"
-import lockfile from "proper-lockfile"
 
 async function getBudibaseContainers() {
   const client = await getContainerRuntimeClient()

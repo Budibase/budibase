@@ -1,12 +1,14 @@
-import { tableForDatasource } from "../../../tests/utilities/structures"
+import { db as dbCore, utils } from "@budibase/backend-core"
 import {
   DatabaseName,
   getDatasource,
   knexClient,
 } from "../../../integrations/tests/utils"
-import { db as dbCore, utils } from "@budibase/backend-core"
+import { tableForDatasource } from "../../../tests/utilities/structures"
 
-import * as setup from "./utilities"
+import { structures } from "@budibase/backend-core/tests"
+import { dataFilters } from "@budibase/shared-core"
+import { encodeJSBinding } from "@budibase/string-templates"
 import {
   AutoFieldSubType,
   BBReferenceFieldSubType,
@@ -24,12 +26,10 @@ import {
   TableSchema,
   User,
 } from "@budibase/types"
+import { Knex } from "knex"
 import _ from "lodash"
 import tk from "timekeeper"
-import { encodeJSBinding } from "@budibase/string-templates"
-import { dataFilters } from "@budibase/shared-core"
-import { Knex } from "knex"
-import { structures } from "@budibase/backend-core/tests"
+import * as setup from "./utilities"
 
 describe.each([
   ["in-memory", undefined],

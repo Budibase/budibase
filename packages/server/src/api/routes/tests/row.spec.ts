@@ -4,21 +4,18 @@ import {
   knexClient,
 } from "../../../integrations/tests/utils"
 
-import tk from "timekeeper"
-import emitter from "../../../../src/events"
-import { outputProcessing } from "../../../utilities/rowProcessor"
-import * as setup from "./utilities"
-import { context, InternalTable, tenancy } from "@budibase/backend-core"
+import { InternalTable, context, tenancy } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import { quotas } from "@budibase/pro"
 import {
   AttachmentFieldMetadata,
   AutoFieldSubType,
+  BBReferenceFieldSubType,
   Datasource,
   DateFieldMetadata,
   DeleteRow,
   FieldSchema,
   FieldType,
-  BBReferenceFieldSubType,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
   NumberFieldMetadata,
@@ -28,14 +25,17 @@ import {
   SaveTableRequest,
   StaticQuotaName,
   Table,
+  TableSchema,
   TableSourceType,
   UpdatedRowEventEmitter,
-  TableSchema,
 } from "@budibase/types"
-import { generator, mocks } from "@budibase/backend-core/tests"
-import _, { merge } from "lodash"
-import * as uuid from "uuid"
 import { Knex } from "knex"
+import _, { merge } from "lodash"
+import tk from "timekeeper"
+import * as uuid from "uuid"
+import emitter from "../../../../src/events"
+import { outputProcessing } from "../../../utilities/rowProcessor"
+import * as setup from "./utilities"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -320,7 +320,7 @@ describe.each([
               try {
                 await config.api.row.save(table._id!, {})
                 return
-              } catch (e) {
+              } catch (_e) {
                 await new Promise(r => setTimeout(r, Math.random() * 50))
               }
             }

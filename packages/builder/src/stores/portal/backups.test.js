@@ -1,8 +1,8 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createBackupsStore } from "./backups"
 
-import { writable } from "svelte/store"
 import { API } from "api"
+import { writable } from "svelte/store"
 
 vi.mock("svelte/store", () => {
   return {

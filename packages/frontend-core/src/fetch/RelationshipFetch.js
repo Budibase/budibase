@@ -10,7 +10,7 @@ export default class RelationshipFetch extends DataFetch {
         fieldName: datasource?.fieldName,
       })
       return { rows: res || [] }
-    } catch (error) {
+    } catch (_error) {
       return { rows: [] }
     }
   }

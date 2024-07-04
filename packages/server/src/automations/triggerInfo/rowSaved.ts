@@ -1,10 +1,10 @@
 import {
   AutomationCustomIOType,
+  AutomationEventType,
   AutomationIOType,
   AutomationStepType,
   AutomationTriggerSchema,
   AutomationTriggerStepId,
-  AutomationEventType,
 } from "@budibase/types"
 
 export const definition: AutomationTriggerSchema = {

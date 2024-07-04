@@ -1,7 +1,7 @@
+import { Constants } from "@budibase/frontend-core"
 import { derived } from "svelte/store"
 import { appStore } from "./app"
 import { authStore } from "./auth"
-import { Constants } from "@budibase/frontend-core"
 
 const createFeaturesStore = () => {
   return derived([authStore, appStore], ([$authStore, $appStore]) => {

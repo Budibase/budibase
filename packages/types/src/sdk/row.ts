@@ -1,7 +1,7 @@
 import { SortOrder, SortType } from "../api"
-import { SearchFilters } from "./search"
 import { Row } from "../documents"
 import { WithRequired } from "../shared"
+import { SearchFilters } from "./search"
 
 export interface SearchParams {
   tableId?: string

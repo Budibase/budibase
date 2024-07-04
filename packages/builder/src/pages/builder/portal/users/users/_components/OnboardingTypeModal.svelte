@@ -1,10 +1,10 @@
 <script>
-  import { ModalContent, Body, Layout, Icon } from "@budibase/bbui"
-  import { OnboardingType } from "constants"
+import { OnboardingType } from "constants"
+import { Body, Icon, Layout, ModalContent } from "@budibase/bbui"
 
-  export let chooseCreationType
+export let chooseCreationType
 
-  let selectedOnboardingType
+let selectedOnboardingType
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

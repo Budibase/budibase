@@ -1,4 +1,4 @@
-import { Table, Row } from "../documents"
+import { Row, Table } from "../documents"
 import { QueryJson } from "./search"
 
 export const PASSWORD_REPLACEMENT = "--secret-value--"

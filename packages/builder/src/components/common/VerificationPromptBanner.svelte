@@ -1,31 +1,31 @@
 <script>
-  import { notifications, Button, Icon, Body } from "@budibase/bbui"
-  import { admin, auth } from "stores/portal"
+import { Body, Button, Icon, notifications } from "@budibase/bbui"
+import { admin, auth } from "stores/portal"
 
-  $: user = $auth.user
-  let loading = false
-  let complete = false
+$: user = $auth.user
+let loading = false
+let complete = false
 
-  const resetPassword = async () => {
-    if (loading || complete) return
-    loading = true
+const resetPassword = async () => {
+  if (loading || complete) return
+  loading = true
 
-    try {
-      await fetch(`${$admin.accountPortalUrl}/api/auth/reset`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: user.email }),
-      })
+  try {
+    await fetch(`${$admin.accountPortalUrl}/api/auth/reset`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: user.email }),
+    })
 
-      complete = true
-    } catch (e) {
-      notifications.error("There was an issue sending your validation email.")
-    } finally {
-      loading = false
-    }
+    complete = true
+  } catch (e) {
+    notifications.error("There was an issue sending your validation email.")
+  } finally {
+    loading = false
   }
+}
 </script>
 
 {#if user?.account?.verified === false}

@@ -1,6 +1,6 @@
-import { getCouchInfo } from "./connections"
 import fetch from "node-fetch"
 import { checkSlashesInUrl } from "../../helpers"
+import { getCouchInfo } from "./connections"
 
 export async function directCouchCall(
   path: string,

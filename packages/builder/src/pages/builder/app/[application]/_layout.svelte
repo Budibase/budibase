@@ -1,128 +1,128 @@
 <script>
-  import {
-    initialise,
-    reset,
-    appStore,
-    builderStore,
-    previewStore,
-    userStore,
-    deploymentStore,
-  } from "stores/builder"
-  import { auth, appsStore } from "stores/portal"
-  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
-  import {
-    Icon,
-    Tabs,
-    Tab,
-    Heading,
-    Modal,
-    notifications,
-    TooltipPosition,
-  } from "@budibase/bbui"
-  import AppActions from "components/deploy/AppActions.svelte"
-  import { API } from "api"
-  import { isActive, url, goto, layout, redirect } from "@roxi/routify"
-  import { capitalise } from "helpers"
-  import { onMount, onDestroy } from "svelte"
-  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
-  import CommandPalette from "components/commandPalette/CommandPalette.svelte"
-  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
-  import TourPopover from "components/portal/onboarding/TourPopover.svelte"
-  import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
-  import { UserAvatars } from "@budibase/frontend-core"
-  import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
-  import PreviewOverlay from "./_components/PreviewOverlay.svelte"
-  import EnterpriseBasicTrialModal from "components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
-  import UpdateAppTopNav from "components/common/UpdateAppTopNav.svelte"
+import {
+  Heading,
+  Icon,
+  Modal,
+  Tab,
+  Tabs,
+  TooltipPosition,
+  notifications,
+} from "@budibase/bbui"
+import { UserAvatars } from "@budibase/frontend-core"
+import { url, goto, isActive, layout, redirect } from "@roxi/routify"
+import { API } from "api"
+import CommandPalette from "components/commandPalette/CommandPalette.svelte"
+import UpdateAppTopNav from "components/common/UpdateAppTopNav.svelte"
+import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
+import AppActions from "components/deploy/AppActions.svelte"
+import EnterpriseBasicTrialModal from "components/portal/onboarding/EnterpriseBasicTrialModal.svelte"
+import TourPopover from "components/portal/onboarding/TourPopover.svelte"
+import TourWrap from "components/portal/onboarding/TourWrap.svelte"
+import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
+import { capitalise } from "helpers"
+import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
+import {
+  appStore,
+  builderStore,
+  deploymentStore,
+  initialise,
+  previewStore,
+  reset,
+  userStore,
+} from "stores/builder"
+import { appsStore, auth } from "stores/portal"
+import { onDestroy, onMount } from "svelte"
+import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
+import PreviewOverlay from "./_components/PreviewOverlay.svelte"
 
-  export let application
+export let application
 
-  let promise = getPackage()
-  let hasSynced = false
-  let commandPaletteModal
-  let loaded = false
+let promise = getPackage()
+let hasSynced = false
+let commandPaletteModal
+let loaded = false
 
-  $: loaded && initTour()
-  $: selected = capitalise(
-    $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
-  )
+$: loaded && initTour()
+$: selected = capitalise(
+  $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
+)
 
-  async function getPackage() {
+async function getPackage() {
+  try {
+    reset()
+
+    const pkg = await API.fetchAppPackage(application)
+    await initialise(pkg)
+
+    await appsStore.load()
+    await deploymentStore.load()
+
+    loaded = true
+    return pkg
+  } catch (error) {
+    notifications.error(`Error initialising app: ${error?.message}`)
+    $redirect("../../")
+  }
+}
+// Handles navigation between frontend, backend, automation.
+// This remembers your last place on each of the sections
+// e.g. if one of your screens is selected on front end, then
+// you browse to backend, when you click frontend, you will be
+// brought back to the same screen.
+const topItemNavigate = path => {
+  const activeTopNav = $layout.children.find(c => $isActive(c.path))
+  if (activeTopNav) {
+    builderStore.setPreviousTopNavPath(
+      activeTopNav.path,
+      window.location.pathname
+    )
+  }
+  $goto($builderStore.previousTopNavPath[path] || path)
+}
+
+// Event handler for the command palette
+const handleKeyDown = e => {
+  if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault()
+    commandPaletteModal.toggle()
+  }
+}
+
+const initTour = async () => {
+  // Check if onboarding is enabled.
+  if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
+    if (!$auth.user?.onboardedAt) {
+      builderStore.startBuilderOnboarding()
+    } else {
+      // Feature tour date
+      const release_date = new Date("2023-03-01T00:00:00.000Z")
+      const onboarded = new Date($auth.user?.onboardedAt)
+      if (onboarded < release_date) {
+        builderStore.setTour(TOUR_KEYS.FEATURE_ONBOARDING)
+      }
+    }
+  }
+}
+
+onMount(async () => {
+  if (!hasSynced && application) {
     try {
-      reset()
-
-      const pkg = await API.fetchAppPackage(application)
-      await initialise(pkg)
-
-      await appsStore.load()
-      await deploymentStore.load()
-
-      loaded = true
-      return pkg
+      await API.syncApp(application)
+      // check if user has beta access
+      // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
+      // betaAccess = betaResponse.access
     } catch (error) {
-      notifications.error(`Error initialising app: ${error?.message}`)
-      $redirect("../../")
+      notifications.error("Failed to sync with production database")
     }
+    hasSynced = true
   }
-  // Handles navigation between frontend, backend, automation.
-  // This remembers your last place on each of the sections
-  // e.g. if one of your screens is selected on front end, then
-  // you browse to backend, when you click frontend, you will be
-  // brought back to the same screen.
-  const topItemNavigate = path => {
-    const activeTopNav = $layout.children.find(c => $isActive(c.path))
-    if (activeTopNav) {
-      builderStore.setPreviousTopNavPath(
-        activeTopNav.path,
-        window.location.pathname
-      )
-    }
-    $goto($builderStore.previousTopNavPath[path] || path)
-  }
+})
 
-  // Event handler for the command palette
-  const handleKeyDown = e => {
-    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault()
-      commandPaletteModal.toggle()
-    }
-  }
-
-  const initTour = async () => {
-    // Check if onboarding is enabled.
-    if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
-      if (!$auth.user?.onboardedAt) {
-        builderStore.startBuilderOnboarding()
-      } else {
-        // Feature tour date
-        const release_date = new Date("2023-03-01T00:00:00.000Z")
-        const onboarded = new Date($auth.user?.onboardedAt)
-        if (onboarded < release_date) {
-          builderStore.setTour(TOUR_KEYS.FEATURE_ONBOARDING)
-        }
-      }
-    }
-  }
-
-  onMount(async () => {
-    if (!hasSynced && application) {
-      try {
-        await API.syncApp(application)
-        // check if user has beta access
-        // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
-        // betaAccess = betaResponse.access
-      } catch (error) {
-        notifications.error("Failed to sync with production database")
-      }
-      hasSynced = true
-    }
-  })
-
-  onDestroy(() => {
-    // Run async on a slight delay to let other cleanup logic run without
-    // being confused by the store wiping
-    setTimeout(reset, 10)
-  })
+onDestroy(() => {
+  // Run async on a slight delay to let other cleanup logic run without
+  // being confused by the store wiping
+  setTimeout(reset, 10)
+})
 </script>
 
 <TourPopover />

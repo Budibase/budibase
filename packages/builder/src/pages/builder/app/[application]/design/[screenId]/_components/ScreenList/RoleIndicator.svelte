@@ -1,19 +1,19 @@
 <script>
-  import { RoleUtils } from "@budibase/frontend-core"
-  import { Tooltip, StatusLight } from "@budibase/bbui"
-  import { roles } from "stores/builder"
-  import { Roles } from "constants/backend"
+import { StatusLight, Tooltip } from "@budibase/bbui"
+import { RoleUtils } from "@budibase/frontend-core"
+import { Roles } from "constants/backend"
+import { roles } from "stores/builder"
 
-  export let roleId
+export let roleId
 
-  let showTooltip = false
+let showTooltip = false
 
-  $: color = RoleUtils.getRoleColour(roleId)
-  $: role = $roles.find(role => role._id === roleId)
-  $: tooltip =
-    roleId === Roles.PUBLIC
-      ? "Open to the public"
-      : `Requires ${role?.name} access`
+$: color = RoleUtils.getRoleColour(roleId)
+$: role = $roles.find(role => role._id === roleId)
+$: tooltip =
+  roleId === Roles.PUBLIC
+    ? "Open to the public"
+    : `Requires ${role?.name} access`
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

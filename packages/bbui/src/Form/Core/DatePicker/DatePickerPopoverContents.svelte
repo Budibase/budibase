@@ -1,54 +1,54 @@
 <script>
-  import dayjs from "dayjs"
-  import TimePicker from "./TimePicker.svelte"
-  import Calendar from "./Calendar.svelte"
-  import ActionButton from "../../../ActionButton/ActionButton.svelte"
-  import { createEventDispatcher, onMount } from "svelte"
-  import { stringifyDate } from "../../../helpers"
+import dayjs from "dayjs"
+import { createEventDispatcher, onMount } from "svelte"
+import ActionButton from "../../../ActionButton/ActionButton.svelte"
+import { stringifyDate } from "../../../helpers"
+import Calendar from "./Calendar.svelte"
+import TimePicker from "./TimePicker.svelte"
 
-  export let useKeyboardShortcuts = true
-  export let ignoreTimezones
-  export let enableTime
-  export let timeOnly
-  export let value
+export let useKeyboardShortcuts = true
+export let ignoreTimezones
+export let enableTime
+export let timeOnly
+export let value
 
-  const dispatch = createEventDispatcher()
-  let calendar
+const dispatch = createEventDispatcher()
+let calendar
 
-  $: showCalendar = !timeOnly
-  $: showTime = enableTime || timeOnly
+$: showCalendar = !timeOnly
+$: showTime = enableTime || timeOnly
 
-  const setToNow = () => {
-    const now = dayjs()
-    calendar?.setDate(now)
-    handleChange(now)
+const setToNow = () => {
+  const now = dayjs()
+  calendar?.setDate(now)
+  handleChange(now)
+}
+
+const handleChange = date => {
+  dispatch(
+    "change",
+    stringifyDate(date, { enableTime, timeOnly, ignoreTimezones })
+  )
+}
+
+const clearDateOnBackspace = event => {
+  // Ignore if we're typing a value
+  if (document.activeElement?.tagName.toLowerCase() === "input") {
+    return
   }
-
-  const handleChange = date => {
-    dispatch(
-      "change",
-      stringifyDate(date, { enableTime, timeOnly, ignoreTimezones })
-    )
+  if (["Backspace", "Clear", "Delete"].includes(event.key)) {
+    dispatch("change", null)
   }
+}
 
-  const clearDateOnBackspace = event => {
-    // Ignore if we're typing a value
-    if (document.activeElement?.tagName.toLowerCase() === "input") {
-      return
-    }
-    if (["Backspace", "Clear", "Delete"].includes(event.key)) {
-      dispatch("change", null)
-    }
+onMount(() => {
+  if (useKeyboardShortcuts) {
+    document.addEventListener("keyup", clearDateOnBackspace)
   }
-
-  onMount(() => {
-    if (useKeyboardShortcuts) {
-      document.addEventListener("keyup", clearDateOnBackspace)
-    }
-    return () => {
-      document.removeEventListener("keyup", clearDateOnBackspace)
-    }
-  })
+  return () => {
+    document.removeEventListener("keyup", clearDateOnBackspace)
+  }
+})
 </script>
 
 <div class="date-time-popover">

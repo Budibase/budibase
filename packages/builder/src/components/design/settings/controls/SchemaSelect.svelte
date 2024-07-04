@@ -1,7 +1,7 @@
 <script>
-  import DataSourceSelect from "./DataSourceSelect/DataSourceSelect.svelte"
+import DataSourceSelect from "./DataSourceSelect/DataSourceSelect.svelte"
 
-  const otherSources = [{ name: "Custom", label: "Custom" }]
+const otherSources = [{ name: "Custom", label: "Custom" }]
 </script>
 
 <DataSourceSelect

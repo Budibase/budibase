@@ -1,24 +1,24 @@
-import { permissions, roles, context, HTTPError } from "@budibase/backend-core"
+import { HTTPError, context, permissions, roles } from "@budibase/backend-core"
 import {
-  UserCtx,
-  Database,
-  Role,
-  PermissionLevel,
-  GetResourcePermsResponse,
-  ResourcePermissionInfo,
-  GetDependantResourcesResponse,
-  AddPermissionResponse,
   AddPermissionRequest,
+  AddPermissionResponse,
+  Database,
+  GetDependantResourcesResponse,
+  GetResourcePermsResponse,
+  PermissionLevel,
   RemovePermissionRequest,
   RemovePermissionResponse,
+  ResourcePermissionInfo,
+  Role,
+  UserCtx,
 } from "@budibase/types"
 import { getRoleParams } from "../../db/utils"
+import sdk from "../../sdk"
+import { removeFromArray } from "../../utilities"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
 } from "../../utilities/security"
-import { removeFromArray } from "../../utilities"
-import sdk from "../../sdk"
 
 const enum PermissionUpdateType {
   REMOVE = "remove",

@@ -1,12 +1,12 @@
-import * as redis from "../redis/init"
-import * as tenancy from "../tenancy"
-import * as context from "../context"
-import * as platform from "../platform"
-import env from "../environment"
-import * as accounts from "../accounts"
-import { UserDB } from "../users"
 import { sdk } from "@budibase/shared-core"
 import { User, UserMetadata } from "@budibase/types"
+import * as accounts from "../accounts"
+import * as context from "../context"
+import env from "../environment"
+import * as platform from "../platform"
+import * as redis from "../redis/init"
+import * as tenancy from "../tenancy"
+import { UserDB } from "../users"
 
 const EXPIRY_SECONDS = 3600
 
@@ -34,7 +34,7 @@ async function populateUsersFromDB(
   const getUsersResponse = await UserDB.bulkGet(userIds)
 
   // Handle missed user ids
-  const notFoundIds = userIds.filter((uid, i) => !getUsersResponse[i])
+  const notFoundIds = userIds.filter((_uid, i) => !getUsersResponse[i])
 
   const users = getUsersResponse.filter(x => x)
 
@@ -77,7 +77,7 @@ export async function getUser(
   if (!tenantId) {
     try {
       tenantId = context.getTenantId()
-    } catch (err) {
+    } catch (_err) {
       tenantId = await platform.users.lookupTenantId(userId)
     }
   }

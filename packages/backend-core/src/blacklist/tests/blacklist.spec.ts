@@ -1,4 +1,4 @@
-import { refreshBlacklist, isBlacklisted } from ".."
+import { isBlacklisted, refreshBlacklist } from ".."
 import env from "../../environment"
 
 describe("blacklist", () => {

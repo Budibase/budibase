@@ -1,11 +1,11 @@
+import BullQueue, { QueueOptions, JobOptions } from "bull"
 import env from "../environment"
 import { getRedisOptions } from "../redis/utils"
+import * as timers from "../timers"
+import { Duration } from "../utils"
 import { JobQueue } from "./constants"
 import InMemoryQueue from "./inMemoryQueue"
-import BullQueue, { QueueOptions, JobOptions } from "bull"
-import { addListeners, StalledFn } from "./listeners"
-import { Duration } from "../utils"
-import * as timers from "../timers"
+import { StalledFn, addListeners } from "./listeners"
 
 export { QueueOptions, Queue, JobOptions } from "bull"
 

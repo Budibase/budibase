@@ -1,27 +1,27 @@
 <script>
-  import { Select, Multiselect } from "@budibase/bbui"
-  import { fetchData } from "@budibase/frontend-core"
-  import { createAPIClient } from "../api"
+import { Multiselect, Select } from "@budibase/bbui"
+import { fetchData } from "@budibase/frontend-core"
+import { createAPIClient } from "../api"
 
-  export let API = createAPIClient()
+export let API = createAPIClient()
 
-  export let value = null
-  export let disabled
-  export let multiselect = false
+export let value = null
+export let disabled
+export let multiselect = false
 
-  $: fetch = fetchData({
-    API,
-    datasource: {
-      type: "user",
-    },
-    options: {
-      limit: 100,
-    },
-  })
+$: fetch = fetchData({
+  API,
+  datasource: {
+    type: "user",
+  },
+  options: {
+    limit: 100,
+  },
+})
 
-  $: options = $fetch.rows
+$: options = $fetch.rows
 
-  $: component = multiselect ? Multiselect : Select
+$: component = multiselect ? Multiselect : Select
 </script>
 
 <div class="user-control">

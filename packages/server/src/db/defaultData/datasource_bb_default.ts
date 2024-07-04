@@ -1,17 +1,3 @@
-import {
-  DEFAULT_BB_DATASOURCE_ID,
-  DEFAULT_EMPLOYEE_TABLE_ID,
-  DEFAULT_EXPENSES_TABLE_ID,
-  DEFAULT_INVENTORY_TABLE_ID,
-  DEFAULT_JOBS_TABLE_ID,
-} from "../../constants"
-import { importToRows } from "../../api/controllers/table/utils"
-import { cloneDeep } from "lodash/fp"
-import LinkDocument from "../linkedRows/LinkDocument"
-import { inventoryImport } from "./inventoryImport"
-import { employeeImport } from "./employeeImport"
-import { jobsImport } from "./jobsImport"
-import { expensesImport } from "./expensesImport"
 import { db as dbCore } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
@@ -24,6 +10,20 @@ import {
   TableSchema,
   TableSourceType,
 } from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
+import { importToRows } from "../../api/controllers/table/utils"
+import {
+  DEFAULT_BB_DATASOURCE_ID,
+  DEFAULT_EMPLOYEE_TABLE_ID,
+  DEFAULT_EXPENSES_TABLE_ID,
+  DEFAULT_INVENTORY_TABLE_ID,
+  DEFAULT_JOBS_TABLE_ID,
+} from "../../constants"
+import LinkDocument from "../linkedRows/LinkDocument"
+import { employeeImport } from "./employeeImport"
+import { expensesImport } from "./expensesImport"
+import { inventoryImport } from "./inventoryImport"
+import { jobsImport } from "./jobsImport"
 
 const defaultDatasource: Datasource = {
   _id: DEFAULT_BB_DATASOURCE_ID,
@@ -639,7 +639,7 @@ export async function buildDefaultDocs() {
 
   // Build one link doc for each employee/job
   const jobEmployeeLinks = employeeData.rows.map(
-    (employee: any, index: any) => {
+    (_employee: any, index: any) => {
       return new LinkDocument(
         employeeData.table._id!,
         "Jobs",

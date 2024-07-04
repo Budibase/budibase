@@ -1,6 +1,6 @@
+import { v4 as uuid } from "uuid"
 import * as accounts from "../../../../sdk/accounts"
 import { TestConfiguration, structures } from "../../../../tests"
-import { v4 as uuid } from "uuid"
 
 describe("accounts", () => {
   const config = new TestConfiguration()

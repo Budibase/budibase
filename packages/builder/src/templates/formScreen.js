@@ -1,6 +1,6 @@
-import { Screen } from "./Screen"
-import { Component } from "./Component"
 import sanitizeUrl from "helpers/sanitizeUrl"
+import { Component } from "./Component"
+import { Screen } from "./Screen"
 
 export const FORM_TEMPLATE = "FORM_TEMPLATE"
 export const formUrl = datasource => sanitizeUrl(`/${datasource.label}-form`)

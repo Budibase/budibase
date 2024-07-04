@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // have to import this before anything else
 import "./environment"
-import { getCommands } from "./options"
 import { Command } from "commander"
-import { getHelpDescription, error } from "./utils"
 import { version } from "../package.json"
+import { getCommands } from "./options"
+import { error, getHelpDescription } from "./utils"
 
 // add hosting config
 async function init() {

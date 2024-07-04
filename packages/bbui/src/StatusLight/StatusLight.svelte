@@ -1,25 +1,25 @@
 <script>
-  import "@spectrum-css/statuslight"
+import "@spectrum-css/statuslight"
 
-  export let size = "M"
-  export let celery = false
-  export let yellow = false
-  export let fuchsia = false
-  export let indigo = false
-  export let seafoam = false
-  export let chartreuse = false
-  export let magenta = false
-  export let purple = false
-  export let neutral = false
-  export let info = false
-  export let positive = false
-  export let notice = false
-  export let negative = false
-  export let disabled = false
-  export let active = false
-  export let color = null
-  export let square = false
-  export let hoverable = false
+export let size = "M"
+export let celery = false
+export let yellow = false
+export let fuchsia = false
+export let indigo = false
+export let seafoam = false
+export let chartreuse = false
+export let magenta = false
+export let purple = false
+export let neutral = false
+export let info = false
+export let positive = false
+export let notice = false
+export let negative = false
+export let disabled = false
+export let active = false
+export let color = null
+export let square = false
+export let hoverable = false
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

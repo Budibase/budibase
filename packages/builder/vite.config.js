@@ -1,8 +1,8 @@
-import { svelte } from "@sveltejs/vite-plugin-svelte"
+import path from "path"
 import replace from "@rollup/plugin-replace"
+import { svelte } from "@sveltejs/vite-plugin-svelte"
 import { defineConfig, loadEnv } from "vite"
 import { viteStaticCopy } from "vite-plugin-static-copy"
-import path from "path"
 
 const ignoredWarnings = [
   "unused-export-let",

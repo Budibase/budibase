@@ -1,13 +1,13 @@
-import { readStaticFile } from "../../utilities/fileSystem"
-import {
-  EmailTemplatePurpose,
-  TemplateType,
-  TemplatePurpose,
-  GLOBAL_OWNER,
-} from "../index"
 import { join } from "path"
 import { db as dbCore, tenancy } from "@budibase/backend-core"
 import { Template } from "@budibase/types"
+import { readStaticFile } from "../../utilities/fileSystem"
+import {
+  EmailTemplatePurpose,
+  GLOBAL_OWNER,
+  TemplatePurpose,
+  TemplateType,
+} from "../index"
 
 export const EmailTemplates = {
   [EmailTemplatePurpose.PASSWORD_RECOVERY]: readStaticFile(

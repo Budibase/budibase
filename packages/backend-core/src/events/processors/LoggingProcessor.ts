@@ -1,6 +1,6 @@
-import { Event, Identity, Group } from "@budibase/types"
-import { EventProcessor } from "./types"
+import { Event, Group, Identity } from "@budibase/types"
 import env from "../../environment"
+import { EventProcessor } from "./types"
 
 const skipLogging = env.SELF_HOSTED && !env.isDev()
 

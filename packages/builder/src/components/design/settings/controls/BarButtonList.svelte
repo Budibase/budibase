@@ -1,9 +1,9 @@
 <script>
-  import { ActionButton, ActionGroup } from "@budibase/bbui"
+import { ActionButton, ActionGroup } from "@budibase/bbui"
 
-  export let value
-  export let onChange
-  export let options
+export let value
+export let onChange
+export let options
 </script>
 
 <ActionGroup>

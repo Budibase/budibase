@@ -1,7 +1,7 @@
-import { search as stringSearch, addRev } from "./utils"
-import * as controller from "../table"
 import { Table, UserCtx } from "@budibase/types"
 import { Next } from "koa"
+import * as controller from "../table"
+import { addRev, search as stringSearch } from "./utils"
 
 function fixTable(table: Table, params: any) {
   if (!params || !table) {

@@ -1,229 +1,226 @@
 <script>
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "dataBinding"
-  import {
-    Button,
-    Popover,
-    Select,
-    Layout,
-    Drawer,
-    DrawerContent,
-    Icon,
-    Modal,
-    ModalContent,
-    CoreDropzone,
-    notifications,
-  } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import {
-    tables as tablesStore,
-    queries as queriesStore,
-    viewsV2 as viewsV2Store,
-    views as viewsStore,
-    selectedScreen,
-    componentStore,
-    datasources,
-    integrations,
-  } from "stores/builder"
-  import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
-  import IntegrationQueryEditor from "components/integration/index.svelte"
-  import { makePropSafe as safe } from "@budibase/string-templates"
-  import { findAllComponents } from "helpers/components"
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
-  import { API } from "api"
+import {
+  Button,
+  CoreDropzone,
+  Drawer,
+  DrawerContent,
+  Icon,
+  Layout,
+  Modal,
+  ModalContent,
+  Popover,
+  Select,
+  notifications,
+} from "@budibase/bbui"
+import { makePropSafe as safe } from "@budibase/string-templates"
+import { API } from "api"
+import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
+import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
+import IntegrationQueryEditor from "components/integration/index.svelte"
+import { readableToRuntimeBinding, runtimeToReadableBinding } from "dataBinding"
+import { findAllComponents } from "helpers/components"
+import {
+  componentStore,
+  datasources,
+  integrations,
+  queries as queriesStore,
+  selectedScreen,
+  tables as tablesStore,
+  views as viewsStore,
+  viewsV2 as viewsV2Store,
+} from "stores/builder"
+import { createEventDispatcher } from "svelte"
 
-  export let value = {}
-  export let otherSources
-  export let showAllQueries
-  export let bindings = []
-  export let showDataProviders = true
+export let value = {}
+export let otherSources
+export let showAllQueries
+export let bindings = []
+export let showDataProviders = true
 
-  const dispatch = createEventDispatcher()
-  const arrayTypes = ["attachment", "array"]
+const dispatch = createEventDispatcher()
+const arrayTypes = ["attachment", "array"]
 
-  let anchorRight, dropdownRight
-  let drawer
-  let tmpQueryParams
-  let tmpCustomData
-  let modal
+let anchorRight, dropdownRight
+let drawer
+let tmpQueryParams
+let tmpCustomData
+let modal
 
-  $: text = value?.label ?? "Choose an option"
-  $: tables = $tablesStore.list.map(m => ({
-    label: m.name,
-    tableId: m._id,
-    type: "table",
-    datasource: $datasources.list.find(
-      ds => ds._id === m.sourceId || m.datasourceId
-    ),
+$: text = value?.label ?? "Choose an option"
+$: tables = $tablesStore.list.map(m => ({
+  label: m.name,
+  tableId: m._id,
+  type: "table",
+  datasource: $datasources.list.find(
+    ds => ds._id === m.sourceId || m.datasourceId
+  ),
+}))
+$: viewsV1 = $viewsStore.list.map(view => ({
+  ...view,
+  label: view.name,
+  type: "view",
+}))
+$: viewsV2 = $viewsV2Store.list.map(view => ({
+  ...view,
+  label: view.name,
+  type: "viewV2",
+}))
+$: views = [...(viewsV1 || []), ...(viewsV2 || [])]
+$: queries = $queriesStore.list
+  .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
+  .map(query => ({
+    label: query.name,
+    name: query.name,
+    ...query,
+    type: "query",
   }))
-  $: viewsV1 = $viewsStore.list.map(view => ({
-    ...view,
-    label: view.name,
-    type: "view",
-  }))
-  $: viewsV2 = $viewsV2Store.list.map(view => ({
-    ...view,
-    label: view.name,
-    type: "viewV2",
-  }))
-  $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
-  $: queries = $queriesStore.list
-    .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
-    .map(query => ({
-      label: query.name,
-      name: query.name,
-      ...query,
-      type: "query",
-    }))
-  $: dataProviders = findAllComponents($selectedScreen.props)
-    .filter(component => {
-      return (
-        component._component?.endsWith("/dataprovider") &&
-        component._id !== $componentStore.selectedComponentId
-      )
-    })
-    .map(provider => ({
-      label: provider._instanceName,
-      name: provider._instanceName,
-      providerId: provider._id,
-      value: `{{ literal ${safe(provider._id)} }}`,
-      type: "provider",
-    }))
-  $: links = bindings
-    // Get only link bindings
-    .filter(x => x.fieldSchema?.type === "link")
-    // Filter out bindings provided by forms
-    .filter(x => !x.component?.endsWith("/form"))
-    .map(binding => {
-      const { providerId, readableBinding, fieldSchema } = binding || {}
-      const { name, tableId } = fieldSchema || {}
-      const safeProviderId = safe(providerId)
-      return {
-        providerId,
-        label: readableBinding,
-        fieldName: name,
-        tableId,
-        type: "link",
-        // These properties will be enriched by the client library and provide
-        // details of the parent row of the relationship field, from context
-        rowId: `{{ ${safeProviderId}.${safe("_id")} }}`,
-        rowTableId: `{{ ${safeProviderId}.${safe("tableId")} }}`,
-      }
-    })
-  $: fields = bindings
-    .filter(x => arrayTypes.includes(x.fieldSchema?.type))
-    .map(binding => {
-      const { providerId, readableBinding, runtimeBinding } = binding
-      const { name, type, tableId } = binding.fieldSchema
-      return {
-        providerId,
-        label: readableBinding,
-        fieldName: name,
-        fieldType: type,
-        tableId,
-        type: "field",
-        value: `{{ literal ${runtimeBinding} }}`,
-      }
-    })
-  $: jsonArrays = bindings
-    .filter(
-      x =>
-        x.fieldSchema?.type === "jsonarray" ||
-        (x.fieldSchema?.type === "json" && x.fieldSchema?.subtype === "array")
+$: dataProviders = findAllComponents($selectedScreen.props)
+  .filter(component => {
+    return (
+      component._component?.endsWith("/dataprovider") &&
+      component._id !== $componentStore.selectedComponentId
     )
-    .map(binding => {
-      const { providerId, readableBinding, runtimeBinding, tableId } = binding
-      const { name, type, prefixKeys, subtype } = binding.fieldSchema
-      return {
-        providerId,
-        label: readableBinding,
-        fieldName: name,
-        fieldType: type,
-        tableId,
-        prefixKeys,
-        type: type === "jsonarray" ? "jsonarray" : "queryarray",
-        subtype,
-        value: `{{ literal ${runtimeBinding} }}`,
-      }
-    })
-  $: custom = {
-    type: "custom",
-    label: "JSON / CSV",
-  }
-
-  const handleSelected = selected => {
-    dispatch("change", selected)
-    dropdownRight.hide()
-  }
-
-  const fetchQueryDefinition = query => {
-    const source = $datasources.list.find(
-      ds => ds._id === query.datasourceId
-    ).source
-    return $integrations[source].query[query.queryVerb]
-  }
-
-  const getQueryParams = query => {
-    return $queriesStore.list.find(q => q._id === query?._id)?.parameters || []
-  }
-
-  const getQueryDatasource = query => {
-    return $datasources.list.find(ds => ds._id === query?.datasourceId)
-  }
-
-  const openQueryParamsDrawer = () => {
-    tmpQueryParams = { ...value.queryParams }
-    drawer.show()
-  }
-
-  const openCustomDrawer = () => {
-    tmpCustomData = runtimeToReadableBinding(bindings, value.data || "")
-    drawer.show()
-  }
-
-  const getQueryValue = queries => {
-    return queries.find(q => q._id === value._id) || value
-  }
-
-  const saveQueryParams = () => {
-    handleSelected({
-      ...value,
-      queryParams: tmpQueryParams,
-    })
-    drawer.hide()
-  }
-
-  const saveCustomData = () => {
-    handleSelected({
-      ...value,
-      data: readableToRuntimeBinding(bindings, tmpCustomData),
-    })
-    drawer.hide()
-  }
-
-  const promptForCSV = () => {
-    drawer.hide()
-    modal.show()
-  }
-
-  const handleCSV = async e => {
-    try {
-      const csv = await e.detail[0]?.text()
-      if (csv?.length) {
-        const js = await API.csvToJson(csv)
-        tmpCustomData = JSON.stringify(js)
-      }
-      modal.hide()
-      saveCustomData()
-    } catch (error) {
-      notifications.error("Failed to parse CSV")
-      modal.hide()
-      drawer.show()
+  })
+  .map(provider => ({
+    label: provider._instanceName,
+    name: provider._instanceName,
+    providerId: provider._id,
+    value: `{{ literal ${safe(provider._id)} }}`,
+    type: "provider",
+  }))
+$: links = bindings
+  // Get only link bindings
+  .filter(x => x.fieldSchema?.type === "link")
+  // Filter out bindings provided by forms
+  .filter(x => !x.component?.endsWith("/form"))
+  .map(binding => {
+    const { providerId, readableBinding, fieldSchema } = binding || {}
+    const { name, tableId } = fieldSchema || {}
+    const safeProviderId = safe(providerId)
+    return {
+      providerId,
+      label: readableBinding,
+      fieldName: name,
+      tableId,
+      type: "link",
+      // These properties will be enriched by the client library and provide
+      // details of the parent row of the relationship field, from context
+      rowId: `{{ ${safeProviderId}.${safe("_id")} }}`,
+      rowTableId: `{{ ${safeProviderId}.${safe("tableId")} }}`,
     }
+  })
+$: fields = bindings
+  .filter(x => arrayTypes.includes(x.fieldSchema?.type))
+  .map(binding => {
+    const { providerId, readableBinding, runtimeBinding } = binding
+    const { name, type, tableId } = binding.fieldSchema
+    return {
+      providerId,
+      label: readableBinding,
+      fieldName: name,
+      fieldType: type,
+      tableId,
+      type: "field",
+      value: `{{ literal ${runtimeBinding} }}`,
+    }
+  })
+$: jsonArrays = bindings
+  .filter(
+    x =>
+      x.fieldSchema?.type === "jsonarray" ||
+      (x.fieldSchema?.type === "json" && x.fieldSchema?.subtype === "array")
+  )
+  .map(binding => {
+    const { providerId, readableBinding, runtimeBinding, tableId } = binding
+    const { name, type, prefixKeys, subtype } = binding.fieldSchema
+    return {
+      providerId,
+      label: readableBinding,
+      fieldName: name,
+      fieldType: type,
+      tableId,
+      prefixKeys,
+      type: type === "jsonarray" ? "jsonarray" : "queryarray",
+      subtype,
+      value: `{{ literal ${runtimeBinding} }}`,
+    }
+  })
+$: custom = {
+  type: "custom",
+  label: "JSON / CSV",
+}
+
+const handleSelected = selected => {
+  dispatch("change", selected)
+  dropdownRight.hide()
+}
+
+const fetchQueryDefinition = query => {
+  const source = $datasources.list.find(
+    ds => ds._id === query.datasourceId
+  ).source
+  return $integrations[source].query[query.queryVerb]
+}
+
+const getQueryParams = query => {
+  return $queriesStore.list.find(q => q._id === query?._id)?.parameters || []
+}
+
+const getQueryDatasource = query => {
+  return $datasources.list.find(ds => ds._id === query?.datasourceId)
+}
+
+const openQueryParamsDrawer = () => {
+  tmpQueryParams = { ...value.queryParams }
+  drawer.show()
+}
+
+const openCustomDrawer = () => {
+  tmpCustomData = runtimeToReadableBinding(bindings, value.data || "")
+  drawer.show()
+}
+
+const getQueryValue = queries => {
+  return queries.find(q => q._id === value._id) || value
+}
+
+const saveQueryParams = () => {
+  handleSelected({
+    ...value,
+    queryParams: tmpQueryParams,
+  })
+  drawer.hide()
+}
+
+const saveCustomData = () => {
+  handleSelected({
+    ...value,
+    data: readableToRuntimeBinding(bindings, tmpCustomData),
+  })
+  drawer.hide()
+}
+
+const promptForCSV = () => {
+  drawer.hide()
+  modal.show()
+}
+
+const handleCSV = async e => {
+  try {
+    const csv = await e.detail[0]?.text()
+    if (csv?.length) {
+      const js = await API.csvToJson(csv)
+      tmpCustomData = JSON.stringify(js)
+    }
+    modal.hide()
+    saveCustomData()
+  } catch (error) {
+    notifications.error("Failed to parse CSV")
+    modal.hide()
+    drawer.show()
   }
+}
 </script>
 
 <div class="container" bind:this={anchorRight}>

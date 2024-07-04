@@ -1,17 +1,17 @@
 <script>
-  import { getContext } from "svelte"
-  import { GutterWidth } from "../lib/constants"
+import { getContext } from "svelte"
+import { GutterWidth } from "../lib/constants"
 
-  const { resize, visibleColumns, stickyColumn, isReordering, scrollLeft } =
-    getContext("grid")
+const { resize, visibleColumns, stickyColumn, isReordering, scrollLeft } =
+  getContext("grid")
 
-  $: offset = GutterWidth + ($stickyColumn?.width || 0)
-  $: activeColumn = $resize.column
+$: offset = GutterWidth + ($stickyColumn?.width || 0)
+$: activeColumn = $resize.column
 
-  const getStyle = (column, offset, scrollLeft) => {
-    const left = offset + column.left + column.width - scrollLeft
-    return `left:${left}px;`
-  }
+const getStyle = (column, offset, scrollLeft) => {
+  const left = offset + column.left + column.width - scrollLeft
+  return `left:${left}px;`
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

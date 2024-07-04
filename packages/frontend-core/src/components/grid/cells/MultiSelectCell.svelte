@@ -1,7 +1,7 @@
 <script>
-  import OptionsCell from "./OptionsCell.svelte"
+import OptionsCell from "./OptionsCell.svelte"
 
-  export let api
+export let api
 </script>
 
 <OptionsCell bind:api {...$$props} multi />

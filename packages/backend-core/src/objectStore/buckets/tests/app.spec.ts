@@ -1,5 +1,5 @@
-import * as app from "../app"
 import { testEnv } from "../../../../tests/extra"
+import * as app from "../app"
 
 describe("app", () => {
   beforeEach(() => {

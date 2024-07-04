@@ -1,20 +1,20 @@
+import { events, context } from "@budibase/backend-core"
+import sdk from "../../../sdk"
+import { getCachedVariable } from "../../../threads/utils"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import { getCachedVariable } from "../../../threads/utils"
-import { context, events } from "@budibase/backend-core"
-import sdk from "../../../sdk"
 
 import { generator } from "@budibase/backend-core/tests"
 import {
+  BBReferenceFieldSubType,
   Datasource,
   FieldSchema,
-  BBReferenceFieldSubType,
   FieldType,
   RelationshipType,
   SourceName,
+  SupportedSqlTypes,
   Table,
   TableSchema,
-  SupportedSqlTypes,
 } from "@budibase/types"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"

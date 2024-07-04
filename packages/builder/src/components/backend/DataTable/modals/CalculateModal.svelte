@@ -1,49 +1,47 @@
 <script>
-  import { Select, Label, notifications, ModalContent } from "@budibase/bbui"
-  import { tables, views } from "stores/builder"
-  import { FIELDS } from "constants/backend"
+import { Label, ModalContent, Select, notifications } from "@budibase/bbui"
+import { FIELDS } from "constants/backend"
+import { tables, views } from "stores/builder"
 
-  const CALCULATIONS = [
-    {
-      name: "Statistics",
-      key: "stats",
-    },
-    {
-      name: "Count",
-      key: "count",
-    },
-    {
-      name: "Sum",
-      key: "sum",
-    },
-  ]
+const CALCULATIONS = [
+  {
+    name: "Statistics",
+    key: "stats",
+  },
+  {
+    name: "Count",
+    key: "count",
+  },
+  {
+    name: "Sum",
+    key: "sum",
+  },
+]
 
-  export let view = {}
+export let view = {}
 
-  $: viewTable = $tables.list.find(
-    ({ _id }) => _id === $views.selected?.tableId
-  )
-  $: fields =
-    viewTable &&
-    Object.keys(viewTable.schema).filter(fieldName => {
-      const field = viewTable.schema[fieldName]
-      return (
-        field.type !== FIELDS.FORMULA.type &&
-        field.type !== FIELDS.LINK.type &&
-        (view.calculation === "count" ||
-          // don't want to perform calculations based on auto ID
-          (field.type === "number" && !field.autocolumn))
-      )
-    })
+$: viewTable = $tables.list.find(({ _id }) => _id === $views.selected?.tableId)
+$: fields =
+  viewTable &&
+  Object.keys(viewTable.schema).filter(fieldName => {
+    const field = viewTable.schema[fieldName]
+    return (
+      field.type !== FIELDS.FORMULA.type &&
+      field.type !== FIELDS.LINK.type &&
+      (view.calculation === "count" ||
+        // don't want to perform calculations based on auto ID
+        (field.type === "number" && !field.autocolumn))
+    )
+  })
 
-  function saveView() {
-    try {
-      views.save(view)
-      notifications.success(`View ${view.name} saved`)
-    } catch (error) {
-      notifications.error("Error saving view")
-    }
+function saveView() {
+  try {
+    views.save(view)
+    notifications.success(`View ${view.name} saved`)
+  } catch (error) {
+    notifications.error("Error saving view")
   }
+}
 </script>
 
 <ModalContent

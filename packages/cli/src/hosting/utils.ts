@@ -1,8 +1,8 @@
-import { lookpath } from "lookpath"
 import fs from "fs"
-import * as makeFiles from "./makeFiles"
-import { logErrorToFile, downloadFile, error } from "../utils"
+import { lookpath } from "lookpath"
 import yaml from "yaml"
+import { downloadFile, error, logErrorToFile } from "../utils"
+import * as makeFiles from "./makeFiles"
 import { DockerCompose } from "./types"
 
 const ERROR_FILE = "docker-error.log"
@@ -25,7 +25,7 @@ export function getServiceImage(service: string) {
     } else {
       return null
     }
-  } catch (err) {
+  } catch (_err) {
     return null
   }
 }

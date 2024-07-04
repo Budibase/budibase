@@ -1,10 +1,10 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { DEFAULT_CONFIG, createAdminStore } from "./admin"
 
-import { writable, get } from "svelte/store"
+import { banner } from "@budibase/bbui"
 import { API } from "api"
 import { auth } from "stores/portal"
-import { banner } from "@budibase/bbui"
+import { get, writable } from "svelte/store"
 
 vi.mock("stores/portal", () => {
   return { auth: vi.fn() }

@@ -1,202 +1,199 @@
 <script>
-  import {
-    Body,
-    Button,
-    Combobox,
-    DatePicker,
-    Icon,
-    Input,
-    Layout,
-    Select,
-    Label,
-    Multiselect,
-  } from "@budibase/bbui"
-  import { FieldType, SearchFilterOperator } from "@budibase/types"
-  import { generate } from "shortid"
-  import { QueryUtils, Constants } from "@budibase/frontend-core"
-  import { getContext } from "svelte"
-  import FilterUsers from "./FilterUsers.svelte"
+import {
+  Body,
+  Button,
+  Combobox,
+  DatePicker,
+  Icon,
+  Input,
+  Label,
+  Layout,
+  Multiselect,
+  Select,
+} from "@budibase/bbui"
+import { Constants, QueryUtils } from "@budibase/frontend-core"
+import { FieldType, SearchFilterOperator } from "@budibase/types"
+import { generate } from "shortid"
+import { getContext } from "svelte"
+import FilterUsers from "./FilterUsers.svelte"
 
-  const { OperatorOptions, DEFAULT_BB_DATASOURCE_ID } = Constants
+const { OperatorOptions, DEFAULT_BB_DATASOURCE_ID } = Constants
 
-  export let schemaFields
-  export let filters = []
-  export let tables = []
-  export let datasource
-  export let behaviourFilters = false
-  export let allowBindings = false
-  export let filtersLabel = "Filters"
+export let schemaFields
+export let filters = []
+export let tables = []
+export let datasource
+export let behaviourFilters = false
+export let allowBindings = false
+export let filtersLabel = "Filters"
 
-  $: {
-    if (
-      tables.find(
-        table =>
-          table._id === datasource.tableId &&
-          table.sourceId === DEFAULT_BB_DATASOURCE_ID
-      ) &&
-      !schemaFields.some(field => field.name === "_id")
-    ) {
-      schemaFields = [
-        ...schemaFields,
-        { name: "_id", type: "string" },
-        { name: "_rev", type: "string" },
-      ]
-    }
+$: {
+  if (
+    tables.find(
+      table =>
+        table._id === datasource.tableId &&
+        table.sourceId === DEFAULT_BB_DATASOURCE_ID
+    ) &&
+    !schemaFields.some(field => field.name === "_id")
+  ) {
+    schemaFields = [
+      ...schemaFields,
+      { name: "_id", type: "string" },
+      { name: "_rev", type: "string" },
+    ]
+  }
+}
+
+$: matchAny = filters?.find(filter => filter.operator === "allOr") != null
+$: onEmptyFilter =
+  filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
+
+$: fieldFilters = filters.filter(
+  filter => filter.operator !== "allOr" && !filter.onEmptyFilter
+)
+const behaviourOptions = [
+  { value: "and", label: "Match all filters" },
+  { value: "or", label: "Match any filter" },
+]
+const onEmptyOptions = [
+  { value: "all", label: "Return all table rows" },
+  { value: "none", label: "Return no rows" },
+]
+const context = getContext("context")
+
+$: fieldOptions = (schemaFields || []).map(field => ({
+  label: field.displayName || field.name,
+  value: field.name,
+}))
+
+const addFilter = () => {
+  filters = [
+    ...(filters || []),
+    {
+      id: generate(),
+      field: null,
+      operator: OperatorOptions.Equals.value,
+      value: null,
+      valueType: "Value",
+    },
+  ]
+}
+
+const removeFilter = id => {
+  filters = filters.filter(field => field.id !== id)
+
+  // Clear all filters when no fields are specified
+  if (filters.length === 1 && filters[0].onEmptyFilter) {
+    filters = []
+  }
+}
+
+const duplicateFilter = id => {
+  const existingFilter = filters.find(filter => filter.id === id)
+  const duplicate = { ...existingFilter, id: generate() }
+  filters = [...filters, duplicate]
+}
+
+const onFieldChange = filter => {
+  const previousType = filter.type
+  sanitizeTypes(filter)
+  sanitizeOperator(filter)
+  sanitizeValue(filter, previousType)
+}
+
+const onOperatorChange = filter => {
+  sanitizeOperator(filter)
+  sanitizeValue(filter, filter.type)
+}
+
+const onValueTypeChange = filter => {
+  sanitizeValue(filter)
+}
+
+const getFieldOptions = field => {
+  const schema = schemaFields.find(x => x.name === field)
+  return schema?.constraints?.inclusion || []
+}
+
+const getSchema = filter => {
+  return schemaFields.find(field => field.name === filter.field)
+}
+
+const getValidOperatorsForType = filter => {
+  if (!filter?.field && !filter?.name) {
+    return []
   }
 
-  $: matchAny = filters?.find(filter => filter.operator === "allOr") != null
-  $: onEmptyFilter =
-    filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
-
-  $: fieldFilters = filters.filter(
-    filter => filter.operator !== "allOr" && !filter.onEmptyFilter
+  return QueryUtils.getValidOperatorsForType(
+    filter,
+    filter.field || filter.name,
+    datasource
   )
-  const behaviourOptions = [
-    { value: "and", label: "Match all filters" },
-    { value: "or", label: "Match any filter" },
+}
+
+$: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
+
+const sanitizeTypes = filter => {
+  // Update type based on field
+  const fieldSchema = schemaFields.find(x => x.name === filter.field)
+  filter.type = fieldSchema?.type
+  filter.subtype = fieldSchema?.subtype
+  filter.formulaType = fieldSchema?.formulaType
+  filter.constraints = fieldSchema?.constraints
+
+  // Update external type based on field
+  filter.externalType = getSchema(filter)?.externalType
+}
+
+const sanitizeOperator = filter => {
+  // Ensure a valid operator is selected
+  const operators = getValidOperatorsForType(filter).map(x => x.value)
+  if (!operators.includes(filter.operator)) {
+    filter.operator = operators[0] ?? OperatorOptions.Equals.value
+  }
+
+  // Update the noValue flag if the operator does not take a value
+  const noValueOptions = [
+    OperatorOptions.Empty.value,
+    OperatorOptions.NotEmpty.value,
   ]
-  const onEmptyOptions = [
-    { value: "all", label: "Return all table rows" },
-    { value: "none", label: "Return no rows" },
-  ]
-  const context = getContext("context")
+  filter.noValue = noValueOptions.includes(filter.operator)
+}
 
-  $: fieldOptions = (schemaFields || []).map(field => ({
-    label: field.displayName || field.name,
-    value: field.name,
-  }))
-
-  const addFilter = () => {
-    filters = [
-      ...(filters || []),
-      {
-        id: generate(),
-        field: null,
-        operator: OperatorOptions.Equals.value,
-        value: null,
-        valueType: "Value",
-      },
-    ]
+const sanitizeValue = (filter, previousType) => {
+  // Check if the operator allows a value at all
+  if (filter.noValue) {
+    filter.value = null
+    return
   }
 
-  const removeFilter = id => {
-    filters = filters.filter(field => field.id !== id)
-
-    // Clear all filters when no fields are specified
-    if (filters.length === 1 && filters[0].onEmptyFilter) {
-      filters = []
-    }
-  }
-
-  const duplicateFilter = id => {
-    const existingFilter = filters.find(filter => filter.id === id)
-    const duplicate = { ...existingFilter, id: generate() }
-    filters = [...filters, duplicate]
-  }
-
-  const onFieldChange = filter => {
-    const previousType = filter.type
-    sanitizeTypes(filter)
-    sanitizeOperator(filter)
-    sanitizeValue(filter, previousType)
-  }
-
-  const onOperatorChange = filter => {
-    sanitizeOperator(filter)
-    sanitizeValue(filter, filter.type)
-  }
-
-  const onValueTypeChange = filter => {
-    sanitizeValue(filter)
-  }
-
-  const getFieldOptions = field => {
-    const schema = schemaFields.find(x => x.name === field)
-    return schema?.constraints?.inclusion || []
-  }
-
-  const getSchema = filter => {
-    return schemaFields.find(field => field.name === filter.field)
-  }
-
-  const getValidOperatorsForType = filter => {
-    if (!filter?.field && !filter?.name) {
-      return []
-    }
-
-    return QueryUtils.getValidOperatorsForType(
-      filter,
-      filter.field || filter.name,
-      datasource
-    )
-  }
-
-  $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
-
-  const sanitizeTypes = filter => {
-    // Update type based on field
-    const fieldSchema = schemaFields.find(x => x.name === filter.field)
-    filter.type = fieldSchema?.type
-    filter.subtype = fieldSchema?.subtype
-    filter.formulaType = fieldSchema?.formulaType
-    filter.constraints = fieldSchema?.constraints
-
-    // Update external type based on field
-    filter.externalType = getSchema(filter)?.externalType
-  }
-
-  const sanitizeOperator = filter => {
-    // Ensure a valid operator is selected
-    const operators = getValidOperatorsForType(filter).map(x => x.value)
-    if (!operators.includes(filter.operator)) {
-      filter.operator = operators[0] ?? OperatorOptions.Equals.value
-    }
-
-    // Update the noValue flag if the operator does not take a value
-    const noValueOptions = [
-      OperatorOptions.Empty.value,
-      OperatorOptions.NotEmpty.value,
-    ]
-    filter.noValue = noValueOptions.includes(filter.operator)
-  }
-
-  const sanitizeValue = (filter, previousType) => {
-    // Check if the operator allows a value at all
-    if (filter.noValue) {
+  // Ensure array values are properly set and cleared
+  if (Array.isArray(filter.value)) {
+    if (filter.valueType !== "Value" || filter.type !== FieldType.ARRAY) {
       filter.value = null
-      return
     }
-
-    // Ensure array values are properly set and cleared
-    if (Array.isArray(filter.value)) {
-      if (filter.valueType !== "Value" || filter.type !== FieldType.ARRAY) {
-        filter.value = null
-      }
-    } else if (
-      filter.type === FieldType.ARRAY &&
-      filter.valueType === "Value"
-    ) {
-      filter.value = []
-    } else if (
-      previousType !== filter.type &&
-      (previousType === FieldType.BB_REFERENCE ||
-        filter.type === FieldType.BB_REFERENCE)
-    ) {
-      filter.value = filter.type === FieldType.ARRAY ? [] : null
-    }
+  } else if (filter.type === FieldType.ARRAY && filter.valueType === "Value") {
+    filter.value = []
+  } else if (
+    previousType !== filter.type &&
+    (previousType === FieldType.BB_REFERENCE ||
+      filter.type === FieldType.BB_REFERENCE)
+  ) {
+    filter.value = filter.type === FieldType.ARRAY ? [] : null
   }
+}
 
-  function handleAllOr(option) {
-    filters = filters.filter(f => f.operator !== "allOr")
-    if (option === "or") {
-      filters.push({ operator: "allOr" })
-    }
+function handleAllOr(option) {
+  filters = filters.filter(f => f.operator !== "allOr")
+  if (option === "or") {
+    filters.push({ operator: "allOr" })
   }
+}
 
-  function handleOnEmptyFilter(value) {
-    filters = filters?.filter(filter => !filter.onEmptyFilter)
-    filters.push({ onEmptyFilter: value })
-  }
+function handleOnEmptyFilter(value) {
+  filters = filters?.filter(filter => !filter.onEmptyFilter)
+  filters.push({ onEmptyFilter: value })
+}
 </script>
 
 <div class="container" class:mobile={$context?.device?.mobile}>

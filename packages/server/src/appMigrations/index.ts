@@ -1,9 +1,9 @@
-import { getAppMigrationQueue } from "./queue"
+import { Header } from "@budibase/backend-core"
+import { UserCtx } from "@budibase/types"
 import { Next } from "koa"
 import { getAppMigrationVersion } from "./appMigrationMetadata"
 import { MIGRATIONS } from "./migrations"
-import { UserCtx } from "@budibase/types"
-import { Header } from "@budibase/backend-core"
+import { getAppMigrationQueue } from "./queue"
 
 export * from "./appMigrationMetadata"
 

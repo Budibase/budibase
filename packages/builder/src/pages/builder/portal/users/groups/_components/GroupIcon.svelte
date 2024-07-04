@@ -1,8 +1,8 @@
 <script>
-  import { IconAvatar } from "@budibase/bbui"
+import { IconAvatar } from "@budibase/bbui"
 
-  export let group
-  export let size = "M"
+export let group
+export let size = "M"
 </script>
 
 <div class="icon-group">

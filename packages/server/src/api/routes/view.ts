@@ -1,9 +1,9 @@
+import { permissions } from "@budibase/backend-core"
 import Router from "@koa/router"
-import * as viewController from "../controllers/view"
-import * as rowController from "../controllers/row"
 import authorized, { authorizedResource } from "../../middleware/authorized"
 import { paramResource } from "../../middleware/resourceId"
-import { permissions } from "@budibase/backend-core"
+import * as rowController from "../controllers/row"
+import * as viewController from "../controllers/view"
 
 const router: Router = new Router()
 

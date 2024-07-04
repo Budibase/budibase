@@ -1,8 +1,5 @@
-import * as linkRows from "../../db/linkedRows"
-import { fixAutoColumnSubType, processFormulas } from "./utils"
 import { objectStore, utils } from "@budibase/backend-core"
-import { InternalTables } from "../../db/utils"
-import { TYPE_TRANSFORM_MAP } from "./map"
+import { helpers } from "@budibase/shared-core"
 import {
   AutoFieldSubType,
   FieldType,
@@ -11,14 +8,17 @@ import {
   Table,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
+import * as linkRows from "../../db/linkedRows"
+import { InternalTables } from "../../db/utils"
+import { isExternalTableID } from "../../integrations/utils"
 import {
   processInputBBReference,
   processInputBBReferences,
   processOutputBBReference,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
-import { isExternalTableID } from "../../integrations/utils"
-import { helpers } from "@budibase/shared-core"
+import { TYPE_TRANSFORM_MAP } from "./map"
+import { fixAutoColumnSubType, processFormulas } from "./utils"
 
 export * from "./utils"
 export * from "./attachments"
@@ -102,7 +102,7 @@ export function coerce(row: any, type: string) {
   if (!TYPE_TRANSFORM_MAP[type]) {
     return row
   }
-  // eslint-disable-next-line no-prototype-builtins
+  // biome-ignore lint: no-prototype-builtins
   if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(row)) {
     // @ts-ignore
     return TYPE_TRANSFORM_MAP[type][row]

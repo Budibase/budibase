@@ -1,9 +1,9 @@
-import dotenv from "dotenv"
 import fs from "fs"
-import { string } from "../questions"
-import { getPouch } from "../core/db"
 import { env as environment } from "@budibase/backend-core"
+import dotenv from "dotenv"
 import PouchDB from "pouchdb"
+import { getPouch } from "../core/db"
+import { string } from "../questions"
 
 export const TEMP_DIR = ".temp"
 export const COUCH_DIR = "couchdb"
@@ -25,9 +25,8 @@ export function checkURLs(config: Record<string, string>) {
     username = config["COUCH_DB_USER"],
     password = config["COUCH_DB_PASSWORD"]
   if (!config["COUCH_DB_URL"] && mainPort && username && password) {
-    config[
-      "COUCH_DB_URL"
-    ] = `http://${username}:${password}@localhost:${mainPort}/db/`
+    config["COUCH_DB_URL"] =
+      `http://${username}:${password}@localhost:${mainPort}/db/`
   }
   if (!config["MINIO_URL"]) {
     config["MINIO_URL"] = `http://localhost:${mainPort}/`

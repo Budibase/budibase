@@ -1,29 +1,29 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  const { styleable, linkable } = getContext("sdk")
-  const component = getContext("component")
+const { styleable, linkable } = getContext("sdk")
+const component = getContext("component")
 
-  export const className = ""
-  export let imageUrl = ""
-  export let heading = ""
-  export let description = ""
-  export let linkText = ""
-  export let linkUrl
-  export let linkColor
-  export let linkHoverColor
-  export let imageHeight
-  export let cardWidth
+export const className = ""
+export let imageUrl = ""
+export let heading = ""
+export let description = ""
+export let linkText = ""
+export let linkUrl
+export let linkColor
+export let linkHoverColor
+export let imageHeight
+export let cardWidth
 
-  $: cardStyles = {
-    ...$component.styles,
-    normal: {
-      ...$component.styles.normal,
-      width: cardWidth,
-    },
-  }
+$: cardStyles = {
+  ...$component.styles,
+  normal: {
+    ...$component.styles.normal,
+    width: cardWidth,
+  },
+}
 
-  $: showImage = !!imageUrl
+$: showImage = !!imageUrl
 </script>
 
 <div class="container" use:styleable={cardStyles}>

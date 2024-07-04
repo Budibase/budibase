@@ -1,14 +1,14 @@
-import { v4 } from "uuid"
-import { Component } from "templates/Component"
-import { Screen } from "templates/Screen"
-import { get } from "svelte/store"
+import { FieldType } from "@budibase/types"
 import {
   BUDIBASE_INTERNAL_DB_ID,
-  DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
+  DB_TYPE_INTERNAL,
   DEFAULT_BB_DATASOURCE_ID,
 } from "constants/backend"
-import { FieldType } from "@budibase/types"
+import { get } from "svelte/store"
+import { Component } from "templates/Component"
+import { Screen } from "templates/Screen"
+import { v4 } from "uuid"
 
 const getDocId = () => {
   return v4().replace(/-/g, "")

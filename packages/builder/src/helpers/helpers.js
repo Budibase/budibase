@@ -1,4 +1,4 @@
-import { last, flow } from "lodash/fp"
+import { flow, last } from "lodash/fp"
 
 export const buildStyle = styles => {
   let str = ""

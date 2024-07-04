@@ -1,8 +1,8 @@
 <script>
-  export let width = "18"
-  export let height = "18"
+export let width = "18"
+export let height = "18"
 
-  import OracleLogo from "assets/oracle.png"
+import OracleLogo from "assets/oracle.png"
 </script>
 
 <div class>

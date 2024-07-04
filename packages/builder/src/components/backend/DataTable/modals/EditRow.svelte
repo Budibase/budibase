@@ -1,16 +1,16 @@
 <script>
-  import { Modal, Button } from "@budibase/bbui"
-  import CreateEditRow from "../modals/CreateEditRow.svelte"
+import { Button, Modal } from "@budibase/bbui"
+import CreateEditRow from "../modals/CreateEditRow.svelte"
 
-  export let row
-  export let modalContentComponent = CreateEditRow
+export let row
+export let modalContentComponent = CreateEditRow
 
-  let modal
+let modal
 
-  function showModal(e) {
-    e.stopPropagation()
-    modal.show()
-  }
+function showModal(e) {
+  e.stopPropagation()
+  modal.show()
+}
 </script>
 
 <Button secondary small on:click={showModal}>Edit</Button>

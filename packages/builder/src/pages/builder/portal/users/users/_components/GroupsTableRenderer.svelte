@@ -1,7 +1,7 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
 
-  export let value
+export let value
 </script>
 
 <div class="align">

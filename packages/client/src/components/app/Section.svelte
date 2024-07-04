@@ -1,32 +1,32 @@
 <script>
-  import { getContext } from "svelte"
-  import Placeholder from "./Placeholder.svelte"
+import { getContext } from "svelte"
+import Placeholder from "./Placeholder.svelte"
 
-  const { styleable, builderStore } = getContext("sdk")
-  const component = getContext("component")
+const { styleable, builderStore } = getContext("sdk")
+const component = getContext("component")
 
-  export let type = "mainSidebar"
-  export let minSize = 250
+export let type = "mainSidebar"
+export let minSize = 250
 
-  let layoutMap = {
-    mainSidebar: 2,
-    sidebarMain: 2,
-    oneColumn: 1,
-    twoColumns: 2,
-    threeColumns: 3,
+let layoutMap = {
+  mainSidebar: 2,
+  sidebarMain: 2,
+  oneColumn: 1,
+  twoColumns: 2,
+  threeColumns: 3,
+}
+
+let containerWidth
+$: columnsDependingOnSize = calculateColumns(containerWidth)
+
+function calculateColumns(parentWidth) {
+  const numberOfAllowedColumns = Math.floor(parentWidth / minSize) || 100
+  if (layoutMap[type] <= numberOfAllowedColumns) {
+    return false
+  } else if (layoutMap[type] > numberOfAllowedColumns) {
+    return numberOfAllowedColumns
   }
-
-  let containerWidth
-  $: columnsDependingOnSize = calculateColumns(containerWidth)
-
-  function calculateColumns(parentWidth) {
-    const numberOfAllowedColumns = Math.floor(parentWidth / minSize) || 100
-    if (layoutMap[type] <= numberOfAllowedColumns) {
-      return false
-    } else if (layoutMap[type] > numberOfAllowedColumns) {
-      return numberOfAllowedColumns
-    }
-  }
+}
 </script>
 
 <div

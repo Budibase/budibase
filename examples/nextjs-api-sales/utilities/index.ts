@@ -1,5 +1,5 @@
-import { App, AppSearch, Table, TableSearch } from "../definitions"
 import getConfig from "next/config"
+import { App, AppSearch, Table, TableSearch } from "../definitions"
 
 const { serverRuntimeConfig } = getConfig()
 const apiKey = serverRuntimeConfig["apiKey"]

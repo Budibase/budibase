@@ -1,17 +1,17 @@
 <script>
-  import { Layout, Toggle } from "@budibase/bbui"
-  import DevToolsStat from "./DevToolsStat.svelte"
-  import { componentStore } from "stores/index.js"
-  import { getSettingsDefinition } from "utils/componentProps.js"
+import { Layout, Toggle } from "@budibase/bbui"
+import { componentStore } from "stores/index.js"
+import { getSettingsDefinition } from "utils/componentProps.js"
+import DevToolsStat from "./DevToolsStat.svelte"
 
-  let showEnrichedSettings = true
+let showEnrichedSettings = true
 
-  $: selectedInstance = $componentStore.selectedComponentInstance
-  $: settingsDefinition = getSettingsDefinition(
-    $componentStore.selectedComponentDefinition
-  )
-  $: rawSettings = selectedInstance?.getRawSettings()
-  $: settings = selectedInstance?.getSettings()
+$: selectedInstance = $componentStore.selectedComponentInstance
+$: settingsDefinition = getSettingsDefinition(
+  $componentStore.selectedComponentDefinition
+)
+$: rawSettings = selectedInstance?.getRawSettings()
+$: settings = selectedInstance?.getSettings()
 </script>
 
 <Layout noPadding gap="S">

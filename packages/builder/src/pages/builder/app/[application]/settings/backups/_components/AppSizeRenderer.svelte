@@ -1,11 +1,11 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
 
-  export let row
+export let row
 
-  $: automations = row?.automations
-  $: datasources = row?.datasources
-  $: screens = row?.screens
+$: automations = row?.automations
+$: datasources = row?.datasources
+$: screens = row?.screens
 </script>
 
 <div class="cell">

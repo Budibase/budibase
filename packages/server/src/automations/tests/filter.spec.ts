@@ -1,5 +1,5 @@
-import * as setup from "./utilities"
 import { FilterConditions } from "../steps/filter"
+import * as setup from "./utilities"
 
 describe("test the filter logic", () => {
   async function checkFilter(

@@ -1,7 +1,7 @@
-import { testEnv, DBTestConfiguration } from "../../../tests/extra"
-import * as migrations from "../index"
-import * as context from "../../context"
 import { MigrationType } from "@budibase/types"
+import { DBTestConfiguration, testEnv } from "../../../tests/extra"
+import * as context from "../../context"
+import * as migrations from "../index"
 
 testEnv.multiTenant()
 

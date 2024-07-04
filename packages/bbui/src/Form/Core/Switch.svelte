@@ -1,16 +1,16 @@
 <script>
-  import "@spectrum-css/switch/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+import "@spectrum-css/switch/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
 
-  export let value = false
-  export let id = null
-  export let text = null
-  export let disabled = false
+export let value = false
+export let id = null
+export let text = null
+export let disabled = false
 
-  const dispatch = createEventDispatcher()
-  const onChange = event => {
-    dispatch("change", event.target.checked)
-  }
+const dispatch = createEventDispatcher()
+const onChange = event => {
+  dispatch("change", event.target.checked)
+}
 </script>
 
 <div class="spectrum-Switch spectrum-Switch--emphasized">

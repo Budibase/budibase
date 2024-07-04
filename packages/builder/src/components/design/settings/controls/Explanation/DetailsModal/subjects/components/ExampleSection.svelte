@@ -1,7 +1,7 @@
 <script>
-  import Section from "./Section.svelte"
+import Section from "./Section.svelte"
 
-  export let heading
+export let heading
 </script>
 
 <Section>

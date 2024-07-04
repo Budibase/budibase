@@ -1,47 +1,47 @@
 <script>
-  import { getContext } from "svelte"
-  import { Icon } from "@budibase/bbui"
-  import GridCell from "../cells/GridCell.svelte"
-  import DataCell from "../cells/DataCell.svelte"
-  import GridScrollWrapper from "./GridScrollWrapper.svelte"
-  import HeaderCell from "../cells/HeaderCell.svelte"
-  import { GutterWidth, BlankRowID } from "../lib/constants"
-  import GutterCell from "../cells/GutterCell.svelte"
-  import KeyboardShortcut from "./KeyboardShortcut.svelte"
-  import { getCellID } from "../lib/utils"
+import { Icon } from "@budibase/bbui"
+import { getContext } from "svelte"
+import DataCell from "../cells/DataCell.svelte"
+import GridCell from "../cells/GridCell.svelte"
+import GutterCell from "../cells/GutterCell.svelte"
+import HeaderCell from "../cells/HeaderCell.svelte"
+import { BlankRowID, GutterWidth } from "../lib/constants"
+import { getCellID } from "../lib/utils"
+import GridScrollWrapper from "./GridScrollWrapper.svelte"
+import KeyboardShortcut from "./KeyboardShortcut.svelte"
 
-  const {
-    rows,
-    selectedRows,
-    stickyColumn,
-    renderedRows,
-    focusedCellId,
-    hoveredRowId,
-    config,
-    selectedCellMap,
-    focusedRow,
-    scrollLeft,
-    dispatch,
-    contentLines,
-    isDragging,
-  } = getContext("grid")
+const {
+  rows,
+  selectedRows,
+  stickyColumn,
+  renderedRows,
+  focusedCellId,
+  hoveredRowId,
+  config,
+  selectedCellMap,
+  focusedRow,
+  scrollLeft,
+  dispatch,
+  contentLines,
+  isDragging,
+} = getContext("grid")
 
-  $: rowCount = $rows.length
-  $: selectedRowCount = Object.values($selectedRows).length
-  $: width = GutterWidth + ($stickyColumn?.width || 0)
+$: rowCount = $rows.length
+$: selectedRowCount = Object.values($selectedRows).length
+$: width = GutterWidth + ($stickyColumn?.width || 0)
 
-  const selectAll = () => {
-    const allSelected = selectedRowCount === rowCount
-    if (allSelected) {
-      $selectedRows = {}
-    } else {
-      let allRows = {}
-      $rows.forEach(row => {
-        allRows[row._id] = true
-      })
-      $selectedRows = allRows
-    }
+const selectAll = () => {
+  const allSelected = selectedRowCount === rowCount
+  if (allSelected) {
+    $selectedRows = {}
+  } else {
+    let allRows = {}
+    $rows.forEach(row => {
+      allRows[row._id] = true
+    })
+    $selectedRows = allRows
   }
+}
 </script>
 
 <div

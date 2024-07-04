@@ -1,4 +1,6 @@
 import { IncludeRelationship, Operation, Row } from "@budibase/types"
+import cloneDeep from "lodash/fp/cloneDeep"
+import isEqual from "lodash/fp/isEqual"
 import { handleRequest } from "../../../api/controllers/row/external"
 import { breakRowIdField } from "../../../integrations/utils"
 import sdk from "../../../sdk"
@@ -6,8 +8,6 @@ import {
   inputProcessing,
   outputProcessing,
 } from "../../../utilities/rowProcessor"
-import cloneDeep from "lodash/fp/cloneDeep"
-import isEqual from "lodash/fp/isEqual"
 
 export async function getRow(
   tableId: string,

@@ -1,5 +1,5 @@
 <script>
-  import BG from "../../assets/bg.png"
+import BG from "../../assets/bg.png"
 </script>
 
 <div class="split-page">

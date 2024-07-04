@@ -1,14 +1,14 @@
-import { generateGlobalUserID } from "../../../db"
-import { authError } from "../utils"
-import * as users from "../../../users"
-import * as context from "../../../context"
-import fetch from "node-fetch"
 import {
-  SaveSSOUserFunction,
   SSOAuthDetails,
   SSOUser,
+  SaveSSOUserFunction,
   User,
 } from "@budibase/types"
+import fetch from "node-fetch"
+import * as context from "../../../context"
+import { generateGlobalUserID } from "../../../db"
+import * as users from "../../../users"
+import { authError } from "../utils"
 
 // no-op function for user save
 // - this allows datasource auth and access token refresh to work correctly
@@ -97,7 +97,7 @@ export async function authenticate(
   return done(null, ssoUser)
 }
 
-async function getProfilePictureUrl(user: User, details: SSOAuthDetails) {
+async function getProfilePictureUrl(_user: User, details: SSOAuthDetails) {
   const pictureUrl = details.profile?._json.picture
   if (pictureUrl) {
     const response = await fetch(pictureUrl)

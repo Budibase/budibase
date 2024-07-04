@@ -1,12 +1,12 @@
 <script>
-  import { Select } from "@budibase/bbui"
-  import { builderStore, componentStore } from "stores"
+import { Select } from "@budibase/bbui"
+import { builderStore, componentStore } from "stores"
 
-  export let prop
-  export let options
-  export let label
+export let prop
+export let options
+export let label
 
-  $: currentValue = $componentStore.selectedComponent?.[prop]
+$: currentValue = $componentStore.selectedComponent?.[prop]
 </script>
 
 <div>

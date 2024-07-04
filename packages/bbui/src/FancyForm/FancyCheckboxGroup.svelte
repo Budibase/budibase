@@ -1,43 +1,43 @@
 <script>
-  import FancyCheckbox from "./FancyCheckbox.svelte"
-  import FancyForm from "./FancyForm.svelte"
-  import { createEventDispatcher } from "svelte"
+import { createEventDispatcher } from "svelte"
+import FancyCheckbox from "./FancyCheckbox.svelte"
+import FancyForm from "./FancyForm.svelte"
 
-  export let options = []
-  export let selected = []
-  export let showSelectAll = true
-  export let selectAllText = "Select all"
+export let options = []
+export let selected = []
+export let showSelectAll = true
+export let selectAllText = "Select all"
 
-  let selectedBooleans = options.map(x => selected.indexOf(x) > -1)
-  const dispatch = createEventDispatcher()
+let selectedBooleans = options.map(x => selected.indexOf(x) > -1)
+const dispatch = createEventDispatcher()
 
-  $: updateSelected(selectedBooleans)
-  $: allSelected = selected?.length === options.length
-  $: noneSelected = !selected?.length
+$: updateSelected(selectedBooleans)
+$: allSelected = selected?.length === options.length
+$: noneSelected = !selected?.length
 
-  function reset() {
-    return Array(options.length).fill(true)
-  }
+function reset() {
+  return Array(options.length).fill(true)
+}
 
-  function updateSelected(selectedArr) {
-    const array = []
-    for (let [i, isSelected] of Object.entries(selectedArr)) {
-      if (isSelected) {
-        array.push(options[i])
-      }
+function updateSelected(selectedArr) {
+  const array = []
+  for (let [i, isSelected] of Object.entries(selectedArr)) {
+    if (isSelected) {
+      array.push(options[i])
     }
-    selected = array
-    dispatch("change", selected)
   }
+  selected = array
+  dispatch("change", selected)
+}
 
-  function toggleSelectAll() {
-    if (allSelected === true) {
-      selectedBooleans = []
-    } else {
-      selectedBooleans = reset()
-    }
-    dispatch("change", selected)
+function toggleSelectAll() {
+  if (allSelected === true) {
+    selectedBooleans = []
+  } else {
+    selectedBooleans = reset()
   }
+  dispatch("change", selected)
+}
 </script>
 
 {#if options && Array.isArray(options)}

@@ -1,6 +1,6 @@
+import { BasicPaginationRequest, PaginationResponse } from "../"
+import { App, User } from "../../../"
 import { Event } from "../../../sdk"
-import { PaginationResponse, BasicPaginationRequest } from "../"
-import { User, App } from "../../../"
 
 export interface AuditLogSearchParams {
   userIds?: string[]

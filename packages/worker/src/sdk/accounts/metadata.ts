@@ -1,10 +1,10 @@
-import { AccountMetadata } from "@budibase/types"
 import {
-  db,
-  StaticDatabases,
   DocumentType,
   SEPARATOR,
+  StaticDatabases,
+  db,
 } from "@budibase/backend-core"
+import { AccountMetadata } from "@budibase/types"
 
 export const formatAccountMetadataId = (accountId: string) => {
   return `${DocumentType.ACCOUNT_METADATA}${SEPARATOR}${accountId}`

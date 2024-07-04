@@ -1,15 +1,15 @@
-import {
-  BulkUserResponse,
-  BulkUserRequest,
-  InviteUsersRequest,
-  User,
-  CreateAdminUserRequest,
-  SearchFilters,
-  InviteUsersResponse,
-} from "@budibase/types"
-import structures from "../structures"
 import { generator } from "@budibase/backend-core/tests"
+import {
+  BulkUserRequest,
+  BulkUserResponse,
+  CreateAdminUserRequest,
+  InviteUsersRequest,
+  InviteUsersResponse,
+  SearchFilters,
+  User,
+} from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
+import structures from "../structures"
 import { TestAPI, TestAPIOpts } from "./base"
 
 export class UserAPI extends TestAPI {

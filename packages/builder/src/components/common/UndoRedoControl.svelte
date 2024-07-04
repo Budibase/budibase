@@ -1,35 +1,35 @@
 <script>
-  import { Icon } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import { isBuilderInputFocused } from "helpers"
+import { Icon } from "@budibase/bbui"
+import { isBuilderInputFocused } from "helpers"
+import { onMount } from "svelte"
 
-  export let store
+export let store
 
-  const handleKeyPress = e => {
-    if (!(e.ctrlKey || e.metaKey)) {
-      return
-    }
-
-    let keyLowerCase = e.key.toLowerCase()
-
-    // Ignore events when typing
-    if (isBuilderInputFocused(e)) {
-      return
-    }
-    if (e.shiftKey && keyLowerCase === "z") {
-      store.redo()
-    } else if (keyLowerCase === "z") {
-      store.undo()
-    }
+const handleKeyPress = e => {
+  if (!(e.ctrlKey || e.metaKey)) {
+    return
   }
 
-  onMount(() => {
-    document.addEventListener("keydown", handleKeyPress)
+  let keyLowerCase = e.key.toLowerCase()
 
-    return () => {
-      document.removeEventListener("keydown", handleKeyPress)
-    }
-  })
+  // Ignore events when typing
+  if (isBuilderInputFocused(e)) {
+    return
+  }
+  if (e.shiftKey && keyLowerCase === "z") {
+    store.redo()
+  } else if (keyLowerCase === "z") {
+    store.undo()
+  }
+}
+
+onMount(() => {
+  document.addEventListener("keydown", handleKeyPress)
+
+  return () => {
+    document.removeEventListener("keydown", handleKeyPress)
+  }
+})
 </script>
 
 <div class="undo-redo">

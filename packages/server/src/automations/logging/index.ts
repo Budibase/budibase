@@ -1,8 +1,8 @@
-import env from "../../environment"
-import { AutomationResults, Automation, App } from "@budibase/types"
-import { automations } from "@budibase/pro"
 import { db as dbUtils } from "@budibase/backend-core"
+import { automations } from "@budibase/pro"
+import { App, Automation, AutomationResults } from "@budibase/types"
 import sizeof from "object-sizeof"
+import env from "../../environment"
 
 const MAX_LOG_SIZE_MB = 5
 const MB_IN_BYTES = 1024 * 1024

@@ -1,6 +1,6 @@
-import PouchDB from "pouchdb"
-import { getPouchDB, closePouchDB } from "./couch"
 import { DocumentType } from "@budibase/types"
+import PouchDB from "pouchdb"
+import { closePouchDB, getPouchDB } from "./couch"
 
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",

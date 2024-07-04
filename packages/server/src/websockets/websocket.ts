@@ -1,13 +1,13 @@
-import { Server, Socket } from "socket.io"
 import http from "http"
-import Koa from "koa"
-import { userAgent } from "koa-useragent"
-import { auth, Header, redis } from "@budibase/backend-core"
-import { createAdapter } from "@socket.io/redis-adapter"
-import { getSocketPubSubClients } from "../utilities/redis"
+import { Header, auth, redis } from "@budibase/backend-core"
 import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
 import { SocketSession } from "@budibase/types"
+import { createAdapter } from "@socket.io/redis-adapter"
+import Koa from "koa"
+import { userAgent } from "koa-useragent"
+import { Server, Socket } from "socket.io"
 import { v4 as uuid } from "uuid"
+import { getSocketPubSubClients } from "../utilities/redis"
 import { createContext, runMiddlewares } from "./middleware"
 
 export interface EmitOptions {
@@ -171,7 +171,7 @@ export class BaseSocket {
     const sessionsExist = await Promise.all(
       sessionIds.map(id => this.redisClient?.exists(this.getSessionKey(id)))
     )
-    const prunedSessionIds = sessionIds.filter((id, idx) => {
+    const prunedSessionIds = sessionIds.filter((_id, idx) => {
       if (!sessionsExist[idx]) {
         this.io.to(room).emit(SocketEvent.UserDisconnect, {
           sessionId: sessionIds[idx],

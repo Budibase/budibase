@@ -2,27 +2,27 @@ if (process.env.DD_APM_ENABLED) {
   require("./ddApm")
 }
 
-// need to load environment first
-import env from "./environment"
-import Application from "koa"
-import { bootstrap } from "global-agent"
-import * as db from "./db"
-import { sdk as proSdk } from "@budibase/pro"
 import {
-  auth,
-  logging,
   events,
+  timers,
+  auth,
+  cache,
+  env as coreEnv,
+  logging,
   middleware,
   queue,
-  env as coreEnv,
-  timers,
   redis,
-  cache,
 } from "@budibase/backend-core"
+import { sdk as proSdk } from "@budibase/pro"
+import { bootstrap } from "global-agent"
+import Application from "koa"
+import * as db from "./db"
+// need to load environment first
+import env from "./environment"
 
 db.init()
-import koaBody from "koa-body"
 import http from "http"
+import koaBody from "koa-body"
 import api from "./api"
 
 const koaSession = require("koa-session")

@@ -1,11 +1,11 @@
-import {
-  FieldType,
-  BBReferenceFieldSubType,
-  INTERNAL_TABLE_SOURCE_ID,
-  AutoFieldSubType,
-  Hosting,
-} from "@budibase/types"
 import { Constants } from "@budibase/frontend-core"
+import {
+  AutoFieldSubType,
+  BBReferenceFieldSubType,
+  FieldType,
+  Hosting,
+  INTERNAL_TABLE_SOURCE_ID,
+} from "@budibase/types"
 
 const { TypeIconMap } = Constants
 

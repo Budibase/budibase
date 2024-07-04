@@ -1,9 +1,9 @@
-import * as google from "../sso/google"
-import { Cookie } from "../../../constants"
-import * as configs from "../../../configs"
+import { SSOProfile, UserCtx } from "@budibase/types"
 import * as cache from "../../../cache"
+import * as configs from "../../../configs"
+import { Cookie } from "../../../constants"
 import * as utils from "../../../utils"
-import { UserCtx, SSOProfile } from "@budibase/types"
+import * as google from "../sso/google"
 import { ssoSaveUserNoOp } from "../sso/sso"
 
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
@@ -85,7 +85,7 @@ export async function postAuth(
       }
     ),
     { successRedirect: "/", failureRedirect: "/error" },
-    async (err: any, tokens: string[]) => {
+    async (_err: any, tokens: string[]) => {
       const baseUrl = `/builder/app/${authStateCookie.appId}/data`
 
       const id = utils.newid()

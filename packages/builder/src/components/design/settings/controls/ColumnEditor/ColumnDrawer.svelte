@@ -1,88 +1,88 @@
 <script>
-  import {
-    Button,
-    Icon,
-    DrawerContent,
-    Layout,
-    Select,
-    Label,
-    Body,
-    Input,
-  } from "@budibase/bbui"
-  import { flip } from "svelte/animate"
-  import { dndzone } from "svelte-dnd-action"
-  import { generate } from "shortid"
-  import CellEditor from "./CellEditor.svelte"
+import {
+  Body,
+  Button,
+  DrawerContent,
+  Icon,
+  Input,
+  Label,
+  Layout,
+  Select,
+} from "@budibase/bbui"
+import { generate } from "shortid"
+import { dndzone } from "svelte-dnd-action"
+import { flip } from "svelte/animate"
+import CellEditor from "./CellEditor.svelte"
 
-  export let columns = []
-  export let options = []
-  export let schema = {}
-  export let allowCellEditing = true
-  export let allowReorder = true
+export let columns = []
+export let options = []
+export let schema = {}
+export let allowCellEditing = true
+export let allowReorder = true
 
-  const flipDurationMs = 150
-  let dragDisabled = true
+const flipDurationMs = 150
+let dragDisabled = true
 
-  $: unselectedColumns = getUnselectedColumns(options, columns)
-  $: columns.forEach(column => {
-    if (!column.id) {
-      column.id = generate()
+$: unselectedColumns = getUnselectedColumns(options, columns)
+$: columns.forEach(column => {
+  if (!column.id) {
+    column.id = generate()
+  }
+})
+
+const getUnselectedColumns = (allColumns, selectedColumns) => {
+  let optionsObj = {}
+  allColumns.forEach(option => {
+    optionsObj[option] = true
+  })
+  selectedColumns?.forEach(column => {
+    delete optionsObj[column.name]
+  })
+  return Object.keys(optionsObj)
+}
+
+const getRemainingColumnOptions = selectedColumn => {
+  if (!selectedColumn || unselectedColumns.includes(selectedColumn)) {
+    return unselectedColumns
+  }
+  return [selectedColumn, ...unselectedColumns]
+}
+
+const addColumn = () => {
+  columns = [...columns, {}]
+}
+
+const removeColumn = id => {
+  columns = columns.filter(column => column.id !== id)
+}
+
+const updateColumnOrder = e => {
+  columns = e.detail.items
+}
+
+const handleFinalize = e => {
+  updateColumnOrder(e)
+  dragDisabled = true
+}
+
+const addAllColumns = () => {
+  let newColumns = columns || []
+  options.forEach(field => {
+    const fieldSchema = schema[field]
+    const hasCol = columns && columns.findIndex(x => x.name === field) !== -1
+    if (!fieldSchema?.autocolumn && !hasCol) {
+      newColumns.push({
+        name: field,
+        displayName: field,
+      })
     }
   })
+  columns = newColumns
+}
 
-  const getUnselectedColumns = (allColumns, selectedColumns) => {
-    let optionsObj = {}
-    allColumns.forEach(option => {
-      optionsObj[option] = true
-    })
-    selectedColumns?.forEach(column => {
-      delete optionsObj[column.name]
-    })
-    return Object.keys(optionsObj)
-  }
-
-  const getRemainingColumnOptions = selectedColumn => {
-    if (!selectedColumn || unselectedColumns.includes(selectedColumn)) {
-      return unselectedColumns
-    }
-    return [selectedColumn, ...unselectedColumns]
-  }
-
-  const addColumn = () => {
-    columns = [...columns, {}]
-  }
-
-  const removeColumn = id => {
-    columns = columns.filter(column => column.id !== id)
-  }
-
-  const updateColumnOrder = e => {
-    columns = e.detail.items
-  }
-
-  const handleFinalize = e => {
-    updateColumnOrder(e)
-    dragDisabled = true
-  }
-
-  const addAllColumns = () => {
-    let newColumns = columns || []
-    options.forEach(field => {
-      const fieldSchema = schema[field]
-      const hasCol = columns && columns.findIndex(x => x.name === field) !== -1
-      if (!fieldSchema?.autocolumn && !hasCol) {
-        newColumns.push({
-          name: field,
-          displayName: field,
-        })
-      }
-    })
-    columns = newColumns
-  }
-
-  const reset = () => {
-    columns = []
-  }
+const reset = () => {
+  columns = []
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

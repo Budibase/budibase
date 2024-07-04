@@ -1,9 +1,9 @@
-import { it, expect, describe, vi } from "vitest"
 import { render, screen } from "@testing-library/svelte"
+import { describe, expect, it, vi } from "vitest"
 import "@testing-library/jest-dom"
 
-import ExportModal from "./ExportModal.svelte"
 import { utils } from "@budibase/shared-core"
+import ExportModal from "./ExportModal.svelte"
 
 const labelLookup = utils.filterValueToLabel()
 

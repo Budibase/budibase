@@ -1,18 +1,18 @@
 <script>
-  import SpectrumMDE from "./SpectrumMDE.svelte"
+import SpectrumMDE from "./SpectrumMDE.svelte"
 
-  export let value
-  export let height
+export let value
+export let height
 
-  let mde
+let mde
 
-  // Keep the value up to date
-  $: mde && mde.value(value || "")
-  $: {
-    if (mde && !mde.isPreviewActive()) {
-      mde.togglePreview()
-    }
+// Keep the value up to date
+$: mde && mde.value(value || "")
+$: {
+  if (mde && !mde.isPreviewActive()) {
+    mde.togglePreview()
   }
+}
 </script>
 
 <div class="markdown-viewer" style="height:{height};">

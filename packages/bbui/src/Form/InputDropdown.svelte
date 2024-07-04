@@ -1,33 +1,33 @@
 <script>
-  import Field from "./Field.svelte"
-  import InputDropdown from "./Core/InputDropdown.svelte"
-  import { createEventDispatcher } from "svelte"
+import { createEventDispatcher } from "svelte"
+import InputDropdown from "./Core/InputDropdown.svelte"
+import Field from "./Field.svelte"
 
-  export let inputValue = null
-  export let dropdownValue = null
-  export let inputType = "text"
-  export let label = null
-  export let labelPosition = "above"
-  export let placeholder = null
-  export let disabled = false
-  export let readonly = false
-  export let error = null
-  export let updateOnChange = true
-  export let quiet = false
-  export let autofocus
-  export let helpText = null
-  export let options = []
+export let inputValue = null
+export let dropdownValue = null
+export let inputType = "text"
+export let label = null
+export let labelPosition = "above"
+export let placeholder = null
+export let disabled = false
+export let readonly = false
+export let error = null
+export let updateOnChange = true
+export let quiet = false
+export let autofocus
+export let helpText = null
+export let options = []
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  const onPick = e => {
-    dropdownValue = e.detail
-    dispatch("pick", e.detail)
-  }
-  const onChange = e => {
-    inputValue = e.detail
-    dispatch("change", e.detail)
-  }
+const onPick = e => {
+  dropdownValue = e.detail
+  dispatch("pick", e.detail)
+}
+const onChange = e => {
+  inputValue = e.detail
+  dispatch("change", e.detail)
+}
 </script>
 
 <Field {helpText} {label} {labelPosition} {error}>

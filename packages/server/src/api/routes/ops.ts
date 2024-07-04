@@ -1,7 +1,7 @@
-import Router from "@koa/router"
-import * as controller from "../controllers/ops"
 import { middleware } from "@budibase/backend-core"
+import Router from "@koa/router"
 import Joi from "joi"
+import * as controller from "../controllers/ops"
 
 export function logsValidator() {
   return middleware.joiValidator.body(

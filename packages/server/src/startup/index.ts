@@ -1,32 +1,32 @@
-import env from "../environment"
-import * as redis from "../utilities/redis"
-import { generateApiKey, getChecklist } from "../utilities/workerRequests"
+import fs from "fs"
+import { Server } from "http"
+import { AddressInfo } from "net"
 import {
   events,
+  cache,
+  env as coreEnv,
   installation,
   logging,
   tenancy,
   users,
-  cache,
-  env as coreEnv,
 } from "@budibase/backend-core"
-import { watch } from "../watch"
-import * as automations from "../automations"
-import * as fileSystem from "../utilities/fileSystem"
-import { default as eventEmitter, init as eventInit } from "../events"
-import * as migrations from "../migrations"
-import * as bullboard from "../automations/bullboard"
-import * as appMigrations from "../appMigrations/queue"
 import * as pro from "@budibase/pro"
+import Koa from "koa"
 import * as api from "../api"
-import sdk from "../sdk"
-import { initialise as initialiseWebsockets } from "../websockets"
+import * as appMigrations from "../appMigrations/queue"
+import * as automations from "../automations"
+import * as bullboard from "../automations/bullboard"
+import env from "../environment"
+import { default as eventEmitter, init as eventInit } from "../events"
 import { automationsEnabled, printFeatures } from "../features"
 import * as jsRunner from "../jsRunner"
-import Koa from "koa"
-import { Server } from "http"
-import { AddressInfo } from "net"
-import fs from "fs"
+import * as migrations from "../migrations"
+import sdk from "../sdk"
+import * as fileSystem from "../utilities/fileSystem"
+import * as redis from "../utilities/redis"
+import { generateApiKey, getChecklist } from "../utilities/workerRequests"
+import { watch } from "../watch"
+import { initialise as initialiseWebsockets } from "../websockets"
 
 let STARTUP_RAN = false
 

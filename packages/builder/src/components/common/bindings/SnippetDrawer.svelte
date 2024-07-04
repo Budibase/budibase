@@ -1,79 +1,79 @@
 <script>
-  import {
-    Button,
-    Drawer,
-    Input,
-    Icon,
-    AbsTooltip,
-    TooltipType,
-    notifications,
-  } from "@budibase/bbui"
-  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
-  import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
-  import { snippets } from "stores/builder"
-  import { getSequentialName } from "helpers/duplicate"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { ValidSnippetNameRegex } from "@budibase/shared-core"
+import {
+  AbsTooltip,
+  Button,
+  Drawer,
+  Icon,
+  Input,
+  TooltipType,
+  notifications,
+} from "@budibase/bbui"
+import { ValidSnippetNameRegex } from "@budibase/shared-core"
+import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import BindingPanel from "components/common/bindings/BindingPanel.svelte"
+import { getSequentialName } from "helpers/duplicate"
+import { snippets } from "stores/builder"
 
-  export let snippet
+export let snippet
 
-  export const show = () => drawer.show()
-  export const hide = () => drawer.hide()
+export const show = () => drawer.show()
+export const hide = () => drawer.hide()
 
-  const firstCharNumberRegex = /^[0-9].*$/
+const firstCharNumberRegex = /^[0-9].*$/
 
-  let drawer
-  let name = ""
-  let code = ""
-  let loading = false
-  let deleteConfirmationDialog
+let drawer
+let name = ""
+let code = ""
+let loading = false
+let deleteConfirmationDialog
 
-  $: defaultName = getSequentialName($snippets, "MySnippet", x => x.name)
-  $: key = snippet?.name
-  $: name = snippet?.name || defaultName
-  $: code = snippet?.code ? encodeJSBinding(snippet.code) : ""
-  $: rawJS = decodeJSBinding(code)
-  $: nameError = validateName(name, $snippets)
+$: defaultName = getSequentialName($snippets, "MySnippet", x => x.name)
+$: key = snippet?.name
+$: name = snippet?.name || defaultName
+$: code = snippet?.code ? encodeJSBinding(snippet.code) : ""
+$: rawJS = decodeJSBinding(code)
+$: nameError = validateName(name, $snippets)
 
-  const saveSnippet = async () => {
-    loading = true
-    try {
-      const newSnippet = { name, code: rawJS }
-      await snippets.saveSnippet(newSnippet)
-      drawer.hide()
-      notifications.success(`Snippet ${newSnippet.name} saved`)
-    } catch (error) {
-      notifications.error(error.message || "Error saving snippet")
-    }
-    loading = false
+const saveSnippet = async () => {
+  loading = true
+  try {
+    const newSnippet = { name, code: rawJS }
+    await snippets.saveSnippet(newSnippet)
+    drawer.hide()
+    notifications.success(`Snippet ${newSnippet.name} saved`)
+  } catch (error) {
+    notifications.error(error.message || "Error saving snippet")
   }
+  loading = false
+}
 
-  const deleteSnippet = async () => {
-    loading = true
-    try {
-      await snippets.deleteSnippet(snippet.name)
-      drawer.hide()
-    } catch (error) {
-      notifications.error("Error deleting snippet")
-    }
-    loading = false
+const deleteSnippet = async () => {
+  loading = true
+  try {
+    await snippets.deleteSnippet(snippet.name)
+    drawer.hide()
+  } catch (error) {
+    notifications.error("Error deleting snippet")
   }
+  loading = false
+}
 
-  const validateName = (name, snippets) => {
-    if (!name?.length) {
-      return "Name is required"
-    }
-    if (snippets.some(snippet => snippet.name === name)) {
-      return "That name is already in use"
-    }
-    if (firstCharNumberRegex.test(name)) {
-      return "Can't start with a number"
-    }
-    if (!ValidSnippetNameRegex.test(name)) {
-      return "No special characters or spaces"
-    }
-    return null
+const validateName = (name, snippets) => {
+  if (!name?.length) {
+    return "Name is required"
   }
+  if (snippets.some(snippet => snippet.name === name)) {
+    return "That name is already in use"
+  }
+  if (firstCharNumberRegex.test(name)) {
+    return "Can't start with a number"
+  }
+  if (!ValidSnippetNameRegex.test(name)) {
+    return "No special characters or spaces"
+  }
+  return null
+}
 </script>
 
 <Drawer bind:this={drawer}>

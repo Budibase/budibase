@@ -1,45 +1,45 @@
 <script>
-  import { Heading, Body, Button, Icon } from "@budibase/bbui"
-  import { processStringSync } from "@budibase/string-templates"
-  import { auth } from "stores/portal"
-  import { goto } from "@roxi/routify"
-  import { UserAvatars } from "@budibase/frontend-core"
-  import { sdk } from "@budibase/shared-core"
-  import AppRowContext from "./AppRowContext.svelte"
-  import FavouriteAppButton from "pages/builder/portal/apps/FavouriteAppButton.svelte"
+import { Body, Button, Heading, Icon } from "@budibase/bbui"
+import { UserAvatars } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
+import { processStringSync } from "@budibase/string-templates"
+import { goto } from "@roxi/routify"
+import FavouriteAppButton from "pages/builder/portal/apps/FavouriteAppButton.svelte"
+import { auth } from "stores/portal"
+import AppRowContext from "./AppRowContext.svelte"
 
-  export let app
-  export let lockedAction
+export let app
+export let lockedAction
 
-  let actionsOpen = false
+let actionsOpen = false
 
-  $: editing = app.sessions?.length
-  $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
-  $: unclickable = !isBuilder && !app.deployed
+$: editing = app.sessions?.length
+$: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
+$: unclickable = !isBuilder && !app.deployed
 
-  const handleDefaultClick = () => {
-    if (!isBuilder) {
-      goToApp()
-    } else if (window.innerWidth < 640) {
-      goToOverview()
-    } else {
-      goToBuilder()
-    }
+const handleDefaultClick = () => {
+  if (!isBuilder) {
+    goToApp()
+  } else if (window.innerWidth < 640) {
+    goToOverview()
+  } else {
+    goToBuilder()
   }
+}
 
-  const goToBuilder = () => {
-    $goto(`../../app/${app.devId}`)
-  }
+const goToBuilder = () => {
+  $goto(`../../app/${app.devId}`)
+}
 
-  const goToOverview = () => {
-    $goto(`../../app/${app.devId}/settings`)
-  }
+const goToOverview = () => {
+  $goto(`../../app/${app.devId}/settings`)
+}
 
-  const goToApp = () => {
-    if (app.deployed && app.url) {
-      window.open(`/app${app.url}`, "_blank")
-    }
+const goToApp = () => {
+  if (app.deployed && app.url) {
+    window.open(`/app${app.url}`, "_blank")
   }
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

@@ -1,26 +1,26 @@
 <script>
-  import { Modal, ModalContent } from "@budibase/bbui"
-  import FreeTrial from "../../../../assets/FreeTrial.svelte"
-  import { get } from "svelte/store"
-  import { auth, licensing, admin } from "stores/portal"
-  import { API } from "api"
-  import { PlanType } from "@budibase/types"
+import { Modal, ModalContent } from "@budibase/bbui"
+import { PlanType } from "@budibase/types"
+import { API } from "api"
+import { admin, auth, licensing } from "stores/portal"
+import { get } from "svelte/store"
+import FreeTrial from "../../../../assets/FreeTrial.svelte"
 
-  let freeTrialModal
+let freeTrialModal
 
-  $: planType = $licensing?.license?.plan?.type
-  $: showFreeTrialModal(planType, freeTrialModal)
-  $: isOwner = $auth.accountPortalAccess && $admin.cloud
+$: planType = $licensing?.license?.plan?.type
+$: showFreeTrialModal(planType, freeTrialModal)
+$: isOwner = $auth.accountPortalAccess && $admin.cloud
 
-  const showFreeTrialModal = (planType, freeTrialModal) => {
-    if (
-      planType === PlanType.ENTERPRISE_BASIC_TRIAL &&
-      !$auth.user?.freeTrialConfirmedAt &&
-      isOwner
-    ) {
-      freeTrialModal?.show()
-    }
+const showFreeTrialModal = (planType, freeTrialModal) => {
+  if (
+    planType === PlanType.ENTERPRISE_BASIC_TRIAL &&
+    !$auth.user?.freeTrialConfirmedAt &&
+    isOwner
+  ) {
+    freeTrialModal?.show()
   }
+}
 </script>
 
 <Modal bind:this={freeTrialModal} disableCancel={true}>

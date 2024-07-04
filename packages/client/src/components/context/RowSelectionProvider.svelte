@@ -1,6 +1,6 @@
 <script>
-  import Provider from "./Provider.svelte"
-  import { rowSelectionStore } from "stores"
+import { rowSelectionStore } from "stores"
+import Provider from "./Provider.svelte"
 </script>
 
 <Provider key="rowSelection" data={$rowSelectionStore}>

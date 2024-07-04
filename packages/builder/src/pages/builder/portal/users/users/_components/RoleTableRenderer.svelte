@@ -1,14 +1,14 @@
 <script>
-  import { users } from "stores/portal"
-  import { Constants } from "@budibase/frontend-core"
+import { Constants } from "@budibase/frontend-core"
+import { users } from "stores/portal"
 
-  export let row
+export let row
 
-  $: role = Constants.BudibaseRoleOptions.find(
-    x => x.value === users.getUserRole(row)
-  )
-  $: value = role?.label || "Not available"
-  $: tooltip = role?.subtitle || ""
+$: role = Constants.BudibaseRoleOptions.find(
+  x => x.value === users.getUserRole(row)
+)
+$: value = role?.label || "Not available"
+$: tooltip = role?.subtitle || ""
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

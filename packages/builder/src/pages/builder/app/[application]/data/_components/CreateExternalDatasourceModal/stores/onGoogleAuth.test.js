@@ -1,11 +1,9 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
-import { createOnGoogleAuthStore } from "./onGoogleAuth"
-import { writable, get } from "svelte/store"
-// eslint-disable-next-line
 import { params } from "@roxi/routify"
-// eslint-disable-next-line
-import { integrations } from "stores/builder"
 import { IntegrationTypes } from "constants/backend"
+import { integrations } from "stores/builder"
+import { get, writable } from "svelte/store"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { createOnGoogleAuthStore } from "./onGoogleAuth"
 
 vi.mock("@roxi/routify", () => ({
   params: vi.fn(),
@@ -21,7 +19,7 @@ vi.stubGlobal("window", { location: { pathname: "/current-path" } })
 describe("google auth store", () => {
   beforeEach(ctx => {
     vi.clearAllMocks()
-    // eslint-disable-next-line no-import-assign
+    // biome-ignore lint: no-import-assign
     integrations = writable({
       [IntegrationTypes.GOOGLE_SHEETS]: { data: "integration" },
     })
@@ -30,7 +28,7 @@ describe("google auth store", () => {
 
   describe("with id present", () => {
     beforeEach(ctx => {
-      // eslint-disable-next-line no-import-assign
+      // biome-ignore lint: no-import-assign
       params = writable({ "?continue_google_setup": "googleId" })
       get(createOnGoogleAuthStore())(ctx.callback)
     })
@@ -58,7 +56,7 @@ describe("google auth store", () => {
 
   describe("without id present", () => {
     beforeEach(ctx => {
-      // eslint-disable-next-line no-import-assign
+      // biome-ignore lint: no-import-assign
       params = writable({})
       get(createOnGoogleAuthStore())(ctx.callback)
     })

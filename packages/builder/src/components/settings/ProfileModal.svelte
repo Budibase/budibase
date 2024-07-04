@@ -1,22 +1,22 @@
 <script>
-  import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
-  import { writable } from "svelte/store"
-  import { auth } from "stores/portal"
+import { Body, Input, ModalContent, notifications } from "@budibase/bbui"
+import { auth } from "stores/portal"
+import { writable } from "svelte/store"
 
-  const values = writable({
-    firstName: $auth.user.firstName,
-    lastName: $auth.user.lastName,
-  })
+const values = writable({
+  firstName: $auth.user.firstName,
+  lastName: $auth.user.lastName,
+})
 
-  const updateInfo = async () => {
-    try {
-      await auth.updateSelf($values)
-      notifications.success("Information updated successfully")
-    } catch (error) {
-      console.error(error)
-      notifications.error("Failed to update information")
-    }
+const updateInfo = async () => {
+  try {
+    await auth.updateSelf($values)
+    notifications.success("Information updated successfully")
+  } catch (error) {
+    console.error(error)
+    notifications.error("Failed to update information")
   }
+}
 </script>
 
 <ModalContent title="My profile" confirmText="Save" onConfirm={updateInfo}>

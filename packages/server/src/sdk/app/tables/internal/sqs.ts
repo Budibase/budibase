@@ -1,20 +1,20 @@
-import { context, sql, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
+import { SQLITE_DESIGN_DOC_ID, context, sql } from "@budibase/backend-core"
 import {
   FieldType,
+  PreSaveSQLiteDefinition,
   RelationshipFieldMetadata,
   SQLiteDefinition,
-  PreSaveSQLiteDefinition,
   SQLiteTable,
   SQLiteTables,
   SQLiteType,
   Table,
 } from "@budibase/types"
+import { isEqual } from "lodash"
 import tablesSdk from "../"
 import {
   CONSTANT_INTERNAL_ROW_COLS,
   generateJunctionTableID,
 } from "../../../../db/utils"
-import { isEqual } from "lodash"
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BOOLEAN]: SQLiteType.NUMERIC,
@@ -78,7 +78,7 @@ function encodeNonAscii(str: string): string {
 }
 
 export function decodeNonAscii(str: string): string {
-  return str.replace(/\\u([0-9a-fA-F]{4})/g, (match, p1) =>
+  return str.replace(/\\u([0-9a-fA-F]{4})/g, (_match, p1) =>
     String.fromCharCode(parseInt(p1, 16))
   )
 }
@@ -161,7 +161,7 @@ export async function addTable(table: Table) {
   let definition: PreSaveSQLiteDefinition | SQLiteDefinition
   try {
     definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
-  } catch (err) {
+  } catch (_err) {
     definition = await buildBaseDefinition()
   }
   definition.sql.tables = {

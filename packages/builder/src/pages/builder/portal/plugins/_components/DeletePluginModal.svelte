@@ -1,23 +1,23 @@
 <script>
-  import { Body, ModalContent, notifications } from "@budibase/bbui"
-  import { plugins } from "stores/portal"
-  import { createEventDispatcher } from "svelte"
+import { Body, ModalContent, notifications } from "@budibase/bbui"
+import { plugins } from "stores/portal"
+import { createEventDispatcher } from "svelte"
 
-  export let plugin
+export let plugin
 
-  let dispatch = createEventDispatcher()
+let dispatch = createEventDispatcher()
 
-  async function deletePlugin() {
-    try {
-      const name = plugin.name
-      await plugins.deletePlugin(plugin._id)
-      notifications.success(`Plugin ${name} deleted successfully`)
-      dispatch("deleted")
-    } catch (error) {
-      const msg = error?.message ? error.message : JSON.stringify(error)
-      notifications.error(`Error deleting plugin: ${msg}`)
-    }
+async function deletePlugin() {
+  try {
+    const name = plugin.name
+    await plugins.deletePlugin(plugin._id)
+    notifications.success(`Plugin ${name} deleted successfully`)
+    dispatch("deleted")
+  } catch (error) {
+    const msg = error?.message ? error.message : JSON.stringify(error)
+    notifications.error(`Error deleting plugin: ${msg}`)
   }
+}
 </script>
 
 <ModalContent

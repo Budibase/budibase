@@ -1,10 +1,10 @@
 <script>
-  import { ActionButton, Modal } from "@budibase/bbui"
-  import FilterModal from "../modals/FilterModal.svelte"
+import { ActionButton, Modal } from "@budibase/bbui"
+import FilterModal from "../modals/FilterModal.svelte"
 
-  export let view = {}
+export let view = {}
 
-  let modal
+let modal
 </script>
 
 <ActionButton

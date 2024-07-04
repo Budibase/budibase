@@ -1,5 +1,5 @@
-import * as controller from "../../controllers/system/restore"
 import Router from "@koa/router"
+import * as controller from "../../controllers/system/restore"
 
 const router: Router = new Router()
 

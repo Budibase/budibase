@@ -1,6 +1,6 @@
-import { validate } from "../utils"
-import fetch from "node-fetch"
 import { PluginType } from "@budibase/types"
+import fetch from "node-fetch"
+import { validate } from "../utils"
 
 const repoUrl =
   "https://raw.githubusercontent.com/Budibase/budibase-skeleton/master"

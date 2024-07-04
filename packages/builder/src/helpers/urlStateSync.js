@@ -1,5 +1,5 @@
-import { get } from "svelte/store"
 import { isChangingPage } from "@roxi/routify"
+import { get } from "svelte/store"
 
 export const syncURLToState = options => {
   const {

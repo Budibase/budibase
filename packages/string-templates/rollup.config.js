@@ -1,12 +1,12 @@
 import commonjs from "@rollup/plugin-commonjs"
-import resolve from "rollup-plugin-node-resolve"
+import inject from "@rollup/plugin-inject"
 import json from "@rollup/plugin-json"
-import { terser } from "rollup-plugin-terser"
-import builtins from "rollup-plugin-node-builtins"
-import globals from "rollup-plugin-node-globals"
 import typescript from "@rollup/plugin-typescript"
 import injectProcessEnv from "rollup-plugin-inject-process-env"
-import inject from "@rollup/plugin-inject"
+import builtins from "rollup-plugin-node-builtins"
+import globals from "rollup-plugin-node-globals"
+import resolve from "rollup-plugin-node-resolve"
+import { terser } from "rollup-plugin-terser"
 
 const production = !process.env.ROLLUP_WATCH
 

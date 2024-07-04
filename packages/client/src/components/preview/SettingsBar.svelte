@@ -1,128 +1,128 @@
 <script>
-  import { onMount, onDestroy } from "svelte"
-  import SettingsButton from "./SettingsButton.svelte"
-  import SettingsColorPicker from "./SettingsColorPicker.svelte"
-  import SettingsPicker from "./SettingsPicker.svelte"
-  import { builderStore, componentStore, dndIsDragging } from "stores"
-  import { domDebounce } from "utils/domDebounce"
+import { builderStore, componentStore, dndIsDragging } from "stores"
+import { onDestroy, onMount } from "svelte"
+import { domDebounce } from "utils/domDebounce"
+import SettingsButton from "./SettingsButton.svelte"
+import SettingsColorPicker from "./SettingsColorPicker.svelte"
+import SettingsPicker from "./SettingsPicker.svelte"
 
-  const verticalOffset = 36
-  const horizontalOffset = 2
+const verticalOffset = 36
+const horizontalOffset = 2
 
-  let top = 0
-  let left = 0
-  let interval
-  let self
-  let measured = false
+let top = 0
+let left = 0
+let interval
+let self
+let measured = false
 
-  $: id = $builderStore.selectedComponentId
-  $: instance = componentStore.actions.getComponentInstance(id)
-  $: state = $instance?.state
-  $: definition = $componentStore.selectedComponentDefinition
-  $: showBar =
-    definition?.showSettingsBar !== false &&
-    !$dndIsDragging &&
-    definition &&
-    !$state?.errorState
-  $: {
-    if (!showBar) {
-      measured = false
-    }
+$: id = $builderStore.selectedComponentId
+$: instance = componentStore.actions.getComponentInstance(id)
+$: state = $instance?.state
+$: definition = $componentStore.selectedComponentDefinition
+$: showBar =
+  definition?.showSettingsBar !== false &&
+  !$dndIsDragging &&
+  definition &&
+  !$state?.errorState
+$: {
+  if (!showBar) {
+    measured = false
   }
-  $: settings = getBarSettings(definition)
-  $: isRoot = id === $builderStore.screen?.props?._id
+}
+$: settings = getBarSettings(definition)
+$: isRoot = id === $builderStore.screen?.props?._id
 
-  const getBarSettings = definition => {
-    let allSettings = []
-    definition?.settings?.forEach(setting => {
-      if (setting.section) {
-        allSettings = allSettings.concat(setting.settings || [])
-      } else {
-        allSettings.push(setting)
-      }
-    })
-    return allSettings.filter(setting => setting.showInBar && !setting.hidden)
-  }
-
-  const updatePosition = () => {
-    if (!showBar) {
-      return
+const getBarSettings = definition => {
+  let allSettings = []
+  definition?.settings?.forEach(setting => {
+    if (setting.section) {
+      allSettings = allSettings.concat(setting.settings || [])
+    } else {
+      allSettings.push(setting)
     }
-    const id = $builderStore.selectedComponentId
-    const parent = document.getElementsByClassName(id)?.[0]
-    const element = parent?.children?.[0]
+  })
+  return allSettings.filter(setting => setting.showInBar && !setting.hidden)
+}
 
-    // The settings bar is higher in the dom tree than the selection indicators
-    // as we want to be able to render the settings bar wider than the screen,
-    // or outside the screen.
-    // Therefore we use the clip root rather than the app root to determine
-    // its position.
-    const device = document.getElementById("clip-root")
-    if (element && self) {
-      // Batch reads to minimize reflow
-      const deviceBounds = device.getBoundingClientRect()
-      const elBounds = element.getBoundingClientRect()
-      const width = self.offsetWidth
-      const height = self.offsetHeight
-      const { scrollX, scrollY, innerWidth } = window
+const updatePosition = () => {
+  if (!showBar) {
+    return
+  }
+  const id = $builderStore.selectedComponentId
+  const parent = document.getElementsByClassName(id)?.[0]
+  const element = parent?.children?.[0]
 
-      // Vertically, always render above unless no room, then render inside
-      let newTop = elBounds.top + scrollY - verticalOffset - height
-      if (newTop < deviceBounds.top - 50) {
-        newTop = deviceBounds.top - 50
-      }
-      if (newTop < 0) {
-        newTop = 0
-      }
-      const deviceBottom = deviceBounds.top + deviceBounds.height
-      if (newTop > deviceBottom - 44) {
-        newTop = deviceBottom - 44
-      }
+  // The settings bar is higher in the dom tree than the selection indicators
+  // as we want to be able to render the settings bar wider than the screen,
+  // or outside the screen.
+  // Therefore we use the clip root rather than the app root to determine
+  // its position.
+  const device = document.getElementById("clip-root")
+  if (element && self) {
+    // Batch reads to minimize reflow
+    const deviceBounds = device.getBoundingClientRect()
+    const elBounds = element.getBoundingClientRect()
+    const width = self.offsetWidth
+    const height = self.offsetHeight
+    const { scrollX, scrollY, innerWidth } = window
 
-      //If element is at the very top of the screen, put the bar below the element
-      if (elBounds.top < elBounds.height && elBounds.height < 80) {
-        newTop = elBounds.bottom + verticalOffset
-      }
+    // Vertically, always render above unless no room, then render inside
+    let newTop = elBounds.top + scrollY - verticalOffset - height
+    if (newTop < deviceBounds.top - 50) {
+      newTop = deviceBounds.top - 50
+    }
+    if (newTop < 0) {
+      newTop = 0
+    }
+    const deviceBottom = deviceBounds.top + deviceBounds.height
+    if (newTop > deviceBottom - 44) {
+      newTop = deviceBottom - 44
+    }
 
-      // Horizontally, try to center first.
-      // Failing that, render to left edge of component.
-      // Failing that, render to right edge of component,
-      // Failing that, render to window left edge and accept defeat.
-      let elCenter = elBounds.left + scrollX + elBounds.width / 2
-      let newLeft = elCenter - width / 2
+    //If element is at the very top of the screen, put the bar below the element
+    if (elBounds.top < elBounds.height && elBounds.height < 80) {
+      newTop = elBounds.bottom + verticalOffset
+    }
+
+    // Horizontally, try to center first.
+    // Failing that, render to left edge of component.
+    // Failing that, render to right edge of component,
+    // Failing that, render to window left edge and accept defeat.
+    let elCenter = elBounds.left + scrollX + elBounds.width / 2
+    let newLeft = elCenter - width / 2
+    if (newLeft < 0 || newLeft + width > innerWidth) {
+      newLeft = elBounds.left + scrollX - horizontalOffset
       if (newLeft < 0 || newLeft + width > innerWidth) {
-        newLeft = elBounds.left + scrollX - horizontalOffset
+        newLeft = elBounds.right + scrollX - width + horizontalOffset
         if (newLeft < 0 || newLeft + width > innerWidth) {
-          newLeft = elBounds.right + scrollX - width + horizontalOffset
-          if (newLeft < 0 || newLeft + width > innerWidth) {
-            newLeft = horizontalOffset
-          }
+          newLeft = horizontalOffset
         }
       }
-
-      // Only update state when things changes to minimize renders
-      if (Math.round(newTop) !== Math.round(top)) {
-        top = newTop
-      }
-      if (Math.round(newLeft) !== Math.round(left)) {
-        left = newLeft
-      }
-
-      measured = true
     }
+
+    // Only update state when things changes to minimize renders
+    if (Math.round(newTop) !== Math.round(top)) {
+      top = newTop
+    }
+    if (Math.round(newLeft) !== Math.round(left)) {
+      left = newLeft
+    }
+
+    measured = true
   }
-  const debouncedUpdate = domDebounce(updatePosition)
+}
+const debouncedUpdate = domDebounce(updatePosition)
 
-  onMount(() => {
-    debouncedUpdate()
-    interval = setInterval(debouncedUpdate, 100)
-    document.addEventListener("scroll", debouncedUpdate, true)
-  })
+onMount(() => {
+  debouncedUpdate()
+  interval = setInterval(debouncedUpdate, 100)
+  document.addEventListener("scroll", debouncedUpdate, true)
+})
 
-  onDestroy(() => {
-    clearInterval(interval)
-    document.removeEventListener("scroll", debouncedUpdate, true)
-  })
+onDestroy(() => {
+  clearInterval(interval)
+  document.removeEventListener("scroll", debouncedUpdate, true)
+})
 </script>
 
 {#if showBar}

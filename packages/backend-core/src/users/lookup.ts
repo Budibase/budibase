@@ -4,9 +4,9 @@ import {
   PlatformUserByEmail,
   User,
 } from "@budibase/types"
-import * as dbUtils from "../db"
-import { ViewName } from "../constants"
 import { getExistingInvites } from "../cache/invite"
+import { ViewName } from "../constants"
+import * as dbUtils from "../db"
 
 /**
  * Apply a system-wide search on emails:

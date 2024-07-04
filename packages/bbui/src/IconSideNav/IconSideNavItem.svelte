@@ -1,13 +1,13 @@
 <script>
-  import Icon from "../Icon/Icon.svelte"
-  import Tooltip from "../Tooltip/Tooltip.svelte"
-  import { fade } from "svelte/transition"
+import { fade } from "svelte/transition"
+import Icon from "../Icon/Icon.svelte"
+import Tooltip from "../Tooltip/Tooltip.svelte"
 
-  export let icon
-  export let active = false
-  export let tooltip
+export let icon
+export let active = false
+export let tooltip
 
-  let showTooltip = false
+let showTooltip = false
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

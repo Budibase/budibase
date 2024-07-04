@@ -1,13 +1,13 @@
 <script>
-  import { MarkdownViewer } from "@budibase/bbui"
-  import { getContext } from "svelte"
-  import Placeholder from "./Placeholder.svelte"
+import { MarkdownViewer } from "@budibase/bbui"
+import { getContext } from "svelte"
+import Placeholder from "./Placeholder.svelte"
 
-  export let value
+export let value
 
-  const component = getContext("component")
-  const { builderStore, styleable } = getContext("sdk")
-  const height = $component.styles?.normal?.height
+const component = getContext("component")
+const { builderStore, styleable } = getContext("sdk")
+const height = $component.styles?.normal?.height
 </script>
 
 <div use:styleable={$component.styles}>

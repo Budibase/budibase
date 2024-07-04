@@ -1,33 +1,30 @@
 <script>
-  import { Body, Heading, Icon, Input, Layout } from "@budibase/bbui"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "dataBinding"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { createEventDispatcher } from "svelte"
+import { Body, Heading, Icon, Input, Layout } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { readableToRuntimeBinding, runtimeToReadableBinding } from "dataBinding"
+import { createEventDispatcher } from "svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let bindable = true
-  export let queryBindings = []
-  export let bindings = []
-  export let customParams = {}
+export let bindable = true
+export let queryBindings = []
+export let bindings = []
+export let customParams = {}
 
-  function deleteQueryBinding(idx) {
-    queryBindings.splice(idx, 1)
-    queryBindings = queryBindings
-  }
+function deleteQueryBinding(idx) {
+  queryBindings.splice(idx, 1)
+  queryBindings = queryBindings
+}
 
-  // This is necessary due to the way readable and writable bindings are stored.
-  // The readable binding in the UI gets converted to a UUID value that the client understands
-  // for parsing, then converted back so we can display it the readable form in the UI
-  function onBindingChange(param, valueToParse) {
-    dispatch("change", {
-      ...customParams,
-      [param]: readableToRuntimeBinding(bindings, valueToParse),
-    })
-  }
+// This is necessary due to the way readable and writable bindings are stored.
+// The readable binding in the UI gets converted to a UUID value that the client understands
+// for parsing, then converted back so we can display it the readable form in the UI
+function onBindingChange(param, valueToParse) {
+  dispatch("change", {
+    ...customParams,
+    [param]: readableToRuntimeBinding(bindings, valueToParse),
+  })
+}
 </script>
 
 <Layout noPadding={bindable} gap="S">

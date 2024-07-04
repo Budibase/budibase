@@ -1,26 +1,26 @@
 <script>
-  import "@spectrum-css/link/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
-  import Tooltip from "../Tooltip/Tooltip.svelte"
+import "@spectrum-css/link/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
+import Tooltip from "../Tooltip/Tooltip.svelte"
 
-  export let href = "#"
-  export let size = "M"
-  export let quiet = false
-  export let primary = false
-  export let secondary = false
-  export let overBackground = false
-  export let target
-  export let download
-  export let disabled = false
-  export let tooltip = null
+export let href = "#"
+export let size = "M"
+export let quiet = false
+export let primary = false
+export let secondary = false
+export let overBackground = false
+export let target
+export let download
+export let disabled = false
+export let tooltip = null
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  const onClick = () => {
-    if (!disabled) {
-      dispatch("click")
-    }
+const onClick = () => {
+  if (!disabled) {
+    dispatch("click")
   }
+}
 </script>
 
 <a

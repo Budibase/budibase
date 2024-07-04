@@ -1,35 +1,35 @@
 <script>
-  import {
-    Body,
-    FancyCheckboxGroup,
-    InlineAlert,
-    Layout,
-    ModalContent,
-  } from "@budibase/bbui"
-  import Spinner from "components/common/Spinner.svelte"
-  import { IntegrationTypes } from "constants/backend"
-  import { createTableSelectionStore } from "./tableSelectionStore"
+import {
+  Body,
+  FancyCheckboxGroup,
+  InlineAlert,
+  Layout,
+  ModalContent,
+} from "@budibase/bbui"
+import Spinner from "components/common/Spinner.svelte"
+import { IntegrationTypes } from "constants/backend"
+import { createTableSelectionStore } from "./tableSelectionStore"
 
-  export let integration
-  export let datasource
-  export let onComplete = () => {}
+export let integration
+export let datasource
+export let onComplete = () => {}
 
-  $: store = createTableSelectionStore(integration, datasource)
+$: store = createTableSelectionStore(integration, datasource)
 
-  $: isSheets = integration.name === IntegrationTypes.GOOGLE_SHEETS
-  $: tableType = isSheets ? "sheets" : "tables"
-  $: title = `Choose your ${tableType}`
+$: isSheets = integration.name === IntegrationTypes.GOOGLE_SHEETS
+$: tableType = isSheets ? "sheets" : "tables"
+$: title = `Choose your ${tableType}`
 
-  $: confirmText =
-    $store.loading || $store.hasSelected
-      ? `Fetch ${tableType}`
-      : "Continue without fetching"
+$: confirmText =
+  $store.loading || $store.hasSelected
+    ? `Fetch ${tableType}`
+    : "Continue without fetching"
 
-  $: description = isSheets
-    ? "Select which spreadsheets you want to connect."
-    : "Choose what tables you want to sync with Budibase"
+$: description = isSheets
+  ? "Select which spreadsheets you want to connect."
+  : "Choose what tables you want to sync with Budibase"
 
-  $: selectAllText = isSheets ? "Select all sheets" : "Select all"
+$: selectAllText = isSheets ? "Select all sheets" : "Select all"
 </script>
 
 <ModalContent

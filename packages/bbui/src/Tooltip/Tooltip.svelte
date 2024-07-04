@@ -1,9 +1,9 @@
 <script>
-  import "@spectrum-css/tooltip/dist/index-vars.css"
+import "@spectrum-css/tooltip/dist/index-vars.css"
 
-  export let direction = "top"
-  export let text = ""
-  export let textWrapping = false
+export let direction = "top"
+export let text = ""
+export let textWrapping = false
 </script>
 
 <!-- Showing / Hiding a text wrapped tooltip should be handled outside the component -->

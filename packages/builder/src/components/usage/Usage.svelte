@@ -1,37 +1,37 @@
 <script>
-  import { Body, ProgressBar, Heading, Icon, Link } from "@budibase/bbui"
-  import { admin, auth } from "stores/portal"
-  import { onMount } from "svelte"
+import { Body, Heading, Icon, Link, ProgressBar } from "@budibase/bbui"
+import { admin, auth } from "stores/portal"
+import { onMount } from "svelte"
 
-  export let usage
-  export let warnWhenFull = false
+export let usage
+export let warnWhenFull = false
 
-  let percentage
-  let unlimited = false
-  let showWarning = false
+let percentage
+let unlimited = false
+let showWarning = false
 
-  $: accountPortalAccess = $auth?.user?.accountPortalAccess
+$: accountPortalAccess = $auth?.user?.accountPortalAccess
 
-  const isUnlimited = () => {
-    if (usage.total === -1) {
-      return true
-    }
-    return false
+const isUnlimited = () => {
+  if (usage.total === -1) {
+    return true
   }
+  return false
+}
 
-  const getPercentage = () => {
-    return (usage.used / usage.total) * 100
+const getPercentage = () => {
+  return (usage.used / usage.total) * 100
+}
+
+const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+
+onMount(() => {
+  unlimited = isUnlimited()
+  percentage = getPercentage()
+  if (warnWhenFull && percentage >= 100) {
+    showWarning = true
   }
-
-  const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
-
-  onMount(() => {
-    unlimited = isUnlimited()
-    percentage = getPercentage()
-    if (warnWhenFull && percentage >= 100) {
-      showWarning = true
-    }
-  })
+})
 </script>
 
 <div class="usage">

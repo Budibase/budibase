@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// biome-ignore lint: no-unused-vars
 module ArangoMock {
   const arangodb: any = {}
 

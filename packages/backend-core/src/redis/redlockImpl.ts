@@ -1,9 +1,9 @@
-import Redlock from "redlock"
-import { getLockClient } from "./init"
-import { LockOptions, LockType } from "@budibase/types"
-import * as context from "../context"
 import { utils } from "@budibase/shared-core"
+import { LockOptions, LockType } from "@budibase/types"
+import Redlock from "redlock"
+import * as context from "../context"
 import { Duration } from "../utils"
+import { getLockClient } from "./init"
 
 async function getClient(
   type: LockType,

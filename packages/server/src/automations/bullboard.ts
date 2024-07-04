@@ -1,11 +1,11 @@
+import { queue } from "@budibase/backend-core"
+import { backups } from "@budibase/pro"
+import { createBullBoard } from "@bull-board/api"
 import { BullAdapter } from "@bull-board/api/bullAdapter"
 import { KoaAdapter } from "@bull-board/koa"
-import { queue } from "@budibase/backend-core"
-import * as automation from "../threads/automation"
-import { backups } from "@budibase/pro"
-import { getAppMigrationQueue } from "../appMigrations/queue"
-import { createBullBoard } from "@bull-board/api"
 import BullQueue from "bull"
+import { getAppMigrationQueue } from "../appMigrations/queue"
+import * as automation from "../threads/automation"
 
 export const automationQueue: BullQueue.Queue = queue.createQueue(
   queue.JobQueue.AUTOMATION,

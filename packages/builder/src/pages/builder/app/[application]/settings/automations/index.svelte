@@ -1,166 +1,160 @@
 <script>
-  import {
-    Layout,
-    Table,
-    Select,
-    Pagination,
-    Button,
-    Body,
-    Heading,
-    Divider,
-    Toggle,
-    notifications,
-  } from "@budibase/bbui"
-  import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
-  import StatusRenderer from "./_components/StatusRenderer.svelte"
-  import HistoryDetailsPanel from "./_components/HistoryDetailsPanel.svelte"
-  import { automationStore, appStore } from "stores/builder"
-  import { createPaginationStore } from "helpers/pagination"
-  import { getContext, onDestroy, onMount } from "svelte"
-  import dayjs from "dayjs"
-  import { auth, licensing, admin, appsStore } from "stores/portal"
-  import { Constants } from "@budibase/frontend-core"
-  import Portal from "svelte-portal"
+import {
+  Body,
+  Button,
+  Divider,
+  Heading,
+  Layout,
+  Pagination,
+  Select,
+  Table,
+  Toggle,
+  notifications,
+} from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
+import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
+import dayjs from "dayjs"
+import { createPaginationStore } from "helpers/pagination"
+import { appStore, automationStore } from "stores/builder"
+import { admin, appsStore, auth, licensing } from "stores/portal"
+import { getContext, onDestroy, onMount } from "svelte"
+import Portal from "svelte-portal"
+import HistoryDetailsPanel from "./_components/HistoryDetailsPanel.svelte"
+import StatusRenderer from "./_components/StatusRenderer.svelte"
 
-  const ERROR = "error",
-    SUCCESS = "success",
-    STOPPED = "stopped",
-    STOPPED_ERROR = "stopped_error"
-  const sidePanel = getContext("side-panel")
+const ERROR = "error",
+  SUCCESS = "success",
+  STOPPED = "stopped",
+  STOPPED_ERROR = "stopped_error"
+const sidePanel = getContext("side-panel")
 
-  let pageInfo = createPaginationStore()
-  let runHistory = null
-  let selectedHistory = null
-  let automationOptions = []
-  let automationId = null
-  let status = null
-  let timeRange = null
-  let loaded = false
-  $: app = $appsStore.apps.find(app => $appStore.appId?.includes(app.appId))
-  $: licensePlan = $auth.user?.license?.plan
-  $: page = $pageInfo.page
-  $: fetchLogs(automationId, status, page, timeRange)
-  $: isCloud = $admin.cloud
-  $: chainAutomations = app?.automations?.chainAutomations ?? !isCloud
-  const timeOptions = [
-    { value: "90-d", label: "Past 90 days" },
-    { value: "30-d", label: "Past 30 days" },
-    { value: "1-w", label: "Past week" },
-    { value: "1-d", label: "Past day" },
-    { value: "1-h", label: "Past 1 hour" },
-    { value: "15-m", label: "Past 15 mins" },
-    { value: "5-m", label: "Past 5 mins" },
-  ]
+let pageInfo = createPaginationStore()
+let runHistory = null
+let selectedHistory = null
+let automationOptions = []
+let automationId = null
+let status = null
+let timeRange = null
+let loaded = false
+$: app = $appsStore.apps.find(app => $appStore.appId?.includes(app.appId))
+$: licensePlan = $auth.user?.license?.plan
+$: page = $pageInfo.page
+$: fetchLogs(automationId, status, page, timeRange)
+$: isCloud = $admin.cloud
+$: chainAutomations = app?.automations?.chainAutomations ?? !isCloud
+const timeOptions = [
+  { value: "90-d", label: "Past 90 days" },
+  { value: "30-d", label: "Past 30 days" },
+  { value: "1-w", label: "Past week" },
+  { value: "1-d", label: "Past day" },
+  { value: "1-h", label: "Past 1 hour" },
+  { value: "15-m", label: "Past 15 mins" },
+  { value: "5-m", label: "Past 5 mins" },
+]
 
-  const statusOptions = [
-    { value: SUCCESS, label: "Success" },
-    { value: ERROR, label: "Error" },
-    { value: STOPPED, label: "Stopped" },
-    { value: STOPPED_ERROR, label: "Stopped - Error" },
-  ]
+const statusOptions = [
+  { value: SUCCESS, label: "Success" },
+  { value: ERROR, label: "Error" },
+  { value: STOPPED, label: "Stopped" },
+  { value: STOPPED_ERROR, label: "Stopped - Error" },
+]
 
-  const runHistorySchema = {
-    status: { displayName: "Status" },
-    automationName: { displayName: "Automation" },
-    createdAt: { displayName: "Time" },
+const runHistorySchema = {
+  status: { displayName: "Status" },
+  automationName: { displayName: "Automation" },
+  createdAt: { displayName: "Time" },
+}
+
+const customRenderers = [
+  { column: "createdAt", component: DateTimeRenderer },
+  { column: "status", component: StatusRenderer },
+]
+
+async function fetchLogs(automationId, status, page, timeRange, force = false) {
+  if (!force && !loaded) {
+    return
   }
-
-  const customRenderers = [
-    { column: "createdAt", component: DateTimeRenderer },
-    { column: "status", component: StatusRenderer },
-  ]
-
-  async function fetchLogs(
+  let startDate = null
+  if (timeRange) {
+    const [length, units] = timeRange.split("-")
+    startDate = dayjs().subtract(length, units)
+  }
+  const response = await automationStore.actions.getLogs({
     automationId,
     status,
     page,
-    timeRange,
-    force = false
-  ) {
-    if (!force && !loaded) {
-      return
+    startDate,
+  })
+  pageInfo.fetched(response.hasNextPage, response.nextPage)
+  runHistory = enrichHistory($automationStore.blockDefinitions, response.data)
+}
+
+function enrichHistory(definitions, runHistory) {
+  if (!definitions) {
+    return []
+  }
+  const finalHistory = []
+  for (let history of runHistory) {
+    if (!history.steps) {
+      continue
     }
-    let startDate = null
-    if (timeRange) {
-      const [length, units] = timeRange.split("-")
-      startDate = dayjs().subtract(length, units)
+    let notFound = false
+    for (let step of history.steps) {
+      const trigger = definitions.TRIGGER[step.stepId],
+        action = definitions.ACTION[step.stepId]
+      if (!trigger && !action) {
+        notFound = true
+        break
+      }
+      step.icon = trigger ? trigger.icon : action.icon
+      step.name = trigger ? trigger.name : action.name
     }
-    const response = await automationStore.actions.getLogs({
-      automationId,
-      status,
-      page,
-      startDate,
+    if (!notFound) {
+      finalHistory.push(history)
+    }
+  }
+  return finalHistory
+}
+
+function viewDetails({ detail }) {
+  selectedHistory = detail
+  sidePanel.open()
+}
+
+async function save({ detail }) {
+  try {
+    await appsStore.save($appStore.appId, {
+      automations: {
+        chainAutomations: detail,
+      },
     })
-    pageInfo.fetched(response.hasNextPage, response.nextPage)
-    runHistory = enrichHistory($automationStore.blockDefinitions, response.data)
+  } catch (error) {
+    notifications.error("Error updating automation chaining setting")
   }
+}
 
-  function enrichHistory(definitions, runHistory) {
-    if (!definitions) {
-      return []
-    }
-    const finalHistory = []
-    for (let history of runHistory) {
-      if (!history.steps) {
-        continue
-      }
-      let notFound = false
-      for (let step of history.steps) {
-        const trigger = definitions.TRIGGER[step.stepId],
-          action = definitions.ACTION[step.stepId]
-        if (!trigger && !action) {
-          notFound = true
-          break
-        }
-        step.icon = trigger ? trigger.icon : action.icon
-        step.name = trigger ? trigger.name : action.name
-      }
-      if (!notFound) {
-        finalHistory.push(history)
-      }
-    }
-    return finalHistory
+onMount(async () => {
+  await automationStore.actions.fetch()
+  const params = new URLSearchParams(window.location.search)
+  const shouldOpen = params.get("open") === ERROR
+  if (shouldOpen) {
+    status = ERROR
   }
-
-  function viewDetails({ detail }) {
-    selectedHistory = detail
-    sidePanel.open()
+  automationOptions = []
+  for (let automation of $automationStore.automations) {
+    automationOptions.push({ value: automation._id, label: automation.name })
   }
-
-  async function save({ detail }) {
-    try {
-      await appsStore.save($appStore.appId, {
-        automations: {
-          chainAutomations: detail,
-        },
-      })
-    } catch (error) {
-      notifications.error("Error updating automation chaining setting")
-    }
+  await fetchLogs(automationId, status, 0, timeRange, true)
+  // Open the first automation info if one exists
+  if (shouldOpen && runHistory?.[0]) {
+    viewDetails({ detail: runHistory[0] })
   }
+  loaded = true
+})
 
-  onMount(async () => {
-    await automationStore.actions.fetch()
-    const params = new URLSearchParams(window.location.search)
-    const shouldOpen = params.get("open") === ERROR
-    if (shouldOpen) {
-      status = ERROR
-    }
-    automationOptions = []
-    for (let automation of $automationStore.automations) {
-      automationOptions.push({ value: automation._id, label: automation.name })
-    }
-    await fetchLogs(automationId, status, 0, timeRange, true)
-    // Open the first automation info if one exists
-    if (shouldOpen && runHistory?.[0]) {
-      viewDetails({ detail: runHistory[0] })
-    }
-    loaded = true
-  })
-
-  onDestroy(() => {
-    sidePanel.close()
-  })
+onDestroy(() => {
+  sidePanel.close()
+})
 </script>
 
 <Layout noPadding>

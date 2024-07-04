@@ -1,48 +1,48 @@
 <script>
-  import { notifications, Icon, Body } from "@budibase/bbui"
-  import { isActive, goto } from "@roxi/routify"
-  import {
-    selectedScreen,
-    screenStore,
-    componentStore,
-    userSelectedResourceMap,
-    hoverStore,
-  } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
-  import ComponentTree from "./ComponentTree.svelte"
-  import { dndStore, DropPosition } from "./dndStore.js"
-  import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
-  import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
-  import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
-  import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
+import { Body, Icon, notifications } from "@budibase/bbui"
+import { goto, isActive } from "@roxi/routify"
+import NavItem from "components/common/NavItem.svelte"
+import {
+  componentStore,
+  hoverStore,
+  screenStore,
+  selectedScreen,
+  userSelectedResourceMap,
+} from "stores/builder"
+import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
+import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
+import ComponentTree from "./ComponentTree.svelte"
+import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
+import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
+import { DropPosition, dndStore } from "./dndStore.js"
 
-  let scrolling = false
+let scrolling = false
 
-  $: screenComponentId = `${$screenStore.selectedScreenId}-screen`
-  $: navComponentId = `${$screenStore.selectedScreenId}-navigation`
+$: screenComponentId = `${$screenStore.selectedScreenId}-screen`
+$: navComponentId = `${$screenStore.selectedScreenId}-navigation`
 
-  const toNewComponentRoute = () => {
-    if ($isActive(`./:componentId/new`)) {
-      $goto(`./:componentId`)
-    } else {
-      $goto(`./:componentId/new`)
-    }
+const toNewComponentRoute = () => {
+  if ($isActive(`./:componentId/new`)) {
+    $goto(`./:componentId`)
+  } else {
+    $goto(`./:componentId/new`)
   }
+}
 
-  const onDrop = async () => {
-    try {
-      await dndStore.actions.drop()
-    } catch (error) {
-      console.error(error)
-      notifications.error("Error saving component")
-    }
+const onDrop = async () => {
+  try {
+    await dndStore.actions.drop()
+  } catch (error) {
+    console.error(error)
+    notifications.error("Error saving component")
   }
+}
 
-  const handleScroll = e => {
-    scrolling = e.target.scrollTop !== 0
-  }
+const handleScroll = e => {
+  scrolling = e.target.scrollTop !== 0
+}
 
-  const hover = hoverStore.hover
+const hover = hoverStore.hover
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

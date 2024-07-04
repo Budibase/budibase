@@ -1,12 +1,12 @@
 <script>
-  import GoogleLogo from "assets/google-logo.png"
-  import { auth } from "stores/portal"
-  import { appStore } from "stores/builder"
+import GoogleLogo from "assets/google-logo.png"
+import { appStore } from "stores/builder"
+import { auth } from "stores/portal"
 
-  export let disabled
-  export let samePage
+export let disabled
+export let samePage
 
-  $: tenantId = $auth.tenantId
+$: tenantId = $auth.tenantId
 </script>
 
 <button

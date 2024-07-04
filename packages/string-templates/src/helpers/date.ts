@@ -1,13 +1,13 @@
 import dayjs from "dayjs"
 
-import dayjsDurationPlugin from "dayjs/plugin/duration"
 import dayjsAdvancedFormatPlugin from "dayjs/plugin/advancedFormat"
+import dayjsDurationPlugin from "dayjs/plugin/duration"
 import dayjsIsoWeekPlugin from "dayjs/plugin/isoWeek"
-import dayjsWeekYearPlugin from "dayjs/plugin/weekYear"
-import dayjsWeekOfYearPlugin from "dayjs/plugin/weekOfYear"
 import dayjsRelativeTimePlugin from "dayjs/plugin/relativeTime"
-import dayjsUtcPlugin from "dayjs/plugin/utc"
 import dayjsTimezonePlugin from "dayjs/plugin/timezone"
+import dayjsUtcPlugin from "dayjs/plugin/utc"
+import dayjsWeekOfYearPlugin from "dayjs/plugin/weekOfYear"
+import dayjsWeekYearPlugin from "dayjs/plugin/weekYear"
 
 dayjs.extend(dayjsDurationPlugin)
 dayjs.extend(dayjsAdvancedFormatPlugin)

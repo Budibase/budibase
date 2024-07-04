@@ -1,5 +1,5 @@
-import { writable, get, derived } from "svelte/store"
 import { tick } from "svelte"
+import { derived, get, writable } from "svelte/store"
 import {
   DefaultRowHeight,
   GutterWidth,

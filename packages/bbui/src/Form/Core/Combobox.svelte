@@ -1,41 +1,41 @@
 <script>
-  import "@spectrum-css/inputgroup/dist/index-vars.css"
-  import "@spectrum-css/popover/dist/index-vars.css"
-  import "@spectrum-css/menu/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
-  import clickOutside from "../../Actions/click_outside"
-  import Popover from "../../Popover/Popover.svelte"
+import "@spectrum-css/inputgroup/dist/index-vars.css"
+import "@spectrum-css/popover/dist/index-vars.css"
+import "@spectrum-css/menu/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
+import clickOutside from "../../Actions/click_outside"
+import Popover from "../../Popover/Popover.svelte"
 
-  export let value = null
-  export let id = null
-  export let placeholder = "Choose an option or type"
-  export let disabled = false
-  export let readonly = false
-  export let options = []
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
+export let value = null
+export let id = null
+export let placeholder = "Choose an option or type"
+export let disabled = false
+export let readonly = false
+export let options = []
+export let getOptionLabel = option => option
+export let getOptionValue = option => option
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let open = false
-  let focus = false
-  let anchor
+let open = false
+let focus = false
+let anchor
 
-  const selectOption = value => {
-    dispatch("change", value)
-    open = false
-  }
+const selectOption = value => {
+  dispatch("change", value)
+  open = false
+}
 
-  const onType = e => {
-    const value = e.target.value
-    dispatch("type", value)
-    selectOption(value)
-  }
+const onType = e => {
+  const value = e.target.value
+  dispatch("type", value)
+  selectOption(value)
+}
 
-  const onPick = value => {
-    dispatch("pick", value)
-    selectOption(value)
-  }
+const onPick = value => {
+  dispatch("pick", value)
+  selectOption(value)
+}
 </script>
 
 <div

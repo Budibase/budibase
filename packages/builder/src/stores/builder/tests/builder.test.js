@@ -1,8 +1,8 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
-import { get } from "svelte/store"
-import { INITIAL_BUILDER_STATE, BuilderStore } from "stores/builder/builder"
-import { createBuilderWebsocket } from "../websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
+import { BuilderStore, INITIAL_BUILDER_STATE } from "stores/builder/builder"
+import { get } from "svelte/store"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { createBuilderWebsocket } from "../websocket.js"
 
 vi.mock("../websocket.js")
 

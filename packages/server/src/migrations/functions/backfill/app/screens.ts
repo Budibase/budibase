@@ -1,6 +1,6 @@
 import { events } from "@budibase/backend-core"
-import { getScreenParams } from "../../../../db/utils"
 import { Screen } from "@budibase/types"
+import { getScreenParams } from "../../../../db/utils"
 
 const getScreens = async (appDb: any): Promise<Screen[]> => {
   const response = await appDb.allDocs(

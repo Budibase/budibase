@@ -1,49 +1,49 @@
 <script>
-  import { getContext, onMount } from "svelte"
-  import GridScrollWrapper from "./GridScrollWrapper.svelte"
-  import GridRow from "./GridRow.svelte"
-  import GridCell from "../cells/GridCell.svelte"
-  import { BlankRowID } from "../lib/constants"
-  import ButtonColumn from "./ButtonColumn.svelte"
+import { getContext, onMount } from "svelte"
+import GridCell from "../cells/GridCell.svelte"
+import { BlankRowID } from "../lib/constants"
+import ButtonColumn from "./ButtonColumn.svelte"
+import GridRow from "./GridRow.svelte"
+import GridScrollWrapper from "./GridScrollWrapper.svelte"
 
-  const {
-    bounds,
-    renderedRows,
-    visibleColumns,
-    hoveredRowId,
-    dispatch,
-    isDragging,
-    config,
-    props,
-  } = getContext("grid")
+const {
+  bounds,
+  renderedRows,
+  visibleColumns,
+  hoveredRowId,
+  dispatch,
+  isDragging,
+  config,
+  props,
+} = getContext("grid")
 
-  let body
+let body
 
-  $: columnsWidth = $visibleColumns.reduce(
-    (total, col) => (total += col.width),
-    0
-  )
+$: columnsWidth = $visibleColumns.reduce(
+  (total, col) => (total += col.width),
+  0
+)
 
-  const updateBounds = () => {
-    bounds.set(body.getBoundingClientRect())
+const updateBounds = () => {
+  bounds.set(body.getBoundingClientRect())
+}
+
+onMount(() => {
+  // Observe and record the height of the body
+  const resizeObserver = new ResizeObserver(updateBounds)
+  resizeObserver.observe(body)
+
+  // Capture any wheel events on the page to ensure our scroll offset is
+  // correct. We don't care about touch events as we only need this for
+  // hovering over rows with a mouse.
+  window.addEventListener("wheel", updateBounds, true)
+
+  // Clean up listeners
+  return () => {
+    resizeObserver.disconnect()
+    window.removeEventListener("wheel", updateBounds, true)
   }
-
-  onMount(() => {
-    // Observe and record the height of the body
-    const resizeObserver = new ResizeObserver(updateBounds)
-    resizeObserver.observe(body)
-
-    // Capture any wheel events on the page to ensure our scroll offset is
-    // correct. We don't care about touch events as we only need this for
-    // hovering over rows with a mouse.
-    window.addEventListener("wheel", updateBounds, true)
-
-    // Clean up listeners
-    return () => {
-      resizeObserver.disconnect()
-      window.removeEventListener("wheel", updateBounds, true)
-    }
-  })
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

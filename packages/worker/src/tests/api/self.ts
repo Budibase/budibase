@@ -1,5 +1,5 @@
-import TestConfiguration from "../TestConfiguration"
 import { User } from "@budibase/types"
+import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 
 export class SelfAPI extends TestAPI {

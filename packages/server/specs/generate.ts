@@ -1,7 +1,7 @@
-import { join } from "path"
 import { writeFileSync } from "fs"
-import { examples, schemas } from "./resources"
+import { join } from "path"
 import * as parameters from "./parameters"
+import { examples, schemas } from "./resources"
 import * as security from "./security"
 
 const swaggerJsdoc = require("swagger-jsdoc")

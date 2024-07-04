@@ -1,21 +1,21 @@
-import viewTemplate from "./viewBuilder"
-import { apiFileReturn } from "../../../utilities/fileSystem"
-import { csv, json, jsonWithSchema, Format, isFormat } from "./exporters"
-import { deleteView, getView, getViews, saveView } from "./utils"
-import { fetchView } from "../row"
-import { context, events } from "@budibase/backend-core"
-import sdk from "../../../sdk"
+import { events, context } from "@budibase/backend-core"
 import {
-  FieldType,
   Ctx,
+  DocumentType,
+  FieldType,
   Row,
   Table,
   TableExportFormat,
   TableSchema,
   View,
-  DocumentType,
 } from "@budibase/types"
+import sdk from "../../../sdk"
+import { apiFileReturn } from "../../../utilities/fileSystem"
 import { builderSocket } from "../../../websockets"
+import { fetchView } from "../row"
+import { Format, csv, isFormat, json, jsonWithSchema } from "./exporters"
+import { deleteView, getView, getViews, saveView } from "./utils"
+import viewTemplate from "./viewBuilder"
 
 const cloneDeep = require("lodash/cloneDeep")
 

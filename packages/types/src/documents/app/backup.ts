@@ -1,5 +1,5 @@
-import { Document } from "../document"
 import { User } from "../../"
+import { Document } from "../document"
 
 export enum AppBackupType {
   BACKUP = "backup",

@@ -1,6 +1,6 @@
+import { timers, env as coreEnv } from "@budibase/backend-core"
 import { mocks, testContainerUtils } from "@budibase/backend-core/tests"
 import env from "../environment"
-import { env as coreEnv, timers } from "@budibase/backend-core"
 
 // must explicitly enable fetch mock
 mocks.fetch.enable()

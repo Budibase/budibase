@@ -4,8 +4,8 @@ import {
   InviteUsersRequest,
   InviteUsersResponse,
 } from "@budibase/types"
-import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
+import { sendEmail } from "../../utilities/email"
 
 export async function invite(
   users: InviteUsersRequest

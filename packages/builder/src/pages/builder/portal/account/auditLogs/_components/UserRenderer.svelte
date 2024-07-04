@@ -1,7 +1,7 @@
 <script>
-  import { UserAvatar } from "@budibase/frontend-core"
+import { UserAvatar } from "@budibase/frontend-core"
 
-  export let row
+export let row
 </script>
 
 {#if row?.user?.email}

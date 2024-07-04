@@ -1,97 +1,97 @@
 <script>
-  import "@spectrum-css/textfield/dist/index-vars.css"
-  import "@spectrum-css/actionbutton/dist/index-vars.css"
-  import "@spectrum-css/stepper/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+import "@spectrum-css/textfield/dist/index-vars.css"
+import "@spectrum-css/actionbutton/dist/index-vars.css"
+import "@spectrum-css/stepper/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
 
-  export let value = null
-  export let placeholder = null
-  export let disabled = false
-  export let id = null
-  export let readonly = false
-  export let updateOnChange = true
-  export let quiet = false
-  export let min
-  export let max
-  export let step
+export let value = null
+export let placeholder = null
+export let disabled = false
+export let id = null
+export let readonly = false
+export let updateOnChange = true
+export let quiet = false
+export let min
+export let max
+export let step
 
-  const dispatch = createEventDispatcher()
-  let focus = false
+const dispatch = createEventDispatcher()
+let focus = false
 
-  // We need to keep the field value bound to a different variable in order
-  // to properly handle erroneous values. If we don't do this then it is
-  // possible for the field to show stale text which does not represent the
-  // real value. The reactive statement is to ensure that external changes to
-  // the value prop are reflected.
-  let fieldValue = value
-  $: fieldValue = value
+// We need to keep the field value bound to a different variable in order
+// to properly handle erroneous values. If we don't do this then it is
+// possible for the field to show stale text which does not represent the
+// real value. The reactive statement is to ensure that external changes to
+// the value prop are reflected.
+let fieldValue = value
+$: fieldValue = value
 
-  // Ensure step is always a numeric value defaulting to 1
-  $: step = step == null || isNaN(step) ? 1 : step
+// Ensure step is always a numeric value defaulting to 1
+$: step = step == null || isNaN(step) ? 1 : step
 
-  const updateValue = value => {
-    if (readonly) {
-      return
-    }
-    const float = parseFloat(value)
-    value = isNaN(float) ? null : float
-    if (value != null) {
-      if (min != null && value < min) {
-        value = min
-      } else if (max != null && value > max) {
-        value = max
-      }
-    }
-    dispatch("change", value)
-    fieldValue = value
+const updateValue = value => {
+  if (readonly) {
+    return
   }
-
-  const onFocus = () => {
-    if (readonly) {
-      return
+  const float = parseFloat(value)
+  value = isNaN(float) ? null : float
+  if (value != null) {
+    if (min != null && value < min) {
+      value = min
+    } else if (max != null && value > max) {
+      value = max
     }
-    focus = true
   }
+  dispatch("change", value)
+  fieldValue = value
+}
 
-  const onBlur = event => {
-    if (readonly) {
-      return
-    }
-    focus = false
+const onFocus = () => {
+  if (readonly) {
+    return
+  }
+  focus = true
+}
+
+const onBlur = event => {
+  if (readonly) {
+    return
+  }
+  focus = false
+  updateValue(event.target.value)
+}
+
+const onInput = event => {
+  if (readonly || !updateOnChange) {
+    return
+  }
+  updateValue(event.target.value)
+}
+
+const updateValueOnEnter = event => {
+  if (readonly) {
+    return
+  }
+  if (event.key === "Enter") {
     updateValue(event.target.value)
   }
+}
 
-  const onInput = event => {
-    if (readonly || !updateOnChange) {
-      return
-    }
-    updateValue(event.target.value)
+const stepUp = () => {
+  if (value == null || isNaN(value)) {
+    updateValue(step)
+  } else {
+    updateValue(value + step)
   }
+}
 
-  const updateValueOnEnter = event => {
-    if (readonly) {
-      return
-    }
-    if (event.key === "Enter") {
-      updateValue(event.target.value)
-    }
+const stepDown = () => {
+  if (value == null || isNaN(value)) {
+    updateValue(step)
+  } else {
+    updateValue(value - step)
   }
-
-  const stepUp = () => {
-    if (value == null || isNaN(value)) {
-      updateValue(step)
-    } else {
-      updateValue(value + step)
-    }
-  }
-
-  const stepDown = () => {
-    if (value == null || isNaN(value)) {
-      updateValue(step)
-    } else {
-      updateValue(value - step)
-    }
-  }
+}
 </script>
 
 <div

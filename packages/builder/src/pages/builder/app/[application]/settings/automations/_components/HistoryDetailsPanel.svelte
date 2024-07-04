@@ -1,26 +1,26 @@
 <script>
-  import {
-    Layout,
-    Body,
-    Button,
-    InlineAlert,
-    Heading,
-    Icon,
-  } from "@budibase/bbui"
-  import StatusRenderer from "./StatusRenderer.svelte"
-  import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
-  import TestDisplay from "components/automation/AutomationBuilder/TestDisplay.svelte"
-  import { goto } from "@roxi/routify"
-  import { automationStore } from "stores/builder"
+import {
+  Body,
+  Button,
+  Heading,
+  Icon,
+  InlineAlert,
+  Layout,
+} from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import TestDisplay from "components/automation/AutomationBuilder/TestDisplay.svelte"
+import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
+import { automationStore } from "stores/builder"
+import StatusRenderer from "./StatusRenderer.svelte"
 
-  export let history
-  export let appId
-  export let close
-  const STOPPED_ERROR = "stopped_error"
+export let history
+export let appId
+export let close
+const STOPPED_ERROR = "stopped_error"
 
-  $: exists = $automationStore.automations?.find(
-    auto => auto._id === history?.automationId
-  )
+$: exists = $automationStore.automations?.find(
+  auto => auto._id === history?.automationId
+)
 </script>
 
 {#if history}

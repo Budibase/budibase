@@ -7,6 +7,7 @@ jest.mock("../../../sdk/app/permissions", () => ({
 import sdk from "../../../sdk"
 
 import { roles } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import {
   Document,
   DocumentType,
@@ -16,7 +17,6 @@ import {
   ViewV2,
 } from "@budibase/types"
 import * as setup from "./utilities"
-import { generator, mocks } from "@budibase/backend-core/tests"
 
 const { basicRow } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles

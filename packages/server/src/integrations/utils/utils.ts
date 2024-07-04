@@ -1,20 +1,20 @@
+import fs from "fs"
+import { context, objectStore, sql } from "@budibase/backend-core"
+import { helpers, utils } from "@budibase/shared-core"
 import {
+  Datasource,
+  FieldSchema,
+  FieldType,
   SqlQuery,
   Table,
-  Datasource,
-  FieldType,
-  FieldSchema,
 } from "@budibase/types"
-import { context, objectStore, sql } from "@budibase/backend-core"
-import { v4 } from "uuid"
-import { parseStringPromise as xmlParser } from "xml2js"
-import { formatBytes } from "../../utilities"
-import env from "../../environment"
-import { InvalidColumns } from "../../constants"
-import { helpers, utils } from "@budibase/shared-core"
 import { pipeline } from "stream/promises"
 import tmp from "tmp"
-import fs from "fs"
+import { v4 } from "uuid"
+import { parseStringPromise as xmlParser } from "xml2js"
+import { InvalidColumns } from "../../constants"
+import env from "../../environment"
+import { formatBytes } from "../../utilities"
 
 type PrimitiveTypes =
   | FieldType.STRING
@@ -124,8 +124,8 @@ const isSelfHost = env.isProd() && env.SELF_HOSTED
 export const HOST_ADDRESS = isSelfHost
   ? "host.docker.internal"
   : isCloud
-  ? ""
-  : "localhost"
+    ? ""
+    : "localhost"
 
 export function generateColumnDefinition(config: {
   externalType: string

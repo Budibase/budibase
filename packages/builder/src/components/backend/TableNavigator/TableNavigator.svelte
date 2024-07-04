@@ -1,31 +1,31 @@
 <script>
-  import {
-    tables as tablesStore,
-    views,
-    viewsV2,
-    userSelectedResourceMap,
-  } from "stores/builder"
-  import { TableNames } from "constants"
-  import EditTablePopover from "./popovers/EditTablePopover.svelte"
-  import EditViewPopover from "./popovers/EditViewPopover.svelte"
-  import NavItem from "components/common/NavItem.svelte"
-  import { goto, isActive } from "@roxi/routify"
+import { TableNames } from "constants"
+import { goto, isActive } from "@roxi/routify"
+import NavItem from "components/common/NavItem.svelte"
+import {
+  tables as tablesStore,
+  userSelectedResourceMap,
+  views,
+  viewsV2,
+} from "stores/builder"
+import EditTablePopover from "./popovers/EditTablePopover.svelte"
+import EditViewPopover from "./popovers/EditViewPopover.svelte"
 
-  export let tables
-  export let selectTable
+export let tables
+export let selectTable
 
-  $: sortedTables = tables.sort(alphabetical)
+$: sortedTables = tables.sort(alphabetical)
 
-  const alphabetical = (a, b) => {
-    return a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
-  }
+const alphabetical = (a, b) => {
+  return a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
+}
 
-  const isViewActive = (view, isActive, views, viewsV2) => {
-    return (
-      (isActive("./view/v1") && views.selected?.name === view.name) ||
-      (isActive("./view/v2") && viewsV2.selected?.id === view.id)
-    )
-  }
+const isViewActive = (view, isActive, views, viewsV2) => {
+  return (
+    (isActive("./view/v1") && views.selected?.name === view.name) ||
+    (isActive("./view/v2") && viewsV2.selected?.id === view.id)
+  )
+}
 </script>
 
 <div class="hierarchy-items-container">

@@ -1,11 +1,11 @@
 <script>
-  import Checkbox from "../Form/Checkbox.svelte"
-  import ActionButton from "../ActionButton/ActionButton.svelte"
+import ActionButton from "../ActionButton/ActionButton.svelte"
+import Checkbox from "../Form/Checkbox.svelte"
 
-  export let selected
-  export let onEdit
-  export let allowSelectRows = false
-  export let allowEditRows = false
+export let selected
+export let onEdit
+export let allowSelectRows = false
+export let allowEditRows = false
 </script>
 
 <div>

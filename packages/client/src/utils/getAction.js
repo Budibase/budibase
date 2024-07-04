@@ -1,5 +1,5 @@
-import { get } from "svelte/store"
 import { getContext } from "svelte"
+import { get } from "svelte/store"
 
 /**
  * Gets a component action.

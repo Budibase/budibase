@@ -1,8 +1,8 @@
 <script>
-  import { Label, Toggle } from "@budibase/bbui"
+import { Label, Toggle } from "@budibase/bbui"
 
-  export let value
-  export let name
+export let value
+export let name
 </script>
 
 <div class="form-row">

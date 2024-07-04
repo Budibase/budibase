@@ -1,5 +1,5 @@
 import { Duration, cache, db, env } from "@budibase/backend-core"
-import { Database, DocumentType, Document } from "@budibase/types"
+import { Database, Document, DocumentType } from "@budibase/types"
 
 export interface AppMigrationDoc extends Document {
   version: string

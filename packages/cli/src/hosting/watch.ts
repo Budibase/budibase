@@ -1,8 +1,8 @@
-import { resolve } from "path"
 import fs from "fs"
+import { resolve } from "path"
 import { error, success } from "../utils"
-import { updateDockerComposeService } from "./utils"
 import { DockerCompose } from "./types"
+import { updateDockerComposeService } from "./utils"
 
 export async function watchPlugins(pluginPath: string, silent: boolean) {
   const PLUGIN_PATH = "/plugins"

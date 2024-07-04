@@ -1,239 +1,239 @@
 <script>
-  import {
-    Context,
-    Icon,
-    Input,
-    ModalContent,
-    Detail,
-    notifications,
-  } from "@budibase/bbui"
-  import { API } from "api"
-  import { goto } from "@roxi/routify"
-  import {
-    automationStore,
-    previewStore,
-    builderStore,
-    sortedScreens,
-    appStore,
-    datasources,
-    queries,
-    tables,
-    views,
-  } from "stores/builder"
-  import { themeStore } from "stores/portal"
-  import { getContext } from "svelte"
-  import { Constants } from "@budibase/frontend-core"
+import {
+  Context,
+  Detail,
+  Icon,
+  Input,
+  ModalContent,
+  notifications,
+} from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
+import { goto } from "@roxi/routify"
+import { API } from "api"
+import {
+  appStore,
+  automationStore,
+  builderStore,
+  datasources,
+  previewStore,
+  queries,
+  sortedScreens,
+  tables,
+  views,
+} from "stores/builder"
+import { themeStore } from "stores/portal"
+import { getContext } from "svelte"
 
-  const modalContext = getContext(Context.Modal)
-  const commands = [
-    {
-      type: "Access",
-      name: "Invite users and manage app access",
-      description: "",
-      icon: "User",
-      action: () => builderStore.showBuilderSidePanel(),
+const modalContext = getContext(Context.Modal)
+const commands = [
+  {
+    type: "Access",
+    name: "Invite users and manage app access",
+    description: "",
+    icon: "User",
+    action: () => builderStore.showBuilderSidePanel(),
+  },
+  {
+    type: "Navigate",
+    name: "Portal",
+    description: "",
+    icon: "Compass",
+    action: () => $goto("../../portal"),
+  },
+  {
+    type: "Navigate",
+    name: "Data",
+    description: "",
+    icon: "Compass",
+    action: () => $goto("./data"),
+  },
+  {
+    type: "Navigate",
+    name: "Design",
+    description: "",
+    icon: "Compass",
+    action: () => $goto("./design"),
+  },
+  {
+    type: "Navigate",
+    name: "Automations",
+    description: "",
+    icon: "Compass",
+    action: () => $goto("./automation"),
+  },
+  {
+    type: "Publish",
+    name: "App",
+    description: "Deploy your application",
+    icon: "Box",
+    action: deployApp,
+  },
+  {
+    type: "Preview",
+    name: "App",
+    description: "",
+    icon: "Play",
+    action: () => previewStore.showPreview(true),
+  },
+  {
+    type: "Preview",
+    name: "Published App",
+    icon: "Play",
+    action: () => window.open(`/app${$appStore.url}`),
+  },
+  {
+    type: "Support",
+    name: "Raise Github Discussion",
+    icon: "Help",
+    action: () =>
+      window.open(`https://github.com/Budibase/budibase/discussions/new`),
+  },
+  {
+    type: "Support",
+    name: "Raise A Bug",
+    icon: "Bug",
+    action: () =>
+      window.open(
+        `https://github.com/Budibase/budibase/issues/new?assignees=&labels=bug&template=bug_report.md&title=`
+      ),
+  },
+  ...($datasources?.list?.map(datasource => ({
+    type: "Datasource",
+    name: `${datasource.name}`,
+    icon: "Data",
+    action: () => $goto(`./data/datasource/${datasource._id}`),
+  })) ?? []),
+  ...($tables?.list?.map(table => ({
+    type: "Table",
+    name: table.name,
+    icon: "Table",
+    action: () => $goto(`./data/table/${table._id}`),
+  })) ?? []),
+  ...($views?.list?.map(view => ({
+    type: "View",
+    name: view.name,
+    icon: "Remove",
+    action: () => {
+      if (view.version === 2) {
+        $goto(`./data/view/v2/${view.id}`)
+      } else {
+        $goto(`./data/view/${view.name}`)
+      }
     },
-    {
-      type: "Navigate",
-      name: "Portal",
-      description: "",
-      icon: "Compass",
-      action: () => $goto("../../portal"),
+  })) ?? []),
+  ...($queries?.list?.map(query => ({
+    type: "Query",
+    name: query.name,
+    icon: "SQLQuery",
+    action: () => $goto(`./data/query/${query._id}`),
+  })) ?? []),
+  ...$sortedScreens.map(screen => ({
+    type: "Screen",
+    name: screen.routing.route,
+    icon: "WebPage",
+    action: () => {
+      $goto(`./design/${screen._id}/${screen._id}-screen`)
     },
-    {
-      type: "Navigate",
-      name: "Data",
-      description: "",
-      icon: "Compass",
-      action: () => $goto("./data"),
-    },
-    {
-      type: "Navigate",
-      name: "Design",
-      description: "",
-      icon: "Compass",
-      action: () => $goto("./design"),
-    },
-    {
-      type: "Navigate",
-      name: "Automations",
-      description: "",
-      icon: "Compass",
-      action: () => $goto("./automation"),
-    },
-    {
-      type: "Publish",
-      name: "App",
-      description: "Deploy your application",
-      icon: "Box",
-      action: deployApp,
-    },
-    {
-      type: "Preview",
-      name: "App",
-      description: "",
-      icon: "Play",
-      action: () => previewStore.showPreview(true),
-    },
-    {
-      type: "Preview",
-      name: "Published App",
-      icon: "Play",
-      action: () => window.open(`/app${$appStore.url}`),
-    },
-    {
-      type: "Support",
-      name: "Raise Github Discussion",
-      icon: "Help",
-      action: () =>
-        window.open(`https://github.com/Budibase/budibase/discussions/new`),
-    },
-    {
-      type: "Support",
-      name: "Raise A Bug",
-      icon: "Bug",
-      action: () =>
-        window.open(
-          `https://github.com/Budibase/budibase/issues/new?assignees=&labels=bug&template=bug_report.md&title=`
-        ),
-    },
-    ...($datasources?.list?.map(datasource => ({
-      type: "Datasource",
-      name: `${datasource.name}`,
-      icon: "Data",
-      action: () => $goto(`./data/datasource/${datasource._id}`),
-    })) ?? []),
-    ...($tables?.list?.map(table => ({
-      type: "Table",
-      name: table.name,
-      icon: "Table",
-      action: () => $goto(`./data/table/${table._id}`),
-    })) ?? []),
-    ...($views?.list?.map(view => ({
-      type: "View",
-      name: view.name,
-      icon: "Remove",
-      action: () => {
-        if (view.version === 2) {
-          $goto(`./data/view/v2/${view.id}`)
-        } else {
-          $goto(`./data/view/${view.name}`)
-        }
-      },
-    })) ?? []),
-    ...($queries?.list?.map(query => ({
-      type: "Query",
-      name: query.name,
-      icon: "SQLQuery",
-      action: () => $goto(`./data/query/${query._id}`),
-    })) ?? []),
-    ...$sortedScreens.map(screen => ({
-      type: "Screen",
-      name: screen.routing.route,
-      icon: "WebPage",
-      action: () => {
-        $goto(`./design/${screen._id}/${screen._id}-screen`)
-      },
-    })),
-    ...($automationStore?.automations?.map(automation => ({
-      type: "Automation",
-      name: automation.name,
-      icon: "ShareAndroid",
-      action: () => $goto(`./automation/${automation._id}`),
-    })) ?? []),
-    ...Constants.Themes.map(theme => ({
-      type: "Change Builder Theme",
-      name: theme.name,
-      icon: "ColorPalette",
-      action: () =>
-        themeStore.update(state => {
-          state.theme = theme.class
-          return state
-        }),
-    })),
-  ]
+  })),
+  ...($automationStore?.automations?.map(automation => ({
+    type: "Automation",
+    name: automation.name,
+    icon: "ShareAndroid",
+    action: () => $goto(`./automation/${automation._id}`),
+  })) ?? []),
+  ...Constants.Themes.map(theme => ({
+    type: "Change Builder Theme",
+    name: theme.name,
+    icon: "ColorPalette",
+    action: () =>
+      themeStore.update(state => {
+        state.theme = theme.class
+        return state
+      }),
+  })),
+]
 
-  let search
-  let selected = null
+let search
+let selected = null
 
-  $: enrichedCommands = commands.map(cmd => ({
-    ...cmd,
-    searchValue: `${cmd.type} ${cmd.name}`.toLowerCase(),
-  }))
-  $: results = filterResults(enrichedCommands, search)
-  $: categories = groupResults(results)
+$: enrichedCommands = commands.map(cmd => ({
+  ...cmd,
+  searchValue: `${cmd.type} ${cmd.name}`.toLowerCase(),
+}))
+$: results = filterResults(enrichedCommands, search)
+$: categories = groupResults(results)
 
-  const filterResults = (commands, search) => {
-    if (!search) {
-      selected = null
-      return commands
-    }
-    selected = 0
-    search = search.toLowerCase()
+const filterResults = (commands, search) => {
+  if (!search) {
+    selected = null
     return commands
-      .filter(cmd => cmd.searchValue.includes(search))
-      .map((cmd, idx) => ({
-        ...cmd,
-        idx,
-      }))
   }
+  selected = 0
+  search = search.toLowerCase()
+  return commands
+    .filter(cmd => cmd.searchValue.includes(search))
+    .map((cmd, idx) => ({
+      ...cmd,
+      idx,
+    }))
+}
 
-  const groupResults = results => {
-    let categories = {}
-    results?.forEach(result => {
-      if (!categories[result.type]) {
-        categories[result.type] = []
-      }
-      categories[result.type].push(result)
-    })
-    return Object.entries(categories)
-  }
-
-  const onKeyDown = e => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault()
-      if (selected === null) {
-        selected = 0
-        return
-      }
-      if (selected < results.length - 1) {
-        selected += 1
-      }
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault()
-      if (selected === null) {
-        selected = results.length - 1
-        return
-      }
-      if (selected > 0) {
-        selected -= 1
-      }
-    } else if (e.key === "Enter") {
-      if (selected == null) {
-        return
-      }
-      runAction(results[selected])
-    } else if (e.key === "Escape") {
-      modalContext.hide()
+const groupResults = results => {
+  let categories = {}
+  results?.forEach(result => {
+    if (!categories[result.type]) {
+      categories[result.type] = []
     }
-  }
+    categories[result.type].push(result)
+  })
+  return Object.entries(categories)
+}
 
-  async function deployApp() {
-    try {
-      await API.publishAppChanges($appStore.appId)
-      notifications.success("App published successfully")
-    } catch (error) {
-      notifications.error("Error publishing app")
-    }
-  }
-
-  const runAction = command => {
-    if (!command) {
+const onKeyDown = e => {
+  if (e.key === "ArrowDown") {
+    e.preventDefault()
+    if (selected === null) {
+      selected = 0
       return
     }
-    command.action()
+    if (selected < results.length - 1) {
+      selected += 1
+    }
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault()
+    if (selected === null) {
+      selected = results.length - 1
+      return
+    }
+    if (selected > 0) {
+      selected -= 1
+    }
+  } else if (e.key === "Enter") {
+    if (selected == null) {
+      return
+    }
+    runAction(results[selected])
+  } else if (e.key === "Escape") {
     modalContext.hide()
   }
+}
+
+async function deployApp() {
+  try {
+    await API.publishAppChanges($appStore.appId)
+    notifications.success("App published successfully")
+  } catch (error) {
+    notifications.error("Error publishing app")
+  }
+}
+
+const runAction = command => {
+  if (!command) {
+    return
+  }
+  command.action()
+  modalContext.hide()
+}
 </script>
 
 <svelte:window on:keydown={onKeyDown} />

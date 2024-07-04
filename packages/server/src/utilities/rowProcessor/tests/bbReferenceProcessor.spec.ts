@@ -1,17 +1,17 @@
-import _ from "lodash"
 import * as backendCore from "@budibase/backend-core"
+import {
+  DBTestConfiguration,
+  generator,
+  structures,
+} from "@budibase/backend-core/tests"
 import { BBReferenceFieldSubType, User } from "@budibase/types"
+import _ from "lodash"
 import {
   processInputBBReference,
   processInputBBReferences,
   processOutputBBReference,
   processOutputBBReferences,
 } from "../bbReferenceProcessor"
-import {
-  DBTestConfiguration,
-  generator,
-  structures,
-} from "@budibase/backend-core/tests"
 import { InvalidBBRefError } from "../errors"
 
 jest.mock("@budibase/backend-core", (): typeof backendCore => {

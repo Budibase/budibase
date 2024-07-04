@@ -1,4 +1,4 @@
-import { prefixed, DocumentType } from "@budibase/types"
+import { DocumentType, prefixed } from "@budibase/types"
 
 export {
   SEPARATOR,

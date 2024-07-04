@@ -1,10 +1,10 @@
-import { publishEvent } from "../events"
 import {
   Event,
   Screen,
   ScreenCreatedEvent,
   ScreenDeletedEvent,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 async function created(screen: Screen, timestamp?: string | number) {
   const properties: ScreenCreatedEvent = {

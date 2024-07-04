@@ -1,35 +1,35 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import { ActionButton, Body, Icon, Modal, ModalContent } from "@budibase/bbui"
+import { ActionButton, Body, Icon, Modal, ModalContent } from "@budibase/bbui"
+import { createEventDispatcher } from "svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let value = ""
-  let selected = value
+export let value = ""
+let selected = value
 
-  let modal
-  let layoutMap = {
-    mainSidebar: {
-      name: "Main with Sidebar",
-      icon: "ColumnTwoB",
-    },
-    sidebarMain: {
-      name: "Sidebar with Main",
-      icon: "ColumnTwoC",
-    },
-    oneColumn: {
-      name: "One column",
-      icon: "LoupeView",
-    },
-    twoColumns: {
-      name: "Two columns",
-      icon: "ColumnTwoA",
-    },
-    threeColumns: {
-      name: "Three columns",
-      icon: "ViewColumn",
-    },
-  }
+let modal
+let layoutMap = {
+  mainSidebar: {
+    name: "Main with Sidebar",
+    icon: "ColumnTwoB",
+  },
+  sidebarMain: {
+    name: "Sidebar with Main",
+    icon: "ColumnTwoC",
+  },
+  oneColumn: {
+    name: "One column",
+    icon: "LoupeView",
+  },
+  twoColumns: {
+    name: "Two columns",
+    icon: "ColumnTwoA",
+  },
+  threeColumns: {
+    name: "Three columns",
+    icon: "ViewColumn",
+  },
+}
 </script>
 
 <ActionButton on:click={modal.show}>

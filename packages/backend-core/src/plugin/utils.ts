@@ -1,12 +1,12 @@
 import {
-  DatasourceFieldType,
-  QueryType,
-  PluginType,
-  AutomationStepType,
-  AutomationStepIdArray,
-  AutomationIOType,
   AutomationCustomIOType,
+  AutomationIOType,
+  AutomationStepIdArray,
+  AutomationStepType,
   DatasourceFeature,
+  DatasourceFieldType,
+  PluginType,
+  QueryType,
 } from "@budibase/types"
 import joi from "joi"
 

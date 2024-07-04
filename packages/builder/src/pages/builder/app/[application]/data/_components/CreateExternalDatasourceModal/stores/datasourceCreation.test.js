@@ -1,9 +1,9 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
-import {
-  defaultStore,
-  createDatasourceCreationStore,
-} from "./datasourceCreation"
 import { get } from "svelte/store"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import {
+  createDatasourceCreationStore,
+  defaultStore,
+} from "./datasourceCreation"
 
 vi.mock("stores/selectors", () => ({
   shouldIntegrationFetchTableNames: vi.fn(),

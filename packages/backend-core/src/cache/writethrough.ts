@@ -1,8 +1,8 @@
-import BaseCache from "./base"
-import { getWritethroughClient } from "../redis/init"
-import { logWarn } from "../logging"
 import { Database, Document, LockName, LockType } from "@budibase/types"
+import { logWarn } from "../logging"
+import { getWritethroughClient } from "../redis/init"
 import * as locks from "../redis/redlockImpl"
+import BaseCache from "./base"
 
 const DEFAULT_WRITE_RATE_MS = 10000
 let CACHE: BaseCache | null = null

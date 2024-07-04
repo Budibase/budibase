@@ -1,8 +1,8 @@
+import { context } from "@budibase/backend-core"
+import { FieldType, RelationshipType, Table } from "@budibase/types"
 import TestConfig from "../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../tests/utilities/structures"
 import * as linkUtils from "../linkedRows/linkUtils"
-import { context } from "@budibase/backend-core"
-import { FieldType, RelationshipType, Table } from "@budibase/types"
 
 describe("test link functionality", () => {
   const config = new TestConfig()

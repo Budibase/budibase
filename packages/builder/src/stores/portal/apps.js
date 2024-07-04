@@ -1,8 +1,8 @@
-import { derived } from "svelte/store"
 import { AppStatus } from "constants"
 import { API } from "api"
-import { auth } from "./auth"
+import { derived } from "svelte/store"
 import BudiStore from "../BudiStore" // move this
+import { auth } from "./auth"
 
 // properties that should always come from the dev app, not the deployed
 const DEV_PROPS = ["updatedBy", "updatedAt"]

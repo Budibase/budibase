@@ -1,8 +1,8 @@
-import TestConfig from "../../../tests/utilities/TestConfiguration"
 import { context } from "@budibase/backend-core"
-import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../../actions"
-import emitter from "../../../events/index"
 import env from "../../../environment"
+import emitter from "../../../events/index"
+import TestConfig from "../../../tests/utilities/TestConfiguration"
+import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../../actions"
 
 let config: TestConfig
 

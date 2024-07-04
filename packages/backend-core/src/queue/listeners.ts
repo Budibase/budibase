@@ -1,6 +1,6 @@
 import { Job, JobId, Queue } from "bull"
-import { JobQueue } from "./constants"
 import * as context from "../context"
+import { JobQueue } from "./constants"
 
 export type StalledFn = (job: Job) => Promise<void>
 

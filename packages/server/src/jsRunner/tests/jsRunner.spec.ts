@@ -1,5 +1,5 @@
+import { encodeJSBinding, processStringSync } from "@budibase/string-templates"
 import { validate as isValidUUID } from "uuid"
-import { processStringSync, encodeJSBinding } from "@budibase/string-templates"
 
 import { runJsHelpersTests } from "@budibase/string-templates/test/utils"
 

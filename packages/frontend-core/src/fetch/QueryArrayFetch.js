@@ -1,8 +1,8 @@
-import FieldFetch from "./FieldFetch.js"
 import {
-  getJSONArrayDatasourceSchema,
   generateQueryArraySchemas,
+  getJSONArrayDatasourceSchema,
 } from "../utils/json"
+import FieldFetch from "./FieldFetch.js"
 
 export default class QueryArrayFetch extends FieldFetch {
   async getDefinition(datasource) {
@@ -18,7 +18,7 @@ export default class QueryArrayFetch extends FieldFetch {
         table?.nestedSchemaFields
       )
       return { schema: getJSONArrayDatasourceSchema(schema, datasource) }
-    } catch (error) {
+    } catch (_error) {
       return null
     }
   }

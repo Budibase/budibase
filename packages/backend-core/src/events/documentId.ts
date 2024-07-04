@@ -1,16 +1,16 @@
 import {
   Event,
+  GroupCreatedEvent,
+  GroupDeletedEvent,
+  GroupPermissionsEditedEvent,
+  GroupUpdatedEvent,
+  GroupUsersAddedEvent,
+  GroupUsersDeletedEvent,
   UserCreatedEvent,
-  UserUpdatedEvent,
   UserDeletedEvent,
   UserPermissionAssignedEvent,
   UserPermissionRemovedEvent,
-  GroupCreatedEvent,
-  GroupUpdatedEvent,
-  GroupDeletedEvent,
-  GroupUsersAddedEvent,
-  GroupUsersDeletedEvent,
-  GroupPermissionsEditedEvent,
+  UserUpdatedEvent,
 } from "@budibase/types"
 
 const getEventProperties: Record<

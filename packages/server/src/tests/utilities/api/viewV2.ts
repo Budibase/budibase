@@ -1,10 +1,10 @@
 import {
   CreateViewRequest,
-  UpdateViewRequest,
-  ViewV2,
-  SearchViewRowRequest,
   PaginatedSearchRowResponse,
+  SearchViewRowRequest,
+  UpdateViewRequest,
   ViewResponseEnriched,
+  ViewV2,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 

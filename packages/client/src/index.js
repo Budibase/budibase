@@ -1,17 +1,17 @@
+import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
+import { get } from "svelte/store"
 import ClientApp from "./components/ClientApp.svelte"
 import UpdatingApp from "./components/UpdatingApp.svelte"
 import {
-  builderStore,
   appStore,
   blockStore,
+  builderStore,
   componentStore,
-  environmentStore,
   dndStore,
+  environmentStore,
   eventStore,
   hoverStore,
 } from "./stores"
-import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
-import { get } from "svelte/store"
 import { initWebsocket } from "./websocket.js"
 
 // Provide svelte and svelte/internal as globals for custom components
@@ -91,7 +91,7 @@ const loadBudibase = async () => {
       let stringifiedContext = null
       try {
         stringifiedContext = JSON.stringify(context)
-      } catch (error) {
+      } catch (_error) {
         // Ignore - invalid context
       }
       eventStore.actions.dispatchEvent("provide-context", {

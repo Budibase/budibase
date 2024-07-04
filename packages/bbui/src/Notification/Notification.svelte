@@ -1,17 +1,17 @@
 <script>
-  import { ActionButton } from "../"
+import { ActionButton } from "../"
 
-  import { createEventDispatcher } from "svelte"
+import { createEventDispatcher } from "svelte"
 
-  export let type = "info"
-  export let icon = "Info"
-  export let message = ""
-  export let dismissable = false
-  export let actionMessage = null
-  export let action = null
-  export let wide = false
+export let type = "info"
+export let icon = "Info"
+export let message = ""
+export let dismissable = false
+export let actionMessage = null
+export let action = null
+export let wide = false
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 </script>
 
 <div class="spectrum-Toast spectrum-Toast--{type}" class:wide>

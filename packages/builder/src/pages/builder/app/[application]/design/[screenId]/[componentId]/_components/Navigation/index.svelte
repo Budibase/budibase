@@ -1,61 +1,61 @@
 <script>
-  import NavItemConfiguration from "./NavItemConfiguration.svelte"
-  import { get } from "svelte/store"
-  import Panel from "components/design/Panel.svelte"
-  import {
-    Toggle,
-    DetailSummary,
-    Checkbox,
-    notifications,
-    Select,
-  } from "@budibase/bbui"
-  import {
-    themeStore,
-    selectedScreen,
-    screenStore,
-    componentStore,
-    navigationStore as nav,
-  } from "stores/builder"
-  import { DefaultAppTheme } from "constants"
-  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
-  import BarButtonList from "components/design/settings/controls/BarButtonList.svelte"
-  import ColorPicker from "components/design/settings/controls/ColorPicker.svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
-  import { getBindableProperties } from "dataBinding"
+import { DefaultAppTheme } from "constants"
+import {
+  Checkbox,
+  DetailSummary,
+  Select,
+  Toggle,
+  notifications,
+} from "@budibase/bbui"
+import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import Panel from "components/design/Panel.svelte"
+import BarButtonList from "components/design/settings/controls/BarButtonList.svelte"
+import ColorPicker from "components/design/settings/controls/ColorPicker.svelte"
+import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
+import { getBindableProperties } from "dataBinding"
+import {
+  componentStore,
+  navigationStore as nav,
+  screenStore,
+  selectedScreen,
+  themeStore,
+} from "stores/builder"
+import { get } from "svelte/store"
+import NavItemConfiguration from "./NavItemConfiguration.svelte"
 
-  const positionOptions = [
-    { value: "Top", barIcon: "PaddingTop" },
-    { value: "Left", barIcon: "PaddingLeft" },
-  ]
-  const alignmentOptions = [
-    { value: "Left", barIcon: "TextAlignLeft" },
-    { value: "Center", barIcon: "TextAlignCenter" },
-    { value: "Right", barIcon: "TextAlignRight" },
-  ]
-  const widthOptions = ["Max", "Large", "Medium", "Small"]
+const positionOptions = [
+  { value: "Top", barIcon: "PaddingTop" },
+  { value: "Left", barIcon: "PaddingLeft" },
+]
+const alignmentOptions = [
+  { value: "Left", barIcon: "TextAlignLeft" },
+  { value: "Center", barIcon: "TextAlignCenter" },
+  { value: "Right", barIcon: "TextAlignRight" },
+]
+const widthOptions = ["Max", "Large", "Medium", "Small"]
 
-  $: bindings = getBindableProperties(
-    $selectedScreen,
-    $componentStore.selectedComponentId
-  )
-  $: screenRouteOptions = $screenStore.screens
-    .map(screen => screen.routing?.route)
-    .filter(x => x != null)
+$: bindings = getBindableProperties(
+  $selectedScreen,
+  $componentStore.selectedComponentId
+)
+$: screenRouteOptions = $screenStore.screens
+  .map(screen => screen.routing?.route)
+  .filter(x => x != null)
 
-  const updateShowNavigation = async show => {
-    await screenStore.updateSetting(get(selectedScreen), "showNavigation", show)
+const updateShowNavigation = async show => {
+  await screenStore.updateSetting(get(selectedScreen), "showNavigation", show)
+}
+
+const update = async (key, value) => {
+  try {
+    let navigation = $nav
+    navigation[key] = value
+    await nav.save(navigation)
+  } catch (error) {
+    notifications.error("Error updating navigation settings")
   }
-
-  const update = async (key, value) => {
-    try {
-      let navigation = $nav
-      navigation[key] = value
-      await nav.save(navigation)
-    } catch (error) {
-      notifications.error("Error updating navigation settings")
-    }
-  }
+}
 </script>
 
 <Panel

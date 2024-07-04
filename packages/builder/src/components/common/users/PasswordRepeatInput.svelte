@@ -1,25 +1,25 @@
 <script>
-  import { Layout, Input } from "@budibase/bbui"
-  import { createValidationStore, requiredValidator } from "helpers/validation"
+import { Input, Layout } from "@budibase/bbui"
+import { createValidationStore, requiredValidator } from "helpers/validation"
 
-  export let password
-  export let error
+export let password
+export let error
 
-  const [firstPassword, passwordError, firstTouched] = createValidationStore(
-    "",
-    requiredValidator
-  )
-  const [repeatPassword, _, repeatTouched] = createValidationStore(
-    "",
-    requiredValidator
-  )
+const [firstPassword, passwordError, firstTouched] = createValidationStore(
+  "",
+  requiredValidator
+)
+const [repeatPassword, _, repeatTouched] = createValidationStore(
+  "",
+  requiredValidator
+)
 
-  $: password = $firstPassword
-  $: error =
-    !$firstPassword ||
-    !$firstTouched ||
-    !$repeatTouched ||
-    $firstPassword !== $repeatPassword
+$: password = $firstPassword
+$: error =
+  !$firstPassword ||
+  !$firstTouched ||
+  !$repeatTouched ||
+  $firstPassword !== $repeatPassword
 </script>
 
 <Layout gap="XS" noPadding>

@@ -1,74 +1,74 @@
 <script>
-  import { screenStore, componentStore, navigationStore } from "stores/builder"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import {
-    ActionMenu,
-    MenuItem,
-    Icon,
-    Modal,
-    Helpers,
-    notifications,
-  } from "@budibase/bbui"
-  import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
-  import sanitizeUrl from "helpers/sanitizeUrl"
-  import { makeComponentUnique } from "helpers/components"
-  import { capitalise } from "helpers"
+import {
+  ActionMenu,
+  Helpers,
+  Icon,
+  MenuItem,
+  Modal,
+  notifications,
+} from "@budibase/bbui"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
+import { capitalise } from "helpers"
+import { makeComponentUnique } from "helpers/components"
+import sanitizeUrl from "helpers/sanitizeUrl"
+import { componentStore, navigationStore, screenStore } from "stores/builder"
 
-  export let screenId
+export let screenId
 
-  let confirmDeleteDialog
-  let screenDetailsModal
+let confirmDeleteDialog
+let screenDetailsModal
 
-  $: screen = $screenStore.screens.find(screen => screen._id === screenId)
-  $: noPaste = !$componentStore.componentToPaste
+$: screen = $screenStore.screens.find(screen => screen._id === screenId)
+$: noPaste = !$componentStore.componentToPaste
 
-  const pasteComponent = mode => {
-    try {
-      componentStore.paste(screen.props, mode, screen)
-    } catch (error) {
-      notifications.error("Error saving component")
-    }
+const pasteComponent = mode => {
+  try {
+    componentStore.paste(screen.props, mode, screen)
+  } catch (error) {
+    notifications.error("Error saving component")
   }
+}
 
-  const duplicateScreen = () => {
-    screenDetailsModal.show()
+const duplicateScreen = () => {
+  screenDetailsModal.show()
+}
+
+const createDuplicateScreen = async ({ screenName, screenUrl }) => {
+  // Create a dupe and ensure it is unique
+  let duplicateScreen = Helpers.cloneDeep(screen)
+  delete duplicateScreen._id
+  delete duplicateScreen._rev
+  duplicateScreen.props = makeComponentUnique(duplicateScreen.props)
+
+  // Attach the new name and URL
+  duplicateScreen.routing.route = sanitizeUrl(screenUrl)
+  duplicateScreen.routing.homeScreen = false
+  duplicateScreen.props._instanceName = screenName
+
+  try {
+    // Create the screen
+    await screenStore.save(duplicateScreen)
+
+    // Add new screen to navigation
+    await navigationStore.saveLink(
+      duplicateScreen.routing.route,
+      capitalise(duplicateScreen.routing.route.split("/")[1]),
+      duplicateScreen.routing.roleId
+    )
+  } catch (error) {
+    notifications.error("Error duplicating screen")
   }
+}
 
-  const createDuplicateScreen = async ({ screenName, screenUrl }) => {
-    // Create a dupe and ensure it is unique
-    let duplicateScreen = Helpers.cloneDeep(screen)
-    delete duplicateScreen._id
-    delete duplicateScreen._rev
-    duplicateScreen.props = makeComponentUnique(duplicateScreen.props)
-
-    // Attach the new name and URL
-    duplicateScreen.routing.route = sanitizeUrl(screenUrl)
-    duplicateScreen.routing.homeScreen = false
-    duplicateScreen.props._instanceName = screenName
-
-    try {
-      // Create the screen
-      await screenStore.save(duplicateScreen)
-
-      // Add new screen to navigation
-      await navigationStore.saveLink(
-        duplicateScreen.routing.route,
-        capitalise(duplicateScreen.routing.route.split("/")[1]),
-        duplicateScreen.routing.roleId
-      )
-    } catch (error) {
-      notifications.error("Error duplicating screen")
-    }
+const deleteScreen = async () => {
+  try {
+    await screenStore.delete(screen)
+    notifications.success("Deleted screen successfully")
+  } catch (err) {
+    notifications.error("Error deleting screen")
   }
-
-  const deleteScreen = async () => {
-    try {
-      await screenStore.delete(screen)
-      notifications.success("Deleted screen successfully")
-    } catch (err) {
-      notifications.error("Error deleting screen")
-    }
-  }
+}
 </script>
 
 <ActionMenu>

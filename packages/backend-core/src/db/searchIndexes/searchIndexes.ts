@@ -1,4 +1,4 @@
-import { User, SearchIndex } from "@budibase/types"
+import { SearchIndex, User } from "@budibase/types"
 import { getGlobalDB } from "../../context"
 
 export async function createUserIndex() {
@@ -35,11 +35,11 @@ export async function createUserIndex() {
         let idxKey = prev != null ? `${prev}.${key}` : key
         if (typeof input[key] === "string") {
           // @ts-expect-error index is available in a CouchDB map function
-          // eslint-disable-next-line no-undef
+          // biome-ignore lint: no-undef
           index(idxKey, input[key].toLowerCase(), { facet: true })
         } else if (typeof input[key] !== "object") {
           // @ts-expect-error index is available in a CouchDB map function
-          // eslint-disable-next-line no-undef
+          // biome-ignore lint: no-undef
           index(idxKey, input[key], { facet: true })
         } else {
           idx(input[key], idxKey)

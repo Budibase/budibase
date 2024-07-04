@@ -1,6 +1,6 @@
+import { tenancy, users, utils } from "@budibase/backend-core"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { startup } from "../index"
-import { users, utils, tenancy } from "@budibase/backend-core"
 
 describe("check BB_ADMIN environment variables", () => {
   const config = new TestConfiguration()

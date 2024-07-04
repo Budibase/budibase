@@ -1,42 +1,42 @@
 <script>
-  import { Icon, Search, Layout } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+import { Icon, Layout, Search } from "@budibase/bbui"
+import { createEventDispatcher } from "svelte"
 
-  export let searchTerm = ""
-  export let selected
-  export let list = []
-  export let labelKey
-  export let iconComponent = null
-  export let extractIconProps = x => x
+export let searchTerm = ""
+export let selected
+export let list = []
+export let labelKey
+export let iconComponent = null
+export let extractIconProps = x => x
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  $: enrichedList = enrich(list, selected)
-  $: sortedList = sort(enrichedList)
+$: enrichedList = enrich(list, selected)
+$: sortedList = sort(enrichedList)
 
-  const enrich = (list, selected) => {
-    return list.map(item => {
-      return {
-        ...item,
-        selected: selected?.find(x => x === item._id) != null,
-      }
-    })
-  }
+const enrich = (list, selected) => {
+  return list.map(item => {
+    return {
+      ...item,
+      selected: selected?.find(x => x === item._id) != null,
+    }
+  })
+}
 
-  const sort = list => {
-    let sortedList = list.slice()
-    sortedList.sort((a, b) => {
-      if (a.selected === b.selected) {
-        return a[labelKey] < b[labelKey] ? -1 : 1
-      } else if (a.selected) {
-        return -1
-      } else if (b.selected) {
-        return 1
-      }
-      return 0
-    })
-    return sortedList
-  }
+const sort = list => {
+  let sortedList = list.slice()
+  sortedList.sort((a, b) => {
+    if (a.selected === b.selected) {
+      return a[labelKey] < b[labelKey] ? -1 : 1
+    } else if (a.selected) {
+      return -1
+    } else if (b.selected) {
+      return 1
+    }
+    return 0
+  })
+  return sortedList
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

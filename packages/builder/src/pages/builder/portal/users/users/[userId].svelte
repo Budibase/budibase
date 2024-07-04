@@ -1,243 +1,243 @@
 <script>
-  import { goto, url } from "@roxi/routify"
-  import {
-    ActionMenu,
-    Button,
-    Layout,
-    Heading,
-    Body,
-    Label,
-    Icon,
-    Input,
-    MenuItem,
-    Popover,
-    Select,
-    Modal,
-    notifications,
-    Banner,
-    Table,
-  } from "@budibase/bbui"
-  import { onMount, setContext } from "svelte"
-  import { users, auth, groups, appsStore, licensing } from "stores/portal"
-  import { roles } from "stores/builder"
-  import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
-  import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
-  import DeleteUserModal from "./_components/DeleteUserModal.svelte"
-  import GroupIcon from "../groups/_components/GroupIcon.svelte"
-  import { Constants, UserAvatar } from "@budibase/frontend-core"
-  import { Breadcrumbs, Breadcrumb } from "components/portal/page"
-  import RemoveGroupTableRenderer from "./_components/RemoveGroupTableRenderer.svelte"
-  import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
-  import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
-  import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
-  import { sdk } from "@budibase/shared-core"
-  import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
+import {
+  ActionMenu,
+  Banner,
+  Body,
+  Button,
+  Heading,
+  Icon,
+  Input,
+  Label,
+  Layout,
+  MenuItem,
+  Modal,
+  Popover,
+  Select,
+  Table,
+  notifications,
+} from "@budibase/bbui"
+import { Constants, UserAvatar } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
+import { url, goto } from "@roxi/routify"
+import { Breadcrumb, Breadcrumbs } from "components/portal/page"
+import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
+import { roles } from "stores/builder"
+import { appsStore, auth, groups, licensing, users } from "stores/portal"
+import { onMount, setContext } from "svelte"
+import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
+import GroupIcon from "../groups/_components/GroupIcon.svelte"
+import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
+import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
+import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
+import DeleteUserModal from "./_components/DeleteUserModal.svelte"
+import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
+import RemoveGroupTableRenderer from "./_components/RemoveGroupTableRenderer.svelte"
 
-  export let userId
+export let userId
 
-  $: groupSchema = {
-    name: {
-      width: "1fr",
-    },
-    ...(!isAdmin
-      ? {}
-      : // Add
-        {
-          _id: {
-            displayName: "",
-            width: "auto",
-            borderLeft: true,
-          },
-        }),
-  }
-  const appSchema = {
-    name: {
-      width: "2fr",
-    },
-    role: {
-      width: "1fr",
-      displayName: "Access",
-    },
-  }
-  const customGroupTableRenderers = [
-    {
-      column: "name",
-      component: GroupNameTableRenderer,
-    },
-    {
-      column: "_id",
-      component: RemoveGroupTableRenderer,
-    },
-  ]
-  const customAppTableRenderers = [
-    {
-      column: "name",
-      component: AppNameTableRenderer,
-    },
-    {
-      column: "role",
-      component: AppRoleTableRenderer,
-    },
-  ]
-
-  let deleteModal
-  let resetPasswordModal
-  let popoverAnchor
-  let searchTerm = ""
-  let popover
-  let user
-  let loaded = false
-
-  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
-
-  $: isSSO = !!user?.provider
-  $: isAdmin = sdk.users.isAdmin($auth.user)
-  $: isScim = user?.scimInfo?.isSync
-  $: readonly = !isAdmin || isScim
-  $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
-  $: nameLabel = getNameLabel(user)
-  $: filteredGroups = getFilteredGroups(internalGroups, searchTerm)
-  $: availableApps = getAvailableApps($appsStore.apps, privileged, user?.roles)
-  $: userGroups = $groups.filter(x => {
-    return x.users?.find(y => {
-      return y._id === userId
-    })
-  })
-  $: globalRole = users.getUserRole(user)
-
-  const getAvailableApps = (appList, privileged, roles) => {
-    let availableApps = appList.slice()
-    if (!privileged) {
-      availableApps = availableApps.filter(x => {
-        let roleKeys = Object.keys(roles || {})
-        return roleKeys.concat(user?.builder?.apps).find(y => {
-          return x.appId === appsStore.extractAppId(y)
-        })
-      })
-    }
-    return availableApps.map(app => {
-      const prodAppId = appsStore.getProdAppID(app.devId)
-      return {
-        name: app.name,
-        devId: app.devId,
-        icon: app.icon,
-        role: getRole(prodAppId, roles),
-      }
-    })
-  }
-
-  const getFilteredGroups = (groups, search) => {
-    if (!search) {
-      return groups
-    }
-    search = search.toLowerCase()
-    return groups.filter(group => group.name?.toLowerCase().includes(search))
-  }
-
-  const getRole = (prodAppId, roles) => {
-    if (privileged) {
-      return Constants.Roles.ADMIN
-    }
-
-    if (user?.builder?.apps?.includes(prodAppId)) {
-      return Constants.Roles.CREATOR
-    }
-
-    return roles[prodAppId]
-  }
-
-  const getNameLabel = user => {
-    const { firstName, lastName, email } = user || {}
-    if (!firstName && !lastName) {
-      return email || ""
-    }
-    let label
-    if (firstName) {
-      label = firstName
-      if (lastName) {
-        label += ` ${lastName}`
-      }
-    } else {
-      label = lastName
-    }
-    return label
-  }
-
-  async function updateUserFirstName(evt) {
-    try {
-      await users.save({ ...user, firstName: evt.target.value })
-      await fetchUser()
-    } catch (error) {
-      notifications.error("Error updating user")
-    }
-  }
-
-  async function updateUserLastName(evt) {
-    try {
-      await users.save({ ...user, lastName: evt.target.value })
-      await fetchUser()
-    } catch (error) {
-      notifications.error("Error updating user")
-    }
-  }
-
-  async function updateUserRole({ detail }) {
-    if (detail === Constants.BudibaseRoles.Developer) {
-      toggleFlags({ admin: { global: false }, builder: { global: true } })
-    } else if (detail === Constants.BudibaseRoles.Admin) {
-      toggleFlags({ admin: { global: true }, builder: { global: true } })
-    } else if (detail === Constants.BudibaseRoles.AppUser) {
-      toggleFlags({ admin: { global: false }, builder: { global: false } })
-    } else if (detail === Constants.BudibaseRoles.Creator) {
-      toggleFlags({
-        admin: { global: false },
-        builder: {
-          global: false,
-          creator: true,
-          apps: user?.builder?.apps || [],
+$: groupSchema = {
+  name: {
+    width: "1fr",
+  },
+  ...(!isAdmin
+    ? {}
+    : // Add
+      {
+        _id: {
+          displayName: "",
+          width: "auto",
+          borderLeft: true,
         },
+      }),
+}
+const appSchema = {
+  name: {
+    width: "2fr",
+  },
+  role: {
+    width: "1fr",
+    displayName: "Access",
+  },
+}
+const customGroupTableRenderers = [
+  {
+    column: "name",
+    component: GroupNameTableRenderer,
+  },
+  {
+    column: "_id",
+    component: RemoveGroupTableRenderer,
+  },
+]
+const customAppTableRenderers = [
+  {
+    column: "name",
+    component: AppNameTableRenderer,
+  },
+  {
+    column: "role",
+    component: AppRoleTableRenderer,
+  },
+]
+
+let deleteModal
+let resetPasswordModal
+let popoverAnchor
+let searchTerm = ""
+let popover
+let user
+let loaded = false
+
+$: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
+
+$: isSSO = !!user?.provider
+$: isAdmin = sdk.users.isAdmin($auth.user)
+$: isScim = user?.scimInfo?.isSync
+$: readonly = !isAdmin || isScim
+$: privileged = sdk.users.isAdminOrGlobalBuilder(user)
+$: nameLabel = getNameLabel(user)
+$: filteredGroups = getFilteredGroups(internalGroups, searchTerm)
+$: availableApps = getAvailableApps($appsStore.apps, privileged, user?.roles)
+$: userGroups = $groups.filter(x => {
+  return x.users?.find(y => {
+    return y._id === userId
+  })
+})
+$: globalRole = users.getUserRole(user)
+
+const getAvailableApps = (appList, privileged, roles) => {
+  let availableApps = appList.slice()
+  if (!privileged) {
+    availableApps = availableApps.filter(x => {
+      let roleKeys = Object.keys(roles || {})
+      return roleKeys.concat(user?.builder?.apps).find(y => {
+        return x.appId === appsStore.extractAppId(y)
       })
-    }
+    })
   }
-
-  async function fetchUser() {
-    user = await users.get(userId)
-    if (!user?._id) {
-      $goto("./")
-    }
-  }
-
-  async function toggleFlags(detail) {
-    try {
-      await users.save({ ...user, ...detail })
-      await fetchUser()
-    } catch (error) {
-      notifications.error("Error updating user")
-    }
-  }
-
-  const addGroup = async groupId => {
-    await groups.actions.addUser(groupId, userId)
-    await fetchUser()
-  }
-
-  const removeGroup = async groupId => {
-    await groups.actions.removeUser(groupId, userId)
-    await fetchUser()
-  }
-
-  setContext("groups", {
-    removeGroup,
-  })
-
-  onMount(async () => {
-    try {
-      await Promise.all([fetchUser(), groups.actions.init(), roles.fetch()])
-      loaded = true
-    } catch (error) {
-      notifications.error("Error getting user groups")
+  return availableApps.map(app => {
+    const prodAppId = appsStore.getProdAppID(app.devId)
+    return {
+      name: app.name,
+      devId: app.devId,
+      icon: app.icon,
+      role: getRole(prodAppId, roles),
     }
   })
+}
+
+const getFilteredGroups = (groups, search) => {
+  if (!search) {
+    return groups
+  }
+  search = search.toLowerCase()
+  return groups.filter(group => group.name?.toLowerCase().includes(search))
+}
+
+const getRole = (prodAppId, roles) => {
+  if (privileged) {
+    return Constants.Roles.ADMIN
+  }
+
+  if (user?.builder?.apps?.includes(prodAppId)) {
+    return Constants.Roles.CREATOR
+  }
+
+  return roles[prodAppId]
+}
+
+const getNameLabel = user => {
+  const { firstName, lastName, email } = user || {}
+  if (!firstName && !lastName) {
+    return email || ""
+  }
+  let label
+  if (firstName) {
+    label = firstName
+    if (lastName) {
+      label += ` ${lastName}`
+    }
+  } else {
+    label = lastName
+  }
+  return label
+}
+
+async function updateUserFirstName(evt) {
+  try {
+    await users.save({ ...user, firstName: evt.target.value })
+    await fetchUser()
+  } catch (error) {
+    notifications.error("Error updating user")
+  }
+}
+
+async function updateUserLastName(evt) {
+  try {
+    await users.save({ ...user, lastName: evt.target.value })
+    await fetchUser()
+  } catch (error) {
+    notifications.error("Error updating user")
+  }
+}
+
+async function updateUserRole({ detail }) {
+  if (detail === Constants.BudibaseRoles.Developer) {
+    toggleFlags({ admin: { global: false }, builder: { global: true } })
+  } else if (detail === Constants.BudibaseRoles.Admin) {
+    toggleFlags({ admin: { global: true }, builder: { global: true } })
+  } else if (detail === Constants.BudibaseRoles.AppUser) {
+    toggleFlags({ admin: { global: false }, builder: { global: false } })
+  } else if (detail === Constants.BudibaseRoles.Creator) {
+    toggleFlags({
+      admin: { global: false },
+      builder: {
+        global: false,
+        creator: true,
+        apps: user?.builder?.apps || [],
+      },
+    })
+  }
+}
+
+async function fetchUser() {
+  user = await users.get(userId)
+  if (!user?._id) {
+    $goto("./")
+  }
+}
+
+async function toggleFlags(detail) {
+  try {
+    await users.save({ ...user, ...detail })
+    await fetchUser()
+  } catch (error) {
+    notifications.error("Error updating user")
+  }
+}
+
+const addGroup = async groupId => {
+  await groups.actions.addUser(groupId, userId)
+  await fetchUser()
+}
+
+const removeGroup = async groupId => {
+  await groups.actions.removeUser(groupId, userId)
+  await fetchUser()
+}
+
+setContext("groups", {
+  removeGroup,
+})
+
+onMount(async () => {
+  try {
+    await Promise.all([fetchUser(), groups.actions.init(), roles.fetch()])
+    loaded = true
+  } catch (error) {
+    notifications.error("Error getting user groups")
+  }
+})
 </script>
 
 {#if loaded}

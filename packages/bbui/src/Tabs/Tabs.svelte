@@ -1,83 +1,83 @@
 <script>
-  import "@spectrum-css/tabs/dist/index-vars.css"
-  import { writable } from "svelte/store"
-  import { onMount, setContext, createEventDispatcher } from "svelte"
+import "@spectrum-css/tabs/dist/index-vars.css"
+import { createEventDispatcher, onMount, setContext } from "svelte"
+import { writable } from "svelte/store"
 
-  export let selected
-  export let vertical = false
-  export let noPadding = false
-  // added as a separate option as noPadding is used for vertical padding
-  export let noHorizPadding = false
-  export let quiet = false
-  export let emphasized = false
-  export let onTop = false
-  export let size = "M"
-  export let beforeSwitch = null
+export let selected
+export let vertical = false
+export let noPadding = false
+// added as a separate option as noPadding is used for vertical padding
+export let noHorizPadding = false
+export let quiet = false
+export let emphasized = false
+export let onTop = false
+export let size = "M"
+export let beforeSwitch = null
 
-  let thisSelected = undefined
+let thisSelected = undefined
 
-  let _id = id()
-  const tab = writable({ title: selected, id: _id, emphasized })
-  setContext("tab", tab)
+let _id = id()
+const tab = writable({ title: selected, id: _id, emphasized })
+setContext("tab", tab)
 
-  let container
+let container
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  $: {
-    if (thisSelected !== selected) {
-      thisSelected = selected
-      dispatch("select", thisSelected)
-    } else if ($tab.title !== thisSelected) {
-      if (typeof beforeSwitch == "function") {
-        const proceed = beforeSwitch($tab.title)
-        if (proceed) {
-          thisSelected = $tab.title
-          selected = $tab.title
-          dispatch("select", thisSelected)
-        }
-      } else {
+$: {
+  if (thisSelected !== selected) {
+    thisSelected = selected
+    dispatch("select", thisSelected)
+  } else if ($tab.title !== thisSelected) {
+    if (typeof beforeSwitch == "function") {
+      const proceed = beforeSwitch($tab.title)
+      if (proceed) {
         thisSelected = $tab.title
         selected = $tab.title
         dispatch("select", thisSelected)
       }
-    }
-    if ($tab.title !== thisSelected) {
-      tab.update(state => {
-        state.title = thisSelected
-        return state
-      })
-    }
-  }
-
-  let top, left, width, height
-  $: calculateIndicatorLength($tab)
-  $: calculateIndicatorOffset($tab)
-
-  function calculateIndicatorLength() {
-    if (!vertical) {
-      width = $tab.info?.width + "px"
     } else {
-      height = $tab.info?.height + 4 + "px"
+      thisSelected = $tab.title
+      selected = $tab.title
+      dispatch("select", thisSelected)
     }
   }
-
-  function calculateIndicatorOffset() {
-    if (!vertical) {
-      left = $tab.info?.left - container?.getBoundingClientRect().left + "px"
-    } else {
-      top = $tab.info?.top - container?.getBoundingClientRect().top + "px"
-    }
+  if ($tab.title !== thisSelected) {
+    tab.update(state => {
+      state.title = thisSelected
+      return state
+    })
   }
+}
 
-  onMount(() => {
-    calculateIndicatorLength()
-    calculateIndicatorOffset()
-  })
+let top, left, width, height
+$: calculateIndicatorLength($tab)
+$: calculateIndicatorOffset($tab)
 
-  function id() {
-    return "_" + Math.random().toString(36).slice(2, 9)
+function calculateIndicatorLength() {
+  if (!vertical) {
+    width = $tab.info?.width + "px"
+  } else {
+    height = $tab.info?.height + 4 + "px"
   }
+}
+
+function calculateIndicatorOffset() {
+  if (!vertical) {
+    left = $tab.info?.left - container?.getBoundingClientRect().left + "px"
+  } else {
+    top = $tab.info?.top - container?.getBoundingClientRect().top + "px"
+  }
+}
+
+onMount(() => {
+  calculateIndicatorLength()
+  calculateIndicatorOffset()
+})
+
+function id() {
+  return "_" + Math.random().toString(36).slice(2, 9)
+}
 </script>
 
 <div

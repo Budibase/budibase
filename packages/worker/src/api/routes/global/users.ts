@@ -1,8 +1,8 @@
-import Router from "@koa/router"
-import * as controller from "../../controllers/global/users"
 import { auth } from "@budibase/backend-core"
+import Router from "@koa/router"
 import Joi from "joi"
 import cloudRestricted from "../../../middleware/cloudRestricted"
+import * as controller from "../../controllers/global/users"
 import { users } from "../validation"
 
 const router: Router = new Router()
@@ -25,20 +25,26 @@ function buildAdminInitValidation() {
 
 function buildInviteValidation() {
   // prettier-ignore
-  return auth.joiValidator.body(Joi.object({
-    email: Joi.string().required(),
-    userInfo: Joi.object().optional(),
-  }).required())
+  return auth.joiValidator.body(
+    Joi.object({
+      email: Joi.string().required(),
+      userInfo: Joi.object().optional(),
+    }).required()
+  )
 }
 
 function buildInviteMultipleValidation() {
   // prettier-ignore
-  return auth.joiValidator.body(Joi.array().required().items(
-    Joi.object({
-      email: Joi.string(),
-      userInfo: Joi.object().optional(),
-    })
-  ))
+  return auth.joiValidator.body(
+    Joi.array()
+      .required()
+      .items(
+        Joi.object({
+          email: Joi.string(),
+          userInfo: Joi.object().optional(),
+        })
+      )
+  )
 }
 
 const createUserAdminOnly = (ctx: any, next: any) => {
@@ -51,12 +57,16 @@ const createUserAdminOnly = (ctx: any, next: any) => {
 
 function buildInviteAcceptValidation() {
   // prettier-ignore
-  return auth.joiValidator.body(Joi.object({
-    inviteCode: Joi.string().required(),
-    password: Joi.string().optional(),
-    firstName: Joi.string().optional(),
-    lastName: Joi.string().optional(),
-  }).required().unknown(true))
+  return auth.joiValidator.body(
+    Joi.object({
+      inviteCode: Joi.string().required(),
+      password: Joi.string().optional(),
+      firstName: Joi.string().optional(),
+      lastName: Joi.string().optional(),
+    })
+      .required()
+      .unknown(true)
+  )
 }
 
 router

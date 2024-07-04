@@ -1,61 +1,61 @@
 <script>
-  import "@spectrum-css/popover/dist/index-vars.css"
-  import clickOutside from "../Actions/click_outside"
-  import { fly } from "svelte/transition"
-  import Icon from "../Icon/Icon.svelte"
-  import { createEventDispatcher } from "svelte"
+import "@spectrum-css/popover/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
+import { fly } from "svelte/transition"
+import clickOutside from "../Actions/click_outside"
+import Icon from "../Icon/Icon.svelte"
 
-  export let value
-  export let size = "M"
-  export let alignRight = false
+export let value
+export let size = "M"
+export let alignRight = false
 
-  let open = false
+let open = false
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  const iconList = [
-    {
-      label: "Icons",
-      icons: [
-        "Apps",
-        "Actions",
-        "ConversionFunnel",
-        "App",
-        "Briefcase",
-        "Money",
-        "ShoppingCart",
-        "Form",
-        "Help",
-        "Monitoring",
-        "Sandbox",
-        "Project",
-        "Organisations",
-        "Magnify",
-        "Launch",
-        "Car",
-        "Camera",
-        "Bug",
-        "Channel",
-        "Calculator",
-        "Calendar",
-        "GraphDonut",
-        "GraphBarHorizontal",
-        "Demographic",
-      ],
-    },
-  ]
+const iconList = [
+  {
+    label: "Icons",
+    icons: [
+      "Apps",
+      "Actions",
+      "ConversionFunnel",
+      "App",
+      "Briefcase",
+      "Money",
+      "ShoppingCart",
+      "Form",
+      "Help",
+      "Monitoring",
+      "Sandbox",
+      "Project",
+      "Organisations",
+      "Magnify",
+      "Launch",
+      "Car",
+      "Camera",
+      "Bug",
+      "Channel",
+      "Calculator",
+      "Calendar",
+      "GraphDonut",
+      "GraphBarHorizontal",
+      "Demographic",
+    ],
+  },
+]
 
-  const onChange = value => {
-    dispatch("change", value)
+const onChange = value => {
+  dispatch("change", value)
+  open = false
+}
+
+const handleOutsideClick = event => {
+  if (open) {
+    event.stopPropagation()
     open = false
   }
-
-  const handleOutsideClick = event => {
-    if (open) {
-      event.stopPropagation()
-      open = false
-    }
-  }
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

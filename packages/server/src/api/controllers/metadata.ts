@@ -1,8 +1,8 @@
-import { MetadataTypes } from "../../constants"
-import { generateMetadataID } from "../../db/utils"
-import { saveEntityMetadata, deleteEntityMetadata } from "../../utilities"
 import { context } from "@budibase/backend-core"
 import { BBContext } from "@budibase/types"
+import { MetadataTypes } from "../../constants"
+import { generateMetadataID } from "../../db/utils"
+import { deleteEntityMetadata, saveEntityMetadata } from "../../utilities"
 
 export async function getTypes(ctx: BBContext) {
   ctx.body = {

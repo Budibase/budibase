@@ -1,11 +1,11 @@
 <script>
-  import { Label, Button } from "@budibase/bbui"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+import { Button, Label } from "@budibase/bbui"
+import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
 
-  export let name
-  export let value
+export let name
+export let value
 
-  let addButton
+let addButton
 </script>
 
 <div class="form-row ssl">

@@ -1,141 +1,141 @@
 <script>
-  import "@spectrum-css/dropzone/dist/index-vars.css"
-  import "@spectrum-css/typography/dist/index-vars.css"
-  import "@spectrum-css/illustratedmessage/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
-  import { uuid } from "../../helpers"
-  import Icon from "../../Icon/Icon.svelte"
-  import Link from "../../Link/Link.svelte"
-  import Tag from "../../Tags/Tag.svelte"
-  import Tags from "../../Tags/Tags.svelte"
+import "@spectrum-css/dropzone/dist/index-vars.css"
+import "@spectrum-css/typography/dist/index-vars.css"
+import "@spectrum-css/illustratedmessage/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
+import Icon from "../../Icon/Icon.svelte"
+import Link from "../../Link/Link.svelte"
+import Tag from "../../Tags/Tag.svelte"
+import Tags from "../../Tags/Tags.svelte"
+import { uuid } from "../../helpers"
 
-  const BYTES_IN_KB = 1000
-  const BYTES_IN_MB = 1000000
+const BYTES_IN_KB = 1000
+const BYTES_IN_MB = 1000000
 
-  export let value = []
-  export let id = null
-  export let disabled = false
-  export let compact = false
-  export let fileSizeLimit = BYTES_IN_MB * 20
-  export let processFiles = null
-  export let deleteAttachments = null
-  export let handleFileTooLarge = null
-  export let handleTooManyFiles = null
-  export let gallery = true
-  export let fileTags = []
-  export let maximum = null
-  export let extensions = "*"
+export let value = []
+export let id = null
+export let disabled = false
+export let compact = false
+export let fileSizeLimit = BYTES_IN_MB * 20
+export let processFiles = null
+export let deleteAttachments = null
+export let handleFileTooLarge = null
+export let handleTooManyFiles = null
+export let gallery = true
+export let fileTags = []
+export let maximum = null
+export let extensions = "*"
 
-  const dispatch = createEventDispatcher()
-  const imageExtensions = [
-    "png",
-    "tiff",
-    "gif",
-    "raw",
-    "jpg",
-    "jpeg",
-    "svg",
-    "bmp",
-    "jfif",
-    "webp",
-  ]
+const dispatch = createEventDispatcher()
+const imageExtensions = [
+  "png",
+  "tiff",
+  "gif",
+  "raw",
+  "jpg",
+  "jpeg",
+  "svg",
+  "bmp",
+  "jfif",
+  "webp",
+]
 
-  const fieldId = id || uuid()
-  let selectedImageIdx = 0
-  let fileDragged = false
-  let selectedUrl
-  let fileInput
-  $: selectedImage = value?.[selectedImageIdx] ?? null
-  $: fileCount = value?.length ?? 0
-  $: isImage =
-    imageExtensions.includes(selectedImage?.extension?.toLowerCase()) ||
-    selectedImage?.type?.startsWith("image")
+const fieldId = id || uuid()
+let selectedImageIdx = 0
+let fileDragged = false
+let selectedUrl
+let fileInput
+$: selectedImage = value?.[selectedImageIdx] ?? null
+$: fileCount = value?.length ?? 0
+$: isImage =
+  imageExtensions.includes(selectedImage?.extension?.toLowerCase()) ||
+  selectedImage?.type?.startsWith("image")
 
-  $: {
-    if (selectedImage?.url) {
-      selectedUrl = selectedImage?.url
-    } else if (selectedImage && isImage) {
-      try {
-        let reader = new FileReader()
-        reader.readAsDataURL(selectedImage)
-        reader.onload = e => {
-          selectedUrl = e.target.result
-        }
-      } catch (error) {
-        selectedUrl = null
+$: {
+  if (selectedImage?.url) {
+    selectedUrl = selectedImage?.url
+  } else if (selectedImage && isImage) {
+    try {
+      let reader = new FileReader()
+      reader.readAsDataURL(selectedImage)
+      reader.onload = e => {
+        selectedUrl = e.target.result
       }
+    } catch (error) {
+      selectedUrl = null
     }
   }
+}
 
-  $: showDropzone =
-    (!maximum || (maximum && (value?.length || 0) < maximum)) && !disabled
+$: showDropzone =
+  (!maximum || (maximum && (value?.length || 0) < maximum)) && !disabled
 
-  async function processFileList(fileList) {
-    if (
-      handleFileTooLarge &&
-      Array.from(fileList).some(file => file.size >= fileSizeLimit)
-    ) {
-      handleFileTooLarge(fileSizeLimit, value)
-      return
-    }
-
-    const fileCount = fileList.length + value.length
-    if (handleTooManyFiles && maximum && fileCount > maximum) {
-      handleTooManyFiles(maximum)
-      return
-    }
-
-    if (processFiles) {
-      const processedFiles = await processFiles(fileList)
-      const newValue = [...value, ...processedFiles]
-      dispatch("change", newValue)
-      selectedImageIdx = newValue.length - 1
-    } else {
-      dispatch("change", fileList)
-    }
+async function processFileList(fileList) {
+  if (
+    handleFileTooLarge &&
+    Array.from(fileList).some(file => file.size >= fileSizeLimit)
+  ) {
+    handleFileTooLarge(fileSizeLimit, value)
+    return
   }
 
-  async function removeFile() {
-    dispatch(
-      "change",
-      value.filter((x, idx) => idx !== selectedImageIdx)
+  const fileCount = fileList.length + value.length
+  if (handleTooManyFiles && maximum && fileCount > maximum) {
+    handleTooManyFiles(maximum)
+    return
+  }
+
+  if (processFiles) {
+    const processedFiles = await processFiles(fileList)
+    const newValue = [...value, ...processedFiles]
+    dispatch("change", newValue)
+    selectedImageIdx = newValue.length - 1
+  } else {
+    dispatch("change", fileList)
+  }
+}
+
+async function removeFile() {
+  dispatch(
+    "change",
+    value.filter((x, idx) => idx !== selectedImageIdx)
+  )
+  if (deleteAttachments) {
+    await deleteAttachments(
+      value.filter((x, idx) => idx === selectedImageIdx).map(item => item.key)
     )
-    if (deleteAttachments) {
-      await deleteAttachments(
-        value.filter((x, idx) => idx === selectedImageIdx).map(item => item.key)
-      )
-      fileInput.value = ""
-    }
-    selectedImageIdx = 0
+    fileInput.value = ""
   }
+  selectedImageIdx = 0
+}
 
-  function navigateLeft() {
-    selectedImageIdx -= 1
-  }
+function navigateLeft() {
+  selectedImageIdx -= 1
+}
 
-  function navigateRight() {
-    selectedImageIdx += 1
-  }
+function navigateRight() {
+  selectedImageIdx += 1
+}
 
-  function handleFile(evt) {
-    processFileList(evt.target.files)
-  }
+function handleFile(evt) {
+  processFileList(evt.target.files)
+}
 
-  function handleDragOver(evt) {
-    evt.preventDefault()
-    fileDragged = true
-  }
+function handleDragOver(evt) {
+  evt.preventDefault()
+  fileDragged = true
+}
 
-  function handleDragLeave(evt) {
-    evt.preventDefault()
-    fileDragged = false
-  }
+function handleDragLeave(evt) {
+  evt.preventDefault()
+  fileDragged = false
+}
 
-  function handleDrop(evt) {
-    evt.preventDefault()
-    processFileList(evt.dataTransfer.files)
-    fileDragged = false
-  }
+function handleDrop(evt) {
+  evt.preventDefault()
+  processFileList(evt.dataTransfer.files)
+  fileDragged = false
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

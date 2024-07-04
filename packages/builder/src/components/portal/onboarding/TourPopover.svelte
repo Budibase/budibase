@@ -1,90 +1,90 @@
 <script>
-  import { Popover, Layout, Heading, Body, Button, Link } from "@budibase/bbui"
-  import { TOURS, getCurrentStepIdx } from "./tours.js"
-  import { goto, layout, isActive } from "@roxi/routify"
-  import { builderStore } from "stores/builder"
+import { Body, Button, Heading, Layout, Link, Popover } from "@budibase/bbui"
+import { goto, isActive, layout } from "@roxi/routify"
+import { builderStore } from "stores/builder"
+import { TOURS, getCurrentStepIdx } from "./tours.js"
 
-  let popoverAnchor
-  let popover
-  let tourSteps = null
-  let tourStep
-  let tourStepIdx
-  let lastStep
-  let skipping = false
+let popoverAnchor
+let popover
+let tourSteps = null
+let tourStep
+let tourStepIdx
+let lastStep
+let skipping = false
 
-  $: tourNodes = { ...$builderStore.tourNodes }
-  $: tourKey = $builderStore.tourKey
-  $: tourStepKey = $builderStore.tourStepKey
-  $: tour = TOURS[tourKey]
-  $: tourOnSkip = tour?.onSkip
+$: tourNodes = { ...$builderStore.tourNodes }
+$: tourKey = $builderStore.tourKey
+$: tourStepKey = $builderStore.tourStepKey
+$: tour = TOURS[tourKey]
+$: tourOnSkip = tour?.onSkip
 
-  const updateTourStep = (targetStepKey, tourKey) => {
-    if (!tourKey) {
-      tourSteps = null
-      tourStepIdx = null
-      lastStep = null
-      tourStep = null
-      popoverAnchor = null
-      popover = null
-      skipping = false
-      return
-    }
-    if (!tourSteps?.length) {
-      tourSteps = [...tour.steps]
-    }
-    tourStepIdx = getCurrentStepIdx(tourSteps, targetStepKey)
-    lastStep = tourStepIdx + 1 == tourSteps.length
-    tourStep = { ...tourSteps[tourStepIdx] }
-    tourStep.onLoad()
+const updateTourStep = (targetStepKey, tourKey) => {
+  if (!tourKey) {
+    tourSteps = null
+    tourStepIdx = null
+    lastStep = null
+    tourStep = null
+    popoverAnchor = null
+    popover = null
+    skipping = false
+    return
   }
-
-  $: updateTourStep(tourStepKey, tourKey)
-
-  const showPopover = (tourStep, tourNodes, popover) => {
-    if (!tourStep) {
-      return
-    }
-    popoverAnchor = tourNodes[tourStep.id]
-    popover?.show()
+  if (!tourSteps?.length) {
+    tourSteps = [...tour.steps]
   }
+  tourStepIdx = getCurrentStepIdx(tourSteps, targetStepKey)
+  lastStep = tourStepIdx + 1 == tourSteps.length
+  tourStep = { ...tourSteps[tourStepIdx] }
+  tourStep.onLoad()
+}
 
-  $: showPopover(tourStep, tourNodes, popover)
+$: updateTourStep(tourStepKey, tourKey)
 
-  const navigateStep = step => {
-    if (step.route) {
-      const activeNav = $layout.children.find(c => $isActive(c.path))
-      if (activeNav) {
-        builderStore.setPreviousTopNavPath(
-          activeNav.path,
-          window.location.pathname
-        )
-        $goto($builderStore.previousTopNavPath[step.route] || step.route)
-      }
+const showPopover = (tourStep, tourNodes, popover) => {
+  if (!tourStep) {
+    return
+  }
+  popoverAnchor = tourNodes[tourStep.id]
+  popover?.show()
+}
+
+$: showPopover(tourStep, tourNodes, popover)
+
+const navigateStep = step => {
+  if (step.route) {
+    const activeNav = $layout.children.find(c => $isActive(c.path))
+    if (activeNav) {
+      builderStore.setPreviousTopNavPath(
+        activeNav.path,
+        window.location.pathname
+      )
+      $goto($builderStore.previousTopNavPath[step.route] || step.route)
     }
   }
+}
 
-  const nextStep = async () => {
-    if (!lastStep === true) {
-      let target = tourSteps[tourStepIdx + 1]
-      if (target) {
-        builderStore.update(state => ({
-          ...state,
-          tourStepKey: target.id,
-        }))
-        navigateStep(target)
-      } else {
-        console.warn("Could not retrieve step")
-      }
+const nextStep = async () => {
+  if (!lastStep === true) {
+    let target = tourSteps[tourStepIdx + 1]
+    if (target) {
+      builderStore.update(state => ({
+        ...state,
+        tourStepKey: target.id,
+      }))
+      navigateStep(target)
     } else {
-      if (typeof tourStep.onComplete === "function") {
-        tourStep.onComplete()
-      }
-      popover.hide()
-      if (tour.endRoute) {
-        $goto(tour.endRoute)
-      }
+      console.warn("Could not retrieve step")
+    }
+  } else {
+    if (typeof tourStep.onComplete === "function") {
+      tourStep.onComplete()
+    }
+    popover.hide()
+    if (tour.endRoute) {
+      $goto(tour.endRoute)
     }
   }
+}
 </script>
 
 {#if tourKey}

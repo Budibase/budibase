@@ -1,11 +1,11 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
 
-  export let value
-  export let row
+export let value
+export let row
 
-  $: icon = row?.schema?.schema?.icon
-  $: friendlyName = row?.schema?.schema?.friendlyName
+$: icon = row?.schema?.schema?.icon
+$: friendlyName = row?.schema?.schema?.friendlyName
 </script>
 
 <div class="container" title={value}>

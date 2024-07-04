@@ -1,5 +1,5 @@
-import { writable, get, derived } from "svelte/store"
-import { MinColumnWidth, DefaultColumnWidth } from "../lib/constants"
+import { derived, get, writable } from "svelte/store"
+import { DefaultColumnWidth, MinColumnWidth } from "../lib/constants"
 import { parseEventLocation } from "../lib/utils"
 
 const initialState = {

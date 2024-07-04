@@ -1,4 +1,4 @@
-import { Knex, knex } from "knex"
+import { helpers, utils } from "@budibase/shared-core"
 import {
   FieldType,
   NumberFieldMetadata,
@@ -6,13 +6,13 @@ import {
   QueryJson,
   RelationshipType,
   RenameColumn,
+  SqlClient,
   SqlQuery,
   Table,
   TableSourceType,
-  SqlClient,
 } from "@budibase/types"
+import { Knex, knex } from "knex"
 import { breakExternalTableId, getNativeSql } from "./utils"
-import { helpers, utils } from "@budibase/shared-core"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
 

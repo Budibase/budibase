@@ -1,6 +1,6 @@
 <script>
-  export let value
-  export let schema
+export let value
+export let schema
 </script>
 
 <div class:capitalise={schema?.capitalise}>

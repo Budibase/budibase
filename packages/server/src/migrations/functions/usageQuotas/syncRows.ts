@@ -1,7 +1,7 @@
 import { db as dbCore } from "@budibase/backend-core"
-import { getUniqueRows } from "../../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
-import { StaticQuotaName, QuotaUsageType, App } from "@budibase/types"
+import { App, QuotaUsageType, StaticQuotaName } from "@budibase/types"
+import { getUniqueRows } from "../../../utilities/usageQuota/rows"
 
 export const run = async () => {
   // get all rows in all apps

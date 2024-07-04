@@ -1,3 +1,4 @@
+import { events } from "@budibase/backend-core"
 import {
   Datasource,
   Operation,
@@ -6,15 +7,14 @@ import {
   SourceName,
   TableSourceType,
 } from "@budibase/types"
-import * as setup from "../utilities"
+import { Knex } from "knex"
+import { Expectations } from "src/tests/utilities/api/base"
 import {
   DatabaseName,
   getDatasource,
   knexClient,
 } from "../../../../integrations/tests/utils"
-import { Expectations } from "src/tests/utilities/api/base"
-import { events } from "@budibase/backend-core"
-import { Knex } from "knex"
+import * as setup from "../utilities"
 
 describe.each(
   [

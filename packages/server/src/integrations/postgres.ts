@@ -1,36 +1,36 @@
 import fs from "fs"
 import {
-  Integration,
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
-  QueryType,
+  DatasourcePlus,
+  DatasourcePlusQueryResponse,
+  Integration,
   QueryJson,
+  QueryType,
+  Schema,
+  SourceName,
+  SqlClient,
   SqlQuery,
   Table,
-  DatasourcePlus,
-  DatasourceFeature,
-  ConnectionInfo,
-  SourceName,
-  Schema,
   TableSourceType,
-  DatasourcePlusQueryResponse,
-  SqlClient,
 } from "@budibase/types"
-import {
-  getSqlQuery,
-  buildExternalTableId,
-  generateColumnDefinition,
-  finaliseExternalTables,
-  checkExternalTables,
-  HOST_ADDRESS,
-} from "./utils"
-import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
+import { PostgresColumn } from "./base/types"
+import {
+  HOST_ADDRESS,
+  buildExternalTableId,
+  checkExternalTables,
+  finaliseExternalTables,
+  generateColumnDefinition,
+  getSqlQuery,
+} from "./utils"
 
-import { Client, ClientConfig, types } from "pg"
-import { getReadableErrorMessage } from "./base/errorMapping"
 import { exec } from "child_process"
-import { storeTempFile } from "../utilities/fileSystem"
 import { env, sql } from "@budibase/backend-core"
+import { Client, ClientConfig, types } from "pg"
+import { storeTempFile } from "../utilities/fileSystem"
+import { getReadableErrorMessage } from "./base/errorMapping"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -317,7 +317,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           tableKeys[tableName].push(key)
         }
       }
-    } catch (err) {
+    } catch (_err) {
       tableKeys = {}
     }
 

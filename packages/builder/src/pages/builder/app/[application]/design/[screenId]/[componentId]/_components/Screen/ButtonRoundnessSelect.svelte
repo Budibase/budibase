@@ -1,17 +1,17 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import { Slider, Button } from "@budibase/bbui"
+import { Button, Slider } from "@budibase/bbui"
+import { createEventDispatcher } from "svelte"
 
-  export let customTheme
+export let customTheme
 
-  const dispatch = createEventDispatcher()
-  const options = ["0", "4px", "8px", "16px"]
+const dispatch = createEventDispatcher()
+const options = ["0", "4px", "8px", "16px"]
 
-  $: index = options.indexOf(customTheme.buttonBorderRadius) ?? 2
+$: index = options.indexOf(customTheme.buttonBorderRadius) ?? 2
 
-  const onChange = async e => {
-    dispatch("change", options[e.detail])
-  }
+const onChange = async e => {
+  dispatch("change", options[e.detail])
+}
 </script>
 
 <div class="container">

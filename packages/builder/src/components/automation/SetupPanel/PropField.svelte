@@ -1,10 +1,10 @@
 <script>
-  import { Label } from "@budibase/bbui"
+import { Label } from "@budibase/bbui"
 
-  export let label
-  export let labelTooltip
-  export let fullWidth = false
-  export let componentWidth = 320
+export let label
+export let labelTooltip
+export let fullWidth = false
+export let componentWidth = 320
 </script>
 
 <div

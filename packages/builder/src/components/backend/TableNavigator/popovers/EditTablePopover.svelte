@@ -1,88 +1,88 @@
 <script>
-  import { goto, params } from "@roxi/routify"
-  import { cloneDeep } from "lodash/fp"
-  import { tables, datasources, screenStore } from "stores/builder"
-  import {
-    ActionMenu,
-    Icon,
-    Input,
-    MenuItem,
-    Modal,
-    ModalContent,
-    notifications,
-  } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { DB_TYPE_EXTERNAL } from "constants/backend"
+import {
+  ActionMenu,
+  Icon,
+  Input,
+  MenuItem,
+  Modal,
+  ModalContent,
+  notifications,
+} from "@budibase/bbui"
+import { goto, params } from "@roxi/routify"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { DB_TYPE_EXTERNAL } from "constants/backend"
+import { cloneDeep } from "lodash/fp"
+import { datasources, screenStore, tables } from "stores/builder"
 
-  export let table
+export let table
 
-  let editorModal, editTableNameModal
-  let confirmDeleteDialog
-  let error = ""
+let editorModal, editTableNameModal
+let confirmDeleteDialog
+let error = ""
 
-  let originalName
-  let updatedName
+let originalName
+let updatedName
 
-  let templateScreens
-  let willBeDeleted
-  let deleteTableName
+let templateScreens
+let willBeDeleted
+let deleteTableName
 
-  $: externalTable = table?.sourceType === DB_TYPE_EXTERNAL
+$: externalTable = table?.sourceType === DB_TYPE_EXTERNAL
 
-  function showDeleteModal() {
-    templateScreens = $screenStore.screens.filter(
-      screen => screen.autoTableId === table._id
-    )
-    willBeDeleted = ["All table data"].concat(
-      templateScreens.map(screen => `Screen ${screen.routing?.route || ""}`)
-    )
-    confirmDeleteDialog.show()
-  }
+function showDeleteModal() {
+  templateScreens = $screenStore.screens.filter(
+    screen => screen.autoTableId === table._id
+  )
+  willBeDeleted = ["All table data"].concat(
+    templateScreens.map(screen => `Screen ${screen.routing?.route || ""}`)
+  )
+  confirmDeleteDialog.show()
+}
 
-  async function deleteTable() {
-    const isSelected = $params.tableId === table._id
-    try {
-      await tables.delete(table)
-      // Screens need deleted one at a time because of undo/redo
-      for (let screen of templateScreens) {
-        await screenStore.delete(screen)
-      }
-      if (table.sourceType === DB_TYPE_EXTERNAL) {
-        await datasources.fetch()
-      }
-      notifications.success("Table deleted")
-      if (isSelected) {
-        $goto(`./datasource/${table.datasourceId}`)
-      }
-    } catch (error) {
-      notifications.error(`Error deleting table - ${error.message}`)
+async function deleteTable() {
+  const isSelected = $params.tableId === table._id
+  try {
+    await tables.delete(table)
+    // Screens need deleted one at a time because of undo/redo
+    for (let screen of templateScreens) {
+      await screenStore.delete(screen)
     }
+    if (table.sourceType === DB_TYPE_EXTERNAL) {
+      await datasources.fetch()
+    }
+    notifications.success("Table deleted")
+    if (isSelected) {
+      $goto(`./datasource/${table.datasourceId}`)
+    }
+  } catch (error) {
+    notifications.error(`Error deleting table - ${error.message}`)
   }
+}
 
-  function hideDeleteDialog() {
-    deleteTableName = ""
-  }
+function hideDeleteDialog() {
+  deleteTableName = ""
+}
 
-  async function save() {
-    const updatedTable = cloneDeep(table)
-    updatedTable.name = updatedName
-    await tables.save(updatedTable)
-    await datasources.fetch()
-    notifications.success("Table renamed successfully")
-  }
+async function save() {
+  const updatedTable = cloneDeep(table)
+  updatedTable.name = updatedName
+  await tables.save(updatedTable)
+  await datasources.fetch()
+  notifications.success("Table renamed successfully")
+}
 
-  function checkValid(evt) {
-    const tableName = evt.target.value
-    error =
-      originalName === tableName
-        ? `Table with name ${tableName} already exists. Please choose another name.`
-        : ""
-  }
+function checkValid(evt) {
+  const tableName = evt.target.value
+  error =
+    originalName === tableName
+      ? `Table with name ${tableName} already exists. Please choose another name.`
+      : ""
+}
 
-  const initForm = () => {
-    originalName = table.name + ""
-    updatedName = table.name + ""
-  }
+const initForm = () => {
+  originalName = table.name + ""
+  updatedName = table.name + ""
+}
 </script>
 
 <ActionMenu>

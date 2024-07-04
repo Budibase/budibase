@@ -1,42 +1,42 @@
 <script>
-  import { Select, ModalContent } from "@budibase/bbui"
-  import { RoleUtils } from "@budibase/frontend-core"
-  import { roles, screenStore } from "stores/builder"
-  import { get } from "svelte/store"
-  import { onMount } from "svelte"
+import { ModalContent, Select } from "@budibase/bbui"
+import { RoleUtils } from "@budibase/frontend-core"
+import { roles, screenStore } from "stores/builder"
+import { onMount } from "svelte"
+import { get } from "svelte/store"
 
-  export let onConfirm
-  export let onCancel
-  export let screenUrl
-  export let screenAccessRole
-  export let confirmText = "Done"
+export let onConfirm
+export let onCancel
+export let screenUrl
+export let screenAccessRole
+export let confirmText = "Done"
 
-  let error
+let error
 
-  const onChangeRole = e => {
-    const roleId = e.detail
-    if (routeExists(screenUrl, roleId)) {
-      error = "This URL is already taken for this access role"
-    } else {
-      error = null
-    }
+const onChangeRole = e => {
+  const roleId = e.detail
+  if (routeExists(screenUrl, roleId)) {
+    error = "This URL is already taken for this access role"
+  } else {
+    error = null
   }
+}
 
-  const routeExists = (url, role) => {
-    if (!url || !role) {
-      return false
-    }
-    return get(screenStore).screens.some(
-      screen =>
-        screen.routing.route.toLowerCase() === url.toLowerCase() &&
-        screen.routing.roleId === role
-    )
+const routeExists = (url, role) => {
+  if (!url || !role) {
+    return false
   }
+  return get(screenStore).screens.some(
+    screen =>
+      screen.routing.route.toLowerCase() === url.toLowerCase() &&
+      screen.routing.roleId === role
+  )
+}
 
-  onMount(() => {
-    // Validate the initial role
-    onChangeRole({ detail: screenAccessRole })
-  })
+onMount(() => {
+  // Validate the initial role
+  onChangeRole({ detail: screenAccessRole })
+})
 </script>
 
 <ModalContent

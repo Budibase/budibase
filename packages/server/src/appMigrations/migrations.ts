@@ -1,7 +1,7 @@
 // This file should never be manually modified, use `yarn add-app-migration` in order to add a new one
 
-import env from "../environment"
 import { AppMigration } from "."
+import env from "../environment"
 
 import m20240604153647_initial_sqs from "./migrations/20240604153647_initial_sqs"
 

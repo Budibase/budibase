@@ -1,38 +1,38 @@
-import { parse, isSchema, isRows } from "../../../utilities/schema"
-import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
-import isEqual from "lodash/isEqual"
-import {
-  GOOGLE_SHEETS_PRIMARY_KEY,
-  USERS_TABLE_SCHEMA,
-  SwitchableTypes,
-  CanSwitchTypes,
-} from "../../../constants"
-import {
-  inputProcessing,
-  AttachmentCleanup,
-} from "../../../utilities/rowProcessor"
-import { getViews, saveView } from "../view/utils"
-import viewTemplate from "../view/viewBuilder"
-import { cloneDeep } from "lodash/fp"
-import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
   AutoFieldSubType,
   ContextUser,
+  Database,
   Datasource,
+  FieldSchema,
+  FieldType,
+  NumberFieldMetadata,
+  RelationshipFieldMetadata,
+  RenameColumn,
   Row,
   SourceName,
   Table,
-  Database,
-  RenameColumn,
-  NumberFieldMetadata,
-  FieldSchema,
   View,
-  RelationshipFieldMetadata,
-  FieldType,
 } from "@budibase/types"
-import sdk from "../../../sdk"
+import { cloneDeep } from "lodash/fp"
+import isEqual from "lodash/isEqual"
+import {
+  CanSwitchTypes,
+  GOOGLE_SHEETS_PRIMARY_KEY,
+  SwitchableTypes,
+  USERS_TABLE_SCHEMA,
+} from "../../../constants"
+import { InternalTables, generateRowID, getRowParams } from "../../../db/utils"
 import env from "../../../environment"
+import sdk from "../../../sdk"
+import {
+  AttachmentCleanup,
+  inputProcessing,
+} from "../../../utilities/rowProcessor"
+import { isRows, isSchema, parse } from "../../../utilities/schema"
+import { getViews, saveView } from "../view/utils"
+import viewTemplate from "../view/viewBuilder"
 import { runStaticFormulaChecks } from "./bulkFormula"
 
 export async function clearColumns(table: Table, columnNames: string[]) {

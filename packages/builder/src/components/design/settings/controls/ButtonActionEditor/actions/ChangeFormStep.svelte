@@ -1,45 +1,45 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
-  import { selectedScreen, componentStore } from "stores/builder"
-  import { getActionProviders } from "dataBinding"
-  import { onMount } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { Label, Select } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { getActionProviders } from "dataBinding"
+import { componentStore, selectedScreen } from "stores/builder"
+import { onMount } from "svelte"
 
-  export let parameters
-  export let bindings = []
-  export let nested
+export let parameters
+export let bindings = []
+export let nested
 
-  $: actionProviders = getActionProviders(
-    $selectedScreen,
-    $componentStore.selectedComponentId,
-    "ChangeFormStep",
-    { includeSelf: nested }
-  )
+$: actionProviders = getActionProviders(
+  $selectedScreen,
+  $componentStore.selectedComponentId,
+  "ChangeFormStep",
+  { includeSelf: nested }
+)
 
-  const typeOptions = [
-    {
-      label: "Next step",
-      value: "next",
-    },
-    {
-      label: "Previous step",
-      value: "prev",
-    },
-    {
-      label: "First step",
-      value: "first",
-    },
-    {
-      label: "Specific step",
-      value: "specific",
-    },
-  ]
+const typeOptions = [
+  {
+    label: "Next step",
+    value: "next",
+  },
+  {
+    label: "Previous step",
+    value: "prev",
+  },
+  {
+    label: "First step",
+    value: "first",
+  },
+  {
+    label: "Specific step",
+    value: "specific",
+  },
+]
 
-  onMount(() => {
-    if (!parameters.type) {
-      parameters.type = "next"
-    }
-  })
+onMount(() => {
+  if (!parameters.type) {
+    parameters.type = "next"
+  }
+})
 </script>
 
 <div class="root">

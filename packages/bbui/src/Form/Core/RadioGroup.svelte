@@ -1,36 +1,36 @@
 <script>
-  import "@spectrum-css/fieldgroup/dist/index-vars.css"
-  import "@spectrum-css/radio/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+import "@spectrum-css/fieldgroup/dist/index-vars.css"
+import "@spectrum-css/radio/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
 
-  export let direction = "vertical"
-  export let value = null
-  export let options = []
-  export let disabled = false
-  export let readonly = false
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
-  export let getOptionTitle = option => option
-  export let sort = false
+export let direction = "vertical"
+export let value = null
+export let options = []
+export let disabled = false
+export let readonly = false
+export let getOptionLabel = option => option
+export let getOptionValue = option => option
+export let getOptionTitle = option => option
+export let sort = false
 
-  const dispatch = createEventDispatcher()
-  const onChange = e => dispatch("change", e.target.value)
+const dispatch = createEventDispatcher()
+const onChange = e => dispatch("change", e.target.value)
 
-  const getSortedOptions = (options, getLabel, sort) => {
-    if (!options?.length || !Array.isArray(options)) {
-      return []
-    }
-    if (!sort) {
-      return options
-    }
-    return [...options].sort((a, b) => {
-      const labelA = getLabel(a)
-      const labelB = getLabel(b)
-      return labelA > labelB ? 1 : -1
-    })
+const getSortedOptions = (options, getLabel, sort) => {
+  if (!options?.length || !Array.isArray(options)) {
+    return []
   }
+  if (!sort) {
+    return options
+  }
+  return [...options].sort((a, b) => {
+    const labelA = getLabel(a)
+    const labelB = getLabel(b)
+    return labelA > labelB ? 1 : -1
+  })
+}
 
-  $: parsedOptions = getSortedOptions(options, getOptionLabel, sort)
+$: parsedOptions = getSortedOptions(options, getOptionLabel, sort)
 </script>
 
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>

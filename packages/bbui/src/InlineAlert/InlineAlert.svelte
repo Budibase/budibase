@@ -1,30 +1,30 @@
 <script>
-  import "@spectrum-css/inlinealert/dist/index-vars.css"
-  import Button from "../Button/Button.svelte"
+import "@spectrum-css/inlinealert/dist/index-vars.css"
+import Button from "../Button/Button.svelte"
 
-  export let type = "info"
-  export let header = ""
-  export let message = ""
-  export let onConfirm = undefined
-  export let buttonText = ""
-  export let cta = false
-  $: icon = selectIcon(type)
-  // if newlines used, convert them to different elements
-  $: split = message.split("\n")
+export let type = "info"
+export let header = ""
+export let message = ""
+export let onConfirm = undefined
+export let buttonText = ""
+export let cta = false
+$: icon = selectIcon(type)
+// if newlines used, convert them to different elements
+$: split = message.split("\n")
 
-  function selectIcon(alertType) {
-    switch (alertType) {
-      case "error":
-      case "negative":
-        return "Alert"
-      case "success":
-        return "CheckmarkCircle"
-      case "help":
-        return "Help"
-      default:
-        return "Info"
-    }
+function selectIcon(alertType) {
+  switch (alertType) {
+    case "error":
+    case "negative":
+      return "Alert"
+    case "success":
+      return "CheckmarkCircle"
+    case "help":
+      return "Help"
+    default:
+      return "Info"
   }
+}
 </script>
 
 <div class="spectrum-InLineAlert spectrum-InLineAlert--{type}">

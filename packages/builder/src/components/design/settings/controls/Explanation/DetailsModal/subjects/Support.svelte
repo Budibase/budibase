@@ -1,6 +1,6 @@
 <script>
-  import { InfoWord } from "../../typography"
-  import { Subject, Section } from "./components"
+import { InfoWord } from "../../typography"
+import { Section, Subject } from "./components"
 </script>
 
 <Subject heading="Data/Component Compatibility">

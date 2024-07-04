@@ -1,11 +1,11 @@
-import { Command } from "../structures/Command"
 import { CommandWord } from "../constants"
+import { Command } from "../structures/Command"
+import { generateUser } from "./genUser"
 import { init } from "./init"
 import { start } from "./start"
-import { stop } from "./stop"
 import { status } from "./status"
+import { stop } from "./stop"
 import { update } from "./update"
-import { generateUser } from "./genUser"
 import { watchPlugins } from "./watch"
 
 export default new Command(`${CommandWord.HOSTING}`)

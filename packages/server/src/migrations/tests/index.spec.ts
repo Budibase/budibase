@@ -1,17 +1,17 @@
 import {
   events,
-  migrations,
-  tenancy,
   DocumentType,
   context,
+  migrations,
+  tenancy,
 } from "@budibase/backend-core"
+import { MIGRATIONS } from "../"
 import TestConfig from "../../tests/utilities/TestConfiguration"
 import * as structures from "../../tests/utilities/structures"
-import { MIGRATIONS } from "../"
 import * as helpers from "./helpers"
 
-import tk from "timekeeper"
 import { View } from "@budibase/types"
+import tk from "timekeeper"
 
 const timestamp = new Date().toISOString()
 tk.freeze(timestamp)

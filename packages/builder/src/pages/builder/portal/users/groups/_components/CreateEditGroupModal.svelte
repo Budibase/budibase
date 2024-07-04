@@ -1,19 +1,19 @@
 <script>
-  import {
-    keepOpen,
-    ColorPicker,
-    Body,
-    ModalContent,
-    Input,
-    IconPicker,
-  } from "@budibase/bbui"
+import {
+  Body,
+  ColorPicker,
+  IconPicker,
+  Input,
+  ModalContent,
+  keepOpen,
+} from "@budibase/bbui"
 
-  export let group
-  export let saveGroup
+export let group
+export let saveGroup
 
-  let readonlyTitle = group?.scimInfo?.isSync
+let readonlyTitle = group?.scimInfo?.isSync
 
-  let nameError
+let nameError
 </script>
 
 <ModalContent

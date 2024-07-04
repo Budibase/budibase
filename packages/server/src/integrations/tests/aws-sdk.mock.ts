@@ -40,7 +40,7 @@ class S3 {
       Contents: {},
     })
   )
-  getSignedUrl = jest.fn((operation, params) => {
+  getSignedUrl = jest.fn((_operation, params) => {
     return `http://example.com/${params.Bucket}/${params.Key}`
   })
   headBucket = jest.fn(

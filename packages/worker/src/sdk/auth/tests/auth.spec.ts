@@ -1,7 +1,7 @@
 import { cache, context, sessions, utils } from "@budibase/backend-core"
-import { loginUser, resetUpdate } from "../auth"
 import { generator, structures } from "@budibase/backend-core/tests"
 import { TestConfiguration } from "../../../tests"
+import { loginUser, resetUpdate } from "../auth"
 
 describe("auth", () => {
   const config = new TestConfiguration()

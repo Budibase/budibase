@@ -1,71 +1,71 @@
 <script>
-  import { isActive, redirect, goto, url } from "@roxi/routify"
-  import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
-  import {
-    organisation,
-    auth,
-    menu,
-    appsStore,
-    licensing,
-    admin,
-  } from "stores/portal"
-  import { onMount } from "svelte"
-  import UpgradeButton from "./_components/UpgradeButton.svelte"
-  import MobileMenu from "./_components/MobileMenu.svelte"
-  import Logo from "./_components/Logo.svelte"
-  import UserDropdown from "./_components/UserDropdown.svelte"
-  import HelpMenu from "components/common/HelpMenu.svelte"
-  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
-  import { sdk } from "@budibase/shared-core"
-  import EnterpriseBasicTrialBanner from "components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
-  import { Constants } from "@budibase/frontend-core"
+import { Icon, Tab, Tabs, notifications } from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
+import { url, goto, isActive, redirect } from "@roxi/routify"
+import HelpMenu from "components/common/HelpMenu.svelte"
+import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
+import EnterpriseBasicTrialBanner from "components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
+import {
+  admin,
+  appsStore,
+  auth,
+  licensing,
+  menu,
+  organisation,
+} from "stores/portal"
+import { onMount } from "svelte"
+import Logo from "./_components/Logo.svelte"
+import MobileMenu from "./_components/MobileMenu.svelte"
+import UpgradeButton from "./_components/UpgradeButton.svelte"
+import UserDropdown from "./_components/UserDropdown.svelte"
 
-  let loaded = false
-  let mobileMenuVisible = false
-  let activeTab = "Apps"
+let loaded = false
+let mobileMenuVisible = false
+let activeTab = "Apps"
 
-  $: $url(), updateActiveTab($menu)
-  $: isOnboarding =
-    !$appsStore.apps.length && sdk.users.hasBuilderPermissions($auth.user)
-  $: isOwner = $auth.accountPortalAccess && $admin.cloud
+$: $url(), updateActiveTab($menu)
+$: isOnboarding =
+  !$appsStore.apps.length && sdk.users.hasBuilderPermissions($auth.user)
+$: isOwner = $auth.accountPortalAccess && $admin.cloud
 
-  const updateActiveTab = menu => {
-    for (let entry of menu) {
-      if ($isActive(entry.href)) {
-        if (activeTab !== entry.title) {
-          activeTab = entry.title
-        }
-        break
+const updateActiveTab = menu => {
+  for (let entry of menu) {
+    if ($isActive(entry.href)) {
+      if (activeTab !== entry.title) {
+        activeTab = entry.title
       }
+      break
     }
   }
+}
 
-  const showMobileMenu = () => (mobileMenuVisible = true)
-  const hideMobileMenu = () => (mobileMenuVisible = false)
+const showMobileMenu = () => (mobileMenuVisible = true)
+const hideMobileMenu = () => (mobileMenuVisible = false)
 
-  const showFreeTrialBanner = () => {
-    return (
-      $licensing.license?.plan?.type ===
-        Constants.PlanType.ENTERPRISE_BASIC_TRIAL && isOwner
-    )
-  }
+const showFreeTrialBanner = () => {
+  return (
+    $licensing.license?.plan?.type ===
+      Constants.PlanType.ENTERPRISE_BASIC_TRIAL && isOwner
+  )
+}
 
-  onMount(async () => {
-    // Prevent non-builders from accessing the portal
-    if ($auth.user) {
-      if (!sdk.users.hasBuilderPermissions($auth.user)) {
-        $redirect("../")
-      } else {
-        try {
-          // We need to load apps to know if we need to show onboarding fullscreen
-          await Promise.all([appsStore.load(), organisation.init()])
-        } catch (error) {
-          notifications.error("Error getting org config")
-        }
-        loaded = true
+onMount(async () => {
+  // Prevent non-builders from accessing the portal
+  if ($auth.user) {
+    if (!sdk.users.hasBuilderPermissions($auth.user)) {
+      $redirect("../")
+    } else {
+      try {
+        // We need to load apps to know if we need to show onboarding fullscreen
+        await Promise.all([appsStore.load(), organisation.init()])
+      } catch (error) {
+        notifications.error("Error getting org config")
       }
+      loaded = true
     }
-  })
+  }
+})
 </script>
 
 {#if $auth.user && loaded}

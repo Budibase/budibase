@@ -1,4 +1,3 @@
-import { publishEvent } from "../events"
 import {
   Event,
   User,
@@ -7,6 +6,7 @@ import {
   UserDeletedEvent,
   UserInviteAcceptedEvent,
   UserInvitedEvent,
+  UserOnboardingEvent,
   UserPasswordForceResetEvent,
   UserPasswordResetEvent,
   UserPasswordResetRequestedEvent,
@@ -14,9 +14,9 @@ import {
   UserPermissionAssignedEvent,
   UserPermissionRemovedEvent,
   UserUpdatedEvent,
-  UserOnboardingEvent,
 } from "@budibase/types"
 import { isScim } from "../../context"
+import { publishEvent } from "../events"
 
 async function created(user: User, timestamp?: number) {
   const properties: UserCreatedEvent = {

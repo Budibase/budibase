@@ -1,14 +1,9 @@
 import { permissions, roles, utils } from "@budibase/backend-core"
-import { createHomeScreen } from "../../constants/screens"
-import { EMPTY_LAYOUT } from "../../constants/layouts"
-import { cloneDeep } from "lodash/fp"
-import {
-  BUILTIN_ACTION_DEFINITIONS,
-  TRIGGER_DEFINITIONS,
-} from "../../automations"
+import { generator } from "@budibase/backend-core/tests"
 import {
   Automation,
   AutomationActionStepId,
+  AutomationEventType,
   AutomationResults,
   AutomationStatus,
   AutomationStep,
@@ -17,18 +12,23 @@ import {
   AutomationTriggerStepId,
   Datasource,
   FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  Query,
   SourceName,
   Table,
-  INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
-  Query,
   Webhook,
   WebhookActionType,
-  AutomationEventType,
 } from "@budibase/types"
-import { LoopInput, LoopStepType } from "../../definitions/automations"
 import { merge } from "lodash"
-import { generator } from "@budibase/backend-core/tests"
+import { cloneDeep } from "lodash/fp"
+import {
+  BUILTIN_ACTION_DEFINITIONS,
+  TRIGGER_DEFINITIONS,
+} from "../../automations"
+import { EMPTY_LAYOUT } from "../../constants/layouts"
+import { createHomeScreen } from "../../constants/screens"
+import { LoopInput, LoopStepType } from "../../definitions/automations"
 
 const { BUILTIN_ROLE_IDS } = roles
 

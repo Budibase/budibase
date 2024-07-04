@@ -1,7 +1,7 @@
 <script>
-  import { UserAvatar } from "@budibase/frontend-core"
+import { UserAvatar } from "@budibase/frontend-core"
 
-  export let value
+export let value
 </script>
 
 <div class="cell">

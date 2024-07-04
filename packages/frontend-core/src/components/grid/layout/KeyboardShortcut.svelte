@@ -1,20 +1,20 @@
 <script>
-  export let keybind
-  export let padded = false
-  export let overlay = false
+export let keybind
+export let padded = false
+export let overlay = false
 
-  $: parsedKeys = parseKeys(keybind)
+$: parsedKeys = parseKeys(keybind)
 
-  const parseKeys = keybind => {
-    return keybind?.split("+").map(key => {
-      if (key.toLowerCase() === "ctrl") {
-        return navigator.platform.startsWith("Mac") ? "⌘" : key
-      } else if (key.toLowerCase() === "enter") {
-        return "↵"
-      }
-      return key
-    })
-  }
+const parseKeys = keybind => {
+  return keybind?.split("+").map(key => {
+    if (key.toLowerCase() === "ctrl") {
+      return navigator.platform.startsWith("Mac") ? "⌘" : key
+    } else if (key.toLowerCase() === "enter") {
+      return "↵"
+    }
+    return key
+  })
+}
 </script>
 
 <div class="keys" class:padded class:overlay>

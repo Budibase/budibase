@@ -1,6 +1,6 @@
-import { getRoutingInfo } from "../../utilities/routing"
 import { roles } from "@budibase/backend-core"
 import { UserCtx } from "@budibase/types"
+import { getRoutingInfo } from "../../utilities/routing"
 
 const URL_SEPARATOR = "/"
 

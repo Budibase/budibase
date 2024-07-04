@@ -1,6 +1,9 @@
+import fs from "fs"
+import { join } from "path"
 import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
-import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import { streamFile, createTempFolder } from "../../../utilities/fileSystem"
+import fsp from "fs/promises"
+import tar from "tar"
+import { v4 as uuid } from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
 import {
   AUTOMATION_LOG_PREFIX,
@@ -8,17 +11,14 @@ import {
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
 } from "../../../db/utils"
+import env from "../../../environment"
+import { budibaseTempDir } from "../../../utilities/budibaseDir"
+import { createTempFolder, streamFile } from "../../../utilities/fileSystem"
 import {
+  ATTACHMENT_DIRECTORY,
   DB_EXPORT_FILE,
   STATIC_APP_FILES,
-  ATTACHMENT_DIRECTORY,
 } from "./constants"
-import fs from "fs"
-import fsp from "fs/promises"
-import { join } from "path"
-import env from "../../../environment"
-import { v4 as uuid } from "uuid"
-import tar from "tar"
 
 const MemoryStream = require("memorystream")
 

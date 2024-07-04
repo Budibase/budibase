@@ -1,12 +1,12 @@
 <script>
-  import NewColumnButton from "./NewColumnButton.svelte"
-  import { getContext } from "svelte"
-  import GridScrollWrapper from "./GridScrollWrapper.svelte"
-  import HeaderCell from "../cells/HeaderCell.svelte"
-  import { TempTooltip, TooltipType } from "@budibase/bbui"
+import { TempTooltip, TooltipType } from "@budibase/bbui"
+import { getContext } from "svelte"
+import HeaderCell from "../cells/HeaderCell.svelte"
+import GridScrollWrapper from "./GridScrollWrapper.svelte"
+import NewColumnButton from "./NewColumnButton.svelte"
 
-  const { visibleColumns, config, hasNonAutoColumn, datasource, loading } =
-    getContext("grid")
+const { visibleColumns, config, hasNonAutoColumn, datasource, loading } =
+  getContext("grid")
 </script>
 
 <div class="header">

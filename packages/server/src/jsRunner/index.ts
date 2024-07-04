@@ -1,12 +1,12 @@
-import { serializeError } from "serialize-error"
-import env from "../environment"
+import { context, logging } from "@budibase/backend-core"
 import {
   JsErrorTimeout,
   setJSRunner,
   setOnErrorLog,
 } from "@budibase/string-templates"
-import { context, logging } from "@budibase/backend-core"
 import tracer from "dd-trace"
+import { serializeError } from "serialize-error"
+import env from "../environment"
 import { IsolatedVM } from "./vm"
 
 export function init() {

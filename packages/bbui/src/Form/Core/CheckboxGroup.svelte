@@ -1,29 +1,29 @@
 <script>
-  import "@spectrum-css/fieldgroup/dist/index-vars.css"
-  import "@spectrum-css/radio/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+import "@spectrum-css/fieldgroup/dist/index-vars.css"
+import "@spectrum-css/radio/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
 
-  export let direction = "vertical"
-  export let value = []
-  export let options = []
-  export let disabled = false
-  export let readonly = false
-  export let getOptionLabel = option => option
-  export let getOptionValue = option => option
+export let direction = "vertical"
+export let value = []
+export let options = []
+export let disabled = false
+export let readonly = false
+export let getOptionLabel = option => option
+export let getOptionValue = option => option
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  const onChange = e => {
-    const optionValue = e.target.value
-    if (e.target.checked && !value.includes(optionValue)) {
-      dispatch("change", [...value, optionValue])
-    } else {
-      dispatch(
-        "change",
-        value.filter(x => x !== optionValue)
-      )
-    }
+const onChange = e => {
+  const optionValue = e.target.value
+  if (e.target.checked && !value.includes(optionValue)) {
+    dispatch("change", [...value, optionValue])
+  } else {
+    dispatch(
+      "change",
+      value.filter(x => x !== optionValue)
+    )
   }
+}
 </script>
 
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>

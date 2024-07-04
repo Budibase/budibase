@@ -1,7 +1,7 @@
 import {
   createTempFolder,
-  getPluginMetadata,
   extractTarball,
+  getPluginMetadata,
 } from "../../../utilities/fileSystem"
 
 export async function fileUpload(file: { name: string; path: string }) {

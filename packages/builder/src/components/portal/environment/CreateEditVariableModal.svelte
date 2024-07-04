@@ -1,52 +1,52 @@
 <script>
-  import {
-    ModalContent,
-    Button,
-    Input,
-    Checkbox,
-    Heading,
-    notifications,
-    Context,
-  } from "@budibase/bbui"
-  import { environment } from "stores/portal"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { getContext } from "svelte"
+import {
+  Button,
+  Checkbox,
+  Context,
+  Heading,
+  Input,
+  ModalContent,
+  notifications,
+} from "@budibase/bbui"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { environment } from "stores/portal"
+import { getContext } from "svelte"
 
-  const modalContext = getContext(Context.Modal)
+const modalContext = getContext(Context.Modal)
 
-  export let save
-  export let row
+export let save
+export let row
 
-  let deleteDialog
-  let name = row?.name || ""
-  let productionValue
-  let developmentValue
-  let useProductionValue = true
+let deleteDialog
+let name = row?.name || ""
+let productionValue
+let developmentValue
+let useProductionValue = true
 
-  const HasSpacesRegex = /[\\"\s]/
+const HasSpacesRegex = /[\\"\s]/
 
-  const deleteVariable = async name => {
-    try {
-      await environment.deleteVariable(name)
-      modalContext.hide()
-      notifications.success("Environment variable deleted")
-    } catch (err) {
-      notifications.error(err.message)
-    }
+const deleteVariable = async name => {
+  try {
+    await environment.deleteVariable(name)
+    modalContext.hide()
+    notifications.success("Environment variable deleted")
+  } catch (err) {
+    notifications.error(err.message)
   }
+}
 
-  const saveVariable = async () => {
-    try {
-      await save({
-        name,
-        production: productionValue,
-        development: developmentValue,
-      })
-      notifications.success("Environment variable saved")
-    } catch (err) {
-      notifications.error(`Error saving environment variable - ${err.message}`)
-    }
+const saveVariable = async () => {
+  try {
+    await save({
+      name,
+      production: productionValue,
+      development: developmentValue,
+    })
+    notifications.success("Environment variable saved")
+  } catch (err) {
+    notifications.error(`Error saving environment variable - ${err.message}`)
   }
+}
 </script>
 
 <ModalContent

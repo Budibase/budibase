@@ -1,9 +1,9 @@
 <script>
-  import { Label, Body, Layout } from "@budibase/bbui"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { Body, Label, Layout } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
-  export let parameters
-  export let bindings = []
+export let parameters
+export let bindings = []
 </script>
 
 <div class="root">

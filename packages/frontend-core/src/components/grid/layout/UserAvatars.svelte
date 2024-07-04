@@ -1,18 +1,18 @@
 <script>
-  import { getContext } from "svelte"
-  import UserAvatar from "../../UserAvatar.svelte"
+import { getContext } from "svelte"
+import UserAvatar from "../../UserAvatar.svelte"
 
-  const { users } = getContext("grid")
+const { users } = getContext("grid")
 
-  $: uniqueUsers = unique($users)
+$: uniqueUsers = unique($users)
 
-  const unique = users => {
-    let uniqueUsers = {}
-    users?.forEach(user => {
-      uniqueUsers[user.email] = user
-    })
-    return Object.values(uniqueUsers)
-  }
+const unique = users => {
+  let uniqueUsers = {}
+  users?.forEach(user => {
+    uniqueUsers[user.email] = user
+  })
+  return Object.values(uniqueUsers)
+}
 </script>
 
 <div class="users">

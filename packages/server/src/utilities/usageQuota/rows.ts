@@ -1,6 +1,6 @@
-import { getRowParams, USER_METDATA_PREFIX } from "../../db/utils"
 import { db as dbCore } from "@budibase/backend-core"
 import { Database, Row } from "@budibase/types"
+import { USER_METDATA_PREFIX, getRowParams } from "../../db/utils"
 
 const ROW_EXCLUSIONS = [USER_METDATA_PREFIX]
 

@@ -1,30 +1,30 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import { queries } from "stores/builder"
-  import { Select, Label } from "@budibase/bbui"
-  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
-  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+import { Label, Select } from "@budibase/bbui"
+import { queries } from "stores/builder"
+import { createEventDispatcher } from "svelte"
+import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let value
-  export let bindings
+export let value
+export let bindings
 
-  const onChangeQuery = e => {
-    value.queryId = e.detail
-    dispatch("change", value)
-  }
+const onChangeQuery = e => {
+  value.queryId = e.detail
+  dispatch("change", value)
+}
 
-  const onChange = (e, field) => {
-    value[field.name] = e.detail
-    dispatch("change", value)
-  }
+const onChange = (e, field) => {
+  value[field.name] = e.detail
+  dispatch("change", value)
+}
 
-  $: query = $queries.list.find(query => query._id === value?.queryId)
-  $: parameters = query?.parameters ?? []
-  // Ensure any nullish queryId values get set to empty string so
-  // that the select works
-  $: if (value?.queryId == null) value = { queryId: "" }
+$: query = $queries.list.find(query => query._id === value?.queryId)
+$: parameters = query?.parameters ?? []
+// Ensure any nullish queryId values get set to empty string so
+// that the select works
+$: if (value?.queryId == null) value = { queryId: "" }
 </script>
 
 <div class="schema-field">

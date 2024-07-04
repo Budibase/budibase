@@ -1,126 +1,126 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import {
-    Button,
-    Heading,
-    Divider,
-    Label,
-    notifications,
-    Layout,
-    Input,
-    Select,
-    Body,
-    Table,
-    Checkbox,
-  } from "@budibase/bbui"
-  import { email, admin } from "stores/portal"
-  import { API } from "api"
-  import { cloneDeep } from "lodash/fp"
+import {
+  Body,
+  Button,
+  Checkbox,
+  Divider,
+  Heading,
+  Input,
+  Label,
+  Layout,
+  Select,
+  Table,
+  notifications,
+} from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import { API } from "api"
+import { cloneDeep } from "lodash/fp"
+import { admin, email } from "stores/portal"
 
-  const ConfigTypes = {
-    SMTP: "smtp",
+const ConfigTypes = {
+  SMTP: "smtp",
+}
+
+const templateSchema = {
+  name: {
+    displayName: "Name",
+    editable: false,
+  },
+  category: {
+    displayName: "Category",
+    editable: false,
+  },
+}
+
+$: emailInfo = getEmailInfo($email.definitions)
+
+let smtpConfig
+let loading
+let requireAuth = false
+
+function getEmailInfo(definitions) {
+  if (!definitions) {
+    return []
   }
+  const entries = Object.entries(definitions.info)
+  return entries.map(([key, value]) => ({ purpose: key, ...value }))
+}
 
-  const templateSchema = {
-    name: {
-      displayName: "Name",
-      editable: false,
-    },
-    category: {
-      displayName: "Category",
-      editable: false,
-    },
+async function saveSmtp() {
+  // clone it so we can remove stuff if required
+  const smtp = cloneDeep(smtpConfig)
+  if (!requireAuth) {
+    delete smtp.config.auth
   }
+  // Save your SMTP config
+  try {
+    const savedConfig = await API.saveConfig(smtp)
+    smtpConfig._rev = savedConfig._rev
+    smtpConfig._id = savedConfig._id
+    await admin.getChecklist()
+    notifications.success(`Settings saved`)
+  } catch (error) {
+    notifications.error(
+      `Failed to save email settings, reason: ${error?.message || "Unknown"}`
+    )
+  }
+}
 
-  $: emailInfo = getEmailInfo($email.definitions)
-
-  let smtpConfig
-  let loading
-  let requireAuth = false
-
-  function getEmailInfo(definitions) {
-    if (!definitions) {
-      return []
+async function deleteSmtp() {
+  // Delete the SMTP config
+  try {
+    await API.deleteConfig({
+      id: smtpConfig._id,
+      rev: smtpConfig._rev,
+    })
+    smtpConfig = {
+      type: ConfigTypes.SMTP,
+      config: {
+        secure: true,
+      },
     }
-    const entries = Object.entries(definitions.info)
-    return entries.map(([key, value]) => ({ purpose: key, ...value }))
+    await admin.getChecklist()
+    notifications.success(`Settings cleared`)
+  } catch (error) {
+    notifications.error(
+      `Failed to clear email settings, reason: ${error?.message || "Unknown"}`
+    )
   }
+}
 
-  async function saveSmtp() {
-    // clone it so we can remove stuff if required
-    const smtp = cloneDeep(smtpConfig)
-    if (!requireAuth) {
-      delete smtp.config.auth
-    }
-    // Save your SMTP config
-    try {
-      const savedConfig = await API.saveConfig(smtp)
-      smtpConfig._rev = savedConfig._rev
-      smtpConfig._id = savedConfig._id
-      await admin.getChecklist()
-      notifications.success(`Settings saved`)
-    } catch (error) {
-      notifications.error(
-        `Failed to save email settings, reason: ${error?.message || "Unknown"}`
-      )
-    }
-  }
-
-  async function deleteSmtp() {
-    // Delete the SMTP config
-    try {
-      await API.deleteConfig({
-        id: smtpConfig._id,
-        rev: smtpConfig._rev,
-      })
+async function fetchSmtp() {
+  loading = true
+  try {
+    // Fetch the configs for smtp
+    const smtpDoc = await API.getConfig(ConfigTypes.SMTP)
+    if (!smtpDoc._id) {
       smtpConfig = {
         type: ConfigTypes.SMTP,
         config: {
           secure: true,
         },
       }
-      await admin.getChecklist()
-      notifications.success(`Settings cleared`)
-    } catch (error) {
-      notifications.error(
-        `Failed to clear email settings, reason: ${error?.message || "Unknown"}`
-      )
+    } else {
+      smtpConfig = smtpDoc
     }
-  }
-
-  async function fetchSmtp() {
-    loading = true
-    try {
-      // Fetch the configs for smtp
-      const smtpDoc = await API.getConfig(ConfigTypes.SMTP)
-      if (!smtpDoc._id) {
-        smtpConfig = {
-          type: ConfigTypes.SMTP,
-          config: {
-            secure: true,
-          },
-        }
-      } else {
-        smtpConfig = smtpDoc
-      }
-      loading = false
-      requireAuth = smtpConfig.config.auth != null
-      // Always attach the auth for the forms purpose -
-      // this will be removed later if required
-      if (!smtpDoc.config) {
-        smtpDoc.config = {}
-      }
-      if (!smtpDoc.config.auth) {
-        smtpConfig.config.auth = {
-          type: "login",
-        }
-      }
-    } catch (error) {
-      notifications.error("Error fetching SMTP config")
+    loading = false
+    requireAuth = smtpConfig.config.auth != null
+    // Always attach the auth for the forms purpose -
+    // this will be removed later if required
+    if (!smtpDoc.config) {
+      smtpDoc.config = {}
     }
+    if (!smtpDoc.config.auth) {
+      smtpConfig.config.auth = {
+        type: "login",
+      }
+    }
+  } catch (error) {
+    notifications.error("Error fetching SMTP config")
   }
+}
 
-  fetchSmtp()
+fetchSmtp()
 </script>
 
 <Layout noPadding>

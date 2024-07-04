@@ -1,18 +1,18 @@
 <script>
-  import { setContext } from "svelte"
-  import clickOutside from "../Actions/click_outside"
+import { setContext } from "svelte"
+import clickOutside from "../Actions/click_outside"
 
-  export let wide = false
-  export let narrow = false
-  export let narrower = false
-  export let noPadding = false
+export let wide = false
+export let narrow = false
+export let narrower = false
+export let noPadding = false
 
-  let sidePanelVisible = false
+let sidePanelVisible = false
 
-  setContext("side-panel", {
-    open: () => (sidePanelVisible = true),
-    close: () => (sidePanelVisible = false),
-  })
+setContext("side-panel", {
+  open: () => (sidePanelVisible = true),
+  close: () => (sidePanelVisible = false),
+})
 </script>
 
 <div class="page">

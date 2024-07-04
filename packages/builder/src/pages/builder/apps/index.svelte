@@ -1,97 +1,97 @@
 <script>
-  import {
-    Heading,
-    Layout,
-    Divider,
-    ActionMenu,
-    MenuItem,
-    Page,
-    Icon,
-    Body,
-    Modal,
-    notifications,
-  } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import {
-    appsStore,
-    organisation,
-    auth,
-    groups,
-    licensing,
-    enrichedApps,
-  } from "stores/portal"
-  import { goto } from "@roxi/routify"
-  import { AppStatus } from "constants"
-  import { gradient } from "actions"
-  import ProfileModal from "components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
-  import { processStringSync } from "@budibase/string-templates"
-  import Spaceman from "assets/bb-space-man.svg"
-  import Logo from "assets/bb-emblem.svg"
-  import { UserAvatar } from "@budibase/frontend-core"
-  import { helpers, sdk } from "@budibase/shared-core"
+import { AppStatus } from "constants"
+import {
+  ActionMenu,
+  Body,
+  Divider,
+  Heading,
+  Icon,
+  Layout,
+  MenuItem,
+  Modal,
+  Page,
+  notifications,
+} from "@budibase/bbui"
+import { UserAvatar } from "@budibase/frontend-core"
+import { helpers, sdk } from "@budibase/shared-core"
+import { processStringSync } from "@budibase/string-templates"
+import { goto } from "@roxi/routify"
+import { gradient } from "actions"
+import Logo from "assets/bb-emblem.svg"
+import Spaceman from "assets/bb-space-man.svg"
+import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
+import ProfileModal from "components/settings/ProfileModal.svelte"
+import {
+  appsStore,
+  auth,
+  enrichedApps,
+  groups,
+  licensing,
+  organisation,
+} from "stores/portal"
+import { onMount } from "svelte"
 
-  let loaded = false
-  let userInfoModal
-  let changePasswordModal
+let loaded = false
+let userInfoModal
+let changePasswordModal
 
-  $: userGroups = $groups.filter(group =>
-    group.users.find(user => user._id === $auth.user?._id)
-  )
-  $: publishedApps = $enrichedApps.filter(
-    app => app.status === AppStatus.DEPLOYED
-  )
-  $: userApps = getUserApps(publishedApps, userGroups, $auth.user)
+$: userGroups = $groups.filter(group =>
+  group.users.find(user => user._id === $auth.user?._id)
+)
+$: publishedApps = $enrichedApps.filter(
+  app => app.status === AppStatus.DEPLOYED
+)
+$: userApps = getUserApps(publishedApps, userGroups, $auth.user)
 
-  function getUserApps(publishedApps, userGroups, user) {
-    if (sdk.users.isAdmin(user)) {
-      return publishedApps
+function getUserApps(publishedApps, userGroups, user) {
+  if (sdk.users.isAdmin(user)) {
+    return publishedApps
+  }
+  return publishedApps.filter(app => {
+    if (sdk.users.isBuilder(user, app.prodId)) {
+      return true
     }
-    return publishedApps.filter(app => {
-      if (sdk.users.isBuilder(user, app.prodId)) {
-        return true
-      }
-      if (!Object.keys(user?.roles).length && user?.userGroups) {
-        return userGroups.find(group => {
-          return groups.actions
-            .getGroupAppIds(group)
-            .map(role => appsStore.extractAppId(role))
-            .includes(app.appId)
-        })
-      } else {
-        return Object.keys($auth.user?.roles)
-          .map(x => appsStore.extractAppId(x))
+    if (!Object.keys(user?.roles).length && user?.userGroups) {
+      return userGroups.find(group => {
+        return groups.actions
+          .getGroupAppIds(group)
+          .map(role => appsStore.extractAppId(role))
           .includes(app.appId)
-      }
-    })
-  }
-
-  function getUrl(app) {
-    if (app.url) {
-      return `/app${app.url}`
+      })
     } else {
-      return `/${app.prodId}`
+      return Object.keys($auth.user?.roles)
+        .map(x => appsStore.extractAppId(x))
+        .includes(app.appId)
     }
-  }
-
-  const logout = async () => {
-    try {
-      await auth.logout()
-    } catch (error) {
-      // Swallow error and do nothing
-    }
-  }
-
-  onMount(async () => {
-    try {
-      await organisation.init()
-      await appsStore.load()
-      await groups.actions.init()
-    } catch (error) {
-      notifications.error("Error loading apps")
-    }
-    loaded = true
   })
+}
+
+function getUrl(app) {
+  if (app.url) {
+    return `/app${app.url}`
+  } else {
+    return `/${app.prodId}`
+  }
+}
+
+const logout = async () => {
+  try {
+    await auth.logout()
+  } catch (error) {
+    // Swallow error and do nothing
+  }
+}
+
+onMount(async () => {
+  try {
+    await organisation.init()
+    await appsStore.load()
+    await groups.actions.init()
+  } catch (error) {
+    notifications.error("Error loading apps")
+  }
+  loaded = true
+})
 </script>
 
 {#if $auth.user && loaded}

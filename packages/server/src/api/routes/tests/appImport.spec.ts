@@ -1,5 +1,5 @@
-import * as setup from "./utilities"
 import path from "path"
+import * as setup from "./utilities"
 
 const PASSWORD = "testtest"
 

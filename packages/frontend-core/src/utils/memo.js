@@ -1,4 +1,4 @@
-import { writable, get, derived } from "svelte/store"
+import { derived, get, writable } from "svelte/store"
 
 // A simple svelte store which deeply compares all changes and ensures that
 // subscribed children will only fire when a new value is actually set

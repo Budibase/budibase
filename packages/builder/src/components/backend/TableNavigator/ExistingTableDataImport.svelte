@@ -1,151 +1,147 @@
 <script>
-  import {
-    FieldType,
-    BBReferenceFieldSubType,
-    SourceName,
-  } from "@budibase/types"
-  import { Select, Toggle, Multiselect } from "@budibase/bbui"
-  import { DB_TYPE_INTERNAL } from "constants/backend"
-  import { API } from "api"
-  import { parseFile } from "./utils"
-  import { tables, datasources } from "stores/builder"
+import { Multiselect, Select, Toggle } from "@budibase/bbui"
+import { BBReferenceFieldSubType, FieldType, SourceName } from "@budibase/types"
+import { API } from "api"
+import { DB_TYPE_INTERNAL } from "constants/backend"
+import { datasources, tables } from "stores/builder"
+import { parseFile } from "./utils"
 
-  let error = null
-  let fileName = null
+let error = null
+let fileName = null
 
-  let loading = false
-  let updateExistingRows = false
-  let validation = {}
-  let validateHash = ""
-  let schema = null
-  let invalidColumns = []
+let loading = false
+let updateExistingRows = false
+let validation = {}
+let validateHash = ""
+let schema = null
+let invalidColumns = []
 
-  export let tableId = null
-  export let tableType
-  export let rows = []
-  export let allValid = false
-  export let identifierFields = []
+export let tableId = null
+export let tableType
+export let rows = []
+export let allValid = false
+export let identifierFields = []
 
-  const typeOptions = [
-    {
-      label: "Text",
-      value: FieldType.STRING,
-    },
-    {
-      label: "Number",
-      value: FieldType.NUMBER,
-    },
-    {
-      label: "Date",
-      value: FieldType.DATETIME,
-    },
-    {
-      label: "Options",
-      value: FieldType.OPTIONS,
-    },
-    {
-      label: "Multi-select",
-      value: FieldType.ARRAY.type,
-    },
-    {
-      label: "Barcode/QR",
-      value: FieldType.BARCODEQR,
-    },
-    {
-      label: "Long Form Text",
-      value: FieldType.LONGFORM,
-    },
-    {
-      label: "Attachment",
-      value: FieldType.ATTACHMENT_SINGLE,
-    },
-    {
-      label: "Signature",
-      value: FieldType.SIGNATURE_SINGLE,
-    },
-    {
-      label: "Attachment list",
-      value: FieldType.ATTACHMENTS,
-    },
-    {
-      label: "Users",
-      value: `${FieldType.BB_REFERENCE}${BBReferenceFieldSubType.USER}`,
-    },
-    {
-      label: "Users",
-      value: `${FieldType.BB_REFERENCE}${BBReferenceFieldSubType.USERS}`,
-    },
-    {
-      label: "User",
-      value: `${FieldType.BB_REFERENCE_SINGLE}${BBReferenceFieldSubType.USER}`,
-    },
-  ]
+const typeOptions = [
+  {
+    label: "Text",
+    value: FieldType.STRING,
+  },
+  {
+    label: "Number",
+    value: FieldType.NUMBER,
+  },
+  {
+    label: "Date",
+    value: FieldType.DATETIME,
+  },
+  {
+    label: "Options",
+    value: FieldType.OPTIONS,
+  },
+  {
+    label: "Multi-select",
+    value: FieldType.ARRAY.type,
+  },
+  {
+    label: "Barcode/QR",
+    value: FieldType.BARCODEQR,
+  },
+  {
+    label: "Long Form Text",
+    value: FieldType.LONGFORM,
+  },
+  {
+    label: "Attachment",
+    value: FieldType.ATTACHMENT_SINGLE,
+  },
+  {
+    label: "Signature",
+    value: FieldType.SIGNATURE_SINGLE,
+  },
+  {
+    label: "Attachment list",
+    value: FieldType.ATTACHMENTS,
+  },
+  {
+    label: "Users",
+    value: `${FieldType.BB_REFERENCE}${BBReferenceFieldSubType.USER}`,
+  },
+  {
+    label: "Users",
+    value: `${FieldType.BB_REFERENCE}${BBReferenceFieldSubType.USERS}`,
+  },
+  {
+    label: "User",
+    value: `${FieldType.BB_REFERENCE_SINGLE}${BBReferenceFieldSubType.USER}`,
+  },
+]
 
-  $: {
-    schema = fetchSchema(tableId)
+$: {
+  schema = fetchSchema(tableId)
+}
+
+$: table = $tables.list.find(table => table._id === tableId)
+$: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
+
+async function fetchSchema(tableId) {
+  try {
+    const definition = await API.fetchTableDefinition(tableId)
+    schema = definition.schema
+  } catch (e) {
+    error = e
   }
+}
 
-  $: table = $tables.list.find(table => table._id === tableId)
-  $: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
+async function handleFile(e) {
+  loading = true
+  error = null
+  validation = {}
 
-  async function fetchSchema(tableId) {
-    try {
-      const definition = await API.fetchTableDefinition(tableId)
-      schema = definition.schema
-    } catch (e) {
-      error = e
-    }
-  }
-
-  async function handleFile(e) {
-    loading = true
-    error = null
-    validation = {}
-
-    try {
-      const response = await parseFile(e)
-      rows = response.rows
-      fileName = response.fileName
-    } catch (e) {
-      loading = false
-      error = e
-    }
-  }
-
-  async function validate(rows) {
-    loading = true
-    error = null
-    validation = {}
-    allValid = false
-
-    try {
-      if (rows.length > 0) {
-        const response = await API.validateExistingTableImport({
-          rows,
-          tableId,
-        })
-
-        validation = response.schemaValidation
-        invalidColumns = response.invalidColumns
-        allValid = response.allValid
-      }
-    } catch (e) {
-      error = e.message
-    }
-
+  try {
+    const response = await parseFile(e)
+    rows = response.rows
+    fileName = response.fileName
+  } catch (e) {
     loading = false
+    error = e
   }
+}
 
-  $: {
-    // binding in consumer is causing double renders here
-    const newValidateHash = JSON.stringify(rows)
+async function validate(rows) {
+  loading = true
+  error = null
+  validation = {}
+  allValid = false
 
-    if (newValidateHash !== validateHash) {
-      validate(rows)
+  try {
+    if (rows.length > 0) {
+      const response = await API.validateExistingTableImport({
+        rows,
+        tableId,
+      })
+
+      validation = response.schemaValidation
+      invalidColumns = response.invalidColumns
+      allValid = response.allValid
     }
-
-    validateHash = newValidateHash
+  } catch (e) {
+    error = e.message
   }
+
+  loading = false
+}
+
+$: {
+  // binding in consumer is causing double renders here
+  const newValidateHash = JSON.stringify(rows)
+
+  if (newValidateHash !== validateHash) {
+    validate(rows)
+  }
+
+  validateHash = newValidateHash
+}
 </script>
 
 <div class="dropzone">

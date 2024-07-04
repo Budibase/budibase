@@ -1,26 +1,26 @@
 <script>
-  import { Heading, Icon, Input, Label, Body } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+import { Body, Heading, Icon, Input, Label } from "@budibase/bbui"
+import { createEventDispatcher } from "svelte"
 
-  let dispatch = createEventDispatcher()
+let dispatch = createEventDispatcher()
 
-  export let defaultValue = ""
-  export let value
-  export let type = "label"
-  export let size = "M"
+export let defaultValue = ""
+export let value
+export let type = "label"
+export let size = "M"
 
-  let editing = false
+let editing = false
 
-  function setEditing(state) {
-    editing = state
-    if (editing) {
-      dispatch("change")
-    }
+function setEditing(state) {
+  editing = state
+  if (editing) {
+    dispatch("change")
   }
+}
 
-  function save() {
-    dispatch("save", value)
-  }
+function save() {
+  dispatch("save", value)
+}
 </script>
 
 <div class="parent">

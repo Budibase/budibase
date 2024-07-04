@@ -1,13 +1,13 @@
 <script>
-  import { getContext, setContext } from "svelte"
-  import Section from "../Section.svelte"
+import { getContext, setContext } from "svelte"
+import Section from "../Section.svelte"
 
-  export let labelPosition = "above"
-  export let type = "oneColumn"
+export let labelPosition = "above"
+export let type = "oneColumn"
 
-  const { styleable } = getContext("sdk")
-  const component = getContext("component")
-  setContext("field-group", { labelPosition })
+const { styleable } = getContext("sdk")
+const component = getContext("component")
+setContext("field-group", { labelPosition })
 </script>
 
 <div class="wrapper" use:styleable={$component.styles}>

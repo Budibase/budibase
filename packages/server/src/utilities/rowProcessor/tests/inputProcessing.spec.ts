@@ -1,12 +1,12 @@
-import { inputProcessing } from ".."
 import { generator, structures } from "@budibase/backend-core/tests"
 import {
-  FieldType,
   BBReferenceFieldSubType,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
   TableSourceType,
 } from "@budibase/types"
+import { inputProcessing } from ".."
 import * as bbReferenceProcessor from "../bbReferenceProcessor"
 
 jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({

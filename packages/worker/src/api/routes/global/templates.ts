@@ -1,8 +1,8 @@
-import Router from "@koa/router"
-import * as controller from "../../controllers/global/templates"
-import { TemplatePurpose, TemplateType } from "../../../constants"
 import { auth as authCore } from "@budibase/backend-core"
+import Router from "@koa/router"
 import Joi from "joi"
+import { TemplatePurpose, TemplateType } from "../../../constants"
+import * as controller from "../../controllers/global/templates"
 
 const { adminOnly, joiValidator } = authCore
 
@@ -10,15 +10,24 @@ const router: Router = new Router()
 
 function buildTemplateSaveValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
-    _id: Joi.string().allow(null, ""),
-    _rev: Joi.string().allow(null, ""),
-    ownerId: Joi.string().allow(null, ""),
-    name: Joi.string().allow(null, ""),
-    contents: Joi.string().required(),
-    purpose: Joi.string().required().valid(...Object.values(TemplatePurpose)),
-    type: Joi.string().required().valid(...Object.values(TemplateType)),
-  }).required().unknown(true).optional())
+  return joiValidator.body(
+    Joi.object({
+      _id: Joi.string().allow(null, ""),
+      _rev: Joi.string().allow(null, ""),
+      ownerId: Joi.string().allow(null, ""),
+      name: Joi.string().allow(null, ""),
+      contents: Joi.string().required(),
+      purpose: Joi.string()
+        .required()
+        .valid(...Object.values(TemplatePurpose)),
+      type: Joi.string()
+        .required()
+        .valid(...Object.values(TemplateType)),
+    })
+      .required()
+      .unknown(true)
+      .optional()
+  )
 }
 
 router

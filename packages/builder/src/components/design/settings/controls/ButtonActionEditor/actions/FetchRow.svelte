@@ -1,20 +1,20 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
-  import { tables, viewsV2 } from "stores/builder"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { Label, Select } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { tables, viewsV2 } from "stores/builder"
 
-  export let parameters
-  export let bindings = []
+export let parameters
+export let bindings = []
 
-  $: tableOptions = $tables.list.map(table => ({
-    label: table.name,
-    resourceId: table._id,
-  }))
-  $: viewOptions = $viewsV2.list.map(view => ({
-    label: view.name,
-    resourceId: view.id,
-  }))
-  $: options = [...(tableOptions || []), ...(viewOptions || [])]
+$: tableOptions = $tables.list.map(table => ({
+  label: table.name,
+  resourceId: table._id,
+}))
+$: viewOptions = $viewsV2.list.map(view => ({
+  label: view.name,
+  resourceId: view.id,
+}))
+$: options = [...(tableOptions || []), ...(viewOptions || [])]
 </script>
 
 <div class="root">

@@ -1,5 +1,3 @@
-import { generateTableID } from "../../../db/utils"
-import { handleDataImport } from "./utils"
 import {
   BulkImportRequest,
   BulkImportResponse,
@@ -10,7 +8,9 @@ import {
   TableSourceType,
   UserCtx,
 } from "@budibase/types"
+import { generateTableID } from "../../../db/utils"
 import sdk from "../../../sdk"
+import { handleDataImport } from "./utils"
 
 export async function save(
   ctx: UserCtx<SaveTableRequest, SaveTableResponse>,

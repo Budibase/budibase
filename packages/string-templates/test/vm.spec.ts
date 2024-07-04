@@ -6,7 +6,7 @@ jest.mock("../src/utilities", () => {
   }
 })
 
-import { defaultJSSetup, processStringSync, encodeJSBinding } from "../src"
+import { defaultJSSetup, encodeJSBinding, processStringSync } from "../src"
 import { isBackendService } from "../src/utilities"
 
 const mockedBackendService = jest.mocked(isBackendService)

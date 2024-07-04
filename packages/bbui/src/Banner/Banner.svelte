@@ -1,23 +1,23 @@
 <script>
-  import { createEventDispatcher } from "svelte"
+import { createEventDispatcher } from "svelte"
 
-  let dispatch = createEventDispatcher()
+let dispatch = createEventDispatcher()
 
-  export let type = "info"
-  export let icon = "Info"
-  export let size = "S"
-  export let extraButtonText
-  export let extraButtonAction
-  export let extraLinkText
-  export let extraLinkAction
-  export let showCloseButton = true
+export let type = "info"
+export let icon = "Info"
+export let size = "S"
+export let extraButtonText
+export let extraButtonAction
+export let extraLinkText
+export let extraLinkAction
+export let showCloseButton = true
 
-  let show = true
+let show = true
 
-  function clear() {
-    show = false
-    dispatch("change")
-  }
+function clear() {
+  show = false
+  dispatch("change")
+}
 </script>
 
 {#if show}

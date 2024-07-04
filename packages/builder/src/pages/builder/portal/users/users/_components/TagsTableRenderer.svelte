@@ -1,13 +1,13 @@
 <script>
-  import { Tag, Tags } from "@budibase/bbui"
+import { Tag, Tags } from "@budibase/bbui"
 
-  export let value
+export let value
 
-  const displayLimit = 5
+const displayLimit = 5
 
-  $: values = value?.filter(value => value != null) ?? []
-  $: tags = values.slice(0, displayLimit)
-  $: leftover = values.length - tags.length
+$: values = value?.filter(value => value != null) ?? []
+$: tags = values.slice(0, displayLimit)
+$: leftover = values.length - tags.length
 </script>
 
 <div class="tag-renderer">

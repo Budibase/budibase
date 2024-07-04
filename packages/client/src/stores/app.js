@@ -1,5 +1,5 @@
 import { API } from "api"
-import { get, writable, derived } from "svelte/store"
+import { derived, get, writable } from "svelte/store"
 
 const initialState = {
   appId: null,
@@ -30,7 +30,7 @@ const createAppStore = () => {
         ...appDefinition,
         appId: appDefinition?.application?.appId,
       })
-    } catch (error) {
+    } catch (_error) {
       store.set(initialState)
     }
   }

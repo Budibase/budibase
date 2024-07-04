@@ -1,17 +1,17 @@
-import fetch from "node-fetch"
-import * as sso from "./sso"
-import { ssoCallbackUrl } from "../utils"
-import { validEmail } from "../../../utils"
 import {
   ConfigType,
+  JwtClaims,
   OIDCInnerConfig,
-  SSOProfile,
   OIDCStrategyConfiguration,
   SSOAuthDetails,
+  SSOProfile,
   SSOProviderType,
-  JwtClaims,
   SaveSSOUserFunction,
 } from "@budibase/types"
+import fetch from "node-fetch"
+import { validEmail } from "../../../utils"
+import { ssoCallbackUrl } from "../utils"
+import * as sso from "./sso"
 
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 
@@ -29,13 +29,13 @@ export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {
    */
   return async (
     issuer: string,
-    sub: string,
+    _sub: string,
     profile: SSOProfile,
     jwtClaims: JwtClaims,
     accessToken: string,
     refreshToken: string,
-    idToken: string,
-    params: any,
+    _idToken: string,
+    _params: any,
     done: Function
   ) => {
     const details: SSOAuthDetails = {

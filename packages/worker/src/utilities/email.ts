@@ -1,12 +1,12 @@
-import env from "../environment"
-import { EmailTemplatePurpose, TemplateType } from "../constants"
-import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
-import { getSettingsTemplateContext } from "./templates"
+import { cache, configs, objectStore } from "@budibase/backend-core"
 import { processString } from "@budibase/string-templates"
-import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
-import { configs, cache, objectStore } from "@budibase/backend-core"
+import { SMTPInnerConfig, SendEmailOpts, User } from "@budibase/types"
 import ical from "ical-generator"
 import _ from "lodash"
+import { EmailTemplatePurpose, TemplateType } from "../constants"
+import { EmailTemplates, getTemplateByPurpose } from "../constants/templates"
+import env from "../environment"
+import { getSettingsTemplateContext } from "./templates"
 
 const nodemailer = require("nodemailer")
 

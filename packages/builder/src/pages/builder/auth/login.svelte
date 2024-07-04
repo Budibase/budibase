@@ -1,67 +1,67 @@
 <script>
-  import {
-    ActionButton,
-    Body,
-    Button,
-    Divider,
-    Heading,
-    Layout,
-    notifications,
-    Link,
-    FancyForm,
-    FancyInput,
-  } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
-  import { auth, organisation, oidc, admin } from "stores/portal"
-  import GoogleButton from "./_components/GoogleButton.svelte"
-  import OIDCButton from "./_components/OIDCButton.svelte"
-  import { handleError } from "./_components/utils"
-  import Logo from "assets/bb-emblem.svg"
-  import { TestimonialPage } from "@budibase/frontend-core/src/components"
-  import { onMount } from "svelte"
+import {
+  ActionButton,
+  Body,
+  Button,
+  Divider,
+  FancyForm,
+  FancyInput,
+  Heading,
+  Layout,
+  Link,
+  notifications,
+} from "@budibase/bbui"
+import { TestimonialPage } from "@budibase/frontend-core/src/components"
+import { goto } from "@roxi/routify"
+import Logo from "assets/bb-emblem.svg"
+import { admin, auth, oidc, organisation } from "stores/portal"
+import { onMount } from "svelte"
+import GoogleButton from "./_components/GoogleButton.svelte"
+import OIDCButton from "./_components/OIDCButton.svelte"
+import { handleError } from "./_components/utils"
 
-  let loaded = false
-  let form
-  let errors = {}
-  let formData = {}
+let loaded = false
+let form
+let errors = {}
+let formData = {}
 
-  $: company = $organisation.company || "Budibase"
-  $: cloud = $admin.cloud
+$: company = $organisation.company || "Budibase"
+$: cloud = $admin.cloud
 
-  async function login() {
-    form.validate()
-    if (Object.keys(errors).length > 0) {
-      console.error("errors", errors)
-      return
-    }
-    try {
-      await auth.login({
-        username: formData?.username.trim(),
-        password: formData?.password,
-      })
-      if ($auth?.user?.forceResetPassword) {
-        $goto("./reset")
-      } else {
-        notifications.success("Logged in successfully")
-        $goto("../portal")
-      }
-    } catch (err) {
-      notifications.error(err.message ? err.message : "Invalid credentials")
-    }
+async function login() {
+  form.validate()
+  if (Object.keys(errors).length > 0) {
+    console.error("errors", errors)
+    return
   }
-
-  function handleKeydown(evt) {
-    if (evt.key === "Enter") login()
-  }
-
-  onMount(async () => {
-    try {
-      await organisation.init()
-    } catch (error) {
-      notifications.error("Error getting org config")
+  try {
+    await auth.login({
+      username: formData?.username.trim(),
+      password: formData?.password,
+    })
+    if ($auth?.user?.forceResetPassword) {
+      $goto("./reset")
+    } else {
+      notifications.success("Logged in successfully")
+      $goto("../portal")
     }
-    loaded = true
-  })
+  } catch (err) {
+    notifications.error(err.message ? err.message : "Invalid credentials")
+  }
+}
+
+function handleKeydown(evt) {
+  if (evt.key === "Enter") login()
+}
+
+onMount(async () => {
+  try {
+    await organisation.init()
+  } catch (error) {
+    notifications.error("Error getting org config")
+  }
+  loaded = true
+})
 </script>
 
 <svelte:window on:keydown={handleKeydown} />

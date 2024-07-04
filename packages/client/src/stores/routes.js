@@ -1,8 +1,8 @@
-import { get, writable } from "svelte/store"
-import { push } from "svelte-spa-router"
 import { API } from "api"
-import { peekStore } from "./peek"
+import { push } from "svelte-spa-router"
+import { get, writable } from "svelte/store"
 import { builderStore } from "./builder"
+import { peekStore } from "./peek"
 
 const createRouteStore = () => {
   const initialState = {
@@ -19,7 +19,7 @@ const createRouteStore = () => {
     let routeConfig
     try {
       routeConfig = await API.fetchClientAppRoutes()
-    } catch (error) {
+    } catch (_error) {
       routeConfig = null
     }
     let routes = []

@@ -1,14 +1,14 @@
 <script>
-  import { ActionButton, Popover, Heading, Body, Button } from "@budibase/bbui"
-  import { builderStore } from "stores/builder"
+import { ActionButton, Body, Button, Heading, Popover } from "@budibase/bbui"
+import { builderStore } from "stores/builder"
 
-  let anchor
-  let open = false
+let anchor
+let open = false
 
-  const openSidePanel = () => {
-    builderStore.showBuilderSidePanel()
-    open = false
-  }
+const openSidePanel = () => {
+  builderStore.showBuilderSidePanel()
+  open = false
+}
 </script>
 
 <div bind:this={anchor}>

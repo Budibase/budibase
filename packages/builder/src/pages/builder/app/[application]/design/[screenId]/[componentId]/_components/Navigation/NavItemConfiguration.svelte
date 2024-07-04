@@ -1,66 +1,66 @@
 <script>
-  import { navigationStore } from "stores/builder"
-  import DraggableList from "components/design/settings/controls/DraggableList/DraggableList.svelte"
-  import NavItem from "./NavItem.svelte"
-  import { generate } from "shortid"
-  import { getSequentialName } from "helpers/duplicate"
-  import { Constants } from "@budibase/frontend-core"
+import { Constants } from "@budibase/frontend-core"
+import DraggableList from "components/design/settings/controls/DraggableList/DraggableList.svelte"
+import { getSequentialName } from "helpers/duplicate"
+import { generate } from "shortid"
+import { navigationStore } from "stores/builder"
+import NavItem from "./NavItem.svelte"
 
-  export let bindings
+export let bindings
 
-  $: navItems = enrichNavItems($navigationStore.links)
-  $: navItemProps = {
-    removeNavItem,
-    bindings,
+$: navItems = enrichNavItems($navigationStore.links)
+$: navItemProps = {
+  removeNavItem,
+  bindings,
+}
+
+const enrichNavItems = links => {
+  return (links || []).map(link => ({
+    ...link,
+    id: link.id || generate(),
+  }))
+}
+
+const save = async links => {
+  await navigationStore.save({ ...$navigationStore, links })
+}
+
+const handleNavItemUpdate = async e => {
+  const newNavItem = e.detail
+  const newLinks = [...navItems]
+  const idx = newLinks.findIndex(link => {
+    return link.id === newNavItem?.id
+  })
+  if (idx === -1) {
+    newLinks.push(newNavItem)
+  } else {
+    newLinks[idx] = newNavItem
   }
+  await save(newLinks)
+}
 
-  const enrichNavItems = links => {
-    return (links || []).map(link => ({
-      ...link,
-      id: link.id || generate(),
-    }))
-  }
+const handleListUpdate = async e => {
+  await save([...e.detail])
+}
 
-  const save = async links => {
-    await navigationStore.save({ ...$navigationStore, links })
-  }
+const addNavItem = async () => {
+  await save([
+    ...navItems,
+    {
+      id: generate(),
+      text: getSequentialName(navItems, "Nav Item ", {
+        getName: x => x.text,
+      }),
+      url: "",
+      roleId: Constants.Roles.BASIC,
+      type: "link",
+    },
+  ])
+}
 
-  const handleNavItemUpdate = async e => {
-    const newNavItem = e.detail
-    const newLinks = [...navItems]
-    const idx = newLinks.findIndex(link => {
-      return link.id === newNavItem?.id
-    })
-    if (idx === -1) {
-      newLinks.push(newNavItem)
-    } else {
-      newLinks[idx] = newNavItem
-    }
-    await save(newLinks)
-  }
-
-  const handleListUpdate = async e => {
-    await save([...e.detail])
-  }
-
-  const addNavItem = async () => {
-    await save([
-      ...navItems,
-      {
-        id: generate(),
-        text: getSequentialName(navItems, "Nav Item ", {
-          getName: x => x.text,
-        }),
-        url: "",
-        roleId: Constants.Roles.BASIC,
-        type: "link",
-      },
-    ])
-  }
-
-  const removeNavItem = async id => {
-    await save(navItems.filter(navItem => navItem.id !== id))
-  }
+const removeNavItem = async id => {
+  await save(navItems.filter(navItem => navItem.id !== id))
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

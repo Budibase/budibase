@@ -1,11 +1,11 @@
-import {
-  getPluginMetadata,
-  findFileRec,
-  extractTarball,
-  deleteFolderFileSystem,
-} from "../../../utilities/fileSystem"
-import fetch from "node-fetch"
 import { join } from "path"
+import fetch from "node-fetch"
+import {
+  deleteFolderFileSystem,
+  extractTarball,
+  findFileRec,
+  getPluginMetadata,
+} from "../../../utilities/fileSystem"
 import { downloadUnzipTarball } from "./utils"
 
 export async function npmUpload(url: string, name: string, headers = {}) {

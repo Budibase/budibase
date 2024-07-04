@@ -1,5 +1,5 @@
-import { derived, get, writable } from "svelte/store"
 import { capitalise } from "helpers"
+import { derived, get, writable } from "svelte/store"
 import { string } from "yup"
 
 export const createValidatedNameStore = (name, isVisible) => {

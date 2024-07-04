@@ -1,93 +1,93 @@
 <script>
-  import {
-    Layout,
-    Heading,
-    Body,
-    Button,
-    ButtonGroup,
-    Modal,
-    Tag,
-    Tags,
-    Table,
-    Divider,
-    Search,
-    notifications,
-  } from "@budibase/bbui"
-  import { groups, auth, licensing, admin } from "stores/portal"
-  import { onMount } from "svelte"
-  import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
-  import { cloneDeep } from "lodash/fp"
-  import GroupAppsTableRenderer from "./_components/GroupAppsTableRenderer.svelte"
-  import UsersTableRenderer from "./_components/UsersTableRenderer.svelte"
-  import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
-  import { goto } from "@roxi/routify"
-  import { sdk } from "@budibase/shared-core"
+import {
+  Body,
+  Button,
+  ButtonGroup,
+  Divider,
+  Heading,
+  Layout,
+  Modal,
+  Search,
+  Table,
+  Tag,
+  Tags,
+  notifications,
+} from "@budibase/bbui"
+import { sdk } from "@budibase/shared-core"
+import { goto } from "@roxi/routify"
+import { cloneDeep } from "lodash/fp"
+import { admin, auth, groups, licensing } from "stores/portal"
+import { onMount } from "svelte"
+import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
+import GroupAppsTableRenderer from "./_components/GroupAppsTableRenderer.svelte"
+import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
+import UsersTableRenderer from "./_components/UsersTableRenderer.svelte"
 
-  const DefaultGroup = {
-    name: "",
-    icon: "UserGroup",
-    color: "var(--spectrum-global-color-blue-600)",
-    users: [],
-    roles: {},
+const DefaultGroup = {
+  name: "",
+  icon: "UserGroup",
+  color: "var(--spectrum-global-color-blue-600)",
+  users: [],
+  roles: {},
+}
+
+let modal
+let searchString
+let group = cloneDeep(DefaultGroup)
+let customRenderers = [
+  { column: "name", component: GroupNameTableRenderer },
+  { column: "users", component: UsersTableRenderer },
+  { column: "roles", component: GroupAppsTableRenderer },
+]
+
+$: readonly = !sdk.users.isAdmin($auth.user)
+$: schema = {
+  name: { displayName: "Group", width: "2fr", minWidth: "200px" },
+  users: { sortable: false, width: "1fr" },
+  roles: { sortable: false, displayName: "Apps", width: "1fr" },
+}
+$: filteredGroups = filterGroups($groups, searchString)
+
+const filterGroups = (groups, searchString) => {
+  if (!searchString) {
+    return groups
   }
-
-  let modal
-  let searchString
-  let group = cloneDeep(DefaultGroup)
-  let customRenderers = [
-    { column: "name", component: GroupNameTableRenderer },
-    { column: "users", component: UsersTableRenderer },
-    { column: "roles", component: GroupAppsTableRenderer },
-  ]
-
-  $: readonly = !sdk.users.isAdmin($auth.user)
-  $: schema = {
-    name: { displayName: "Group", width: "2fr", minWidth: "200px" },
-    users: { sortable: false, width: "1fr" },
-    roles: { sortable: false, displayName: "Apps", width: "1fr" },
-  }
-  $: filteredGroups = filterGroups($groups, searchString)
-
-  const filterGroups = (groups, searchString) => {
-    if (!searchString) {
-      return groups
-    }
-    searchString = searchString.toLocaleLowerCase()
-    return groups?.filter(group => {
-      return group.name?.toLowerCase().includes(searchString)
-    })
-  }
-
-  async function saveGroup(group) {
-    try {
-      group = await groups.actions.save(group)
-      $goto(`./${group._id}`)
-      notifications.success(`User group created successfully`)
-    } catch (error) {
-      if (error.status === 400) {
-        notifications.error(error.message)
-      } else if (error.message) {
-        notifications.error(error.message)
-      } else {
-        notifications.error(`Failed to save group`)
-      }
-    }
-  }
-
-  const showCreateGroupModal = () => {
-    group = cloneDeep(DefaultGroup)
-    modal?.show()
-  }
-
-  onMount(async () => {
-    try {
-      // always load latest
-      await licensing.init()
-      await groups.actions.init()
-    } catch (error) {
-      notifications.error("Error getting user groups")
-    }
+  searchString = searchString.toLocaleLowerCase()
+  return groups?.filter(group => {
+    return group.name?.toLowerCase().includes(searchString)
   })
+}
+
+async function saveGroup(group) {
+  try {
+    group = await groups.actions.save(group)
+    $goto(`./${group._id}`)
+    notifications.success(`User group created successfully`)
+  } catch (error) {
+    if (error.status === 400) {
+      notifications.error(error.message)
+    } else if (error.message) {
+      notifications.error(error.message)
+    } else {
+      notifications.error(`Failed to save group`)
+    }
+  }
+}
+
+const showCreateGroupModal = () => {
+  group = cloneDeep(DefaultGroup)
+  modal?.show()
+}
+
+onMount(async () => {
+  try {
+    // always load latest
+    await licensing.init()
+    await groups.actions.init()
+  } catch (error) {
+    notifications.error("Error getting user groups")
+  }
+})
 </script>
 
 <Layout noPadding gap="M">

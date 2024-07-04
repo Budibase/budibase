@@ -1,7 +1,7 @@
-import { derived, get } from "svelte/store"
-import { componentStore } from "stores/builder"
-import BudiStore from "../BudiStore"
 import { API } from "api"
+import { componentStore } from "stores/builder"
+import { derived, get } from "svelte/store"
+import BudiStore from "../BudiStore"
 
 export const INITIAL_LAYOUT_STATE = {
   layouts: [],

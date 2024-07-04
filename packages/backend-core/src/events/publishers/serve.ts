@@ -1,11 +1,11 @@
-import { publishEvent } from "../events"
 import {
   App,
-  BuilderServedEvent,
-  Event,
   AppPreviewServedEvent,
   AppServedEvent,
+  BuilderServedEvent,
+  Event,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 async function servedBuilder(timezone: string) {
   const properties: BuilderServedEvent = {

@@ -1,24 +1,24 @@
 <script>
-  import {
-    Layout,
-    Body,
-    Heading,
-    Divider,
-    Button,
-    Helpers,
-    Icon,
-    notifications,
-  } from "@budibase/bbui"
-  import { AppStatus } from "constants"
-  import { appsStore } from "stores/portal"
-  import { appStore } from "stores/builder"
+import { AppStatus } from "constants"
+import {
+  Body,
+  Button,
+  Divider,
+  Heading,
+  Helpers,
+  Icon,
+  Layout,
+  notifications,
+} from "@budibase/bbui"
+import { appStore } from "stores/builder"
+import { appsStore } from "stores/portal"
 
-  $: filteredApps = $appsStore.apps.filter(app => app.devId == $appStore.appId)
-  $: app = filteredApps.length ? filteredApps[0] : {}
-  $: appUrl = `${window.origin}/embed${app?.url}`
-  $: appDeployed = app?.status === AppStatus.DEPLOYED
+$: filteredApps = $appsStore.apps.filter(app => app.devId == $appStore.appId)
+$: app = filteredApps.length ? filteredApps[0] : {}
+$: appUrl = `${window.origin}/embed${app?.url}`
+$: appDeployed = app?.status === AppStatus.DEPLOYED
 
-  $: embed = `<iframe width="800" height="600" frameborder="0" allow="clipboard-write;camera;geolocation;fullscreen" src="${appUrl}"></iframe>`
+$: embed = `<iframe width="800" height="600" frameborder="0" allow="clipboard-write;camera;geolocation;fullscreen" src="${appUrl}"></iframe>`
 </script>
 
 <Layout noPadding>

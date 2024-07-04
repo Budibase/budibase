@@ -1,12 +1,12 @@
-import { InitType, AnalyticsEvent } from "../constants"
-import { confirmation } from "../questions"
+import fetch from "node-fetch"
+import { AnalyticsEvent, InitType } from "../constants"
 import { captureEvent } from "../events"
-import * as makeFiles from "./makeFiles"
+import { confirmation } from "../questions"
 import { parseEnv } from "../utils"
+import { generateUser } from "./genUser"
+import * as makeFiles from "./makeFiles"
 import { checkDockerConfigured, downloadDockerCompose } from "./utils"
 import { watchPlugins } from "./watch"
-import { generateUser } from "./genUser"
-import fetch from "node-fetch"
 
 const DO_USER_DATA_URL = "http://169.254.169.254/metadata/v1/user-data"
 
@@ -22,7 +22,7 @@ async function getInitConfig(type: string, isQuick: boolean, port: number) {
           config[value as string] = response[key]
         }
       }
-    } catch (err) {
+    } catch (_err) {
       // don't need to handle error, just don't do anything
     }
   }

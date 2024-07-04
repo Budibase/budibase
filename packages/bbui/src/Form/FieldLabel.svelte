@@ -1,14 +1,14 @@
 <script>
-  import TooltipWrapper from "../Tooltip/TooltipWrapper.svelte"
+import TooltipWrapper from "../Tooltip/TooltipWrapper.svelte"
 
-  import "@spectrum-css/fieldlabel/dist/index-vars.css"
+import "@spectrum-css/fieldlabel/dist/index-vars.css"
 
-  export let forId
-  export let label
-  export let position = "above"
-  export let tooltip = ""
+export let forId
+export let label
+export let position = "above"
+export let tooltip = ""
 
-  $: className = position === "above" ? "" : `spectrum-FieldLabel--${position}`
+$: className = position === "above" ? "" : `spectrum-FieldLabel--${position}`
 </script>
 
 <TooltipWrapper {tooltip} size="S">

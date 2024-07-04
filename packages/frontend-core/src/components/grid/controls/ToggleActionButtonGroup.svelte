@@ -1,12 +1,12 @@
 <script>
-  import { createEventDispatcher } from "svelte"
+import { createEventDispatcher } from "svelte"
 
-  let dispatch = createEventDispatcher()
+let dispatch = createEventDispatcher()
 
-  import { ActionButton, AbsTooltip, TooltipType } from "@budibase/bbui"
+import { AbsTooltip, ActionButton, TooltipType } from "@budibase/bbui"
 
-  export let value
-  export let options
+export let value
+export let options
 </script>
 
 <div class="permissionPicker">

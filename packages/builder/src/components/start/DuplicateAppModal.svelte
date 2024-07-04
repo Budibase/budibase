@@ -1,109 +1,109 @@
 <script>
-  import {
-    ModalContent,
-    Input,
-    notifications,
-    Layout,
-    keepOpen,
-  } from "@budibase/bbui"
-  import { createValidationStore } from "helpers/validation/yup"
-  import { writable, get } from "svelte/store"
-  import * as appValidation from "helpers/validation/yup/app"
-  import { appsStore, auth } from "stores/portal"
-  import { onMount } from "svelte"
-  import { API } from "api"
-  import { sdk } from "@budibase/shared-core"
+import {
+  Input,
+  Layout,
+  ModalContent,
+  keepOpen,
+  notifications,
+} from "@budibase/bbui"
+import { sdk } from "@budibase/shared-core"
+import { API } from "api"
+import { createValidationStore } from "helpers/validation/yup"
+import * as appValidation from "helpers/validation/yup/app"
+import { appsStore, auth } from "stores/portal"
+import { onMount } from "svelte"
+import { get, writable } from "svelte/store"
 
-  export let appId
-  export let appName
-  export let onDuplicateSuccess = () => {}
+export let appId
+export let appName
+export let onDuplicateSuccess = () => {}
 
-  const validation = createValidationStore()
-  const values = writable({ name: appName + " copy", url: null })
-  const appPrefix = "/app"
+const validation = createValidationStore()
+const values = writable({ name: appName + " copy", url: null })
+const appPrefix = "/app"
 
-  let defaultAppName = appName + " copy"
-  let duplicating = false
+let defaultAppName = appName + " copy"
+let duplicating = false
 
-  $: {
-    const { url } = $values
+$: {
+  const { url } = $values
 
-    validation.check({
-      ...$values,
-      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
-    })
-  }
-
-  const resolveAppName = name => {
-    return name ? name.trim() : null
-  }
-
-  const resolveAppUrl = name => {
-    let parsedName
-    const resolvedName = resolveAppName(name)
-    parsedName = resolvedName ? resolvedName.toLowerCase() : ""
-    const parsedUrl = parsedName ? parsedName.replace(/\s+/g, "-") : ""
-    return encodeURI(parsedUrl)
-  }
-
-  const nameToUrl = appName => {
-    let resolvedUrl = resolveAppUrl(appName)
-    tidyUrl(resolvedUrl)
-  }
-
-  const tidyUrl = url => {
-    if (url && !url.startsWith("/")) {
-      url = `/${url}`
-    }
-    $values.url = url === "" ? null : url
-  }
-
-  const duplicateApp = async () => {
-    duplicating = true
-
-    let data = new FormData()
-    data.append("name", $values.name.trim())
-    if ($values.url) {
-      data.append("url", $values.url.trim())
-    }
-
-    try {
-      const app = await API.duplicateApp(data, appId)
-      appsStore.load()
-      if (!sdk.users.isBuilder($auth.user, app?.duplicateAppId)) {
-        // Refresh for access to created applications
-        await auth.getSelf()
-      }
-      onDuplicateSuccess()
-      notifications.success("App duplicated successfully")
-    } catch (err) {
-      notifications.error("Error duplicating app")
-      duplicating = false
-    }
-  }
-
-  const setupValidation = async () => {
-    const applications = get(appsStore).apps
-    appValidation.name(validation, { apps: applications })
-    appValidation.url(validation, { apps: applications })
-
-    const { url } = $values
-    validation.check({
-      ...$values,
-      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
-    })
-  }
-
-  $: appUrl = `${window.location.origin}${
-    $values.url
-      ? `${appPrefix}${$values.url}`
-      : `${appPrefix}${resolveAppUrl($values.name)}`
-  }`
-
-  onMount(async () => {
-    nameToUrl($values.name)
-    await setupValidation()
+  validation.check({
+    ...$values,
+    url: url?.[0] === "/" ? url.substring(1, url.length) : url,
   })
+}
+
+const resolveAppName = name => {
+  return name ? name.trim() : null
+}
+
+const resolveAppUrl = name => {
+  let parsedName
+  const resolvedName = resolveAppName(name)
+  parsedName = resolvedName ? resolvedName.toLowerCase() : ""
+  const parsedUrl = parsedName ? parsedName.replace(/\s+/g, "-") : ""
+  return encodeURI(parsedUrl)
+}
+
+const nameToUrl = appName => {
+  let resolvedUrl = resolveAppUrl(appName)
+  tidyUrl(resolvedUrl)
+}
+
+const tidyUrl = url => {
+  if (url && !url.startsWith("/")) {
+    url = `/${url}`
+  }
+  $values.url = url === "" ? null : url
+}
+
+const duplicateApp = async () => {
+  duplicating = true
+
+  let data = new FormData()
+  data.append("name", $values.name.trim())
+  if ($values.url) {
+    data.append("url", $values.url.trim())
+  }
+
+  try {
+    const app = await API.duplicateApp(data, appId)
+    appsStore.load()
+    if (!sdk.users.isBuilder($auth.user, app?.duplicateAppId)) {
+      // Refresh for access to created applications
+      await auth.getSelf()
+    }
+    onDuplicateSuccess()
+    notifications.success("App duplicated successfully")
+  } catch (err) {
+    notifications.error("Error duplicating app")
+    duplicating = false
+  }
+}
+
+const setupValidation = async () => {
+  const applications = get(appsStore).apps
+  appValidation.name(validation, { apps: applications })
+  appValidation.url(validation, { apps: applications })
+
+  const { url } = $values
+  validation.check({
+    ...$values,
+    url: url?.[0] === "/" ? url.substring(1, url.length) : url,
+  })
+}
+
+$: appUrl = `${window.location.origin}${
+  $values.url
+    ? `${appPrefix}${$values.url}`
+    : `${appPrefix}${resolveAppUrl($values.name)}`
+}`
+
+onMount(async () => {
+  nameToUrl($values.name)
+  await setupValidation()
+})
 </script>
 
 <ModalContent

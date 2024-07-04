@@ -1,12 +1,12 @@
 <script>
-  import ExportButton from "../ExportButton.svelte"
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
+import ExportButton from "../ExportButton.svelte"
 
-  const { rows, columns, datasource, sort, selectedRows, filter } =
-    getContext("grid")
+const { rows, columns, datasource, sort, selectedRows, filter } =
+  getContext("grid")
 
-  $: disabled = !$rows.length || !$columns.length
-  $: selectedRowArray = Object.keys($selectedRows).map(id => ({ _id: id }))
+$: disabled = !$rows.length || !$columns.length
+$: selectedRowArray = Object.keys($selectedRows).map(id => ({ _id: id }))
 </script>
 
 <span data-ignore-click-outside="true">

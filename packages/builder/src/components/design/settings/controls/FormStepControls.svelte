@@ -1,17 +1,17 @@
 <script>
-  import { createEventDispatcher, getContext } from "svelte"
-  import { ActionButton, AbsTooltip } from "@budibase/bbui"
+import { AbsTooltip, ActionButton } from "@budibase/bbui"
+import { createEventDispatcher, getContext } from "svelte"
 
-  const multiStepStore = getContext("multi-step-form-block")
-  const dispatch = createEventDispatcher()
+const multiStepStore = getContext("multi-step-form-block")
+const dispatch = createEventDispatcher()
 
-  $: ({ stepCount, currentStep } = $multiStepStore)
+$: ({ stepCount, currentStep } = $multiStepStore)
 
-  const stepAction = action => {
-    dispatch("change", {
-      action,
-    })
-  }
+const stepAction = action => {
+  dispatch("change", {
+    action,
+  })
+}
 </script>
 
 {#if stepCount === 1}

@@ -8,13 +8,13 @@ import {
   OIDCLogosConfig,
   SCIMConfig,
   SCIMInnerConfig,
-  SettingsConfig,
-  SettingsInnerConfig,
   SMTPConfig,
   SMTPInnerConfig,
+  SettingsConfig,
+  SettingsInnerConfig,
 } from "@budibase/types"
-import { DocumentType, SEPARATOR } from "../constants"
 import { CacheKey, TTL, withCache } from "../cache"
+import { DocumentType, SEPARATOR } from "../constants"
 import * as context from "../context"
 import env from "../environment"
 

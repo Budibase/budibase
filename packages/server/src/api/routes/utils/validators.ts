@@ -1,8 +1,8 @@
 import { auth, permissions } from "@budibase/backend-core"
-import { DataSourceOperation } from "../../../constants"
+import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
 import { Table, WebhookActionType } from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
-import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
+import { DataSourceOperation } from "../../../constants"
 import sdk from "../../../sdk"
 
 const { isRequired } = helpers.schema

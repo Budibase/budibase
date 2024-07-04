@@ -1,27 +1,27 @@
 <script>
-  import { setContext } from "svelte"
+import { setContext } from "svelte"
 
-  let fields = {}
+let fields = {}
 
-  setContext("fancy-form", {
-    registerField: (id, api) => {
-      fields = { ...fields, [id]: api }
-    },
-    unregisterField: id => {
-      delete fields[id]
-      fields = fields
-    },
+setContext("fancy-form", {
+  registerField: (id, api) => {
+    fields = { ...fields, [id]: api }
+  },
+  unregisterField: id => {
+    delete fields[id]
+    fields = fields
+  },
+})
+
+export const validate = () => {
+  let valid = true
+  Object.values(fields).forEach(api => {
+    if (!api.validate()) {
+      valid = false
+    }
   })
-
-  export const validate = () => {
-    let valid = true
-    Object.values(fields).forEach(api => {
-      if (!api.validate()) {
-        valid = false
-      }
-    })
-    return valid
-  }
+  return valid
+}
 </script>
 
 <div class="fancy-form">

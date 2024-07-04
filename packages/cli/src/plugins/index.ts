@@ -1,21 +1,21 @@
-import { Command } from "../structures/Command"
-import {
-  CommandWord,
-  AnalyticsEvent,
-  InitType,
-  GENERATED_USER_EMAIL,
-} from "../constants"
-import { getSkeleton, fleshOutSkeleton } from "./skeleton"
-import * as questions from "../questions"
 import fs from "fs"
-import { PluginType, PLUGIN_TYPE_ARR } from "@budibase/types"
-import { plugins } from "@budibase/backend-core"
-import { runPkgCommand } from "../exec"
 import { join } from "path"
-import { success, error, info, moveDirectory } from "../utils"
+import { plugins } from "@budibase/backend-core"
+import { PLUGIN_TYPE_ARR, PluginType } from "@budibase/types"
+import {
+  AnalyticsEvent,
+  CommandWord,
+  GENERATED_USER_EMAIL,
+  InitType,
+} from "../constants"
 import { captureEvent } from "../events"
+import { runPkgCommand } from "../exec"
 import { init as hostingInit } from "../hosting/init"
 import { start as hostingStart } from "../hosting/start"
+import * as questions from "../questions"
+import { Command } from "../structures/Command"
+import { error, info, moveDirectory, success } from "../utils"
+import { fleshOutSkeleton, getSkeleton } from "./skeleton"
 
 const fp = require("find-free-port")
 
@@ -148,7 +148,7 @@ async function watch() {
   console.log(info(`Watching - build in: ${output}`))
   try {
     await runPkgCommand("watch")
-  } catch (err) {
+  } catch (_err) {
     // always errors when user escapes
     console.log(success("Watch exited."))
   }

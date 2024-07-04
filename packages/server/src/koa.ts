@@ -1,14 +1,14 @@
-import env from "./environment"
+import http from "http"
+import { events, timers, logging, middleware } from "@budibase/backend-core"
 import Koa from "koa"
 import koaBody from "koa-body"
-import http from "http"
+import { userAgent } from "koa-useragent"
+import destroyable from "server-destroy"
 import * as api from "./api"
 import * as automations from "./automations"
+import env from "./environment"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
-import { events, logging, middleware, timers } from "@budibase/backend-core"
-import destroyable from "server-destroy"
-import { userAgent } from "koa-useragent"
 
 export default function createKoaApp() {
   const app = new Koa()

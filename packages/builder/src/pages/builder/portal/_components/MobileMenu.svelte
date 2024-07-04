@@ -1,18 +1,18 @@
 <script>
-  import { Layout } from "@budibase/bbui"
-  import { SideNav, SideNavItem } from "components/portal/page"
-  import { createEventDispatcher } from "svelte"
-  import { isActive } from "@roxi/routify"
-  import UpgradeButton from "./UpgradeButton.svelte"
-  import { fade } from "svelte/transition"
-  import Logo from "./Logo.svelte"
-  import { menu } from "stores/portal"
+import { Layout } from "@budibase/bbui"
+import { isActive } from "@roxi/routify"
+import { SideNav, SideNavItem } from "components/portal/page"
+import { menu } from "stores/portal"
+import { createEventDispatcher } from "svelte"
+import { fade } from "svelte/transition"
+import Logo from "./Logo.svelte"
+import UpgradeButton from "./UpgradeButton.svelte"
 
-  export let visible = false
+export let visible = false
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  const close = () => dispatch("close")
+const close = () => dispatch("close")
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

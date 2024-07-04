@@ -1,3 +1,4 @@
+import { SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import {
   Datasource,
   DatasourcePlusQueryResponse,
@@ -7,11 +8,10 @@ import {
   SearchFilters,
   SqlClient,
 } from "@budibase/types"
-import { SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
-import { getSQLClient } from "./utils"
 import { cloneDeep } from "lodash"
-import datasources from "../datasources"
 import { BudibaseInternalDB } from "../../../db/utils"
+import datasources from "../datasources"
+import { getSQLClient } from "./utils"
 
 type PerformQueryFunction = (
   datasource: Datasource,
@@ -91,7 +91,7 @@ export default class AliasTables {
       if (isWrite && isDisabledClient) {
         return false
       }
-    } catch (err) {
+    } catch (_err) {
       // if we can't get an SQL client, we can't alias
       return false
     }

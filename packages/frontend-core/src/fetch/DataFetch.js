@@ -1,5 +1,5 @@
-import { writable, derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
+import { derived, get, writable } from "svelte/store"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
 
@@ -291,7 +291,7 @@ export default class DataFetch {
    * @param definition the datasource definition
    * @return {object} the schema
    */
-  getSchema(datasource, definition) {
+  getSchema(_datasource, definition) {
     return definition?.schema
   }
 

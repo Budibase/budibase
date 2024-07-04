@@ -1,61 +1,61 @@
 <script>
-  import {
-    ModalContent,
-    Icon,
-    ColorPicker,
-    Label,
-    notifications,
-  } from "@budibase/bbui"
-  import { appsStore } from "stores/portal"
-  import { createEventDispatcher } from "svelte"
+import {
+  ColorPicker,
+  Icon,
+  Label,
+  ModalContent,
+  notifications,
+} from "@budibase/bbui"
+import { appsStore } from "stores/portal"
+import { createEventDispatcher } from "svelte"
 
-  export let app
-  export let name
-  export let color
-  export let autoSave = false
+export let app
+export let name
+export let color
+export let autoSave = false
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let iconsList = [
-    "Apps",
-    "Actions",
-    "ConversionFunnel",
-    "App",
-    "Briefcase",
-    "Money",
-    "ShoppingCart",
-    "Form",
-    "Help",
-    "Monitoring",
-    "Sandbox",
-    "Project",
-    "Organisations",
-    "Magnify",
-    "Launch",
-    "Car",
-    "Camera",
-    "Bug",
-    "Channel",
-    "Calculator",
-    "Calendar",
-    "GraphDonut",
-    "GraphBarHorizontal",
-    "Demographic",
-  ]
+let iconsList = [
+  "Apps",
+  "Actions",
+  "ConversionFunnel",
+  "App",
+  "Briefcase",
+  "Money",
+  "ShoppingCart",
+  "Form",
+  "Help",
+  "Monitoring",
+  "Sandbox",
+  "Project",
+  "Organisations",
+  "Magnify",
+  "Launch",
+  "Car",
+  "Camera",
+  "Bug",
+  "Channel",
+  "Calculator",
+  "Calendar",
+  "GraphDonut",
+  "GraphBarHorizontal",
+  "Demographic",
+]
 
-  const save = async () => {
-    if (!autoSave) {
-      dispatch("change", { color, name })
-      return
-    }
-    try {
-      await appsStore.save(app.instance._id, {
-        icon: { name, color },
-      })
-    } catch (error) {
-      notifications.error("Error updating app")
-    }
+const save = async () => {
+  if (!autoSave) {
+    dispatch("change", { color, name })
+    return
   }
+  try {
+    await appsStore.save(app.instance._id, {
+      icon: { name, color },
+    })
+  } catch (error) {
+    notifications.error("Error updating app")
+  }
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

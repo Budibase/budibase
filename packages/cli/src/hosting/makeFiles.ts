@@ -1,8 +1,8 @@
-import { number } from "../questions"
-import { success, stringifyToDotEnv } from "../utils"
 import fs from "fs"
 import path from "path"
 import yaml from "yaml"
+import { number } from "../questions"
+import { stringifyToDotEnv, success } from "../utils"
 import { getAppService } from "./utils"
 
 const randomString = require("randomstring")

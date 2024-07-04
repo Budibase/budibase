@@ -28,10 +28,10 @@ const mockGoogleIntegration = {
 GoogleSpreadsheet.mockImplementation(() => mockGoogleIntegration)
 
 import { structures } from "@budibase/backend-core/tests"
-import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import GoogleSheetsIntegration from "../googlesheets"
 import { FieldType, Table, TableSchema, TableSourceType } from "@budibase/types"
 import { generateDatasourceID } from "../../db/utils"
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
+import GoogleSheetsIntegration from "../googlesheets"
 
 describe("Google Sheets Integration", () => {
   let integration: any,

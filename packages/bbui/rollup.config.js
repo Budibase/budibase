@@ -1,9 +1,9 @@
-import svelte from "rollup-plugin-svelte"
-import resolve from "@rollup/plugin-node-resolve"
 import commonjs from "@rollup/plugin-commonjs"
 import json from "@rollup/plugin-json"
-import { terser } from "rollup-plugin-terser"
+import resolve from "@rollup/plugin-node-resolve"
 import postcss from "rollup-plugin-postcss"
+import svelte from "rollup-plugin-svelte"
+import { terser } from "rollup-plugin-terser"
 
 export default {
   input: "src/index.js",

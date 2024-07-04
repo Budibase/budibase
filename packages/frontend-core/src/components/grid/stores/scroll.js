@@ -1,10 +1,10 @@
-import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
+import { derived, get, writable } from "svelte/store"
 import {
-  GutterWidth,
   FocusedCellMinOffset,
-  ScrollBarSize,
+  GutterWidth,
   HPadding,
+  ScrollBarSize,
   VPadding,
 } from "../lib/constants"
 import { parseCellID } from "../lib/utils"

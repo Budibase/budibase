@@ -1,18 +1,18 @@
 <script>
-  import { datasources } from "stores/builder"
-  import { redirect } from "@roxi/routify"
-  import { onMount } from "svelte"
+import { redirect } from "@roxi/routify"
+import { datasources } from "stores/builder"
+import { onMount } from "svelte"
 
-  onMount(async () => {
-    const { list, selected, hasData } = $datasources
-    if (selected) {
-      $redirect(`./${selected?._id}`)
-    } else if (hasData && list?.length) {
-      $redirect(`./${list[0]._id}`)
-    } else {
-      $redirect("../new")
-    }
-  })
+onMount(async () => {
+  const { list, selected, hasData } = $datasources
+  if (selected) {
+    $redirect(`./${selected?._id}`)
+  } else if (hasData && list?.length) {
+    $redirect(`./${list[0]._id}`)
+  } else {
+    $redirect("../new")
+  }
+})
 </script>
 
 {#if !$datasources.list?.length}

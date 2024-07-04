@@ -1,5 +1,5 @@
 <script context="module">
-  export const keepOpen = Symbol("keepOpen")
+export const keepOpen = Symbol("keepOpen")
 </script>
 
 <script>

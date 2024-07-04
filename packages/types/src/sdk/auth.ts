@@ -1,5 +1,5 @@
-import { BBContext } from "./koa"
 import { Hosting } from "./hosting"
+import { BBContext } from "./koa"
 
 export interface AuthToken {
   userId: string

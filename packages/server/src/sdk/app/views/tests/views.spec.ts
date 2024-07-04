@@ -1,4 +1,4 @@
-import _ from "lodash"
+import { generator } from "@budibase/backend-core/tests"
 import {
   FieldSchema,
   FieldType,
@@ -8,7 +8,7 @@ import {
   TableSourceType,
   ViewV2,
 } from "@budibase/types"
-import { generator } from "@budibase/backend-core/tests"
+import _ from "lodash"
 import { enrichSchema, syncSchema } from ".."
 
 describe("table sdk", () => {

@@ -1,44 +1,44 @@
 <script>
-  import "@spectrum-css/actionbutton/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
-  import Tooltip from "../Tooltip/Tooltip.svelte"
-  import { fade } from "svelte/transition"
+import "@spectrum-css/actionbutton/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
+import { fade } from "svelte/transition"
+import Tooltip from "../Tooltip/Tooltip.svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let quiet = false
-  export let emphasized = false
-  export let selected = false
-  export let longPressable = false
-  export let disabled = false
-  export let icon = ""
-  export let size = "M"
-  export let active = false
-  export let fullWidth = false
-  export let noPadding = false
-  export let tooltip = ""
+export let quiet = false
+export let emphasized = false
+export let selected = false
+export let longPressable = false
+export let disabled = false
+export let icon = ""
+export let size = "M"
+export let active = false
+export let fullWidth = false
+export let noPadding = false
+export let tooltip = ""
 
-  let showTooltip = false
+let showTooltip = false
 
-  function longPress(element) {
-    if (!longPressable) return
-    let timer
+function longPress(element) {
+  if (!longPressable) return
+  let timer
 
-    const listener = () => {
-      timer = setTimeout(() => {
-        dispatch("longpress")
-      }, 700)
-    }
-
-    element.addEventListener("pointerdown", listener)
-
-    return {
-      destroy() {
-        clearTimeout(timer)
-        element.removeEventListener("pointerdown", longPress)
-      },
-    }
+  const listener = () => {
+    timer = setTimeout(() => {
+      dispatch("longpress")
+    }, 700)
   }
+
+  element.addEventListener("pointerdown", listener)
+
+  return {
+    destroy() {
+      clearTimeout(timer)
+      element.removeEventListener("pointerdown", longPress)
+    },
+  }
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

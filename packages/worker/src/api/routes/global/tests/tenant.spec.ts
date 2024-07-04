@@ -1,6 +1,6 @@
+import { tenancy as _tenancy } from "@budibase/backend-core"
 import { Hosting, TenantInfo } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
-import { tenancy as _tenancy } from "@budibase/backend-core"
 
 const tenancy = jest.mocked(_tenancy)
 

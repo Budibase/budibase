@@ -1,47 +1,47 @@
 <script>
-  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { selectedScreen, componentStore } from "stores/builder"
-  import DraggableList from "../DraggableList/DraggableList.svelte"
-  import { createEventDispatcher } from "svelte"
-  import FieldSetting from "./FieldSetting.svelte"
-  import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
-  import getColumns from "./getColumns.js"
+import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+import { componentStore, selectedScreen } from "stores/builder"
+import { createEventDispatcher } from "svelte"
+import DraggableList from "../DraggableList/DraggableList.svelte"
+import FieldSetting from "./FieldSetting.svelte"
+import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
+import getColumns from "./getColumns.js"
 
-  export let value
-  export let componentInstance
+export let value
+export let componentInstance
 
-  const dispatch = createEventDispatcher()
-  let primaryDisplayColumnAnchor
+const dispatch = createEventDispatcher()
+let primaryDisplayColumnAnchor
 
-  const handleChange = newValues => {
-    dispatch("change", newValues)
+const handleChange = newValues => {
+  dispatch("change", newValues)
+}
+
+const getSchema = (asset, datasource) => {
+  const schema = getSchemaForDatasource(asset, datasource).schema
+
+  // Don't show ID and rev in tables
+  if (schema) {
+    delete schema._id
+    delete schema._rev
   }
 
-  const getSchema = (asset, datasource) => {
-    const schema = getSchemaForDatasource(asset, datasource).schema
+  return schema
+}
 
-    // Don't show ID and rev in tables
-    if (schema) {
-      delete schema._id
-      delete schema._rev
-    }
-
-    return schema
-  }
-
-  $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
-  $: primaryDisplayColumnName = getSchemaForDatasource(
-    $selectedScreen,
-    datasource
-  )?.table?.primaryDisplay
-  $: schema = getSchema($selectedScreen, datasource)
-  $: columns = getColumns({
-    columns: value,
-    schema,
-    primaryDisplayColumnName,
-    onChange: handleChange,
-    createComponent: componentStore.createInstance,
-  })
+$: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
+$: primaryDisplayColumnName = getSchemaForDatasource(
+  $selectedScreen,
+  datasource
+)?.table?.primaryDisplay
+$: schema = getSchema($selectedScreen, datasource)
+$: columns = getColumns({
+  columns: value,
+  schema,
+  primaryDisplayColumnName,
+  onChange: handleChange,
+  createComponent: componentStore.createInstance,
+})
 </script>
 
 {#if columns.primary}

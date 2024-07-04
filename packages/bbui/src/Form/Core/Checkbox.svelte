@@ -1,22 +1,22 @@
 <script>
-  import "@spectrum-css/checkbox/dist/index-vars.css"
-  import "@spectrum-css/fieldgroup/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+import "@spectrum-css/checkbox/dist/index-vars.css"
+import "@spectrum-css/fieldgroup/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
 
-  export let value = false
-  export let id = null
-  export let text = null
-  export let disabled = false
-  export let readonly = false
-  export let size
-  export let indeterminate = false
+export let value = false
+export let id = null
+export let text = null
+export let disabled = false
+export let readonly = false
+export let size
+export let indeterminate = false
 
-  const dispatch = createEventDispatcher()
-  const onChange = event => {
-    dispatch("change", event.target.checked)
-  }
+const dispatch = createEventDispatcher()
+const onChange = event => {
+  dispatch("change", event.target.checked)
+}
 
-  $: sizeClass = `spectrum-Checkbox--size${size || "M"}`
+$: sizeClass = `spectrum-Checkbox--size${size || "M"}`
 </script>
 
 <label

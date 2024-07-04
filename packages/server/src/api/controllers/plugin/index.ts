@@ -1,10 +1,10 @@
-import { npmUpload, urlUpload, githubUpload } from "./uploaders"
 import { plugins as pluginCore } from "@budibase/backend-core"
-import { PluginType, FileType, PluginSource } from "@budibase/types"
-import env from "../../../environment"
-import { clientAppSocket } from "../../../websockets"
-import sdk from "../../../sdk"
 import { sdk as pro } from "@budibase/pro"
+import { FileType, PluginSource, PluginType } from "@budibase/types"
+import env from "../../../environment"
+import sdk from "../../../sdk"
+import { clientAppSocket } from "../../../websockets"
+import { githubUpload, npmUpload, urlUpload } from "./uploaders"
 
 export async function upload(ctx: any) {
   const plugins: FileType[] =

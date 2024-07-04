@@ -1,47 +1,47 @@
 <script>
-  import {
-    notifications,
-    Button,
-    Layout,
-    Body,
-    Heading,
-    Icon,
-    FancyForm,
-    FancyInput,
-  } from "@budibase/bbui"
-  import { organisation, auth } from "stores/portal"
-  import Logo from "assets/bb-emblem.svg"
-  import { onMount } from "svelte"
-  import { goto } from "@roxi/routify"
-  import { TestimonialPage } from "@budibase/frontend-core/src/components"
+import {
+  Body,
+  Button,
+  FancyForm,
+  FancyInput,
+  Heading,
+  Icon,
+  Layout,
+  notifications,
+} from "@budibase/bbui"
+import { TestimonialPage } from "@budibase/frontend-core/src/components"
+import { goto } from "@roxi/routify"
+import Logo from "assets/bb-emblem.svg"
+import { auth, organisation } from "stores/portal"
+import { onMount } from "svelte"
 
-  let email = ""
-  let form
-  let error
-  let submitted = false
+let email = ""
+let form
+let error
+let submitted = false
 
-  async function forgot() {
-    form.validate()
-    if (error) {
-      return
-    }
-    submitted = true
-    try {
-      await auth.forgotPassword(email)
-      notifications.success("Email sent - please check your inbox")
-    } catch (err) {
-      submitted = false
-      notifications.error("Unable to send reset password link")
-    }
+async function forgot() {
+  form.validate()
+  if (error) {
+    return
   }
+  submitted = true
+  try {
+    await auth.forgotPassword(email)
+    notifications.success("Email sent - please check your inbox")
+  } catch (err) {
+    submitted = false
+    notifications.error("Unable to send reset password link")
+  }
+}
 
-  onMount(async () => {
-    try {
-      await organisation.init()
-    } catch (error) {
-      notifications.error("Error getting org config")
-    }
-  })
+onMount(async () => {
+  try {
+    await organisation.init()
+  } catch (error) {
+    notifications.error("Error getting org config")
+  }
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

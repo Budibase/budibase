@@ -1,5 +1,5 @@
-import { downloadUnzipTarball } from "./utils"
 import { getPluginMetadata } from "../../../utilities/fileSystem"
+import { downloadUnzipTarball } from "./utils"
 
 export async function urlUpload(url: string, name = "", headers = {}) {
   if (!url.includes(".tar.gz")) {

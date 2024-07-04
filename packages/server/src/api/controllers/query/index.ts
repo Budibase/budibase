@@ -1,28 +1,28 @@
-import { generateQueryID } from "../../../db/utils"
-import { Thread, ThreadType } from "../../../threads"
-import { save as saveDatasource } from "../datasource"
-import { RestImporter } from "./import"
-import { invalidateCachedVariable } from "../../../threads/utils"
-import env from "../../../environment"
-import { events, context, utils, constants } from "@budibase/backend-core"
-import sdk from "../../../sdk"
-import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
+import { constants, events, context, utils } from "@budibase/backend-core"
+import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
+import { findHBSBlocks } from "@budibase/string-templates"
 import {
   ConfigType,
-  Query,
-  UserCtx,
-  SessionCookie,
-  JsonFieldSubType,
-  QueryResponse,
-  QuerySchema,
-  FieldType,
   ExecuteQueryRequest,
   ExecuteQueryResponse,
+  FieldType,
+  JsonFieldSubType,
   PreviewQueryRequest,
   PreviewQueryResponse,
+  Query,
+  QueryResponse,
+  QuerySchema,
+  SessionCookie,
+  UserCtx,
 } from "@budibase/types"
-import { ValidQueryNameRegex, utils as JsonUtils } from "@budibase/shared-core"
-import { findHBSBlocks } from "@budibase/string-templates"
+import { generateQueryID } from "../../../db/utils"
+import env from "../../../environment"
+import sdk from "../../../sdk"
+import { Thread, ThreadType } from "../../../threads"
+import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
+import { invalidateCachedVariable } from "../../../threads/utils"
+import { save as saveDatasource } from "../datasource"
+import { RestImporter } from "./import"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -369,9 +369,8 @@ async function execute(
       schema: query.schema,
     }
 
-    const { rows, pagination, extra, info } = await Runner.run<QueryResponse>(
-      inputs
-    )
+    const { rows, pagination, extra, info } =
+      await Runner.run<QueryResponse>(inputs)
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw

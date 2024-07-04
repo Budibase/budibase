@@ -1,4 +1,4 @@
-import { context, events } from "@budibase/backend-core"
+import { events, context } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   BBReferenceFieldSubType,
@@ -15,14 +15,14 @@ import {
   ViewCalculation,
   ViewV2Enriched,
 } from "@budibase/types"
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
 import * as uuid from "uuid"
+import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 import { generator } from "@budibase/backend-core/tests"
+import timekeeper from "timekeeper"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
-import timekeeper from "timekeeper"
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/

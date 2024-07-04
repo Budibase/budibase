@@ -1,5 +1,5 @@
-import { writable, get } from "svelte/store"
 import { API } from "api"
+import { get, writable } from "svelte/store"
 import { FieldTypes } from "../constants"
 import { routeStore } from "./routes"
 
@@ -85,7 +85,7 @@ export const createDataSourceStore = () => {
       try {
         const definition = await API.fetchTableDefinition(dataSourceId)
         schema = definition?.schema
-      } catch (error) {
+      } catch (_error) {
         schema = null
       }
     }

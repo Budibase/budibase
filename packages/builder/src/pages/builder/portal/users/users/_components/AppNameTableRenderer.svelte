@@ -1,8 +1,8 @@
 <script>
-  import { IconAvatar } from "@budibase/bbui"
+import { IconAvatar } from "@budibase/bbui"
 
-  export let value
-  export let row
+export let value
+export let row
 </script>
 
 <div class="align">

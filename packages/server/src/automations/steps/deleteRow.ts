@@ -1,15 +1,15 @@
-import { destroy } from "../../api/controllers/row"
-import { buildCtx } from "./utils"
-import { getError } from "../automationUtils"
 import {
   AutomationActionStepId,
+  AutomationCustomIOType,
+  AutomationFeature,
+  AutomationIOType,
   AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
-  AutomationIOType,
-  AutomationCustomIOType,
-  AutomationFeature,
 } from "@budibase/types"
+import { destroy } from "../../api/controllers/row"
+import { getError } from "../automationUtils"
+import { buildCtx } from "./utils"
 
 export const definition: AutomationStepSchema = {
   description: "Delete a row from your database",

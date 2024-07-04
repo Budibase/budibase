@@ -1,11 +1,11 @@
-import * as automation from "../index"
-import * as triggers from "../triggers"
-import { loopAutomation } from "../../tests/utilities/structures"
 import { context } from "@budibase/backend-core"
-import * as setup from "./utilities"
 import { Table } from "@budibase/types"
-import * as loopUtils from "../loopUtils"
 import { LoopInput, LoopStepType } from "../../definitions/automations"
+import { loopAutomation } from "../../tests/utilities/structures"
+import * as automation from "../index"
+import * as loopUtils from "../loopUtils"
+import * as triggers from "../triggers"
+import * as setup from "./utilities"
 
 describe("Attempt to run a basic loop automation", () => {
   let config = setup.getConfig(),

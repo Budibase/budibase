@@ -1,17 +1,17 @@
 <script>
-  import { Label, EnvDropdown } from "@budibase/bbui"
-  import { environment, licensing } from "stores/portal"
+import { EnvDropdown, Label } from "@budibase/bbui"
+import { environment, licensing } from "stores/portal"
 
-  export let type
-  export let name
-  export let value
-  export let error
-  export let showModal = () => {}
+export let type
+export let name
+export let value
+export let error
+export let showModal = () => {}
 
-  async function handleUpgradePanel() {
-    await environment.upgradePanelOpened()
-    $licensing.goToUpgradePage()
-  }
+async function handleUpgradePanel() {
+  await environment.upgradePanelOpened()
+  $licensing.goToUpgradePage()
+}
 </script>
 
 <div class="form-row">

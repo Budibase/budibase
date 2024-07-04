@@ -1,15 +1,15 @@
-import { getWebhookParams } from "../../db/utils"
-import * as triggers from "../../automations/triggers"
-import { db as dbCore, context } from "@budibase/backend-core"
+import { context, db as dbCore } from "@budibase/backend-core"
+import * as pro from "@budibase/pro"
 import {
-  Webhook,
-  WebhookActionType,
-  BBContext,
   Automation,
   AutomationActionStepId,
+  BBContext,
+  Webhook,
+  WebhookActionType,
 } from "@budibase/types"
+import * as triggers from "../../automations/triggers"
+import { getWebhookParams } from "../../db/utils"
 import sdk from "../../sdk"
-import * as pro from "@budibase/pro"
 
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate

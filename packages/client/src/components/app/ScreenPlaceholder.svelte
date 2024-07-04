@@ -1,8 +1,8 @@
 <script>
-  import { getContext } from "svelte"
-  import { Heading, Body, Button } from "@budibase/bbui"
+import { Body, Button, Heading } from "@budibase/bbui"
+import { getContext } from "svelte"
 
-  const { builderStore } = getContext("sdk")
+const { builderStore } = getContext("sdk")
 </script>
 
 {#if $builderStore.inBuilder}

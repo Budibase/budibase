@@ -1,8 +1,8 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
 
-  export let url
-  export let text
+export let url
+export let text
 </script>
 
 <div>

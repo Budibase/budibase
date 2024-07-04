@@ -1,10 +1,10 @@
 <script>
-  // This component is overridden when running in a real app.
-  // This simply serves as a placeholder component for the real screen router
-  import { getContext } from "svelte"
+// This component is overridden when running in a real app.
+// This simply serves as a placeholder component for the real screen router
+import { getContext } from "svelte"
 
-  const { styleable } = getContext("sdk")
-  const component = getContext("component")
+const { styleable } = getContext("sdk")
+const component = getContext("component")
 </script>
 
 <div use:styleable={{ ...$component.styles, empty: true }}>

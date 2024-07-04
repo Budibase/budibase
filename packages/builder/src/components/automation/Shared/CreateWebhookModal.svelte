@@ -1,47 +1,46 @@
 <script>
-  import { Icon, notifications, ModalContent } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "stores/builder"
-  import WebhookDisplay from "./WebhookDisplay.svelte"
-  import { onMount, onDestroy } from "svelte"
+import { Icon, ModalContent, notifications } from "@budibase/bbui"
+import { automationStore, selectedAutomation } from "stores/builder"
+import { onDestroy, onMount } from "svelte"
+import WebhookDisplay from "./WebhookDisplay.svelte"
 
-  const POLL_RATE_MS = 2500
+const POLL_RATE_MS = 2500
 
-  let interval
-  let finished = false
-  let schemaURL
-  let propCount = 0
+let interval
+let finished = false
+let schemaURL
+let propCount = 0
 
-  $: automation = $selectedAutomation
+$: automation = $selectedAutomation
 
-  onMount(async () => {
-    if (!automation?.definition?.trigger?.inputs.schemaUrl) {
-      // save the automation initially
-      try {
-        await automationStore.actions.save(automation)
-      } catch (error) {
-        notifications.error("Error saving automation")
-      }
+onMount(async () => {
+  if (!automation?.definition?.trigger?.inputs.schemaUrl) {
+    // save the automation initially
+    try {
+      await automationStore.actions.save(automation)
+    } catch (error) {
+      notifications.error("Error saving automation")
     }
-    interval = setInterval(async () => {
-      try {
-        await automationStore.actions.fetch()
-        const outputs =
-          automation?.definition?.trigger.schema.outputs?.properties
-        // always one prop for the "body"
-        if (Object.keys(outputs).length > 1) {
-          propCount = Object.keys(outputs).length - 1
-          finished = true
-        }
-      } catch (error) {
-        notifications.error("Error getting automations list")
+  }
+  interval = setInterval(async () => {
+    try {
+      await automationStore.actions.fetch()
+      const outputs = automation?.definition?.trigger.schema.outputs?.properties
+      // always one prop for the "body"
+      if (Object.keys(outputs).length > 1) {
+        propCount = Object.keys(outputs).length - 1
+        finished = true
       }
-    }, POLL_RATE_MS)
-    schemaURL = automation?.definition?.trigger?.inputs.schemaUrl
-  })
+    } catch (error) {
+      notifications.error("Error getting automations list")
+    }
+  }, POLL_RATE_MS)
+  schemaURL = automation?.definition?.trigger?.inputs.schemaUrl
+})
 
-  onDestroy(() => {
-    clearInterval(interval)
-  })
+onDestroy(() => {
+  clearInterval(interval)
+})
 </script>
 
 <ModalContent

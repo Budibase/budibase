@@ -1,8 +1,8 @@
-import env from "../../environment"
-import * as objectStore from "../objectStore"
-import * as cloudfront from "../cloudfront"
 import qs from "querystring"
 import { DEFAULT_TENANT_ID, getTenantId } from "../../context"
+import env from "../../environment"
+import * as cloudfront from "../cloudfront"
+import * as objectStore from "../objectStore"
 
 export function clientLibraryPath(appId: string) {
   return `${objectStore.sanitizeKey(appId)}/budibase-client.js`

@@ -1,53 +1,53 @@
 <script>
-  import DetailsModal from "./DetailsModal/index.svelte"
-  import {
-    messages as messageConstants,
-    getExplanationMessagesAndSupport,
-    getExplanationWithPresets,
-  } from "./explanation"
-  import {
-    StringAsDate,
-    NumberAsDate,
-    Column,
-    Support,
-    NotRequired,
-    StringAsNumber,
-    JSONPrimitivesOnly,
-    DateAsNumber,
-  } from "./lines"
-  import subjects from "./subjects"
-  import { appStore } from "stores/builder"
+import { appStore } from "stores/builder"
+import DetailsModal from "./DetailsModal/index.svelte"
+import {
+  getExplanationMessagesAndSupport,
+  getExplanationWithPresets,
+  messages as messageConstants,
+} from "./explanation"
+import {
+  Column,
+  DateAsNumber,
+  JSONPrimitivesOnly,
+  NotRequired,
+  NumberAsDate,
+  StringAsDate,
+  StringAsNumber,
+  Support,
+} from "./lines"
+import subjects from "./subjects"
 
-  export let tableHref = () => {}
-  export let schema
-  export let name
-  export let explanation
-  export let componentName
+export let tableHref = () => {}
+export let schema
+export let name
+export let explanation
+export let componentName
 
-  $: explanationWithPresets = getExplanationWithPresets(
-    explanation,
-    $appStore.typeSupportPresets
+$: explanationWithPresets = getExplanationWithPresets(
+  explanation,
+  $appStore.typeSupportPresets
+)
+let support
+let messages = []
+
+$: {
+  const explanationMessagesAndSupport = getExplanationMessagesAndSupport(
+    schema,
+    explanationWithPresets
   )
-  let support
-  let messages = []
+  support = explanationMessagesAndSupport.support
+  messages = explanationMessagesAndSupport.messages
+}
 
-  $: {
-    const explanationMessagesAndSupport = getExplanationMessagesAndSupport(
-      schema,
-      explanationWithPresets
-    )
-    support = explanationMessagesAndSupport.support
-    messages = explanationMessagesAndSupport.messages
-  }
+let root = null
 
-  let root = null
+let detailsModalSubject = subjects.none
 
-  let detailsModalSubject = subjects.none
-
-  const setExplanationSubject = option => {
-    detailsModalSubject = option
-    root = root
-  }
+const setExplanationSubject = option => {
+  detailsModalSubject = option
+  root = root
+}
 </script>
 
 <div bind:this={root} class="tooltipContents">

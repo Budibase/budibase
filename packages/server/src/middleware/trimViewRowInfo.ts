@@ -1,8 +1,8 @@
 import { Ctx, Row } from "@budibase/types"
-import * as utils from "../db/utils"
-import sdk from "../sdk"
 import { Next } from "koa"
 import { getTableId } from "../api/controllers/row/utils"
+import * as utils from "../db/utils"
+import sdk from "../sdk"
 
 export default async (ctx: Ctx<Row>, next: Next) => {
   const { body } = ctx.request

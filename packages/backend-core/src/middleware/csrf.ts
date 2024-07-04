@@ -1,6 +1,6 @@
+import { BBContext, EndpointMatcher } from "@budibase/types"
 import { Header } from "../constants"
 import { buildMatcherRegex, matches } from "./matchers"
-import { BBContext, EndpointMatcher } from "@budibase/types"
 
 /**
  * GET, HEAD and OPTIONS methods are considered safe operations

@@ -1,7 +1,7 @@
-import Router from "@koa/router"
-import * as controller from "../../controllers/global/license"
 import { middleware } from "@budibase/backend-core"
+import Router from "@koa/router"
 import Joi from "joi"
+import * as controller from "../../controllers/global/license"
 
 const activateLicenseKeyValidator = middleware.joiValidator.body(
   Joi.object({

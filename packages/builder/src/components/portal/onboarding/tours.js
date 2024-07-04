@@ -1,15 +1,15 @@
-import { get } from "svelte/store"
+import analytics from "analytics"
+import { API } from "api"
 import { builderStore } from "stores/builder"
 import { auth } from "stores/portal"
-import analytics from "analytics"
+import { get } from "svelte/store"
 import {
+  NewFormSteps,
+  NewViewUpdateFormRowId,
   OnboardingData,
   OnboardingDesign,
   OnboardingPublish,
-  NewViewUpdateFormRowId,
-  NewFormSteps,
 } from "./steps"
-import { API } from "api"
 
 const ONBOARDING_EVENT_PREFIX = "onboarding"
 

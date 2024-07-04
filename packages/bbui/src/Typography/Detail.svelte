@@ -1,9 +1,9 @@
 <script>
-  import "@spectrum-css/typography/dist/index-vars.css"
+import "@spectrum-css/typography/dist/index-vars.css"
 
-  export let size = "M"
-  export let serif = false
-  export let weight = 600
+export let size = "M"
+export let serif = false
+export let weight = 600
 </script>
 
 <p

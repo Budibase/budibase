@@ -1,6 +1,6 @@
 import { APIError } from "@budibase/types"
-import * as errors from "../errors"
 import environment from "../environment"
+import * as errors from "../errors"
 
 export async function errorHandling(ctx: any, next: any) {
   try {

@@ -1,44 +1,44 @@
 <script>
-  import Portal from "svelte-portal"
-  import { getContext } from "svelte"
-  import Context from "../context"
+import { getContext } from "svelte"
+import Portal from "svelte-portal"
+import Context from "../context"
 
-  export let anchor
-  export let visible = false
-  export let offset = 0
+export let anchor
+export let visible = false
+export let offset = 0
 
-  $: target = getContext(Context.PopoverRoot) || "#app"
+$: target = getContext(Context.PopoverRoot) || "#app"
 
-  let hovering = false
-  let tooltip
-  let x = 0
-  let y = 0
+let hovering = false
+let tooltip
+let x = 0
+let y = 0
 
-  const updatePosition = (anchor, tooltip) => {
-    if (anchor == null || tooltip == null) {
-      return
-    }
-
-    requestAnimationFrame(() => {
-      const rect = anchor.getBoundingClientRect()
-      const windowOffset =
-        window.innerHeight - offset - (tooltip.clientHeight + rect.y)
-      const tooltipWidth = tooltip.clientWidth
-
-      x = rect.x - tooltipWidth - offset
-      y = windowOffset < 0 ? rect.y + windowOffset : rect.y
-    })
+const updatePosition = (anchor, tooltip) => {
+  if (anchor == null || tooltip == null) {
+    return
   }
 
-  $: updatePosition(anchor, tooltip)
+  requestAnimationFrame(() => {
+    const rect = anchor.getBoundingClientRect()
+    const windowOffset =
+      window.innerHeight - offset - (tooltip.clientHeight + rect.y)
+    const tooltipWidth = tooltip.clientWidth
 
-  const handleMouseenter = () => {
-    hovering = true
-  }
+    x = rect.x - tooltipWidth - offset
+    y = windowOffset < 0 ? rect.y + windowOffset : rect.y
+  })
+}
 
-  const handleMouseleave = () => {
-    hovering = false
-  }
+$: updatePosition(anchor, tooltip)
+
+const handleMouseenter = () => {
+  hovering = true
+}
+
+const handleMouseleave = () => {
+  hovering = false
+}
 </script>
 
 <Portal {target}>

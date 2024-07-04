@@ -1,32 +1,32 @@
 <script>
-  import { onMount } from "svelte"
-  import { Checkbox } from "@budibase/bbui"
+import { Checkbox } from "@budibase/bbui"
+import { onMount } from "svelte"
 
-  export let value
-  export let focused = false
-  export let onChange
-  export let readonly = false
-  export let api
+export let value
+export let focused = false
+export let onChange
+export let readonly = false
+export let api
 
-  $: editable = focused && !readonly
+$: editable = focused && !readonly
 
-  const handleChange = e => {
-    onChange(e.detail)
+const handleChange = e => {
+  onChange(e.detail)
+}
+
+const onKeyDown = e => {
+  if (e.key === "Enter") {
+    onChange(!value)
+    return true
   }
+  return false
+}
 
-  const onKeyDown = e => {
-    if (e.key === "Enter") {
-      onChange(!value)
-      return true
-    }
-    return false
+onMount(() => {
+  api = {
+    onKeyDown,
   }
-
-  onMount(() => {
-    api = {
-      onKeyDown,
-    }
-  })
+})
 </script>
 
 <div class="boolean-cell" class:editable>

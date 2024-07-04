@@ -1,16 +1,16 @@
 <script>
-  import FontAwesomeIcon from "./FontAwesomeIcon.svelte"
-  import { Popover, Heading, Body } from "@budibase/bbui"
-  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
-  import { licensing } from "stores/portal"
-  import { isPremiumOrAbove } from "helpers/planTitle"
-  import { ChangelogURL } from "constants"
+import { ChangelogURL } from "constants"
+import { Body, Heading, Popover } from "@budibase/bbui"
+import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
+import { isPremiumOrAbove } from "helpers/planTitle"
+import { licensing } from "stores/portal"
+import FontAwesomeIcon from "./FontAwesomeIcon.svelte"
 
-  $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license?.plan?.type)
+$: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license?.plan?.type)
 
-  let show
-  let hide
-  let popoverAnchor
+let show
+let hide
+let popoverAnchor
 </script>
 
 <div bind:this={popoverAnchor} class="help">

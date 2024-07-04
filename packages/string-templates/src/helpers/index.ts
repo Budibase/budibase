@@ -1,12 +1,12 @@
-import Helper from "./Helper"
 import Handlebars from "handlebars"
-import * as externalHandlebars from "./external"
-import { processJS } from "./javascript"
+import Helper from "./Helper"
 import {
-  HelperFunctionNames,
   HelperFunctionBuiltin,
+  HelperFunctionNames,
   LITERAL_MARKER,
 } from "./constants"
+import * as externalHandlebars from "./external"
+import { processJS } from "./javascript"
 
 export { getJsHelperList } from "./list"
 

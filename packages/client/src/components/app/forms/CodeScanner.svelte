@@ -1,132 +1,131 @@
 <script>
-  import {
-    ModalContent,
-    Modal,
-    Icon,
-    ActionButton,
-    Input,
-    Button,
-    StatusLight,
-  } from "@budibase/bbui"
-  import { Html5Qrcode } from "html5-qrcode"
-  import { createEventDispatcher } from "svelte"
+import {
+  ActionButton,
+  Button,
+  Icon,
+  Input,
+  Modal,
+  ModalContent,
+  StatusLight,
+} from "@budibase/bbui"
+import { Html5Qrcode } from "html5-qrcode"
+import { createEventDispatcher } from "svelte"
 
-  export let value
-  export let disabled = false
-  export let allowManualEntry = false
-  export let autoConfirm = false
-  export let scanButtonText = "Scan code"
-  export let beepOnScan = false
-  export let beepFrequency = 2637
-  export let customFrequency = 1046
-  export let preferredCamera = "environment"
-  export let validator
+export let value
+export let disabled = false
+export let allowManualEntry = false
+export let autoConfirm = false
+export let scanButtonText = "Scan code"
+export let beepOnScan = false
+export let beepFrequency = 2637
+export let customFrequency = 1046
+export let preferredCamera = "environment"
+export let validator
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let videoEle
-  let camModal
-  let manualMode = false
-  let cameraEnabled
-  let cameraStarted = false
-  let html5QrCode
-  let cameraSetting = { facingMode: preferredCamera }
-  let cameraConfig = {
-    fps: 25,
-    qrbox: { width: 250, height: 250 },
-  }
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+let videoEle
+let camModal
+let manualMode = false
+let cameraEnabled
+let cameraStarted = false
+let html5QrCode
+let cameraSetting = { facingMode: preferredCamera }
+let cameraConfig = {
+  fps: 25,
+  qrbox: { width: 250, height: 250 },
+}
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
 
-  const onScanSuccess = decodedText => {
-    if (value != decodedText) {
-      if (beepOnScan) {
-        beep()
-      }
-      dispatch("change", decodedText)
-      if (autoConfirm && !validator?.(decodedText)) {
-        camModal?.hide()
-      }
+const onScanSuccess = decodedText => {
+  if (value != decodedText) {
+    if (beepOnScan) {
+      beep()
+    }
+    dispatch("change", decodedText)
+    if (autoConfirm && !validator?.(decodedText)) {
+      camModal?.hide()
     }
   }
+}
 
-  const initReader = async () => {
-    if (html5QrCode) {
-      html5QrCode.stop()
-    }
-    html5QrCode = new Html5Qrcode("reader")
-    return new Promise(resolve => {
-      html5QrCode
-        .start(cameraSetting, cameraConfig, onScanSuccess)
-        .then(() => {
-          resolve({ initialised: true })
-        })
-        .catch(err => {
-          console.error("There was a problem scanning the image", err)
-          resolve({ initialised: false })
-        })
-    })
+const initReader = async () => {
+  if (html5QrCode) {
+    html5QrCode.stop()
   }
+  html5QrCode = new Html5Qrcode("reader")
+  return new Promise(resolve => {
+    html5QrCode
+      .start(cameraSetting, cameraConfig, onScanSuccess)
+      .then(() => {
+        resolve({ initialised: true })
+      })
+      .catch(err => {
+        console.error("There was a problem scanning the image", err)
+        resolve({ initialised: false })
+      })
+  })
+}
 
-  const checkCamera = async () => {
-    return new Promise(resolve => {
-      Html5Qrcode.getCameras()
-        .then(devices => {
-          if (devices && devices.length) {
-            resolve({ enabled: true })
-          }
-        })
-        .catch(e => {
-          console.error(e)
-          resolve({ enabled: false })
-        })
-    })
+const checkCamera = async () => {
+  return new Promise(resolve => {
+    Html5Qrcode.getCameras()
+      .then(devices => {
+        if (devices && devices.length) {
+          resolve({ enabled: true })
+        }
+      })
+      .catch(e => {
+        console.error(e)
+        resolve({ enabled: false })
+      })
+  })
+}
+
+const start = async () => {
+  const status = await initReader()
+  cameraStarted = status.initialised
+}
+
+$: if (cameraEnabled && videoEle && !cameraStarted) {
+  start()
+}
+
+const showReaderModal = async () => {
+  camModal.show()
+  const camStatus = await checkCamera()
+  cameraEnabled = camStatus.enabled
+}
+
+const hideReaderModal = async () => {
+  cameraEnabled = undefined
+  cameraStarted = false
+  if (html5QrCode) {
+    await html5QrCode.stop()
+    html5QrCode = undefined
   }
+  camModal.hide()
+}
 
-  const start = async () => {
-    const status = await initReader()
-    cameraStarted = status.initialised
-  }
+const beep = () => {
+  const oscillator = audioCtx.createOscillator()
+  const gainNode = audioCtx.createGain()
 
-  $: if (cameraEnabled && videoEle && !cameraStarted) {
-    start()
-  }
+  oscillator.connect(gainNode)
+  gainNode.connect(audioCtx.destination)
 
-  const showReaderModal = async () => {
-    camModal.show()
-    const camStatus = await checkCamera()
-    cameraEnabled = camStatus.enabled
-  }
+  const frequency = beepFrequency === "custom" ? customFrequency : beepFrequency
+  oscillator.frequency.value = frequency
+  oscillator.type = "square"
 
-  const hideReaderModal = async () => {
-    cameraEnabled = undefined
-    cameraStarted = false
-    if (html5QrCode) {
-      await html5QrCode.stop()
-      html5QrCode = undefined
-    }
-    camModal.hide()
-  }
+  const duration = 420
+  const endTime = audioCtx.currentTime + duration / 1000
+  gainNode.gain.setValueAtTime(1, audioCtx.currentTime)
+  gainNode.gain.exponentialRampToValueAtTime(0.001, endTime)
 
-  const beep = () => {
-    const oscillator = audioCtx.createOscillator()
-    const gainNode = audioCtx.createGain()
-
-    oscillator.connect(gainNode)
-    gainNode.connect(audioCtx.destination)
-
-    const frequency =
-      beepFrequency === "custom" ? customFrequency : beepFrequency
-    oscillator.frequency.value = frequency
-    oscillator.type = "square"
-
-    const duration = 420
-    const endTime = audioCtx.currentTime + duration / 1000
-    gainNode.gain.setValueAtTime(1, audioCtx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.001, endTime)
-
-    oscillator.start()
-    oscillator.stop(endTime)
-  }
+  oscillator.start()
+  oscillator.stop(endTime)
+}
 </script>
 
 <div class="scanner-video-wrapper">

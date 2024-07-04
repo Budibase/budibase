@@ -1,9 +1,9 @@
 <script>
-  import { Button } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
-  import { auth, admin, licensing } from "stores/portal"
-  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
-  import { sdk } from "@budibase/shared-core"
+import { Button } from "@budibase/bbui"
+import { sdk } from "@budibase/shared-core"
+import { goto } from "@roxi/routify"
+import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
+import { admin, auth, licensing } from "stores/portal"
 </script>
 
 {#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING) && !$licensing.isEnterprisePlan && !$licensing.isEnterpriseTrial}

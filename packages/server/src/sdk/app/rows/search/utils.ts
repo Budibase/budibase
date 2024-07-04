@@ -1,17 +1,17 @@
+import { context, db as dbCore } from "@budibase/backend-core"
+import { utils } from "@budibase/shared-core"
 import {
-  FieldType,
-  Table,
-  DocumentType,
-  SEPARATOR,
   BBReferenceFieldSubType,
+  DocumentType,
+  FieldType,
+  Row,
+  RowSearchParams,
+  SEPARATOR,
   SearchFilters,
   SearchIndex,
   SearchResponse,
-  Row,
-  RowSearchParams,
+  Table,
 } from "@budibase/types"
-import { db as dbCore, context } from "@budibase/backend-core"
-import { utils } from "@budibase/shared-core"
 
 export async function paginatedSearch(
   query: SearchFilters,

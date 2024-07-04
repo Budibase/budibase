@@ -1,38 +1,38 @@
 <script>
-  import { Heading, Select, ActionButton } from "@budibase/bbui"
-  import { devToolsStore, appStore, roleStore } from "../../stores"
-  import { getContext, onMount } from "svelte"
+import { ActionButton, Heading, Select } from "@budibase/bbui"
+import { getContext, onMount } from "svelte"
+import { appStore, devToolsStore, roleStore } from "../../stores"
 
-  const context = getContext("context")
-  const SELF_ROLE = "self"
+const context = getContext("context")
+const SELF_ROLE = "self"
 
-  let staticRoleList
+let staticRoleList
 
-  $: previewOptions = buildRoleList(staticRoleList)
+$: previewOptions = buildRoleList(staticRoleList)
 
-  function buildRoleList(roleIds) {
-    const list = []
-    list.push({
-      label: "View as yourself",
-      value: SELF_ROLE,
-    })
-    if (!roleIds) {
-      return list
-    }
-    for (let roleId of roleIds) {
-      list.push({
-        label: `View as ${roleId.toLowerCase()} user`,
-        value: roleId,
-      })
-    }
+function buildRoleList(roleIds) {
+  const list = []
+  list.push({
+    label: "View as yourself",
+    value: SELF_ROLE,
+  })
+  if (!roleIds) {
     return list
   }
+  for (let roleId of roleIds) {
+    list.push({
+      label: `View as ${roleId.toLowerCase()} user`,
+      value: roleId,
+    })
+  }
+  return list
+}
 
-  onMount(async () => {
-    // make sure correct before starting
-    await devToolsStore.actions.changeRole(SELF_ROLE)
-    staticRoleList = await roleStore.actions.fetchAccessibleRoles()
-  })
+onMount(async () => {
+  // make sure correct before starting
+  await devToolsStore.actions.changeRole(SELF_ROLE)
+  staticRoleList = await roleStore.actions.fetchAccessibleRoles()
+})
 </script>
 
 <div class="dev-preview-header" class:mobile={$context.device.mobile}>

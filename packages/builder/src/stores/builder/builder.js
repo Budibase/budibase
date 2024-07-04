@@ -1,8 +1,8 @@
-import { get } from "svelte/store"
-import { createBuilderWebsocket } from "./websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
-import BudiStore from "../BudiStore.js"
 import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
+import { get } from "svelte/store"
+import BudiStore from "../BudiStore.js"
+import { createBuilderWebsocket } from "./websocket.js"
 
 export const INITIAL_BUILDER_STATE = {
   previousTopNavPath: {},

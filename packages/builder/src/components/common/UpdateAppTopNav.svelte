@@ -1,10 +1,10 @@
 <script>
-  import { Popover, Layout, Icon } from "@budibase/bbui"
-  import UpdateAppForm from "./UpdateAppForm.svelte"
+import { Icon, Layout, Popover } from "@budibase/bbui"
+import UpdateAppForm from "./UpdateAppForm.svelte"
 
-  let formPopover
-  let formPopoverAnchor
-  let formPopoverOpen = false
+let formPopover
+let formPopoverAnchor
+let formPopoverOpen = false
 </script>
 
 <div bind:this={formPopoverAnchor}>

@@ -1,9 +1,9 @@
 <script>
-  import { Body, Label } from "@budibase/bbui"
+import { Body, Label } from "@budibase/bbui"
 
-  export let title
-  export let description
-  export let disabled
+export let title
+export let description
+export let disabled
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

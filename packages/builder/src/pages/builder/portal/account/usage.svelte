@@ -1,187 +1,187 @@
 <script>
-  import {
-    Body,
-    Divider,
-    Heading,
-    Layout,
-    notifications,
-    Detail,
-    Link,
-    TooltipWrapper,
-  } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import { admin, auth, licensing } from "stores/portal"
-  import { Constants } from "@budibase/frontend-core"
-  import { DashCard, Usage } from "components/usage"
-  import { PlanModel } from "constants"
-  import { sdk } from "@budibase/shared-core"
-  import { getFormattedPlanName } from "helpers/planTitle"
+import { PlanModel } from "constants"
+import {
+  Body,
+  Detail,
+  Divider,
+  Heading,
+  Layout,
+  Link,
+  TooltipWrapper,
+  notifications,
+} from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
+import { DashCard, Usage } from "components/usage"
+import { getFormattedPlanName } from "helpers/planTitle"
+import { admin, auth, licensing } from "stores/portal"
+import { onMount } from "svelte"
 
-  let staticUsage = []
-  let monthlyUsage = []
-  let cancelAt
-  let loaded = false
-  let textRows = []
-  let daysRemainingInMonth
-  let primaryActionText
+let staticUsage = []
+let monthlyUsage = []
+let cancelAt
+let loaded = false
+let textRows = []
+let daysRemainingInMonth
+let primaryActionText
 
-  const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
-  const manageUrl = `${$admin.accountPortalUrl}/portal/billing`
+const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+const manageUrl = `${$admin.accountPortalUrl}/portal/billing`
 
-  const WARN_USAGE = ["Queries", "Automations", "Rows", "Day Passes", "Users"]
-  const oneDayInSeconds = 86400
+const WARN_USAGE = ["Queries", "Automations", "Rows", "Day Passes", "Users"]
+const oneDayInSeconds = 86400
 
-  const EXCLUDE_QUOTAS = {
-    Queries: () => true,
-    Users: license => {
-      return license.plan.model !== PlanModel.PER_USER
-    },
-    "Day Passes": license => {
-      return license.plan.model !== PlanModel.DAY_PASS
-    },
-  }
+const EXCLUDE_QUOTAS = {
+  Queries: () => true,
+  Users: license => {
+    return license.plan.model !== PlanModel.PER_USER
+  },
+  "Day Passes": license => {
+    return license.plan.model !== PlanModel.DAY_PASS
+  },
+}
 
-  function excludeQuota(name) {
-    return EXCLUDE_QUOTAS[name] && EXCLUDE_QUOTAS[name](license)
-  }
+function excludeQuota(name) {
+  return EXCLUDE_QUOTAS[name] && EXCLUDE_QUOTAS[name](license)
+}
 
-  $: quotaUsage = $licensing.quotaUsage
+$: quotaUsage = $licensing.quotaUsage
 
-  $: license = $auth.user?.license
-  $: plan = license?.plan
-  $: usesInvoicing = plan?.usesInvoicing
+$: license = $auth.user?.license
+$: plan = license?.plan
+$: usesInvoicing = plan?.usesInvoicing
 
-  $: accountPortalAccess = $auth?.user?.accountPortalAccess
-  $: quotaReset = quotaUsage?.quotaReset
-  $: canManagePlan =
-    ($admin.cloud && accountPortalAccess) ||
-    (!$admin.cloud && sdk.users.isAdmin($auth.user))
+$: accountPortalAccess = $auth?.user?.accountPortalAccess
+$: quotaReset = quotaUsage?.quotaReset
+$: canManagePlan =
+  ($admin.cloud && accountPortalAccess) ||
+  (!$admin.cloud && sdk.users.isAdmin($auth.user))
 
-  $: showButton = !usesInvoicing && accountPortalAccess
+$: showButton = !usesInvoicing && accountPortalAccess
 
-  const setMonthlyUsage = () => {
-    monthlyUsage = []
-    if (quotaUsage.monthly) {
-      for (let [key, value] of Object.entries(license.quotas.usage.monthly)) {
-        if (excludeQuota(value.name)) {
-          continue
-        }
-        const used = quotaUsage.monthly.current[key]
-        if (value.value !== 0) {
-          monthlyUsage.push({
-            name: value.name,
-            used: used ? used : 0,
-            total: value.value,
-          })
-        }
-      }
-    }
-    monthlyUsage = monthlyUsage.sort((a, b) => a.name.localeCompare(b.name))
-  }
-
-  const setStaticUsage = () => {
-    staticUsage = []
-    for (let [key, value] of Object.entries(license.quotas.usage.static)) {
+const setMonthlyUsage = () => {
+  monthlyUsage = []
+  if (quotaUsage.monthly) {
+    for (let [key, value] of Object.entries(license.quotas.usage.monthly)) {
       if (excludeQuota(value.name)) {
         continue
       }
-      const used = quotaUsage.usageQuota[key]
+      const used = quotaUsage.monthly.current[key]
       if (value.value !== 0) {
-        staticUsage.push({
+        monthlyUsage.push({
           name: value.name,
           used: used ? used : 0,
           total: value.value,
         })
       }
     }
-    staticUsage = staticUsage.sort((a, b) => a.name.localeCompare(b.name))
   }
+  monthlyUsage = monthlyUsage.sort((a, b) => a.name.localeCompare(b.name))
+}
 
-  const setCancelAt = () => {
-    cancelAt = license?.billing?.subscription?.cancelAt
-  }
-
-  const getDaysRemaining = timestamp => {
-    if (!timestamp) {
-      return
+const setStaticUsage = () => {
+  staticUsage = []
+  for (let [key, value] of Object.entries(license.quotas.usage.static)) {
+    if (excludeQuota(value.name)) {
+      continue
     }
-    const diffTime = Math.abs(timestamp - new Date().getTime()) / 1000
-    return Math.floor(diffTime / oneDayInSeconds)
-  }
-
-  const setTextRows = () => {
-    textRows = []
-
-    if (cancelAt && !usesInvoicing) {
-      if (plan?.type !== Constants.PlanType.ENTERPRISE_BASIC_TRIAL) {
-        textRows.push({ message: "Subscription has been cancelled" })
-      }
-      textRows.push({
-        message: `${getDaysRemaining(cancelAt)} days remaining`,
-        tooltip: new Date(cancelAt),
+    const used = quotaUsage.usageQuota[key]
+    if (value.value !== 0) {
+      staticUsage.push({
+        name: value.name,
+        used: used ? used : 0,
+        total: value.value,
       })
     }
   }
+  staticUsage = staticUsage.sort((a, b) => a.name.localeCompare(b.name))
+}
 
-  const setDaysRemainingInMonth = () => {
-    const resetDate = new Date(quotaReset)
+const setCancelAt = () => {
+  cancelAt = license?.billing?.subscription?.cancelAt
+}
 
-    const now = new Date()
-    const difference = resetDate.getTime() - now.getTime()
+const getDaysRemaining = timestamp => {
+  if (!timestamp) {
+    return
+  }
+  const diffTime = Math.abs(timestamp - new Date().getTime()) / 1000
+  return Math.floor(diffTime / oneDayInSeconds)
+}
 
-    // return the difference in days
-    daysRemainingInMonth = (difference / (1000 * 3600 * 24)).toFixed(0)
+const setTextRows = () => {
+  textRows = []
+
+  if (cancelAt && !usesInvoicing) {
+    if (plan?.type !== Constants.PlanType.ENTERPRISE_BASIC_TRIAL) {
+      textRows.push({ message: "Subscription has been cancelled" })
+    }
+    textRows.push({
+      message: `${getDaysRemaining(cancelAt)} days remaining`,
+      tooltip: new Date(cancelAt),
+    })
+  }
+}
+
+const setDaysRemainingInMonth = () => {
+  const resetDate = new Date(quotaReset)
+
+  const now = new Date()
+  const difference = resetDate.getTime() - now.getTime()
+
+  // return the difference in days
+  daysRemainingInMonth = (difference / (1000 * 3600 * 24)).toFixed(0)
+}
+
+const goToAccountPortal = () => {
+  if (license?.plan.type === Constants.PlanType.FREE) {
+    window.location.href = upgradeUrl
+  } else {
+    window.location.href = manageUrl
+  }
+}
+
+const setPrimaryActionText = () => {
+  if (license?.plan.type === Constants.PlanType.FREE) {
+    primaryActionText = "Upgrade"
+    return
   }
 
-  const goToAccountPortal = () => {
-    if (license?.plan.type === Constants.PlanType.FREE) {
-      window.location.href = upgradeUrl
-    } else {
-      window.location.href = manageUrl
+  if (cancelAt) {
+    primaryActionText = "Renew"
+  } else {
+    primaryActionText = "Manage"
+  }
+}
+
+const init = async () => {
+  try {
+    // always load latest
+    await licensing.init()
+  } catch (e) {
+    console.error(e)
+    notifications.error(e)
+  }
+}
+
+onMount(async () => {
+  await init()
+  loaded = true
+})
+
+$: {
+  if (license) {
+    setPrimaryActionText()
+    setCancelAt()
+    setTextRows()
+    setDaysRemainingInMonth()
+
+    if (quotaUsage) {
+      setMonthlyUsage()
+      setStaticUsage()
     }
   }
-
-  const setPrimaryActionText = () => {
-    if (license?.plan.type === Constants.PlanType.FREE) {
-      primaryActionText = "Upgrade"
-      return
-    }
-
-    if (cancelAt) {
-      primaryActionText = "Renew"
-    } else {
-      primaryActionText = "Manage"
-    }
-  }
-
-  const init = async () => {
-    try {
-      // always load latest
-      await licensing.init()
-    } catch (e) {
-      console.error(e)
-      notifications.error(e)
-    }
-  }
-
-  onMount(async () => {
-    await init()
-    loaded = true
-  })
-
-  $: {
-    if (license) {
-      setPrimaryActionText()
-      setCancelAt()
-      setTextRows()
-      setDaysRemainingInMonth()
-
-      if (quotaUsage) {
-        setMonthlyUsage()
-        setStaticUsage()
-      }
-    }
-  }
+}
 </script>
 
 {#if loaded}

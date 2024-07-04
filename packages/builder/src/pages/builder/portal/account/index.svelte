@@ -1,5 +1,5 @@
 <script>
-  import { redirect } from "@roxi/routify"
+import { redirect } from "@roxi/routify"
 
-  $redirect("./usage")
+$redirect("./usage")
 </script>

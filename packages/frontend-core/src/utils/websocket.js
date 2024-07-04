@@ -1,5 +1,5 @@
-import { io } from "socket.io-client"
 import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
+import { io } from "socket.io-client"
 import { APISessionID } from "../api"
 
 const DefaultOptions = {

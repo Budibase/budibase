@@ -1,57 +1,57 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  const { styleable, builderStore } = getContext("sdk")
-  const component = getContext("component")
+const { styleable, builderStore } = getContext("sdk")
+const component = getContext("component")
 
-  export let text
-  export let color
-  export let align
-  export let bold
-  export let italic
-  export let underline
-  export let size
+export let text
+export let color
+export let align
+export let bold
+export let italic
+export let underline
+export let size
 
-  let node
-  let touched = false
+let node
+let touched = false
 
-  $: $component.editing && node?.focus()
-  $: placeholder = $builderStore.inBuilder && !text && !$component.editing
-  $: componentText = getComponentText(text, $builderStore, $component)
-  $: sizeClass = `spectrum-Body--size${size || "M"}`
-  $: alignClass = `align--${align || "left"}`
+$: $component.editing && node?.focus()
+$: placeholder = $builderStore.inBuilder && !text && !$component.editing
+$: componentText = getComponentText(text, $builderStore, $component)
+$: sizeClass = `spectrum-Body--size${size || "M"}`
+$: alignClass = `align--${align || "left"}`
 
-  // Add color styles to main styles object, otherwise the styleable helper
-  // overrides the color when it's passed as inline style.
-  $: styles = enrichStyles($component.styles, color)
+// Add color styles to main styles object, otherwise the styleable helper
+// overrides the color when it's passed as inline style.
+$: styles = enrichStyles($component.styles, color)
 
-  const getComponentText = (text, builderState, componentState) => {
-    if (!builderState.inBuilder || componentState.editing) {
-      return text || ""
-    }
-    return text || componentState.name || "Placeholder text"
+const getComponentText = (text, builderState, componentState) => {
+  if (!builderState.inBuilder || componentState.editing) {
+    return text || ""
   }
+  return text || componentState.name || "Placeholder text"
+}
 
-  const enrichStyles = (styles, color) => {
-    if (!color) {
-      return styles
-    }
-    return {
-      ...styles,
-      normal: {
-        ...styles?.normal,
-        color,
-      },
-    }
+const enrichStyles = (styles, color) => {
+  if (!color) {
+    return styles
   }
+  return {
+    ...styles,
+    normal: {
+      ...styles?.normal,
+      color,
+    },
+  }
+}
 
-  // Convert contenteditable HTML to text and save
-  const updateText = e => {
-    if (touched) {
-      builderStore.actions.updateProp("text", e.target.textContent)
-    }
-    touched = false
+// Convert contenteditable HTML to text and save
+const updateText = e => {
+  if (touched) {
+    builderStore.actions.updateProp("text", e.target.textContent)
   }
+  touched = false
+}
 </script>
 
 {#key $component.editing}

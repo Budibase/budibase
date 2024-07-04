@@ -1,12 +1,12 @@
 <script>
-  import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
-  import { auth } from "stores/portal"
+import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
+import { auth } from "stores/portal"
 
-  export let app
-  export let size = "S"
-  export let position = TooltipPosition.Top
-  export let noWrap = false
-  export let hoverColor = "var(--ink)"
+export let app
+export let size = "S"
+export let position = TooltipPosition.Top
+export let noWrap = false
+export let hoverColor = "var(--ink)"
 </script>
 
 <Icon

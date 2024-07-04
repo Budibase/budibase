@@ -1,14 +1,14 @@
-import { publishEvent } from "../events"
 import {
   Event,
-  TableExportFormat,
   Table,
   TableCreatedEvent,
-  TableUpdatedEvent,
   TableDeletedEvent,
+  TableExportFormat,
   TableExportedEvent,
   TableImportedEvent,
+  TableUpdatedEvent,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 async function created(table: Table, timestamp?: string | number) {
   const properties: TableCreatedEvent = {

@@ -1,226 +1,226 @@
 <script>
-  import { onMount, getContext } from "svelte"
-  import { Icon, Input, ProgressCircle } from "@budibase/bbui"
-  import { debounce } from "../../../utils/utils"
-  import GridPopover from "../overlays/GridPopover.svelte"
-  import { OptionColours } from "../../../constants"
+import { Icon, Input, ProgressCircle } from "@budibase/bbui"
+import { getContext, onMount } from "svelte"
+import { OptionColours } from "../../../constants"
+import { debounce } from "../../../utils/utils"
+import GridPopover from "../overlays/GridPopover.svelte"
 
-  const { API, cache } = getContext("grid")
+const { API, cache } = getContext("grid")
 
-  export let value
-  export let api
-  export let readonly
-  export let focused
-  export let schema
-  export let onChange
-  export let contentLines = 1
-  export let searchFunction = API.searchTable
-  export let primaryDisplay
-  export let hideCounter = false
+export let value
+export let api
+export let readonly
+export let focused
+export let schema
+export let onChange
+export let contentLines = 1
+export let searchFunction = API.searchTable
+export let primaryDisplay
+export let hideCounter = false
 
-  const color = OptionColours[0]
+const color = OptionColours[0]
 
-  let isOpen = false
-  let searchResults
-  let searchString
-  let lastSearchString
-  let candidateIndex
-  let lastSearchId
-  let searching = false
-  let container
-  let anchor
+let isOpen = false
+let searchResults
+let searchString
+let lastSearchString
+let candidateIndex
+let lastSearchId
+let searching = false
+let container
+let anchor
 
-  $: oneRowOnly = schema?.relationshipType === "one-to-many"
-  $: editable = focused && !readonly
-  $: lookupMap = buildLookupMap(value, isOpen)
-  $: debouncedSearch(searchString)
-  $: {
-    if (!focused && isOpen) {
-      close()
-    }
-  }
-
-  // Builds a lookup map to quickly check which rows are selected
-  const buildLookupMap = (value, isOpen) => {
-    let map = {}
-    if (!isOpen || !value?.length) {
-      return map
-    }
-    for (let i = 0; i < value.length; i++) {
-      map[value[i]._id] = true
-    }
-    return map
-  }
-
-  // Checks if a certain row is currently selected
-  const isRowSelected = row => {
-    if (!row?._id) {
-      return false
-    }
-    return lookupMap?.[row._id] === true
-  }
-
-  // Search for rows based on the search string
-  const search = async (searchString, force = false) => {
-    // Avoid update state at all if we've already handled the update and this is
-    // a wasted search due to svelte reactivity
-    if (!force && !searchString && !lastSearchString) {
-      return
-    }
-
-    // Reset state if this search is invalid
-    if (!schema?.tableId || !isOpen) {
-      lastSearchString = null
-      candidateIndex = null
-      searchResults = []
-      return
-    }
-
-    // Search for results, using IDs to track invocations and ensure we're
-    // handling the latest update
-    lastSearchId = Math.random()
-    searching = true
-    const thisSearchId = lastSearchId
-    const results = await searchFunction({
-      paginate: false,
-      tableId: schema.tableId,
-      limit: 20,
-      query: {
-        string: {
-          [`1:${primaryDisplay}`]: searchString || "",
-        },
-      },
-    })
-    searching = false
-
-    // In case searching takes longer than our debounced update, abandon these
-    // results
-    if (thisSearchId !== lastSearchId) {
-      return
-    }
-
-    // Sort and process results
-    searchResults = sortRows(
-      results.rows?.map(row => ({
-        ...row,
-        primaryDisplay: row[primaryDisplay],
-      }))
-    )
-    candidateIndex = searchResults?.length ? 0 : null
-    lastSearchString = searchString
-  }
-
-  // Debounced version of searching
-  const debouncedSearch = debounce(search, 250)
-
-  // Alphabetically sorts rows by their primary display column
-  const sortRows = rows => {
-    if (!rows?.length) {
-      return []
-    }
-    return rows.slice().sort((a, b) => {
-      return a.primaryDisplay < b.primaryDisplay ? -1 : 1
-    })
-  }
-
-  const open = async () => {
-    isOpen = true
-
-    // Find the primary display for the related table
-    if (!primaryDisplay) {
-      searching = true
-      primaryDisplay = await cache.actions.getPrimaryDisplayForTableId(
-        schema.tableId
-      )
-    }
-
-    // Show initial list of results
-    await search(null, true)
-  }
-
-  const close = () => {
-    isOpen = false
-    searchResults = []
-    searchString = null
-    lastSearchString = null
-    candidateIndex = null
-  }
-
-  const onKeyDown = e => {
-    if (!isOpen) {
-      return false
-    }
-    if (e.key === "ArrowDown") {
-      // Select next result on down arrow
-      e.preventDefault()
-      if (candidateIndex == null) {
-        candidateIndex = 0
-      } else {
-        candidateIndex = Math.min(searchResults.length - 1, candidateIndex + 1)
-      }
-    } else if (e.key === "ArrowUp") {
-      // Select previous result on up array
-      e.preventDefault()
-      if (candidateIndex === 0) {
-        candidateIndex = null
-      } else if (candidateIndex != null) {
-        candidateIndex = Math.max(0, candidateIndex - 1)
-      }
-    } else if (e.key === "Enter") {
-      // Toggle the highlighted result on enter press
-      if (candidateIndex != null && searchResults[candidateIndex] != null) {
-        toggleRow(searchResults[candidateIndex])
-      }
-    }
-    return true
-  }
-
-  // Toggles whether a row is included in the relationship or not
-  const toggleRow = async row => {
-    if (value?.some(x => x._id === row._id)) {
-      // If the row is already included, remove it and update the candidate
-      // row to be the same position if possible
-      if (oneRowOnly) {
-        await onChange([])
-      } else {
-        const newValue = value.filter(x => x._id !== row._id)
-        if (!newValue.length) {
-          candidateIndex = null
-        } else {
-          candidateIndex = Math.min(candidateIndex, newValue.length - 1)
-        }
-        await onChange(newValue)
-      }
-    } else {
-      // If we don't have this row, include it
-      if (oneRowOnly) {
-        await onChange([row])
-      } else {
-        await onChange(sortRows([...(value || []), row]))
-      }
-      candidateIndex = null
-    }
+$: oneRowOnly = schema?.relationshipType === "one-to-many"
+$: editable = focused && !readonly
+$: lookupMap = buildLookupMap(value, isOpen)
+$: debouncedSearch(searchString)
+$: {
+  if (!focused && isOpen) {
     close()
   }
+}
 
-  const readable = value => {
-    if (value == null) {
-      return ""
-    }
-    if (value instanceof Object) {
-      return JSON.stringify(value)
-    }
-    return value
+// Builds a lookup map to quickly check which rows are selected
+const buildLookupMap = (value, isOpen) => {
+  let map = {}
+  if (!isOpen || !value?.length) {
+    return map
+  }
+  for (let i = 0; i < value.length; i++) {
+    map[value[i]._id] = true
+  }
+  return map
+}
+
+// Checks if a certain row is currently selected
+const isRowSelected = row => {
+  if (!row?._id) {
+    return false
+  }
+  return lookupMap?.[row._id] === true
+}
+
+// Search for rows based on the search string
+const search = async (searchString, force = false) => {
+  // Avoid update state at all if we've already handled the update and this is
+  // a wasted search due to svelte reactivity
+  if (!force && !searchString && !lastSearchString) {
+    return
   }
 
-  onMount(() => {
-    api = {
-      focus: open,
-      blur: close,
-      isActive: () => isOpen,
-      onKeyDown,
-    }
+  // Reset state if this search is invalid
+  if (!schema?.tableId || !isOpen) {
+    lastSearchString = null
+    candidateIndex = null
+    searchResults = []
+    return
+  }
+
+  // Search for results, using IDs to track invocations and ensure we're
+  // handling the latest update
+  lastSearchId = Math.random()
+  searching = true
+  const thisSearchId = lastSearchId
+  const results = await searchFunction({
+    paginate: false,
+    tableId: schema.tableId,
+    limit: 20,
+    query: {
+      string: {
+        [`1:${primaryDisplay}`]: searchString || "",
+      },
+    },
   })
+  searching = false
+
+  // In case searching takes longer than our debounced update, abandon these
+  // results
+  if (thisSearchId !== lastSearchId) {
+    return
+  }
+
+  // Sort and process results
+  searchResults = sortRows(
+    results.rows?.map(row => ({
+      ...row,
+      primaryDisplay: row[primaryDisplay],
+    }))
+  )
+  candidateIndex = searchResults?.length ? 0 : null
+  lastSearchString = searchString
+}
+
+// Debounced version of searching
+const debouncedSearch = debounce(search, 250)
+
+// Alphabetically sorts rows by their primary display column
+const sortRows = rows => {
+  if (!rows?.length) {
+    return []
+  }
+  return rows.slice().sort((a, b) => {
+    return a.primaryDisplay < b.primaryDisplay ? -1 : 1
+  })
+}
+
+const open = async () => {
+  isOpen = true
+
+  // Find the primary display for the related table
+  if (!primaryDisplay) {
+    searching = true
+    primaryDisplay = await cache.actions.getPrimaryDisplayForTableId(
+      schema.tableId
+    )
+  }
+
+  // Show initial list of results
+  await search(null, true)
+}
+
+const close = () => {
+  isOpen = false
+  searchResults = []
+  searchString = null
+  lastSearchString = null
+  candidateIndex = null
+}
+
+const onKeyDown = e => {
+  if (!isOpen) {
+    return false
+  }
+  if (e.key === "ArrowDown") {
+    // Select next result on down arrow
+    e.preventDefault()
+    if (candidateIndex == null) {
+      candidateIndex = 0
+    } else {
+      candidateIndex = Math.min(searchResults.length - 1, candidateIndex + 1)
+    }
+  } else if (e.key === "ArrowUp") {
+    // Select previous result on up array
+    e.preventDefault()
+    if (candidateIndex === 0) {
+      candidateIndex = null
+    } else if (candidateIndex != null) {
+      candidateIndex = Math.max(0, candidateIndex - 1)
+    }
+  } else if (e.key === "Enter") {
+    // Toggle the highlighted result on enter press
+    if (candidateIndex != null && searchResults[candidateIndex] != null) {
+      toggleRow(searchResults[candidateIndex])
+    }
+  }
+  return true
+}
+
+// Toggles whether a row is included in the relationship or not
+const toggleRow = async row => {
+  if (value?.some(x => x._id === row._id)) {
+    // If the row is already included, remove it and update the candidate
+    // row to be the same position if possible
+    if (oneRowOnly) {
+      await onChange([])
+    } else {
+      const newValue = value.filter(x => x._id !== row._id)
+      if (!newValue.length) {
+        candidateIndex = null
+      } else {
+        candidateIndex = Math.min(candidateIndex, newValue.length - 1)
+      }
+      await onChange(newValue)
+    }
+  } else {
+    // If we don't have this row, include it
+    if (oneRowOnly) {
+      await onChange([row])
+    } else {
+      await onChange(sortRows([...(value || []), row]))
+    }
+    candidateIndex = null
+  }
+  close()
+}
+
+const readable = value => {
+  if (value == null) {
+    return ""
+  }
+  if (value instanceof Object) {
+    return JSON.stringify(value)
+  }
+  return value
+}
+
+onMount(() => {
+  api = {
+    focus: open,
+    blur: close,
+    isActive: () => isOpen,
+    onKeyDown,
+  }
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

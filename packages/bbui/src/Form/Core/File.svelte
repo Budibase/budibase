@@ -1,44 +1,44 @@
 <script>
-  import ActionButton from "../../ActionButton/ActionButton.svelte"
-  import { uuid } from "../../helpers"
-  import Icon from "../../Icon/Icon.svelte"
-  import { createEventDispatcher } from "svelte"
+import { createEventDispatcher } from "svelte"
+import ActionButton from "../../ActionButton/ActionButton.svelte"
+import Icon from "../../Icon/Icon.svelte"
+import { uuid } from "../../helpers"
 
-  export let value = null
-  export let title = "Upload file"
-  export let disabled = false
-  export let allowClear = null
-  export let extensions = null
-  export let handleFileTooLarge = null
-  export let fileSizeLimit = BYTES_IN_MB * 20
-  export let id = null
-  export let previewUrl = null
+export let value = null
+export let title = "Upload file"
+export let disabled = false
+export let allowClear = null
+export let extensions = null
+export let handleFileTooLarge = null
+export let fileSizeLimit = BYTES_IN_MB * 20
+export let id = null
+export let previewUrl = null
 
-  const fieldId = id || uuid()
-  const BYTES_IN_KB = 1000
-  const BYTES_IN_MB = 1000000
+const fieldId = id || uuid()
+const BYTES_IN_KB = 1000
+const BYTES_IN_MB = 1000000
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let fileInput
+let fileInput
 
-  $: inputAccept = Array.isArray(extensions) ? extensions.join(",") : "*"
+$: inputAccept = Array.isArray(extensions) ? extensions.join(",") : "*"
 
-  async function processFile(targetFile) {
-    if (handleFileTooLarge && targetFile?.size >= fileSizeLimit) {
-      handleFileTooLarge(targetFile)
-      return
-    }
-    dispatch("change", targetFile)
+async function processFile(targetFile) {
+  if (handleFileTooLarge && targetFile?.size >= fileSizeLimit) {
+    handleFileTooLarge(targetFile)
+    return
   }
+  dispatch("change", targetFile)
+}
 
-  function handleFile(evt) {
-    processFile(evt.target.files[0])
-  }
+function handleFile(evt) {
+  processFile(evt.target.files[0])
+}
 
-  function clearFile() {
-    dispatch("change", null)
-  }
+function clearFile() {
+  dispatch("change", null)
+}
 </script>
 
 <input

@@ -1,9 +1,9 @@
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
-  AutomationStepType,
   AutomationIOType,
+  AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {

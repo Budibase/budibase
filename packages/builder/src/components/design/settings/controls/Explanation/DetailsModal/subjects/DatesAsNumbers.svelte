@@ -1,31 +1,31 @@
 <script>
-  import { onMount } from "svelte"
-  import {
-    ExampleSection,
-    ExampleLine,
-    Block,
-    Subject,
-    Section,
-  } from "./components"
+import { onMount } from "svelte"
+import {
+  Block,
+  ExampleLine,
+  ExampleSection,
+  Section,
+  Subject,
+} from "./components"
 
-  let timestamp = Date.now()
+let timestamp = Date.now()
 
-  onMount(() => {
-    let run = true
+onMount(() => {
+  let run = true
 
-    const updateTimeStamp = () => {
-      timestamp = Date.now()
-      if (run) {
-        setTimeout(updateTimeStamp, 200)
-      }
+  const updateTimeStamp = () => {
+    timestamp = Date.now()
+    if (run) {
+      setTimeout(updateTimeStamp, 200)
     }
+  }
 
-    updateTimeStamp()
+  updateTimeStamp()
 
-    return () => {
-      run = false
-    }
-  })
+  return () => {
+    run = false
+  }
+})
 </script>
 
 <Subject heading="Dates as Numbers">

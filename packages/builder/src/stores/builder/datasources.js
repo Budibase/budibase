@@ -1,14 +1,14 @@
-import { writable, derived, get } from "svelte/store"
-import {
-  IntegrationTypes,
-  DEFAULT_BB_DATASOURCE_ID,
-  BUDIBASE_INTERNAL_DB_ID,
-} from "constants/backend"
-import { tables } from "./tables"
-import { queries } from "./queries"
-import { API } from "api"
-import { DatasourceFeature } from "@budibase/types"
 import { TableNames } from "constants"
+import { DatasourceFeature } from "@budibase/types"
+import { API } from "api"
+import {
+  BUDIBASE_INTERNAL_DB_ID,
+  DEFAULT_BB_DATASOURCE_ID,
+  IntegrationTypes,
+} from "constants/backend"
+import { derived, get, writable } from "svelte/store"
+import { queries } from "./queries"
+import { tables } from "./tables"
 
 class TableImportError extends Error {
   constructor(errors) {

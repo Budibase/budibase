@@ -1,9 +1,9 @@
 import { User } from "@budibase/types"
+import _ from "lodash"
 import { generator, structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
-import { getUsers } from "../user"
 import { getGlobalDB } from "../../context"
-import _ from "lodash"
+import { getUsers } from "../user"
 
 import * as redis from "../../redis/init"
 import { UserDB } from "../../users"

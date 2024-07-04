@@ -1,5 +1,5 @@
-import { encrypt, decrypt, SecretOption, getSecret } from "../encryption"
 import env from "../../environment"
+import { SecretOption, decrypt, encrypt, getSecret } from "../encryption"
 
 describe("encryption", () => {
   it("should throw an error if API encryption key is not set", () => {

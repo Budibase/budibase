@@ -1,77 +1,77 @@
 <script>
-  import { goto, isActive, params } from "@roxi/routify"
-  import { Layout } from "@budibase/bbui"
-  import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
-  import {
-    datasources,
-    queries,
-    tables,
-    views,
-    viewsV2,
-    userSelectedResourceMap,
-  } from "stores/builder"
-  import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
-  import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
-  import NavItem from "components/common/NavItem.svelte"
-  import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
-  import {
-    customQueryIconText,
-    customQueryIconColor,
-    customQueryText,
-  } from "helpers/data/utils"
-  import IntegrationIcon from "./IntegrationIcon.svelte"
-  import { TableNames } from "constants"
-  import { enrichDatasources } from "./datasourceUtils"
-  import { onMount } from "svelte"
+import { TableNames } from "constants"
+import { Layout } from "@budibase/bbui"
+import { goto, isActive, params } from "@roxi/routify"
+import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
+import NavItem from "components/common/NavItem.svelte"
+import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
+import {
+  customQueryIconColor,
+  customQueryIconText,
+  customQueryText,
+} from "helpers/data/utils"
+import {
+  datasources,
+  queries,
+  tables,
+  userSelectedResourceMap,
+  views,
+  viewsV2,
+} from "stores/builder"
+import { onMount } from "svelte"
+import IntegrationIcon from "./IntegrationIcon.svelte"
+import { enrichDatasources } from "./datasourceUtils"
+import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
+import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
 
-  export let searchTerm
-  let toggledDatasources = {}
+export let searchTerm
+let toggledDatasources = {}
 
-  $: enrichedDataSources = enrichDatasources(
-    $datasources,
-    $params,
-    $isActive,
-    $tables,
-    $queries,
-    $views,
-    $viewsV2,
-    toggledDatasources,
-    searchTerm
-  )
+$: enrichedDataSources = enrichDatasources(
+  $datasources,
+  $params,
+  $isActive,
+  $tables,
+  $queries,
+  $views,
+  $viewsV2,
+  toggledDatasources,
+  searchTerm
+)
 
-  function selectDatasource(datasource) {
-    openNode(datasource)
-    $goto(`./datasource/${datasource._id}`)
+function selectDatasource(datasource) {
+  openNode(datasource)
+  $goto(`./datasource/${datasource._id}`)
+}
+
+const selectTable = tableId => {
+  tables.select(tableId)
+  if (!$isActive("./table/:tableId")) {
+    $goto(`./table/${tableId}`)
   }
+}
 
-  const selectTable = tableId => {
-    tables.select(tableId)
-    if (!$isActive("./table/:tableId")) {
-      $goto(`./table/${tableId}`)
-    }
+function openNode(datasource) {
+  toggledDatasources[datasource._id] = true
+}
+
+function toggleNode(datasource) {
+  toggledDatasources[datasource._id] = !datasource.open
+}
+
+const appUsersTableName = "App users"
+$: showAppUsersTable =
+  !searchTerm ||
+  appUsersTableName.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1
+
+onMount(() => {
+  if ($tables.selected) {
+    toggledDatasources[$tables.selected.sourceId] = true
   }
+})
 
-  function openNode(datasource) {
-    toggledDatasources[datasource._id] = true
-  }
-
-  function toggleNode(datasource) {
-    toggledDatasources[datasource._id] = !datasource.open
-  }
-
-  const appUsersTableName = "App users"
-  $: showAppUsersTable =
-    !searchTerm ||
-    appUsersTableName.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1
-
-  onMount(() => {
-    if ($tables.selected) {
-      toggledDatasources[$tables.selected.sourceId] = true
-    }
-  })
-
-  $: showNoResults =
-    searchTerm && !showAppUsersTable && !enrichedDataSources.find(ds => ds.show)
+$: showNoResults =
+  searchTerm && !showAppUsersTable && !enrichedDataSources.find(ds => ds.show)
 </script>
 
 <div class="hierarchy-items-container">

@@ -1,6 +1,6 @@
+import { Helpers } from "@budibase/bbui"
 import dayjs from "dayjs"
 import { FieldTypes } from "../../../constants"
-import { Helpers } from "@budibase/bbui"
 
 /**
  * Creates a validation function from a combination of schema-level constraints
@@ -341,7 +341,7 @@ const jsonHandler = value => {
   try {
     JSON.parse(JSON.stringify(value))
     return true
-  } catch (error) {
+  } catch (_error) {
     return false
   }
 }

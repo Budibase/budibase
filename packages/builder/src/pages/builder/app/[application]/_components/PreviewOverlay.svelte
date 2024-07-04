@@ -1,27 +1,27 @@
 <script>
-  import { onMount } from "svelte"
-  import { fade, fly } from "svelte/transition"
-  import {
-    previewStore,
-    themeStore,
-    selectedScreen,
-    appStore,
-  } from "stores/builder"
-  import { ProgressCircle } from "@budibase/bbui"
+import { ProgressCircle } from "@budibase/bbui"
+import {
+  appStore,
+  previewStore,
+  selectedScreen,
+  themeStore,
+} from "stores/builder"
+import { onMount } from "svelte"
+import { fade, fly } from "svelte/transition"
 
-  $: route = $selectedScreen?.routing.route || "/"
-  $: src = `/${$appStore.appId}#${route}`
+$: route = $selectedScreen?.routing.route || "/"
+$: src = `/${$appStore.appId}#${route}`
 
-  const close = () => {
+const close = () => {
+  previewStore.showPreview(false)
+}
+
+onMount(() => {
+  window.isBuilder = true
+  window.closePreview = () => {
     previewStore.showPreview(false)
   }
-
-  onMount(() => {
-    window.isBuilder = true
-    window.closePreview = () => {
-      previewStore.showPreview(false)
-    }
-  })
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

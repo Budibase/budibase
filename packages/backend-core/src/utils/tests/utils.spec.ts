@@ -1,11 +1,11 @@
+import { BBContext } from "@budibase/types"
 import { structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
-import * as utils from "../../utils"
-import * as db from "../../db"
 import { Header } from "../../constants"
-import { newid } from "../../utils"
+import * as db from "../../db"
 import env from "../../environment"
-import { BBContext } from "@budibase/types"
+import * as utils from "../../utils"
+import { newid } from "../../utils"
 
 describe("utils", () => {
   const config = new DBTestConfiguration()

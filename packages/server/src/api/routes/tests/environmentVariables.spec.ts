@@ -11,10 +11,10 @@ jest.mock("pg", () => {
     on: jest.fn(),
   }
 })
-import * as setup from "./utilities"
+import { events, env } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
-import { env, events } from "@budibase/backend-core"
 import { QueryPreview } from "@budibase/types"
+import * as setup from "./utilities"
 
 const structures = setup.structures
 

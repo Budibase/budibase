@@ -1,146 +1,143 @@
 <script>
-  import { Icon, Input, Drawer, Button } from "@budibase/bbui"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "dataBinding"
-  import { FieldType } from "@budibase/types"
+import { Button, Drawer, Icon, Input } from "@budibase/bbui"
+import { FieldType } from "@budibase/types"
+import { readableToRuntimeBinding, runtimeToReadableBinding } from "dataBinding"
 
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import { createEventDispatcher, setContext } from "svelte"
-  import { isJSBinding } from "@budibase/string-templates"
+import { isJSBinding } from "@budibase/string-templates"
+import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+import { createEventDispatcher, setContext } from "svelte"
 
-  export let panel = ClientBindingPanel
-  export let value = ""
-  export let bindings = []
-  export let title = "Bindings"
-  export let placeholder
-  export let label
-  export let disabled = false
-  export let allowJS = true
-  export let allowHelpers = true
-  export let updateOnChange = true
-  export let drawerLeft
-  export let type
-  export let schema
+export let panel = ClientBindingPanel
+export let value = ""
+export let bindings = []
+export let title = "Bindings"
+export let placeholder
+export let label
+export let disabled = false
+export let allowJS = true
+export let allowHelpers = true
+export let updateOnChange = true
+export let drawerLeft
+export let type
+export let schema
 
-  const dispatch = createEventDispatcher()
-  let bindingDrawer
-  let currentVal = value
+const dispatch = createEventDispatcher()
+let bindingDrawer
+let currentVal = value
 
-  let attachmentTypes = [
-    FieldType.ATTACHMENT_SINGLE,
-    FieldType.ATTACHMENTS,
-    FieldType.SIGNATURE_SINGLE,
-  ]
+let attachmentTypes = [
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.ATTACHMENTS,
+  FieldType.SIGNATURE_SINGLE,
+]
 
-  $: readableValue = runtimeToReadableBinding(bindings, value)
-  $: tempValue = readableValue
-  $: isJS = isJSBinding(value)
+$: readableValue = runtimeToReadableBinding(bindings, value)
+$: tempValue = readableValue
+$: isJS = isJSBinding(value)
 
-  const saveBinding = () => {
-    onChange(tempValue)
-    onBlur()
-    bindingDrawer.hide()
+const saveBinding = () => {
+  onChange(tempValue)
+  onBlur()
+  bindingDrawer.hide()
+}
+
+setContext("binding-drawer-actions", {
+  save: saveBinding,
+})
+
+const onChange = value => {
+  if (
+    (type === "link" || type === "bb_reference") &&
+    value &&
+    hasValidLinks(value)
+  ) {
+    currentVal = value.split(",")
+  } else if (type === "array" && value && hasValidOptions(value)) {
+    currentVal = value.split(",")
+  } else {
+    currentVal = readableToRuntimeBinding(bindings, value)
+  }
+  dispatch("change", currentVal)
+}
+
+const onBlur = () => {
+  dispatch("blur", currentVal)
+}
+
+const isValidDate = value => {
+  return !value || !isNaN(new Date(value).valueOf())
+}
+
+const hasValidLinks = value => {
+  let links = []
+  if (Array.isArray(value)) {
+    links = value
+  } else if (value && typeof value === "string") {
+    links = value.split(",")
+  } else {
+    return !value
   }
 
-  setContext("binding-drawer-actions", {
-    save: saveBinding,
-  })
+  return links.every(link => link.startsWith("ro_"))
+}
 
-  const onChange = value => {
-    if (
-      (type === "link" || type === "bb_reference") &&
-      value &&
-      hasValidLinks(value)
-    ) {
-      currentVal = value.split(",")
-    } else if (type === "array" && value && hasValidOptions(value)) {
-      currentVal = value.split(",")
-    } else {
-      currentVal = readableToRuntimeBinding(bindings, value)
-    }
-    dispatch("change", currentVal)
+const hasValidOptions = value => {
+  let links = []
+  if (Array.isArray(value)) {
+    links = value
+  } else if (value && typeof value === "string") {
+    links = value.split(",")
+  } else {
+    return !value
   }
+  return links.every(link => schema?.constraints?.inclusion?.includes(link))
+}
 
-  const onBlur = () => {
-    dispatch("blur", currentVal)
+const isValidBoolean = value => {
+  return value === "false" || value === "true" || value == ""
+}
+
+const validationMap = {
+  date: isValidDate,
+  datetime: isValidDate,
+  link: hasValidLinks,
+  bb_reference: hasValidLinks,
+  array: hasValidOptions,
+  longform: value => !isJSBinding(value),
+  json: value => !isJSBinding(value),
+  boolean: isValidBoolean,
+  attachment: false,
+  attachment_single: false,
+  signature_single: false,
+}
+
+const isValid = value => {
+  const validate = validationMap[type]
+  return validate ? validate(value) : true
+}
+
+const getIconClass = (value, type) => {
+  if (type === "longform" && !isJSBinding(value)) {
+    return "text-area-slot-icon"
   }
-
-  const isValidDate = value => {
-    return !value || !isNaN(new Date(value).valueOf())
+  if (type === "json" && !isJSBinding(value)) {
+    return "json-slot-icon"
   }
-
-  const hasValidLinks = value => {
-    let links = []
-    if (Array.isArray(value)) {
-      links = value
-    } else if (value && typeof value === "string") {
-      links = value.split(",")
-    } else {
-      return !value
-    }
-
-    return links.every(link => link.startsWith("ro_"))
+  if (
+    ![
+      "string",
+      "number",
+      "bigint",
+      "barcodeqr",
+      "attachment",
+      "signature_single",
+      "attachment_single",
+    ].includes(type)
+  ) {
+    return "slot-icon"
   }
-
-  const hasValidOptions = value => {
-    let links = []
-    if (Array.isArray(value)) {
-      links = value
-    } else if (value && typeof value === "string") {
-      links = value.split(",")
-    } else {
-      return !value
-    }
-    return links.every(link => schema?.constraints?.inclusion?.includes(link))
-  }
-
-  const isValidBoolean = value => {
-    return value === "false" || value === "true" || value == ""
-  }
-
-  const validationMap = {
-    date: isValidDate,
-    datetime: isValidDate,
-    link: hasValidLinks,
-    bb_reference: hasValidLinks,
-    array: hasValidOptions,
-    longform: value => !isJSBinding(value),
-    json: value => !isJSBinding(value),
-    boolean: isValidBoolean,
-    attachment: false,
-    attachment_single: false,
-    signature_single: false,
-  }
-
-  const isValid = value => {
-    const validate = validationMap[type]
-    return validate ? validate(value) : true
-  }
-
-  const getIconClass = (value, type) => {
-    if (type === "longform" && !isJSBinding(value)) {
-      return "text-area-slot-icon"
-    }
-    if (type === "json" && !isJSBinding(value)) {
-      return "json-slot-icon"
-    }
-    if (
-      ![
-        "string",
-        "number",
-        "bigint",
-        "barcodeqr",
-        "attachment",
-        "signature_single",
-        "attachment_single",
-      ].includes(type)
-    ) {
-      return "slot-icon"
-    }
-    return ""
-  }
+  return ""
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

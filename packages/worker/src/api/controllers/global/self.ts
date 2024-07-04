@@ -1,13 +1,11 @@
-import * as userSdk from "../../../sdk/users"
 import {
+  auth as authCore,
+  db as dbCore,
+  encryption,
   featureFlags,
   tenancy,
-  db as dbCore,
   utils,
-  encryption,
-  auth as authCore,
 } from "@budibase/backend-core"
-import env from "../../../environment"
 import { groups } from "@budibase/pro"
 import {
   UpdateSelfRequest,
@@ -15,6 +13,8 @@ import {
   User,
   UserCtx,
 } from "@budibase/types"
+import env from "../../../environment"
+import * as userSdk from "../../../sdk/users"
 
 const { newid } = utils
 
@@ -51,7 +51,7 @@ export async function generateAPIKey(ctx: any) {
   let devInfo
   try {
     devInfo = await db.get<any>(id)
-  } catch (err) {
+  } catch (_err) {
     devInfo = { _id: id, userId }
   }
   devInfo.apiKey = apiKey
@@ -65,7 +65,7 @@ export async function fetchAPIKey(ctx: any) {
   let devInfo
   try {
     devInfo = await db.get(id)
-  } catch (err) {
+  } catch (_err) {
     devInfo = {
       _id: id,
       userId: ctx.user._id,

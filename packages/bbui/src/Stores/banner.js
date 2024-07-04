@@ -15,7 +15,7 @@ export function createBannerStore() {
   const banner = writable(DEFAULT_CONFIG)
 
   const show = async (
-    // eslint-disable-next-line
+    // biome-ignore lint: no-undeclared-variables
     config = { message, type, extraButtonText, extraButtonAction, onChange }
   ) => {
     banner.update(store => {

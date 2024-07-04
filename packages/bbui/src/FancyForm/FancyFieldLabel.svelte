@@ -1,5 +1,5 @@
 <script>
-  export let placeholder = true
+export let placeholder = true
 </script>
 
 <div class:placeholder>

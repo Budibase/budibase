@@ -1,40 +1,40 @@
 <script>
-  import { Icon, Divider, Tabs, Tab, Label } from "@budibase/bbui"
-  import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
-  import { ActionStepID } from "constants/backend/automations"
-  import { JsonView } from "@zerodevx/svelte-json-view"
+import { Divider, Icon, Label, Tab, Tabs } from "@budibase/bbui"
+import { JsonView } from "@zerodevx/svelte-json-view"
+import { ActionStepID } from "constants/backend/automations"
+import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
 
-  export let automation
-  export let testResults
-  export let width = "400px"
+export let automation
+export let testResults
+export let width = "400px"
 
-  let openBlocks = {}
-  let blocks
+let openBlocks = {}
+let blocks
 
-  function prepTestResults(results) {
-    return results?.steps.filter(x => x.stepId !== ActionStepID.LOOP || [])
-  }
+function prepTestResults(results) {
+  return results?.steps.filter(x => x.stepId !== ActionStepID.LOOP || [])
+}
 
-  $: filteredResults = prepTestResults(testResults)
+$: filteredResults = prepTestResults(testResults)
 
-  $: {
-    blocks = []
-    if (automation) {
-      if (automation.definition.trigger) {
-        blocks.push(automation.definition.trigger)
-      }
-      blocks = blocks
-        .concat(automation.definition.steps || [])
-        .filter(x => x.stepId !== ActionStepID.LOOP)
-    } else if (filteredResults) {
-      blocks = filteredResults || []
-      // make sure there is an ID for each block being displayed
-      let count = 0
-      for (let block of blocks) {
-        block.id = count++
-      }
+$: {
+  blocks = []
+  if (automation) {
+    if (automation.definition.trigger) {
+      blocks.push(automation.definition.trigger)
+    }
+    blocks = blocks
+      .concat(automation.definition.steps || [])
+      .filter(x => x.stepId !== ActionStepID.LOOP)
+  } else if (filteredResults) {
+    blocks = filteredResults || []
+    // make sure there is an ID for each block being displayed
+    let count = 0
+    for (let block of blocks) {
+      block.id = count++
     }
   }
+}
 </script>
 
 <div class="container">

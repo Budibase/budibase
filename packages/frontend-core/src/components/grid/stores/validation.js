@@ -1,4 +1,4 @@
-import { writable, get, derived } from "svelte/store"
+import { derived, get, writable } from "svelte/store"
 import { getCellID, parseCellID } from "../lib/utils"
 
 // Normally we would break out actions into the explicit "createActions"

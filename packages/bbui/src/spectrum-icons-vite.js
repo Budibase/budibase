@@ -1,5 +1,5 @@
-import SpectrumUIIcons from "@spectrum-css/icon/dist/spectrum-css-icons.svg?raw"
 import SpectrumWorkflowIcons from "@adobe/spectrum-css-workflow-icons/dist/spectrum-icons.svg?raw"
+import SpectrumUIIcons from "@spectrum-css/icon/dist/spectrum-css-icons.svg?raw"
 
 export default () => {
   loadIconSet("Spectrum UI Icons", SpectrumUIIcons)

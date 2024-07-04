@@ -1,16 +1,16 @@
 <script>
-  import { Body, Layout, Heading, Button, Tabs, Tab } from "@budibase/bbui"
-  import { builderStore, devToolsStore, componentStore } from "stores"
-  import DevToolsStat from "./DevToolsStat.svelte"
-  import DevToolsComponentSettingsTab from "./DevToolsComponentSettingsTab.svelte"
-  import DevToolsComponentContextTab from "./DevToolsComponentContextTab.svelte"
+import { Body, Button, Heading, Layout, Tab, Tabs } from "@budibase/bbui"
+import { builderStore, componentStore, devToolsStore } from "stores"
+import DevToolsComponentContextTab from "./DevToolsComponentContextTab.svelte"
+import DevToolsComponentSettingsTab from "./DevToolsComponentSettingsTab.svelte"
+import DevToolsStat from "./DevToolsStat.svelte"
 
-  $: {
-    // Reset selection store if we can't find a matching instance
-    if (!$componentStore.selectedComponentInstance) {
-      builderStore.actions.selectComponent(null)
-    }
+$: {
+  // Reset selection store if we can't find a matching instance
+  if (!$componentStore.selectedComponentInstance) {
+    builderStore.actions.selectComponent(null)
   }
+}
 </script>
 
 {#if !$builderStore.selectedComponentId}

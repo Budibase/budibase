@@ -1,7 +1,7 @@
-import { Document } from "../document"
 import { EventEmitter } from "events"
-import { User } from "../global"
 import { ReadStream } from "fs"
+import { Document } from "../document"
+import { User } from "../global"
 import { Row } from "./row"
 import { Table } from "./table"
 

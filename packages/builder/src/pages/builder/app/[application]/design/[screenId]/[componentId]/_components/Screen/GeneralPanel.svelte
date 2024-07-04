@@ -1,134 +1,134 @@
 <script>
-  import { get } from "svelte/store"
-  import {
-    Helpers,
-    Input,
-    Checkbox,
-    Banner,
-    Select,
-    notifications,
-  } from "@budibase/bbui"
-  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
-  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import { selectedScreen, screenStore } from "stores/builder"
-  import sanitizeUrl from "helpers/sanitizeUrl"
-  import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
-  import { getBindableProperties } from "dataBinding"
+import {
+  Banner,
+  Checkbox,
+  Helpers,
+  Input,
+  Select,
+  notifications,
+} from "@budibase/bbui"
+import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
+import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
+import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
+import { getBindableProperties } from "dataBinding"
+import sanitizeUrl from "helpers/sanitizeUrl"
+import { screenStore, selectedScreen } from "stores/builder"
+import { get } from "svelte/store"
 
-  $: bindings = getBindableProperties($selectedScreen, null)
+$: bindings = getBindableProperties($selectedScreen, null)
 
-  let errors = {}
+let errors = {}
 
-  const routeTaken = url => {
-    const roleId = get(selectedScreen).routing.roleId || "BASIC"
-    return get(screenStore).screens.some(
-      screen =>
-        screen.routing.route.toLowerCase() === url.toLowerCase() &&
-        screen.routing.roleId === roleId
-    )
+const routeTaken = url => {
+  const roleId = get(selectedScreen).routing.roleId || "BASIC"
+  return get(screenStore).screens.some(
+    screen =>
+      screen.routing.route.toLowerCase() === url.toLowerCase() &&
+      screen.routing.roleId === roleId
+  )
+}
+
+const roleTaken = roleId => {
+  const url = get(selectedScreen).routing.route
+  return get(screenStore).screens.some(
+    screen =>
+      screen.routing.route.toLowerCase() === url.toLowerCase() &&
+      screen.routing.roleId === roleId
+  )
+}
+
+const setScreenSetting = async (setting, value) => {
+  const { key, parser, validate } = setting
+
+  // Parse value if required
+  if (parser) {
+    value = parser(value)
   }
 
-  const roleTaken = roleId => {
-    const url = get(selectedScreen).routing.route
-    return get(screenStore).screens.some(
-      screen =>
-        screen.routing.route.toLowerCase() === url.toLowerCase() &&
-        screen.routing.roleId === roleId
-    )
-  }
-
-  const setScreenSetting = async (setting, value) => {
-    const { key, parser, validate } = setting
-
-    // Parse value if required
-    if (parser) {
-      value = parser(value)
+  // Validate value if required and determine errors
+  if (validate) {
+    const error = validate(value)
+    errors = {
+      ...errors,
+      [key]: error,
     }
-
-    // Validate value if required and determine errors
-    if (validate) {
-      const error = validate(value)
-      errors = {
-        ...errors,
-        [key]: error,
-      }
-      if (error) {
-        return
-      }
-    } else {
-      errors = {
-        ...errors,
-        [key]: null,
-      }
+    if (error) {
+      return
     }
-
-    // Update screen setting
-    try {
-      await screenStore.updateSetting(get(selectedScreen), key, value)
-    } catch (error) {
-      console.error(error)
-      notifications.error("Error saving screen settings")
+  } else {
+    errors = {
+      ...errors,
+      [key]: null,
     }
   }
 
-  $: screenSettings = [
-    {
-      key: "routing.homeScreen",
-      control: Checkbox,
-      props: {
-        text: "Set as home screen",
-      },
-    },
-    {
-      key: "routing.route",
-      label: "Route",
-      control: Input,
-      parser: val => {
-        if (!val.startsWith("/")) {
-          val = "/" + val
-        }
-        return sanitizeUrl(val)
-      },
-      validate: route => {
-        const existingRoute = get(selectedScreen).routing.route
-        if (route !== existingRoute && routeTaken(route)) {
-          return "That URL is already in use for this role"
-        }
-        return null
-      },
-    },
-    {
-      key: "routing.roleId",
-      label: "Access",
-      control: RoleSelect,
-      validate: role => {
-        const existingRole = get(selectedScreen).routing.roleId
-        if (role !== existingRole && roleTaken(role)) {
-          return "That role is already in use for this URL"
-        }
-        return null
-      },
-    },
-    {
-      key: "onLoad",
-      label: "On screen load",
-      control: ButtonActionEditor,
-    },
-    {
-      key: "width",
-      label: "Width",
-      control: Select,
-      props: {
-        options: ["Extra small", "Small", "Medium", "Large", "Max"],
-        placeholder: "Default",
-        disabled: !!$selectedScreen.layoutId,
-      },
-    },
-  ]
-
-  const removeCustomLayout = async () => {
-    return screenStore.removeCustomLayout(get(selectedScreen))
+  // Update screen setting
+  try {
+    await screenStore.updateSetting(get(selectedScreen), key, value)
+  } catch (error) {
+    console.error(error)
+    notifications.error("Error saving screen settings")
   }
+}
+
+$: screenSettings = [
+  {
+    key: "routing.homeScreen",
+    control: Checkbox,
+    props: {
+      text: "Set as home screen",
+    },
+  },
+  {
+    key: "routing.route",
+    label: "Route",
+    control: Input,
+    parser: val => {
+      if (!val.startsWith("/")) {
+        val = "/" + val
+      }
+      return sanitizeUrl(val)
+    },
+    validate: route => {
+      const existingRoute = get(selectedScreen).routing.route
+      if (route !== existingRoute && routeTaken(route)) {
+        return "That URL is already in use for this role"
+      }
+      return null
+    },
+  },
+  {
+    key: "routing.roleId",
+    label: "Access",
+    control: RoleSelect,
+    validate: role => {
+      const existingRole = get(selectedScreen).routing.roleId
+      if (role !== existingRole && roleTaken(role)) {
+        return "That role is already in use for this URL"
+      }
+      return null
+    },
+  },
+  {
+    key: "onLoad",
+    label: "On screen load",
+    control: ButtonActionEditor,
+  },
+  {
+    key: "width",
+    label: "Width",
+    control: Select,
+    props: {
+      options: ["Extra small", "Small", "Medium", "Large", "Max"],
+      placeholder: "Default",
+      disabled: !!$selectedScreen.layoutId,
+    },
+  },
+]
+
+const removeCustomLayout = async () => {
+  return screenStore.removeCustomLayout(get(selectedScreen))
+}
 </script>
 
 {#if $selectedScreen.layoutId}

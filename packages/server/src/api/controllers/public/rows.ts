@@ -1,8 +1,8 @@
+import { Row, UserCtx } from "@budibase/types"
+import { Next } from "koa"
+import { convertBookmark } from "../../../utilities"
 import * as rowController from "../row"
 import { addRev } from "./utils"
-import { Row, UserCtx } from "@budibase/types"
-import { convertBookmark } from "../../../utilities"
-import { Next } from "koa"
 
 // makes sure that the user doesn't need to pass in the type, tableId or _id params for
 // the call to be correct

@@ -1,5 +1,5 @@
 <script>
-  import NewComponentPanel from "./_components/NewComponentPanel.svelte"
+import NewComponentPanel from "./_components/NewComponentPanel.svelte"
 </script>
 
 <NewComponentPanel />

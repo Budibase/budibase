@@ -1,74 +1,74 @@
 <script>
-  import Placeholder from "../Placeholder.svelte"
-  import { getContext, onDestroy } from "svelte"
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
+import { getContext, onDestroy } from "svelte"
+import Placeholder from "../Placeholder.svelte"
 
-  export let label
-  export let field
-  export let fieldState
-  export let fieldApi
-  export let fieldSchema
-  export let defaultValue
-  export let type
-  export let disabled = false
-  export let readonly = false
-  export let validation
-  export let span = 6
-  export let helpText = null
+export let label
+export let field
+export let fieldState
+export let fieldApi
+export let fieldSchema
+export let defaultValue
+export let type
+export let disabled = false
+export let readonly = false
+export let validation
+export let span = 6
+export let helpText = null
 
-  // Get contexts
-  const formContext = getContext("form")
-  const formStepContext = getContext("form-step")
-  const fieldGroupContext = getContext("field-group")
-  const { styleable, builderStore } = getContext("sdk")
-  const component = getContext("component")
+// Get contexts
+const formContext = getContext("form")
+const formStepContext = getContext("form-step")
+const fieldGroupContext = getContext("field-group")
+const { styleable, builderStore } = getContext("sdk")
+const component = getContext("component")
 
-  // Register field with form
-  const formApi = formContext?.formApi
-  const labelPos = fieldGroupContext?.labelPosition || "above"
+// Register field with form
+const formApi = formContext?.formApi
+const labelPos = fieldGroupContext?.labelPosition || "above"
 
-  let touched = false
-  let labelNode
+let touched = false
+let labelNode
 
-  $: formStep = formStepContext ? $formStepContext || 1 : 1
-  $: formField = formApi?.registerField(
-    field,
-    type,
-    defaultValue,
-    disabled,
-    readonly,
-    validation,
-    formStep
-  )
-  $: schemaType =
-    fieldSchema?.type !== "formula" && fieldSchema?.type !== "bigint"
-      ? fieldSchema?.type
-      : "string"
+$: formStep = formStepContext ? $formStepContext || 1 : 1
+$: formField = formApi?.registerField(
+  field,
+  type,
+  defaultValue,
+  disabled,
+  readonly,
+  validation,
+  formStep
+)
+$: schemaType =
+  fieldSchema?.type !== "formula" && fieldSchema?.type !== "bigint"
+    ? fieldSchema?.type
+    : "string"
 
-  // Focus label when editing
-  $: $component.editing && labelNode?.focus()
+// Focus label when editing
+$: $component.editing && labelNode?.focus()
 
-  // Update form properties in parent component on every store change
-  $: unsubscribe = formField?.subscribe(value => {
-    fieldState = value?.fieldState
-    fieldApi = value?.fieldApi
-    fieldSchema = value?.fieldSchema
-  })
+// Update form properties in parent component on every store change
+$: unsubscribe = formField?.subscribe(value => {
+  fieldState = value?.fieldState
+  fieldApi = value?.fieldApi
+  fieldSchema = value?.fieldSchema
+})
 
-  // Determine label class from position
-  $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
+// Determine label class from position
+$: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
 
-  const updateLabel = e => {
-    if (touched) {
-      builderStore.actions.updateProp("label", e.target.textContent)
-    }
-    touched = false
+const updateLabel = e => {
+  if (touched) {
+    builderStore.actions.updateProp("label", e.target.textContent)
   }
+  touched = false
+}
 
-  onDestroy(() => {
-    fieldApi?.deregister()
-    unsubscribe?.()
-  })
+onDestroy(() => {
+  fieldApi?.deregister()
+  unsubscribe?.()
+})
 </script>
 
 <div

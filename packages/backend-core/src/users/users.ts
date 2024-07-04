@@ -1,6 +1,21 @@
 import {
-  directCouchFind,
+  BulkDocsResponse,
+  ContextUser,
+  CouchFindOptions,
+  DatabaseQueryOpts,
+  SearchFilterOperator,
+  SearchFilters,
+  SearchUsersRequest,
+  User,
+} from "@budibase/types"
+import * as context from "../context"
+import { getGlobalDB } from "../context"
+import {
   DocumentType,
+  SEPARATOR,
+  UNICODE_MAX,
+  ViewName,
+  directCouchFind,
   generateAppUserID,
   getGlobalUserParams,
   getProdAppID,
@@ -8,24 +23,9 @@ import {
   pagination,
   queryGlobalView,
   queryGlobalViewRaw,
-  SEPARATOR,
-  UNICODE_MAX,
-  ViewName,
 } from "../db"
-import {
-  BulkDocsResponse,
-  ContextUser,
-  CouchFindOptions,
-  DatabaseQueryOpts,
-  SearchFilters,
-  SearchFilterOperator,
-  SearchUsersRequest,
-  User,
-} from "@budibase/types"
-import * as context from "../context"
-import { getGlobalDB } from "../context"
-import { isCreator } from "./utils"
 import { UserDB } from "./db"
+import { isCreator } from "./utils"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -147,7 +147,7 @@ export async function doesUserExist(email: string) {
     if (Array.isArray(user) || user != null) {
       return true
     }
-  } catch (err) {
+  } catch (_err) {
     return false
   }
   return false

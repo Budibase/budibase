@@ -1,544 +1,530 @@
 <script>
-  import {
-    Icon,
-    Divider,
-    Heading,
-    Layout,
-    Input,
-    clickOutside,
-    notifications,
-    CopyInput,
-    Modal,
-    FancyForm,
-    FancyInput,
-    Button,
-    FancySelect,
-  } from "@budibase/bbui"
-  import { builderStore, appStore, roles } from "stores/builder"
-  import {
-    groups,
-    licensing,
-    appsStore,
-    users,
-    auth,
-    admin,
-  } from "stores/portal"
-  import {
-    fetchData,
-    Constants,
-    Utils,
-    RoleUtils,
-  } from "@budibase/frontend-core"
-  import { sdk } from "@budibase/shared-core"
-  import { API } from "api"
-  import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
-  import RoleSelect from "components/common/RoleSelect.svelte"
-  import UpgradeModal from "components/common/users/UpgradeModal.svelte"
-  import { emailValidator } from "helpers/validation"
-  import { fly } from "svelte/transition"
+import {
+  Button,
+  CopyInput,
+  Divider,
+  FancyForm,
+  FancyInput,
+  FancySelect,
+  Heading,
+  Icon,
+  Input,
+  Layout,
+  Modal,
+  clickOutside,
+  notifications,
+} from "@budibase/bbui"
+import { Constants, RoleUtils, Utils, fetchData } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
+import { API } from "api"
+import RoleSelect from "components/common/RoleSelect.svelte"
+import UpgradeModal from "components/common/users/UpgradeModal.svelte"
+import { emailValidator } from "helpers/validation"
+import { appStore, builderStore, roles } from "stores/builder"
+import { admin, appsStore, auth, groups, licensing, users } from "stores/portal"
+import { fly } from "svelte/transition"
+import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
 
-  let query = null
-  let loaded = false
-  let inviting = false
-  let searchFocus = false
-  let invitingFlow = false
-  // Initially filter entities without app access
-  // Show all when false
-  let filterByAppAccess = false
-  let email
-  let error
-  let form
-  let creationRoleType = Constants.BudibaseRoles.AppUser
-  let creationAccessType = Constants.Roles.BASIC
+let query = null
+let loaded = false
+let inviting = false
+let searchFocus = false
+let invitingFlow = false
+// Initially filter entities without app access
+// Show all when false
+let filterByAppAccess = false
+let email
+let error
+let form
+let creationRoleType = Constants.BudibaseRoles.AppUser
+let creationAccessType = Constants.Roles.BASIC
 
-  let appInvites = []
-  let filteredInvites = []
-  let filteredUsers = []
-  let filteredGroups = []
-  let selectedGroup
-  let userOnboardResponse = null
-  let userLimitReachedModal
+let appInvites = []
+let filteredInvites = []
+let filteredUsers = []
+let filteredGroups = []
+let selectedGroup
+let userOnboardResponse = null
+let userLimitReachedModal
 
-  let inviteFailureResponse = ""
-  $: validEmail = emailValidator(email) === true
-  $: prodAppId = appsStore.getProdAppID($appStore.appId)
-  $: promptInvite = showInvite(
-    filteredInvites,
-    filteredUsers,
-    filteredGroups,
-    query
-  )
-  $: isOwner = $auth.accountPortalAccess && $admin.cloud
-  const showInvite = (invites, users, groups, query) => {
-    return !invites?.length && !users?.length && !groups?.length && query
+let inviteFailureResponse = ""
+$: validEmail = emailValidator(email) === true
+$: prodAppId = appsStore.getProdAppID($appStore.appId)
+$: promptInvite = showInvite(
+  filteredInvites,
+  filteredUsers,
+  filteredGroups,
+  query
+)
+$: isOwner = $auth.accountPortalAccess && $admin.cloud
+const showInvite = (invites, users, groups, query) => {
+  return !invites?.length && !users?.length && !groups?.length && query
+}
+
+const filterInvites = async query => {
+  if (!prodAppId) {
+    return
   }
 
-  const filterInvites = async query => {
-    if (!prodAppId) {
-      return
-    }
+  appInvites = await getInvites()
 
-    appInvites = await getInvites()
-
-    //On Focus behaviour
-    if (!filterByAppAccess && !query) {
-      filteredInvites =
-        appInvites.length > 100 ? appInvites.slice(0, 100) : [...appInvites]
-      filteredInvites.sort(sortInviteRoles)
-      return
-    }
-    filteredInvites = appInvites.filter(invite => {
-      const inviteInfo = invite.info?.apps
-      if (!query && inviteInfo && prodAppId) {
-        return Object.keys(inviteInfo).includes(prodAppId)
-      }
-      return invite.email.includes(query)
-    })
+  //On Focus behaviour
+  if (!filterByAppAccess && !query) {
+    filteredInvites =
+      appInvites.length > 100 ? appInvites.slice(0, 100) : [...appInvites]
     filteredInvites.sort(sortInviteRoles)
+    return
   }
-  $: filterByAppAccess, prodAppId, filterInvites(query)
-  $: if (searchFocus === true) {
-    filterByAppAccess = false
+  filteredInvites = appInvites.filter(invite => {
+    const inviteInfo = invite.info?.apps
+    if (!query && inviteInfo && prodAppId) {
+      return Object.keys(inviteInfo).includes(prodAppId)
+    }
+    return invite.email.includes(query)
+  })
+  filteredInvites.sort(sortInviteRoles)
+}
+$: filterByAppAccess, prodAppId, filterInvites(query)
+$: if (searchFocus === true) {
+  filterByAppAccess = false
+}
+
+const usersFetch = fetchData({
+  API,
+  datasource: {
+    type: "user",
+  },
+})
+
+const searchUsers = async (query, sidePaneOpen, loaded) => {
+  if (!sidePaneOpen || !loaded) {
+    return
+  }
+  if (!prodAppId) {
+    console.error("Application id required")
+    return
+  }
+  await usersFetch.update({
+    query: {
+      string: { email: query },
+    },
+    appId: query || !filterByAppAccess ? null : prodAppId,
+    limit: 50,
+    paginate: query || !filterByAppAccess ? null : false,
+  })
+  await usersFetch.refresh()
+
+  filteredUsers = $usersFetch.rows
+    .filter(user => user.email !== $auth.user.email)
+    .map(user => {
+      const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(user)
+      const isAppBuilder = user.builder?.apps?.includes(prodAppId)
+      let role
+      if (isAdminOrGlobalBuilder) {
+        role = Constants.Roles.ADMIN
+      } else if (isAppBuilder) {
+        role = Constants.Roles.CREATOR
+      } else {
+        const appRole = user.roles[prodAppId]
+        if (appRole) {
+          role = appRole
+        }
+      }
+
+      return {
+        ...user,
+        role,
+        isAdminOrGlobalBuilder,
+        isAppBuilder,
+      }
+    })
+    .sort(sortRoles)
+}
+
+const sortInviteRoles = (a, b) => {
+  const aAppsEmpty = !a.info?.apps?.length && !a.info?.builder?.apps?.length
+  const bAppsEmpty = !b.info?.apps?.length && !b.info?.builder?.apps?.length
+
+  return aAppsEmpty && !bAppsEmpty ? 1 : !aAppsEmpty && bAppsEmpty ? -1 : 0
+}
+
+const sortRoles = (a, b) => {
+  const roleA = a.role
+  const roleB = b.role
+
+  const priorityA = RoleUtils.getRolePriority(roleA)
+  const priorityB = RoleUtils.getRolePriority(roleB)
+
+  if (roleA === undefined && roleB !== undefined) {
+    return 1
+  } else if (roleA !== undefined && roleB === undefined) {
+    return -1
   }
 
-  const usersFetch = fetchData({
-    API,
-    datasource: {
-      type: "user",
+  if (priorityA < priorityB) {
+    return 1
+  } else if (priorityA > priorityB) {
+    return -1
+  }
+
+  return 0
+}
+
+const debouncedUpdateFetch = Utils.debounce(searchUsers, 250)
+$: debouncedUpdateFetch(
+  query,
+  $builderStore.builderSidePanel,
+  loaded,
+  filterByAppAccess
+)
+
+const updateAppUser = async (user, role) => {
+  if (!prodAppId) {
+    notifications.error("Application id must be specified")
+    return
+  }
+  const update = await users.get(user._id)
+  await users.save({
+    ...update,
+    roles: {
+      ...update.roles,
+      [prodAppId]: role,
     },
   })
+  await searchUsers(query, $builderStore.builderSidePanel, loaded)
+}
 
-  const searchUsers = async (query, sidePaneOpen, loaded) => {
-    if (!sidePaneOpen || !loaded) {
+const onUpdateUser = async (user, role) => {
+  if (!user) {
+    notifications.error("A user must be specified")
+    return
+  }
+  try {
+    if (user.role === role) {
       return
     }
-    if (!prodAppId) {
-      console.error("Application id required")
-      return
+    if (user.isAppBuilder) {
+      await removeAppBuilder(user._id, prodAppId)
     }
-    await usersFetch.update({
-      query: {
-        string: { email: query },
-      },
-      appId: query || !filterByAppAccess ? null : prodAppId,
-      limit: 50,
-      paginate: query || !filterByAppAccess ? null : false,
+    if (role === Constants.Roles.CREATOR) {
+      await removeAppBuilder(user._id, prodAppId)
+    }
+    await updateAppUser(user, role)
+  } catch (error) {
+    console.error(error)
+    notifications.error("User could not be updated")
+  }
+}
+
+const updateAppGroup = async (target, role) => {
+  if (!prodAppId) {
+    notifications.error("Application id must be specified")
+    return
+  }
+
+  if (!role) {
+    await groups.actions.removeApp(target._id, prodAppId)
+  } else {
+    await groups.actions.addApp(target._id, prodAppId, role)
+  }
+
+  await usersFetch.refresh()
+  await groups.actions.init()
+}
+
+const onUpdateGroup = async (group, role) => {
+  if (!group) {
+    notifications.error("A group must be specified")
+    return
+  }
+  try {
+    if (group?.builder?.apps.includes(prodAppId)) {
+      await removeGroupAppBuilder(group._id)
+    }
+    await updateAppGroup(group, role)
+  } catch {
+    notifications.error("Group update failed")
+  }
+}
+
+const getAppGroups = (allGroups, appId) => {
+  if (!allGroups) {
+    return []
+  }
+  return allGroups.filter(group => {
+    if (!group.roles) {
+      return false
+    }
+    return groups.actions.getGroupAppIds(group).includes(appId)
+  })
+}
+
+const searchGroups = (userGroups, query) => {
+  let filterGroups =
+    query?.length || !filterByAppAccess
+      ? userGroups
+      : getAppGroups(userGroups, prodAppId)
+  return filterGroups
+    .filter(group => {
+      if (!query?.length) {
+        return true
+      }
+      //Group Name only.
+      const nameMatch = group.name?.toLowerCase().includes(query?.toLowerCase())
+
+      return nameMatch
     })
-    await usersFetch.refresh()
+    .map(enrichGroupRole)
+    .sort(sortRoles)
+}
 
-    filteredUsers = $usersFetch.rows
-      .filter(user => user.email !== $auth.user.email)
-      .map(user => {
-        const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(user)
-        const isAppBuilder = user.builder?.apps?.includes(prodAppId)
-        let role
-        if (isAdminOrGlobalBuilder) {
-          role = Constants.Roles.ADMIN
-        } else if (isAppBuilder) {
-          role = Constants.Roles.CREATOR
-        } else {
-          const appRole = user.roles[prodAppId]
-          if (appRole) {
-            role = appRole
-          }
-        }
-
-        return {
-          ...user,
-          role,
-          isAdminOrGlobalBuilder,
-          isAppBuilder,
-        }
-      })
-      .sort(sortRoles)
+const enrichGroupRole = group => {
+  return {
+    ...group,
+    role: group?.builder?.apps.includes(prodAppId)
+      ? Constants.Roles.CREATOR
+      : group.roles?.[
+          groups.actions.getGroupAppIds(group).find(x => x === prodAppId)
+        ],
   }
+}
 
-  const sortInviteRoles = (a, b) => {
-    const aAppsEmpty = !a.info?.apps?.length && !a.info?.builder?.apps?.length
-    const bAppsEmpty = !b.info?.apps?.length && !b.info?.builder?.apps?.length
+const getEnrichedGroups = groups => {
+  return groups.map(enrichGroupRole)
+}
 
-    return aAppsEmpty && !bAppsEmpty ? 1 : !aAppsEmpty && bAppsEmpty ? -1 : 0
-  }
-
-  const sortRoles = (a, b) => {
-    const roleA = a.role
-    const roleB = b.role
-
-    const priorityA = RoleUtils.getRolePriority(roleA)
-    const priorityB = RoleUtils.getRolePriority(roleB)
-
-    if (roleA === undefined && roleB !== undefined) {
-      return 1
-    } else if (roleA !== undefined && roleB === undefined) {
-      return -1
-    }
-
-    if (priorityA < priorityB) {
-      return 1
-    } else if (priorityA > priorityB) {
-      return -1
-    }
-
-    return 0
-  }
-
-  const debouncedUpdateFetch = Utils.debounce(searchUsers, 250)
-  $: debouncedUpdateFetch(
-    query,
-    $builderStore.builderSidePanel,
-    loaded,
-    filterByAppAccess
-  )
-
-  const updateAppUser = async (user, role) => {
-    if (!prodAppId) {
-      notifications.error("Application id must be specified")
-      return
-    }
-    const update = await users.get(user._id)
-    await users.save({
-      ...update,
-      roles: {
-        ...update.roles,
-        [prodAppId]: role,
-      },
-    })
-    await searchUsers(query, $builderStore.builderSidePanel, loaded)
-  }
-
-  const onUpdateUser = async (user, role) => {
-    if (!user) {
-      notifications.error("A user must be specified")
-      return
-    }
-    try {
-      if (user.role === role) {
-        return
-      }
-      if (user.isAppBuilder) {
-        await removeAppBuilder(user._id, prodAppId)
-      }
-      if (role === Constants.Roles.CREATOR) {
-        await removeAppBuilder(user._id, prodAppId)
-      }
-      await updateAppUser(user, role)
-    } catch (error) {
-      console.error(error)
-      notifications.error("User could not be updated")
-    }
-  }
-
-  const updateAppGroup = async (target, role) => {
-    if (!prodAppId) {
-      notifications.error("Application id must be specified")
-      return
-    }
-
-    if (!role) {
-      await groups.actions.removeApp(target._id, prodAppId)
-    } else {
-      await groups.actions.addApp(target._id, prodAppId, role)
-    }
-
-    await usersFetch.refresh()
-    await groups.actions.init()
-  }
-
-  const onUpdateGroup = async (group, role) => {
-    if (!group) {
-      notifications.error("A group must be specified")
-      return
-    }
-    try {
-      if (group?.builder?.apps.includes(prodAppId)) {
-        await removeGroupAppBuilder(group._id)
-      }
-      await updateAppGroup(group, role)
-    } catch {
-      notifications.error("Group update failed")
-    }
-  }
-
-  const getAppGroups = (allGroups, appId) => {
-    if (!allGroups) {
-      return []
-    }
-    return allGroups.filter(group => {
-      if (!group.roles) {
-        return false
-      }
-      return groups.actions.getGroupAppIds(group).includes(appId)
-    })
-  }
-
-  const searchGroups = (userGroups, query) => {
-    let filterGroups =
-      query?.length || !filterByAppAccess
-        ? userGroups
-        : getAppGroups(userGroups, prodAppId)
-    return filterGroups
-      .filter(group => {
-        if (!query?.length) {
-          return true
-        }
-        //Group Name only.
-        const nameMatch = group.name
-          ?.toLowerCase()
-          .includes(query?.toLowerCase())
-
-        return nameMatch
-      })
-      .map(enrichGroupRole)
-      .sort(sortRoles)
-  }
-
-  const enrichGroupRole = group => {
-    return {
-      ...group,
-      role: group?.builder?.apps.includes(prodAppId)
-        ? Constants.Roles.CREATOR
-        : group.roles?.[
-            groups.actions.getGroupAppIds(group).find(x => x === prodAppId)
-          ],
-    }
-  }
-
-  const getEnrichedGroups = groups => {
-    return groups.map(enrichGroupRole)
-  }
-
-  // Adds the 'role' attribute and sets it to the current app.
-  $: enrichedGroups = getEnrichedGroups($groups, filterByAppAccess)
-  $: filteredGroups = searchGroups(enrichedGroups, query)
-  $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
-  $: allUsers = [...filteredUsers, ...groupUsers]
-  /*  
+// Adds the 'role' attribute and sets it to the current app.
+$: enrichedGroups = getEnrichedGroups($groups, filterByAppAccess)
+$: filteredGroups = searchGroups(enrichedGroups, query)
+$: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
+$: allUsers = [...filteredUsers, ...groupUsers]
+/*  
     Create pseudo users from the "users" attribute on app groups.
     These users will appear muted in the UI and show the ROLE
     inherited from their parent group. The users allow assigning of user 
     specific roles for the app.
   */
-  const buildGroupUsers = (userGroups, filteredUsers) => {
-    if (query || !filterByAppAccess) {
-      return []
+const buildGroupUsers = (userGroups, filteredUsers) => {
+  if (query || !filterByAppAccess) {
+    return []
+  }
+  // Must exclude users who have explicit privileges
+  const userByEmail = filteredUsers.reduce((acc, user) => {
+    if (user.role || sdk.users.isAdminOrBuilder(user, prodAppId)) {
+      acc.push(user.email)
     }
-    // Must exclude users who have explicit privileges
-    const userByEmail = filteredUsers.reduce((acc, user) => {
-      if (user.role || sdk.users.isAdminOrBuilder(user, prodAppId)) {
-        acc.push(user.email)
-      }
-      return acc
-    }, [])
+    return acc
+  }, [])
 
-    const indexedUsers = userGroups.reduce((acc, group) => {
-      group.users.forEach(user => {
-        if (userByEmail.indexOf(user.email) == -1) {
-          acc[user._id] = {
-            _id: user._id,
-            email: user.email,
-            role: group.role,
-            group: group.name,
-          }
+  const indexedUsers = userGroups.reduce((acc, group) => {
+    group.users.forEach(user => {
+      if (userByEmail.indexOf(user.email) == -1) {
+        acc[user._id] = {
+          _id: user._id,
+          email: user.email,
+          role: group.role,
+          group: group.name,
         }
-      })
-      return acc
-    }, {})
-    return Object.values(indexedUsers)
+      }
+    })
+    return acc
+  }, {})
+  return Object.values(indexedUsers)
+}
+
+const getInvites = async () => {
+  try {
+    const invites = await users.getInvites()
+    return invites
+  } catch (error) {
+    notifications.error(error.message)
+    return []
   }
+}
 
-  const getInvites = async () => {
-    try {
-      const invites = await users.getInvites()
-      return invites
-    } catch (error) {
-      notifications.error(error.message)
-      return []
-    }
+async function inviteUser() {
+  if (!validEmail) {
+    notifications.error("Email is not valid")
+    return
   }
+  const newUserEmail = email + ""
+  inviting = true
 
-  async function inviteUser() {
-    if (!validEmail) {
-      notifications.error("Email is not valid")
-      return
-    }
-    const newUserEmail = email + ""
-    inviting = true
-
-    const payload = [
-      {
-        email: newUserEmail,
-        builder: {
-          global: creationRoleType === Constants.BudibaseRoles.Admin,
-          creator: creationRoleType === Constants.BudibaseRoles.Creator,
-        },
-        admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
+  const payload = [
+    {
+      email: newUserEmail,
+      builder: {
+        global: creationRoleType === Constants.BudibaseRoles.Admin,
+        creator: creationRoleType === Constants.BudibaseRoles.Creator,
       },
-    ]
+      admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
+    },
+  ]
 
-    const notCreatingAdmin = creationRoleType !== Constants.BudibaseRoles.Admin
-    const isCreator = creationAccessType === Constants.Roles.CREATOR
-    if (notCreatingAdmin && isCreator) {
-      payload[0].builder.apps = [prodAppId]
-    } else if (notCreatingAdmin && !isCreator) {
-      payload[0].apps = { [prodAppId]: creationAccessType }
-    }
-
-    let userInviteResponse
-    try {
-      userInviteResponse = await users.onboard(payload)
-    } catch (error) {
-      console.error(error.message)
-      notifications.error("Error inviting user")
-    }
-    inviting = false
-    return userInviteResponse
+  const notCreatingAdmin = creationRoleType !== Constants.BudibaseRoles.Admin
+  const isCreator = creationAccessType === Constants.Roles.CREATOR
+  if (notCreatingAdmin && isCreator) {
+    payload[0].builder.apps = [prodAppId]
+  } else if (notCreatingAdmin && !isCreator) {
+    payload[0].apps = { [prodAppId]: creationAccessType }
   }
 
-  const openInviteFlow = () => {
-    // prevent email from getting overwritten if changes are made
-    if (!email) {
-      email = query
-    }
-    $licensing.userLimitReached
-      ? userLimitReachedModal.show()
-      : (invitingFlow = true)
+  let userInviteResponse
+  try {
+    userInviteResponse = await users.onboard(payload)
+  } catch (error) {
+    console.error(error.message)
+    notifications.error("Error inviting user")
   }
+  inviting = false
+  return userInviteResponse
+}
 
-  const onInviteUser = async () => {
-    form.validate()
-    userOnboardResponse = await inviteUser()
-    const originalQuery = email + ""
-    email = null
+const openInviteFlow = () => {
+  // prevent email from getting overwritten if changes are made
+  if (!email) {
+    email = query
+  }
+  $licensing.userLimitReached
+    ? userLimitReachedModal.show()
+    : (invitingFlow = true)
+}
 
-    const newUser = userOnboardResponse?.successful.find(
+const onInviteUser = async () => {
+  form.validate()
+  userOnboardResponse = await inviteUser()
+  const originalQuery = email + ""
+  email = null
+
+  const newUser = userOnboardResponse?.successful.find(
+    user => user.email === originalQuery
+  )
+  if (newUser) {
+    email = originalQuery
+    notifications.success(
+      userOnboardResponse.created
+        ? "User created successfully"
+        : "User invite successful"
+    )
+  } else {
+    const failedUser = userOnboardResponse?.unsuccessful.find(
       user => user.email === originalQuery
     )
-    if (newUser) {
-      email = originalQuery
-      notifications.success(
-        userOnboardResponse.created
-          ? "User created successfully"
-          : "User invite successful"
-      )
-    } else {
-      const failedUser = userOnboardResponse?.unsuccessful.find(
-        user => user.email === originalQuery
-      )
-      inviteFailureResponse =
-        failedUser?.reason === "Unavailable"
-          ? "Email already in use. Please use a different email."
-          : failedUser?.reason
+    inviteFailureResponse =
+      failedUser?.reason === "Unavailable"
+        ? "Email already in use. Please use a different email."
+        : failedUser?.reason
 
-      notifications.error(inviteFailureResponse)
-    }
-    userOnboardResponse = null
-    invitingFlow = false
-    // trigger reload of the users
-    query = ""
+    notifications.error(inviteFailureResponse)
+  }
+  userOnboardResponse = null
+  invitingFlow = false
+  // trigger reload of the users
+  query = ""
+}
+
+const onUpdateUserInvite = async (invite, role) => {
+  let updateBody = {
+    code: invite.code,
+    apps: {
+      ...invite.apps,
+      [prodAppId]: role,
+    },
   }
 
-  const onUpdateUserInvite = async (invite, role) => {
-    let updateBody = {
-      code: invite.code,
-      apps: {
-        ...invite.apps,
-        [prodAppId]: role,
-      },
-    }
-
-    if (role === Constants.Roles.CREATOR) {
-      updateBody.builder = updateBody.builder || {}
-      updateBody.builder.apps = [...(updateBody.builder.apps ?? []), prodAppId]
-      delete updateBody?.apps?.[prodAppId]
-    } else if (role !== Constants.Roles.CREATOR && invite?.builder?.apps) {
-      invite.builder.apps = []
-    }
-    await users.updateInvite(updateBody)
-    await filterInvites(query)
+  if (role === Constants.Roles.CREATOR) {
+    updateBody.builder = updateBody.builder || {}
+    updateBody.builder.apps = [...(updateBody.builder.apps ?? []), prodAppId]
+    delete updateBody?.apps?.[prodAppId]
+  } else if (role !== Constants.Roles.CREATOR && invite?.builder?.apps) {
+    invite.builder.apps = []
   }
+  await users.updateInvite(updateBody)
+  await filterInvites(query)
+}
 
-  const onUninviteAppUser = async invite => {
-    await uninviteAppUser(invite)
-    await filterInvites(query)
+const onUninviteAppUser = async invite => {
+  await uninviteAppUser(invite)
+  await filterInvites(query)
+}
+
+// Purge only the app from the invite or recind the invite if only 1 app remains?
+const uninviteAppUser = async invite => {
+  let updated = { ...invite }
+  delete updated.info.apps[prodAppId]
+
+  return await users.updateInvite({
+    code: updated.code,
+    apps: updated.apps,
+  })
+}
+
+const addAppBuilder = async userId => {
+  await users.addAppBuilder(userId, prodAppId)
+}
+
+const removeAppBuilder = async userId => {
+  await users.removeAppBuilder(userId, prodAppId)
+}
+
+const removeGroupAppBuilder = async groupId => {
+  await groups.actions.removeGroupAppBuilder(groupId, prodAppId)
+}
+
+const initSidePanel = async sidePaneOpen => {
+  if (sidePaneOpen === true) {
+    await groups.actions.init()
   }
+  loaded = true
+}
 
-  // Purge only the app from the invite or recind the invite if only 1 app remains?
-  const uninviteAppUser = async invite => {
-    let updated = { ...invite }
-    delete updated.info.apps[prodAppId]
+$: initSidePanel($builderStore.builderSidePanel)
 
-    return await users.updateInvite({
-      code: updated.code,
-      apps: updated.apps,
-    })
+function handleKeyDown(evt) {
+  if (evt.key === "Enter" && validEmail && !inviting) {
+    onInviteUser()
   }
+}
 
-  const addAppBuilder = async userId => {
-    await users.addAppBuilder(userId, prodAppId)
+const getInviteRoleValue = invite => {
+  if (
+    (invite.info?.admin?.global && invite.info?.builder?.global) ||
+    invite.info?.builder?.apps?.includes(prodAppId)
+  ) {
+    return Constants.Roles.CREATOR
   }
+  return invite.info.apps?.[prodAppId]
+}
 
-  const removeAppBuilder = async userId => {
-    await users.removeAppBuilder(userId, prodAppId)
+const getRoleFooter = user => {
+  if (user.group) {
+    const role = $roles.find(role => role._id === user.role)
+    return `This user has been given ${role?.name} access from the ${user.group} group`
   }
-
-  const removeGroupAppBuilder = async groupId => {
-    await groups.actions.removeGroupAppBuilder(groupId, prodAppId)
+  if (user.isAdminOrGlobalBuilder) {
+    return "Account admins can edit all apps"
   }
+  return null
+}
 
-  const initSidePanel = async sidePaneOpen => {
-    if (sidePaneOpen === true) {
-      await groups.actions.init()
-    }
-    loaded = true
+const parseRole = user => {
+  if (user.isAdminOrGlobalBuilder) {
+    return Constants.Roles.CREATOR
   }
+  return user.role
+}
 
-  $: initSidePanel($builderStore.builderSidePanel)
-
-  function handleKeyDown(evt) {
-    if (evt.key === "Enter" && validEmail && !inviting) {
-      onInviteUser()
-    }
+const checkAppAccess = e => {
+  // Ensure we don't get into an invalid combo of tenant role and app access
+  if (
+    e.detail === Constants.BudibaseRoles.AppUser &&
+    creationAccessType === Constants.Roles.CREATOR
+  ) {
+    creationAccessType = Constants.Roles.BASIC
+  } else if (e.detail === Constants.BudibaseRoles.Admin) {
+    creationAccessType = Constants.Roles.CREATOR
   }
-
-  const getInviteRoleValue = invite => {
-    if (
-      (invite.info?.admin?.global && invite.info?.builder?.global) ||
-      invite.info?.builder?.apps?.includes(prodAppId)
-    ) {
-      return Constants.Roles.CREATOR
-    }
-    return invite.info.apps?.[prodAppId]
-  }
-
-  const getRoleFooter = user => {
-    if (user.group) {
-      const role = $roles.find(role => role._id === user.role)
-      return `This user has been given ${role?.name} access from the ${user.group} group`
-    }
-    if (user.isAdminOrGlobalBuilder) {
-      return "Account admins can edit all apps"
-    }
-    return null
-  }
-
-  const parseRole = user => {
-    if (user.isAdminOrGlobalBuilder) {
-      return Constants.Roles.CREATOR
-    }
-    return user.role
-  }
-
-  const checkAppAccess = e => {
-    // Ensure we don't get into an invalid combo of tenant role and app access
-    if (
-      e.detail === Constants.BudibaseRoles.AppUser &&
-      creationAccessType === Constants.Roles.CREATOR
-    ) {
-      creationAccessType = Constants.Roles.BASIC
-    } else if (e.detail === Constants.BudibaseRoles.Admin) {
-      creationAccessType = Constants.Roles.CREATOR
-    }
-  }
+}
 </script>
 
 <svelte:window on:keydown={handleKeyDown} />

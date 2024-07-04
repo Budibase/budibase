@@ -1,63 +1,63 @@
 <script>
-  import { getContext } from "svelte"
-  import { ActionButton, Popover, Select } from "@budibase/bbui"
-  import { canBeSortColumn } from "@budibase/shared-core"
+import { ActionButton, Popover, Select } from "@budibase/bbui"
+import { canBeSortColumn } from "@budibase/shared-core"
+import { getContext } from "svelte"
 
-  const { sort, columns, stickyColumn } = getContext("grid")
+const { sort, columns, stickyColumn } = getContext("grid")
 
-  let open = false
-  let anchor
+let open = false
+let anchor
 
-  $: columnOptions = getColumnOptions($stickyColumn, $columns)
-  $: orderOptions = getOrderOptions($sort.column, columnOptions)
+$: columnOptions = getColumnOptions($stickyColumn, $columns)
+$: orderOptions = getOrderOptions($sort.column, columnOptions)
 
-  const getColumnOptions = (stickyColumn, columns) => {
-    let options = []
-    if (stickyColumn) {
-      options.push({
-        label: stickyColumn.label || stickyColumn.name,
-        value: stickyColumn.name,
-        type: stickyColumn.schema?.type,
-      })
-    }
-    options = [
-      ...options,
-      ...columns.map(col => ({
-        label: col.label || col.name,
-        value: col.name,
-        type: col.schema?.type,
-      })),
-    ]
-    return options.filter(col => canBeSortColumn(col.type))
+const getColumnOptions = (stickyColumn, columns) => {
+  let options = []
+  if (stickyColumn) {
+    options.push({
+      label: stickyColumn.label || stickyColumn.name,
+      value: stickyColumn.name,
+      type: stickyColumn.schema?.type,
+    })
   }
+  options = [
+    ...options,
+    ...columns.map(col => ({
+      label: col.label || col.name,
+      value: col.name,
+      type: col.schema?.type,
+    })),
+  ]
+  return options.filter(col => canBeSortColumn(col.type))
+}
 
-  const getOrderOptions = (column, columnOptions) => {
-    const type = columnOptions.find(col => col.value === column)?.type
-    return [
-      {
-        label: type === "number" ? "Low-high" : "A-Z",
-        value: "ascending",
-      },
-      {
-        label: type === "number" ? "High-low" : "Z-A",
-        value: "descending",
-      },
-    ]
-  }
+const getOrderOptions = (column, columnOptions) => {
+  const type = columnOptions.find(col => col.value === column)?.type
+  return [
+    {
+      label: type === "number" ? "Low-high" : "A-Z",
+      value: "ascending",
+    },
+    {
+      label: type === "number" ? "High-low" : "Z-A",
+      value: "descending",
+    },
+  ]
+}
 
-  const updateSortColumn = e => {
-    sort.update(state => ({
-      column: e.detail,
-      order: e.detail ? state.order : "ascending",
-    }))
-  }
+const updateSortColumn = e => {
+  sort.update(state => ({
+    column: e.detail,
+    order: e.detail ? state.order : "ascending",
+  }))
+}
 
-  const updateSortOrder = e => {
-    sort.update(state => ({
-      ...state,
-      order: e.detail,
-    }))
-  }
+const updateSortOrder = e => {
+  sort.update(state => ({
+    ...state,
+    order: e.detail,
+  }))
+}
 </script>
 
 <div bind:this={anchor}>

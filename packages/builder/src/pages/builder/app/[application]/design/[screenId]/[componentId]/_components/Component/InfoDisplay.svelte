@@ -1,9 +1,9 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
 
-  export let title
-  export let body
-  export let icon = "HelpOutline"
+export let title
+export let body
+export let icon = "HelpOutline"
 </script>
 
 <div class="info" class:noTitle={!title}>

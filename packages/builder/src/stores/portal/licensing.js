@@ -1,10 +1,10 @@
-import { writable, get } from "svelte/store"
-import { API } from "api"
-import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
+import { PlanModel } from "@budibase/types"
+import { API } from "api"
 import { StripeStatus } from "components/portal/licensing/constants"
 import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
-import { PlanModel } from "@budibase/types"
+import { admin, auth } from "stores/portal"
+import { get, writable } from "svelte/store"
 
 const UNLIMITED = -1
 

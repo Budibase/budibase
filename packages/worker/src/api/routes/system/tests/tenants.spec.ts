@@ -1,5 +1,5 @@
-import { TestConfiguration } from "../../../../tests"
 import { tenancy } from "@budibase/backend-core"
+import { TestConfiguration } from "../../../../tests"
 
 describe("/api/global/tenants", () => {
   const config = new TestConfiguration()

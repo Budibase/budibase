@@ -1,11 +1,11 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  const { linkable, styleable } = getContext("sdk")
-  const component = getContext("component")
+const { linkable, styleable } = getContext("sdk")
+const component = getContext("component")
 
-  export let logoUrl
-  export let hideLogo
+export let logoUrl
+export let hideLogo
 </script>
 
 <div class="nav" use:styleable={$component.styles}>

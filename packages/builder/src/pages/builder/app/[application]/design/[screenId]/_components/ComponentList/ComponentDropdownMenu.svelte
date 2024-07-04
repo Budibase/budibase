@@ -1,26 +1,26 @@
 <script>
-  import { componentStore } from "stores/builder"
-  import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
+import { ActionMenu, Icon, MenuItem } from "@budibase/bbui"
+import { componentStore } from "stores/builder"
 
-  export let component
-  export let opened
+export let component
+export let opened
 
-  $: definition = componentStore.getDefinition(component?._component)
-  $: noPaste = !$componentStore.componentToPaste
-  $: isBlock = definition?.block === true
-  $: canEject = !(definition?.ejectable === false)
+$: definition = componentStore.getDefinition(component?._component)
+$: noPaste = !$componentStore.componentToPaste
+$: isBlock = definition?.block === true
+$: canEject = !(definition?.ejectable === false)
 
-  const keyboardEvent = (key, ctrlKey = false) => {
-    document.dispatchEvent(
-      new CustomEvent("component-menu", {
-        detail: {
-          key,
-          ctrlKey,
-          id: component?._id,
-        },
-      })
-    )
-  }
+const keyboardEvent = (key, ctrlKey = false) => {
+  document.dispatchEvent(
+    new CustomEvent("component-menu", {
+      detail: {
+        key,
+        ctrlKey,
+        id: component?._id,
+      },
+    })
+  )
+}
 </script>
 
 <ActionMenu>

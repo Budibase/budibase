@@ -1,46 +1,46 @@
 <script>
-  import { Label, ActionButton, Button, Select, Input } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { ActionButton, Button, Input, Label, Select } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { createEventDispatcher } from "svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let parameterFields
-  export let schemaFields
-  export let fieldLabel = "Column"
-  export let valueLabel = "Value"
-  export let bindings = []
+export let parameterFields
+export let schemaFields
+export let fieldLabel = "Column"
+export let valueLabel = "Value"
+export let bindings = []
 
-  let fields = Object.entries(parameterFields || {})
-  $: onChange(fields)
+let fields = Object.entries(parameterFields || {})
+$: onChange(fields)
 
-  const addField = () => {
-    fields = [...fields.filter(field => field[0]), ["", ""]]
-  }
+const addField = () => {
+  fields = [...fields.filter(field => field[0]), ["", ""]]
+}
 
-  const removeField = name => {
-    fields = fields.filter(field => field[0] !== name)
-  }
+const removeField = name => {
+  fields = fields.filter(field => field[0] !== name)
+}
 
-  const updateFieldValue = (idx, value) => {
-    fields[idx][1] = value
-    fields = fields
-  }
+const updateFieldValue = (idx, value) => {
+  fields[idx][1] = value
+  fields = fields
+}
 
-  const updateFieldName = (idx, name) => {
-    fields[idx][0] = name
-    fields = fields
-  }
+const updateFieldName = (idx, name) => {
+  fields[idx][0] = name
+  fields = fields
+}
 
-  const onChange = fields => {
-    const newParamFields = {}
-    fields
-      .filter(field => field[0])
-      .forEach(([field, value]) => {
-        newParamFields[field] = value
-      })
-    dispatch("change", newParamFields)
-  }
+const onChange = fields => {
+  const newParamFields = {}
+  fields
+    .filter(field => field[0])
+    .forEach(([field, value]) => {
+      newParamFields[field] = value
+    })
+  dispatch("change", newParamFields)
+}
 </script>
 
 {#if fields}

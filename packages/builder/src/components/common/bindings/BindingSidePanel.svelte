@@ -1,129 +1,129 @@
 <script>
-  import groupBy from "lodash/fp/groupBy"
-  import { convertToJS } from "@budibase/string-templates"
-  import { Input, Layout, Icon, Popover } from "@budibase/bbui"
-  import { handlebarsCompletions } from "constants/completions"
+import { Icon, Input, Layout, Popover } from "@budibase/bbui"
+import { convertToJS } from "@budibase/string-templates"
+import { handlebarsCompletions } from "constants/completions"
+import groupBy from "lodash/fp/groupBy"
 
-  export let addHelper
-  export let addBinding
-  export let bindings
-  export let mode
-  export let allowHelpers
-  export let context = null
+export let addHelper
+export let addBinding
+export let bindings
+export let mode
+export let allowHelpers
+export let context = null
 
-  let search = ""
-  let searching = false
-  let popover
-  let popoverAnchor
-  let hoverTarget
-  let helpers = handlebarsCompletions()
-  let selectedCategory
-  let hideTimeout
+let search = ""
+let searching = false
+let popover
+let popoverAnchor
+let hoverTarget
+let helpers = handlebarsCompletions()
+let selectedCategory
+let hideTimeout
 
-  $: bindingIcons = bindings?.reduce((acc, ele) => {
-    if (ele.icon) {
-      acc[ele.category] = acc[ele.category] || ele.icon
-    }
-    return acc
-  }, {})
-  $: categoryIcons = { ...bindingIcons, Helpers: "MagicWand" }
-  $: categories = Object.entries(groupBy("category", bindings))
-  $: categoryNames = getCategoryNames(categories)
-  $: searchRgx = new RegExp(search, "ig")
-  $: filteredCategories = categories
-    .map(([name, categoryBindings]) => ({
-      name,
-      bindings: categoryBindings?.filter(binding => {
-        return !search || binding.readableBinding.match(searchRgx)
-      }),
-    }))
-    .filter(category => {
-      return (
-        category.bindings?.length > 0 &&
-        (!selectedCategory ? true : selectedCategory === category.name)
-      )
-    })
-  $: filteredHelpers = helpers?.filter(helper => {
+$: bindingIcons = bindings?.reduce((acc, ele) => {
+  if (ele.icon) {
+    acc[ele.category] = acc[ele.category] || ele.icon
+  }
+  return acc
+}, {})
+$: categoryIcons = { ...bindingIcons, Helpers: "MagicWand" }
+$: categories = Object.entries(groupBy("category", bindings))
+$: categoryNames = getCategoryNames(categories)
+$: searchRgx = new RegExp(search, "ig")
+$: filteredCategories = categories
+  .map(([name, categoryBindings]) => ({
+    name,
+    bindings: categoryBindings?.filter(binding => {
+      return !search || binding.readableBinding.match(searchRgx)
+    }),
+  }))
+  .filter(category => {
     return (
-      (!search ||
-        helper.label.match(searchRgx) ||
-        helper.description.match(searchRgx)) &&
-      (mode.name !== "javascript" || helper.allowsJs)
+      category.bindings?.length > 0 &&
+      (!selectedCategory ? true : selectedCategory === category.name)
     )
   })
+$: filteredHelpers = helpers?.filter(helper => {
+  return (
+    (!search ||
+      helper.label.match(searchRgx) ||
+      helper.description.match(searchRgx)) &&
+    (mode.name !== "javascript" || helper.allowsJs)
+  )
+})
 
-  const getHelperExample = (helper, js) => {
-    let example = helper.example || ""
-    if (js) {
-      example = convertToJS(example).split("\n")[0].split("= ")[1]
-      if (example === "null;") {
-        example = ""
-      }
-    }
-    return example || ""
-  }
-
-  const getCategoryNames = categories => {
-    let names = [...categories.map(cat => cat[0])]
-    if (allowHelpers) {
-      names.push("Helpers")
-    }
-    return names
-  }
-
-  const showBindingPopover = (binding, target) => {
-    if (!context || !binding.value || binding.value === "") {
-      return
-    }
-    stopHidingPopover()
-    popoverAnchor = target
-    hoverTarget = {
-      helper: false,
-      code: binding.valueHTML,
-    }
-    popover.show()
-  }
-
-  const showHelperPopover = (helper, target) => {
-    stopHidingPopover()
-    if (!helper.displayText && helper.description) {
-      return
-    }
-    popoverAnchor = target
-    hoverTarget = {
-      helper: true,
-      description: helper.description,
-      code: getHelperExample(helper, mode.name === "javascript"),
-    }
-    popover.show()
-  }
-
-  const hidePopover = () => {
-    hideTimeout = setTimeout(() => {
-      popover.hide()
-      popoverAnchor = null
-      hoverTarget = null
-      hideTimeout = null
-    }, 100)
-  }
-
-  const stopHidingPopover = () => {
-    if (hideTimeout) {
-      clearTimeout(hideTimeout)
-      hideTimeout = null
+const getHelperExample = (helper, js) => {
+  let example = helper.example || ""
+  if (js) {
+    example = convertToJS(example).split("\n")[0].split("= ")[1]
+    if (example === "null;") {
+      example = ""
     }
   }
+  return example || ""
+}
 
-  const startSearching = async () => {
-    searching = true
-    search = ""
+const getCategoryNames = categories => {
+  let names = [...categories.map(cat => cat[0])]
+  if (allowHelpers) {
+    names.push("Helpers")
   }
+  return names
+}
 
-  const stopSearching = e => {
-    e.stopPropagation()
-    searching = false
-    search = ""
+const showBindingPopover = (binding, target) => {
+  if (!context || !binding.value || binding.value === "") {
+    return
   }
+  stopHidingPopover()
+  popoverAnchor = target
+  hoverTarget = {
+    helper: false,
+    code: binding.valueHTML,
+  }
+  popover.show()
+}
+
+const showHelperPopover = (helper, target) => {
+  stopHidingPopover()
+  if (!helper.displayText && helper.description) {
+    return
+  }
+  popoverAnchor = target
+  hoverTarget = {
+    helper: true,
+    description: helper.description,
+    code: getHelperExample(helper, mode.name === "javascript"),
+  }
+  popover.show()
+}
+
+const hidePopover = () => {
+  hideTimeout = setTimeout(() => {
+    popover.hide()
+    popoverAnchor = null
+    hoverTarget = null
+    hideTimeout = null
+  }, 100)
+}
+
+const stopHidingPopover = () => {
+  if (hideTimeout) {
+    clearTimeout(hideTimeout)
+    hideTimeout = null
+  }
+}
+
+const startSearching = async () => {
+  searching = true
+  search = ""
+}
+
+const stopSearching = e => {
+  e.stopPropagation()
+  searching = false
+  search = ""
+}
 </script>
 
 <Popover

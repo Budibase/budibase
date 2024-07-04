@@ -1,15 +1,15 @@
-import Deployment from "./Deployment"
-import { context, db as dbCore, events, cache } from "@budibase/backend-core"
-import { DocumentType, getAutomationParams } from "../../../db/utils"
+import { events, cache, context, db as dbCore } from "@budibase/backend-core"
+import { backups } from "@budibase/pro"
+import { App, AppBackupTrigger } from "@budibase/types"
 import {
   clearMetadata,
   disableAllCrons,
   enableCronTrigger,
 } from "../../../automations/utils"
-import { backups } from "@budibase/pro"
-import { App, AppBackupTrigger } from "@budibase/types"
+import { DocumentType, getAutomationParams } from "../../../db/utils"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
+import Deployment from "./Deployment"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -45,7 +45,7 @@ async function storeDeploymentHistory(deployment: any) {
   try {
     // theres only one deployment doc per app database
     deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
-  } catch (err) {
+  } catch (_err) {
     deploymentDoc = { _id: DocumentType.DEPLOYMENTS, history: {} }
   }
 
@@ -105,7 +105,7 @@ export async function fetchDeployments(ctx: any) {
       await db.put(deployments)
     }
     ctx.body = Object.values(deployments.history).reverse()
-  } catch (err) {
+  } catch (_err) {
     ctx.body = []
   }
 }
@@ -115,7 +115,7 @@ export async function deploymentProgress(ctx: any) {
     const db = context.getAppDB()
     const deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
     ctx.body = deploymentDoc[ctx.params.deploymentId]
-  } catch (err) {
+  } catch (_err) {
     ctx.throw(
       500,
       `Error fetching data for deployment ${ctx.params.deploymentId}`
@@ -169,7 +169,7 @@ export const publishApp = async function (ctx: any) {
     try {
       const prodAppDoc = await db.get<App>(DocumentType.APP_METADATA)
       appDoc._rev = prodAppDoc._rev
-    } catch (err) {
+    } catch (_err) {
       delete appDoc._rev
     }
 

@@ -1,10 +1,10 @@
 <script>
-  import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
-  import { Heading, Body } from "@budibase/bbui"
+import { Body, Heading } from "@budibase/bbui"
+import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
 
-  export let onBack = null
-  export let title = ""
-  export let subtitle = ""
+export let onBack = null
+export let title = ""
+export let subtitle = ""
 </script>
 
 <div class="header">

@@ -1,87 +1,87 @@
 <script>
-  import {
-    Select,
-    DatePicker,
-    Multiselect,
-    TextArea,
-    Toggle,
-  } from "@budibase/bbui"
-  import { FieldType } from "@budibase/types"
-  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
-  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
-  import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
-  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
-  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+import {
+  DatePicker,
+  Multiselect,
+  Select,
+  TextArea,
+  Toggle,
+} from "@budibase/bbui"
+import { FieldType } from "@budibase/types"
+import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
+import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
+import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
+import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
 
-  export let onChange
-  export let field
-  export let schema
-  export let value
-  export let meta
-  export let bindings
-  export let isTestModal
+export let onChange
+export let field
+export let schema
+export let value
+export let meta
+export let bindings
+export let isTestModal
 
-  $: fieldData = value[field]
+$: fieldData = value[field]
 
-  $: parsedBindings = bindings.map(binding => {
-    let clone = Object.assign({}, binding)
-    clone.icon = "ShareAndroid"
-    return clone
-  })
+$: parsedBindings = bindings.map(binding => {
+  let clone = Object.assign({}, binding)
+  clone.icon = "ShareAndroid"
+  return clone
+})
 
-  let attachmentTypes = [
-    FieldType.ATTACHMENTS,
-    FieldType.ATTACHMENT_SINGLE,
-    FieldType.SIGNATURE_SINGLE,
-  ]
+let attachmentTypes = [
+  FieldType.ATTACHMENTS,
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.SIGNATURE_SINGLE,
+]
 
-  function schemaHasOptions(schema) {
-    return !!schema.constraints?.inclusion?.length
+function schemaHasOptions(schema) {
+  return !!schema.constraints?.inclusion?.length
+}
+
+function handleAttachmentParams(keyValueObj) {
+  let params = {}
+  if (!keyValueObj) {
+    return null
   }
 
-  function handleAttachmentParams(keyValueObj) {
-    let params = {}
-    if (!keyValueObj) {
-      return null
-    }
-
-    if (!Array.isArray(keyValueObj) && keyValueObj) {
-      keyValueObj = [keyValueObj]
-    }
-
-    if (keyValueObj.length) {
-      for (let param of keyValueObj) {
-        params[param.url || ""] = param.filename || ""
-      }
-    }
-    return params
+  if (!Array.isArray(keyValueObj) && keyValueObj) {
+    keyValueObj = [keyValueObj]
   }
 
-  const handleMediaUpdate = e => {
-    const media = e.detail || []
-    const isSingle =
-      schema.type === FieldType.ATTACHMENT_SINGLE ||
-      schema.type === FieldType.SIGNATURE_SINGLE
-    const parsedMedia = media.map(({ name, value }) => ({
-      url: name,
-      filename: value,
-    }))
-
-    if (isSingle) {
-      const [singleMedia] = parsedMedia
-      // Return only the first entry
-      return singleMedia
-        ? {
-            url: singleMedia.url,
-            filename: singleMedia.filename,
-          }
-        : null
+  if (keyValueObj.length) {
+    for (let param of keyValueObj) {
+      params[param.url || ""] = param.filename || ""
     }
-
-    // Return the entire array
-    return parsedMedia
   }
+  return params
+}
+
+const handleMediaUpdate = e => {
+  const media = e.detail || []
+  const isSingle =
+    schema.type === FieldType.ATTACHMENT_SINGLE ||
+    schema.type === FieldType.SIGNATURE_SINGLE
+  const parsedMedia = media.map(({ name, value }) => ({
+    url: name,
+    filename: value,
+  }))
+
+  if (isSingle) {
+    const [singleMedia] = parsedMedia
+    // Return only the first entry
+    return singleMedia
+      ? {
+          url: singleMedia.url,
+          filename: singleMedia.filename,
+        }
+      : null
+  }
+
+  // Return the entire array
+  return parsedMedia
+}
 </script>
 
 {#if schemaHasOptions(schema) && schema.type !== "array"}

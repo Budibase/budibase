@@ -1,6 +1,6 @@
 import controller from "../../controllers/public/rows"
-import Endpoint from "./utils/Endpoint"
 import { externalSearchValidator } from "../utils/validators"
+import Endpoint from "./utils/Endpoint"
 
 const read = [],
   write = []

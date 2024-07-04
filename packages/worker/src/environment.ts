@@ -1,6 +1,6 @@
+import { join } from "path"
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
-import { join } from "path"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.WORKER)
 

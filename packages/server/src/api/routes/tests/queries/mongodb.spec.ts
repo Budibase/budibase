@@ -1,11 +1,11 @@
+import { generator } from "@budibase/backend-core/tests"
 import { Datasource, Query } from "@budibase/types"
-import * as setup from "../utilities"
+import { BSON, type Collection, Db, MongoClient } from "mongodb"
 import {
   DatabaseName,
   getDatasource,
 } from "../../../../integrations/tests/utils"
-import { MongoClient, type Collection, BSON, Db } from "mongodb"
-import { generator } from "@budibase/backend-core/tests"
+import * as setup from "../utilities"
 
 const expectValidId = expect.stringMatching(/^\w{24}$/)
 const expectValidBsonObjectId = expect.any(BSON.ObjectId)

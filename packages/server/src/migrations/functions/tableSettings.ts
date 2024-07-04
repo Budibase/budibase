@@ -1,6 +1,6 @@
-import { getScreenParams } from "../../db/utils"
-import { Screen } from "@budibase/types"
 import { makePropSafe as safe } from "@budibase/string-templates"
+import { Screen } from "@budibase/types"
+import { getScreenParams } from "../../db/utils"
 /**
  * Date:
  * November 2022

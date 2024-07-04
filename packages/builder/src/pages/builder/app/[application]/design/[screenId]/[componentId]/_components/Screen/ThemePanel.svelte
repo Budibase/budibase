@@ -1,27 +1,27 @@
 <script>
-  import {
-    Layout,
-    Label,
-    ColorPicker,
-    notifications,
-    Icon,
-    Body,
-  } from "@budibase/bbui"
-  import { themeStore, appStore } from "stores/builder"
-  import { DefaultAppTheme } from "constants"
-  import AppThemeSelect from "./AppThemeSelect.svelte"
-  import ButtonRoundnessSelect from "./ButtonRoundnessSelect.svelte"
-  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
+import { DefaultAppTheme } from "constants"
+import {
+  Body,
+  ColorPicker,
+  Icon,
+  Label,
+  Layout,
+  notifications,
+} from "@budibase/bbui"
+import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
+import { appStore, themeStore } from "stores/builder"
+import AppThemeSelect from "./AppThemeSelect.svelte"
+import ButtonRoundnessSelect from "./ButtonRoundnessSelect.svelte"
 
-  $: customTheme = $themeStore.customTheme || {}
+$: customTheme = $themeStore.customTheme || {}
 
-  const update = async (property, value) => {
-    try {
-      themeStore.saveCustom({ [property]: value }, $appStore.appId)
-    } catch (error) {
-      notifications.error("Error updating custom theme")
-    }
+const update = async (property, value) => {
+  try {
+    themeStore.saveCustom({ [property]: value }, $appStore.appId)
+  } catch (error) {
+    notifications.error("Error updating custom theme")
   }
+}
 </script>
 
 <div class="info">

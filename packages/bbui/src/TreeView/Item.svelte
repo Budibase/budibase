@@ -1,9 +1,9 @@
 <script>
-  export let selected = false
-  export let open = false
-  export let href = false
-  export let title
-  export let icon
+export let selected = false
+export let open = false
+export let href = false
+export let title
+export let icon
 </script>
 
 <li

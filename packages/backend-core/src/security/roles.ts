@@ -1,14 +1,14 @@
-import { BuiltinPermissionID, PermissionLevel } from "./permissions"
+import { Role as RoleDoc, Screen } from "@budibase/types"
+import cloneDeep from "lodash/fp/cloneDeep"
+import { getAppDB } from "../context"
 import {
-  prefixRoleID,
-  getRoleParams,
   DocumentType,
   SEPARATOR,
   doWithDB,
+  getRoleParams,
+  prefixRoleID,
 } from "../db"
-import { getAppDB } from "../context"
-import { Screen, Role as RoleDoc } from "@budibase/types"
-import cloneDeep from "lodash/fp/cloneDeep"
+import { BuiltinPermissionID, PermissionLevel } from "./permissions"
 
 export const BUILTIN_ROLE_IDS = {
   ADMIN: "ADMIN",
@@ -273,7 +273,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     let appDB
     try {
       appDB = getAppDB()
-    } catch (error) {
+    } catch (_error) {
       // We don't have any apps, so we'll just use the built-in roles
     }
     return internal(appDB)

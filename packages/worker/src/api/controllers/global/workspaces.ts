@@ -1,4 +1,4 @@
-import { tenancy, db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, tenancy } from "@budibase/backend-core"
 import { BBContext } from "@budibase/types"
 
 export async function save(ctx: BBContext) {

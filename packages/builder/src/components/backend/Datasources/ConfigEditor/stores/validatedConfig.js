@@ -1,8 +1,8 @@
-import { derived, writable, get } from "svelte/store"
-import { getValidatorFields } from "./validation"
-import { capitalise } from "helpers"
 import { notifications } from "@budibase/bbui"
+import { capitalise } from "helpers"
+import { derived, get, writable } from "svelte/store"
 import { object } from "yup"
+import { getValidatorFields } from "./validation"
 
 export const createValidatedConfigStore = (integration, config) => {
   const configStore = writable(config)

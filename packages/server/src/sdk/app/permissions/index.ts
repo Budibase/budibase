@@ -8,11 +8,11 @@ import {
   VirtualDocumentType,
 } from "@budibase/types"
 import { extractViewInfoFromID, isViewID } from "../../../db/utils"
+import sdk from "../../../sdk"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
 } from "../../../utilities/security"
-import sdk from "../../../sdk"
 import { isV2 } from "../views"
 
 type ResourceActionAllowedResult =
@@ -141,10 +141,13 @@ export async function getDependantResources(
       }
     }
 
-    return Object.entries(dependants).reduce((p, [type, resources]) => {
-      p[type] = resources.size
-      return p
-    }, {} as Record<string, number>)
+    return Object.entries(dependants).reduce(
+      (p, [type, resources]) => {
+        p[type] = resources.size
+        return p
+      },
+      {} as Record<string, number>
+    )
   }
 
   return

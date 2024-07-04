@@ -80,7 +80,7 @@ export const getExplanationMessagesAndSupport = (fieldSchema, explanation) => {
     }
 
     return explanationMessagesAndSupport
-  } catch (e) {
+  } catch (_e) {
     return {
       support: support.partialSupport,
       messages: [messages.contextError],

@@ -1,13 +1,13 @@
 <script>
-  import GeneralPanel from "./GeneralPanel.svelte"
-  import ThemePanel from "./ThemePanel.svelte"
-  import { selectedScreen } from "stores/builder"
-  import Panel from "components/design/Panel.svelte"
-  import { capitalise } from "helpers"
-  import { ActionButton, Layout } from "@budibase/bbui"
+import { ActionButton, Layout } from "@budibase/bbui"
+import Panel from "components/design/Panel.svelte"
+import { capitalise } from "helpers"
+import { selectedScreen } from "stores/builder"
+import GeneralPanel from "./GeneralPanel.svelte"
+import ThemePanel from "./ThemePanel.svelte"
 
-  let activeTab = "general"
-  const tabs = ["general", "theme"]
+let activeTab = "general"
+const tabs = ["general", "theme"]
 </script>
 
 {#if $selectedScreen}

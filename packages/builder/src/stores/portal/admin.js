@@ -1,7 +1,7 @@
-import { writable, get } from "svelte/store"
+import { banner } from "@budibase/bbui"
 import { API } from "api"
 import { auth } from "stores/portal"
-import { banner } from "@budibase/bbui"
+import { get, writable } from "svelte/store"
 
 export const DEFAULT_CONFIG = {
   loaded: false,

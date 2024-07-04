@@ -1,50 +1,44 @@
 <script>
-  import { automationStore } from "stores/builder"
-  import {
-    notifications,
-    Icon,
-    Input,
-    ModalContent,
-    Modal,
-  } from "@budibase/bbui"
+import { Icon, Input, Modal, ModalContent, notifications } from "@budibase/bbui"
+import { automationStore } from "stores/builder"
 
-  export let automation
-  export let onCancel = undefined
+export let automation
+export let onCancel = undefined
 
-  let name
-  let error = ""
-  let modal
+let name
+let error = ""
+let modal
 
-  export const show = () => {
-    name = automation?.name
-    modal.show()
-  }
-  export const hide = () => {
-    modal.hide()
-  }
+export const show = () => {
+  name = automation?.name
+  modal.show()
+}
+export const hide = () => {
+  modal.hide()
+}
 
-  async function saveAutomation() {
-    try {
-      const updatedAutomation = {
-        ...automation,
-        name,
-      }
-      await automationStore.actions.save(updatedAutomation)
-      notifications.success(`Automation ${name} updated successfully`)
-      hide()
-    } catch (error) {
-      notifications.error("Error saving automation")
+async function saveAutomation() {
+  try {
+    const updatedAutomation = {
+      ...automation,
+      name,
     }
+    await automationStore.actions.save(updatedAutomation)
+    notifications.success(`Automation ${name} updated successfully`)
+    hide()
+  } catch (error) {
+    notifications.error("Error saving automation")
   }
+}
 
-  function checkValid(evt) {
-    name = evt.target.value
-    if (!name) {
-      error = "Name is required"
-      return
-    }
-    error = ""
+function checkValid(evt) {
+  name = evt.target.value
+  if (!name) {
+    error = "Name is required"
+    return
   }
+  error = ""
+}
 </script>
 
 <Modal bind:this={modal} on:hide={onCancel}>

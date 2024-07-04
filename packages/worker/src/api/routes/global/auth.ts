@@ -1,31 +1,43 @@
-import Router from "@koa/router"
-import * as authController from "../../controllers/global/auth"
 import { auth } from "@budibase/backend-core"
+import Router from "@koa/router"
 import Joi from "joi"
+import * as authController from "../../controllers/global/auth"
 
 const router: Router = new Router()
 
 function buildAuthValidation() {
   // prettier-ignore
-  return auth.joiValidator.body(Joi.object({
-    username: Joi.string().required(),
-    password: Joi.string().required(),
-  }).required().unknown(false))
+  return auth.joiValidator.body(
+    Joi.object({
+      username: Joi.string().required(),
+      password: Joi.string().required(),
+    })
+      .required()
+      .unknown(false)
+  )
 }
 
 function buildResetValidation() {
   // prettier-ignore
-  return auth.joiValidator.body(Joi.object({
-    email: Joi.string().required(),
-  }).required().unknown(false))
+  return auth.joiValidator.body(
+    Joi.object({
+      email: Joi.string().required(),
+    })
+      .required()
+      .unknown(false)
+  )
 }
 
 function buildResetUpdateValidation() {
   // prettier-ignore
-  return auth.joiValidator.body(Joi.object({
-    resetCode: Joi.string().required(),
-    password: Joi.string().required(),
-  }).required().unknown(false))
+  return auth.joiValidator.body(
+    Joi.object({
+      resetCode: Joi.string().required(),
+      password: Joi.string().required(),
+    })
+      .required()
+      .unknown(false)
+  )
 }
 
 router

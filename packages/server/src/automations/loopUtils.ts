@@ -1,5 +1,5 @@
-import * as automationUtils from "./automationUtils"
 import { isPlainObject } from "lodash"
+import * as automationUtils from "./automationUtils"
 
 type ObjValue = {
   [key: string]: string | ObjValue

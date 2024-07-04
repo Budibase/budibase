@@ -1,6 +1,6 @@
+import { permissions } from "@budibase/backend-core"
 import Router from "@koa/router"
 import authorized from "../../middleware/authorized"
-import { permissions } from "@budibase/backend-core"
 import * as controller from "../controllers/layout"
 
 const router: Router = new Router()

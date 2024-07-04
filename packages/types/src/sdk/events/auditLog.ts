@@ -1,5 +1,5 @@
-import { BaseEvent } from "./event"
 import { AuditLogSearchParams } from "../../api"
+import { BaseEvent } from "./event"
 
 export interface AuditLogFilteredEvent extends BaseEvent {
   filters: AuditLogSearchParams

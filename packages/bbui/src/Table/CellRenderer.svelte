@@ -1,52 +1,52 @@
 <script>
-  import StringRenderer from "./StringRenderer.svelte"
-  import BooleanRenderer from "./BooleanRenderer.svelte"
-  import DateTimeRenderer from "./DateTimeRenderer.svelte"
-  import RelationshipRenderer from "./RelationshipRenderer.svelte"
-  import AttachmentRenderer from "./AttachmentRenderer.svelte"
-  import ArrayRenderer from "./ArrayRenderer.svelte"
-  import InternalRenderer from "./InternalRenderer.svelte"
-  import { processStringSync } from "@budibase/string-templates"
+import { processStringSync } from "@budibase/string-templates"
+import ArrayRenderer from "./ArrayRenderer.svelte"
+import AttachmentRenderer from "./AttachmentRenderer.svelte"
+import BooleanRenderer from "./BooleanRenderer.svelte"
+import DateTimeRenderer from "./DateTimeRenderer.svelte"
+import InternalRenderer from "./InternalRenderer.svelte"
+import RelationshipRenderer from "./RelationshipRenderer.svelte"
+import StringRenderer from "./StringRenderer.svelte"
 
-  export let row
-  export let schema
-  export let value
-  export let customRenderers = []
-  export let snippets
+export let row
+export let schema
+export let value
+export let customRenderers = []
+export let snippets
 
-  let renderer
-  const typeMap = {
-    boolean: BooleanRenderer,
-    datetime: DateTimeRenderer,
-    link: RelationshipRenderer,
-    attachment: AttachmentRenderer,
-    string: StringRenderer,
-    options: StringRenderer,
-    number: StringRenderer,
-    longform: StringRenderer,
-    array: ArrayRenderer,
-    internal: InternalRenderer,
-    bb_reference: RelationshipRenderer,
+let renderer
+const typeMap = {
+  boolean: BooleanRenderer,
+  datetime: DateTimeRenderer,
+  link: RelationshipRenderer,
+  attachment: AttachmentRenderer,
+  string: StringRenderer,
+  options: StringRenderer,
+  number: StringRenderer,
+  longform: StringRenderer,
+  array: ArrayRenderer,
+  internal: InternalRenderer,
+  bb_reference: RelationshipRenderer,
+}
+$: type = getType(schema)
+$: customRenderer = customRenderers?.find(x => x.column === schema?.name)
+$: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
+$: cellValue = getCellValue(value, schema.template)
+
+const getType = schema => {
+  // Use a string renderer for dates if we use a custom template
+  if (schema?.type === "datetime" && schema?.template) {
+    return "string"
   }
-  $: type = getType(schema)
-  $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
-  $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
-  $: cellValue = getCellValue(value, schema.template)
+  return schema?.type || "string"
+}
 
-  const getType = schema => {
-    // Use a string renderer for dates if we use a custom template
-    if (schema?.type === "datetime" && schema?.template) {
-      return "string"
-    }
-    return schema?.type || "string"
+const getCellValue = (value, template) => {
+  if (!template) {
+    return value
   }
-
-  const getCellValue = (value, template) => {
-    if (!template) {
-      return value
-    }
-    return processStringSync(template, { value, snippets })
-  }
+  return processStringSync(template, { value, snippets })
+}
 </script>
 
 {#if renderer && (customRenderer || (cellValue != null && cellValue !== ""))}

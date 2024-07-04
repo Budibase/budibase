@@ -1,9 +1,9 @@
+import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { Datasource, SourceName } from "@budibase/types"
+import knex from "knex"
 import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
-import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
-import knex from "knex"
 
 let ports: Promise<testContainerUtils.Port[]>
 

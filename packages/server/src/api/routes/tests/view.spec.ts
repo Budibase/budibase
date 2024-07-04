@@ -1,5 +1,5 @@
 import { events } from "@budibase/backend-core"
-import * as setup from "./utilities"
+import { quotas } from "@budibase/pro"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -11,7 +11,7 @@ import {
   View,
   ViewCalculation,
 } from "@budibase/types"
-import { quotas } from "@budibase/pro"
+import * as setup from "./utilities"
 
 const priceTable: SaveTableRequest = {
   name: "table",

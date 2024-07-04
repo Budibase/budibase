@@ -1,13 +1,13 @@
-import { doInTenant } from "../context"
-import { getTenantIDFromCtx } from "../tenancy"
-import { buildMatcherRegex, matches } from "./matchers"
-import { Header } from "../constants"
 import {
   BBContext,
   EndpointMatcher,
   GetTenantIdOptions,
   TenantResolutionStrategy,
 } from "@budibase/types"
+import { Header } from "../constants"
+import { doInTenant } from "../context"
+import { getTenantIDFromCtx } from "../tenancy"
+import { buildMatcherRegex, matches } from "./matchers"
 
 export default function (
   allowQueryStringPatterns: EndpointMatcher[],

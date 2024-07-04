@@ -14,28 +14,28 @@ import * as controllers from "./controllers"
 
 const supertest = require("supertest")
 
-import { Config } from "../constants"
 import {
-  users,
-  context,
-  sessions,
   constants,
+  context,
   env as coreEnv,
   db as dbCore,
   encryption,
+  sessions,
+  users,
   utils,
 } from "@budibase/backend-core"
-import structures, { CSRF_TOKEN } from "./structures"
 import {
+  AuthToken,
+  ConfigType,
+  SCIMConfig,
   SaveUserResponse,
   User,
-  AuthToken,
-  SCIMConfig,
-  ConfigType,
 } from "@budibase/types"
-import API from "./api"
 import jwt, { Secret } from "jsonwebtoken"
 import cloneDeep from "lodash/fp/cloneDeep"
+import { Config } from "../constants"
+import API from "./api"
+import structures, { CSRF_TOKEN } from "./structures"
 
 class TestConfiguration {
   server: any
@@ -92,7 +92,14 @@ class TestConfiguration {
   async _req(config: any, params: any, controlFunc: any) {
     const request: any = {}
     // fake cookies, we don't need them
-    request.cookies = { set: () => {}, get: () => {} }
+    request.cookies = {
+      set: () => {
+        // empty on purpose
+      },
+      get: () => {
+        // empty on purpose
+      },
+    }
     request.user = { tenantId: this.getTenantId() }
     request.query = {}
     request.request = {
@@ -160,7 +167,7 @@ class TestConfiguration {
   getTenantId() {
     try {
       return context.getTenantId()
-    } catch (e) {
+    } catch (_e) {
       return this.tenantId!
     }
   }
@@ -330,7 +337,7 @@ class TestConfiguration {
           controllers.config.destroy
         )
       }
-    } catch (err) {
+    } catch (_err) {
       // don't need to handle error
     }
   }

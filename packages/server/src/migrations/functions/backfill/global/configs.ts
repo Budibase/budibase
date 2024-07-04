@@ -6,12 +6,12 @@ import {
 } from "@budibase/backend-core"
 import {
   Config,
-  isSMTPConfig,
-  isGoogleConfig,
-  isOIDCConfig,
-  isSettingsConfig,
   ConfigType,
   DatabaseQueryOpts,
+  isGoogleConfig,
+  isOIDCConfig,
+  isSMTPConfig,
+  isSettingsConfig,
 } from "@budibase/types"
 import env from "./../../../../environment"
 

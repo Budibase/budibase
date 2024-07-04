@@ -1,16 +1,16 @@
 <script>
-  import Icon from "./Icon.svelte"
+import Icon from "./Icon.svelte"
 
-  import Tooltip from "../Tooltip/Tooltip.svelte"
-  import { fade } from "svelte/transition"
+import { fade } from "svelte/transition"
+import Tooltip from "../Tooltip/Tooltip.svelte"
 
-  export let icon
-  export let background
-  export let color
-  export let size = "M"
-  export let tooltip
+export let icon
+export let background
+export let color
+export let size = "M"
+export let tooltip
 
-  let showTooltip = false
+let showTooltip = false
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

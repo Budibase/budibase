@@ -1,13 +1,13 @@
-import { ssoCallbackUrl } from "../utils"
-import * as sso from "./sso"
 import {
   ConfigType,
-  SSOProfile,
+  GoogleInnerConfig,
   SSOAuthDetails,
+  SSOProfile,
   SSOProviderType,
   SaveSSOUserFunction,
-  GoogleInnerConfig,
 } from "@budibase/types"
+import { ssoCallbackUrl } from "../utils"
+import * as sso from "./sso"
 
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 

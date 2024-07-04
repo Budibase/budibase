@@ -1,8 +1,8 @@
+import { sdk } from "@budibase/shared-core"
+import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
 import { derived } from "svelte/store"
-import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 import { admin } from "./admin"
 import { auth } from "./auth"
-import { sdk } from "@budibase/shared-core"
 
 export const menu = derived([admin, auth], ([$admin, $auth]) => {
   const user = $auth?.user

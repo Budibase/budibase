@@ -1,3 +1,4 @@
+import { DatabaseQueryOpts } from "@budibase/types"
 import {
   DocumentType,
   InternalTable,
@@ -6,7 +7,6 @@ import {
   ViewName,
 } from "../constants"
 import { getProdAppID } from "./conversions"
-import { DatabaseQueryOpts } from "@budibase/types"
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this

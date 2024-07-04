@@ -1,22 +1,22 @@
 <script>
-  import { Modal, ModalContent, Body } from "@budibase/bbui"
-  import { auth, admin } from "stores/portal"
+import { Body, Modal, ModalContent } from "@budibase/bbui"
+import { admin, auth } from "stores/portal"
 
-  export let onDismiss = () => {}
-  export let onShow = () => {}
+export let onDismiss = () => {}
+export let onShow = () => {}
 
-  let accountDowngradeModal
+let accountDowngradeModal
 
-  $: accountUrl = $admin.accountPortalUrl
-  $: billingUrl = `${accountUrl}/portal/billing`
+$: accountUrl = $admin.accountPortalUrl
+$: billingUrl = `${accountUrl}/portal/billing`
 
-  export function show() {
-    accountDowngradeModal.show()
-  }
+export function show() {
+  accountDowngradeModal.show()
+}
 
-  export function hide() {
-    accountDowngradeModal.hide()
-  }
+export function hide() {
+  accountDowngradeModal.hide()
+}
 </script>
 
 <Modal bind:this={accountDowngradeModal} on:show={onShow} on:hide={onDismiss}>

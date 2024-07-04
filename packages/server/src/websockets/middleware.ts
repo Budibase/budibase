@@ -1,8 +1,8 @@
-import { Socket } from "socket.io"
-import Cookies from "cookies"
 import http from "http"
-import Koa from "koa"
 import { Header } from "@budibase/backend-core"
+import Cookies from "cookies"
+import Koa from "koa"
+import { Socket } from "socket.io"
 
 /**
  * Constructs a fake Koa context to use for manually running middlewares in

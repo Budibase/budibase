@@ -1,38 +1,38 @@
 <script>
-  import { Body, Table, BoldRenderer, CodeRenderer } from "@budibase/bbui"
-  import { queries } from "stores/builder"
-  import { goto } from "@roxi/routify"
+import { Body, BoldRenderer, CodeRenderer, Table } from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import { queries } from "stores/builder"
 
-  export let datasource
+export let datasource
 
-  let dynamicVariables = []
+let dynamicVariables = []
 
-  $: enrichDynamicVariables(datasource, $queries.list)
+$: enrichDynamicVariables(datasource, $queries.list)
 
-  const dynamicVariableSchema = {
-    name: "",
-    query: "",
-    value: "",
-  }
+const dynamicVariableSchema = {
+  name: "",
+  query: "",
+  value: "",
+}
 
-  const onClick = dynamicVariable => {
-    const queryId = dynamicVariable.queryId
-    queries.select({ _id: queryId })
-    $goto(`../../query/${queryId}`)
-  }
+const onClick = dynamicVariable => {
+  const queryId = dynamicVariable.queryId
+  queries.select({ _id: queryId })
+  $goto(`../../query/${queryId}`)
+}
 
-  /**
-   * Add the query name to the dynamic variables
-   */
-  function enrichDynamicVariables(ds, possibleQueries) {
-    dynamicVariables = []
-    ds.config.dynamicVariables?.forEach(dv => {
-      const query = possibleQueries.find(query => query._id === dv.queryId)
-      if (query) {
-        dynamicVariables.push({ ...dv, query: query.name })
-      }
-    })
-  }
+/**
+ * Add the query name to the dynamic variables
+ */
+function enrichDynamicVariables(ds, possibleQueries) {
+  dynamicVariables = []
+  ds.config.dynamicVariables?.forEach(dv => {
+    const query = possibleQueries.find(query => query._id === dv.queryId)
+    if (query) {
+      dynamicVariables.push({ ...dv, query: query.name })
+    }
+  })
+}
 </script>
 
 {#if dynamicVariables && dynamicVariables.length > 0}

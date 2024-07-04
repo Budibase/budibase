@@ -1,17 +1,17 @@
 <script>
-  import ManageAccessButton from "../ManageAccessButton.svelte"
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
+import ManageAccessButton from "../ManageAccessButton.svelte"
 
-  const { datasource } = getContext("grid")
+const { datasource } = getContext("grid")
 
-  $: resourceId = getResourceID($datasource)
+$: resourceId = getResourceID($datasource)
 
-  const getResourceID = datasource => {
-    if (!datasource) {
-      return null
-    }
-    return datasource.type === "table" ? datasource.tableId : datasource.id
+const getResourceID = datasource => {
+  if (!datasource) {
+    return null
   }
+  return datasource.type === "table" ? datasource.tableId : datasource.id
+}
 </script>
 
 <ManageAccessButton {resourceId} />

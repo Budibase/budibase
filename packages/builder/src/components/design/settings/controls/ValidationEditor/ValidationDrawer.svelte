@@ -1,243 +1,238 @@
 <script>
-  import {
-    Button,
-    Icon,
-    DrawerContent,
-    Layout,
-    Select,
-    Heading,
-    Body,
-    Input,
-    DatePicker,
-  } from "@budibase/bbui"
-  import { selectedScreen, selectedComponent } from "stores/builder"
-  import { findClosestMatchingComponent } from "helpers/components"
-  import { getSchemaForDatasource, getDatasourceForProvider } from "dataBinding"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { generate } from "shortid"
+import {
+  Body,
+  Button,
+  DatePicker,
+  DrawerContent,
+  Heading,
+  Icon,
+  Input,
+  Layout,
+  Select,
+} from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+import { findClosestMatchingComponent } from "helpers/components"
+import { generate } from "shortid"
+import { selectedComponent, selectedScreen } from "stores/builder"
 
-  export let fieldName = null
-  export let rules = []
-  export let bindings = []
-  export let type
+export let fieldName = null
+export let rules = []
+export let bindings = []
+export let type
 
-  const Constraints = {
-    Required: {
-      label: "Required",
-      value: "required",
-    },
-    MinLength: {
-      label: "Min length",
-      value: "minLength",
-    },
-    MaxLength: {
-      label: "Max length",
-      value: "maxLength",
-    },
-    MaxValue: {
-      label: "Max value",
-      value: "maxValue",
-    },
-    MinValue: {
-      label: "Min value",
-      value: "minValue",
-    },
-    Equal: {
-      label: "Must equal",
-      value: "equal",
-    },
-    NotEqual: {
-      label: "Must not equal",
-      value: "notEqual",
-    },
-    Regex: {
-      label: "Must match regex",
-      value: "regex",
-    },
-    NotRegex: {
-      label: "Must not match regex",
-      value: "notRegex",
-    },
-    Contains: {
-      label: "Must contain",
-      value: "contains",
-    },
-    NotContains: {
-      label: "Must not contain",
-      value: "notContains",
-    },
-    MaxFileSize: {
-      label: "Max file size (MB)",
-      value: "maxFileSize",
-    },
-    MaxUploadSize: {
-      label: "Max total upload size (MB)",
-      value: "maxUploadSize",
-    },
+const Constraints = {
+  Required: {
+    label: "Required",
+    value: "required",
+  },
+  MinLength: {
+    label: "Min length",
+    value: "minLength",
+  },
+  MaxLength: {
+    label: "Max length",
+    value: "maxLength",
+  },
+  MaxValue: {
+    label: "Max value",
+    value: "maxValue",
+  },
+  MinValue: {
+    label: "Min value",
+    value: "minValue",
+  },
+  Equal: {
+    label: "Must equal",
+    value: "equal",
+  },
+  NotEqual: {
+    label: "Must not equal",
+    value: "notEqual",
+  },
+  Regex: {
+    label: "Must match regex",
+    value: "regex",
+  },
+  NotRegex: {
+    label: "Must not match regex",
+    value: "notRegex",
+  },
+  Contains: {
+    label: "Must contain",
+    value: "contains",
+  },
+  NotContains: {
+    label: "Must not contain",
+    value: "notContains",
+  },
+  MaxFileSize: {
+    label: "Max file size (MB)",
+    value: "maxFileSize",
+  },
+  MaxUploadSize: {
+    label: "Max total upload size (MB)",
+    value: "maxUploadSize",
+  },
+}
+const ConstraintMap = {
+  ["string"]: [
+    Constraints.Required,
+    Constraints.MaxLength,
+    Constraints.Equal,
+    Constraints.NotEqual,
+    Constraints.Regex,
+    Constraints.NotRegex,
+  ],
+  ["number"]: [
+    Constraints.Required,
+    Constraints.MaxValue,
+    Constraints.MinValue,
+    Constraints.Equal,
+    Constraints.NotEqual,
+  ],
+  ["boolean"]: [Constraints.Required, Constraints.Equal, Constraints.NotEqual],
+  ["datetime"]: [
+    Constraints.Required,
+    Constraints.MaxValue,
+    Constraints.MinValue,
+    Constraints.Equal,
+    Constraints.NotEqual,
+  ],
+  ["attachment"]: [
+    Constraints.Required,
+    Constraints.MaxFileSize,
+    Constraints.MaxUploadSize,
+  ],
+  ["attachment_single"]: [Constraints.Required, Constraints.MaxUploadSize],
+  ["signature_single"]: [Constraints.Required],
+  ["link"]: [
+    Constraints.Required,
+    Constraints.Contains,
+    Constraints.NotContains,
+    Constraints.MinLength,
+    Constraints.MaxLength,
+  ],
+  ["array"]: [
+    Constraints.Required,
+    Constraints.MinLength,
+    Constraints.MaxLength,
+    Constraints.Contains,
+    Constraints.NotContains,
+  ],
+}
+
+const resolveDatasource = (selectedScreen, componentInstance, parent) => {
+  return (
+    getDatasourceForProvider(selectedScreen, parent || componentInstance) || {}
+  )
+}
+
+$: dataSourceSchema = getDataSourceSchema($selectedScreen, $selectedComponent)
+$: field = fieldName || $selectedComponent?.field
+$: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
+$: fieldType = type?.split("/")[1] || "string"
+$: constraintOptions = getConstraintsForType(fieldType)
+
+const getConstraintsForType = type => {
+  return ConstraintMap[type]
+}
+
+const getDataSourceSchema = (asset, component) => {
+  if (!asset || !component) {
+    return null
   }
-  const ConstraintMap = {
-    ["string"]: [
-      Constraints.Required,
-      Constraints.MaxLength,
-      Constraints.Equal,
-      Constraints.NotEqual,
-      Constraints.Regex,
-      Constraints.NotRegex,
-    ],
-    ["number"]: [
-      Constraints.Required,
-      Constraints.MaxValue,
-      Constraints.MinValue,
-      Constraints.Equal,
-      Constraints.NotEqual,
-    ],
-    ["boolean"]: [
-      Constraints.Required,
-      Constraints.Equal,
-      Constraints.NotEqual,
-    ],
-    ["datetime"]: [
-      Constraints.Required,
-      Constraints.MaxValue,
-      Constraints.MinValue,
-      Constraints.Equal,
-      Constraints.NotEqual,
-    ],
-    ["attachment"]: [
-      Constraints.Required,
-      Constraints.MaxFileSize,
-      Constraints.MaxUploadSize,
-    ],
-    ["attachment_single"]: [Constraints.Required, Constraints.MaxUploadSize],
-    ["signature_single"]: [Constraints.Required],
-    ["link"]: [
-      Constraints.Required,
-      Constraints.Contains,
-      Constraints.NotContains,
-      Constraints.MinLength,
-      Constraints.MaxLength,
-    ],
-    ["array"]: [
-      Constraints.Required,
-      Constraints.MinLength,
-      Constraints.MaxLength,
-      Constraints.Contains,
-      Constraints.NotContains,
-    ],
+  const formParent = findClosestMatchingComponent(
+    asset.props,
+    component._id,
+    component =>
+      component._component.endsWith("/form") ||
+      component._component.endsWith("/formblock") ||
+      component._component.endsWith("/tableblock")
+  )
+  const dataSource = resolveDatasource(asset, component, formParent)
+  return getSchemaForDatasource(asset, dataSource)
+}
+
+const parseRulesFromSchema = (field, dataSourceSchema) => {
+  if (!field || !dataSourceSchema) {
+    return []
   }
-
-  const resolveDatasource = (selectedScreen, componentInstance, parent) => {
-    return (
-      getDatasourceForProvider(selectedScreen, parent || componentInstance) ||
-      {}
-    )
+  const fieldSchema = dataSourceSchema.schema?.[field]
+  const constraints = fieldSchema?.constraints
+  if (!constraints) {
+    return []
   }
+  let rules = []
 
-  $: dataSourceSchema = getDataSourceSchema($selectedScreen, $selectedComponent)
-  $: field = fieldName || $selectedComponent?.field
-  $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
-  $: fieldType = type?.split("/")[1] || "string"
-  $: constraintOptions = getConstraintsForType(fieldType)
-
-  const getConstraintsForType = type => {
-    return ConstraintMap[type]
-  }
-
-  const getDataSourceSchema = (asset, component) => {
-    if (!asset || !component) {
-      return null
-    }
-    const formParent = findClosestMatchingComponent(
-      asset.props,
-      component._id,
-      component =>
-        component._component.endsWith("/form") ||
-        component._component.endsWith("/formblock") ||
-        component._component.endsWith("/tableblock")
-    )
-    const dataSource = resolveDatasource(asset, component, formParent)
-    return getSchemaForDatasource(asset, dataSource)
-  }
-
-  const parseRulesFromSchema = (field, dataSourceSchema) => {
-    if (!field || !dataSourceSchema) {
-      return []
-    }
-    const fieldSchema = dataSourceSchema.schema?.[field]
-    const constraints = fieldSchema?.constraints
-    if (!constraints) {
-      return []
-    }
-    let rules = []
-
-    // Required constraint
-    if (
-      field === dataSourceSchema?.table?.primaryDisplay ||
-      constraints.presence?.allowEmpty === false ||
-      constraints.presence === true
-    ) {
-      rules.push({
-        constraint: "required",
-        error: "Required field",
-      })
-    }
-
-    // String length constraint
-    if (exists(constraints.length?.maximum)) {
-      const length = constraints.length.maximum
-      rules.push({
-        constraint: "maxLength",
-        value: length,
-        error: `Maximum ${length} characters`,
-      })
-    }
-
-    // Min / max number constraint
-    if (exists(constraints.numericality?.greaterThanOrEqualTo)) {
-      const min = constraints.numericality.greaterThanOrEqualTo
-      rules.push({
-        constraint: "minValue",
-        value: min,
-        error: `Minimum value is ${min}`,
-      })
-    }
-    if (exists(constraints.numericality?.lessThanOrEqualTo)) {
-      const max = constraints.numericality.lessThanOrEqualTo
-      rules.push({
-        constraint: "maxValue",
-        value: max,
-        error: `Maximum value is ${max}`,
-      })
-    }
-
-    return rules
+  // Required constraint
+  if (
+    field === dataSourceSchema?.table?.primaryDisplay ||
+    constraints.presence?.allowEmpty === false ||
+    constraints.presence === true
+  ) {
+    rules.push({
+      constraint: "required",
+      error: "Required field",
+    })
   }
 
-  const exists = value => {
-    return value != null && value !== ""
+  // String length constraint
+  if (exists(constraints.length?.maximum)) {
+    const length = constraints.length.maximum
+    rules.push({
+      constraint: "maxLength",
+      value: length,
+      error: `Maximum ${length} characters`,
+    })
   }
 
-  const addRule = () => {
-    rules = [
-      ...(rules || []),
-      {
-        valueType: "Binding",
-        type: fieldType,
-        id: generate(),
-        value: fieldType == "array" ? [] : null,
-      },
-    ]
+  // Min / max number constraint
+  if (exists(constraints.numericality?.greaterThanOrEqualTo)) {
+    const min = constraints.numericality.greaterThanOrEqualTo
+    rules.push({
+      constraint: "minValue",
+      value: min,
+      error: `Minimum value is ${min}`,
+    })
+  }
+  if (exists(constraints.numericality?.lessThanOrEqualTo)) {
+    const max = constraints.numericality.lessThanOrEqualTo
+    rules.push({
+      constraint: "maxValue",
+      value: max,
+      error: `Maximum value is ${max}`,
+    })
   }
 
-  const removeRule = id => {
-    rules = rules.filter(link => link.id !== id)
-  }
+  return rules
+}
 
-  const duplicateRule = id => {
-    const existingRule = rules.find(rule => rule.id === id)
-    const newRule = { ...existingRule, id: generate() }
-    rules = [...rules, newRule]
-  }
+const exists = value => {
+  return value != null && value !== ""
+}
+
+const addRule = () => {
+  rules = [
+    ...(rules || []),
+    {
+      valueType: "Binding",
+      type: fieldType,
+      id: generate(),
+      value: fieldType == "array" ? [] : null,
+    },
+  ]
+}
+
+const removeRule = id => {
+  rules = rules.filter(link => link.id !== id)
+}
+
+const duplicateRule = id => {
+  const existingRule = rules.find(rule => rule.id === id)
+  const newRule = { ...existingRule, id: generate() }
+  rules = [...rules, newRule]
+}
 </script>
 
 <DrawerContent>

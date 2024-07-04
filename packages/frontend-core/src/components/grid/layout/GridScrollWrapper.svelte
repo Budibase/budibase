@@ -1,104 +1,104 @@
 <script>
-  import { getContext } from "svelte"
-  import { domDebounce } from "../../../utils/utils"
+import { getContext } from "svelte"
+import { domDebounce } from "../../../utils/utils"
 
-  const {
-    rowHeight,
-    scroll,
-    focusedCellId,
-    renderedRows,
-    maxScrollTop,
-    maxScrollLeft,
-    bounds,
-    hoveredRowId,
-    menu,
-    focusedCellAPI,
-  } = getContext("grid")
+const {
+  rowHeight,
+  scroll,
+  focusedCellId,
+  renderedRows,
+  maxScrollTop,
+  maxScrollLeft,
+  bounds,
+  hoveredRowId,
+  menu,
+  focusedCellAPI,
+} = getContext("grid")
 
-  export let scrollVertically = false
-  export let scrollHorizontally = false
-  export let attachHandlers = false
-  export let ref
+export let scrollVertically = false
+export let scrollHorizontally = false
+export let attachHandlers = false
+export let ref
 
-  // Used for tracking touch events
-  let initialTouchX
-  let initialTouchY
+// Used for tracking touch events
+let initialTouchX
+let initialTouchY
 
-  $: style = generateStyle($scroll, $rowHeight)
+$: style = generateStyle($scroll, $rowHeight)
 
-  const generateStyle = (scroll, rowHeight) => {
-    const offsetX = scrollHorizontally ? -1 * scroll.left : 0
-    const offsetY = scrollVertically ? -1 * (scroll.top % rowHeight) : 0
-    return `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
+const generateStyle = (scroll, rowHeight) => {
+  const offsetX = scrollHorizontally ? -1 * scroll.left : 0
+  const offsetY = scrollVertically ? -1 * (scroll.top % rowHeight) : 0
+  return `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
+}
+
+// Handles a mouse wheel event and updates scroll state
+const handleWheel = e => {
+  e.preventDefault()
+  updateScroll(e.deltaX, e.deltaY, e.clientY)
+
+  // Close any open popovers when scrolling
+  $focusedCellAPI?.blur()
+
+  // If a context menu was visible, hide it
+  if ($menu.visible) {
+    menu.actions.close()
   }
+}
 
-  // Handles a mouse wheel event and updates scroll state
-  const handleWheel = e => {
-    e.preventDefault()
-    updateScroll(e.deltaX, e.deltaY, e.clientY)
+// Handles touch start events
+const handleTouchStart = e => {
+  if (!e.touches?.[0]) return
+  initialTouchX = e.touches[0].clientX
+  initialTouchY = e.touches[0].clientY
+}
 
-    // Close any open popovers when scrolling
-    $focusedCellAPI?.blur()
+// Handles touch move events and updates scroll state
+const handleTouchMove = e => {
+  if (!e.touches?.[0]) return
+  e.preventDefault()
 
-    // If a context menu was visible, hide it
-    if ($menu.visible) {
-      menu.actions.close()
-    }
+  // Compute delta from previous event, and update scroll
+  const deltaX = initialTouchX - e.touches[0].clientX
+  const deltaY = initialTouchY - e.touches[0].clientY
+  updateScroll(deltaX, deltaY)
+
+  // Store position to reference in next event
+  initialTouchX = e.touches[0].clientX
+  initialTouchY = e.touches[0].clientY
+
+  // If a context menu was visible, hide it
+  if ($menu.visible) {
+    menu.actions.close()
   }
+}
 
-  // Handles touch start events
-  const handleTouchStart = e => {
-    if (!e.touches?.[0]) return
-    initialTouchX = e.touches[0].clientX
-    initialTouchY = e.touches[0].clientY
-  }
+// Updates the scroll offset by a certain delta, and ensure scrolling
+// stays within sensible bounds. Debounced for performance.
+const updateScroll = domDebounce((deltaX, deltaY, clientY) => {
+  const { top, left } = $scroll
 
-  // Handles touch move events and updates scroll state
-  const handleTouchMove = e => {
-    if (!e.touches?.[0]) return
-    e.preventDefault()
+  // Calculate new scroll top
+  let newScrollTop = top + deltaY
+  newScrollTop = Math.max(0, Math.min(newScrollTop, $maxScrollTop))
 
-    // Compute delta from previous event, and update scroll
-    const deltaX = initialTouchX - e.touches[0].clientX
-    const deltaY = initialTouchY - e.touches[0].clientY
-    updateScroll(deltaX, deltaY)
+  // Calculate new scroll left
+  let newScrollLeft = left + deltaX
+  newScrollLeft = Math.max(0, Math.min(newScrollLeft, $maxScrollLeft))
 
-    // Store position to reference in next event
-    initialTouchX = e.touches[0].clientX
-    initialTouchY = e.touches[0].clientY
-
-    // If a context menu was visible, hide it
-    if ($menu.visible) {
-      menu.actions.close()
-    }
-  }
-
-  // Updates the scroll offset by a certain delta, and ensure scrolling
-  // stays within sensible bounds. Debounced for performance.
-  const updateScroll = domDebounce((deltaX, deltaY, clientY) => {
-    const { top, left } = $scroll
-
-    // Calculate new scroll top
-    let newScrollTop = top + deltaY
-    newScrollTop = Math.max(0, Math.min(newScrollTop, $maxScrollTop))
-
-    // Calculate new scroll left
-    let newScrollLeft = left + deltaX
-    newScrollLeft = Math.max(0, Math.min(newScrollLeft, $maxScrollLeft))
-
-    // Update state
-    scroll.set({
-      left: scrollHorizontally ? newScrollLeft : left,
-      top: scrollVertically ? newScrollTop : top,
-    })
-
-    // Hover row under cursor
-    if (clientY != null) {
-      const y = clientY - $bounds.top + (newScrollTop % $rowHeight)
-      const hoveredRow = $renderedRows[Math.floor(y / $rowHeight)]
-      hoveredRowId.set(hoveredRow?._id)
-    }
+  // Update state
+  scroll.set({
+    left: scrollHorizontally ? newScrollLeft : left,
+    top: scrollVertically ? newScrollTop : top,
   })
+
+  // Hover row under cursor
+  if (clientY != null) {
+    const y = clientY - $bounds.top + (newScrollTop % $rowHeight)
+    const hoveredRow = $renderedRows[Math.floor(y / $rowHeight)]
+    hoveredRowId.set(hoveredRow?._id)
+  }
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

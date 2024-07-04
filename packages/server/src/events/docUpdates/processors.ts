@@ -1,5 +1,5 @@
-import userGroupProcessor from "./syncUsers"
 import { docUpdates } from "@budibase/backend-core"
+import userGroupProcessor from "./syncUsers"
 
 export type UpdateCallback = (docId: string) => void
 let started = false

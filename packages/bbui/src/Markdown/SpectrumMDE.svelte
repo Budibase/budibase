@@ -1,44 +1,44 @@
 <script>
-  import EasyMDE from "easymde"
-  import "easymde/dist/easymde.min.css"
-  import { onMount } from "svelte"
+import EasyMDE from "easymde"
+import "easymde/dist/easymde.min.css"
+import { onMount } from "svelte"
 
-  export let height = null
-  export let scroll = true
-  export let easyMDEOptions = null
-  export let mde = null
-  export let id = null
-  export let fullScreenOffset = null
-  export let disabled = false
+export let height = null
+export let scroll = true
+export let easyMDEOptions = null
+export let mde = null
+export let id = null
+export let fullScreenOffset = null
+export let disabled = false
 
-  let element
+let element
 
-  onMount(() => {
-    height = height || "200px"
-    mde = new EasyMDE({
-      element,
-      spellChecker: false,
-      status: false,
-      unorderedListStyle: "-",
-      maxHeight: scroll ? height : undefined,
-      minHeight: scroll ? undefined : height,
-      ...easyMDEOptions,
-    })
-
-    // Revert the editor when we unmount
-    return () => {
-      mde.toTextArea()
-    }
+onMount(() => {
+  height = height || "200px"
+  mde = new EasyMDE({
+    element,
+    spellChecker: false,
+    status: false,
+    unorderedListStyle: "-",
+    maxHeight: scroll ? height : undefined,
+    minHeight: scroll ? undefined : height,
+    ...easyMDEOptions,
   })
 
-  $: styleString = getStyleString(fullScreenOffset)
-
-  const getStyleString = offset => {
-    let string = ""
-    string += `--fullscreen-offset-x:${offset?.x || "0px"};`
-    string += `--fullscreen-offset-y:${offset?.y || "0px"};`
-    return string
+  // Revert the editor when we unmount
+  return () => {
+    mde.toTextArea()
   }
+})
+
+$: styleString = getStyleString(fullScreenOffset)
+
+const getStyleString = offset => {
+  let string = ""
+  string += `--fullscreen-offset-x:${offset?.x || "0px"};`
+  string += `--fullscreen-offset-y:${offset?.y || "0px"};`
+  return string
+}
 </script>
 
 <div class:disabled style={styleString}>

@@ -1,7 +1,8 @@
+import { Writable } from "stream"
 import {
+  DocumentBulkResponse,
   DocumentDestroyResponse,
   DocumentInsertResponse,
-  DocumentBulkResponse,
   OkResponse,
 } from "@budibase/nano"
 import {
@@ -16,7 +17,6 @@ import {
   SqlQueryBinding,
 } from "@budibase/types"
 import tracer from "dd-trace"
-import { Writable } from "stream"
 
 export class DDInstrumentedDatabase implements Database {
   constructor(private readonly db: Database) {}

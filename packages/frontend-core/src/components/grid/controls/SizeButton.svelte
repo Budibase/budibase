@@ -1,76 +1,76 @@
 <script>
-  import { getContext } from "svelte"
-  import { ActionButton, Popover, Label } from "@budibase/bbui"
-  import {
-    DefaultColumnWidth,
-    LargeRowHeight,
-    MediumRowHeight,
-    SmallRowHeight,
-  } from "../lib/constants"
+import { ActionButton, Label, Popover } from "@budibase/bbui"
+import { getContext } from "svelte"
+import {
+  DefaultColumnWidth,
+  LargeRowHeight,
+  MediumRowHeight,
+  SmallRowHeight,
+} from "../lib/constants"
 
-  const {
-    stickyColumn,
-    columns,
-    rowHeight,
-    definition,
-    fixedRowHeight,
-    datasource,
-  } = getContext("grid")
+const {
+  stickyColumn,
+  columns,
+  rowHeight,
+  definition,
+  fixedRowHeight,
+  datasource,
+} = getContext("grid")
 
-  // Some constants for column width options
-  const smallColSize = 120
-  const mediumColSize = DefaultColumnWidth
-  const largeColSize = DefaultColumnWidth * 1.5
+// Some constants for column width options
+const smallColSize = 120
+const mediumColSize = DefaultColumnWidth
+const largeColSize = DefaultColumnWidth * 1.5
 
-  // Row height sizes
-  const rowSizeOptions = [
-    {
-      label: "Small",
-      size: SmallRowHeight,
-    },
-    {
-      label: "Medium",
-      size: MediumRowHeight,
-    },
-    {
-      label: "Large",
-      size: LargeRowHeight,
-    },
-  ]
+// Row height sizes
+const rowSizeOptions = [
+  {
+    label: "Small",
+    size: SmallRowHeight,
+  },
+  {
+    label: "Medium",
+    size: MediumRowHeight,
+  },
+  {
+    label: "Large",
+    size: LargeRowHeight,
+  },
+]
 
-  let open = false
-  let anchor
+let open = false
+let anchor
 
-  // Column width sizes
-  $: allCols = $columns.concat($stickyColumn ? [$stickyColumn] : [])
-  $: allSmall = allCols.every(col => col.width === smallColSize)
-  $: allMedium = allCols.every(col => col.width === mediumColSize)
-  $: allLarge = allCols.every(col => col.width === largeColSize)
-  $: custom = !allSmall && !allMedium && !allLarge
-  $: columnSizeOptions = [
-    {
-      label: "Small",
-      size: smallColSize,
-      selected: allSmall,
-    },
-    {
-      label: "Medium",
-      size: mediumColSize,
-      selected: allMedium,
-    },
-    {
-      label: "Large",
-      size: largeColSize,
-      selected: allLarge,
-    },
-  ]
+// Column width sizes
+$: allCols = $columns.concat($stickyColumn ? [$stickyColumn] : [])
+$: allSmall = allCols.every(col => col.width === smallColSize)
+$: allMedium = allCols.every(col => col.width === mediumColSize)
+$: allLarge = allCols.every(col => col.width === largeColSize)
+$: custom = !allSmall && !allMedium && !allLarge
+$: columnSizeOptions = [
+  {
+    label: "Small",
+    size: smallColSize,
+    selected: allSmall,
+  },
+  {
+    label: "Medium",
+    size: mediumColSize,
+    selected: allMedium,
+  },
+  {
+    label: "Large",
+    size: largeColSize,
+    selected: allLarge,
+  },
+]
 
-  const changeRowHeight = height => {
-    datasource.actions.saveDefinition({
-      ...$definition,
-      rowHeight: height,
-    })
-  }
+const changeRowHeight = height => {
+  datasource.actions.saveDefinition({
+    ...$definition,
+    rowHeight: height,
+  })
+}
 </script>
 
 <div bind:this={anchor}>

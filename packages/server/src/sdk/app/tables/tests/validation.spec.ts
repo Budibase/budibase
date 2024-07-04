@@ -1,5 +1,3 @@
-import { populateExternalTableSchemas } from "../validation"
-import { cloneDeep } from "lodash/fp"
 import {
   AutoReason,
   Datasource,
@@ -10,7 +8,9 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import { isEqual } from "lodash"
+import { cloneDeep } from "lodash/fp"
 import { generateDatasourceID } from "../../../../db/utils"
+import { populateExternalTableSchemas } from "../validation"
 
 const datasourceId = generateDatasourceID()
 
@@ -101,7 +101,7 @@ describe("validation and update of external table schemas", () => {
 
   function checkOtherColumns(
     table: Table,
-    compareTable: Table,
+    _compareTable: Table,
     columnsToCheck: string[]
   ) {
     for (let columnName of columnsToCheck) {

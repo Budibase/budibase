@@ -1,29 +1,29 @@
 <script>
-  import { Select, Label, Combobox, Checkbox, Body } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { getAllStateVariables } from "dataBinding"
+import { Body, Checkbox, Combobox, Label, Select } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { getAllStateVariables } from "dataBinding"
+import { onMount } from "svelte"
 
-  export let parameters
-  export let bindings = []
+export let parameters
+export let bindings = []
 
-  const keyOptions = getAllStateVariables()
-  const typeOptions = [
-    {
-      label: "Set value",
-      value: "set",
-    },
-    {
-      label: "Delete value",
-      value: "delete",
-    },
-  ]
+const keyOptions = getAllStateVariables()
+const typeOptions = [
+  {
+    label: "Set value",
+    value: "set",
+  },
+  {
+    label: "Delete value",
+    value: "delete",
+  },
+]
 
-  onMount(() => {
-    if (!parameters.type) {
-      parameters.type = "set"
-    }
-  })
+onMount(() => {
+  if (!parameters.type) {
+    parameters.type = "set"
+  }
+})
 </script>
 
 <div class="root">

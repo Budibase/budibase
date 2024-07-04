@@ -1,6 +1,6 @@
-import { sendEmail as sendEmailFn } from "../../../utilities/email"
 import { tenancy } from "@budibase/backend-core"
 import { BBContext, User } from "@budibase/types"
+import { sendEmail as sendEmailFn } from "../../../utilities/email"
 
 export async function sendEmail(ctx: BBContext) {
   let {

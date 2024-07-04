@@ -1,5 +1,5 @@
 <script>
-  export let noWrap = false
+export let noWrap = false
 </script>
 
 <div class="line">

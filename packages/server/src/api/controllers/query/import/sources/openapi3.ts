@@ -1,8 +1,8 @@
-import { ImportInfo } from "./base"
+import { URL } from "url"
 import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPIV3 } from "openapi-types"
+import { ImportInfo } from "./base"
 import { OpenAPISource } from "./base/openapi"
-import { URL } from "url"
 
 const parameterNotRef = (
   param: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject
@@ -94,7 +94,7 @@ export class OpenAPI3 extends OpenAPISource {
       } else {
         return false
       }
-    } catch (err) {
+    } catch (_err) {
       return false
     }
   }
@@ -116,7 +116,7 @@ export class OpenAPI3 extends OpenAPISource {
       url = this.document.servers[0].url
       try {
         url = new URL(url)
-      } catch (err) {
+      } catch (_err) {
         // unable to construct url, e.g. with variables
         // proceed with string form of url
       }

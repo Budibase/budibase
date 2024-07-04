@@ -1,5 +1,5 @@
-import { generator, structures } from "../../../../../tests"
 import { SSOProviderType } from "@budibase/types"
+import { generator, structures } from "../../../../../tests"
 
 jest.mock("passport-google-oauth")
 const mockStrategy = require("passport-google-oauth").OAuth2Strategy

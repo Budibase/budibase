@@ -1,20 +1,20 @@
 <script>
-  import Input from "../Form/Input.svelte"
-  import Icon from "../Icon/Icon.svelte"
-  import { notifications } from "../Stores/notifications"
+import Input from "../Form/Input.svelte"
+import Icon from "../Icon/Icon.svelte"
+import { notifications } from "../Stores/notifications"
 
-  export let label = null
-  export let value
+export let label = null
+export let value
 
-  const copyToClipboard = val => {
-    const dummy = document.createElement("textarea")
-    document.body.appendChild(dummy)
-    dummy.value = val
-    dummy.select()
-    document.execCommand("copy")
-    document.body.removeChild(dummy)
-    notifications.success(`Copied to clipboard`)
-  }
+const copyToClipboard = val => {
+  const dummy = document.createElement("textarea")
+  document.body.appendChild(dummy)
+  dummy.value = val
+  dummy.select()
+  document.execCommand("copy")
+  document.body.removeChild(dummy)
+  notifications.success(`Copied to clipboard`)
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

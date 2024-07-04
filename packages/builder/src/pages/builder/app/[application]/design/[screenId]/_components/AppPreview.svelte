@@ -1,247 +1,247 @@
 <script>
-  import { get } from "svelte/store"
-  import { onMount, onDestroy } from "svelte"
-  import {
-    previewStore,
-    builderStore,
-    themeStore,
-    componentStore,
-    appStore,
-    navigationStore,
-    selectedScreen,
-    hoverStore,
-    componentTreeNodesStore,
-    snippets,
-  } from "stores/builder"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { Layout, Heading, Body, Icon, notifications } from "@budibase/bbui"
-  import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
-  import { findComponent, findComponentPath } from "helpers/components"
-  import { isActive, goto } from "@roxi/routify"
-  import { ClientAppSkeleton } from "@budibase/frontend-core"
+import { Body, Heading, Icon, Layout, notifications } from "@budibase/bbui"
+import { ClientAppSkeleton } from "@budibase/frontend-core"
+import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
+import { goto, isActive } from "@roxi/routify"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { findComponent, findComponentPath } from "helpers/components"
+import {
+  appStore,
+  builderStore,
+  componentStore,
+  componentTreeNodesStore,
+  hoverStore,
+  navigationStore,
+  previewStore,
+  selectedScreen,
+  snippets,
+  themeStore,
+} from "stores/builder"
+import { onDestroy, onMount } from "svelte"
+import { get } from "svelte/store"
 
-  let iframe
-  let layout
-  let screen
-  let confirmDeleteDialog
-  let idToDelete
-  let loading = true
-  let error
+let iframe
+let layout
+let screen
+let confirmDeleteDialog
+let idToDelete
+let loading = true
+let error
 
-  // Messages that can be sent from the iframe preview to the builder
-  // Budibase events are and initialisation events
-  const MessageTypes = {
-    READY: "ready",
-    ERROR: "error",
-    BUDIBASE: "type",
+// Messages that can be sent from the iframe preview to the builder
+// Budibase events are and initialisation events
+const MessageTypes = {
+  READY: "ready",
+  ERROR: "error",
+  BUDIBASE: "type",
+}
+
+// Extract data to pass to the iframe
+$: screen = $selectedScreen
+
+// Determine selected component ID
+$: selectedComponentId = $componentStore.selectedComponentId
+
+$: previewData = {
+  appId: $appStore.appId,
+  layout,
+  screen,
+  selectedComponentId,
+  theme: $themeStore.theme,
+  customTheme: $themeStore.customTheme,
+  previewDevice: $previewStore.previewDevice,
+  messagePassing: $appStore.clientFeatures.messagePassing,
+  navigation: $navigationStore,
+  hiddenComponentIds:
+    $componentStore.componentToPaste?._id &&
+    $componentStore.componentToPaste?.isCut
+      ? [$componentStore.componentToPaste?._id]
+      : [],
+  isBudibaseEvent: true,
+  usedPlugins: $appStore.usedPlugins,
+  location: {
+    protocol: window.location.protocol,
+    hostname: window.location.hostname,
+    port: window.location.port,
+  },
+  snippets: $snippets,
+}
+
+// Refresh the preview when required
+$: json = JSON.stringify(previewData)
+$: refreshContent(json)
+
+// Determine if the add component menu is active
+$: isAddingComponent = $isActive(`./${selectedComponentId}/new`)
+
+// Register handler to send custom to the preview
+$: sendPreviewEvent = (name, payload) => {
+  iframe?.contentWindow.postMessage(
+    JSON.stringify({
+      name,
+      payload,
+      isBudibaseEvent: true,
+      runtimeEvent: true,
+    })
+  )
+}
+
+$: previewStore.registerEventHandler((name, payload) => {
+  return sendPreviewEvent(name, payload)
+})
+
+// Update the iframe with the builder info to render the correct preview
+const refreshContent = message => {
+  iframe?.contentWindow.postMessage(message)
+}
+
+const receiveMessage = async message => {
+  if (!message?.data?.type) {
+    return
   }
 
-  // Extract data to pass to the iframe
-  $: screen = $selectedScreen
-
-  // Determine selected component ID
-  $: selectedComponentId = $componentStore.selectedComponentId
-
-  $: previewData = {
-    appId: $appStore.appId,
-    layout,
-    screen,
-    selectedComponentId,
-    theme: $themeStore.theme,
-    customTheme: $themeStore.customTheme,
-    previewDevice: $previewStore.previewDevice,
-    messagePassing: $appStore.clientFeatures.messagePassing,
-    navigation: $navigationStore,
-    hiddenComponentIds:
-      $componentStore.componentToPaste?._id &&
-      $componentStore.componentToPaste?.isCut
-        ? [$componentStore.componentToPaste?._id]
-        : [],
-    isBudibaseEvent: true,
-    usedPlugins: $appStore.usedPlugins,
-    location: {
-      protocol: window.location.protocol,
-      hostname: window.location.hostname,
-      port: window.location.port,
-    },
-    snippets: $snippets,
+  // Await the event handler
+  try {
+    await handleBudibaseEvent(message)
+  } catch (error) {
+    notifications.error(error || "Error handling event from app preview")
   }
 
-  // Refresh the preview when required
-  $: json = JSON.stringify(previewData)
-  $: refreshContent(json)
-
-  // Determine if the add component menu is active
-  $: isAddingComponent = $isActive(`./${selectedComponentId}/new`)
-
-  // Register handler to send custom to the preview
-  $: sendPreviewEvent = (name, payload) => {
-    iframe?.contentWindow.postMessage(
-      JSON.stringify({
-        name,
-        payload,
-        isBudibaseEvent: true,
-        runtimeEvent: true,
-      })
-    )
+  // Reply that the event has been completed
+  if (message.data?.id) {
+    sendPreviewEvent("event-completed", message.data?.id)
   }
+}
 
-  $: previewStore.registerEventHandler((name, payload) => {
-    return sendPreviewEvent(name, payload)
-  })
+const handleBudibaseEvent = async event => {
+  const { type, data } = event.data
+  if (type === MessageTypes.READY) {
+    // Initialise the app when mounted
+    if (!loading) {
+      return
+    }
+    refreshContent(json)
+  } else if (type === MessageTypes.ERROR) {
+    // Catch any app errors
+    loading = false
+    error = event.error || "An unknown error occurred"
+  } else if (type === "select-component" && data.id) {
+    componentStore.select(data.id)
+    componentTreeNodesStore.makeNodeVisible(data.id)
+  } else if (type === "hover-component") {
+    hoverStore.hover(data.id, false)
+  } else if (type === "update-prop") {
+    await componentStore.updateSetting(data.prop, data.value)
+  } else if (type === "update-styles") {
+    await componentStore.updateStyles(data.styles, data.id)
+  } else if (type === "delete-component" && data.id) {
+    // Legacy type, can be deleted in future
+    confirmDeleteComponent(data.id)
+  } else if (type === "key-down") {
+    const { key, ctrlKey } = data
+    document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
+  } else if (type === "duplicate-component" && data.id) {
+    const rootComponent = get(selectedScreen).props
+    const component = findComponent(rootComponent, data.id)
+    componentStore.copy(component)
+    await componentStore.paste(component)
+  } else if (type === "preview-loaded") {
+    // Wait for this event to show the client library if intelligent
+    // loading is supported
+    loading = false
+  } else if (type === "move-component") {
+    const { componentId, destinationComponentId } = data
+    const rootComponent = get(selectedScreen).props
 
-  // Update the iframe with the builder info to render the correct preview
-  const refreshContent = message => {
-    iframe?.contentWindow.postMessage(message)
-  }
+    // Get source and destination components
+    const source = findComponent(rootComponent, componentId)
+    const destination = findComponent(rootComponent, destinationComponentId)
 
-  const receiveMessage = async message => {
-    if (!message?.data?.type) {
+    // Stop if the target is a child of source
+    const path = findComponentPath(source, destinationComponentId)
+    const ids = path.map(component => component._id)
+    if (ids.includes(data.destinationComponentId)) {
       return
     }
 
-    // Await the event handler
-    try {
-      await handleBudibaseEvent(message)
-    } catch (error) {
-      notifications.error(error || "Error handling event from app preview")
+    // Cut and paste the component to the new destination
+    if (source && destination) {
+      componentStore.copy(source, true, false)
+      await componentStore.paste(destination, data.mode)
     }
+  } else if (type === "request-add-component") {
+    toggleAddComponent()
+  } else if (type === "highlight-setting") {
+    builderStore.highlightSetting(data.setting, "error")
 
-    // Reply that the event has been completed
-    if (message.data?.id) {
-      sendPreviewEvent("event-completed", message.data?.id)
+    // Also scroll setting into view
+    const selector = `#${data.setting}-prop-control`
+    const element = document.querySelector(selector)?.parentElement
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      })
     }
-  }
-
-  const handleBudibaseEvent = async event => {
-    const { type, data } = event.data
-    if (type === MessageTypes.READY) {
-      // Initialise the app when mounted
-      if (!loading) {
-        return
+  } else if (type === "eject-block") {
+    const { id, definition } = data
+    await componentStore.handleEjectBlock(id, definition)
+  } else if (type === "reload-plugin") {
+    await componentStore.refreshDefinitions()
+  } else if (type === "drop-new-component") {
+    const { component, parent, index } = data
+    await componentStore.create(component, null, parent, index)
+  } else if (type === "add-parent-component") {
+    const { componentId, parentType } = data
+    await componentStore.addParent(componentId, parentType)
+  } else if (type === "provide-context") {
+    let context = data?.context
+    if (context) {
+      try {
+        context = JSON.parse(context)
+      } catch (error) {
+        context = null
       }
-      refreshContent(json)
-    } else if (type === MessageTypes.ERROR) {
-      // Catch any app errors
-      loading = false
-      error = event.error || "An unknown error occurred"
-    } else if (type === "select-component" && data.id) {
-      componentStore.select(data.id)
-      componentTreeNodesStore.makeNodeVisible(data.id)
-    } else if (type === "hover-component") {
-      hoverStore.hover(data.id, false)
-    } else if (type === "update-prop") {
-      await componentStore.updateSetting(data.prop, data.value)
-    } else if (type === "update-styles") {
-      await componentStore.updateStyles(data.styles, data.id)
-    } else if (type === "delete-component" && data.id) {
-      // Legacy type, can be deleted in future
-      confirmDeleteComponent(data.id)
-    } else if (type === "key-down") {
-      const { key, ctrlKey } = data
-      document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
-    } else if (type === "duplicate-component" && data.id) {
-      const rootComponent = get(selectedScreen).props
-      const component = findComponent(rootComponent, data.id)
-      componentStore.copy(component)
-      await componentStore.paste(component)
-    } else if (type === "preview-loaded") {
-      // Wait for this event to show the client library if intelligent
-      // loading is supported
-      loading = false
-    } else if (type === "move-component") {
-      const { componentId, destinationComponentId } = data
-      const rootComponent = get(selectedScreen).props
-
-      // Get source and destination components
-      const source = findComponent(rootComponent, componentId)
-      const destination = findComponent(rootComponent, destinationComponentId)
-
-      // Stop if the target is a child of source
-      const path = findComponentPath(source, destinationComponentId)
-      const ids = path.map(component => component._id)
-      if (ids.includes(data.destinationComponentId)) {
-        return
-      }
-
-      // Cut and paste the component to the new destination
-      if (source && destination) {
-        componentStore.copy(source, true, false)
-        await componentStore.paste(destination, data.mode)
-      }
-    } else if (type === "request-add-component") {
-      toggleAddComponent()
-    } else if (type === "highlight-setting") {
-      builderStore.highlightSetting(data.setting, "error")
-
-      // Also scroll setting into view
-      const selector = `#${data.setting}-prop-control`
-      const element = document.querySelector(selector)?.parentElement
-      if (element) {
-        element.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        })
-      }
-    } else if (type === "eject-block") {
-      const { id, definition } = data
-      await componentStore.handleEjectBlock(id, definition)
-    } else if (type === "reload-plugin") {
-      await componentStore.refreshDefinitions()
-    } else if (type === "drop-new-component") {
-      const { component, parent, index } = data
-      await componentStore.create(component, null, parent, index)
-    } else if (type === "add-parent-component") {
-      const { componentId, parentType } = data
-      await componentStore.addParent(componentId, parentType)
-    } else if (type === "provide-context") {
-      let context = data?.context
-      if (context) {
-        try {
-          context = JSON.parse(context)
-        } catch (error) {
-          context = null
-        }
-      }
-      previewStore.setSelectedComponentContext(context)
-    } else {
-      console.warn(`Client sent unknown event type: ${type}`)
     }
+    previewStore.setSelectedComponentContext(context)
+  } else {
+    console.warn(`Client sent unknown event type: ${type}`)
   }
+}
 
-  const confirmDeleteComponent = componentId => {
-    idToDelete = componentId
-    confirmDeleteDialog.show()
+const confirmDeleteComponent = componentId => {
+  idToDelete = componentId
+  confirmDeleteDialog.show()
+}
+
+const deleteComponent = async () => {
+  try {
+    await componentStore.delete({ _id: idToDelete })
+  } catch (error) {
+    notifications.error("Error deleting component")
   }
+  idToDelete = null
+}
 
-  const deleteComponent = async () => {
-    try {
-      await componentStore.delete({ _id: idToDelete })
-    } catch (error) {
-      notifications.error("Error deleting component")
-    }
-    idToDelete = null
+const cancelDeleteComponent = () => {
+  idToDelete = null
+}
+
+const toggleAddComponent = () => {
+  if ($isActive(`./:componentId/new`)) {
+    $goto(`./:componentId`)
+  } else {
+    $goto(`./:componentId/new`)
   }
+}
 
-  const cancelDeleteComponent = () => {
-    idToDelete = null
-  }
+onMount(() => {
+  window.addEventListener("message", receiveMessage)
+})
 
-  const toggleAddComponent = () => {
-    if ($isActive(`./:componentId/new`)) {
-      $goto(`./:componentId`)
-    } else {
-      $goto(`./:componentId/new`)
-    }
-  }
-
-  onMount(() => {
-    window.addEventListener("message", receiveMessage)
-  })
-
-  onDestroy(() => {
-    window.removeEventListener("message", receiveMessage)
-  })
+onDestroy(() => {
+  window.removeEventListener("message", receiveMessage)
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

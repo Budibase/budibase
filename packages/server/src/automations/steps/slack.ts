@@ -1,13 +1,13 @@
-import fetch from "node-fetch"
-import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
-  AutomationStepType,
-  AutomationIOType,
   AutomationFeature,
+  AutomationIOType,
+  AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
 } from "@budibase/types"
+import fetch from "node-fetch"
+import { getFetchResponse } from "./utils"
 
 export const definition: AutomationStepSchema = {
   name: "Slack Message",

@@ -1,36 +1,36 @@
 <script>
-  import { selectedScreen, componentStore } from "stores/builder"
-  import { Label, Combobox, Select } from "@budibase/bbui"
-  import { getActionProviders, buildFormSchema } from "dataBinding"
-  import { findComponent } from "helpers/components"
+import { Combobox, Label, Select } from "@budibase/bbui"
+import { buildFormSchema, getActionProviders } from "dataBinding"
+import { findComponent } from "helpers/components"
+import { componentStore, selectedScreen } from "stores/builder"
 
-  export let parameters
-  export let nested
+export let parameters
+export let nested
 
-  $: formComponent = getFormComponent(
-    $selectedScreen.props,
-    parameters.componentId
-  )
-  $: formSchema = buildFormSchema(formComponent)
-  $: fieldOptions = Object.keys(formSchema || {})
-  $: actionProviders = getActionProviders(
-    $selectedScreen,
-    $componentStore.selectedComponentId,
-    "ScrollTo",
-    { includeSelf: nested }
-  )
+$: formComponent = getFormComponent(
+  $selectedScreen.props,
+  parameters.componentId
+)
+$: formSchema = buildFormSchema(formComponent)
+$: fieldOptions = Object.keys(formSchema || {})
+$: actionProviders = getActionProviders(
+  $selectedScreen,
+  $componentStore.selectedComponentId,
+  "ScrollTo",
+  { includeSelf: nested }
+)
 
-  const getFormComponent = (asset, id) => {
-    let component = findComponent(asset, id)
-    if (component) {
-      return component
-    }
-    // Check for block component IDs, and use the block itself instead
-    if (id?.includes("-")) {
-      return findComponent(asset, id.split("-")[0])
-    }
-    return null
+const getFormComponent = (asset, id) => {
+  let component = findComponent(asset, id)
+  if (component) {
+    return component
   }
+  // Check for block component IDs, and use the block itself instead
+  if (id?.includes("-")) {
+    return findComponent(asset, id.split("-")[0])
+  }
+  return null
+}
 </script>
 
 <div class="root">

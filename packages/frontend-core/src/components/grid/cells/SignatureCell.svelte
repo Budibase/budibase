@@ -1,69 +1,69 @@
 <script>
-  import { onMount, getContext } from "svelte"
-  import { SignatureModal } from "@budibase/frontend-core/src/components"
-  import { CoreSignature, ActionButton } from "@budibase/bbui"
-  import GridPopover from "../overlays/GridPopover.svelte"
+import { ActionButton, CoreSignature } from "@budibase/bbui"
+import { SignatureModal } from "@budibase/frontend-core/src/components"
+import { getContext, onMount } from "svelte"
+import GridPopover from "../overlays/GridPopover.svelte"
 
-  export let schema
-  export let value
-  export let focused = false
-  export let onChange
-  export let readonly = false
-  export let api
+export let schema
+export let value
+export let focused = false
+export let onChange
+export let readonly = false
+export let api
 
-  const { API, notifications, props } = getContext("grid")
+const { API, notifications, props } = getContext("grid")
 
-  let isOpen = false
-  let modal
-  let anchor
+let isOpen = false
+let modal
+let anchor
 
-  $: editable = focused && !readonly
-  $: {
-    if (!focused) {
-      close()
-    }
+$: editable = focused && !readonly
+$: {
+  if (!focused) {
+    close()
   }
+}
 
-  const onKeyDown = () => {
-    return false
+const onKeyDown = () => {
+  return false
+}
+
+const open = () => {
+  isOpen = true
+}
+
+const close = () => {
+  isOpen = false
+}
+
+const deleteSignature = async () => {
+  onChange(null)
+}
+
+const saveSignature = async sigCanvas => {
+  const signatureFile = sigCanvas.toFile()
+
+  let attachRequest = new FormData()
+  attachRequest.append("file", signatureFile)
+
+  try {
+    const uploadReq = await API.uploadBuilderAttachment(attachRequest)
+    const [signatureAttachment] = uploadReq
+    onChange(signatureAttachment)
+  } catch (error) {
+    $notifications.error(error.message || "Failed to save signature")
+    return []
   }
+}
 
-  const open = () => {
-    isOpen = true
+onMount(() => {
+  api = {
+    focus: () => open(),
+    blur: () => close(),
+    isActive: () => isOpen,
+    onKeyDown,
   }
-
-  const close = () => {
-    isOpen = false
-  }
-
-  const deleteSignature = async () => {
-    onChange(null)
-  }
-
-  const saveSignature = async sigCanvas => {
-    const signatureFile = sigCanvas.toFile()
-
-    let attachRequest = new FormData()
-    attachRequest.append("file", signatureFile)
-
-    try {
-      const uploadReq = await API.uploadBuilderAttachment(attachRequest)
-      const [signatureAttachment] = uploadReq
-      onChange(signatureAttachment)
-    } catch (error) {
-      $notifications.error(error.message || "Failed to save signature")
-      return []
-    }
-  }
-
-  onMount(() => {
-    api = {
-      focus: () => open(),
-      blur: () => close(),
-      isActive: () => isOpen,
-      onKeyDown,
-    }
-  })
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

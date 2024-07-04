@@ -1,8 +1,8 @@
 import DiscordLogo from "assets/discord.svg"
-import ZapierLogo from "assets/zapier.png"
-import n8nLogo from "assets/n8n_square.png"
 import MakeLogo from "assets/make.svg"
+import n8nLogo from "assets/n8n_square.png"
 import SlackLogo from "assets/slack.svg"
+import ZapierLogo from "assets/zapier.png"
 
 export const externalActions = {
   zapier: { name: "zapier", icon: ZapierLogo },

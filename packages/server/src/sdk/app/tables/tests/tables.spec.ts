@@ -1,3 +1,4 @@
+import { generator } from "@budibase/backend-core/tests"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -5,7 +6,6 @@ import {
   TableSourceType,
   ViewV2,
 } from "@budibase/types"
-import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../.."
 
 jest.mock("../../views", () => ({

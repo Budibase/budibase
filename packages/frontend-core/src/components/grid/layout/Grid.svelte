@@ -1,140 +1,140 @@
 <script>
-  import { setContext, onMount } from "svelte"
-  import { writable, derived } from "svelte/store"
-  import { fade } from "svelte/transition"
-  import { clickOutside, ProgressCircle } from "@budibase/bbui"
-  import { createEventManagers } from "../lib/events"
-  import { createAPIClient } from "../../../api"
-  import { attachStores } from "../stores"
-  import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
-  import GridBody from "./GridBody.svelte"
-  import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
-  import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
-  import PopoverOverlay from "../overlays/PopoverOverlay.svelte"
-  import HeaderRow from "./HeaderRow.svelte"
-  import ScrollOverlay from "../overlays/ScrollOverlay.svelte"
-  import MenuOverlay from "../overlays/MenuOverlay.svelte"
-  import StickyColumn from "./StickyColumn.svelte"
-  import UserAvatars from "./UserAvatars.svelte"
-  import KeyboardManager from "../overlays/KeyboardManager.svelte"
-  import SortButton from "../controls/SortButton.svelte"
-  import ColumnsSettingButton from "../controls/ColumnsSettingButton.svelte"
-  import SizeButton from "../controls/SizeButton.svelte"
-  import NewRow from "./NewRow.svelte"
-  import { createGridWebsocket } from "../lib/websocket"
-  import {
-    MaxCellRenderOverflow,
-    GutterWidth,
-    DefaultRowHeight,
-    VPadding,
-    SmallRowHeight,
-    ControlsHeight,
-    ScrollBarSize,
-  } from "../lib/constants"
+import { ProgressCircle, clickOutside } from "@budibase/bbui"
+import { onMount, setContext } from "svelte"
+import { derived, writable } from "svelte/store"
+import { fade } from "svelte/transition"
+import { createAPIClient } from "../../../api"
+import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
+import ColumnsSettingButton from "../controls/ColumnsSettingButton.svelte"
+import SizeButton from "../controls/SizeButton.svelte"
+import SortButton from "../controls/SortButton.svelte"
+import {
+  ControlsHeight,
+  DefaultRowHeight,
+  GutterWidth,
+  MaxCellRenderOverflow,
+  ScrollBarSize,
+  SmallRowHeight,
+  VPadding,
+} from "../lib/constants"
+import { createEventManagers } from "../lib/events"
+import { createGridWebsocket } from "../lib/websocket"
+import KeyboardManager from "../overlays/KeyboardManager.svelte"
+import MenuOverlay from "../overlays/MenuOverlay.svelte"
+import PopoverOverlay from "../overlays/PopoverOverlay.svelte"
+import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
+import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
+import ScrollOverlay from "../overlays/ScrollOverlay.svelte"
+import { attachStores } from "../stores"
+import GridBody from "./GridBody.svelte"
+import HeaderRow from "./HeaderRow.svelte"
+import NewRow from "./NewRow.svelte"
+import StickyColumn from "./StickyColumn.svelte"
+import UserAvatars from "./UserAvatars.svelte"
 
-  export let API = null
-  export let datasource = null
-  export let schemaOverrides = null
-  export let columnWhitelist = null
-  export let canAddRows = true
-  export let canExpandRows = true
-  export let canEditRows = true
-  export let canDeleteRows = true
-  export let canEditColumns = true
-  export let canSaveSchema = true
-  export let canSelectRows = false
-  export let stripeRows = false
-  export let quiet = false
-  export let collaboration = true
-  export let showAvatars = true
-  export let showControls = true
-  export let initialFilter = null
-  export let initialSortColumn = null
-  export let initialSortOrder = null
-  export let fixedRowHeight = null
-  export let notifySuccess = null
-  export let notifyError = null
-  export let buttons = null
-  export let darkMode
-  export let isCloud = null
-  export let allowViewReadonlyColumns = false
+export let API = null
+export let datasource = null
+export let schemaOverrides = null
+export let columnWhitelist = null
+export let canAddRows = true
+export let canExpandRows = true
+export let canEditRows = true
+export let canDeleteRows = true
+export let canEditColumns = true
+export let canSaveSchema = true
+export let canSelectRows = false
+export let stripeRows = false
+export let quiet = false
+export let collaboration = true
+export let showAvatars = true
+export let showControls = true
+export let initialFilter = null
+export let initialSortColumn = null
+export let initialSortOrder = null
+export let fixedRowHeight = null
+export let notifySuccess = null
+export let notifyError = null
+export let buttons = null
+export let darkMode
+export let isCloud = null
+export let allowViewReadonlyColumns = false
 
-  // Unique identifier for DOM nodes inside this instance
-  const gridID = `grid-${Math.random().toString().slice(2)}`
+// Unique identifier for DOM nodes inside this instance
+const gridID = `grid-${Math.random().toString().slice(2)}`
 
-  // Store props in a store for reference in other stores
-  const props = writable($$props)
+// Store props in a store for reference in other stores
+const props = writable($$props)
 
-  // Build up context
-  let context = {
-    API: API || createAPIClient(),
-    gridID,
-    props,
+// Build up context
+let context = {
+  API: API || createAPIClient(),
+  gridID,
+  props,
+}
+context = { ...context, ...createEventManagers() }
+context = attachStores(context)
+
+// Reference some stores for local use
+const {
+  config,
+  isResizing,
+  isReordering,
+  ui,
+  loaded,
+  loading,
+  rowHeight,
+  contentLines,
+  gridFocused,
+  error,
+} = context
+
+// Keep config store up to date with props
+$: props.set({
+  datasource,
+  schemaOverrides,
+  columnWhitelist,
+  canAddRows,
+  canExpandRows,
+  canEditRows,
+  canDeleteRows,
+  canEditColumns,
+  canSaveSchema,
+  canSelectRows,
+  stripeRows,
+  quiet,
+  collaboration,
+  showAvatars,
+  showControls,
+  initialFilter,
+  initialSortColumn,
+  initialSortOrder,
+  fixedRowHeight,
+  notifySuccess,
+  notifyError,
+  buttons,
+  darkMode,
+  isCloud,
+})
+
+// Derive min height and make available in context
+const minHeight = derived(rowHeight, $height => {
+  const heightForControls = showControls ? ControlsHeight : 0
+  return VPadding + SmallRowHeight + $height + heightForControls
+})
+context = { ...context, minHeight }
+
+// Set context for children to consume
+setContext("grid", context)
+
+// Expose ability to retrieve context externally for external control
+export const getContext = () => context
+
+// Initialise websocket for multi-user
+onMount(() => {
+  if (collaboration) {
+    return createGridWebsocket(context)
   }
-  context = { ...context, ...createEventManagers() }
-  context = attachStores(context)
-
-  // Reference some stores for local use
-  const {
-    config,
-    isResizing,
-    isReordering,
-    ui,
-    loaded,
-    loading,
-    rowHeight,
-    contentLines,
-    gridFocused,
-    error,
-  } = context
-
-  // Keep config store up to date with props
-  $: props.set({
-    datasource,
-    schemaOverrides,
-    columnWhitelist,
-    canAddRows,
-    canExpandRows,
-    canEditRows,
-    canDeleteRows,
-    canEditColumns,
-    canSaveSchema,
-    canSelectRows,
-    stripeRows,
-    quiet,
-    collaboration,
-    showAvatars,
-    showControls,
-    initialFilter,
-    initialSortColumn,
-    initialSortOrder,
-    fixedRowHeight,
-    notifySuccess,
-    notifyError,
-    buttons,
-    darkMode,
-    isCloud,
-  })
-
-  // Derive min height and make available in context
-  const minHeight = derived(rowHeight, $height => {
-    const heightForControls = showControls ? ControlsHeight : 0
-    return VPadding + SmallRowHeight + $height + heightForControls
-  })
-  context = { ...context, minHeight }
-
-  // Set context for children to consume
-  setContext("grid", context)
-
-  // Expose ability to retrieve context externally for external control
-  export const getContext = () => context
-
-  // Initialise websocket for multi-user
-  onMount(() => {
-    if (collaboration) {
-      return createGridWebsocket(context)
-    }
-  })
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

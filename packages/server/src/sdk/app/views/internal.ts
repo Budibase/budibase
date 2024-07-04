@@ -1,9 +1,9 @@
+import { HTTPError, context } from "@budibase/backend-core"
 import { ViewV2, ViewV2Enriched } from "@budibase/types"
-import { context, HTTPError } from "@budibase/backend-core"
 
-import sdk from "../../../sdk"
-import * as utils from "../../../db/utils"
 import { enrichSchema, isV2 } from "."
+import * as utils from "../../../db/utils"
+import sdk from "../../../sdk"
 
 export async function get(viewId: string): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)

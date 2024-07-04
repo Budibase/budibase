@@ -1,6 +1,6 @@
+import { RenameColumn } from "../../../sdk"
 import { Document } from "../../document"
 import { View, ViewV2 } from "../view"
-import { RenameColumn } from "../../../sdk"
 import { TableSchema } from "./schema"
 
 export const INTERNAL_TABLE_SOURCE_ID = "bb_internal"

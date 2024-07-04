@@ -1,18 +1,18 @@
 <script>
-  import Body from "../Typography/Body.svelte"
-  import IconAvatar from "../Icon/IconAvatar.svelte"
-  import Label from "../Label/Label.svelte"
-  import Avatar from "../Avatar/Avatar.svelte"
+import Avatar from "../Avatar/Avatar.svelte"
+import IconAvatar from "../Icon/IconAvatar.svelte"
+import Label from "../Label/Label.svelte"
+import Body from "../Typography/Body.svelte"
 
-  export let icon = null
-  export let iconBackground = null
-  export let iconColor = null
-  export let avatar = false
-  export let title = null
-  export let subtitle = null
-  export let hoverable = false
+export let icon = null
+export let iconBackground = null
+export let iconColor = null
+export let avatar = false
+export let title = null
+export let subtitle = null
+export let hoverable = false
 
-  $: initials = avatar ? title?.[0] : null
+$: initials = avatar ? title?.[0] : null
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

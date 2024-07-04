@@ -1,8 +1,8 @@
 import { context } from "@budibase/backend-core"
-import { allLinkDocs } from "../../db/utils"
 import LinkDocumentImpl from "../../db/linkedRows/LinkDocument"
-import sdk from "../../sdk"
+import { allLinkDocs } from "../../db/utils"
 import env from "../../environment"
+import sdk from "../../sdk"
 
 const migration = async () => {
   const linkDocs = await allLinkDocs()

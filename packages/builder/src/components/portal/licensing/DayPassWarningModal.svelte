@@ -1,37 +1,37 @@
 <script>
-  import { Modal, ModalContent, Body, TooltipWrapper } from "@budibase/bbui"
-  import { licensing, auth, admin } from "stores/portal"
+import { Body, Modal, ModalContent, TooltipWrapper } from "@budibase/bbui"
+import { admin, auth, licensing } from "stores/portal"
 
-  export let onDismiss = () => {}
-  export let onShow = () => {}
+export let onDismiss = () => {}
+export let onShow = () => {}
 
-  let dayPassModal
+let dayPassModal
 
-  $: accountUrl = $admin.accountPortalUrl
-  $: upgradeUrl = `${accountUrl}/portal/upgrade`
+$: accountUrl = $admin.accountPortalUrl
+$: upgradeUrl = `${accountUrl}/portal/upgrade`
 
-  $: daysRemaining = $licensing.quotaResetDaysRemaining
-  $: quotaResetDate = $licensing.quotaResetDate
-  $: dayPassesUsed =
-    $licensing.usageMetrics?.dayPasses > 100
-      ? 100
-      : $licensing.usageMetrics?.dayPasses
-  $: dayPassesTitle =
-    dayPassesUsed >= 100
-      ? "You have run out of Day Passes"
-      : "You are almost out of Day Passes"
-  $: dayPassesBody =
-    dayPassesUsed >= 100
-      ? "Upgrade your account to bring your apps back online."
-      : "Upgrade your account to prevent your apps from going offline."
+$: daysRemaining = $licensing.quotaResetDaysRemaining
+$: quotaResetDate = $licensing.quotaResetDate
+$: dayPassesUsed =
+  $licensing.usageMetrics?.dayPasses > 100
+    ? 100
+    : $licensing.usageMetrics?.dayPasses
+$: dayPassesTitle =
+  dayPassesUsed >= 100
+    ? "You have run out of Day Passes"
+    : "You are almost out of Day Passes"
+$: dayPassesBody =
+  dayPassesUsed >= 100
+    ? "Upgrade your account to bring your apps back online."
+    : "Upgrade your account to prevent your apps from going offline."
 
-  export function show() {
-    dayPassModal.show()
-  }
+export function show() {
+  dayPassModal.show()
+}
 
-  export function hide() {
-    dayPassModal.hide()
-  }
+export function hide() {
+  dayPassModal.hide()
+}
 </script>
 
 <Modal bind:this={dayPassModal} on:show={onShow} on:hide={onDismiss}>

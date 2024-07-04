@@ -1,16 +1,16 @@
+import { join } from "path"
+import { sql } from "@budibase/backend-core"
+import { generator } from "@budibase/backend-core/tests"
 import {
   Datasource,
   Operation,
   QueryJson,
   SourceName,
+  SqlClient,
   SqlQuery,
   Table,
   TableSourceType,
-  SqlClient,
 } from "@budibase/types"
-import { sql } from "@budibase/backend-core"
-import { join } from "path"
-import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../sdk"
 
 const Sql = sql.Sql

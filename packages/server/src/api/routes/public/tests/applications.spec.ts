@@ -1,13 +1,13 @@
-import * as setup from "../../tests/utilities"
-import {
-  generateMakeRequest,
-  generateMakeRequestWithFormData,
-  MakeRequestResponse,
-  MakeRequestWithFormDataResponse,
-} from "./utils"
-import { User } from "@budibase/types"
 import { join } from "path"
 import { mocks } from "@budibase/backend-core/tests"
+import { User } from "@budibase/types"
+import * as setup from "../../tests/utilities"
+import {
+  MakeRequestResponse,
+  MakeRequestWithFormDataResponse,
+  generateMakeRequest,
+  generateMakeRequestWithFormData,
+} from "./utils"
 
 const PASSWORD = "testtest"
 const NO_LICENSE_MSG = "Endpoint unavailable, license required."

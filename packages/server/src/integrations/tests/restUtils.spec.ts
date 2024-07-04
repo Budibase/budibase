@@ -1,5 +1,5 @@
-import { getAttachmentHeaders } from "../utils/restUtils"
 import type { Headers } from "node-fetch"
+import { getAttachmentHeaders } from "../utils/restUtils"
 
 function headers(dispositionValue: string, contentType?: string) {
   return {

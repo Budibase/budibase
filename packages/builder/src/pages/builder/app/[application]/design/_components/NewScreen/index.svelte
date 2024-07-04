@@ -1,18 +1,18 @@
 <script>
-  import { Body } from "@budibase/bbui"
-  import CreationPage from "components/common/CreationPage.svelte"
-  import blankImage from "./images/blank.png"
-  import tableInline from "./images/tableInline.png"
-  import tableDetails from "./images/tableDetails.png"
-  import formImage from "./images/form.png"
-  import CreateScreenModal from "./CreateScreenModal.svelte"
-  import { screenStore } from "stores/builder"
+import { Body } from "@budibase/bbui"
+import CreationPage from "components/common/CreationPage.svelte"
+import { screenStore } from "stores/builder"
+import CreateScreenModal from "./CreateScreenModal.svelte"
+import blankImage from "./images/blank.png"
+import formImage from "./images/form.png"
+import tableDetails from "./images/tableDetails.png"
+import tableInline from "./images/tableInline.png"
 
-  export let onClose = null
+export let onClose = null
 
-  let createScreenModal
+let createScreenModal
 
-  $: hasScreens = $screenStore.screens?.length
+$: hasScreens = $screenStore.screens?.length
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

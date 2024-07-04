@@ -1,11 +1,11 @@
 import {
-  QueryJson,
   Datasource,
   DatasourcePlusQueryResponse,
+  QueryJson,
   RowOperations,
 } from "@budibase/types"
-import { getIntegration } from "../index"
 import sdk from "../../sdk"
+import { getIntegration } from "../index"
 
 export async function makeExternalQuery(
   datasource: Datasource,

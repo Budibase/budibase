@@ -1,8 +1,8 @@
 <script>
-  import { layoutStore } from "stores/builder"
-  import { Select } from "@budibase/bbui"
+import { Select } from "@budibase/bbui"
+import { layoutStore } from "stores/builder"
 
-  export let value
+export let value
 </script>
 
 <Select

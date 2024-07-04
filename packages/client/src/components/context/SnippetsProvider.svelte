@@ -1,6 +1,6 @@
 <script>
-  import Provider from "./Provider.svelte"
-  import { snippets } from "stores"
+import { snippets } from "stores"
+import Provider from "./Provider.svelte"
 </script>
 
 <Provider key="snippets" data={$snippets}>

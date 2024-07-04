@@ -10,7 +10,7 @@ export async function getFetchResponse(fetched: any) {
     } else {
       message = await fetched.text()
     }
-  } catch (err) {
+  } catch (_err) {
     message = "Failed to retrieve response"
   }
   return { status, message }
@@ -29,7 +29,7 @@ export function buildCtx(
     appId,
     user: { appId },
     eventEmitter: emitter,
-    throw: (code: string, error: any) => {
+    throw: (_code: string, error: any) => {
       throw error
     },
   }

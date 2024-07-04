@@ -1,5 +1,5 @@
-import DataFetch from "./DataFetch.js"
 import { get } from "svelte/store"
+import DataFetch from "./DataFetch.js"
 
 export default class ViewV2Fetch extends DataFetch {
   determineFeatureFlags() {
@@ -10,7 +10,7 @@ export default class ViewV2Fetch extends DataFetch {
     }
   }
 
-  getSchema(datasource, definition) {
+  getSchema(_datasource, definition) {
     return definition?.schema
   }
 

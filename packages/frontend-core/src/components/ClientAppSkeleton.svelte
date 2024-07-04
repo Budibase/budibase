@@ -1,8 +1,8 @@
 <script>
-  export let sideNav = false
-  export let hideDevTools = false
-  export let hideFooter = false
-  export let noAnimation = false
+export let sideNav = false
+export let hideDevTools = false
+export let hideFooter = false
+export let noAnimation = false
 </script>
 
 <div class:sideNav id="clientAppSkeletonLoader" class="skeleton">

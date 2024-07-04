@@ -1,7 +1,7 @@
-import TestConfig from "../../tests/utilities/TestConfiguration"
-import { basicTable } from "../../tests/utilities/structures"
 import { Table } from "@budibase/types"
 import sdk from "../"
+import TestConfig from "../../tests/utilities/TestConfiguration"
+import { basicTable } from "../../tests/utilities/structures"
 
 describe("tables", () => {
   const config = new TestConfig()

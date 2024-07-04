@@ -1,6 +1,6 @@
 import { getManifest } from "@budibase/string-templates"
-import sanitizeHtml from "sanitize-html"
 import { groupBy } from "lodash"
+import sanitizeHtml from "sanitize-html"
 
 export const EditorModes = {
   JS: {
@@ -26,7 +26,7 @@ export const SECTIONS = {
   },
 }
 
-export const buildHelperInfoNode = (completion, helper) => {
+export const buildHelperInfoNode = (_completion, helper) => {
   const ele = document.createElement("div")
   ele.classList.add("info-bubble")
 
@@ -86,7 +86,7 @@ export const helpersToCompletion = (helpers, mode) => {
       type: "helper",
       section: helperSection,
       detail: "Function",
-      apply: (view, completion, from, to) => {
+      apply: (view, _completion, from, to) => {
         insertBinding(view, from, to, key, mode)
       },
     })
@@ -185,7 +185,7 @@ export const jsAutocomplete = baseCompletions => {
   return coreCompletion
 }
 
-export const buildBindingInfoNode = (completion, binding) => {
+export const buildBindingInfoNode = (_completion, binding) => {
   if (!binding.valueHTML || binding.value == null) {
     return null
   }
@@ -320,7 +320,7 @@ export const bindingsToCompletions = (bindings, mode) => {
           type: "binding",
           detail: displayType,
           section: bindindSectionHeader,
-          apply: (view, completion, from, to) => {
+          apply: (view, _completion, from, to) => {
             insertBinding(view, from, to, binding.readableBinding, mode)
           },
         })

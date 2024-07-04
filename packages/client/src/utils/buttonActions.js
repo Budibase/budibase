@@ -1,23 +1,23 @@
-import { get } from "svelte/store"
-import download from "downloadjs"
+import { ActionTypes } from "constants"
+import { Helpers } from "@budibase/bbui"
 import { downloadStream } from "@budibase/frontend-core"
+import { API } from "api"
+import download from "downloadjs"
 import {
-  routeStore,
+  authStore,
   builderStore,
   confirmationStore,
-  authStore,
-  stateStore,
-  notificationStore,
   dataSourceStore,
-  uploadStore,
+  modalStore,
+  notificationStore,
+  routeStore,
   rowSelectionStore,
   sidePanelStore,
-  modalStore,
+  stateStore,
+  uploadStore,
 } from "stores"
-import { API } from "api"
-import { ActionTypes } from "constants"
+import { get } from "svelte/store"
 import { enrichDataBindings } from "./enrichDataBinding"
-import { Helpers } from "@budibase/bbui"
 
 // Default action handler, which extracts an action from context that was
 // provided by another component and executes it with all action parameters
@@ -100,7 +100,7 @@ const saveRowHandler = async (action, context) => {
       invalidateRelationships: true,
     })
     return { row }
-  } catch (error) {
+  } catch (_error) {
     // Abort next actions
     return false
   }
@@ -135,7 +135,7 @@ const duplicateRowHandler = async (action, context) => {
         invalidateRelationships: true,
       })
       return { row }
-    } catch (error) {
+    } catch (_error) {
       // Abort next actions
       return false
     }
@@ -150,7 +150,7 @@ const fetchRowHandler = async action => {
       const row = await API.fetchRow({ tableId, rowId })
 
       return { row }
-    } catch (error) {
+    } catch (_error) {
       return false
     }
   }
@@ -166,7 +166,7 @@ const deleteRowHandler = async action => {
       if (typeof rowConfig === "string") {
         try {
           parsedRowConfig = JSON.parse(rowConfig)
-        } catch (e) {
+        } catch (_e) {
           parsedRowConfig = rowConfig
             .split(",")
             .map(id => id.trim())
@@ -233,7 +233,7 @@ const triggerAutomationHandler = async action => {
     if (!notificationOverride) {
       notificationStore.actions.success("Automation triggered")
     }
-  } catch (error) {
+  } catch (_error) {
     // Abort next actions
     return false
   }
@@ -275,7 +275,7 @@ const queryExecutionHandler = async action => {
     }
 
     return { result }
-  } catch (error) {
+  } catch (_error) {
     notificationStore.actions.error(
       "An error occurred while executing the query"
     )
@@ -390,7 +390,7 @@ const exportDataHandler = async action => {
         customHeaders,
       })
       download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
-    } catch (error) {
+    } catch (_error) {
       notificationStore.actions.error("There was an error exporting the data")
     }
   }

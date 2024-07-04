@@ -1,7 +1,7 @@
 <script>
-  import { InternalRenderer } from "@budibase/bbui"
+import { InternalRenderer } from "@budibase/bbui"
 
-  export let value
+export let value
 </script>
 
 <div style="display: flex; ">

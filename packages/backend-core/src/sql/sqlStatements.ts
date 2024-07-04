@@ -1,4 +1,4 @@
-import { FieldType, Table, FieldSchema, SqlClient } from "@budibase/types"
+import { FieldSchema, FieldType, SqlClient, Table } from "@budibase/types"
 import { Knex } from "knex"
 
 export class SqlStatements {

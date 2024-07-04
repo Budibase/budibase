@@ -1,7 +1,7 @@
-import nodeFetch from "node-fetch"
-import { downloadTemplate as dlTemplate } from "../../utilities/fileSystem"
-import env from "../../environment"
 import { BBContext } from "@budibase/types"
+import nodeFetch from "node-fetch"
+import env from "../../environment"
+import { downloadTemplate as dlTemplate } from "../../utilities/fileSystem"
 
 // development flag, can be used to test against templates exported locally
 const DEFAULT_TEMPLATES_BUCKET =
@@ -18,7 +18,7 @@ export async function fetch(ctx: BBContext) {
     if (response.status !== 200) {
       error = true
     }
-  } catch (err) {
+  } catch (_err) {
     error = true
   }
   // if there is an error, simply return no templates

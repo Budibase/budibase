@@ -1,88 +1,88 @@
 <script>
-  import "@spectrum-css/modal/dist/index-vars.css"
-  import "@spectrum-css/underlay/dist/index-vars.css"
-  import { createEventDispatcher, setContext, tick, onMount } from "svelte"
-  import { fade, fly } from "svelte/transition"
-  import Portal from "svelte-portal"
-  import Context from "../context"
+import "@spectrum-css/modal/dist/index-vars.css"
+import "@spectrum-css/underlay/dist/index-vars.css"
+import { createEventDispatcher, onMount, setContext, tick } from "svelte"
+import Portal from "svelte-portal"
+import { fade, fly } from "svelte/transition"
+import Context from "../context"
 
-  export let fixed = false
-  export let inline = false
-  export let disableCancel = false
-  export let autoFocus = true
-  export let zIndex = 999
+export let fixed = false
+export let inline = false
+export let disableCancel = false
+export let autoFocus = true
+export let zIndex = 999
 
-  const dispatch = createEventDispatcher()
-  let visible = fixed || inline
-  let modal
+const dispatch = createEventDispatcher()
+let visible = fixed || inline
+let modal
 
-  $: dispatch(visible ? "show" : "hide")
+$: dispatch(visible ? "show" : "hide")
 
-  export function show() {
-    if (visible) {
-      return
-    }
-    visible = true
+export function show() {
+  if (visible) {
+    return
   }
+  visible = true
+}
 
-  export function hide() {
-    if (!visible || fixed || inline) {
-      return
-    }
-    visible = false
+export function hide() {
+  if (!visible || fixed || inline) {
+    return
   }
+  visible = false
+}
 
-  export function toggle() {
-    if (visible) {
-      hide()
-    } else {
-      show()
-    }
-  }
-
-  export function cancel() {
-    if (!visible || disableCancel) {
-      return
-    }
-    dispatch("cancel")
+export function toggle() {
+  if (visible) {
     hide()
+  } else {
+    show()
+  }
+}
+
+export function cancel() {
+  if (!visible || disableCancel) {
+    return
+  }
+  dispatch("cancel")
+  hide()
+}
+
+function handleKey(e) {
+  if (visible && e.key === "Escape") {
+    cancel()
+  }
+}
+
+async function focusModal(node) {
+  if (!autoFocus) {
+    return
+  }
+  await tick()
+
+  // Try to focus first input
+  const inputs = node.querySelectorAll("input")
+  if (inputs?.length) {
+    inputs[0].focus()
   }
 
-  function handleKey(e) {
-    if (visible && e.key === "Escape") {
-      cancel()
+  // Otherwise try to focus confirmation button
+  else if (modal) {
+    const confirm = modal.querySelector(".confirm-wrap .spectrum-Button")
+    if (confirm) {
+      confirm.focus()
     }
   }
+}
 
-  async function focusModal(node) {
-    if (!autoFocus) {
-      return
-    }
-    await tick()
+setContext(Context.Modal, { show, hide, toggle, cancel })
 
-    // Try to focus first input
-    const inputs = node.querySelectorAll("input")
-    if (inputs?.length) {
-      inputs[0].focus()
-    }
-
-    // Otherwise try to focus confirmation button
-    else if (modal) {
-      const confirm = modal.querySelector(".confirm-wrap .spectrum-Button")
-      if (confirm) {
-        confirm.focus()
-      }
-    }
+onMount(() => {
+  document.addEventListener("keydown", handleKey)
+  return () => {
+    document.removeEventListener("keydown", handleKey)
   }
-
-  setContext(Context.Modal, { show, hide, toggle, cancel })
-
-  onMount(() => {
-    document.addEventListener("keydown", handleKey)
-    return () => {
-      document.removeEventListener("keydown", handleKey)
-    }
-  })
+})
 </script>
 
 {#if inline}

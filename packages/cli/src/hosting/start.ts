@@ -1,8 +1,8 @@
-import { checkDockerConfigured, checkInitComplete, handleError } from "./utils"
+import fs from "fs"
+import compose from "docker-compose"
 import { info, success } from "../utils"
 import * as makeFiles from "./makeFiles"
-import compose from "docker-compose"
-import fs from "fs"
+import { checkDockerConfigured, checkInitComplete, handleError } from "./utils"
 
 export async function start() {
   await checkDockerConfigured()

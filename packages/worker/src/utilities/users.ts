@@ -1,4 +1,4 @@
-import { tenancy, db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, tenancy } from "@budibase/backend-core"
 
 export async function checkAnyUserExists() {
   try {
@@ -10,7 +10,7 @@ export async function checkAnyUserExists() {
       })
     )
     return users && users.rows.length >= 1
-  } catch (err) {
+  } catch (_err) {
     throw new Error("Unable to retrieve user list")
   }
 }

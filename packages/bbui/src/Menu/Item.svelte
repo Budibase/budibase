@@ -1,36 +1,36 @@
 <script>
-  import { createEventDispatcher, getContext } from "svelte"
-  import Icon from "../Icon/Icon.svelte"
+import { createEventDispatcher, getContext } from "svelte"
+import Icon from "../Icon/Icon.svelte"
 
-  const dispatch = createEventDispatcher()
-  const actionMenu = getContext("actionMenu")
+const dispatch = createEventDispatcher()
+const actionMenu = getContext("actionMenu")
 
-  export let icon = undefined
-  export let disabled = undefined
-  export let noClose = false
-  export let keyBind = undefined
+export let icon = undefined
+export let disabled = undefined
+export let noClose = false
+export let keyBind = undefined
 
-  $: keys = getKeys(keyBind)
+$: keys = getKeys(keyBind)
 
-  const getKeys = keyBind => {
-    let keys = keyBind?.split("+") || []
-    for (let i = 0; i < keys.length; i++) {
-      if (
-        keys[i].toLowerCase() === "ctrl" &&
-        navigator.platform.startsWith("Mac")
-      ) {
-        keys[i] = "⌘"
-      }
+const getKeys = keyBind => {
+  let keys = keyBind?.split("+") || []
+  for (let i = 0; i < keys.length; i++) {
+    if (
+      keys[i].toLowerCase() === "ctrl" &&
+      navigator.platform.startsWith("Mac")
+    ) {
+      keys[i] = "⌘"
     }
-    return keys
   }
+  return keys
+}
 
-  const onClick = () => {
-    if (actionMenu && !noClose) {
-      actionMenu.hide()
-    }
-    dispatch("click")
+const onClick = () => {
+  if (actionMenu && !noClose) {
+    actionMenu.hide()
   }
+  dispatch("click")
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

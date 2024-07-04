@@ -1,9 +1,20 @@
 const _passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 
-import { getGlobalDB } from "../context"
+import {
+  ConfigType,
+  GoogleInnerConfig,
+  OIDCInnerConfig,
+  PlatformLogoutOpts,
+  SSOProviderType,
+  SessionCookie,
+} from "@budibase/types"
+import * as userCache from "../cache/user"
+import { invalidateUser } from "../cache/user"
+import * as configs from "../configs"
 import { Cookie } from "../constants"
-import { getSessionsForUser, invalidateSessions } from "../security/sessions"
+import { getGlobalDB } from "../context"
+import * as events from "../events"
 import {
   authenticated,
   csrf,
@@ -12,20 +23,9 @@ import {
   oidc,
   tenancy,
 } from "../middleware"
-import * as userCache from "../cache/user"
-import { invalidateUser } from "../cache/user"
-import {
-  ConfigType,
-  GoogleInnerConfig,
-  OIDCInnerConfig,
-  PlatformLogoutOpts,
-  SessionCookie,
-  SSOProviderType,
-} from "@budibase/types"
-import * as events from "../events"
-import * as configs from "../configs"
-import { clearCookie, getCookie } from "../utils"
 import { ssoSaveUserNoOp } from "../middleware/passport/sso/sso"
+import { getSessionsForUser, invalidateSessions } from "../security/sessions"
+import { clearCookie, getCookie } from "../utils"
 
 const refresh = require("passport-oauth2-refresh")
 
@@ -63,7 +63,7 @@ async function refreshOIDCAccessToken(
       throw new Error("OIDC Config contents invalid")
     }
     strategy = await oidc.strategyFactory(enrichedConfig, ssoSaveUserNoOp)
-  } catch (err) {
+  } catch (_err) {
     throw new Error("Could not refresh OAuth Token")
   }
 

@@ -1,7 +1,7 @@
 import fs from "fs"
 import { join } from "path"
-import { ObjectStoreBuckets } from "../../constants"
 import { objectStore } from "@budibase/backend-core"
+import { ObjectStoreBuckets } from "../../constants"
 
 /**
  * This function manages temporary template files which are stored by Koa.

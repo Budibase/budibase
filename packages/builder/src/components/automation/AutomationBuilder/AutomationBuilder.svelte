@@ -1,6 +1,6 @@
 <script>
-  import { selectedAutomation } from "stores/builder"
-  import Flowchart from "./FlowChart/FlowChart.svelte"
+import { selectedAutomation } from "stores/builder"
+import Flowchart from "./FlowChart/FlowChart.svelte"
 </script>
 
 {#if $selectedAutomation}

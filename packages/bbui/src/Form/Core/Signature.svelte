@@ -1,137 +1,137 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte"
-  import Atrament from "atrament"
-  import Icon from "../../Icon/Icon.svelte"
+import Atrament from "atrament"
+import { createEventDispatcher, onMount } from "svelte"
+import Icon from "../../Icon/Icon.svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let last
+let last
 
-  export let value
-  export let disabled = false
-  export let editable = true
-  export let width = 400
-  export let height = 220
-  export let saveIcon = false
-  export let darkMode
+export let value
+export let disabled = false
+export let editable = true
+export let width = 400
+export let height = 220
+export let saveIcon = false
+export let darkMode
 
-  export function toDataUrl() {
-    // PNG to preserve transparency
-    return canvasRef.toDataURL("image/png")
+export function toDataUrl() {
+  // PNG to preserve transparency
+  return canvasRef.toDataURL("image/png")
+}
+
+export function toFile() {
+  const data = canvasContext
+    .getImageData(0, 0, width, height)
+    .data.some(channel => channel !== 0)
+
+  if (!data) {
+    return
   }
 
-  export function toFile() {
-    const data = canvasContext
-      .getImageData(0, 0, width, height)
-      .data.some(channel => channel !== 0)
-
-    if (!data) {
-      return
-    }
-
-    let dataURIParts = toDataUrl().split(",")
-    if (!dataURIParts.length) {
-      console.error("Could not retrieve signature data")
-    }
-
-    // Pull out the base64 encoded byte data
-    let binaryVal = atob(dataURIParts[1])
-    let blobArray = new Uint8Array(binaryVal.length)
-    let pos = 0
-    while (pos < binaryVal.length) {
-      blobArray[pos] = binaryVal.charCodeAt(pos)
-      pos++
-    }
-
-    const signatureBlob = new Blob([blobArray], {
-      type: "image/png",
-    })
-
-    return new File([signatureBlob], "signature.png", {
-      type: signatureBlob.type,
-    })
+  let dataURIParts = toDataUrl().split(",")
+  if (!dataURIParts.length) {
+    console.error("Could not retrieve signature data")
   }
 
-  export function clearCanvas() {
-    return canvasContext.clearRect(0, 0, canvasWidth, canvasHeight)
+  // Pull out the base64 encoded byte data
+  let binaryVal = atob(dataURIParts[1])
+  let blobArray = new Uint8Array(binaryVal.length)
+  let pos = 0
+  while (pos < binaryVal.length) {
+    blobArray[pos] = binaryVal.charCodeAt(pos)
+    pos++
   }
 
-  let canvasRef
-  let canvasContext
-  let canvasWrap
-  let canvasWidth
-  let canvasHeight
-  let signature
+  const signatureBlob = new Blob([blobArray], {
+    type: "image/png",
+  })
 
-  let updated = false
-  let signatureFile
-  let urlFailed
+  return new File([signatureBlob], "signature.png", {
+    type: signatureBlob.type,
+  })
+}
 
-  $: if (value) {
-    signatureFile = value
+export function clearCanvas() {
+  return canvasContext.clearRect(0, 0, canvasWidth, canvasHeight)
+}
+
+let canvasRef
+let canvasContext
+let canvasWrap
+let canvasWidth
+let canvasHeight
+let signature
+
+let updated = false
+let signatureFile
+let urlFailed
+
+$: if (value) {
+  signatureFile = value
+}
+
+$: if (signatureFile?.url) {
+  updated = false
+}
+
+$: if (last) {
+  dispatch("update")
+}
+
+onMount(() => {
+  if (!editable) {
+    return
   }
 
-  $: if (signatureFile?.url) {
-    updated = false
+  const getPos = e => {
+    var rect = canvasRef.getBoundingClientRect()
+    const canvasX = e.offsetX || e.targetTouches?.[0].pageX - rect.left
+    const canvasY = e.offsetY || e.targetTouches?.[0].pageY - rect.top
+
+    return { x: canvasX, y: canvasY }
   }
 
-  $: if (last) {
-    dispatch("update")
+  const checkUp = e => {
+    last = getPos(e)
   }
 
-  onMount(() => {
-    if (!editable) {
-      return
-    }
-
-    const getPos = e => {
-      var rect = canvasRef.getBoundingClientRect()
-      const canvasX = e.offsetX || e.targetTouches?.[0].pageX - rect.left
-      const canvasY = e.offsetY || e.targetTouches?.[0].pageY - rect.top
-
-      return { x: canvasX, y: canvasY }
-    }
-
-    const checkUp = e => {
-      last = getPos(e)
-    }
-
-    canvasRef.addEventListener("pointerdown", e => {
-      const current = getPos(e)
-      //If the cursor didn't move at all, block the default pointerdown
-      if (last?.x === current?.x && last?.y === current?.y) {
-        e.preventDefault()
-        e.stopImmediatePropagation()
-      }
-    })
-
-    document.addEventListener("pointerup", checkUp)
-
-    signature = new Atrament(canvasRef, {
-      width,
-      height,
-      color: "white",
-    })
-
-    signature.weight = 4
-    signature.smoothing = 2
-
-    canvasWrap.style.width = `${width}px`
-    canvasWrap.style.height = `${height}px`
-
-    const { width: wrapWidth, height: wrapHeight } =
-      canvasWrap.getBoundingClientRect()
-
-    canvasHeight = wrapHeight
-    canvasWidth = wrapWidth
-
-    canvasContext = canvasRef.getContext("2d")
-
-    return () => {
-      signature.destroy()
-      document.removeEventListener("pointerup", checkUp)
+  canvasRef.addEventListener("pointerdown", e => {
+    const current = getPos(e)
+    //If the cursor didn't move at all, block the default pointerdown
+    if (last?.x === current?.x && last?.y === current?.y) {
+      e.preventDefault()
+      e.stopImmediatePropagation()
     }
   })
+
+  document.addEventListener("pointerup", checkUp)
+
+  signature = new Atrament(canvasRef, {
+    width,
+    height,
+    color: "white",
+  })
+
+  signature.weight = 4
+  signature.smoothing = 2
+
+  canvasWrap.style.width = `${width}px`
+  canvasWrap.style.height = `${height}px`
+
+  const { width: wrapWidth, height: wrapHeight } =
+    canvasWrap.getBoundingClientRect()
+
+  canvasHeight = wrapHeight
+  canvasWidth = wrapWidth
+
+  canvasContext = canvasRef.getContext("2d")
+
+  return () => {
+    signature.destroy()
+    document.removeEventListener("pointerup", checkUp)
+  }
+})
 </script>
 
 <div class="signature" class:light={!darkMode} class:image-error={urlFailed}>

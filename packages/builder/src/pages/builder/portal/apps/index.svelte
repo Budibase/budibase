@@ -1,182 +1,182 @@
 <script>
-  import {
-    Heading,
-    Layout,
-    Button,
-    Select,
-    Modal,
-    Page,
-    notifications,
-    Notification,
-    Body,
-    Search,
-  } from "@budibase/bbui"
-  import Spinner from "components/common/Spinner.svelte"
-  import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
-  import AccountLockedModal from "components/portal/licensing/AccountLockedModal.svelte"
-  import { sdk } from "@budibase/shared-core"
-  import { automationStore, initialise } from "stores/builder"
-  import { API } from "api"
-  import { onMount } from "svelte"
-  import {
-    appsStore,
-    auth,
-    admin,
-    licensing,
-    environment,
-    enrichedApps,
-  } from "stores/portal"
-  import { goto } from "@roxi/routify"
-  import AppRow from "components/start/AppRow.svelte"
-  import Logo from "assets/bb-space-man.svg"
+import {
+  Body,
+  Button,
+  Heading,
+  Layout,
+  Modal,
+  Notification,
+  Page,
+  Search,
+  Select,
+  notifications,
+} from "@budibase/bbui"
+import { sdk } from "@budibase/shared-core"
+import { goto } from "@roxi/routify"
+import { API } from "api"
+import Logo from "assets/bb-space-man.svg"
+import Spinner from "components/common/Spinner.svelte"
+import AccountLockedModal from "components/portal/licensing/AccountLockedModal.svelte"
+import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
+import AppRow from "components/start/AppRow.svelte"
+import CreateAppModal from "components/start/CreateAppModal.svelte"
+import { automationStore, initialise } from "stores/builder"
+import {
+  admin,
+  appsStore,
+  auth,
+  enrichedApps,
+  environment,
+  licensing,
+} from "stores/portal"
+import { onMount } from "svelte"
 
-  let template
-  let creationModal
-  let appLimitModal
-  let accountLockedModal
-  let searchTerm = ""
-  let creatingFromTemplate = false
-  let automationErrors
+let template
+let creationModal
+let appLimitModal
+let accountLockedModal
+let searchTerm = ""
+let creatingFromTemplate = false
+let automationErrors
 
-  $: welcomeHeader = `Welcome ${$auth?.user?.firstName || "back"}`
-  $: filteredApps = filterApps($enrichedApps, searchTerm)
-  $: automationErrors = getAutomationErrors(filteredApps || [])
-  $: isOwner = $auth.accountPortalAccess && $admin.cloud
+$: welcomeHeader = `Welcome ${$auth?.user?.firstName || "back"}`
+$: filteredApps = filterApps($enrichedApps, searchTerm)
+$: automationErrors = getAutomationErrors(filteredApps || [])
+$: isOwner = $auth.accountPortalAccess && $admin.cloud
 
-  const filterApps = (apps, searchTerm) => {
-    return apps?.filter(app => {
-      const query = searchTerm?.trim()?.replace(/\s/g, "")
-      if (query) {
-        return app?.name?.toLowerCase().includes(query.toLowerCase())
-      } else {
-        return true
-      }
-    })
-  }
-
-  const usersLimitLockAction = $licensing?.errUserLimit
-    ? () => accountLockedModal.show()
-    : null
-
-  const getAutomationErrors = apps => {
-    const automationErrors = {}
-    for (let app of apps) {
-      if (app.automationErrors) {
-        if (errorCount(app.automationErrors) > 0) {
-          automationErrors[app.devId] = app.automationErrors
-        }
-      }
-    }
-    return automationErrors
-  }
-
-  const goToAutomationError = appId => {
-    const params = new URLSearchParams({
-      open: "error",
-    })
-    $goto(
-      `/builder/app/${appId}/settings/automation-history?${params.toString()}`
-    )
-  }
-
-  const errorCount = errors => {
-    return Object.values(errors).reduce((acc, next) => acc + next.length, 0)
-  }
-
-  const automationErrorMessage = appId => {
-    const app = $enrichedApps.find(app => app.devId === appId)
-    const errors = automationErrors[appId]
-    return `${app.name} - Automation error (${errorCount(errors)})`
-  }
-
-  const initiateAppCreation = async () => {
-    if ($licensing?.usageMetrics?.apps >= 100) {
-      appLimitModal.show()
-    } else if ($appsStore.apps?.length) {
-      $goto("/builder/portal/apps/create")
+const filterApps = (apps, searchTerm) => {
+  return apps?.filter(app => {
+    const query = searchTerm?.trim()?.replace(/\s/g, "")
+    if (query) {
+      return app?.name?.toLowerCase().includes(query.toLowerCase())
     } else {
-      template = null
-      creationModal.show()
-    }
-  }
-
-  const initiateAppImport = () => {
-    template = { fromFile: true }
-    creationModal.show()
-  }
-
-  const autoCreateApp = async () => {
-    try {
-      // Auto name app if has same name
-      const templateKey = template.key.split("/")[1]
-
-      let appName = templateKey.replace(/-/g, " ")
-      const appsWithSameName = $appsStore.apps.filter(app =>
-        app.name?.startsWith(appName)
-      )
-      appName = `${appName} ${appsWithSameName.length + 1}`
-
-      // Create form data to create app
-      let data = new FormData()
-      data.append("name", appName)
-      data.append("useTemplate", true)
-      data.append("templateKey", template.key)
-
-      // Create App
-      const createdApp = await API.createApp(data)
-
-      // Select Correct Application/DB in prep for creating user
-      const pkg = await API.fetchAppPackage(createdApp.instance._id)
-      await initialise(pkg)
-
-      // Update checklist - in case first app
-      await admin.init()
-
-      // Create user
-      await API.updateOwnMetadata({
-        roleId: "BASIC",
-      })
-      await auth.setInitInfo({})
-      $goto(`/builder/app/${createdApp.instance._id}`)
-    } catch (error) {
-      notifications.error("Error creating app")
-    }
-  }
-
-  const stopAppCreation = () => {
-    template = null
-  }
-
-  function createAppFromTemplateUrl(templateKey) {
-    // validate the template key just to make sure
-    const templateParts = templateKey.split("/")
-    if (templateParts.length === 2 && templateParts[0] === "app") {
-      template = {
-        key: templateKey,
-      }
-      autoCreateApp()
-    } else {
-      notifications.error("Your Template URL is invalid. Please try another.")
-    }
-  }
-
-  onMount(async () => {
-    try {
-      await environment.loadVariables()
-      // If the portal is loaded from an external URL with a template param
-      const initInfo = await auth.getInitInfo()
-      if (initInfo?.init_template) {
-        creatingFromTemplate = true
-        createAppFromTemplateUrl(initInfo.init_template)
-      }
-      if (usersLimitLockAction) {
-        usersLimitLockAction()
-      }
-    } catch (error) {
-      notifications.error("Error getting init info")
+      return true
     }
   })
+}
+
+const usersLimitLockAction = $licensing?.errUserLimit
+  ? () => accountLockedModal.show()
+  : null
+
+const getAutomationErrors = apps => {
+  const automationErrors = {}
+  for (let app of apps) {
+    if (app.automationErrors) {
+      if (errorCount(app.automationErrors) > 0) {
+        automationErrors[app.devId] = app.automationErrors
+      }
+    }
+  }
+  return automationErrors
+}
+
+const goToAutomationError = appId => {
+  const params = new URLSearchParams({
+    open: "error",
+  })
+  $goto(
+    `/builder/app/${appId}/settings/automation-history?${params.toString()}`
+  )
+}
+
+const errorCount = errors => {
+  return Object.values(errors).reduce((acc, next) => acc + next.length, 0)
+}
+
+const automationErrorMessage = appId => {
+  const app = $enrichedApps.find(app => app.devId === appId)
+  const errors = automationErrors[appId]
+  return `${app.name} - Automation error (${errorCount(errors)})`
+}
+
+const initiateAppCreation = async () => {
+  if ($licensing?.usageMetrics?.apps >= 100) {
+    appLimitModal.show()
+  } else if ($appsStore.apps?.length) {
+    $goto("/builder/portal/apps/create")
+  } else {
+    template = null
+    creationModal.show()
+  }
+}
+
+const initiateAppImport = () => {
+  template = { fromFile: true }
+  creationModal.show()
+}
+
+const autoCreateApp = async () => {
+  try {
+    // Auto name app if has same name
+    const templateKey = template.key.split("/")[1]
+
+    let appName = templateKey.replace(/-/g, " ")
+    const appsWithSameName = $appsStore.apps.filter(app =>
+      app.name?.startsWith(appName)
+    )
+    appName = `${appName} ${appsWithSameName.length + 1}`
+
+    // Create form data to create app
+    let data = new FormData()
+    data.append("name", appName)
+    data.append("useTemplate", true)
+    data.append("templateKey", template.key)
+
+    // Create App
+    const createdApp = await API.createApp(data)
+
+    // Select Correct Application/DB in prep for creating user
+    const pkg = await API.fetchAppPackage(createdApp.instance._id)
+    await initialise(pkg)
+
+    // Update checklist - in case first app
+    await admin.init()
+
+    // Create user
+    await API.updateOwnMetadata({
+      roleId: "BASIC",
+    })
+    await auth.setInitInfo({})
+    $goto(`/builder/app/${createdApp.instance._id}`)
+  } catch (error) {
+    notifications.error("Error creating app")
+  }
+}
+
+const stopAppCreation = () => {
+  template = null
+}
+
+function createAppFromTemplateUrl(templateKey) {
+  // validate the template key just to make sure
+  const templateParts = templateKey.split("/")
+  if (templateParts.length === 2 && templateParts[0] === "app") {
+    template = {
+      key: templateKey,
+    }
+    autoCreateApp()
+  } else {
+    notifications.error("Your Template URL is invalid. Please try another.")
+  }
+}
+
+onMount(async () => {
+  try {
+    await environment.loadVariables()
+    // If the portal is loaded from an external URL with a template param
+    const initInfo = await auth.getInitInfo()
+    if (initInfo?.init_template) {
+      creatingFromTemplate = true
+      createAppFromTemplateUrl(initInfo.init_template)
+    }
+    if (usersLimitLockAction) {
+      usersLimitLockAction()
+    }
+  } catch (error) {
+    notifications.error("Error getting init info")
+  }
+})
 </script>
 
 <Page>

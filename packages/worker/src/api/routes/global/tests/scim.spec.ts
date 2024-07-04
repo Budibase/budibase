@@ -1,5 +1,4 @@
-import tk from "timekeeper"
-import _ from "lodash"
+import { events } from "@budibase/backend-core"
 import { generator, mocks, structures } from "@budibase/backend-core/tests"
 import {
   CloudAccount,
@@ -8,8 +7,9 @@ import {
   ScimUpdateRequest,
   ScimUserResponse,
 } from "@budibase/types"
+import _ from "lodash"
+import tk from "timekeeper"
 import { TestConfiguration } from "../../../../tests"
-import { events } from "@budibase/backend-core"
 
 jest.setTimeout(30000)
 
@@ -839,9 +839,8 @@ describe("scim", () => {
 
       it("creating an external group that conflicts an internal one syncs the existing group", async () => {
         const groupToSave = structures.userGroups.userGroup()
-        const { body: internalGroup } = await config.api.groups.saveGroup(
-          groupToSave
-        )
+        const { body: internalGroup } =
+          await config.api.groups.saveGroup(groupToSave)
 
         const scimGroupData = {
           externalId: structures.uuid(),

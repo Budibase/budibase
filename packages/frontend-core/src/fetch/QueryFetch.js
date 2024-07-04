@@ -1,6 +1,6 @@
-import DataFetch from "./DataFetch.js"
 import { Helpers } from "@budibase/bbui"
 import { get } from "svelte/store"
+import DataFetch from "./DataFetch.js"
 
 export default class QueryFetch extends DataFetch {
   determineFeatureFlags(definition) {
@@ -24,7 +24,7 @@ export default class QueryFetch extends DataFetch {
         definition.fields = datasource.fields
       }
       return definition
-    } catch (error) {
+    } catch (_error) {
       return null
     }
   }
@@ -80,7 +80,7 @@ export default class QueryFetch extends DataFetch {
         cursor: nextCursor,
         hasNextPage,
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         rows: [],
         hasNextPage: false,

@@ -1,19 +1,19 @@
 <script>
-  import { Modal, ModalContent, Body, CoreSignature } from "@budibase/bbui"
+import { Body, CoreSignature, Modal, ModalContent } from "@budibase/bbui"
 
-  export let onConfirm = () => {}
-  export let value
-  export let title
-  export let darkMode
+export let onConfirm = () => {}
+export let value
+export let title
+export let darkMode
 
-  export const show = () => {
-    edited = false
-    modal.show()
-  }
+export const show = () => {
+  edited = false
+  modal.show()
+}
 
-  let modal
-  let canvas
-  let edited = false
+let modal
+let canvas
+let edited = false
 </script>
 
 <Modal bind:this={modal}>

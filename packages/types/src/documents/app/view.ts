@@ -1,7 +1,7 @@
 import { SearchFilter, SortOrder, SortType } from "../../api"
-import { UIFieldMetadata } from "./table"
-import { Document } from "../document"
 import { DBView } from "../../sdk"
+import { Document } from "../document"
+import { UIFieldMetadata } from "./table"
 
 export type ViewTemplateOpts = {
   field: string

@@ -1,5 +1,5 @@
-import { Ctx } from "@budibase/types"
 import { logging } from "@budibase/backend-core"
+import { Ctx } from "@budibase/types"
 
 interface LogRequest {
   message: string

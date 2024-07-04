@@ -1,92 +1,92 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import { tables, roles } from "stores/builder"
-  import {
-    notifications,
-    keepOpen,
-    ModalContent,
-    Select,
-    Link,
-  } from "@budibase/bbui"
-  import RowFieldControl from "../RowFieldControl.svelte"
-  import { API } from "api"
-  import ErrorsBox from "components/common/ErrorsBox.svelte"
-  import { goto } from "@roxi/routify"
+import {
+  Link,
+  ModalContent,
+  Select,
+  keepOpen,
+  notifications,
+} from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import { API } from "api"
+import ErrorsBox from "components/common/ErrorsBox.svelte"
+import { roles, tables } from "stores/builder"
+import { createEventDispatcher } from "svelte"
+import RowFieldControl from "../RowFieldControl.svelte"
 
-  export let row = {}
+export let row = {}
 
-  const dispatch = createEventDispatcher()
-  let errors = []
+const dispatch = createEventDispatcher()
+let errors = []
 
-  $: creating = row?._id == null
-  $: table = row.tableId
-    ? $tables.list.find(table => table._id === row?.tableId)
-    : $tables.selected
-  $: tableSchema = getUserSchema(table)
-  $: customSchemaKeys = getCustomSchemaKeys(tableSchema)
-  $: if (!row.status) row.status = "active"
+$: creating = row?._id == null
+$: table = row.tableId
+  ? $tables.list.find(table => table._id === row?.tableId)
+  : $tables.selected
+$: tableSchema = getUserSchema(table)
+$: customSchemaKeys = getCustomSchemaKeys(tableSchema)
+$: if (!row.status) row.status = "active"
 
-  const getUserSchema = table => {
-    let schema = table?.schema ?? {}
-    if (schema.username) {
-      schema.username.name = "Username"
-    }
-    return schema
+const getUserSchema = table => {
+  let schema = table?.schema ?? {}
+  if (schema.username) {
+    schema.username.name = "Username"
+  }
+  return schema
+}
+
+const getCustomSchemaKeys = schema => {
+  let customSchema = { ...schema }
+  delete customSchema["email"]
+  delete customSchema["roleId"]
+  delete customSchema["status"]
+  delete customSchema["firstName"]
+  delete customSchema["lastName"]
+  return Object.entries(customSchema)
+}
+
+const saveRow = async () => {
+  errors = []
+
+  // Do some basic front end validation first
+  if (!row.email) {
+    errors = [...errors, { message: "Email is required" }]
+  }
+  if (!row.roleId) {
+    errors = [...errors, { message: "Role is required" }]
+  }
+  if (errors.length) {
+    return keepOpen
   }
 
-  const getCustomSchemaKeys = schema => {
-    let customSchema = { ...schema }
-    delete customSchema["email"]
-    delete customSchema["roleId"]
-    delete customSchema["status"]
-    delete customSchema["firstName"]
-    delete customSchema["lastName"]
-    return Object.entries(customSchema)
-  }
-
-  const saveRow = async () => {
-    errors = []
-
-    // Do some basic front end validation first
-    if (!row.email) {
-      errors = [...errors, { message: "Email is required" }]
-    }
-    if (!row.roleId) {
-      errors = [...errors, { message: "Role is required" }]
-    }
-    if (errors.length) {
-      return keepOpen
-    }
-
-    try {
-      const res = await API.saveRow({ ...row, tableId: table._id })
-      notifications.success("User saved successfully")
-      dispatch("updaterows", res.id)
-    } catch (error) {
-      if (error.handled) {
-        const response = error.json
-        if (response?.errors) {
-          if (Array.isArray(response.errors)) {
-            errors = response.errors.map(error => ({ message: error }))
-          } else {
-            errors = Object.entries(response.errors)
-              .map(([key, error]) => ({ dataPath: key, message: error }))
-              .flat()
-          }
-        } else if (error.status === 400 && response?.validationErrors) {
-          errors = Object.keys(response.validationErrors).map(field => ({
-            message: `${field} ${response.validationErrors[field][0]}`,
-          }))
+  try {
+    const res = await API.saveRow({ ...row, tableId: table._id })
+    notifications.success("User saved successfully")
+    dispatch("updaterows", res.id)
+  } catch (error) {
+    if (error.handled) {
+      const response = error.json
+      if (response?.errors) {
+        if (Array.isArray(response.errors)) {
+          errors = response.errors.map(error => ({ message: error }))
         } else {
-          errors = [{ message: response?.message || "Unknown error" }]
+          errors = Object.entries(response.errors)
+            .map(([key, error]) => ({ dataPath: key, message: error }))
+            .flat()
         }
+      } else if (error.status === 400 && response?.validationErrors) {
+        errors = Object.keys(response.validationErrors).map(field => ({
+          message: `${field} ${response.validationErrors[field][0]}`,
+        }))
       } else {
-        notifications.error("Error saving user")
+        errors = [{ message: response?.message || "Unknown error" }]
       }
-
-      return keepOpen
+    } else {
+      notifications.error("Error saving user")
     }
+
+    return keepOpen
   }
+}
 </script>
 
 <ModalContent

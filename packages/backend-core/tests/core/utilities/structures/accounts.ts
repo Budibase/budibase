@@ -1,5 +1,3 @@
-import { generator, quotas, uuid } from "."
-import { generateGlobalUserID } from "../../../../src/docIds"
 import {
   Account,
   AccountSSOProvider,
@@ -13,6 +11,8 @@ import {
   SSOAccount,
 } from "@budibase/types"
 import sample from "lodash/sample"
+import { generator, quotas, uuid } from "."
+import { generateGlobalUserID } from "../../../../src/docIds"
 
 export const account = (partial: Partial<Account> = {}): Account => {
   return {

@@ -1,5 +1,5 @@
-import { publishEvent } from "../events"
 import { Event, SMTPCreatedEvent, SMTPUpdatedEvent } from "@budibase/types"
+import { publishEvent } from "../events"
 
 async function SMTPCreated(timestamp?: string | number) {
   const properties: SMTPCreatedEvent = {}

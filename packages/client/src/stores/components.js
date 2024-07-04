@@ -1,12 +1,12 @@
-import { get, writable, derived } from "svelte/store"
 import Manifest from "manifest.json"
-import { findComponentById, findComponentPathById } from "../utils/components"
-import { devToolsStore } from "./devTools"
-import { screenStore } from "./screens"
-import { builderStore } from "./builder"
+import { derived, get, writable } from "svelte/store"
 import Router from "../components/Router.svelte"
 import * as AppComponents from "../components/app/index.js"
 import { ScreenslotType } from "../constants.js"
+import { findComponentById, findComponentPathById } from "../utils/components"
+import { builderStore } from "./builder"
+import { devToolsStore } from "./devTools"
+import { screenStore } from "./screens"
 
 export const BudibasePrefix = "@budibase/standard-components/"
 

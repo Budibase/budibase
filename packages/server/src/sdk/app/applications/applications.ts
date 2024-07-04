@@ -1,10 +1,10 @@
-import { AppStatus } from "../../../db/utils"
-import { App, ContextUser, User } from "@budibase/types"
-import { getLocksById } from "../../../utilities/redis"
-import { enrichApps } from "../../users/sessions"
-import { checkAppMetadata } from "../../../automations/logging"
 import { db as dbCore, users } from "@budibase/backend-core"
 import { groups } from "@budibase/pro"
+import { App, ContextUser, User } from "@budibase/types"
+import { checkAppMetadata } from "../../../automations/logging"
+import { AppStatus } from "../../../db/utils"
+import { getLocksById } from "../../../utilities/redis"
+import { enrichApps } from "../../users/sessions"
 
 export function filterAppList(user: User, apps: App[]) {
   let appList: string[] = []

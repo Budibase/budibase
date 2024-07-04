@@ -1,12 +1,12 @@
-import { FieldType } from "@budibase/types"
-import { ActionStepID } from "constants/backend/automations"
 import { TableNames } from "constants"
+import { FieldType } from "@budibase/types"
 import {
   AUTO_COLUMN_DISPLAY_NAMES,
   AUTO_COLUMN_SUB_TYPES,
   FIELDS,
   isAutoColumnUserRelationship,
 } from "constants/backend"
+import { ActionStepID } from "constants/backend/automations"
 
 export function getAutoColumnInformation(enabled = true) {
   let info = {}

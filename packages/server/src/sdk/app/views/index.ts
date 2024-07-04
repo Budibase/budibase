@@ -1,3 +1,6 @@
+import { HTTPError, db as dbCore } from "@budibase/backend-core"
+import { features } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import {
   RenameColumn,
   TableSchema,
@@ -6,17 +9,14 @@ import {
   ViewV2,
   ViewV2Enriched,
 } from "@budibase/types"
-import { HTTPError, db as dbCore } from "@budibase/backend-core"
-import { features } from "@budibase/pro"
-import { helpers } from "@budibase/shared-core"
 import { cloneDeep } from "lodash/fp"
 
 import * as utils from "../../../db/utils"
 import { isExternalTableID } from "../../../integrations/utils"
 
-import * as internal from "./internal"
-import * as external from "./external"
 import sdk from "../../../sdk"
+import * as external from "./external"
+import * as internal from "./internal"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {

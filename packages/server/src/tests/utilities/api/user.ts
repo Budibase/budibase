@@ -1,3 +1,4 @@
+import { DocumentInsertResponse } from "@budibase/nano"
 import {
   FetchUserMetadataResponse,
   FindUserMetadataResponse,
@@ -5,7 +6,6 @@ import {
   UserMetadata,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
-import { DocumentInsertResponse } from "@budibase/nano"
 
 export class UserAPI extends TestAPI {
   fetch = async (

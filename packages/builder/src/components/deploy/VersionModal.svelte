@@ -1,82 +1,82 @@
 <script>
-  import { admin } from "stores/portal"
-  import {
-    Modal,
-    notifications,
-    ModalContent,
-    Body,
-    Button,
-    StatusLight,
-    Link,
-  } from "@budibase/bbui"
-  import { appStore, initialise } from "stores/builder"
-  import { API } from "api"
-  import RevertModalVersionSelect from "./RevertModalVersionSelect.svelte"
-  import { ChangelogURL } from "constants"
+import { ChangelogURL } from "constants"
+import {
+  Body,
+  Button,
+  Link,
+  Modal,
+  ModalContent,
+  StatusLight,
+  notifications,
+} from "@budibase/bbui"
+import { API } from "api"
+import { appStore, initialise } from "stores/builder"
+import { admin } from "stores/portal"
+import RevertModalVersionSelect from "./RevertModalVersionSelect.svelte"
 
-  export function show() {
-    updateModal.show()
+export function show() {
+  updateModal.show()
+}
+
+export function hide() {
+  updateModal.hide()
+}
+
+export let onComplete = () => {}
+export let hideIcon = false
+
+let updateModal
+
+$: appId = $appStore.appId
+$: updateAvailable =
+  $appStore.upgradableVersion &&
+  $appStore.version &&
+  $appStore.upgradableVersion !== $appStore.version
+$: revertAvailable =
+  $appStore.revertableVersion != null ||
+  ($admin.isDev && $appStore.version === "0.0.0")
+
+const refreshAppPackage = async () => {
+  try {
+    const pkg = await API.fetchAppPackage(appId)
+    await initialise(pkg)
+  } catch (error) {
+    notifications.error("Error fetching app package")
   }
+}
 
-  export function hide() {
-    updateModal.hide()
+const update = async () => {
+  try {
+    await API.updateAppClientVersion(appId)
+
+    // Don't wait for the async refresh, since this causes modal flashing
+    refreshAppPackage()
+    notifications.success(
+      `App updated successfully to version ${$appStore.upgradableVersion}`
+    )
+    onComplete()
+  } catch (err) {
+    notifications.error(`Error updating app: ${err}`)
   }
+  updateModal.hide()
+}
 
-  export let onComplete = () => {}
-  export let hideIcon = false
+const revert = async () => {
+  try {
+    await API.revertAppClientVersion(appId)
 
-  let updateModal
-
-  $: appId = $appStore.appId
-  $: updateAvailable =
-    $appStore.upgradableVersion &&
-    $appStore.version &&
-    $appStore.upgradableVersion !== $appStore.version
-  $: revertAvailable =
-    $appStore.revertableVersion != null ||
-    ($admin.isDev && $appStore.version === "0.0.0")
-
-  const refreshAppPackage = async () => {
-    try {
-      const pkg = await API.fetchAppPackage(appId)
-      await initialise(pkg)
-    } catch (error) {
-      notifications.error("Error fetching app package")
-    }
+    // Don't wait for the async refresh, since this causes modal flashing
+    refreshAppPackage()
+    notifications.success(
+      $appStore.revertableVersion
+        ? `App reverted successfully to version ${$appStore.revertableVersion}`
+        : "App reverted successfully"
+    )
+  } catch (err) {
+    notifications.error(`Error reverting app: ${err}`)
   }
-
-  const update = async () => {
-    try {
-      await API.updateAppClientVersion(appId)
-
-      // Don't wait for the async refresh, since this causes modal flashing
-      refreshAppPackage()
-      notifications.success(
-        `App updated successfully to version ${$appStore.upgradableVersion}`
-      )
-      onComplete()
-    } catch (err) {
-      notifications.error(`Error updating app: ${err}`)
-    }
-    updateModal.hide()
-  }
-
-  const revert = async () => {
-    try {
-      await API.revertAppClientVersion(appId)
-
-      // Don't wait for the async refresh, since this causes modal flashing
-      refreshAppPackage()
-      notifications.success(
-        $appStore.revertableVersion
-          ? `App reverted successfully to version ${$appStore.revertableVersion}`
-          : "App reverted successfully"
-      )
-    } catch (err) {
-      notifications.error(`Error reverting app: ${err}`)
-    }
-    updateModal.hide()
-  }
+  updateModal.hide()
+}
 </script>
 
 {#if !hideIcon && updateAvailable}

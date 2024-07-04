@@ -1,25 +1,25 @@
 <script>
-  import { auth } from "stores/portal"
-  import { ActionMenu, MenuItem, Icon, Modal } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
-  import ProfileModal from "components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
-  import ThemeModal from "components/settings/ThemeModal.svelte"
-  import APIKeyModal from "components/settings/APIKeyModal.svelte"
-  import { UserAvatar } from "@budibase/frontend-core"
+import { ActionMenu, Icon, MenuItem, Modal } from "@budibase/bbui"
+import { UserAvatar } from "@budibase/frontend-core"
+import { goto } from "@roxi/routify"
+import APIKeyModal from "components/settings/APIKeyModal.svelte"
+import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
+import ProfileModal from "components/settings/ProfileModal.svelte"
+import ThemeModal from "components/settings/ThemeModal.svelte"
+import { auth } from "stores/portal"
 
-  let themeModal
-  let profileModal
-  let updatePasswordModal
-  let apiKeyModal
+let themeModal
+let profileModal
+let updatePasswordModal
+let apiKeyModal
 
-  const logout = async () => {
-    try {
-      await auth.logout()
-    } catch (error) {
-      // Swallow error and do nothing
-    }
+const logout = async () => {
+  try {
+    await auth.logout()
+  } catch (error) {
+    // Swallow error and do nothing
   }
+}
 </script>
 
 <ActionMenu align="right">

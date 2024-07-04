@@ -1,97 +1,97 @@
 <script>
-  import { PermissionSource } from "@budibase/types"
-  import { roles, permissions as permissionsStore } from "stores/builder"
-  import {
-    Label,
-    Input,
-    Select,
-    notifications,
-    Body,
-    ModalContent,
-    Tags,
-    Tag,
-    Icon,
-  } from "@budibase/bbui"
-  import { capitalise } from "helpers"
-  import { getFormattedPlanName } from "helpers/planTitle"
-  import { get } from "svelte/store"
+import {
+  Body,
+  Icon,
+  Input,
+  Label,
+  ModalContent,
+  Select,
+  Tag,
+  Tags,
+  notifications,
+} from "@budibase/bbui"
+import { PermissionSource } from "@budibase/types"
+import { capitalise } from "helpers"
+import { getFormattedPlanName } from "helpers/planTitle"
+import { permissions as permissionsStore, roles } from "stores/builder"
+import { get } from "svelte/store"
 
-  export let resourceId
-  export let permissions
+export let resourceId
+export let permissions
 
-  const inheritedRoleId = "inherited"
+const inheritedRoleId = "inherited"
 
-  async function changePermission(level, role) {
-    try {
-      if (role === inheritedRoleId) {
-        await permissionsStore.remove({
-          level,
-          role,
-          resource: resourceId,
-        })
-      } else {
-        await permissionsStore.save({
-          level,
-          role,
-          resource: resourceId,
-        })
-      }
+async function changePermission(level, role) {
+  try {
+    if (role === inheritedRoleId) {
+      await permissionsStore.remove({
+        level,
+        role,
+        resource: resourceId,
+      })
+    } else {
+      await permissionsStore.save({
+        level,
+        role,
+        resource: resourceId,
+      })
+    }
 
-      // Show updated permissions in UI: REMOVE
-      permissions = await permissionsStore.forResourceDetailed(resourceId)
-      notifications.success("Updated permissions")
-    } catch (error) {
-      notifications.error("Error updating permissions")
+    // Show updated permissions in UI: REMOVE
+    permissions = await permissionsStore.forResourceDetailed(resourceId)
+    notifications.success("Updated permissions")
+  } catch (error) {
+    notifications.error("Error updating permissions")
+  }
+}
+
+$: computedPermissions = Object.entries(permissions.permissions).reduce(
+  (p, [level, roleInfo]) => {
+    p[level] = {
+      selectedValue:
+        roleInfo.permissionType === PermissionSource.INHERITED
+          ? inheritedRoleId
+          : roleInfo.role,
+      options: [...get(roles)],
+    }
+
+    if (roleInfo.inheritablePermission) {
+      p[level].inheritOption = roleInfo.inheritablePermission
+      p[level].options.unshift({
+        _id: inheritedRoleId,
+        name: `Inherit (${
+          get(roles).find(x => x._id === roleInfo.inheritablePermission).name
+        })`,
+      })
+    }
+    return p
+  },
+  {}
+)
+
+$: requiresPlanToModify = permissions.requiresPlanToModify
+
+let dependantsInfoMessage
+async function loadDependantInfo() {
+  const dependantsInfo = await permissionsStore.getDependantsInfo(resourceId)
+
+  const resourceByType = dependantsInfo?.resourceByType
+
+  if (resourceByType) {
+    const total = Object.values(resourceByType).reduce((p, c) => p + c, 0)
+    let resourceDisplay =
+      Object.keys(resourceByType).length === 1 && resourceByType.view
+        ? "view"
+        : "resource"
+
+    if (total === 1) {
+      dependantsInfoMessage = `1 ${resourceDisplay} is inheriting this access.`
+    } else if (total > 1) {
+      dependantsInfoMessage = `${total} ${resourceDisplay}s are inheriting this access.`
     }
   }
-
-  $: computedPermissions = Object.entries(permissions.permissions).reduce(
-    (p, [level, roleInfo]) => {
-      p[level] = {
-        selectedValue:
-          roleInfo.permissionType === PermissionSource.INHERITED
-            ? inheritedRoleId
-            : roleInfo.role,
-        options: [...get(roles)],
-      }
-
-      if (roleInfo.inheritablePermission) {
-        p[level].inheritOption = roleInfo.inheritablePermission
-        p[level].options.unshift({
-          _id: inheritedRoleId,
-          name: `Inherit (${
-            get(roles).find(x => x._id === roleInfo.inheritablePermission).name
-          })`,
-        })
-      }
-      return p
-    },
-    {}
-  )
-
-  $: requiresPlanToModify = permissions.requiresPlanToModify
-
-  let dependantsInfoMessage
-  async function loadDependantInfo() {
-    const dependantsInfo = await permissionsStore.getDependantsInfo(resourceId)
-
-    const resourceByType = dependantsInfo?.resourceByType
-
-    if (resourceByType) {
-      const total = Object.values(resourceByType).reduce((p, c) => p + c, 0)
-      let resourceDisplay =
-        Object.keys(resourceByType).length === 1 && resourceByType.view
-          ? "view"
-          : "resource"
-
-      if (total === 1) {
-        dependantsInfoMessage = `1 ${resourceDisplay} is inheriting this access.`
-      } else if (total > 1) {
-        dependantsInfoMessage = `${total} ${resourceDisplay}s are inheriting this access.`
-      }
-    }
-  }
-  loadDependantInfo()
+}
+loadDependantInfo()
 </script>
 
 <ModalContent showCancelButton={false} confirmText="Done">

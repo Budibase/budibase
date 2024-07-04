@@ -1,22 +1,22 @@
 <script>
-  import {
-    Modal,
-    ModalContent,
-    Button,
-    Label,
-    Input,
-    Context,
-  } from "@budibase/bbui"
-  import { getContext } from "svelte"
-  import DeletePluginModal from "./DeletePluginModal.svelte"
+import {
+  Button,
+  Context,
+  Input,
+  Label,
+  Modal,
+  ModalContent,
+} from "@budibase/bbui"
+import { getContext } from "svelte"
+import DeletePluginModal from "./DeletePluginModal.svelte"
 
-  export let plugin
+export let plugin
 
-  const modalContext = getContext(Context.Modal)
+const modalContext = getContext(Context.Modal)
 
-  let deleteModal
+let deleteModal
 
-  $: friendlyName = plugin?.schema?.schema?.friendlyName
+$: friendlyName = plugin?.schema?.schema?.friendlyName
 </script>
 
 <ModalContent

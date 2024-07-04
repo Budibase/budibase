@@ -1,44 +1,44 @@
 <script>
-  export let name = ""
+export let name = ""
 
-  const rows = [
-    {
-      firstName: "Julie",
-      lastName: "Jimenez",
-      email: "julie.jimenez@example.com",
-      address: "4250 New Street",
-      city: "Stevenage",
-      postcode: "EE32 3SE",
-      phone: "01754 13523",
-    },
-    {
-      firstName: "Mandy",
-      lastName: "Clark",
-      email: "mandy.clark@example.com",
-      address: "8632 North Street",
-      city: "Hereford",
-      postcode: "GT81 7DG",
-      phone: "016973 32814",
-    },
-    {
-      firstName: "Holly",
-      lastName: "Carroll",
-      email: "holly.carroll@example.com",
-      address: "5976 Springfield Road",
-      city: "Edinburgh",
-      postcode: "Y4 2LH",
-      phone: "016977 73053",
-    },
-    {
-      firstName: "Francis",
-      lastName: "Castro",
-      email: "francis.castro@example.com",
-      address: "3970 High Street",
-      city: "Wells",
-      postcode: "X12 6QA",
-      phone: "017684 23551",
-    },
-  ]
+const rows = [
+  {
+    firstName: "Julie",
+    lastName: "Jimenez",
+    email: "julie.jimenez@example.com",
+    address: "4250 New Street",
+    city: "Stevenage",
+    postcode: "EE32 3SE",
+    phone: "01754 13523",
+  },
+  {
+    firstName: "Mandy",
+    lastName: "Clark",
+    email: "mandy.clark@example.com",
+    address: "8632 North Street",
+    city: "Hereford",
+    postcode: "GT81 7DG",
+    phone: "016973 32814",
+  },
+  {
+    firstName: "Holly",
+    lastName: "Carroll",
+    email: "holly.carroll@example.com",
+    address: "5976 Springfield Road",
+    city: "Edinburgh",
+    postcode: "Y4 2LH",
+    phone: "016977 73053",
+  },
+  {
+    firstName: "Francis",
+    lastName: "Castro",
+    email: "francis.castro@example.com",
+    address: "3970 High Street",
+    city: "Wells",
+    postcode: "X12 6QA",
+    phone: "017684 23551",
+  },
+]
 </script>
 
 <div tabindex="-1" class="exampleApp">

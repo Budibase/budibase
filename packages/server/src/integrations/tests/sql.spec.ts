@@ -1,12 +1,12 @@
+import { sql } from "@budibase/backend-core"
 import {
   FieldType,
   Operation,
   QueryJson,
+  SqlClient,
   Table,
   TableSourceType,
-  SqlClient,
 } from "@budibase/types"
-import { sql } from "@budibase/backend-core"
 
 const Sql = sql.Sql
 

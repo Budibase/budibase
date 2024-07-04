@@ -1,5 +1,5 @@
-import { BaseEvent } from "./event"
 import { AppBackupTrigger, AppBackupType } from "../../documents"
+import { BaseEvent } from "./event"
 
 export interface AppBackupRestoreEvent extends BaseEvent {
   appId: string

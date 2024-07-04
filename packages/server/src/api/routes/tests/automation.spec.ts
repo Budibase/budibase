@@ -1,19 +1,19 @@
+import { events } from "@budibase/backend-core"
+import { mocks } from "@budibase/backend-core/tests"
+import { Automation } from "@budibase/types"
 import {
-  checkBuilderEndpoint,
-  getAllTableRows,
-  clearAllAutomations,
-  testAutomation,
-} from "./utilities/TestFunctions"
+  BUILTIN_ACTION_DEFINITIONS,
+  TRIGGER_DEFINITIONS,
+} from "../../../automations"
+import { FilterConditions } from "../../../automations/steps/filter"
+import sdk from "../../../sdk"
 import * as setup from "./utilities"
 import {
-  TRIGGER_DEFINITIONS,
-  BUILTIN_ACTION_DEFINITIONS,
-} from "../../../automations"
-import { events } from "@budibase/backend-core"
-import sdk from "../../../sdk"
-import { Automation } from "@budibase/types"
-import { mocks } from "@budibase/backend-core/tests"
-import { FilterConditions } from "../../../automations/steps/filter"
+  checkBuilderEndpoint,
+  clearAllAutomations,
+  getAllTableRows,
+  testAutomation,
+} from "./utilities/TestFunctions"
 
 const MAX_RETRIES = 4
 let {

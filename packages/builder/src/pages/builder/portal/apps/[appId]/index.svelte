@@ -1,67 +1,62 @@
 <script>
-  import { onMount, onDestroy } from "svelte"
-  import { params, goto } from "@roxi/routify"
-  import {
-    licensing,
-    auth,
-    sideBarCollapsed,
-    enrichedApps,
-  } from "stores/portal"
-  import AppRowContext from "components/start/AppRowContext.svelte"
-  import FavouriteAppButton from "../FavouriteAppButton.svelte"
-  import {
-    Link,
-    Body,
-    Button,
-    Icon,
-    TooltipPosition,
-    TooltipType,
-  } from "@budibase/bbui"
-  import { sdk } from "@budibase/shared-core"
-  import { API } from "api"
-  import ErrorSVG from "./ErrorSVG.svelte"
-  import { getBaseTheme, ClientAppSkeleton } from "@budibase/frontend-core"
+import {
+  Body,
+  Button,
+  Icon,
+  Link,
+  TooltipPosition,
+  TooltipType,
+} from "@budibase/bbui"
+import { ClientAppSkeleton, getBaseTheme } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
+import { goto, params } from "@roxi/routify"
+import { API } from "api"
+import AppRowContext from "components/start/AppRowContext.svelte"
+import { auth, enrichedApps, licensing, sideBarCollapsed } from "stores/portal"
+import { onDestroy, onMount } from "svelte"
+import FavouriteAppButton from "../FavouriteAppButton.svelte"
+import ErrorSVG from "./ErrorSVG.svelte"
 
-  $: app = $enrichedApps.find(app => app.appId === $params.appId)
-  $: iframeUrl = getIframeURL(app)
-  $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
+$: app = $enrichedApps.find(app => app.appId === $params.appId)
+$: iframeUrl = getIframeURL(app)
+$: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
 
-  let loading = true
+let loading = true
 
-  const getIframeURL = app => {
-    loading = true
+const getIframeURL = app => {
+  loading = true
 
-    if (app.status === "published") {
-      return `/app${app.url}`
-    }
-    return `/${app.devId}`
+  if (app.status === "published") {
+    return `/app${app.url}`
   }
+  return `/${app.devId}`
+}
 
-  let noScreens = false
+let noScreens = false
 
-  // Normally fetched in builder/src/pages/builder/app/[application]/_layout.svelte
-  const fetchScreens = async appId => {
-    if (!appId) return
+// Normally fetched in builder/src/pages/builder/app/[application]/_layout.svelte
+const fetchScreens = async appId => {
+  if (!appId) return
 
-    const pkg = await API.fetchAppPackage(appId)
-    noScreens = pkg.screens.length === 0
+  const pkg = await API.fetchAppPackage(appId)
+  noScreens = pkg.screens.length === 0
+}
+
+$: fetchScreens(app?.devId)
+
+const receiveMessage = async message => {
+  if (message.data.type === "docLoaded") {
+    loading = false
   }
+}
 
-  $: fetchScreens(app?.devId)
+onMount(() => {
+  window.addEventListener("message", receiveMessage)
+})
 
-  const receiveMessage = async message => {
-    if (message.data.type === "docLoaded") {
-      loading = false
-    }
-  }
-
-  onMount(() => {
-    window.addEventListener("message", receiveMessage)
-  })
-
-  onDestroy(() => {
-    window.removeEventListener("message", receiveMessage)
-  })
+onDestroy(() => {
+  window.removeEventListener("message", receiveMessage)
+})
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

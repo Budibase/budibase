@@ -1,17 +1,17 @@
 <script>
-  import Panel from "components/design/Panel.svelte"
-  import { ActionButton } from "@budibase/bbui"
-  import JSONPanel from "./JSONPanel.svelte"
-  import SchemaPanel from "./SchemaPanel.svelte"
-  import PreviewPanel from "./PreviewPanel.svelte"
+import { ActionButton } from "@budibase/bbui"
+import Panel from "components/design/Panel.svelte"
+import JSONPanel from "./JSONPanel.svelte"
+import PreviewPanel from "./PreviewPanel.svelte"
+import SchemaPanel from "./SchemaPanel.svelte"
 
-  export let rows
-  export let schema
-  export let onSchemaChange = () => {}
-  export let onClose = () => {}
+export let rows
+export let schema
+export let onSchemaChange = () => {}
+export let onClose = () => {}
 
-  const tabs = ["JSON", "Schema", "Preview"]
-  let activeTab = "JSON"
+const tabs = ["JSON", "Schema", "Preview"]
+let activeTab = "JSON"
 </script>
 
 <Panel

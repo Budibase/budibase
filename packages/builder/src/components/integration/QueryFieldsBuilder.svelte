@@ -1,28 +1,28 @@
 <script>
-  import { Label, Layout, Input } from "@budibase/bbui"
-  import Editor from "./QueryEditor.svelte"
-  import KeyValueBuilder from "./KeyValueBuilder.svelte"
-  import { capitalise } from "helpers"
+import { Input, Label, Layout } from "@budibase/bbui"
+import { capitalise } from "helpers"
+import KeyValueBuilder from "./KeyValueBuilder.svelte"
+import Editor from "./QueryEditor.svelte"
 
-  export let fields = {}
-  export let schema
-  export let editable
+export let fields = {}
+export let schema
+export let editable
 
-  $: schemaKeys = Object.keys(schema?.fields || {})
+$: schemaKeys = Object.keys(schema?.fields || {})
 
-  function updateCustomFields({ detail }) {
-    fields.customData = detail.value
+function updateCustomFields({ detail }) {
+  fields.customData = detail.value
+}
+
+function getDisplayName(field) {
+  let name
+  if (schema.fields[field]?.display) {
+    name = schema.fields[field]?.display
+  } else {
+    name = field
   }
-
-  function getDisplayName(field) {
-    let name
-    if (schema.fields[field]?.display) {
-      name = schema.fields[field]?.display
-    } else {
-      name = field
-    }
-    return capitalise(name)
-  }
+  return capitalise(name)
+}
 </script>
 
 <form on:submit|preventDefault>

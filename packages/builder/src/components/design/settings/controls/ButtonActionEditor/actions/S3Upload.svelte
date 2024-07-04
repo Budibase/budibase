@@ -1,13 +1,13 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
-  import { selectedScreen } from "stores/builder"
-  import { findAllMatchingComponents } from "helpers/components"
+import { Label, Select } from "@budibase/bbui"
+import { findAllMatchingComponents } from "helpers/components"
+import { selectedScreen } from "stores/builder"
 
-  export let parameters
+export let parameters
 
-  $: components = findAllMatchingComponents($selectedScreen?.props, component =>
-    component._component.endsWith("s3upload")
-  )
+$: components = findAllMatchingComponents($selectedScreen?.props, component =>
+  component._component.endsWith("s3upload")
+)
 </script>
 
 <div class="root">

@@ -1,19 +1,16 @@
-import { default as threadUtils } from "./utils"
 import { Job } from "bull"
+import * as actions from "../automations/actions"
+import * as automationUtils from "../automations/automationUtils"
+import { replaceFakeBindings } from "../automations/loopUtils"
 import {
   disableCronById,
   isErrorInOutput,
   isRecurring,
 } from "../automations/utils"
-import * as actions from "../automations/actions"
-import * as automationUtils from "../automations/automationUtils"
-import { replaceFakeBindings } from "../automations/loopUtils"
+import { default as threadUtils } from "./utils"
 
-import { default as AutomationEmitter } from "../events/AutomationEmitter"
-import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
-import { definitions as triggerDefs } from "../automations/triggerInfo"
-import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
-import { storeLog } from "../automations/logging"
+import { context, logging } from "@budibase/backend-core"
+import { processObject } from "@budibase/string-templates"
 import {
   Automation,
   AutomationData,
@@ -23,20 +20,23 @@ import {
   AutomationStep,
   AutomationStepStatus,
 } from "@budibase/types"
+import tracer from "dd-trace"
+import { cloneDeep } from "lodash/fp"
+import { performance } from "perf_hooks"
+import { storeLog } from "../automations/logging"
+import { definitions as triggerDefs } from "../automations/triggerInfo"
+import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
+import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import {
   AutomationContext,
   LoopInput,
   LoopStep,
   TriggerOutput,
 } from "../definitions/automations"
-import { WorkerCallback } from "./definitions"
-import { context, logging } from "@budibase/backend-core"
-import { processObject } from "@budibase/string-templates"
-import { cloneDeep } from "lodash/fp"
-import { performance } from "perf_hooks"
-import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
-import tracer from "dd-trace"
+import { default as AutomationEmitter } from "../events/AutomationEmitter"
+import * as sdkUtils from "../sdk/utils"
+import { WorkerCallback } from "./definitions"
 
 threadUtils.threadSetup()
 const FILTER_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.FILTER.stepId
@@ -54,7 +54,7 @@ function getLoopIterations(loopStep: LoopStep) {
     if (Array.isArray(json)) {
       return json.length
     }
-  } catch (err) {
+  } catch (_err) {
     // ignore error - wasn't able to parse
   }
   if (typeof binding === "string") {
@@ -122,7 +122,7 @@ class Orchestrator {
     let metadata: AutomationMetadata
     try {
       metadata = await db.get(metadataId)
-    } catch (err) {
+    } catch (_err) {
       metadata = {
         _id: metadataId,
         errorCount: 0,
@@ -332,7 +332,7 @@ class Orchestrator {
                   loopStep.inputs.binding = automationUtils.typecastForLooping(
                     loopStep.inputs as LoopInput
                   )
-                } catch (err) {
+                } catch (_err) {
                   this.updateContextAndOutput(
                     currentLoopStepIndex,
                     step,
@@ -587,7 +587,7 @@ export async function executeInThread(job: Job<AutomationData>) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
 
-  const timeoutPromise = new Promise((resolve, reject) => {
+  const timeoutPromise = new Promise((_resolve, reject) => {
     setTimeout(() => {
       reject(new Error("Timeout exceeded"))
     }, job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT)

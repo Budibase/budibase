@@ -1,180 +1,180 @@
 <script>
-  import {
-    Layout,
-    Heading,
-    Body,
-    Divider,
-    Link,
-    Button,
-    Input,
-    Label,
-    ButtonGroup,
-    notifications,
-    CopyInput,
-    File,
-  } from "@budibase/bbui"
-  import { auth, admin } from "stores/portal"
-  import { redirect } from "@roxi/routify"
-  import { processStringSync } from "@budibase/string-templates"
-  import DeleteLicenseKeyModal from "components/portal/licensing/DeleteLicenseKeyModal.svelte"
-  import { API } from "api"
-  import { onMount } from "svelte"
-  import { sdk } from "@budibase/shared-core"
+import {
+  Body,
+  Button,
+  ButtonGroup,
+  CopyInput,
+  Divider,
+  File,
+  Heading,
+  Input,
+  Label,
+  Layout,
+  Link,
+  notifications,
+} from "@budibase/bbui"
+import { sdk } from "@budibase/shared-core"
+import { processStringSync } from "@budibase/string-templates"
+import { redirect } from "@roxi/routify"
+import { API } from "api"
+import DeleteLicenseKeyModal from "components/portal/licensing/DeleteLicenseKeyModal.svelte"
+import { admin, auth } from "stores/portal"
+import { onMount } from "svelte"
 
-  $: license = $auth.user.license
-  $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+$: license = $auth.user.license
+$: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
-  // LICENSE KEY
+// LICENSE KEY
 
-  $: activateDisabled = !licenseKey || licenseKeyDisabled
-  let licenseKeyDisabled = false
-  let licenseKeyType = "text"
-  let licenseKey = ""
-  let deleteLicenseKeyModal
+$: activateDisabled = !licenseKey || licenseKeyDisabled
+let licenseKeyDisabled = false
+let licenseKeyType = "text"
+let licenseKey = ""
+let deleteLicenseKeyModal
 
-  // OFFLINE
+// OFFLINE
 
-  let offlineLicenseIdentifier = ""
-  let offlineLicense = undefined
-  const offlineLicenseExtensions = [".txt"]
+let offlineLicenseIdentifier = ""
+let offlineLicense = undefined
+const offlineLicenseExtensions = [".txt"]
 
-  // Make sure page can't be visited directly in cloud
-  $: {
-    if ($admin.cloud) {
-      $redirect("../../portal")
-    }
+// Make sure page can't be visited directly in cloud
+$: {
+  if ($admin.cloud) {
+    $redirect("../../portal")
   }
+}
 
-  // LICENSE KEY
+// LICENSE KEY
 
-  const getLicenseKey = async () => {
-    try {
-      licenseKey = await API.getLicenseKey()
-      if (licenseKey) {
-        licenseKey = "**********************************************"
-        licenseKeyType = "password"
-        licenseKeyDisabled = true
-        activateDisabled = true
-      }
-    } catch (e) {
-      console.error(e)
-      notifications.error("Error retrieving license key")
+const getLicenseKey = async () => {
+  try {
+    licenseKey = await API.getLicenseKey()
+    if (licenseKey) {
+      licenseKey = "**********************************************"
+      licenseKeyType = "password"
+      licenseKeyDisabled = true
+      activateDisabled = true
     }
+  } catch (e) {
+    console.error(e)
+    notifications.error("Error retrieving license key")
   }
+}
 
-  const activateLicenseKey = async () => {
-    try {
-      await API.activateLicenseKey({ licenseKey })
-      await auth.getSelf()
-      await getLicenseKey()
-      notifications.success("Successfully activated")
-    } catch (e) {
-      console.error(e)
-      notifications.error("Error activating license key")
-    }
+const activateLicenseKey = async () => {
+  try {
+    await API.activateLicenseKey({ licenseKey })
+    await auth.getSelf()
+    await getLicenseKey()
+    notifications.success("Successfully activated")
+  } catch (e) {
+    console.error(e)
+    notifications.error("Error activating license key")
   }
+}
 
-  const deleteLicenseKey = async () => {
-    try {
-      await API.deleteLicenseKey({ licenseKey })
-      await auth.getSelf()
-      await getLicenseKey()
-      // reset the form
-      licenseKey = ""
-      licenseKeyDisabled = false
-      notifications.success("Offline license removed")
-    } catch (e) {
-      console.error(e)
-      notifications.error("Error deleting license key")
-    }
+const deleteLicenseKey = async () => {
+  try {
+    await API.deleteLicenseKey({ licenseKey })
+    await auth.getSelf()
+    await getLicenseKey()
+    // reset the form
+    licenseKey = ""
+    licenseKeyDisabled = false
+    notifications.success("Offline license removed")
+  } catch (e) {
+    console.error(e)
+    notifications.error("Error deleting license key")
   }
+}
 
-  // OFFLINE LICENSE
+// OFFLINE LICENSE
 
-  const getOfflineLicense = async () => {
-    try {
-      const license = await API.getOfflineLicense()
-      if (license) {
-        offlineLicense = {
-          name: "license",
-        }
-      } else {
-        offlineLicense = undefined
-      }
-    } catch (e) {
-      console.error(e)
-      notifications.error("Error loading offline license")
-    }
-  }
-
-  const getOfflineLicenseIdentifier = async () => {
-    try {
-      const res = await API.getOfflineLicenseIdentifier()
-      offlineLicenseIdentifier = res.identifierBase64
-    } catch (e) {
-      console.error(e)
-      notifications.error("Error loading installation identifier")
-    }
-  }
-
-  async function activateOfflineLicense(offlineLicenseToken) {
-    try {
-      await API.activateOfflineLicense({ offlineLicenseToken })
-      await auth.getSelf()
-      await getOfflineLicense()
-      notifications.success("Successfully activated")
-    } catch (e) {
-      console.error(e)
-      notifications.error("Error activating offline license")
-    }
-  }
-
-  async function deleteOfflineLicense() {
-    try {
-      await API.deleteOfflineLicense()
-      await auth.getSelf()
-      await getOfflineLicense()
-      notifications.success("Successfully removed ofline license")
-    } catch (e) {
-      console.error(e)
-      notifications.error("Error upload offline license")
-    }
-  }
-
-  async function onOfflineLicenseChange(event) {
-    if (event.detail) {
-      // prevent file preview jitter by assigning constant
-      // as soon as possible
+const getOfflineLicense = async () => {
+  try {
+    const license = await API.getOfflineLicense()
+    if (license) {
       offlineLicense = {
         name: "license",
       }
-      const reader = new FileReader()
-      reader.readAsText(event.detail)
-      reader.onload = () => activateOfflineLicense(reader.result)
     } else {
       offlineLicense = undefined
-      await deleteOfflineLicense()
     }
+  } catch (e) {
+    console.error(e)
+    notifications.error("Error loading offline license")
   }
+}
 
-  const refresh = async () => {
-    try {
-      await API.refreshLicense()
-      await auth.getSelf()
-      notifications.success("Refreshed license")
-    } catch (err) {
-      console.error(err)
-      notifications.error("Error refreshing license")
-    }
+const getOfflineLicenseIdentifier = async () => {
+  try {
+    const res = await API.getOfflineLicenseIdentifier()
+    offlineLicenseIdentifier = res.identifierBase64
+  } catch (e) {
+    console.error(e)
+    notifications.error("Error loading installation identifier")
   }
+}
 
-  onMount(async () => {
-    if ($admin.offlineMode) {
-      await Promise.all([getOfflineLicense(), getOfflineLicenseIdentifier()])
-    } else {
-      await getLicenseKey()
+async function activateOfflineLicense(offlineLicenseToken) {
+  try {
+    await API.activateOfflineLicense({ offlineLicenseToken })
+    await auth.getSelf()
+    await getOfflineLicense()
+    notifications.success("Successfully activated")
+  } catch (e) {
+    console.error(e)
+    notifications.error("Error activating offline license")
+  }
+}
+
+async function deleteOfflineLicense() {
+  try {
+    await API.deleteOfflineLicense()
+    await auth.getSelf()
+    await getOfflineLicense()
+    notifications.success("Successfully removed ofline license")
+  } catch (e) {
+    console.error(e)
+    notifications.error("Error upload offline license")
+  }
+}
+
+async function onOfflineLicenseChange(event) {
+  if (event.detail) {
+    // prevent file preview jitter by assigning constant
+    // as soon as possible
+    offlineLicense = {
+      name: "license",
     }
-  })
+    const reader = new FileReader()
+    reader.readAsText(event.detail)
+    reader.onload = () => activateOfflineLicense(reader.result)
+  } else {
+    offlineLicense = undefined
+    await deleteOfflineLicense()
+  }
+}
+
+const refresh = async () => {
+  try {
+    await API.refreshLicense()
+    await auth.getSelf()
+    notifications.success("Refreshed license")
+  } catch (err) {
+    console.error(err)
+    notifications.error("Error refreshing license")
+  }
+}
+
+onMount(async () => {
+  if ($admin.offlineMode) {
+    await Promise.all([getOfflineLicense(), getOfflineLicenseIdentifier()])
+  } else {
+    await getLicenseKey()
+  }
+})
 </script>
 
 {#if sdk.users.isAdmin($auth.user)}

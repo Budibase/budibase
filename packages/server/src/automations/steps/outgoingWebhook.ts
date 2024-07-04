@@ -1,6 +1,3 @@
-import fetch from "node-fetch"
-import { getFetchResponse } from "./utils"
-import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
@@ -10,6 +7,9 @@ import {
   AutomationStepSchema,
   AutomationStepType,
 } from "@budibase/types"
+import fetch from "node-fetch"
+import * as automationUtils from "../automationUtils"
+import { getFetchResponse } from "./utils"
 
 enum RequestType {
   POST = "POST",
@@ -101,7 +101,7 @@ export async function run({ inputs }: AutomationStepInput) {
       const customHeaders =
         typeof headers === "string" ? JSON.parse(headers) : headers
       request.headers = { ...request.headers, ...customHeaders }
-    } catch (err) {
+    } catch (_err) {
       return {
         success: false,
         response: "Unable to process headers, must be a JSON object.",

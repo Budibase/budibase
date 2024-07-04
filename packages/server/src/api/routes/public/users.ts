@@ -1,6 +1,6 @@
 import controller from "../../controllers/public/users"
-import Endpoint from "./utils/Endpoint"
 import { nameValidator } from "../utils/validators"
+import Endpoint from "./utils/Endpoint"
 
 const read = [],
   write = []

@@ -1,6 +1,6 @@
 <script>
-  export let narrow = false
-  export let showMobileNav = false
+export let narrow = false
+export let showMobileNav = false
 </script>
 
 <div class="content">

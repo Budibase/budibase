@@ -1,28 +1,28 @@
+import {
+  Account,
+  CloudAccount,
+  Group,
+  Hosting,
+  Identity,
+  IdentityType,
+  InstallationGroup,
+  TenantGroup,
+  User,
+  UserContext,
+  UserIdentity,
+  isCloudAccount,
+  isSSOAccount,
+  isSSOUser,
+} from "@budibase/types"
+import { CacheKey, TTL, withCache } from "../cache/generic"
+import * as configs from "../configs"
 import * as context from "../context"
 import * as identityCtx from "../context/identity"
 import env from "../environment"
-import {
-  Hosting,
-  User,
-  Identity,
-  IdentityType,
-  Account,
-  isCloudAccount,
-  isSSOAccount,
-  TenantGroup,
-  CloudAccount,
-  UserIdentity,
-  InstallationGroup,
-  UserContext,
-  Group,
-  isSSOUser,
-} from "@budibase/types"
-import { processors } from "./processors"
-import { newid } from "../utils"
 import * as installation from "../installation"
-import * as configs from "../configs"
 import * as users from "../users"
-import { withCache, TTL, CacheKey } from "../cache/generic"
+import { newid } from "../utils"
+import { processors } from "./processors"
 
 /**
  * An identity can be:

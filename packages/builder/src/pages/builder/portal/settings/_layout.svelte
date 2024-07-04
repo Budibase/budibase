@@ -1,12 +1,12 @@
 <script>
-  import { goto, isActive } from "@roxi/routify"
-  import { Page } from "@budibase/bbui"
-  import { Content, SideNav, SideNavItem } from "components/portal/page"
-  import { menu } from "stores/portal"
+import { Page } from "@budibase/bbui"
+import { goto, isActive } from "@roxi/routify"
+import { Content, SideNav, SideNavItem } from "components/portal/page"
+import { menu } from "stores/portal"
 
-  $: wide = $isActive("./email/:template")
-  $: pages = $menu.find(x => x.title === "Settings")?.subPages || []
-  $: !pages.length && $goto("../")
+$: wide = $isActive("./email/:template")
+$: pages = $menu.find(x => x.title === "Settings")?.subPages || []
+$: !pages.length && $goto("../")
 </script>
 
 <Page>

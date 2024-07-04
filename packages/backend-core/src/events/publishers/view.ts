@@ -1,6 +1,9 @@
-import { publishEvent } from "../events"
 import {
   Event,
+  Table,
+  TableExportFormat,
+  View,
+  ViewCalculation,
   ViewCalculationCreatedEvent,
   ViewCalculationDeletedEvent,
   ViewCalculationUpdatedEvent,
@@ -11,11 +14,8 @@ import {
   ViewFilterDeletedEvent,
   ViewFilterUpdatedEvent,
   ViewUpdatedEvent,
-  View,
-  ViewCalculation,
-  Table,
-  TableExportFormat,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 /* eslint-disable */
 

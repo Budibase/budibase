@@ -11,10 +11,10 @@ import {
   SSOProviderType,
   User,
 } from "@budibase/types"
-import { generator } from "./generator"
-import { email, uuid } from "./common"
-import * as users from "./users"
 import sample from "lodash/sample"
+import { email, uuid } from "./common"
+import { generator } from "./generator"
+import * as users from "./users"
 
 export function OAuth(): OAuth2 {
   return {

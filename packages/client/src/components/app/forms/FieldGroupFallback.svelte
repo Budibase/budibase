@@ -1,7 +1,7 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  const fieldGroupContext = getContext("field-group")
+const fieldGroupContext = getContext("field-group")
 </script>
 
 {#if fieldGroupContext}

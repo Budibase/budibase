@@ -1,25 +1,25 @@
 <script>
-  import { Icon } from "@budibase/bbui"
-  import { appsStore } from "stores/portal"
-  import { sdk } from "@budibase/shared-core"
+import { Icon } from "@budibase/bbui"
+import { sdk } from "@budibase/shared-core"
+import { appsStore } from "stores/portal"
 
-  export let value
-  export let row
-  $: priviliged = sdk.users.isAdminOrBuilder(row)
-  $: count = getCount(row)
+export let value
+export let row
+$: priviliged = sdk.users.isAdminOrBuilder(row)
+$: count = getCount(row)
 
-  const getCount = () => {
-    if (priviliged) {
-      return $appsStore.apps.length
-    } else {
-      return sdk.users.hasAppBuilderPermissions(row)
-        ? row?.builder?.apps?.length +
-            Object.keys(row.roles || {}).filter(appId => {
-              row?.builder?.apps?.includes(appId)
-            }).length
-        : value?.length || 0
-    }
+const getCount = () => {
+  if (priviliged) {
+    return $appsStore.apps.length
+  } else {
+    return sdk.users.hasAppBuilderPermissions(row)
+      ? row?.builder?.apps?.length +
+          Object.keys(row.roles || {}).filter(appId => {
+            row?.builder?.apps?.includes(appId)
+          }).length
+      : value?.length || 0
   }
+}
 </script>
 
 <div class="align">

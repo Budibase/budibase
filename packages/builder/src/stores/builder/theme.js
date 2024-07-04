@@ -1,6 +1,6 @@
-import { writable, get } from "svelte/store"
-import { API } from "api"
 import { getBaseTheme } from "@budibase/frontend-core"
+import { API } from "api"
+import { get, writable } from "svelte/store"
 
 const INITIAL_THEMES_STATE = {
   theme: "",

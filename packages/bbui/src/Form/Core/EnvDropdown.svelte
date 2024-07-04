@@ -1,99 +1,99 @@
 <script>
-  import "@spectrum-css/textfield/dist/index-vars.css"
-  import { createEventDispatcher, onMount } from "svelte"
-  import clickOutside from "../../Actions/click_outside"
-  import Divider from "../../Divider/Divider.svelte"
+import "@spectrum-css/textfield/dist/index-vars.css"
+import { createEventDispatcher, onMount } from "svelte"
+import clickOutside from "../../Actions/click_outside"
+import Divider from "../../Divider/Divider.svelte"
 
-  export let value = null
-  export let placeholder = null
-  export let type = "text"
-  export let disabled = false
-  export let id = null
-  export let readonly = false
-  export let updateOnChange = true
-  export let align
-  export let autofocus = false
-  export let variables
-  export let showModal
-  export let environmentVariablesEnabled
-  export let handleUpgradePanel
-  const dispatch = createEventDispatcher()
+export let value = null
+export let placeholder = null
+export let type = "text"
+export let disabled = false
+export let id = null
+export let readonly = false
+export let updateOnChange = true
+export let align
+export let autofocus = false
+export let variables
+export let showModal
+export let environmentVariablesEnabled
+export let handleUpgradePanel
+const dispatch = createEventDispatcher()
 
-  let field
-  let focus = false
-  let iconFocused = false
-  let open = false
+let field
+let focus = false
+let iconFocused = false
+let open = false
 
-  //eslint-disable-next-line
-  const STRIP_NAME_REGEX = /(\w+?)(?=\ })/g
+//eslint-disable-next-line
+const STRIP_NAME_REGEX = /(\w+?)(?=\ })/g
 
-  // Strips the name out of the value which is {{ env.Variable }} resulting in an array like ["Variable"]
-  $: hbsValue = String(value)?.match(STRIP_NAME_REGEX) || []
+// Strips the name out of the value which is {{ env.Variable }} resulting in an array like ["Variable"]
+$: hbsValue = String(value)?.match(STRIP_NAME_REGEX) || []
 
-  const updateValue = newValue => {
-    if (readonly) {
-      return
-    }
-    if (type === "number") {
-      const float = parseFloat(newValue)
-      newValue = isNaN(float) ? null : float
-    }
-    dispatch("change", newValue)
+const updateValue = newValue => {
+  if (readonly) {
+    return
   }
-
-  const onFocus = () => {
-    if (readonly) {
-      return
-    }
-    focus = true
+  if (type === "number") {
+    const float = parseFloat(newValue)
+    newValue = isNaN(float) ? null : float
   }
+  dispatch("change", newValue)
+}
 
-  const onBlur = event => {
-    if (readonly) {
-      return
-    }
-    focus = false
-    updateValue(event.target.value)
+const onFocus = () => {
+  if (readonly) {
+    return
   }
+  focus = true
+}
 
-  const onInput = event => {
-    if (readonly || !updateOnChange) {
-      return
-    }
-    updateValue(event.target.value)
+const onBlur = event => {
+  if (readonly) {
+    return
   }
+  focus = false
+  updateValue(event.target.value)
+}
 
-  const handleOutsideClick = event => {
-    if (open) {
-      event.stopPropagation()
-      open = false
-      focus = false
-      iconFocused = false
-      dispatch("closed")
-    }
+const onInput = event => {
+  if (readonly || !updateOnChange) {
+    return
   }
+  updateValue(event.target.value)
+}
 
-  const handleVarSelect = variable => {
+const handleOutsideClick = event => {
+  if (open) {
+    event.stopPropagation()
     open = false
     focus = false
     iconFocused = false
-    updateValue(`{{ env.${variable} }}`)
+    dispatch("closed")
   }
+}
 
-  onMount(() => {
-    focus = autofocus
-    if (focus) field.focus()
-  })
+const handleVarSelect = variable => {
+  open = false
+  focus = false
+  iconFocused = false
+  updateValue(`{{ env.${variable} }}`)
+}
 
-  function removeVariable() {
-    updateValue("")
-  }
+onMount(() => {
+  focus = autofocus
+  if (focus) field.focus()
+})
 
-  function openPopover() {
-    open = true
-    focus = true
-    iconFocused = true
-  }
+function removeVariable() {
+  updateValue("")
+}
+
+function openPopover() {
+  open = true
+  focus = true
+  iconFocused = true
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

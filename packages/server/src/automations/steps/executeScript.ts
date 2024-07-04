@@ -1,6 +1,3 @@
-import * as scriptController from "../../api/controllers/script"
-import { buildCtx } from "./utils"
-import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
@@ -10,6 +7,9 @@ import {
   AutomationStepSchema,
   AutomationStepType,
 } from "@budibase/types"
+import * as scriptController from "../../api/controllers/script"
+import * as automationUtils from "../automationUtils"
+import { buildCtx } from "./utils"
 
 export const definition: AutomationStepSchema = {
   name: "JS Scripting",

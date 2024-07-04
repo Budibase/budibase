@@ -1,6 +1,6 @@
-import { structures, TestConfiguration } from "../../../../tests"
 import { context, db, permissions, roles } from "@budibase/backend-core"
 import { Database } from "@budibase/types"
+import { TestConfiguration, structures } from "../../../../tests"
 
 jest.mock("@budibase/backend-core", () => {
   const core = jest.requireActual("@budibase/backend-core")

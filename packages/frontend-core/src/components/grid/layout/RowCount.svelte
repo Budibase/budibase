@@ -1,7 +1,7 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  const { rows } = getContext("grid")
+const { rows } = getContext("grid")
 </script>
 
 <div>

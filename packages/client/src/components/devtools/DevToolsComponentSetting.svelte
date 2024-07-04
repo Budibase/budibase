@@ -1,11 +1,11 @@
 <script>
-  import DevToolsStat from "./DevToolsStat.svelte"
+import DevToolsStat from "./DevToolsStat.svelte"
 
-  export let name
-  export let value
-  export let settingsMap
+export let name
+export let value
+export let settingsMap
 
-  $: prettyName = settingsMap?.[name]?.label
+$: prettyName = settingsMap?.[name]?.label
 </script>
 
 {#if prettyName}

@@ -1,5 +1,5 @@
-import Joi from "joi"
 import { Ctx } from "@budibase/types"
+import Joi from "joi"
 
 function validate(
   schema: Joi.ObjectSchema | Joi.ArraySchema,

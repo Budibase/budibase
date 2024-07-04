@@ -1,126 +1,126 @@
 <script>
-  import Popover from "../Popover/Popover.svelte"
-  import Layout from "../Layout/Layout.svelte"
-  import { createEventDispatcher } from "svelte"
-  import "@spectrum-css/popover/dist/index-vars.css"
-  import Icon from "../Icon/Icon.svelte"
-  import Input from "../Form/Input.svelte"
-  import { capitalise } from "../helpers"
+import { createEventDispatcher } from "svelte"
+import Layout from "../Layout/Layout.svelte"
+import Popover from "../Popover/Popover.svelte"
+import "@spectrum-css/popover/dist/index-vars.css"
+import Input from "../Form/Input.svelte"
+import Icon from "../Icon/Icon.svelte"
+import { capitalise } from "../helpers"
 
-  export let value
-  export let size = "M"
-  export let spectrumTheme
-  export let offset
-  export let align
+export let value
+export let size = "M"
+export let spectrumTheme
+export let offset
+export let align
 
-  let dropdown
-  let preview
+let dropdown
+let preview
 
-  $: customValue = getCustomValue(value)
-  $: checkColor = getCheckColor(value)
+$: customValue = getCustomValue(value)
+$: checkColor = getCheckColor(value)
 
-  const dispatch = createEventDispatcher()
-  const categories = [
-    {
-      label: "Theme",
-      colors: [
-        "gray-50",
-        "gray-75",
-        "gray-100",
-        "gray-200",
-        "gray-300",
-        "gray-400",
-        "gray-500",
-        "gray-600",
-        "gray-700",
-        "gray-800",
-        "gray-900",
-      ],
-    },
-    {
-      label: "Colors",
-      colors: [
-        "red-400",
-        "orange-400",
-        "yellow-400",
-        "green-400",
-        "seafoam-400",
-        "blue-400",
-        "indigo-400",
-        "magenta-400",
+const dispatch = createEventDispatcher()
+const categories = [
+  {
+    label: "Theme",
+    colors: [
+      "gray-50",
+      "gray-75",
+      "gray-100",
+      "gray-200",
+      "gray-300",
+      "gray-400",
+      "gray-500",
+      "gray-600",
+      "gray-700",
+      "gray-800",
+      "gray-900",
+    ],
+  },
+  {
+    label: "Colors",
+    colors: [
+      "red-400",
+      "orange-400",
+      "yellow-400",
+      "green-400",
+      "seafoam-400",
+      "blue-400",
+      "indigo-400",
+      "magenta-400",
 
-        "red-500",
-        "orange-500",
-        "yellow-500",
-        "green-500",
-        "seafoam-500",
-        "blue-500",
-        "indigo-500",
-        "magenta-500",
+      "red-500",
+      "orange-500",
+      "yellow-500",
+      "green-500",
+      "seafoam-500",
+      "blue-500",
+      "indigo-500",
+      "magenta-500",
 
-        "red-600",
-        "orange-600",
-        "yellow-600",
-        "green-600",
-        "seafoam-600",
-        "blue-600",
-        "indigo-600",
-        "magenta-600",
+      "red-600",
+      "orange-600",
+      "yellow-600",
+      "green-600",
+      "seafoam-600",
+      "blue-600",
+      "indigo-600",
+      "magenta-600",
 
-        "red-700",
-        "orange-700",
-        "yellow-700",
-        "green-700",
-        "seafoam-700",
-        "blue-700",
-        "indigo-700",
-        "magenta-700",
+      "red-700",
+      "orange-700",
+      "yellow-700",
+      "green-700",
+      "seafoam-700",
+      "blue-700",
+      "indigo-700",
+      "magenta-700",
 
-        "static-white",
-        "static-black",
-      ],
-    },
-  ]
+      "static-white",
+      "static-black",
+    ],
+  },
+]
 
-  const onChange = value => {
-    dispatch("change", value)
-    dropdown.hide()
+const onChange = value => {
+  dispatch("change", value)
+  dropdown.hide()
+}
+
+const getCustomValue = value => {
+  if (!value) {
+    return value
+  }
+  let found = false
+  const comparisonValue = value.substring(28, value.length - 1)
+  for (let category of categories) {
+    found = category.colors.includes(comparisonValue)
+    if (found) {
+      break
+    }
+  }
+  return found ? null : value
+}
+
+const prettyPrint = color => {
+  return capitalise(color.split("-").join(" "))
+}
+
+const getCheckColor = value => {
+  // Use dynamic color for theme grays
+  if (value?.includes("gray")) {
+    return /^.*(gray-(50|75|100|200|300|400|500))\)$/.test(value)
+      ? "var(--spectrum-global-color-gray-900)"
+      : "var(--spectrum-global-color-gray-50)"
   }
 
-  const getCustomValue = value => {
-    if (!value) {
-      return value
-    }
-    let found = false
-    const comparisonValue = value.substring(28, value.length - 1)
-    for (let category of categories) {
-      found = category.colors.includes(comparisonValue)
-      if (found) {
-        break
-      }
-    }
-    return found ? null : value
+  // Use black check for static white
+  if (value?.includes("static-black")) {
+    return "var(--spectrum-global-color-static-gray-50)"
   }
 
-  const prettyPrint = color => {
-    return capitalise(color.split("-").join(" "))
-  }
-
-  const getCheckColor = value => {
-    // Use dynamic color for theme grays
-    if (value?.includes("gray")) {
-      return /^.*(gray-(50|75|100|200|300|400|500))\)$/.test(value)
-        ? "var(--spectrum-global-color-gray-900)"
-        : "var(--spectrum-global-color-gray-50)"
-    }
-
-    // Use black check for static white
-    if (value?.includes("static-black")) {
-      return "var(--spectrum-global-color-static-gray-50)"
-    }
-
-    return "var(--spectrum-global-color-static-gray-900)"
-  }
+  return "var(--spectrum-global-color-static-gray-900)"
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

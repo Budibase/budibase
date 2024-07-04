@@ -1,14 +1,14 @@
 <script>
-  import { Button, Modal, ModalContent } from "@budibase/bbui"
+import { Button, Modal, ModalContent } from "@budibase/bbui"
 
-  let modal
+let modal
 
-  export const show = () => {
-    modal.show()
-  }
-  export const hide = () => {
-    modal.hide()
-  }
+export const show = () => {
+  modal.show()
+}
+export const hide = () => {
+  modal.hide()
+}
 </script>
 
 <Modal bind:this={modal}>

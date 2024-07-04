@@ -1,13 +1,13 @@
-import * as setup from "../api/routes/tests/utilities"
-import { Datasource, FieldType } from "@budibase/types"
-import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
+import { Datasource, FieldType } from "@budibase/types"
+import { Knex } from "knex"
+import _ from "lodash"
+import * as setup from "../api/routes/tests/utilities"
 import {
   DatabaseName,
   getDatasource,
   knexClient,
 } from "../integrations/tests/utils"
-import { Knex } from "knex"
 
 const config = setup.getConfig()!
 

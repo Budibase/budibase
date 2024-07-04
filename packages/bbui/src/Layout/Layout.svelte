@@ -1,12 +1,12 @@
 <script>
-  export let horizontal = false
-  export let paddingX = "M"
-  export let paddingY = "M"
-  export let noPadding = false
-  export let gap = "M"
-  export let noGap = false
-  export let alignContent = "normal"
-  export let justifyItems = "stretch"
+export let horizontal = false
+export let paddingX = "M"
+export let paddingY = "M"
+export let noPadding = false
+export let gap = "M"
+export let noGap = false
+export let alignContent = "normal"
+export let justifyItems = "stretch"
 </script>
 
 <div

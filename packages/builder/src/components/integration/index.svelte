@@ -1,73 +1,71 @@
 <script>
-  import Editor from "./QueryEditor.svelte"
-  import FieldsBuilder from "./QueryFieldsBuilder.svelte"
-  import {
-    Label,
-    Input,
-    Select,
-    Layout,
-    Icon,
-    Button,
-    ActionButton,
-  } from "@budibase/bbui"
+import {
+  ActionButton,
+  Button,
+  Icon,
+  Input,
+  Label,
+  Layout,
+  Select,
+} from "@budibase/bbui"
+import Editor from "./QueryEditor.svelte"
+import FieldsBuilder from "./QueryFieldsBuilder.svelte"
 
-  const QueryTypes = {
-    SQL: "sql",
-    JSON: "json",
-    FIELDS: "fields",
+const QueryTypes = {
+  SQL: "sql",
+  JSON: "json",
+  FIELDS: "fields",
+}
+
+export let query
+export let datasource
+export let schema
+export let editable = true
+export let height = 500
+export let noLabel = false
+
+let stepEditors = []
+
+$: urlDisplay =
+  schema.urlDisplay &&
+  `${datasource.config.url}${
+    query.fields.path ? "/" + query.fields.path : ""
+  }${query.fields.queryString ? "?" + query.fields.queryString : ""}`
+
+function updateQuery({ detail }) {
+  query.fields[schema.type] = detail.value
+}
+
+function updateEditorsOnDelete(deleteIndex) {
+  for (let i = deleteIndex; i < query.fields.steps?.length - 1; i++) {
+    stepEditors[i].update(query.fields.steps[i + 1].value?.value)
   }
+}
+function updateEditorsOnSwap(actionIndex, targetIndex) {
+  const target = query.fields.steps[targetIndex].value?.value
+  stepEditors[targetIndex].update(query.fields.steps[actionIndex].value?.value)
+  stepEditors[actionIndex].update(target)
+}
 
-  export let query
-  export let datasource
-  export let schema
-  export let editable = true
-  export let height = 500
-  export let noLabel = false
-
-  let stepEditors = []
-
-  $: urlDisplay =
-    schema.urlDisplay &&
-    `${datasource.config.url}${
-      query.fields.path ? "/" + query.fields.path : ""
-    }${query.fields.queryString ? "?" + query.fields.queryString : ""}`
-
-  function updateQuery({ detail }) {
-    query.fields[schema.type] = detail.value
+function setEditorTemplate(fromKey, toKey, index) {
+  const currentValue = query.fields.steps[index].value?.value
+  if (
+    !currentValue ||
+    currentValue.toString().replace("\\s", "").length < 3 ||
+    schema.steps.filter(step => step.key === fromKey)[0]?.template ===
+      currentValue
+  ) {
+    query.fields.steps[index].value.value = schema.steps.filter(
+      step => step.key === toKey
+    )[0]?.template
+    stepEditors[index].update(query.fields.steps[index].value.value)
   }
+  query.fields.steps[index].key = toKey
+}
 
-  function updateEditorsOnDelete(deleteIndex) {
-    for (let i = deleteIndex; i < query.fields.steps?.length - 1; i++) {
-      stepEditors[i].update(query.fields.steps[i + 1].value?.value)
-    }
-  }
-  function updateEditorsOnSwap(actionIndex, targetIndex) {
-    const target = query.fields.steps[targetIndex].value?.value
-    stepEditors[targetIndex].update(
-      query.fields.steps[actionIndex].value?.value
-    )
-    stepEditors[actionIndex].update(target)
-  }
-
-  function setEditorTemplate(fromKey, toKey, index) {
-    const currentValue = query.fields.steps[index].value?.value
-    if (
-      !currentValue ||
-      currentValue.toString().replace("\\s", "").length < 3 ||
-      schema.steps.filter(step => step.key === fromKey)[0]?.template ===
-        currentValue
-    ) {
-      query.fields.steps[index].value.value = schema.steps.filter(
-        step => step.key === toKey
-      )[0]?.template
-      stepEditors[index].update(query.fields.steps[index].value.value)
-    }
-    query.fields.steps[index].key = toKey
-  }
-
-  $: shouldDisplayJsonBox =
-    schema.type === QueryTypes.JSON &&
-    query.fields.extra?.actionType !== "pipeline"
+$: shouldDisplayJsonBox =
+  schema.type === QueryTypes.JSON &&
+  query.fields.extra?.actionType !== "pipeline"
 </script>
 
 {#if schema}

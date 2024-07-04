@@ -1,5 +1,5 @@
-import { writable } from "svelte/store"
 import { API } from "api"
+import { writable } from "svelte/store"
 
 export default function (url) {
   const store = writable({ status: "LOADING", data: {}, error: {} })

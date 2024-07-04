@@ -1,12 +1,12 @@
+import { cache, db as dbCore } from "@budibase/backend-core"
+import { Database, DocumentType, UserCtx } from "@budibase/types"
 import { APP_DEV_PREFIX, getGlobalIDFromUserMetadataID } from "../db/utils"
 import {
-  doesUserHaveLock,
-  updateLock,
   checkDebounce,
+  doesUserHaveLock,
   setDebounce,
+  updateLock,
 } from "../utilities/redis"
-import { db as dbCore, cache } from "@budibase/backend-core"
-import { DocumentType, UserCtx, Database } from "@budibase/types"
 
 const DEBOUNCE_TIME_SEC = 30
 

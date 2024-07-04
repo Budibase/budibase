@@ -1,5 +1,5 @@
-import { environmentVariables } from "@budibase/pro"
 import { context, db as dbCore } from "@budibase/backend-core"
+import { environmentVariables } from "@budibase/pro"
 import { AppEnvironment } from "@budibase/types"
 
 export async function getEnvironmentVariables() {

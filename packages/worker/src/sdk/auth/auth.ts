@@ -1,18 +1,18 @@
 import {
-  auth as authCore,
-  env as coreEnv,
   events,
   HTTPError,
+  auth as authCore,
+  cache,
+  env as coreEnv,
+  utils as coreUtils,
   sessions,
   tenancy,
-  utils as coreUtils,
-  cache,
 } from "@budibase/backend-core"
 import { PlatformLogoutOpts, User } from "@budibase/types"
 import jwt from "jsonwebtoken"
-import * as userSdk from "../users"
-import * as emails from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
+import * as emails from "../../utilities/email"
+import * as userSdk from "../users"
 
 // LOGIN / LOGOUT
 

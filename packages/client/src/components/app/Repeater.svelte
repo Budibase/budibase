@@ -1,21 +1,21 @@
 <script>
-  import { getContext } from "svelte"
-  import Placeholder from "./Placeholder.svelte"
-  import Container from "./Container.svelte"
+import { getContext } from "svelte"
+import Container from "./Container.svelte"
+import Placeholder from "./Placeholder.svelte"
 
-  const { Provider, ContextScopes } = getContext("sdk")
-  const component = getContext("component")
+const { Provider, ContextScopes } = getContext("sdk")
+const component = getContext("component")
 
-  export let dataProvider
-  export let noRowsMessage
-  export let direction
-  export let hAlign
-  export let vAlign
-  export let gap
-  export let scope = ContextScopes.Local
+export let dataProvider
+export let noRowsMessage
+export let direction
+export let hAlign
+export let vAlign
+export let gap
+export let scope = ContextScopes.Local
 
-  $: rows = dataProvider?.rows ?? []
-  $: loaded = dataProvider?.loaded ?? true
+$: rows = dataProvider?.rows ?? []
+$: loaded = dataProvider?.loaded ?? true
 </script>
 
 <Container {direction} {hAlign} {vAlign} {gap} wrap>

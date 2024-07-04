@@ -1,4 +1,4 @@
-import { getApp, findTable, makeCall } from "../../utilities"
+import { findTable, getApp, makeCall } from "../../utilities"
 
 async function getSalespeople() {
   const { _id: appId } = await getApp()

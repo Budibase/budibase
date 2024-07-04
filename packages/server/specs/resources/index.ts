@@ -1,11 +1,11 @@
 import application from "./application"
-import row from "./row"
-import table from "./table"
-import query from "./query"
-import user from "./user"
 import metrics from "./metrics"
 import misc from "./misc"
+import query from "./query"
 import roles from "./roles"
+import row from "./row"
+import table from "./table"
+import user from "./user"
 
 export const examples = {
   ...application.getExamples(),

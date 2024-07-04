@@ -1,6 +1,6 @@
-import { generator } from "@budibase/backend-core/tests"
 import { db } from "@budibase/backend-core"
-import { UserGroup as UserGroupType, UserGroupRoles } from "@budibase/types"
+import { generator } from "@budibase/backend-core/tests"
+import { UserGroupRoles, UserGroup as UserGroupType } from "@budibase/types"
 
 export function UserGroup(): UserGroupType {
   const appsCount = generator.integer({ min: 0, max: 3 })

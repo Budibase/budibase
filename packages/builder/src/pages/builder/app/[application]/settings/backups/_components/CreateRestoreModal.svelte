@@ -1,13 +1,13 @@
 <script>
-  import { ModalContent, Input, Body } from "@budibase/bbui"
-  import { auth } from "stores/portal"
+import { Body, Input, ModalContent } from "@budibase/bbui"
+import { auth } from "stores/portal"
 
-  export let confirm
+export let confirm
 
-  let templateName = $auth.user.firstName
-    ? `${$auth.user.firstName}'s Backup`
-    : "Restore Backup"
-  let name = templateName
+let templateName = $auth.user.firstName
+  ? `${$auth.user.firstName}'s Backup`
+  : "Restore Backup"
+let name = templateName
 </script>
 
 <ModalContent

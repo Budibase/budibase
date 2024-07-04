@@ -1,49 +1,49 @@
 <script>
-  import { getContext, onMount } from "svelte"
-  import { Button } from "@budibase/bbui"
-  import GridCell from "../cells/GridCell.svelte"
-  import GridScrollWrapper from "./GridScrollWrapper.svelte"
-  import { BlankRowID } from "../lib/constants"
+import { Button } from "@budibase/bbui"
+import { getContext, onMount } from "svelte"
+import GridCell from "../cells/GridCell.svelte"
+import { BlankRowID } from "../lib/constants"
+import GridScrollWrapper from "./GridScrollWrapper.svelte"
 
-  const {
-    renderedRows,
-    hoveredRowId,
-    props,
-    width,
-    rows,
-    focusedRow,
-    selectedRows,
-    visibleColumns,
-    scroll,
-    isDragging,
-    buttonColumnWidth,
-    showVScrollbar,
-    dispatch,
-  } = getContext("grid")
+const {
+  renderedRows,
+  hoveredRowId,
+  props,
+  width,
+  rows,
+  focusedRow,
+  selectedRows,
+  visibleColumns,
+  scroll,
+  isDragging,
+  buttonColumnWidth,
+  showVScrollbar,
+  dispatch,
+} = getContext("grid")
 
-  let container
+let container
 
-  $: buttons = $props.buttons?.slice(0, 3) || []
-  $: columnsWidth = $visibleColumns.reduce(
-    (total, col) => (total += col.width),
-    0
-  )
-  $: end = columnsWidth - 1 - $scroll.left
-  $: left = Math.min($width - $buttonColumnWidth, end)
+$: buttons = $props.buttons?.slice(0, 3) || []
+$: columnsWidth = $visibleColumns.reduce(
+  (total, col) => (total += col.width),
+  0
+)
+$: end = columnsWidth - 1 - $scroll.left
+$: left = Math.min($width - $buttonColumnWidth, end)
 
-  const handleClick = async (button, row) => {
-    await button.onClick?.(rows.actions.cleanRow(row))
-    // Refresh the row in case it changed
-    await rows.actions.refreshRow(row._id)
-  }
+const handleClick = async (button, row) => {
+  await button.onClick?.(rows.actions.cleanRow(row))
+  // Refresh the row in case it changed
+  await rows.actions.refreshRow(row._id)
+}
 
-  onMount(() => {
-    const observer = new ResizeObserver(entries => {
-      const width = entries?.[0]?.contentRect?.width ?? 0
-      buttonColumnWidth.set(width)
-    })
-    observer.observe(container)
+onMount(() => {
+  const observer = new ResizeObserver(entries => {
+    const width = entries?.[0]?.contentRect?.width ?? 0
+    buttonColumnWidth.set(width)
   })
+  observer.observe(container)
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

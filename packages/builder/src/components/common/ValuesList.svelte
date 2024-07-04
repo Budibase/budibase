@@ -1,19 +1,19 @@
 <script>
-  import { join } from "lodash/fp"
-  import { TextArea } from "@budibase/bbui"
+import { TextArea } from "@budibase/bbui"
+import { join } from "lodash/fp"
 
-  export let values
-  export let label
+export let values
+export let label
 
-  const inputChanged = ev => {
-    try {
-      values = ev.detail.split("\n")
-    } catch (_) {
-      values = []
-    }
+const inputChanged = ev => {
+  try {
+    values = ev.detail.split("\n")
+  } catch (_) {
+    values = []
   }
+}
 
-  $: valuesText = join("\n")(values)
+$: valuesText = join("\n")(values)
 </script>
 
 <div class="container">

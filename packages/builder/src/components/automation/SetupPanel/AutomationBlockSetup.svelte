@@ -1,310 +1,290 @@
 <script>
-  import TableSelector from "./TableSelector.svelte"
-  import FieldSelector from "./FieldSelector.svelte"
-  import SchemaSetup from "./SchemaSetup.svelte"
-  import RowSelector from "./RowSelector.svelte"
-  import {
-    Button,
-    Select,
-    Label,
-    ActionButton,
-    Drawer,
-    Modal,
-    notifications,
-    Checkbox,
-    DatePicker,
-    DrawerContent,
-    Helpers,
-    Toggle,
-    Divider,
-  } from "@budibase/bbui"
-  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, selectedAutomation, tables } from "stores/builder"
-  import { environment, licensing } from "stores/portal"
-  import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
-  import {
-    BindingSidePanel,
-    DrawerBindableSlot,
-    DrawerBindableInput,
-    ServerBindingPanel as AutomationBindingPanel,
-    ModalBindableInput,
-  } from "components/common/bindings"
-  import CodeEditorModal from "./CodeEditorModal.svelte"
-  import QueryParamSelector from "./QueryParamSelector.svelte"
-  import AutomationSelector from "./AutomationSelector.svelte"
-  import CronBuilder from "./CronBuilder.svelte"
-  import Editor from "components/integration/QueryEditor.svelte"
-  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import { BindingHelpers, BindingType } from "components/common/bindings/utils"
-  import {
-    bindingsToCompletions,
-    hbAutocomplete,
-    EditorModes,
-  } from "components/common/CodeEditor"
-  import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
-  import { QueryUtils, Utils, search, memo } from "@budibase/frontend-core"
-  import {
-    getSchemaForDatasourcePlus,
-    getEnvironmentBindings,
-  } from "dataBinding"
-  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
-  import { onMount } from "svelte"
-  import { writable } from "svelte/store"
-  import { cloneDeep } from "lodash/fp"
-  import {
-    AutomationEventType,
-    AutomationStepType,
-    AutomationActionStepId,
-  } from "@budibase/types"
-  import { FIELDS } from "constants/backend"
-  import PropField from "./PropField.svelte"
+import {
+  ActionButton,
+  Button,
+  Checkbox,
+  DatePicker,
+  Divider,
+  Drawer,
+  DrawerContent,
+  Helpers,
+  Label,
+  Modal,
+  Select,
+  Toggle,
+  notifications,
+} from "@budibase/bbui"
+import { QueryUtils, Utils, memo, search } from "@budibase/frontend-core"
+import {
+  AutomationActionStepId,
+  AutomationEventType,
+  AutomationStepType,
+} from "@budibase/types"
+import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
+import {
+  EditorModes,
+  bindingsToCompletions,
+  hbAutocomplete,
+} from "components/common/CodeEditor"
+import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
+import {
+  ServerBindingPanel as AutomationBindingPanel,
+  BindingSidePanel,
+  DrawerBindableInput,
+  DrawerBindableSlot,
+  ModalBindableInput,
+} from "components/common/bindings"
+import { BindingHelpers, BindingType } from "components/common/bindings/utils"
+import FilterBuilder from "components/design/settings/controls/FilterEditor/FilterBuilder.svelte"
+import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+import Editor from "components/integration/QueryEditor.svelte"
+import { FIELDS } from "constants/backend"
+import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+import { getEnvironmentBindings, getSchemaForDatasourcePlus } from "dataBinding"
+import { cloneDeep } from "lodash/fp"
+import { automationStore, selectedAutomation, tables } from "stores/builder"
+import { environment, licensing } from "stores/portal"
+import { onMount } from "svelte"
+import { writable } from "svelte/store"
+import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
+import AutomationSelector from "./AutomationSelector.svelte"
+import CodeEditorModal from "./CodeEditorModal.svelte"
+import CronBuilder from "./CronBuilder.svelte"
+import FieldSelector from "./FieldSelector.svelte"
+import PropField from "./PropField.svelte"
+import QueryParamSelector from "./QueryParamSelector.svelte"
+import RowSelector from "./RowSelector.svelte"
+import SchemaSetup from "./SchemaSetup.svelte"
+import TableSelector from "./TableSelector.svelte"
 
-  export let block
-  export let testData
-  export let schemaProperties
-  export let isTestModal = false
+export let block
+export let testData
+export let schemaProperties
+export let isTestModal = false
 
-  // Stop unnecessary rendering
-  const memoBlock = memo(block)
+// Stop unnecessary rendering
+const memoBlock = memo(block)
 
-  const rowTriggers = [
-    TriggerStepID.ROW_UPDATED,
-    TriggerStepID.ROW_SAVED,
-    TriggerStepID.ROW_DELETED,
-  ]
+const rowTriggers = [
+  TriggerStepID.ROW_UPDATED,
+  TriggerStepID.ROW_SAVED,
+  TriggerStepID.ROW_DELETED,
+]
 
-  const rowEvents = [
-    AutomationEventType.ROW_DELETE,
-    AutomationEventType.ROW_SAVE,
-    AutomationEventType.ROW_UPDATE,
-  ]
+const rowEvents = [
+  AutomationEventType.ROW_DELETE,
+  AutomationEventType.ROW_SAVE,
+  AutomationEventType.ROW_UPDATE,
+]
 
-  const rowSteps = [ActionStepID.UPDATE_ROW, ActionStepID.CREATE_ROW]
+const rowSteps = [ActionStepID.UPDATE_ROW, ActionStepID.CREATE_ROW]
 
-  let webhookModal
-  let drawer
-  let inputData
-  let insertAtPos, getCaretPosition
-  let stepLayouts = {}
+let webhookModal
+let drawer
+let inputData
+let insertAtPos, getCaretPosition
+let stepLayouts = {}
 
-  $: memoBlock.set(block)
-  $: filters = lookForFilters(schemaProperties) || []
-  $: tempFilters = filters
-  $: stepId = block.stepId
-  $: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
-  $: getInputData(testData, $memoBlock.inputs)
-  $: tableId = inputData ? inputData.tableId : null
-  $: table = tableId
-    ? $tables.list.find(table => table._id === inputData.tableId)
-    : { schema: {} }
-  $: schema = getSchemaForDatasourcePlus(tableId, {
-    searchableSchema: true,
-  }).schema
-  $: schemaFields = search.getFields(
-    $tables.list,
-    Object.values(schema || {}),
-    { allowLinks: true }
-  )
-  $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
-  $: isTrigger = block?.type === AutomationStepType.TRIGGER
-  $: codeMode =
-    stepId === AutomationActionStepId.EXECUTE_BASH
-      ? EditorModes.Handlebars
-      : EditorModes.JS
-  $: bindingsHelpers = new BindingHelpers(getCaretPosition, insertAtPos, {
-    disableWrapping: true,
-  })
-  $: editingJs = codeMode === EditorModes.JS
-  $: requiredProperties = isTestModal ? [] : block.schema["inputs"].required
+$: memoBlock.set(block)
+$: filters = lookForFilters(schemaProperties) || []
+$: tempFilters = filters
+$: stepId = block.stepId
+$: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
+$: getInputData(testData, $memoBlock.inputs)
+$: tableId = inputData ? inputData.tableId : null
+$: table = tableId
+  ? $tables.list.find(table => table._id === inputData.tableId)
+  : { schema: {} }
+$: schema = getSchemaForDatasourcePlus(tableId, {
+  searchableSchema: true,
+}).schema
+$: schemaFields = search.getFields($tables.list, Object.values(schema || {}), {
+  allowLinks: true,
+})
+$: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
+$: isTrigger = block?.type === AutomationStepType.TRIGGER
+$: codeMode =
+  stepId === AutomationActionStepId.EXECUTE_BASH
+    ? EditorModes.Handlebars
+    : EditorModes.JS
+$: bindingsHelpers = new BindingHelpers(getCaretPosition, insertAtPos, {
+  disableWrapping: true,
+})
+$: editingJs = codeMode === EditorModes.JS
+$: requiredProperties = isTestModal ? [] : block.schema["inputs"].required
 
-  $: stepCompletions =
-    codeMode === EditorModes.Handlebars
-      ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
-      : []
+$: stepCompletions =
+  codeMode === EditorModes.Handlebars
+    ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
+    : []
 
-  const getInputData = (testData, blockInputs) => {
-    // Test data is not cloned for reactivity
-    let newInputData = testData || cloneDeep(blockInputs)
+const getInputData = (testData, blockInputs) => {
+  // Test data is not cloned for reactivity
+  let newInputData = testData || cloneDeep(blockInputs)
 
-    // Ensures the app action fields are populated
-    if (
-      block.event === AutomationEventType.APP_TRIGGER &&
-      !newInputData?.fields
-    ) {
-      newInputData = cloneDeep(blockInputs)
-    }
-    inputData = newInputData
-    setDefaultEnumValues()
+  // Ensures the app action fields are populated
+  if (
+    block.event === AutomationEventType.APP_TRIGGER &&
+    !newInputData?.fields
+  ) {
+    newInputData = cloneDeep(blockInputs)
   }
+  inputData = newInputData
+  setDefaultEnumValues()
+}
 
-  const setDefaultEnumValues = () => {
-    for (const [key, value] of schemaProperties) {
-      if (value.type === "string" && value.enum && inputData[key] == null) {
-        inputData[key] = value.enum[0]
-      }
+const setDefaultEnumValues = () => {
+  for (const [key, value] of schemaProperties) {
+    if (value.type === "string" && value.enum && inputData[key] == null) {
+      inputData[key] = value.enum[0]
     }
   }
+}
 
-  // Store for any UX related data
-  const stepStore = writable({})
-  $: currentStep = $stepStore?.[block.id]
+// Store for any UX related data
+const stepStore = writable({})
+$: currentStep = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, currentStep)
+$: customStepLayouts($memoBlock, schemaProperties, currentStep)
 
-  const customStepLayouts = block => {
-    if (
-      rowSteps.includes(block.stepId) ||
-      (rowTriggers.includes(block.stepId) && isTestModal)
-    ) {
-      const schema = schemaProperties.reduce((acc, entry) => {
-        const [key, val] = entry
-        acc[key] = val
-        return acc
-      }, {})
+const customStepLayouts = block => {
+  if (
+    rowSteps.includes(block.stepId) ||
+    (rowTriggers.includes(block.stepId) && isTestModal)
+  ) {
+    const schema = schemaProperties.reduce((acc, entry) => {
+      const [key, val] = entry
+      acc[key] = val
+      return acc
+    }, {})
 
-      // Optionally build the rev field config when its needed.
-      const getRevConfig = () => {
-        const rowRevEntry = schema["revision"]
-        if (!rowRevEntry) {
-          return []
-        }
-        const rowRevlabel = getFieldLabel("revision", rowRevEntry)
-
-        return isTestModal
-          ? [
-              {
-                type: DrawerBindableInput,
-                title: rowRevlabel,
-                props: {
-                  panel: AutomationBindingPanel,
-                  value: inputData["revision"],
-                  onChange: e => {
-                    onChange({ ["revision"]: e.detail })
-                  },
-                  bindings,
-                  updateOnChange: false,
-                  forceModal: true,
-                },
-              },
-            ]
-          : []
+    // Optionally build the rev field config when its needed.
+    const getRevConfig = () => {
+      const rowRevEntry = schema["revision"]
+      if (!rowRevEntry) {
+        return []
       }
+      const rowRevlabel = getFieldLabel("revision", rowRevEntry)
 
-      const getIdConfig = () => {
-        const rowIdentifier = isTestModal ? "id" : "rowId"
-
-        const rowIdEntry = schema[rowIdentifier]
-        if (!rowIdEntry) {
-          return []
-        }
-
-        const rowIdlabel = getFieldLabel(rowIdentifier, rowIdEntry)
-
-        return [
-          {
-            type: DrawerBindableInput,
-            title: rowIdlabel,
-            props: {
-              panel: AutomationBindingPanel,
-              value: inputData[rowIdentifier],
-              onChange: e => {
-                onChange({ [rowIdentifier]: e.detail })
-              },
-              bindings,
-              updateOnChange: false,
-              forceModal: true,
-            },
-          },
-        ]
-      }
-
-      // A select to switch from `row` to `oldRow`
-      const getRowTypeConfig = () => {
-        if (!isTestModal || block.event !== AutomationEventType.ROW_UPDATE) {
-          return []
-        }
-
-        if (!$stepStore?.[block.id]) {
-          stepStore.update(state => ({
-            ...state,
-            [block.id]: {
-              rowType: "row",
-            },
-          }))
-        }
-
-        return [
-          {
-            type: Select,
-            tooltip: `You can configure test data for both the updated row and 
-              the old row, if you need it. Just select the one you wish to alter`,
-            title: "Row data",
-            props: {
-              value: $stepStore?.[block.id].rowType,
-              onChange: e => {
-                stepStore.update(state => ({
-                  ...state,
-                  [block.id]: {
-                    rowType: e.detail,
-                  },
-                }))
-              },
-              getOptionLabel: type => type.name,
-              getOptionValue: type => type.id,
-              options: [
-                {
-                  id: "row",
-                  name: "Updated row",
-                },
-                { id: "oldRow", name: "Old row" },
-              ],
-            },
-          },
-        ]
-      }
-
-      const getRowSelector = () => {
-        const baseProps = {
-          bindings,
-          isTestModal,
-          isUpdateRow: block.stepId === ActionStepID.UPDATE_ROW,
-        }
-
-        if (isTestModal && currentStep?.rowType === "oldRow") {
-          return [
+      return isTestModal
+        ? [
             {
-              type: RowSelector,
+              type: DrawerBindableInput,
+              title: rowRevlabel,
               props: {
-                row: inputData["oldRow"] || {
-                  tableId: inputData["row"].tableId,
-                },
-                meta: {
-                  fields: inputData["meta"].oldFields || {},
-                },
+                panel: AutomationBindingPanel,
+                value: inputData["revision"],
                 onChange: e => {
-                  onChange({
-                    oldRow: e.detail.row,
-                    meta: {
-                      fields: inputData["meta"].fields,
-                      oldFields: e.detail.meta.fields,
-                    },
-                  })
+                  onChange({ ["revision"]: e.detail })
                 },
-                ...baseProps,
+                bindings,
+                updateOnChange: false,
+                forceModal: true,
               },
             },
           ]
-        }
+        : []
+    }
 
+    const getIdConfig = () => {
+      const rowIdentifier = isTestModal ? "id" : "rowId"
+
+      const rowIdEntry = schema[rowIdentifier]
+      if (!rowIdEntry) {
+        return []
+      }
+
+      const rowIdlabel = getFieldLabel(rowIdentifier, rowIdEntry)
+
+      return [
+        {
+          type: DrawerBindableInput,
+          title: rowIdlabel,
+          props: {
+            panel: AutomationBindingPanel,
+            value: inputData[rowIdentifier],
+            onChange: e => {
+              onChange({ [rowIdentifier]: e.detail })
+            },
+            bindings,
+            updateOnChange: false,
+            forceModal: true,
+          },
+        },
+      ]
+    }
+
+    // A select to switch from `row` to `oldRow`
+    const getRowTypeConfig = () => {
+      if (!isTestModal || block.event !== AutomationEventType.ROW_UPDATE) {
+        return []
+      }
+
+      if (!$stepStore?.[block.id]) {
+        stepStore.update(state => ({
+          ...state,
+          [block.id]: {
+            rowType: "row",
+          },
+        }))
+      }
+
+      return [
+        {
+          type: Select,
+          tooltip: `You can configure test data for both the updated row and 
+              the old row, if you need it. Just select the one you wish to alter`,
+          title: "Row data",
+          props: {
+            value: $stepStore?.[block.id].rowType,
+            onChange: e => {
+              stepStore.update(state => ({
+                ...state,
+                [block.id]: {
+                  rowType: e.detail,
+                },
+              }))
+            },
+            getOptionLabel: type => type.name,
+            getOptionValue: type => type.id,
+            options: [
+              {
+                id: "row",
+                name: "Updated row",
+              },
+              { id: "oldRow", name: "Old row" },
+            ],
+          },
+        },
+      ]
+    }
+
+    const getRowSelector = () => {
+      const baseProps = {
+        bindings,
+        isTestModal,
+        isUpdateRow: block.stepId === ActionStepID.UPDATE_ROW,
+      }
+
+      if (isTestModal && currentStep?.rowType === "oldRow") {
         return [
           {
             type: RowSelector,
             props: {
-              row: inputData["row"],
-              meta: inputData["meta"] || {},
+              row: inputData["oldRow"] || {
+                tableId: inputData["row"].tableId,
+              },
+              meta: {
+                fields: inputData["meta"].oldFields || {},
+              },
               onChange: e => {
-                onChange(e.detail)
+                onChange({
+                  oldRow: e.detail.row,
+                  meta: {
+                    fields: inputData["meta"].fields,
+                    oldFields: e.detail.meta.fields,
+                  },
+                })
               },
               ...baseProps,
             },
@@ -312,49 +292,64 @@
         ]
       }
 
-      stepLayouts[block.stepId] = {
-        row: {
-          schema: schema["row"],
-          //?layout: RowLayoutStepComponent.
-          content: [
-            {
-              type: TableSelector,
-              title: "Table",
-              props: {
-                isTrigger,
-                value: inputData["row"]?.tableId ?? "",
-                onChange: e => {
-                  const rowKey = $stepStore?.[block.id]?.rowType || "row"
-                  onChange({
-                    _tableId: e.detail,
-                    meta: {},
-                    [rowKey]: e.detail
-                      ? {
-                          tableId: e.detail,
-                        }
-                      : {},
-                  })
-                },
-                disabled: isTestModal,
-              },
+      return [
+        {
+          type: RowSelector,
+          props: {
+            row: inputData["row"],
+            meta: inputData["meta"] || {},
+            onChange: e => {
+              onChange(e.detail)
             },
-            ...getIdConfig(),
-            ...getRevConfig(),
-            ...getRowTypeConfig(),
-            {
-              type: Divider,
-              props: {
-                noMargin: true,
-              },
-            },
-            ...getRowSelector(),
-          ],
+            ...baseProps,
+          },
         },
-      }
+      ]
+    }
+
+    stepLayouts[block.stepId] = {
+      row: {
+        schema: schema["row"],
+        //?layout: RowLayoutStepComponent.
+        content: [
+          {
+            type: TableSelector,
+            title: "Table",
+            props: {
+              isTrigger,
+              value: inputData["row"]?.tableId ?? "",
+              onChange: e => {
+                const rowKey = $stepStore?.[block.id]?.rowType || "row"
+                onChange({
+                  _tableId: e.detail,
+                  meta: {},
+                  [rowKey]: e.detail
+                    ? {
+                        tableId: e.detail,
+                      }
+                    : {},
+                })
+              },
+              disabled: isTestModal,
+            },
+          },
+          ...getIdConfig(),
+          ...getRevConfig(),
+          ...getRowTypeConfig(),
+          {
+            type: Divider,
+            props: {
+              noMargin: true,
+            },
+          },
+          ...getRowSelector(),
+        ],
+      },
     }
   }
+}
 
-  /**
+/**
    * Handler for row trigger automation updates.
     @param {object} update - An automation block.inputs update object
     @example
@@ -362,45 +357,45 @@
       "tableId" : "ta_bb_employee"
     })
    */
-  const onRowTriggerUpdate = async update => {
-    if (
-      Object.hasOwn(update, "tableId") &&
-      $selectedAutomation.testData?.row?.tableId !== update.tableId
-    ) {
-      try {
-        const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
-          searchableSchema: true,
-        }).schema
+const onRowTriggerUpdate = async update => {
+  if (
+    Object.hasOwn(update, "tableId") &&
+    $selectedAutomation.testData?.row?.tableId !== update.tableId
+  ) {
+    try {
+      const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
+        searchableSchema: true,
+      }).schema
 
-        // Parse the block inputs as usual
-        const updatedAutomation =
-          await automationStore.actions.processBlockInputs(block, {
-            schema: reqSchema,
-            ...update,
-          })
-
-        // Save the entire automation and reset the testData
-        await automationStore.actions.save({
-          ...updatedAutomation,
-          testData: {
-            // Reset Core fields
-            row: { tableId: update.tableId },
-            oldRow: { tableId: update.tableId },
-            meta: {},
-            id: "",
-            revision: "",
-          },
+      // Parse the block inputs as usual
+      const updatedAutomation =
+        await automationStore.actions.processBlockInputs(block, {
+          schema: reqSchema,
+          ...update,
         })
 
-        return
-      } catch (e) {
-        console.error("Error saving automation", e)
-        notifications.error("Error saving automation")
-      }
+      // Save the entire automation and reset the testData
+      await automationStore.actions.save({
+        ...updatedAutomation,
+        testData: {
+          // Reset Core fields
+          row: { tableId: update.tableId },
+          oldRow: { tableId: update.tableId },
+          meta: {},
+          id: "",
+          revision: "",
+        },
+      })
+
+      return
+    } catch (e) {
+      console.error("Error saving automation", e)
+      notifications.error("Error saving automation")
     }
   }
+}
 
-  /**
+/**
    * Handler for App trigger automation updates.
    * Ensure updates to the field list are reflected in testData
     @param {object} update - An app trigger update object
@@ -409,39 +404,41 @@
       "fields" : {"myField": "123", "myArray": "cat,dog,badger"}
     })
    */
-  const onAppTriggerUpdate = async update => {
-    try {
-      // Parse the block inputs as usual
-      const updatedAutomation =
-        await automationStore.actions.processBlockInputs(block, {
-          schema: {},
-          ...update,
-        })
+const onAppTriggerUpdate = async update => {
+  try {
+    // Parse the block inputs as usual
+    const updatedAutomation = await automationStore.actions.processBlockInputs(
+      block,
+      {
+        schema: {},
+        ...update,
+      }
+    )
 
-      // Exclude default or invalid data from the test data
-      let updatedFields = {}
-      for (const key of Object.keys(block?.inputs?.fields || {})) {
-        if (Object.hasOwn(update.fields, key)) {
-          if (key !== "") {
-            updatedFields[key] = updatedAutomation.testData?.fields?.[key]
-          }
+    // Exclude default or invalid data from the test data
+    let updatedFields = {}
+    for (const key of Object.keys(block?.inputs?.fields || {})) {
+      if (Object.hasOwn(update.fields, key)) {
+        if (key !== "") {
+          updatedFields[key] = updatedAutomation.testData?.fields?.[key]
         }
       }
-
-      // Save the entire automation and reset the testData
-      await automationStore.actions.save({
-        ...updatedAutomation,
-        testData: {
-          fields: updatedFields,
-        },
-      })
-    } catch (e) {
-      console.error("Error saving automation", e)
-      notifications.error("Error saving automation")
     }
-  }
 
-  /**
+    // Save the entire automation and reset the testData
+    await automationStore.actions.save({
+      ...updatedAutomation,
+      testData: {
+        fields: updatedFields,
+      },
+    })
+  } catch (e) {
+    console.error("Error saving automation", e)
+    notifications.error("Error saving automation")
+  }
+}
+
+/**
    * Handler for automation block input updates.
     @param {object} update - An automation inputs update object
     @example
@@ -450,322 +447,319 @@
       row: { "Active": true, "Order Id" : 14, ... }
     })
    */
-  const onChange = Utils.sequential(async update => {
-    const request = cloneDeep(update)
+const onChange = Utils.sequential(async update => {
+  const request = cloneDeep(update)
 
-    // Process app trigger updates
-    if (isTrigger && !isTestModal) {
-      // Row trigger
-      if (rowEvents.includes(block.event)) {
-        await onRowTriggerUpdate(request)
-        return
-      }
-      // App trigger
-      if (block.event === AutomationEventType.APP_TRIGGER) {
-        await onAppTriggerUpdate(request)
-        return
-      }
+  // Process app trigger updates
+  if (isTrigger && !isTestModal) {
+    // Row trigger
+    if (rowEvents.includes(block.event)) {
+      await onRowTriggerUpdate(request)
+      return
     }
-
-    // We need to cache the schema as part of the definition because it is
-    // used in the server to detect relationships. It would be far better to
-    // instead fetch the schema in the backend at runtime.
-    // If _tableId is explicitly included in the update request, the schema will be requested
-    let schema
-    if (request?._tableId) {
-      schema = getSchemaForDatasourcePlus(request._tableId, {
-        searchableSchema: true,
-      }).schema
-      delete request._tableId
+    // App trigger
+    if (block.event === AutomationEventType.APP_TRIGGER) {
+      await onAppTriggerUpdate(request)
+      return
     }
-    try {
-      if (isTestModal) {
-        let newTestData = { schema }
+  }
 
-        // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
-        if (stepId === TriggerStepID.WEBHOOK) {
-          newTestData = {
-            ...newTestData,
-            body: {
-              ...update,
-              ...$selectedAutomation.testData?.body,
-            },
-          }
-        }
+  // We need to cache the schema as part of the definition because it is
+  // used in the server to detect relationships. It would be far better to
+  // instead fetch the schema in the backend at runtime.
+  // If _tableId is explicitly included in the update request, the schema will be requested
+  let schema
+  if (request?._tableId) {
+    schema = getSchemaForDatasourcePlus(request._tableId, {
+      searchableSchema: true,
+    }).schema
+    delete request._tableId
+  }
+  try {
+    if (isTestModal) {
+      let newTestData = { schema }
+
+      // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
+      if (stepId === TriggerStepID.WEBHOOK) {
         newTestData = {
           ...newTestData,
-          ...request,
+          body: {
+            ...update,
+            ...$selectedAutomation.testData?.body,
+          },
         }
-        await automationStore.actions.addTestDataToAutomation(newTestData)
-      } else {
-        const data = { schema, ...request }
-        await automationStore.actions.updateBlockInputs(block, data)
       }
-    } catch (error) {
-      console.error("Error saving automation", error)
-      notifications.error("Error saving automation")
-    }
-  })
-
-  function getAvailableBindings(block, automation) {
-    if (!block || !automation) {
-      return []
-    }
-
-    // Find previous steps to the selected one
-    let allSteps = [...automation.steps]
-
-    if (automation.trigger) {
-      allSteps = [automation.trigger, ...allSteps]
-    }
-    let blockIdx = allSteps.findIndex(step => step.id === block.id)
-
-    // Extract all outputs from all previous steps as available bindingsx§x
-    let bindings = []
-    let loopBlockCount = 0
-    const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
-      if (!name) return
-      const runtimeBinding = determineRuntimeBinding(name, idx, isLoopBlock)
-      const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
-
-      bindings.push(
-        createBindingObject(
-          name,
-          value,
-          icon,
-          idx,
-          loopBlockCount,
-          isLoopBlock,
-          runtimeBinding,
-          categoryName,
-          bindingName
-        )
-      )
-    }
-
-    const determineRuntimeBinding = (name, idx, isLoopBlock) => {
-      let runtimeName
-
-      /* Begin special cases for generating custom schemas based on triggers */
-      if (
-        idx === 0 &&
-        automation.trigger?.event === AutomationEventType.APP_TRIGGER
-      ) {
-        return `trigger.fields.${name}`
+      newTestData = {
+        ...newTestData,
+        ...request,
       }
-
-      if (
-        idx === 0 &&
-        (automation.trigger?.event === AutomationEventType.ROW_UPDATE ||
-          automation.trigger?.event === AutomationEventType.ROW_SAVE)
-      ) {
-        let noRowKeywordBindings = ["id", "revision", "oldRow"]
-        if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
-      }
-      /* End special cases for generating custom schemas based on triggers */
-
-      if (isLoopBlock) {
-        runtimeName = `loop.${name}`
-      } else if (block.name.startsWith("JS")) {
-        runtimeName = `steps[${idx - loopBlockCount}].${name}`
-      } else {
-        runtimeName = `steps.${idx - loopBlockCount}.${name}`
-      }
-      return idx === 0 ? `trigger.${name}` : runtimeName
+      await automationStore.actions.addTestDataToAutomation(newTestData)
+    } else {
+      const data = { schema, ...request }
+      await automationStore.actions.updateBlockInputs(block, data)
     }
+  } catch (error) {
+    console.error("Error saving automation", error)
+    notifications.error("Error saving automation")
+  }
+})
 
-    const determineCategoryName = (idx, isLoopBlock, bindingName) => {
-      if (idx === 0) return "Trigger outputs"
-      if (isLoopBlock) return "Loop Outputs"
-      return bindingName
-        ? `${bindingName} outputs`
-        : `Step ${idx - loopBlockCount} outputs`
-    }
+function getAvailableBindings(block, automation) {
+  if (!block || !automation) {
+    return []
+  }
 
-    const createBindingObject = (
-      name,
-      value,
-      icon,
-      idx,
-      loopBlockCount,
-      isLoopBlock,
-      runtimeBinding,
-      categoryName,
-      bindingName
-    ) => {
-      const field = Object.values(FIELDS).find(
-        field => field.type === value.type && field.subtype === value.subtype
-      )
+  // Find previous steps to the selected one
+  let allSteps = [...automation.steps]
 
-      return {
-        readableBinding: bindingName
-          ? `${bindingName}.${name}`
-          : runtimeBinding,
-        runtimeBinding,
-        type: value.type,
-        description: value.description,
+  if (automation.trigger) {
+    allSteps = [automation.trigger, ...allSteps]
+  }
+  let blockIdx = allSteps.findIndex(step => step.id === block.id)
+
+  // Extract all outputs from all previous steps as available bindingsx§x
+  let bindings = []
+  let loopBlockCount = 0
+  const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
+    if (!name) return
+    const runtimeBinding = determineRuntimeBinding(name, idx, isLoopBlock)
+    const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
+
+    bindings.push(
+      createBindingObject(
+        name,
+        value,
         icon,
-        category: categoryName,
-        display: {
-          type: field?.name || value.type,
-          name,
-          rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
+        idx,
+        loopBlockCount,
+        isLoopBlock,
+        runtimeBinding,
+        categoryName,
+        bindingName
+      )
+    )
+  }
+
+  const determineRuntimeBinding = (name, idx, isLoopBlock) => {
+    let runtimeName
+
+    /* Begin special cases for generating custom schemas based on triggers */
+    if (
+      idx === 0 &&
+      automation.trigger?.event === AutomationEventType.APP_TRIGGER
+    ) {
+      return `trigger.fields.${name}`
+    }
+
+    if (
+      idx === 0 &&
+      (automation.trigger?.event === AutomationEventType.ROW_UPDATE ||
+        automation.trigger?.event === AutomationEventType.ROW_SAVE)
+    ) {
+      let noRowKeywordBindings = ["id", "revision", "oldRow"]
+      if (!noRowKeywordBindings.includes(name)) return `trigger.row.${name}`
+    }
+    /* End special cases for generating custom schemas based on triggers */
+
+    if (isLoopBlock) {
+      runtimeName = `loop.${name}`
+    } else if (block.name.startsWith("JS")) {
+      runtimeName = `steps[${idx - loopBlockCount}].${name}`
+    } else {
+      runtimeName = `steps.${idx - loopBlockCount}.${name}`
+    }
+    return idx === 0 ? `trigger.${name}` : runtimeName
+  }
+
+  const determineCategoryName = (idx, isLoopBlock, bindingName) => {
+    if (idx === 0) return "Trigger outputs"
+    if (isLoopBlock) return "Loop Outputs"
+    return bindingName
+      ? `${bindingName} outputs`
+      : `Step ${idx - loopBlockCount} outputs`
+  }
+
+  const createBindingObject = (
+    name,
+    value,
+    icon,
+    idx,
+    loopBlockCount,
+    isLoopBlock,
+    runtimeBinding,
+    categoryName,
+    bindingName
+  ) => {
+    const field = Object.values(FIELDS).find(
+      field => field.type === value.type && field.subtype === value.subtype
+    )
+
+    return {
+      readableBinding: bindingName ? `${bindingName}.${name}` : runtimeBinding,
+      runtimeBinding,
+      type: value.type,
+      description: value.description,
+      icon,
+      category: categoryName,
+      display: {
+        type: field?.name || value.type,
+        name,
+        rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
+      },
+    }
+  }
+
+  for (let idx = 0; idx < blockIdx; idx++) {
+    let wasLoopBlock = allSteps[idx - 1]?.stepId === ActionStepID.LOOP
+    let isLoopBlock =
+      allSteps[idx]?.stepId === ActionStepID.LOOP &&
+      allSteps.some(x => x.blockToLoop === block.id)
+    let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
+    let bindingName = automation.stepNames?.[allSteps[idx - loopBlockCount].id]
+
+    if (isLoopBlock) {
+      schema = {
+        currentItem: {
+          type: "string",
+          description: "the item currently being executed",
         },
       }
     }
 
-    for (let idx = 0; idx < blockIdx; idx++) {
-      let wasLoopBlock = allSteps[idx - 1]?.stepId === ActionStepID.LOOP
-      let isLoopBlock =
-        allSteps[idx]?.stepId === ActionStepID.LOOP &&
-        allSteps.some(x => x.blockToLoop === block.id)
-      let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
-      let bindingName =
-        automation.stepNames?.[allSteps[idx - loopBlockCount].id]
-
-      if (isLoopBlock) {
-        schema = {
-          currentItem: {
-            type: "string",
-            description: "the item currently being executed",
-          },
+    if (
+      idx === 0 &&
+      automation.trigger?.event === AutomationEventType.APP_TRIGGER
+    ) {
+      schema = Object.fromEntries(
+        Object.keys(automation.trigger.inputs.fields || []).map(key => [
+          key,
+          { type: automation.trigger.inputs.fields[key] },
+        ])
+      )
+    }
+    if (
+      (idx === 0 &&
+        automation.trigger.event === AutomationEventType.ROW_UPDATE) ||
+      (idx === 0 && automation.trigger.event === AutomationEventType.ROW_SAVE)
+    ) {
+      let table = $tables.list.find(
+        table => table._id === automation.trigger.inputs.tableId
+      )
+      // We want to generate our own schema for the bindings from the table schema itself
+      for (const key in table?.schema) {
+        schema[key] = {
+          type: table.schema[key].type,
+          subtype: table.schema[key].subtype,
         }
       }
-
-      if (
-        idx === 0 &&
-        automation.trigger?.event === AutomationEventType.APP_TRIGGER
-      ) {
-        schema = Object.fromEntries(
-          Object.keys(automation.trigger.inputs.fields || []).map(key => [
-            key,
-            { type: automation.trigger.inputs.fields[key] },
-          ])
-        )
-      }
-      if (
-        (idx === 0 &&
-          automation.trigger.event === AutomationEventType.ROW_UPDATE) ||
-        (idx === 0 && automation.trigger.event === AutomationEventType.ROW_SAVE)
-      ) {
-        let table = $tables.list.find(
-          table => table._id === automation.trigger.inputs.tableId
-        )
-        // We want to generate our own schema for the bindings from the table schema itself
-        for (const key in table?.schema) {
-          schema[key] = {
-            type: table.schema[key].type,
-            subtype: table.schema[key].subtype,
-          }
-        }
-        // remove the original binding
-        delete schema.row
-      }
-      let icon =
-        idx === 0
-          ? automation.trigger.icon
-          : isLoopBlock
+      // remove the original binding
+      delete schema.row
+    }
+    let icon =
+      idx === 0
+        ? automation.trigger.icon
+        : isLoopBlock
           ? "Reuse"
           : allSteps[idx].icon
 
-      if (wasLoopBlock) {
-        loopBlockCount++
-        continue
-      }
-      Object.entries(schema).forEach(([name, value]) =>
-        addBinding(name, value, icon, idx, isLoopBlock, bindingName)
-      )
+    if (wasLoopBlock) {
+      loopBlockCount++
+      continue
     }
-
-    // Environment bindings
-    if ($licensing.environmentVariablesEnabled) {
-      bindings = bindings.concat(
-        getEnvironmentBindings().map(binding => {
-          return {
-            ...binding,
-            display: {
-              ...binding.display,
-              rank: 98,
-            },
-          }
-        })
-      )
-    }
-    return bindings
-  }
-  function lookForFilters(properties) {
-    if (!properties) {
-      return []
-    }
-    let filters
-    const inputs = testData ? testData : block.inputs
-    for (let [key, field] of properties) {
-      // need to look for the builder definition (keyed separately, see saveFilters)
-      const defKey = `${key}-def`
-      if (field.customType === "filters" && inputs?.[defKey]) {
-        filters = inputs[defKey]
-        break
-      }
-    }
-    return filters || []
-  }
-
-  function saveFilters(key) {
-    const filters = QueryUtils.buildQuery(tempFilters)
-
-    onChange({
-      [key]: filters,
-      [`${key}-def`]: tempFilters, // need to store the builder definition in the automation
-    })
-
-    drawer.hide()
-  }
-
-  function canShowField(key, value) {
-    const dependsOn = value?.dependsOn
-    return !dependsOn || !!inputData[dependsOn]
-  }
-
-  function shouldRenderField(value) {
-    return (
-      value.customType !== "row" &&
-      value.customType !== "code" &&
-      value.customType !== "queryParams" &&
-      value.customType !== "cron" &&
-      value.customType !== "triggerSchema" &&
-      value.customType !== "automationFields" &&
-      value.customType !== "fields" &&
-      value.type !== "signature_single" &&
-      value.type !== "attachment" &&
-      value.type !== "attachment_single"
+    Object.entries(schema).forEach(([name, value]) =>
+      addBinding(name, value, icon, idx, isLoopBlock, bindingName)
     )
   }
 
-  function getFieldLabel(key, value) {
-    const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
-    const label = `${
-      value.title || (key === "row" ? "Row" : key)
-    } ${requiredSuffix}`
-    return Helpers.capitalise(label)
+  // Environment bindings
+  if ($licensing.environmentVariablesEnabled) {
+    bindings = bindings.concat(
+      getEnvironmentBindings().map(binding => {
+        return {
+          ...binding,
+          display: {
+            ...binding.display,
+            rank: 98,
+          },
+        }
+      })
+    )
   }
-
-  function handleAttachmentParams(keyValueObj) {
-    let params = {}
-    if (keyValueObj?.length) {
-      for (let param of keyValueObj) {
-        params[param.url] = param.filename
-      }
-    }
-    return params
+  return bindings
+}
+function lookForFilters(properties) {
+  if (!properties) {
+    return []
   }
-
-  onMount(async () => {
-    try {
-      await environment.loadVariables()
-    } catch (error) {
-      console.error(error)
+  let filters
+  const inputs = testData ? testData : block.inputs
+  for (let [key, field] of properties) {
+    // need to look for the builder definition (keyed separately, see saveFilters)
+    const defKey = `${key}-def`
+    if (field.customType === "filters" && inputs?.[defKey]) {
+      filters = inputs[defKey]
+      break
     }
+  }
+  return filters || []
+}
+
+function saveFilters(key) {
+  const filters = QueryUtils.buildQuery(tempFilters)
+
+  onChange({
+    [key]: filters,
+    [`${key}-def`]: tempFilters, // need to store the builder definition in the automation
   })
+
+  drawer.hide()
+}
+
+function canShowField(key, value) {
+  const dependsOn = value?.dependsOn
+  return !dependsOn || !!inputData[dependsOn]
+}
+
+function shouldRenderField(value) {
+  return (
+    value.customType !== "row" &&
+    value.customType !== "code" &&
+    value.customType !== "queryParams" &&
+    value.customType !== "cron" &&
+    value.customType !== "triggerSchema" &&
+    value.customType !== "automationFields" &&
+    value.customType !== "fields" &&
+    value.type !== "signature_single" &&
+    value.type !== "attachment" &&
+    value.type !== "attachment_single"
+  )
+}
+
+function getFieldLabel(key, value) {
+  const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
+  const label = `${
+    value.title || (key === "row" ? "Row" : key)
+  } ${requiredSuffix}`
+  return Helpers.capitalise(label)
+}
+
+function handleAttachmentParams(keyValueObj) {
+  let params = {}
+  if (keyValueObj?.length) {
+    for (let param of keyValueObj) {
+      params[param.url] = param.filename
+    }
+  }
+  return params
+}
+
+onMount(async () => {
+  try {
+    await environment.loadVariables()
+  } catch (error) {
+    console.error(error)
+  }
+})
 </script>
 
 <div class="step-fields">

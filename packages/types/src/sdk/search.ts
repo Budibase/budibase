@@ -1,7 +1,7 @@
-import { Operation } from "./datasources"
-import { Row, Table, DocumentType } from "../documents"
-import { SortOrder, SortType } from "../api"
 import { Knex } from "knex"
+import { SortOrder, SortType } from "../api"
+import { DocumentType, Row, Table } from "../documents"
+import { Operation } from "./datasources"
 
 export enum SearchFilterOperator {
   STRING = "string",

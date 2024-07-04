@@ -1,12 +1,12 @@
 import { Datasource, FieldType, Row, Table } from "@budibase/types"
 
-import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
-import { search } from "../../../../../sdk/app/rows/search"
 import { generator } from "@budibase/backend-core/tests"
 import {
   DatabaseName,
   getDatasource,
 } from "../../../../../integrations/tests/utils"
+import { search } from "../../../../../sdk/app/rows/search"
+import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { tableForDatasource } from "../../../../../tests/utilities/structures"
 
 // These test cases are only for things that cannot be tested through the API

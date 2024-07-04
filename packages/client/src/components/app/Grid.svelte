@@ -1,27 +1,27 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  const component = getContext("component")
-  const { styleable, builderStore } = getContext("sdk")
+const component = getContext("component")
+const { styleable, builderStore } = getContext("sdk")
 
-  export let cols = 12
-  export let rows = 12
+export let cols = 12
+export let rows = 12
 
-  // Deliberately non-reactive as we want this fixed whenever the grid renders
-  const defaultColSpan = Math.ceil((cols + 1) / 2)
-  const defaultRowSpan = Math.ceil((rows + 1) / 2)
+// Deliberately non-reactive as we want this fixed whenever the grid renders
+const defaultColSpan = Math.ceil((cols + 1) / 2)
+const defaultRowSpan = Math.ceil((rows + 1) / 2)
 
-  $: coords = generateCoords(rows, cols)
+$: coords = generateCoords(rows, cols)
 
-  const generateCoords = (rows, cols) => {
-    let grid = []
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        grid.push({ row, col })
-      }
+const generateCoords = (rows, cols) => {
+  let grid = []
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      grid.push({ row, col })
     }
-    return grid
   }
+  return grid
+}
 </script>
 
 <div

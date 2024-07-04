@@ -1,16 +1,16 @@
 <script>
-  import { Button, Modal } from "@budibase/bbui"
-  import { integrations, tables } from "stores/builder"
-  import CreateExternalTableModal from "./CreateExternalTableModal.svelte"
-  import TableImportSelection from "components/backend/Datasources/TableImportSelection/index.svelte"
-  import { integrationForDatasource } from "stores/selectors"
+import { Button, Modal } from "@budibase/bbui"
+import TableImportSelection from "components/backend/Datasources/TableImportSelection/index.svelte"
+import { integrations, tables } from "stores/builder"
+import { integrationForDatasource } from "stores/selectors"
+import CreateExternalTableModal from "./CreateExternalTableModal.svelte"
 
-  export let datasource
+export let datasource
 
-  $: integration = integrationForDatasource($integrations, datasource)
+$: integration = integrationForDatasource($integrations, datasource)
 
-  let createExternalTableModal
-  let tableSelectionModal
+let createExternalTableModal
+let tableSelectionModal
 </script>
 
 <Modal bind:this={createExternalTableModal}>

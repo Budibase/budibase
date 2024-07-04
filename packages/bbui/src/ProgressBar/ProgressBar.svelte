@@ -1,24 +1,24 @@
 <script>
-  import "@spectrum-css/progressbar/dist/index-vars.css"
-  import { tweened } from "svelte/motion"
-  import { cubicOut } from "svelte/easing"
+import "@spectrum-css/progressbar/dist/index-vars.css"
+import { cubicOut } from "svelte/easing"
+import { tweened } from "svelte/motion"
 
-  export let value = false
-  export let easing = cubicOut
-  export let duration = 1000
-  export let width = false
-  export let sideLabel = false
-  export let hidePercentage = true
-  export let color // red, green, default = blue
+export let value = false
+export let easing = cubicOut
+export let duration = 1000
+export let width = false
+export let sideLabel = false
+export let hidePercentage = true
+export let color // red, green, default = blue
 
-  export let size = "M"
+export let size = "M"
 
-  const progress = tweened(0, {
-    duration: duration,
-    easing: easing,
-  })
+const progress = tweened(0, {
+  duration: duration,
+  easing: easing,
+})
 
-  $: if (value || value === 0) $progress = value
+$: if (value || value === 0) $progress = value
 </script>
 
 <div

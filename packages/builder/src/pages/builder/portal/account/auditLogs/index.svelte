@@ -3,253 +3,250 @@
      to get it working again.
 -->
 <script>
-  import {
-    Layout,
-    Table,
-    Search,
-    Multiselect,
-    notifications,
-    Icon,
-    clickOutside,
-    CoreTextArea,
-    Pagination,
-    Helpers,
-    Divider,
-    ActionButton,
-  } from "@budibase/bbui"
-  import { licensing, users, appsStore, auditLogs } from "stores/portal"
-  import LockedFeature from "../../_components/LockedFeature.svelte"
-  import { createPaginationStore } from "helpers/pagination"
-  import { onMount, setContext } from "svelte"
-  import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
-  import UserRenderer from "./_components/UserRenderer.svelte"
-  import TimeRenderer from "./_components/TimeRenderer.svelte"
-  import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
-  import { cloneDeep } from "lodash"
-  import DateRangePicker from "components/common/DateRangePicker.svelte"
-  import dayjs from "dayjs"
+import {
+  ActionButton,
+  CoreTextArea,
+  Divider,
+  Helpers,
+  Icon,
+  Layout,
+  Multiselect,
+  Pagination,
+  Search,
+  Table,
+  clickOutside,
+  notifications,
+} from "@budibase/bbui"
+import DateRangePicker from "components/common/DateRangePicker.svelte"
+import dayjs from "dayjs"
+import { createPaginationStore } from "helpers/pagination"
+import { cloneDeep } from "lodash"
+import { appsStore, auditLogs, licensing, users } from "stores/portal"
+import { onMount, setContext } from "svelte"
+import LockedFeature from "../../_components/LockedFeature.svelte"
+import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
+import TimeRenderer from "./_components/TimeRenderer.svelte"
+import UserRenderer from "./_components/UserRenderer.svelte"
+import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
 
-  const schema = {
-    date: { width: "0.8fr" },
-    user: { width: "0.5fr" },
-    name: { width: "2fr", displayName: "Event" },
-    app: { width: "1.5fr" },
-    view: { width: "0.1fr", borderLeft: true, displayName: "" },
+const schema = {
+  date: { width: "0.8fr" },
+  user: { width: "0.5fr" },
+  name: { width: "2fr", displayName: "Event" },
+  app: { width: "1.5fr" },
+  view: { width: "0.1fr", borderLeft: true, displayName: "" },
+}
+
+const customRenderers = [
+  {
+    column: "view",
+    component: ViewDetailsRenderer,
+  },
+  {
+    column: "user",
+    component: UserRenderer,
+  },
+  {
+    column: "date",
+    component: TimeRenderer,
+  },
+  {
+    column: "app",
+    component: AppColumnRenderer,
+  },
+]
+
+let userSearchTerm = ""
+let logSearchTerm = ""
+let userPageInfo = createPaginationStore()
+let logsPageInfo = createPaginationStore()
+
+let prevUserSearch = undefined
+let prevLogSearch = undefined
+let selectedUsers = []
+let selectedApps = []
+let selectedEvents = []
+let selectedLog
+let sidePanelVisible = false
+let wideSidePanel = false
+let timer
+let dateRange = [dayjs().subtract(30, "days"), dayjs()]
+
+$: fetchUsers(userPage, userSearchTerm)
+$: fetchLogs({
+  logsPage,
+  logSearchTerm,
+  dateRange,
+  selectedUsers,
+  selectedApps,
+  selectedEvents,
+})
+$: userPage = $userPageInfo.page
+$: logsPage = $logsPageInfo.page
+
+let usersObj = {}
+$: usersObj = {
+  ...usersObj,
+  ...$users.data?.reduce((accumulator, user) => {
+    accumulator[user._id] = user
+    return accumulator
+  }, {}),
+}
+$: sortedUsers = sort(
+  enrich(Object.values(usersObj), selectedUsers, "_id"),
+  "email"
+)
+$: sortedEvents = sort(
+  enrich(parseEventObject($auditLogs.events), selectedEvents, "id"),
+  "id"
+)
+$: sortedApps = sort(enrich($appsStore.apps, selectedApps, "appId"), "name")
+
+const debounce = value => {
+  clearTimeout(timer)
+  timer = setTimeout(() => {
+    logSearchTerm = value
+  }, 400)
+}
+
+const fetchUsers = async (userPage, search) => {
+  if ($userPageInfo.loading) {
+    return
   }
+  // need to remove the page if they've started searching
+  if (search && !prevUserSearch) {
+    userPageInfo.reset()
+    userPage = undefined
+  }
+  prevUserSearch = search
+  try {
+    userPageInfo.loading()
+    await users.search({
+      bookmark: userPage,
+      query: { string: { email: search } },
+    })
+    userPageInfo.fetched($users.hasNextPage, $users.nextPage)
+  } catch (error) {
+    notifications.error("Error getting user list")
+  }
+}
 
-  const customRenderers = [
-    {
-      column: "view",
-      component: ViewDetailsRenderer,
-    },
-    {
-      column: "user",
-      component: UserRenderer,
-    },
-    {
-      column: "date",
-      component: TimeRenderer,
-    },
-    {
-      column: "app",
-      component: AppColumnRenderer,
-    },
-  ]
+const fetchLogs = async ({
+  logsPage,
+  logSearchTerm,
+  dateRange,
+  selectedUsers,
+  selectedApps,
+  selectedEvents,
+}) => {
+  if ($logsPageInfo.loading) {
+    return
+  }
+  // need to remove the page if they've started searching
+  if (logSearchTerm && !prevLogSearch) {
+    logsPageInfo.reset()
+    logsPage = undefined
+  }
+  prevLogSearch = logSearchTerm
+  try {
+    logsPageInfo.loading()
+    await auditLogs.search({
+      bookmark: logsPage,
+      startDate: dateRange[0],
+      endDate: dateRange[1],
+      fullSearch: logSearchTerm,
+      userIds: selectedUsers,
+      appIds: selectedApps,
+      events: selectedEvents,
+    })
+    logsPageInfo.fetched($auditLogs.logs.hasNextPage, $auditLogs.logs.bookmark)
+  } catch (error) {
+    notifications.error(`Error getting audit logs - ${error}`)
+  }
+}
 
-  let userSearchTerm = ""
-  let logSearchTerm = ""
-  let userPageInfo = createPaginationStore()
-  let logsPageInfo = createPaginationStore()
-
-  let prevUserSearch = undefined
-  let prevLogSearch = undefined
-  let selectedUsers = []
-  let selectedApps = []
-  let selectedEvents = []
-  let selectedLog
-  let sidePanelVisible = false
-  let wideSidePanel = false
-  let timer
-  let dateRange = [dayjs().subtract(30, "days"), dayjs()]
-
-  $: fetchUsers(userPage, userSearchTerm)
-  $: fetchLogs({
-    logsPage,
-    logSearchTerm,
-    dateRange,
-    selectedUsers,
-    selectedApps,
-    selectedEvents,
+const enrich = (list, selected, key) => {
+  return list.map(item => {
+    return {
+      ...item,
+      selected:
+        selected.find(x => x === item[key] || x.includes(item[key])) != null,
+    }
   })
-  $: userPage = $userPageInfo.page
-  $: logsPage = $logsPageInfo.page
+}
 
-  let usersObj = {}
-  $: usersObj = {
-    ...usersObj,
-    ...$users.data?.reduce((accumulator, user) => {
-      accumulator[user._id] = user
-      return accumulator
-    }, {}),
-  }
-  $: sortedUsers = sort(
-    enrich(Object.values(usersObj), selectedUsers, "_id"),
-    "email"
-  )
-  $: sortedEvents = sort(
-    enrich(parseEventObject($auditLogs.events), selectedEvents, "id"),
-    "id"
-  )
-  $: sortedApps = sort(enrich($appsStore.apps, selectedApps, "appId"), "name")
+const sort = (list, key) => {
+  let sortedList = list.slice()
+  sortedList?.sort((a, b) => {
+    if (a.selected === b.selected) {
+      return a[key] < b[key] ? -1 : 1
+    } else if (a.selected) {
+      return -1
+    } else if (b.selected) {
+      return 1
+    }
+    return 0
+  })
+  return sortedList
+}
 
-  const debounce = value => {
-    clearTimeout(timer)
-    timer = setTimeout(() => {
-      logSearchTerm = value
-    }, 400)
-  }
-
-  const fetchUsers = async (userPage, search) => {
-    if ($userPageInfo.loading) {
-      return
-    }
-    // need to remove the page if they've started searching
-    if (search && !prevUserSearch) {
-      userPageInfo.reset()
-      userPage = undefined
-    }
-    prevUserSearch = search
-    try {
-      userPageInfo.loading()
-      await users.search({
-        bookmark: userPage,
-        query: { string: { email: search } },
-      })
-      userPageInfo.fetched($users.hasNextPage, $users.nextPage)
-    } catch (error) {
-      notifications.error("Error getting user list")
-    }
-  }
-
-  const fetchLogs = async ({
-    logsPage,
-    logSearchTerm,
-    dateRange,
-    selectedUsers,
-    selectedApps,
-    selectedEvents,
-  }) => {
-    if ($logsPageInfo.loading) {
-      return
-    }
-    // need to remove the page if they've started searching
-    if (logSearchTerm && !prevLogSearch) {
-      logsPageInfo.reset()
-      logsPage = undefined
-    }
-    prevLogSearch = logSearchTerm
-    try {
-      logsPageInfo.loading()
-      await auditLogs.search({
-        bookmark: logsPage,
-        startDate: dateRange[0],
-        endDate: dateRange[1],
-        fullSearch: logSearchTerm,
-        userIds: selectedUsers,
-        appIds: selectedApps,
-        events: selectedEvents,
-      })
-      logsPageInfo.fetched(
-        $auditLogs.logs.hasNextPage,
-        $auditLogs.logs.bookmark
-      )
-    } catch (error) {
-      notifications.error(`Error getting audit logs - ${error}`)
-    }
-  }
-
-  const enrich = (list, selected, key) => {
-    return list.map(item => {
-      return {
-        ...item,
-        selected:
-          selected.find(x => x === item[key] || x.includes(item[key])) != null,
-      }
+const parseEventObject = obj => {
+  // convert obj which is an object of key value pairs to an array of objects
+  // with the key as the id and the value as the name
+  if (obj) {
+    return Object.entries(obj).map(([id, label]) => {
+      return { id, label }
     })
   }
+}
 
-  const sort = (list, key) => {
-    let sortedList = list.slice()
-    sortedList?.sort((a, b) => {
-      if (a.selected === b.selected) {
-        return a[key] < b[key] ? -1 : 1
-      } else if (a.selected) {
-        return -1
-      } else if (b.selected) {
-        return 1
-      }
-      return 0
+const viewDetails = detail => {
+  selectedLog = detail
+  sidePanelVisible = true
+}
+
+const downloadLogs = async () => {
+  try {
+    window.location = auditLogs.getDownloadUrl({
+      startDate: dateRange[0],
+      endDate: dateRange[1],
+      fullSearch: logSearchTerm,
+      userIds: selectedUsers,
+      appIds: selectedApps,
+      events: selectedEvents,
     })
-    return sortedList
+  } catch (error) {
+    notifications.error(`Error downloading logs: ` + error.message)
   }
+}
 
-  const parseEventObject = obj => {
-    // convert obj which is an object of key value pairs to an array of objects
-    // with the key as the id and the value as the name
-    if (obj) {
-      return Object.entries(obj).map(([id, label]) => {
-        return { id, label }
-      })
-    }
+setContext("auditLogs", {
+  viewDetails,
+})
+
+const copyToClipboard = async value => {
+  await Helpers.copyToClipboard(value)
+  notifications.success("Copied")
+}
+
+function cleanupMetadata(log) {
+  const cloned = cloneDeep(log)
+  cloned.userId = cloned.user._id
+  if (cloned.app) {
+    cloned.appId = cloned.app.appId
   }
+  // remove props that are confused/not returned in download
+  delete cloned._id
+  delete cloned._rev
+  delete cloned.app
+  delete cloned.user
+  return cloned
+}
 
-  const viewDetails = detail => {
-    selectedLog = detail
-    sidePanelVisible = true
-  }
-
-  const downloadLogs = async () => {
-    try {
-      window.location = auditLogs.getDownloadUrl({
-        startDate: dateRange[0],
-        endDate: dateRange[1],
-        fullSearch: logSearchTerm,
-        userIds: selectedUsers,
-        appIds: selectedApps,
-        events: selectedEvents,
-      })
-    } catch (error) {
-      notifications.error(`Error downloading logs: ` + error.message)
-    }
-  }
-
-  setContext("auditLogs", {
-    viewDetails,
-  })
-
-  const copyToClipboard = async value => {
-    await Helpers.copyToClipboard(value)
-    notifications.success("Copied")
-  }
-
-  function cleanupMetadata(log) {
-    const cloned = cloneDeep(log)
-    cloned.userId = cloned.user._id
-    if (cloned.app) {
-      cloned.appId = cloned.app.appId
-    }
-    // remove props that are confused/not returned in download
-    delete cloned._id
-    delete cloned._rev
-    delete cloned.app
-    delete cloned.user
-    return cloned
-  }
-
-  onMount(async () => {
-    await auditLogs.getEventDefinitions()
-    await licensing.init()
-  })
+onMount(async () => {
+  await auditLogs.getEventDefinitions()
+  await licensing.init()
+})
 </script>
 
 <LockedFeature

@@ -1,10 +1,10 @@
 <script>
-  import "@spectrum-css/toast/dist/index-vars.css"
-  import Portal from "svelte-portal"
-  import { banner } from "../Stores/banner"
-  import Banner from "./Banner.svelte"
-  import { fly } from "svelte/transition"
-  import TooltipWrapper from "../Tooltip/TooltipWrapper.svelte"
+import "@spectrum-css/toast/dist/index-vars.css"
+import Portal from "svelte-portal"
+import { fly } from "svelte/transition"
+import { banner } from "../Stores/banner"
+import TooltipWrapper from "../Tooltip/TooltipWrapper.svelte"
+import Banner from "./Banner.svelte"
 </script>
 
 <Portal target=".banner-container">

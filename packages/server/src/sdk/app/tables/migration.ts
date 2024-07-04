@@ -1,23 +1,23 @@
 import { BadRequestError, context, db as dbCore } from "@budibase/backend-core"
 import {
   BBReferenceFieldMetadata,
-  FieldSchema,
   BBReferenceFieldSubType,
+  BBReferenceSingleFieldMetadata,
+  FieldSchema,
+  FieldType,
   InternalTable,
-  isRelationshipField,
   LinkDocument,
   LinkInfo,
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
   Table,
-  FieldType,
-  BBReferenceSingleFieldMetadata,
+  isRelationshipField,
 } from "@budibase/types"
-import sdk from "../../../sdk"
-import { isExternalTableID } from "../../../integrations/utils"
-import { EventType, updateLinks } from "../../../db/linkedRows"
 import { cloneDeep } from "lodash"
+import { EventType, updateLinks } from "../../../db/linkedRows"
+import { isExternalTableID } from "../../../integrations/utils"
+import sdk from "../../../sdk"
 
 export interface MigrationResult {
   tablesUpdated: Table[]
@@ -184,10 +184,13 @@ abstract class UserColumnMigrator<T> implements ColumnMigrator {
   async doMigration(): Promise<MigrationResult> {
     let oldTable = cloneDeep(this.table)
     let rows = await sdk.rows.fetchRaw(this.table._id!)
-    let rowsById = rows.reduce((acc, row) => {
-      acc[row._id!] = row
-      return acc
-    }, {} as Record<string, Row>)
+    let rowsById = rows.reduce(
+      (acc, row) => {
+        acc[row._id!] = row
+        return acc
+      },
+      {} as Record<string, Row>
+    )
 
     let links = await sdk.links.fetchWithDocument(this.table._id!)
     for (let link of links) {

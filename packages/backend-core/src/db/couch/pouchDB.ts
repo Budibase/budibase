@@ -1,6 +1,6 @@
+import { PouchOptions } from "@budibase/types"
 import PouchDB from "pouchdb"
 import env from "../../environment"
-import { PouchOptions } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 
 let Pouch: any
@@ -91,7 +91,7 @@ export async function closePouchDB(db: PouchDB.Database) {
   try {
     // specifically await so that if there is an error, it can be ignored
     return await db.close()
-  } catch (err) {
+  } catch (_err) {
     // ignore error, already closed
   }
 }

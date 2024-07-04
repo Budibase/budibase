@@ -1,7 +1,7 @@
 <script>
-  import "@spectrum-css/checkbox/dist/index-vars.css"
+import "@spectrum-css/checkbox/dist/index-vars.css"
 
-  export let value
+export let value
 </script>
 
 <label

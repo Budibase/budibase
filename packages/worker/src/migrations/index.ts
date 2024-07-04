@@ -1,10 +1,10 @@
-import { migrations, locks } from "@budibase/backend-core"
+import { locks, migrations } from "@budibase/backend-core"
 import {
-  Migration,
-  MigrationOptions,
-  MigrationName,
-  LockType,
   LockName,
+  LockType,
+  Migration,
+  MigrationName,
+  MigrationOptions,
 } from "@budibase/types"
 import env from "../environment"
 

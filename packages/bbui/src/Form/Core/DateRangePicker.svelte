@@ -1,16 +1,16 @@
 <script>
-  import CoreDatePicker from "./DatePicker/DatePicker.svelte"
-  import Icon from "../../Icon/Icon.svelte"
+import Icon from "../../Icon/Icon.svelte"
+import CoreDatePicker from "./DatePicker/DatePicker.svelte"
 
-  export let value = null
-  export let disabled = false
-  export let readonly = false
-  export let error = null
-  export let appendTo = undefined
-  export let ignoreTimezones = false
+export let value = null
+export let disabled = false
+export let readonly = false
+export let error = null
+export let appendTo = undefined
+export let ignoreTimezones = false
 
-  let fromDate
-  let toDate
+let fromDate
+let toDate
 </script>
 
 <div class="date-range">

@@ -1,34 +1,34 @@
 <script>
-  import { ActionButton } from "@budibase/bbui"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import {
-    getRestBindings,
-    readableToRuntimeBinding,
-    runtimeToReadableMap,
-  } from "dataBinding"
-  import { cloneDeep } from "lodash/fp"
-  import SaveDatasourceButton from "./SaveDatasourceButton.svelte"
-  import Panel from "./Panel.svelte"
-  import Tooltip from "./Tooltip.svelte"
+import { ActionButton } from "@budibase/bbui"
+import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+import {
+  getRestBindings,
+  readableToRuntimeBinding,
+  runtimeToReadableMap,
+} from "dataBinding"
+import { cloneDeep } from "lodash/fp"
+import Panel from "./Panel.svelte"
+import SaveDatasourceButton from "./SaveDatasourceButton.svelte"
+import Tooltip from "./Tooltip.svelte"
 
-  export let datasource
-  let restBindings = getRestBindings()
-  let addHeader
+export let datasource
+let restBindings = getRestBindings()
+let addHeader
 
-  $: updatedDatasource = cloneDeep(datasource)
-  $: parsedHeaders = runtimeToReadableMap(
-    restBindings,
-    updatedDatasource?.config?.defaultHeaders
-  )
+$: updatedDatasource = cloneDeep(datasource)
+$: parsedHeaders = runtimeToReadableMap(
+  restBindings,
+  updatedDatasource?.config?.defaultHeaders
+)
 
-  const onDefaultHeaderUpdate = headers => {
-    const flatHeaders = cloneDeep(headers).reduce((acc, entry) => {
-      acc[entry.name] = readableToRuntimeBinding(restBindings, entry.value)
-      return acc
-    }, {})
+const onDefaultHeaderUpdate = headers => {
+  const flatHeaders = cloneDeep(headers).reduce((acc, entry) => {
+    acc[entry.name] = readableToRuntimeBinding(restBindings, entry.value)
+    return acc
+  }, {})
 
-    updatedDatasource.config.defaultHeaders = flatHeaders
-  }
+  updatedDatasource.config.defaultHeaders = flatHeaders
+}
 </script>
 
 <Panel>

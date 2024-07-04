@@ -1,18 +1,18 @@
-import { Command } from "../structures/Command"
-import { CommandWord } from "../constants"
 import fs from "fs"
 import { join } from "path"
+import { CommandWord } from "../constants"
 import { getAllDbs } from "../core/db"
-import { progressBar, httpCall } from "../utils"
+import { Command } from "../structures/Command"
+import { httpCall, progressBar } from "../utils"
+import { exportObjects, importObjects } from "./objectStore"
 import {
-  TEMP_DIR,
   COUCH_DIR,
   MINIO_DIR,
+  TEMP_DIR,
   getConfig,
-  replication,
   getPouches,
+  replication,
 } from "./utils"
-import { exportObjects, importObjects } from "./objectStore"
 
 const tar = require("tar")
 
@@ -95,7 +95,7 @@ async function importBackup(opts: BackupOpts) {
       `http://localhost:${config.MAIN_PORT}/api/system/restored`,
       "POST"
     )
-  } catch (err) {
+  } catch (_err) {
     // ignore error - it will be an older system
   }
   console.log("Import complete")

@@ -1,5 +1,5 @@
-import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
+import { makePropSafe as safe } from "@budibase/string-templates"
 
 /**
  * Utility to wrap an async function and ensure all invocations happen

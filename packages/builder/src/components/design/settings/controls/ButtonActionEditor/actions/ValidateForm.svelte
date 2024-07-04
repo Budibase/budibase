@@ -1,17 +1,17 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
-  import { selectedScreen, componentStore } from "stores/builder"
-  import { getActionProviders } from "dataBinding"
+import { Label, Select } from "@budibase/bbui"
+import { getActionProviders } from "dataBinding"
+import { componentStore, selectedScreen } from "stores/builder"
 
-  export let parameters
-  export let nested
+export let parameters
+export let nested
 
-  $: actionProviders = getActionProviders(
-    $selectedScreen,
-    $componentStore.selectedComponentId,
-    "ValidateForm",
-    { includeSelf: nested }
-  )
+$: actionProviders = getActionProviders(
+  $selectedScreen,
+  $componentStore.selectedComponentId,
+  "ValidateForm",
+  { includeSelf: nested }
+)
 </script>
 
 <div class="root">

@@ -1,9 +1,5 @@
-import * as rowController from "../../api/controllers/row"
-import * as tableController from "../../api/controllers/table"
-import { buildCtx } from "./utils"
-import * as automationUtils from "../automationUtils"
+import { db as dbCore } from "@budibase/backend-core"
 import {
-  FieldType,
   AutomationActionStepId,
   AutomationCustomIOType,
   AutomationFeature,
@@ -12,11 +8,15 @@ import {
   AutomationStepSchema,
   AutomationStepType,
   EmptyFilterOption,
+  FieldType,
   SearchFilters,
-  Table,
   SortOrder,
+  Table,
 } from "@budibase/types"
-import { db as dbCore } from "@budibase/backend-core"
+import * as rowController from "../../api/controllers/row"
+import * as tableController from "../../api/controllers/table"
+import * as automationUtils from "../automationUtils"
+import { buildCtx } from "./utils"
 
 const SortOrderPretty = {
   [SortOrder.ASCENDING]: "Ascending",

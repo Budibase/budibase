@@ -1,90 +1,90 @@
 <script>
-  import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
-  import NavItem from "components/common/NavItem.svelte"
-  import { notifications } from "@budibase/bbui"
-  import {
-    selectedScreen,
-    componentStore,
-    userSelectedResourceMap,
-    selectedComponent,
-    hoverStore,
-    componentTreeNodesStore,
-  } from "stores/builder"
-  import {
-    findComponentPath,
-    getComponentText,
-    getComponentName,
-  } from "helpers/components"
-  import { get } from "svelte/store"
-  import { dndStore } from "./dndStore"
+import { notifications } from "@budibase/bbui"
+import NavItem from "components/common/NavItem.svelte"
+import {
+  findComponentPath,
+  getComponentName,
+  getComponentText,
+} from "helpers/components"
+import {
+  componentStore,
+  componentTreeNodesStore,
+  hoverStore,
+  selectedComponent,
+  selectedScreen,
+  userSelectedResourceMap,
+} from "stores/builder"
+import { get } from "svelte/store"
+import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
+import { dndStore } from "./dndStore"
 
-  export let components = []
-  export let level = 0
+export let components = []
+export let level = 0
 
-  $: openNodes = $componentTreeNodesStore
+$: openNodes = $componentTreeNodesStore
 
-  $: filteredComponents = components?.filter(component => {
-    return (
-      !$componentStore.componentToPaste?.isCut ||
-      component._id !== $componentStore.componentToPaste?._id
-    )
+$: filteredComponents = components?.filter(component => {
+  return (
+    !$componentStore.componentToPaste?.isCut ||
+    component._id !== $componentStore.componentToPaste?._id
+  )
+})
+
+const dragover = (component, index) => e => {
+  const mousePosition = e.offsetY / e.currentTarget.offsetHeight
+  dndStore.actions.dragover({
+    component,
+    index,
+    mousePosition,
   })
+  return false
+}
 
-  const dragover = (component, index) => e => {
-    const mousePosition = e.offsetY / e.currentTarget.offsetHeight
-    dndStore.actions.dragover({
-      component,
-      index,
-      mousePosition,
-    })
+const getComponentIcon = component => {
+  const def = componentStore.getDefinition(component?._component)
+  return def?.icon
+}
+
+const componentSupportsChildren = component => {
+  const def = componentStore.getDefinition(component?._component)
+  return def?.hasChildren
+}
+
+const componentHasChildren = component => {
+  return componentSupportsChildren(component) && component._children?.length
+}
+
+const onDrop = async e => {
+  e.stopPropagation()
+  try {
+    await dndStore.actions.drop()
+  } catch (error) {
+    notifications.error(error || "Error saving component")
+  }
+}
+
+const isOpen = component => {
+  if (!component?._children?.length) {
     return false
   }
+  return componentTreeNodesStore.isNodeExpanded(component._id)
+}
 
-  const getComponentIcon = component => {
-    const def = componentStore.getDefinition(component?._component)
-    return def?.icon
+const isChildOfSelectedComponent = component => {
+  const selectedComponentId = get(selectedComponent)?._id
+  const selectedScreenId = get(selectedScreen)?.props._id
+  if (!selectedComponentId || selectedComponentId === selectedScreenId) {
+    return false
   }
+  return findComponentPath($selectedComponent, component._id)?.length > 0
+}
 
-  const componentSupportsChildren = component => {
-    const def = componentStore.getDefinition(component?._component)
-    return def?.hasChildren
-  }
+const handleIconClick = componentId => {
+  componentStore.select(componentId)
+  componentTreeNodesStore.toggleNode(componentId)
+}
 
-  const componentHasChildren = component => {
-    return componentSupportsChildren(component) && component._children?.length
-  }
-
-  const onDrop = async e => {
-    e.stopPropagation()
-    try {
-      await dndStore.actions.drop()
-    } catch (error) {
-      notifications.error(error || "Error saving component")
-    }
-  }
-
-  const isOpen = component => {
-    if (!component?._children?.length) {
-      return false
-    }
-    return componentTreeNodesStore.isNodeExpanded(component._id)
-  }
-
-  const isChildOfSelectedComponent = component => {
-    const selectedComponentId = get(selectedComponent)?._id
-    const selectedScreenId = get(selectedScreen)?.props._id
-    if (!selectedComponentId || selectedComponentId === selectedScreenId) {
-      return false
-    }
-    return findComponentPath($selectedComponent, component._id)?.length > 0
-  }
-
-  const handleIconClick = componentId => {
-    componentStore.select(componentId)
-    componentTreeNodesStore.toggleNode(componentId)
-  }
-
-  const hover = hoverStore.hover
+const hover = hoverStore.hover
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions-->

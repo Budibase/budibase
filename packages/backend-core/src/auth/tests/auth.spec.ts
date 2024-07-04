@@ -1,7 +1,7 @@
 import { structures } from "../../../tests"
 import { testEnv } from "../../../tests/extra"
-import * as auth from "../auth"
 import * as events from "../../events"
+import * as auth from "../auth"
 
 describe("platformLogout", () => {
   it("should call platform logout", async () => {

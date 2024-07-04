@@ -1,42 +1,42 @@
 <script>
-  import { Select } from "@budibase/bbui"
-  import { createEventDispatcher, onMount } from "svelte"
-  import { tables as tablesStore, viewsV2 } from "stores/builder"
+import { Select } from "@budibase/bbui"
+import { tables as tablesStore, viewsV2 } from "stores/builder"
+import { createEventDispatcher, onMount } from "svelte"
 
-  export let value
+export let value
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  $: tables = $tablesStore.list.map(table => ({
-    type: "table",
-    label: table.name,
-    tableId: table._id,
-    resourceId: table._id,
-  }))
-  $: views = $viewsV2.list.map(view => ({
-    type: "viewV2",
-    id: view.id,
-    label: view.name,
-    tableId: view.tableId,
-    resourceId: view.id,
-  }))
-  $: options = [...(tables || []), ...(views || [])]
+$: tables = $tablesStore.list.map(table => ({
+  type: "table",
+  label: table.name,
+  tableId: table._id,
+  resourceId: table._id,
+}))
+$: views = $viewsV2.list.map(view => ({
+  type: "viewV2",
+  id: view.id,
+  label: view.name,
+  tableId: view.tableId,
+  resourceId: view.id,
+}))
+$: options = [...(tables || []), ...(views || [])]
 
-  const onChange = e => {
-    dispatch(
-      "change",
-      options.find(x => x.resourceId === e.detail)
-    )
+const onChange = e => {
+  dispatch(
+    "change",
+    options.find(x => x.resourceId === e.detail)
+  )
+}
+
+onMount(() => {
+  // Migrate old values before "resourceId" existed
+  if (value && !value.resourceId) {
+    const view = views.find(x => x.resourceId === value.id)
+    const table = tables.find(x => x.resourceId === value.tableId)
+    dispatch("change", view || table)
   }
-
-  onMount(() => {
-    // Migrate old values before "resourceId" existed
-    if (value && !value.resourceId) {
-      const view = views.find(x => x.resourceId === value.id)
-      const table = tables.find(x => x.resourceId === value.tableId)
-      dispatch("change", view || table)
-    }
-  })
+})
 </script>
 
 <Select

@@ -1,10 +1,10 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  const component = getContext("component")
-  const { builderStore, componentStore } = getContext("sdk")
+const component = getContext("component")
+const { builderStore, componentStore } = getContext("sdk")
 
-  $: definition = componentStore.actions.getComponentDefinition($component.type)
+$: definition = componentStore.actions.getComponentDefinition($component.type)
 </script>
 
 {#if $builderStore.inBuilder}

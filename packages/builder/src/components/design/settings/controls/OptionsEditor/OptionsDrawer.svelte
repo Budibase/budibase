@@ -1,31 +1,31 @@
 <script>
-  import {
-    Icon,
-    Button,
-    Input,
-    DrawerContent,
-    Layout,
-    Body,
-    Label,
-  } from "@budibase/bbui"
-  import { generate } from "shortid"
+import {
+  Body,
+  Button,
+  DrawerContent,
+  Icon,
+  Input,
+  Label,
+  Layout,
+} from "@budibase/bbui"
+import { generate } from "shortid"
 
-  export let options = []
+export let options = []
 
-  const removeOption = id => {
-    options = options.filter(option => option.id !== id)
-  }
+const removeOption = id => {
+  options = options.filter(option => option.id !== id)
+}
 
-  const addOption = () => {
-    options = [
-      ...options,
-      {
-        id: generate(),
-        label: null,
-        value: null,
-      },
-    ]
-  }
+const addOption = () => {
+  options = [
+    ...options,
+    {
+      id: generate(),
+      label: null,
+      value: null,
+    },
+  ]
+}
 </script>
 
 <DrawerContent>

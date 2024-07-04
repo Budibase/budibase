@@ -1,11 +1,11 @@
 <script>
-  import { Router } from "@roxi/routify"
-  import { routes } from "../.routify/routes"
-  import { NotificationDisplay, BannerDisplay } from "@budibase/bbui"
-  import { parse, stringify } from "qs"
-  import LicensingOverlays from "components/portal/licensing/LicensingOverlays.svelte"
+import { BannerDisplay, NotificationDisplay } from "@budibase/bbui"
+import { Router } from "@roxi/routify"
+import LicensingOverlays from "components/portal/licensing/LicensingOverlays.svelte"
+import { parse, stringify } from "qs"
+import { routes } from "../.routify/routes"
 
-  const queryHandler = { parse, stringify }
+const queryHandler = { parse, stringify }
 </script>
 
 <div class="banner-container" />

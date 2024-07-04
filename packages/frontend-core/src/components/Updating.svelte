@@ -1,37 +1,37 @@
 <script>
-  export let isMigrationDone
-  export let onMigrationDone
-  export let timeoutSeconds = 60 // 1 minute
-  export let minTimeSeconds = 3
+export let isMigrationDone
+export let onMigrationDone
+export let timeoutSeconds = 60 // 1 minute
+export let minTimeSeconds = 3
 
-  const loadTime = Date.now()
-  const intervalMs = 1000
-  let timedOut = false
-  let secondsWaited = 0
+const loadTime = Date.now()
+const intervalMs = 1000
+let timedOut = false
+let secondsWaited = 0
 
-  async function checkMigrationsFinished() {
-    setTimeout(async () => {
-      const isMigrated = await isMigrationDone()
+async function checkMigrationsFinished() {
+  setTimeout(async () => {
+    const isMigrated = await isMigrationDone()
 
-      const timeoutMs = timeoutSeconds * 1000
-      if (!isMigrated || secondsWaited <= minTimeSeconds) {
-        if (loadTime + timeoutMs > Date.now()) {
-          secondsWaited += 1
-          return checkMigrationsFinished()
-        }
-
-        return migrationTimeout()
+    const timeoutMs = timeoutSeconds * 1000
+    if (!isMigrated || secondsWaited <= minTimeSeconds) {
+      if (loadTime + timeoutMs > Date.now()) {
+        secondsWaited += 1
+        return checkMigrationsFinished()
       }
 
-      onMigrationDone()
-    }, intervalMs)
-  }
+      return migrationTimeout()
+    }
 
-  checkMigrationsFinished()
+    onMigrationDone()
+  }, intervalMs)
+}
 
-  function migrationTimeout() {
-    timedOut = true
-  }
+checkMigrationsFinished()
+
+function migrationTimeout() {
+  timedOut = true
+}
 </script>
 
 <div class="loading" class:timeout={timedOut}>

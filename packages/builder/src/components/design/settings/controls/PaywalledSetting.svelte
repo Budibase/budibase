@@ -1,10 +1,10 @@
 <script>
-  import { Tag, Tags } from "@budibase/bbui"
-  import { getFormattedPlanName } from "helpers/planTitle"
+import { Tag, Tags } from "@budibase/bbui"
+import { getFormattedPlanName } from "helpers/planTitle"
 
-  export let license
+export let license
 
-  $: title = getFormattedPlanName(license)
+$: title = getFormattedPlanName(license)
 </script>
 
 <div>

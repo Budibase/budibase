@@ -1,7 +1,7 @@
-import { FIND_HBS_REGEX } from "../utilities"
-import * as preprocessor from "./preprocessor"
-import * as postprocessor from "./postprocessor"
 import { ProcessOptions } from "../types"
+import { FIND_HBS_REGEX } from "../utilities"
+import * as postprocessor from "./postprocessor"
+import * as preprocessor from "./preprocessor"
 
 function process(output: string, processors: any[], opts?: ProcessOptions) {
   for (let processor of processors) {

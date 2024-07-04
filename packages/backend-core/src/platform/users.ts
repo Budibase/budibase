@@ -1,6 +1,3 @@
-import { getPlatformDB } from "./platformDb"
-import { DEFAULT_TENANT_ID } from "../constants"
-import env from "../environment"
 import {
   PlatformUser,
   PlatformUserByEmail,
@@ -8,6 +5,9 @@ import {
   PlatformUserBySsoId,
   User,
 } from "@budibase/types"
+import { DEFAULT_TENANT_ID } from "../constants"
+import env from "../environment"
+import { getPlatformDB } from "./platformDb"
 
 // READ
 

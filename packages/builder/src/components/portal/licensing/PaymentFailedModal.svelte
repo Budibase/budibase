@@ -1,31 +1,31 @@
 <script>
-  import { Modal, ModalContent, Body, TooltipWrapper } from "@budibase/bbui"
-  import { auth, admin, licensing } from "stores/portal"
-  import { onMount } from "svelte"
+import { Body, Modal, ModalContent, TooltipWrapper } from "@budibase/bbui"
+import { admin, auth, licensing } from "stores/portal"
+import { onMount } from "svelte"
 
-  export let onDismiss = () => {}
-  export let onShow = () => {}
+export let onDismiss = () => {}
+export let onShow = () => {}
 
-  let paymentFailedModal
-  let pastDueEndDate
+let paymentFailedModal
+let pastDueEndDate
 
-  const paymentFailedTitle = "Payment failed"
-  $: accountUrl = $admin.accountPortalUrl
-  $: billingUrl = `${accountUrl}/portal/billing`
+const paymentFailedTitle = "Payment failed"
+$: accountUrl = $admin.accountPortalUrl
+$: billingUrl = `${accountUrl}/portal/billing`
 
-  export function show() {
-    paymentFailedModal.show()
-  }
+export function show() {
+  paymentFailedModal.show()
+}
 
-  export function hide() {
-    paymentFailedModal.hide()
-  }
+export function hide() {
+  paymentFailedModal.hide()
+}
 
-  onMount(() => {
-    licensing.subscribe(state => {
-      pastDueEndDate = state.pastDueEndDate
-    })
+onMount(() => {
+  licensing.subscribe(state => {
+    pastDueEndDate = state.pastDueEndDate
   })
+})
 </script>
 
 <Modal bind:this={paymentFailedModal} on:show={onShow} on:hide={onDismiss}>

@@ -1,13 +1,13 @@
-import dayjs from "dayjs"
+import { generator } from "@budibase/backend-core/tests"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
   TableSourceType,
 } from "@budibase/types"
+import dayjs from "dayjs"
 import { generateTableID } from "../../../../db/utils"
 import { validate } from "../utils"
-import { generator } from "@budibase/backend-core/tests"
 
 describe("validate", () => {
   const hour = () => generator.hour().toString().padStart(2, "0")

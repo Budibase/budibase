@@ -1,24 +1,24 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import { Layout, Accordion } from "@budibase/bbui"
-  import ConfigInput from "../ConfigInput.svelte"
+import { Accordion, Layout } from "@budibase/bbui"
+import { createEventDispatcher } from "svelte"
+import ConfigInput from "../ConfigInput.svelte"
 
-  export let value
-  export let name
-  export let config
+export let value
+export let name
+export let config
 
-  let dispatch = createEventDispatcher()
+let dispatch = createEventDispatcher()
 
-  const handleChange = (updatedFieldKey, updatedFieldValue) => {
-    const updatedValue = value.map(field => {
-      return {
-        key: field.key,
-        value: field.key === updatedFieldKey ? updatedFieldValue : field.value,
-      }
-    })
+const handleChange = (updatedFieldKey, updatedFieldValue) => {
+  const updatedValue = value.map(field => {
+    return {
+      key: field.key,
+      value: field.key === updatedFieldKey ? updatedFieldValue : field.value,
+    }
+  })
 
-    dispatch("change", updatedValue)
-  }
+  dispatch("change", updatedValue)
+}
 </script>
 
 <Accordion

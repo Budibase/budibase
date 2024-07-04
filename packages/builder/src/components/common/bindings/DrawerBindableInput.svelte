@@ -1,63 +1,60 @@
 <script>
-  import { Icon, Input, Drawer, Button } from "@budibase/bbui"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "dataBinding"
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import { createEventDispatcher, setContext } from "svelte"
-  import { isJSBinding } from "@budibase/string-templates"
-  import { builderStore } from "stores/builder"
+import { Button, Drawer, Icon, Input } from "@budibase/bbui"
+import { isJSBinding } from "@budibase/string-templates"
+import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+import { readableToRuntimeBinding, runtimeToReadableBinding } from "dataBinding"
+import { builderStore } from "stores/builder"
+import { createEventDispatcher, setContext } from "svelte"
 
-  export let panel = ClientBindingPanel
-  export let value = ""
-  export let bindings = []
-  export let title
-  export let placeholder
-  export let label
-  export let disabled = false
-  export let allowJS = true
-  export let allowHelpers = true
-  export let updateOnChange = true
-  export let key
-  export let disableBindings = false
-  export let forceModal = false
-  export let context = null
-  export let autocomplete
+export let panel = ClientBindingPanel
+export let value = ""
+export let bindings = []
+export let title
+export let placeholder
+export let label
+export let disabled = false
+export let allowJS = true
+export let allowHelpers = true
+export let updateOnChange = true
+export let key
+export let disableBindings = false
+export let forceModal = false
+export let context = null
+export let autocomplete
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let bindingDrawer
-  let currentVal = value
+let bindingDrawer
+let currentVal = value
 
-  $: readableValue = runtimeToReadableBinding(bindings, value)
-  $: tempValue = readableValue
-  $: isJS = isJSBinding(value)
+$: readableValue = runtimeToReadableBinding(bindings, value)
+$: tempValue = readableValue
+$: isJS = isJSBinding(value)
 
-  const saveBinding = () => {
-    onChange(tempValue)
-    onBlur()
-    builderStore.propertyFocus()
-    bindingDrawer.hide()
-  }
+const saveBinding = () => {
+  onChange(tempValue)
+  onBlur()
+  builderStore.propertyFocus()
+  bindingDrawer.hide()
+}
 
-  setContext("binding-drawer-actions", {
-    save: saveBinding,
-  })
+setContext("binding-drawer-actions", {
+  save: saveBinding,
+})
 
-  const onChange = value => {
-    currentVal = readableToRuntimeBinding(bindings, value)
-    dispatch("change", currentVal)
-  }
+const onChange = value => {
+  currentVal = readableToRuntimeBinding(bindings, value)
+  dispatch("change", currentVal)
+}
 
-  const onBlur = () => {
-    dispatch("blur", currentVal)
-  }
+const onBlur = () => {
+  dispatch("blur", currentVal)
+}
 
-  const onDrawerHide = e => {
-    builderStore.propertyFocus()
-    dispatch("drawerHide", e.detail)
-  }
+const onDrawerHide = e => {
+  builderStore.propertyFocus()
+  dispatch("drawerHide", e.detail)
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

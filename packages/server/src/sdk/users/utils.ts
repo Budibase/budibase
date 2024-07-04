@@ -1,18 +1,18 @@
-import { getGlobalUsers } from "../../utilities/global"
 import { context, roles as rolesCore } from "@budibase/backend-core"
 import {
-  getGlobalIDFromUserMetadataID,
-  generateUserMetadataID,
-  getUserMetadataParams,
-  InternalTables,
-} from "../../db/utils"
+  ContextUser,
+  ContextUserMetadata,
+  Database,
+  UserMetadata,
+} from "@budibase/types"
 import isEqual from "lodash/isEqual"
 import {
-  ContextUser,
-  UserMetadata,
-  Database,
-  ContextUserMetadata,
-} from "@budibase/types"
+  InternalTables,
+  generateUserMetadataID,
+  getGlobalIDFromUserMetadataID,
+  getUserMetadataParams,
+} from "../../db/utils"
+import { getGlobalUsers } from "../../utilities/global"
 
 export function combineMetadataAndUser(
   user: ContextUser,

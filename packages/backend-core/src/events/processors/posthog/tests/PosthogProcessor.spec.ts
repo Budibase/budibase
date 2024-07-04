@@ -1,6 +1,6 @@
+import { Event, Hosting, IdentityType } from "@budibase/types"
 import { testEnv } from "../../../../../tests/extra"
 import PosthogProcessor from "../PosthogProcessor"
-import { Event, IdentityType, Hosting } from "@budibase/types"
 
 const tk = require("timekeeper")
 

@@ -1,10 +1,10 @@
 import {
-  Integration,
-  QueryType,
-  IntegrationBase,
-  DatasourceFieldType,
-  DatasourceFeature,
   ConnectionInfo,
+  DatasourceFeature,
+  DatasourceFieldType,
+  Integration,
+  IntegrationBase,
+  QueryType,
 } from "@budibase/types"
 
 import AWS from "aws-sdk"

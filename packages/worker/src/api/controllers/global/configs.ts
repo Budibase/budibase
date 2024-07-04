@@ -1,16 +1,13 @@
-import * as email from "../../../utilities/email"
-import env from "../../../environment"
-import { googleCallbackUrl, oidcCallbackUrl } from "./auth"
 import {
+  events,
   cache,
   configs,
-  db as dbCore,
   env as coreEnv,
-  events,
+  db as dbCore,
   objectStore,
   tenancy,
 } from "@budibase/backend-core"
-import { checkAnyUserExists } from "../../../utilities/users"
+import * as pro from "@budibase/pro"
 import {
   Config,
   ConfigType,
@@ -18,19 +15,22 @@ import {
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
   GoogleInnerConfig,
-  isGoogleConfig,
-  isOIDCConfig,
-  isSettingsConfig,
-  isSMTPConfig,
   OIDCConfigs,
-  SettingsBrandingConfig,
-  SettingsInnerConfig,
+  OIDCLogosConfig,
   SSOConfig,
   SSOConfigType,
+  SettingsBrandingConfig,
+  SettingsInnerConfig,
   UserCtx,
-  OIDCLogosConfig,
+  isGoogleConfig,
+  isOIDCConfig,
+  isSMTPConfig,
+  isSettingsConfig,
 } from "@budibase/types"
-import * as pro from "@budibase/pro"
+import env from "../../../environment"
+import * as email from "../../../utilities/email"
+import { checkAnyUserExists } from "../../../utilities/users"
+import { googleCallbackUrl, oidcCallbackUrl } from "./auth"
 
 const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []

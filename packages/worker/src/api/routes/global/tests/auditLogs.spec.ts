@@ -1,7 +1,7 @@
+import { events, context } from "@budibase/backend-core"
 import { mocks, structures } from "@budibase/backend-core/tests"
-import { context, events } from "@budibase/backend-core"
-import { Event, IdentityType } from "@budibase/types"
 import { auditLogs } from "@budibase/pro"
+import { Event, IdentityType } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
 
 mocks.licenses.useAuditLogs()

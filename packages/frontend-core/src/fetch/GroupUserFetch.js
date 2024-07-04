@@ -1,6 +1,6 @@
 import { get } from "svelte/store"
-import DataFetch from "./DataFetch.js"
 import { TableNames } from "../constants"
+import DataFetch from "./DataFetch.js"
 
 export default class GroupUserFetch extends DataFetch {
   constructor(opts) {

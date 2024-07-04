@@ -1,17 +1,17 @@
-import { derived, get } from "svelte/store"
-import { cloneDeep } from "lodash/fp"
 import { Helpers } from "@budibase/bbui"
 import { RoleUtils, Utils } from "@budibase/frontend-core"
+import { API } from "api"
 import { findAllMatchingComponents } from "helpers/components"
+import { cloneDeep } from "lodash/fp"
 import {
-  layoutStore,
   appStore,
   componentStore,
+  layoutStore,
   navigationStore,
   selectedComponent,
 } from "stores/builder"
 import { createHistoryStore } from "stores/builder/history"
-import { API } from "api"
+import { derived, get } from "svelte/store"
 import BudiStore from "../BudiStore"
 
 export const INITIAL_SCREENS_STATE = {

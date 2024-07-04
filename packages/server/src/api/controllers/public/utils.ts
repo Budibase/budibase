@@ -1,7 +1,7 @@
 import { context } from "@budibase/backend-core"
-import { isExternalTableID } from "../../../integrations/utils"
-import { APP_PREFIX, DocumentType } from "../../../db/utils"
 import { Row } from "@budibase/types"
+import { APP_PREFIX, DocumentType } from "../../../db/utils"
+import { isExternalTableID } from "../../../integrations/utils"
 
 export async function addRev(
   body: { _id?: string; _rev?: string },

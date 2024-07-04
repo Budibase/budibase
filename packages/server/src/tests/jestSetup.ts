@@ -1,6 +1,6 @@
-import env from "../environment"
-import { env as coreEnv, timers } from "@budibase/backend-core"
+import { timers, env as coreEnv } from "@budibase/backend-core"
 import { testContainerUtils } from "@budibase/backend-core/tests"
+import env from "../environment"
 
 if (!process.env.CI) {
   // set a longer timeout in dev for debugging 100 seconds

@@ -1,53 +1,53 @@
 <script>
-  import { DatePicker } from "@budibase/bbui"
-  import dayjs from "dayjs"
-  import { createEventDispatcher } from "svelte"
-  import { memo } from "@budibase/frontend-core"
+import { DatePicker } from "@budibase/bbui"
+import { memo } from "@budibase/frontend-core"
+import dayjs from "dayjs"
+import { createEventDispatcher } from "svelte"
 
-  export let value
+export let value
 
-  const dispatch = createEventDispatcher()
-  const valueStore = memo(value)
+const dispatch = createEventDispatcher()
+const valueStore = memo(value)
 
-  let date1
-  let date2
+let date1
+let date2
 
-  $: valueStore.set(value)
-  $: parseValue($valueStore)
+$: valueStore.set(value)
+$: parseValue($valueStore)
 
-  const parseValue = value => {
-    if (!Array.isArray(value) || !value[0] || !value[1]) {
-      date1 = null
-      date2 = null
-    } else {
-      date1 = value[0]
-      date2 = value[1]
-    }
+const parseValue = value => {
+  if (!Array.isArray(value) || !value[0] || !value[1]) {
+    date1 = null
+    date2 = null
+  } else {
+    date1 = value[0]
+    date2 = value[1]
   }
+}
 
-  const onChangeDate1 = e => {
-    date1 = e.detail ? dayjs(e.detail).startOf("day") : null
-    if (date1 && (!date2 || date1.isAfter(date2))) {
-      date2 = date1.endOf("day")
-    } else if (!date1) {
-      date2 = null
-    }
-    broadcastChange()
+const onChangeDate1 = e => {
+  date1 = e.detail ? dayjs(e.detail).startOf("day") : null
+  if (date1 && (!date2 || date1.isAfter(date2))) {
+    date2 = date1.endOf("day")
+  } else if (!date1) {
+    date2 = null
   }
+  broadcastChange()
+}
 
-  const onChangeDate2 = e => {
-    date2 = e.detail ? dayjs(e.detail).endOf("day") : null
-    if (date2 && (!date1 || date2.isBefore(date1))) {
-      date1 = date2.startOf("day")
-    } else if (!date2) {
-      date1 = null
-    }
-    broadcastChange()
+const onChangeDate2 = e => {
+  date2 = e.detail ? dayjs(e.detail).endOf("day") : null
+  if (date2 && (!date1 || date2.isBefore(date1))) {
+    date1 = date2.startOf("day")
+  } else if (!date2) {
+    date1 = null
   }
+  broadcastChange()
+}
 
-  const broadcastChange = () => {
-    dispatch("change", [date1, date2])
-  }
+const broadcastChange = () => {
+  dispatch("change", [date1, date2])
+}
 </script>
 
 <div class="date-range-picker">

@@ -1,6 +1,6 @@
 module.exports = {
   "no-console-error": {
-    create: function(context) {
+    create: function (context) {
       return {
         CallExpression(node) {
           if (
@@ -13,11 +13,12 @@ module.exports = {
           ) {
             context.report({
               node,
-              message: 'Using console.error(err) on its own is not allowed. Either provide context to the error (console.error(msg, err)) or throw it.',
+              message:
+                "Using console.error(err) on its own is not allowed. Either provide context to the error (console.error(msg, err)) or throw it.",
             })
           }
         },
-      };
+      }
     },
   },
   "no-budibase-imports": {

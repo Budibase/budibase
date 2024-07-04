@@ -1,46 +1,46 @@
 <script>
-  import { ModalContent, Layout, notifications, Body } from "@budibase/bbui"
-  import { datasources } from "stores/builder"
-  import ICONS from "components/backend/DatasourceNavigator/icons"
-  import { IntegrationNames } from "constants"
-  import { onMount } from "svelte"
-  import DatasourceTemplateRow from "./DatasourceTemplateRow.svelte"
+import { IntegrationNames } from "constants"
+import { Body, Layout, ModalContent, notifications } from "@budibase/bbui"
+import ICONS from "components/backend/DatasourceNavigator/icons"
+import { datasources } from "stores/builder"
+import { onMount } from "svelte"
+import DatasourceTemplateRow from "./DatasourceTemplateRow.svelte"
 
-  export let onCancel
-  export let onConfirm
+export let onCancel
+export let onConfirm
 
-  let selectedSources = []
+let selectedSources = []
 
-  $: filteredSources = $datasources.list?.filter(datasource => {
-    return datasource.source !== IntegrationNames.REST && datasource["entities"]
-  })
+$: filteredSources = $datasources.list?.filter(datasource => {
+  return datasource.source !== IntegrationNames.REST && datasource["entities"]
+})
 
-  const toggleSelection = datasource => {
-    const exists = selectedSources.find(
+const toggleSelection = datasource => {
+  const exists = selectedSources.find(
+    d => d.resourceId === datasource.resourceId
+  )
+  if (exists) {
+    selectedSources = selectedSources.filter(
       d => d.resourceId === datasource.resourceId
     )
-    if (exists) {
-      selectedSources = selectedSources.filter(
-        d => d.resourceId === datasource.resourceId
-      )
-    } else {
-      selectedSources = [...selectedSources, datasource]
-    }
+  } else {
+    selectedSources = [...selectedSources, datasource]
   }
+}
 
-  const confirmDatasourceSelection = async () => {
-    await onConfirm({
-      datasources: selectedSources,
-    })
-  }
-
-  onMount(async () => {
-    try {
-      await datasources.fetch()
-    } catch (error) {
-      notifications.error("Error fetching datasources")
-    }
+const confirmDatasourceSelection = async () => {
+  await onConfirm({
+    datasources: selectedSources,
   })
+}
+
+onMount(async () => {
+  try {
+    await datasources.fetch()
+  } catch (error) {
+    notifications.error("Error fetching datasources")
+  }
+})
 </script>
 
 <span>

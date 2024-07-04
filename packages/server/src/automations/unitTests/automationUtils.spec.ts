@@ -1,8 +1,8 @@
 import { LoopStepType } from "../../definitions/automations"
 import {
-  typecastForLooping,
   cleanInputValues,
   substituteLoopStep,
+  typecastForLooping,
 } from "../automationUtils"
 
 describe("automationUtils", () => {

@@ -1,19 +1,19 @@
 import { locks, migrations } from "@budibase/backend-core"
 import {
-  Migration,
-  MigrationOptions,
-  MigrationName,
-  LockType,
   LockName,
+  LockType,
+  Migration,
+  MigrationName,
+  MigrationOptions,
 } from "@budibase/types"
 import env from "../environment"
 
+import * as appUrls from "./functions/appUrls"
+import * as backfill from "./functions/backfill"
+import * as syncQuotas from "./functions/syncQuotas"
+import * as tableSettings from "./functions/tableSettings"
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
-import * as syncQuotas from "./functions/syncQuotas"
-import * as appUrls from "./functions/appUrls"
-import * as tableSettings from "./functions/tableSettings"
-import * as backfill from "./functions/backfill"
 /**
  * Populate the migration function and additional configuration from
  * the static migration definitions.

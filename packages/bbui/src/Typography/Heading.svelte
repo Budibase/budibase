@@ -1,11 +1,11 @@
 <script>
-  import "@spectrum-css/typography/dist/index-vars.css"
+import "@spectrum-css/typography/dist/index-vars.css"
 
-  // Sizes
-  export let size = "M"
-  export let textAlign
-  export let noPadding = false
-  export let weight = "default" // light, heavy, default
+// Sizes
+export let size = "M"
+export let textAlign
+export let noPadding = false
+export let weight = "default" // light, heavy, default
 </script>
 
 <h1

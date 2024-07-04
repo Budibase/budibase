@@ -1,12 +1,12 @@
-import { newid } from "./utils"
-import * as events from "./events"
-import { StaticDatabases, doWithDB } from "./db"
-import { Installation, IdentityType, Database } from "@budibase/types"
-import * as context from "./context"
+import { Database, IdentityType, Installation } from "@budibase/types"
 import semver from "semver"
-import { bustCache, withCache, TTL, CacheKey } from "./cache/generic"
+import { CacheKey, TTL, bustCache, withCache } from "./cache/generic"
+import * as context from "./context"
+import { StaticDatabases, doWithDB } from "./db"
 import environment from "./environment"
+import * as events from "./events"
 import { logAlert } from "./logging"
+import { newid } from "./utils"
 
 export const getInstall = async (): Promise<Installation> => {
   return withCache(CacheKey.INSTALLATION, TTL.ONE_DAY, getInstallFromDB, {

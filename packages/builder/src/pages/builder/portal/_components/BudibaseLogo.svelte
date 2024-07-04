@@ -1,6 +1,6 @@
 <script>
-  import Logo from "assets/bb-emblem.svg"
-  import { goto } from "@roxi/routify"
+import { goto } from "@roxi/routify"
+import Logo from "assets/bb-emblem.svg"
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions-->

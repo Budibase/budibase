@@ -1,59 +1,59 @@
 <script>
-  import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
-  import { datasources, integrations } from "stores/builder"
-  import ICONS from "components/backend/DatasourceNavigator/icons"
-  import EditDatasourceConfig from "./_components/EditDatasourceConfig.svelte"
-  import TablesPanel from "./_components/panels/Tables/index.svelte"
-  import RelationshipsPanel from "./_components/panels/Relationships.svelte"
-  import QueriesPanel from "./_components/panels/Queries/index.svelte"
-  import RestHeadersPanel from "./_components/panels/Headers.svelte"
-  import RestAuthenticationPanel from "./_components/panels/Authentication/index.svelte"
-  import RestVariablesPanel from "./_components/panels/Variables/index.svelte"
-  import PromptQueryModal from "./_components/PromptQueryModal.svelte"
-  import SettingsPanel from "./_components/panels/Settings.svelte"
-  import { helpers } from "@budibase/shared-core"
-  import { admin } from "stores/portal"
-  import { IntegrationTypes } from "constants/backend"
+import { Body, Heading, Layout, Tab, Tabs } from "@budibase/bbui"
+import { helpers } from "@budibase/shared-core"
+import ICONS from "components/backend/DatasourceNavigator/icons"
+import { IntegrationTypes } from "constants/backend"
+import { datasources, integrations } from "stores/builder"
+import { admin } from "stores/portal"
+import EditDatasourceConfig from "./_components/EditDatasourceConfig.svelte"
+import PromptQueryModal from "./_components/PromptQueryModal.svelte"
+import RestAuthenticationPanel from "./_components/panels/Authentication/index.svelte"
+import RestHeadersPanel from "./_components/panels/Headers.svelte"
+import QueriesPanel from "./_components/panels/Queries/index.svelte"
+import RelationshipsPanel from "./_components/panels/Relationships.svelte"
+import SettingsPanel from "./_components/panels/Settings.svelte"
+import TablesPanel from "./_components/panels/Tables/index.svelte"
+import RestVariablesPanel from "./_components/panels/Variables/index.svelte"
 
-  let selectedPanel = null
-  let panelOptions = []
+let selectedPanel = null
+let panelOptions = []
 
-  $: datasource = $datasources.selected
+$: datasource = $datasources.selected
 
-  $: isCloud = $admin.cloud
-  $: isPostgres = datasource?.source === IntegrationTypes.POSTGRES
-  $: getOptions(datasource)
+$: isCloud = $admin.cloud
+$: isPostgres = datasource?.source === IntegrationTypes.POSTGRES
+$: getOptions(datasource)
 
-  const getOptions = datasource => {
-    if (datasource.plus) {
-      // Google Sheets' integration definition specifies `relationships: false` as it doesn't support relationships like other plus datasources
-      panelOptions =
-        $integrations[datasource.source].relationships === false
-          ? ["Tables", "Queries"]
-          : ["Tables", "Relationships", "Queries"]
-      selectedPanel = panelOptions.includes(selectedPanel)
-        ? selectedPanel
-        : "Tables"
-    } else if (datasource.source === "REST") {
-      panelOptions = ["Queries", "Headers", "Authentication", "Variables"]
-      selectedPanel = panelOptions.includes(selectedPanel)
-        ? selectedPanel
-        : "Queries"
+const getOptions = datasource => {
+  if (datasource.plus) {
+    // Google Sheets' integration definition specifies `relationships: false` as it doesn't support relationships like other plus datasources
+    panelOptions =
+      $integrations[datasource.source].relationships === false
+        ? ["Tables", "Queries"]
+        : ["Tables", "Relationships", "Queries"]
+    selectedPanel = panelOptions.includes(selectedPanel)
+      ? selectedPanel
+      : "Tables"
+  } else if (datasource.source === "REST") {
+    panelOptions = ["Queries", "Headers", "Authentication", "Variables"]
+    selectedPanel = panelOptions.includes(selectedPanel)
+      ? selectedPanel
+      : "Queries"
+  } else {
+    panelOptions = ["Queries"]
+    selectedPanel = "Queries"
+  }
+  // always the last option for SQL
+  if (helpers.isSQL(datasource)) {
+    if (isCloud && isPostgres) {
+      // We don't show the settings panel for Postgres on Budicloud because
+      // it requires pg_dump to work and we don't want to enable shell injection
+      // attacks.
     } else {
-      panelOptions = ["Queries"]
-      selectedPanel = "Queries"
-    }
-    // always the last option for SQL
-    if (helpers.isSQL(datasource)) {
-      if (isCloud && isPostgres) {
-        // We don't show the settings panel for Postgres on Budicloud because
-        // it requires pg_dump to work and we don't want to enable shell injection
-        // attacks.
-      } else {
-        panelOptions.push("Settings")
-      }
+      panelOptions.push("Settings")
     }
   }
+}
 </script>
 
 <PromptQueryModal />

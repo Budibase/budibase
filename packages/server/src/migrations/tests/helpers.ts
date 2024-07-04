@@ -1,8 +1,8 @@
 // Mimic configs test configuration from worker, creation configs directly in database
 
-import * as structures from "./structures"
 import { configs } from "@budibase/backend-core"
 import { Config } from "@budibase/types"
+import * as structures from "./structures"
 
 export const saveSettingsConfig = async (globalDb: any) => {
   const config = structures.settings()

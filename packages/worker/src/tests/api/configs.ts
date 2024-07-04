@@ -31,7 +31,7 @@ export class ConfigAPI extends TestAPI {
       .expect("Content-Type", /json/)
   }
 
-  OIDCCallback = (configId: string, preAuthRes: any) => {
+  OIDCCallback = (_configId: string, preAuthRes: any) => {
     const cookie = this.config.cookieHeader(preAuthRes.get("set-cookie"))
     const setKoaSession = cookie.Cookie.find((c: string) =>
       c.includes("koa:sess")

@@ -1,8 +1,8 @@
 import { InviteUsersResponse, User } from "@budibase/types"
 
-import { TestConfiguration, mocks, structures } from "../../../../tests"
-import { events, tenancy, accounts as _accounts } from "@budibase/backend-core"
+import { events, accounts as _accounts, tenancy } from "@budibase/backend-core"
 import * as userSdk from "../../../../sdk/users"
+import { TestConfiguration, mocks, structures } from "../../../../tests"
 
 jest.mock("nodemailer")
 const sendMailMock = mocks.email.mock()

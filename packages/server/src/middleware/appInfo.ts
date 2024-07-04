@@ -1,5 +1,5 @@
-import { isDevAppID, isProdAppID } from "../db/utils"
 import { BBContext } from "@budibase/types"
+import { isDevAppID, isProdAppID } from "../db/utils"
 
 export enum AppType {
   DEV = "dev",

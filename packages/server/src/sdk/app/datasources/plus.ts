@@ -1,3 +1,4 @@
+import { context } from "@budibase/backend-core"
 import {
   Datasource,
   DatasourcePlus,
@@ -5,10 +6,9 @@ import {
   Schema,
   Table,
 } from "@budibase/types"
-import * as datasources from "./datasources"
-import tableSdk from "../tables"
 import { getIntegration } from "../../../integrations"
-import { context } from "@budibase/backend-core"
+import tableSdk from "../tables"
+import * as datasources from "./datasources"
 
 function checkForSchemaErrors(schema: Record<string, Table>) {
   const errors: Record<string, string> = {}
@@ -21,9 +21,8 @@ function checkForSchemaErrors(schema: Record<string, Table>) {
         columnName.includes(".")
       )
       if (invalidColumnName) {
-        errors[
-          tableName
-        ] = `Column '${invalidColumnName}' is not supported as it contains a dot.`
+        errors[tableName] =
+          `Column '${invalidColumnName}' is not supported as it contains a dot.`
       }
     }
   }

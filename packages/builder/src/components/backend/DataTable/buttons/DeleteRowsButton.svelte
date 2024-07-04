@@ -1,22 +1,22 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import { Button } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { Button } from "@budibase/bbui"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { createEventDispatcher } from "svelte"
 
-  export let selectedRows
-  export let deleteRows
-  export let item = "row"
+export let selectedRows
+export let deleteRows
+export let item = "row"
 
-  const dispatch = createEventDispatcher()
-  let modal
+const dispatch = createEventDispatcher()
+let modal
 
-  async function confirmDeletion() {
-    await deleteRows(selectedRows)
-    modal?.hide()
-    dispatch("updaterows")
-  }
+async function confirmDeletion() {
+  await deleteRows(selectedRows)
+  modal?.hide()
+  dispatch("updaterows")
+}
 
-  $: text = `${item}${selectedRows?.length === 1 ? "" : "s"}`
+$: text = `${item}${selectedRows?.length === 1 ? "" : "s"}`
 </script>
 
 <Button icon="Delete" warning quiet on:click={modal.show}>

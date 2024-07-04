@@ -1,49 +1,49 @@
 <script>
-  import { automationStore } from "stores/builder"
-  import {
-    notifications,
-    Input,
-    InlineAlert,
-    ModalContent,
-    Layout,
-    Body,
-    Icon,
-    Label,
-  } from "@budibase/bbui"
-  import { TriggerStepID } from "constants/backend/automations"
+import {
+  Body,
+  Icon,
+  InlineAlert,
+  Input,
+  Label,
+  Layout,
+  ModalContent,
+  notifications,
+} from "@budibase/bbui"
+import { TriggerStepID } from "constants/backend/automations"
+import { automationStore } from "stores/builder"
 
-  export let webhookModal
+export let webhookModal
 
-  let name
-  let selectedTrigger
-  let nameTouched = false
-  let triggerVal
+let name
+let selectedTrigger
+let nameTouched = false
+let triggerVal
 
-  $: nameError =
-    nameTouched && !name ? "Please specify a name for the automation." : null
-  $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
+$: nameError =
+  nameTouched && !name ? "Please specify a name for the automation." : null
+$: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
 
-  async function createAutomation() {
-    try {
-      const trigger = automationStore.actions.constructBlock(
-        "TRIGGER",
-        triggerVal.stepId,
-        triggerVal
-      )
-      await automationStore.actions.create(name, trigger)
-      if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
-        webhookModal.show()
-      }
-      notifications.success(`Automation ${name} created`)
-    } catch (error) {
-      notifications.error("Error creating automation")
+async function createAutomation() {
+  try {
+    const trigger = automationStore.actions.constructBlock(
+      "TRIGGER",
+      triggerVal.stepId,
+      triggerVal
+    )
+    await automationStore.actions.create(name, trigger)
+    if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
+      webhookModal.show()
     }
+    notifications.success(`Automation ${name} created`)
+  } catch (error) {
+    notifications.error("Error creating automation")
   }
+}
 
-  const selectTrigger = trigger => {
-    triggerVal = trigger
-    selectedTrigger = trigger.name
-  }
+const selectTrigger = trigger => {
+  triggerVal = trigger
+  selectedTrigger = trigger.name
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

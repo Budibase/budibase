@@ -1,17 +1,17 @@
+import compose from "docker-compose"
+import { confirmation } from "../questions"
+import { info, success } from "../utils"
+import { COMPOSE_PATH } from "./makeFiles"
+import { start } from "./start"
 import {
   checkDockerConfigured,
   checkInitComplete,
   downloadDockerCompose,
-  handleError,
-  getServices,
   getServiceImage,
+  getServices,
+  handleError,
   setServiceImage,
 } from "./utils"
-import { confirmation } from "../questions"
-import compose from "docker-compose"
-import { COMPOSE_PATH } from "./makeFiles"
-import { info, success } from "../utils"
-import { start } from "./start"
 
 const BB_COMPOSE_SERVICES = [
   "app-service",

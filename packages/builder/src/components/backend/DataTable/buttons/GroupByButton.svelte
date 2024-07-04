@@ -1,10 +1,10 @@
 <script>
-  import { Modal, Button } from "@budibase/bbui"
-  import GroupByModal from "../modals/GroupByModal.svelte"
+import { Button, Modal } from "@budibase/bbui"
+import GroupByModal from "../modals/GroupByModal.svelte"
 
-  export let view = {}
+export let view = {}
 
-  let modal
+let modal
 </script>
 
 <Button

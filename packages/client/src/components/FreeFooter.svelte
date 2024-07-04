@@ -1,5 +1,5 @@
 <script>
-  import { Link } from "@budibase/bbui"
+import { Link } from "@budibase/bbui"
 </script>
 
 <div class="free-footer">

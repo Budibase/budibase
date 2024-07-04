@@ -1,5 +1,5 @@
 <script>
-  export let heading
+export let heading
 </script>
 
 <li role="presentation">

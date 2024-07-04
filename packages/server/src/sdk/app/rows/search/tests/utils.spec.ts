@@ -1,13 +1,13 @@
-import { searchInputMapping } from "../utils"
 import { db as dbCore } from "@budibase/backend-core"
 import {
-  FieldType,
   BBReferenceFieldSubType,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   RowSearchParams,
   Table,
   TableSourceType,
 } from "@budibase/types"
+import { searchInputMapping } from "../utils"
 
 const tableId = "ta_a"
 const tableWithUserCol: Table = {

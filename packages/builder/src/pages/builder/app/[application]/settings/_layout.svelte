@@ -1,11 +1,11 @@
 <script>
-  import { Content, SideNav, SideNavItem } from "components/portal/page"
-  import { Page, Layout, AbsTooltip, TooltipPosition } from "@budibase/bbui"
-  import { url, isActive } from "@roxi/routify"
-  import DeleteModal from "components/deploy/DeleteModal.svelte"
-  import { isOnlyUser, appStore } from "stores/builder"
+import { AbsTooltip, Layout, Page, TooltipPosition } from "@budibase/bbui"
+import { url, isActive } from "@roxi/routify"
+import DeleteModal from "components/deploy/DeleteModal.svelte"
+import { Content, SideNav, SideNavItem } from "components/portal/page"
+import { appStore, isOnlyUser } from "stores/builder"
 
-  let deleteModal
+let deleteModal
 </script>
 
 <!-- routify:options index=4 -->

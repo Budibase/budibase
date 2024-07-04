@@ -1,26 +1,26 @@
+import { context } from "@budibase/backend-core"
+import {
+  ContextUser,
+  FieldType,
+  LinkDocumentValue,
+  Row,
+  Table,
+} from "@budibase/types"
+import flatten from "lodash/flatten"
+import partition from "lodash/partition"
+import sdk from "../../sdk"
+import { getGlobalUsersFromMetadata } from "../../utilities/global"
+import { processFormulas } from "../../utilities/rowProcessor"
+import { USER_METDATA_PREFIX } from "../utils"
 import LinkController from "./LinkController"
 import {
   IncludeDocs,
   getLinkDocuments,
-  getUniqueByProp,
-  getRelatedTableForField,
-  getLinkedTableIDs,
   getLinkedTable,
+  getLinkedTableIDs,
+  getRelatedTableForField,
+  getUniqueByProp,
 } from "./linkUtils"
-import flatten from "lodash/flatten"
-import { USER_METDATA_PREFIX } from "../utils"
-import partition from "lodash/partition"
-import { getGlobalUsersFromMetadata } from "../../utilities/global"
-import { processFormulas } from "../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
-import {
-  Table,
-  Row,
-  LinkDocumentValue,
-  FieldType,
-  ContextUser,
-} from "@budibase/types"
-import sdk from "../../sdk"
 
 export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
 
@@ -124,7 +124,7 @@ export async function updateLinks(args: {
     ) {
       return baseReturnObj
     }
-  } catch (err) {
+  } catch (_err) {
     return baseReturnObj
   }
   switch (eventType) {

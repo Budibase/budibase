@@ -1,7 +1,7 @@
-import { createRoutingView } from "../../db/views/staticViews"
-import { ViewName, getQueryIndex, UNICODE_MAX } from "../../db/utils"
 import { context } from "@budibase/backend-core"
-import { ScreenRouting, Document } from "@budibase/types"
+import { Document, ScreenRouting } from "@budibase/types"
+import { UNICODE_MAX, ViewName, getQueryIndex } from "../../db/utils"
+import { createRoutingView } from "../../db/views/staticViews"
 
 interface ScreenRoutesView extends Document {
   id: string

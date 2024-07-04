@@ -1,12 +1,12 @@
 <script>
-  import TableFilterButton from "../TableFilterButton.svelte"
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
+import TableFilterButton from "../TableFilterButton.svelte"
 
-  const { columns, datasource, filter, definition } = getContext("grid")
+const { columns, datasource, filter, definition } = getContext("grid")
 
-  const onFilter = e => {
-    filter.set(e.detail || [])
-  }
+const onFilter = e => {
+  filter.set(e.detail || [])
+}
 </script>
 
 {#key $datasource}

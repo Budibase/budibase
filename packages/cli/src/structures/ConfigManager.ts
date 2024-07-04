@@ -16,7 +16,7 @@ export class ConfigManager {
   get config() {
     try {
       return JSON.parse(fs.readFileSync(this.path, "utf8"))
-    } catch (err) {
+    } catch (_err) {
       console.log(
         error(
           "Error parsing configuration file. Please check your .budibase.json is valid."

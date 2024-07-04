@@ -1,8 +1,8 @@
-import { Ctx } from "@budibase/types"
 import { context } from "@budibase/backend-core"
+import { Ctx } from "@budibase/types"
 import { tracer } from "dd-trace"
 
-export default async (ctx: Ctx, next: any) => {
+export default async (_ctx: Ctx, next: any) => {
   const resp = await next()
 
   const current = context.getCurrentContext()

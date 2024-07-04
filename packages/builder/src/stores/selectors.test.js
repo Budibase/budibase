@@ -1,6 +1,6 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
 import { DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
-import { integrationForDatasource, hasData, hasDefaultData } from "./selectors"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { hasData, hasDefaultData, integrationForDatasource } from "./selectors"
 
 describe("selectors", () => {
   beforeEach(() => {

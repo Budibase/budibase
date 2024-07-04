@@ -1,9 +1,9 @@
 <script>
-  export let icon
-  export let className
-  export let title
-  export let selected
-  export let indented
+export let icon
+export let className
+export let title
+export let selected
+export let indented
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

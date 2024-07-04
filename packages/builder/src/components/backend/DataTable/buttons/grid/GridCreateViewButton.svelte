@@ -1,19 +1,19 @@
 <script>
-  import { getContext } from "svelte"
-  import { Modal, ActionButton, TooltipType, TempTooltip } from "@budibase/bbui"
-  import GridCreateViewModal from "../../modals/grid/GridCreateViewModal.svelte"
+import { ActionButton, Modal, TempTooltip, TooltipType } from "@budibase/bbui"
+import { getContext } from "svelte"
+import GridCreateViewModal from "../../modals/grid/GridCreateViewModal.svelte"
 
-  const { rows, columns, filter } = getContext("grid")
+const { rows, columns, filter } = getContext("grid")
 
-  let modal
-  let firstFilterUsage = false
+let modal
+let firstFilterUsage = false
 
-  $: disabled = !$columns.length || !$rows.length
-  $: {
-    if ($filter?.length && !firstFilterUsage) {
-      firstFilterUsage = true
-    }
+$: disabled = !$columns.length || !$rows.length
+$: {
+  if ($filter?.length && !firstFilterUsage) {
+    firstFilterUsage = true
   }
+}
 </script>
 
 <TempTooltip

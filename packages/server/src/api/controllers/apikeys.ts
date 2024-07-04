@@ -7,7 +7,7 @@ async function getBuilderMainDoc() {
   const db = tenancy.getGlobalDB()
   try {
     return await db.get<any>(KEYS_DOC)
-  } catch (err) {
+  } catch (_err) {
     // doesn't exist yet, nothing to get
     return {
       _id: KEYS_DOC,

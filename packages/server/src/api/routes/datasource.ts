@@ -1,10 +1,10 @@
-import Router from "@koa/router"
-import * as datasourceController from "../controllers/datasource"
-import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
+import Router from "@koa/router"
+import authorized from "../../middleware/authorized"
+import * as datasourceController from "../controllers/datasource"
 import {
-  datasourceValidator,
   datasourceQueryValidator,
+  datasourceValidator,
 } from "./utils/validators"
 
 const router: Router = new Router()

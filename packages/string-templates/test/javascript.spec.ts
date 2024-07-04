@@ -1,6 +1,6 @@
 import vm from "vm"
 
-import { processStringSync, encodeJSBinding, setJSRunner } from "../src/index"
+import { encodeJSBinding, processStringSync, setJSRunner } from "../src/index"
 import { UUID_REGEX } from "./constants"
 
 const processJS = (js: string, context?: object): any => {

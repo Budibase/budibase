@@ -1,20 +1,20 @@
 <script>
-  import { Select, Label, Input } from "@budibase/bbui"
+import { Input, Label, Select } from "@budibase/bbui"
 
-  /**
-   * This component takes the query object and populates the 'extra' property
-   * when a datasource has specified a configuration for these fields in SCHEMA.extra
-   */
-  export let populateExtraQuery
-  export let config
-  export let query
+/**
+ * This component takes the query object and populates the 'extra' property
+ * when a datasource has specified a configuration for these fields in SCHEMA.extra
+ */
+export let populateExtraQuery
+export let config
+export let query
 
-  $: extraFields = Object.keys(config).map(key => ({
-    ...config[key],
-    key,
-  }))
+$: extraFields = Object.keys(config).map(key => ({
+  ...config[key],
+  key,
+}))
 
-  $: extraQueryFields = query.fields.extra || {}
+$: extraQueryFields = query.fields.extra || {}
 </script>
 
 {#each extraFields as { key, displayName, type }}

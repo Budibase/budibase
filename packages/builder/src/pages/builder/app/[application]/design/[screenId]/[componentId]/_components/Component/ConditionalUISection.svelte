@@ -1,38 +1,38 @@
 <script>
-  import {
-    DetailSummary,
-    ActionButton,
-    Drawer,
-    Button,
-    notifications,
-  } from "@budibase/bbui"
-  import { componentStore } from "stores/builder"
-  import ConditionalUIDrawer from "./ConditionalUIDrawer.svelte"
+import {
+  ActionButton,
+  Button,
+  DetailSummary,
+  Drawer,
+  notifications,
+} from "@budibase/bbui"
+import { componentStore } from "stores/builder"
+import ConditionalUIDrawer from "./ConditionalUIDrawer.svelte"
 
-  export let componentInstance
-  export let bindings
+export let componentInstance
+export let bindings
 
-  let tempValue
-  let drawer
+let tempValue
+let drawer
 
-  const openDrawer = () => {
-    tempValue = JSON.parse(JSON.stringify(componentInstance?._conditions ?? []))
-    drawer.show()
+const openDrawer = () => {
+  tempValue = JSON.parse(JSON.stringify(componentInstance?._conditions ?? []))
+  drawer.show()
+}
+
+const save = async () => {
+  try {
+    await componentStore.updateConditions(tempValue)
+  } catch (error) {
+    notifications.error("Error updating conditions")
   }
+  drawer.hide()
+}
 
-  const save = async () => {
-    try {
-      await componentStore.updateConditions(tempValue)
-    } catch (error) {
-      notifications.error("Error updating conditions")
-    }
-    drawer.hide()
-  }
-
-  $: conditionCount = componentInstance?._conditions?.length
-  $: conditionText = `${conditionCount || "No"} condition${
-    conditionCount !== 1 ? "s" : ""
-  } set`
+$: conditionCount = componentInstance?._conditions?.length
+$: conditionText = `${conditionCount || "No"} condition${
+  conditionCount !== 1 ? "s" : ""
+} set`
 </script>
 
 <DetailSummary name={"Conditions"} collapsible={false}>

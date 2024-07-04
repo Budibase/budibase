@@ -1,55 +1,55 @@
 <script>
-  import { onMount, tick } from "svelte"
-  import { clickOutside } from "@budibase/bbui"
-  import GridPopover from "../overlays/GridPopover.svelte"
+import { clickOutside } from "@budibase/bbui"
+import { onMount, tick } from "svelte"
+import GridPopover from "../overlays/GridPopover.svelte"
 
-  export let value
-  export let focused = false
-  export let onChange
-  export let readonly = false
-  export let api
+export let value
+export let focused = false
+export let onChange
+export let readonly = false
+export let api
 
-  let textarea
-  let isOpen = false
-  let anchor
+let textarea
+let isOpen = false
+let anchor
 
-  $: editable = focused && !readonly
-  $: {
-    if (!focused) {
-      isOpen = false
-    }
-  }
-
-  const handleChange = e => {
-    onChange(e.target.value)
-  }
-
-  const onKeyDown = () => {
-    return isOpen
-  }
-
-  const open = async () => {
-    isOpen = true
-    await tick()
-    textarea.focus()
-    if (value?.length > 100) {
-      textarea.setSelectionRange(0, 0)
-    }
-  }
-
-  const close = () => {
-    textarea?.blur()
+$: editable = focused && !readonly
+$: {
+  if (!focused) {
     isOpen = false
   }
+}
 
-  onMount(() => {
-    api = {
-      focus: () => open(),
-      blur: () => close(),
-      isActive: () => isOpen,
-      onKeyDown,
-    }
-  })
+const handleChange = e => {
+  onChange(e.target.value)
+}
+
+const onKeyDown = () => {
+  return isOpen
+}
+
+const open = async () => {
+  isOpen = true
+  await tick()
+  textarea.focus()
+  if (value?.length > 100) {
+    textarea.setSelectionRange(0, 0)
+  }
+}
+
+const close = () => {
+  textarea?.blur()
+  isOpen = false
+}
+
+onMount(() => {
+  api = {
+    focus: () => open(),
+    blur: () => close(),
+    isActive: () => isOpen,
+    onKeyDown,
+  }
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

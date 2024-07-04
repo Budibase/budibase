@@ -1,37 +1,37 @@
 <script>
-  import AbsTooltip from "./AbsTooltip.svelte"
-  import { onDestroy } from "svelte"
+import { onDestroy } from "svelte"
+import AbsTooltip from "./AbsTooltip.svelte"
 
-  export let text = null
-  export let condition = true
-  export let duration = 5000
-  export let position
-  export let type
+export let text = null
+export let condition = true
+export let duration = 5000
+export let position
+export let type
 
-  let visible = false
-  let timeout
+let visible = false
+let timeout
 
-  $: {
-    if (condition) {
-      showTooltip()
-    } else {
-      hideTooltip()
-    }
+$: {
+  if (condition) {
+    showTooltip()
+  } else {
+    hideTooltip()
   }
+}
 
-  const showTooltip = () => {
-    visible = true
-    timeout = setTimeout(() => {
-      visible = false
-    }, duration)
-  }
-
-  const hideTooltip = () => {
+const showTooltip = () => {
+  visible = true
+  timeout = setTimeout(() => {
     visible = false
-    clearTimeout(timeout)
-  }
+  }, duration)
+}
 
-  onDestroy(hideTooltip)
+const hideTooltip = () => {
+  visible = false
+  clearTimeout(timeout)
+}
+
+onDestroy(hideTooltip)
 </script>
 
 <AbsTooltip {position} {type} text={visible ? text : null} fixed={visible}>

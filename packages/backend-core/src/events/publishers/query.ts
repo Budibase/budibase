@@ -1,16 +1,16 @@
-import { publishEvent } from "../events"
 import {
-  Event,
   Datasource,
+  Event,
+  QueriesRunEvent,
   Query,
-  QueryPreview,
   QueryCreatedEvent,
-  QueryUpdatedEvent,
   QueryDeletedEvent,
   QueryImportedEvent,
+  QueryPreview,
   QueryPreviewedEvent,
-  QueriesRunEvent,
+  QueryUpdatedEvent,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 /* eslint-disable */
 

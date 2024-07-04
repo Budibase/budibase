@@ -1,7 +1,7 @@
-import { get } from "svelte/store"
 import { createSessionStorageStore } from "@budibase/frontend-core"
-import { selectedScreen as selectedScreenStore } from "./screens"
 import { findComponentPath } from "helpers/components"
+import { get } from "svelte/store"
+import { selectedScreen as selectedScreenStore } from "./screens"
 
 const baseStore = createSessionStorageStore("openNodes", {})
 

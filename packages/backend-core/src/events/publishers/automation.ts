@@ -1,16 +1,16 @@
-import { publishEvent } from "../events"
 import {
   Automation,
-  Event,
-  AutomationStep,
   AutomationCreatedEvent,
   AutomationDeletedEvent,
-  AutomationTestedEvent,
+  AutomationStep,
   AutomationStepCreatedEvent,
   AutomationStepDeletedEvent,
+  AutomationTestedEvent,
   AutomationTriggerUpdatedEvent,
   AutomationsRunEvent,
+  Event,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 async function created(automation: Automation, timestamp?: string | number) {
   const properties: AutomationCreatedEvent = {

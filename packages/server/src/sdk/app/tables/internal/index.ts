@@ -1,28 +1,28 @@
+import { context } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
+import { findDuplicateInternalColumns } from "@budibase/shared-core"
 import {
+  ContextUser,
   FieldType,
   RenameColumn,
+  Row,
   Table,
   ViewStatisticsSchema,
   ViewV2,
-  Row,
-  ContextUser,
 } from "@budibase/types"
-import {
-  hasTypeChanged,
-  TableSaveFunctions,
-  internalTableCleanup,
-} from "../../../../api/controllers/table/utils"
-import { EventType, updateLinks } from "../../../../db/linkedRows"
 import { cloneDeep } from "lodash/fp"
 import isEqual from "lodash/isEqual"
 import { runStaticFormulaChecks } from "../../../../api/controllers/table/bulkFormula"
-import { context } from "@budibase/backend-core"
-import { findDuplicateInternalColumns } from "@budibase/shared-core"
+import {
+  TableSaveFunctions,
+  hasTypeChanged,
+  internalTableCleanup,
+} from "../../../../api/controllers/table/utils"
+import { EventType, updateLinks } from "../../../../db/linkedRows"
+import { getRowParams } from "../../../../db/utils"
+import * as viewsSdk from "../../views"
 import { getTable } from "../getters"
 import { checkAutoColumns } from "./utils"
-import * as viewsSdk from "../../views"
-import { getRowParams } from "../../../../db/utils"
-import { quotas } from "@budibase/pro"
 
 export async function save(
   table: Table,

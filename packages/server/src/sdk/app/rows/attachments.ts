@@ -1,5 +1,5 @@
-import { FieldType, CouchFindOptions, Table, Row } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
+import { CouchFindOptions, FieldType, Row, Table } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../../../db/utils"
 
 // default limit - seems to work well for performance

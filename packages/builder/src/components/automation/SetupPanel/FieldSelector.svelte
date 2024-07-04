@@ -1,61 +1,61 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import PropField from "./PropField.svelte"
-  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
-  import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
-  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
-  import { DatePicker, Select } from "@budibase/bbui"
-  import { FieldType } from "@budibase/types"
+import { DatePicker, Select } from "@budibase/bbui"
+import { FieldType } from "@budibase/types"
+import { createEventDispatcher } from "svelte"
+import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
+import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+import PropField from "./PropField.svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let value = {}
-  export let bindings
-  export let block
-  export let isTestModal
+export let value = {}
+export let bindings
+export let block
+export let isTestModal
 
-  const { STRING, NUMBER, ARRAY } = FieldType
+const { STRING, NUMBER, ARRAY } = FieldType
 
-  let schemaFields = []
-  let editableValue
+let schemaFields = []
+let editableValue
 
-  $: editableValue = { ...value }
+$: editableValue = { ...value }
 
-  $: {
-    let fields = {}
-    for (const [key, type] of Object.entries(block?.inputs?.fields ?? {})) {
-      fields = {
-        ...fields,
-        [key]: {
-          type: type,
-          name: key,
-          fieldName: key,
-          constraints: { type: type },
-        },
-      }
-
-      if (editableValue[key] === type) {
-        editableValue[key] = INITIAL_VALUES[type.toUpperCase()]
-      }
+$: {
+  let fields = {}
+  for (const [key, type] of Object.entries(block?.inputs?.fields ?? {})) {
+    fields = {
+      ...fields,
+      [key]: {
+        type: type,
+        name: key,
+        fieldName: key,
+        constraints: { type: type },
+      },
     }
 
-    schemaFields = Object.entries(fields)
-  }
-
-  const INITIAL_VALUES = {
-    BOOLEAN: null,
-    NUMBER: null,
-    DATETIME: null,
-    STRING: "",
-    ARRAY: "",
-  }
-
-  const onChange = (e, field) => {
-    if (e.detail !== editableValue[field]) {
-      editableValue[field] = e.detail
-      dispatch("change", editableValue)
+    if (editableValue[key] === type) {
+      editableValue[key] = INITIAL_VALUES[type.toUpperCase()]
     }
   }
+
+  schemaFields = Object.entries(fields)
+}
+
+const INITIAL_VALUES = {
+  BOOLEAN: null,
+  NUMBER: null,
+  DATETIME: null,
+  STRING: "",
+  ARRAY: "",
+}
+
+const onChange = (e, field) => {
+  if (e.detail !== editableValue[field]) {
+    editableValue[field] = e.detail
+    dispatch("change", editableValue)
+  }
+}
 </script>
 
 {#if schemaFields?.length && isTestModal}

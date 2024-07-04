@@ -1,8 +1,8 @@
 <script>
-  import SplitPage from "./SplitPage.svelte"
-  import Testimonial from "./Testimonial.svelte"
+import SplitPage from "./SplitPage.svelte"
+import Testimonial from "./Testimonial.svelte"
 
-  export let enabled = true
+export let enabled = true
 </script>
 
 <SplitPage>

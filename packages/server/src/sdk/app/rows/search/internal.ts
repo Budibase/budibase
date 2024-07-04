@@ -1,7 +1,4 @@
-import { context, db, HTTPError } from "@budibase/backend-core"
-import env from "../../../../environment"
-import { fullSearch, paginatedSearch } from "./utils"
-import { getRowParams, InternalTables } from "../../../../db/utils"
+import { HTTPError, context, db } from "@budibase/backend-core"
 import {
   Database,
   DocumentType,
@@ -12,25 +9,28 @@ import {
   Table,
   User,
 } from "@budibase/types"
-import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
-import { outputProcessing } from "../../../../utilities/rowProcessor"
+import pick from "lodash/pick"
 import {
-  csv,
   Format,
+  csv,
   json,
   jsonWithSchema,
 } from "../../../../api/controllers/view/exporters"
-import * as inMemoryViews from "../../../../db/inMemoryView"
 import {
   getFromDesignDoc,
   getFromMemoryDoc,
   migrateToDesignView,
   migrateToInMemoryView,
 } from "../../../../api/controllers/view/utils"
-import sdk from "../../../../sdk"
-import { ExportRowsParams, ExportRowsResult } from "./types"
-import pick from "lodash/pick"
+import * as inMemoryViews from "../../../../db/inMemoryView"
+import { InternalTables, getRowParams } from "../../../../db/utils"
+import env from "../../../../environment"
 import { breakRowIdField } from "../../../../integrations/utils"
+import sdk from "../../../../sdk"
+import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
+import { outputProcessing } from "../../../../utilities/rowProcessor"
+import { ExportRowsParams, ExportRowsResult } from "./types"
+import { fullSearch, paginatedSearch } from "./utils"
 
 export async function search(
   options: RowSearchParams,
@@ -238,7 +238,7 @@ export async function fetchView(
     let table: Table
     try {
       table = await sdk.tables.getTable(viewInfo.meta!.tableId)
-    } catch (err) {
+    } catch (_err) {
       throw new Error("Unable to retrieve view table.")
     }
     rows = await outputProcessing(table, response.rows)

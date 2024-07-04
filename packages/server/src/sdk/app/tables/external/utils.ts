@@ -9,13 +9,13 @@ import {
   Table,
   TableSourceType,
 } from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
 import {
   foreignKeyStructure,
   generateForeignKey,
   generateJunctionTableName,
 } from "../../../../api/controllers/table/utils"
 import { buildExternalTableId } from "../../../../integrations/utils"
-import { cloneDeep } from "lodash/fp"
 
 export function cleanupRelationships(
   table: Table,

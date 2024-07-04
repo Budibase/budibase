@@ -1,38 +1,38 @@
 <script>
-  import { url } from "@roxi/routify"
-  import FirstAppOnboarding from "./onboarding/index.svelte"
-  import { Layout, Page, Button, Modal } from "@budibase/bbui"
-  import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import TemplateDisplay from "components/common/TemplateDisplay.svelte"
-  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
-  import { appsStore, templates, licensing } from "stores/portal"
-  import { Breadcrumbs, Breadcrumb, Header } from "components/portal/page"
+import { Button, Layout, Modal, Page } from "@budibase/bbui"
+import { url } from "@roxi/routify"
+import TemplateDisplay from "components/common/TemplateDisplay.svelte"
+import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
+import { Breadcrumb, Breadcrumbs, Header } from "components/portal/page"
+import CreateAppModal from "components/start/CreateAppModal.svelte"
+import { appsStore, licensing, templates } from "stores/portal"
+import FirstAppOnboarding from "./onboarding/index.svelte"
 
-  let template
-  let creationModal = false
-  let appLimitModal
+let template
+let creationModal = false
+let appLimitModal
 
-  const initiateAppCreation = () => {
-    if ($licensing?.usageMetrics?.apps >= 100) {
-      appLimitModal.show()
-    } else {
-      template = null
-      creationModal.show()
-    }
-  }
-
-  const stopAppCreation = () => {
+const initiateAppCreation = () => {
+  if ($licensing?.usageMetrics?.apps >= 100) {
+    appLimitModal.show()
+  } else {
     template = null
+    creationModal.show()
   }
+}
 
-  const initiateAppImport = () => {
-    if ($licensing?.usageMetrics?.apps >= 100) {
-      appLimitModal.show()
-    } else {
-      template = { fromFile: true }
-      creationModal.show()
-    }
+const stopAppCreation = () => {
+  template = null
+}
+
+const initiateAppImport = () => {
+  if ($licensing?.usageMetrics?.apps >= 100) {
+    appLimitModal.show()
+  } else {
+    template = { fromFile: true }
+    creationModal.show()
   }
+}
 </script>
 
 {#if !$appsStore.apps.length}

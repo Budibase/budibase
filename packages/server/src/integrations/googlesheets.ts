@@ -1,8 +1,12 @@
+import { HTTPError, cache, configs, context } from "@budibase/backend-core"
+import { dataFilters, utils } from "@budibase/shared-core"
 import {
+  BBReferenceFieldSubType,
   ConnectionInfo,
   DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
+  DatasourcePlusQueryResponse,
   FieldType,
   Integration,
   Operation,
@@ -16,20 +20,16 @@ import {
   Table,
   TableRequest,
   TableSourceType,
-  DatasourcePlusQueryResponse,
-  BBReferenceFieldSubType,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
+import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
+import fetch from "node-fetch"
+import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
 import {
   buildExternalTableId,
   checkExternalTables,
   finaliseExternalTables,
 } from "./utils"
-import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
-import fetch from "node-fetch"
-import { cache, configs, context, HTTPError } from "@budibase/backend-core"
-import { dataFilters, utils } from "@budibase/shared-core"
-import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string

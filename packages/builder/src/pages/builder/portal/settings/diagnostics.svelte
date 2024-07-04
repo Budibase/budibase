@@ -1,50 +1,50 @@
 <script>
-  import {
-    Layout,
-    Heading,
-    Body,
-    Helpers,
-    Divider,
-    notifications,
-    Icon,
-    TextArea,
-  } from "@budibase/bbui"
-  import { auth, admin } from "stores/portal"
-  import { redirect } from "@roxi/routify"
-  import { API } from "api"
-  import { onMount } from "svelte"
-  import { sdk } from "@budibase/shared-core"
+import {
+  Body,
+  Divider,
+  Heading,
+  Helpers,
+  Icon,
+  Layout,
+  TextArea,
+  notifications,
+} from "@budibase/bbui"
+import { sdk } from "@budibase/shared-core"
+import { redirect } from "@roxi/routify"
+import { API } from "api"
+import { admin, auth } from "stores/portal"
+import { onMount } from "svelte"
 
-  let diagnosticInfo = ""
+let diagnosticInfo = ""
 
-  // Make sure page can't be visited directly in cloud
-  $: {
-    if ($admin.cloud) {
-      $redirect("../../portal")
-    }
+// Make sure page can't be visited directly in cloud
+$: {
+  if ($admin.cloud) {
+    $redirect("../../portal")
   }
+}
 
-  async function fetchSystemDebugInfo() {
-    const diagnostics = await API.fetchSystemDebugInfo()
-    diagnosticInfo = {
-      browser: {
-        language: navigator.language || navigator.userLanguage,
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        vendor: navigator.vendor,
-      },
-      server: diagnostics,
-    }
+async function fetchSystemDebugInfo() {
+  const diagnostics = await API.fetchSystemDebugInfo()
+  diagnosticInfo = {
+    browser: {
+      language: navigator.language || navigator.userLanguage,
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      vendor: navigator.vendor,
+    },
+    server: diagnostics,
   }
+}
 
-  const copyToClipboard = async () => {
-    await Helpers.copyToClipboard(JSON.stringify(diagnosticInfo, undefined, 2))
-    notifications.success("Copied")
-  }
+const copyToClipboard = async () => {
+  await Helpers.copyToClipboard(JSON.stringify(diagnosticInfo, undefined, 2))
+  notifications.success("Copied")
+}
 
-  onMount(async () => {
-    await fetchSystemDebugInfo()
-  })
+onMount(async () => {
+  await fetchSystemDebugInfo()
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

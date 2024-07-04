@@ -1,5 +1,5 @@
 import { derived, get, writable } from "svelte/store"
-import { GutterWidth, DefaultColumnWidth } from "../lib/constants"
+import { DefaultColumnWidth, GutterWidth } from "../lib/constants"
 
 export const createStores = () => {
   const columns = writable([])

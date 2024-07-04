@@ -2,11 +2,11 @@ import pino, { LoggerOptions } from "pino"
 import pinoPretty from "pino-pretty"
 
 import { IdentityType } from "@budibase/types"
-import env from "../../environment"
-import * as context from "../../context"
-import * as correlation from "../correlation"
 import tracer from "dd-trace"
 import { formats } from "dd-trace/ext"
+import * as context from "../../context"
+import env from "../../environment"
+import * as correlation from "../correlation"
 
 import { localFileDestination } from "../system"
 
@@ -199,7 +199,7 @@ if (!env.DISABLE_PINO_LOGGER) {
     let tenantId
     try {
       tenantId = context.getTenantId()
-    } catch (e: any) {
+    } catch (_e: any) {
       // do nothing
     }
     return tenantId
@@ -209,7 +209,7 @@ if (!env.DISABLE_PINO_LOGGER) {
     let appId
     try {
       appId = context.getAppId()
-    } catch (e) {
+    } catch (_e) {
       // do nothing
     }
     return appId
@@ -219,7 +219,7 @@ if (!env.DISABLE_PINO_LOGGER) {
     let appId
     try {
       appId = context.getAutomationId()
-    } catch (e) {
+    } catch (_e) {
       // do nothing
     }
     return appId
@@ -229,7 +229,7 @@ if (!env.DISABLE_PINO_LOGGER) {
     let identity
     try {
       identity = context.getIdentity()
-    } catch (e) {
+    } catch (_e) {
       // do nothing
     }
     return identity

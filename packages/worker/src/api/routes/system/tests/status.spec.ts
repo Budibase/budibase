@@ -1,6 +1,6 @@
+import { accounts as _accounts } from "@budibase/backend-core"
 import { HealthStatusResponse } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
-import { accounts as _accounts } from "@budibase/backend-core"
 
 const accounts = jest.mocked(_accounts)
 

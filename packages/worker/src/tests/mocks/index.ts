@@ -1,5 +1,5 @@
-import * as email from "./email"
 import { mocks } from "@budibase/backend-core/tests"
+import * as email from "./email"
 
 import * as _pro from "@budibase/pro"
 

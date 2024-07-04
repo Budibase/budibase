@@ -3,10 +3,10 @@ import Router from "@koa/router"
 const compress = require("koa-compress")
 
 import zlib from "zlib"
-import { routes } from "./routes"
-import { middleware as pro, sdk } from "@budibase/pro"
 import { auth, middleware } from "@budibase/backend-core"
+import { middleware as pro, sdk } from "@budibase/pro"
 import env from "../environment"
+import { routes } from "./routes"
 
 if (env.SQS_SEARCH_ENABLE) {
   sdk.auditLogs.useSQLSearch()

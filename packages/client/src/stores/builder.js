@@ -1,5 +1,5 @@
-import { writable, get } from "svelte/store"
 import { API } from "api"
+import { get, writable } from "svelte/store"
 import { devToolsStore } from "./devTools.js"
 import { eventStore } from "./events.js"
 
@@ -58,7 +58,7 @@ const createBuilderStore = () => {
     analyticsPing: async ({ embedded }) => {
       try {
         await API.analyticsPing({ source: "app", embedded })
-      } catch (error) {
+      } catch (_error) {
         // Do nothing
       }
     },

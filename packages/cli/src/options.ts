@@ -1,6 +1,6 @@
 import analytics from "./analytics"
-import hosting from "./hosting"
 import backups from "./backups"
+import hosting from "./hosting"
 import plugins from "./plugins"
 
 export function getCommands() {

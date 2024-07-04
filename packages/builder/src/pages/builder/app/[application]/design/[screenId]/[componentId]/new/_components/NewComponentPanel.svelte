@@ -1,229 +1,229 @@
 <script>
-  import Panel from "components/design/Panel.svelte"
-  import { goto } from "@roxi/routify"
-  import { Layout, Search, Icon, Body, notifications } from "@budibase/bbui"
-  import structure from "./componentStructure.json"
-  import {
-    previewStore,
-    selectedScreen,
-    componentStore,
-    selectedComponent,
-  } from "stores/builder"
-  import { onMount } from "svelte"
-  import { fly } from "svelte/transition"
-  import { findComponentPath } from "helpers/components"
+import { Body, Icon, Layout, Search, notifications } from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import Panel from "components/design/Panel.svelte"
+import { findComponentPath } from "helpers/components"
+import {
+  componentStore,
+  previewStore,
+  selectedComponent,
+  selectedScreen,
+} from "stores/builder"
+import { onMount } from "svelte"
+import { fly } from "svelte/transition"
+import structure from "./componentStructure.json"
 
-  let searchString
-  let searchRef
-  let selectedIndex
-  let componentList = []
+let searchString
+let searchRef
+let selectedIndex
+let componentList = []
 
-  $: allowedComponents = getAllowedComponents(
-    $componentStore.components,
-    $selectedScreen,
-    $selectedComponent
-  )
-  $: enrichedStructure = enrichStructure(
-    structure,
-    $componentStore.components,
-    $componentStore.customComponents
-  )
-  $: filteredStructure = filterStructure(
-    enrichedStructure,
-    allowedComponents,
-    searchString
-  )
-  $: orderMap = createComponentOrderMap(componentList)
+$: allowedComponents = getAllowedComponents(
+  $componentStore.components,
+  $selectedScreen,
+  $selectedComponent
+)
+$: enrichedStructure = enrichStructure(
+  structure,
+  $componentStore.components,
+  $componentStore.customComponents
+)
+$: filteredStructure = filterStructure(
+  enrichedStructure,
+  allowedComponents,
+  searchString
+)
+$: orderMap = createComponentOrderMap(componentList)
 
-  const getAllowedComponents = (allComponents, screen, component) => {
-    // Default to using the root screen container if no component specified
-    if (!component) {
-      component = screen.props
-    }
-    const path = findComponentPath(screen?.props, component?._id)
-    if (!path?.length) {
-      return []
-    }
-
-    // Get initial set of allowed components
-    let allowedComponents = []
-    const definition = componentStore.getDefinition(component?._component)
-    if (definition.legalDirectChildren?.length) {
-      allowedComponents = definition.legalDirectChildren.map(x => {
-        return `@budibase/standard-components/${x}`
-      })
-    } else {
-      allowedComponents = Object.keys(allComponents)
-    }
-
-    // Build up list of illegal children from ancestors
-    let illegalChildren = definition.illegalChildren || []
-    path.forEach(ancestor => {
-      // Sidepanels and modals can be nested anywhere in the component tree, but really they are always rendered at the top level.
-      // Because of this, it doesn't make sense to carry over any parent illegal children to them, so the array is reset here.
-      if (
-        [
-          "@budibase/standard-components/sidepanel",
-          "@budibase/standard-components/modal",
-        ].includes(ancestor._component)
-      ) {
-        illegalChildren = []
-      }
-      const def = componentStore.getDefinition(ancestor._component)
-      const blacklist = def?.illegalChildren?.map(x => {
-        return `@budibase/standard-components/${x}`
-      })
-      illegalChildren = [...illegalChildren, ...(blacklist || [])]
-    })
-    illegalChildren = [...new Set(illegalChildren)]
-
-    // Filter out illegal children from allowed components
-    allowedComponents = allowedComponents.filter(x => {
-      return !illegalChildren.includes(x)
-    })
-
-    return allowedComponents
+const getAllowedComponents = (allComponents, screen, component) => {
+  // Default to using the root screen container if no component specified
+  if (!component) {
+    component = screen.props
+  }
+  const path = findComponentPath(screen?.props, component?._id)
+  if (!path?.length) {
+    return []
   }
 
-  // Creates a simple lookup map from an array, so we can find the selected
-  // component much faster
-  const createComponentOrderMap = list => {
-    let map = {}
-    list.forEach((component, idx) => {
-      map[component] = idx
+  // Get initial set of allowed components
+  let allowedComponents = []
+  const definition = componentStore.getDefinition(component?._component)
+  if (definition.legalDirectChildren?.length) {
+    allowedComponents = definition.legalDirectChildren.map(x => {
+      return `@budibase/standard-components/${x}`
     })
-    return map
+  } else {
+    allowedComponents = Object.keys(allComponents)
   }
 
-  // Parses the structure in the manifest and returns an enriched structure with
-  // explicit categories
-  const enrichStructure = (structure, definitions, customComponents) => {
-    let enrichedStructure = []
-
-    // Add custom components category
-    if (customComponents?.length) {
-      enrichedStructure.push({
-        name: "Plugins",
-        isCategory: true,
-        children: customComponents
-          .map(x => ({
-            ...definitions[x],
-            name: definitions[x].friendlyName || definitions[x].name,
-          }))
-          .sort((a, b) => {
-            return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
-          }),
-      })
+  // Build up list of illegal children from ancestors
+  let illegalChildren = definition.illegalChildren || []
+  path.forEach(ancestor => {
+    // Sidepanels and modals can be nested anywhere in the component tree, but really they are always rendered at the top level.
+    // Because of this, it doesn't make sense to carry over any parent illegal children to them, so the array is reset here.
+    if (
+      [
+        "@budibase/standard-components/sidepanel",
+        "@budibase/standard-components/modal",
+      ].includes(ancestor._component)
+    ) {
+      illegalChildren = []
     }
+    const def = componentStore.getDefinition(ancestor._component)
+    const blacklist = def?.illegalChildren?.map(x => {
+      return `@budibase/standard-components/${x}`
+    })
+    illegalChildren = [...illegalChildren, ...(blacklist || [])]
+  })
+  illegalChildren = [...new Set(illegalChildren)]
 
-    structure.forEach(item => {
-      if (typeof item === "string") {
-        const def = definitions[`@budibase/standard-components/${item}`]
-        if (def) {
-          enrichedStructure.push({
-            ...def,
-            isCategory: false,
-          })
-        }
-      } else {
+  // Filter out illegal children from allowed components
+  allowedComponents = allowedComponents.filter(x => {
+    return !illegalChildren.includes(x)
+  })
+
+  return allowedComponents
+}
+
+// Creates a simple lookup map from an array, so we can find the selected
+// component much faster
+const createComponentOrderMap = list => {
+  let map = {}
+  list.forEach((component, idx) => {
+    map[component] = idx
+  })
+  return map
+}
+
+// Parses the structure in the manifest and returns an enriched structure with
+// explicit categories
+const enrichStructure = (structure, definitions, customComponents) => {
+  let enrichedStructure = []
+
+  // Add custom components category
+  if (customComponents?.length) {
+    enrichedStructure.push({
+      name: "Plugins",
+      isCategory: true,
+      children: customComponents
+        .map(x => ({
+          ...definitions[x],
+          name: definitions[x].friendlyName || definitions[x].name,
+        }))
+        .sort((a, b) => {
+          return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
+        }),
+    })
+  }
+
+  structure.forEach(item => {
+    if (typeof item === "string") {
+      const def = definitions[`@budibase/standard-components/${item}`]
+      if (def) {
         enrichedStructure.push({
-          ...item,
-          isCategory: true,
-          children: enrichStructure(item.children || [], definitions),
+          ...def,
+          isCategory: false,
         })
       }
-    })
-
-    // Swap blocks and plugins
-    let tmp = enrichedStructure[1]
-    enrichedStructure[1] = enrichedStructure[0]
-    enrichedStructure[0] = tmp
-
-    return enrichedStructure
-  }
-
-  const filterStructure = (structure, allowedComponents, search) => {
-    selectedIndex = search ? 0 : null
-    componentList = []
-    if (!structure?.length) {
-      return []
-    }
-
-    // Return only items which match the search string
-    let filteredStructure = []
-    structure.forEach(category => {
-      let matchedChildren = category.children.filter(child => {
-        const name = child.name.toLowerCase()
-
-        // Check if the component matches the search string
-        if (search && !name.includes(search.toLowerCase())) {
-          return false
-        }
-
-        // Check if the component is allowed as a child
-        return allowedComponents.includes(child.component)
+    } else {
+      enrichedStructure.push({
+        ...item,
+        isCategory: true,
+        children: enrichStructure(item.children || [], definitions),
       })
-      if (matchedChildren.length) {
-        filteredStructure.push({
-          ...category,
-          children: matchedChildren,
-        })
-
-        // Create a flat list of all components so that we can reference them by
-        // order later
-        componentList = componentList.concat(
-          matchedChildren.map(x => x.component)
-        )
-      }
-    })
-    structure = filteredStructure
-    return structure
-  }
-
-  const addComponent = async component => {
-    try {
-      await componentStore.create(component)
-    } catch (error) {
-      notifications.error(error || "Error creating component")
-    }
-  }
-
-  const handleKeyDown = e => {
-    if (e.key === "Tab" || e.key === "ArrowDown" || e.key === "ArrowUp") {
-      // Cycle selected components on tab press
-      if (selectedIndex == null) {
-        selectedIndex = 0
-      } else {
-        const direction = e.key === "ArrowUp" ? -1 : 1
-        selectedIndex = (selectedIndex + direction) % componentList.length
-      }
-      e.preventDefault()
-      e.stopPropagation()
-      return false
-    } else if (e.key === "Enter") {
-      // Add selected component on enter press
-      if (componentList[selectedIndex]) {
-        addComponent(componentList[selectedIndex])
-      }
-    }
-  }
-
-  onMount(() => {
-    searchRef.focus()
-    window.addEventListener("keydown", handleKeyDown)
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown)
     }
   })
 
-  const onDragStart = component => {
-    previewStore.startDrag(component)
+  // Swap blocks and plugins
+  let tmp = enrichedStructure[1]
+  enrichedStructure[1] = enrichedStructure[0]
+  enrichedStructure[0] = tmp
+
+  return enrichedStructure
+}
+
+const filterStructure = (structure, allowedComponents, search) => {
+  selectedIndex = search ? 0 : null
+  componentList = []
+  if (!structure?.length) {
+    return []
   }
 
-  const onDragEnd = () => {
-    previewStore.stopDrag()
+  // Return only items which match the search string
+  let filteredStructure = []
+  structure.forEach(category => {
+    let matchedChildren = category.children.filter(child => {
+      const name = child.name.toLowerCase()
+
+      // Check if the component matches the search string
+      if (search && !name.includes(search.toLowerCase())) {
+        return false
+      }
+
+      // Check if the component is allowed as a child
+      return allowedComponents.includes(child.component)
+    })
+    if (matchedChildren.length) {
+      filteredStructure.push({
+        ...category,
+        children: matchedChildren,
+      })
+
+      // Create a flat list of all components so that we can reference them by
+      // order later
+      componentList = componentList.concat(
+        matchedChildren.map(x => x.component)
+      )
+    }
+  })
+  structure = filteredStructure
+  return structure
+}
+
+const addComponent = async component => {
+  try {
+    await componentStore.create(component)
+  } catch (error) {
+    notifications.error(error || "Error creating component")
   }
+}
+
+const handleKeyDown = e => {
+  if (e.key === "Tab" || e.key === "ArrowDown" || e.key === "ArrowUp") {
+    // Cycle selected components on tab press
+    if (selectedIndex == null) {
+      selectedIndex = 0
+    } else {
+      const direction = e.key === "ArrowUp" ? -1 : 1
+      selectedIndex = (selectedIndex + direction) % componentList.length
+    }
+    e.preventDefault()
+    e.stopPropagation()
+    return false
+  } else if (e.key === "Enter") {
+    // Add selected component on enter press
+    if (componentList[selectedIndex]) {
+      addComponent(componentList[selectedIndex])
+    }
+  }
+}
+
+onMount(() => {
+  searchRef.focus()
+  window.addEventListener("keydown", handleKeyDown)
+
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown)
+  }
+})
+
+const onDragStart = component => {
+  previewStore.startDrag(component)
+}
+
+const onDragEnd = () => {
+  previewStore.stopDrag()
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

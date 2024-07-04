@@ -1,6 +1,6 @@
 import { events } from "@budibase/backend-core"
-import { getLayoutParams } from "../../../../db/utils"
 import { Layout } from "@budibase/types"
+import { getLayoutParams } from "../../../../db/utils"
 
 const getLayouts = async (appDb: any): Promise<Layout[]> => {
   const response = await appDb.allDocs(

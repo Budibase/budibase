@@ -10,7 +10,7 @@ export default class ViewFetch extends DataFetch {
     try {
       const res = await this.API.fetchViewData(datasource)
       return { rows: res || [] }
-    } catch (error) {
+    } catch (_error) {
       return { rows: [] }
     }
   }

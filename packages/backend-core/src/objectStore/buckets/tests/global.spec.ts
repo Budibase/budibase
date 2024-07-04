@@ -1,5 +1,5 @@
-import * as global from "../global"
 import { testEnv } from "../../../../tests/extra"
+import * as global from "../global"
 
 describe("global", () => {
   describe("getGlobalFileUrl", () => {

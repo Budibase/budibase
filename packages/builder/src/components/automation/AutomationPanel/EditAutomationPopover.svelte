@@ -1,31 +1,31 @@
 <script>
-  import { automationStore } from "stores/builder"
-  import { ActionMenu, MenuItem, notifications, Icon } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import UpdateAutomationModal from "components/automation/AutomationPanel/UpdateAutomationModal.svelte"
+import { ActionMenu, Icon, MenuItem, notifications } from "@budibase/bbui"
+import UpdateAutomationModal from "components/automation/AutomationPanel/UpdateAutomationModal.svelte"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { automationStore } from "stores/builder"
 
-  export let automation
+export let automation
 
-  let confirmDeleteDialog
-  let updateAutomationDialog
+let confirmDeleteDialog
+let updateAutomationDialog
 
-  async function deleteAutomation() {
-    try {
-      await automationStore.actions.delete(automation)
-      notifications.success("Automation deleted successfully")
-    } catch (error) {
-      notifications.error("Error deleting automation")
-    }
+async function deleteAutomation() {
+  try {
+    await automationStore.actions.delete(automation)
+    notifications.success("Automation deleted successfully")
+  } catch (error) {
+    notifications.error("Error deleting automation")
   }
+}
 
-  async function duplicateAutomation() {
-    try {
-      await automationStore.actions.duplicate(automation)
-      notifications.success("Automation has been duplicated successfully")
-    } catch (error) {
-      notifications.error("Error duplicating automation")
-    }
+async function duplicateAutomation() {
+  try {
+    await automationStore.actions.duplicate(automation)
+    notifications.success("Automation has been duplicated successfully")
+  } catch (error) {
+    notifications.error("Error duplicating automation")
   }
+}
 </script>
 
 <ActionMenu>

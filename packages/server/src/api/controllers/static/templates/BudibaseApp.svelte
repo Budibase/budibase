@@ -1,21 +1,21 @@
 <script>
-  import ClientAppSkeleton from "@budibase/frontend-core/src/components/ClientAppSkeleton.svelte"
+import ClientAppSkeleton from "@budibase/frontend-core/src/components/ClientAppSkeleton.svelte"
 
-  export let title = ""
-  export let favicon = ""
+export let title = ""
+export let favicon = ""
 
-  export let metaImage = ""
-  export let metaTitle = ""
-  export let metaDescription = ""
+export let metaImage = ""
+export let metaTitle = ""
+export let metaDescription = ""
 
-  export let clientLibPath
-  export let usedPlugins
-  export let appMigrating
+export let clientLibPath
+export let usedPlugins
+export let appMigrating
 
-  export let showSkeletonLoader = false
-  export let hideDevTools
-  export let sideNav
-  export let hideFooter
+export let showSkeletonLoader = false
+export let hideDevTools
+export let sideNav
+export let hideFooter
 </script>
 
 <svelte:head>

@@ -1,23 +1,23 @@
 import { default as threadUtils } from "./utils"
 
 threadUtils.threadSetup()
-import {
-  WorkerCallback,
-  QueryEvent,
-  QueryVariable,
-  QueryResponse,
-} from "./definitions"
-import { IsolatedVM } from "../jsRunner/vm"
+import { auth, cache, context } from "@budibase/backend-core"
 import { iifeWrapper, processStringSync } from "@budibase/string-templates"
-import { getIntegration } from "../integrations"
-import { context, cache, auth } from "@budibase/backend-core"
-import { getGlobalIDFromUserMetadataID } from "../db/utils"
-import sdk from "../sdk"
+import { Datasource, Query, Row, SourceName } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
-import { Datasource, Query, SourceName, Row } from "@budibase/types"
+import { getGlobalIDFromUserMetadataID } from "../db/utils"
+import { getIntegration } from "../integrations"
+import { IsolatedVM } from "../jsRunner/vm"
+import sdk from "../sdk"
+import {
+  QueryEvent,
+  QueryResponse,
+  QueryVariable,
+  WorkerCallback,
+} from "./definitions"
 
-import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
+import { isSQL } from "../integrations/utils"
 
 class QueryRunner {
   datasource: Datasource

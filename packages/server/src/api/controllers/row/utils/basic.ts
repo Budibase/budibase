@@ -1,8 +1,8 @@
+import { helpers } from "@budibase/shared-core"
 // need to handle table name + field or just field, depending on if relationships used
 import { FieldType, Row, Table } from "@budibase/types"
-import { helpers } from "@budibase/shared-core"
-import { generateRowIdField } from "../../../../integrations/utils"
 import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
+import { generateRowIdField } from "../../../../integrations/utils"
 
 function extractFieldValue({
   row,
@@ -114,7 +114,7 @@ export function fixArrayTypes(row: Row, table: Table) {
     ) {
       try {
         row[fieldName] = JSON.parse(row[fieldName])
-      } catch (err) {
+      } catch (_err) {
         if (!helpers.schema.isDeprecatedSingleUserColumn(schema)) {
           // couldn't convert back to array, ignore
           delete row[fieldName]

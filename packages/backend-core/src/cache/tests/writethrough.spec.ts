@@ -1,9 +1,9 @@
-import { DBTestConfiguration } from "../../../tests/extra"
-import { structures } from "../../../tests"
-import { Writethrough } from "../writethrough"
-import { getDB } from "../../db"
 import { Document } from "@budibase/types"
 import tk from "timekeeper"
+import { structures } from "../../../tests"
+import { DBTestConfiguration } from "../../../tests/extra"
+import { getDB } from "../../db"
+import { Writethrough } from "../writethrough"
 
 tk.freeze(Date.now())
 

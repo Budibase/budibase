@@ -1,20 +1,20 @@
 <script>
-  import {
-    Layout,
-    Heading,
-    Body,
-    Button,
-    Divider,
-    Tags,
-    Tag,
-  } from "@budibase/bbui"
-  import { auth, admin } from "stores/portal"
+import {
+  Body,
+  Button,
+  Divider,
+  Heading,
+  Layout,
+  Tag,
+  Tags,
+} from "@budibase/bbui"
+import { admin, auth } from "stores/portal"
 
-  export let title
-  export let planType
-  export let description
-  export let enabled
-  export let upgradeButtonClick
+export let title
+export let planType
+export let description
+export let enabled
+export let upgradeButtonClick
 </script>
 
 <Layout noPadding>

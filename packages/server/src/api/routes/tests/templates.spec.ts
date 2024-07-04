@@ -1,7 +1,7 @@
-import * as setup from "./utilities"
 import path from "path"
-import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
+import nock from "nock"
+import * as setup from "./utilities"
 
 interface App {
   background: string

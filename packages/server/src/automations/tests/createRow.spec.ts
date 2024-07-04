@@ -1,6 +1,6 @@
-import * as setup from "./utilities"
-import { basicTableWithAttachmentField } from "../../tests/utilities/structures"
 import { objectStore } from "@budibase/backend-core"
+import { basicTableWithAttachmentField } from "../../tests/utilities/structures"
+import * as setup from "./utilities"
 
 async function uploadTestFile(filename: string) {
   let bucket = "testbucket"

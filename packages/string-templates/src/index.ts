@@ -1,17 +1,17 @@
 import { Context, createContext, runInNewContext } from "vm"
-import { create, TemplateDelegate } from "handlebars"
+import { TemplateDelegate, create } from "handlebars"
+import { convertHBSBlock } from "./conversion"
 import { registerAll, registerMinimum } from "./helpers/index"
-import { preprocess, postprocess } from "./processors"
+import { removeJSRunner, setJSRunner } from "./helpers/javascript"
+import { postprocess, preprocess } from "./processors"
 import {
+  FIND_ANY_HBS_REGEX,
+  FIND_HBS_REGEX,
   atob,
   btoa,
-  isBackendService,
-  FIND_HBS_REGEX,
-  FIND_ANY_HBS_REGEX,
   findDoubleHbsInstances,
+  isBackendService,
 } from "./utilities"
-import { convertHBSBlock } from "./conversion"
-import { setJSRunner, removeJSRunner } from "./helpers/javascript"
 
 import manifest from "./manifest.json"
 import { ProcessOptions } from "./types"
@@ -40,7 +40,7 @@ function testObject(object: any) {
   // JSON stringify will fail if there are any cycles, stops infinite recursion
   try {
     JSON.stringify(object)
-  } catch (err) {
+  } catch (_err) {
     throw "Unable to process inputs to JSON, cannot recurse"
   }
 }
@@ -194,7 +194,7 @@ export function processStringSync(
     } else {
       return process(string)
     }
-  } catch (err) {
+  } catch (_err) {
     return input
   }
 }

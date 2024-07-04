@@ -1,6 +1,6 @@
-import { ImportSource, ImportInfo } from "./base"
-import { Query } from "../../../../../definitions/common"
 import { URL } from "url"
+import { Query } from "../../../../../definitions/common"
+import { ImportInfo, ImportSource } from "./base"
 
 const curlconverter = require("curlconverter")
 
@@ -25,7 +25,7 @@ const parseBody = (curl: any) => {
           key = key.substring(1)
         }
         return JSON.parse(key)
-      } catch (e) {
+      } catch (_e) {
         // do nothing
       }
     }
@@ -55,7 +55,7 @@ export class Curl extends ImportSource {
     try {
       const curl = parseCurl(data)
       this.curl = curl
-    } catch (err) {
+    } catch (_err) {
       return false
     }
     return true

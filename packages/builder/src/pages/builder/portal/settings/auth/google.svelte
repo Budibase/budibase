@@ -1,148 +1,148 @@
 <script>
-  import GoogleLogo from "./_logos/Google.svelte"
-  import { isEqual, cloneDeep } from "lodash/fp"
-  import {
-    Button,
-    Heading,
-    Divider,
-    Label,
-    notifications,
-    Layout,
-    Input,
-    Body,
-    Toggle,
-    Icon,
-    Helpers,
-    Link,
-  } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import { API } from "api"
-  import { organisation, admin } from "stores/portal"
+import {
+  Body,
+  Button,
+  Divider,
+  Heading,
+  Helpers,
+  Icon,
+  Input,
+  Label,
+  Layout,
+  Link,
+  Toggle,
+  notifications,
+} from "@budibase/bbui"
+import { API } from "api"
+import { cloneDeep, isEqual } from "lodash/fp"
+import { admin, organisation } from "stores/portal"
+import { onMount } from "svelte"
+import GoogleLogo from "./_logos/Google.svelte"
 
-  const ConfigTypes = {
-    Google: "google",
-  }
+const ConfigTypes = {
+  Google: "google",
+}
 
-  // Some older google configs contain a manually specified value - retain the functionality to edit the field
-  // When there is no value or we are in the cloud - prohibit editing the field, must use platform url to change
-  $: googleCallbackUrl = undefined
-  $: googleCallbackReadonly = $admin.cloud || !googleCallbackUrl
+// Some older google configs contain a manually specified value - retain the functionality to edit the field
+// When there is no value or we are in the cloud - prohibit editing the field, must use platform url to change
+$: googleCallbackUrl = undefined
+$: googleCallbackReadonly = $admin.cloud || !googleCallbackUrl
 
-  // Indicate to user that callback is based on platform url
-  // If there is an existing value, indicate that it may be removed to return to default behaviour
-  $: googleCallbackTooltip = $admin.cloud
-    ? null
-    : googleCallbackReadonly
+// Indicate to user that callback is based on platform url
+// If there is an existing value, indicate that it may be removed to return to default behaviour
+$: googleCallbackTooltip = $admin.cloud
+  ? null
+  : googleCallbackReadonly
     ? "Visit the organisation page to update the platform URL"
     : "Leave blank to use the default callback URL"
-  $: googleSheetsCallbackUrl = `${$organisation.platformUrl}/api/global/auth/datasource/google/callback`
+$: googleSheetsCallbackUrl = `${$organisation.platformUrl}/api/global/auth/datasource/google/callback`
 
-  $: GoogleConfigFields = {
-    Google: [
-      { name: "clientID", label: "Client ID" },
-      { name: "clientSecret", label: "Client secret" },
-      {
-        name: "callbackURL",
-        label: "Callback URL",
-        readonly: googleCallbackReadonly,
-        tooltip: googleCallbackTooltip,
-        placeholder: $organisation.googleCallbackUrl,
-        copyButton: true,
-      },
-      {
-        name: "sheetsURL",
-        label: "Sheets URL",
-        readonly: googleCallbackReadonly,
-        tooltip: googleCallbackTooltip,
-        placeholder: googleSheetsCallbackUrl,
-        copyButton: true,
-      },
-    ],
+$: GoogleConfigFields = {
+  Google: [
+    { name: "clientID", label: "Client ID" },
+    { name: "clientSecret", label: "Client secret" },
+    {
+      name: "callbackURL",
+      label: "Callback URL",
+      readonly: googleCallbackReadonly,
+      tooltip: googleCallbackTooltip,
+      placeholder: $organisation.googleCallbackUrl,
+      copyButton: true,
+    },
+    {
+      name: "sheetsURL",
+      label: "Sheets URL",
+      readonly: googleCallbackReadonly,
+      tooltip: googleCallbackTooltip,
+      placeholder: googleSheetsCallbackUrl,
+      copyButton: true,
+    },
+  ],
+}
+
+let google
+
+const providers = { google }
+
+// control the state of the save button depending on whether form has changed
+let originalGoogleDoc
+let googleSaveButtonDisabled
+$: {
+  isEqual(providers.google?.config, originalGoogleDoc?.config)
+    ? (googleSaveButtonDisabled = true)
+    : (googleSaveButtonDisabled = false)
+}
+
+$: googleComplete = !!(
+  providers.google?.config?.clientID && providers.google?.config?.clientSecret
+)
+
+async function saveConfig(config) {
+  // Delete unsupported fields
+  delete config.createdAt
+  delete config.updatedAt
+  return API.saveConfig(config)
+}
+
+async function saveGoogle() {
+  if (!googleComplete) {
+    notifications.error(
+      `Please fill in all required ${ConfigTypes.Google} fields`
+    )
+    return
   }
 
-  let google
+  const google = providers.google
 
-  const providers = { google }
-
-  // control the state of the save button depending on whether form has changed
-  let originalGoogleDoc
-  let googleSaveButtonDisabled
-  $: {
-    isEqual(providers.google?.config, originalGoogleDoc?.config)
-      ? (googleSaveButtonDisabled = true)
-      : (googleSaveButtonDisabled = false)
+  try {
+    const res = await saveConfig(google)
+    providers[res.type]._rev = res._rev
+    providers[res.type]._id = res._id
+    notifications.success(`Settings saved`)
+  } catch (e) {
+    notifications.error(e.message)
+    return
   }
 
-  $: googleComplete = !!(
-    providers.google?.config?.clientID && providers.google?.config?.clientSecret
-  )
+  googleSaveButtonDisabled = true
+  originalGoogleDoc = cloneDeep(providers.google)
+}
 
-  async function saveConfig(config) {
-    // Delete unsupported fields
-    delete config.createdAt
-    delete config.updatedAt
-    return API.saveConfig(config)
+const copyToClipboard = async value => {
+  await Helpers.copyToClipboard(value)
+  notifications.success("Copied")
+}
+
+onMount(async () => {
+  try {
+    await organisation.init()
+  } catch (error) {
+    notifications.error("Error getting org config")
   }
 
-  async function saveGoogle() {
-    if (!googleComplete) {
-      notifications.error(
-        `Please fill in all required ${ConfigTypes.Google} fields`
-      )
-      return
-    }
-
-    const google = providers.google
-
-    try {
-      const res = await saveConfig(google)
-      providers[res.type]._rev = res._rev
-      providers[res.type]._id = res._id
-      notifications.success(`Settings saved`)
-    } catch (e) {
-      notifications.error(e.message)
-      return
-    }
-
-    googleSaveButtonDisabled = true
-    originalGoogleDoc = cloneDeep(providers.google)
+  // Fetch Google config
+  let googleDoc
+  try {
+    googleDoc = await API.getConfig(ConfigTypes.Google)
+  } catch (error) {
+    notifications.error("Error fetching Google OAuth config")
   }
-
-  const copyToClipboard = async value => {
-    await Helpers.copyToClipboard(value)
-    notifications.success("Copied")
+  if (!googleDoc?._id) {
+    providers.google = {
+      type: ConfigTypes.Google,
+      config: { activated: false },
+    }
+    originalGoogleDoc = cloneDeep(googleDoc)
+  } else {
+    // Default activated to true for older configs
+    if (googleDoc.config.activated === undefined) {
+      googleDoc.config.activated = true
+    }
+    originalGoogleDoc = cloneDeep(googleDoc)
+    providers.google = googleDoc
   }
-
-  onMount(async () => {
-    try {
-      await organisation.init()
-    } catch (error) {
-      notifications.error("Error getting org config")
-    }
-
-    // Fetch Google config
-    let googleDoc
-    try {
-      googleDoc = await API.getConfig(ConfigTypes.Google)
-    } catch (error) {
-      notifications.error("Error fetching Google OAuth config")
-    }
-    if (!googleDoc?._id) {
-      providers.google = {
-        type: ConfigTypes.Google,
-        config: { activated: false },
-      }
-      originalGoogleDoc = cloneDeep(googleDoc)
-    } else {
-      // Default activated to true for older configs
-      if (googleDoc.config.activated === undefined) {
-        googleDoc.config.activated = true
-      }
-      originalGoogleDoc = cloneDeep(googleDoc)
-      providers.google = googleDoc
-    }
-    googleCallbackUrl = providers?.google?.config?.callbackURL
-  })
+  googleCallbackUrl = providers?.google?.config?.callbackURL
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

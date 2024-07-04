@@ -1,16 +1,16 @@
-import { publishEvent } from "../events"
 import {
   Event,
-  UserGroup,
+  GroupAddedOnboardingEvent,
   GroupCreatedEvent,
   GroupDeletedEvent,
+  GroupPermissionsEditedEvent,
   GroupUpdatedEvent,
   GroupUsersAddedEvent,
   GroupUsersDeletedEvent,
-  GroupAddedOnboardingEvent,
-  GroupPermissionsEditedEvent,
+  UserGroup,
 } from "@budibase/types"
 import { isScim } from "../../context"
+import { publishEvent } from "../events"
 
 async function created(group: UserGroup, timestamp?: number) {
   const properties: GroupCreatedEvent = {

@@ -1,11 +1,11 @@
 <script>
-  import { getContext } from "svelte"
-  import { Layout, Heading, Tabs, Tab, Icon } from "@budibase/bbui"
-  import DevToolsStatsTab from "./DevToolsStatsTab.svelte"
-  import DevToolsComponentTab from "./DevToolsComponentTab.svelte"
-  import { devToolsStore } from "stores"
+import { Heading, Icon, Layout, Tab, Tabs } from "@budibase/bbui"
+import { devToolsStore } from "stores"
+import { getContext } from "svelte"
+import DevToolsComponentTab from "./DevToolsComponentTab.svelte"
+import DevToolsStatsTab from "./DevToolsStatsTab.svelte"
 
-  const context = getContext("context")
+const context = getContext("context")
 </script>
 
 <div

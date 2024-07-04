@@ -1,4 +1,4 @@
-import { queue, logging } from "@budibase/backend-core"
+import { logging, queue } from "@budibase/backend-core"
 import { Job } from "bull"
 import { MIGRATIONS } from "./migrations"
 import { processMigrations } from "./migrationsProcessor"

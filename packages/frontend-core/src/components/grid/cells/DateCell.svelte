@@ -1,96 +1,96 @@
 <script>
-  import { CoreDatePickerPopoverContents, Icon, Helpers } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import dayjs from "dayjs"
-  import GridPopover from "../overlays/GridPopover.svelte"
+import { CoreDatePickerPopoverContents, Helpers, Icon } from "@budibase/bbui"
+import dayjs from "dayjs"
+import { onMount } from "svelte"
+import GridPopover from "../overlays/GridPopover.svelte"
 
-  export let value
-  export let schema
-  export let onChange
-  export let focused = false
-  export let readonly = false
-  export let api
+export let value
+export let schema
+export let onChange
+export let focused = false
+export let readonly = false
+export let api
 
-  let isOpen
-  let anchor
+let isOpen
+let anchor
 
-  $: timeOnly = schema?.timeOnly
-  $: enableTime = !schema?.dateOnly
-  $: ignoreTimezones = schema?.ignoreTimezones
-  $: editable = focused && !readonly
-  $: parsedValue = Helpers.parseDate(value, {
-    timeOnly,
+$: timeOnly = schema?.timeOnly
+$: enableTime = !schema?.dateOnly
+$: ignoreTimezones = schema?.ignoreTimezones
+$: editable = focused && !readonly
+$: parsedValue = Helpers.parseDate(value, {
+  timeOnly,
+  enableTime,
+  ignoreTimezones,
+})
+$: displayValue = getDisplayValue(parsedValue, timeOnly, enableTime)
+// Ensure open state matches desired state
+$: {
+  if (!focused && isOpen) {
+    close()
+  }
+}
+
+const getDisplayValue = (value, timeOnly, enableTime) => {
+  return Helpers.getDateDisplayValue(value, {
     enableTime,
+    timeOnly,
+  })
+}
+
+const open = () => {
+  isOpen = true
+}
+
+const close = () => {
+  isOpen = false
+
+  // Only save the changed value when closing. If the value is unchanged then
+  // this is handled upstream and no action is taken.
+  onChange(value)
+}
+
+const onKeyDown = e => {
+  if (!isOpen) {
+    return false
+  }
+  e.preventDefault()
+  if (e.key === "ArrowUp") {
+    changeDate(-1, "week")
+  } else if (e.key === "ArrowDown") {
+    changeDate(1, "week")
+  } else if (e.key === "ArrowLeft") {
+    changeDate(-1, "day")
+  } else if (e.key === "ArrowRight") {
+    changeDate(1, "day")
+  } else if (e.key === "Enter") {
+    close()
+  }
+  return true
+}
+
+const changeDate = (quantity, unit) => {
+  let newValue
+  if (!value) {
+    newValue = dayjs()
+  } else {
+    newValue = dayjs(value).add(quantity, unit)
+  }
+  value = Helpers.stringifyDate(newValue, {
+    enableTime,
+    timeOnly,
     ignoreTimezones,
   })
-  $: displayValue = getDisplayValue(parsedValue, timeOnly, enableTime)
-  // Ensure open state matches desired state
-  $: {
-    if (!focused && isOpen) {
-      close()
-    }
+}
+
+onMount(() => {
+  api = {
+    onKeyDown,
+    focus: open,
+    blur: close,
+    isActive: () => isOpen,
   }
-
-  const getDisplayValue = (value, timeOnly, enableTime) => {
-    return Helpers.getDateDisplayValue(value, {
-      enableTime,
-      timeOnly,
-    })
-  }
-
-  const open = () => {
-    isOpen = true
-  }
-
-  const close = () => {
-    isOpen = false
-
-    // Only save the changed value when closing. If the value is unchanged then
-    // this is handled upstream and no action is taken.
-    onChange(value)
-  }
-
-  const onKeyDown = e => {
-    if (!isOpen) {
-      return false
-    }
-    e.preventDefault()
-    if (e.key === "ArrowUp") {
-      changeDate(-1, "week")
-    } else if (e.key === "ArrowDown") {
-      changeDate(1, "week")
-    } else if (e.key === "ArrowLeft") {
-      changeDate(-1, "day")
-    } else if (e.key === "ArrowRight") {
-      changeDate(1, "day")
-    } else if (e.key === "Enter") {
-      close()
-    }
-    return true
-  }
-
-  const changeDate = (quantity, unit) => {
-    let newValue
-    if (!value) {
-      newValue = dayjs()
-    } else {
-      newValue = dayjs(value).add(quantity, unit)
-    }
-    value = Helpers.stringifyDate(newValue, {
-      enableTime,
-      timeOnly,
-      ignoreTimezones,
-    })
-  }
-
-  onMount(() => {
-    api = {
-      onKeyDown,
-      focus: open,
-      blur: close,
-      isActive: () => isOpen,
-    }
-  })
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

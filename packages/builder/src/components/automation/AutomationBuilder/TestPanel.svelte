@@ -1,9 +1,9 @@
 <script>
-  import { Icon, Divider } from "@budibase/bbui"
-  import TestDisplay from "./TestDisplay.svelte"
-  import { automationStore } from "stores/builder"
+import { Divider, Icon } from "@budibase/bbui"
+import { automationStore } from "stores/builder"
+import TestDisplay from "./TestDisplay.svelte"
 
-  export let automation
+export let automation
 </script>
 
 <div class="title">

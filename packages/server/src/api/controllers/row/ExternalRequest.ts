@@ -1,4 +1,5 @@
-import dayjs from "dayjs"
+import { db as dbCore } from "@budibase/backend-core"
+import { processObjectSync } from "@budibase/string-templates"
 import {
   AutoFieldSubType,
   AutoReason,
@@ -7,7 +8,6 @@ import {
   FieldType,
   FilterType,
   IncludeRelationship,
-  isManyToOne,
   OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
@@ -17,7 +17,12 @@ import {
   SortJson,
   SortType,
   Table,
+  isManyToOne,
 } from "@budibase/types"
+import dayjs from "dayjs"
+import { cloneDeep } from "lodash/fp"
+import env from "../../../environment"
+import { makeExternalQuery } from "../../../integrations/base/query"
 import {
   breakExternalTableId,
   breakRowIdField,
@@ -26,6 +31,11 @@ import {
   isRowId,
   isSQL,
 } from "../../../integrations/utils"
+import sdk from "../../../sdk"
+import {
+  getDatasourceAndQuery,
+  processRowCountResponse,
+} from "../../../sdk/app/rows/utils"
 import {
   buildExternalRelationships,
   buildSqlFieldList,
@@ -34,16 +44,6 @@ import {
   isManyToMany,
   sqlOutputProcessing,
 } from "./utils"
-import {
-  getDatasourceAndQuery,
-  processRowCountResponse,
-} from "../../../sdk/app/rows/utils"
-import { processObjectSync } from "@budibase/string-templates"
-import { cloneDeep } from "lodash/fp"
-import { db as dbCore } from "@budibase/backend-core"
-import sdk from "../../../sdk"
-import env from "../../../environment"
-import { makeExternalQuery } from "../../../integrations/base/query"
 
 export interface ManyRelationship {
   tableId?: string
@@ -69,8 +69,8 @@ export type ExternalRequestReturnType<T extends Operation> =
   T extends Operation.READ
     ? Row[]
     : T extends Operation.COUNT
-    ? number
-    : { row: Row; table: Table }
+      ? number
+      : { row: Row; table: Table }
 
 /**
  * This function checks the incoming parameters to make sure all the inputs are

@@ -1,6 +1,6 @@
-import { checkDockerConfigured, checkInitComplete, handleError } from "./utils"
-import { info, success } from "../utils"
 import compose from "docker-compose"
+import { info, success } from "../utils"
+import { checkDockerConfigured, checkInitComplete, handleError } from "./utils"
 
 export async function stop() {
   await checkDockerConfigured()

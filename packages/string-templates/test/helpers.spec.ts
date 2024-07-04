@@ -1,7 +1,7 @@
-import { processString, processObject, isValid } from "../src/index"
-import tableJson from "./examples/table.json"
 import dayjs from "dayjs"
+import { isValid, processObject, processString } from "../src/index"
 import { UUID_REGEX } from "./constants"
+import tableJson from "./examples/table.json"
 
 describe("test the custom helpers we have applied", () => {
   it("should be able to use the object helper", async () => {

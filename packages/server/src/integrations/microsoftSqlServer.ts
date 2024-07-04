@@ -1,3 +1,5 @@
+import { ConfidentialClientApplication } from "@azure/msal-node"
+import { sql } from "@budibase/backend-core"
 import {
   ConnectionInfo,
   DatasourceFeature,
@@ -16,19 +18,17 @@ import {
   TableSchema,
   TableSourceType,
 } from "@budibase/types"
+import sqlServer from "mssql"
+import { getReadableErrorMessage } from "./base/errorMapping"
+import { MSSQLColumn, MSSQLTablesResponse } from "./base/types"
 import {
+  HOST_ADDRESS,
   buildExternalTableId,
   checkExternalTables,
   finaliseExternalTables,
   generateColumnDefinition,
   getSqlQuery,
-  HOST_ADDRESS,
 } from "./utils"
-import { MSSQLColumn, MSSQLTablesResponse } from "./base/types"
-import { getReadableErrorMessage } from "./base/errorMapping"
-import sqlServer from "mssql"
-import { sql } from "@budibase/backend-core"
-import { ConfidentialClientApplication } from "@azure/msal-node"
 
 import { utils } from "@budibase/shared-core"
 

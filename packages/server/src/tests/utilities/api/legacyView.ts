@@ -1,5 +1,5 @@
-import { Expectations, TestAPI } from "./base"
 import { Row, View, ViewCalculation } from "@budibase/types"
+import { Expectations, TestAPI } from "./base"
 
 export class LegacyViewAPI extends TestAPI {
   get = async (

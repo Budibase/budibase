@@ -1,36 +1,36 @@
-import { get, derived } from "svelte/store"
-import { cloneDeep } from "lodash/fp"
-import { API } from "api"
 import { Helpers } from "@budibase/bbui"
-import analytics, { Events } from "analytics"
+import { Utils } from "@budibase/frontend-core"
 import { makePropSafe as safe } from "@budibase/string-templates"
+import { FieldType } from "@budibase/types"
+import analytics, { Events } from "analytics"
+import { API } from "api"
 import {
-  findComponentPath,
+  BUDIBASE_INTERNAL_DB_ID,
+  DB_TYPE_EXTERNAL,
+  DB_TYPE_INTERNAL,
+  DEFAULT_BB_DATASOURCE_ID,
+} from "constants/backend"
+import { buildFormSchema, getSchemaForDatasource } from "dataBinding"
+import {
+  findAllMatchingComponents,
   findClosestMatchingComponent,
   findComponent,
   findComponentParent,
-  findAllMatchingComponents,
+  findComponentPath,
   makeComponentUnique,
 } from "helpers/components"
 import { getComponentFieldOptions } from "helpers/formFields"
-import { selectedScreen } from "./screens"
+import { cloneDeep } from "lodash/fp"
 import {
-  screenStore,
   appStore,
-  previewStore,
-  tables,
   componentTreeNodesStore,
+  previewStore,
+  screenStore,
+  tables,
 } from "stores/builder"
-import { buildFormSchema, getSchemaForDatasource } from "dataBinding"
-import {
-  BUDIBASE_INTERNAL_DB_ID,
-  DEFAULT_BB_DATASOURCE_ID,
-  DB_TYPE_INTERNAL,
-  DB_TYPE_EXTERNAL,
-} from "constants/backend"
+import { derived, get } from "svelte/store"
 import BudiStore from "../BudiStore"
-import { Utils } from "@budibase/frontend-core"
-import { FieldType } from "@budibase/types"
+import { selectedScreen } from "./screens"
 
 export const INITIAL_COMPONENTS_STATE = {
   components: {},

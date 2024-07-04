@@ -1,21 +1,21 @@
 <script>
-  import KeyValueBuilder from "../KeyValueBuilder.svelte"
-  import { SchemaTypeOptionsExpanded } from "constants/backend"
+import { SchemaTypeOptionsExpanded } from "constants/backend"
+import KeyValueBuilder from "../KeyValueBuilder.svelte"
 
-  export let schema
-  export let onSchemaChange = () => {}
+export let schema
+export let onSchemaChange = () => {}
 
-  const handleChange = e => {
-    let newSchema = {}
+const handleChange = e => {
+  let newSchema = {}
 
-    // KeyValueBuilder on change event returns an array of objects with each object
-    // containing a field
-    e.detail.forEach(({ name, value }) => {
-      newSchema[name] = value
-    })
+  // KeyValueBuilder on change event returns an array of objects with each object
+  // containing a field
+  e.detail.forEach(({ name, value }) => {
+    newSchema[name] = value
+  })
 
-    onSchemaChange(newSchema)
-  }
+  onSchemaChange(newSchema)
+}
 </script>
 
 {#key schema}

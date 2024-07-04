@@ -1,16 +1,16 @@
+import { db as dbCore } from "@budibase/backend-core"
+import { sdk } from "@budibase/pro"
+import { User, UserCtx } from "@budibase/types"
+import { Next } from "koa"
+import { cloneDeep, isEqual } from "lodash"
+import { publicApiUserFix } from "../../../utilities/users"
 import {
   allGlobalUsers,
   deleteGlobalUser,
   readGlobalUser,
   saveGlobalUser,
 } from "../../../utilities/workerRequests"
-import { publicApiUserFix } from "../../../utilities/users"
-import { db as dbCore } from "@budibase/backend-core"
 import { search as stringSearch } from "./utils"
-import { UserCtx, User } from "@budibase/types"
-import { Next } from "koa"
-import { sdk } from "@budibase/pro"
-import { isEqual, cloneDeep } from "lodash"
 
 function rolesRemoved(base: User, ctx: UserCtx) {
   return (

@@ -1,48 +1,48 @@
 <script>
-  import { CoreSelect, CoreRadioGroup } from "@budibase/bbui"
-  import Field from "./Field.svelte"
-  import { getOptions } from "./optionsParser"
+import { CoreRadioGroup, CoreSelect } from "@budibase/bbui"
+import Field from "./Field.svelte"
+import { getOptions } from "./optionsParser"
 
-  export let field
-  export let label
-  export let placeholder
-  export let disabled = false
-  export let readonly = false
-  export let optionsType = "select"
-  export let validation
-  export let defaultValue
-  export let optionsSource = "schema"
-  export let dataProvider
-  export let labelColumn
-  export let valueColumn
-  export let customOptions
-  export let autocomplete = false
-  export let direction = "vertical"
-  export let onChange
-  export let sort = true
-  export let span
-  export let helpText = null
+export let field
+export let label
+export let placeholder
+export let disabled = false
+export let readonly = false
+export let optionsType = "select"
+export let validation
+export let defaultValue
+export let optionsSource = "schema"
+export let dataProvider
+export let labelColumn
+export let valueColumn
+export let customOptions
+export let autocomplete = false
+export let direction = "vertical"
+export let onChange
+export let sort = true
+export let span
+export let helpText = null
 
-  let fieldState
-  let fieldApi
-  let fieldSchema
+let fieldState
+let fieldApi
+let fieldSchema
 
-  $: flatOptions = optionsSource == null || optionsSource === "schema"
-  $: options = getOptions(
-    optionsSource,
-    fieldSchema,
-    dataProvider,
-    labelColumn,
-    valueColumn,
-    customOptions
-  )
+$: flatOptions = optionsSource == null || optionsSource === "schema"
+$: options = getOptions(
+  optionsSource,
+  fieldSchema,
+  dataProvider,
+  labelColumn,
+  valueColumn,
+  customOptions
+)
 
-  const handleChange = e => {
-    const changed = fieldApi.setValue(e.detail)
-    if (onChange && changed) {
-      onChange({ value: e.detail })
-    }
+const handleChange = e => {
+  const changed = fieldApi.setValue(e.detail)
+  if (onChange && changed) {
+    onChange({ value: e.detail })
   }
+}
 </script>
 
 <Field

@@ -1,30 +1,30 @@
 <script>
-  import { getContext } from "svelte"
-  import DataCell from "../cells/DataCell.svelte"
-  import { getCellID } from "../lib/utils"
+import { getContext } from "svelte"
+import DataCell from "../cells/DataCell.svelte"
+import { getCellID } from "../lib/utils"
 
-  export let row
-  export let top = false
+export let row
+export let top = false
 
-  const {
-    focusedCellId,
-    reorder,
-    selectedRows,
-    visibleColumns,
-    hoveredRowId,
-    selectedCellMap,
-    focusedRow,
-    contentLines,
-    isDragging,
-    dispatch,
-    rows,
-    columnRenderMap,
-  } = getContext("grid")
+const {
+  focusedCellId,
+  reorder,
+  selectedRows,
+  visibleColumns,
+  hoveredRowId,
+  selectedCellMap,
+  focusedRow,
+  contentLines,
+  isDragging,
+  dispatch,
+  rows,
+  columnRenderMap,
+} = getContext("grid")
 
-  $: rowSelected = !!$selectedRows[row._id]
-  $: rowHovered = $hoveredRowId === row._id
-  $: rowFocused = $focusedRow?._id === row._id
-  $: reorderSource = $reorder.sourceColumn
+$: rowSelected = !!$selectedRows[row._id]
+$: rowHovered = $hoveredRowId === row._id
+$: rowFocused = $focusedRow?._id === row._id
+$: reorderSource = $reorder.sourceColumn
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

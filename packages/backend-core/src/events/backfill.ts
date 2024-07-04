@@ -1,28 +1,28 @@
 import {
-  Event,
-  BackfillMetadata,
-  CachedEvent,
-  SSOCreatedEvent,
+  AppCreatedEvent,
+  AppPublishedEvent,
   AutomationCreatedEvent,
   AutomationStepCreatedEvent,
+  BackfillMetadata,
+  CachedEvent,
   DatasourceCreatedEvent,
+  Event,
   LayoutCreatedEvent,
   QueryCreatedEvent,
+  RoleAssignedEvent,
   RoleCreatedEvent,
+  SSOCreatedEvent,
   ScreenCreatedEvent,
   TableCreatedEvent,
-  ViewCreatedEvent,
-  ViewCalculationCreatedEvent,
-  ViewFilterCreatedEvent,
-  AppPublishedEvent,
   UserCreatedEvent,
-  RoleAssignedEvent,
   UserPermissionAssignedEvent,
-  AppCreatedEvent,
+  ViewCalculationCreatedEvent,
+  ViewCreatedEvent,
+  ViewFilterCreatedEvent,
 } from "@budibase/types"
-import * as context from "../context"
 import { CacheKey } from "../cache/generic"
 import * as cache from "../cache/generic"
+import * as context from "../context"
 
 // LIFECYCLE
 

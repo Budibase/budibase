@@ -1,62 +1,62 @@
 <script>
-  import {
-    keepOpen,
-    Modal,
-    notifications,
-    Body,
-    Layout,
-    ModalContent,
-  } from "@budibase/bbui"
-  import { processStringSync } from "@budibase/string-templates"
-  import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
-  import ConfigInput from "./ConfigInput.svelte"
-  import { createValidatedConfigStore } from "./stores/validatedConfig"
-  import { createValidatedNameStore } from "./stores/validatedName"
-  import { get } from "svelte/store"
-  import { environment } from "stores/portal"
+import {
+  Body,
+  Layout,
+  Modal,
+  ModalContent,
+  keepOpen,
+  notifications,
+} from "@budibase/bbui"
+import { processStringSync } from "@budibase/string-templates"
+import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
+import { environment } from "stores/portal"
+import { get } from "svelte/store"
+import ConfigInput from "./ConfigInput.svelte"
+import { createValidatedConfigStore } from "./stores/validatedConfig"
+import { createValidatedNameStore } from "./stores/validatedName"
 
-  export let integration
-  export let config
-  export let onSubmit = () => {}
-  export let showNameField = false
-  export let nameFieldValue = ""
+export let integration
+export let config
+export let onSubmit = () => {}
+export let showNameField = false
+export let nameFieldValue = ""
 
-  $: configStore = createValidatedConfigStore(integration, config)
-  $: nameStore = createValidatedNameStore(nameFieldValue, showNameField)
+$: configStore = createValidatedConfigStore(integration, config)
+$: nameStore = createValidatedNameStore(nameFieldValue, showNameField)
 
-  const handleConfirm = async () => {
-    configStore.markAllFieldsActive()
-    nameStore.markActive()
+const handleConfirm = async () => {
+  configStore.markAllFieldsActive()
+  nameStore.markActive()
 
-    if ((await configStore.validate()) && (await nameStore.validate())) {
-      const { config } = get(configStore)
-      const { name } = get(nameStore)
-      return onSubmit({
-        config,
-        name,
-      })
-    }
-
-    return keepOpen
+  if ((await configStore.validate()) && (await nameStore.validate())) {
+    const { config } = get(configStore)
+    const { name } = get(nameStore)
+    return onSubmit({
+      config,
+      name,
+    })
   }
 
-  let createVariableModal
-  let configValueSetterCallback = () => {}
+  return keepOpen
+}
 
-  const showModal = setter => {
-    configValueSetterCallback = setter
-    createVariableModal.show()
-  }
+let createVariableModal
+let configValueSetterCallback = () => {}
 
-  async function saveVariable(data) {
-    try {
-      await environment.createVariable(data)
-      configValueSetterCallback(`{{ env.${data.name} }}`)
-      createVariableModal.hide()
-    } catch (err) {
-      notifications.error(`Failed to create variable: ${err.message}`)
-    }
+const showModal = setter => {
+  configValueSetterCallback = setter
+  createVariableModal.show()
+}
+
+async function saveVariable(data) {
+  try {
+    await environment.createVariable(data)
+    configValueSetterCallback(`{{ env.${data.name} }}`)
+    createVariableModal.hide()
+  } catch (err) {
+    notifications.error(`Failed to create variable: ${err.message}`)
   }
+}
 </script>
 
 <ModalContent

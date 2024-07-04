@@ -1,8 +1,8 @@
 <script>
-  import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
+import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
-  export let value
-  export let row
+export let value
+export let row
 </script>
 
 {value}

@@ -1,15 +1,15 @@
 import {
-  Integration,
-  DatasourceFieldType,
-  QueryType,
-  IntegrationBase,
-  DatasourceFeature,
   ConnectionInfo,
+  DatasourceFeature,
+  DatasourceFieldType,
+  Integration,
+  IntegrationBase,
+  QueryType,
 } from "@budibase/types"
 
 import AWS from "aws-sdk"
-import { AWS_REGION } from "../constants"
 import { DocumentClient } from "aws-sdk/clients/dynamodb"
+import { AWS_REGION } from "../constants"
 
 interface DynamoDBConfig {
   region: string

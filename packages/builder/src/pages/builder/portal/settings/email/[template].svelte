@@ -1,73 +1,73 @@
 <script>
-  import { onMount, tick } from "svelte"
-  import {
-    Button,
-    Heading,
-    Body,
-    Layout,
-    notifications,
-    Tabs,
-    Tab,
-  } from "@budibase/bbui"
-  import { url } from "@roxi/routify"
-  import { email } from "stores/portal"
-  import Editor from "components/integration/QueryEditor.svelte"
-  import TemplateBindings from "./_components/TemplateBindings.svelte"
-  import { Breadcrumbs, Breadcrumb } from "components/portal/page"
+import {
+  Body,
+  Button,
+  Heading,
+  Layout,
+  Tab,
+  Tabs,
+  notifications,
+} from "@budibase/bbui"
+import { url } from "@roxi/routify"
+import Editor from "components/integration/QueryEditor.svelte"
+import { Breadcrumb, Breadcrumbs } from "components/portal/page"
+import { email } from "stores/portal"
+import { onMount, tick } from "svelte"
+import TemplateBindings from "./_components/TemplateBindings.svelte"
 
-  // this is the email purpose
-  export let template
+// this is the email purpose
+export let template
 
-  let htmlEditor
-  let mounted = false
+let htmlEditor
+let mounted = false
 
-  $: selectedTemplate = $email.templates?.find(
-    ({ purpose }) => purpose === template
-  )
-  $: name = $email.definitions?.info[template]?.name
-  $: description = $email.definitions?.info[template]?.description
-  $: baseTemplate = $email.templates?.find(({ purpose }) => purpose === "base")
-  $: templateBindings =
-    $email.definitions?.bindings?.[selectedTemplate?.purpose] || []
-  $: previewContent = makePreviewContent(baseTemplate, selectedTemplate)
+$: selectedTemplate = $email.templates?.find(
+  ({ purpose }) => purpose === template
+)
+$: name = $email.definitions?.info[template]?.name
+$: description = $email.definitions?.info[template]?.description
+$: baseTemplate = $email.templates?.find(({ purpose }) => purpose === "base")
+$: templateBindings =
+  $email.definitions?.bindings?.[selectedTemplate?.purpose] || []
+$: previewContent = makePreviewContent(baseTemplate, selectedTemplate)
 
-  async function saveTemplate() {
-    try {
-      // Save your template config
-      await email.templates.save(selectedTemplate)
-      notifications.success("Template saved")
-    } catch (error) {
-      notifications.error("Failed to update template settings")
-    }
+async function saveTemplate() {
+  try {
+    // Save your template config
+    await email.templates.save(selectedTemplate)
+    notifications.success("Template saved")
+  } catch (error) {
+    notifications.error("Failed to update template settings")
   }
+}
 
-  function setTemplateBinding(binding) {
-    htmlEditor.update((selectedTemplate.contents += `{{ ${binding.name} }}`))
+function setTemplateBinding(binding) {
+  htmlEditor.update((selectedTemplate.contents += `{{ ${binding.name} }}`))
+}
+
+const makePreviewContent = (baseTemplate, selectedTemplate) => {
+  if (!selectedTemplate) {
+    return ""
   }
-
-  const makePreviewContent = (baseTemplate, selectedTemplate) => {
-    if (!selectedTemplate) {
-      return ""
-    }
-    if (selectedTemplate.purpose === "base") {
-      return selectedTemplate.contents
-    }
-    const base = baseTemplate?.contents ?? ""
-    return base.replace("{{ body }}", selectedTemplate?.contents ?? "")
+  if (selectedTemplate.purpose === "base") {
+    return selectedTemplate.contents
   }
+  const base = baseTemplate?.contents ?? ""
+  return base.replace("{{ body }}", selectedTemplate?.contents ?? "")
+}
 
-  onMount(() => {
+onMount(() => {
+  mounted = true
+})
+
+async function fixMountBug({ detail }) {
+  if (detail === "Edit") {
+    await tick()
     mounted = true
-  })
-
-  async function fixMountBug({ detail }) {
-    if (detail === "Edit") {
-      await tick()
-      mounted = true
-    } else {
-      mounted = false
-    }
+  } else {
+    mounted = false
   }
+}
 </script>
 
 <Layout gap="L" noPadding>

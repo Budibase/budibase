@@ -1,46 +1,46 @@
 <script>
-  import formatHighlight from "json-format-highlight"
-  import { Icon, ProgressCircle, notifications } from "@budibase/bbui"
-  import { copyToClipboard } from "@budibase/bbui/helpers"
-  import { fade } from "svelte/transition"
+import { Icon, ProgressCircle, notifications } from "@budibase/bbui"
+import { copyToClipboard } from "@budibase/bbui/helpers"
+import formatHighlight from "json-format-highlight"
+import { fade } from "svelte/transition"
 
-  export let expressionResult
-  export let evaluating = false
-  export let expression = null
+export let expressionResult
+export let evaluating = false
+export let expression = null
 
-  $: error = expressionResult === "Error while executing JS"
-  $: empty = expression == null || expression?.trim() === ""
-  $: success = !error && !empty
-  $: highlightedResult = highlight(expressionResult)
+$: error = expressionResult === "Error while executing JS"
+$: empty = expression == null || expression?.trim() === ""
+$: success = !error && !empty
+$: highlightedResult = highlight(expressionResult)
 
-  const highlight = json => {
-    if (json == null) {
-      return ""
-    }
-    // Attempt to parse and then stringify, in case this is valid JSON
-    try {
-      json = JSON.stringify(JSON.parse(json), null, 2)
-    } catch (err) {
-      // Ignore
-    }
-    return formatHighlight(json, {
-      keyColor: "#e06c75",
-      numberColor: "#e5c07b",
-      stringColor: "#98c379",
-      trueColor: "#d19a66",
-      falseColor: "#d19a66",
-      nullColor: "#c678dd",
-    })
+const highlight = json => {
+  if (json == null) {
+    return ""
   }
-
-  const copy = () => {
-    let clipboardVal = expressionResult
-    if (typeof clipboardVal === "object") {
-      clipboardVal = JSON.stringify(clipboardVal, null, 2)
-    }
-    copyToClipboard(clipboardVal)
-    notifications.success("Value copied to clipboard")
+  // Attempt to parse and then stringify, in case this is valid JSON
+  try {
+    json = JSON.stringify(JSON.parse(json), null, 2)
+  } catch (err) {
+    // Ignore
   }
+  return formatHighlight(json, {
+    keyColor: "#e06c75",
+    numberColor: "#e5c07b",
+    stringColor: "#98c379",
+    trueColor: "#d19a66",
+    falseColor: "#d19a66",
+    nullColor: "#c678dd",
+  })
+}
+
+const copy = () => {
+  let clipboardVal = expressionResult
+  if (typeof clipboardVal === "object") {
+    clipboardVal = JSON.stringify(clipboardVal, null, 2)
+  }
+  copyToClipboard(clipboardVal)
+  notifications.success("Value copied to clipboard")
+}
 </script>
 
 <div class="evaluation-side-panel">

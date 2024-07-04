@@ -1,21 +1,21 @@
 <script>
-  import { ContextTooltip } from "@budibase/bbui"
-  import {
-    StringsAsDates,
-    NumbersAsDates,
-    ScalarJsonOnly,
-    Column,
-    Support,
-    NotRequired,
-    StringsAsNumbers,
-    DatesAsNumbers,
-  } from "./subjects"
-  import subjects from "../subjects"
+import { ContextTooltip } from "@budibase/bbui"
+import subjects from "../subjects"
+import {
+  Column,
+  DatesAsNumbers,
+  NotRequired,
+  NumbersAsDates,
+  ScalarJsonOnly,
+  StringsAsDates,
+  StringsAsNumbers,
+  Support,
+} from "./subjects"
 
-  export let anchor
-  export let schema
-  export let columnName
-  export let subject = subjects.none
+export let anchor
+export let schema
+export let columnName
+export let subject = subjects.none
 </script>
 
 <ContextTooltip visible={subject !== subjects.none} {anchor} offset={20}>

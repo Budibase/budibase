@@ -1,5 +1,5 @@
-import { get, writable } from "svelte/store"
 import { shouldIntegrationFetchTableNames } from "stores/selectors"
+import { get, writable } from "svelte/store"
 
 export const defaultStore = {
   finished: false,

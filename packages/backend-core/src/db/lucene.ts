@@ -1,14 +1,14 @@
-import fetch from "node-fetch"
-import { getCouchInfo } from "./couch"
+import { dataFilters } from "@budibase/shared-core"
 import {
-  SearchFilters,
-  Row,
   EmptyFilterOption,
-  SearchResponse,
+  Row,
+  SearchFilters,
   SearchParams,
+  SearchResponse,
   WithRequired,
 } from "@budibase/types"
-import { dataFilters } from "@budibase/shared-core"
+import fetch from "node-fetch"
+import { getCouchInfo } from "./couch"
 
 export const removeKeyNumbering = dataFilters.removeKeyNumbering
 
@@ -211,6 +211,7 @@ export class QueryBuilder<T> {
   preprocess(
     value: any,
     {
+      // biome-ignore lint: no-shadow-restricted-names
       escape,
       lowercase,
       wrap,

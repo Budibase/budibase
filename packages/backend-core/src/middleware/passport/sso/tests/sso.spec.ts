@@ -1,10 +1,10 @@
-import { structures, mocks } from "../../../../../tests"
-import { testEnv } from "../../../../../tests/extra"
 import { SSOAuthDetails, User } from "@budibase/types"
+import { mocks, structures } from "../../../../../tests"
+import { testEnv } from "../../../../../tests/extra"
 
+import * as context from "../../../../context"
 import { HTTPError } from "../../../../errors"
 import * as sso from "../sso"
-import * as context from "../../../../context"
 
 const mockDone = jest.fn()
 const mockSaveUser = jest.fn()

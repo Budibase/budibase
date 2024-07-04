@@ -1,14 +1,14 @@
-import * as redis from "../redis/init"
-import { v4 as uuidv4 } from "uuid"
-import { logWarn } from "../logging"
-import env from "../environment"
-import { Duration } from "../utils"
 import {
-  Session,
-  ScannedSession,
-  SessionKey,
   CreateSession,
+  ScannedSession,
+  Session,
+  SessionKey,
 } from "@budibase/types"
+import { v4 as uuidv4 } from "uuid"
+import env from "../environment"
+import { logWarn } from "../logging"
+import * as redis from "../redis/init"
+import { Duration } from "../utils"
 
 // a week expiry is the default
 const EXPIRY_SECONDS = env.SESSION_EXPIRY_SECONDS

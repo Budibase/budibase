@@ -1,10 +1,10 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
 
-  export let icon = null
-  export let color = null
-  export let text
-  export let href = null
+export let icon = null
+export let color = null
+export let text
+export let href = null
 </script>
 
 {#if href !== null}

@@ -1,26 +1,26 @@
 <script>
-  import { automationStore } from "stores/builder"
-  import { ModalContent } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import WebhookDisplay from "../automation/Shared/WebhookDisplay.svelte"
-  import { TriggerStepID } from "constants/backend/automations"
+import { ModalContent } from "@budibase/bbui"
+import { TriggerStepID } from "constants/backend/automations"
+import { automationStore } from "stores/builder"
+import { onMount } from "svelte"
+import WebhookDisplay from "../automation/Shared/WebhookDisplay.svelte"
 
-  let webhookUrls = []
+let webhookUrls = []
 
-  $: automations = $automationStore.automations
+$: automations = $automationStore.automations
 
-  onMount(() => {
-    webhookUrls = automations.map(automation => {
-      const trigger = automation.definition.trigger
-      if (trigger?.stepId === TriggerStepID.WEBHOOK && trigger.inputs) {
-        return {
-          type: "Automation",
-          name: automation.name,
-          url: trigger.inputs.triggerUrl,
-        }
+onMount(() => {
+  webhookUrls = automations.map(automation => {
+    const trigger = automation.definition.trigger
+    if (trigger?.stepId === TriggerStepID.WEBHOOK && trigger.inputs) {
+      return {
+        type: "Automation",
+        name: automation.name,
+        url: trigger.inputs.triggerUrl,
       }
-    })
+    }
   })
+})
 </script>
 
 <ModalContent

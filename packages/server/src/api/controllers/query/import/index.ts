@@ -1,12 +1,12 @@
-import { queryValidation } from "../validation"
-import { generateQueryID } from "../../../../db/utils"
-import { ImportInfo, ImportSource } from "./sources/base"
-import { OpenAPI2 } from "./sources/openapi2"
-import { OpenAPI3 } from "./sources/openapi3"
-import { Curl } from "./sources/curl"
 // @ts-ignore
 import { events, context } from "@budibase/backend-core"
 import { Datasource, Query } from "@budibase/types"
+import { generateQueryID } from "../../../../db/utils"
+import { queryValidation } from "../validation"
+import { ImportInfo, ImportSource } from "./sources/base"
+import { Curl } from "./sources/curl"
+import { OpenAPI2 } from "./sources/openapi2"
+import { OpenAPI3 } from "./sources/openapi3"
 
 interface ImportResult {
   errorQueries: Query[]
@@ -62,12 +62,15 @@ export class RestImporter {
     const response = await db.bulkDocs(queries)
 
     // create index to seperate queries and errors
-    const queryIndex = queries.reduce((acc, query) => {
-      if (query._id) {
-        acc[query._id] = query
-      }
-      return acc
-    }, {} as { [key: string]: Query })
+    const queryIndex = queries.reduce(
+      (acc, query) => {
+        if (query._id) {
+          acc[query._id] = query
+        }
+        return acc
+      },
+      {} as { [key: string]: Query }
+    )
 
     // check for failed writes
     response.forEach((query: any) => {

@@ -1,40 +1,40 @@
 <script>
-  import { Select, Body } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { Body, Select } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { onMount } from "svelte"
 
-  export let parameters
-  export let bindings
+export let parameters
+export let bindings
 
-  const typeOptions = [
-    {
-      label: "Continue if",
-      value: "continue",
-    },
-    {
-      label: "Stop if",
-      value: "stop",
-    },
-  ]
-  const operatorOptions = [
-    {
-      label: "Equals",
-      value: "equal",
-    },
-    {
-      label: "Not equals",
-      value: "notEqual",
-    },
-  ]
+const typeOptions = [
+  {
+    label: "Continue if",
+    value: "continue",
+  },
+  {
+    label: "Stop if",
+    value: "stop",
+  },
+]
+const operatorOptions = [
+  {
+    label: "Equals",
+    value: "equal",
+  },
+  {
+    label: "Not equals",
+    value: "notEqual",
+  },
+]
 
-  onMount(() => {
-    if (!parameters.type) {
-      parameters.type = "continue"
-    }
-    if (!parameters.operator) {
-      parameters.operator = "equal"
-    }
-  })
+onMount(() => {
+  if (!parameters.type) {
+    parameters.type = "continue"
+  }
+  if (!parameters.operator) {
+    parameters.operator = "equal"
+  }
+})
 </script>
 
 <div class="root">

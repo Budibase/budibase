@@ -1,23 +1,23 @@
 <script>
-  import dayjs from "dayjs"
-  import NumberInput from "./NumberInput.svelte"
-  import { createEventDispatcher } from "svelte"
+import dayjs from "dayjs"
+import { createEventDispatcher } from "svelte"
+import NumberInput from "./NumberInput.svelte"
 
-  export let value
+export let value
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  $: displayValue = value?.format("HH:mm")
+$: displayValue = value?.format("HH:mm")
 
-  const handleChange = e => {
-    if (!e.target.value) {
-      dispatch("change", undefined)
-      return
-    }
-
-    const [hour, minute] = e.target.value.split(":").map(x => parseInt(x))
-    dispatch("change", (value || dayjs()).hour(hour).minute(minute))
+const handleChange = e => {
+  if (!e.target.value) {
+    dispatch("change", undefined)
+    return
   }
+
+  const [hour, minute] = e.target.value.split(":").map(x => parseInt(x))
+  dispatch("change", (value || dayjs()).hour(hour).minute(minute))
+}
 </script>
 
 <div class="time-picker">

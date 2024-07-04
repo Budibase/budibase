@@ -1,42 +1,42 @@
 <script>
-  import { API } from "api"
-  import {
-    tables,
-    datasources,
-    sortedIntegrations as integrations,
-  } from "stores/builder"
+import { API } from "api"
+import {
+  datasources,
+  sortedIntegrations as integrations,
+  tables,
+} from "stores/builder"
 
-  import { hasData } from "stores/selectors"
-  import { notifications, Body, Icon, AbsTooltip } from "@budibase/bbui"
-  import { params, goto } from "@roxi/routify"
-  import CreateExternalDatasourceModal from "./_components/CreateExternalDatasourceModal/index.svelte"
-  import CreateInternalTableModal from "./_components/CreateInternalTableModal.svelte"
-  import DatasourceOption from "./_components/DatasourceOption.svelte"
-  import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
-  import CreationPage from "components/common/CreationPage.svelte"
-  import ICONS from "components/backend/DatasourceNavigator/icons/index.js"
+import { AbsTooltip, Body, Icon, notifications } from "@budibase/bbui"
+import { goto, params } from "@roxi/routify"
+import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
+import ICONS from "components/backend/DatasourceNavigator/icons/index.js"
+import CreationPage from "components/common/CreationPage.svelte"
+import { hasData } from "stores/selectors"
+import CreateExternalDatasourceModal from "./_components/CreateExternalDatasourceModal/index.svelte"
+import CreateInternalTableModal from "./_components/CreateInternalTableModal.svelte"
+import DatasourceOption from "./_components/DatasourceOption.svelte"
 
-  let internalTableModal
-  let externalDatasourceModal
+let internalTableModal
+let externalDatasourceModal
 
-  let sampleDataLoading = false
-  let externalDatasourceLoading = false
+let sampleDataLoading = false
+let externalDatasourceLoading = false
 
-  $: disabled = sampleDataLoading || externalDatasourceLoading
+$: disabled = sampleDataLoading || externalDatasourceLoading
 
-  const createSampleData = async () => {
-    sampleDataLoading = true
+const createSampleData = async () => {
+  sampleDataLoading = true
 
-    try {
-      await API.addSampleData($params.application)
-      await tables.fetch()
-      await datasources.fetch()
-      $goto("./table")
-    } catch (e) {
-      sampleDataLoading = false
-      notifications.error("Error creating datasource")
-    }
+  try {
+    await API.addSampleData($params.application)
+    await tables.fetch()
+    await datasources.fetch()
+    $goto("./table")
+  } catch (e) {
+    sampleDataLoading = false
+    notifications.error("Error creating datasource")
   }
+}
 </script>
 
 <CreateInternalTableModal bind:this={internalTableModal} />

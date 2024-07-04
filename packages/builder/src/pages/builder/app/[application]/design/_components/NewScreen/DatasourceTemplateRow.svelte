@@ -1,10 +1,10 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
 
-  export let datasource
-  export let selected = false
+export let datasource
+export let selected = false
 
-  $: icon = datasource.type === "viewV2" ? "Remove" : "Table"
+$: icon = datasource.type === "viewV2" ? "Remove" : "Table"
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

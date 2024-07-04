@@ -1,8 +1,8 @@
 import fs, { PathLike } from "fs"
-import { budibaseTempDir } from "../budibaseDir"
-import { resolve, join } from "path"
-import env from "../../environment"
+import { join, resolve } from "path"
 import tar from "tar"
+import env from "../../environment"
+import { budibaseTempDir } from "../budibaseDir"
 
 import { v4 as uuid } from "uuid"
 

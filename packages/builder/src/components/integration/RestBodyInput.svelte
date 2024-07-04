@@ -1,62 +1,62 @@
 <script>
-  import { Body } from "@budibase/bbui"
-  import { RawRestBodyTypes } from "constants/backend"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import CodeMirrorEditor, {
-    EditorModes,
-  } from "components/common/CodeMirrorEditor.svelte"
+import { Body } from "@budibase/bbui"
+import CodeMirrorEditor, {
+  EditorModes,
+} from "components/common/CodeMirrorEditor.svelte"
+import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+import { RawRestBodyTypes } from "constants/backend"
 
-  const objectTypes = [RawRestBodyTypes.FORM, RawRestBodyTypes.ENCODED]
-  const textTypes = [
-    RawRestBodyTypes.JSON,
-    RawRestBodyTypes.XML,
-    RawRestBodyTypes.TEXT,
-  ]
+const objectTypes = [RawRestBodyTypes.FORM, RawRestBodyTypes.ENCODED]
+const textTypes = [
+  RawRestBodyTypes.JSON,
+  RawRestBodyTypes.XML,
+  RawRestBodyTypes.TEXT,
+]
 
-  export let query
-  export let bodyType
+export let query
+export let bodyType
 
-  let text = ""
-  let json = ""
+let text = ""
+let json = ""
 
-  $: checkRequestBody(bodyType)
-  $: updateRequestBody(bodyType, text, json)
+$: checkRequestBody(bodyType)
+$: updateRequestBody(bodyType, text, json)
 
-  function checkRequestBody(type) {
-    if (!bodyType || !query) {
-      return
-    }
-    const currentType = typeof query?.fields.requestBody
-    const isObject = objectTypes.includes(type)
-    const isText = textTypes.includes(type)
-    if (isText && currentType === "string") {
-      text = query.fields.requestBody
-    } else if (isObject && currentType === "object") {
-      json = query.fields.requestBody
-    }
+function checkRequestBody(type) {
+  if (!bodyType || !query) {
+    return
   }
-
-  function updateRequestBody(type, text, json) {
-    if (type === RawRestBodyTypes.NONE) {
-      query.fields.requestBody = null
-    } else if (objectTypes.includes(type)) {
-      query.fields.requestBody = json
-    } else {
-      query.fields.requestBody = text
-    }
+  const currentType = typeof query?.fields.requestBody
+  const isObject = objectTypes.includes(type)
+  const isText = textTypes.includes(type)
+  if (isText && currentType === "string") {
+    text = query.fields.requestBody
+  } else if (isObject && currentType === "object") {
+    json = query.fields.requestBody
   }
+}
 
-  function editorMode(type) {
-    switch (type) {
-      case RawRestBodyTypes.JSON:
-        return EditorModes.JSON
-      case RawRestBodyTypes.XML:
-        return EditorModes.XML
-      default:
-      case RawRestBodyTypes.TEXT:
-        return EditorModes.Text
-    }
+function updateRequestBody(type, text, json) {
+  if (type === RawRestBodyTypes.NONE) {
+    query.fields.requestBody = null
+  } else if (objectTypes.includes(type)) {
+    query.fields.requestBody = json
+  } else {
+    query.fields.requestBody = text
   }
+}
+
+function editorMode(type) {
+  switch (type) {
+    case RawRestBodyTypes.JSON:
+      return EditorModes.JSON
+    case RawRestBodyTypes.XML:
+      return EditorModes.XML
+    default:
+    case RawRestBodyTypes.TEXT:
+      return EditorModes.Text
+  }
+}
 </script>
 
 <div class="margin">

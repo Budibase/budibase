@@ -1,28 +1,28 @@
 <script>
-  import ModalContent from "./ModalContent.svelte"
-  import Input from "../Form/Input.svelte"
+import Input from "../Form/Input.svelte"
+import ModalContent from "./ModalContent.svelte"
 
-  let modal
-  let answer
-  let error
+let modal
+let answer
+let error
 
-  export function show() {
-    modal.show()
-  }
-  export function hide() {
-    modal.hide
-  }
+export function show() {
+  modal.show()
+}
+export function hide() {
+  modal.hide
+}
 
-  function resetState() {
-    answer = undefined
-    error = undefined
-  }
+function resetState() {
+  answer = undefined
+  error = undefined
+}
 
-  async function answerQuiz() {
-    const correct = answer === "8"
-    error = !correct
-    return correct
-  }
+async function answerQuiz() {
+  const correct = answer === "8"
+  error = !correct
+  return correct
+}
 </script>
 
 <ModalContent

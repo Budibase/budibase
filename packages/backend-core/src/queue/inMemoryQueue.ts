@@ -1,6 +1,6 @@
 import events from "events"
 import { newid, timeout } from "../utils"
-import { Queue, QueueOptions, JobOptions } from "./queue"
+import { JobOptions, Queue, QueueOptions } from "./queue"
 
 interface JobMessage {
   id: string
@@ -80,7 +80,7 @@ class InMemoryQueue implements Partial<Queue> {
       async function retryFunc(fnc: any) {
         try {
           await fnc
-        } catch (e: any) {
+        } catch (_e: any) {
           await new Promise<void>(r => setTimeout(() => r(), 50))
 
           await retryFunc(func(msg))

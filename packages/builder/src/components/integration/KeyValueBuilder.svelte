@@ -1,103 +1,103 @@
 <script>
-  import {
-    Icon,
-    ActionButton,
-    Input,
-    Label,
-    Toggle,
-    Select,
-    ActionMenu,
-    MenuItem,
-  } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import { lowercase } from "helpers"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import {
+  ActionButton,
+  ActionMenu,
+  Icon,
+  Input,
+  Label,
+  MenuItem,
+  Select,
+  Toggle,
+} from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { lowercase } from "helpers"
+import { createEventDispatcher } from "svelte"
 
-  let dispatch = createEventDispatcher()
+let dispatch = createEventDispatcher()
 
-  export let defaults
-  export let object = defaults || {}
-  export let activity = {}
-  export let readOnly
-  export let noAddButton
-  export let name
-  export let headings = false
-  export let options
-  export let toggle
-  export let keyPlaceholder = "Key"
-  export let valuePlaceholder = "Value"
-  export let valueHeading
-  export let keyHeading
-  export let tooltip
-  export let menuItems
-  export let showMenu = false
-  export let bindings = []
-  export let bindingDrawerLeft
-  export let allowHelpers = true
-  export let customButtonText = null
-  export let keyBindings = false
-  export let allowJS = false
-  export let actionButtonDisabled = false
-  export let compare = (option, value) => option === value
+export let defaults
+export let object = defaults || {}
+export let activity = {}
+export let readOnly
+export let noAddButton
+export let name
+export let headings = false
+export let options
+export let toggle
+export let keyPlaceholder = "Key"
+export let valuePlaceholder = "Value"
+export let valueHeading
+export let keyHeading
+export let tooltip
+export let menuItems
+export let showMenu = false
+export let bindings = []
+export let bindingDrawerLeft
+export let allowHelpers = true
+export let customButtonText = null
+export let keyBindings = false
+export let allowJS = false
+export let actionButtonDisabled = false
+export let compare = (option, value) => option === value
 
-  let fields = Object.entries(object || {}).map(([name, value]) => ({
-    name,
-    value,
-  }))
-  let fieldActivity = buildFieldActivity(activity)
+let fields = Object.entries(object || {}).map(([name, value]) => ({
+  name,
+  value,
+}))
+let fieldActivity = buildFieldActivity(activity)
 
-  $: object = fields.reduce(
-    (acc, next) => ({ ...acc, [next.name]: next.value }),
-    {}
-  )
+$: object = fields.reduce(
+  (acc, next) => ({ ...acc, [next.name]: next.value }),
+  {}
+)
 
-  function buildFieldActivity(obj) {
-    if (!obj || typeof obj !== "object") {
-      return []
-    }
-    const array = Array(fields.length)
-    for (let [key, value] of Object.entries(obj)) {
-      const field = fields.find(el => el.name === key)
-      const idx = fields.indexOf(field)
-      array[idx] = idx !== -1 ? value : true
-    }
-    return array
+function buildFieldActivity(obj) {
+  if (!obj || typeof obj !== "object") {
+    return []
   }
-
-  export function addEntry() {
-    fields = [...fields, { name: "", value: "" }]
-    fieldActivity = [...fieldActivity, true]
-    changed()
+  const array = Array(fields.length)
+  for (let [key, value] of Object.entries(obj)) {
+    const field = fields.find(el => el.name === key)
+    const idx = fields.indexOf(field)
+    array[idx] = idx !== -1 ? value : true
   }
+  return array
+}
 
-  function deleteEntry(idx) {
-    fields.splice(idx, 1)
-    fieldActivity.splice(idx, 1)
-    changed()
-  }
+export function addEntry() {
+  fields = [...fields, { name: "", value: "" }]
+  fieldActivity = [...fieldActivity, true]
+  changed()
+}
 
-  function changed() {
-    fields = fields
-    const newActivity = {}
-    for (let idx = 0; idx < fields.length; idx++) {
-      const fieldName = fields[idx].name
-      if (fieldName) {
-        newActivity[fieldName] = fieldActivity[idx]
-      }
+function deleteEntry(idx) {
+  fields.splice(idx, 1)
+  fieldActivity.splice(idx, 1)
+  changed()
+}
+
+function changed() {
+  fields = fields
+  const newActivity = {}
+  for (let idx = 0; idx < fields.length; idx++) {
+    const fieldName = fields[idx].name
+    if (fieldName) {
+      newActivity[fieldName] = fieldActivity[idx]
     }
-    activity = newActivity
-    dispatch("change", fields)
   }
+  activity = newActivity
+  dispatch("change", fields)
+}
 
-  function isJsonArray(value) {
-    if (!value || typeof value === "string") {
-      return false
-    }
-    if (value.type === "array") {
-      return true
-    }
-    return value.type === "json" && value.subtype === "array"
+function isJsonArray(value) {
+  if (!value || typeof value === "string") {
+    return false
   }
+  if (value.type === "array") {
+    return true
+  }
+  return value.type === "json" && value.subtype === "array"
+}
 </script>
 
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->

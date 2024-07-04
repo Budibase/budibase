@@ -1,29 +1,29 @@
-import postgres from "./postgres"
-import dynamodb from "./dynamodb"
-import mongodb from "./mongodb"
-import elasticsearch from "./elasticsearch"
-import couchdb from "./couchdb"
-import sqlServer from "./microsoftSqlServer"
-import s3 from "./s3"
-import airtable from "./airtable"
-import mysql from "./mysql"
-import arangodb from "./arangodb"
-import rest from "./rest"
-import googlesheets from "./googlesheets"
-import firebase from "./firebase"
-import redis from "./redis"
-import snowflake from "./snowflake"
-import oracle from "./oracle"
 import {
-  SourceName,
   Integration,
-  PluginType,
   IntegrationBase,
+  PluginType,
+  SourceName,
 } from "@budibase/types"
-import { getDatasourcePlugin } from "../utilities/fileSystem"
-import env from "../environment"
 import cloneDeep from "lodash/cloneDeep"
+import env from "../environment"
 import sdk from "../sdk"
+import { getDatasourcePlugin } from "../utilities/fileSystem"
+import airtable from "./airtable"
+import arangodb from "./arangodb"
+import couchdb from "./couchdb"
+import dynamodb from "./dynamodb"
+import elasticsearch from "./elasticsearch"
+import firebase from "./firebase"
+import googlesheets from "./googlesheets"
+import sqlServer from "./microsoftSqlServer"
+import mongodb from "./mongodb"
+import mysql from "./mysql"
+import oracle from "./oracle"
+import postgres from "./postgres"
+import redis from "./redis"
+import rest from "./rest"
+import s3 from "./s3"
+import snowflake from "./snowflake"
 
 const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.POSTGRES]: postgres.schema,

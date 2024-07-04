@@ -1,5 +1,5 @@
-import { DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
 import { DatasourceFeature } from "@budibase/types"
+import { DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
 
 export const integrationForDatasource = (integrations, datasource) => ({
   name: datasource.source,

@@ -1,8 +1,8 @@
-import { processEvent } from "./utils"
-import { automationQueue } from "./bullboard"
-import { rebootTrigger } from "./triggers"
 import BullQueue from "bull"
 import { automationsEnabled } from "../features"
+import { automationQueue } from "./bullboard"
+import { rebootTrigger } from "./triggers"
+import { processEvent } from "./utils"
 
 export { automationQueue } from "./bullboard"
 export { shutdown } from "./bullboard"

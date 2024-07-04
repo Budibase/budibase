@@ -1,33 +1,33 @@
 <script>
-  import {
-    Layout,
-    Body,
-    Heading,
-    Divider,
-    ActionButton,
-    Modal,
-  } from "@budibase/bbui"
-  import { AppStatus } from "constants"
-  import { appsStore } from "stores/portal"
-  import { appStore } from "stores/builder"
-  import ExportAppModal from "components/start/ExportAppModal.svelte"
-  import ImportAppModal from "components/start/ImportAppModal.svelte"
+import { AppStatus } from "constants"
+import {
+  ActionButton,
+  Body,
+  Divider,
+  Heading,
+  Layout,
+  Modal,
+} from "@budibase/bbui"
+import ExportAppModal from "components/start/ExportAppModal.svelte"
+import ImportAppModal from "components/start/ImportAppModal.svelte"
+import { appStore } from "stores/builder"
+import { appsStore } from "stores/portal"
 
-  $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
-  $: app = filteredApps.length ? filteredApps[0] : {}
-  $: appDeployed = app?.status === AppStatus.DEPLOYED
+$: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
+$: app = filteredApps.length ? filteredApps[0] : {}
+$: appDeployed = app?.status === AppStatus.DEPLOYED
 
-  let exportModal, importModal
-  let exportPublishedVersion = false
+let exportModal, importModal
+let exportPublishedVersion = false
 
-  const exportApp = opts => {
-    exportPublishedVersion = !!opts?.published
-    exportModal.show()
-  }
+const exportApp = opts => {
+  exportPublishedVersion = !!opts?.published
+  exportModal.show()
+}
 
-  const importApp = () => {
-    importModal.show()
-  }
+const importApp = () => {
+  importModal.show()
+}
 </script>
 
 <Modal bind:this={exportModal} padding={false}>

@@ -1,0 +1,184 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "files": {
+    "include": ["packages/**/*.ts", "packages/**/*.js"],
+    "ignore": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.git/**",
+      "**/coverage/**",
+      "**/*.ivm.bundle.js",
+      "packages/account-portal/packages/ui/src/analytics/IntercomClient.js",
+      "packages/server/builder",
+      "packages/server/client",
+      "packages/server/src/definitions/openapi.ts",
+      "packages/builder/.routify",
+      "packages/sdk/sdk",
+      "packages/account-portal/packages/ui/build",
+      "packages/account-portal/packages/ui/.routify",
+      "packages/account-portal/packages/server/build"
+    ],
+    "ignoreUnknown": true
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 80,
+    "attributePosition": "auto"
+  },
+  "organizeImports": {
+    "enabled": true,
+    "ignore": ["packages/server/src/middleware/tests/authorized.spec.ts"]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "complexity": {
+        "noExtraBooleanCast": "error",
+        "noMultipleSpacesInRegularExpressionLiterals": "error",
+        "noUselessCatch": "error",
+        "noWith": "error"
+      },
+      "correctness": {
+        "noConstAssign": "error",
+        "noConstantCondition": "error",
+        "noEmptyCharacterClassInRegex": "error",
+        "noEmptyPattern": "error",
+        "noGlobalObjectCalls": "error",
+        "noInnerDeclarations": "error",
+        "noInvalidConstructorSuper": "error",
+        "noNewSymbol": "error",
+        "noNonoctalDecimalEscape": "error",
+        "noPrecisionLoss": "error",
+        "noSelfAssign": "off",
+        "noSetterReturn": "error",
+        "noSwitchDeclarations": "error",
+        "noUndeclaredVariables": "error",
+        "noUnreachable": "error",
+        "noUnreachableSuper": "error",
+        "noUnsafeFinally": "error",
+        "noUnsafeOptionalChaining": "error",
+        "noUnusedLabels": "error",
+        "noUnusedVariables": "error",
+        "useIsNan": "error",
+        "useValidForDirection": "error",
+        "useYield": "error"
+      },
+      "suspicious": {
+        "noAsyncPromiseExecutor": "error",
+        "noCatchAssign": "error",
+        "noClassAssign": "error",
+        "noCompareNegZero": "error",
+        "noControlCharactersInRegex": "error",
+        "noDebugger": "error",
+        "noDuplicateCase": "error",
+        "noDuplicateClassMembers": "error",
+        "noDuplicateObjectKeys": "error",
+        "noDuplicateParameters": "error",
+        "noEmptyBlockStatements": "off",
+        "noFallthroughSwitchClause": "error",
+        "noFunctionAssign": "error",
+        "noGlobalAssign": "error",
+        "noImportAssign": "error",
+        "noMisleadingCharacterClass": "error",
+        "noPrototypeBuiltins": "error",
+        "noRedeclare": "error",
+        "noShadowRestrictedNames": "error",
+        "noUnsafeNegation": "error",
+        "useGetterReturn": "error",
+        "useValidTypeof": "error"
+      }
+    },
+    "ignore": [
+      "packages/**/*.spec.js",
+      "packages/**/bundle.js",
+      "packages/server/builder",
+      "packages/server/client",
+      "packages/builder/.routify",
+      "packages/sdk/sdk",
+      "packages/account-portal/packages/server/build",
+      "packages/account-portal/packages/ui/.routify",
+      "packages/account-portal/packages/ui/build",
+      "packages/**/*.ivm.bundle.js",
+      "packages/server/build/oldClientVersions/**/**"
+    ]
+  },
+  "javascript": {
+    "formatter": {
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "es5",
+      "semicolons": "asNeeded",
+      "arrowParentheses": "asNeeded",
+      "bracketSpacing": true,
+      "bracketSameLine": false,
+      "quoteStyle": "double",
+      "attributePosition": "auto"
+    },
+    "globals": ["GeolocationPositionError"]
+  },
+  "overrides": [
+    {
+      "include": ["**/*.svelte"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useConst": "off"
+          },
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUndeclaredVariables": "off"
+          }
+        }
+      }
+    },
+    {
+      "include": ["**/*.ts"],
+      "javascript": { "globals": ["NodeJS"] },
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noDuplicateClassMembers": "off",
+            "noRedeclare": "error"
+          }
+        }
+      }
+    },
+    {
+      "include": [
+        "**/*.spec.ts",
+        "**/*.spec.js",
+        "**/*.test.ts",
+        "**/*.test.js",
+        "**/test/**",
+        "**/tests/**",
+        "**/__mocks__/**"
+      ],
+      "javascript": {
+        "globals": [
+          "NodeJS",
+          "jest",
+          "describe",
+          "it",
+          "expect",
+          "beforeEach",
+          "afterEach",
+          "beforeAll",
+          "afterAll"
+        ]
+      }
+    },
+    {
+      "include": [
+        "packages/builder/**/*",
+        "packages/client/**/*",
+        "packages/frontend-core/**/*"
+      ],
+      "linter": { "rules": {} }
+    }
+  ]
+}

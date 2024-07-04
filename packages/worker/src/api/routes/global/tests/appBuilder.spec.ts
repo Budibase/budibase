@@ -1,6 +1,6 @@
-import { TestConfiguration, structures } from "../../../../tests"
 import { mocks } from "@budibase/backend-core/tests"
 import { User } from "@budibase/types"
+import { TestConfiguration, structures } from "../../../../tests"
 
 const MOCK_APP_ID = "app_a"
 

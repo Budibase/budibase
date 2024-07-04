@@ -1,7 +1,7 @@
 import { GenericContainer, StartedTestContainer } from "testcontainers"
+import { env } from "../.."
 import { generator, structures } from "../../../tests"
 import RedisWrapper from "../redis"
-import { env } from "../.."
 
 jest.setTimeout(30000)
 
@@ -56,10 +56,13 @@ describe("redis", () => {
     ) {
       return generator
         .unique(() => generator.word(), keyLength)
-        .reduce((acc, key) => {
-          acc[key] = valueGenerator()
-          return acc
-        }, {} as Record<string, string>)
+        .reduce(
+          (acc, key) => {
+            acc[key] = valueGenerator()
+            return acc
+          },
+          {} as Record<string, string>
+        )
     }
 
     it("a basic object can be persisted", async () => {

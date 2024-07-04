@@ -1,29 +1,29 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
-import { get, writable } from "svelte/store"
-import {
-  INITIAL_COMPONENTS_STATE,
-  ComponentStore,
-} from "stores/builder/components"
+import { makePropSafe as safe } from "@budibase/string-templates"
 import { API } from "api"
-import { appStore, tables } from "stores/builder"
 import {
-  componentDefinitionMap,
-  getComponentFixture,
-  getScreenFixture,
-  pluginDefinitionMap,
-  clientFeaturesResp,
-  sampleTableDoc,
-  internalTableDoc,
-  userTableDoc,
-  externalTableDoc,
-  componentsToNested,
-} from "./fixtures"
-import {
-  DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
+  DB_TYPE_INTERNAL,
   DEFAULT_BB_DATASOURCE_ID,
 } from "constants/backend"
-import { makePropSafe as safe } from "@budibase/string-templates"
+import { appStore, tables } from "stores/builder"
+import {
+  ComponentStore,
+  INITIAL_COMPONENTS_STATE,
+} from "stores/builder/components"
+import { get, writable } from "svelte/store"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import {
+  clientFeaturesResp,
+  componentDefinitionMap,
+  componentsToNested,
+  externalTableDoc,
+  getComponentFixture,
+  getScreenFixture,
+  internalTableDoc,
+  pluginDefinitionMap,
+  sampleTableDoc,
+  userTableDoc,
+} from "./fixtures"
 
 // Could move to fixtures
 const COMP_PREFIX = "@budibase/standard-components"
@@ -129,9 +129,8 @@ describe("Component store", () => {
       .mockResolvedValue(mockAPIResponse)
 
     const fakeAppId = "abc123"
-    const components = await ctx.test.componentStore.refreshDefinitions(
-      fakeAppId
-    )
+    const components =
+      await ctx.test.componentStore.refreshDefinitions(fakeAppId)
 
     expect(components).toStrictEqual(mockAPIResponse)
     expect(ctx.test.store.components).toStrictEqual(mockAPIResponse)
@@ -154,9 +153,8 @@ describe("Component store", () => {
       .mockResolvedValue(mockAPIResponse)
 
     const fakeAppId = "abc123"
-    const components = await ctx.test.componentStore.refreshDefinitions(
-      fakeAppId
-    )
+    const components =
+      await ctx.test.componentStore.refreshDefinitions(fakeAppId)
 
     expect(components).toStrictEqual(mockAPIResponse)
     expect(ctx.test.store.components).toStrictEqual(mockAPIResponse)

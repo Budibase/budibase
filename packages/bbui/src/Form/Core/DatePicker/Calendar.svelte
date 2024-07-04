@@ -1,78 +1,78 @@
 <script>
-  import { cleanInput } from "./utils"
-  import Select from "../../Select.svelte"
-  import dayjs from "dayjs"
-  import NumberInput from "./NumberInput.svelte"
-  import { createEventDispatcher } from "svelte"
-  import isoWeek from "dayjs/plugin/isoWeek"
+import dayjs from "dayjs"
+import isoWeek from "dayjs/plugin/isoWeek"
+import { createEventDispatcher } from "svelte"
+import Select from "../../Select.svelte"
+import NumberInput from "./NumberInput.svelte"
+import { cleanInput } from "./utils"
 
-  dayjs.extend(isoWeek)
+dayjs.extend(isoWeek)
 
-  export let value
+export let value
 
-  const dispatch = createEventDispatcher()
-  const DaysOfWeek = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ]
-  const MonthsOfYear = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ]
+const dispatch = createEventDispatcher()
+const DaysOfWeek = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+]
+const MonthsOfYear = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+]
 
-  const now = dayjs()
-  let calendarDate
+const now = dayjs()
+let calendarDate
 
-  $: calendarDate = dayjs(value || dayjs()).startOf("month")
-  $: mondays = getMondays(calendarDate)
+$: calendarDate = dayjs(value || dayjs()).startOf("month")
+$: mondays = getMondays(calendarDate)
 
-  const getMondays = monthStart => {
-    if (!monthStart?.isValid()) {
-      return []
-    }
-    let monthEnd = monthStart.endOf("month")
-    let calendarStart = monthStart.startOf("isoWeek")
-    const numWeeks = Math.ceil((monthEnd.diff(calendarStart, "day") + 1) / 7)
-
-    let mondays = []
-    for (let i = 0; i < numWeeks; i++) {
-      mondays.push(calendarStart.add(i, "weeks"))
-    }
-    return mondays
+const getMondays = monthStart => {
+  if (!monthStart?.isValid()) {
+    return []
   }
+  let monthEnd = monthStart.endOf("month")
+  let calendarStart = monthStart.startOf("isoWeek")
+  const numWeeks = Math.ceil((monthEnd.diff(calendarStart, "day") + 1) / 7)
 
-  const handleCalendarYearChange = e => {
-    calendarDate = calendarDate.year(parseInt(e.target.value))
+  let mondays = []
+  for (let i = 0; i < numWeeks; i++) {
+    mondays.push(calendarStart.add(i, "weeks"))
   }
+  return mondays
+}
 
-  const handleDateChange = date => {
-    const base = value || now
-    dispatch(
-      "change",
-      base.year(date.year()).month(date.month()).date(date.date())
-    )
-  }
+const handleCalendarYearChange = e => {
+  calendarDate = calendarDate.year(parseInt(e.target.value))
+}
 
-  export const setDate = date => {
-    calendarDate = date
-  }
+const handleDateChange = date => {
+  const base = value || now
+  dispatch(
+    "change",
+    base.year(date.year()).month(date.month()).date(date.date())
+  )
+}
 
-  const cleanYear = cleanInput({ max: 9999, pad: 0, fallback: now.year() })
+export const setDate = date => {
+  calendarDate = date
+}
+
+const cleanYear = cleanInput({ max: 9999, pad: 0, fallback: now.year() })
 </script>
 
 <div class="spectrum-Calendar">

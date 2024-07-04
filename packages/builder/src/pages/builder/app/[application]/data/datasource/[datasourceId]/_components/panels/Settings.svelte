@@ -1,18 +1,18 @@
 <script>
-  import { Body, Button, Layout, notifications } from "@budibase/bbui"
-  import Panel from "./Panel.svelte"
-  import { API } from "api"
-  import { downloadText } from "@budibase/frontend-core"
+import { Body, Button, Layout, notifications } from "@budibase/bbui"
+import { downloadText } from "@budibase/frontend-core"
+import { API } from "api"
+import Panel from "./Panel.svelte"
 
-  export let datasource
+export let datasource
 
-  async function download() {
-    if (!datasource?._id) {
-      notifications.error("Datasource invalid")
-    }
-    const response = await API.fetchExternalSchema(datasource._id)
-    downloadText(`${datasource.name}-dump.sql`, response.schema)
+async function download() {
+  if (!datasource?._id) {
+    notifications.error("Datasource invalid")
   }
+  const response = await API.fetchExternalSchema(datasource._id)
+  downloadText(`${datasource.name}-dump.sql`, response.schema)
+}
 </script>
 
 <Panel>

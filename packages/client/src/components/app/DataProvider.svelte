@@ -1,148 +1,148 @@
 <script>
-  import { getContext } from "svelte"
-  import { Pagination, ProgressCircle } from "@budibase/bbui"
-  import { fetchData, QueryUtils } from "@budibase/frontend-core"
+import { Pagination, ProgressCircle } from "@budibase/bbui"
+import { QueryUtils, fetchData } from "@budibase/frontend-core"
+import { getContext } from "svelte"
 
-  export let dataSource
-  export let filter
-  export let sortColumn
-  export let sortOrder
-  export let limit
-  export let paginate
-  export let autoRefresh
+export let dataSource
+export let filter
+export let sortColumn
+export let sortOrder
+export let limit
+export let paginate
+export let autoRefresh
 
-  const { styleable, Provider, ActionTypes, API } = getContext("sdk")
-  const component = getContext("component")
+const { styleable, Provider, ActionTypes, API } = getContext("sdk")
+const component = getContext("component")
 
-  let interval
-  let queryExtensions = {}
+let interval
+let queryExtensions = {}
 
-  // We need to manage our lucene query manually as we want to allow components
-  // to extend it
-  $: defaultQuery = QueryUtils.buildQuery(filter)
-  $: query = extendQuery(defaultQuery, queryExtensions)
-  $: fetch = createFetch(dataSource)
-  $: fetch.update({
-    query,
-    sortColumn,
-    sortOrder,
-    limit,
-    paginate,
+// We need to manage our lucene query manually as we want to allow components
+// to extend it
+$: defaultQuery = QueryUtils.buildQuery(filter)
+$: query = extendQuery(defaultQuery, queryExtensions)
+$: fetch = createFetch(dataSource)
+$: fetch.update({
+  query,
+  sortColumn,
+  sortOrder,
+  limit,
+  paginate,
+})
+$: schema = sanitizeSchema($fetch.schema)
+$: setUpAutoRefresh(autoRefresh)
+$: actions = [
+  {
+    type: ActionTypes.RefreshDatasource,
+    callback: () => fetch.refresh(),
+    metadata: { dataSource },
+  },
+  {
+    type: ActionTypes.AddDataProviderQueryExtension,
+    callback: addQueryExtension,
+  },
+  {
+    type: ActionTypes.RemoveDataProviderQueryExtension,
+    callback: removeQueryExtension,
+  },
+  {
+    type: ActionTypes.SetDataProviderSorting,
+    callback: ({ column, order }) => {
+      let newOptions = {}
+      if (column) {
+        newOptions.sortColumn = column
+      }
+      if (order) {
+        newOptions.sortOrder = order
+      }
+      if (Object.keys(newOptions)?.length) {
+        fetch.update(newOptions)
+      }
+    },
+  },
+]
+$: dataContext = {
+  rows: $fetch.rows,
+  info: $fetch.info,
+  datasource: dataSource || {},
+  schema,
+  rowsLength: $fetch.rows.length,
+  pageNumber: $fetch.pageNumber + 1,
+  // Undocumented properties. These aren't supposed to be used in builder
+  // bindings, but are used internally by other components
+  id: $component?.id,
+  state: {
+    query: $fetch.query,
+    sortColumn: $fetch.sortColumn,
+    sortOrder: $fetch.sortOrder,
+  },
+  limit,
+  primaryDisplay: $fetch.definition?.primaryDisplay,
+}
+
+const createFetch = datasource => {
+  return fetchData({
+    API,
+    datasource,
+    options: {
+      query,
+      sortColumn,
+      sortOrder,
+      limit,
+      paginate,
+    },
   })
-  $: schema = sanitizeSchema($fetch.schema)
-  $: setUpAutoRefresh(autoRefresh)
-  $: actions = [
-    {
-      type: ActionTypes.RefreshDatasource,
-      callback: () => fetch.refresh(),
-      metadata: { dataSource },
-    },
-    {
-      type: ActionTypes.AddDataProviderQueryExtension,
-      callback: addQueryExtension,
-    },
-    {
-      type: ActionTypes.RemoveDataProviderQueryExtension,
-      callback: removeQueryExtension,
-    },
-    {
-      type: ActionTypes.SetDataProviderSorting,
-      callback: ({ column, order }) => {
-        let newOptions = {}
-        if (column) {
-          newOptions.sortColumn = column
-        }
-        if (order) {
-          newOptions.sortOrder = order
-        }
-        if (Object.keys(newOptions)?.length) {
-          fetch.update(newOptions)
-        }
-      },
-    },
-  ]
-  $: dataContext = {
-    rows: $fetch.rows,
-    info: $fetch.info,
-    datasource: dataSource || {},
-    schema,
-    rowsLength: $fetch.rows.length,
-    pageNumber: $fetch.pageNumber + 1,
-    // Undocumented properties. These aren't supposed to be used in builder
-    // bindings, but are used internally by other components
-    id: $component?.id,
-    state: {
-      query: $fetch.query,
-      sortColumn: $fetch.sortColumn,
-      sortOrder: $fetch.sortOrder,
-    },
-    limit,
-    primaryDisplay: $fetch.definition?.primaryDisplay,
-  }
+}
 
-  const createFetch = datasource => {
-    return fetchData({
-      API,
-      datasource,
-      options: {
-        query,
-        sortColumn,
-        sortOrder,
-        limit,
-        paginate,
-      },
-    })
+const sanitizeSchema = schema => {
+  if (!schema) {
+    return schema
   }
-
-  const sanitizeSchema = schema => {
-    if (!schema) {
-      return schema
+  let cloned = { ...schema }
+  Object.entries(cloned).forEach(([field, fieldSchema]) => {
+    if (fieldSchema.visible === false) {
+      delete cloned[field]
     }
-    let cloned = { ...schema }
-    Object.entries(cloned).forEach(([field, fieldSchema]) => {
-      if (fieldSchema.visible === false) {
-        delete cloned[field]
+  })
+  return cloned
+}
+
+const addQueryExtension = (key, extension) => {
+  if (!key || !extension) {
+    return
+  }
+  queryExtensions = { ...queryExtensions, [key]: extension }
+}
+
+const removeQueryExtension = key => {
+  if (!key) {
+    return
+  }
+  const newQueryExtensions = { ...queryExtensions }
+  delete newQueryExtensions[key]
+  queryExtensions = newQueryExtensions
+}
+
+const extendQuery = (defaultQuery, extensions) => {
+  const extensionValues = Object.values(extensions || {})
+  let extendedQuery = { ...defaultQuery }
+  extensionValues.forEach(extension => {
+    Object.entries(extension || {}).forEach(([operator, fields]) => {
+      extendedQuery[operator] = {
+        ...extendedQuery[operator],
+        ...fields,
       }
     })
-    return cloned
-  }
+  })
+  return extendedQuery
+}
 
-  const addQueryExtension = (key, extension) => {
-    if (!key || !extension) {
-      return
-    }
-    queryExtensions = { ...queryExtensions, [key]: extension }
+const setUpAutoRefresh = autoRefresh => {
+  clearInterval(interval)
+  if (autoRefresh) {
+    interval = setInterval(fetch.refresh, Math.max(10000, autoRefresh * 1000))
   }
-
-  const removeQueryExtension = key => {
-    if (!key) {
-      return
-    }
-    const newQueryExtensions = { ...queryExtensions }
-    delete newQueryExtensions[key]
-    queryExtensions = newQueryExtensions
-  }
-
-  const extendQuery = (defaultQuery, extensions) => {
-    const extensionValues = Object.values(extensions || {})
-    let extendedQuery = { ...defaultQuery }
-    extensionValues.forEach(extension => {
-      Object.entries(extension || {}).forEach(([operator, fields]) => {
-        extendedQuery[operator] = {
-          ...extendedQuery[operator],
-          ...fields,
-        }
-      })
-    })
-    return extendedQuery
-  }
-
-  const setUpAutoRefresh = autoRefresh => {
-    clearInterval(interval)
-    if (autoRefresh) {
-      interval = setInterval(fetch.refresh, Math.max(10000, autoRefresh * 1000))
-    }
-  }
+}
 </script>
 
 <div use:styleable={$component.styles} class="container">

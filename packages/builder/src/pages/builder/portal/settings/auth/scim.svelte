@@ -1,78 +1,78 @@
 <script>
-  import {
-    Button,
-    Heading,
-    Label,
-    notifications,
-    Layout,
-    Body,
-    Toggle,
-    Input,
-    Icon,
-    Helpers,
-  } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import { API } from "api"
-  import { organisation, auth } from "stores/portal"
+import {
+  Body,
+  Button,
+  Heading,
+  Helpers,
+  Icon,
+  Input,
+  Label,
+  Layout,
+  Toggle,
+  notifications,
+} from "@budibase/bbui"
+import { API } from "api"
+import { auth, organisation } from "stores/portal"
+import { onMount } from "svelte"
 
-  const configType = "scim"
+const configType = "scim"
 
-  $: scimEnabled = false
-  $: apiKey = null
+$: scimEnabled = false
+$: apiKey = null
 
-  async function saveSCIM() {
-    try {
-      await API.saveConfig({
-        type: configType,
-        config: {
-          enabled: scimEnabled,
-        },
-      })
-      notifications.success(`Settings saved`)
-    } catch (e) {
-      notifications.error(e.message)
-      return
-    }
+async function saveSCIM() {
+  try {
+    await API.saveConfig({
+      type: configType,
+      config: {
+        enabled: scimEnabled,
+      },
+    })
+    notifications.success(`Settings saved`)
+  } catch (e) {
+    notifications.error(e.message)
+    return
   }
+}
 
-  async function fetchConfig() {
-    try {
-      const scimConfig = await API.getConfig(configType)
-      scimEnabled = scimConfig?.config?.enabled
-    } catch (error) {
-      console.error(error)
-      notifications.error(
-        `Error fetching SCIM config - ${error?.message || "unknown error"}`
-      )
-    }
+async function fetchConfig() {
+  try {
+    const scimConfig = await API.getConfig(configType)
+    scimEnabled = scimConfig?.config?.enabled
+  } catch (error) {
+    console.error(error)
+    notifications.error(
+      `Error fetching SCIM config - ${error?.message || "unknown error"}`
+    )
   }
+}
 
-  async function fetchAPIKey() {
-    try {
-      apiKey = await auth.fetchAPIKey()
-    } catch (err) {
-      notifications.error(
-        `Unable to fetch API key - ${err?.message || "unknown error"}`
-      )
-    }
+async function fetchAPIKey() {
+  try {
+    apiKey = await auth.fetchAPIKey()
+  } catch (err) {
+    notifications.error(
+      `Unable to fetch API key - ${err?.message || "unknown error"}`
+    )
   }
+}
 
-  onMount(async () => {
-    await Promise.all([fetchConfig(), fetchAPIKey()])
-  })
+onMount(async () => {
+  await Promise.all([fetchConfig(), fetchAPIKey()])
+})
 
-  const copyToClipboard = async value => {
-    await Helpers.copyToClipboard(value)
-    notifications.success("Copied")
-  }
+const copyToClipboard = async value => {
+  await Helpers.copyToClipboard(value)
+  notifications.success("Copied")
+}
 
-  $: settings = [
-    {
-      title: "Provisioning URL",
-      value: `${$organisation.platformUrl}/api/global/scim/v2`,
-    },
-    { title: "Provisioning Token", value: apiKey },
-  ]
+$: settings = [
+  {
+    title: "Provisioning URL",
+    value: `${$organisation.platformUrl}/api/global/scim/v2`,
+  },
+  { title: "Provisioning Token", value: apiKey },
+]
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

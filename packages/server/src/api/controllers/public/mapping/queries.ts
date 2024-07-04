@@ -1,4 +1,4 @@
-import { Query, ExecuteQuery } from "./types"
+import { ExecuteQuery, Query } from "./types"
 
 function query(body: any): Query {
   return {

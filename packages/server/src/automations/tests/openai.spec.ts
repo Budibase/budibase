@@ -1,5 +1,5 @@
-import { getConfig, runStep, afterAll as _afterAll } from "./utilities"
 import { OpenAI } from "openai"
+import { afterAll as _afterAll, getConfig, runStep } from "./utilities"
 
 jest.mock("openai", () => ({
   OpenAI: jest.fn().mockImplementation(() => ({
@@ -78,7 +78,7 @@ describe("test the openai action", () => {
               }),
             },
           },
-        } as any)
+        }) as any
     )
 
     const res = await runStep("OPENAI", {

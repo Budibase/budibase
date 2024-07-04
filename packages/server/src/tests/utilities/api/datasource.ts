@@ -1,12 +1,12 @@
 import {
-  Datasource,
-  VerifyDatasourceRequest,
-  CreateDatasourceResponse,
-  UpdateDatasourceResponse,
-  UpdateDatasourceRequest,
-  QueryJson,
   BuildSchemaFromSourceResponse,
+  CreateDatasourceResponse,
+  Datasource,
   FetchDatasourceInfoResponse,
+  QueryJson,
+  UpdateDatasourceRequest,
+  UpdateDatasourceResponse,
+  VerifyDatasourceRequest,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 

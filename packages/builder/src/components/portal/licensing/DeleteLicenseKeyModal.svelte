@@ -1,17 +1,17 @@
 <script>
-  import { Modal, ModalContent, Body } from "@budibase/bbui"
+import { Body, Modal, ModalContent } from "@budibase/bbui"
 
-  let modal
+let modal
 
-  export let onConfirm
+export let onConfirm
 
-  export function show() {
-    modal.show()
-  }
+export function show() {
+  modal.show()
+}
 
-  export function hide() {
-    modal.hide()
-  }
+export function hide() {
+  modal.hide()
+}
 </script>
 
 <Modal bind:this={modal} on:hide={modal}>

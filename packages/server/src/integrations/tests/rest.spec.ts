@@ -37,10 +37,10 @@ jest.mock("@budibase/backend-core", () => {
 })
 jest.mock("uuid", () => ({ v4: () => "00000000-0000-0000-0000-000000000000" }))
 
-import { default as RestIntegration } from "../rest"
+import { Readable } from "stream"
 import { RestAuthType } from "@budibase/types"
 import fetch from "node-fetch"
-import { Readable } from "stream"
+import { default as RestIntegration } from "../rest"
 
 const FormData = require("form-data")
 const { URLSearchParams } = require("url")
@@ -267,7 +267,7 @@ describe("REST Integration", () => {
       expect(output.extra.headers["content-type"]).toEqual("application/xml")
     })
 
-    test.each([...contentTypes, undefined])(
+    it.each([...contentTypes, undefined])(
       "should not throw an error on 204 no content",
       async contentType => {
         const input = buildInput(undefined, "", contentType, 204)

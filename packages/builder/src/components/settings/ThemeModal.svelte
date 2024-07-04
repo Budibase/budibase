@@ -1,7 +1,7 @@
 <script>
-  import { ModalContent, Select } from "@budibase/bbui"
-  import { themeStore } from "stores/portal"
-  import { Constants } from "@budibase/frontend-core"
+import { ModalContent, Select } from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
+import { themeStore } from "stores/portal"
 </script>
 
 <ModalContent title="Theme">

@@ -10,10 +10,10 @@
   take.
 -->
 <script>
-  import { MaintenanceType } from "@budibase/types"
-  import { Heading, Body, Layout } from "@budibase/bbui"
+import { Body, Heading, Layout } from "@budibase/bbui"
+import { MaintenanceType } from "@budibase/types"
 
-  export let maintenanceList
+export let maintenanceList
 </script>
 
 <div class="content">

@@ -1,9 +1,9 @@
-import { getEnvironmentVariables } from "../../utils"
-import { processStringSync } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
-import { getQueryParams, isProdAppID } from "../../../db/utils"
-import { BaseQueryVerbs } from "../../../constants"
+import { processStringSync } from "@budibase/string-templates"
 import { Query, QuerySchema } from "@budibase/types"
+import { BaseQueryVerbs } from "../../../constants"
+import { getQueryParams, isProdAppID } from "../../../db/utils"
+import { getEnvironmentVariables } from "../../utils"
 
 function updateSchema(query: Query): Query {
   if (!query.schema) {
@@ -124,7 +124,7 @@ export async function enrichContext(
           enrichedQuery.customData ||
           enrichedQuery.requestBody
       )
-    } catch (err) {
+    } catch (_err) {
       // no json found, ignore
     }
     delete enrichedQuery.customData

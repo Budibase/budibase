@@ -1,10 +1,10 @@
 import { db } from "@budibase/backend-core"
 import { Row } from "@budibase/types"
-import sdk from "../../../sdk"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { finaliseRow } from "../../../api/controllers/row/staticFormula"
-import { inputProcessing } from "../../../utilities/rowProcessor"
 import * as linkRows from "../../../db/linkedRows"
+import sdk from "../../../sdk"
+import { inputProcessing } from "../../../utilities/rowProcessor"
 
 export async function save(
   tableId: string,

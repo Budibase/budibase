@@ -1,8 +1,8 @@
-import env from "../environment"
-import { context } from "@budibase/backend-core"
-import { generateMetadataID } from "../db/utils"
-import { Document } from "@budibase/types"
 import stream from "stream"
+import { context } from "@budibase/backend-core"
+import { Document } from "@budibase/types"
+import { generateMetadataID } from "../db/utils"
+import env from "../environment"
 
 const Readable = stream.Readable
 
@@ -45,7 +45,7 @@ export async function updateEntityMetadata(
     const oldMetadata = await db.get<any>(id)
     rev = oldMetadata._rev
     metadata = updateFn(oldMetadata)
-  } catch (err) {
+  } catch (_err) {
     rev = null
     metadata = updateFn({})
   }
@@ -80,7 +80,7 @@ export async function deleteEntityMetadata(type: string, entityId: string) {
     if (metadata) {
       rev = metadata._rev
     }
-  } catch (err) {
+  } catch (_err) {
     // don't need to error if it doesn't exist
   }
   if (id && rev) {

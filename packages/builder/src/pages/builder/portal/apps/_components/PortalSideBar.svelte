@@ -1,21 +1,20 @@
 <script>
-  import { sideBarCollapsed, enrichedApps, auth } from "stores/portal"
-  import { params, goto } from "@roxi/routify"
-  import NavItem from "components/common/NavItem.svelte"
-  import NavHeader from "components/common/NavHeader.svelte"
-  import AppRowContext from "components/start/AppRowContext.svelte"
-  import FavouriteAppButton from "../FavouriteAppButton.svelte"
-  import { sdk } from "@budibase/shared-core"
+import { sdk } from "@budibase/shared-core"
+import { goto, params } from "@roxi/routify"
+import NavHeader from "components/common/NavHeader.svelte"
+import NavItem from "components/common/NavItem.svelte"
+import AppRowContext from "components/start/AppRowContext.svelte"
+import { auth, enrichedApps, sideBarCollapsed } from "stores/portal"
+import FavouriteAppButton from "../FavouriteAppButton.svelte"
 
-  let searchString
-  let opened
+let searchString
+let opened
 
-  $: filteredApps = $enrichedApps.filter(app => {
-    return (
-      !searchString ||
-      app.name.toLowerCase().includes(searchString.toLowerCase())
-    )
-  })
+$: filteredApps = $enrichedApps.filter(app => {
+  return (
+    !searchString || app.name.toLowerCase().includes(searchString.toLowerCase())
+  )
+})
 </script>
 
 <div class="side-bar" class:collapsed={$sideBarCollapsed}>

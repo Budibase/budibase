@@ -1,5 +1,5 @@
-import { it, expect, describe, beforeEach } from "vitest"
 import { render, screen } from "@testing-library/svelte"
+import { beforeEach, describe, expect, it } from "vitest"
 import "@testing-library/jest-dom"
 
 import EditableLabel from "./EditableLabel.svelte"

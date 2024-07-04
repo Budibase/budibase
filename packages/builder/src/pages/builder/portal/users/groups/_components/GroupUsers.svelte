@@ -1,64 +1,64 @@
 <script>
-  import EditUserPicker from "./EditUserPicker.svelte"
+import EditUserPicker from "./EditUserPicker.svelte"
 
-  import { Heading, Pagination, Table, Search } from "@budibase/bbui"
-  import { fetchData } from "@budibase/frontend-core"
-  import { goto } from "@roxi/routify"
-  import { API } from "api"
-  import { groups } from "stores/portal"
-  import { setContext } from "svelte"
+import { Heading, Pagination, Search, Table } from "@budibase/bbui"
+import { fetchData } from "@budibase/frontend-core"
+import { goto } from "@roxi/routify"
+import { API } from "api"
+import { groups } from "stores/portal"
+import { setContext } from "svelte"
 
-  import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
-  import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
+import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
+import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
 
-  export let groupId
-  export let readonly
-  export let isScimGroup
+export let groupId
+export let readonly
+export let isScimGroup
 
-  let emailSearch
-  let fetchGroupUsers
-  $: fetchGroupUsers = fetchData({
-    API,
-    datasource: {
-      type: "groupUser",
+let emailSearch
+let fetchGroupUsers
+$: fetchGroupUsers = fetchData({
+  API,
+  datasource: {
+    type: "groupUser",
+  },
+  options: {
+    query: {
+      groupId,
+      emailSearch,
     },
-    options: {
-      query: {
-        groupId,
-        emailSearch,
-      },
-    },
-  })
+  },
+})
 
-  $: userSchema = {
-    email: {
-      width: "1fr",
-    },
-    ...(readonly
-      ? {}
-      : {
-          _id: {
-            displayName: "",
-            width: "auto",
-            borderLeft: true,
-          },
-        }),
-  }
-  const customUserTableRenderers = [
-    {
-      column: "_id",
-      component: RemoveUserTableRenderer,
-    },
-  ]
+$: userSchema = {
+  email: {
+    width: "1fr",
+  },
+  ...(readonly
+    ? {}
+    : {
+        _id: {
+          displayName: "",
+          width: "auto",
+          borderLeft: true,
+        },
+      }),
+}
+const customUserTableRenderers = [
+  {
+    column: "_id",
+    component: RemoveUserTableRenderer,
+  },
+]
 
-  const removeUser = async id => {
-    await groups.actions.removeUser(groupId, id)
-    fetchGroupUsers.refresh()
-  }
+const removeUser = async id => {
+  await groups.actions.removeUser(groupId, id)
+  fetchGroupUsers.refresh()
+}
 
-  setContext("users", {
-    removeUser,
-  })
+setContext("users", {
+  removeUser,
+})
 </script>
 
 <div class="header">

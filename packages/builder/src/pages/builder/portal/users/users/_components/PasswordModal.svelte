@@ -1,99 +1,99 @@
 <script>
-  import { Body, ModalContent, Table, Icon } from "@budibase/bbui"
-  import PasswordCopyTableRenderer from "./PasswordCopyTableRenderer.svelte"
-  import { parseToCsv } from "helpers/data/utils"
-  import { onMount } from "svelte"
-  import InviteResponseRenderer from "./InviteResponseRenderer.svelte"
+import { Body, Icon, ModalContent, Table } from "@budibase/bbui"
+import { parseToCsv } from "helpers/data/utils"
+import { onMount } from "svelte"
+import InviteResponseRenderer from "./InviteResponseRenderer.svelte"
+import PasswordCopyTableRenderer from "./PasswordCopyTableRenderer.svelte"
 
-  export let userData
-  export let createUsersResponse
+export let userData
+export let createUsersResponse
 
-  let hasSuccess
-  let hasFailure
-  let title
-  let failureMessage
+let hasSuccess
+let hasFailure
+let title
+let failureMessage
 
-  let userDataIndex
-  let successfulUsers
-  let unsuccessfulUsers
+let userDataIndex
+let successfulUsers
+let unsuccessfulUsers
 
-  const setTitle = () => {
-    if (hasSuccess) {
-      title = "Users created!"
-    } else if (hasFailure) {
-      title = "Oops!"
+const setTitle = () => {
+  if (hasSuccess) {
+    title = "Users created!"
+  } else if (hasFailure) {
+    title = "Oops!"
+  }
+}
+
+const setFailureMessage = () => {
+  if (hasSuccess) {
+    failureMessage = "However there was a problem creating some users."
+  } else {
+    failureMessage = "There was a problem creating some users."
+  }
+}
+
+const setUsers = () => {
+  userDataIndex = userData.reduce((prev, current) => {
+    prev[current.email] = current
+    return prev
+  }, {})
+
+  successfulUsers = createUsersResponse.successful.map(user => {
+    return {
+      email: user.email,
+      password: userDataIndex[user.email].password,
     }
-  }
-
-  const setFailureMessage = () => {
-    if (hasSuccess) {
-      failureMessage = "However there was a problem creating some users."
-    } else {
-      failureMessage = "There was a problem creating some users."
-    }
-  }
-
-  const setUsers = () => {
-    userDataIndex = userData.reduce((prev, current) => {
-      prev[current.email] = current
-      return prev
-    }, {})
-
-    successfulUsers = createUsersResponse.successful.map(user => {
-      return {
-        email: user.email,
-        password: userDataIndex[user.email].password,
-      }
-    })
-
-    unsuccessfulUsers = createUsersResponse.unsuccessful.map(user => {
-      return {
-        email: user.email,
-        reason: user.reason,
-      }
-    })
-  }
-
-  onMount(() => {
-    hasSuccess = createUsersResponse.successful.length
-    hasFailure = createUsersResponse.unsuccessful.length
-    setTitle()
-    setFailureMessage()
-    setUsers()
   })
 
-  const successSchema = {
-    email: {},
-    password: {},
-  }
+  unsuccessfulUsers = createUsersResponse.unsuccessful.map(user => {
+    return {
+      email: user.email,
+      reason: user.reason,
+    }
+  })
+}
 
-  const failedSchema = {
-    email: {},
-    reason: {},
-  }
+onMount(() => {
+  hasSuccess = createUsersResponse.successful.length
+  hasFailure = createUsersResponse.unsuccessful.length
+  setTitle()
+  setFailureMessage()
+  setUsers()
+})
 
-  const downloadCsvFile = () => {
-    const fileName = "passwords.csv"
-    const content = parseToCsv(["email", "password"], successfulUsers)
+const successSchema = {
+  email: {},
+  password: {},
+}
 
-    download(fileName, content)
-  }
+const failedSchema = {
+  email: {},
+  reason: {},
+}
 
-  const download = (filename, text) => {
-    const element = document.createElement("a")
-    element.setAttribute(
-      "href",
-      "data:text/csv;charset=utf-8," + encodeURIComponent(text)
-    )
-    element.setAttribute("download", filename)
+const downloadCsvFile = () => {
+  const fileName = "passwords.csv"
+  const content = parseToCsv(["email", "password"], successfulUsers)
 
-    element.style.display = "none"
-    document.body.appendChild(element)
+  download(fileName, content)
+}
 
-    element.click()
+const download = (filename, text) => {
+  const element = document.createElement("a")
+  element.setAttribute(
+    "href",
+    "data:text/csv;charset=utf-8," + encodeURIComponent(text)
+  )
+  element.setAttribute("download", filename)
 
-    document.body.removeChild(element)
-  }
+  element.style.display = "none"
+  document.body.appendChild(element)
+
+  element.click()
+
+  document.body.removeChild(element)
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

@@ -1,16 +1,16 @@
 import {
-  DEFAULT_TENANT_ID,
-  getTenantId,
-  getTenantIDFromAppID,
-  isMultiTenant,
-  getPlatformURL,
-} from "../context"
-import {
   BBContext,
-  TenantResolutionStrategy,
   GetTenantIdOptions,
+  TenantResolutionStrategy,
 } from "@budibase/types"
 import { Header } from "../constants"
+import {
+  DEFAULT_TENANT_ID,
+  getPlatformURL,
+  getTenantIDFromAppID,
+  getTenantId,
+  isMultiTenant,
+} from "../context"
 
 export function addTenantToUrl(url: string) {
   const tenantId = getTenantId()

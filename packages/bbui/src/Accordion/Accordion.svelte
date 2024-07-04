@@ -1,18 +1,18 @@
 <script>
-  import "@spectrum-css/accordion"
+import "@spectrum-css/accordion"
 
-  export let itemName
-  export let initialOpen
-  export let header
+export let itemName
+export let initialOpen
+export let header
 
-  let isOpen
+let isOpen
 
-  function getOpenClass(isOpen) {
-    if (isOpen === undefined) {
-      isOpen = initialOpen
-    }
-    return isOpen ? "is-open" : ""
+function getOpenClass(isOpen) {
+  if (isOpen === undefined) {
+    isOpen = initialOpen
   }
+  return isOpen ? "is-open" : ""
+}
 </script>
 
 <div class="spectrum-Accordion" role={itemName}>

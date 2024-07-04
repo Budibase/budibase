@@ -1,74 +1,74 @@
 <script>
-  import { onMount, getContext } from "svelte"
-  import { Dropzone } from "@budibase/bbui"
-  import GridPopover from "../overlays/GridPopover.svelte"
+import { Dropzone } from "@budibase/bbui"
+import { getContext, onMount } from "svelte"
+import GridPopover from "../overlays/GridPopover.svelte"
 
-  export let value
-  export let focused = false
-  export let onChange
-  export let readonly = false
-  export let api
-  export let schema
-  export let maximum
+export let value
+export let focused = false
+export let onChange
+export let readonly = false
+export let api
+export let schema
+export let maximum
 
-  const { API, notifications, props } = getContext("grid")
-  const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
+const { API, notifications, props } = getContext("grid")
+const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
 
-  let isOpen = false
-  let anchor
+let isOpen = false
+let anchor
 
-  $: editable = focused && !readonly
-  $: {
-    if (!focused) {
-      close()
-    }
+$: editable = focused && !readonly
+$: {
+  if (!focused) {
+    close()
   }
+}
 
-  const onKeyDown = () => {
-    return isOpen
+const onKeyDown = () => {
+  return isOpen
+}
+
+const open = () => {
+  isOpen = true
+}
+
+const close = () => {
+  isOpen = false
+}
+
+const isImage = extension => {
+  return imageExtensions.includes(extension?.toLowerCase())
+}
+
+const handleFileTooLarge = fileSizeLimit => {
+  $notifications.error(
+    `Files cannot exceed ${
+      fileSizeLimit / 1000000
+    }MB. Please try again with smaller files.`
+  )
+}
+
+const processFiles = async fileList => {
+  let data = new FormData()
+  for (let i = 0; i < fileList.length; i++) {
+    data.append("file", fileList[i])
   }
-
-  const open = () => {
-    isOpen = true
+  try {
+    return await API.uploadBuilderAttachment(data)
+  } catch (error) {
+    $notifications.error(error.message || "Failed to upload attachment")
+    return []
   }
+}
 
-  const close = () => {
-    isOpen = false
+onMount(() => {
+  api = {
+    focus: () => open(),
+    blur: () => close(),
+    isActive: () => isOpen,
+    onKeyDown,
   }
-
-  const isImage = extension => {
-    return imageExtensions.includes(extension?.toLowerCase())
-  }
-
-  const handleFileTooLarge = fileSizeLimit => {
-    $notifications.error(
-      `Files cannot exceed ${
-        fileSizeLimit / 1000000
-      }MB. Please try again with smaller files.`
-    )
-  }
-
-  const processFiles = async fileList => {
-    let data = new FormData()
-    for (let i = 0; i < fileList.length; i++) {
-      data.append("file", fileList[i])
-    }
-    try {
-      return await API.uploadBuilderAttachment(data)
-    } catch (error) {
-      $notifications.error(error.message || "Failed to upload attachment")
-      return []
-    }
-  }
-
-  onMount(() => {
-    api = {
-      focus: () => open(),
-      blur: () => close(),
-      isActive: () => isOpen,
-      onKeyDown,
-    }
-  })
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

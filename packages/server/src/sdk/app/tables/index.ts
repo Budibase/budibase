@@ -1,9 +1,9 @@
-import { populateExternalTableSchemas } from "./validation"
 import * as getters from "./getters"
+import * as sqs from "./internal/sqs"
+import { migrate } from "./migration"
 import * as updates from "./update"
 import * as utils from "./utils"
-import { migrate } from "./migration"
-import * as sqs from "./internal/sqs"
+import { populateExternalTableSchemas } from "./validation"
 
 export default {
   populateExternalTableSchemas,

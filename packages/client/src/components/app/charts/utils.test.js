@@ -1,4 +1,4 @@
-import { expect, describe, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { cloneDeep } from "./utils"
 
 describe("utils", () => {

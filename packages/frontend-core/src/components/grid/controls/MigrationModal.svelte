@@ -1,45 +1,40 @@
 <script>
-  import {
-    ModalContent,
-    notifications,
-    Input,
-    InlineAlert,
-  } from "@budibase/bbui"
-  import { getContext } from "svelte"
-  import { ValidColumnNameRegex } from "@budibase/shared-core"
+import { InlineAlert, Input, ModalContent, notifications } from "@budibase/bbui"
+import { ValidColumnNameRegex } from "@budibase/shared-core"
+import { getContext } from "svelte"
 
-  const { API, definition, rows } = getContext("grid")
+const { API, definition, rows } = getContext("grid")
 
-  export let column
+export let column
 
-  let newColumnName = `${column.schema.name} migrated`
-  $: error = checkNewColumnName(newColumnName)
+let newColumnName = `${column.schema.name} migrated`
+$: error = checkNewColumnName(newColumnName)
 
-  const checkNewColumnName = newColumnName => {
-    if (newColumnName === "") {
-      return "Column name can't be empty."
-    }
-    if (newColumnName in $definition.schema) {
-      return "New column name can't be the same as an existing column name."
-    }
-    if (newColumnName.match(ValidColumnNameRegex) === null) {
-      return "Illegal character; must be alpha-numeric."
-    }
+const checkNewColumnName = newColumnName => {
+  if (newColumnName === "") {
+    return "Column name can't be empty."
   }
-
-  const migrateUserColumn = async () => {
-    try {
-      await API.migrateColumn({
-        tableId: $definition._id,
-        oldColumn: column.schema.name,
-        newColumn: newColumnName,
-      })
-      notifications.success("Column migrated")
-    } catch (e) {
-      notifications.error(`Failed to migrate: ${e.message}`)
-    }
-    await rows.actions.refreshData()
+  if (newColumnName in $definition.schema) {
+    return "New column name can't be the same as an existing column name."
   }
+  if (newColumnName.match(ValidColumnNameRegex) === null) {
+    return "Illegal character; must be alpha-numeric."
+  }
+}
+
+const migrateUserColumn = async () => {
+  try {
+    await API.migrateColumn({
+      tableId: $definition._id,
+      oldColumn: column.schema.name,
+      newColumn: newColumnName,
+    })
+    notifications.success("Column migrated")
+  } catch (e) {
+    notifications.error(`Failed to migrate: ${e.message}`)
+  }
+  await rows.actions.refreshData()
+}
 </script>
 
 <ModalContent

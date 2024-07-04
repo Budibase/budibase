@@ -1,3 +1,4 @@
+import { db as dbCore } from "@budibase/backend-core"
 import {
   ConnectionInfo,
   Database,
@@ -8,7 +9,6 @@ import {
   IntegrationBase,
   QueryType,
 } from "@budibase/types"
-import { db as dbCore } from "@budibase/backend-core"
 import { HOST_ADDRESS } from "./utils"
 
 interface CouchDBConfig {

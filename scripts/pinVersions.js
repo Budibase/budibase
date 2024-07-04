@@ -7,7 +7,9 @@ const packages = getPackages()
 
 function getPackages() {
   if (fs.existsSync(MONOREPO_ROOT)) {
-    return fs.readdirSync(MONOREPO_ROOT).map(pkg => path.join(MONOREPO_ROOT, pkg))
+    return fs
+      .readdirSync(MONOREPO_ROOT)
+      .map(pkg => path.join(MONOREPO_ROOT, pkg))
   } else {
     return ["./"]
   }
@@ -32,7 +34,6 @@ for (let pkgPath of packages) {
       continue
     }
     const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath))
-    
 
     // find any budibase dependencies, and pin them
     pkgJson.dependencies = pinDeps(pkgJson.dependencies)

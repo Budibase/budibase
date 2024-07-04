@@ -1,5 +1,15 @@
-import { cloneDeep } from "lodash/fp"
-import { get } from "svelte/store"
+import { Constants, JSONUtils } from "@budibase/frontend-core"
+import {
+  decodeJSBinding,
+  encodeJSBinding,
+  getJsHelperList,
+  isJSBinding,
+  makePropSafe,
+} from "@budibase/string-templates"
+import { FieldType } from "@budibase/types"
+import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
+import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
+import { FIELDS } from "constants/backend"
 import {
   buildContextTreeLookupMap,
   findAllComponents,
@@ -7,30 +17,20 @@ import {
   findComponent,
   findComponentPath,
 } from "helpers/components"
+import { cloneDeep } from "lodash/fp"
 import {
-  componentStore,
-  screenStore,
   appStore,
+  componentStore,
   layoutStore,
   queries as queriesStores,
-  tables as tablesStore,
   roles as rolesStore,
+  screenStore,
   selectedScreen,
+  tables as tablesStore,
 } from "stores/builder"
-import {
-  makePropSafe,
-  isJSBinding,
-  decodeJSBinding,
-  encodeJSBinding,
-  getJsHelperList,
-} from "@budibase/string-templates"
-import { TableNames } from "./constants"
-import { JSONUtils, Constants } from "@budibase/frontend-core"
-import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
-import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
-import { FIELDS } from "constants/backend"
-import { FieldType } from "@budibase/types"
+import { get } from "svelte/store"
+import { TableNames } from "./constants"
 
 const { ContextScopes } = Constants
 

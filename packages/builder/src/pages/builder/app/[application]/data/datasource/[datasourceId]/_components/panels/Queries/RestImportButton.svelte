@@ -1,9 +1,9 @@
 <script>
-  import { Button, Modal } from "@budibase/bbui"
-  import ImportQueriesModal from "./RestImportQueriesModal.svelte"
+import { Button, Modal } from "@budibase/bbui"
+import ImportQueriesModal from "./RestImportQueriesModal.svelte"
 
-  export let datasourceId
-  let importQueriesModal
+export let datasourceId
+let importQueriesModal
 </script>
 
 <Modal bind:this={importQueriesModal}>

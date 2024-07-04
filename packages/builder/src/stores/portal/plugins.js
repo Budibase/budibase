@@ -1,6 +1,6 @@
-import { writable } from "svelte/store"
-import { API } from "api"
 import { PluginSource } from "constants"
+import { API } from "api"
+import { writable } from "svelte/store"
 
 export function createPluginsStore() {
   const { subscribe, set, update } = writable([])

@@ -1,11 +1,11 @@
 <script>
-  import "@spectrum-css/typography/dist/index-vars.css"
+import "@spectrum-css/typography/dist/index-vars.css"
 
-  export let size = "M"
-  export let serif = false
-  export let weight = null
-  export let textAlign = null
-  export let color = null
+export let size = "M"
+export let serif = false
+export let weight = null
+export let textAlign = null
+export let color = null
 </script>
 
 <p

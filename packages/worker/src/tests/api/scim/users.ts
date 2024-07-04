@@ -1,8 +1,8 @@
 import {
-  ScimUserListResponse,
   ScimCreateUserRequest,
-  ScimUserResponse,
   ScimUpdateRequest,
+  ScimUserListResponse,
+  ScimUserResponse,
 } from "@budibase/types"
 import TestConfiguration from "../../TestConfiguration"
 import { RequestSettings, ScimTestAPI } from "./shared"

@@ -1,35 +1,35 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { datasources, queries } from "stores/builder"
+import { ActionMenu, Icon, MenuItem, notifications } from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { datasources, queries } from "stores/builder"
 
-  export let query
+export let query
 
-  let confirmDeleteDialog
+let confirmDeleteDialog
 
-  async function deleteQuery() {
-    try {
-      // Go back to the datasource if we are deleting the active query
-      if ($queries.selectedQueryId === query._id) {
-        $goto(`./datasource/${query.datasourceId}`)
-      }
-      await queries.delete(query)
-      await datasources.fetch()
-      notifications.success("Query deleted")
-    } catch (error) {
-      notifications.error("Error deleting query")
+async function deleteQuery() {
+  try {
+    // Go back to the datasource if we are deleting the active query
+    if ($queries.selectedQueryId === query._id) {
+      $goto(`./datasource/${query.datasourceId}`)
     }
+    await queries.delete(query)
+    await datasources.fetch()
+    notifications.success("Query deleted")
+  } catch (error) {
+    notifications.error("Error deleting query")
   }
+}
 
-  async function duplicateQuery() {
-    try {
-      const newQuery = await queries.duplicate(query)
-      $goto(`./query/${newQuery._id}`)
-    } catch (error) {
-      notifications.error("Error duplicating query")
-    }
+async function duplicateQuery() {
+  try {
+    const newQuery = await queries.duplicate(query)
+    $goto(`./query/${newQuery._id}`)
+  } catch (error) {
+    notifications.error("Error duplicating query")
   }
+}
 </script>
 
 <ActionMenu>

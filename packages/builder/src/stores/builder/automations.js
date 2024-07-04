@@ -1,10 +1,10 @@
-import { writable, get, derived } from "svelte/store"
+import { notifications } from "@budibase/bbui"
 import { API } from "api"
+import { updateReferencesInObject } from "dataBinding"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { createHistoryStore } from "stores/builder/history"
-import { notifications } from "@budibase/bbui"
-import { updateReferencesInObject } from "dataBinding"
+import { derived, get, writable } from "svelte/store"
 
 const initialAutomationState = {
   automations: [],
@@ -149,7 +149,7 @@ const automationActions = store => ({
           automation.disabled ? "enabled" : "disabled"
         } successfully`
       )
-    } catch (error) {
+    } catch (_error) {
       notifications.error(
         `Error ${
           automation && automation.disabled ? "enabling" : "disabling"
@@ -283,7 +283,7 @@ const automationActions = store => ({
 
     try {
       updateStepReferences(newAutomation.definition.steps, blockIdx, "add")
-    } catch (e) {
+    } catch (_e) {
       notifications.error("Error adding automation block")
     }
     newAutomation.definition.steps.splice(blockIdx, 0, block)
@@ -329,7 +329,7 @@ const automationActions = store => ({
     }
     try {
       updateStepReferences(newAutomation.definition.steps, blockIdx, "delete")
-    } catch (e) {
+    } catch (_e) {
       notifications.error("Error deleting automation block")
     }
 

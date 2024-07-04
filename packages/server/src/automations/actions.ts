@@ -1,31 +1,31 @@
-import * as sendSmtpEmail from "./steps/sendSmtpEmail"
-import * as createRow from "./steps/createRow"
-import * as updateRow from "./steps/updateRow"
-import * as deleteRow from "./steps/deleteRow"
-import * as executeScript from "./steps/executeScript"
-import * as executeQuery from "./steps/executeQuery"
-import * as outgoingWebhook from "./steps/outgoingWebhook"
-import * as serverLog from "./steps/serverLog"
-import * as discord from "./steps/discord"
-import * as slack from "./steps/slack"
-import * as zapier from "./steps/zapier"
-import * as n8n from "./steps/n8n"
-import * as make from "./steps/make"
-import * as filter from "./steps/filter"
-import * as delay from "./steps/delay"
-import * as queryRow from "./steps/queryRows"
-import * as loop from "./steps/loop"
-import * as collect from "./steps/collect"
-import * as triggerAutomationRun from "./steps/triggerAutomationRun"
-import env from "../environment"
 import {
-  AutomationStepSchema,
-  AutomationStepInput,
-  PluginType,
   AutomationStep,
+  AutomationStepInput,
+  AutomationStepSchema,
+  PluginType,
 } from "@budibase/types"
+import env from "../environment"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
+import * as collect from "./steps/collect"
+import * as createRow from "./steps/createRow"
+import * as delay from "./steps/delay"
+import * as deleteRow from "./steps/deleteRow"
+import * as discord from "./steps/discord"
+import * as executeQuery from "./steps/executeQuery"
+import * as executeScript from "./steps/executeScript"
+import * as filter from "./steps/filter"
+import * as loop from "./steps/loop"
+import * as make from "./steps/make"
+import * as n8n from "./steps/n8n"
+import * as outgoingWebhook from "./steps/outgoingWebhook"
+import * as queryRow from "./steps/queryRows"
+import * as sendSmtpEmail from "./steps/sendSmtpEmail"
+import * as serverLog from "./steps/serverLog"
+import * as slack from "./steps/slack"
+import * as triggerAutomationRun from "./steps/triggerAutomationRun"
+import * as updateRow from "./steps/updateRow"
+import * as zapier from "./steps/zapier"
 
 const ACTION_IMPLS: Record<
   string,

@@ -23,8 +23,8 @@ export function csv(
           typeof val === "object" && !(val instanceof Date)
             ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
             : val !== undefined
-            ? `"${val}"`
-            : ""
+              ? `"${val}"`
+              : ""
         return val.trim()
       })
       .join(delimiter)}`

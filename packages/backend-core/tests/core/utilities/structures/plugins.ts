@@ -1,5 +1,5 @@
-import { generator } from "."
 import { Plugin, PluginSource, PluginType } from "@budibase/types"
+import { generator } from "."
 
 export function plugin(): Plugin {
   return {

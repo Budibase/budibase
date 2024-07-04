@@ -1,13 +1,13 @@
 import {
-  processObject,
-  processString,
+  disableEscaping,
+  doesContainString,
+  encodeJSBinding,
+  findHBSBlocks,
+  getManifest,
   isValid,
   makePropSafe,
-  getManifest,
-  encodeJSBinding,
-  doesContainString,
-  disableEscaping,
-  findHBSBlocks,
+  processObject,
+  processString,
 } from "../src/index"
 
 describe("Test that the string processing works correctly", () => {

@@ -1,66 +1,66 @@
 <script>
-  import { Select, Label, Input, Checkbox, Icon, Body } from "@budibase/bbui"
-  import { automationStore } from "stores/builder"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
+import { Body, Checkbox, Icon, Input, Label, Select } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+import { automationStore } from "stores/builder"
 
-  export let parameters = {}
-  export let bindings = []
+export let parameters = {}
+export let bindings = []
 
-  const AUTOMATION_STATUS = {
-    NEW: "new",
-    EXISTING: "existing",
+const AUTOMATION_STATUS = {
+  NEW: "new",
+  EXISTING: "existing",
+}
+let automationStatus = parameters.automationId
+  ? AUTOMATION_STATUS.EXISTING
+  : AUTOMATION_STATUS.NEW
+$: {
+  if (automationStatus === AUTOMATION_STATUS.NEW) {
+    parameters.synchronous = false
   }
-  let automationStatus = parameters.automationId
-    ? AUTOMATION_STATUS.EXISTING
-    : AUTOMATION_STATUS.NEW
-  $: {
-    if (automationStatus === AUTOMATION_STATUS.NEW) {
-      parameters.synchronous = false
-    }
-    parameters.synchronous = automations.find(
-      automation => automation._id === parameters.automationId
-    )?.synchronous
-    parameters
-  }
-  $: automations = $automationStore.automations
-    .filter(
-      a => a.definition.trigger?.stepId === TriggerStepID.APP && !a.disabled
-    )
-    .map(automation => {
-      const schema = Object.entries(
-        automation.definition.trigger.inputs.fields || {}
-      ).map(([name, type]) => ({ name, type }))
-
-      let hasCollectBlock = automation.definition.steps.some(
-        step => step.stepId === ActionStepID.COLLECT
-      )
-
-      return {
-        name: automation.name,
-        _id: automation._id,
-        schema,
-        synchronous: hasCollectBlock,
-      }
-    })
-
-  $: selectedAutomation = automations?.find(
-    a => a._id === parameters?.automationId
+  parameters.synchronous = automations.find(
+    automation => automation._id === parameters.automationId
+  )?.synchronous
+  parameters
+}
+$: automations = $automationStore.automations
+  .filter(
+    a => a.definition.trigger?.stepId === TriggerStepID.APP && !a.disabled
   )
-  $: selectedSchema = selectedAutomation?.schema
-  $: error = parameters.timeout > 120 ? "Timeout must be less than 120s" : null
+  .map(automation => {
+    const schema = Object.entries(
+      automation.definition.trigger.inputs.fields || {}
+    ).map(([name, type]) => ({ name, type }))
 
-  const onFieldsChanged = field => {
-    parameters.fields = { ...parameters.fields, ...field }
-  }
+    let hasCollectBlock = automation.definition.steps.some(
+      step => step.stepId === ActionStepID.COLLECT
+    )
 
-  const onChange = value => {
-    let automationId = value.detail
-    parameters.synchronous = automations.find(
-      automation => automation._id === automationId
-    )?.synchronous
-    parameters.automationId = automationId
-  }
+    return {
+      name: automation.name,
+      _id: automation._id,
+      schema,
+      synchronous: hasCollectBlock,
+    }
+  })
+
+$: selectedAutomation = automations?.find(
+  a => a._id === parameters?.automationId
+)
+$: selectedSchema = selectedAutomation?.schema
+$: error = parameters.timeout > 120 ? "Timeout must be less than 120s" : null
+
+const onFieldsChanged = field => {
+  parameters.fields = { ...parameters.fields, ...field }
+}
+
+const onChange = value => {
+  let automationId = value.detail
+  parameters.synchronous = automations.find(
+    automation => automation._id === automationId
+  )?.synchronous
+  parameters.automationId = automationId
+}
 </script>
 
 <div class="root">

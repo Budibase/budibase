@@ -1,84 +1,84 @@
 <script>
-  import {
-    keepOpen,
-    Label,
-    ActionButton,
-    ModalContent,
-    Multiselect,
-    InputDropdown,
-    Layout,
-    Icon,
-  } from "@budibase/bbui"
-  import { groups, licensing } from "stores/portal"
-  import { Constants } from "@budibase/frontend-core"
-  import { emailValidator } from "helpers/validation"
-  import { capitalise } from "helpers"
+import {
+  ActionButton,
+  Icon,
+  InputDropdown,
+  Label,
+  Layout,
+  ModalContent,
+  Multiselect,
+  keepOpen,
+} from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
+import { capitalise } from "helpers"
+import { emailValidator } from "helpers/validation"
+import { groups, licensing } from "stores/portal"
 
-  export let showOnboardingTypeModal
+export let showOnboardingTypeModal
 
-  const password = Math.random().toString(36).substring(2, 22)
-  let disabled
-  let userGroups = []
+const password = Math.random().toString(36).substring(2, 22)
+let disabled
+let userGroups = []
 
-  $: userData = [
+$: userData = [
+  {
+    email: "",
+    role: "appUser",
+    password,
+    forceResetPassword: true,
+  },
+]
+$: hasError = userData.find(x => x.error != null)
+$: userCount = $licensing.userCount + userData.length
+$: reached = licensing.usersLimitReached(userCount)
+$: exceeded = licensing.usersLimitExceeded(userCount)
+
+$: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
+
+function removeInput(idx) {
+  userData = userData.filter((e, i) => i !== idx)
+}
+function addNewInput() {
+  userData = [
+    ...userData,
     {
       email: "",
       role: "appUser",
-      password,
+      password: Math.random().toString(36).substring(2, 22),
       forceResetPassword: true,
+      error: null,
     },
   ]
-  $: hasError = userData.find(x => x.error != null)
-  $: userCount = $licensing.userCount + userData.length
-  $: reached = licensing.usersLimitReached(userCount)
-  $: exceeded = licensing.usersLimitExceeded(userCount)
+}
 
-  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
-
-  function removeInput(idx) {
-    userData = userData.filter((e, i) => i !== idx)
+function validateInput(input, index) {
+  if (input.email) {
+    input.email = input.email.trim()
   }
-  function addNewInput() {
-    userData = [
-      ...userData,
-      {
-        email: "",
-        role: "appUser",
-        password: Math.random().toString(36).substring(2, 22),
-        forceResetPassword: true,
-        error: null,
-      },
-    ]
-  }
-
-  function validateInput(input, index) {
-    if (input.email) {
-      input.email = input.email.trim()
-    }
-    const email = input.email
-    if (email) {
-      const res = emailValidator(email)
-      if (res === true) {
-        userData[index].error = null
-      } else {
-        userData[index].error = res
-      }
+  const email = input.email
+  if (email) {
+    const res = emailValidator(email)
+    if (res === true) {
+      userData[index].error = null
     } else {
-      userData[index].error = "Please enter an email address"
+      userData[index].error = res
     }
-    return userData[index].error == null
+  } else {
+    userData[index].error = "Please enter an email address"
   }
+  return userData[index].error == null
+}
 
-  const onConfirm = () => {
-    let valid = true
-    userData.forEach((input, index) => {
-      valid = validateInput(input, index) && valid
-    })
-    if (!valid) {
-      return keepOpen
-    }
-    showOnboardingTypeModal({ users: userData, groups: userGroups })
+const onConfirm = () => {
+  let valid = true
+  userData.forEach((input, index) => {
+    valid = validateInput(input, index) && valid
+  })
+  if (!valid) {
+    return keepOpen
   }
+  showOnboardingTypeModal({ users: userData, groups: userGroups })
+}
 </script>
 
 <ModalContent

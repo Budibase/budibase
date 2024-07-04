@@ -1,11 +1,11 @@
 <script>
-  import { Layout, Heading, Body, Divider, Button } from "@budibase/bbui"
-  import { isOnlyUser, appStore } from "stores/builder"
-  import VersionModal from "components/deploy/VersionModal.svelte"
+import { Body, Button, Divider, Heading, Layout } from "@budibase/bbui"
+import VersionModal from "components/deploy/VersionModal.svelte"
+import { appStore, isOnlyUser } from "stores/builder"
 
-  let versionModal
+let versionModal
 
-  $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
+$: updateAvailable = $appStore.upgradableVersion !== $appStore.version
 </script>
 
 <Layout noPadding>

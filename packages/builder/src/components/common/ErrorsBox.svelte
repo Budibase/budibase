@@ -1,7 +1,7 @@
 <script>
-  export let errors = []
+export let errors = []
 
-  $: hasErrors = errors.length > 0
+$: hasErrors = errors.length > 0
 </script>
 
 {#if hasErrors}

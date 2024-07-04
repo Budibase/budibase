@@ -1,8 +1,8 @@
 <script>
-  import { queries } from "stores/builder"
-  import { Select } from "@budibase/bbui"
+import { Select } from "@budibase/bbui"
+import { queries } from "stores/builder"
 
-  export let value
+export let value
 </script>
 
 <div class="block-field">

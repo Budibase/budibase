@@ -1,8 +1,8 @@
 <script>
-  export let text
-  export let url
-  export let active = false
-  export let disabled = false
+export let text
+export let url
+export let active = false
+export let disabled = false
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

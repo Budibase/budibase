@@ -1,6 +1,6 @@
+import { auth } from "@budibase/backend-core"
 import Router from "@koa/router"
 import * as controller from "../../controllers/global/self"
-import { auth } from "@budibase/backend-core"
 import { users } from "../validation"
 
 const router: Router = new Router()

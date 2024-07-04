@@ -1,4 +1,5 @@
-import { context, db as dbCore, events } from "@budibase/backend-core"
+import { events, context, db as dbCore } from "@budibase/backend-core"
+import { helpers } from "@budibase/shared-core"
 import { findHBSBlocks, processObjectSync } from "@budibase/string-templates"
 import {
   Datasource,
@@ -8,29 +9,28 @@ import {
   RestAuthConfig,
   RestAuthType,
   RestBasicAuthConfig,
-  Row,
   RestConfig,
+  Row,
   SourceName,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
-import { getEnvironmentVariables } from "../../utils"
-import {
-  getDefinitions,
-  getDefinition,
-  getIntegration,
-} from "../../../integrations"
 import merge from "lodash/merge"
 import {
   BudibaseInternalDB,
+  DocumentType,
   generateDatasourceID,
   getDatasourceParams,
   getDatasourcePlusParams,
   getTableParams,
-  DocumentType,
 } from "../../../db/utils"
-import sdk from "../../index"
+import {
+  getDefinition,
+  getDefinitions,
+  getIntegration,
+} from "../../../integrations"
 import { setupCreationAuth as googleSetupCreationAuth } from "../../../integrations/googlesheets"
-import { helpers } from "@budibase/shared-core"
+import sdk from "../../index"
+import { getEnvironmentVariables } from "../../utils"
 
 const ENV_VAR_PREFIX = "env."
 

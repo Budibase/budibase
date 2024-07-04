@@ -1,8 +1,8 @@
-import _ from "lodash"
 import { AnyDocument } from "@budibase/types"
+import _ from "lodash"
 import { generator } from "../../../tests"
-import { DatabaseImpl } from "../couch"
 import { newid } from "../../utils"
+import { DatabaseImpl } from "../couch"
 
 describe("DatabaseImpl", () => {
   const database = new DatabaseImpl(generator.word())

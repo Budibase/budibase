@@ -1,9 +1,9 @@
-import * as setup from "../utilities"
-import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { Datasource, SourceName } from "@budibase/types"
-import { getCachedVariable } from "../../../../threads/utils"
-import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
+import { Datasource, SourceName } from "@budibase/types"
+import nock from "nock"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { getCachedVariable } from "../../../../threads/utils"
+import * as setup from "../utilities"
 
 jest.unmock("node-fetch")
 

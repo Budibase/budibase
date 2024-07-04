@@ -1,33 +1,33 @@
 <script>
-  import TableDataTable from "components/backend/DataTable/TableDataTable.svelte"
-  import { tables } from "stores/builder"
-  import { Banner } from "@budibase/bbui"
+import { Banner } from "@budibase/bbui"
+import TableDataTable from "components/backend/DataTable/TableDataTable.svelte"
+import { tables } from "stores/builder"
 
-  const verifyAutocolumns = table => {
-    // Check for duplicates
-    return Object.values(table?.schema || {}).reduce((acc, fieldSchema) => {
-      if (!fieldSchema.autocolumn || !fieldSchema.subtype) {
-        return acc
-      }
-      let fieldKey = fieldSchema.tableId
-        ? `${fieldSchema.tableId}-${fieldSchema.subtype}`
-        : fieldSchema.subtype
-      acc[fieldKey] = acc[fieldKey] || []
-      acc[fieldKey].push(fieldSchema)
+const verifyAutocolumns = table => {
+  // Check for duplicates
+  return Object.values(table?.schema || {}).reduce((acc, fieldSchema) => {
+    if (!fieldSchema.autocolumn || !fieldSchema.subtype) {
       return acc
-    }, {})
-  }
-
-  $: autoColumnStatus = verifyAutocolumns($tables?.selected)
-  $: duplicates = Object.values(autoColumnStatus).reduce((acc, status) => {
-    if (status.length > 1) {
-      acc = [...acc, ...status]
     }
+    let fieldKey = fieldSchema.tableId
+      ? `${fieldSchema.tableId}-${fieldSchema.subtype}`
+      : fieldSchema.subtype
+    acc[fieldKey] = acc[fieldKey] || []
+    acc[fieldKey].push(fieldSchema)
     return acc
-  }, [])
-  $: invalidColumnText = duplicates.map(entry => {
-    return `${entry.name} (${entry.subtype})`
-  })
+  }, {})
+}
+
+$: autoColumnStatus = verifyAutocolumns($tables?.selected)
+$: duplicates = Object.values(autoColumnStatus).reduce((acc, status) => {
+  if (status.length > 1) {
+    acc = [...acc, ...status]
+  }
+  return acc
+}, [])
+$: invalidColumnText = duplicates.map(entry => {
+  return `${entry.name} (${entry.subtype})`
+})
 </script>
 
 {#if $tables?.selected?.name}

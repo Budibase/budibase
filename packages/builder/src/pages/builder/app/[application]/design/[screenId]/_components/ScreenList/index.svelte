@@ -1,45 +1,45 @@
 <script>
-  import { Layout } from "@budibase/bbui"
-  import {
-    screenStore,
-    sortedScreens,
-    userSelectedResourceMap,
-  } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
-  import RoleIndicator from "./RoleIndicator.svelte"
-  import DropdownMenu from "./DropdownMenu.svelte"
-  import { goto } from "@roxi/routify"
-  import { getVerticalResizeActions } from "components/common/resizable"
-  import NavHeader from "components/common/NavHeader.svelte"
+import { Layout } from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import NavHeader from "components/common/NavHeader.svelte"
+import NavItem from "components/common/NavItem.svelte"
+import { getVerticalResizeActions } from "components/common/resizable"
+import {
+  screenStore,
+  sortedScreens,
+  userSelectedResourceMap,
+} from "stores/builder"
+import DropdownMenu from "./DropdownMenu.svelte"
+import RoleIndicator from "./RoleIndicator.svelte"
 
-  const [resizable, resizableHandle] = getVerticalResizeActions()
+const [resizable, resizableHandle] = getVerticalResizeActions()
 
-  let searching = false
-  let searchValue = ""
-  let screensContainer
-  let scrolling = false
+let searching = false
+let searchValue = ""
+let screensContainer
+let scrolling = false
 
-  $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
+$: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
 
-  const handleOpenSearch = async () => {
-    screensContainer.scroll({ top: 0, behavior: "smooth" })
+const handleOpenSearch = async () => {
+  screensContainer.scroll({ top: 0, behavior: "smooth" })
+}
+
+$: {
+  if (searching) {
+    handleOpenSearch()
   }
+}
 
-  $: {
-    if (searching) {
-      handleOpenSearch()
-    }
-  }
+const getFilteredScreens = (screens, searchValue) => {
+  return screens.filter(screen => {
+    return !searchValue || screen.routing.route.includes(searchValue)
+  })
+}
 
-  const getFilteredScreens = (screens, searchValue) => {
-    return screens.filter(screen => {
-      return !searchValue || screen.routing.route.includes(searchValue)
-    })
-  }
-
-  const handleScroll = e => {
-    scrolling = e.target.scrollTop !== 0
-  }
+const handleScroll = e => {
+  scrolling = e.target.scrollTop !== 0
+}
 </script>
 
 <div class="screens" class:searching use:resizable>

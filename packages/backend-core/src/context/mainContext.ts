@@ -1,16 +1,16 @@
+import { App, Database, IdentityContext, Snippet } from "@budibase/types"
+import {
+  DEFAULT_TENANT_ID,
+  DocumentType,
+  SEPARATOR,
+  StaticDatabases,
+} from "../constants"
+import { getDB } from "../db/db"
+import * as conversions from "../docIds/conversions"
 // some test cases call functions directly, need to
 // store an app ID to pretend there is a context
 import env from "../environment"
 import Context from "./Context"
-import * as conversions from "../docIds/conversions"
-import { getDB } from "../db/db"
-import {
-  DocumentType,
-  SEPARATOR,
-  StaticDatabases,
-  DEFAULT_TENANT_ID,
-} from "../constants"
-import { Database, IdentityContext, Snippet, App } from "@budibase/types"
 import { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null
@@ -98,7 +98,7 @@ function updateContext(updates: ContextMap): ContextMap {
   let context: ContextMap
   try {
     context = Context.get()
-  } catch (err) {
+  } catch (_err) {
     // no context, start empty
     context = {}
   }
@@ -221,7 +221,7 @@ export function getIdentity(): IdentityContext | undefined {
   try {
     const context = Context.get()
     return context?.identity
-  } catch (e) {
+  } catch (_e) {
     // do nothing - identity is not in context
   }
 }
@@ -371,7 +371,7 @@ export function isScim(): boolean {
 export function getCurrentContext(): ContextMap | undefined {
   try {
     return Context.get()
-  } catch (e) {
+  } catch (_e) {
     return undefined
   }
 }

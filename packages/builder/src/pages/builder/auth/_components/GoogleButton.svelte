@@ -1,13 +1,13 @@
 <script>
-  import { FancyButton } from "@budibase/bbui"
-  import GoogleLogo from "assets/google-logo.png"
-  import { auth, organisation } from "stores/portal"
+import { FancyButton } from "@budibase/bbui"
+import GoogleLogo from "assets/google-logo.png"
+import { auth, organisation } from "stores/portal"
 
-  export let samePage
-  let show
+export let samePage
+let show
 
-  $: tenantId = $auth.tenantId
-  $: show = $organisation.google
+$: tenantId = $auth.tenantId
+$: show = $organisation.google
 </script>
 
 {#if show}

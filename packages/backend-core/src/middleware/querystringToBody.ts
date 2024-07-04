@@ -20,7 +20,7 @@ export default function (ctx: Ctx, next: any) {
   let json
   try {
     json = JSON.parse(decoded)
-  } catch (err) {
+  } catch (_err) {
     return next()
   }
   ctx.request.body = json

@@ -1,14 +1,14 @@
-import { newid } from "../../docIds/newid"
-import { getDB } from "../db"
 import {
   Database,
+  DocumentType,
   EmptyFilterOption,
+  SEPARATOR,
   SortOrder,
   SortType,
-  DocumentType,
-  SEPARATOR,
 } from "@budibase/types"
-import { fullSearch, paginatedSearch, QueryBuilder } from "../lucene"
+import { newid } from "../../docIds/newid"
+import { getDB } from "../db"
+import { QueryBuilder, fullSearch, paginatedSearch } from "../lucene"
 
 const INDEX_NAME = "main"
 const TABLE_ID = DocumentType.TABLE + SEPARATOR + newid()

@@ -1,6 +1,3 @@
-import * as rowController from "../../api/controllers/row"
-import * as automationUtils from "../automationUtils"
-import { buildCtx } from "./utils"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
@@ -10,6 +7,9 @@ import {
   AutomationStepSchema,
   AutomationStepType,
 } from "@budibase/types"
+import * as rowController from "../../api/controllers/row"
+import * as automationUtils from "../automationUtils"
+import { buildCtx } from "./utils"
 
 export const definition: AutomationStepSchema = {
   name: "Update Row",

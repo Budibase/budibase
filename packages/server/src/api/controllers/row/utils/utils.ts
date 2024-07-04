@@ -1,6 +1,5 @@
-import { InternalTables } from "../../../../db/utils"
-import * as userController from "../../user"
 import { context } from "@budibase/backend-core"
+import { processStringSync } from "@budibase/string-templates"
 import {
   Ctx,
   DatasourcePlusQueryResponse,
@@ -10,20 +9,21 @@ import {
   Table,
   UserCtx,
 } from "@budibase/types"
+import validateJs from "validate.js"
+import { InternalTables } from "../../../../db/utils"
+import sdk from "../../../../sdk"
 import {
   processDates,
   processFormulas,
 } from "../../../../utilities/rowProcessor"
-import { isKnexEmptyReadResponse, updateRelationshipColumns } from "./sqlUtils"
+import * as userController from "../../user"
 import {
   basicProcessing,
-  generateIdForRow,
   fixArrayTypes,
+  generateIdForRow,
   getInternalRowId,
 } from "./basic"
-import sdk from "../../../../sdk"
-import { processStringSync } from "@budibase/string-templates"
-import validateJs from "validate.js"
+import { isKnexEmptyReadResponse, updateRelationshipColumns } from "./sqlUtils"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {

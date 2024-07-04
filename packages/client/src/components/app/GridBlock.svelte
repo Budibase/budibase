@@ -1,155 +1,155 @@
 <script>
-  // NOTE: this is not a block - it's just named as such to avoid confusing users,
-  // because it functions similarly to one
-  import { getContext, onMount } from "svelte"
-  import { get, derived, readable } from "svelte/store"
-  import { Grid } from "@budibase/frontend-core"
+import { Grid } from "@budibase/frontend-core"
+// NOTE: this is not a block - it's just named as such to avoid confusing users,
+// because it functions similarly to one
+import { getContext, onMount } from "svelte"
+import { derived, get, readable } from "svelte/store"
 
-  // table is actually any datasource, but called table for legacy compatibility
-  export let table
-  export let allowAddRows = true
-  export let allowEditRows = true
-  export let allowDeleteRows = true
-  export let stripeRows = false
-  export let quiet = false
-  export let initialFilter = null
-  export let initialSortColumn = null
-  export let initialSortOrder = null
-  export let fixedRowHeight = null
-  export let columns = null
-  export let onRowClick = null
-  export let buttons = null
+// table is actually any datasource, but called table for legacy compatibility
+export let table
+export let allowAddRows = true
+export let allowEditRows = true
+export let allowDeleteRows = true
+export let stripeRows = false
+export let quiet = false
+export let initialFilter = null
+export let initialSortColumn = null
+export let initialSortOrder = null
+export let fixedRowHeight = null
+export let columns = null
+export let onRowClick = null
+export let buttons = null
 
-  const context = getContext("context")
-  const component = getContext("component")
-  const { environmentStore } = getContext("sdk")
-  const {
-    styleable,
-    API,
-    builderStore,
-    notificationStore,
-    enrichButtonActions,
-    ActionTypes,
-    createContextStore,
-    Provider,
-    generateGoldenSample,
-  } = getContext("sdk")
+const context = getContext("context")
+const component = getContext("component")
+const { environmentStore } = getContext("sdk")
+const {
+  styleable,
+  API,
+  builderStore,
+  notificationStore,
+  enrichButtonActions,
+  ActionTypes,
+  createContextStore,
+  Provider,
+  generateGoldenSample,
+} = getContext("sdk")
 
-  let grid
-  let gridContext
-  let minHeight = 0
+let grid
+let gridContext
+let minHeight = 0
 
-  $: currentTheme = $context?.device?.theme
-  $: darkMode = !currentTheme?.includes("light")
-  $: parsedColumns = getParsedColumns(columns)
-  $: columnWhitelist = parsedColumns.filter(x => x.active).map(x => x.field)
-  $: schemaOverrides = getSchemaOverrides(parsedColumns)
-  $: enrichedButtons = enrichButtons(buttons)
-  $: selectedRows = deriveSelectedRows(gridContext)
-  $: styles = patchStyles($component.styles, minHeight)
-  $: data = { selectedRows: $selectedRows }
-  $: actions = [
-    {
-      type: ActionTypes.RefreshDatasource,
-      callback: () => gridContext?.rows.actions.refreshData(),
-      metadata: { dataSource: table },
+$: currentTheme = $context?.device?.theme
+$: darkMode = !currentTheme?.includes("light")
+$: parsedColumns = getParsedColumns(columns)
+$: columnWhitelist = parsedColumns.filter(x => x.active).map(x => x.field)
+$: schemaOverrides = getSchemaOverrides(parsedColumns)
+$: enrichedButtons = enrichButtons(buttons)
+$: selectedRows = deriveSelectedRows(gridContext)
+$: styles = patchStyles($component.styles, minHeight)
+$: data = { selectedRows: $selectedRows }
+$: actions = [
+  {
+    type: ActionTypes.RefreshDatasource,
+    callback: () => gridContext?.rows.actions.refreshData(),
+    metadata: { dataSource: table },
+  },
+]
+
+// Provide additional data context for live binding eval
+export const getAdditionalDataContext = () => {
+  const rows = get(grid?.getContext()?.rows)
+  const goldenRow = generateGoldenSample(rows)
+  const id = get(component).id
+  return {
+    [id]: goldenRow,
+    eventContext: {
+      row: goldenRow,
     },
-  ]
-
-  // Provide additional data context for live binding eval
-  export const getAdditionalDataContext = () => {
-    const rows = get(grid?.getContext()?.rows)
-    const goldenRow = generateGoldenSample(rows)
-    const id = get(component).id
-    return {
-      [id]: goldenRow,
-      eventContext: {
-        row: goldenRow,
-      },
-    }
   }
+}
 
-  // Parses columns to fix older formats
-  const getParsedColumns = columns => {
-    if (!columns?.length) {
-      return []
-    }
-    // If the first element has an active key all elements should be in the new format
-    if (columns[0].active !== undefined) {
-      return columns
-    }
-    return columns.map(column => ({
-      label: column.displayName || column.name,
-      field: column.name,
-      active: true,
-    }))
+// Parses columns to fix older formats
+const getParsedColumns = columns => {
+  if (!columns?.length) {
+    return []
   }
-
-  const getSchemaOverrides = columns => {
-    let overrides = {}
-    columns.forEach((column, idx) => {
-      overrides[column.field] = {
-        displayName: column.label,
-        order: idx,
-      }
-      if (column.width) {
-        overrides[column.field].width = column.width
-      }
-    })
-    return overrides
+  // If the first element has an active key all elements should be in the new format
+  if (columns[0].active !== undefined) {
+    return columns
   }
+  return columns.map(column => ({
+    label: column.displayName || column.name,
+    field: column.name,
+    active: true,
+  }))
+}
 
-  const enrichButtons = buttons => {
-    if (!buttons?.length) {
-      return null
+const getSchemaOverrides = columns => {
+  let overrides = {}
+  columns.forEach((column, idx) => {
+    overrides[column.field] = {
+      displayName: column.label,
+      order: idx,
     }
-    return buttons.map(settings => ({
-      size: "M",
-      text: settings.text,
-      type: settings.type,
-      icon: settings.icon,
-      onClick: async row => {
-        // Create a fake, ephemeral context to run the buttons actions with
-        const id = get(component).id
-        const gridContext = createContextStore(context)
-        gridContext.actions.provideData(id, row)
-        const fn = enrichButtonActions(settings.onClick, get(gridContext))
-        return await fn?.({ row })
-      },
-    }))
-  }
-
-  const deriveSelectedRows = gridContext => {
-    if (!gridContext) {
-      return readable([])
+    if (column.width) {
+      overrides[column.field].width = column.width
     }
-    return derived(
-      [gridContext.selectedRows, gridContext.rowLookupMap, gridContext.rows],
-      ([$selectedRows, $rowLookupMap, $rows]) => {
-        return Object.entries($selectedRows || {})
-          .filter(([_, selected]) => selected)
-          .map(([rowId]) => {
-            const idx = $rowLookupMap[rowId]
-            return gridContext.rows.actions.cleanRow($rows[idx])
-          })
-      }
-    )
-  }
-
-  const patchStyles = (styles, minHeight) => {
-    return {
-      ...styles,
-      normal: {
-        ...styles?.normal,
-        "min-height": `${minHeight}px`,
-      },
-    }
-  }
-
-  onMount(() => {
-    gridContext = grid.getContext()
-    gridContext.minHeight.subscribe($height => (minHeight = $height))
   })
+  return overrides
+}
+
+const enrichButtons = buttons => {
+  if (!buttons?.length) {
+    return null
+  }
+  return buttons.map(settings => ({
+    size: "M",
+    text: settings.text,
+    type: settings.type,
+    icon: settings.icon,
+    onClick: async row => {
+      // Create a fake, ephemeral context to run the buttons actions with
+      const id = get(component).id
+      const gridContext = createContextStore(context)
+      gridContext.actions.provideData(id, row)
+      const fn = enrichButtonActions(settings.onClick, get(gridContext))
+      return await fn?.({ row })
+    },
+  }))
+}
+
+const deriveSelectedRows = gridContext => {
+  if (!gridContext) {
+    return readable([])
+  }
+  return derived(
+    [gridContext.selectedRows, gridContext.rowLookupMap, gridContext.rows],
+    ([$selectedRows, $rowLookupMap, $rows]) => {
+      return Object.entries($selectedRows || {})
+        .filter(([_, selected]) => selected)
+        .map(([rowId]) => {
+          const idx = $rowLookupMap[rowId]
+          return gridContext.rows.actions.cleanRow($rows[idx])
+        })
+    }
+  )
+}
+
+const patchStyles = (styles, minHeight) => {
+  return {
+    ...styles,
+    normal: {
+      ...styles?.normal,
+      "min-height": `${minHeight}px`,
+    },
+  }
+}
+
+onMount(() => {
+  gridContext = grid.getContext()
+  gridContext.minHeight.subscribe($height => (minHeight = $height))
+})
 </script>
 
 <div use:styleable={styles} class:in-builder={$builderStore.inBuilder}>

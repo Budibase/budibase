@@ -1,29 +1,22 @@
+import { sql } from "@budibase/backend-core"
 import {
-  FieldType,
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
+  DatasourcePlus,
+  DatasourcePlusQueryResponse,
+  FieldType,
   Integration,
   Operation,
   QueryJson,
   QueryType,
+  Row,
+  Schema,
+  SqlClient,
   SqlQuery,
   Table,
-  DatasourcePlus,
-  DatasourceFeature,
-  ConnectionInfo,
-  Schema,
   TableSourceType,
-  Row,
-  DatasourcePlusQueryResponse,
-  SqlClient,
 } from "@budibase/types"
-import {
-  buildExternalTableId,
-  checkExternalTables,
-  generateColumnDefinition,
-  finaliseExternalTables,
-  getSqlQuery,
-  HOST_ADDRESS,
-} from "./utils"
 import {
   BindParameters,
   Connection,
@@ -31,8 +24,15 @@ import {
   ExecuteOptions,
   Result,
 } from "oracledb"
-import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
-import { sql } from "@budibase/backend-core"
+import { OracleColumn, OracleColumnsResponse, OracleTable } from "./base/types"
+import {
+  HOST_ADDRESS,
+  buildExternalTableId,
+  checkExternalTables,
+  finaliseExternalTables,
+  generateColumnDefinition,
+  getSqlQuery,
+} from "./utils"
 
 const Sql = sql.Sql
 
@@ -40,7 +40,7 @@ let oracledb: any
 try {
   oracledb = require("oracledb")
   oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT
-} catch (err) {
+} catch (_err) {
   console.log("ORACLEDB is not installed")
 }
 

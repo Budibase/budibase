@@ -1,64 +1,64 @@
 <script>
-  import { createEventDispatcher, onMount } from "svelte"
-  import FancyField from "./FancyField.svelte"
-  import FancyFieldLabel from "./FancyFieldLabel.svelte"
-  import { fade } from "svelte/transition"
+import { createEventDispatcher, onMount } from "svelte"
+import { fade } from "svelte/transition"
+import FancyField from "./FancyField.svelte"
+import FancyFieldLabel from "./FancyFieldLabel.svelte"
 
-  export let label
-  export let value
-  export let type = "text"
-  export let disabled = false
-  export let error = null
-  export let validate = null
-  export let suffix = null
-  export let validateOn = "change"
+export let label
+export let value
+export let type = "text"
+export let disabled = false
+export let error = null
+export let validate = null
+export let suffix = null
+export let validateOn = "change"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let ref
-  let focused = false
-  let autofilled = false
+let ref
+let focused = false
+let autofilled = false
 
-  $: placeholder = !autofilled && !focused && !value
+$: placeholder = !autofilled && !focused && !value
 
-  const onChange = e => {
-    const newValue = e.target.value
-    dispatch("change", newValue)
-    value = newValue
-    if (validate && (error || validateOn === "change")) {
-      error = validate(newValue)
-    }
+const onChange = e => {
+  const newValue = e.target.value
+  dispatch("change", newValue)
+  value = newValue
+  if (validate && (error || validateOn === "change")) {
+    error = validate(newValue)
   }
+}
 
-  const onBlur = e => {
-    focused = false
-    const newValue = e.target.value
-    dispatch("blur", newValue)
-    if (validate && validateOn === "blur") {
-      error = validate(newValue)
-    }
+const onBlur = e => {
+  focused = false
+  const newValue = e.target.value
+  dispatch("blur", newValue)
+  if (validate && validateOn === "blur") {
+    error = validate(newValue)
   }
+}
 
-  onMount(() => {
-    // Start watching for autofill every 100ms
-    const interval = setInterval(() => {
-      autofilled = ref?.matches(":-webkit-autofill")
-      if (autofilled) {
-        clearInterval(interval)
-      }
-    }, 100)
-
-    // Give up after 2 seconds and assume autofill has not been used
-    const timeout = setTimeout(() => {
+onMount(() => {
+  // Start watching for autofill every 100ms
+  const interval = setInterval(() => {
+    autofilled = ref?.matches(":-webkit-autofill")
+    if (autofilled) {
       clearInterval(interval)
-    }, 2000)
-
-    // Cleanup
-    return () => {
-      clearInterval(interval)
-      clearTimeout(timeout)
     }
-  })
+  }, 100)
+
+  // Give up after 2 seconds and assume autofill has not been used
+  const timeout = setTimeout(() => {
+    clearInterval(interval)
+  }, 2000)
+
+  // Cleanup
+  return () => {
+    clearInterval(interval)
+    clearTimeout(timeout)
+  }
+})
 </script>
 
 <FancyField {error} {value} {validate} {disabled} {focused}>

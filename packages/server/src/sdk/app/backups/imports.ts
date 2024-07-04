@@ -1,27 +1,27 @@
+import fs from "fs"
+import { join } from "path"
 import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
 import {
-  Database,
-  Row,
   Automation,
   AutomationTriggerStepId,
-  RowAttachment,
+  Database,
   FieldType,
+  Row,
+  RowAttachment,
 } from "@budibase/types"
+import fsp from "fs/promises"
+import tar from "tar"
+import { v4 as uuid } from "uuid"
+import sdk from "../../"
+import { ObjectStoreBuckets } from "../../../constants"
 import { getAutomationParams } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
+import { downloadTemplate } from "../../../utilities/fileSystem"
 import {
+  ATTACHMENT_DIRECTORY,
   DB_EXPORT_FILE,
   GLOBAL_DB_EXPORT_FILE,
-  ATTACHMENT_DIRECTORY,
 } from "./constants"
-import { downloadTemplate } from "../../../utilities/fileSystem"
-import { ObjectStoreBuckets } from "../../../constants"
-import { join } from "path"
-import fs from "fs"
-import fsp from "fs/promises"
-import sdk from "../../"
-import { v4 as uuid } from "uuid"
-import tar from "tar"
 
 type TemplateType = {
   file?: {

@@ -1,57 +1,56 @@
 <script>
-  import { getContext } from "svelte"
-  import ApexCharts from "apexcharts"
-  import { Icon } from "@budibase/bbui"
-  import { cloneDeep } from "./utils"
+import { Icon } from "@budibase/bbui"
+import ApexCharts from "apexcharts"
+import { getContext } from "svelte"
+import { cloneDeep } from "./utils"
 
-  const { styleable, builderStore } = getContext("sdk")
-  const component = getContext("component")
+const { styleable, builderStore } = getContext("sdk")
+const component = getContext("component")
 
-  export let options
+export let options
 
-  // Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone options here to provide a buffer.
-  $: optionsCopy = cloneDeep(options)
+// Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone options here to provide a buffer.
+$: optionsCopy = cloneDeep(options)
 
-  let chartElement
-  let chart
-  let currentType = null
+let chartElement
+let chart
+let currentType = null
 
-  const updateChart = async newOptions => {
-    // Line charts have issues transitioning between "datetime" and "category" types, and will ignore the provided formatters
-    // in certain scenarios. Rerendering the chart when the user changes label type fixes this, but unfortunately it does
-    // cause a little bit of jankiness with animations.
-    if (newOptions?.xaxis?.type && newOptions.xaxis.type !== currentType) {
-      await renderChart(chartElement)
-    } else {
-      await chart?.updateOptions(newOptions)
+const updateChart = async newOptions => {
+  // Line charts have issues transitioning between "datetime" and "category" types, and will ignore the provided formatters
+  // in certain scenarios. Rerendering the chart when the user changes label type fixes this, but unfortunately it does
+  // cause a little bit of jankiness with animations.
+  if (newOptions?.xaxis?.type && newOptions.xaxis.type !== currentType) {
+    await renderChart(chartElement)
+  } else {
+    await chart?.updateOptions(newOptions)
+  }
+}
+
+const renderChart = async newChartElement => {
+  try {
+    await chart?.destroy()
+    chart = new ApexCharts(newChartElement, optionsCopy)
+    currentType = optionsCopy?.xaxis?.type
+    await chart.render()
+  } catch (e) {
+    // Apex for some reason throws this error when creating a new chart.
+    // It doesn't actually cause any issues with the function of the chart, so
+    // just suppress it so the console doesn't get spammed
+    if (
+      e.message !== "Cannot read properties of undefined (reading 'parentNode')"
+    ) {
+      throw e
     }
   }
+}
 
-  const renderChart = async newChartElement => {
-    try {
-      await chart?.destroy()
-      chart = new ApexCharts(newChartElement, optionsCopy)
-      currentType = optionsCopy?.xaxis?.type
-      await chart.render()
-    } catch (e) {
-      // Apex for some reason throws this error when creating a new chart.
-      // It doesn't actually cause any issues with the function of the chart, so
-      // just suppress it so the console doesn't get spammed
-      if (
-        e.message !==
-        "Cannot read properties of undefined (reading 'parentNode')"
-      ) {
-        throw e
-      }
-    }
-  }
+$: noData = optionsCopy == null || optionsCopy?.series?.length === 0
 
-  $: noData = optionsCopy == null || optionsCopy?.series?.length === 0
-
-  // Call render chart upon changes to noData, as apex charts has issues with rendering upon changes automatically
-  // if the chart is hidden.
-  $: renderChart(chartElement, noData)
-  $: updateChart(optionsCopy)
+// Call render chart upon changes to noData, as apex charts has issues with rendering upon changes automatically
+// if the chart is hidden.
+$: renderChart(chartElement, noData)
+$: updateChart(optionsCopy)
 </script>
 
 {#key optionsCopy?.customColor}

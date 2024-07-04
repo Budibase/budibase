@@ -1,4 +1,4 @@
-import { getApp, findTable, makeCall } from "../../utilities"
+import { findTable, getApp, makeCall } from "../../utilities"
 
 async function getSales(req: any) {
   const { page } = req.query

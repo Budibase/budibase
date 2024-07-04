@@ -1,4 +1,3 @@
-import newid from "./newid"
 import { context, db as dbCore } from "@budibase/backend-core"
 import {
   DatabaseQueryOpts,
@@ -7,11 +6,12 @@ import {
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  LinkDocument,
   RelationshipFieldMetadata,
   SourceName,
   VirtualDocumentType,
-  LinkDocument,
 } from "@budibase/types"
+import newid from "./newid"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
 

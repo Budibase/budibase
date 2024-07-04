@@ -1,10 +1,10 @@
-import { publishEvent } from "../events"
 import {
   Event,
-  RowsImportedEvent,
   RowsCreatedEvent,
+  RowsImportedEvent,
   Table,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 /* eslint-disable */
 

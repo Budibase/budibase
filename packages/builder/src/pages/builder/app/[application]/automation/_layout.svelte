@@ -1,40 +1,40 @@
 <script>
-  import { Heading, Body, Layout, Button, Modal } from "@budibase/bbui"
-  import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
-  import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
-  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import TestPanel from "components/automation/AutomationBuilder/TestPanel.svelte"
-  import { onDestroy, onMount } from "svelte"
-  import { syncURLToState } from "helpers/urlStateSync"
-  import * as routify from "@roxi/routify"
-  import {
-    builderStore,
-    automationStore,
-    selectedAutomation,
-  } from "stores/builder"
+import { Body, Button, Heading, Layout, Modal } from "@budibase/bbui"
+import * as routify from "@roxi/routify"
+import TestPanel from "components/automation/AutomationBuilder/TestPanel.svelte"
+import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
+import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
+import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
+import { syncURLToState } from "helpers/urlStateSync"
+import {
+  automationStore,
+  builderStore,
+  selectedAutomation,
+} from "stores/builder"
+import { onDestroy, onMount } from "svelte"
 
-  $: automationId = $selectedAutomation?._id
-  $: builderStore.selectResource(automationId)
+$: automationId = $selectedAutomation?._id
+$: builderStore.selectResource(automationId)
 
-  // Keep URL and state in sync for selected screen ID
-  const stopSyncing = syncURLToState({
-    urlParam: "automationId",
-    stateKey: "selectedAutomationId",
-    validate: id => $automationStore.automations.some(x => x._id === id),
-    fallbackUrl: "./index",
-    store: automationStore,
-    update: automationStore.actions.select,
-    routify,
-  })
+// Keep URL and state in sync for selected screen ID
+const stopSyncing = syncURLToState({
+  urlParam: "automationId",
+  stateKey: "selectedAutomationId",
+  validate: id => $automationStore.automations.some(x => x._id === id),
+  fallbackUrl: "./index",
+  store: automationStore,
+  update: automationStore.actions.select,
+  routify,
+})
 
-  let modal
-  let webhookModal
+let modal
+let webhookModal
 
-  onMount(() => {
-    $automationStore.showTestPanel = false
-  })
+onMount(() => {
+  $automationStore.showTestPanel = false
+})
 
-  onDestroy(stopSyncing)
+onDestroy(stopSyncing)
 </script>
 
 <!-- routify:options index=3 -->

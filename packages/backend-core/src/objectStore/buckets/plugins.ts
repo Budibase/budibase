@@ -1,8 +1,8 @@
-import env from "../../environment"
-import * as objectStore from "../objectStore"
-import * as context from "../../context"
-import * as cloudfront from "../cloudfront"
 import { Plugin } from "@budibase/types"
+import * as context from "../../context"
+import env from "../../environment"
+import * as cloudfront from "../cloudfront"
+import * as objectStore from "../objectStore"
 
 // URLS
 

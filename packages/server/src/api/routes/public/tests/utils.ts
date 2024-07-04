@@ -1,6 +1,6 @@
-import * as setup from "../../tests/utilities"
-import { checkSlashesInUrl } from "../../../../utilities"
 import supertest from "supertest"
+import { checkSlashesInUrl } from "../../../../utilities"
+import * as setup from "../../tests/utilities"
 
 export type HttpMethod = "post" | "get" | "put" | "delete" | "patch"
 

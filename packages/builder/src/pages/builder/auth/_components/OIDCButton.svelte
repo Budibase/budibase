@@ -1,36 +1,36 @@
 <script>
-  import { notifications, FancyButton } from "@budibase/bbui"
-  import OidcLogo from "assets/oidc-logo.png"
-  import Auth0Logo from "assets/auth0-logo.png"
-  import MicrosoftLogo from "assets/microsoft-logo.png"
-  import OktaLogo from "assets/okta-logo.png"
-  import OneLoginLogo from "assets/onelogin-logo.png"
+import { FancyButton, notifications } from "@budibase/bbui"
+import Auth0Logo from "assets/auth0-logo.png"
+import MicrosoftLogo from "assets/microsoft-logo.png"
+import OidcLogo from "assets/oidc-logo.png"
+import OktaLogo from "assets/okta-logo.png"
+import OneLoginLogo from "assets/onelogin-logo.png"
 
-  import { oidc, organisation, auth } from "stores/portal"
-  import { onMount } from "svelte"
+import { auth, oidc, organisation } from "stores/portal"
+import { onMount } from "svelte"
 
-  export let samePage
+export let samePage
 
-  $: show = $organisation.oidc
+$: show = $organisation.oidc
 
-  let preDefinedIcons = {
-    Oidc: OidcLogo,
-    Auth0: Auth0Logo,
-    Microsoft: MicrosoftLogo,
-    Okta: OktaLogo,
-    OneLogin: OneLoginLogo,
+let preDefinedIcons = {
+  Oidc: OidcLogo,
+  Auth0: Auth0Logo,
+  Microsoft: MicrosoftLogo,
+  Okta: OktaLogo,
+  OneLogin: OneLoginLogo,
+}
+
+onMount(async () => {
+  try {
+    await oidc.init()
+  } catch (error) {
+    notifications.error("Error getting OIDC config")
   }
+})
 
-  onMount(async () => {
-    try {
-      await oidc.init()
-    } catch (error) {
-      notifications.error("Error getting OIDC config")
-    }
-  })
-
-  $: oidcLogoImageURL = preDefinedIcons[$oidc.logo] ?? $oidc.logo
-  $: logoSrc = oidcLogoImageURL ?? OidcLogo
+$: oidcLogoImageURL = preDefinedIcons[$oidc.logo] ?? $oidc.logo
+$: logoSrc = oidcLogoImageURL ?? OidcLogo
 </script>
 
 {#if show}

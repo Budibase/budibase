@@ -1,5 +1,3 @@
-import { EMPTY_LAYOUT } from "../../constants/layouts"
-import { generateLayoutID, getScreenParams } from "../../db/utils"
 import { events, context } from "@budibase/backend-core"
 import {
   BBContext,
@@ -8,6 +6,8 @@ import {
   SaveLayoutResponse,
   UserCtx,
 } from "@budibase/types"
+import { EMPTY_LAYOUT } from "../../constants/layouts"
+import { generateLayoutID, getScreenParams } from "../../db/utils"
 
 export async function save(
   ctx: UserCtx<SaveLayoutRequest, SaveLayoutResponse>

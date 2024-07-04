@@ -1,91 +1,91 @@
 <script>
-  import {
-    Input,
-    Layout,
-    Icon,
-    Popover,
-    Tags,
-    Tag,
-    Body,
-    Button,
-  } from "@budibase/bbui"
-  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import { EditorModes } from "components/common/CodeEditor"
-  import SnippetDrawer from "./SnippetDrawer.svelte"
-  import { licensing } from "stores/portal"
-  import UpgradeButton from "pages/builder/portal/_components/UpgradeButton.svelte"
+import {
+  Body,
+  Button,
+  Icon,
+  Input,
+  Layout,
+  Popover,
+  Tag,
+  Tags,
+} from "@budibase/bbui"
+import { EditorModes } from "components/common/CodeEditor"
+import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
+import UpgradeButton from "pages/builder/portal/_components/UpgradeButton.svelte"
+import { licensing } from "stores/portal"
+import SnippetDrawer from "./SnippetDrawer.svelte"
 
-  export let addSnippet
-  export let snippets
+export let addSnippet
+export let snippets
 
-  let search = ""
-  let searching = false
-  let popover
-  let popoverAnchor
-  let hoveredSnippet
-  let hideTimeout
-  let snippetDrawer
-  let editableSnippet
+let search = ""
+let searching = false
+let popover
+let popoverAnchor
+let hoveredSnippet
+let hideTimeout
+let snippetDrawer
+let editableSnippet
 
-  $: enableSnippets = !$licensing.isFreePlan
-  $: filteredSnippets = getFilteredSnippets(enableSnippets, snippets, search)
+$: enableSnippets = !$licensing.isFreePlan
+$: filteredSnippets = getFilteredSnippets(enableSnippets, snippets, search)
 
-  const getFilteredSnippets = (enableSnippets, snippets, search) => {
-    if (!enableSnippets || !snippets?.length) {
-      return []
-    }
-    if (!search?.length) {
-      return snippets
-    }
-    return snippets.filter(snippet =>
-      snippet.name.toLowerCase().includes(search.toLowerCase())
-    )
+const getFilteredSnippets = (enableSnippets, snippets, search) => {
+  if (!enableSnippets || !snippets?.length) {
+    return []
   }
-
-  const showSnippet = (snippet, target) => {
-    stopHidingPopover()
-    popoverAnchor = target
-    hoveredSnippet = snippet
-    popover.show()
+  if (!search?.length) {
+    return snippets
   }
+  return snippets.filter(snippet =>
+    snippet.name.toLowerCase().includes(search.toLowerCase())
+  )
+}
 
-  const hidePopover = () => {
-    hideTimeout = setTimeout(() => {
-      popover.hide()
-      popoverAnchor = null
-      hoveredSnippet = null
-      hideTimeout = null
-    }, 100)
-  }
+const showSnippet = (snippet, target) => {
+  stopHidingPopover()
+  popoverAnchor = target
+  hoveredSnippet = snippet
+  popover.show()
+}
 
-  const stopHidingPopover = () => {
-    if (hideTimeout) {
-      clearTimeout(hideTimeout)
-      hideTimeout = null
-    }
-  }
+const hidePopover = () => {
+  hideTimeout = setTimeout(() => {
+    popover.hide()
+    popoverAnchor = null
+    hoveredSnippet = null
+    hideTimeout = null
+  }, 100)
+}
 
-  const startSearching = () => {
-    searching = true
-    search = ""
+const stopHidingPopover = () => {
+  if (hideTimeout) {
+    clearTimeout(hideTimeout)
+    hideTimeout = null
   }
+}
 
-  const stopSearching = () => {
-    searching = false
-    search = ""
-  }
+const startSearching = () => {
+  searching = true
+  search = ""
+}
 
-  const createSnippet = () => {
-    editableSnippet = null
-    snippetDrawer.show()
-  }
+const stopSearching = () => {
+  searching = false
+  search = ""
+}
 
-  const editSnippet = (e, snippet) => {
-    e.preventDefault()
-    e.stopPropagation()
-    editableSnippet = snippet
-    snippetDrawer.show()
-  }
+const createSnippet = () => {
+  editableSnippet = null
+  snippetDrawer.show()
+}
+
+const editSnippet = (e, snippet) => {
+  e.preventDefault()
+  e.stopPropagation()
+  editableSnippet = snippet
+  snippetDrawer.show()
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

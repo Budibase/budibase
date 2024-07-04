@@ -1,30 +1,30 @@
 <script>
-  import { DropPosition } from "./dndStore"
-  import { fade } from "svelte/transition"
+import { fade } from "svelte/transition"
+import { DropPosition } from "./dndStore"
 
-  export let component
-  export let position
+export let component
+export let position
 
-  let x
-  let y
-  let width
-  let height
+let x
+let y
+let width
+let height
 
-  $: calculatePosition(component)
+$: calculatePosition(component)
 
-  const calculatePosition = component => {
-    // Get root li element
-    const el = document.getElementById(`component-${component?._id}`)
-    // Get inner nav item content element
-    const child = el?.children[0]?.children[0]
-    if (!el) {
-      return
-    }
-    x = child.offsetLeft
-    y = child.offsetTop
-    width = child.clientWidth
-    height = child.clientHeight
+const calculatePosition = component => {
+  // Get root li element
+  const el = document.getElementById(`component-${component?._id}`)
+  // Get inner nav item content element
+  const child = el?.children[0]?.children[0]
+  if (!el) {
+    return
   }
+  x = child.offsetLeft
+  y = child.offsetTop
+  width = child.clientWidth
+  height = child.clientHeight
+}
 </script>
 
 {#if component && position}

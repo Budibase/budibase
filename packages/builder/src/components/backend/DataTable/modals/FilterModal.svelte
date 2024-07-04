@@ -1,130 +1,128 @@
 <script>
-  import {
-    Button,
-    Input,
-    Body,
-    Select,
-    DatePicker,
-    ModalContent,
-    Label,
-    notifications,
-    Icon,
-  } from "@budibase/bbui"
-  import { tables, views } from "stores/builder"
+import {
+  Body,
+  Button,
+  DatePicker,
+  Icon,
+  Input,
+  Label,
+  ModalContent,
+  Select,
+  notifications,
+} from "@budibase/bbui"
+import { tables, views } from "stores/builder"
 
-  const CONDITIONS = [
-    {
-      name: "Equals",
-      key: "EQUALS",
-    },
-    {
-      name: "Not Equals",
-      key: "NOT_EQUALS",
-    },
-    {
-      name: "Less Than",
-      key: "LT",
-    },
-    {
-      name: "Less Than Or Equal",
-      key: "LTE",
-    },
-    {
-      name: "More Than",
-      key: "MT",
-    },
-    {
-      name: "More Than Or Equal",
-      key: "MTE",
-    },
-    {
-      name: "Contains",
-      key: "CONTAINS",
-    },
-    {
-      name: "Is Not Empty",
-      key: "NOT_EMPTY",
-    },
-    {
-      name: "Is Empty",
-      key: "EMPTY",
-    },
-  ]
+const CONDITIONS = [
+  {
+    name: "Equals",
+    key: "EQUALS",
+  },
+  {
+    name: "Not Equals",
+    key: "NOT_EQUALS",
+  },
+  {
+    name: "Less Than",
+    key: "LT",
+  },
+  {
+    name: "Less Than Or Equal",
+    key: "LTE",
+  },
+  {
+    name: "More Than",
+    key: "MT",
+  },
+  {
+    name: "More Than Or Equal",
+    key: "MTE",
+  },
+  {
+    name: "Contains",
+    key: "CONTAINS",
+  },
+  {
+    name: "Is Not Empty",
+    key: "NOT_EMPTY",
+  },
+  {
+    name: "Is Empty",
+    key: "EMPTY",
+  },
+]
 
-  const CONJUNCTIONS = [
-    {
-      name: "Or",
-      key: "OR",
-    },
-    {
-      name: "And",
-      key: "AND",
-    },
-  ]
+const CONJUNCTIONS = [
+  {
+    name: "Or",
+    key: "OR",
+  },
+  {
+    name: "And",
+    key: "AND",
+  },
+]
 
-  export let view = {}
+export let view = {}
 
-  $: viewTable = $tables.list.find(
-    ({ _id }) => _id === $views.selected?.tableId
+$: viewTable = $tables.list.find(({ _id }) => _id === $views.selected?.tableId)
+$: fields = viewTable && Object.keys(viewTable.schema)
+$: schema = viewTable && viewTable.schema ? viewTable.schema : {}
+
+function saveView() {
+  try {
+    views.save(view)
+    notifications.success(`View ${view.name} saved`)
+  } catch (error) {
+    notifications.error("Error saving view")
+  }
+}
+
+function removeFilter(idx) {
+  view.filters.splice(idx, 1)
+  view.filters = view.filters
+}
+
+function addFilter() {
+  view.filters.push({ conjunction: "AND" })
+  view.filters = view.filters
+}
+
+function isMultipleChoice(field) {
+  return (
+    schema[field]?.constraints?.inclusion?.length ||
+    schema[field]?.type === "boolean"
   )
-  $: fields = viewTable && Object.keys(viewTable.schema)
-  $: schema = viewTable && viewTable.schema ? viewTable.schema : {}
+}
 
-  function saveView() {
-    try {
-      views.save(view)
-      notifications.success(`View ${view.name} saved`)
-    } catch (error) {
-      notifications.error("Error saving view")
-    }
+function fieldOptions(field) {
+  return schema[field]?.type === "options" || schema[field]?.type === "array"
+    ? schema[field]?.constraints.inclusion
+    : [true, false]
+}
+
+function isDate(field) {
+  return schema[field]?.type === "datetime"
+}
+
+function isNumber(field) {
+  return schema[field]?.type === "number"
+}
+
+const fieldChanged = filter => ev => {
+  // Reset if type changed
+  const oldType = schema[filter.key]?.type
+  const newType = schema[ev.detail]?.type
+  if (filter.key && ev.detail && oldType !== newType) {
+    filter.value = ""
   }
+}
 
-  function removeFilter(idx) {
-    view.filters.splice(idx, 1)
-    view.filters = view.filters
-  }
+const getOptionLabel = x => x.name
+const getOptionValue = x => x.key
 
-  function addFilter() {
-    view.filters.push({ conjunction: "AND" })
-    view.filters = view.filters
-  }
-
-  function isMultipleChoice(field) {
-    return (
-      schema[field]?.constraints?.inclusion?.length ||
-      schema[field]?.type === "boolean"
-    )
-  }
-
-  function fieldOptions(field) {
-    return schema[field]?.type === "options" || schema[field]?.type === "array"
-      ? schema[field]?.constraints.inclusion
-      : [true, false]
-  }
-
-  function isDate(field) {
-    return schema[field]?.type === "datetime"
-  }
-
-  function isNumber(field) {
-    return schema[field]?.type === "number"
-  }
-
-  const fieldChanged = filter => ev => {
-    // Reset if type changed
-    const oldType = schema[filter.key]?.type
-    const newType = schema[ev.detail]?.type
-    if (filter.key && ev.detail && oldType !== newType) {
-      filter.value = ""
-    }
-  }
-
-  const getOptionLabel = x => x.name
-  const getOptionValue = x => x.key
-
-  const showValue = filter => {
-    return !(filter.condition === "EMPTY" || filter.condition === "NOT_EMPTY")
-  }
+const showValue = filter => {
+  return !(filter.condition === "EMPTY" || filter.condition === "NOT_EMPTY")
+}
 </script>
 
 <ModalContent title="Filter" confirmText="Save" onConfirm={saveView} size="L">

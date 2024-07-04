@@ -1,57 +1,57 @@
 <script>
-  import { Body } from "@budibase/bbui"
-  import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
-  import { IntegrationTypes } from "constants/backend"
+import { Body } from "@budibase/bbui"
+import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
+import { IntegrationTypes } from "constants/backend"
 
-  export let datasource
-  const getSubtitle = datasource => {
-    if (datasource.source === IntegrationTypes.REST) {
-      return datasource.name
-    }
-    if (
-      datasource.source === IntegrationTypes.POSTGRES ||
-      datasource.source === IntegrationTypes.MYSQL ||
-      datasource.source === IntegrationTypes.ORACLE ||
-      datasource.source === IntegrationTypes.REDIS
-    ) {
-      return `${datasource.config.host}:${datasource.config.port}`
-    }
-    if (datasource.source === IntegrationTypes.SQL_SERVER) {
-      return `${datasource.config.server}:${datasource.config.port}`
-    }
-    if (datasource.source === IntegrationTypes.SNOWFLAKE) {
-      return `${datasource.config.warehouse}:${datasource.config.database}:${datasource.config.schema}`
-    }
-    if (datasource.source === IntegrationTypes.ARANGODB) {
-      return `${datasource.config.url}:${datasource.config.databaseName}`
-    }
-    if (datasource.source === IntegrationTypes.COUCHDB) {
-      return datasource.config.database
-    }
-    if (datasource.source === IntegrationTypes.DYNAMODB) {
-      return `${datasource.config.endpoint}:${datasource.config.region}`
-    }
-    if (datasource.source === IntegrationTypes.S3) {
-      return datasource.config.endpoint
-        ? `${datasource.config.endpoint}:${datasource.config.region}`
-        : `s3.${datasource.config.region}.amazonaws.com`
-    }
-    if (datasource.source === IntegrationTypes.ELASTICSEARCH) {
-      return datasource.config.url
-    }
-    if (datasource.source === IntegrationTypes.FIRESTORE) {
-      return datasource.config.projectId
-    }
-    if (datasource.source === IntegrationTypes.MONGODB) {
-      return datasource.config.db
-    }
-    if (datasource.source === IntegrationTypes.AIRTABLE) {
-      return datasource.config.base
-    }
-    if (datasource.source === IntegrationTypes.GOOGLE_SHEETS) {
-      return datasource.config.spreadsheetId
-    }
+export let datasource
+const getSubtitle = datasource => {
+  if (datasource.source === IntegrationTypes.REST) {
+    return datasource.name
   }
+  if (
+    datasource.source === IntegrationTypes.POSTGRES ||
+    datasource.source === IntegrationTypes.MYSQL ||
+    datasource.source === IntegrationTypes.ORACLE ||
+    datasource.source === IntegrationTypes.REDIS
+  ) {
+    return `${datasource.config.host}:${datasource.config.port}`
+  }
+  if (datasource.source === IntegrationTypes.SQL_SERVER) {
+    return `${datasource.config.server}:${datasource.config.port}`
+  }
+  if (datasource.source === IntegrationTypes.SNOWFLAKE) {
+    return `${datasource.config.warehouse}:${datasource.config.database}:${datasource.config.schema}`
+  }
+  if (datasource.source === IntegrationTypes.ARANGODB) {
+    return `${datasource.config.url}:${datasource.config.databaseName}`
+  }
+  if (datasource.source === IntegrationTypes.COUCHDB) {
+    return datasource.config.database
+  }
+  if (datasource.source === IntegrationTypes.DYNAMODB) {
+    return `${datasource.config.endpoint}:${datasource.config.region}`
+  }
+  if (datasource.source === IntegrationTypes.S3) {
+    return datasource.config.endpoint
+      ? `${datasource.config.endpoint}:${datasource.config.region}`
+      : `s3.${datasource.config.region}.amazonaws.com`
+  }
+  if (datasource.source === IntegrationTypes.ELASTICSEARCH) {
+    return datasource.config.url
+  }
+  if (datasource.source === IntegrationTypes.FIRESTORE) {
+    return datasource.config.projectId
+  }
+  if (datasource.source === IntegrationTypes.MONGODB) {
+    return datasource.config.db
+  }
+  if (datasource.source === IntegrationTypes.AIRTABLE) {
+    return datasource.config.base
+  }
+  if (datasource.source === IntegrationTypes.GOOGLE_SHEETS) {
+    return datasource.config.spreadsheetId
+  }
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

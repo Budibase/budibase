@@ -1,7 +1,4 @@
-import { breakExternalTableId } from "../../../integrations/utils"
-import { handleRequest } from "../row/external"
 import { events } from "@budibase/backend-core"
-import { isRows, isSchema, parse } from "../../../utilities/schema"
 import {
   BulkImportRequest,
   BulkImportResponse,
@@ -13,10 +10,13 @@ import {
   TableRequest,
   UserCtx,
 } from "@budibase/types"
-import sdk from "../../../sdk"
-import { builderSocket } from "../../../websockets"
-import { inputProcessing } from "../../../utilities/rowProcessor"
 import { isEqual } from "lodash"
+import { breakExternalTableId } from "../../../integrations/utils"
+import sdk from "../../../sdk"
+import { inputProcessing } from "../../../utilities/rowProcessor"
+import { isRows, isSchema, parse } from "../../../utilities/schema"
+import { builderSocket } from "../../../websockets"
+import { handleRequest } from "../row/external"
 
 function getDatasourceId(table: Table) {
   if (!table) {

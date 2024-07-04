@@ -1,39 +1,39 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import active from "svelte-spa-router/active"
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
+import { createEventDispatcher } from "svelte"
+import active from "svelte-spa-router/active"
 
-  export let type
-  export let url
-  export let text
-  export let subLinks
-  export let internalLink
-  export let leftNav = false
-  export let mobile = false
-  export let navStateStore
+export let type
+export let url
+export let text
+export let subLinks
+export let internalLink
+export let leftNav = false
+export let mobile = false
+export let navStateStore
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let renderKey
+let renderKey
 
-  $: expanded = !!$navStateStore[text]
-  $: renderLeftNav = leftNav || mobile
-  $: icon = !renderLeftNav || expanded ? "ChevronDown" : "ChevronRight"
+$: expanded = !!$navStateStore[text]
+$: renderLeftNav = leftNav || mobile
+$: icon = !renderLeftNav || expanded ? "ChevronDown" : "ChevronRight"
 
-  const onClickLink = () => {
-    dispatch("clickLink")
-    renderKey = Math.random()
+const onClickLink = () => {
+  dispatch("clickLink")
+  renderKey = Math.random()
+}
+
+const onClickDropdown = () => {
+  if (!renderLeftNav) {
+    return
   }
-
-  const onClickDropdown = () => {
-    if (!renderLeftNav) {
-      return
-    }
-    navStateStore.update(state => ({
-      ...state,
-      [text]: !state[text],
-    }))
-  }
+  navStateStore.update(state => ({
+    ...state,
+    [text]: !state[text],
+  }))
+}
 </script>
 
 {#if !type || type === "link"}

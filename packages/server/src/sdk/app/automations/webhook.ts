@@ -1,5 +1,5 @@
+import { context, db as dbCore } from "@budibase/backend-core"
 import { Webhook, WebhookActionType } from "@budibase/types"
-import { db as dbCore, context } from "@budibase/backend-core"
 import { generateWebhookID } from "../../../db/utils"
 
 function isWebhookID(id: string) {

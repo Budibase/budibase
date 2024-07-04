@@ -1,30 +1,30 @@
+import { ReadStream, WriteStream } from "fs"
 import Nano from "@budibase/nano"
 import {
   AllDocsResponse,
   AnyDocument,
+  DBError,
   Database,
   DatabaseCreateIndexOpts,
   DatabaseDeleteIndexOpts,
   DatabaseOpts,
   DatabasePutOpts,
   DatabaseQueryOpts,
-  DBError,
   Document,
-  isDocument,
   RowResponse,
   RowValue,
   SQLiteDefinition,
   SqlQueryBinding,
+  isDocument,
 } from "@budibase/types"
-import { getCouchInfo } from "./connections"
-import { directCouchUrlCall } from "./utils"
-import { getPouchDB } from "./pouchDB"
-import { ReadStream, WriteStream } from "fs"
-import { newid } from "../../docIds/newid"
 import { SQLITE_DESIGN_DOC_ID } from "../../constants"
-import { DDInstrumentedDatabase } from "../instrumentation"
-import { checkSlashesInUrl } from "../../helpers"
+import { newid } from "../../docIds/newid"
 import env from "../../environment"
+import { checkSlashesInUrl } from "../../helpers"
+import { DDInstrumentedDatabase } from "../instrumentation"
+import { getCouchInfo } from "./connections"
+import { getPouchDB } from "./pouchDB"
+import { directCouchUrlCall } from "./utils"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 

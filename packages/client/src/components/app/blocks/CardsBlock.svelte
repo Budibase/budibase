@@ -1,103 +1,103 @@
 <script>
-  import { getContext } from "svelte"
-  import Block from "components/Block.svelte"
-  import BlockComponent from "components/BlockComponent.svelte"
-  import { makePropSafe as safe } from "@budibase/string-templates"
-  import { enrichSearchColumns, enrichFilter } from "utils/blocks.js"
-  import { get } from "svelte/store"
+import { makePropSafe as safe } from "@budibase/string-templates"
+import Block from "components/Block.svelte"
+import BlockComponent from "components/BlockComponent.svelte"
+import { getContext } from "svelte"
+import { get } from "svelte/store"
+import { enrichFilter, enrichSearchColumns } from "utils/blocks.js"
 
-  export let title
-  export let dataSource
-  export let searchColumns
-  export let filter
-  export let sortColumn
-  export let sortOrder
-  export let paginate
-  export let limit
-  export let showTitleButton
-  export let titleButtonText
-  export let titleButtonURL
-  export let titleButtonPeek
-  export let cardTitle
-  export let cardSubtitle
-  export let cardDescription
-  export let cardImageURL
-  export let linkCardTitle
-  export let cardURL
-  export let cardPeek
-  export let cardHorizontal
-  export let showCardButton
-  export let cardButtonText
-  export let cardButtonOnClick
-  export let linkColumn
-  export let noRowsMessage
-  export let autoRefresh
+export let title
+export let dataSource
+export let searchColumns
+export let filter
+export let sortColumn
+export let sortOrder
+export let paginate
+export let limit
+export let showTitleButton
+export let titleButtonText
+export let titleButtonURL
+export let titleButtonPeek
+export let cardTitle
+export let cardSubtitle
+export let cardDescription
+export let cardImageURL
+export let linkCardTitle
+export let cardURL
+export let cardPeek
+export let cardHorizontal
+export let showCardButton
+export let cardButtonText
+export let cardButtonOnClick
+export let linkColumn
+export let noRowsMessage
+export let autoRefresh
 
-  const context = getContext("context")
-  const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
-  const component = getContext("component")
+const context = getContext("context")
+const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
+const component = getContext("component")
 
-  let formId
-  let dataProviderId
-  let repeaterId
-  let schema
-  let enrichedSearchColumns
-  let schemaLoaded = false
+let formId
+let dataProviderId
+let repeaterId
+let schema
+let enrichedSearchColumns
+let schemaLoaded = false
 
-  $: fetchSchema(dataSource)
-  $: enrichSearchColumns(searchColumns, schema).then(
-    val => (enrichedSearchColumns = val)
-  )
-  $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
-  $: cardWidth = cardHorizontal ? 420 : 300
-  $: fullCardURL = buildFullCardUrl(
-    linkCardTitle,
-    cardURL,
-    repeaterId,
-    linkColumn
-  )
-  $: titleButtonAction = [
-    {
-      "##eventHandlerType": "Navigate To",
-      parameters: {
-        peek: titleButtonPeek,
-        url: titleButtonURL,
-      },
+$: fetchSchema(dataSource)
+$: enrichSearchColumns(searchColumns, schema).then(
+  val => (enrichedSearchColumns = val)
+)
+$: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
+$: cardWidth = cardHorizontal ? 420 : 300
+$: fullCardURL = buildFullCardUrl(
+  linkCardTitle,
+  cardURL,
+  repeaterId,
+  linkColumn
+)
+$: titleButtonAction = [
+  {
+    "##eventHandlerType": "Navigate To",
+    parameters: {
+      peek: titleButtonPeek,
+      url: titleButtonURL,
     },
-  ]
+  },
+]
 
-  // Provide additional data context for live binding eval
-  export const getAdditionalDataContext = () => {
-    const rows = get(context)[dataProviderId]?.rows || []
-    const goldenRow = generateGoldenSample(rows)
-    const id = get(component).id
-    return {
-      [`${id}-repeater`]: goldenRow,
-    }
+// Provide additional data context for live binding eval
+export const getAdditionalDataContext = () => {
+  const rows = get(context)[dataProviderId]?.rows || []
+  const goldenRow = generateGoldenSample(rows)
+  const id = get(component).id
+  return {
+    [`${id}-repeater`]: goldenRow,
   }
+}
 
-  // Builds a full details page URL for the card title
-  const buildFullCardUrl = (link, url, repeaterId, linkColumn) => {
-    if (!link || !url || !repeaterId) {
-      return null
-    }
-    const col = linkColumn || "_id"
-    const split = url.split("/:")
-    if (split.length > 1) {
-      return `${split[0]}/{{ ${safe(repeaterId)}.${safe(col)} }}`
-    }
-    return url
+// Builds a full details page URL for the card title
+const buildFullCardUrl = (link, url, repeaterId, linkColumn) => {
+  if (!link || !url || !repeaterId) {
+    return null
   }
+  const col = linkColumn || "_id"
+  const split = url.split("/:")
+  if (split.length > 1) {
+    return `${split[0]}/{{ ${safe(repeaterId)}.${safe(col)} }}`
+  }
+  return url
+}
 
-  // Load the datasource schema so we can determine column types
-  const fetchSchema = async dataSource => {
-    if (dataSource) {
-      schema = await fetchDatasourceSchema(dataSource, {
-        enrichRelationships: true,
-      })
-    }
-    schemaLoaded = true
+// Load the datasource schema so we can determine column types
+const fetchSchema = async dataSource => {
+  if (dataSource) {
+    schema = await fetchDatasourceSchema(dataSource, {
+      enrichRelationships: true,
+    })
   }
+  schemaLoaded = true
+}
 </script>
 
 {#if schemaLoaded}

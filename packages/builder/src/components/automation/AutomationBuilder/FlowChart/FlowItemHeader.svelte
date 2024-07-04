@@ -1,96 +1,96 @@
 <script>
-  import { automationStore, selectedAutomation } from "stores/builder"
-  import { Icon, Body, AbsTooltip, StatusLight } from "@budibase/bbui"
-  import { externalActions } from "./ExternalActions"
-  import { createEventDispatcher } from "svelte"
-  import { Features } from "constants/backend/automations"
+import { AbsTooltip, Body, Icon, StatusLight } from "@budibase/bbui"
+import { Features } from "constants/backend/automations"
+import { automationStore, selectedAutomation } from "stores/builder"
+import { createEventDispatcher } from "svelte"
+import { externalActions } from "./ExternalActions"
 
-  export let block
-  export let open
-  export let showTestStatus = false
-  export let testResult
-  export let isTrigger
-  export let idx
-  export let addLooping
-  export let deleteStep
-  export let enableNaming = true
-  let validRegex = /^[A-Za-z0-9_\s]+$/
-  let typing = false
+export let block
+export let open
+export let showTestStatus = false
+export let testResult
+export let isTrigger
+export let idx
+export let addLooping
+export let deleteStep
+export let enableNaming = true
+let validRegex = /^[A-Za-z0-9_\s]+$/
+let typing = false
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  $: stepNames = $selectedAutomation?.definition.stepNames
-  $: automationName = stepNames?.[block.id] || block?.name || ""
-  $: automationNameError = getAutomationNameError(automationName)
-  $: status = updateStatus(testResult, isTrigger)
-  $: isHeaderTrigger = isTrigger || block.type === "TRIGGER"
+$: stepNames = $selectedAutomation?.definition.stepNames
+$: automationName = stepNames?.[block.id] || block?.name || ""
+$: automationNameError = getAutomationNameError(automationName)
+$: status = updateStatus(testResult, isTrigger)
+$: isHeaderTrigger = isTrigger || block.type === "TRIGGER"
 
-  $: {
-    if (!testResult) {
-      testResult = $automationStore.testResults?.steps?.filter(step =>
-        block.id ? step.id === block.id : step.stepId === block.stepId
-      )?.[0]
-    }
+$: {
+  if (!testResult) {
+    testResult = $automationStore.testResults?.steps?.filter(step =>
+      block.id ? step.id === block.id : step.stepId === block.stepId
+    )?.[0]
   }
-  $: loopBlock = $selectedAutomation?.definition.steps.find(
-    x => x.blockToLoop === block?.id
-  )
+}
+$: loopBlock = $selectedAutomation?.definition.steps.find(
+  x => x.blockToLoop === block?.id
+)
 
-  async function onSelect(block) {
-    await automationStore.update(state => {
-      state.selectedBlock = block
-      return state
-    })
+async function onSelect(block) {
+  await automationStore.update(state => {
+    state.selectedBlock = block
+    return state
+  })
+}
+
+function updateStatus(results, isTrigger) {
+  if (!results) {
+    return {}
   }
-
-  function updateStatus(results, isTrigger) {
-    if (!results) {
-      return {}
-    }
-    const lcStatus = results.outputs?.status?.toLowerCase()
-    if (lcStatus === "stopped" || lcStatus === "stopped_error") {
-      return { yellow: true, message: "Stopped" }
-    } else if (results.outputs?.success || isTrigger) {
-      return { positive: true, message: "Success" }
-    } else {
-      return { negative: true, message: "Error" }
-    }
+  const lcStatus = results.outputs?.status?.toLowerCase()
+  if (lcStatus === "stopped" || lcStatus === "stopped_error") {
+    return { yellow: true, message: "Stopped" }
+  } else if (results.outputs?.success || isTrigger) {
+    return { positive: true, message: "Success" }
+  } else {
+    return { negative: true, message: "Error" }
   }
+}
 
-  const getAutomationNameError = name => {
-    if (stepNames) {
-      for (const [key, value] of Object.entries(stepNames)) {
-        if (name === value && key !== block.id) {
-          return "This name already exists, please enter a unique name"
-        }
+const getAutomationNameError = name => {
+  if (stepNames) {
+    for (const [key, value] of Object.entries(stepNames)) {
+      if (name === value && key !== block.id) {
+        return "This name already exists, please enter a unique name"
       }
     }
-
-    if (name !== block.name && name?.length > 0) {
-      let invalidRoleName = !validRegex.test(name)
-      if (invalidRoleName) {
-        return "Please enter a role name consisting of only alphanumeric symbols and underscores"
-      }
-
-      return null
-    }
   }
 
-  const startTyping = async () => {
-    typing = true
-  }
-
-  const saveName = async () => {
-    if (automationNameError || block.name === automationName) {
-      return
+  if (name !== block.name && name?.length > 0) {
+    let invalidRoleName = !validRegex.test(name)
+    if (invalidRoleName) {
+      return "Please enter a role name consisting of only alphanumeric symbols and underscores"
     }
 
-    if (automationName.length === 0) {
-      await automationStore.actions.deleteAutomationName(block.id)
-    } else {
-      await automationStore.actions.saveAutomationName(block.id, automationName)
-    }
+    return null
   }
+}
+
+const startTyping = async () => {
+  typing = true
+}
+
+const saveName = async () => {
+  if (automationNameError || block.name === automationName) {
+    return
+  }
+
+  if (automationName.length === 0) {
+    await automationStore.actions.deleteAutomationName(block.id)
+  } else {
+    await automationStore.actions.saveAutomationName(block.id, automationName)
+  }
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

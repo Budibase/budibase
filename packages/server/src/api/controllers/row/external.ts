@@ -1,15 +1,6 @@
 import {
-  breakExternalTableId,
-  breakRowIdField,
-} from "../../../integrations/utils"
-import {
-  ExternalRequest,
-  ExternalRequestReturnType,
-  RunConfig,
-} from "./ExternalRequest"
-import {
-  FieldType,
   Datasource,
+  FieldType,
   IncludeRelationship,
   Operation,
   PatchRowRequest,
@@ -18,13 +9,22 @@ import {
   Table,
   UserCtx,
 } from "@budibase/types"
+import { cloneDeep } from "lodash"
+import {
+  breakExternalTableId,
+  breakRowIdField,
+} from "../../../integrations/utils"
 import sdk from "../../../sdk"
-import * as utils from "./utils"
 import {
   inputProcessing,
   outputProcessing,
 } from "../../../utilities/rowProcessor"
-import { cloneDeep } from "lodash"
+import {
+  ExternalRequest,
+  ExternalRequestReturnType,
+  RunConfig,
+} from "./ExternalRequest"
+import * as utils from "./utils"
 import { generateIdForRow } from "./utils"
 
 export async function handleRequest<T extends Operation>(

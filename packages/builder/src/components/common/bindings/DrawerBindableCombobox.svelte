@@ -1,59 +1,56 @@
 <script>
-  import { Icon, Combobox, Drawer, Button } from "@budibase/bbui"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "dataBinding"
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import { createEventDispatcher, setContext } from "svelte"
-  import { isJSBinding } from "@budibase/string-templates"
+import { Button, Combobox, Drawer, Icon } from "@budibase/bbui"
+import { isJSBinding } from "@budibase/string-templates"
+import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+import { readableToRuntimeBinding, runtimeToReadableBinding } from "dataBinding"
+import { createEventDispatcher, setContext } from "svelte"
 
-  export let panel = ClientBindingPanel
-  export let value = ""
-  export let bindings = []
-  export let title = "Bindings"
-  export let placeholder
-  export let label
-  export let disabled = false
-  export let options
-  export let allowJS = true
-  export let appendBindingsAsOptions = true
-  export let error
+export let panel = ClientBindingPanel
+export let value = ""
+export let bindings = []
+export let title = "Bindings"
+export let placeholder
+export let label
+export let disabled = false
+export let options
+export let allowJS = true
+export let appendBindingsAsOptions = true
+export let error
 
-  const dispatch = createEventDispatcher()
-  let bindingDrawer
+const dispatch = createEventDispatcher()
+let bindingDrawer
 
-  $: readableValue = runtimeToReadableBinding(bindings, value)
-  $: tempValue = readableValue
-  $: isJS = isJSBinding(value)
-  $: allOptions = buildOptions(options, bindings, appendBindingsAsOptions)
+$: readableValue = runtimeToReadableBinding(bindings, value)
+$: tempValue = readableValue
+$: isJS = isJSBinding(value)
+$: allOptions = buildOptions(options, bindings, appendBindingsAsOptions)
 
-  const handleClose = () => {
-    onChange(tempValue)
-    bindingDrawer.hide()
+const handleClose = () => {
+  onChange(tempValue)
+  bindingDrawer.hide()
+}
+
+setContext("binding-drawer-actions", {
+  save: handleClose,
+})
+
+const onChange = (value, optionPicked) => {
+  // Add HBS braces if picking binding
+  if (optionPicked && !options?.includes(value)) {
+    value = `{{ ${value} }}`
   }
 
-  setContext("binding-drawer-actions", {
-    save: handleClose,
-  })
+  dispatch("change", readableToRuntimeBinding(bindings, value))
+}
 
-  const onChange = (value, optionPicked) => {
-    // Add HBS braces if picking binding
-    if (optionPicked && !options?.includes(value)) {
-      value = `{{ ${value} }}`
-    }
-
-    dispatch("change", readableToRuntimeBinding(bindings, value))
+const buildOptions = (options, bindings, appendBindingsAsOptions) => {
+  if (!appendBindingsAsOptions) {
+    return options
   }
-
-  const buildOptions = (options, bindings, appendBindingsAsOptions) => {
-    if (!appendBindingsAsOptions) {
-      return options
-    }
-    return []
-      .concat(options || [])
-      .concat(bindings?.map(binding => binding.readableBinding) || [])
-  }
+  return []
+    .concat(options || [])
+    .concat(bindings?.map(binding => binding.readableBinding) || [])
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

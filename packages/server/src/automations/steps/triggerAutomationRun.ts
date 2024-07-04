@@ -1,17 +1,17 @@
-import {
-  AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
-  AutomationStepType,
-  AutomationIOType,
-  AutomationResults,
-  Automation,
-  AutomationCustomIOType,
-} from "@budibase/types"
-import * as triggers from "../triggers"
 import { context } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
+import {
+  Automation,
+  AutomationActionStepId,
+  AutomationCustomIOType,
+  AutomationIOType,
+  AutomationResults,
+  AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
+} from "@budibase/types"
 import env from "../../environment"
+import * as triggers from "../triggers"
 
 export const definition: AutomationStepSchema = {
   name: "Trigger an automation",

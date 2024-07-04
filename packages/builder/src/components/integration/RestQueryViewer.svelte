@@ -1,486 +1,486 @@
 <script>
-  import { goto, params } from "@roxi/routify"
-  import { datasources, flags, integrations, queries } from "stores/builder"
-  import { environment } from "stores/portal"
-  import {
-    Banner,
-    Body,
-    Button,
-    Divider,
-    Heading,
-    Input,
-    Label,
-    Layout,
-    notifications,
-    RadioGroup,
-    Select,
-    Tab,
-    Table,
-    Tabs,
-    TextArea,
-  } from "@budibase/bbui"
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import EditableLabel from "components/common/inputs/EditableLabel.svelte"
-  import CodeMirrorEditor, {
-    EditorModes,
-  } from "components/common/CodeMirrorEditor.svelte"
-  import RestBodyInput from "./RestBodyInput.svelte"
-  import { capitalise } from "helpers"
-  import { onMount } from "svelte"
-  import restUtils from "helpers/data/utils"
-  import {
-    PaginationLocations,
-    PaginationTypes,
-    RawRestBodyTypes,
-    RestBodyTypes as bodyTypes,
-    SchemaTypeOptionsExpanded,
-  } from "constants/backend"
-  import JSONPreview from "components/integration/JSONPreview.svelte"
-  import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
-  import DynamicVariableModal from "./DynamicVariableModal.svelte"
-  import Placeholder from "assets/bb-spaceship.svg"
-  import { cloneDeep } from "lodash/fp"
+import {
+  Banner,
+  Body,
+  Button,
+  Divider,
+  Heading,
+  Input,
+  Label,
+  Layout,
+  RadioGroup,
+  Select,
+  Tab,
+  Table,
+  Tabs,
+  TextArea,
+  notifications,
+} from "@budibase/bbui"
+import { goto, params } from "@roxi/routify"
+import Placeholder from "assets/bb-spaceship.svg"
+import CodeMirrorEditor, {
+  EditorModes,
+} from "components/common/CodeMirrorEditor.svelte"
+import EditableLabel from "components/common/inputs/EditableLabel.svelte"
+import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
+import JSONPreview from "components/integration/JSONPreview.svelte"
+import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+import {
+  PaginationLocations,
+  PaginationTypes,
+  RawRestBodyTypes,
+  SchemaTypeOptionsExpanded,
+  RestBodyTypes as bodyTypes,
+} from "constants/backend"
+import { capitalise } from "helpers"
+import restUtils from "helpers/data/utils"
+import { cloneDeep } from "lodash/fp"
+import { datasources, flags, integrations, queries } from "stores/builder"
+import { environment } from "stores/portal"
+import { onMount } from "svelte"
+import DynamicVariableModal from "./DynamicVariableModal.svelte"
+import RestBodyInput from "./RestBodyInput.svelte"
 
-  import {
-    getRestBindings,
-    readableToRuntimeBinding,
-    readableToRuntimeMap,
-    runtimeToReadableBinding,
-    runtimeToReadableMap,
-    toBindingsArray,
-  } from "dataBinding"
+import {
+  getRestBindings,
+  readableToRuntimeBinding,
+  readableToRuntimeMap,
+  runtimeToReadableBinding,
+  runtimeToReadableMap,
+  toBindingsArray,
+} from "dataBinding"
 
-  export let queryId
+export let queryId
 
-  let query, datasource
-  let breakQs = {},
-    requestBindings = {}
-  let saveId, url
-  let response, schema, enabledHeaders
-  let authConfigId
-  let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
-  let restBindings = getRestBindings()
-  let nestedSchemaFields = {}
+let query, datasource
+let breakQs = {},
+  requestBindings = {}
+let saveId, url
+let response, schema, enabledHeaders
+let authConfigId
+let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
+let restBindings = getRestBindings()
+let nestedSchemaFields = {}
 
-  $: staticVariables = datasource?.config?.staticVariables || {}
+$: staticVariables = datasource?.config?.staticVariables || {}
 
-  $: customRequestBindings = toBindingsArray(
-    requestBindings,
-    "Binding",
-    "Bindings"
-  )
-  $: globalDynamicRequestBindings = toBindingsArray(
-    globalDynamicBindings,
-    "Dynamic",
-    "Dynamic"
-  )
-  $: dataSourceStaticBindings = toBindingsArray(
-    staticVariables,
-    "Datasource.Static",
-    "Datasource Static"
-  )
+$: customRequestBindings = toBindingsArray(
+  requestBindings,
+  "Binding",
+  "Bindings"
+)
+$: globalDynamicRequestBindings = toBindingsArray(
+  globalDynamicBindings,
+  "Dynamic",
+  "Dynamic"
+)
+$: dataSourceStaticBindings = toBindingsArray(
+  staticVariables,
+  "Datasource.Static",
+  "Datasource Static"
+)
 
-  $: mergedBindings = [
-    ...restBindings,
-    ...customRequestBindings,
-    ...globalDynamicRequestBindings,
-    ...dataSourceStaticBindings,
-  ]
+$: mergedBindings = [
+  ...restBindings,
+  ...customRequestBindings,
+  ...globalDynamicRequestBindings,
+  ...dataSourceStaticBindings,
+]
 
-  $: datasourceType = datasource?.source
-  $: integrationInfo = $integrations[datasourceType]
-  $: queryConfig = integrationInfo?.query
-  $: url = buildUrl(url, breakQs)
-  $: checkQueryName(url)
-  $: responseSuccess = response?.info?.code >= 200 && response?.info?.code < 400
-  $: isGet = query?.queryVerb === "read"
-  $: authConfigs = buildAuthConfigs(datasource)
-  $: schemaReadOnly = !responseSuccess
-  $: variablesReadOnly = !responseSuccess
-  $: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
-  $: hasSchema = Object.keys(schema || {}).length !== 0
+$: datasourceType = datasource?.source
+$: integrationInfo = $integrations[datasourceType]
+$: queryConfig = integrationInfo?.query
+$: url = buildUrl(url, breakQs)
+$: checkQueryName(url)
+$: responseSuccess = response?.info?.code >= 200 && response?.info?.code < 400
+$: isGet = query?.queryVerb === "read"
+$: authConfigs = buildAuthConfigs(datasource)
+$: schemaReadOnly = !responseSuccess
+$: variablesReadOnly = !responseSuccess
+$: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
+$: hasSchema = Object.keys(schema || {}).length !== 0
 
-  $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
+$: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
-  function getSelectedQuery() {
-    return cloneDeep(
-      $queries.list.find(q => q._id === queryId) || {
-        datasourceId: $params.datasourceId,
-        parameters: [],
-        fields: {
-          // only init the objects, everything else is optional strings
-          disabledHeaders: {},
-          headers: {},
-        },
-        queryVerb: "read",
-      }
-    )
-  }
-
-  const cleanUrl = inputUrl =>
-    url
-      ?.replace(/(https)|(http)|[{}:]/g, "")
-      ?.replaceAll(".", "_")
-      ?.replaceAll("/", " ")
-      ?.trim() || inputUrl
-
-  function checkQueryName(inputUrl = null) {
-    if (query && (!query.name || query.flags.urlName)) {
-      query.flags.urlName = true
-      query.name = cleanUrl(inputUrl)
-    }
-  }
-
-  function buildUrl(base, qsObj) {
-    if (!base) {
-      return base
-    }
-    let qs = restUtils.buildQueryString(
-      runtimeToReadableMap(mergedBindings, qsObj)
-    )
-    let newUrl = base
-    if (base.includes("?")) {
-      const split = base.split("?")
-      newUrl = split[0]
-    }
-    return qs.length === 0 ? newUrl : `${newUrl}?${qs}`
-  }
-
-  function buildQuery() {
-    const newQuery = cloneDeep(query)
-    const queryString = restUtils.buildQueryString(runtimeUrlQueries)
-
-    newQuery.parameters = restUtils.keyValueToQueryParameters(requestBindings)
-    newQuery.fields.requestBody =
-      typeof newQuery.fields.requestBody === "object"
-        ? readableToRuntimeMap(mergedBindings, newQuery.fields.requestBody)
-        : readableToRuntimeBinding(mergedBindings, newQuery.fields.requestBody)
-
-    newQuery.fields.path = url.split("?")[0]
-    newQuery.fields.queryString = queryString
-    newQuery.fields.authConfigId = authConfigId
-    newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
-    newQuery.schema = schema || {}
-    newQuery.nestedSchemaFields = nestedSchemaFields || {}
-
-    return newQuery
-  }
-
-  async function saveQuery() {
-    const toSave = buildQuery()
-    try {
-      const isNew = !query._rev
-      const { _id } = await queries.save(toSave.datasourceId, toSave)
-      saveId = _id
-      query = getSelectedQuery()
-      notifications.success(`Request saved successfully`)
-      if (dynamicVariables) {
-        datasource.config.dynamicVariables = rebuildVariables(saveId)
-        datasource = await datasources.update({
-          integration: integrationInfo,
-          datasource,
-        })
-      }
-      prettifyQueryRequestBody(
-        query,
-        requestBindings,
-        dynamicVariables,
-        staticVariables,
-        restBindings
-      )
-      if (isNew) {
-        $goto(`../../${_id}`)
-      }
-    } catch (err) {
-      notifications.error(`Error saving query`)
-    }
-  }
-
-  const validateQuery = async () => {
-    const forbiddenBindings = /{{\s?user(\.(\w|\$)*\s?|\s?)}}/g
-    const bindingError = new Error(
-      "'user' is a protected binding and cannot be used"
-    )
-
-    if (forbiddenBindings.test(url)) {
-      throw bindingError
-    }
-
-    if (forbiddenBindings.test(query.fields.requestBody ?? "")) {
-      throw bindingError
-    }
-
-    Object.values(requestBindings).forEach(bindingValue => {
-      if (forbiddenBindings.test(bindingValue)) {
-        throw bindingError
-      }
-    })
-
-    Object.values(query.fields.headers).forEach(headerValue => {
-      if (forbiddenBindings.test(headerValue)) {
-        throw bindingError
-      }
-    })
-  }
-
-  async function runQuery() {
-    try {
-      await validateQuery()
-      response = await queries.preview(buildQuery())
-      if (response.rows.length === 0) {
-        notifications.info("Request did not return any data")
-      } else {
-        response.info = response.info || { code: 200 }
-        // if existing schema, copy over what it is
-        if (schema) {
-          for (let [name, field] of Object.entries(response.schema)) {
-            if (!schema[name]) {
-              schema[name] = field
-            }
-          }
-        }
-        schema = response.schema
-        nestedSchemaFields = response.nestedSchemaFields
-        notifications.success("Request sent successfully")
-      }
-    } catch (error) {
-      notifications.error(`Query Error: ${error.message}`)
-    }
-  }
-
-  const getAuthConfigId = () => {
-    let id = query.fields.authConfigId
-    if (id) {
-      // find the matching config on the datasource
-      const matchedConfig = datasource?.config?.authConfigs?.filter(
-        c => c._id === id
-      )[0]
-      // clear the id if the config is not found (deleted)
-      // i.e. just show 'None' in the dropdown
-      if (!matchedConfig) {
-        id = undefined
-      }
-    }
-    return id
-  }
-
-  const buildAuthConfigs = datasource => {
-    if (datasource?.config?.authConfigs) {
-      return datasource.config.authConfigs.map(c => ({
-        label: c.name,
-        value: c._id,
-      }))
-    }
-    return []
-  }
-
-  const schemaMenuItems = [
-    {
-      text: "Create dynamic variable",
-      onClick: input => {
-        varBinding = `{{ data.0.[${input.name}] }}`
-        addVariableModal.show()
+function getSelectedQuery() {
+  return cloneDeep(
+    $queries.list.find(q => q._id === queryId) || {
+      datasourceId: $params.datasourceId,
+      parameters: [],
+      fields: {
+        // only init the objects, everything else is optional strings
+        disabledHeaders: {},
+        headers: {},
       },
-    },
-  ]
-  const responseHeadersMenuItems = [
-    {
-      text: "Create dynamic variable",
-      onClick: input => {
-        varBinding = `{{ info.headers.[${input.name}] }}`
-        addVariableModal.show()
-      },
-    },
-  ]
-
-  // convert dynamic variables list to simple key/val object
-  const getDynamicVariables = (datasource, queryId, matchFn) => {
-    const variablesList = datasource?.config?.dynamicVariables
-    if (variablesList && variablesList.length > 0) {
-      const filtered = queryId
-        ? variablesList.filter(variable => matchFn(variable, queryId))
-        : variablesList
-      return filtered.reduce(
-        (acc, next) => ({ ...acc, [next.name]: next.value }),
-        {}
-      )
+      queryVerb: "read",
     }
-    return {}
-  }
+  )
+}
 
-  // convert dynamic variables object back to a list, enrich with query id
-  const rebuildVariables = queryId => {
-    let variables = []
+const cleanUrl = inputUrl =>
+  url
+    ?.replace(/(https)|(http)|[{}:]/g, "")
+    ?.replaceAll(".", "_")
+    ?.replaceAll("/", " ")
+    ?.trim() || inputUrl
+
+function checkQueryName(inputUrl = null) {
+  if (query && (!query.name || query.flags.urlName)) {
+    query.flags.urlName = true
+    query.name = cleanUrl(inputUrl)
+  }
+}
+
+function buildUrl(base, qsObj) {
+  if (!base) {
+    return base
+  }
+  let qs = restUtils.buildQueryString(
+    runtimeToReadableMap(mergedBindings, qsObj)
+  )
+  let newUrl = base
+  if (base.includes("?")) {
+    const split = base.split("?")
+    newUrl = split[0]
+  }
+  return qs.length === 0 ? newUrl : `${newUrl}?${qs}`
+}
+
+function buildQuery() {
+  const newQuery = cloneDeep(query)
+  const queryString = restUtils.buildQueryString(runtimeUrlQueries)
+
+  newQuery.parameters = restUtils.keyValueToQueryParameters(requestBindings)
+  newQuery.fields.requestBody =
+    typeof newQuery.fields.requestBody === "object"
+      ? readableToRuntimeMap(mergedBindings, newQuery.fields.requestBody)
+      : readableToRuntimeBinding(mergedBindings, newQuery.fields.requestBody)
+
+  newQuery.fields.path = url.split("?")[0]
+  newQuery.fields.queryString = queryString
+  newQuery.fields.authConfigId = authConfigId
+  newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
+  newQuery.schema = schema || {}
+  newQuery.nestedSchemaFields = nestedSchemaFields || {}
+
+  return newQuery
+}
+
+async function saveQuery() {
+  const toSave = buildQuery()
+  try {
+    const isNew = !query._rev
+    const { _id } = await queries.save(toSave.datasourceId, toSave)
+    saveId = _id
+    query = getSelectedQuery()
+    notifications.success(`Request saved successfully`)
     if (dynamicVariables) {
-      variables = Object.entries(dynamicVariables).map(entry => {
-        return {
-          name: entry[0],
-          value: entry[1],
-          queryId,
-        }
+      datasource.config.dynamicVariables = rebuildVariables(saveId)
+      datasource = await datasources.update({
+        integration: integrationInfo,
+        datasource,
       })
     }
-
-    let existing = datasource?.config?.dynamicVariables || []
-    // remove existing query variables (for changes and deletions)
-    existing = existing.filter(variable => variable.queryId !== queryId)
-    // re-add the new query variables
-    return [...existing, ...variables]
-  }
-
-  const shouldShowVariables = (dynamicVariables, variablesReadOnly) => {
-    return !!(
-      dynamicVariables &&
-      // show when editable or when read only and not empty
-      (!variablesReadOnly || Object.keys(dynamicVariables).length > 0)
-    )
-  }
-
-  const updateFlag = async (flag, value) => {
-    try {
-      await flags.updateFlag(flag, value)
-    } catch (error) {
-      notifications.error("Error updating flag")
-    }
-  }
-
-  const prettifyQueryRequestBody = (
-    query,
-    requestBindings,
-    dynamicVariables,
-    staticVariables,
-    restBindings
-  ) => {
-    let customRequestBindings = toBindingsArray(requestBindings, "Binding")
-    let dynamicRequestBindings = toBindingsArray(dynamicVariables, "Dynamic")
-    let dataSourceStaticBindings = toBindingsArray(
-      staticVariables,
-      "Datasource.Static"
-    )
-
-    const prettyBindings = [
-      ...restBindings,
-      ...customRequestBindings,
-      ...dynamicRequestBindings,
-      ...dataSourceStaticBindings,
-    ]
-
-    //Parse the body here as now all bindings have been updated.
-    if (query?.fields?.requestBody) {
-      query.fields.requestBody =
-        typeof query.fields.requestBody === "object"
-          ? runtimeToReadableMap(prettyBindings, query.fields.requestBody)
-          : runtimeToReadableBinding(prettyBindings, query.fields.requestBody)
-    }
-  }
-
-  const paramsChanged = evt => {
-    breakQs = {}
-    for (let param of evt.detail) {
-      breakQs[param.name] = param.value
-    }
-  }
-
-  const urlChanged = evt => {
-    breakQs = {}
-    const qs = evt.target.value.split("?")[1]
-    if (qs && qs.length > 0) {
-      const parts = qs.split("&")
-      for (let part of parts) {
-        const [key, value] = part.split("=")
-        breakQs[key] = value
-      }
-    }
-  }
-
-  onMount(async () => {
-    query = getSelectedQuery()
-    schema = query.schema
-
-    try {
-      // Clear any unsaved changes to the datasource
-      await datasources.init()
-    } catch (error) {
-      notifications.error("Error getting datasources")
-    }
-
-    try {
-      // load the environment variables
-      await environment.loadVariables()
-    } catch (error) {
-      notifications.error(`Error getting environment variables - ${error}`)
-    }
-
-    datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
-    const datasourceUrl = datasource?.config.url
-    const qs = query?.fields.queryString
-    breakQs = restUtils.breakQueryString(encodeURI(qs ?? ""))
-    breakQs = runtimeToReadableMap(mergedBindings, breakQs)
-
-    const path = query.fields.path
-    if (
-      datasourceUrl &&
-      !path?.startsWith("http") &&
-      !path?.startsWith("{{") // don't substitute the datasource url when query starts with a variable e.g. the upgrade path
-    ) {
-      query.fields.path = `${datasource.config.url}/${path ? path : ""}`
-    }
-    url = buildUrl(query.fields.path, breakQs)
-    requestBindings = restUtils.queryParametersToKeyValue(query.parameters)
-    authConfigId = getAuthConfigId()
-    if (!query.fields.disabledHeaders) {
-      query.fields.disabledHeaders = {}
-    }
-    // make sure the disabled headers are set (migration)
-    for (let header of Object.keys(query.fields.headers)) {
-      if (!query.fields.disabledHeaders[header]) {
-        query.fields.disabledHeaders[header] = false
-      }
-    }
-    enabledHeaders = restUtils.flipHeaderState(query.fields.disabledHeaders)
-    if (query && !query.transformer) {
-      query.transformer = "return data"
-    }
-    if (query && !query.flags) {
-      query.flags = {
-        urlName: false,
-      }
-    }
-    if (query && !query.fields.bodyType) {
-      if (query.fields.requestBody) {
-        query.fields.bodyType = RawRestBodyTypes.JSON
-      } else {
-        query.fields.bodyType = RawRestBodyTypes.NONE
-      }
-    }
-    if (query && !query.fields.pagination) {
-      query.fields.pagination = {}
-    }
-    // if query doesn't have ID then its new - don't try to copy existing dynamic variables
-    if (!queryId) {
-      dynamicVariables = []
-      globalDynamicBindings = getDynamicVariables(datasource)
-    } else {
-      dynamicVariables = getDynamicVariables(
-        datasource,
-        query._id,
-        (variable, queryId) => variable.queryId === queryId
-      )
-      globalDynamicBindings = getDynamicVariables(
-        datasource,
-        query._id,
-        (variable, queryId) => variable.queryId !== queryId
-      )
-    }
-
     prettifyQueryRequestBody(
       query,
       requestBindings,
-      globalDynamicBindings,
+      dynamicVariables,
       staticVariables,
       restBindings
     )
+    if (isNew) {
+      $goto(`../../${_id}`)
+    }
+  } catch (err) {
+    notifications.error(`Error saving query`)
+  }
+}
+
+const validateQuery = async () => {
+  const forbiddenBindings = /{{\s?user(\.(\w|\$)*\s?|\s?)}}/g
+  const bindingError = new Error(
+    "'user' is a protected binding and cannot be used"
+  )
+
+  if (forbiddenBindings.test(url)) {
+    throw bindingError
+  }
+
+  if (forbiddenBindings.test(query.fields.requestBody ?? "")) {
+    throw bindingError
+  }
+
+  Object.values(requestBindings).forEach(bindingValue => {
+    if (forbiddenBindings.test(bindingValue)) {
+      throw bindingError
+    }
   })
+
+  Object.values(query.fields.headers).forEach(headerValue => {
+    if (forbiddenBindings.test(headerValue)) {
+      throw bindingError
+    }
+  })
+}
+
+async function runQuery() {
+  try {
+    await validateQuery()
+    response = await queries.preview(buildQuery())
+    if (response.rows.length === 0) {
+      notifications.info("Request did not return any data")
+    } else {
+      response.info = response.info || { code: 200 }
+      // if existing schema, copy over what it is
+      if (schema) {
+        for (let [name, field] of Object.entries(response.schema)) {
+          if (!schema[name]) {
+            schema[name] = field
+          }
+        }
+      }
+      schema = response.schema
+      nestedSchemaFields = response.nestedSchemaFields
+      notifications.success("Request sent successfully")
+    }
+  } catch (error) {
+    notifications.error(`Query Error: ${error.message}`)
+  }
+}
+
+const getAuthConfigId = () => {
+  let id = query.fields.authConfigId
+  if (id) {
+    // find the matching config on the datasource
+    const matchedConfig = datasource?.config?.authConfigs?.filter(
+      c => c._id === id
+    )[0]
+    // clear the id if the config is not found (deleted)
+    // i.e. just show 'None' in the dropdown
+    if (!matchedConfig) {
+      id = undefined
+    }
+  }
+  return id
+}
+
+const buildAuthConfigs = datasource => {
+  if (datasource?.config?.authConfigs) {
+    return datasource.config.authConfigs.map(c => ({
+      label: c.name,
+      value: c._id,
+    }))
+  }
+  return []
+}
+
+const schemaMenuItems = [
+  {
+    text: "Create dynamic variable",
+    onClick: input => {
+      varBinding = `{{ data.0.[${input.name}] }}`
+      addVariableModal.show()
+    },
+  },
+]
+const responseHeadersMenuItems = [
+  {
+    text: "Create dynamic variable",
+    onClick: input => {
+      varBinding = `{{ info.headers.[${input.name}] }}`
+      addVariableModal.show()
+    },
+  },
+]
+
+// convert dynamic variables list to simple key/val object
+const getDynamicVariables = (datasource, queryId, matchFn) => {
+  const variablesList = datasource?.config?.dynamicVariables
+  if (variablesList && variablesList.length > 0) {
+    const filtered = queryId
+      ? variablesList.filter(variable => matchFn(variable, queryId))
+      : variablesList
+    return filtered.reduce(
+      (acc, next) => ({ ...acc, [next.name]: next.value }),
+      {}
+    )
+  }
+  return {}
+}
+
+// convert dynamic variables object back to a list, enrich with query id
+const rebuildVariables = queryId => {
+  let variables = []
+  if (dynamicVariables) {
+    variables = Object.entries(dynamicVariables).map(entry => {
+      return {
+        name: entry[0],
+        value: entry[1],
+        queryId,
+      }
+    })
+  }
+
+  let existing = datasource?.config?.dynamicVariables || []
+  // remove existing query variables (for changes and deletions)
+  existing = existing.filter(variable => variable.queryId !== queryId)
+  // re-add the new query variables
+  return [...existing, ...variables]
+}
+
+const shouldShowVariables = (dynamicVariables, variablesReadOnly) => {
+  return !!(
+    dynamicVariables &&
+    // show when editable or when read only and not empty
+    (!variablesReadOnly || Object.keys(dynamicVariables).length > 0)
+  )
+}
+
+const updateFlag = async (flag, value) => {
+  try {
+    await flags.updateFlag(flag, value)
+  } catch (error) {
+    notifications.error("Error updating flag")
+  }
+}
+
+const prettifyQueryRequestBody = (
+  query,
+  requestBindings,
+  dynamicVariables,
+  staticVariables,
+  restBindings
+) => {
+  let customRequestBindings = toBindingsArray(requestBindings, "Binding")
+  let dynamicRequestBindings = toBindingsArray(dynamicVariables, "Dynamic")
+  let dataSourceStaticBindings = toBindingsArray(
+    staticVariables,
+    "Datasource.Static"
+  )
+
+  const prettyBindings = [
+    ...restBindings,
+    ...customRequestBindings,
+    ...dynamicRequestBindings,
+    ...dataSourceStaticBindings,
+  ]
+
+  //Parse the body here as now all bindings have been updated.
+  if (query?.fields?.requestBody) {
+    query.fields.requestBody =
+      typeof query.fields.requestBody === "object"
+        ? runtimeToReadableMap(prettyBindings, query.fields.requestBody)
+        : runtimeToReadableBinding(prettyBindings, query.fields.requestBody)
+  }
+}
+
+const paramsChanged = evt => {
+  breakQs = {}
+  for (let param of evt.detail) {
+    breakQs[param.name] = param.value
+  }
+}
+
+const urlChanged = evt => {
+  breakQs = {}
+  const qs = evt.target.value.split("?")[1]
+  if (qs && qs.length > 0) {
+    const parts = qs.split("&")
+    for (let part of parts) {
+      const [key, value] = part.split("=")
+      breakQs[key] = value
+    }
+  }
+}
+
+onMount(async () => {
+  query = getSelectedQuery()
+  schema = query.schema
+
+  try {
+    // Clear any unsaved changes to the datasource
+    await datasources.init()
+  } catch (error) {
+    notifications.error("Error getting datasources")
+  }
+
+  try {
+    // load the environment variables
+    await environment.loadVariables()
+  } catch (error) {
+    notifications.error(`Error getting environment variables - ${error}`)
+  }
+
+  datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
+  const datasourceUrl = datasource?.config.url
+  const qs = query?.fields.queryString
+  breakQs = restUtils.breakQueryString(encodeURI(qs ?? ""))
+  breakQs = runtimeToReadableMap(mergedBindings, breakQs)
+
+  const path = query.fields.path
+  if (
+    datasourceUrl &&
+    !path?.startsWith("http") &&
+    !path?.startsWith("{{") // don't substitute the datasource url when query starts with a variable e.g. the upgrade path
+  ) {
+    query.fields.path = `${datasource.config.url}/${path ? path : ""}`
+  }
+  url = buildUrl(query.fields.path, breakQs)
+  requestBindings = restUtils.queryParametersToKeyValue(query.parameters)
+  authConfigId = getAuthConfigId()
+  if (!query.fields.disabledHeaders) {
+    query.fields.disabledHeaders = {}
+  }
+  // make sure the disabled headers are set (migration)
+  for (let header of Object.keys(query.fields.headers)) {
+    if (!query.fields.disabledHeaders[header]) {
+      query.fields.disabledHeaders[header] = false
+    }
+  }
+  enabledHeaders = restUtils.flipHeaderState(query.fields.disabledHeaders)
+  if (query && !query.transformer) {
+    query.transformer = "return data"
+  }
+  if (query && !query.flags) {
+    query.flags = {
+      urlName: false,
+    }
+  }
+  if (query && !query.fields.bodyType) {
+    if (query.fields.requestBody) {
+      query.fields.bodyType = RawRestBodyTypes.JSON
+    } else {
+      query.fields.bodyType = RawRestBodyTypes.NONE
+    }
+  }
+  if (query && !query.fields.pagination) {
+    query.fields.pagination = {}
+  }
+  // if query doesn't have ID then its new - don't try to copy existing dynamic variables
+  if (!queryId) {
+    dynamicVariables = []
+    globalDynamicBindings = getDynamicVariables(datasource)
+  } else {
+    dynamicVariables = getDynamicVariables(
+      datasource,
+      query._id,
+      (variable, queryId) => variable.queryId === queryId
+    )
+    globalDynamicBindings = getDynamicVariables(
+      datasource,
+      query._id,
+      (variable, queryId) => variable.queryId !== queryId
+    )
+  }
+
+  prettifyQueryRequestBody(
+    query,
+    requestBindings,
+    globalDynamicBindings,
+    staticVariables,
+    restBindings
+  )
+})
 </script>
 
 <DynamicVariableModal

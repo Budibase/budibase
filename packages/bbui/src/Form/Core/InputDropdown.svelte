@@ -1,113 +1,113 @@
 <script>
-  import "@spectrum-css/inputgroup/dist/index-vars.css"
-  import "@spectrum-css/popover/dist/index-vars.css"
-  import "@spectrum-css/menu/dist/index-vars.css"
-  import { fly } from "svelte/transition"
-  import { createEventDispatcher } from "svelte"
-  import clickOutside from "../../Actions/click_outside"
+import "@spectrum-css/inputgroup/dist/index-vars.css"
+import "@spectrum-css/popover/dist/index-vars.css"
+import "@spectrum-css/menu/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
+import { fly } from "svelte/transition"
+import clickOutside from "../../Actions/click_outside"
 
-  export let inputValue
-  export let dropdownValue
-  export let id = null
-  export let inputType = "text"
-  export let placeholder = "Choose an option or type"
-  export let disabled = false
-  export let readonly = false
-  export let updateOnChange = true
-  export let options = []
-  export let getOptionLabel = option => extractProperty(option, "label")
-  export let getOptionValue = option => extractProperty(option, "value")
-  export let getOptionSubtitle = option => option?.subtitle
-  export let isOptionSelected = () => false
+export let inputValue
+export let dropdownValue
+export let id = null
+export let inputType = "text"
+export let placeholder = "Choose an option or type"
+export let disabled = false
+export let readonly = false
+export let updateOnChange = true
+export let options = []
+export let getOptionLabel = option => extractProperty(option, "label")
+export let getOptionValue = option => extractProperty(option, "value")
+export let getOptionSubtitle = option => option?.subtitle
+export let isOptionSelected = () => false
 
-  const dispatch = createEventDispatcher()
-  let open = false
-  let focus = false
+const dispatch = createEventDispatcher()
+let open = false
+let focus = false
 
-  $: fieldText = getFieldText(dropdownValue, options, placeholder)
+$: fieldText = getFieldText(dropdownValue, options, placeholder)
 
-  const getFieldText = (dropdownValue, options, placeholder) => {
-    // Always use placeholder if no value
-    if (dropdownValue == null || dropdownValue === "") {
-      return placeholder || "Choose an option or type"
-    }
-
-    // Wait for options to load if there is a value but no options
-    if (!options?.length) {
-      return ""
-    }
-
-    // Render the label if the selected option is found, otherwise raw value
-    const selected = options.find(
-      option => getOptionValue(option) === dropdownValue
-    )
-    return selected ? getOptionLabel(selected) : dropdownValue
+const getFieldText = (dropdownValue, options, placeholder) => {
+  // Always use placeholder if no value
+  if (dropdownValue == null || dropdownValue === "") {
+    return placeholder || "Choose an option or type"
   }
 
-  const updateValue = newValue => {
-    if (readonly) {
-      return
-    }
-    dispatch("change", newValue)
+  // Wait for options to load if there is a value but no options
+  if (!options?.length) {
+    return ""
   }
 
-  const onFocus = () => {
-    if (readonly) {
-      return
-    }
-    focus = true
-  }
+  // Render the label if the selected option is found, otherwise raw value
+  const selected = options.find(
+    option => getOptionValue(option) === dropdownValue
+  )
+  return selected ? getOptionLabel(selected) : dropdownValue
+}
 
-  const onBlur = event => {
-    if (readonly) {
-      return
-    }
-    focus = false
+const updateValue = newValue => {
+  if (readonly) {
+    return
+  }
+  dispatch("change", newValue)
+}
+
+const onFocus = () => {
+  if (readonly) {
+    return
+  }
+  focus = true
+}
+
+const onBlur = event => {
+  if (readonly) {
+    return
+  }
+  focus = false
+  updateValue(event.target.value)
+}
+
+const onInput = event => {
+  if (readonly || !updateOnChange) {
+    return
+  }
+  updateValue(event.target.value)
+}
+
+const updateValueOnEnter = event => {
+  if (readonly) {
+    return
+  }
+  if (event.key === "Enter") {
     updateValue(event.target.value)
   }
+}
 
-  const onInput = event => {
-    if (readonly || !updateOnChange) {
-      return
-    }
-    updateValue(event.target.value)
+const onClick = () => {
+  dispatch("click")
+  if (readonly) {
+    return
   }
+  open = true
+}
 
-  const updateValueOnEnter = event => {
-    if (readonly) {
-      return
-    }
-    if (event.key === "Enter") {
-      updateValue(event.target.value)
-    }
+const onPick = newValue => {
+  dispatch("pick", newValue)
+  open = false
+}
+
+const extractProperty = (value, property) => {
+  if (value && typeof value === "object") {
+    return value[property]
   }
+  return value
+}
 
-  const onClick = () => {
-    dispatch("click")
-    if (readonly) {
-      return
-    }
-    open = true
-  }
-
-  const onPick = newValue => {
-    dispatch("pick", newValue)
+const handleOutsideClick = event => {
+  if (open) {
+    event.stopPropagation()
     open = false
   }
-
-  const extractProperty = (value, property) => {
-    if (value && typeof value === "object") {
-      return value[property]
-    }
-    return value
-  }
-
-  const handleOutsideClick = event => {
-    if (open) {
-      event.stopPropagation()
-      open = false
-    }
-  }
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -1,13 +1,13 @@
-import fetch from "node-fetch"
-import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
-  AutomationStepType,
-  AutomationIOType,
   AutomationFeature,
+  AutomationIOType,
+  AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
 } from "@budibase/types"
+import fetch from "node-fetch"
+import { getFetchResponse } from "./utils"
 
 export const definition: AutomationStepSchema = {
   name: "Zapier Webhook",
@@ -56,7 +56,7 @@ export async function run({ inputs }: AutomationStepInput) {
   let payload = {}
   try {
     payload = body?.value ? JSON.parse(body?.value) : {}
-  } catch (err) {
+  } catch (_err) {
     return {
       httpStatus: 400,
       response: "Invalid payload JSON",

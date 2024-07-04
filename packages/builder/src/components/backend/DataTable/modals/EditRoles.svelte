@@ -1,125 +1,123 @@
 <script>
-  import {
-    keepOpen,
-    ModalContent,
-    Select,
-    Input,
-    Button,
-    notifications,
-  } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import { API } from "api"
-  import ErrorsBox from "components/common/ErrorsBox.svelte"
-  import { roles } from "stores/builder"
+import {
+  Button,
+  Input,
+  ModalContent,
+  Select,
+  keepOpen,
+  notifications,
+} from "@budibase/bbui"
+import { API } from "api"
+import ErrorsBox from "components/common/ErrorsBox.svelte"
+import { roles } from "stores/builder"
+import { onMount } from "svelte"
 
-  const BASE_ROLE = { _id: "", inherits: "BASIC", permissionId: "write" }
+const BASE_ROLE = { _id: "", inherits: "BASIC", permissionId: "write" }
 
-  let basePermissions = []
-  let selectedRole = BASE_ROLE
-  let errors = []
-  let builtInRoles = ["Admin", "Power", "Basic", "Public"]
-  let validRegex = /^[a-zA-Z0-9_]*$/
-  // Don't allow editing of public role
-  $: editableRoles = $roles.filter(role => role._id !== "PUBLIC")
-  $: selectedRoleId = selectedRole._id
-  $: otherRoles = editableRoles.filter(role => role._id !== selectedRoleId)
-  $: isCreating = selectedRoleId == null || selectedRoleId === ""
+let basePermissions = []
+let selectedRole = BASE_ROLE
+let errors = []
+let builtInRoles = ["Admin", "Power", "Basic", "Public"]
+let validRegex = /^[a-zA-Z0-9_]*$/
+// Don't allow editing of public role
+$: editableRoles = $roles.filter(role => role._id !== "PUBLIC")
+$: selectedRoleId = selectedRole._id
+$: otherRoles = editableRoles.filter(role => role._id !== selectedRoleId)
+$: isCreating = selectedRoleId == null || selectedRoleId === ""
 
-  $: roleNameError = getRoleNameError(selectedRole.name)
+$: roleNameError = getRoleNameError(selectedRole.name)
 
-  $: valid =
-    selectedRole.name &&
-    selectedRole.inherits &&
-    selectedRole.permissionId &&
-    !builtInRoles.includes(selectedRole.name)
+$: valid =
+  selectedRole.name &&
+  selectedRole.inherits &&
+  selectedRole.permissionId &&
+  !builtInRoles.includes(selectedRole.name)
 
-  $: shouldDisableRoleInput =
-    builtInRoles.includes(selectedRole.name) &&
-    selectedRole.name?.toLowerCase() === selectedRoleId?.toLowerCase()
+$: shouldDisableRoleInput =
+  builtInRoles.includes(selectedRole.name) &&
+  selectedRole.name?.toLowerCase() === selectedRoleId?.toLowerCase()
 
-  const fetchBasePermissions = async () => {
-    try {
-      basePermissions = await API.getBasePermissions()
-    } catch (error) {
-      notifications.error("Error fetching base permission options")
-      basePermissions = []
+const fetchBasePermissions = async () => {
+  try {
+    basePermissions = await API.getBasePermissions()
+  } catch (error) {
+    notifications.error("Error fetching base permission options")
+    basePermissions = []
+  }
+}
+
+// Changes the selected role
+const changeRole = event => {
+  const id = event?.detail
+  const role = $roles.find(role => role._id === id)
+  if (role) {
+    selectedRole = {
+      ...role,
+      inherits: role.inherits ?? "",
+      permissionId: role.permissionId ?? "",
     }
+  } else {
+    selectedRole = BASE_ROLE
+  }
+  errors = []
+}
+
+// Saves or creates the selected role
+const saveRole = async () => {
+  errors = []
+
+  // Clean up empty strings
+  const keys = ["_id", "inherits", "permissionId"]
+  keys.forEach(key => {
+    if (selectedRole[key] === "") {
+      delete selectedRole[key]
+    }
+  })
+
+  // Validation
+  if (!selectedRole.name || selectedRole.name.trim() === "") {
+    errors.push({ message: "Please enter a role name" })
+  }
+  if (!selectedRole.permissionId) {
+    errors.push({ message: "Please choose permissions" })
+  }
+  if (errors.length) {
+    return keepOpen
   }
 
-  // Changes the selected role
-  const changeRole = event => {
-    const id = event?.detail
-    const role = $roles.find(role => role._id === id)
-    if (role) {
-      selectedRole = {
-        ...role,
-        inherits: role.inherits ?? "",
-        permissionId: role.permissionId ?? "",
-      }
-    } else {
-      selectedRole = BASE_ROLE
-    }
-    errors = []
+  // Save/create the role
+  try {
+    await roles.save(selectedRole)
+    notifications.success("Role saved successfully")
+  } catch (error) {
+    notifications.error(`Error saving role - ${error.message}`)
+    return keepOpen
   }
+}
 
-  // Saves or creates the selected role
-  const saveRole = async () => {
-    errors = []
-
-    // Clean up empty strings
-    const keys = ["_id", "inherits", "permissionId"]
-    keys.forEach(key => {
-      if (selectedRole[key] === "") {
-        delete selectedRole[key]
-      }
-    })
-
-    // Validation
-    if (!selectedRole.name || selectedRole.name.trim() === "") {
-      errors.push({ message: "Please enter a role name" })
-    }
-    if (!selectedRole.permissionId) {
-      errors.push({ message: "Please choose permissions" })
-    }
-    if (errors.length) {
-      return keepOpen
-    }
-
-    // Save/create the role
-    try {
-      await roles.save(selectedRole)
-      notifications.success("Role saved successfully")
-    } catch (error) {
-      notifications.error(`Error saving role - ${error.message}`)
-      return keepOpen
-    }
+// Deletes the selected role
+const deleteRole = async () => {
+  try {
+    await roles.delete(selectedRole)
+    changeRole()
+    notifications.success("Role deleted successfully")
+  } catch (error) {
+    notifications.error(`Error deleting role - ${error.message}`)
+    return false
   }
+}
 
-  // Deletes the selected role
-  const deleteRole = async () => {
-    try {
-      await roles.delete(selectedRole)
-      changeRole()
-      notifications.success("Role deleted successfully")
-    } catch (error) {
-      notifications.error(`Error deleting role - ${error.message}`)
-      return false
-    }
+const getRoleNameError = name => {
+  const hasUniqueRoleName = !otherRoles?.map(role => role.name)?.includes(name)
+  const invalidRoleName = !validRegex.test(name)
+  if (!hasUniqueRoleName) {
+    return "Select a unique role name."
+  } else if (invalidRoleName) {
+    return "Please enter a role name consisting of only alphanumeric symbols and underscores"
   }
+}
 
-  const getRoleNameError = name => {
-    const hasUniqueRoleName = !otherRoles
-      ?.map(role => role.name)
-      ?.includes(name)
-    const invalidRoleName = !validRegex.test(name)
-    if (!hasUniqueRoleName) {
-      return "Select a unique role name."
-    } else if (invalidRoleName) {
-      return "Please enter a role name consisting of only alphanumeric symbols and underscores"
-    }
-  }
-
-  onMount(fetchBasePermissions)
+onMount(fetchBasePermissions)
 </script>
 
 <ModalContent

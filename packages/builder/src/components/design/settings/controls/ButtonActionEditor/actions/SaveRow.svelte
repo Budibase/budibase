@@ -1,43 +1,38 @@
 <script>
-  import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
-  import {
-    selectedScreen,
-    componentStore,
-    tables,
-    viewsV2,
-  } from "stores/builder"
-  import { getSchemaForDatasourcePlus } from "dataBinding"
-  import SaveFields from "./SaveFields.svelte"
-  import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
+import { Body, Checkbox, Input, Label, Select } from "@budibase/bbui"
+import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
+import { getSchemaForDatasourcePlus } from "dataBinding"
+import { componentStore, selectedScreen, tables, viewsV2 } from "stores/builder"
+import SaveFields from "./SaveFields.svelte"
 
-  export let parameters
-  export let bindings = []
-  export let nested
+export let parameters
+export let bindings = []
+export let nested
 
-  $: providerOptions = getDatasourceLikeProviders({
-    asset: $selectedScreen,
-    componentId: $componentStore.selectedComponentId,
-    nested,
-  })
-  $: schemaFields = getSchemaFields(parameters?.tableId)
-  $: tableOptions = $tables.list.map(table => ({
-    label: table.name,
-    resourceId: table._id,
-  }))
-  $: viewOptions = $viewsV2.list.map(view => ({
-    label: view.name,
-    resourceId: view.id,
-  }))
-  $: options = [...(tableOptions || []), ...(viewOptions || [])]
+$: providerOptions = getDatasourceLikeProviders({
+  asset: $selectedScreen,
+  componentId: $componentStore.selectedComponentId,
+  nested,
+})
+$: schemaFields = getSchemaFields(parameters?.tableId)
+$: tableOptions = $tables.list.map(table => ({
+  label: table.name,
+  resourceId: table._id,
+}))
+$: viewOptions = $viewsV2.list.map(view => ({
+  label: view.name,
+  resourceId: view.id,
+}))
+$: options = [...(tableOptions || []), ...(viewOptions || [])]
 
-  const getSchemaFields = resourceId => {
-    const { schema } = getSchemaForDatasourcePlus(resourceId)
-    return Object.values(schema || {})
-  }
+const getSchemaFields = resourceId => {
+  const { schema } = getSchemaForDatasourcePlus(resourceId)
+  return Object.values(schema || {})
+}
 
-  const onFieldsChanged = e => {
-    parameters.fields = e.detail
-  }
+const onFieldsChanged = e => {
+  parameters.fields = e.detail
+}
 </script>
 
 <div class="root">

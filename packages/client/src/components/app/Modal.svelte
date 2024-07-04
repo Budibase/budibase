@@ -1,54 +1,50 @@
 <script>
-  import { getContext } from "svelte"
-  import { Modal, Icon } from "@budibase/bbui"
+import { Icon, Modal } from "@budibase/bbui"
+import { getContext } from "svelte"
 
-  const component = getContext("component")
-  const { styleable, modalStore, builderStore, dndIsDragging } =
-    getContext("sdk")
+const component = getContext("component")
+const { styleable, modalStore, builderStore, dndIsDragging } = getContext("sdk")
 
-  export let onClose
-  export let ignoreClicksOutside
-  export let size
-  let modal
+export let onClose
+export let ignoreClicksOutside
+export let size
+let modal
 
-  // Open modal automatically in builder
-  $: {
-    if ($builderStore.inBuilder) {
-      if (
-        $component.inSelectedPath &&
-        $modalStore.contentId !== $component.id
-      ) {
-        modalStore.actions.open($component.id)
-      } else if (
-        !$component.inSelectedPath &&
-        $modalStore.contentId === $component.id &&
-        !$dndIsDragging
-      ) {
-        modalStore.actions.close()
-      }
+// Open modal automatically in builder
+$: {
+  if ($builderStore.inBuilder) {
+    if ($component.inSelectedPath && $modalStore.contentId !== $component.id) {
+      modalStore.actions.open($component.id)
+    } else if (
+      !$component.inSelectedPath &&
+      $modalStore.contentId === $component.id &&
+      !$dndIsDragging
+    ) {
+      modalStore.actions.close()
     }
   }
+}
 
-  $: open = $modalStore.contentId === $component.id
+$: open = $modalStore.contentId === $component.id
 
-  const handleModalClose = async () => {
-    if (onClose) {
-      await onClose()
-    }
-    modalStore.actions.close()
+const handleModalClose = async () => {
+  if (onClose) {
+    await onClose()
   }
+  modalStore.actions.close()
+}
 
-  const handleOpen = (open, modal) => {
-    if (!modal) return
+const handleOpen = (open, modal) => {
+  if (!modal) return
 
-    if (open) {
-      modal.show()
-    } else {
-      modal.hide()
-    }
+  if (open) {
+    modal.show()
+  } else {
+    modal.hide()
   }
+}
 
-  $: handleOpen(open, modal)
+$: handleOpen(open, modal)
 </script>
 
 <!-- Conditional displaying in the builder is necessary otherwise previews don't update properly upon component deletion -->

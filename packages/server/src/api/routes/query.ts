@@ -1,15 +1,15 @@
-import Router from "@koa/router"
-import * as queryController from "../controllers/query"
-import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
+import Router from "@koa/router"
+import authorized from "../../middleware/authorized"
 import {
   bodyResource,
   bodySubResource,
   paramResource,
 } from "../../middleware/resourceId"
+import * as queryController from "../controllers/query"
 import {
-  generateQueryValidation,
   generateQueryPreviewValidation,
+  generateQueryValidation,
 } from "../controllers/query/validation"
 
 const { BUILDER, PermissionType, PermissionLevel } = permissions

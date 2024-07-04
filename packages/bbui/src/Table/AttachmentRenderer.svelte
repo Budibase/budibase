@@ -1,16 +1,16 @@
 <script>
-  import Link from "../Link/Link.svelte"
+import Link from "../Link/Link.svelte"
 
-  export let value
+export let value
 
-  const displayLimit = 5
-  $: attachments = value?.slice(0, displayLimit) ?? []
-  $: leftover = (value?.length ?? 0) - attachments.length
+const displayLimit = 5
+$: attachments = value?.slice(0, displayLimit) ?? []
+$: leftover = (value?.length ?? 0) - attachments.length
 
-  const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
-  const isImage = extension => {
-    return imageExtensions.includes(extension?.toLowerCase())
-  }
+const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
+const isImage = extension => {
+  return imageExtensions.includes(extension?.toLowerCase())
+}
 </script>
 
 {#each attachments as attachment}

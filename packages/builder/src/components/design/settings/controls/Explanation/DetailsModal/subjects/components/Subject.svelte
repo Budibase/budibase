@@ -1,22 +1,22 @@
 <script>
-  import { onMount } from "svelte"
+import { onMount } from "svelte"
 
-  export let heading = ""
-  let body
+export let heading = ""
+let body
 
-  const handleScroll = e => {
-    if (!body) return
+const handleScroll = e => {
+  if (!body) return
 
-    body.scrollTo({ top: body.scrollTop + e.deltaY, behavior: "smooth" })
+  body.scrollTo({ top: body.scrollTop + e.deltaY, behavior: "smooth" })
+}
+
+onMount(() => {
+  window.addEventListener("wheel", handleScroll)
+
+  return () => {
+    window.removeEventListener("wheel", handleScroll)
   }
-
-  onMount(() => {
-    window.addEventListener("wheel", handleScroll)
-
-    return () => {
-      window.removeEventListener("wheel", handleScroll)
-    }
-  })
+})
 </script>
 
 <div class="heading">

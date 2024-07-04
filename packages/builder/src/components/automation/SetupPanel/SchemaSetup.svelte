@@ -1,68 +1,68 @@
 <script>
-  import { Input, Select, Button } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+import { Button, Input, Select } from "@budibase/bbui"
+import { createEventDispatcher } from "svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let value = {}
+export let value = {}
 
-  $: fieldsArray = value
-    ? Object.entries(value).map(([name, type]) => ({
-        name,
-        type,
-      }))
-    : []
+$: fieldsArray = value
+  ? Object.entries(value).map(([name, type]) => ({
+      name,
+      type,
+    }))
+  : []
 
-  const typeOptions = [
-    {
-      label: "Text",
-      value: "string",
-    },
-    {
-      label: "Number",
-      value: "number",
-    },
-    {
-      label: "Boolean",
-      value: "boolean",
-    },
-    {
-      label: "DateTime",
-      value: "datetime",
-    },
-    {
-      label: "Array",
-      value: "array",
-    },
-  ]
+const typeOptions = [
+  {
+    label: "Text",
+    value: "string",
+  },
+  {
+    label: "Number",
+    value: "number",
+  },
+  {
+    label: "Boolean",
+    value: "boolean",
+  },
+  {
+    label: "DateTime",
+    value: "datetime",
+  },
+  {
+    label: "Array",
+    value: "array",
+  },
+]
 
-  function addField() {
-    const newValue = { ...value }
-    newValue[""] = "string"
-    dispatch("change", newValue)
+function addField() {
+  const newValue = { ...value }
+  newValue[""] = "string"
+  dispatch("change", newValue)
+}
+
+function removeField(name) {
+  const newValues = { ...value }
+  delete newValues[name]
+  dispatch("change", newValues)
+}
+
+const fieldNameChanged = originalName => e => {
+  // reconstruct using fieldsArray, so field order is preserved
+  let entries = [...fieldsArray]
+  const newName = e.detail
+  if (newName) {
+    entries.find(f => f.name === originalName).name = newName
+  } else {
+    entries = entries.filter(f => f.name !== originalName)
   }
-
-  function removeField(name) {
-    const newValues = { ...value }
-    delete newValues[name]
-    dispatch("change", newValues)
-  }
-
-  const fieldNameChanged = originalName => e => {
-    // reconstruct using fieldsArray, so field order is preserved
-    let entries = [...fieldsArray]
-    const newName = e.detail
-    if (newName) {
-      entries.find(f => f.name === originalName).name = newName
-    } else {
-      entries = entries.filter(f => f.name !== originalName)
-    }
-    value = entries.reduce((newVals, current) => {
-      newVals[current.name.trim()] = current.type
-      return newVals
-    }, {})
-    dispatch("change", value)
-  }
+  value = entries.reduce((newVals, current) => {
+    newVals[current.name.trim()] = current.type
+    return newVals
+  }, {})
+  dispatch("change", value)
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

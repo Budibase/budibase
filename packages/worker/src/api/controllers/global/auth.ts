@@ -1,21 +1,21 @@
 import {
-  auth as authCore,
   constants,
-  context,
   events,
-  utils as utilsCore,
+  auth as authCore,
   configs,
+  context,
+  utils as utilsCore,
 } from "@budibase/backend-core"
 import {
   ConfigType,
-  User,
   Ctx,
+  DatasourceAuthCookie,
+  GoogleInnerConfig,
   LoginRequest,
-  SSOUser,
   PasswordResetRequest,
   PasswordResetUpdateRequest,
-  GoogleInnerConfig,
-  DatasourceAuthCookie,
+  SSOUser,
+  User,
 } from "@budibase/types"
 import env from "../../../environment"
 
@@ -90,7 +90,7 @@ export const setInitInfo = (ctx: any) => {
 export const getInitInfo = (ctx: any) => {
   try {
     ctx.body = getCookie(ctx, Cookie.Init) || {}
-  } catch (err) {
+  } catch (_err) {
     clearCookie(ctx, Cookie.Init)
     ctx.body = {}
   }

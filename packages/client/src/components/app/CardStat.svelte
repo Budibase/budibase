@@ -1,13 +1,13 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  const { styleable } = getContext("sdk")
-  const component = getContext("component")
+const { styleable } = getContext("sdk")
+const component = getContext("component")
 
-  export const className = ""
-  export let title = ""
-  export let value = ""
-  export let label = ""
+export const className = ""
+export let title = ""
+export let value = ""
+export let label = ""
 </script>
 
 <div use:styleable={$component.styles} class="container">

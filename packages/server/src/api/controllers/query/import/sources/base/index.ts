@@ -1,5 +1,5 @@
-import { Query, QueryParameter } from "@budibase/types"
 import { URL } from "url"
+import { Query, QueryParameter } from "@budibase/types"
 
 export interface ImportInfo {
   name: string

@@ -1,7 +1,7 @@
 import { createAPIClient } from "@budibase/frontend-core"
-import { authStore } from "../stores/auth.js"
-import { notificationStore, devToolsEnabled, devToolsStore } from "../stores/"
 import { get } from "svelte/store"
+import { devToolsEnabled, devToolsStore, notificationStore } from "../stores/"
+import { authStore } from "../stores/auth.js"
 
 export const API = createAPIClient({
   // Enable caching of cacheable endpoints to speed things up,

@@ -1,5 +1,5 @@
 <script>
-  export let value
+export let value
 </script>
 
 <div class="bold">{value}</div>

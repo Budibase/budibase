@@ -1,18 +1,18 @@
 <script>
-  import Icon from "../Icon/Icon.svelte"
+import Icon from "../Icon/Icon.svelte"
 
-  export let name
-  export let initiallyShow = false
-  export let collapsible = true
+export let name
+export let initiallyShow = false
+export let collapsible = true
 
-  let show = initiallyShow
+let show = initiallyShow
 
-  const onHeaderClick = () => {
-    if (!collapsible) {
-      return
-    }
-    show = !show
+const onHeaderClick = () => {
+  if (!collapsible) {
+    return
   }
+  show = !show
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

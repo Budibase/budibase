@@ -1,59 +1,59 @@
 <script>
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
-  import { dataFilters } from "@budibase/shared-core"
-  import { FilterBuilder } from "@budibase/frontend-core"
-  import { tables } from "stores/builder"
+import { FilterBuilder } from "@budibase/frontend-core"
+import { dataFilters } from "@budibase/shared-core"
+import { tables } from "stores/builder"
 
-  import { createEventDispatcher, onMount } from "svelte"
+import { createEventDispatcher, onMount } from "svelte"
 
-  export let schemaFields
-  export let filters = []
-  export let bindings = []
-  export let panel = ClientBindingPanel
-  export let allowBindings = true
-  export let datasource
+export let schemaFields
+export let filters = []
+export let bindings = []
+export let panel = ClientBindingPanel
+export let allowBindings = true
+export let datasource
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let rawFilters
+let rawFilters
 
-  $: parseFilters(rawFilters)
-  $: dispatch("change", enrichFilters(rawFilters))
+$: parseFilters(rawFilters)
+$: dispatch("change", enrichFilters(rawFilters))
 
-  // Remove field key prefixes and determine which behaviours to use
-  const parseFilters = filters => {
-    rawFilters = (filters || []).map(filter => {
-      const { field } = filter
-      let newFilter = { ...filter }
-      delete newFilter.allOr
-      newFilter.field = dataFilters.removeKeyNumbering(field)
-      return newFilter
-    })
-  }
-
-  onMount(() => {
-    parseFilters(filters)
-    rawFilters.forEach(filter => {
-      filter.type =
-        schemaFields.find(field => field.name === filter.field)?.type ||
-        filter.type
-    })
+// Remove field key prefixes and determine which behaviours to use
+const parseFilters = filters => {
+  rawFilters = (filters || []).map(filter => {
+    const { field } = filter
+    let newFilter = { ...filter }
+    delete newFilter.allOr
+    newFilter.field = dataFilters.removeKeyNumbering(field)
+    return newFilter
   })
+}
 
-  // Add field key prefixes and a special metadata filter object to indicate
-  // how to handle filter behaviour
-  const enrichFilters = rawFilters => {
-    let count = 1
-    return rawFilters
-      .filter(filter => filter.field)
-      .map(filter => ({
-        ...filter,
-        field: `${count++}:${filter.field}`,
-      }))
-      .concat(...rawFilters.filter(filter => !filter.field))
-  }
+onMount(() => {
+  parseFilters(filters)
+  rawFilters.forEach(filter => {
+    filter.type =
+      schemaFields.find(field => field.name === filter.field)?.type ||
+      filter.type
+  })
+})
+
+// Add field key prefixes and a special metadata filter object to indicate
+// how to handle filter behaviour
+const enrichFilters = rawFilters => {
+  let count = 1
+  return rawFilters
+    .filter(filter => filter.field)
+    .map(filter => ({
+      ...filter,
+      field: `${count++}:${filter.field}`,
+    }))
+    .concat(...rawFilters.filter(filter => !filter.field))
+}
 </script>
 
 <FilterBuilder

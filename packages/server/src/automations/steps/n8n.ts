@@ -1,14 +1,14 @@
-import fetch, { HeadersInit } from "node-fetch"
-import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
-  AutomationStepType,
-  AutomationIOType,
   AutomationFeature,
+  AutomationIOType,
+  AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
   HttpMethod,
 } from "@budibase/types"
+import fetch, { HeadersInit } from "node-fetch"
+import { getFetchResponse } from "./utils"
 
 export const definition: AutomationStepSchema = {
   name: "n8n Integration",
@@ -73,7 +73,7 @@ export async function run({ inputs }: AutomationStepInput) {
   let payload = {}
   try {
     payload = body?.value ? JSON.parse(body?.value) : {}
-  } catch (err) {
+  } catch (_err) {
     return {
       httpStatus: 400,
       response: "Invalid payload JSON",

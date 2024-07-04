@@ -1,22 +1,22 @@
 <script>
-  import Icon from "../Icon/Icon.svelte"
-  import { copyToClipboard } from "../helpers"
-  import { notifications } from "../Stores/notifications"
+import Icon from "../Icon/Icon.svelte"
+import { notifications } from "../Stores/notifications"
+import { copyToClipboard } from "../helpers"
 
-  export let value
+export let value
 
-  const onClick = async e => {
-    e.stopPropagation()
-    try {
-      await copyToClipboard(value)
-      notifications.success("Copied to clipboard")
-    } catch (error) {
-      notifications.error(
-        "Failed to copy to clipboard. Check the dev console for the value."
-      )
-      console.warn("Failed to copy the value", value)
-    }
+const onClick = async e => {
+  e.stopPropagation()
+  try {
+    await copyToClipboard(value)
+    notifications.success("Copied to clipboard")
+  } catch (error) {
+    notifications.error(
+      "Failed to copy to clipboard. Check the dev console for the value."
+    )
+    console.warn("Failed to copy the value", value)
   }
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

@@ -1,8 +1,8 @@
-import { objectStore } from "@budibase/backend-core"
 import fs from "fs"
 import { join } from "path"
-import { TEMP_DIR, MINIO_DIR } from "./utils"
+import { objectStore } from "@budibase/backend-core"
 import { progressBar } from "../utils"
+import { MINIO_DIR, TEMP_DIR } from "./utils"
 
 const {
   ObjectStoreBuckets,
@@ -23,7 +23,7 @@ export async function exportObjects() {
     const client = ObjectStore(bucket)
     try {
       await client.headBucket().promise()
-    } catch (err) {
+    } catch (_err) {
       errorCount++
       continue
     }

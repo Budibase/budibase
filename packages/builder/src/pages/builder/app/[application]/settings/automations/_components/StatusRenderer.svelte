@@ -1,24 +1,24 @@
 <script>
-  import { Badge } from "@budibase/bbui"
+import { Badge } from "@budibase/bbui"
 
-  export let value
+export let value
 
-  $: isError = !value || value.toLowerCase() === "error"
-  $: isStoppedError = value?.toLowerCase() === "stopped_error"
-  $: isStopped = value?.toLowerCase() === "stopped"
-  $: info = getInfo(isError, isStopped, isStoppedError)
+$: isError = !value || value.toLowerCase() === "error"
+$: isStoppedError = value?.toLowerCase() === "stopped_error"
+$: isStopped = value?.toLowerCase() === "stopped"
+$: info = getInfo(isError, isStopped, isStoppedError)
 
-  function getInfo(error, stopped, stoppedError) {
-    if (stoppedError) {
-      return { color: "red", message: "Stopped - Error" }
-    } else if (error) {
-      return { color: "red", message: "Error" }
-    } else if (stopped) {
-      return { color: "yellow", message: "Stopped" }
-    } else {
-      return { color: "green", message: "Success" }
-    }
+function getInfo(error, stopped, stoppedError) {
+  if (stoppedError) {
+    return { color: "red", message: "Stopped - Error" }
+  } else if (error) {
+    return { color: "red", message: "Error" }
+  } else if (stopped) {
+    return { color: "yellow", message: "Stopped" }
+  } else {
+    return { color: "green", message: "Success" }
   }
+}
 </script>
 
 <Badge

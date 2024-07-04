@@ -1,14 +1,14 @@
-import { sendSmtpEmail } from "../../utilities/workerRequests"
-import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
-  AutomationStepType,
-  AutomationIOType,
-  AutomationFeature,
   AutomationCustomIOType,
+  AutomationFeature,
+  AutomationIOType,
+  AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
 } from "@budibase/types"
+import { sendSmtpEmail } from "../../utilities/workerRequests"
+import * as automationUtils from "../automationUtils"
 
 export const definition: AutomationStepSchema = {
   description: "Send an email using SMTP",

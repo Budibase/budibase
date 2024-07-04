@@ -1,60 +1,58 @@
 <script>
-  import {
-    Layout,
-    Button,
-    Modal,
-    Table,
-    InlineAlert,
-    notifications,
-  } from "@budibase/bbui"
-  import { environment, licensing } from "stores/portal"
-  import { onMount } from "svelte"
-  import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
-  import EditVariableColumn from "./_components/EditVariableColumn.svelte"
-  import LockedFeature from "../../_components/LockedFeature.svelte"
+import {
+  Button,
+  InlineAlert,
+  Layout,
+  Modal,
+  Table,
+  notifications,
+} from "@budibase/bbui"
+import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
+import { environment, licensing } from "stores/portal"
+import { onMount } from "svelte"
+import LockedFeature from "../../_components/LockedFeature.svelte"
+import EditVariableColumn from "./_components/EditVariableColumn.svelte"
 
-  let modal
+let modal
 
-  const customRenderers = [{ column: "edit", component: EditVariableColumn }]
+const customRenderers = [{ column: "edit", component: EditVariableColumn }]
 
-  $: noEncryptionKey = $environment.status?.encryptionKeyAvailable === false
-  $: schema = buildSchema(noEncryptionKey)
+$: noEncryptionKey = $environment.status?.encryptionKeyAvailable === false
+$: schema = buildSchema(noEncryptionKey)
 
-  onMount(async () => {
-    try {
-      await environment.checkStatus()
-      await environment.loadVariables()
-    } catch (error) {
-      notifications.error(
-        `Error loading environment variables: ${error.message}`
-      )
-    }
-  })
-
-  const buildSchema = noEncryptionKey => {
-    const schema = {
-      name: {
-        width: "2fr",
-      },
-    }
-    if (!noEncryptionKey) {
-      schema.edit = {
-        width: "auto",
-        borderLeft: true,
-        displayName: "",
-      }
-    }
-    return schema
+onMount(async () => {
+  try {
+    await environment.checkStatus()
+    await environment.loadVariables()
+  } catch (error) {
+    notifications.error(`Error loading environment variables: ${error.message}`)
   }
+})
 
-  const save = async data => {
-    try {
-      await environment.createVariable(data)
-      modal.hide()
-    } catch (err) {
-      notifications.error(`Error saving variable: ${err.message}`)
+const buildSchema = noEncryptionKey => {
+  const schema = {
+    name: {
+      width: "2fr",
+    },
+  }
+  if (!noEncryptionKey) {
+    schema.edit = {
+      width: "auto",
+      borderLeft: true,
+      displayName: "",
     }
   }
+  return schema
+}
+
+const save = async data => {
+  try {
+    await environment.createVariable(data)
+    modal.hide()
+  } catch (err) {
+    notifications.error(`Error saving variable: ${err.message}`)
+  }
+}
 </script>
 
 <LockedFeature

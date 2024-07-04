@@ -1,24 +1,24 @@
 import {
-  Datasource,
   BBReferenceFieldSubType,
+  Datasource,
+  EmptyFilterOption,
+  FieldConstraints,
   FieldType,
   FormulaType,
+  RowSearchParams,
   SearchFilter,
+  SearchFilterOperator,
   SearchFilters,
   SearchQueryFields,
-  SearchFilterOperator,
-  SortType,
-  FieldConstraints,
-  SortOrder,
-  RowSearchParams,
-  EmptyFilterOption,
   SearchResponse,
+  SortOrder,
+  SortType,
   Table,
 } from "@budibase/types"
 import dayjs from "dayjs"
+import _ from "lodash"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet, schema } from "./helpers"
-import _ from "lodash"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -251,7 +251,7 @@ export const buildQuery = (filter: SearchFilter[]) => {
       }
       try {
         value = new Date(value).toISOString()
-      } catch (error) {
+      } catch (_error) {
         return
       }
     }

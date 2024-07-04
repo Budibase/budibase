@@ -1,12 +1,12 @@
 <script>
-  import BlockComponent from "../BlockComponent.svelte"
-  import Block from "../Block.svelte"
+import Block from "../Block.svelte"
+import BlockComponent from "../BlockComponent.svelte"
 
-  export let buttons = []
-  export let direction = "row"
-  export let hAlign = "left"
-  export let vAlign = "top"
-  export let gap = "S"
+export let buttons = []
+export let direction = "row"
+export let hAlign = "left"
+export let vAlign = "top"
+export let gap = "S"
 </script>
 
 <Block>

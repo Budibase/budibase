@@ -1,153 +1,153 @@
 <script>
-  import { getContext, onDestroy, onMount, tick } from "svelte"
-  import { Icon, Button, TempTooltip, TooltipType } from "@budibase/bbui"
-  import GridScrollWrapper from "./GridScrollWrapper.svelte"
-  import DataCell from "../cells/DataCell.svelte"
-  import { fade } from "svelte/transition"
-  import { GutterWidth, NewRowID } from "../lib/constants"
-  import GutterCell from "../cells/GutterCell.svelte"
-  import KeyboardShortcut from "./KeyboardShortcut.svelte"
-  import { getCellID } from "../lib/utils"
+import { Button, Icon, TempTooltip, TooltipType } from "@budibase/bbui"
+import { getContext, onDestroy, onMount, tick } from "svelte"
+import { fade } from "svelte/transition"
+import DataCell from "../cells/DataCell.svelte"
+import GutterCell from "../cells/GutterCell.svelte"
+import { GutterWidth, NewRowID } from "../lib/constants"
+import { getCellID } from "../lib/utils"
+import GridScrollWrapper from "./GridScrollWrapper.svelte"
+import KeyboardShortcut from "./KeyboardShortcut.svelte"
 
-  const {
-    hoveredRowId,
-    focusedCellId,
-    stickyColumn,
-    scroll,
-    dispatch,
-    rows,
-    focusedCellAPI,
-    datasource,
-    subscribe,
-    renderedRows,
-    visibleColumns,
-    rowHeight,
-    hasNextPage,
-    maxScrollTop,
-    selectedRows,
-    loaded,
-    refreshing,
-    config,
-    filter,
-    inlineFilters,
-    columnRenderMap,
-    scrollTop,
-  } = getContext("grid")
+const {
+  hoveredRowId,
+  focusedCellId,
+  stickyColumn,
+  scroll,
+  dispatch,
+  rows,
+  focusedCellAPI,
+  datasource,
+  subscribe,
+  renderedRows,
+  visibleColumns,
+  rowHeight,
+  hasNextPage,
+  maxScrollTop,
+  selectedRows,
+  loaded,
+  refreshing,
+  config,
+  filter,
+  inlineFilters,
+  columnRenderMap,
+  scrollTop,
+} = getContext("grid")
 
-  let visible = false
-  let isAdding = false
-  let newRow
-  let offset = 0
+let visible = false
+let isAdding = false
+let newRow
+let offset = 0
 
-  $: firstColumn = $stickyColumn || $visibleColumns[0]
-  $: width = GutterWidth + ($stickyColumn?.width || 0)
-  $: $datasource, (visible = false)
-  $: selectedRowCount = Object.values($selectedRows).length
-  $: hasNoRows = !$rows.length
-  $: renderedRowCount = $renderedRows.length
-  $: offset = getOffset($hasNextPage, renderedRowCount, $rowHeight, $scrollTop)
+$: firstColumn = $stickyColumn || $visibleColumns[0]
+$: width = GutterWidth + ($stickyColumn?.width || 0)
+$: $datasource, (visible = false)
+$: selectedRowCount = Object.values($selectedRows).length
+$: hasNoRows = !$rows.length
+$: renderedRowCount = $renderedRows.length
+$: offset = getOffset($hasNextPage, renderedRowCount, $rowHeight, $scrollTop)
 
-  const getOffset = (hasNextPage, rowCount, rowHeight, scrollTop) => {
-    // If we have a next page of data then we aren't truly at the bottom, so we
-    // render the add row component at the top
-    if (hasNextPage) {
-      return 0
-    }
-    offset = rowCount * rowHeight - (scrollTop % rowHeight)
-    if (rowCount !== 0) {
-      offset -= 1
-    }
-    return offset
+const getOffset = (hasNextPage, rowCount, rowHeight, scrollTop) => {
+  // If we have a next page of data then we aren't truly at the bottom, so we
+  // render the add row component at the top
+  if (hasNextPage) {
+    return 0
   }
-
-  const addRow = async () => {
-    // Blur the active cell and tick to let final value updates propagate
-    isAdding = true
-    $focusedCellId = null
-    await tick()
-
-    // Create row
-    const newRowIndex = offset ? undefined : 0
-    let rowToCreate = { ...newRow }
-    delete rowToCreate._isNewRow
-    const savedRow = await rows.actions.addRow(rowToCreate, newRowIndex)
-    if (savedRow) {
-      // Reset state
-      clear()
-
-      // Select the first cell if possible
-      if (firstColumn) {
-        $focusedCellId = getCellID(savedRow._id, firstColumn.name)
-      }
-    }
-    isAdding = false
+  offset = rowCount * rowHeight - (scrollTop % rowHeight)
+  if (rowCount !== 0) {
+    offset -= 1
   }
+  return offset
+}
 
-  const clear = () => {
-    isAdding = false
-    visible = false
-    $focusedCellId = null
-    $hoveredRowId = null
-    document.removeEventListener("keydown", handleKeyPress)
-  }
+const addRow = async () => {
+  // Blur the active cell and tick to let final value updates propagate
+  isAdding = true
+  $focusedCellId = null
+  await tick()
 
-  const startAdding = async () => {
-    // Attempt to submit if already adding a row
-    if (visible && !isAdding) {
-      await addRow()
-      return
-    }
-    if (visible || !firstColumn) {
-      return
-    }
-
-    // If we don't have a next page then we're at the bottom and can scroll to
-    // the max available offset
-    if (!$hasNextPage) {
-      scroll.update(state => ({
-        ...state,
-        top: $maxScrollTop,
-      }))
-    }
-
-    // Update state and select initial cell
-    newRow = { _isNewRow: true }
-    visible = true
-    $hoveredRowId = NewRowID
-    if (firstColumn) {
-      $focusedCellId = getCellID(NewRowID, firstColumn.name)
-    }
-
-    // Attach key listener
-    document.addEventListener("keydown", handleKeyPress)
-  }
-
-  const updateValue = ({ column, value }) => {
-    newRow[column] = value
-  }
-
-  const addViaModal = () => {
+  // Create row
+  const newRowIndex = offset ? undefined : 0
+  let rowToCreate = { ...newRow }
+  delete rowToCreate._isNewRow
+  const savedRow = await rows.actions.addRow(rowToCreate, newRowIndex)
+  if (savedRow) {
+    // Reset state
     clear()
-    dispatch("add-row")
-  }
 
-  const handleKeyPress = e => {
-    if (!visible) {
-      return
-    }
-    if (e.key === "Escape") {
-      // Only close the new row component if we aren't actively inside a cell
-      if (!$focusedCellAPI?.isActive()) {
-        e.preventDefault()
-        clear()
-      }
+    // Select the first cell if possible
+    if (firstColumn) {
+      $focusedCellId = getCellID(savedRow._id, firstColumn.name)
     }
   }
+  isAdding = false
+}
 
-  onMount(() => subscribe("add-row-inline", startAdding))
-  onDestroy(() => {
-    document.removeEventListener("keydown", handleKeyPress)
-  })
+const clear = () => {
+  isAdding = false
+  visible = false
+  $focusedCellId = null
+  $hoveredRowId = null
+  document.removeEventListener("keydown", handleKeyPress)
+}
+
+const startAdding = async () => {
+  // Attempt to submit if already adding a row
+  if (visible && !isAdding) {
+    await addRow()
+    return
+  }
+  if (visible || !firstColumn) {
+    return
+  }
+
+  // If we don't have a next page then we're at the bottom and can scroll to
+  // the max available offset
+  if (!$hasNextPage) {
+    scroll.update(state => ({
+      ...state,
+      top: $maxScrollTop,
+    }))
+  }
+
+  // Update state and select initial cell
+  newRow = { _isNewRow: true }
+  visible = true
+  $hoveredRowId = NewRowID
+  if (firstColumn) {
+    $focusedCellId = getCellID(NewRowID, firstColumn.name)
+  }
+
+  // Attach key listener
+  document.addEventListener("keydown", handleKeyPress)
+}
+
+const updateValue = ({ column, value }) => {
+  newRow[column] = value
+}
+
+const addViaModal = () => {
+  clear()
+  dispatch("add-row")
+}
+
+const handleKeyPress = e => {
+  if (!visible) {
+    return
+  }
+  if (e.key === "Escape") {
+    // Only close the new row component if we aren't actively inside a cell
+    if (!$focusedCellAPI?.isActive()) {
+      e.preventDefault()
+      clear()
+    }
+  }
+}
+
+onMount(() => subscribe("add-row-inline", startAdding))
+onDestroy(() => {
+  document.removeEventListener("keydown", handleKeyPress)
+})
 </script>
 
 <!-- New row FAB -->

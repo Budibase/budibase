@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store"
+import { get, writable } from "svelte/store"
 import { routeStore } from "./routes"
 
 const DEFAULT_NOTIFICATION_TIMEOUT = 3000

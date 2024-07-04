@@ -1,22 +1,22 @@
-import authorized from "../middleware/authorized"
-import { BaseSocket, EmitOptions } from "./websocket"
-import { permissions, events, context } from "@budibase/backend-core"
 import http from "http"
-import Koa from "koa"
+import { events, context, permissions } from "@budibase/backend-core"
+import { BuilderSocketEvent } from "@budibase/shared-core"
 import {
-  Datasource,
-  Table,
-  SocketSession,
-  ContextUser,
-  Screen,
   App,
   Automation,
+  ContextUser,
+  Datasource,
+  Screen,
+  SocketSession,
+  Table,
 } from "@budibase/types"
-import { gridSocket } from "./index"
-import { clearLock, updateLock } from "../utilities/redis"
+import Koa from "koa"
 import { Socket } from "socket.io"
-import { BuilderSocketEvent } from "@budibase/shared-core"
+import authorized from "../middleware/authorized"
 import { processTable } from "../sdk/app/tables/getters"
+import { clearLock, updateLock } from "../utilities/redis"
+import { gridSocket } from "./index"
+import { BaseSocket, EmitOptions } from "./websocket"
 
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
@@ -87,7 +87,7 @@ export default class BuilderSocket extends BaseSocket {
           })
         }
       }
-    } catch (e) {
+    } catch (_e) {
       // This is fine, just means this user didn't hold the lock
     }
   }

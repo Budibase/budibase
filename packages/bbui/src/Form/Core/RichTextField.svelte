@@ -1,14 +1,14 @@
 <script>
-  import MarkdownEditor from "../../Markdown/MarkdownEditor.svelte"
+import MarkdownEditor from "../../Markdown/MarkdownEditor.svelte"
 
-  export let value = ""
-  export let placeholder = null
-  export let disabled = false
-  export let readonly = false
-  export let height = null
-  export let id = null
-  export let fullScreenOffset = null
-  export let easyMDEOptions = null
+export let value = ""
+export let placeholder = null
+export let disabled = false
+export let readonly = false
+export let height = null
+export let id = null
+export let fullScreenOffset = null
+export let easyMDEOptions = null
 </script>
 
 <div>

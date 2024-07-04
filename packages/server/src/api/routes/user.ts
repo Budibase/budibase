@@ -1,7 +1,7 @@
-import Router from "@koa/router"
-import * as controller from "../controllers/user"
-import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
+import Router from "@koa/router"
+import authorized from "../../middleware/authorized"
+import * as controller from "../controllers/user"
 
 const { PermissionType, PermissionLevel } = permissions
 

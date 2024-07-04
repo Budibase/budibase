@@ -1,5 +1,5 @@
-import { Header } from "../constants"
 import { BBContext } from "@budibase/types"
+import { Header } from "../constants"
 import { isValidInternalAPIKey } from "../utils"
 
 /**

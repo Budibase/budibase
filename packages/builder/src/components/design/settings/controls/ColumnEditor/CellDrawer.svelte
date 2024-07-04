@@ -1,19 +1,19 @@
 <script>
-  import {
-    Input,
-    Select,
-    ColorPicker,
-    DrawerContent,
-    Layout,
-    Label,
-  } from "@budibase/bbui"
-  import { themeStore, previewStore } from "stores/builder"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import {
+  ColorPicker,
+  DrawerContent,
+  Input,
+  Label,
+  Layout,
+  Select,
+} from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { previewStore, themeStore } from "stores/builder"
 
-  export let column
+export let column
 
-  $: columnValue =
-    $previewStore.selectedComponentContext?.eventContext?.row?.[column.name]
+$: columnValue =
+  $previewStore.selectedComponentContext?.eventContext?.row?.[column.name]
 </script>
 
 <DrawerContent>

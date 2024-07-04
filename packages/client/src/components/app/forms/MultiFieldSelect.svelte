@@ -1,58 +1,58 @@
 <script>
-  import { CoreMultiselect, CoreCheckboxGroup } from "@budibase/bbui"
-  import Field from "./Field.svelte"
-  import { getOptions } from "./optionsParser"
+import { CoreCheckboxGroup, CoreMultiselect } from "@budibase/bbui"
+import Field from "./Field.svelte"
+import { getOptions } from "./optionsParser"
 
-  export let field
-  export let label
-  export let placeholder
-  export let disabled = false
-  export let readonly = false
-  export let validation
-  export let defaultValue
-  export let optionsSource = "schema"
-  export let dataProvider
-  export let labelColumn
-  export let valueColumn
-  export let customOptions
-  export let autocomplete = false
-  export let onChange
-  export let optionsType = "select"
-  export let direction = "vertical"
-  export let span
-  export let helpText = null
+export let field
+export let label
+export let placeholder
+export let disabled = false
+export let readonly = false
+export let validation
+export let defaultValue
+export let optionsSource = "schema"
+export let dataProvider
+export let labelColumn
+export let valueColumn
+export let customOptions
+export let autocomplete = false
+export let onChange
+export let optionsType = "select"
+export let direction = "vertical"
+export let span
+export let helpText = null
 
-  let fieldState
-  let fieldApi
-  let fieldSchema
+let fieldState
+let fieldApi
+let fieldSchema
 
-  $: flatOptions = optionsSource == null || optionsSource === "schema"
-  $: expandedDefaultValue = expand(defaultValue)
-  $: options = getOptions(
-    optionsSource,
-    fieldSchema,
-    dataProvider,
-    labelColumn,
-    valueColumn,
-    customOptions
-  )
+$: flatOptions = optionsSource == null || optionsSource === "schema"
+$: expandedDefaultValue = expand(defaultValue)
+$: options = getOptions(
+  optionsSource,
+  fieldSchema,
+  dataProvider,
+  labelColumn,
+  valueColumn,
+  customOptions
+)
 
-  const expand = values => {
-    if (!values) {
-      return []
-    }
-    if (Array.isArray(values)) {
-      return values.slice()
-    }
-    return values.split(",").map(value => value.trim())
+const expand = values => {
+  if (!values) {
+    return []
   }
-
-  const handleChange = e => {
-    const changed = fieldApi.setValue(e.detail)
-    if (onChange && changed) {
-      onChange({ value: e.detail })
-    }
+  if (Array.isArray(values)) {
+    return values.slice()
   }
+  return values.split(",").map(value => value.trim())
+}
+
+const handleChange = e => {
+  const changed = fieldApi.setValue(e.detail)
+  if (onChange && changed) {
+    onChange({ value: e.detail })
+  }
+}
 </script>
 
 <Field

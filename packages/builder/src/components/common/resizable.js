@@ -3,7 +3,9 @@ const getResizeActions = (
   mouseMoveEventProperty,
   elementProperty,
   initialValue,
-  setValue = () => {}
+  setValue = () => {
+    // empty on purpose
+  }
 ) => {
   let element = null
 

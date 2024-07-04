@@ -1,13 +1,13 @@
-import { Table, RenameColumn } from "@budibase/types"
+import { context } from "@budibase/backend-core"
+import { DocumentInsertResponse } from "@budibase/nano"
+import { RenameColumn, Table } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import sdk from "../../index"
-import { context } from "@budibase/backend-core"
 import { isExternal } from "./utils"
-import { DocumentInsertResponse } from "@budibase/nano"
 
+import { cloneDeep } from "lodash"
 import * as external from "./external"
 import * as internal from "./internal"
-import { cloneDeep } from "lodash"
 
 export * as external from "./external"
 export * as internal from "./internal"

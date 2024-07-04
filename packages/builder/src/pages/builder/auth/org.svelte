@@ -1,51 +1,51 @@
 <script>
-  import {
-    Body,
-    Button,
-    Divider,
-    Heading,
-    Input,
-    Layout,
-    notifications,
-  } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
-  import { auth, admin } from "stores/portal"
-  import Logo from "assets/bb-emblem.svg"
-  import { get } from "svelte/store"
-  import { onMount } from "svelte"
+import {
+  Body,
+  Button,
+  Divider,
+  Heading,
+  Input,
+  Layout,
+  notifications,
+} from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import Logo from "assets/bb-emblem.svg"
+import { admin, auth } from "stores/portal"
+import { onMount } from "svelte"
+import { get } from "svelte/store"
 
-  let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""
-  $: multiTenancyEnabled = $admin.multiTenancy
-  $: cloud = $admin.cloud
+let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""
+$: multiTenancyEnabled = $admin.multiTenancy
+$: cloud = $admin.cloud
 
-  $: useAccountPortal = cloud && !$admin.disableAccountPortal
+$: useAccountPortal = cloud && !$admin.disableAccountPortal
 
-  async function setOrg() {
-    try {
-      if (tenantId == null || tenantId === "") {
-        tenantId = "default"
-      }
-      await auth.setOrg(tenantId)
-      // re-init now org selected
-      await admin.init()
-      $goto("../")
-    } catch (error) {
-      notifications.error("Error setting organisation")
+async function setOrg() {
+  try {
+    if (tenantId == null || tenantId === "") {
+      tenantId = "default"
     }
+    await auth.setOrg(tenantId)
+    // re-init now org selected
+    await admin.init()
+    $goto("../")
+  } catch (error) {
+    notifications.error("Error setting organisation")
   }
+}
 
-  function handleKeydown(evt) {
-    if (evt.key === "Enter") setOrg()
+function handleKeydown(evt) {
+  if (evt.key === "Enter") setOrg()
+}
+
+onMount(async () => {
+  await auth.checkQueryString()
+  if (!multiTenancyEnabled || useAccountPortal) {
+    $goto("../")
+  } else {
+    admin.unload()
   }
-
-  onMount(async () => {
-    await auth.checkQueryString()
-    if (!multiTenancyEnabled || useAccountPortal) {
-      $goto("../")
-    } else {
-      admin.unload()
-    }
-  })
+})
 </script>
 
 <svelte:window on:keydown={handleKeydown} />

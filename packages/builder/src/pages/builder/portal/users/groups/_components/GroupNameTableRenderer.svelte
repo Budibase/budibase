@@ -1,9 +1,9 @@
 <script>
-  import GroupIcon from "./GroupIcon.svelte"
-  import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
+import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
+import GroupIcon from "./GroupIcon.svelte"
 
-  export let value
-  export let row
+export let value
+export let row
 </script>
 
 <div class="align">

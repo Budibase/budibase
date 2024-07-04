@@ -1,6 +1,6 @@
+import { quotas } from "@budibase/pro"
 import TestConfig from "../../../../tests/utilities/TestConfiguration"
 import * as syncCreators from "../syncCreators"
-import { quotas } from "@budibase/pro"
 
 describe("syncCreators", () => {
   let config = new TestConfig(false)

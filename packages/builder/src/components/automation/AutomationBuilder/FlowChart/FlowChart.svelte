@@ -1,49 +1,49 @@
 <script>
-  import {
-    automationStore,
-    selectedAutomation,
-    automationHistoryStore,
-  } from "stores/builder"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import FlowItem from "./FlowItem.svelte"
-  import TestDataModal from "./TestDataModal.svelte"
-  import { flip } from "svelte/animate"
-  import { fly } from "svelte/transition"
-  import { Icon, notifications, Modal, Toggle } from "@budibase/bbui"
-  import { ActionStepID } from "constants/backend/automations"
-  import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+import { Icon, Modal, Toggle, notifications } from "@budibase/bbui"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+import { ActionStepID } from "constants/backend/automations"
+import {
+  automationHistoryStore,
+  automationStore,
+  selectedAutomation,
+} from "stores/builder"
+import { flip } from "svelte/animate"
+import { fly } from "svelte/transition"
+import FlowItem from "./FlowItem.svelte"
+import TestDataModal from "./TestDataModal.svelte"
 
-  export let automation
+export let automation
 
-  let testDataModal
-  let confirmDeleteDialog
-  let scrolling = false
-  $: blocks = getBlocks(automation).filter(x => x.stepId !== ActionStepID.LOOP)
-  const getBlocks = automation => {
-    let blocks = []
-    if (automation.definition.trigger) {
-      blocks.push(automation.definition.trigger)
-    }
-    blocks = blocks.concat(automation.definition.steps || [])
-    return blocks
+let testDataModal
+let confirmDeleteDialog
+let scrolling = false
+$: blocks = getBlocks(automation).filter(x => x.stepId !== ActionStepID.LOOP)
+const getBlocks = automation => {
+  let blocks = []
+  if (automation.definition.trigger) {
+    blocks.push(automation.definition.trigger)
   }
+  blocks = blocks.concat(automation.definition.steps || [])
+  return blocks
+}
 
-  const deleteAutomation = async () => {
-    try {
-      await automationStore.actions.delete($selectedAutomation)
-    } catch (error) {
-      notifications.error("Error deleting automation")
-    }
+const deleteAutomation = async () => {
+  try {
+    await automationStore.actions.delete($selectedAutomation)
+  } catch (error) {
+    notifications.error("Error deleting automation")
   }
+}
 
-  const handleScroll = e => {
-    if (e.target.scrollTop >= 30) {
-      scrolling = true
-    } else if (e.target.scrollTop) {
-      // Set scrolling back to false if scrolled back to less than 100px
-      scrolling = false
-    }
+const handleScroll = e => {
+  if (e.target.scrollTop >= 30) {
+    scrolling = true
+  } else if (e.target.scrollTop) {
+    // Set scrolling back to false if scrolled back to less than 100px
+    scrolling = false
   }
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

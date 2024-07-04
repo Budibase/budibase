@@ -1,29 +1,29 @@
 <script>
-  import { Button, ActionButton, Drawer } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import ValidationDrawer from "./ValidationDrawer.svelte"
+import { ActionButton, Button, Drawer } from "@budibase/bbui"
+import { createEventDispatcher } from "svelte"
+import ValidationDrawer from "./ValidationDrawer.svelte"
 
-  export let value = []
-  export let bindings = []
-  export let componentInstance
-  export let type
-  const dispatch = createEventDispatcher()
-  let drawer
+export let value = []
+export let bindings = []
+export let componentInstance
+export let type
+const dispatch = createEventDispatcher()
+let drawer
 
-  $: text = getText(value)
+$: text = getText(value)
 
-  const save = () => {
-    dispatch("change", value)
-    drawer.hide()
+const save = () => {
+  dispatch("change", value)
+  drawer.hide()
+}
+
+const getText = rules => {
+  if (!rules?.length) {
+    return "No rules set"
+  } else {
+    return `${rules.length} rule${rules.length === 1 ? "" : "s"} set`
   }
-
-  const getText = rules => {
-    if (!rules?.length) {
-      return "No rules set"
-    } else {
-      return `${rules.length} rule${rules.length === 1 ? "" : "s"} set`
-    }
-  }
+}
 </script>
 
 <div class="validation-editor">

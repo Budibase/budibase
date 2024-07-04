@@ -1,6 +1,6 @@
-import Resource from "./utils/Resource"
-import { object } from "./utils"
 import { BaseQueryVerbs } from "../../src/constants"
+import { object } from "./utils"
+import Resource from "./utils/Resource"
 
 const query = {
   _id: "query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e",

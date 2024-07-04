@@ -1,10 +1,10 @@
 import {
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
   Integration,
-  QueryType,
   IntegrationBase,
-  DatasourceFeature,
-  ConnectionInfo,
+  QueryType,
 } from "@budibase/types"
 import { Firestore, WhereFilterOp } from "@google-cloud/firestore"
 

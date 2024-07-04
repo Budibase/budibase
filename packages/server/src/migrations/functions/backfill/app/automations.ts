@@ -1,6 +1,6 @@
 import { events } from "@budibase/backend-core"
-import { getAutomationParams } from "../../../../db/utils"
 import { Automation } from "@budibase/types"
+import { getAutomationParams } from "../../../../db/utils"
 
 const getAutomations = async (appDb: any): Promise<Automation[]> => {
   const response = await appDb.allDocs(

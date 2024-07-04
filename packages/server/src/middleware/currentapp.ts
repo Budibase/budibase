@@ -1,18 +1,18 @@
 import {
-  utils,
   constants,
+  auth,
+  context,
   roles,
   tenancy,
-  context,
   users,
-  auth,
+  utils,
 } from "@budibase/backend-core"
-import { generateUserMetadataID, isDevAppID } from "../db/utils"
-import { getCachedSelf } from "../utilities/global"
-import env from "../environment"
-import { isWebhookEndpoint } from "./utils"
-import { UserCtx, ContextUser } from "@budibase/types"
+import { ContextUser, UserCtx } from "@budibase/types"
 import tracer from "dd-trace"
+import { generateUserMetadataID, isDevAppID } from "../db/utils"
+import env from "../environment"
+import { getCachedSelf } from "../utilities/global"
+import { isWebhookEndpoint } from "./utils"
 
 export default async (ctx: UserCtx, next: any) => {
   // try to get the appID from the request
@@ -65,7 +65,7 @@ export default async (ctx: UserCtx, next: any) => {
           // Delete admin and builder flags so that the specified role is honoured
           ctx.user = users.removePortalUserPermissions(ctx.user) as ContextUser
         }
-      } catch (error) {
+      } catch (_error) {
         // Swallow error and do nothing
       }
     }

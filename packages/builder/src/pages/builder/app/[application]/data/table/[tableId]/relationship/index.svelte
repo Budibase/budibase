@@ -1,7 +1,7 @@
 <script>
-  import { redirect } from "@roxi/routify"
+import { redirect } from "@roxi/routify"
 
-  $redirect("../")
+$redirect("../")
 </script>
 
 <!-- routify:options index=false -->

@@ -1,113 +1,113 @@
 <script>
-  import {
-    ActionMenu,
-    Heading,
-    Icon,
-    Layout,
-    MenuItem,
-    Modal,
-    Table,
-    notifications,
-  } from "@budibase/bbui"
-  import { goto, url } from "@roxi/routify"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { Breadcrumb, Breadcrumbs } from "components/portal/page"
-  import { roles } from "stores/builder"
-  import { appsStore, auth, groups } from "stores/portal"
-  import { onMount, setContext } from "svelte"
-  import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
-  import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
-  import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
-  import GroupIcon from "./_components/GroupIcon.svelte"
-  import GroupUsers from "./_components/GroupUsers.svelte"
-  import { sdk } from "@budibase/shared-core"
-  import { Constants } from "@budibase/frontend-core"
+import {
+  ActionMenu,
+  Heading,
+  Icon,
+  Layout,
+  MenuItem,
+  Modal,
+  Table,
+  notifications,
+} from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
+import { url, goto } from "@roxi/routify"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { Breadcrumb, Breadcrumbs } from "components/portal/page"
+import { roles } from "stores/builder"
+import { appsStore, auth, groups } from "stores/portal"
+import { onMount, setContext } from "svelte"
+import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
+import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
+import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
+import GroupIcon from "./_components/GroupIcon.svelte"
+import GroupUsers from "./_components/GroupUsers.svelte"
 
-  export let groupId
+export let groupId
 
-  const appSchema = {
-    name: {
-      width: "2fr",
-    },
-    role: {
-      width: "1fr",
-    },
+const appSchema = {
+  name: {
+    width: "2fr",
+  },
+  role: {
+    width: "1fr",
+  },
+}
+const customAppTableRenderers = [
+  {
+    column: "name",
+    component: AppNameTableRenderer,
+  },
+  {
+    column: "role",
+    component: AppRoleTableRenderer,
+  },
+]
+
+let loaded = false
+let editModal, deleteModal
+
+$: group = $groups.find(x => x._id === groupId)
+$: isScimGroup = group?.scimInfo?.isSync
+$: isAdmin = sdk.users.isAdmin($auth.user)
+$: readonly = !isAdmin || isScimGroup
+$: groupApps = $appsStore.apps
+  .filter(app =>
+    groups.actions
+      .getGroupAppIds(group)
+      .includes(appsStore.getProdAppID(app.devId))
+  )
+  .map(app => ({
+    ...app,
+    role: group?.builder?.apps.includes(appsStore.getProdAppID(app.devId))
+      ? Constants.Roles.CREATOR
+      : group?.roles?.[appsStore.getProdAppID(app.devId)],
+  }))
+
+$: {
+  if (loaded && !group?._id) {
+    $goto("./")
   }
-  const customAppTableRenderers = [
-    {
-      column: "name",
-      component: AppNameTableRenderer,
-    },
-    {
-      column: "role",
-      component: AppRoleTableRenderer,
-    },
-  ]
+}
 
-  let loaded = false
-  let editModal, deleteModal
+async function deleteGroup() {
+  try {
+    await groups.actions.delete(group)
+    notifications.success("User group deleted successfully")
+    $goto("./")
+  } catch (error) {
+    notifications.error(`Failed to delete user group`)
+  }
+}
 
-  $: group = $groups.find(x => x._id === groupId)
-  $: isScimGroup = group?.scimInfo?.isSync
-  $: isAdmin = sdk.users.isAdmin($auth.user)
-  $: readonly = !isAdmin || isScimGroup
-  $: groupApps = $appsStore.apps
-    .filter(app =>
-      groups.actions
-        .getGroupAppIds(group)
-        .includes(appsStore.getProdAppID(app.devId))
-    )
-    .map(app => ({
-      ...app,
-      role: group?.builder?.apps.includes(appsStore.getProdAppID(app.devId))
-        ? Constants.Roles.CREATOR
-        : group?.roles?.[appsStore.getProdAppID(app.devId)],
-    }))
-
-  $: {
-    if (loaded && !group?._id) {
-      $goto("./")
+async function saveGroup(group) {
+  try {
+    await groups.actions.save(group)
+  } catch (error) {
+    if (error.message) {
+      notifications.error(error.message)
+    } else {
+      notifications.error(`Failed to save user group`)
     }
   }
+}
 
-  async function deleteGroup() {
-    try {
-      await groups.actions.delete(group)
-      notifications.success("User group deleted successfully")
-      $goto("./")
-    } catch (error) {
-      notifications.error(`Failed to delete user group`)
-    }
+const removeApp = async app => {
+  await groups.actions.removeApp(groupId, appsStore.getProdAppID(app.devId))
+}
+setContext("roles", {
+  updateRole: () => {},
+  removeRole: removeApp,
+})
+
+onMount(async () => {
+  try {
+    await Promise.all([groups.actions.init(), roles.fetch()])
+    loaded = true
+  } catch (error) {
+    notifications.error("Error fetching user group data")
   }
-
-  async function saveGroup(group) {
-    try {
-      await groups.actions.save(group)
-    } catch (error) {
-      if (error.message) {
-        notifications.error(error.message)
-      } else {
-        notifications.error(`Failed to save user group`)
-      }
-    }
-  }
-
-  const removeApp = async app => {
-    await groups.actions.removeApp(groupId, appsStore.getProdAppID(app.devId))
-  }
-  setContext("roles", {
-    updateRole: () => {},
-    removeRole: removeApp,
-  })
-
-  onMount(async () => {
-    try {
-      await Promise.all([groups.actions.init(), roles.fetch()])
-      loaded = true
-    } catch (error) {
-      notifications.error("Error fetching user group data")
-    }
-  })
+})
 </script>
 
 {#if loaded}

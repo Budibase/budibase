@@ -1,11 +1,11 @@
 <script>
-  import { getContext } from "svelte"
-  import Placeholder from "./Placeholder.svelte"
+import { getContext } from "svelte"
+import Placeholder from "./Placeholder.svelte"
 
-  const { styleable, builderStore } = getContext("sdk")
-  const component = getContext("component")
+const { styleable, builderStore } = getContext("sdk")
+const component = getContext("component")
 
-  export let url
+export let url
 </script>
 
 {#if url}

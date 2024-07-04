@@ -1,15 +1,15 @@
+import { events, db as dbUtils } from "@budibase/backend-core"
+import { App, AppBackfillSucceededEvent, Event } from "@budibase/types"
+import { DEFAULT_TIMESTAMP } from "."
+import env from "../../../environment"
 import * as automations from "./app/automations"
 import * as datasources from "./app/datasources"
 import * as layouts from "./app/layouts"
 import * as queries from "./app/queries"
 import * as roles from "./app/roles"
-import * as tables from "./app/tables"
 import * as screens from "./app/screens"
+import * as tables from "./app/tables"
 import * as global from "./global"
-import { App, AppBackfillSucceededEvent, Event } from "@budibase/types"
-import { db as dbUtils, events } from "@budibase/backend-core"
-import env from "../../../environment"
-import { DEFAULT_TIMESTAMP } from "."
 
 const failGraceful = env.SELF_HOSTED && !env.isDev()
 

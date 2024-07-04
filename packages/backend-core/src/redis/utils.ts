@@ -1,5 +1,5 @@
-import env from "../environment"
 import * as Redis from "ioredis"
+import env from "../environment"
 
 const SLOT_REFRESH_MS = 2000
 const CONNECT_TIMEOUT_MS = 10000

@@ -1,5 +1,5 @@
 import { tenancy } from "@budibase/backend-core"
-import { TenantInfo, Ctx } from "@budibase/types"
+import { Ctx, TenantInfo } from "@budibase/types"
 
 export const save = async (ctx: Ctx<TenantInfo>) => {
   const response = await tenancy.saveTenantInfo(ctx.request.body)

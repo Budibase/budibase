@@ -1,6 +1,6 @@
-import { get } from "svelte/store"
-import { link } from "svelte-spa-router"
 import { builderStore } from "stores"
+import { link } from "svelte-spa-router"
+import { get } from "svelte/store"
 
 export const linkable = (node, href) => {
   if (get(builderStore).inBuilder) {

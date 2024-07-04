@@ -1,16 +1,38 @@
-import env from "../../environment"
 import {
-  createAllSearchIndex,
-  createLinkView,
-  createRoutingView,
-} from "../../db/views/staticViews"
+  events,
+  ErrorCode,
+  cache,
+  context,
+  db as dbCore,
+  env as envCore,
+  migrations,
+  objectStore,
+  roles,
+  tenancy,
+  users,
+} from "@budibase/backend-core"
+import { groups, licensing, quotas } from "@budibase/pro"
+import { sdk as sharedCoreSDK } from "@budibase/shared-core"
 import {
-  backupClientLibrary,
-  createApp,
-  deleteApp,
-  revertClientLibrary,
-  updateClientLibrary,
-} from "../../utilities/fileSystem"
+  App,
+  CreateAppRequest,
+  DuplicateAppRequest,
+  DuplicateAppResponse,
+  FetchAppDefinitionResponse,
+  FetchAppPackageResponse,
+  Layout,
+  MigrationType,
+  PlanType,
+  Screen,
+  UpdateAppRequest,
+  UpdateAppResponse,
+  UserCtx,
+} from "@budibase/types"
+import * as appMigrations from "../../appMigrations"
+import { cleanupAutomations } from "../../automations/utils"
+import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
+import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
+import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import {
   AppStatus,
   DocumentType,
@@ -20,46 +42,24 @@ import {
   getScreenParams,
 } from "../../db/utils"
 import {
-  cache,
-  context,
-  db as dbCore,
-  env as envCore,
-  ErrorCode,
-  events,
-  migrations,
-  objectStore,
-  roles,
-  tenancy,
-  users,
-} from "@budibase/backend-core"
-import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
-import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
-import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { stringToReadStream } from "../../utilities"
-import { doesUserHaveLock } from "../../utilities/redis"
-import { cleanupAutomations } from "../../automations/utils"
-import { getUniqueRows } from "../../utilities/usageQuota/rows"
-import { groups, licensing, quotas } from "@budibase/pro"
-import {
-  App,
-  Layout,
-  MigrationType,
-  PlanType,
-  Screen,
-  UserCtx,
-  CreateAppRequest,
-  FetchAppDefinitionResponse,
-  FetchAppPackageResponse,
-  DuplicateAppRequest,
-  DuplicateAppResponse,
-  UpdateAppRequest,
-  UpdateAppResponse,
-} from "@budibase/types"
-import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
+  createAllSearchIndex,
+  createLinkView,
+  createRoutingView,
+} from "../../db/views/staticViews"
+import env from "../../environment"
 import sdk from "../../sdk"
+import { stringToReadStream } from "../../utilities"
+import {
+  backupClientLibrary,
+  createApp,
+  deleteApp,
+  revertClientLibrary,
+  updateClientLibrary,
+} from "../../utilities/fileSystem"
+import { doesUserHaveLock } from "../../utilities/redis"
+import { getUniqueRows } from "../../utilities/usageQuota/rows"
+import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { builderSocket } from "../../websockets"
-import { sdk as sharedCoreSDK } from "@budibase/shared-core"
-import * as appMigrations from "../../appMigrations"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -171,7 +171,7 @@ export const addSampleData = async (ctx: UserCtx) => {
   try {
     // Check if default datasource exists before creating it
     await sdk.datasources.get(DEFAULT_BB_DATASOURCE_ID)
-  } catch (err: any) {
+  } catch (_err: any) {
     const defaultDbDocs = await buildDefaultDocs()
 
     // add in the default db data docs - tables, datasource, rows and links
@@ -346,7 +346,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
           newApplication.navigation = navigation
         }
       }
-    } catch (err) {
+    } catch (_err) {
       // Nothing to do
     }
 

@@ -1,6 +1,6 @@
 import { EventEmitter } from "events"
+import { Row, Table } from "@budibase/types"
 import { rowEmission, tableEmission } from "./utils"
-import { Table, Row } from "@budibase/types"
 
 /**
  * keeping event emitter in one central location as it might be used for things other than

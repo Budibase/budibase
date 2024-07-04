@@ -1,51 +1,51 @@
 <script>
-  import { Layout, Detail, Button, Modal } from "@budibase/bbui"
-  import TemplateCard from "components/common/TemplateCard.svelte"
-  import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import { licensing } from "stores/portal"
-  import { Content, SideNav, SideNavItem } from "components/portal/page"
+import { Button, Detail, Layout, Modal } from "@budibase/bbui"
+import TemplateCard from "components/common/TemplateCard.svelte"
+import { Content, SideNav, SideNavItem } from "components/portal/page"
+import CreateAppModal from "components/start/CreateAppModal.svelte"
+import { licensing } from "stores/portal"
 
-  export let templates
+export let templates
 
-  let selectedCategory
-  let creationModal
-  let template
+let selectedCategory
+let creationModal
+let template
 
-  $: categories = getCategories(templates)
-  $: filteredCategories = getFilteredCategories(categories, selectedCategory)
+$: categories = getCategories(templates)
+$: filteredCategories = getFilteredCategories(categories, selectedCategory)
 
-  const getCategories = templates => {
-    let categories = {}
-    templates?.forEach(template => {
-      if (!categories[template.category]) {
-        categories[template.category] = []
+const getCategories = templates => {
+  let categories = {}
+  templates?.forEach(template => {
+    if (!categories[template.category]) {
+      categories[template.category] = []
+    }
+    categories[template.category].push(template)
+  })
+  categories = Object.entries(categories).map(
+    ([category, categoryTemplates]) => {
+      return {
+        name: category,
+        templates: categoryTemplates,
       }
-      categories[template.category].push(template)
-    })
-    categories = Object.entries(categories).map(
-      ([category, categoryTemplates]) => {
-        return {
-          name: category,
-          templates: categoryTemplates,
-        }
-      }
-    )
-    categories.sort((a, b) => {
-      return a.name < b.name ? -1 : 1
-    })
+    }
+  )
+  categories.sort((a, b) => {
+    return a.name < b.name ? -1 : 1
+  })
+  return categories
+}
+
+const getFilteredCategories = (categories, selectedCategory) => {
+  if (!selectedCategory) {
     return categories
   }
+  return categories.filter(x => x.name === selectedCategory)
+}
 
-  const getFilteredCategories = (categories, selectedCategory) => {
-    if (!selectedCategory) {
-      return categories
-    }
-    return categories.filter(x => x.name === selectedCategory)
-  }
-
-  const stopAppCreation = () => {
-    template = null
-  }
+const stopAppCreation = () => {
+  template = null
+}
 </script>
 
 <Content>

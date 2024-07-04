@@ -1,6 +1,6 @@
-import BullQueue from "bull"
-import { createQueue, JobQueue } from "../../queue"
 import { Event, Identity } from "@budibase/types"
+import BullQueue from "bull"
+import { JobQueue, createQueue } from "../../queue"
 
 export interface EventPayload {
   event: Event

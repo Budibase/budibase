@@ -1,31 +1,31 @@
 <script>
-  import { keepOpen, Body, ModalContent, Select } from "@budibase/bbui"
-  import { appsStore, groups } from "stores/portal"
-  import { roles } from "stores/builder"
-  import RoleSelect from "components/common/RoleSelect.svelte"
+import { Body, ModalContent, Select, keepOpen } from "@budibase/bbui"
+import RoleSelect from "components/common/RoleSelect.svelte"
+import { roles } from "stores/builder"
+import { appsStore, groups } from "stores/portal"
 
-  export let group
+export let group
 
-  $: appOptions = $appsStore.apps.map(app => ({
-    label: app.name,
-    value: app,
-  }))
-  $: confirmDisabled =
-    (!selectingRole && !selectedApp) || (selectingRole && !selectedRoleId)
-  let selectedApp, selectedRoleId
-  let selectingRole = false
+$: appOptions = $appsStore.apps.map(app => ({
+  label: app.name,
+  value: app,
+}))
+$: confirmDisabled =
+  (!selectingRole && !selectedApp) || (selectingRole && !selectedRoleId)
+let selectedApp, selectedRoleId
+let selectingRole = false
 
-  async function appSelected() {
-    const prodAppId = appsStore.getProdAppID(selectedApp.devId)
-    if (!selectingRole) {
-      selectingRole = true
-      await roles.fetchByAppId(prodAppId)
+async function appSelected() {
+  const prodAppId = appsStore.getProdAppID(selectedApp.devId)
+  if (!selectingRole) {
+    selectingRole = true
+    await roles.fetchByAppId(prodAppId)
 
-      return keepOpen
-    } else {
-      await groups.actions.addApp(group._id, prodAppId, selectedRoleId)
-    }
+    return keepOpen
+  } else {
+    await groups.actions.addApp(group._id, prodAppId, selectedRoleId)
   }
+}
 </script>
 
 <ModalContent

@@ -1,8 +1,8 @@
 <script>
-  import { DetailSummary } from "@budibase/bbui"
-  import InfoDisplay from "./InfoDisplay.svelte"
+import { DetailSummary } from "@budibase/bbui"
+import InfoDisplay from "./InfoDisplay.svelte"
 
-  export let componentDefinition
+export let componentDefinition
 </script>
 
 <DetailSummary collapsible={false} noPadding={true}>

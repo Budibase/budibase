@@ -1,10 +1,10 @@
 import { context } from "@budibase/backend-core"
-import { migrate as migrationImpl, MIGRATIONS } from "../../migrations"
 import { Ctx } from "@budibase/types"
 import {
   getAppMigrationVersion,
   getLatestEnabledMigrationId,
 } from "../../appMigrations"
+import { MIGRATIONS, migrate as migrationImpl } from "../../migrations"
 
 export async function migrate(ctx: Ctx) {
   const options = ctx.request.body

@@ -1,65 +1,65 @@
 <script>
-  import { Icon, TooltipType, TooltipPosition } from "@budibase/bbui"
-  import { createEventDispatcher, getContext } from "svelte"
-  import { helpers } from "@budibase/shared-core"
-  import { UserAvatars } from "@budibase/frontend-core"
+import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
+import { UserAvatars } from "@budibase/frontend-core"
+import { helpers } from "@budibase/shared-core"
+import { createEventDispatcher, getContext } from "svelte"
 
-  export let icon
-  export let iconTooltip
-  export let withArrow = false
-  export let withActions = true
-  export let showActions = false
-  export let indentLevel = 0
-  export let text
-  export let border = true
-  export let selected = false
-  export let opened = false
-  export let draggable = false
-  export let iconText
-  export let iconColor
-  export let scrollable = false
-  export let highlighted = false
-  export let rightAlignIcon = false
-  export let id
-  export let showTooltip = false
-  export let selectedBy = null
-  export let compact = false
-  export let hovering = false
-  export let disabled = false
+export let icon
+export let iconTooltip
+export let withArrow = false
+export let withActions = true
+export let showActions = false
+export let indentLevel = 0
+export let text
+export let border = true
+export let selected = false
+export let opened = false
+export let draggable = false
+export let iconText
+export let iconColor
+export let scrollable = false
+export let highlighted = false
+export let rightAlignIcon = false
+export let id
+export let showTooltip = false
+export let selectedBy = null
+export let compact = false
+export let hovering = false
+export let disabled = false
 
-  const scrollApi = getContext("scroll")
-  const dispatch = createEventDispatcher()
+const scrollApi = getContext("scroll")
+const dispatch = createEventDispatcher()
 
-  let contentRef
+let contentRef
 
-  $: selected && contentRef && scrollToView()
-  $: style = getStyle(indentLevel, selectedBy)
+$: selected && contentRef && scrollToView()
+$: style = getStyle(indentLevel, selectedBy)
 
-  const onClick = () => {
-    scrollToView()
-    dispatch("click")
+const onClick = () => {
+  scrollToView()
+  dispatch("click")
+}
+
+const onIconClick = e => {
+  e.stopPropagation()
+  dispatch("iconClick")
+}
+
+const scrollToView = () => {
+  if (!scrollApi || !contentRef) {
+    return
   }
+  const bounds = contentRef.getBoundingClientRect()
+  scrollApi.scrollTo(bounds)
+}
 
-  const onIconClick = e => {
-    e.stopPropagation()
-    dispatch("iconClick")
+const getStyle = (indentLevel, selectedBy) => {
+  let style = `padding-left:calc(${indentLevel * 14}px);`
+  if (selectedBy) {
+    style += `--selected-by-color:${helpers.getUserColor(selectedBy)};`
   }
-
-  const scrollToView = () => {
-    if (!scrollApi || !contentRef) {
-      return
-    }
-    const bounds = contentRef.getBoundingClientRect()
-    scrollApi.scrollTo(bounds)
-  }
-
-  const getStyle = (indentLevel, selectedBy) => {
-    let style = `padding-left:calc(${indentLevel * 14}px);`
-    if (selectedBy) {
-      style += `--selected-by-color:${helpers.getUserColor(selectedBy)};`
-    }
-    return style
-  }
+  return style
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

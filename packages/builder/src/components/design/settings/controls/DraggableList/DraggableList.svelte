@@ -1,83 +1,83 @@
 <script>
-  import { dndzone } from "svelte-dnd-action"
-  import { createEventDispatcher, setContext } from "svelte"
-  import { generate } from "shortid"
-  import { writable, get } from "svelte/store"
-  import DragHandle from "./drag-handle.svelte"
+import { generate } from "shortid"
+import { createEventDispatcher, setContext } from "svelte"
+import { dndzone } from "svelte-dnd-action"
+import { get, writable } from "svelte/store"
+import DragHandle from "./drag-handle.svelte"
 
-  export let items = []
-  export let showHandle = true
-  export let listType
-  export let listTypeProps = {}
-  export let listItemKey
-  export let draggable = true
-  export let focus
+export let items = []
+export let showHandle = true
+export let listType
+export let listTypeProps = {}
+export let listItemKey
+export let draggable = true
+export let focus
 
-  let zoneType = generate()
+let zoneType = generate()
 
-  let store = writable({
-    selected: null,
-    actions: {
-      select: id => {
-        store.update(state => ({
-          ...state,
-          selected: id,
-        }))
-      },
+let store = writable({
+  selected: null,
+  actions: {
+    select: id => {
+      store.update(state => ({
+        ...state,
+        selected: id,
+      }))
     },
-  })
+  },
+})
 
-  setContext("draggable", store)
+setContext("draggable", store)
 
-  $: if (focus && store) {
-    get(store).actions.select(focus)
-  }
+$: if (focus && store) {
+  get(store).actions.select(focus)
+}
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let anchors = {}
-  let draggableItems = []
+let anchors = {}
+let draggableItems = []
 
-  // Used for controlling cursor behaviour in order to limit drag behaviour
-  // to the drag handle
-  let inactive = true
+// Used for controlling cursor behaviour in order to limit drag behaviour
+// to the drag handle
+let inactive = true
 
-  const buildDraggable = items => {
-    return items
-      .map(item => {
-        return {
-          id: listItemKey ? item[listItemKey] : generate(),
-          item,
-          type: zoneType,
-        }
-      })
-      .filter(item => item.id)
-  }
+const buildDraggable = items => {
+  return items
+    .map(item => {
+      return {
+        id: listItemKey ? item[listItemKey] : generate(),
+        item,
+        type: zoneType,
+      }
+    })
+    .filter(item => item.id)
+}
 
-  $: if (items) {
-    draggableItems = buildDraggable(items)
-  }
+$: if (items) {
+  draggableItems = buildDraggable(items)
+}
 
-  const updateRowOrder = e => {
-    draggableItems = e.detail.items
-  }
+const updateRowOrder = e => {
+  draggableItems = e.detail.items
+}
 
-  const serialiseUpdate = () => {
-    return draggableItems.reduce((acc, ele) => {
-      acc.push(ele.item)
-      return acc
-    }, [])
-  }
+const serialiseUpdate = () => {
+  return draggableItems.reduce((acc, ele) => {
+    acc.push(ele.item)
+    return acc
+  }, [])
+}
 
-  const handleFinalize = e => {
-    inactive = true
-    updateRowOrder(e)
-    dispatch("change", serialiseUpdate())
-  }
+const handleFinalize = e => {
+  inactive = true
+  updateRowOrder(e)
+  dispatch("change", serialiseUpdate())
+}
 
-  const onItemChanged = e => {
-    dispatch("itemChange", e.detail)
-  }
+const onItemChanged = e => {
+  dispatch("itemChange", e.detail)
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -1,55 +1,55 @@
 <script>
-  import { Menu, MenuItem, Helpers } from "@budibase/bbui"
-  import { getContext } from "svelte"
-  import { NewRowID } from "../lib/constants"
-  import GridPopover from "./GridPopover.svelte"
-  import { getCellID } from "../lib/utils"
+import { Helpers, Menu, MenuItem } from "@budibase/bbui"
+import { getContext } from "svelte"
+import { NewRowID } from "../lib/constants"
+import { getCellID } from "../lib/utils"
+import GridPopover from "./GridPopover.svelte"
 
-  const {
-    focusedRow,
-    menu,
-    rows,
-    columns,
-    focusedCellId,
-    stickyColumn,
-    config,
-    copiedCell,
-    clipboard,
-    dispatch,
-    focusedCellAPI,
-    focusedRowId,
-    notifications,
-    hasBudibaseIdentifiers,
-  } = getContext("grid")
+const {
+  focusedRow,
+  menu,
+  rows,
+  columns,
+  focusedCellId,
+  stickyColumn,
+  config,
+  copiedCell,
+  clipboard,
+  dispatch,
+  focusedCellAPI,
+  focusedRowId,
+  notifications,
+  hasBudibaseIdentifiers,
+} = getContext("grid")
 
-  let anchor
+let anchor
 
-  $: style = makeStyle($menu)
-  $: isNewRow = $focusedRowId === NewRowID
+$: style = makeStyle($menu)
+$: isNewRow = $focusedRowId === NewRowID
 
-  const makeStyle = menu => {
-    return `left:${menu.left}px; top:${menu.top}px;`
+const makeStyle = menu => {
+  return `left:${menu.left}px; top:${menu.top}px;`
+}
+
+const deleteRow = () => {
+  rows.actions.deleteRows([$focusedRow])
+  menu.actions.close()
+  $notifications.success("Deleted 1 row")
+}
+
+const duplicate = async () => {
+  menu.actions.close()
+  const newRow = await rows.actions.duplicateRow($focusedRow)
+  if (newRow) {
+    const column = $stickyColumn?.name || $columns[0].name
+    $focusedCellId = getCellID(newRow._id, column)
   }
+}
 
-  const deleteRow = () => {
-    rows.actions.deleteRows([$focusedRow])
-    menu.actions.close()
-    $notifications.success("Deleted 1 row")
-  }
-
-  const duplicate = async () => {
-    menu.actions.close()
-    const newRow = await rows.actions.duplicateRow($focusedRow)
-    if (newRow) {
-      const column = $stickyColumn?.name || $columns[0].name
-      $focusedCellId = getCellID(newRow._id, column)
-    }
-  }
-
-  const copyToClipboard = async value => {
-    await Helpers.copyToClipboard(value)
-    $notifications.success("Copied to clipboard")
-  }
+const copyToClipboard = async value => {
+  await Helpers.copyToClipboard(value)
+  $notifications.success("Copied to clipboard")
+}
 </script>
 
 <div bind:this={anchor} {style} class="menu-anchor" />

@@ -12,7 +12,7 @@ const createAuthStore = () => {
     // First try and get the global user, to see if we are logged in at all
     try {
       globalSelf = await API.fetchBuilderSelf()
-    } catch (error) {
+    } catch (_error) {
       store.set(null)
       return
     }
@@ -20,7 +20,7 @@ const createAuthStore = () => {
     // Then try and get the user for this app to provide via context
     try {
       appSelf = await API.fetchSelf()
-    } catch (error) {
+    } catch (_error) {
       // Swallow
     }
 
@@ -31,7 +31,7 @@ const createAuthStore = () => {
   const logOut = async () => {
     try {
       await API.logOut()
-    } catch (error) {
+    } catch (_error) {
       // Do nothing
     }
 

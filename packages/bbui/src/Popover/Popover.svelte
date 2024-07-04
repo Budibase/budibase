@@ -1,82 +1,82 @@
 <script>
-  import "@spectrum-css/popover/dist/index-vars.css"
-  import Portal from "svelte-portal"
-  import { createEventDispatcher, getContext } from "svelte"
-  import positionDropdown from "../Actions/position_dropdown"
-  import clickOutside from "../Actions/click_outside"
-  import { fly } from "svelte/transition"
-  import Context from "../context"
+import "@spectrum-css/popover/dist/index-vars.css"
+import { createEventDispatcher, getContext } from "svelte"
+import Portal from "svelte-portal"
+import { fly } from "svelte/transition"
+import clickOutside from "../Actions/click_outside"
+import positionDropdown from "../Actions/position_dropdown"
+import Context from "../context"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let anchor
-  export let align = "right"
-  export let portalTarget
-  export let minWidth
-  export let maxWidth
-  export let maxHeight
-  export let open = false
-  export let useAnchorWidth = false
-  export let dismissible = true
-  export let offset = 4
-  export let customHeight
-  export let animate = true
-  export let customZindex
-  export let handlePostionUpdate
-  export let showPopover = true
-  export let clickOutsideOverride = false
-  export let resizable = true
-  export let wrap = false
+export let anchor
+export let align = "right"
+export let portalTarget
+export let minWidth
+export let maxWidth
+export let maxHeight
+export let open = false
+export let useAnchorWidth = false
+export let dismissible = true
+export let offset = 4
+export let customHeight
+export let animate = true
+export let customZindex
+export let handlePostionUpdate
+export let showPopover = true
+export let clickOutsideOverride = false
+export let resizable = true
+export let wrap = false
 
-  $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
+$: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
-  export const show = () => {
-    dispatch("open")
-    open = true
+export const show = () => {
+  dispatch("open")
+  open = true
+}
+
+export const hide = () => {
+  dispatch("close")
+  open = false
+}
+
+export const toggle = () => {
+  if (!open) {
+    show()
+  } else {
+    hide()
   }
+}
 
-  export const hide = () => {
-    dispatch("close")
-    open = false
+const handleOutsideClick = e => {
+  if (clickOutsideOverride) {
+    return
   }
-
-  export const toggle = () => {
-    if (!open) {
-      show()
-    } else {
-      hide()
+  if (open) {
+    // Stop propagation if the source is the anchor
+    let node = e.target
+    let fromAnchor = false
+    while (!fromAnchor && node && node.parentNode) {
+      fromAnchor = node === anchor
+      node = node.parentNode
     }
+    if (fromAnchor) {
+      e.stopPropagation()
+    }
+
+    // Hide the popover
+    hide()
   }
+}
 
-  const handleOutsideClick = e => {
-    if (clickOutsideOverride) {
-      return
-    }
-    if (open) {
-      // Stop propagation if the source is the anchor
-      let node = e.target
-      let fromAnchor = false
-      while (!fromAnchor && node && node.parentNode) {
-        fromAnchor = node === anchor
-        node = node.parentNode
-      }
-      if (fromAnchor) {
-        e.stopPropagation()
-      }
-
-      // Hide the popover
-      hide()
-    }
+function handleEscape(e) {
+  if (!clickOutsideOverride) {
+    return
   }
-
-  function handleEscape(e) {
-    if (!clickOutsideOverride) {
-      return
-    }
-    if (open && e.key === "Escape") {
-      hide()
-    }
+  if (open && e.key === "Escape") {
+    hide()
   }
+}
 </script>
 
 {#if open}

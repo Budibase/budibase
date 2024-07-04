@@ -1,9 +1,9 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  export let requiredSetting
+export let requiredSetting
 
-  const { builderStore } = getContext("sdk")
+const { builderStore } = getContext("sdk")
 </script>
 
 <span>

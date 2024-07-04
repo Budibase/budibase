@@ -37,7 +37,7 @@ export default class CustomFetch extends DataFetch {
       try {
         const js = JSON.parse(data)
         return Array.isArray(js) ? js : [js]
-      } catch (error) {
+      } catch (_error) {
         // Ignore
       }
 

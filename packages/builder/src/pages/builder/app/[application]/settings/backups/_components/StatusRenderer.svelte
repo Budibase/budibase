@@ -1,8 +1,8 @@
 <script>
-  import { Badge } from "@budibase/bbui"
+import { Badge } from "@budibase/bbui"
 
-  export let value = "started"
-  $: status = value[0].toUpperCase() + value?.slice(1)
+export let value = "started"
+$: status = value[0].toUpperCase() + value?.slice(1)
 </script>
 
 <Badge

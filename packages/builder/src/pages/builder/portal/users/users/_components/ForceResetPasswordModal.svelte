@@ -1,27 +1,27 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
-  import { users } from "stores/portal"
+import { Body, Input, ModalContent, notifications } from "@budibase/bbui"
+import { users } from "stores/portal"
+import { createEventDispatcher } from "svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let user
+export let user
 
-  const password = Math.random().toString(36).slice(2, 20)
+const password = Math.random().toString(36).slice(2, 20)
 
-  async function resetPassword() {
-    try {
-      await users.save({
-        ...user,
-        password,
-        forceResetPassword: true,
-      })
-      notifications.success("Password reset successfully")
-      dispatch("update")
-    } catch (error) {
-      notifications.error("Error resetting password")
-    }
+async function resetPassword() {
+  try {
+    await users.save({
+      ...user,
+      password,
+      forceResetPassword: true,
+    })
+    notifications.success("Password reset successfully")
+    dispatch("update")
+  } catch (error) {
+    notifications.error("Error resetting password")
   }
+}
 </script>
 
 <ModalContent

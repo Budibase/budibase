@@ -1,5 +1,5 @@
-import Joi from "joi"
 import { BBContext } from "@budibase/types"
+import Joi from "joi"
 
 function validate(schema: Joi.Schema, property: string) {
   // Return a Koa middleware function

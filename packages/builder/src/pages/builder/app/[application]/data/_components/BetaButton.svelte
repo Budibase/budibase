@@ -1,5 +1,5 @@
 <script>
-  import { Button } from "@budibase/bbui"
+import { Button } from "@budibase/bbui"
 </script>
 
 <div class="beta">

@@ -1,53 +1,53 @@
 <script>
-  import { ModalContent, Input } from "@budibase/bbui"
-  import sanitizeUrl from "helpers/sanitizeUrl"
-  import { get } from "svelte/store"
-  import { screenStore } from "stores/builder"
+import { Input, ModalContent } from "@budibase/bbui"
+import sanitizeUrl from "helpers/sanitizeUrl"
+import { screenStore } from "stores/builder"
+import { get } from "svelte/store"
 
-  export let onConfirm
-  export let onCancel
-  export let screenUrl
-  export let screenRole
-  export let confirmText = "Continue"
+export let onConfirm
+export let onCancel
+export let screenUrl
+export let screenRole
+export let confirmText = "Continue"
 
-  const appPrefix = "/app"
-  let touched = false
-  let error
-  let modal
+const appPrefix = "/app"
+let touched = false
+let error
+let modal
 
-  $: appUrl = screenUrl
-    ? `${window.location.origin}${appPrefix}${screenUrl}`
-    : `${window.location.origin}${appPrefix}`
+$: appUrl = screenUrl
+  ? `${window.location.origin}${appPrefix}${screenUrl}`
+  : `${window.location.origin}${appPrefix}`
 
-  const routeChanged = event => {
-    if (!event.detail.startsWith("/")) {
-      screenUrl = "/" + event.detail
-    }
-    touched = true
-    screenUrl = sanitizeUrl(screenUrl)
-    if (routeExists(screenUrl)) {
-      error = "This URL is already taken for this access role"
-    } else {
-      error = null
-    }
+const routeChanged = event => {
+  if (!event.detail.startsWith("/")) {
+    screenUrl = "/" + event.detail
   }
-
-  const routeExists = url => {
-    if (!screenRole) {
-      return false
-    }
-    return get(screenStore).screens.some(
-      screen =>
-        screen.routing.route.toLowerCase() === url.toLowerCase() &&
-        screen.routing.roleId === screenRole
-    )
+  touched = true
+  screenUrl = sanitizeUrl(screenUrl)
+  if (routeExists(screenUrl)) {
+    error = "This URL is already taken for this access role"
+  } else {
+    error = null
   }
+}
 
-  const confirmScreenDetails = async () => {
-    await onConfirm({
-      screenUrl,
-    })
+const routeExists = url => {
+  if (!screenRole) {
+    return false
   }
+  return get(screenStore).screens.some(
+    screen =>
+      screen.routing.route.toLowerCase() === url.toLowerCase() &&
+      screen.routing.roleId === screenRole
+  )
+}
+
+const confirmScreenDetails = async () => {
+  await onConfirm({
+    screenUrl,
+  })
+}
 </script>
 
 <ModalContent

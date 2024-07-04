@@ -1,8 +1,8 @@
+import { auth } from "@budibase/backend-core"
 import Router from "@koa/router"
 import Joi from "joi"
-import { auth } from "@budibase/backend-core"
-import * as controller from "../../controllers/global/tenant"
 import cloudRestricted from "../../../middleware/cloudRestricted"
+import * as controller from "../../controllers/global/tenant"
 
 const router: Router = new Router()
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")

@@ -1,73 +1,73 @@
 <script>
-  import { ActionMenu, MenuItem, Icon, Modal } from "@budibase/bbui"
-  import DeleteModal from "components/deploy/DeleteModal.svelte"
-  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
-  import ExportAppModal from "./ExportAppModal.svelte"
-  import DuplicateAppModal from "./DuplicateAppModal.svelte"
-  import { onMount } from "svelte"
-  import { licensing } from "stores/portal"
+import { ActionMenu, Icon, MenuItem, Modal } from "@budibase/bbui"
+import DeleteModal from "components/deploy/DeleteModal.svelte"
+import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
+import { licensing } from "stores/portal"
+import { onMount } from "svelte"
+import DuplicateAppModal from "./DuplicateAppModal.svelte"
+import ExportAppModal from "./ExportAppModal.svelte"
 
-  export let app
-  export let align = "right"
-  export let options
+export let app
+export let align = "right"
+export let options
 
-  let deleteModal
-  let exportModal
-  let duplicateModal
-  let exportPublishedVersion = false
-  let loaded = false
+let deleteModal
+let exportModal
+let duplicateModal
+let exportPublishedVersion = false
+let loaded = false
 
-  const getActions = app => {
-    if (!loaded) {
-      return []
-    }
-    return [
-      {
-        id: "duplicate",
-        icon: "Copy",
-        onClick: duplicateModal.show,
-        body: "Duplicate",
-      },
-      {
-        id: "exportDev",
-        icon: "Export",
-        onClick: () => {
-          exportPublishedVersion = false
-          exportModal.show()
-        },
-        body: "Export latest edited app",
-      },
-      {
-        id: "exportProd",
-        icon: "Export",
-        onClick: () => {
-          exportPublishedVersion = true
-          exportModal.show()
-        },
-        body: "Export latest published app",
-      },
-      {
-        id: "delete",
-        icon: "Delete",
-        onClick: deleteModal.show,
-        body: "Delete",
-      },
-    ].filter(action => {
-      if (action.id === "exportProd" && app.deployed !== true) {
-        return false
-      } else if (Array.isArray(options) && !options.includes(action.id)) {
-        return false
-      }
-      return true
-    })
+const getActions = app => {
+  if (!loaded) {
+    return []
   }
-
-  $: actions = getActions(app, loaded)
-
-  onMount(() => {
-    loaded = true
+  return [
+    {
+      id: "duplicate",
+      icon: "Copy",
+      onClick: duplicateModal.show,
+      body: "Duplicate",
+    },
+    {
+      id: "exportDev",
+      icon: "Export",
+      onClick: () => {
+        exportPublishedVersion = false
+        exportModal.show()
+      },
+      body: "Export latest edited app",
+    },
+    {
+      id: "exportProd",
+      icon: "Export",
+      onClick: () => {
+        exportPublishedVersion = true
+        exportModal.show()
+      },
+      body: "Export latest published app",
+    },
+    {
+      id: "delete",
+      icon: "Delete",
+      onClick: deleteModal.show,
+      body: "Delete",
+    },
+  ].filter(action => {
+    if (action.id === "exportProd" && app.deployed !== true) {
+      return false
+    } else if (Array.isArray(options) && !options.includes(action.id)) {
+      return false
+    }
+    return true
   })
-  let appLimitModal
+}
+
+$: actions = getActions(app, loaded)
+
+onMount(() => {
+  loaded = true
+})
+let appLimitModal
 </script>
 
 <DeleteModal

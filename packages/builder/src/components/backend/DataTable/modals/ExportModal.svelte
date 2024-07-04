@@ -1,162 +1,159 @@
 <script>
-  import {
-    Select,
-    ModalContent,
-    notifications,
-    Body,
-    Table,
-  } from "@budibase/bbui"
-  import download from "downloadjs"
-  import { API } from "api"
-  import { QueryUtils } from "@budibase/frontend-core"
-  import { utils } from "@budibase/shared-core"
-  import { ROW_EXPORT_FORMATS } from "constants/backend"
+import {
+  Body,
+  ModalContent,
+  Select,
+  Table,
+  notifications,
+} from "@budibase/bbui"
+import { QueryUtils } from "@budibase/frontend-core"
+import { utils } from "@budibase/shared-core"
+import { API } from "api"
+import { ROW_EXPORT_FORMATS } from "constants/backend"
+import download from "downloadjs"
 
-  export let view
-  export let filters
-  export let sorting
-  export let selectedRows = []
-  export let formats
+export let view
+export let filters
+export let sorting
+export let selectedRows = []
+export let formats
 
-  const FORMATS = [
-    {
-      name: "CSV",
-      key: ROW_EXPORT_FORMATS.CSV,
-    },
-    {
-      name: "JSON",
-      key: ROW_EXPORT_FORMATS.JSON,
-    },
-    {
-      name: "JSON with Schema",
-      key: ROW_EXPORT_FORMATS.JSON_WITH_SCHEMA,
-    },
-  ]
+const FORMATS = [
+  {
+    name: "CSV",
+    key: ROW_EXPORT_FORMATS.CSV,
+  },
+  {
+    name: "JSON",
+    key: ROW_EXPORT_FORMATS.JSON,
+  },
+  {
+    name: "JSON with Schema",
+    key: ROW_EXPORT_FORMATS.JSON_WITH_SCHEMA,
+  },
+]
 
-  $: appliedFilters = filters?.filter(filter => !filter.onEmptyFilter)
+$: appliedFilters = filters?.filter(filter => !filter.onEmptyFilter)
 
-  $: options = FORMATS.filter(format => {
-    if (formats && !formats.includes(format.key)) {
-      return false
+$: options = FORMATS.filter(format => {
+  if (formats && !formats.includes(format.key)) {
+    return false
+  }
+  return true
+})
+
+let exportFormat
+let filterLookup
+
+$: if (options && !exportFormat) {
+  exportFormat = Array.isArray(options) ? options[0]?.key : []
+}
+
+$: query = QueryUtils.buildQuery(appliedFilters)
+$: exportOpDisplay = buildExportOpDisplay(
+  sorting,
+  filterDisplay,
+  appliedFilters
+)
+
+filterLookup = utils.filterValueToLabel()
+
+const filterDisplay = () => {
+  if (!appliedFilters) {
+    return []
+  }
+  return appliedFilters.map(filter => {
+    let newFieldName = filter.field + ""
+    const parts = newFieldName.split(":")
+    parts.shift()
+    newFieldName = parts.join(":")
+    return {
+      Field: newFieldName,
+      Operation: filterLookup[filter.operator],
+      "Field Value": filter.value || "",
     }
-    return true
   })
+}
 
-  let exportFormat
-  let filterLookup
-
-  $: if (options && !exportFormat) {
-    exportFormat = Array.isArray(options) ? options[0]?.key : []
+const buildExportOpDisplay = (sorting, filterDisplay) => {
+  let filterDisplayConfig = filterDisplay()
+  if (sorting?.sortColumn) {
+    filterDisplayConfig = [
+      ...filterDisplayConfig,
+      {
+        Field: sorting.sortColumn,
+        Operation: "Order By",
+        "Field Value": sorting.sortOrder,
+      },
+    ]
   }
+  return filterDisplayConfig
+}
 
-  $: query = QueryUtils.buildQuery(appliedFilters)
-  $: exportOpDisplay = buildExportOpDisplay(
-    sorting,
-    filterDisplay,
-    appliedFilters
-  )
+const displaySchema = {
+  Field: {
+    type: "string",
+    fieldName: "Field",
+  },
+  Operation: {
+    type: "string",
+    fieldName: "Operation",
+  },
+  "Field Value": {
+    type: "string",
+    fieldName: "Value",
+  },
+}
 
-  filterLookup = utils.filterValueToLabel()
+function downloadWithBlob(data, filename) {
+  download(new Blob([data], { type: "text/plain" }), filename)
+}
 
-  const filterDisplay = () => {
-    if (!appliedFilters) {
-      return []
-    }
-    return appliedFilters.map(filter => {
-      let newFieldName = filter.field + ""
-      const parts = newFieldName.split(":")
-      parts.shift()
-      newFieldName = parts.join(":")
-      return {
-        Field: newFieldName,
-        Operation: filterLookup[filter.operator],
-        "Field Value": filter.value || "",
-      }
+async function exportView() {
+  try {
+    const data = await API.exportView({
+      viewName: view,
+      format: exportFormat,
     })
+    downloadWithBlob(data, `export.${exportFormat === "csv" ? "csv" : "json"}`)
+  } catch (error) {
+    notifications.error(`Unable to export ${exportFormat.toUpperCase()} data`)
   }
+}
 
-  const buildExportOpDisplay = (sorting, filterDisplay) => {
-    let filterDisplayConfig = filterDisplay()
-    if (sorting?.sortColumn) {
-      filterDisplayConfig = [
-        ...filterDisplayConfig,
-        {
-          Field: sorting.sortColumn,
-          Operation: "Order By",
-          "Field Value": sorting.sortOrder,
-        },
-      ]
-    }
-    return filterDisplayConfig
-  }
-
-  const displaySchema = {
-    Field: {
-      type: "string",
-      fieldName: "Field",
-    },
-    Operation: {
-      type: "string",
-      fieldName: "Operation",
-    },
-    "Field Value": {
-      type: "string",
-      fieldName: "Value",
-    },
-  }
-
-  function downloadWithBlob(data, filename) {
-    download(new Blob([data], { type: "text/plain" }), filename)
-  }
-
-  async function exportView() {
+async function exportRows() {
+  if (selectedRows?.length) {
+    const data = await API.exportRows({
+      tableId: view,
+      rows: selectedRows.map(row => row._id),
+      format: exportFormat,
+    })
+    downloadWithBlob(data, `export.${exportFormat}`)
+  } else if (appliedFilters || sorting) {
+    let response
     try {
-      const data = await API.exportView({
-        viewName: view,
-        format: exportFormat,
-      })
-      downloadWithBlob(
-        data,
-        `export.${exportFormat === "csv" ? "csv" : "json"}`
-      )
-    } catch (error) {
-      notifications.error(`Unable to export ${exportFormat.toUpperCase()} data`)
-    }
-  }
-
-  async function exportRows() {
-    if (selectedRows?.length) {
-      const data = await API.exportRows({
+      response = await API.exportRows({
         tableId: view,
-        rows: selectedRows.map(row => row._id),
         format: exportFormat,
+        search: {
+          query,
+          sort: sorting?.sortColumn,
+          sortOrder: sorting?.sortOrder,
+          paginate: false,
+        },
       })
-      downloadWithBlob(data, `export.${exportFormat}`)
-    } else if (appliedFilters || sorting) {
-      let response
-      try {
-        response = await API.exportRows({
-          tableId: view,
-          format: exportFormat,
-          search: {
-            query,
-            sort: sorting?.sortColumn,
-            sortOrder: sorting?.sortOrder,
-            paginate: false,
-          },
-        })
-      } catch (e) {
-        console.error("Failed to export", e)
-        notifications.error("Export Failed")
-      }
-      if (response) {
-        downloadWithBlob(response, `export.${exportFormat}`)
-        notifications.success("Export Successful")
-      }
-    } else {
-      await exportView()
+    } catch (e) {
+      console.error("Failed to export", e)
+      notifications.error("Export Failed")
     }
+    if (response) {
+      downloadWithBlob(response, `export.${exportFormat}`)
+      notifications.success("Export Successful")
+    }
+  } else {
+    await exportView()
   }
+}
 </script>
 
 <ModalContent

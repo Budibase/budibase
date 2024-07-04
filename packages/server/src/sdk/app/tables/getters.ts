@@ -1,10 +1,4 @@
 import { context } from "@budibase/backend-core"
-import { getTableParams } from "../../../db/utils"
-import {
-  breakExternalTableId,
-  isExternalTableID,
-  isSQL,
-} from "../../../integrations/utils"
 import {
   Database,
   INTERNAL_TABLE_SOURCE_ID,
@@ -13,9 +7,15 @@ import {
   TableSourceType,
   TableViewsResponse,
 } from "@budibase/types"
-import datasources from "../datasources"
-import sdk from "../../../sdk"
+import { getTableParams } from "../../../db/utils"
 import env from "../../../environment"
+import {
+  breakExternalTableId,
+  isExternalTableID,
+  isSQL,
+} from "../../../integrations/utils"
+import sdk from "../../../sdk"
+import datasources from "../datasources"
 
 export function processTable(table: Table): Table {
   if (!table) {

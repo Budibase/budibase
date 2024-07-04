@@ -9,7 +9,7 @@ const parseArrayString = (value: any) => {
     try {
       result = JSON.parse(value.replace(/'/g, '"'))
       return result
-    } catch (e) {
+    } catch (_e) {
       return value
     }
   }
@@ -142,7 +142,7 @@ export const TYPE_TRANSFORM_MAP: any = {
           return undefined
         }
         return JSON.parse(input)
-      } catch (err) {
+      } catch (_err) {
         return input
       }
     },

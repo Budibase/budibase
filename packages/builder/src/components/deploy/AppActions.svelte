@@ -1,146 +1,146 @@
 <script>
-  import {
-    notifications,
-    Popover,
-    Layout,
-    Body,
-    Button,
-    ActionButton,
-    Icon,
-    Link,
-    StatusLight,
-    AbsTooltip,
-  } from "@budibase/bbui"
-  import RevertModal from "components/deploy/RevertModal.svelte"
-  import VersionModal from "components/deploy/VersionModal.svelte"
-  import { processStringSync } from "@budibase/string-templates"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import analytics, { Events, EventSource } from "analytics"
-  import { API } from "api"
-  import { appsStore } from "stores/portal"
-  import {
-    previewStore,
-    builderStore,
-    isOnlyUser,
-    appStore,
-    deploymentStore,
-    sortedScreens,
-  } from "stores/builder"
-  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
-  import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
-  import { goto } from "@roxi/routify"
+import {
+  AbsTooltip,
+  ActionButton,
+  Body,
+  Button,
+  Icon,
+  Layout,
+  Link,
+  Popover,
+  StatusLight,
+  notifications,
+} from "@budibase/bbui"
+import { processStringSync } from "@budibase/string-templates"
+import { goto } from "@roxi/routify"
+import analytics, { Events, EventSource } from "analytics"
+import { API } from "api"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import RevertModal from "components/deploy/RevertModal.svelte"
+import VersionModal from "components/deploy/VersionModal.svelte"
+import TourWrap from "components/portal/onboarding/TourWrap.svelte"
+import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
+import {
+  appStore,
+  builderStore,
+  deploymentStore,
+  isOnlyUser,
+  previewStore,
+  sortedScreens,
+} from "stores/builder"
+import { appsStore } from "stores/portal"
 
-  export let application
-  export let loaded
+export let application
+export let loaded
 
-  let unpublishModal
-  let revertModal
-  let versionModal
-  let appActionPopover
-  let appActionPopoverOpen = false
-  let appActionPopoverAnchor
-  let publishing = false
-  let showNpsSurvey = false
-  let lastOpened
+let unpublishModal
+let revertModal
+let versionModal
+let appActionPopover
+let appActionPopoverOpen = false
+let appActionPopoverAnchor
+let publishing = false
+let showNpsSurvey = false
+let lastOpened
 
-  $: filteredApps = $appsStore.apps.filter(app => app.devId === application)
-  $: selectedApp = filteredApps?.length ? filteredApps[0] : null
-  $: latestDeployments = $deploymentStore
-    .filter(deployment => deployment.status === "SUCCESS")
-    .sort((a, b) => a.updatedAt > b.updatedAt)
-  $: isPublished =
-    selectedApp?.status === "published" && latestDeployments?.length > 0
-  $: updateAvailable =
-    $appStore.upgradableVersion &&
-    $appStore.version &&
-    $appStore.upgradableVersion !== $appStore.version
-  $: canPublish = !publishing && loaded && $sortedScreens.length > 0
-  $: lastDeployed = getLastDeployedString($deploymentStore, lastOpened)
+$: filteredApps = $appsStore.apps.filter(app => app.devId === application)
+$: selectedApp = filteredApps?.length ? filteredApps[0] : null
+$: latestDeployments = $deploymentStore
+  .filter(deployment => deployment.status === "SUCCESS")
+  .sort((a, b) => a.updatedAt > b.updatedAt)
+$: isPublished =
+  selectedApp?.status === "published" && latestDeployments?.length > 0
+$: updateAvailable =
+  $appStore.upgradableVersion &&
+  $appStore.version &&
+  $appStore.upgradableVersion !== $appStore.version
+$: canPublish = !publishing && loaded && $sortedScreens.length > 0
+$: lastDeployed = getLastDeployedString($deploymentStore, lastOpened)
 
-  const getLastDeployedString = deployments => {
-    return deployments?.length
-      ? processStringSync("Published {{ duration time 'millisecond' }} ago", {
-          time:
-            new Date().getTime() - new Date(deployments[0].updatedAt).getTime(),
-        })
-      : ""
+const getLastDeployedString = deployments => {
+  return deployments?.length
+    ? processStringSync("Published {{ duration time 'millisecond' }} ago", {
+        time:
+          new Date().getTime() - new Date(deployments[0].updatedAt).getTime(),
+      })
+    : ""
+}
+
+const previewApp = () => {
+  previewStore.showPreview(true)
+}
+
+const viewApp = () => {
+  analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
+    appId: selectedApp.appId,
+    eventSource: EventSource.PORTAL,
+  })
+  if (selectedApp.url) {
+    window.open(`/app${selectedApp.url}`)
+  } else {
+    window.open(`/${selectedApp.prodId}`)
   }
+}
 
-  const previewApp = () => {
-    previewStore.showPreview(true)
-  }
-
-  const viewApp = () => {
-    analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
-      appId: selectedApp.appId,
-      eventSource: EventSource.PORTAL,
+async function publishApp() {
+  try {
+    publishing = true
+    await API.publishAppChanges($appStore.appId)
+    notifications.send("App published successfully", {
+      type: "success",
+      icon: "GlobeCheck",
     })
-    if (selectedApp.url) {
-      window.open(`/app${selectedApp.url}`)
+    showNpsSurvey = true
+    await completePublish()
+  } catch (error) {
+    console.error(error)
+    analytics.captureException(error)
+    const baseMsg = "Error publishing app"
+    const message = error.message
+    if (message) {
+      notifications.error(`${baseMsg} - ${message}`)
     } else {
-      window.open(`/${selectedApp.prodId}`)
+      notifications.error(baseMsg)
     }
   }
+  publishing = false
+}
 
-  async function publishApp() {
-    try {
-      publishing = true
-      await API.publishAppChanges($appStore.appId)
-      notifications.send("App published successfully", {
-        type: "success",
-        icon: "GlobeCheck",
-      })
-      showNpsSurvey = true
-      await completePublish()
-    } catch (error) {
-      console.error(error)
-      analytics.captureException(error)
-      const baseMsg = "Error publishing app"
-      const message = error.message
-      if (message) {
-        notifications.error(`${baseMsg} - ${message}`)
-      } else {
-        notifications.error(baseMsg)
-      }
-    }
-    publishing = false
-  }
+const unpublishApp = () => {
+  appActionPopover.hide()
+  unpublishModal.show()
+}
 
-  const unpublishApp = () => {
-    appActionPopover.hide()
-    unpublishModal.show()
-  }
+const revertApp = () => {
+  appActionPopover.hide()
+  revertModal.show()
+}
 
-  const revertApp = () => {
-    appActionPopover.hide()
-    revertModal.show()
+const confirmUnpublishApp = async () => {
+  if (!application || !isPublished) {
+    //confirm the app has loaded.
+    return
   }
+  try {
+    await API.unpublishApp(selectedApp.prodId)
+    await appsStore.load()
+    notifications.send("App unpublished", {
+      type: "success",
+      icon: "GlobeStrike",
+    })
+  } catch (err) {
+    notifications.error("Error unpublishing app")
+  }
+}
 
-  const confirmUnpublishApp = async () => {
-    if (!application || !isPublished) {
-      //confirm the app has loaded.
-      return
-    }
-    try {
-      await API.unpublishApp(selectedApp.prodId)
-      await appsStore.load()
-      notifications.send("App unpublished", {
-        type: "success",
-        icon: "GlobeStrike",
-      })
-    } catch (err) {
-      notifications.error("Error unpublishing app")
-    }
+const completePublish = async () => {
+  try {
+    await appsStore.load()
+    await deploymentStore.load()
+  } catch (err) {
+    notifications.error("Error refreshing app")
   }
-
-  const completePublish = async () => {
-    try {
-      await appsStore.load()
-      await deploymentStore.load()
-    } catch (err) {
-      notifications.error("Error refreshing app")
-    }
-  }
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

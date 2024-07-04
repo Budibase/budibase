@@ -1,8 +1,8 @@
 import { createLocalStorageStore } from "@budibase/frontend-core"
-import { initialise } from "./initialise"
-import { authStore } from "./auth"
-import { API } from "../api"
 import { get } from "svelte/store"
+import { API } from "../api"
+import { authStore } from "./auth"
+import { initialise } from "./initialise"
 
 const initialState = {
   visible: false,

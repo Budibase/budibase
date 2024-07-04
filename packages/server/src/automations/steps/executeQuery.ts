@@ -1,6 +1,3 @@
-import * as queryController from "../../api/controllers/query"
-import { buildCtx } from "./utils"
-import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
@@ -10,6 +7,9 @@ import {
   AutomationStepSchema,
   AutomationStepType,
 } from "@budibase/types"
+import * as queryController from "../../api/controllers/query"
+import * as automationUtils from "../automationUtils"
+import { buildCtx } from "./utils"
 
 export const definition: AutomationStepSchema = {
   name: "External Data Connector",

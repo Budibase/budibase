@@ -1,7 +1,7 @@
 // @ts-ignore
 import fs from "fs"
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// biome-ignore lint: no-unused-vars
 module FetchMock {
   // @ts-ignore
   const fetch = jest.requireActual("node-fetch")

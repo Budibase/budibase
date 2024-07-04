@@ -1,23 +1,23 @@
 <script>
-  import { Page, notifications } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import { SideNav, SideNavItem, Content } from "components/portal/page"
-  import { isActive, goto } from "@roxi/routify"
-  import { menu, features } from "stores/portal"
+import { Page, notifications } from "@budibase/bbui"
+import { goto, isActive } from "@roxi/routify"
+import { Content, SideNav, SideNavItem } from "components/portal/page"
+import { features, menu } from "stores/portal"
+import { onMount } from "svelte"
 
-  $: wide = $isActive("./users/index") || $isActive("./groups/index")
-  $: pages = $menu.find(x => x.title === "Users")?.subPages || []
-  $: !pages.length && $goto("../")
+$: wide = $isActive("./users/index") || $isActive("./groups/index")
+$: pages = $menu.find(x => x.title === "Users")?.subPages || []
+$: !pages.length && $goto("../")
 
-  onMount(async () => {
-    try {
-      await features.init()
-    } catch (error) {
-      notifications.error(
-        `Error fetching feature configs - ${error?.message || "unknown error"}`
-      )
-    }
-  })
+onMount(async () => {
+  try {
+    await features.init()
+  } catch (error) {
+    notifications.error(
+      `Error fetching feature configs - ${error?.message || "unknown error"}`
+    )
+  }
+})
 </script>
 
 <Page>

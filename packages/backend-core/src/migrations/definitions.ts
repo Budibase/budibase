@@ -1,7 +1,7 @@
 import {
-  MigrationType,
-  MigrationName,
   MigrationDefinition,
+  MigrationName,
+  MigrationType,
 } from "@budibase/types"
 
 export const DEFINITIONS: MigrationDefinition[] = [

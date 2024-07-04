@@ -1,4 +1,3 @@
-import { publishEvent } from "../events"
 import {
   Event,
   LoginEvent,
@@ -11,6 +10,7 @@ import {
   SSOUpdatedEvent,
 } from "@budibase/types"
 import { identification } from ".."
+import { publishEvent } from "../events"
 
 async function login(source: LoginSource, email: string) {
   const identity = await identification.getCurrentIdentity()

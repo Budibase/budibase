@@ -1,248 +1,248 @@
 <script>
-  import { getContext, onMount, tick } from "svelte"
-  import { canBeDisplayColumn, canBeSortColumn } from "@budibase/shared-core"
-  import { Icon, Menu, MenuItem, Modal } from "@budibase/bbui"
-  import GridCell from "./GridCell.svelte"
-  import { getColumnIcon } from "../lib/utils"
-  import MigrationModal from "../controls/MigrationModal.svelte"
-  import { debounce } from "../../../utils/utils"
-  import { FieldType, FormulaType } from "@budibase/types"
-  import { TableNames } from "../../../constants"
-  import GridPopover from "../overlays/GridPopover.svelte"
+import { Icon, Menu, MenuItem, Modal } from "@budibase/bbui"
+import { canBeDisplayColumn, canBeSortColumn } from "@budibase/shared-core"
+import { FieldType, FormulaType } from "@budibase/types"
+import { getContext, onMount, tick } from "svelte"
+import { TableNames } from "../../../constants"
+import { debounce } from "../../../utils/utils"
+import MigrationModal from "../controls/MigrationModal.svelte"
+import { getColumnIcon } from "../lib/utils"
+import GridPopover from "../overlays/GridPopover.svelte"
+import GridCell from "./GridCell.svelte"
 
-  export let column
-  export let idx
+export let column
+export let idx
 
-  const {
-    reorder,
-    isReordering,
-    isResizing,
-    sort,
-    visibleColumns,
-    dispatch,
-    subscribe,
-    config,
-    ui,
-    definition,
-    datasource,
-    schema,
-    focusedCellId,
-    filter,
-    inlineFilters,
-    keyboardBlocked,
-  } = getContext("grid")
+const {
+  reorder,
+  isReordering,
+  isResizing,
+  sort,
+  visibleColumns,
+  dispatch,
+  subscribe,
+  config,
+  ui,
+  definition,
+  datasource,
+  schema,
+  focusedCellId,
+  filter,
+  inlineFilters,
+  keyboardBlocked,
+} = getContext("grid")
 
-  const searchableTypes = [
-    FieldType.STRING,
-    FieldType.OPTIONS,
-    FieldType.NUMBER,
-    FieldType.BIGINT,
-    FieldType.ARRAY,
-    FieldType.LONGFORM,
-  ]
+const searchableTypes = [
+  FieldType.STRING,
+  FieldType.OPTIONS,
+  FieldType.NUMBER,
+  FieldType.BIGINT,
+  FieldType.ARRAY,
+  FieldType.LONGFORM,
+]
 
-  let anchor
-  let open = false
-  let editIsOpen = false
-  let timeout
-  let migrationModal
-  let searchValue
-  let input
+let anchor
+let open = false
+let editIsOpen = false
+let timeout
+let migrationModal
+let searchValue
+let input
 
-  $: sortedBy = column.name === $sort.column
-  $: canMoveLeft = orderable && idx > 0
-  $: canMoveRight = orderable && idx < $visibleColumns.length - 1
-  $: sortingLabels = getSortingLabels(column.schema?.type)
-  $: searchable = isColumnSearchable(column)
-  $: resetSearchValue(column.name)
-  $: searching = searchValue != null
-  $: debouncedUpdateFilter(searchValue)
-  $: orderable = !column.primaryDisplay
-  $: editable = $config.canEditColumns && !column.schema.disabled
-  $: keyboardBlocked.set(open)
+$: sortedBy = column.name === $sort.column
+$: canMoveLeft = orderable && idx > 0
+$: canMoveRight = orderable && idx < $visibleColumns.length - 1
+$: sortingLabels = getSortingLabels(column.schema?.type)
+$: searchable = isColumnSearchable(column)
+$: resetSearchValue(column.name)
+$: searching = searchValue != null
+$: debouncedUpdateFilter(searchValue)
+$: orderable = !column.primaryDisplay
+$: editable = $config.canEditColumns && !column.schema.disabled
+$: keyboardBlocked.set(open)
 
-  const close = () => {
-    open = false
-    editIsOpen = false
+const close = () => {
+  open = false
+  editIsOpen = false
+}
+
+const getSortingLabels = type => {
+  switch (type) {
+    case FieldType.NUMBER:
+    case FieldType.BIGINT:
+      return {
+        ascending: "low-high",
+        descending: "high-low",
+      }
+    case FieldType.DATETIME:
+      return {
+        ascending: "old-new",
+        descending: "new-old",
+      }
+    default:
+      return {
+        ascending: "A-Z",
+        descending: "Z-A",
+      }
   }
+}
 
-  const getSortingLabels = type => {
-    switch (type) {
-      case FieldType.NUMBER:
-      case FieldType.BIGINT:
-        return {
-          ascending: "low-high",
-          descending: "high-low",
-        }
-      case FieldType.DATETIME:
-        return {
-          ascending: "old-new",
-          descending: "new-old",
-        }
-      default:
-        return {
-          ascending: "A-Z",
-          descending: "Z-A",
-        }
-    }
+const resetSearchValue = name => {
+  searchValue = $inlineFilters?.find(x => x.id === `inline-${name}`)?.value
+}
+
+const isColumnSearchable = col => {
+  const { type, formulaType } = col.schema
+  return (
+    searchableTypes.includes(type) ||
+    (type === FieldType.FORMULA && formulaType === FormulaType.STATIC)
+  )
+}
+
+const editColumn = async () => {
+  editIsOpen = true
+  await tick()
+  dispatch("edit-column", column.schema)
+}
+
+const onMouseDown = e => {
+  ui.actions.blur()
+  if ((e.touches?.length || e.button === 0) && orderable) {
+    timeout = setTimeout(() => {
+      reorder.actions.startReordering(column.name, e)
+    }, 200)
   }
+}
 
-  const resetSearchValue = name => {
-    searchValue = $inlineFilters?.find(x => x.id === `inline-${name}`)?.value
+const onMouseUp = () => {
+  if (timeout) {
+    clearTimeout(timeout)
+    timeout = null
   }
+}
 
-  const isColumnSearchable = col => {
-    const { type, formulaType } = col.schema
-    return (
-      searchableTypes.includes(type) ||
-      (type === FieldType.FORMULA && formulaType === FormulaType.STATIC)
-    )
-  }
+const onContextMenu = e => {
+  e.preventDefault()
 
-  const editColumn = async () => {
-    editIsOpen = true
-    await tick()
-    dispatch("edit-column", column.schema)
-  }
-
-  const onMouseDown = e => {
+  // The timeout allows time for clickoutside to close other open popvers
+  // before we show this one. Without the timeout, this popover closes again
+  // before it's even visible as clickoutside closes it.
+  setTimeout(() => {
     ui.actions.blur()
-    if ((e.touches?.length || e.button === 0) && orderable) {
-      timeout = setTimeout(() => {
-        reorder.actions.startReordering(column.name, e)
-      }, 200)
-    }
+    open = !open
+  }, 10)
+}
+
+const sortAscending = () => {
+  sort.set({
+    column: column.name,
+    order: "ascending",
+  })
+  open = false
+}
+
+const sortDescending = () => {
+  sort.set({
+    column: column.name,
+    order: "descending",
+  })
+  open = false
+}
+
+const moveLeft = () => {
+  reorder.actions.moveColumnLeft(column.name)
+  open = false
+}
+
+const moveRight = () => {
+  reorder.actions.moveColumnRight(column.name)
+  open = false
+}
+
+const makeDisplayColumn = () => {
+  datasource.actions.changePrimaryDisplay(column.name)
+  open = false
+}
+
+const hideColumn = () => {
+  datasource.actions.addSchemaMutation(column.name, { visible: false })
+  datasource.actions.saveSchemaMutations()
+  open = false
+}
+
+const duplicateColumn = async () => {
+  open = false
+
+  // Generate new name
+  let newName = `${column.name} copy`
+  let attempts = 2
+  while ($schema[newName]) {
+    newName = `${column.name} copy ${attempts++}`
   }
 
-  const onMouseUp = () => {
-    if (timeout) {
-      clearTimeout(timeout)
-      timeout = null
-    }
-  }
-
-  const onContextMenu = e => {
-    e.preventDefault()
-
-    // The timeout allows time for clickoutside to close other open popvers
-    // before we show this one. Without the timeout, this popover closes again
-    // before it's even visible as clickoutside closes it.
-    setTimeout(() => {
-      ui.actions.blur()
-      open = !open
-    }, 10)
-  }
-
-  const sortAscending = () => {
-    sort.set({
-      column: column.name,
-      order: "ascending",
-    })
-    open = false
-  }
-
-  const sortDescending = () => {
-    sort.set({
-      column: column.name,
-      order: "descending",
-    })
-    open = false
-  }
-
-  const moveLeft = () => {
-    reorder.actions.moveColumnLeft(column.name)
-    open = false
-  }
-
-  const moveRight = () => {
-    reorder.actions.moveColumnRight(column.name)
-    open = false
-  }
-
-  const makeDisplayColumn = () => {
-    datasource.actions.changePrimaryDisplay(column.name)
-    open = false
-  }
-
-  const hideColumn = () => {
-    datasource.actions.addSchemaMutation(column.name, { visible: false })
-    datasource.actions.saveSchemaMutations()
-    open = false
-  }
-
-  const duplicateColumn = async () => {
-    open = false
-
-    // Generate new name
-    let newName = `${column.name} copy`
-    let attempts = 2
-    while ($schema[newName]) {
-      newName = `${column.name} copy ${attempts++}`
-    }
-
-    // Save schema with new column
-    const existingColumnDefinition = $schema[column.name]
-    await datasource.actions.saveDefinition({
-      ...$definition,
-      schema: {
-        ...$schema,
-        [newName]: {
-          ...existingColumnDefinition,
-          name: newName,
-          schema: {
-            ...existingColumnDefinition.schema,
-          },
+  // Save schema with new column
+  const existingColumnDefinition = $schema[column.name]
+  await datasource.actions.saveDefinition({
+    ...$definition,
+    schema: {
+      ...$schema,
+      [newName]: {
+        ...existingColumnDefinition,
+        name: newName,
+        schema: {
+          ...existingColumnDefinition.schema,
         },
       },
-    })
-  }
+    },
+  })
+}
 
-  const openMigrationModal = () => {
-    migrationModal.show()
-    open = false
-  }
+const openMigrationModal = () => {
+  migrationModal.show()
+  open = false
+}
 
-  const startSearching = async () => {
-    $focusedCellId = null
-    searchValue = ""
-    await tick()
-    input?.focus()
-  }
+const startSearching = async () => {
+  $focusedCellId = null
+  searchValue = ""
+  await tick()
+  input?.focus()
+}
 
-  const onInputKeyDown = e => {
-    if (e.key === "Enter") {
-      updateFilter()
-    } else if (e.key === "Escape") {
-      input?.blur()
-    }
+const onInputKeyDown = e => {
+  if (e.key === "Enter") {
+    updateFilter()
+  } else if (e.key === "Escape") {
+    input?.blur()
   }
+}
 
-  const stopSearching = () => {
+const stopSearching = () => {
+  searchValue = null
+  updateFilter()
+}
+
+const onBlurInput = () => {
+  if (searchValue === "") {
     searchValue = null
-    updateFilter()
   }
+  updateFilter()
+}
 
-  const onBlurInput = () => {
-    if (searchValue === "") {
-      searchValue = null
-    }
-    updateFilter()
+const updateFilter = () => {
+  filter.actions.addInlineFilter(column, searchValue)
+}
+const debouncedUpdateFilter = debounce(updateFilter, 250)
+
+const handleDoubleClick = () => {
+  if (!editable || searching) {
+    return
   }
+  open = true
+  editColumn()
+}
 
-  const updateFilter = () => {
-    filter.actions.addInlineFilter(column, searchValue)
-  }
-  const debouncedUpdateFilter = debounce(updateFilter, 250)
-
-  const handleDoubleClick = () => {
-    if (!editable || searching) {
-      return
-    }
-    open = true
-    editColumn()
-  }
-
-  onMount(() => subscribe("close-edit-column", close))
+onMount(() => subscribe("close-edit-column", close))
 </script>
 
 <Modal bind:this={migrationModal}>

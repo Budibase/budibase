@@ -1,7 +1,7 @@
 import { AnyDocument, Database } from "@budibase/types"
 
-import { JobQueue, Queue, createQueue } from "../queue"
 import * as dbUtils from "../db"
+import { JobQueue, Queue, createQueue } from "../queue"
 
 interface ProcessDocMessage {
   dbName: string

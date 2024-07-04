@@ -1,4 +1,4 @@
-import { Table, Row } from "@budibase/types"
+import { Row, Table } from "@budibase/types"
 import BudibaseEmitter from "./BudibaseEmitter"
 
 type BBEventOpts = {

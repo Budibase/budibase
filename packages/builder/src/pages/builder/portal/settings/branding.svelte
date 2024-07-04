@@ -1,210 +1,210 @@
 <script>
-  import {
-    Layout,
-    Heading,
-    Body,
-    Divider,
-    File,
-    notifications,
-    Tags,
-    Tag,
-    Button,
-    Toggle,
-    Input,
-    Label,
-    TextArea,
-  } from "@budibase/bbui"
-  import { auth, organisation, licensing, admin } from "stores/portal"
-  import { API } from "api"
-  import { onMount } from "svelte"
-  import { goto } from "@roxi/routify"
-  import { sdk } from "@budibase/shared-core"
+import {
+  Body,
+  Button,
+  Divider,
+  File,
+  Heading,
+  Input,
+  Label,
+  Layout,
+  Tag,
+  Tags,
+  TextArea,
+  Toggle,
+  notifications,
+} from "@budibase/bbui"
+import { sdk } from "@budibase/shared-core"
+import { goto } from "@roxi/routify"
+import { API } from "api"
+import { admin, auth, licensing, organisation } from "stores/portal"
+import { onMount } from "svelte"
 
-  const imageExtensions = [
-    ".png",
-    ".tiff",
-    ".gif",
-    ".raw",
-    ".jpg",
-    ".jpeg",
-    ".svg",
-    ".bmp",
-    ".jfif",
+const imageExtensions = [
+  ".png",
+  ".tiff",
+  ".gif",
+  ".raw",
+  ".jpg",
+  ".jpeg",
+  ".svg",
+  ".bmp",
+  ".jfif",
+]
+
+const faviconExtensions = [".png", ".ico", ".gif"]
+
+let mounted = false
+let saving = false
+
+let logoFile = null
+let logoPreview = null
+let faviconFile = null
+let faviconPreview = null
+
+let config = {}
+let updated = false
+
+$: onConfigUpdate(config)
+$: initialised = Object.keys(config).length > 0
+
+$: isCloud = $admin.cloud
+$: brandingEnabled = $licensing.brandingEnabled
+
+const onConfigUpdate = () => {
+  if (!mounted || updated || !initialised) {
+    return
+  }
+  updated = true
+}
+
+$: logo = config.logoUrl
+  ? { url: config.logoUrl, type: "image", name: "Logo" }
+  : null
+
+$: favicon = config.faviconUrl
+  ? { url: config.faviconUrl, type: "image", name: "Favicon" }
+  : null
+
+const previewUrl = async localFile => {
+  if (!localFile) {
+    return Promise.resolve(null)
+  }
+
+  return new Promise(resolve => {
+    let reader = new FileReader()
+    try {
+      reader.onload = e => {
+        resolve({
+          result: e.target.result,
+        })
+      }
+      reader.readAsDataURL(localFile)
+    } catch (error) {
+      console.error(error)
+      resolve(null)
+    }
+  })
+}
+
+$: previewUrl(logoFile).then(response => {
+  if (response) {
+    logoPreview = response.result
+  }
+})
+
+$: previewUrl(faviconFile).then(response => {
+  if (response) {
+    faviconPreview = response.result
+  }
+})
+
+async function uploadLogo(file) {
+  let response = {}
+  try {
+    let data = new FormData()
+    data.append("file", file)
+    response = await API.uploadLogo(data)
+  } catch (error) {
+    notifications.error("Error uploading logo")
+  }
+  return response
+}
+
+async function uploadFavicon(file) {
+  let response = {}
+  try {
+    let data = new FormData()
+    data.append("file", file)
+    response = await API.uploadFavicon(data)
+  } catch (error) {
+    notifications.error("Error uploading favicon")
+  }
+  return response
+}
+
+async function saveFiles() {
+  if (logoFile) {
+    const logoResp = await uploadLogo(logoFile)
+    if (logoResp.url) {
+      logoFile = null
+      logoPreview = null
+    }
+    config.logoUrl = undefined
+  }
+
+  if (faviconFile) {
+    const faviconResp = await uploadFavicon(faviconFile)
+    if (faviconResp.url) {
+      faviconFile = null
+      faviconPreview = null
+    }
+    config.faviconUrl = undefined
+  }
+}
+
+function trimFields() {
+  const userStrings = [
+    "metaTitle",
+    "platformTitle",
+    "loginButton",
+    "loginHeading",
+    "metaDescription",
+    "metaImageUrl",
   ]
 
-  const faviconExtensions = [".png", ".ico", ".gif"]
+  const trimmed = userStrings.reduce((acc, fieldName) => {
+    acc[fieldName] = config[fieldName] ? config[fieldName].trim() : undefined
+    return acc
+  }, {})
 
-  let mounted = false
-  let saving = false
-
-  let logoFile = null
-  let logoPreview = null
-  let faviconFile = null
-  let faviconPreview = null
-
-  let config = {}
-  let updated = false
-
-  $: onConfigUpdate(config)
-  $: initialised = Object.keys(config).length > 0
-
-  $: isCloud = $admin.cloud
-  $: brandingEnabled = $licensing.brandingEnabled
-
-  const onConfigUpdate = () => {
-    if (!mounted || updated || !initialised) {
-      return
-    }
-    updated = true
+  config = {
+    ...config,
+    ...trimmed,
   }
+}
 
-  $: logo = config.logoUrl
-    ? { url: config.logoUrl, type: "image", name: "Logo" }
-    : null
+async function saveConfig() {
+  saving = true
 
-  $: favicon = config.faviconUrl
-    ? { url: config.faviconUrl, type: "image", name: "Favicon" }
-    : null
+  await saveFiles()
+  trimFields()
 
-  const previewUrl = async localFile => {
-    if (!localFile) {
-      return Promise.resolve(null)
-    }
-
-    return new Promise(resolve => {
-      let reader = new FileReader()
-      try {
-        reader.onload = e => {
-          resolve({
-            result: e.target.result,
-          })
-        }
-        reader.readAsDataURL(localFile)
-      } catch (error) {
-        console.error(error)
-        resolve(null)
-      }
-    })
-  }
-
-  $: previewUrl(logoFile).then(response => {
-    if (response) {
-      logoPreview = response.result
-    }
-  })
-
-  $: previewUrl(faviconFile).then(response => {
-    if (response) {
-      faviconPreview = response.result
-    }
-  })
-
-  async function uploadLogo(file) {
-    let response = {}
-    try {
-      let data = new FormData()
-      data.append("file", file)
-      response = await API.uploadLogo(data)
-    } catch (error) {
-      notifications.error("Error uploading logo")
-    }
-    return response
-  }
-
-  async function uploadFavicon(file) {
-    let response = {}
-    try {
-      let data = new FormData()
-      data.append("file", file)
-      response = await API.uploadFavicon(data)
-    } catch (error) {
-      notifications.error("Error uploading favicon")
-    }
-    return response
-  }
-
-  async function saveFiles() {
-    if (logoFile) {
-      const logoResp = await uploadLogo(logoFile)
-      if (logoResp.url) {
-        logoFile = null
-        logoPreview = null
-      }
-      config.logoUrl = undefined
-    }
-
-    if (faviconFile) {
-      const faviconResp = await uploadFavicon(faviconFile)
-      if (faviconResp.url) {
-        faviconFile = null
-        faviconPreview = null
-      }
-      config.faviconUrl = undefined
-    }
-  }
-
-  function trimFields() {
-    const userStrings = [
-      "metaTitle",
-      "platformTitle",
-      "loginButton",
-      "loginHeading",
-      "metaDescription",
-      "metaImageUrl",
-    ]
-
-    const trimmed = userStrings.reduce((acc, fieldName) => {
-      acc[fieldName] = config[fieldName] ? config[fieldName].trim() : undefined
-      return acc
-    }, {})
-
-    config = {
-      ...config,
-      ...trimmed,
-    }
-  }
-
-  async function saveConfig() {
-    saving = true
-
-    await saveFiles()
-    trimFields()
-
-    try {
-      // Update settings
-      await organisation.save(config)
-      await init()
-      notifications.success("Branding settings updated")
-    } catch (e) {
-      console.error("Branding updated failed", e)
-      notifications.error("Branding updated failed")
-    }
-    updated = false
-    saving = false
-  }
-
-  async function init() {
-    if (!$organisation.loaded) {
-      await organisation.init()
-    }
-    config = {
-      faviconUrl: $organisation.faviconUrl,
-      logoUrl: $organisation.logoUrl,
-      platformTitle: $organisation.platformTitle,
-      emailBrandingEnabled: $organisation.emailBrandingEnabled,
-      loginHeading: $organisation.loginHeading,
-      loginButton: $organisation.loginButton,
-      testimonialsEnabled: $organisation.testimonialsEnabled,
-      metaDescription: $organisation.metaDescription,
-      metaImageUrl: $organisation.metaImageUrl,
-      metaTitle: $organisation.metaTitle,
-    }
-  }
-
-  onMount(async () => {
+  try {
+    // Update settings
+    await organisation.save(config)
     await init()
-    mounted = true
-  })
+    notifications.success("Branding settings updated")
+  } catch (e) {
+    console.error("Branding updated failed", e)
+    notifications.error("Branding updated failed")
+  }
+  updated = false
+  saving = false
+}
+
+async function init() {
+  if (!$organisation.loaded) {
+    await organisation.init()
+  }
+  config = {
+    faviconUrl: $organisation.faviconUrl,
+    logoUrl: $organisation.logoUrl,
+    platformTitle: $organisation.platformTitle,
+    emailBrandingEnabled: $organisation.emailBrandingEnabled,
+    loginHeading: $organisation.loginHeading,
+    loginButton: $organisation.loginButton,
+    testimonialsEnabled: $organisation.testimonialsEnabled,
+    metaDescription: $organisation.metaDescription,
+    metaImageUrl: $organisation.metaImageUrl,
+    metaTitle: $organisation.metaTitle,
+  }
+}
+
+onMount(async () => {
+  await init()
+  mounted = true
+})
 </script>
 
 {#if sdk.users.isAdmin($auth.user) && mounted}

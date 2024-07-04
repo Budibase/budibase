@@ -1,7 +1,7 @@
 <script>
-  import { slide } from "svelte/transition"
+import { slide } from "svelte/transition"
 
-  export let error = null
+export let error = null
 </script>
 
 <div transition:slide|local={{ duration: 130 }} class="error-message">

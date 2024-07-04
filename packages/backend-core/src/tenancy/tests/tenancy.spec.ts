@@ -1,6 +1,6 @@
 import { TenantResolutionStrategy } from "@budibase/types"
-import { addTenantToUrl, isUserInAppTenant, getTenantIDFromCtx } from "../"
-import { isMultiTenant, getTenantIDFromAppID } from "../../context"
+import { addTenantToUrl, getTenantIDFromCtx, isUserInAppTenant } from "../"
+import { getTenantIDFromAppID, isMultiTenant } from "../../context"
 
 jest.mock("../../context", () => ({
   getTenantId: jest.fn(() => "budibase"),

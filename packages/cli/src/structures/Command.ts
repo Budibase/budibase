@@ -1,8 +1,8 @@
 import {
-  getSubHelpDescription,
-  getHelpDescription,
-  error,
   capitaliseFirstLetter,
+  error,
+  getHelpDescription,
+  getSubHelpDescription,
 } from "../utils"
 
 type CommandOpt = {

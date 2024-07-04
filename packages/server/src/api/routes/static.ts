@@ -1,11 +1,11 @@
-import Router from "@koa/router"
-import * as controller from "../controllers/static"
-import { budibaseTempDir } from "../../utilities/budibaseDir"
-import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
+import Router from "@koa/router"
 import env from "../../environment"
+import authorized from "../../middleware/authorized"
 import { paramResource } from "../../middleware/resourceId"
+import { budibaseTempDir } from "../../utilities/budibaseDir"
 import { devClientLibPath } from "../../utilities/fileSystem"
+import * as controller from "../controllers/static"
 
 const { BUILDER, PermissionType, PermissionLevel } = permissions
 

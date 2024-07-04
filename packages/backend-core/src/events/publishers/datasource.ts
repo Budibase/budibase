@@ -1,12 +1,12 @@
-import { publishEvent } from "../events"
 import {
-  Event,
   Datasource,
   DatasourceCreatedEvent,
-  DatasourceUpdatedEvent,
   DatasourceDeletedEvent,
+  DatasourceUpdatedEvent,
+  Event,
   SourceName,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 function isCustom(datasource: Datasource) {
   const sources = Object.values(SourceName)

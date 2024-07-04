@@ -1,6 +1,6 @@
+import { ConfigType } from "@budibase/types"
 import { generator, structures } from "../../../tests"
 import { DBTestConfiguration, testEnv } from "../../../tests/extra"
-import { ConfigType } from "@budibase/types"
 import env from "../../environment"
 import * as configs from "../configs"
 

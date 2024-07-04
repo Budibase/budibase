@@ -1,28 +1,28 @@
 <script>
-  import BlockComponent from "components/BlockComponent.svelte"
-  import Block from "components/Block.svelte"
-  import { makePropSafe as safe } from "@budibase/string-templates"
-  import { getContext } from "svelte"
+import { makePropSafe as safe } from "@budibase/string-templates"
+import Block from "components/Block.svelte"
+import BlockComponent from "components/BlockComponent.svelte"
+import { getContext } from "svelte"
 
-  export let actionType
-  export let dataSource
-  export let rowId
-  export let noRowsMessage
+export let actionType
+export let dataSource
+export let rowId
+export let noRowsMessage
 
-  const component = getContext("component")
-  const { ContextScopes } = getContext("sdk")
+const component = getContext("component")
+const { ContextScopes } = getContext("sdk")
 
-  $: providerId = `${$component.id}-provider`
-  $: dataProvider = `{{ literal ${safe(providerId)} }}`
-  $: filter = [
-    {
-      field: "_id",
-      operator: "equal",
-      type: "string",
-      value: !rowId ? `{{ ${safe("url")}.${safe("id")} }}` : rowId,
-      valueType: "Binding",
-    },
-  ]
+$: providerId = `${$component.id}-provider`
+$: dataProvider = `{{ literal ${safe(providerId)} }}`
+$: filter = [
+  {
+    field: "_id",
+    operator: "equal",
+    type: "string",
+    value: !rowId ? `{{ ${safe("url")}.${safe("id")} }}` : rowId,
+    valueType: "Binding",
+  },
+]
 </script>
 
 <Block>

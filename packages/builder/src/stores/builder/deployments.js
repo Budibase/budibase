@@ -1,6 +1,6 @@
-import { writable } from "svelte/store"
-import { API } from "api"
 import { notifications } from "@budibase/bbui"
+import { API } from "api"
+import { writable } from "svelte/store"
 
 export const createDeploymentStore = () => {
   let store = writable([])
@@ -8,7 +8,7 @@ export const createDeploymentStore = () => {
   const load = async () => {
     try {
       store.set(await API.getAppDeployments())
-    } catch (err) {
+    } catch (_err) {
       notifications.error("Error fetching deployments")
     }
   }

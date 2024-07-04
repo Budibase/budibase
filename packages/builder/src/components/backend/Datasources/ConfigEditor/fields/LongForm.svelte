@@ -1,10 +1,10 @@
 <script>
-  import { Label, TextArea } from "@budibase/bbui"
+import { Label, TextArea } from "@budibase/bbui"
 
-  export let type
-  export let name
-  export let value
-  export let error
+export let type
+export let name
+export let value
+export let error
 </script>
 
 <div class="form-row">

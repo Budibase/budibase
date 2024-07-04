@@ -1,69 +1,69 @@
 <script>
-  import { getContext, onDestroy, createEventDispatcher } from "svelte"
-  import Portal from "svelte-portal"
+import { createEventDispatcher, getContext, onDestroy } from "svelte"
+import Portal from "svelte-portal"
 
-  export let title
-  export let icon = ""
-  export let id
-  export let href = "#"
-  export let link = false
+export let title
+export let icon = ""
+export let id
+export let href = "#"
+export let link = false
 
-  const dispatch = createEventDispatcher()
-  let selected = getContext("tab")
-  let observer
-  let ref
+const dispatch = createEventDispatcher()
+let selected = getContext("tab")
+let observer
+let ref
 
-  $: isSelected = $selected.title === title
-  $: {
-    if (isSelected && ref) {
-      observe()
-    } else {
-      stopObserving()
-    }
+$: isSelected = $selected.title === title
+$: {
+  if (isSelected && ref) {
+    observe()
+  } else {
+    stopObserving()
   }
+}
 
-  const setTabInfo = () => {
-    const tabInfo = ref?.getBoundingClientRect()
-    if (tabInfo) {
-      $selected.info = tabInfo
-    }
+const setTabInfo = () => {
+  const tabInfo = ref?.getBoundingClientRect()
+  if (tabInfo) {
+    $selected.info = tabInfo
   }
+}
 
-  const onAnchorClick = e => {
-    if (e.metaKey || e.shiftKey || e.altKey || e.ctrlKey) return
+const onAnchorClick = e => {
+  if (e.metaKey || e.shiftKey || e.altKey || e.ctrlKey) return
 
-    e.preventDefault()
-    $selected = {
-      ...$selected,
-      title,
-      info: ref.getBoundingClientRect(),
-    }
-    dispatch("click")
+  e.preventDefault()
+  $selected = {
+    ...$selected,
+    title,
+    info: ref.getBoundingClientRect(),
   }
+  dispatch("click")
+}
 
-  const onClick = () => {
-    $selected = {
-      ...$selected,
-      title,
-      info: ref.getBoundingClientRect(),
-    }
+const onClick = () => {
+  $selected = {
+    ...$selected,
+    title,
+    info: ref.getBoundingClientRect(),
   }
+}
 
-  const observe = () => {
-    if (!observer) {
-      observer = new ResizeObserver(setTabInfo)
-      observer.observe(ref)
-    }
+const observe = () => {
+  if (!observer) {
+    observer = new ResizeObserver(setTabInfo)
+    observer.observe(ref)
   }
+}
 
-  const stopObserving = () => {
-    if (observer) {
-      observer.unobserve(ref)
-      observer = null
-    }
+const stopObserving = () => {
+  if (observer) {
+    observer.unobserve(ref)
+    observer = null
   }
+}
 
-  onDestroy(stopObserving)
+onDestroy(stopObserving)
 </script>
 
 {#if link}

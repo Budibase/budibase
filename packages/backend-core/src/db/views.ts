@@ -1,4 +1,12 @@
 import {
+  AllDocsResponse,
+  DBView,
+  Database,
+  DatabaseQueryOpts,
+  DesignDocument,
+  Document,
+} from "@budibase/types"
+import {
   DeprecatedViews,
   DocumentType,
   SEPARATOR,
@@ -6,16 +14,8 @@ import {
   ViewName,
 } from "../constants"
 import { getGlobalDB } from "../context"
-import { doWithDB } from "./"
-import {
-  AllDocsResponse,
-  Database,
-  DatabaseQueryOpts,
-  Document,
-  DesignDocument,
-  DBView,
-} from "@budibase/types"
 import env from "../environment"
+import { doWithDB } from "./"
 
 const DESIGN_DB = "_design/database"
 
@@ -38,7 +38,7 @@ async function removeDeprecated(db: Database, viewName: ViewName) {
       delete designDoc.views?.[deprecatedNames]
     }
     await db.put(designDoc)
-  } catch (err) {
+  } catch (_err) {
     // doesn't exist, ignore
   }
 }
@@ -51,7 +51,7 @@ export async function createView(
   let designDoc
   try {
     designDoc = await db.get<DesignDocument>(DESIGN_DB)
-  } catch (err) {
+  } catch (_err) {
     // no design doc, make one
     designDoc = DesignDoc()
   }

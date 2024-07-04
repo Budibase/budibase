@@ -1,4 +1,3 @@
-import { publishEvent } from "../events"
 import {
   Event,
   Plugin,
@@ -6,6 +5,7 @@ import {
   PluginImportedEvent,
   PluginInitEvent,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 async function init(plugin: Plugin) {
   const properties: PluginInitEvent = {

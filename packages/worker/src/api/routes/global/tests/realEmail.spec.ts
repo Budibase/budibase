@@ -1,9 +1,9 @@
 jest.unmock("node-fetch")
-import { TestConfiguration } from "../../../../tests"
-import { EmailTemplatePurpose } from "../../../../constants"
 import { objectStore } from "@budibase/backend-core"
-import tk from "timekeeper"
 import { EmailAttachment } from "@budibase/types"
+import tk from "timekeeper"
+import { EmailTemplatePurpose } from "../../../../constants"
+import { TestConfiguration } from "../../../../tests"
 
 const fetch = require("node-fetch")
 
@@ -31,7 +31,7 @@ describe("/api/global/email", () => {
     let response, text
     try {
       const timeout = () =>
-        new Promise((resolve, reject) =>
+        new Promise((_resolve, reject) =>
           setTimeout(
             () =>
               reject({

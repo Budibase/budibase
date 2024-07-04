@@ -1,15 +1,15 @@
 <script>
-  import { ActionButton, Modal } from "@budibase/bbui"
-  import ExportModal from "../modals/ExportModal.svelte"
+import { ActionButton, Modal } from "@budibase/bbui"
+import ExportModal from "../modals/ExportModal.svelte"
 
-  export let view
-  export let filters
-  export let sorting
-  export let disabled = false
-  export let selectedRows
-  export let formats
+export let view
+export let filters
+export let sorting
+export let disabled = false
+export let selectedRows
+export let formats
 
-  let modal
+let modal
 </script>
 
 <ActionButton {disabled} icon="DataDownload" quiet on:click={modal.show}>

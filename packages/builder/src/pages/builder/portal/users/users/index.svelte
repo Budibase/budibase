@@ -1,303 +1,303 @@
 <script>
-  import {
-    Heading,
-    Body,
-    Button,
-    Table,
-    Layout,
-    Modal,
-    Search,
-    notifications,
-    Pagination,
-    Divider,
-    InlineAlert,
-  } from "@budibase/bbui"
-  import AddUserModal from "./_components/AddUserModal.svelte"
-  import {
-    users,
-    groups,
-    auth,
-    licensing,
-    organisation,
-    admin,
-  } from "stores/portal"
-  import { onMount } from "svelte"
-  import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
-  import UpgradeModal from "components/common/users/UpgradeModal.svelte"
-  import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
-  import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
-  import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
-  import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
-  import { goto } from "@roxi/routify"
-  import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
-  import PasswordModal from "./_components/PasswordModal.svelte"
-  import InvitedModal from "./_components/InvitedModal.svelte"
-  import ImportUsersModal from "./_components/ImportUsersModal.svelte"
-  import { get } from "svelte/store"
-  import { Constants, Utils, fetchData } from "@budibase/frontend-core"
-  import { API } from "api"
-  import { OnboardingType } from "constants"
-  import { sdk } from "@budibase/shared-core"
+import { OnboardingType } from "constants"
+import {
+  Body,
+  Button,
+  Divider,
+  Heading,
+  InlineAlert,
+  Layout,
+  Modal,
+  Pagination,
+  Search,
+  Table,
+  notifications,
+} from "@budibase/bbui"
+import { Constants, Utils, fetchData } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
+import { goto } from "@roxi/routify"
+import { API } from "api"
+import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
+import UpgradeModal from "components/common/users/UpgradeModal.svelte"
+import {
+  admin,
+  auth,
+  groups,
+  licensing,
+  organisation,
+  users,
+} from "stores/portal"
+import { onMount } from "svelte"
+import { get } from "svelte/store"
+import AddUserModal from "./_components/AddUserModal.svelte"
+import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
+import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
+import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
+import ImportUsersModal from "./_components/ImportUsersModal.svelte"
+import InvitedModal from "./_components/InvitedModal.svelte"
+import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
+import PasswordModal from "./_components/PasswordModal.svelte"
+import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
 
-  const fetch = fetchData({
-    API,
-    datasource: {
-      type: "user",
-    },
-    options: {
-      paginate: true,
-      limit: 10,
+const fetch = fetchData({
+  API,
+  datasource: {
+    type: "user",
+  },
+  options: {
+    paginate: true,
+    limit: 10,
+  },
+})
+
+let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
+let enrichedUsers = []
+let createUserModal,
+  inviteConfirmationModal,
+  onboardingTypeModal,
+  passwordModal,
+  importUsersModal,
+  userLimitReachedModal
+let searchEmail = undefined
+let selectedRows = []
+let selectedInvites = []
+let bulkSaveResponse
+let customRenderers = [
+  { column: "email", component: EmailTableRenderer },
+  { column: "userGroups", component: GroupsTableRenderer },
+  { column: "apps", component: AppsTableRenderer },
+  { column: "role", component: RoleTableRenderer },
+]
+let userData = []
+let invitesLoaded = false
+let pendingInvites = []
+let parsedInvites = []
+
+$: isOwner = $auth.accountPortalAccess && $admin.cloud
+$: readonly = !sdk.users.isAdmin($auth.user)
+$: debouncedUpdateFetch(searchEmail)
+$: schema = {
+  email: {
+    sortable: false,
+    width: "2fr",
+    minWidth: "200px",
+  },
+  role: {
+    displayName: "Access",
+    sortable: false,
+    width: "1fr",
+  },
+  ...($licensing.groupsEnabled && {
+    userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
+  }),
+  apps: {
+    sortable: false,
+    width: "1fr",
+  },
+}
+$: pendingSchema = getPendingSchema(schema)
+$: userData = []
+$: inviteUsersResponse = { successful: [], unsuccessful: [] }
+$: {
+  enrichedUsers = $fetch.rows?.map(user => {
+    let userGroups = []
+    $groups.forEach(group => {
+      if (group.users) {
+        group.users?.forEach(y => {
+          if (y._id === user._id) {
+            userGroups.push(group)
+          }
+        })
+      }
+    })
+    return {
+      ...user,
+      name: user.firstName ? user.firstName + " " + user.lastName : "",
+      userGroups,
+      apps: [...new Set(Object.keys(user.roles))],
+    }
+  })
+}
+
+const getPendingSchema = tblSchema => {
+  if (!tblSchema) {
+    return {}
+  }
+  let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
+  pendingSchema.email.displayName = "Pending Users"
+  return pendingSchema
+}
+
+const invitesToSchema = invites => {
+  return invites.map(invite => {
+    const { admin, builder, userGroups, apps } = invite.info
+
+    return {
+      _id: invite.code,
+      email: invite.email,
+      builder,
+      admin,
+      userGroups: userGroups,
+      apps: apps ? [...new Set(Object.keys(apps))] : undefined,
+    }
+  })
+}
+$: parsedInvites = invitesToSchema(pendingInvites)
+
+const updateFetch = email => {
+  fetch.update({
+    query: {
+      string: {
+        email,
+      },
     },
   })
+}
+const debouncedUpdateFetch = Utils.debounce(updateFetch, 250)
 
-  let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
-  let enrichedUsers = []
-  let createUserModal,
-    inviteConfirmationModal,
-    onboardingTypeModal,
-    passwordModal,
-    importUsersModal,
-    userLimitReachedModal
-  let searchEmail = undefined
-  let selectedRows = []
-  let selectedInvites = []
-  let bulkSaveResponse
-  let customRenderers = [
-    { column: "email", component: EmailTableRenderer },
-    { column: "userGroups", component: GroupsTableRenderer },
-    { column: "apps", component: AppsTableRenderer },
-    { column: "role", component: RoleTableRenderer },
-  ]
-  let userData = []
-  let invitesLoaded = false
-  let pendingInvites = []
-  let parsedInvites = []
-
-  $: isOwner = $auth.accountPortalAccess && $admin.cloud
-  $: readonly = !sdk.users.isAdmin($auth.user)
-  $: debouncedUpdateFetch(searchEmail)
-  $: schema = {
-    email: {
-      sortable: false,
-      width: "2fr",
-      minWidth: "200px",
-    },
-    role: {
-      displayName: "Access",
-      sortable: false,
-      width: "1fr",
-    },
-    ...($licensing.groupsEnabled && {
-      userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
-    }),
-    apps: {
-      sortable: false,
-      width: "1fr",
-    },
-  }
-  $: pendingSchema = getPendingSchema(schema)
-  $: userData = []
-  $: inviteUsersResponse = { successful: [], unsuccessful: [] }
-  $: {
-    enrichedUsers = $fetch.rows?.map(user => {
-      let userGroups = []
-      $groups.forEach(group => {
-        if (group.users) {
-          group.users?.forEach(y => {
-            if (y._id === user._id) {
-              userGroups.push(group)
-            }
-          })
-        }
-      })
-      return {
-        ...user,
-        name: user.firstName ? user.firstName + " " + user.lastName : "",
-        userGroups,
-        apps: [...new Set(Object.keys(user.roles))],
-      }
-    })
+const showOnboardingTypeModal = async addUsersData => {
+  // no-op if users already exist
+  userData = await removingDuplicities(addUsersData)
+  if (!userData?.users?.length) {
+    return
   }
 
-  const getPendingSchema = tblSchema => {
-    if (!tblSchema) {
-      return {}
+  if ($organisation.isSSOEnforced) {
+    // bypass the onboarding type selection of sso is enforced
+    await chooseCreationType(OnboardingType.EMAIL)
+  } else {
+    onboardingTypeModal.show()
+  }
+}
+
+async function createUserFlow() {
+  const payload = userData?.users?.map(user => ({
+    email: user.email,
+    builder: user.role === Constants.BudibaseRoles.Developer,
+    creator: user.role === Constants.BudibaseRoles.Creator,
+    admin: user.role === Constants.BudibaseRoles.Admin,
+    groups: userData.groups,
+  }))
+  try {
+    inviteUsersResponse = await users.invite(payload)
+    pendingInvites = await users.getInvites()
+    inviteConfirmationModal.show()
+  } catch (error) {
+    notifications.error("Error inviting user")
+  }
+}
+
+const removingDuplicities = async userData => {
+  const currentUserEmails = (await users.fetch())?.map(x => x.email) || []
+  const newUsers = []
+
+  for (const user of userData?.users ?? []) {
+    const { email } = user
+    if (
+      newUsers.find(x => x.email === email) ||
+      currentUserEmails.includes(email)
+    ) {
+      continue
     }
-    let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
-    pendingSchema.email.displayName = "Pending Users"
-    return pendingSchema
+    newUsers.push(user)
   }
 
-  const invitesToSchema = invites => {
-    return invites.map(invite => {
-      const { admin, builder, userGroups, apps } = invite.info
-
-      return {
-        _id: invite.code,
-        email: invite.email,
-        builder,
-        admin,
-        userGroups: userGroups,
-        apps: apps ? [...new Set(Object.keys(apps))] : undefined,
-      }
-    })
+  if (!newUsers.length) {
+    notifications.info("Duplicated! There is no new users to add.")
   }
-  $: parsedInvites = invitesToSchema(pendingInvites)
+  return { ...userData, users: newUsers }
+}
 
-  const updateFetch = email => {
-    fetch.update({
-      query: {
-        string: {
-          email,
-        },
-      },
-    })
+const createUsersFromCsv = async userCsvData => {
+  const { userEmails, usersRole, userGroups: groups } = userCsvData
+
+  const users = []
+  for (const email of userEmails) {
+    const newUser = {
+      email: email,
+      role: usersRole,
+      password: Math.random().toString(36).substring(2, 22),
+      forceResetPassword: true,
+    }
+
+    users.push(newUser)
   }
-  const debouncedUpdateFetch = Utils.debounce(updateFetch, 250)
 
-  const showOnboardingTypeModal = async addUsersData => {
-    // no-op if users already exist
-    userData = await removingDuplicities(addUsersData)
-    if (!userData?.users?.length) {
+  userData = await removingDuplicities({ groups, users })
+  if (!userData.users.length) return
+
+  return createUsers()
+}
+
+async function createUsers() {
+  try {
+    bulkSaveResponse = await users.create(await removingDuplicities(userData))
+    notifications.success("Successfully created user")
+    await groups.actions.init()
+    passwordModal.show()
+    await fetch.refresh()
+  } catch (error) {
+    notifications.error("Error creating user")
+  }
+}
+
+async function chooseCreationType(onboardingType) {
+  if (onboardingType === OnboardingType.EMAIL) {
+    await createUserFlow()
+  } else {
+    await createUsers()
+  }
+}
+
+const deleteUsers = async () => {
+  try {
+    let ids = selectedRows.map(user => user._id)
+    if (ids.includes(get(auth).user._id)) {
+      notifications.error("You cannot delete yourself")
       return
     }
 
-    if ($organisation.isSSOEnforced) {
-      // bypass the onboarding type selection of sso is enforced
-      await chooseCreationType(OnboardingType.EMAIL)
-    } else {
-      onboardingTypeModal.show()
-    }
-  }
-
-  async function createUserFlow() {
-    const payload = userData?.users?.map(user => ({
-      email: user.email,
-      builder: user.role === Constants.BudibaseRoles.Developer,
-      creator: user.role === Constants.BudibaseRoles.Creator,
-      admin: user.role === Constants.BudibaseRoles.Admin,
-      groups: userData.groups,
-    }))
-    try {
-      inviteUsersResponse = await users.invite(payload)
-      pendingInvites = await users.getInvites()
-      inviteConfirmationModal.show()
-    } catch (error) {
-      notifications.error("Error inviting user")
-    }
-  }
-
-  const removingDuplicities = async userData => {
-    const currentUserEmails = (await users.fetch())?.map(x => x.email) || []
-    const newUsers = []
-
-    for (const user of userData?.users ?? []) {
-      const { email } = user
-      if (
-        newUsers.find(x => x.email === email) ||
-        currentUserEmails.includes(email)
-      ) {
-        continue
-      }
-      newUsers.push(user)
+    if (selectedRows.some(u => u.scimInfo?.isSync)) {
+      notifications.error("You cannot remove users created via your AD")
+      return
     }
 
-    if (!newUsers.length) {
-      notifications.info("Duplicated! There is no new users to add.")
-    }
-    return { ...userData, users: newUsers }
-  }
-
-  const createUsersFromCsv = async userCsvData => {
-    const { userEmails, usersRole, userGroups: groups } = userCsvData
-
-    const users = []
-    for (const email of userEmails) {
-      const newUser = {
-        email: email,
-        role: usersRole,
-        password: Math.random().toString(36).substring(2, 22),
-        forceResetPassword: true,
-      }
-
-      users.push(newUser)
+    if (ids.length > 0) {
+      await users.bulkDelete(ids)
     }
 
-    userData = await removingDuplicities({ groups, users })
-    if (!userData.users.length) return
-
-    return createUsers()
-  }
-
-  async function createUsers() {
-    try {
-      bulkSaveResponse = await users.create(await removingDuplicities(userData))
-      notifications.success("Successfully created user")
-      await groups.actions.init()
-      passwordModal.show()
-      await fetch.refresh()
-    } catch (error) {
-      notifications.error("Error creating user")
-    }
-  }
-
-  async function chooseCreationType(onboardingType) {
-    if (onboardingType === OnboardingType.EMAIL) {
-      await createUserFlow()
-    } else {
-      await createUsers()
-    }
-  }
-
-  const deleteUsers = async () => {
-    try {
-      let ids = selectedRows.map(user => user._id)
-      if (ids.includes(get(auth).user._id)) {
-        notifications.error("You cannot delete yourself")
-        return
-      }
-
-      if (selectedRows.some(u => u.scimInfo?.isSync)) {
-        notifications.error("You cannot remove users created via your AD")
-        return
-      }
-
-      if (ids.length > 0) {
-        await users.bulkDelete(ids)
-      }
-
-      if (selectedInvites.length > 0) {
-        await users.removeInvites(
-          selectedInvites.map(invite => ({
-            code: invite._id,
-          }))
-        )
-        pendingInvites = await users.getInvites()
-      }
-
-      notifications.success(
-        `Successfully deleted ${
-          selectedRows.length + selectedInvites.length
-        } users`
+    if (selectedInvites.length > 0) {
+      await users.removeInvites(
+        selectedInvites.map(invite => ({
+          code: invite._id,
+        }))
       )
-      selectedRows = []
-      selectedInvites = []
-      await fetch.refresh()
-    } catch (error) {
-      notifications.error("Error deleting users")
-    }
-  }
-
-  onMount(async () => {
-    try {
-      await groups.actions.init()
-      groupsLoaded = true
       pendingInvites = await users.getInvites()
-      invitesLoaded = true
-    } catch (error) {
-      notifications.error("Error fetching user group data")
     }
-  })
+
+    notifications.success(
+      `Successfully deleted ${
+        selectedRows.length + selectedInvites.length
+      } users`
+    )
+    selectedRows = []
+    selectedInvites = []
+    await fetch.refresh()
+  } catch (error) {
+    notifications.error("Error deleting users")
+  }
+}
+
+onMount(async () => {
+  try {
+    await groups.actions.init()
+    groupsLoaded = true
+    pendingInvites = await users.getInvites()
+    invitesLoaded = true
+  } catch (error) {
+    notifications.error("Error fetching user group data")
+  }
+})
 </script>
 
 <Layout noPadding gap="M">

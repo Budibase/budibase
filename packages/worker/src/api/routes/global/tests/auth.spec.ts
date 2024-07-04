@@ -3,18 +3,18 @@ import { CloudAccount, SSOUser, User } from "@budibase/types"
 jest.mock("nodemailer")
 import {
   TestConfiguration,
+  generator,
   mocks,
   structures,
-  generator,
 } from "../../../../tests"
 
 const sendMailMock = mocks.email.mock()
-import { events, constants } from "@budibase/backend-core"
+import { constants, events } from "@budibase/backend-core"
 import { Response } from "superagent"
 
-import * as userSdk from "../../../../sdk/users"
-import nock from "nock"
 import * as jwt from "jsonwebtoken"
+import nock from "nock"
+import * as userSdk from "../../../../sdk/users"
 
 function getAuthCookie(response: Response) {
   return response.headers["set-cookie"]

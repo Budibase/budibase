@@ -1,29 +1,29 @@
 <script>
-  import { CoreTextField } from "@budibase/bbui"
-  import Field from "./Field.svelte"
+import { CoreTextField } from "@budibase/bbui"
+import Field from "./Field.svelte"
 
-  export let field
-  export let label
-  export let placeholder
-  export let type = "text"
-  export let disabled = false
-  export let readonly = false
-  export let validation
-  export let defaultValue = ""
-  export let align
-  export let onChange
-  export let span
-  export let helpText = null
+export let field
+export let label
+export let placeholder
+export let type = "text"
+export let disabled = false
+export let readonly = false
+export let validation
+export let defaultValue = ""
+export let align
+export let onChange
+export let span
+export let helpText = null
 
-  let fieldState
-  let fieldApi
+let fieldState
+let fieldApi
 
-  const handleChange = e => {
-    const changed = fieldApi.setValue(e.detail)
-    if (onChange && changed) {
-      onChange({ value: e.detail })
-    }
+const handleChange = e => {
+  const changed = fieldApi.setValue(e.detail)
+  if (onChange && changed) {
+    onChange({ value: e.detail })
   }
+}
 </script>
 
 <Field

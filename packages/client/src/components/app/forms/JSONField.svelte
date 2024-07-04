@@ -1,49 +1,49 @@
 <script>
-  import { CoreTextArea } from "@budibase/bbui"
-  import Field from "./Field.svelte"
-  import { getContext } from "svelte"
+import { CoreTextArea } from "@budibase/bbui"
+import { getContext } from "svelte"
+import Field from "./Field.svelte"
 
-  export let field
-  export let label
-  export let placeholder
-  export let disabled = false
-  export let readonly = false
-  export let defaultValue = ""
-  export let onChange
-  export let helpText = null
+export let field
+export let label
+export let placeholder
+export let disabled = false
+export let readonly = false
+export let defaultValue = ""
+export let onChange
+export let helpText = null
 
-  const component = getContext("component")
-  const validation = [
-    {
-      constraint: "json",
-      type: "json",
-      error: "JSON syntax is invalid",
-    },
-  ]
-  let fieldState
-  let fieldApi
+const component = getContext("component")
+const validation = [
+  {
+    constraint: "json",
+    type: "json",
+    error: "JSON syntax is invalid",
+  },
+]
+let fieldState
+let fieldApi
 
-  $: height = $component.styles?.normal?.height || "124px"
+$: height = $component.styles?.normal?.height || "124px"
 
-  const serialiseValue = value => {
-    return JSON.stringify(value || undefined, null, 4) || ""
+const serialiseValue = value => {
+  return JSON.stringify(value || undefined, null, 4) || ""
+}
+
+const parseValue = value => {
+  try {
+    return JSON.parse(value)
+  } catch (error) {
+    return value
   }
+}
 
-  const parseValue = value => {
-    try {
-      return JSON.parse(value)
-    } catch (error) {
-      return value
-    }
+const handleChange = e => {
+  const value = parseValue(e.detail)
+  const changed = fieldApi.setValue(value)
+  if (onChange && changed) {
+    onChange({ value })
   }
-
-  const handleChange = e => {
-    const value = parseValue(e.detail)
-    const changed = fieldApi.setValue(value)
-    if (onChange && changed) {
-      onChange({ value })
-    }
-  }
+}
 </script>
 
 <Field

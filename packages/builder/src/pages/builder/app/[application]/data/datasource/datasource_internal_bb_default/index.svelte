@@ -1,24 +1,24 @@
 <script>
-  import { Button, Heading, Body, Layout, Modal, Divider } from "@budibase/bbui"
-  import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
-  import ICONS from "components/backend/DatasourceNavigator/icons"
-  import { tables, datasources, builderStore } from "stores/builder"
-  import { goto } from "@roxi/routify"
-  import { DEFAULT_BB_DATASOURCE_ID, DB_TYPE_EXTERNAL } from "constants/backend"
-  import { onMount } from "svelte"
+import { Body, Button, Divider, Heading, Layout, Modal } from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import ICONS from "components/backend/DatasourceNavigator/icons"
+import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
+import { DB_TYPE_EXTERNAL, DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
+import { builderStore, datasources, tables } from "stores/builder"
+import { onMount } from "svelte"
 
-  let modal
+let modal
 
-  $: builderStore.selectResource(DEFAULT_BB_DATASOURCE_ID)
-  $: internalTablesBySourceId = $tables.list.filter(
-    table =>
-      table.sourceType !== DB_TYPE_EXTERNAL &&
-      table.sourceId === DEFAULT_BB_DATASOURCE_ID
-  )
+$: builderStore.selectResource(DEFAULT_BB_DATASOURCE_ID)
+$: internalTablesBySourceId = $tables.list.filter(
+  table =>
+    table.sourceType !== DB_TYPE_EXTERNAL &&
+    table.sourceId === DEFAULT_BB_DATASOURCE_ID
+)
 
-  onMount(() => {
-    datasources.select(DEFAULT_BB_DATASOURCE_ID)
-  })
+onMount(() => {
+  datasources.select(DEFAULT_BB_DATASOURCE_ID)
+})
 </script>
 
 <Modal bind:this={modal}>

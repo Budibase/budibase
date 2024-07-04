@@ -1,5 +1,5 @@
-import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import supertest from "supertest"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 export * as structures from "../../../../tests/utilities/structures"
 

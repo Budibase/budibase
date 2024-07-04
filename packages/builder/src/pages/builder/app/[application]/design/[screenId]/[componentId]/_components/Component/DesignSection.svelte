@@ -1,27 +1,27 @@
 <script>
-  import StyleSection from "./StyleSection.svelte"
-  import * as ComponentStyles from "./componentStyles"
-  import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
+import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
+import StyleSection from "./StyleSection.svelte"
+import * as ComponentStyles from "./componentStyles"
 
-  export let componentDefinition
-  export let componentInstance
-  export let bindings
-  export let componentBindings
+export let componentDefinition
+export let componentInstance
+export let bindings
+export let componentBindings
 
-  const getStyles = def => {
-    if (!def?.styles?.length) {
-      return [...ComponentStyles.all]
-    }
-    let styles = [...ComponentStyles.all]
-    def.styles.forEach(style => {
-      if (ComponentStyles[style]) {
-        styles.push(ComponentStyles[style])
-      }
-    })
-    return styles
+const getStyles = def => {
+  if (!def?.styles?.length) {
+    return [...ComponentStyles.all]
   }
+  let styles = [...ComponentStyles.all]
+  def.styles.forEach(style => {
+    if (ComponentStyles[style]) {
+      styles.push(ComponentStyles[style])
+    }
+  })
+  return styles
+}
 
-  $: styles = getStyles(componentDefinition)
+$: styles = getStyles(componentDefinition)
 </script>
 
 <!--

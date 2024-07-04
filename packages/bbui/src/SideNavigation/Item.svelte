@@ -1,16 +1,16 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  const multilevel = getContext("sidenav-type")
-  import Badge from "../Badge/Badge.svelte"
+const multilevel = getContext("sidenav-type")
+import Badge from "../Badge/Badge.svelte"
 
-  export let href = ""
-  export let external = false
-  export let heading = ""
-  export let icon = ""
-  export let selected = false
-  export let disabled = false
-  export let badge = ""
+export let href = ""
+export let external = false
+export let heading = ""
+export let icon = ""
+export let selected = false
+export let disabled = false
+export let badge = ""
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

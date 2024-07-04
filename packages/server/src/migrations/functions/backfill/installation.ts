@@ -1,8 +1,8 @@
-import { DEFAULT_TIMESTAMP } from "./index"
-import { events, tenancy, installation } from "@budibase/backend-core"
+import { events, installation, tenancy } from "@budibase/backend-core"
 import { Installation } from "@budibase/types"
-import * as global from "./global"
 import env from "../../../environment"
+import * as global from "./global"
+import { DEFAULT_TIMESTAMP } from "./index"
 
 const failGraceful = env.SELF_HOSTED
 

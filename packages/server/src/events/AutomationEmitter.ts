@@ -1,8 +1,8 @@
-import { rowEmission, tableEmission } from "./utils"
-import mainEmitter from "./index"
-import env from "../environment"
-import { Table, Row, DocumentType, App } from "@budibase/types"
 import { context } from "@budibase/backend-core"
+import { App, DocumentType, Row, Table } from "@budibase/types"
+import env from "../environment"
+import mainEmitter from "./index"
+import { rowEmission, tableEmission } from "./utils"
 
 const MAX_AUTOMATIONS_ALLOWED = 5
 

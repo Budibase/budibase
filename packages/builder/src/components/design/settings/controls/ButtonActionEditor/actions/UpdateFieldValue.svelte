@@ -1,56 +1,56 @@
 <script>
-  import { Select, Label, Combobox } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { selectedScreen, componentStore } from "stores/builder"
-  import { getActionProviders, buildFormSchema } from "dataBinding"
-  import { findComponent } from "helpers/components"
+import { Combobox, Label, Select } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { buildFormSchema, getActionProviders } from "dataBinding"
+import { findComponent } from "helpers/components"
+import { componentStore, selectedScreen } from "stores/builder"
+import { onMount } from "svelte"
 
-  export let parameters
-  export let bindings = []
-  export let nested
+export let parameters
+export let bindings = []
+export let nested
 
-  const typeOptions = [
-    {
-      label: "Set value",
-      value: "set",
-    },
-    {
-      label: "Reset to default value",
-      value: "reset",
-    },
-  ]
+const typeOptions = [
+  {
+    label: "Set value",
+    value: "set",
+  },
+  {
+    label: "Reset to default value",
+    value: "reset",
+  },
+]
 
-  $: formComponent = getFormComponent(
-    $selectedScreen.props,
-    parameters.componentId
-  )
-  $: formSchema = buildFormSchema(formComponent)
-  $: fieldOptions = Object.keys(formSchema || {})
-  $: actionProviders = getActionProviders(
-    $selectedScreen,
-    $componentStore.selectedComponentId,
-    "ValidateForm",
-    { includeSelf: nested }
-  )
+$: formComponent = getFormComponent(
+  $selectedScreen.props,
+  parameters.componentId
+)
+$: formSchema = buildFormSchema(formComponent)
+$: fieldOptions = Object.keys(formSchema || {})
+$: actionProviders = getActionProviders(
+  $selectedScreen,
+  $componentStore.selectedComponentId,
+  "ValidateForm",
+  { includeSelf: nested }
+)
 
-  const getFormComponent = (asset, id) => {
-    let component = findComponent(asset, id)
-    if (component) {
-      return component
-    }
-    // Check for block component IDs, and use the block itself instead
-    if (id?.includes("-")) {
-      return findComponent(asset, id.split("-")[0])
-    }
-    return null
+const getFormComponent = (asset, id) => {
+  let component = findComponent(asset, id)
+  if (component) {
+    return component
   }
+  // Check for block component IDs, and use the block itself instead
+  if (id?.includes("-")) {
+    return findComponent(asset, id.split("-")[0])
+  }
+  return null
+}
 
-  onMount(() => {
-    if (!parameters.type) {
-      parameters.type = "set"
-    }
-  })
+onMount(() => {
+  if (!parameters.type) {
+    parameters.type = "set"
+  }
+})
 </script>
 
 <div class="root">

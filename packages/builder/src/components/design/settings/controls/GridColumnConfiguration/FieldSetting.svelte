@@ -1,39 +1,39 @@
 <script>
-  import EditComponentPopover from "../EditComponentPopover.svelte"
-  import { Toggle, Icon } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import { cloneDeep } from "lodash/fp"
-  import { FIELDS } from "constants/backend"
+import { Icon, Toggle } from "@budibase/bbui"
+import { FIELDS } from "constants/backend"
+import { cloneDeep } from "lodash/fp"
+import { createEventDispatcher } from "svelte"
+import EditComponentPopover from "../EditComponentPopover.svelte"
 
-  export let item
-  export let anchor
+export let item
+export let anchor
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  $: fieldIconLookupMap = buildFieldIconLookupMap(FIELDS)
+$: fieldIconLookupMap = buildFieldIconLookupMap(FIELDS)
 
-  const buildFieldIconLookupMap = fields => {
-    let map = {}
-    Object.values(fields).forEach(fieldInfo => {
-      map[fieldInfo.type] = fieldInfo.icon
+const buildFieldIconLookupMap = fields => {
+  let map = {}
+  Object.values(fields).forEach(fieldInfo => {
+    map[fieldInfo.type] = fieldInfo.icon
+  })
+  return map
+}
+
+const onToggle = item => {
+  return e => {
+    item.active = e.detail
+    dispatch("change", { ...cloneDeep(item), active: e.detail })
+  }
+}
+
+const parseSettings = settings => {
+  return settings
+    .filter(setting => setting.key !== "field")
+    .map(setting => {
+      return { ...setting, nested: true }
     })
-    return map
-  }
-
-  const onToggle = item => {
-    return e => {
-      item.active = e.detail
-      dispatch("change", { ...cloneDeep(item), active: e.detail })
-    }
-  }
-
-  const parseSettings = settings => {
-    return settings
-      .filter(setting => setting.key !== "field")
-      .map(setting => {
-        return { ...setting, nested: true }
-      })
-  }
+}
 </script>
 
 <div class="list-item-body">

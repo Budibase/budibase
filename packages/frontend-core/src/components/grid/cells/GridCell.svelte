@@ -1,26 +1,26 @@
 <script>
-  export let focused = false
-  export let selected = false
-  export let highlighted = false
-  export let width = ""
-  export let selectedUser = null
-  export let error = null
-  export let rowIdx
-  export let topRow = false
-  export let defaultHeight = false
-  export let center = false
-  export let readonly = false
-  export let hidden = false
+export let focused = false
+export let selected = false
+export let highlighted = false
+export let width = ""
+export let selectedUser = null
+export let error = null
+export let rowIdx
+export let topRow = false
+export let defaultHeight = false
+export let center = false
+export let readonly = false
+export let hidden = false
 
-  $: style = getStyle(width, selectedUser)
+$: style = getStyle(width, selectedUser)
 
-  const getStyle = (width, selectedUser) => {
-    let style = width === "auto" ? "width: auto;" : `flex: 0 0 ${width}px;`
-    if (selectedUser) {
-      style += `--user-color:${selectedUser.color};`
-    }
-    return style
+const getStyle = (width, selectedUser) => {
+  let style = width === "auto" ? "width: auto;" : `flex: 0 0 ${width}px;`
+  if (selectedUser) {
+    style += `--user-color:${selectedUser.color};`
   }
+  return style
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

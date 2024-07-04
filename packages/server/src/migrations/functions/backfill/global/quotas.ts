@@ -1,7 +1,7 @@
-import { DEFAULT_TIMESTAMP } from "./../index"
 import { events } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { App } from "@budibase/types"
+import { DEFAULT_TIMESTAMP } from "./../index"
 
 const getOldestCreatedAt = (allApps: App[]): string | undefined => {
   const timestamps = allApps

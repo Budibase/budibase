@@ -1,13 +1,13 @@
-import { budibaseTempDir } from "../budibaseDir"
 import fs from "fs"
 import { join } from "path"
-import { ObjectStoreBuckets, devClientVersion } from "../../constants"
-import { updateClientLibrary } from "./clientLibrary"
-import env from "../../environment"
-import { objectStore, context } from "@budibase/backend-core"
-import { TOP_LEVEL_PATH } from "./filesystem"
-import { DocumentType } from "../../db/utils"
+import { context, objectStore } from "@budibase/backend-core"
 import { App } from "@budibase/types"
+import { ObjectStoreBuckets, devClientVersion } from "../../constants"
+import { DocumentType } from "../../db/utils"
+import env from "../../environment"
+import { budibaseTempDir } from "../budibaseDir"
+import { updateClientLibrary } from "./clientLibrary"
+import { TOP_LEVEL_PATH } from "./filesystem"
 
 export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 

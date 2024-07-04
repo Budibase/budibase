@@ -1,6 +1,3 @@
-import validateJs from "validate.js"
-import dayjs from "dayjs"
-import cloneDeep from "lodash/fp/cloneDeep"
 import {
   Datasource,
   DatasourcePlusQueryResponse,
@@ -9,14 +6,17 @@ import {
   QueryJson,
   Row,
   SourceName,
+  SqlClient,
   Table,
   TableSchema,
-  SqlClient,
 } from "@budibase/types"
-import { makeExternalQuery } from "../../../integrations/base/query"
-import { Format } from "../../../api/controllers/view/exporters"
+import dayjs from "dayjs"
+import cloneDeep from "lodash/fp/cloneDeep"
+import validateJs from "validate.js"
 import sdk from "../.."
+import { Format } from "../../../api/controllers/view/exporters"
 import { isRelationshipColumn } from "../../../db/utils"
+import { makeExternalQuery } from "../../../integrations/base/query"
 import { isSQL } from "../../../integrations/utils"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
@@ -216,7 +216,7 @@ export async function validate({
             errors[fieldName] = [`Must be an array`]
           }
         }
-      } catch (err) {
+      } catch (_err) {
         errors[fieldName] = [`Contains invalid JSON`]
       }
     } else if (type === FieldType.DATETIME && column.timeOnly) {

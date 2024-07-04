@@ -1,8 +1,8 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
-import { Operations, initialState, createHistoryStore } from "../history"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { Operations, createHistoryStore, initialState } from "../history"
 
-import { writable, derived, get } from "svelte/store"
 import * as jsonpatch from "fast-json-patch/index.mjs"
+import { derived, get, writable } from "svelte/store"
 
 vi.mock("svelte/store", () => {
   return {

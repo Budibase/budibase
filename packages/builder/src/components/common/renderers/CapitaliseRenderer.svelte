@@ -1,7 +1,7 @@
 <script>
-  import { capitalise } from "helpers"
+import { capitalise } from "helpers"
 
-  export let value
+export let value
 </script>
 
 {capitalise(value)}

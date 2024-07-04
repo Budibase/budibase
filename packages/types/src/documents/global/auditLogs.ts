@@ -1,5 +1,5 @@
-import { Document } from "../document"
 import { Event } from "../../sdk"
+import { Document } from "../document"
 
 export const AuditLogSystemUser = "SYSTEM"
 export const AUDIT_LOG_TYPE = "auditLog"

@@ -1,13 +1,13 @@
 <script>
-  import "@spectrum-css/tags/dist/index-vars.css"
-  import Avatar from "../Avatar/Avatar.svelte"
-  import ClearButton from "../ClearButton/ClearButton.svelte"
+import "@spectrum-css/tags/dist/index-vars.css"
+import Avatar from "../Avatar/Avatar.svelte"
+import ClearButton from "../ClearButton/ClearButton.svelte"
 
-  export let icon = ""
-  export let avatar = ""
-  export let invalid = false
-  export let disabled = false
-  export let closable = false
+export let icon = ""
+export let avatar = ""
+export let invalid = false
+export let disabled = false
+export let closable = false
 </script>
 
 <div

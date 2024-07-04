@@ -1,63 +1,63 @@
 <script>
-  import { Select, ContextTooltip } from "@budibase/bbui"
-  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { selectedScreen } from "stores/builder"
-  import { createEventDispatcher } from "svelte"
-  import { Explanation } from "./Explanation"
-  import { debounce } from "lodash"
-  import { params } from "@roxi/routify"
+import { ContextTooltip, Select } from "@budibase/bbui"
+import { params } from "@roxi/routify"
+import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+import { debounce } from "lodash"
+import { selectedScreen } from "stores/builder"
+import { createEventDispatcher } from "svelte"
+import { Explanation } from "./Explanation"
 
-  export let componentInstance = {}
-  export let value = ""
-  export let placeholder
-  export let explanation
+export let componentInstance = {}
+export let value = ""
+export let placeholder
+export let explanation
 
-  let contextTooltipAnchor = null
-  let currentOption = null
-  let contextTooltipVisible = false
+let contextTooltipAnchor = null
+let currentOption = null
+let contextTooltipVisible = false
 
-  const dispatch = createEventDispatcher()
-  $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
-  $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
-  $: options = Object.keys(schema || {})
-  $: boundValue = getValidValue(value, options)
+const dispatch = createEventDispatcher()
+$: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
+$: schema = getSchemaForDatasource($selectedScreen, datasource).schema
+$: options = Object.keys(schema || {})
+$: boundValue = getValidValue(value, options)
 
-  const getValidValue = (value, options) => {
-    // Reset value if there aren't any options
-    if (!Array.isArray(options)) {
-      return null
-    }
-
-    // Reset value if the value isn't found in the options
-    if (options.indexOf(value) === -1) {
-      return null
-    }
-
-    return value
+const getValidValue = (value, options) => {
+  // Reset value if there aren't any options
+  if (!Array.isArray(options)) {
+    return null
   }
 
-  const onChange = value => {
-    boundValue = getValidValue(value.detail, options)
-    dispatch("change", boundValue)
+  // Reset value if the value isn't found in the options
+  if (options.indexOf(value) === -1) {
+    return null
   }
 
-  const updateTooltip = debounce((e, option) => {
-    if (option == null) {
-      contextTooltipVisible = false
-    } else {
-      contextTooltipAnchor = e?.target
-      currentOption = option
-      contextTooltipVisible = true
-    }
-  }, 200)
+  return value
+}
 
-  const onOptionMouseenter = (e, option) => {
-    updateTooltip(e, option)
-  }
+const onChange = value => {
+  boundValue = getValidValue(value.detail, options)
+  dispatch("change", boundValue)
+}
 
-  const onOptionMouseleave = e => {
-    updateTooltip(e, null)
+const updateTooltip = debounce((e, option) => {
+  if (option == null) {
+    contextTooltipVisible = false
+  } else {
+    contextTooltipAnchor = e?.target
+    currentOption = option
+    contextTooltipVisible = true
   }
+}, 200)
+
+const onOptionMouseenter = (e, option) => {
+  updateTooltip(e, option)
+}
+
+const onOptionMouseleave = e => {
+  updateTooltip(e, null)
+}
 </script>
 
 <Select

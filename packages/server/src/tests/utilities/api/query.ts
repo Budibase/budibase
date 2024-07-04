@@ -1,12 +1,12 @@
+import { constants } from "@budibase/backend-core"
 import {
-  Query,
   ExecuteQueryRequest,
   ExecuteQueryResponse,
   PreviewQueryRequest,
   PreviewQueryResponse,
+  Query,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
-import { constants } from "@budibase/backend-core"
 
 export class QueryAPI extends TestAPI {
   save = async (body: Query, expectations?: Expectations): Promise<Query> => {

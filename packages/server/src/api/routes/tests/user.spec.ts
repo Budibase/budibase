@@ -1,7 +1,7 @@
 import { roles, utils } from "@budibase/backend-core"
-import { checkPermissionsEndpoint } from "./utilities/TestFunctions"
-import * as setup from "./utilities"
 import { UserMetadata } from "@budibase/types"
+import * as setup from "./utilities"
+import { checkPermissionsEndpoint } from "./utilities/TestFunctions"
 
 jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {

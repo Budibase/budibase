@@ -1,9 +1,31 @@
 import { generator, mocks, structures } from "@budibase/backend-core/tests"
 
+import {
+  constants,
+  cache,
+  context,
+  env as coreEnv,
+  db as dbCore,
+  encryption,
+  roles,
+  sessions,
+  tenancy,
+} from "@budibase/backend-core"
 // init the licensing mock
 import * as pro from "@budibase/pro"
 import { init as dbInit } from "../../db"
 import env from "../../environment"
+import {
+  app as appController,
+  automation as automationController,
+  deploy as deployController,
+  layout as layoutController,
+  query as queryController,
+  role as roleController,
+  screen as screenController,
+  view as viewController,
+  webhook as webhookController,
+} from "./controllers"
 import {
   basicAutomation,
   basicAutomationResults,
@@ -16,34 +38,7 @@ import {
   basicTable,
   basicWebhook,
 } from "./structures"
-import {
-  cache,
-  constants,
-  context,
-  db as dbCore,
-  encryption,
-  env as coreEnv,
-  roles,
-  sessions,
-  tenancy,
-} from "@budibase/backend-core"
-import {
-  app as appController,
-  deploy as deployController,
-  role as roleController,
-  automation as automationController,
-  webhook as webhookController,
-  query as queryController,
-  screen as screenController,
-  layout as layoutController,
-  view as viewController,
-} from "./controllers"
 
-import { cleanup } from "../../utilities/fileSystem"
-import newid from "../../db/newid"
-import { generateUserMetadataID } from "../../db/utils"
-import { startup } from "../../startup"
-import supertest from "supertest"
 import {
   App,
   AuthToken,
@@ -57,8 +52,8 @@ import {
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
-  Screen,
   RowSearchParams,
+  Screen,
   SourceName,
   Table,
   TableSourceType,
@@ -68,11 +63,16 @@ import {
   Webhook,
   WithRequired,
 } from "@budibase/types"
+import supertest from "supertest"
+import newid from "../../db/newid"
+import { generateUserMetadataID } from "../../db/utils"
+import { startup } from "../../startup"
+import { cleanup } from "../../utilities/fileSystem"
 
-import API from "./api"
-import { cloneDeep } from "lodash"
-import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
+import jwt, { Secret } from "jsonwebtoken"
+import { cloneDeep } from "lodash"
+import API from "./api"
 
 mocks.licenses.init(pro)
 
@@ -371,7 +371,7 @@ export default class TestConfiguration {
     let existing: Partial<User> = {}
     try {
       existing = await db.get<User>(_id)
-    } catch (err) {
+    } catch (_err) {
       // ignore
     }
     const user: User = {
@@ -584,7 +584,7 @@ export default class TestConfiguration {
     let devInfo: any
     try {
       devInfo = await db.get(id)
-    } catch (err) {
+    } catch (_err) {
       devInfo = { _id: id, userId }
     }
     devInfo.apiKey = encryption.encrypt(

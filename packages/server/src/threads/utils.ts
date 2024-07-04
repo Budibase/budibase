@@ -1,8 +1,8 @@
-import { QueryVariable } from "./definitions"
-import env from "../environment"
+import { db as dbCore, redis } from "@budibase/backend-core"
 import * as db from "../db"
-import { redis, db as dbCore } from "@budibase/backend-core"
+import env from "../environment"
 import * as jsRunner from "../jsRunner"
+import { QueryVariable } from "./definitions"
 
 const VARIABLE_TTL_SECONDS = 3600
 let client: redis.Client | null = null
@@ -64,7 +64,7 @@ export function formatResponse(resp: any) {
   if (typeof resp === "string") {
     try {
       resp = JSON.parse(resp)
-    } catch (err) {
+    } catch (_err) {
       resp = { response: resp }
     }
   }

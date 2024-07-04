@@ -1,6 +1,6 @@
-import env from "../../../environment"
-import { BBContext } from "@budibase/types"
 import { cache } from "@budibase/backend-core"
+import { BBContext } from "@budibase/types"
+import env from "../../../environment"
 
 export async function systemRestored(ctx: BBContext) {
   if (!env.SELF_HOSTED) {

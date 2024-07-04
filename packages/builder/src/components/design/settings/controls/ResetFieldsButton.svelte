@@ -1,31 +1,31 @@
 <script>
-  import { ActionButton, notifications } from "@budibase/bbui"
-  import { selectedScreen, componentStore } from "stores/builder"
-  import { findClosestMatchingComponent } from "helpers/components"
-  import { makeDatasourceFormComponents } from "templates/commonComponents"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { ActionButton, notifications } from "@budibase/bbui"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { findClosestMatchingComponent } from "helpers/components"
+import { componentStore, selectedScreen } from "stores/builder"
+import { makeDatasourceFormComponents } from "templates/commonComponents"
 
-  export let componentInstance
+export let componentInstance
 
-  let confirmResetFieldsDialog
+let confirmResetFieldsDialog
 
-  const resetFormFields = async () => {
-    const form = findClosestMatchingComponent(
-      $selectedScreen?.props,
-      componentInstance._id,
-      component => component._component.endsWith("/form")
+const resetFormFields = async () => {
+  const form = findClosestMatchingComponent(
+    $selectedScreen?.props,
+    componentInstance._id,
+    component => component._component.endsWith("/form")
+  )
+  const dataSource = form?.dataSource
+  const fields = makeDatasourceFormComponents(dataSource)
+  try {
+    await componentStore.updateSetting(
+      "_children",
+      fields.map(field => field.json())
     )
-    const dataSource = form?.dataSource
-    const fields = makeDatasourceFormComponents(dataSource)
-    try {
-      await componentStore.updateSetting(
-        "_children",
-        fields.map(field => field.json())
-      )
-    } catch (error) {
-      notifications.error("Error resetting form fields")
-    }
+  } catch (error) {
+    notifications.error("Error resetting form fields")
   }
+}
 </script>
 
 <div>

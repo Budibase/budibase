@@ -1,35 +1,35 @@
+import { sql } from "@budibase/backend-core"
 import {
-  Integration,
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
-  QueryType,
+  DatasourcePlus,
+  DatasourcePlusQueryResponse,
+  Integration,
   QueryJson,
+  QueryType,
+  Schema,
+  SourceName,
+  SqlClient,
   SqlQuery,
+  SqlQueryBinding,
   Table,
   TableSchema,
-  DatasourcePlus,
-  DatasourceFeature,
-  ConnectionInfo,
-  SourceName,
-  Schema,
   TableSourceType,
-  DatasourcePlusQueryResponse,
-  SqlQueryBinding,
-  SqlClient,
 } from "@budibase/types"
-import {
-  getSqlQuery,
-  buildExternalTableId,
-  generateColumnDefinition,
-  finaliseExternalTables,
-  checkExternalTables,
-  HOST_ADDRESS,
-} from "./utils"
 import dayjs from "dayjs"
-import { NUMBER_REGEX } from "../utilities"
-import { MySQLColumn } from "./base/types"
-import { getReadableErrorMessage } from "./base/errorMapping"
-import { sql } from "@budibase/backend-core"
 import mysql from "mysql2/promise"
+import { NUMBER_REGEX } from "../utilities"
+import { getReadableErrorMessage } from "./base/errorMapping"
+import { MySQLColumn } from "./base/types"
+import {
+  HOST_ADDRESS,
+  buildExternalTableId,
+  checkExternalTables,
+  finaliseExternalTables,
+  generateColumnDefinition,
+  getSqlQuery,
+} from "./utils"
 
 const Sql = sql.Sql
 

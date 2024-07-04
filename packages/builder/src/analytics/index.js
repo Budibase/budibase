@@ -1,6 +1,6 @@
 import { API } from "api"
 import PosthogClient from "./PosthogClient"
-import { Events, EventSource } from "./constants"
+import { EventSource, Events } from "./constants"
 
 const posthog = new PosthogClient(process.env.POSTHOG_TOKEN)
 
@@ -25,7 +25,9 @@ class AnalyticsHub {
     posthog.identify(id)
   }
 
-  captureException(_err) {}
+  captureException(_err) {
+    // empty on purpose
+  }
 
   captureEvent(eventName, props = {}) {
     posthog.captureEvent(eventName, props)

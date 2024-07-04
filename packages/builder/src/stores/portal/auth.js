@@ -1,7 +1,7 @@
-import { derived, writable, get } from "svelte/store"
+import analytics from "analytics"
 import { API } from "api"
 import { admin } from "stores/portal"
-import analytics from "analytics"
+import { derived, get, writable } from "svelte/store"
 
 export function createAuthStore() {
   const auth = writable({
@@ -107,7 +107,7 @@ export function createAuthStore() {
       try {
         const user = await API.fetchBuilderSelf()
         setUser(user)
-      } catch (error) {
+      } catch (_error) {
         setUser(null)
       }
     },
@@ -132,7 +132,7 @@ export function createAuthStore() {
       try {
         const user = await API.fetchBuilderSelf()
         setUser(user)
-      } catch (error) {
+      } catch (_error) {
         setUser(null)
       }
     },

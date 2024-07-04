@@ -1,12 +1,12 @@
-import Router from "@koa/router"
-import * as controller from "../controllers/automation"
-import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
-import { bodyResource, paramResource } from "../../middleware/resourceId"
+import Router from "@koa/router"
 import {
-  middleware as appInfoMiddleware,
   AppType,
+  middleware as appInfoMiddleware,
 } from "../../middleware/appInfo"
+import authorized from "../../middleware/authorized"
+import { bodyResource, paramResource } from "../../middleware/resourceId"
+import * as controller from "../controllers/automation"
 import { automationValidator } from "./utils/validators"
 
 const router: Router = new Router()

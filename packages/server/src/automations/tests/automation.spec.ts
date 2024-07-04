@@ -10,15 +10,15 @@ jest.mock("../../utilities/redis", () => ({
 jest.spyOn(global.console, "error")
 
 import "../../environment"
-import * as automation from "../index"
-import * as thread from "../../threads/automation"
-import * as triggers from "../triggers"
-import { basicAutomation } from "../../tests/utilities/structures"
-import { wait } from "../../utilities"
-import { makePartial } from "../../tests/utilities"
-import { cleanInputValues } from "../automationUtils"
-import * as setup from "./utilities"
 import { Automation } from "@budibase/types"
+import { makePartial } from "../../tests/utilities"
+import { basicAutomation } from "../../tests/utilities/structures"
+import * as thread from "../../threads/automation"
+import { wait } from "../../utilities"
+import { cleanInputValues } from "../automationUtils"
+import * as automation from "../index"
+import * as triggers from "../triggers"
+import * as setup from "./utilities"
 
 describe("Run through some parts of the automations system", () => {
   let config = setup.getConfig()

@@ -1,14 +1,14 @@
 <script>
-  import { runtimeToReadableBinding } from "dataBinding"
-  import EditNavItemPopover from "./EditNavItemPopover.svelte"
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
+import { runtimeToReadableBinding } from "dataBinding"
+import EditNavItemPopover from "./EditNavItemPopover.svelte"
 
-  export let item
-  export let removeNavItem
-  export let anchor
-  export let bindings
+export let item
+export let removeNavItem
+export let anchor
+export let bindings
 
-  $: text = runtimeToReadableBinding(bindings, item.text)
+$: text = runtimeToReadableBinding(bindings, item.text)
 </script>
 
 <div class="list-item-body">

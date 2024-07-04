@@ -1,11 +1,11 @@
 <script>
-  import "@spectrum-css/divider/dist/index-vars.css"
+import "@spectrum-css/divider/dist/index-vars.css"
 
-  export let size = "M"
+export let size = "M"
 
-  export let vertical = false
-  export let noMargin = false
-  export let noGrid = false
+export let vertical = false
+export let noMargin = false
+export let noGrid = false
 </script>
 
 <hr

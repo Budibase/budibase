@@ -1,36 +1,36 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import { automationStore, selectedAutomation } from "stores/builder"
-  import { TriggerStepID } from "constants/backend/automations"
-  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
-  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+import { Label, Select } from "@budibase/bbui"
+import { TriggerStepID } from "constants/backend/automations"
+import { automationStore, selectedAutomation } from "stores/builder"
+import { createEventDispatcher } from "svelte"
+import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let value
-  export let bindings = []
-  const onChangeAutomation = e => {
-    value.automationId = e.detail
-    dispatch("change", value)
-  }
+export let value
+export let bindings = []
+const onChangeAutomation = e => {
+  value.automationId = e.detail
+  dispatch("change", value)
+}
 
-  const onChange = (e, field) => {
-    value[field] = e.detail
-    dispatch("change", value)
-  }
-  $: if (value?.automationId == null) value = { automationId: "" }
+const onChange = (e, field) => {
+  value[field] = e.detail
+  dispatch("change", value)
+}
+$: if (value?.automationId == null) value = { automationId: "" }
 
-  $: automationFields =
-    $automationStore.automations.find(
-      automation => automation._id === value?.automationId
-    )?.definition?.trigger?.inputs?.fields || []
+$: automationFields =
+  $automationStore.automations.find(
+    automation => automation._id === value?.automationId
+  )?.definition?.trigger?.inputs?.fields || []
 
-  $: filteredAutomations = $automationStore.automations.filter(
-    automation =>
-      automation.definition.trigger.stepId === TriggerStepID.APP &&
-      automation._id !== $selectedAutomation._id
-  )
+$: filteredAutomations = $automationStore.automations.filter(
+  automation =>
+    automation.definition.trigger.stepId === TriggerStepID.APP &&
+    automation._id !== $selectedAutomation._id
+)
 </script>
 
 <div class="schema-field">

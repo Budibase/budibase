@@ -1,38 +1,38 @@
 <script>
-  import Block from "components/Block.svelte"
-  import BlockComponent from "components/BlockComponent.svelte"
-  import { makePropSafe as safe } from "@budibase/string-templates"
-  import { generate } from "shortid"
-  import { get } from "svelte/store"
-  import { getContext } from "svelte"
+import { makePropSafe as safe } from "@budibase/string-templates"
+import Block from "components/Block.svelte"
+import BlockComponent from "components/BlockComponent.svelte"
+import { generate } from "shortid"
+import { getContext } from "svelte"
+import { get } from "svelte/store"
 
-  export let dataSource
-  export let height
-  export let cardTitle
-  export let cardSubtitle
-  export let cardDescription
-  export let cardImageURL
-  export let cardSearchField
-  export let detailFields
-  export let detailTitle
-  export let noRowsMessage
-  export let autoRefresh
+export let dataSource
+export let height
+export let cardTitle
+export let cardSubtitle
+export let cardDescription
+export let cardImageURL
+export let cardSearchField
+export let detailFields
+export let detailTitle
+export let noRowsMessage
+export let autoRefresh
 
-  const stateKey = generate()
-  const context = getContext("context")
-  const { generateGoldenSample } = getContext("sdk")
+const stateKey = generate()
+const context = getContext("context")
+const { generateGoldenSample } = getContext("sdk")
 
-  let listDataProviderId
-  let listRepeaterId
+let listDataProviderId
+let listRepeaterId
 
-  // Provide additional data context for live binding eval
-  export const getAdditionalDataContext = () => {
-    const rows = get(context)[listDataProviderId]?.rows || []
-    const goldenRow = generateGoldenSample(rows)
-    return {
-      [listRepeaterId]: goldenRow,
-    }
+// Provide additional data context for live binding eval
+export const getAdditionalDataContext = () => {
+  const rows = get(context)[listDataProviderId]?.rows || []
+  const goldenRow = generateGoldenSample(rows)
+  return {
+    [listRepeaterId]: goldenRow,
   }
+}
 </script>
 
 <Block>

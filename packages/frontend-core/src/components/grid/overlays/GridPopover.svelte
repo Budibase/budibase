@@ -1,39 +1,39 @@
 <script>
-  import { Popover, clickOutside } from "@budibase/bbui"
-  import { createEventDispatcher, getContext } from "svelte"
-  import {
-    PopoverMinWidth,
-    PopoverMaxWidth,
-    PopoverMaxHeight,
-  } from "../lib/constants"
+import { Popover, clickOutside } from "@budibase/bbui"
+import { createEventDispatcher, getContext } from "svelte"
+import {
+  PopoverMaxHeight,
+  PopoverMaxWidth,
+  PopoverMinWidth,
+} from "../lib/constants"
 
-  export let anchor
-  export let minWidth = PopoverMinWidth
-  export let maxWidth = PopoverMaxWidth
-  export let maxHeight = PopoverMaxHeight
-  export let align = "left"
-  export let open = true
-  export let resizable = false
-  export let wrap = true
+export let anchor
+export let minWidth = PopoverMinWidth
+export let maxWidth = PopoverMaxWidth
+export let maxHeight = PopoverMaxHeight
+export let align = "left"
+export let open = true
+export let resizable = false
+export let wrap = true
 
-  const { gridID } = getContext("grid")
-  const dispatch = createEventDispatcher()
+const { gridID } = getContext("grid")
+const dispatch = createEventDispatcher()
 
-  $: style = buildStyles(minWidth, maxWidth, maxHeight)
+$: style = buildStyles(minWidth, maxWidth, maxHeight)
 
-  const buildStyles = (minWidth, maxWidth, maxHeight) => {
-    let style = ""
-    if (minWidth != null) {
-      style += `min-width: ${minWidth}px;`
-    }
-    if (maxWidth != null) {
-      style += `max-width: ${maxWidth}px;`
-    }
-    if (maxHeight != null) {
-      style += `max-height: ${maxHeight}px;`
-    }
-    return style
+const buildStyles = (minWidth, maxWidth, maxHeight) => {
+  let style = ""
+  if (minWidth != null) {
+    style += `min-width: ${minWidth}px;`
   }
+  if (maxWidth != null) {
+    style += `max-width: ${maxWidth}px;`
+  }
+  if (maxHeight != null) {
+    style += `max-height: ${maxHeight}px;`
+  }
+  return style
+}
 </script>
 
 <Popover

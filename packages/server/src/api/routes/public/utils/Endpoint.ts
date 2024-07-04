@@ -35,7 +35,9 @@ class Endpoint {
       outputMiddlewares = this.outputMiddlewares
     // need a function to do nothing to stop the execution at the end
     // middlewares are circular so if they always keep calling next, it'll just keep looping
-    const complete = () => {}
+    const complete = () => {
+      // empty on purpose
+    }
     const params = [
       url,
       ...middlewares,

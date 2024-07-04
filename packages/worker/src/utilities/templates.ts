@@ -1,8 +1,8 @@
-import { tenancy, configs } from "@budibase/backend-core"
+import { configs, tenancy } from "@budibase/backend-core"
 import {
+  EmailTemplatePurpose,
   InternalTemplateBinding,
   LOGO_URL,
-  EmailTemplatePurpose,
 } from "../constants"
 import { checkSlashesInUrl } from "./index"
 

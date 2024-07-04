@@ -1,6 +1,6 @@
+import { AutomationJob } from "@budibase/types"
 import workerFarm from "worker-farm"
 import env from "../environment"
-import { AutomationJob } from "@budibase/types"
 import { QueryEvent } from "./definitions"
 
 export const ThreadType = {

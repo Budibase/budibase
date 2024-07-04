@@ -1,40 +1,40 @@
 <script>
-  import { CoreCheckbox } from "@budibase/bbui"
-  import Field from "./Field.svelte"
+import { CoreCheckbox } from "@budibase/bbui"
+import Field from "./Field.svelte"
 
-  export let field
-  export let label
-  export let text
-  export let disabled = false
-  export let readonly = false
-  export let size
-  export let validation
-  export let defaultValue
-  export let onChange
-  export let helpText = null
+export let field
+export let label
+export let text
+export let disabled = false
+export let readonly = false
+export let size
+export let validation
+export let defaultValue
+export let onChange
+export let helpText = null
 
-  let fieldState
-  let fieldApi
+let fieldState
+let fieldApi
 
-  const isTruthy = value => {
-    if (!value) {
-      return false
-    }
-    if (value === true) {
-      return true
-    }
-    if (typeof value === "string" && value.toLowerCase() === "true") {
-      return true
-    }
+const isTruthy = value => {
+  if (!value) {
     return false
   }
-
-  const handleChange = e => {
-    const changed = fieldApi.setValue(e.detail)
-    if (onChange && changed) {
-      onChange({ value: e.detail })
-    }
+  if (value === true) {
+    return true
   }
+  if (typeof value === "string" && value.toLowerCase() === "true") {
+    return true
+  }
+  return false
+}
+
+const handleChange = e => {
+  const changed = fieldApi.setValue(e.detail)
+  if (onChange && changed) {
+    onChange({ value: e.detail })
+  }
+}
 </script>
 
 <Field

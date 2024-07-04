@@ -1,12 +1,12 @@
-import path, { join } from "path"
-import { ObjectStoreBuckets } from "../../constants"
 import fs from "fs"
+import path, { join } from "path"
 import { context, objectStore } from "@budibase/backend-core"
-import { resolve } from "../centralPath"
-import env from "../../environment"
-import { TOP_LEVEL_PATH } from "./filesystem"
-import { DocumentType } from "../../db/utils"
 import { App } from "@budibase/types"
+import { ObjectStoreBuckets } from "../../constants"
+import { DocumentType } from "../../db/utils"
+import env from "../../environment"
+import { resolve } from "../centralPath"
+import { TOP_LEVEL_PATH } from "./filesystem"
 
 export function devClientLibPath() {
   return require.resolve("@budibase/client")
@@ -48,7 +48,7 @@ export async function backupClientLibrary(appId: string) {
       ObjectStoreBuckets.APPS,
       join(appId, "manifest.json")
     )
-  } catch (error) {
+  } catch (_error) {
     // Fallback to loading it from the old location for old apps
     tmpManifestPath = await objectStore.retrieveToTmp(
       ObjectStoreBuckets.APPS,

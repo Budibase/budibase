@@ -1,32 +1,32 @@
 <script>
-  import { onMount } from "svelte"
-  import { DNDPlaceholderID } from "constants"
-  import { domDebounce } from "utils/domDebounce.js"
+import { DNDPlaceholderID } from "constants"
+import { onMount } from "svelte"
+import { domDebounce } from "utils/domDebounce.js"
 
-  let left, top, height, width
+let left, top, height, width
 
-  const updatePosition = () => {
-    const node =
-      document.getElementsByClassName(DNDPlaceholderID)[0]?.childNodes[0]
-    if (!node) {
-      height = 0
-      width = 0
-    } else {
-      const bounds = node.getBoundingClientRect()
-      left = bounds.left
-      top = bounds.top
-      height = bounds.height
-      width = bounds.width
-    }
+const updatePosition = () => {
+  const node =
+    document.getElementsByClassName(DNDPlaceholderID)[0]?.childNodes[0]
+  if (!node) {
+    height = 0
+    width = 0
+  } else {
+    const bounds = node.getBoundingClientRect()
+    left = bounds.left
+    top = bounds.top
+    height = bounds.height
+    width = bounds.width
   }
-  const debouncedUpdate = domDebounce(updatePosition)
+}
+const debouncedUpdate = domDebounce(updatePosition)
 
-  onMount(() => {
-    const interval = setInterval(debouncedUpdate, 100)
-    return () => {
-      clearInterval(interval)
-    }
-  })
+onMount(() => {
+  const interval = setInterval(debouncedUpdate, 100)
+  return () => {
+    clearInterval(interval)
+  }
+})
 </script>
 
 {#if left != null && top != null && width && height}

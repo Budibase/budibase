@@ -1,45 +1,45 @@
 <script>
-  import {
-    ActionMenu,
-    MenuItem,
-    Icon,
-    Heading,
-    Body,
-    Modal,
-    AbsTooltip,
-    TooltipPosition,
-  } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import CreateRestoreModal from "./CreateRestoreModal.svelte"
-  import { createEventDispatcher } from "svelte"
-  import { isOnlyUser } from "stores/builder"
-  import { BackupType } from "constants/backend/backups"
+import {
+  AbsTooltip,
+  ActionMenu,
+  Body,
+  Heading,
+  Icon,
+  MenuItem,
+  Modal,
+  TooltipPosition,
+} from "@budibase/bbui"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { BackupType } from "constants/backend/backups"
+import { isOnlyUser } from "stores/builder"
+import { createEventDispatcher } from "svelte"
+import CreateRestoreModal from "./CreateRestoreModal.svelte"
 
-  export let row
+export let row
 
-  let deleteDialog
-  let restoreDialog
-  let restoreBackupModal
+let deleteDialog
+let restoreDialog
+let restoreBackupModal
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  const onClickRestore = () => {
-    dispatch("buttonclick", {
-      type: "backupRestore",
-      backupId: row._id,
-    })
-  }
+const onClickRestore = () => {
+  dispatch("buttonclick", {
+    type: "backupRestore",
+    backupId: row._id,
+  })
+}
 
-  const onClickDelete = () => {
-    dispatch("buttonclick", {
-      type: "backupDelete",
-      backupId: row._id,
-    })
-  }
+const onClickDelete = () => {
+  dispatch("buttonclick", {
+    type: "backupDelete",
+    backupId: row._id,
+  })
+}
 
-  async function downloadExport() {
-    window.open(`/api/apps/${row.appId}/backups/${row._id}/file`, "_blank")
-  }
+async function downloadExport() {
+  window.open(`/api/apps/${row.appId}/backups/${row._id}/file`, "_blank")
+}
 </script>
 
 <div class="cell">

@@ -1,15 +1,15 @@
 <script>
-  export let backgroundColour
-  export let imageSrc
-  export let name
-  export let icon
-  export let overlayEnabled = true
+export let backgroundColour
+export let imageSrc
+export let name
+export let icon
+export let overlayEnabled = true
 
-  let imageError = false
+let imageError = false
 
-  const imageRenderError = () => {
-    imageError = true
-  }
+const imageRenderError = () => {
+  imageError = true
+}
 </script>
 
 <div class="template-card" style="background-color:{backgroundColour};">

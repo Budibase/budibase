@@ -1,5 +1,5 @@
-import env from "../environment"
 import { BBContext } from "@budibase/types"
+import env from "../environment"
 
 // if added as a middleware will stop requests unless builder is in self host mode
 // or cloud is in self host

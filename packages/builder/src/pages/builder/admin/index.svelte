@@ -1,46 +1,46 @@
 <script>
-  import {
-    Button,
-    Heading,
-    notifications,
-    Layout,
-    Body,
-    FancyForm,
-    FancyInput,
-  } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
-  import { API } from "api"
-  import { admin, auth } from "stores/portal"
-  import Logo from "assets/bb-emblem.svg"
-  import { TestimonialPage } from "@budibase/frontend-core/src/components"
-  import { passwordsMatch, handleError } from "../auth/_components/utils"
+import {
+  Body,
+  Button,
+  FancyForm,
+  FancyInput,
+  Heading,
+  Layout,
+  notifications,
+} from "@budibase/bbui"
+import { TestimonialPage } from "@budibase/frontend-core/src/components"
+import { goto } from "@roxi/routify"
+import { API } from "api"
+import Logo from "assets/bb-emblem.svg"
+import { admin, auth } from "stores/portal"
+import { handleError, passwordsMatch } from "../auth/_components/utils"
 
-  let form
-  let errors = {}
-  let formData = {}
-  let submitted = false
+let form
+let errors = {}
+let formData = {}
+let submitted = false
 
-  $: tenantId = $auth.tenantId
+$: tenantId = $auth.tenantId
 
-  async function save() {
-    form.validate()
-    if (Object.keys(errors).length > 0) {
-      return
-    }
-    submitted = true
-    try {
-      let adminUser = { ...formData, tenantId }
-      delete adminUser.confirmationPassword
-      // Save the admin user
-      await API.createAdminUser(adminUser)
-      notifications.success("Admin user created")
-      await admin.init()
-      $goto("../portal")
-    } catch (error) {
-      submitted = false
-      notifications.error(error.message || "Failed to create admin user")
-    }
+async function save() {
+  form.validate()
+  if (Object.keys(errors).length > 0) {
+    return
   }
+  submitted = true
+  try {
+    let adminUser = { ...formData, tenantId }
+    delete adminUser.confirmationPassword
+    // Save the admin user
+    await API.createAdminUser(adminUser)
+    notifications.success("Admin user created")
+    await admin.init()
+    $goto("../portal")
+  } catch (error) {
+    submitted = false
+    notifications.error(error.message || "Failed to create admin user")
+  }
+}
 </script>
 
 <TestimonialPage>

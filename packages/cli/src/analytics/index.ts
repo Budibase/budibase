@@ -1,6 +1,6 @@
-import { Command } from "../structures/Command"
 import { CommandWord } from "../constants"
-import { success, error } from "../utils"
+import { Command } from "../structures/Command"
+import { error, success } from "../utils"
 import { AnalyticsClient } from "./Client"
 
 const client = new AnalyticsClient()
@@ -32,7 +32,7 @@ async function optIn() {
         "Successfully opted in to Budibase analytics. Thank you for helping us make Budibase better!"
       )
     )
-  } catch (err) {
+  } catch (_err) {
     console.log(
       error("Error opting in to Budibase analytics. Please try again later.")
     )
@@ -42,7 +42,7 @@ async function optIn() {
 async function status() {
   try {
     console.log(success(`Budibase analytics ${client.status()}`))
-  } catch (err) {
+  } catch (_err) {
     console.log(
       error("Error fetching analytics status. Please try again later.")
     )

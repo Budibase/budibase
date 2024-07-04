@@ -1,17 +1,17 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { Table } from "@budibase/bbui"
-  import ArrayRenderer from "components/common/renderers/ArrayRenderer.svelte"
-  import Controls from "./Controls.svelte"
-  import Panel from "../Panel.svelte"
-  import Tooltip from "../Tooltip.svelte"
+import { Table } from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import ArrayRenderer from "components/common/renderers/ArrayRenderer.svelte"
+import Panel from "../Panel.svelte"
+import Tooltip from "../Tooltip.svelte"
+import Controls from "./Controls.svelte"
 
-  export let datasource
+export let datasource
 
-  let tableSchema = {
-    name: {},
-    primary: { displayName: "Primary Key" },
-  }
+let tableSchema = {
+  name: {},
+  primary: { displayName: "Primary Key" },
+}
 </script>
 
 <Panel>

@@ -1,13 +1,13 @@
+import { sdk } from "@budibase/shared-core"
 import { CloudAccount, ContextUser, User, UserGroup } from "@budibase/types"
 import * as accountSdk from "../accounts"
-import env from "../environment"
-import { getPlatformUser } from "./lookup"
-import { EmailUnavailableError } from "../errors"
-import { getTenantId } from "../context"
-import { sdk } from "@budibase/shared-core"
 import { getAccountByTenantId } from "../accounts"
-import { BUILTIN_ROLE_IDS } from "../security/roles"
+import { getTenantId } from "../context"
 import * as context from "../context"
+import env from "../environment"
+import { EmailUnavailableError } from "../errors"
+import { BUILTIN_ROLE_IDS } from "../security/roles"
+import { getPlatformUser } from "./lookup"
 
 // extract from shared-core to make easily accessible from backend-core
 export const isBuilder = sdk.users.isBuilder

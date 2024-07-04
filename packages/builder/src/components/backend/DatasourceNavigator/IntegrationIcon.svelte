@@ -1,23 +1,23 @@
 <script>
-  import { getIcon } from "./icons"
-  import CustomSVG from "components/common/CustomSVG.svelte"
+import CustomSVG from "components/common/CustomSVG.svelte"
+import { getIcon } from "./icons"
 
-  export let integrationType
-  export let schema
-  export let size = "18"
+export let integrationType
+export let schema
+export let size = "18"
 
-  $: iconInfo = getIcon(integrationType, schema)
+$: iconInfo = getIcon(integrationType, schema)
 
-  async function getSvgFromUrl(info) {
-    const url = `${info.url}`
-    const resp = await fetch(url, {
-      headers: {
-        ["pragma"]: "no-cache",
-        ["cache-control"]: "no-cache",
-      },
-    })
-    return resp.text()
-  }
+async function getSvgFromUrl(info) {
+  const url = `${info.url}`
+  const resp = await fetch(url, {
+    headers: {
+      ["pragma"]: "no-cache",
+      ["cache-control"]: "no-cache",
+    },
+  })
+  return resp.text()
+}
 </script>
 
 {#if iconInfo.icon}

@@ -1,9 +1,9 @@
-import { expect, describe, it, vi } from "vitest"
 import {
-  runtimeToReadableBinding,
   readableToRuntimeBinding,
+  runtimeToReadableBinding,
   updateReferencesInObject,
 } from "dataBinding"
+import { describe, expect, it, vi } from "vitest"
 
 describe("Builder dataBinding", () => {
   beforeEach(() => {

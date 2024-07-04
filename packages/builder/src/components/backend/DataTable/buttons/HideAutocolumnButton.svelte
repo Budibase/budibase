@@ -1,11 +1,11 @@
 <script>
-  import { ActionButton } from "@budibase/bbui"
+import { ActionButton } from "@budibase/bbui"
 
-  export let hideAutocolumns
+export let hideAutocolumns
 
-  function hideOrUnhide() {
-    hideAutocolumns = !hideAutocolumns
-  }
+function hideOrUnhide() {
+  hideAutocolumns = !hideAutocolumns
+}
 </script>
 
 <ActionButton

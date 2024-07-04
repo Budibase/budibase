@@ -1,17 +1,17 @@
-import fetch from "node-fetch"
-import env from "../../environment"
-import { checkSlashesInUrl } from "../../utilities"
-import { createRequest } from "../../utilities/workerRequests"
-import { clearLock as redisClearLock } from "../../utilities/redis"
-import { DocumentType } from "../../db/utils"
 import {
-  context,
-  env as envCore,
   events,
-  db as dbCore,
   cache,
+  context,
+  db as dbCore,
+  env as envCore,
 } from "@budibase/backend-core"
 import { App } from "@budibase/types"
+import fetch from "node-fetch"
+import { DocumentType } from "../../db/utils"
+import env from "../../environment"
+import { checkSlashesInUrl } from "../../utilities"
+import { clearLock as redisClearLock } from "../../utilities/redis"
+import { createRequest } from "../../utilities/workerRequests"
 
 async function redirect(
   ctx: any,
@@ -41,7 +41,7 @@ async function redirect(
   let body
   try {
     body = await response.json()
-  } catch (err) {
+  } catch (_err) {
     // don't worry about errors, likely no JSON
   }
   ctx.status = response.status
@@ -99,7 +99,7 @@ export async function revert(ctx: any) {
     ) {
       throw new Error("No deployments for app")
     }
-  } catch (err) {
+  } catch (_err) {
     return ctx.throw(400, "App has not yet been deployed")
   }
 

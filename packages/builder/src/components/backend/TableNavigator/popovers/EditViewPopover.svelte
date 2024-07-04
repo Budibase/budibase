@@ -1,60 +1,60 @@
 <script>
-  import { views, viewsV2 } from "stores/builder"
-  import { cloneDeep } from "lodash/fp"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import {
-    notifications,
-    Icon,
-    Input,
-    ActionMenu,
-    MenuItem,
-    Modal,
-    ModalContent,
-  } from "@budibase/bbui"
+import {
+  ActionMenu,
+  Icon,
+  Input,
+  MenuItem,
+  Modal,
+  ModalContent,
+  notifications,
+} from "@budibase/bbui"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import { cloneDeep } from "lodash/fp"
+import { views, viewsV2 } from "stores/builder"
 
-  export let view
+export let view
 
-  let editorModal
-  let originalName
-  let updatedName
-  let confirmDeleteDialog
+let editorModal
+let originalName
+let updatedName
+let confirmDeleteDialog
 
-  async function save() {
-    const updatedView = cloneDeep(view)
-    updatedView.name = updatedName
+async function save() {
+  const updatedView = cloneDeep(view)
+  updatedView.name = updatedName
 
+  if (view.version === 2) {
+    await viewsV2.save({
+      originalName,
+      ...updatedView,
+    })
+  } else {
+    await views.save({
+      originalName,
+      ...updatedView,
+    })
+  }
+
+  notifications.success("View renamed successfully")
+}
+
+async function deleteView() {
+  try {
     if (view.version === 2) {
-      await viewsV2.save({
-        originalName,
-        ...updatedView,
-      })
+      await viewsV2.delete(view)
     } else {
-      await views.save({
-        originalName,
-        ...updatedView,
-      })
+      await views.delete(view)
     }
-
-    notifications.success("View renamed successfully")
+    notifications.success("View deleted")
+  } catch (error) {
+    notifications.error("Error deleting view")
   }
+}
 
-  async function deleteView() {
-    try {
-      if (view.version === 2) {
-        await viewsV2.delete(view)
-      } else {
-        await views.delete(view)
-      }
-      notifications.success("View deleted")
-    } catch (error) {
-      notifications.error("Error deleting view")
-    }
-  }
-
-  const initForm = () => {
-    updatedName = view.name + ""
-    originalName = view.name + ""
-  }
+const initForm = () => {
+  updatedName = view.name + ""
+  originalName = view.name + ""
+}
 </script>
 
 <ActionMenu>

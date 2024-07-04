@@ -1,8 +1,8 @@
-import { atob, isJSAllowed } from "../utilities"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { LITERAL_MARKER } from "../helpers/constants"
-import { getJsHelperList } from "./list"
 import { iifeWrapper } from "../iife"
+import { atob, isJSAllowed } from "../utilities"
+import { getJsHelperList } from "./list"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).

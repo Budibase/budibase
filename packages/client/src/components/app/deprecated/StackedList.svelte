@@ -1,15 +1,15 @@
 <script>
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
 
-  const { styleable, linkable } = getContext("sdk")
-  const component = getContext("component")
+const { styleable, linkable } = getContext("sdk")
+const component = getContext("component")
 
-  export let imageUrl = ""
-  export let heading = ""
-  export let subheading = ""
-  export let destinationUrl = "/"
+export let imageUrl = ""
+export let heading = ""
+export let subheading = ""
+export let destinationUrl = "/"
 
-  $: showImage = !!imageUrl
+$: showImage = !!imageUrl
 </script>
 
 <div class="container" use:styleable={$component.styles}>

@@ -1,5 +1,5 @@
-import { generator } from "./generator"
 import { newid } from "../../../../src/docIds/newid"
+import { generator } from "./generator"
 
 export function id() {
   return `db_${newid()}`

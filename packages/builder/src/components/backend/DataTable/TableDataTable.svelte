@@ -1,59 +1,59 @@
 <script>
-  import { datasources, tables, integrations, appStore } from "stores/builder"
-  import { themeStore, admin } from "stores/portal"
-  import EditRolesButton from "./buttons/EditRolesButton.svelte"
-  import { TableNames } from "constants"
-  import { Grid } from "@budibase/frontend-core"
-  import { API } from "api"
-  import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
-  import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
-  import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
-  import GridCreateViewButton from "components/backend/DataTable/buttons/grid/GridCreateViewButton.svelte"
-  import GridImportButton from "components/backend/DataTable/buttons/grid/GridImportButton.svelte"
-  import GridExportButton from "components/backend/DataTable/buttons/grid/GridExportButton.svelte"
-  import GridFilterButton from "components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
-  import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
-  import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
-  import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
-  import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
-  import { DB_TYPE_EXTERNAL } from "constants/backend"
+import { TableNames } from "constants"
+import { Grid } from "@budibase/frontend-core"
+import { API } from "api"
+import GridCreateViewButton from "components/backend/DataTable/buttons/grid/GridCreateViewButton.svelte"
+import GridExportButton from "components/backend/DataTable/buttons/grid/GridExportButton.svelte"
+import GridFilterButton from "components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
+import GridImportButton from "components/backend/DataTable/buttons/grid/GridImportButton.svelte"
+import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
+import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
+import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
+import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
+import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
+import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
+import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
+import { DB_TYPE_EXTERNAL } from "constants/backend"
+import { appStore, datasources, integrations, tables } from "stores/builder"
+import { admin, themeStore } from "stores/portal"
+import EditRolesButton from "./buttons/EditRolesButton.svelte"
 
-  const userSchemaOverrides = {
-    firstName: { displayName: "First name", disabled: true },
-    lastName: { displayName: "Last name", disabled: true },
-    email: { displayName: "Email", disabled: true },
-    roleId: { displayName: "Role", disabled: true },
-    status: { displayName: "Status", disabled: true },
+const userSchemaOverrides = {
+  firstName: { displayName: "First name", disabled: true },
+  lastName: { displayName: "Last name", disabled: true },
+  email: { displayName: "Email", disabled: true },
+  roleId: { displayName: "Role", disabled: true },
+  status: { displayName: "Status", disabled: true },
+}
+
+$: id = $tables.selected?._id
+$: isUsersTable = id === TableNames.USERS
+$: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
+$: gridDatasource = {
+  type: "table",
+  tableId: id,
+}
+$: tableDatasource = $datasources.list.find(datasource => {
+  return datasource._id === $tables.selected?.sourceId
+})
+$: relationshipsEnabled = relationshipSupport(tableDatasource)
+
+$: currentTheme = $themeStore?.theme
+$: darkMode = !currentTheme.includes("light")
+
+const relationshipSupport = datasource => {
+  const integration = $integrations[datasource?.source]
+  return !isInternal && integration?.relationships !== false
+}
+
+const handleGridTableUpdate = async e => {
+  tables.replaceTable(id, e.detail)
+
+  // We need to refresh datasources when an external table changes.
+  if (e.detail?.sourceType === DB_TYPE_EXTERNAL) {
+    await datasources.fetch()
   }
-
-  $: id = $tables.selected?._id
-  $: isUsersTable = id === TableNames.USERS
-  $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
-  $: gridDatasource = {
-    type: "table",
-    tableId: id,
-  }
-  $: tableDatasource = $datasources.list.find(datasource => {
-    return datasource._id === $tables.selected?.sourceId
-  })
-  $: relationshipsEnabled = relationshipSupport(tableDatasource)
-
-  $: currentTheme = $themeStore?.theme
-  $: darkMode = !currentTheme.includes("light")
-
-  const relationshipSupport = datasource => {
-    const integration = $integrations[datasource?.source]
-    return !isInternal && integration?.relationships !== false
-  }
-
-  const handleGridTableUpdate = async e => {
-    tables.replaceTable(id, e.detail)
-
-    // We need to refresh datasources when an external table changes.
-    if (e.detail?.sourceType === DB_TYPE_EXTERNAL) {
-      await datasources.fetch()
-    }
-  }
+}
 </script>
 
 <div class="wrapper">

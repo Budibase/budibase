@@ -1,73 +1,73 @@
 <script>
-  import { getContext } from "svelte"
-  import GridCell from "./GridCell.svelte"
-  import { getCellRenderer } from "../lib/renderers"
-  import { derived, writable } from "svelte/store"
+import { getContext } from "svelte"
+import { derived, writable } from "svelte/store"
+import { getCellRenderer } from "../lib/renderers"
+import GridCell from "./GridCell.svelte"
 
-  const { rows, focusedCellId, focusedCellAPI, menu, config, validation } =
-    getContext("grid")
+const { rows, focusedCellId, focusedCellAPI, menu, config, validation } =
+  getContext("grid")
 
-  export let highlighted
-  export let selected
-  export let rowFocused
-  export let rowIdx
-  export let topRow = false
-  export let focused
-  export let selectedUser
-  export let column
-  export let row
-  export let cellId
-  export let updateValue = rows.actions.updateValue
-  export let contentLines = 1
-  export let hidden = false
+export let highlighted
+export let selected
+export let rowFocused
+export let rowIdx
+export let topRow = false
+export let focused
+export let selectedUser
+export let column
+export let row
+export let cellId
+export let updateValue = rows.actions.updateValue
+export let contentLines = 1
+export let hidden = false
 
-  const emptyError = writable(null)
+const emptyError = writable(null)
 
-  let api
+let api
 
-  // Get the error for this cell if the row is focused
-  $: error = getErrorStore(rowFocused, cellId)
+// Get the error for this cell if the row is focused
+$: error = getErrorStore(rowFocused, cellId)
 
-  // Determine if the cell is editable
-  $: readonly =
-    column.schema.autocolumn ||
-    column.schema.disabled ||
-    column.schema.type === "formula" ||
-    (!$config.canEditRows && !row._isNewRow) ||
-    column.schema.readonly
+// Determine if the cell is editable
+$: readonly =
+  column.schema.autocolumn ||
+  column.schema.disabled ||
+  column.schema.type === "formula" ||
+  (!$config.canEditRows && !row._isNewRow) ||
+  column.schema.readonly
 
-  // Register this cell API if the row is focused
-  $: {
-    if (focused) {
-      focusedCellAPI.set(cellAPI)
-    }
+// Register this cell API if the row is focused
+$: {
+  if (focused) {
+    focusedCellAPI.set(cellAPI)
   }
+}
 
-  const getErrorStore = (selected, cellId) => {
-    if (!selected) {
-      return emptyError
-    }
-    return derived(validation, $validation => $validation[cellId])
+const getErrorStore = (selected, cellId) => {
+  if (!selected) {
+    return emptyError
   }
+  return derived(validation, $validation => $validation[cellId])
+}
 
-  const cellAPI = {
-    focus: () => api?.focus?.(),
-    blur: () => api?.blur?.(),
-    isActive: () => api?.isActive?.() ?? false,
-    onKeyDown: (...params) => api?.onKeyDown(...params),
-    isReadonly: () => readonly,
-    getType: () => column.schema.type,
-    getValue: () => row[column.name],
-    setValue: (value, options = { apply: true }) => {
-      validation.actions.setError(cellId, null)
-      updateValue({
-        rowId: row._id,
-        column: column.name,
-        value,
-        apply: options?.apply,
-      })
-    },
-  }
+const cellAPI = {
+  focus: () => api?.focus?.(),
+  blur: () => api?.blur?.(),
+  isActive: () => api?.isActive?.() ?? false,
+  onKeyDown: (...params) => api?.onKeyDown(...params),
+  isReadonly: () => readonly,
+  getType: () => column.schema.type,
+  getValue: () => row[column.name],
+  setValue: (value, options = { apply: true }) => {
+    validation.actions.setError(cellId, null)
+    updateValue({
+      rowId: row._id,
+      column: column.name,
+      value,
+      apply: options?.apply,
+    })
+  },
+}
 </script>
 
 <GridCell

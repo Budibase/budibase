@@ -1,97 +1,97 @@
 <script>
-  import { flip } from "svelte/animate"
-  import { dndzone } from "svelte-dnd-action"
-  import { Icon, Popover } from "@budibase/bbui"
-  import { tick } from "svelte"
-  import { Constants } from "@budibase/frontend-core"
-  import { getSequentialName } from "helpers/duplicate"
-  import { derived, writable } from "svelte/store"
+import { Icon, Popover } from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
+import { getSequentialName } from "helpers/duplicate"
+import { tick } from "svelte"
+import { dndzone } from "svelte-dnd-action"
+import { flip } from "svelte/animate"
+import { derived, writable } from "svelte/store"
 
-  export let constraints
-  export let optionColors = {}
-  export let valid = true
+export let constraints
+export let optionColors = {}
+export let valid = true
 
-  const flipDurationMs = 130
-  const { OptionColours } = Constants
-  const getDefaultColor = idx => OptionColours[idx % OptionColours.length]
-  const options = writable(
-    constraints.inclusion.map((value, idx) => ({
-      id: Math.random(),
-      name: value,
-      color: optionColors?.[value] || getDefaultColor(idx),
-      invalid: false,
-    }))
-  )
-  const enrichedOptions = derived(options, $options => {
-    let enriched = []
-    $options.forEach(option => {
-      enriched.push({
-        ...option,
-        valid: option.name && !enriched.some(opt => opt.name === option.name),
-      })
+const flipDurationMs = 130
+const { OptionColours } = Constants
+const getDefaultColor = idx => OptionColours[idx % OptionColours.length]
+const options = writable(
+  constraints.inclusion.map((value, idx) => ({
+    id: Math.random(),
+    name: value,
+    color: optionColors?.[value] || getDefaultColor(idx),
+    invalid: false,
+  }))
+)
+const enrichedOptions = derived(options, $options => {
+  let enriched = []
+  $options.forEach(option => {
+    enriched.push({
+      ...option,
+      valid: option.name && !enriched.some(opt => opt.name === option.name),
     })
-    return enriched
+  })
+  return enriched
+})
+
+let openOption = null
+let anchor = null
+
+$: options.subscribe(updateConstraints)
+$: valid = $enrichedOptions.every(option => option.valid)
+
+const updateConstraints = options => {
+  constraints.inclusion = options.map(option => option.name)
+  optionColors = options.reduce(
+    (colors, option) => ({ ...colors, [option.name]: option.color }),
+    {}
+  )
+}
+
+const addNewInput = async () => {
+  const newId = Math.random()
+  const newName = getSequentialName($options, "Option ", {
+    numberFirstItem: true,
+    getName: option => option.name,
+  })
+  options.update(state => {
+    return [
+      ...state,
+      {
+        name: newName,
+        id: newId,
+        color: getDefaultColor(state.length),
+      },
+    ]
   })
 
-  let openOption = null
-  let anchor = null
+  // Focus new option
+  await tick()
+  document.getElementById(`option-${newId}`)?.focus()
+}
 
-  $: options.subscribe(updateConstraints)
-  $: valid = $enrichedOptions.every(option => option.valid)
+const removeInput = id => {
+  options.update(state => state.filter(option => option.id !== id))
+}
 
-  const updateConstraints = options => {
-    constraints.inclusion = options.map(option => option.name)
-    optionColors = options.reduce(
-      (colors, option) => ({ ...colors, [option.name]: option.color }),
-      {}
-    )
-  }
+const openColorPicker = id => {
+  anchor = document.getElementById(`color-${id}`)
+  openOption = id
+}
 
-  const addNewInput = async () => {
-    const newId = Math.random()
-    const newName = getSequentialName($options, "Option ", {
-      numberFirstItem: true,
-      getName: option => option.name,
-    })
-    options.update(state => {
-      return [
-        ...state,
-        {
-          name: newName,
-          id: newId,
-          color: getDefaultColor(state.length),
-        },
-      ]
-    })
+const handleColorChange = (id, color) => {
+  options.update(state => {
+    state.find(option => option.id === id).color = color
+    return state.slice()
+  })
+  openOption = null
+}
 
-    // Focus new option
-    await tick()
-    document.getElementById(`option-${newId}`)?.focus()
-  }
-
-  const removeInput = id => {
-    options.update(state => state.filter(option => option.id !== id))
-  }
-
-  const openColorPicker = id => {
-    anchor = document.getElementById(`color-${id}`)
-    openOption = id
-  }
-
-  const handleColorChange = (id, color) => {
-    options.update(state => {
-      state.find(option => option.id === id).color = color
-      return state.slice()
-    })
-    openOption = null
-  }
-
-  const handleNameChange = (id, name) => {
-    options.update(state => {
-      state.find(option => option.id === id).name = name
-      return state.slice()
-    })
-  }
+const handleNameChange = (id, name) => {
+  options.update(state => {
+    state.find(option => option.id === id).name = name
+    return state.slice()
+  })
+}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

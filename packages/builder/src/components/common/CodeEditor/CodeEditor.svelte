@@ -1,319 +1,319 @@
 <script>
-  import { Label } from "@budibase/bbui"
-  import { onMount, createEventDispatcher } from "svelte"
-  import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
+import { Label } from "@budibase/bbui"
+import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
+import { createEventDispatcher, onMount } from "svelte"
 
-  import {
-    autocompletion,
-    closeBrackets,
-    completionKeymap,
-    closeBracketsKeymap,
-    acceptCompletion,
-    completionStatus,
-  } from "@codemirror/autocomplete"
-  import {
-    EditorView,
-    lineNumbers,
-    keymap,
-    highlightSpecialChars,
-    drawSelection,
-    dropCursor,
-    highlightActiveLine,
-    highlightActiveLineGutter,
-    highlightWhitespace,
-    placeholder as placeholderFn,
-    MatchDecorator,
-    ViewPlugin,
-    Decoration,
-  } from "@codemirror/view"
-  import {
-    bracketMatching,
-    foldKeymap,
-    foldGutter,
-    syntaxHighlighting,
-  } from "@codemirror/language"
-  import { oneDark, oneDarkHighlightStyle } from "@codemirror/theme-one-dark"
-  import {
-    defaultKeymap,
-    historyKeymap,
-    history,
-    indentMore,
-    indentLess,
-  } from "@codemirror/commands"
-  import { Compartment, EditorState } from "@codemirror/state"
-  import { javascript } from "@codemirror/lang-javascript"
-  import { EditorModes } from "./"
-  import { themeStore } from "stores/portal"
+import {
+  acceptCompletion,
+  autocompletion,
+  closeBrackets,
+  closeBracketsKeymap,
+  completionKeymap,
+  completionStatus,
+} from "@codemirror/autocomplete"
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  indentLess,
+  indentMore,
+} from "@codemirror/commands"
+import { javascript } from "@codemirror/lang-javascript"
+import {
+  bracketMatching,
+  foldGutter,
+  foldKeymap,
+  syntaxHighlighting,
+} from "@codemirror/language"
+import { Compartment, EditorState } from "@codemirror/state"
+import { oneDark, oneDarkHighlightStyle } from "@codemirror/theme-one-dark"
+import {
+  Decoration,
+  EditorView,
+  MatchDecorator,
+  ViewPlugin,
+  drawSelection,
+  dropCursor,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+  highlightSpecialChars,
+  highlightWhitespace,
+  keymap,
+  lineNumbers,
+  placeholder as placeholderFn,
+} from "@codemirror/view"
+import { themeStore } from "stores/portal"
+import { EditorModes } from "./"
 
-  export let label
-  export let completions = []
-  export let mode = EditorModes.Handlebars
-  export let value = ""
-  export let placeholder = null
-  export let autocompleteEnabled = true
-  export let autofocus = false
-  export let jsBindingWrapping = true
-  export let readonly = false
-  export let readonlyLineNumbers = false
+export let label
+export let completions = []
+export let mode = EditorModes.Handlebars
+export let value = ""
+export let placeholder = null
+export let autocompleteEnabled = true
+export let autofocus = false
+export let jsBindingWrapping = true
+export let readonly = false
+export let readonlyLineNumbers = false
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  // Export a function to expose caret position
-  export const getCaretPosition = () => {
-    const selection_range = editor.state.selection.ranges[0]
-    return {
-      start: selection_range.from,
-      end: selection_range.to,
-    }
+// Export a function to expose caret position
+export const getCaretPosition = () => {
+  const selection_range = editor.state.selection.ranges[0]
+  return {
+    start: selection_range.from,
+    end: selection_range.to,
   }
+}
 
-  export const insertAtPos = opts => {
-    // Updating the value inside.
-    // Retain focus
-    editor.dispatch({
-      changes: {
-        from: opts.start || editor.state.doc.length,
-        to: opts.end || editor.state.doc.length,
-        insert: opts.value,
+export const insertAtPos = opts => {
+  // Updating the value inside.
+  // Retain focus
+  editor.dispatch({
+    changes: {
+      from: opts.start || editor.state.doc.length,
+      to: opts.end || editor.state.doc.length,
+      insert: opts.value,
+    },
+    selection: opts.cursor
+      ? {
+          anchor: opts.start + opts.value.length,
+        }
+      : undefined,
+  })
+}
+
+// Match decoration for HBS bindings
+const hbsMatchDeco = new MatchDecorator({
+  regexp: FIND_ANY_HBS_REGEX,
+  decoration: () => {
+    return Decoration.mark({
+      tag: "span",
+      attributes: {
+        class: "binding-wrap",
       },
-      selection: opts.cursor
-        ? {
-            anchor: opts.start + opts.value.length,
-          }
-        : undefined,
     })
-  }
-
-  // Match decoration for HBS bindings
-  const hbsMatchDeco = new MatchDecorator({
-    regexp: FIND_ANY_HBS_REGEX,
-    decoration: () => {
-      return Decoration.mark({
-        tag: "span",
-        attributes: {
-          class: "binding-wrap",
-        },
-      })
+  },
+})
+const hbsMatchDecoPlugin = ViewPlugin.define(
+  view => ({
+    decorations: hbsMatchDeco.createDeco(view),
+    update(u) {
+      this.decorations = hbsMatchDeco.updateDeco(u, this.decorations)
     },
-  })
-  const hbsMatchDecoPlugin = ViewPlugin.define(
-    view => ({
-      decorations: hbsMatchDeco.createDeco(view),
-      update(u) {
-        this.decorations = hbsMatchDeco.updateDeco(u, this.decorations)
+  }),
+  {
+    decorations: v => v.decorations,
+  }
+)
+
+// Match decoration for snippets
+const snippetMatchDeco = new MatchDecorator({
+  regexp: /snippets\.[^\s(]+/g,
+  decoration: () => {
+    return Decoration.mark({
+      tag: "span",
+      attributes: {
+        class: "snippet-wrap",
       },
-    }),
-    {
-      decorations: v => v.decorations,
-    }
-  )
+    })
+  },
+})
+const snippetMatchDecoPlugin = ViewPlugin.define(
+  view => ({
+    decorations: snippetMatchDeco.createDeco(view),
+    update(u) {
+      this.decorations = snippetMatchDeco.updateDeco(u, this.decorations)
+    },
+  }),
+  {
+    decorations: v => v.decorations,
+  }
+)
 
-  // Match decoration for snippets
-  const snippetMatchDeco = new MatchDecorator({
-    regexp: /snippets\.[^\s(]+/g,
-    decoration: () => {
-      return Decoration.mark({
-        tag: "span",
-        attributes: {
-          class: "snippet-wrap",
-        },
+// Theming!
+let currentTheme = $themeStore?.theme
+let isDark = !currentTheme.includes("light")
+let themeConfig = new Compartment()
+
+const indentWithTabCustom = {
+  key: "Tab",
+  run: view => {
+    if (completionStatus(view.state) === "active") {
+      acceptCompletion(view)
+      return true
+    }
+    indentMore(view)
+    return true
+  },
+  shift: view => {
+    indentLess(view)
+    return true
+  },
+}
+
+const buildKeymap = () => {
+  return [
+    ...closeBracketsKeymap,
+    ...defaultKeymap,
+    ...historyKeymap,
+    ...foldKeymap,
+    ...completionKeymap,
+    indentWithTabCustom,
+  ]
+}
+
+const buildBaseExtensions = () => {
+  return [
+    drawSelection(),
+    dropCursor(),
+    bracketMatching(),
+    closeBrackets(),
+    syntaxHighlighting(oneDarkHighlightStyle, { fallback: true }),
+    highlightSpecialChars(),
+    EditorView.lineWrapping,
+    themeConfig.of([...(isDark ? [oneDark] : [])]),
+  ]
+}
+
+// None of this is reactive, but it never has been, so we just assume most
+// config flags aren't changed at runtime
+const buildExtensions = base => {
+  let complete = [...base]
+
+  if (autocompleteEnabled) {
+    complete.push(
+      autocompletion({
+        override: [...completions],
+        closeOnBlur: true,
+        icons: false,
+        optionClass: completion =>
+          completion.simple
+            ? "autocomplete-option-simple"
+            : "autocomplete-option",
       })
-    },
-  })
-  const snippetMatchDecoPlugin = ViewPlugin.define(
-    view => ({
-      decorations: snippetMatchDeco.createDeco(view),
-      update(u) {
-        this.decorations = snippetMatchDeco.updateDeco(u, this.decorations)
-      },
-    }),
-    {
-      decorations: v => v.decorations,
-    }
-  )
+    )
+    complete.push(
+      EditorView.inputHandler.of((view, from, to, insert) => {
+        if (jsBindingWrapping && insert === "$") {
+          let { text } = view.state.doc.lineAt(from)
 
-  // Theming!
-  let currentTheme = $themeStore?.theme
-  let isDark = !currentTheme.includes("light")
-  let themeConfig = new Compartment()
-
-  const indentWithTabCustom = {
-    key: "Tab",
-    run: view => {
-      if (completionStatus(view.state) === "active") {
-        acceptCompletion(view)
-        return true
-      }
-      indentMore(view)
-      return true
-    },
-    shift: view => {
-      indentLess(view)
-      return true
-    },
-  }
-
-  const buildKeymap = () => {
-    return [
-      ...closeBracketsKeymap,
-      ...defaultKeymap,
-      ...historyKeymap,
-      ...foldKeymap,
-      ...completionKeymap,
-      indentWithTabCustom,
-    ]
-  }
-
-  const buildBaseExtensions = () => {
-    return [
-      drawSelection(),
-      dropCursor(),
-      bracketMatching(),
-      closeBrackets(),
-      syntaxHighlighting(oneDarkHighlightStyle, { fallback: true }),
-      highlightSpecialChars(),
-      EditorView.lineWrapping,
-      themeConfig.of([...(isDark ? [oneDark] : [])]),
-    ]
-  }
-
-  // None of this is reactive, but it never has been, so we just assume most
-  // config flags aren't changed at runtime
-  const buildExtensions = base => {
-    let complete = [...base]
-
-    if (autocompleteEnabled) {
-      complete.push(
-        autocompletion({
-          override: [...completions],
-          closeOnBlur: true,
-          icons: false,
-          optionClass: completion =>
-            completion.simple
-              ? "autocomplete-option-simple"
-              : "autocomplete-option",
-        })
-      )
-      complete.push(
-        EditorView.inputHandler.of((view, from, to, insert) => {
-          if (jsBindingWrapping && insert === "$") {
-            let { text } = view.state.doc.lineAt(from)
-
-            const left = from ? text.substring(0, from) : ""
-            const right = to ? text.substring(to) : ""
-            const wrap = !left.includes('$("') || !right.includes('")')
-            const tr = view.state.update(
-              {
-                changes: [{ from, insert: wrap ? '$("")' : "$" }],
-                selection: {
-                  anchor: from + (wrap ? 3 : 1),
-                },
+          const left = from ? text.substring(0, from) : ""
+          const right = to ? text.substring(to) : ""
+          const wrap = !left.includes('$("') || !right.includes('")')
+          const tr = view.state.update(
+            {
+              changes: [{ from, insert: wrap ? '$("")' : "$" }],
+              selection: {
+                anchor: from + (wrap ? 3 : 1),
               },
-              {
-                scrollIntoView: true,
-                userEvent: "input.type",
-              }
-            )
-            view.dispatch(tr)
-            return true
-          }
-          return false
-        })
-      )
-    }
-
-    // JS only plugins
-    if (mode.name === "javascript") {
-      complete.push(snippetMatchDecoPlugin)
-      complete.push(javascript())
-      if (!readonly) {
-        complete.push(highlightWhitespace())
-      }
-    }
-    // HBS only plugins
-    else {
-      complete.push(hbsMatchDecoPlugin)
-    }
-
-    if (placeholder) {
-      complete.push(placeholderFn(placeholder))
-    }
-
-    if (readonly) {
-      complete.push(EditorState.readOnly.of(true))
-      if (readonlyLineNumbers) {
-        complete.push(lineNumbers())
-      }
-    } else {
-      complete = [
-        ...complete,
-        history(),
-        highlightActiveLine(),
-        highlightActiveLineGutter(),
-        lineNumbers(),
-        foldGutter(),
-        keymap.of(buildKeymap()),
-        EditorView.updateListener.of(v => {
-          const docStr = v.state.doc?.toString()
-          if (docStr === value) {
-            return
-          }
-          dispatch("change", docStr)
-        }),
-      ]
-    }
-
-    return complete
+            },
+            {
+              scrollIntoView: true,
+              userEvent: "input.type",
+            }
+          )
+          view.dispatch(tr)
+          return true
+        }
+        return false
+      })
+    )
   }
 
-  let textarea
-  let editor
-  let mounted = false
-  let isEditorInitialised = false
+  // JS only plugins
+  if (mode.name === "javascript") {
+    complete.push(snippetMatchDecoPlugin)
+    complete.push(javascript())
+    if (!readonly) {
+      complete.push(highlightWhitespace())
+    }
+  }
+  // HBS only plugins
+  else {
+    complete.push(hbsMatchDecoPlugin)
+  }
 
-  const initEditor = () => {
-    const baseExtensions = buildBaseExtensions()
+  if (placeholder) {
+    complete.push(placeholderFn(placeholder))
+  }
 
-    editor = new EditorView({
-      doc: value?.toString(),
-      extensions: buildExtensions(baseExtensions),
-      parent: textarea,
+  if (readonly) {
+    complete.push(EditorState.readOnly.of(true))
+    if (readonlyLineNumbers) {
+      complete.push(lineNumbers())
+    }
+  } else {
+    complete = [
+      ...complete,
+      history(),
+      highlightActiveLine(),
+      highlightActiveLineGutter(),
+      lineNumbers(),
+      foldGutter(),
+      keymap.of(buildKeymap()),
+      EditorView.updateListener.of(v => {
+        const docStr = v.state.doc?.toString()
+        if (docStr === value) {
+          return
+        }
+        dispatch("change", docStr)
+      }),
+    ]
+  }
+
+  return complete
+}
+
+let textarea
+let editor
+let mounted = false
+let isEditorInitialised = false
+
+const initEditor = () => {
+  const baseExtensions = buildBaseExtensions()
+
+  editor = new EditorView({
+    doc: value?.toString(),
+    extensions: buildExtensions(baseExtensions),
+    parent: textarea,
+  })
+}
+
+$: {
+  if (autofocus && isEditorInitialised) {
+    editor.focus()
+  }
+}
+
+// Init when all elements are ready
+$: if (mounted && !isEditorInitialised) {
+  isEditorInitialised = true
+  initEditor()
+}
+
+// Theme change
+$: if (mounted && isEditorInitialised && $themeStore?.theme) {
+  if (currentTheme != $themeStore?.theme) {
+    currentTheme = $themeStore?.theme
+    isDark = !currentTheme.includes("light")
+
+    // Issue theme compartment update
+    editor.dispatch({
+      effects: themeConfig.reconfigure([...(isDark ? [oneDark] : [])]),
     })
   }
+}
 
-  $: {
-    if (autofocus && isEditorInitialised) {
-      editor.focus()
+onMount(async () => {
+  mounted = true
+  return () => {
+    if (editor) {
+      editor.destroy()
     }
   }
-
-  // Init when all elements are ready
-  $: if (mounted && !isEditorInitialised) {
-    isEditorInitialised = true
-    initEditor()
-  }
-
-  // Theme change
-  $: if (mounted && isEditorInitialised && $themeStore?.theme) {
-    if (currentTheme != $themeStore?.theme) {
-      currentTheme = $themeStore?.theme
-      isDark = !currentTheme.includes("light")
-
-      // Issue theme compartment update
-      editor.dispatch({
-        effects: themeConfig.reconfigure([...(isDark ? [oneDark] : [])]),
-      })
-    }
-  }
-
-  onMount(async () => {
-    mounted = true
-    return () => {
-      if (editor) {
-        editor.destroy()
-      }
-    }
-  })
+})
 </script>
 
 {#if label}

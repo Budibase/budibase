@@ -1,7 +1,7 @@
-import { Context, Request } from "koa"
-import { User, Role, UserRoles, Account, ConfigType } from "../documents"
-import { FeatureFlag, License } from "../sdk"
 import { Files } from "formidable"
+import { Context, Request } from "koa"
+import { Account, ConfigType, Role, User, UserRoles } from "../documents"
+import { FeatureFlag, License } from "../sdk"
 
 export interface ContextUser extends Omit<User, "roles"> {
   globalId?: string

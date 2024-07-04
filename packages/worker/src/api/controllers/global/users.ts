@@ -1,5 +1,15 @@
-import * as userSdk from "../../../sdk/users"
-import env from "../../../environment"
+import {
+  events,
+  ErrorCode,
+  accounts,
+  cache,
+  db,
+  locks,
+  migrations,
+  platform,
+  tenancy,
+} from "@budibase/backend-core"
+import { BpmStatusKey, BpmStatusValue } from "@budibase/shared-core"
 import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
@@ -24,20 +34,10 @@ import {
   User,
   UserCtx,
 } from "@budibase/types"
-import {
-  accounts,
-  cache,
-  ErrorCode,
-  events,
-  migrations,
-  platform,
-  tenancy,
-  db,
-  locks,
-} from "@budibase/backend-core"
-import { checkAnyUserExists } from "../../../utilities/users"
+import env from "../../../environment"
+import * as userSdk from "../../../sdk/users"
 import { isEmailConfigured } from "../../../utilities/email"
-import { BpmStatusKey, BpmStatusValue } from "@budibase/shared-core"
+import { checkAnyUserExists } from "../../../utilities/users"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -370,7 +370,7 @@ export const getUserInvites = async (ctx: any) => {
   try {
     // Restricted to the currently authenticated tenant
     ctx.body = await cache.invite.getInviteCodes()
-  } catch (e) {
+  } catch (_e) {
     ctx.throw(400, "There was a problem fetching invites")
   }
 }
@@ -384,7 +384,7 @@ export const updateInvite = async (ctx: any) => {
   let invite
   try {
     invite = await cache.invite.getCode(code)
-  } catch (e) {
+  } catch (_e) {
     ctx.throw(400, "There was a problem with the invite")
     return
   }

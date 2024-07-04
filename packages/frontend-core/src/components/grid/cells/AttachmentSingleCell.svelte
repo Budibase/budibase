@@ -1,16 +1,16 @@
 <script>
-  import AttachmentCell from "./AttachmentCell.svelte"
+import AttachmentCell from "./AttachmentCell.svelte"
 
-  export let value
-  export let onChange
-  export let api
+export let value
+export let onChange
+export let api
 
-  $: arrayValue = (!Array.isArray(value) && value ? [value] : value) || []
+$: arrayValue = (!Array.isArray(value) && value ? [value] : value) || []
 
-  $: onFileChange = value => {
-    value = value[0] || null
-    onChange(value)
-  }
+$: onFileChange = value => {
+  value = value[0] || null
+  onChange(value)
+}
 </script>
 
 <AttachmentCell

@@ -1,54 +1,54 @@
 <script>
-  import {
-    Layout,
-    Heading,
-    Body,
-    Button,
-    Divider,
-    Label,
-    Input,
-    notifications,
-    Toggle,
-  } from "@budibase/bbui"
-  import { auth, organisation, admin } from "stores/portal"
-  import { writable } from "svelte/store"
-  import { redirect } from "@roxi/routify"
-  import { sdk } from "@budibase/shared-core"
+import {
+  Body,
+  Button,
+  Divider,
+  Heading,
+  Input,
+  Label,
+  Layout,
+  Toggle,
+  notifications,
+} from "@budibase/bbui"
+import { sdk } from "@budibase/shared-core"
+import { redirect } from "@roxi/routify"
+import { admin, auth, organisation } from "stores/portal"
+import { writable } from "svelte/store"
 
-  // Only admins allowed here
-  $: {
-    if (!sdk.users.isAdmin($auth.user)) {
-      $redirect("../../portal")
-    }
+// Only admins allowed here
+$: {
+  if (!sdk.users.isAdmin($auth.user)) {
+    $redirect("../../portal")
   }
+}
 
-  const values = writable({
-    isSSOEnforced: $organisation.isSSOEnforced,
-    company: $organisation.company,
-    platformUrl: $organisation.platformUrl,
-    analyticsEnabled: $organisation.analyticsEnabled,
-  })
+const values = writable({
+  isSSOEnforced: $organisation.isSSOEnforced,
+  company: $organisation.company,
+  platformUrl: $organisation.platformUrl,
+  analyticsEnabled: $organisation.analyticsEnabled,
+})
 
-  let loading = false
+let loading = false
 
-  async function saveConfig() {
-    loading = true
+async function saveConfig() {
+  loading = true
 
-    try {
-      const config = {
-        isSSOEnforced: $values.isSSOEnforced,
-        company: $values.company ?? "",
-        platformUrl: $values.platformUrl ?? "",
-        analyticsEnabled: $values.analyticsEnabled,
-      }
-
-      // Update settings
-      await organisation.save(config)
-    } catch (error) {
-      notifications.error("Error saving org config")
+  try {
+    const config = {
+      isSSOEnforced: $values.isSSOEnforced,
+      company: $values.company ?? "",
+      platformUrl: $values.platformUrl ?? "",
+      analyticsEnabled: $values.analyticsEnabled,
     }
-    loading = false
+
+    // Update settings
+    await organisation.save(config)
+  } catch (error) {
+    notifications.error("Error saving org config")
   }
+  loading = false
+}
 </script>
 
 {#if sdk.users.isAdmin($auth.user)}

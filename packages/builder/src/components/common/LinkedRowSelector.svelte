@@ -1,39 +1,39 @@
 <script>
-  import { tables } from "stores/builder"
-  import { API } from "api"
-  import { Select, Label, Multiselect } from "@budibase/bbui"
-  import { capitalise } from "helpers"
-  import { createEventDispatcher } from "svelte"
+import { Label, Multiselect, Select } from "@budibase/bbui"
+import { API } from "api"
+import { capitalise } from "helpers"
+import { tables } from "stores/builder"
+import { createEventDispatcher } from "svelte"
 
-  export let schema
-  export let linkedRows = []
-  export let useLabel = true
-  export let linkedTableId
-  export let label
-  const dispatch = createEventDispatcher()
+export let schema
+export let linkedRows = []
+export let useLabel = true
+export let linkedTableId
+export let label
+const dispatch = createEventDispatcher()
 
-  let rows = []
-  let linkedIds = []
+let rows = []
+let linkedIds = []
 
-  $: linkedIds = (Array.isArray(linkedRows) ? linkedRows : [])?.map(
-    row => row?._id || row
-  )
-  $: label = label || capitalise(schema.name)
-  $: linkedTableId = linkedTableId || schema.tableId
-  $: linkedTable = $tables.list.find(table => table._id === linkedTableId)
-  $: fetchRows(linkedTableId)
+$: linkedIds = (Array.isArray(linkedRows) ? linkedRows : [])?.map(
+  row => row?._id || row
+)
+$: label = label || capitalise(schema.name)
+$: linkedTableId = linkedTableId || schema.tableId
+$: linkedTable = $tables.list.find(table => table._id === linkedTableId)
+$: fetchRows(linkedTableId)
 
-  async function fetchRows(linkedTableId) {
-    try {
-      rows = await API.fetchTableData(linkedTableId)
-    } catch (error) {
-      rows = []
-    }
+async function fetchRows(linkedTableId) {
+  try {
+    rows = await API.fetchTableData(linkedTableId)
+  } catch (error) {
+    rows = []
   }
+}
 
-  function getPrettyName(row) {
-    return row[linkedTable.primaryDisplay || "_id"]
-  }
+function getPrettyName(row) {
+  return row[linkedTable.primaryDisplay || "_id"]
+}
 </script>
 
 {#if linkedTable.primaryDisplay == null}

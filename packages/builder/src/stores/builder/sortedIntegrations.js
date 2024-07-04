@@ -1,5 +1,5 @@
-import { integrations } from "./integrations"
 import { derived } from "svelte/store"
+import { integrations } from "./integrations"
 
 import { DatasourceTypes } from "constants/backend"
 

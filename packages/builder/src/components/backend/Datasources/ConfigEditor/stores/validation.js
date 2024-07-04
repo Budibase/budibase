@@ -1,4 +1,4 @@
-import { string, number, object } from "yup"
+import { number, object, string } from "yup"
 
 const propertyValidator = type => {
   if (type === "number") {

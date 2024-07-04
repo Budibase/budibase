@@ -1,17 +1,32 @@
-import * as setup from "../../api/routes/tests/utilities"
-import { processMigrations } from "../migrationsProcessor"
-import { getAppMigrationVersion } from "../appMigrationMetadata"
 import { context } from "@budibase/backend-core"
 import { AppMigration } from ".."
+import * as setup from "../../api/routes/tests/utilities"
+import { getAppMigrationVersion } from "../appMigrationMetadata"
+import { processMigrations } from "../migrationsProcessor"
 
 const futureTimestamp = `20500101174029`
 
 describe("migrationsProcessor", () => {
   it("running migrations will update the latest applied migration", async () => {
     const testMigrations: AppMigration[] = [
-      { id: `${futureTimestamp}_123`, func: async () => {} },
-      { id: `${futureTimestamp}_124`, func: async () => {} },
-      { id: `${futureTimestamp}_125`, func: async () => {} },
+      {
+        id: `${futureTimestamp}_123`,
+        func: async () => {
+          /* empty on purpose */
+        },
+      },
+      {
+        id: `${futureTimestamp}_124`,
+        func: async () => {
+          /* empty on purpose */
+        },
+      },
+      {
+        id: `${futureTimestamp}_125`,
+        func: async () => {
+          /* empty on purpose */
+        },
+      },
     ]
 
     const config = setup.getConfig()

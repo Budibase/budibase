@@ -1,11 +1,11 @@
 import { context, locks, logging } from "@budibase/backend-core"
 import { LockName, LockType } from "@budibase/types"
 
+import { AppMigration } from "."
 import {
   getAppMigrationVersion,
   updateAppMigrationMetadata,
 } from "./appMigrationMetadata"
-import { AppMigration } from "."
 
 export async function processMigrations(
   appId: string,

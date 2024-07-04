@@ -1,18 +1,18 @@
 import {
-  DatasourcePlusQueryResponse,
   DSPlusOperation,
+  DatasourcePlusQueryResponse,
   FieldType,
-  isManyToOne,
-  isOneToMany,
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
   Row,
   Table,
+  isManyToOne,
+  isOneToMany,
 } from "@budibase/types"
+import { generateJunctionTableID } from "../../../../db/utils"
 import { breakExternalTableId } from "../../../../integrations/utils"
 import { basicProcessing } from "./basic"
-import { generateJunctionTableID } from "../../../../db/utils"
 
 type TableMap = Record<string, Table>
 

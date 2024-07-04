@@ -1,8 +1,8 @@
-import { Datasource, Query, SourceName } from "@budibase/types"
-import * as setup from "./utilities"
-import { DatabaseName, getDatasource } from "../../integrations/tests/utils"
-import knex, { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
+import { Datasource, Query, SourceName } from "@budibase/types"
+import knex, { Knex } from "knex"
+import { DatabaseName, getDatasource } from "../../integrations/tests/utils"
+import * as setup from "./utilities"
 
 function getKnexClientName(source: SourceName) {
   switch (source) {

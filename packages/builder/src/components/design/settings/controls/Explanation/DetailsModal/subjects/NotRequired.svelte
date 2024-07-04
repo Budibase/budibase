@@ -1,5 +1,5 @@
 <script>
-  import { Block, Subject, Section } from "./components"
+import { Block, Section, Subject } from "./components"
 </script>
 
 <Subject heading="Required Constraint">

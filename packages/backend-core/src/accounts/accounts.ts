@@ -1,7 +1,7 @@
-import API from "./api"
-import env from "../environment"
-import { Header } from "../constants"
 import { CloudAccount, HealthStatusResponse } from "@budibase/types"
+import { Header } from "../constants"
+import env from "../environment"
+import API from "./api"
 
 const api = new API(env.ACCOUNT_PORTAL_URL)
 

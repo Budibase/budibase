@@ -1,18 +1,18 @@
 <script>
-  import { ActionButton, Modal } from "@budibase/bbui"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { environment } from "stores/portal"
-  import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
+import { ActionButton, Modal } from "@budibase/bbui"
+import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
+import { environment } from "stores/portal"
 
-  export let row
+export let row
 
-  let editVariableModal
-  let deleteDialog
+let editVariableModal
+let deleteDialog
 
-  const save = async data => {
-    await environment.updateVariable(data)
-    editVariableModal.hide()
-  }
+const save = async data => {
+  await environment.updateVariable(data)
+  editVariableModal.hide()
+}
 </script>
 
 <ActionButton size="S" on:click={editVariableModal.show}>Edit</ActionButton>

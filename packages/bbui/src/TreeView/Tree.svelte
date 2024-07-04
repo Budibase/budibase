@@ -1,9 +1,9 @@
 <script>
-  import "@spectrum-css/treeview/dist/index-vars.css"
+import "@spectrum-css/treeview/dist/index-vars.css"
 
-  export let quiet = false
-  export let standalone = true
-  export let width = "250px"
+export let quiet = false
+export let standalone = true
+export let width = "250px"
 </script>
 
 <ul

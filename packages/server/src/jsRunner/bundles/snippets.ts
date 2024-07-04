@@ -13,14 +13,14 @@ export default new Proxy(
       // why eval is being called this way.
       // Snippets are cached and reused once they have been evaluated.
       // @ts-expect-error snippetDefinitions and snippetCache are injected to the global scope
-      // eslint-disable-next-line no-undef
+      // biome-ignore lint: no-undef
       if (!(name in snippetCache)) {
         // @ts-expect-error snippetDefinitions and snippetCache are injected to the global scope
-        // eslint-disable-next-line no-undef
+        // biome-ignore lint: no-undef
         snippetCache[name] = [eval][0](iifeWrapper(snippetDefinitions[name]))
       }
       // @ts-expect-error snippetDefinitions and snippetCache are injected to the global scope
-      // eslint-disable-next-line no-undef
+      // biome-ignore lint: no-undef
       return snippetCache[name]
     },
   }

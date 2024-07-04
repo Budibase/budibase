@@ -1,131 +1,131 @@
 <script>
-  import { writable, get } from "svelte/store"
-  import { setContext, onMount } from "svelte"
-  import { Layout, Heading, Body } from "@budibase/bbui"
-  import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
-  import { Constants, CookieUtils } from "@budibase/frontend-core"
-  import Component from "./Component.svelte"
-  import SDK from "sdk"
-  import {
-    featuresStore,
-    createContextStore,
-    initialise,
-    screenStore,
-    authStore,
-    routeStore,
-    builderStore,
-    themeStore,
-    appStore,
-    devToolsStore,
-    devToolsEnabled,
-    environmentStore,
-    sidePanelStore,
-    modalStore,
-  } from "stores"
-  import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
-  import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
-  import PeekScreenDisplay from "components/overlay/PeekScreenDisplay.svelte"
-  import UserBindingsProvider from "components/context/UserBindingsProvider.svelte"
-  import DeviceBindingsProvider from "components/context/DeviceBindingsProvider.svelte"
-  import StateBindingsProvider from "components/context/StateBindingsProvider.svelte"
-  import RowSelectionProvider from "components/context/RowSelectionProvider.svelte"
-  import QueryParamsProvider from "components/context/QueryParamsProvider.svelte"
-  import SettingsBar from "components/preview/SettingsBar.svelte"
-  import SelectionIndicator from "components/preview/SelectionIndicator.svelte"
-  import HoverIndicator from "components/preview/HoverIndicator.svelte"
-  import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
-  import DNDHandler from "components/preview/DNDHandler.svelte"
-  import GridDNDHandler from "components/preview/GridDNDHandler.svelte"
-  import KeyboardManager from "components/preview/KeyboardManager.svelte"
-  import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
-  import DevTools from "components/devtools/DevTools.svelte"
-  import FreeFooter from "components/FreeFooter.svelte"
-  import MaintenanceScreen from "components/MaintenanceScreen.svelte"
-  import SnippetsProvider from "./context/SnippetsProvider.svelte"
+import { Body, Heading, Layout } from "@budibase/bbui"
+import { Constants, CookieUtils } from "@budibase/frontend-core"
+import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
+import FreeFooter from "components/FreeFooter.svelte"
+import MaintenanceScreen from "components/MaintenanceScreen.svelte"
+import DeviceBindingsProvider from "components/context/DeviceBindingsProvider.svelte"
+import QueryParamsProvider from "components/context/QueryParamsProvider.svelte"
+import RowSelectionProvider from "components/context/RowSelectionProvider.svelte"
+import StateBindingsProvider from "components/context/StateBindingsProvider.svelte"
+import UserBindingsProvider from "components/context/UserBindingsProvider.svelte"
+import DevTools from "components/devtools/DevTools.svelte"
+import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
+import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
+import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
+import PeekScreenDisplay from "components/overlay/PeekScreenDisplay.svelte"
+import DNDHandler from "components/preview/DNDHandler.svelte"
+import GridDNDHandler from "components/preview/GridDNDHandler.svelte"
+import HoverIndicator from "components/preview/HoverIndicator.svelte"
+import KeyboardManager from "components/preview/KeyboardManager.svelte"
+import SelectionIndicator from "components/preview/SelectionIndicator.svelte"
+import SettingsBar from "components/preview/SettingsBar.svelte"
+import SDK from "sdk"
+import {
+  appStore,
+  authStore,
+  builderStore,
+  createContextStore,
+  devToolsEnabled,
+  devToolsStore,
+  environmentStore,
+  featuresStore,
+  initialise,
+  modalStore,
+  routeStore,
+  screenStore,
+  sidePanelStore,
+  themeStore,
+} from "stores"
+import { onMount, setContext } from "svelte"
+import { get, writable } from "svelte/store"
+import Component from "./Component.svelte"
+import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
+import SnippetsProvider from "./context/SnippetsProvider.svelte"
 
-  // Provide contexts
-  setContext("sdk", SDK)
-  setContext("component", writable({ id: null, ancestors: [] }))
-  setContext("context", createContextStore())
+// Provide contexts
+setContext("sdk", SDK)
+setContext("component", writable({ id: null, ancestors: [] }))
+setContext("context", createContextStore())
 
-  let dataLoaded = false
-  let permissionError = false
-  let embedNoScreens = false
+let dataLoaded = false
+let permissionError = false
+let embedNoScreens = false
 
-  // Determine if we should show devtools or not
-  $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
+// Determine if we should show devtools or not
+$: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
 
-  // Handle no matching route
-  $: {
-    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
-      if ($screenStore.screens.length) {
-        // If we have some available screens, use the first screen which
-        // represents the best route based on rank
-        const route = $screenStore.screens[0].routing?.route
-        if (!route) {
-          permissionError = true
-          console.error("No route found but screens exist")
-        } else {
-          permissionError = false
-          routeStore.actions.navigate(route)
-        }
-      } else if ($authStore) {
-        // If the user is logged in but has no screens, they don't have
-        // permission to use the app
+// Handle no matching route
+$: {
+  if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
+    if ($screenStore.screens.length) {
+      // If we have some available screens, use the first screen which
+      // represents the best route based on rank
+      const route = $screenStore.screens[0].routing?.route
+      if (!route) {
         permissionError = true
-      } else if ($appStore.embedded) {
-        embedNoScreens = true
+        console.error("No route found but screens exist")
       } else {
-        // If they have no screens and are not logged in, it probably means
-        // they should log in to gain access
-        const returnUrl = `${window.location.pathname}${window.location.hash}`
-        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
-        window.location = "/builder/auth/login"
+        permissionError = false
+        routeStore.actions.navigate(route)
       }
+    } else if ($authStore) {
+      // If the user is logged in but has no screens, they don't have
+      // permission to use the app
+      permissionError = true
+    } else if ($appStore.embedded) {
+      embedNoScreens = true
+    } else {
+      // If they have no screens and are not logged in, it probably means
+      // they should log in to gain access
+      const returnUrl = `${window.location.pathname}${window.location.hash}`
+      CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
+      window.location = "/builder/auth/login"
     }
   }
+}
 
-  let fontsLoaded = false
+let fontsLoaded = false
 
-  // Load app config
-  onMount(async () => {
-    document.fonts.ready.then(() => {
-      fontsLoaded = true
-    })
-
-    await initialise()
-    await authStore.actions.fetchUser()
-    dataLoaded = true
-
-    if (get(builderStore).inBuilder) {
-      builderStore.actions.notifyLoaded()
-    } else {
-      builderStore.actions.analyticsPing({
-        embedded: !!$appStore.embedded,
-      })
-    }
-    const handleHashChange = () => {
-      const { open: sidePanelOpen } = $sidePanelStore
-      if (sidePanelOpen) {
-        sidePanelStore.actions.close()
-      }
-
-      const { open: modalOpen } = $modalStore
-      if (modalOpen) {
-        modalStore.actions.close()
-      }
-    }
-    window.addEventListener("hashchange", handleHashChange)
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange)
-    }
+// Load app config
+onMount(async () => {
+  document.fonts.ready.then(() => {
+    fontsLoaded = true
   })
 
-  $: {
-    if (dataLoaded && fontsLoaded) {
-      document.getElementById("clientAppSkeletonLoader")?.remove()
+  await initialise()
+  await authStore.actions.fetchUser()
+  dataLoaded = true
+
+  if (get(builderStore).inBuilder) {
+    builderStore.actions.notifyLoaded()
+  } else {
+    builderStore.actions.analyticsPing({
+      embedded: !!$appStore.embedded,
+    })
+  }
+  const handleHashChange = () => {
+    const { open: sidePanelOpen } = $sidePanelStore
+    if (sidePanelOpen) {
+      sidePanelStore.actions.close()
+    }
+
+    const { open: modalOpen } = $modalStore
+    if (modalOpen) {
+      modalStore.actions.close()
     }
   }
+  window.addEventListener("hashchange", handleHashChange)
+  return () => {
+    window.removeEventListener("hashchange", handleHashChange)
+  }
+})
+
+$: {
+  if (dataLoaded && fontsLoaded) {
+    document.getElementById("clientAppSkeletonLoader")?.remove()
+  }
+}
 </script>
 
 <svelte:head>

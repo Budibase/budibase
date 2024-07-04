@@ -1,6 +1,6 @@
 <script>
-  export let truncate = false
-  export let noShrink = false
+export let truncate = false
+export let noShrink = false
 </script>
 
 <span class:truncate class:noShrink class="block">

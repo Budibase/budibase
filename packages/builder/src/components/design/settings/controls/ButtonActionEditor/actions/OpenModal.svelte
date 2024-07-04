@@ -1,21 +1,21 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
-  import { selectedScreen } from "stores/builder"
-  import { findAllMatchingComponents } from "helpers/components"
+import { Label, Select } from "@budibase/bbui"
+import { findAllMatchingComponents } from "helpers/components"
+import { selectedScreen } from "stores/builder"
 
-  export let parameters
+export let parameters
 
-  $: modalOptions = getModalOptions($selectedScreen)
+$: modalOptions = getModalOptions($selectedScreen)
 
-  const getModalOptions = screen => {
-    const modalComponents = findAllMatchingComponents(screen.props, component =>
-      component._component.endsWith("/modal")
-    )
-    return modalComponents.map(modal => ({
-      label: modal._instanceName,
-      value: modal._id,
-    }))
-  }
+const getModalOptions = screen => {
+  const modalComponents = findAllMatchingComponents(screen.props, component =>
+    component._component.endsWith("/modal")
+  )
+  return modalComponents.map(modal => ({
+    label: modal._instanceName,
+    value: modal._id,
+  }))
+}
 </script>
 
 <div class="root">

@@ -1,11 +1,11 @@
 <script>
-  export let value = ""
-  export let text = ""
-  export let icon = ""
-  export let onClick = () => {}
-  export let selected = false
+export let value = ""
+export let text = ""
+export let icon = ""
+export let onClick = () => {}
+export let selected = false
 
-  $: useIcon = !!icon
+$: useIcon = !!icon
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

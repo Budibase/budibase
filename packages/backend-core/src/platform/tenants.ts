@@ -1,7 +1,7 @@
-import { StaticDatabases } from "../constants"
-import { getPlatformDB } from "./platformDb"
 import { LockName, LockOptions, LockType, Tenants } from "@budibase/types"
+import { StaticDatabases } from "../constants"
 import * as locks from "../redis/redlockImpl"
+import { getPlatformDB } from "./platformDb"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 

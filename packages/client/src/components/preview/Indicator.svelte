@@ -1,31 +1,31 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
 
-  export let top
-  export let left
-  export let width
-  export let height
-  export let text
-  export let icon
-  export let color
-  export let zIndex
-  export let componentId
-  export let line = false
-  export let alignRight = false
-  export let showResizeAnchors = false
+export let top
+export let left
+export let width
+export let height
+export let text
+export let icon
+export let color
+export let zIndex
+export let componentId
+export let line = false
+export let alignRight = false
+export let showResizeAnchors = false
 
-  const AnchorSides = [
-    "right",
-    "left",
-    "top",
-    "bottom",
-    "bottom-right",
-    "bottom-left",
-    "top-right",
-    "top-left",
-  ]
+const AnchorSides = [
+  "right",
+  "left",
+  "top",
+  "bottom",
+  "bottom-right",
+  "bottom-left",
+  "top-right",
+  "top-left",
+]
 
-  $: flipped = top < 24
+$: flipped = top < 24
 </script>
 
 <div

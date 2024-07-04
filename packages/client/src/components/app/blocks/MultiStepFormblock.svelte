@@ -1,99 +1,99 @@
 <script>
-  import BlockComponent from "components/BlockComponent.svelte"
-  import { Helpers } from "@budibase/bbui"
-  import { getContext, setContext } from "svelte"
-  import { builderStore } from "stores"
-  import { Utils } from "@budibase/frontend-core"
-  import FormBlockWrapper from "./form/FormBlockWrapper.svelte"
-  import { get, writable } from "svelte/store"
-  import FormBlockComponent from "./FormBlockComponent.svelte"
+import { Helpers } from "@budibase/bbui"
+import { Utils } from "@budibase/frontend-core"
+import BlockComponent from "components/BlockComponent.svelte"
+import { builderStore } from "stores"
+import { getContext, setContext } from "svelte"
+import { get, writable } from "svelte/store"
+import FormBlockComponent from "./FormBlockComponent.svelte"
+import FormBlockWrapper from "./form/FormBlockWrapper.svelte"
 
-  export let actionType
-  export let rowId
-  export let noRowsMessage
-  export let steps
-  export let dataSource
-  export let buttonPosition = "bottom"
-  export let size
+export let actionType
+export let rowId
+export let noRowsMessage
+export let steps
+export let dataSource
+export let buttonPosition = "bottom"
+export let size
 
-  const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
-  const component = getContext("component")
-  const context = getContext("context")
+const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
+const component = getContext("component")
+const context = getContext("context")
 
-  // Set current step context to force child form to use it
-  const currentStep = writable(1)
-  setContext("current-step", currentStep)
+// Set current step context to force child form to use it
+const currentStep = writable(1)
+setContext("current-step", currentStep)
 
-  let schema
+let schema
 
-  $: id = $component.id
-  $: selected = $component.selected
-  $: builderStep = $builderStore.metadata?.step
-  $: fetchSchema(dataSource)
-  $: enrichedSteps = enrichSteps(steps, schema, id)
-  $: updateCurrentStep(enrichedSteps, selected, builderStep)
+$: id = $component.id
+$: selected = $component.selected
+$: builderStep = $builderStore.metadata?.step
+$: fetchSchema(dataSource)
+$: enrichedSteps = enrichSteps(steps, schema, id)
+$: updateCurrentStep(enrichedSteps, selected, builderStep)
 
-  // Provide additional data context for live binding eval
-  export const getAdditionalDataContext = () => {
-    const id = get(component).id
-    const rows = get(context)[`${id}-provider`]?.rows || []
-    const goldenRow = generateGoldenSample(rows)
-    return {
-      [`${id}-repeater`]: goldenRow,
-    }
+// Provide additional data context for live binding eval
+export const getAdditionalDataContext = () => {
+  const id = get(component).id
+  const rows = get(context)[`${id}-provider`]?.rows || []
+  const goldenRow = generateGoldenSample(rows)
+  return {
+    [`${id}-repeater`]: goldenRow,
+  }
+}
+
+const updateCurrentStep = (steps, selected, builderStep) => {
+  // If we aren't selected in the builder then just allowing the normal form
+  // to take control.
+  if (!selected) {
+    return
   }
 
-  const updateCurrentStep = (steps, selected, builderStep) => {
-    // If we aren't selected in the builder then just allowing the normal form
-    // to take control.
-    if (!selected) {
-      return
-    }
+  // Ensure we have a valid step selected
+  let newStep = Math.min(builderStep || 0, steps.length - 1)
+  newStep = Math.max(newStep, 0)
 
-    // Ensure we have a valid step selected
-    let newStep = Math.min(builderStep || 0, steps.length - 1)
-    newStep = Math.max(newStep, 0)
+  // Add 1 because the form component expects 1 indexed rather than 0 indexed
+  currentStep.set(newStep + 1)
+}
 
-    // Add 1 because the form component expects 1 indexed rather than 0 indexed
-    currentStep.set(newStep + 1)
+const fetchSchema = async dataSource => {
+  schema = (await fetchDatasourceSchema(dataSource)) || {}
+}
+
+const getDefaultFields = (fields, schema) => {
+  if (fields?.length) {
+    return fields.filter(field => field.active)
   }
+  return Object.values(schema || {})
+    .filter(field => !field.autocolumn)
+    .map(field => ({
+      name: field.name,
+      active: true,
+    }))
+}
 
-  const fetchSchema = async dataSource => {
-    schema = (await fetchDatasourceSchema(dataSource)) || {}
-  }
-
-  const getDefaultFields = (fields, schema) => {
-    if (fields?.length) {
-      return fields.filter(field => field.active)
-    }
-    return Object.values(schema || {})
-      .filter(field => !field.autocolumn)
-      .map(field => ({
-        name: field.name,
-        active: true,
-      }))
-  }
-
-  const enrichSteps = (steps, schema, id) => {
-    const safeSteps = steps?.length ? steps : [{}]
-    return safeSteps.map((step, idx) => {
-      const { title, desc, fields, buttons } = step
-      const defaultProps = Utils.buildMultiStepFormBlockDefaultProps({
-        _id: id,
-        stepCount: safeSteps.length,
-        currentStep: idx,
-        actionType,
-        dataSource,
-      })
-      return {
-        _stepId: Helpers.uuid(),
-        fields: getDefaultFields(fields || [], schema),
-        title: title ?? defaultProps.title,
-        desc,
-        buttons: buttons || defaultProps.buttons,
-      }
+const enrichSteps = (steps, schema, id) => {
+  const safeSteps = steps?.length ? steps : [{}]
+  return safeSteps.map((step, idx) => {
+    const { title, desc, fields, buttons } = step
+    const defaultProps = Utils.buildMultiStepFormBlockDefaultProps({
+      _id: id,
+      stepCount: safeSteps.length,
+      currentStep: idx,
+      actionType,
+      dataSource,
     })
-  }
+    return {
+      _stepId: Helpers.uuid(),
+      fields: getDefaultFields(fields || [], schema),
+      title: title ?? defaultProps.title,
+      desc,
+      buttons: buttons || defaultProps.buttons,
+    }
+  })
+}
 </script>
 
 <FormBlockWrapper {actionType} {dataSource} {rowId} {noRowsMessage}>

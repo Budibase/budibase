@@ -1,50 +1,50 @@
 <script>
-  import { Body, ModalContent, Table } from "@budibase/bbui"
-  import { onMount } from "svelte"
+import { Body, ModalContent, Table } from "@budibase/bbui"
+import { onMount } from "svelte"
 
-  export let deleteUsersResponse
+export let deleteUsersResponse
 
-  let successCount
-  let title
-  let unsuccessfulUsers
-  let message
+let successCount
+let title
+let unsuccessfulUsers
+let message
 
-  const setTitle = () => {
-    if (successCount) {
-      title = `${successCount} users deleted`
-    } else {
-      title = "Oops!"
+const setTitle = () => {
+  if (successCount) {
+    title = `${successCount} users deleted`
+  } else {
+    title = "Oops!"
+  }
+}
+
+const setMessage = () => {
+  if (successCount) {
+    message = "However there was a problem deleting some users."
+  } else {
+    message = "There was a problem deleting some users."
+  }
+}
+
+const setUsers = () => {
+  unsuccessfulUsers = deleteUsersResponse.unsuccessful.map(user => {
+    return {
+      email: user.email,
+      reason: user.reason,
     }
-  }
-
-  const setMessage = () => {
-    if (successCount) {
-      message = "However there was a problem deleting some users."
-    } else {
-      message = "There was a problem deleting some users."
-    }
-  }
-
-  const setUsers = () => {
-    unsuccessfulUsers = deleteUsersResponse.unsuccessful.map(user => {
-      return {
-        email: user.email,
-        reason: user.reason,
-      }
-    })
-  }
-
-  onMount(() => {
-    successCount = deleteUsersResponse.successful.length
-    setTitle()
-    setMessage()
-    setUsers()
   })
+}
 
-  const schema = {
-    email: {},
-    reason: {},
-  }
+onMount(() => {
+  successCount = deleteUsersResponse.successful.length
+  setTitle()
+  setMessage()
+  setUsers()
+})
+
+const schema = {
+  email: {},
+  reason: {},
+}
 </script>
 
 <ModalContent

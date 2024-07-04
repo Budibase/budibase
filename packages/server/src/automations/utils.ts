@@ -1,23 +1,23 @@
-import { Thread, ThreadType } from "../threads"
-import { definitions } from "./triggerInfo"
-import { automationQueue } from "./bullboard"
-import newid from "../db/newid"
-import { updateEntityMetadata } from "../utilities"
-import { MetadataTypes } from "../constants"
-import { db as dbCore, context } from "@budibase/backend-core"
-import { getAutomationMetadataParams } from "../db/utils"
-import { cloneDeep } from "lodash/fp"
+import { context, db as dbCore } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
+import { REBOOT_CRON, helpers } from "@budibase/shared-core"
 import {
   Automation,
   AutomationJob,
   Webhook,
   WebhookActionType,
 } from "@budibase/types"
-import sdk from "../sdk"
-import { automationsEnabled } from "../features"
-import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
+import { cloneDeep } from "lodash/fp"
+import { MetadataTypes } from "../constants"
+import newid from "../db/newid"
+import { getAutomationMetadataParams } from "../db/utils"
+import { automationsEnabled } from "../features"
+import sdk from "../sdk"
+import { Thread, ThreadType } from "../threads"
+import { updateEntityMetadata } from "../utilities"
+import { automationQueue } from "./bullboard"
+import { definitions } from "./triggerInfo"
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
@@ -99,7 +99,7 @@ export async function processEvent(job: AutomationJob) {
 }
 
 export async function updateTestHistory(
-  appId: any,
+  _appId: any,
   automation: any,
   history: any
 ) {
@@ -270,7 +270,7 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
         newTrigger.inputs = {}
       }
       await sdk.automations.webhook.destroy(webhook._id!, webhook._rev!)
-    } catch (err) {
+    } catch (_err) {
       // don't worry about not being able to delete, if it doesn't exist all good
     }
   }

@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store"
+import { get, writable } from "svelte/store"
 
 const INITIAL_PREVIEW_STATE = {
   previewDevice: "desktop",

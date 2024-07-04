@@ -1,12 +1,12 @@
-import { Datasource, SourceName } from "@budibase/types"
-import * as postgres from "./postgres"
-import * as mongodb from "./mongodb"
-import * as mysql from "./mysql"
-import * as mssql from "./mssql"
-import * as mariadb from "./mariadb"
-import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { testContainerUtils } from "@budibase/backend-core/tests"
+import { Datasource, SourceName } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
+import { GenericContainer, StartedTestContainer } from "testcontainers"
+import * as mariadb from "./mariadb"
+import * as mongodb from "./mongodb"
+import * as mssql from "./mssql"
+import * as mysql from "./mysql"
+import * as postgres from "./postgres"
 
 export type DatasourceProvider = () => Promise<Datasource>
 

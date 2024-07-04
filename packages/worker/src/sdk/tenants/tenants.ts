@@ -1,6 +1,6 @@
-import { App } from "@budibase/types"
-import { tenancy, db as dbCore, platform } from "@budibase/backend-core"
+import { db as dbCore, platform, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
+import { App } from "@budibase/types"
 
 export async function deleteTenant(tenantId: string) {
   await quotas.bustCache()

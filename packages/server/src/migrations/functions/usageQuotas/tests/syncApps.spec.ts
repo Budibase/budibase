@@ -1,7 +1,7 @@
-import TestConfig from "../../../../tests/utilities/TestConfiguration"
-import * as syncApps from "../syncApps"
 import { quotas } from "@budibase/pro"
 import { QuotaUsageType, StaticQuotaName } from "@budibase/types"
+import TestConfig from "../../../../tests/utilities/TestConfiguration"
+import * as syncApps from "../syncApps"
 
 describe("syncApps", () => {
   let config = new TestConfig(false)

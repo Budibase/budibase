@@ -1,107 +1,107 @@
 <script>
-  import "@spectrum-css/inputgroup/dist/index-vars.css"
-  import "@spectrum-css/popover/dist/index-vars.css"
-  import "@spectrum-css/menu/dist/index-vars.css"
-  import { fly } from "svelte/transition"
-  import { createEventDispatcher } from "svelte"
-  import clickOutside from "../../Actions/click_outside"
-  import Icon from "../../Icon/Icon.svelte"
-  import StatusLight from "../../StatusLight/StatusLight.svelte"
-  import Detail from "../../Typography/Detail.svelte"
-  import Search from "./Search.svelte"
-  import IconAvatar from "../../Icon/IconAvatar.svelte"
+import "@spectrum-css/inputgroup/dist/index-vars.css"
+import "@spectrum-css/popover/dist/index-vars.css"
+import "@spectrum-css/menu/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
+import { fly } from "svelte/transition"
+import clickOutside from "../../Actions/click_outside"
+import Icon from "../../Icon/Icon.svelte"
+import IconAvatar from "../../Icon/IconAvatar.svelte"
+import StatusLight from "../../StatusLight/StatusLight.svelte"
+import Detail from "../../Typography/Detail.svelte"
+import Search from "./Search.svelte"
 
-  export let primaryLabel = ""
-  export let primaryValue = null
-  export let id = null
-  export let placeholder = "Choose an option or type"
-  export let disabled = false
-  export let secondaryOptions = []
-  export let primaryOptions = []
-  export let secondaryFieldText = ""
-  export let secondaryFieldIcon = ""
-  export let secondaryFieldColour = ""
-  export let getPrimaryOptionValue = option => option
-  export let getPrimaryOptionColour = () => null
-  export let getPrimaryOptionIcon = () => null
-  export let getSecondaryOptionLabel = option => option
-  export let getSecondaryOptionValue = option => option
-  export let getSecondaryOptionColour = () => null
-  export let onSelectOption = () => {}
-  export let autoWidth = false
-  export let autocomplete = false
-  export let isOptionSelected = () => false
-  export let isPlaceholder = false
-  export let placeholderOption = null
-  export let showClearIcon = true
+export let primaryLabel = ""
+export let primaryValue = null
+export let id = null
+export let placeholder = "Choose an option or type"
+export let disabled = false
+export let secondaryOptions = []
+export let primaryOptions = []
+export let secondaryFieldText = ""
+export let secondaryFieldIcon = ""
+export let secondaryFieldColour = ""
+export let getPrimaryOptionValue = option => option
+export let getPrimaryOptionColour = () => null
+export let getPrimaryOptionIcon = () => null
+export let getSecondaryOptionLabel = option => option
+export let getSecondaryOptionValue = option => option
+export let getSecondaryOptionColour = () => null
+export let onSelectOption = () => {}
+export let autoWidth = false
+export let autocomplete = false
+export let isOptionSelected = () => false
+export let isPlaceholder = false
+export let placeholderOption = null
+export let showClearIcon = true
 
-  const dispatch = createEventDispatcher()
-  let primaryOpen = false
-  let secondaryOpen = false
-  let focus = false
-  let searchTerm = null
+const dispatch = createEventDispatcher()
+let primaryOpen = false
+let secondaryOpen = false
+let focus = false
+let searchTerm = null
 
-  $: groupTitles = Object.keys(primaryOptions)
-  let iconData
+$: groupTitles = Object.keys(primaryOptions)
+let iconData
 
-  const updateSearch = e => {
-    dispatch("search", e.detail)
+const updateSearch = e => {
+  dispatch("search", e.detail)
+}
+
+const updateValue = newValue => {
+  dispatch("change", newValue)
+}
+
+const onClickSecondary = () => {
+  dispatch("click")
+  secondaryOpen = true
+}
+
+const onPickPrimary = newValue => {
+  dispatch("pickprimary", newValue)
+  primaryOpen = false
+  dispatch("closed")
+}
+
+const onClearPrimary = () => {
+  dispatch("pickprimary", null)
+  primaryOpen = false
+}
+
+const onPickSecondary = newValue => {
+  dispatch("picksecondary", newValue)
+  secondaryOpen = false
+}
+
+const onBlur = event => {
+  focus = false
+  updateValue(event.target.value)
+}
+
+const onInput = event => {
+  updateValue(event.target.value)
+}
+
+const updateValueOnEnter = event => {
+  if (event.key === "Enter") {
+    updateValue(event.target.value)
   }
+}
 
-  const updateValue = newValue => {
-    dispatch("change", newValue)
-  }
-
-  const onClickSecondary = () => {
-    dispatch("click")
-    secondaryOpen = true
-  }
-
-  const onPickPrimary = newValue => {
-    dispatch("pickprimary", newValue)
+const handlePrimaryOutsideClick = event => {
+  if (primaryOpen) {
+    event.stopPropagation()
     primaryOpen = false
     dispatch("closed")
   }
+}
 
-  const onClearPrimary = () => {
-    dispatch("pickprimary", null)
-    primaryOpen = false
-  }
-
-  const onPickSecondary = newValue => {
-    dispatch("picksecondary", newValue)
+const handleSecondaryOutsideClick = event => {
+  if (secondaryOpen) {
+    event.stopPropagation()
     secondaryOpen = false
   }
-
-  const onBlur = event => {
-    focus = false
-    updateValue(event.target.value)
-  }
-
-  const onInput = event => {
-    updateValue(event.target.value)
-  }
-
-  const updateValueOnEnter = event => {
-    if (event.key === "Enter") {
-      updateValue(event.target.value)
-    }
-  }
-
-  const handlePrimaryOutsideClick = event => {
-    if (primaryOpen) {
-      event.stopPropagation()
-      primaryOpen = false
-      dispatch("closed")
-    }
-  }
-
-  const handleSecondaryOutsideClick = event => {
-    if (secondaryOpen) {
-      event.stopPropagation()
-      secondaryOpen = false
-    }
-  }
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -1,113 +1,110 @@
 <script>
-  import {
-    ModalContent,
-    Layout,
-    Detail,
-    Body,
-    Icon,
-    notifications,
-    Tags,
-    Tag,
-  } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "stores/builder"
-  import { admin, licensing } from "stores/portal"
-  import { externalActions } from "./ExternalActions"
-  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
-  import { checkForCollectStep } from "helpers/utils"
+import {
+  Body,
+  Detail,
+  Icon,
+  Layout,
+  ModalContent,
+  Tag,
+  Tags,
+  notifications,
+} from "@budibase/bbui"
+import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+import { checkForCollectStep } from "helpers/utils"
+import { automationStore, selectedAutomation } from "stores/builder"
+import { admin, licensing } from "stores/portal"
+import { externalActions } from "./ExternalActions"
 
-  export let blockIdx
-  export let lastStep
+export let blockIdx
+export let lastStep
 
-  let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
-  let triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
-  let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
-  let selectedAction
-  let actionVal
-  let actions = Object.entries($automationStore.blockDefinitions.ACTION)
-  let lockedFeatures = [
-    ActionStepID.COLLECT,
-    ActionStepID.TRIGGER_AUTOMATION_RUN,
-  ]
+let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
+let triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
+let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
+let selectedAction
+let actionVal
+let actions = Object.entries($automationStore.blockDefinitions.ACTION)
+let lockedFeatures = [ActionStepID.COLLECT, ActionStepID.TRIGGER_AUTOMATION_RUN]
 
-  $: collectBlockExists = checkForCollectStep($selectedAutomation)
+$: collectBlockExists = checkForCollectStep($selectedAutomation)
 
-  const disabled = () => {
-    return {
-      SEND_EMAIL_SMTP: {
-        disabled: !$admin.checklist.smtp.checked,
-        message: "Please configure SMTP",
-      },
-      COLLECT: {
-        disabled: !lastStep || !syncAutomationsEnabled || collectBlockExists,
-        message: collectDisabledMessage(),
-      },
-      TRIGGER_AUTOMATION_RUN: {
-        disabled: !triggerAutomationRunEnabled,
-        message: "Please upgrade to a paid plan",
-      },
-    }
+const disabled = () => {
+  return {
+    SEND_EMAIL_SMTP: {
+      disabled: !$admin.checklist.smtp.checked,
+      message: "Please configure SMTP",
+    },
+    COLLECT: {
+      disabled: !lastStep || !syncAutomationsEnabled || collectBlockExists,
+      message: collectDisabledMessage(),
+    },
+    TRIGGER_AUTOMATION_RUN: {
+      disabled: !triggerAutomationRunEnabled,
+      message: "Please upgrade to a paid plan",
+    },
   }
+}
 
-  const collectDisabledMessage = () => {
-    if (collectBlockExists) {
-      return "Only one Collect step allowed"
-    }
-    if (!lastStep) {
-      return "Only available as the last step"
-    }
+const collectDisabledMessage = () => {
+  if (collectBlockExists) {
+    return "Only one Collect step allowed"
   }
-
-  const external = actions.reduce((acc, elm) => {
-    const [k, v] = elm
-    if (!v.internal && !v.custom) {
-      acc[k] = v
-    }
-    return acc
-  }, {})
-
-  const internal = actions.reduce((acc, elm) => {
-    const [k, v] = elm
-    if (v.internal) {
-      acc[k] = v
-    }
-    delete acc.LOOP
-
-    // Filter out Collect block if not App Action or Webhook
-    if (
-      !collectBlockAllowedSteps.includes(
-        $selectedAutomation.definition.trigger.stepId
-      )
-    ) {
-      delete acc.COLLECT
-    }
-    return acc
-  }, {})
-
-  const plugins = actions.reduce((acc, elm) => {
-    const [k, v] = elm
-    if (v.custom) {
-      acc[k] = v
-    }
-    return acc
-  }, {})
-
-  const selectAction = action => {
-    actionVal = action
-    selectedAction = action.name
+  if (!lastStep) {
+    return "Only available as the last step"
   }
+}
 
-  async function addBlockToAutomation() {
-    try {
-      const newBlock = automationStore.actions.constructBlock(
-        "ACTION",
-        actionVal.stepId,
-        actionVal
-      )
-      await automationStore.actions.addBlockToAutomation(newBlock, blockIdx + 1)
-    } catch (error) {
-      notifications.error("Error saving automation")
-    }
+const external = actions.reduce((acc, elm) => {
+  const [k, v] = elm
+  if (!v.internal && !v.custom) {
+    acc[k] = v
   }
+  return acc
+}, {})
+
+const internal = actions.reduce((acc, elm) => {
+  const [k, v] = elm
+  if (v.internal) {
+    acc[k] = v
+  }
+  delete acc.LOOP
+
+  // Filter out Collect block if not App Action or Webhook
+  if (
+    !collectBlockAllowedSteps.includes(
+      $selectedAutomation.definition.trigger.stepId
+    )
+  ) {
+    delete acc.COLLECT
+  }
+  return acc
+}, {})
+
+const plugins = actions.reduce((acc, elm) => {
+  const [k, v] = elm
+  if (v.custom) {
+    acc[k] = v
+  }
+  return acc
+}, {})
+
+const selectAction = action => {
+  actionVal = action
+  selectedAction = action.name
+}
+
+async function addBlockToAutomation() {
+  try {
+    const newBlock = automationStore.actions.constructBlock(
+      "ACTION",
+      actionVal.stepId,
+      actionVal
+    )
+    await automationStore.actions.addBlockToAutomation(newBlock, blockIdx + 1)
+  } catch (error) {
+    notifications.error("Error saving automation")
+  }
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

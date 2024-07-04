@@ -1,45 +1,45 @@
 <script>
-  import { Input, ModalContent, Modal, Body } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+import { Body, Input, Modal, ModalContent } from "@budibase/bbui"
+import { createEventDispatcher } from "svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let dynamicVariables
-  export let datasource
-  export let binding
+export let dynamicVariables
+export let datasource
+export let binding
 
-  let name, modal, valid, allVariableNames
+let name, modal, valid, allVariableNames
 
-  export const show = () => {
-    modal.show()
+export const show = () => {
+  modal.show()
+}
+export const hide = () => {
+  modal.hide()
+}
+
+function checkValid(vars, name) {
+  if (!name) {
+    return false
   }
-  export const hide = () => {
-    modal.hide()
-  }
-
-  function checkValid(vars, name) {
-    if (!name) {
-      return false
-    }
-    return !allVariableNames.find(
-      varName => varName.toLowerCase() === name.toLowerCase()
-    )
-  }
-
-  $: valid = checkValid(dynamicVariables, name)
-  $: allVariableNames = (datasource?.config?.dynamicVariables || []).map(
-    variable => variable.name
+  return !allVariableNames.find(
+    varName => varName.toLowerCase() === name.toLowerCase()
   )
-  $: error = name && !valid ? "Variable name is already in use." : null
+}
 
-  async function saveVariable() {
-    const copiedName = name,
-      copiedBinding = binding
-    name = null
-    binding = null
-    dynamicVariables[copiedName] = copiedBinding
-    dispatch("change", dynamicVariables)
-  }
+$: valid = checkValid(dynamicVariables, name)
+$: allVariableNames = (datasource?.config?.dynamicVariables || []).map(
+  variable => variable.name
+)
+$: error = name && !valid ? "Variable name is already in use." : null
+
+async function saveVariable() {
+  const copiedName = name,
+    copiedBinding = binding
+  name = null
+  binding = null
+  dynamicVariables[copiedName] = copiedBinding
+  dispatch("change", dynamicVariables)
+}
 </script>
 
 <Modal bind:this={modal}>

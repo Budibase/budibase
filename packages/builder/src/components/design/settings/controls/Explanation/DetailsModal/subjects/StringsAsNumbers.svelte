@@ -1,11 +1,11 @@
 <script>
-  import {
-    ExampleSection,
-    ExampleLine,
-    Block,
-    Subject,
-    Section,
-  } from "./components"
+import {
+  Block,
+  ExampleLine,
+  ExampleSection,
+  Section,
+  Subject,
+} from "./components"
 </script>
 
 <Subject heading="Text as Numbers">

@@ -1,12 +1,12 @@
-import { generator, mocks, structures } from "../../../../../tests"
 import {
   JwtClaims,
   OIDCInnerConfig,
   SSOAuthDetails,
   SSOProviderType,
 } from "@budibase/types"
-import * as _sso from "../sso"
+import { generator, mocks, structures } from "../../../../../tests"
 import * as oidc from "../oidc"
+import * as _sso from "../sso"
 
 jest.mock("@techpass/passport-openidconnect")
 const mockStrategy = require("@techpass/passport-openidconnect").Strategy

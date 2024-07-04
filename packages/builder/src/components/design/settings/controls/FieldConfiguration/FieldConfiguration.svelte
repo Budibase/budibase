@@ -1,163 +1,163 @@
 <script>
-  import { Toggle } from "@budibase/bbui"
-  import { cloneDeep, isEqual } from "lodash/fp"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-    getBindableProperties,
-    getComponentBindableProperties,
-  } from "dataBinding"
-  import { selectedScreen, componentStore } from "stores/builder"
-  import DraggableList from "../DraggableList/DraggableList.svelte"
-  import { createEventDispatcher } from "svelte"
-  import FieldSetting from "./FieldSetting.svelte"
-  import { convertOldFieldFormat, getComponentForField } from "./utils"
+import { Toggle } from "@budibase/bbui"
+import {
+  getBindableProperties,
+  getComponentBindableProperties,
+  getDatasourceForProvider,
+  getSchemaForDatasource,
+} from "dataBinding"
+import { cloneDeep, isEqual } from "lodash/fp"
+import { componentStore, selectedScreen } from "stores/builder"
+import { createEventDispatcher } from "svelte"
+import DraggableList from "../DraggableList/DraggableList.svelte"
+import FieldSetting from "./FieldSetting.svelte"
+import { convertOldFieldFormat, getComponentForField } from "./utils"
 
-  export let componentInstance
-  export let bindings
-  export let value
+export let componentInstance
+export let bindings
+export let value
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let sanitisedFields
-  let fieldList
-  let schema
-  let cachedValue
-  let options
-  let sanitisedValue
-  let unconfigured
+let sanitisedFields
+let fieldList
+let schema
+let cachedValue
+let options
+let sanitisedValue
+let unconfigured
 
-  let selectAll = true
+let selectAll = true
 
-  $: resolvedBindings =
-    bindings || getBindableProperties($selectedScreen, componentInstance._id)
+$: resolvedBindings =
+  bindings || getBindableProperties($selectedScreen, componentInstance._id)
 
-  $: actionType = componentInstance.actionType
-  let componentBindings = []
+$: actionType = componentInstance.actionType
+let componentBindings = []
 
-  $: if (actionType) {
-    componentBindings = getComponentBindableProperties(
-      $selectedScreen,
-      componentInstance._id
-    )
+$: if (actionType) {
+  componentBindings = getComponentBindableProperties(
+    $selectedScreen,
+    componentInstance._id
+  )
+}
+
+$: datasource =
+  componentInstance.dataSource ||
+  getDatasourceForProvider($selectedScreen, componentInstance)
+
+$: resourceId = datasource?.resourceId || datasource?.tableId
+
+$: if (!isEqual(value, cachedValue)) {
+  cachedValue = cloneDeep(value)
+}
+
+const updateState = value => {
+  schema = getSchema($selectedScreen, datasource)
+  options = Object.keys(schema || {})
+  sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
+  updateSanitsedFields(sanitisedValue)
+  unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
+  fieldList = [...sanitisedFields, ...unconfigured]
+    .map(buildPseudoInstance)
+    .filter(x => x != null)
+}
+
+$: updateState(cachedValue, resourceId)
+
+// Builds unused ones only
+const buildUnconfiguredOptions = (schema, selected) => {
+  if (!schema) {
+    return []
   }
+  let schemaClone = cloneDeep(schema)
+  selected.forEach(val => {
+    delete schemaClone[val.field]
+  })
 
-  $: datasource =
-    componentInstance.dataSource ||
-    getDatasourceForProvider($selectedScreen, componentInstance)
-
-  $: resourceId = datasource?.resourceId || datasource?.tableId
-
-  $: if (!isEqual(value, cachedValue)) {
-    cachedValue = cloneDeep(value)
-  }
-
-  const updateState = value => {
-    schema = getSchema($selectedScreen, datasource)
-    options = Object.keys(schema || {})
-    sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
-    updateSanitsedFields(sanitisedValue)
-    unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
-    fieldList = [...sanitisedFields, ...unconfigured]
-      .map(buildPseudoInstance)
-      .filter(x => x != null)
-  }
-
-  $: updateState(cachedValue, resourceId)
-
-  // Builds unused ones only
-  const buildUnconfiguredOptions = (schema, selected) => {
-    if (!schema) {
-      return []
-    }
-    let schemaClone = cloneDeep(schema)
-    selected.forEach(val => {
-      delete schemaClone[val.field]
+  return Object.keys(schemaClone)
+    .filter(key => !schemaClone[key].autocolumn)
+    .map(key => {
+      const col = schemaClone[key]
+      let toggleOn = !value
+      return {
+        field: key,
+        active: typeof col.active != "boolean" ? toggleOn : col.active,
+      }
     })
+}
 
-    return Object.keys(schemaClone)
-      .filter(key => !schemaClone[key].autocolumn)
-      .map(key => {
-        const col = schemaClone[key]
-        let toggleOn = !value
-        return {
-          field: key,
-          active: typeof col.active != "boolean" ? toggleOn : col.active,
-        }
-      })
+const getSchema = (asset, datasource) => {
+  const schema = getSchemaForDatasource(asset, datasource).schema
+
+  // Don't show ID and rev in tables
+  if (schema) {
+    delete schema._id
+    delete schema._rev
   }
 
-  const getSchema = (asset, datasource) => {
-    const schema = getSchemaForDatasource(asset, datasource).schema
+  return schema
+}
 
-    // Don't show ID and rev in tables
-    if (schema) {
-      delete schema._id
-      delete schema._rev
-    }
+const updateSanitsedFields = value => {
+  sanitisedFields = cloneDeep(value)
+}
 
-    return schema
+const getValidColumns = (columns, options) => {
+  if (!Array.isArray(columns) || !columns.length) {
+    return []
   }
 
-  const updateSanitsedFields = value => {
-    sanitisedFields = cloneDeep(value)
+  return columns.filter(column => {
+    return options.includes(column.field)
+  })
+}
+
+const buildPseudoInstance = instance => {
+  if (instance._component) {
+    return instance
+  }
+  const type = getComponentForField(instance.field, schema)
+  if (!type) {
+    return null
+  }
+  instance._component = `@budibase/standard-components/${type}`
+
+  const pseudoComponentInstance = componentStore.createInstance(
+    instance._component,
+    {
+      _instanceName: instance.field,
+      field: instance.field,
+      label: instance.field,
+      placeholder: instance.field,
+    },
+    {}
+  )
+
+  return { ...instance, ...pseudoComponentInstance }
+}
+
+const processItemUpdate = e => {
+  const updatedField = e.detail
+  const parentFieldsUpdated = fieldList ? cloneDeep(fieldList) : []
+
+  let parentFieldIdx = parentFieldsUpdated.findIndex(pSetting => {
+    return pSetting.field === updatedField?.field
+  })
+
+  if (parentFieldIdx == -1) {
+    parentFieldsUpdated.push(updatedField)
+  } else {
+    parentFieldsUpdated[parentFieldIdx] = updatedField
   }
 
-  const getValidColumns = (columns, options) => {
-    if (!Array.isArray(columns) || !columns.length) {
-      return []
-    }
+  dispatch("change", getValidColumns(parentFieldsUpdated, options))
+}
 
-    return columns.filter(column => {
-      return options.includes(column.field)
-    })
-  }
-
-  const buildPseudoInstance = instance => {
-    if (instance._component) {
-      return instance
-    }
-    const type = getComponentForField(instance.field, schema)
-    if (!type) {
-      return null
-    }
-    instance._component = `@budibase/standard-components/${type}`
-
-    const pseudoComponentInstance = componentStore.createInstance(
-      instance._component,
-      {
-        _instanceName: instance.field,
-        field: instance.field,
-        label: instance.field,
-        placeholder: instance.field,
-      },
-      {}
-    )
-
-    return { ...instance, ...pseudoComponentInstance }
-  }
-
-  const processItemUpdate = e => {
-    const updatedField = e.detail
-    const parentFieldsUpdated = fieldList ? cloneDeep(fieldList) : []
-
-    let parentFieldIdx = parentFieldsUpdated.findIndex(pSetting => {
-      return pSetting.field === updatedField?.field
-    })
-
-    if (parentFieldIdx == -1) {
-      parentFieldsUpdated.push(updatedField)
-    } else {
-      parentFieldsUpdated[parentFieldIdx] = updatedField
-    }
-
-    dispatch("change", getValidColumns(parentFieldsUpdated, options))
-  }
-
-  const listUpdated = columns => {
-    const parsedColumns = getValidColumns(columns, options)
-    dispatch("change", parsedColumns)
-  }
+const listUpdated = columns => {
+  const parsedColumns = getValidColumns(columns, options)
+  dispatch("change", parsedColumns)
+}
 </script>
 
 <div class="field-configuration">

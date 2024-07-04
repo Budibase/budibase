@@ -1,15 +1,3 @@
-import * as internal from "./internal"
-import * as external from "./external"
-import {
-  isRows,
-  isSchema,
-  validate as validateSchema,
-} from "../../../utilities/schema"
-import {
-  isExternalTable,
-  isExternalTableID,
-  isSQL,
-} from "../../../integrations/utils"
 import { events } from "@budibase/backend-core"
 import {
   BulkImportRequest,
@@ -25,10 +13,22 @@ import {
   TableSourceType,
   UserCtx,
 } from "@budibase/types"
+import { cloneDeep, isEqual } from "lodash"
+import {
+  isExternalTable,
+  isExternalTableID,
+  isSQL,
+} from "../../../integrations/utils"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
+import {
+  isRows,
+  isSchema,
+  validate as validateSchema,
+} from "../../../utilities/schema"
 import { builderSocket } from "../../../websockets"
-import { cloneDeep, isEqual } from "lodash"
+import * as external from "./external"
+import * as internal from "./internal"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {

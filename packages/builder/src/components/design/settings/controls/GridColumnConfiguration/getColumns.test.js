@@ -1,4 +1,4 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import getColumns from "./getColumns"
 
 describe("getColumns", () => {

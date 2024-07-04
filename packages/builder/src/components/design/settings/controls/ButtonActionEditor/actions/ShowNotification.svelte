@@ -1,48 +1,48 @@
 <script>
-  import { Select, Label, Checkbox } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { Checkbox, Label, Select } from "@budibase/bbui"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { onMount } from "svelte"
 
-  export let parameters
-  export let bindings = []
+export let parameters
+export let bindings = []
 
-  const types = [
-    {
-      label: "Success",
-      value: "success",
-    },
-    {
-      label: "Warning",
-      value: "warning",
-    },
-    {
-      label: "Error",
-      value: "error",
-    },
-    {
-      label: "Info",
-      value: "info",
-    },
-  ]
+const types = [
+  {
+    label: "Success",
+    value: "success",
+  },
+  {
+    label: "Warning",
+    value: "warning",
+  },
+  {
+    label: "Error",
+    value: "error",
+  },
+  {
+    label: "Info",
+    value: "info",
+  },
+]
 
-  const MAX_DURATION = 120000 // Maximum duration in milliseconds (2 minutes)
+const MAX_DURATION = 120000 // Maximum duration in milliseconds (2 minutes)
 
-  onMount(() => {
-    if (!parameters.type) {
-      parameters.type = "success"
-    }
-    if (parameters.autoDismiss == null) {
-      parameters.autoDismiss = true
-    }
-  })
-
-  function handleDurationChange(event) {
-    let newDuration = event.detail
-    if (newDuration > MAX_DURATION) {
-      newDuration = MAX_DURATION
-    }
-    parameters.duration = newDuration
+onMount(() => {
+  if (!parameters.type) {
+    parameters.type = "success"
   }
+  if (parameters.autoDismiss == null) {
+    parameters.autoDismiss = true
+  }
+})
+
+function handleDurationChange(event) {
+  let newDuration = event.detail
+  if (newDuration > MAX_DURATION) {
+    newDuration = MAX_DURATION
+  }
+  parameters.duration = newDuration
+}
 </script>
 
 <div class="root">

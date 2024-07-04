@@ -1,4 +1,4 @@
-import { getConfig, afterAll, runStep, actions } from "./utilities"
+import { actions, afterAll, getConfig, runStep } from "./utilities"
 
 describe("test the outgoing webhook action", () => {
   let config = getConfig()

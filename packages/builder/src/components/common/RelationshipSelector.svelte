@@ -1,19 +1,19 @@
 <script>
-  import { Select, Input } from "@budibase/bbui"
+import { Input, Select } from "@budibase/bbui"
 
-  export let relationshipPart1
-  export let relationshipPart2
-  export let relationshipTableIdPrimary
-  export let relationshipTableIdSecondary
-  export let editableColumn
-  export let linkEditDisabled = false
-  export let tableOptions
-  export let errors
-  export let relationshipOpts1
-  export let relationshipOpts2
-  export let primaryTableChanged
-  export let secondaryTableChanged
-  export let primaryDisabled = true
+export let relationshipPart1
+export let relationshipPart2
+export let relationshipTableIdPrimary
+export let relationshipTableIdSecondary
+export let editableColumn
+export let linkEditDisabled = false
+export let tableOptions
+export let errors
+export let relationshipOpts1
+export let relationshipOpts2
+export let primaryTableChanged
+export let secondaryTableChanged
+export let primaryDisabled = true
 </script>
 
 <div class="relationship-container">

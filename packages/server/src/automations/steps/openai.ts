@@ -1,13 +1,13 @@
 import { OpenAI } from "openai"
 
+import { env } from "@budibase/backend-core"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
-  AutomationStepType,
   AutomationIOType,
+  AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
 } from "@budibase/types"
-import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
 
 enum Model {

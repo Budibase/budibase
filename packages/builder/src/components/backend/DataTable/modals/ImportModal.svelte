@@ -1,40 +1,40 @@
 <script>
-  import {
-    ModalContent,
-    Label,
-    notifications,
-    Body,
-    Layout,
-  } from "@budibase/bbui"
-  import TableDataImport from "../../TableNavigator/ExistingTableDataImport.svelte"
-  import { API } from "api"
-  import { createEventDispatcher } from "svelte"
+import {
+  Body,
+  Label,
+  Layout,
+  ModalContent,
+  notifications,
+} from "@budibase/bbui"
+import { API } from "api"
+import { createEventDispatcher } from "svelte"
+import TableDataImport from "../../TableNavigator/ExistingTableDataImport.svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let tableId
-  export let tableType
+export let tableId
+export let tableType
 
-  let rows = []
-  let allValid = false
-  let displayColumn = null
-  let identifierFields = []
+let rows = []
+let allValid = false
+let displayColumn = null
+let identifierFields = []
 
-  async function importData() {
-    try {
-      await API.importTableData({
-        tableId,
-        rows,
-        identifierFields,
-      })
-      notifications.success("Rows successfully imported")
-    } catch (error) {
-      notifications.error("Unable to import data")
-    }
-
-    // Always refresh rows just to be sure
-    dispatch("importrows")
+async function importData() {
+  try {
+    await API.importTableData({
+      tableId,
+      rows,
+      identifierFields,
+    })
+    notifications.success("Rows successfully imported")
+  } catch (error) {
+    notifications.error("Unable to import data")
   }
+
+  // Always refresh rows just to be sure
+  dispatch("importrows")
+}
 </script>
 
 <ModalContent

@@ -1,42 +1,42 @@
 <script>
-  import { onMount } from "svelte"
+import { onMount } from "svelte"
 
-  export let value
-  export let focused = false
-  export let onChange
-  export let type = "text"
-  export let readonly = false
-  export let api
+export let value
+export let focused = false
+export let onChange
+export let type = "text"
+export let readonly = false
+export let api
 
-  let input
-  let active = false
+let input
+let active = false
 
-  $: editable = focused && !readonly
+$: editable = focused && !readonly
 
-  const handleChange = e => {
-    onChange(e.target.value)
+const handleChange = e => {
+  onChange(e.target.value)
+}
+
+const onKeyDown = e => {
+  if (!active) {
+    return false
   }
-
-  const onKeyDown = e => {
-    if (!active) {
-      return false
-    }
-    if (e.key === "Enter") {
-      input?.blur()
-      const event = new KeyboardEvent("keydown", { key: "ArrowDown" })
-      document.dispatchEvent(event)
-    }
-    return true
+  if (e.key === "Enter") {
+    input?.blur()
+    const event = new KeyboardEvent("keydown", { key: "ArrowDown" })
+    document.dispatchEvent(event)
   }
+  return true
+}
 
-  onMount(() => {
-    api = {
-      focus: () => input?.focus(),
-      blur: () => input?.blur(),
-      isActive: () => active,
-      onKeyDown,
-    }
-  })
+onMount(() => {
+  api = {
+    focus: () => input?.focus(),
+    blur: () => input?.blur(),
+    isActive: () => active,
+    onKeyDown,
+  }
+})
 </script>
 
 {#if editable}

@@ -1,19 +1,19 @@
 <script>
-  import { organisation, auth } from "stores/portal"
-  import { onMount } from "svelte"
+import { auth, organisation } from "stores/portal"
+import { onMount } from "svelte"
 
-  let loaded = false
+let loaded = false
 
-  $: platformTitleText = $organisation.platformTitle
-  $: platformTitle =
-    !$auth.user && platformTitleText ? platformTitleText : "Budibase"
+$: platformTitleText = $organisation.platformTitle
+$: platformTitle =
+  !$auth.user && platformTitleText ? platformTitleText : "Budibase"
 
-  $: faviconUrl = $organisation.faviconUrl || "/builder/bblogo.png"
+$: faviconUrl = $organisation.faviconUrl || "/builder/bblogo.png"
 
-  onMount(async () => {
-    await organisation.init()
-    loaded = true
-  })
+onMount(async () => {
+  await organisation.init()
+  loaded = true
+})
 </script>
 
 <!--

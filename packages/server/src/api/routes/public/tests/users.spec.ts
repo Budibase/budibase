@@ -1,7 +1,7 @@
-import * as setup from "../../tests/utilities"
-import { generateMakeRequest, MakeRequestResponse } from "./utils"
-import { User } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
+import { User } from "@budibase/types"
+import * as setup from "../../tests/utilities"
+import { MakeRequestResponse, generateMakeRequest } from "./utils"
 
 import * as workerRequests from "../../../../utilities/workerRequests"
 

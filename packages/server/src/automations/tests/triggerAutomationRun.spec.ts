@@ -1,9 +1,9 @@
 jest.spyOn(global.console, "error")
 
-import * as setup from "./utilities"
-import * as automation from "../index"
-import { serverLogAutomation } from "../../tests/utilities/structures"
 import env from "../../environment"
+import { serverLogAutomation } from "../../tests/utilities/structures"
+import * as automation from "../index"
+import * as setup from "./utilities"
 
 describe("Test triggering an automation from another automation", () => {
   let config = setup.getConfig()

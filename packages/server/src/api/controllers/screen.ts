@@ -1,20 +1,20 @@
-import { getScreenParams, generateScreenID, DocumentType } from "../../db/utils"
 import {
   events,
   context,
-  tenancy,
   db as dbCore,
   roles,
+  tenancy,
 } from "@budibase/backend-core"
-import { updateAppPackage } from "./application"
 import {
-  Plugin,
-  ScreenProps,
   BBContext,
+  Plugin,
   Screen,
+  ScreenProps,
   UserCtx,
 } from "@budibase/types"
+import { DocumentType, generateScreenID, getScreenParams } from "../../db/utils"
 import { builderSocket } from "../../websockets"
+import { updateAppPackage } from "./application"
 
 export async function fetch(ctx: BBContext) {
   const db = context.getAppDB()

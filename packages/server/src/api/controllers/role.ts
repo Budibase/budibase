@@ -1,11 +1,11 @@
 import {
+  events,
+  Header,
   context,
   db as dbCore,
-  events,
   roles,
-  Header,
 } from "@budibase/backend-core"
-import { getUserMetadataParams, InternalTables } from "../../db/utils"
+import { sdk as sharedSdk } from "@budibase/shared-core"
 import {
   AccessibleRolesResponse,
   Database,
@@ -19,7 +19,7 @@ import {
   UserMetadata,
   UserRoles,
 } from "@budibase/types"
-import { sdk as sharedSdk } from "@budibase/shared-core"
+import { InternalTables, getUserMetadataParams } from "../../db/utils"
 import sdk from "../../sdk"
 
 const UpdateRolesOptions = {

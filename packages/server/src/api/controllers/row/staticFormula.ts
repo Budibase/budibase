@@ -1,13 +1,13 @@
+import { context } from "@budibase/backend-core"
+import { FieldType, FormulaType, Row, Table } from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
+import isEqual from "lodash/isEqual"
+import * as linkRows from "../../../db/linkedRows"
 import { getRowParams } from "../../../db/utils"
 import {
   outputProcessing,
   processFormulas,
 } from "../../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
-import { Table, Row, FormulaType, FieldType } from "@budibase/types"
-import * as linkRows from "../../../db/linkedRows"
-import isEqual from "lodash/isEqual"
-import { cloneDeep } from "lodash/fp"
 
 /**
  * This function runs through a list of enriched rows, looks at the rows which
@@ -54,7 +54,7 @@ export async function updateRelatedFormula(
           continue
         }
         relatedTable = await db.get(tableId)
-      } catch (err) {
+      } catch (_err) {
         // no error scenario, table doesn't seem to exist anymore, ignore
       }
       for (let column of Object.values(relatedTable!.schema)) {

@@ -1,26 +1,26 @@
 <script>
-  import { goto, beforeUrlChange } from "@roxi/routify"
-  import { Body, Modal, ModalContent } from "@budibase/bbui"
+import { Body, Modal, ModalContent } from "@budibase/bbui"
+import { beforeUrlChange, goto } from "@roxi/routify"
 
-  export let checkIsModified = () => {}
-  export let attemptSave = () => {}
-  let modal
-  let navigateTo
-  let override = false
+export let checkIsModified = () => {}
+export let attemptSave = () => {}
+let modal
+let navigateTo
+let override = false
 
-  $beforeUrlChange(event => {
-    if (checkIsModified() && !override) {
-      navigateTo = event.type == "pushstate" ? event.url : null
-      modal.show()
-      return false
-    } else return true
-  })
+$beforeUrlChange(event => {
+  if (checkIsModified() && !override) {
+    navigateTo = event.type == "pushstate" ? event.url : null
+    modal.show()
+    return false
+  } else return true
+})
 
-  const resumeNavigation = () => {
-    if (typeof navigateTo == "string") {
-      $goto(typeof navigateTo == "string" ? `${navigateTo}` : navigateTo)
-    }
+const resumeNavigation = () => {
+  if (typeof navigateTo == "string") {
+    $goto(typeof navigateTo == "string" ? `${navigateTo}` : navigateTo)
   }
+}
 </script>
 
 <Modal

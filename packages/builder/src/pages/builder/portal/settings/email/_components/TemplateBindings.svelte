@@ -1,8 +1,8 @@
 <script>
-  import { Body, Detail } from "@budibase/bbui"
+import { Body, Detail } from "@budibase/bbui"
 
-  export let bindings
-  export let onBindingClick = () => {}
+export let bindings
+export let onBindingClick = () => {}
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

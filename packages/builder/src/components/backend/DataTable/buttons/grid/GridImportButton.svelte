@@ -1,10 +1,10 @@
 <script>
-  import ImportButton from "../ImportButton.svelte"
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
+import ImportButton from "../ImportButton.svelte"
 
-  export let disabled = false
+export let disabled = false
 
-  const { rows, datasource, definition } = getContext("grid")
+const { rows, datasource, definition } = getContext("grid")
 </script>
 
 <ImportButton

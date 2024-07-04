@@ -1,3 +1,8 @@
+import * as https from "https"
+import path from "path"
+import qs from "querystring"
+import { URLSearchParams } from "url"
+import { blacklist } from "@budibase/backend-core"
 import {
   DatasourceFieldType,
   HttpMethod,
@@ -12,20 +17,15 @@ import {
   RestConfig,
   RestQueryFields as RestQuery,
 } from "@budibase/types"
+import { parse } from "content-disposition"
+import FormData from "form-data"
 import get from "lodash/get"
-import * as https from "https"
-import qs from "querystring"
 import type { Response } from "node-fetch"
 import fetch from "node-fetch"
-import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
-import FormData from "form-data"
-import { URLSearchParams } from "url"
-import { blacklist } from "@budibase/backend-core"
-import { handleFileResponse, handleXml } from "./utils"
-import { parse } from "content-disposition"
-import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
+import { formatBytes } from "../utilities"
+import { handleFileResponse, handleXml } from "./utils"
 import { getAttachmentHeaders } from "./utils/restUtils"
 
 enum BodyType {

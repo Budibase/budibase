@@ -1,7 +1,7 @@
-import env from "../../environment"
 import * as context from "../../context"
-import * as objectStore from "../objectStore"
+import env from "../../environment"
 import * as cloudfront from "../cloudfront"
+import * as objectStore from "../objectStore"
 
 // URLs
 

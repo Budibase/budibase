@@ -1,25 +1,25 @@
 <script>
-  import BlockComponent from "components/BlockComponent.svelte"
-  import Placeholder from "components/app/Placeholder.svelte"
-  import { getContext } from "svelte"
-  import FormBlockComponent from "../FormBlockComponent.svelte"
+import BlockComponent from "components/BlockComponent.svelte"
+import Placeholder from "components/app/Placeholder.svelte"
+import { getContext } from "svelte"
+import FormBlockComponent from "../FormBlockComponent.svelte"
 
-  export let dataSource
-  export let actionType
-  export let size
-  export let disabled
-  export let fields
-  export let title
-  export let description
-  export let buttons
-  export let buttonPosition = "bottom"
-  export let schema
+export let dataSource
+export let actionType
+export let size
+export let disabled
+export let fields
+export let title
+export let description
+export let buttons
+export let buttonPosition = "bottom"
+export let schema
 
-  const context = getContext("context")
+const context = getContext("context")
 
-  let formId
+let formId
 
-  $: renderHeader = buttons || title
+$: renderHeader = buttons || title
 </script>
 
 {#if fields?.length}

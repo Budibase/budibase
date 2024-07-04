@@ -1,57 +1,57 @@
 <script>
-  import Block from "components/Block.svelte"
-  import BlockComponent from "components/BlockComponent.svelte"
-  import { makePropSafe as safe } from "@budibase/string-templates"
+import { makePropSafe as safe } from "@budibase/string-templates"
+import Block from "components/Block.svelte"
+import BlockComponent from "components/BlockComponent.svelte"
 
-  // Datasource
-  export let filter
-  export let sortColumn
-  export let sortOrder
-  export let limit
-  export let autoRefresh
+// Datasource
+export let filter
+export let sortColumn
+export let sortOrder
+export let limit
+export let autoRefresh
 
-  // Block
-  export let chartTitle
-  export let chartType
-  export let dataSource
-  export let palette
-  export let c1, c2, c3, c4, c5
-  export let labelColumn
-  export let legend
-  export let animate
-  export let dataLabels
-  export let height
-  export let width
+// Block
+export let chartTitle
+export let chartType
+export let dataSource
+export let palette
+export let c1, c2, c3, c4, c5
+export let labelColumn
+export let legend
+export let animate
+export let dataLabels
+export let height
+export let width
 
-  // Pie/Donut
-  export let valueColumn
+// Pie/Donut
+export let valueColumn
 
-  // Bar
-  export let stacked
-  export let horizontal
+// Bar
+export let stacked
+export let horizontal
 
-  // Bar/Line/Area
-  export let valueColumns
-  export let valueUnits
-  export let yAxisLabel
-  export let xAxisLabel
-  export let yAxisUnits
-  export let curve
+// Bar/Line/Area
+export let valueColumns
+export let valueUnits
+export let yAxisLabel
+export let xAxisLabel
+export let yAxisUnits
+export let curve
 
-  // Area
-  export let gradient
+// Area
+export let gradient
 
-  // Candlestick
-  export let closeColumn
-  export let openColumn
-  export let highColumn
-  export let lowColumn
-  export let dateColumn
+// Candlestick
+export let closeColumn
+export let openColumn
+export let highColumn
+export let lowColumn
+export let dateColumn
 
-  // Histogram
-  export let bucketCount
+// Histogram
+export let bucketCount
 
-  let dataProviderId
+let dataProviderId
 </script>
 
 <Block>

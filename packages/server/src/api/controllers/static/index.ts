@@ -1,15 +1,4 @@
-import { InvalidFileExtensions } from "@budibase/shared-core"
-import AppComponent from "./templates/BudibaseApp.svelte"
-import { join } from "../../../utilities/centralPath"
-import * as uuid from "uuid"
-import { devClientVersion, ObjectStoreBuckets } from "../../../constants"
-import { processString } from "@budibase/string-templates"
-import {
-  loadHandlebarsFile,
-  NODE_MODULES_PATH,
-  TOP_LEVEL_PATH,
-} from "../../../utilities/fileSystem"
-import env from "../../../environment"
+import fs from "fs"
 import {
   BadRequestError,
   configs,
@@ -17,10 +6,9 @@ import {
   objectStore,
   utils,
 } from "@budibase/backend-core"
-import AWS from "aws-sdk"
-import fs from "fs"
-import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
+import { InvalidFileExtensions } from "@budibase/shared-core"
+import { processString } from "@budibase/string-templates"
 import {
   App,
   Ctx,
@@ -29,10 +17,22 @@ import {
   ProcessAttachmentResponse,
   UserCtx,
 } from "@budibase/types"
+import AWS from "aws-sdk"
+import * as uuid from "uuid"
 import {
   getAppMigrationVersion,
   getLatestEnabledMigrationId,
 } from "../../../appMigrations"
+import { ObjectStoreBuckets, devClientVersion } from "../../../constants"
+import env from "../../../environment"
+import sdk from "../../../sdk"
+import { join } from "../../../utilities/centralPath"
+import {
+  NODE_MODULES_PATH,
+  TOP_LEVEL_PATH,
+  loadHandlebarsFile,
+} from "../../../utilities/fileSystem"
+import AppComponent from "./templates/BudibaseApp.svelte"
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
@@ -211,7 +211,7 @@ export const serveApp = async function (ctx: UserCtx) {
       // just return the app info for jest to assert on
       ctx.body = appInfo
     }
-  } catch (error) {
+  } catch (_error) {
     if (!env.isJest()) {
       const { head, html, css } = AppComponent.render({
         title: branding?.metaTitle,
@@ -288,7 +288,7 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     if (!datasource) {
       ctx.throw(400, "The specified datasource could not be found")
     }
-  } catch (error) {
+  } catch (_error) {
     ctx.throw(400, "The specified datasource could not be found")
   }
 

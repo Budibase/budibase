@@ -1,22 +1,22 @@
+import {
+  App,
+  Migration,
+  MigrationNoOpOptions,
+  MigrationOptions,
+  MigrationType,
+} from "@budibase/types"
+import { DEFINITIONS } from "."
 import { DEFAULT_TENANT_ID } from "../constants"
+import * as context from "../context"
 import {
   DocumentType,
   StaticDatabases,
   getAllApps,
-  getGlobalDBName,
   getDB,
+  getGlobalDBName,
 } from "../db"
 import environment from "../environment"
 import * as platform from "../platform"
-import * as context from "../context"
-import { DEFINITIONS } from "."
-import {
-  Migration,
-  MigrationOptions,
-  MigrationType,
-  MigrationNoOpOptions,
-  App,
-} from "@budibase/types"
 
 export const getMigrationsDoc = async (db: any) => {
   // get the migrations doc

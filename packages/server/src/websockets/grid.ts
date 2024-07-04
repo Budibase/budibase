@@ -1,15 +1,15 @@
+import http from "http"
+import { auth, permissions } from "@budibase/backend-core"
+import { GridSocketEvent } from "@budibase/shared-core"
+import { Row, Table, View, ViewV2 } from "@budibase/types"
+import Koa from "koa"
+import { userAgent } from "koa-useragent"
+import { Socket } from "socket.io"
+import { getTableId } from "../api/controllers/row/utils"
 import authorized from "../middleware/authorized"
 import currentApp from "../middleware/currentapp"
-import { BaseSocket } from "./websocket"
-import { auth, permissions } from "@budibase/backend-core"
-import http from "http"
-import Koa from "koa"
-import { getTableId } from "../api/controllers/row/utils"
-import { Row, Table, View, ViewV2 } from "@budibase/types"
-import { Socket } from "socket.io"
-import { GridSocketEvent } from "@budibase/shared-core"
-import { userAgent } from "koa-useragent"
 import { createContext, runMiddlewares } from "./middleware"
+import { BaseSocket } from "./websocket"
 
 const { PermissionType, PermissionLevel } = permissions
 
@@ -59,7 +59,7 @@ export default class GridSocket extends BaseSocket {
           const sessions = await this.getRoomSessions(room)
           callback({ users: sessions })
         })
-      } catch (error) {
+      } catch (_error) {
         socket.disconnect(true)
       }
     })

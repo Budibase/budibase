@@ -1,17 +1,17 @@
 <script>
-  import { ActionButton } from "@budibase/bbui"
-  import { getContext } from "svelte"
-  import { auth } from "stores/portal"
-  import { sdk } from "@budibase/shared-core"
+import { ActionButton } from "@budibase/bbui"
+import { sdk } from "@budibase/shared-core"
+import { auth } from "stores/portal"
+import { getContext } from "svelte"
 
-  export let value
+export let value
 
-  const userContext = getContext("users")
+const userContext = getContext("users")
 
-  const onClick = e => {
-    e.stopPropagation()
-    userContext.removeUser(value)
-  }
+const onClick = e => {
+  e.stopPropagation()
+  userContext.removeUser(value)
+}
 </script>
 
 <ActionButton

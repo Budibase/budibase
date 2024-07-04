@@ -1,10 +1,10 @@
 import { context, db as dbCore } from "@budibase/backend-core"
 import { Database } from "@budibase/types"
 import {
-  getDatasourceParams,
-  getTableParams,
   getAutomationParams,
+  getDatasourceParams,
   getScreenParams,
+  getTableParams,
 } from "../../../db/utils"
 
 async function runInContext(appId: string, cb: any, db?: Database) {

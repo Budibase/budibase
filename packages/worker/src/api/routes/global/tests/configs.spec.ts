@@ -1,10 +1,10 @@
 // mock the email system
 jest.mock("nodemailer")
-import { TestConfiguration, structures, mocks } from "../../../../tests"
+import { TestConfiguration, mocks, structures } from "../../../../tests"
 
 mocks.email.mock()
 import { events } from "@budibase/backend-core"
-import { GetPublicSettingsResponse, Config, ConfigType } from "@budibase/types"
+import { Config, ConfigType, GetPublicSettingsResponse } from "@budibase/types"
 
 describe("configs", () => {
   const config = new TestConfiguration()

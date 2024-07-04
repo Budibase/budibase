@@ -1,13 +1,4 @@
-import { Knex, knex } from "knex"
-import * as dbCore from "../db"
-import {
-  getNativeSql,
-  isExternalTable,
-  isIsoDateString,
-  isValidFilter,
-} from "./utils"
-import { SqlStatements } from "./sqlStatements"
-import SqlTableQueryBuilder from "./sqlTable"
+import { helpers } from "@budibase/shared-core"
 import {
   BBReferenceFieldMetadata,
   FieldSchema,
@@ -16,7 +7,6 @@ import {
   JsonFieldMetadata,
   JsonTypes,
   Operation,
-  prefixed,
   QueryJson,
   QueryOptions,
   RelationshipsJson,
@@ -27,9 +17,19 @@ import {
   SqlQueryBinding,
   Table,
   TableSourceType,
+  prefixed,
 } from "@budibase/types"
+import { Knex, knex } from "knex"
+import * as dbCore from "../db"
 import environment from "../environment"
-import { helpers } from "@budibase/shared-core"
+import { SqlStatements } from "./sqlStatements"
+import SqlTableQueryBuilder from "./sqlTable"
+import {
+  getNativeSql,
+  isExternalTable,
+  isIsoDateString,
+  isValidFilter,
+} from "./utils"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 

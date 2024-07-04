@@ -1,8 +1,8 @@
-import { Plugin } from "@budibase/types"
-import { budibaseTempDir } from "../budibaseDir"
 import fs from "fs"
 import { join } from "path"
 import { objectStore } from "@budibase/backend-core"
+import { Plugin } from "@budibase/types"
+import { budibaseTempDir } from "../budibaseDir"
 
 const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 const AUTOMATION_PATH = join(budibaseTempDir(), "automation")

@@ -1,12 +1,12 @@
 import {
   ContextUser,
   DocumentType,
+  InternalTable,
   SEPARATOR,
   User,
-  InternalTable,
 } from "@budibase/types"
-import { getProdAppID } from "./applications"
 import * as _ from "lodash/fp"
+import { getProdAppID } from "./applications"
 
 // checks if a user is specifically a builder, given an app ID
 export function isBuilder(user: User | ContextUser, appId?: string): boolean {

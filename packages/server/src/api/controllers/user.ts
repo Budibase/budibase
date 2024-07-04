@@ -1,6 +1,5 @@
-import { generateUserFlagID, InternalTables } from "../../db/utils"
-import { getFullUser } from "../../utilities/users"
 import { context } from "@budibase/backend-core"
+import { DocumentInsertResponse } from "@budibase/nano"
 import {
   ContextUserMetadata,
   Ctx,
@@ -11,8 +10,9 @@ import {
   UserCtx,
   UserMetadata,
 } from "@budibase/types"
+import { InternalTables, generateUserFlagID } from "../../db/utils"
 import sdk from "../../sdk"
-import { DocumentInsertResponse } from "@budibase/nano"
+import { getFullUser } from "../../utilities/users"
 
 export async function fetchMetadata(ctx: Ctx<void, FetchUserMetadataResponse>) {
   ctx.body = await sdk.users.fetchMetadata()
@@ -49,7 +49,7 @@ export async function destroyMetadata(ctx: UserCtx<void, { message: string }>) {
   try {
     const dbUser = await sdk.users.get(ctx.params.id)
     await db.remove(dbUser._id!, dbUser._rev)
-  } catch (err) {
+  } catch (_err) {
     // error just means the global user has no config in this app
   }
   ctx.body = {
@@ -76,7 +76,7 @@ export async function setFlag(
   let doc: Flags
   try {
     doc = await db.get<Flags>(flagDocId)
-  } catch (err) {
+  } catch (_err) {
     doc = { _id: flagDocId }
   }
   doc[flag] = value || true
@@ -91,7 +91,7 @@ export async function getFlags(ctx: UserCtx<void, Flags>) {
   let doc: Flags
   try {
     doc = await db.get<Flags>(docId)
-  } catch (err) {
+  } catch (_err) {
     doc = { _id: docId }
   }
   ctx.body = doc

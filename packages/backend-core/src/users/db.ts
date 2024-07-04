@@ -1,33 +1,33 @@
-import env from "../environment"
-import * as eventHelpers from "./events"
-import * as accountSdk from "../accounts"
-import * as cache from "../cache"
-import { getGlobalDB, getIdentity, getTenantId } from "../context"
-import * as dbUtils from "../db"
-import { EmailUnavailableError, HTTPError } from "../errors"
-import * as platform from "../platform"
-import * as sessions from "../security/sessions"
-import * as usersCore from "./users"
 import {
   Account,
   BulkUserCreated,
   BulkUserDeleted,
-  isSSOAccount,
-  isSSOUser,
   SaveUserOpts,
   User,
-  UserStatus,
   UserGroup,
+  UserStatus,
+  isSSOAccount,
+  isSSOUser,
 } from "@budibase/types"
+import * as accountSdk from "../accounts"
+import * as cache from "../cache"
+import { getGlobalDB, getIdentity, getTenantId } from "../context"
+import * as dbUtils from "../db"
+import env from "../environment"
+import { EmailUnavailableError, HTTPError } from "../errors"
+import * as platform from "../platform"
+import { validatePassword } from "../security"
+import * as sessions from "../security/sessions"
+import { hash } from "../utils"
+import * as eventHelpers from "./events"
+import { searchExistingEmails } from "./lookup"
+import * as usersCore from "./users"
 import {
   getAccountHolderFromUserIds,
   isAdmin,
   isCreator,
   validateUniqueUser,
 } from "./utils"
-import { searchExistingEmails } from "./lookup"
-import { hash } from "../utils"
-import { validatePassword } from "../security"
 
 type QuotaUpdateFn = (
   change: number,

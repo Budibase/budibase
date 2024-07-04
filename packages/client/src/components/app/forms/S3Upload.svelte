@@ -1,124 +1,124 @@
 <script>
-  import Field from "./Field.svelte"
-  import { CoreDropzone, ProgressCircle, Helpers } from "@budibase/bbui"
-  import { getContext, onMount, onDestroy } from "svelte"
+import { CoreDropzone, Helpers, ProgressCircle } from "@budibase/bbui"
+import { getContext, onDestroy, onMount } from "svelte"
+import Field from "./Field.svelte"
 
-  export let datasourceId
-  export let bucket
-  export let key
-  export let field
-  export let label
-  export let disabled = false
-  export let validation
-  export let onChange
+export let datasourceId
+export let bucket
+export let key
+export let field
+export let label
+export let disabled = false
+export let validation
+export let onChange
 
-  let fieldState
-  let fieldApi
-  let localFiles = []
+let fieldState
+let fieldApi
+let localFiles = []
 
-  $: {
-    // If the field state is reset, clear the local files
-    if (!fieldState?.value?.length) {
-      localFiles = []
+$: {
+  // If the field state is reset, clear the local files
+  if (!fieldState?.value?.length) {
+    localFiles = []
+  }
+}
+
+const { API, notificationStore, uploadStore } = getContext("sdk")
+const component = getContext("component")
+
+// 5GB cap per item sent via S3 REST API
+const MaxFileSize = 1000000000 * 5
+
+// Actual file data to upload
+let data
+let loading = false
+
+const handleFileTooLarge = () => {
+  notificationStore.actions.warning(
+    "Files cannot exceed 5GB. Please try again with a smaller file."
+  )
+}
+
+// Process the file input and return a serializable structure expected by
+// the dropzone component to display the file
+const processFiles = async fileList => {
+  return await new Promise(resolve => {
+    if (!fileList?.length) {
+      return []
     }
-  }
 
-  const { API, notificationStore, uploadStore } = getContext("sdk")
-  const component = getContext("component")
+    // Don't read in non-image files
+    data = fileList[0]
+    if (!data.type?.startsWith("image")) {
+      resolve([
+        {
+          name: data.name,
+          type: data.type,
+        },
+      ])
+    }
 
-  // 5GB cap per item sent via S3 REST API
-  const MaxFileSize = 1000000000 * 5
-
-  // Actual file data to upload
-  let data
-  let loading = false
-
-  const handleFileTooLarge = () => {
-    notificationStore.actions.warning(
-      "Files cannot exceed 5GB. Please try again with a smaller file."
-    )
-  }
-
-  // Process the file input and return a serializable structure expected by
-  // the dropzone component to display the file
-  const processFiles = async fileList => {
-    return await new Promise(resolve => {
-      if (!fileList?.length) {
-        return []
-      }
-
-      // Don't read in non-image files
-      data = fileList[0]
-      if (!data.type?.startsWith("image")) {
+    // Read image files and display as preview
+    const reader = new FileReader()
+    reader.addEventListener(
+      "load",
+      () => {
         resolve([
           {
+            url: reader.result,
             name: data.name,
             type: data.type,
           },
         ])
-      }
-
-      // Read image files and display as preview
-      const reader = new FileReader()
-      reader.addEventListener(
-        "load",
-        () => {
-          resolve([
-            {
-              url: reader.result,
-              name: data.name,
-              type: data.type,
-            },
-          ])
-        },
-        false
-      )
-      reader.readAsDataURL(fileList[0])
-    })
-  }
-
-  const upload = async () => {
-    loading = true
-    try {
-      const res = await API.externalUpload({
-        datasourceId,
-        bucket,
-        key,
-        data,
-      })
-      notificationStore.actions.success("File uploaded successfully")
-      loading = false
-      return res
-    } catch (error) {
-      notificationStore.actions.error(
-        `Error uploading file: ${error?.message || error}`
-      )
-      loading = false
-    }
-  }
-
-  const handleChange = e => {
-    localFiles = e.detail
-    let files = Helpers.cloneDeep(e.detail) || []
-    // remove URL as it contains the full base64 image data
-    files.forEach(file => {
-      if (file.type?.startsWith("image")) {
-        delete file.url
-      }
-    })
-    const changed = fieldApi.setValue(files)
-    if (onChange && changed) {
-      onChange({ value: files })
-    }
-  }
-
-  onMount(() => {
-    uploadStore.actions.registerFileUpload($component.id, upload)
+      },
+      false
+    )
+    reader.readAsDataURL(fileList[0])
   })
+}
 
-  onDestroy(() => {
-    uploadStore.actions.unregisterFileUpload($component.id)
+const upload = async () => {
+  loading = true
+  try {
+    const res = await API.externalUpload({
+      datasourceId,
+      bucket,
+      key,
+      data,
+    })
+    notificationStore.actions.success("File uploaded successfully")
+    loading = false
+    return res
+  } catch (error) {
+    notificationStore.actions.error(
+      `Error uploading file: ${error?.message || error}`
+    )
+    loading = false
+  }
+}
+
+const handleChange = e => {
+  localFiles = e.detail
+  let files = Helpers.cloneDeep(e.detail) || []
+  // remove URL as it contains the full base64 image data
+  files.forEach(file => {
+    if (file.type?.startsWith("image")) {
+      delete file.url
+    }
   })
+  const changed = fieldApi.setValue(files)
+  if (onChange && changed) {
+    onChange({ value: files })
+  }
+}
+
+onMount(() => {
+  uploadStore.actions.registerFileUpload($component.id, upload)
+})
+
+onDestroy(() => {
+  uploadStore.actions.unregisterFileUpload($component.id)
+})
 </script>
 
 <Field

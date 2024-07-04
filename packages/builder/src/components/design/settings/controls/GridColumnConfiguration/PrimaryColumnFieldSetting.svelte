@@ -1,44 +1,44 @@
 <script>
-  import EditComponentPopover from "../EditComponentPopover.svelte"
-  import { Icon } from "@budibase/bbui"
-  import { setContext } from "svelte"
-  import { writable } from "svelte/store"
-  import { FieldTypeToComponentMap } from "../FieldConfiguration/utils"
-  import { componentStore } from "stores/builder"
+import { Icon } from "@budibase/bbui"
+import { componentStore } from "stores/builder"
+import { setContext } from "svelte"
+import { writable } from "svelte/store"
+import EditComponentPopover from "../EditComponentPopover.svelte"
+import { FieldTypeToComponentMap } from "../FieldConfiguration/utils"
 
-  export let item
-  export let anchor
+export let item
+export let anchor
 
-  let draggableStore = writable({
-    selected: null,
-    actions: {
-      select: id => {
-        draggableStore.update(state => ({
-          ...state,
-          selected: id,
-        }))
-      },
+let draggableStore = writable({
+  selected: null,
+  actions: {
+    select: id => {
+      draggableStore.update(state => ({
+        ...state,
+        selected: id,
+      }))
     },
-  })
+  },
+})
 
-  setContext("draggable", draggableStore)
+setContext("draggable", draggableStore)
 
-  const parseSettings = settings => {
-    return settings
-      .filter(setting => setting.key !== "field")
-      .map(setting => {
-        return { ...setting, nested: true }
-      })
-  }
+const parseSettings = settings => {
+  return settings
+    .filter(setting => setting.key !== "field")
+    .map(setting => {
+      return { ...setting, nested: true }
+    })
+}
 
-  const getIcon = item => {
-    const component = `@budibase/standard-components/${
-      FieldTypeToComponentMap[item.columnType]
-    }`
-    return componentStore.getDefinition(component)?.icon
-  }
+const getIcon = item => {
+  const component = `@budibase/standard-components/${
+    FieldTypeToComponentMap[item.columnType]
+  }`
+  return componentStore.getDefinition(component)?.icon
+}
 
-  $: icon = getIcon(item)
+$: icon = getIcon(item)
 </script>
 
 <div class="list-item-body">

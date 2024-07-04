@@ -1,5 +1,5 @@
 import PostHog from "posthog-node"
-import { POSTHOG_TOKEN, AnalyticsEvent } from "../constants"
+import { AnalyticsEvent, POSTHOG_TOKEN } from "../constants"
 import { ConfigManager } from "../structures/ConfigManager"
 
 export class AnalyticsClient {

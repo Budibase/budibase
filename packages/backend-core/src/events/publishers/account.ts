@@ -1,12 +1,12 @@
-import { publishEvent } from "../events"
 import {
-  Event,
   Account,
   AccountCreatedEvent,
   AccountDeletedEvent,
   AccountVerifiedEvent,
+  Event,
   Identity,
 } from "@budibase/types"
+import { publishEvent } from "../events"
 
 async function created(account: Account, identityOverride?: Identity) {
   const properties: AccountCreatedEvent = {

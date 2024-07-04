@@ -1,15 +1,15 @@
 <script>
-  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import { getUserBindings } from "dataBinding"
+import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+import { getUserBindings } from "dataBinding"
 
-  export let queryBindings = []
+export let queryBindings = []
 
-  const userBindings = getUserBindings()
+const userBindings = getUserBindings()
 
-  let internalBindings = queryBindings.reduce((acc, binding) => {
-    acc[binding.name] = binding.default
-    return acc
-  }, {})
+let internalBindings = queryBindings.reduce((acc, binding) => {
+  acc[binding.name] = binding.default
+  return acc
+}, {})
 </script>
 
 <KeyValueBuilder

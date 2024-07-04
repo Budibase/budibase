@@ -5,6 +5,7 @@
     "@babel/core": "^7.22.5",
     "@babel/eslint-parser": "^7.22.5",
     "@babel/preset-env": "^7.22.5",
+    "@biomejs/biome": "1.8.3",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
     "@types/node": "20.10.0",
     "@types/proper-lockfile": "^4.1.4",

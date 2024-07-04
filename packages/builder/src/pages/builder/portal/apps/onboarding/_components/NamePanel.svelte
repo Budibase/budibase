@@ -1,49 +1,49 @@
 <script>
-  import { Button, FancyForm, FancyInput } from "@budibase/bbui"
-  import PanelHeader from "./PanelHeader.svelte"
-  import { APP_URL_REGEX } from "constants"
+import { APP_URL_REGEX } from "constants"
+import { Button, FancyForm, FancyInput } from "@budibase/bbui"
+import PanelHeader from "./PanelHeader.svelte"
 
-  export let disabled
-  export let name = ""
-  export let url = ""
-  export let onNext = () => {}
+export let disabled
+export let name = ""
+export let url = ""
+export let onNext = () => {}
 
-  const nameRegex = /^[a-zA-Z0-9\s]*$/
-  let nameError = null
-  let urlError = null
+const nameRegex = /^[a-zA-Z0-9\s]*$/
+let nameError = null
+let urlError = null
 
-  $: isValid = name.length && url.length && !nameError && !urlError
+$: isValid = name.length && url.length && !nameError && !urlError
 
-  const validateName = name => {
-    if (name.length < 1) {
-      return "Name must be provided"
-    }
-    if (!nameRegex.test(name)) {
-      return "No special characters are allowed"
-    }
+const validateName = name => {
+  if (name.length < 1) {
+    return "Name must be provided"
+  }
+  if (!nameRegex.test(name)) {
+    return "No special characters are allowed"
+  }
+}
+
+const validateUrl = url => {
+  if (url.length < 1) {
+    return "URL must be provided"
   }
 
-  const validateUrl = url => {
-    if (url.length < 1) {
-      return "URL must be provided"
-    }
+  if (!APP_URL_REGEX.test(url)) {
+    return "Invalid URL"
+  }
+}
 
-    if (!APP_URL_REGEX.test(url)) {
-      return "Invalid URL"
-    }
+$: urlManuallySet = false
+
+const updateUrl = event => {
+  const appName = event.detail
+  if (urlManuallySet) {
+    return
   }
 
-  $: urlManuallySet = false
-
-  const updateUrl = event => {
-    const appName = event.detail
-    if (urlManuallySet) {
-      return
-    }
-
-    const parsedUrl = appName.toLowerCase().replace(/\s+/g, "-")
-    url = encodeURI(parsedUrl)
-  }
+  const parsedUrl = appName.toLowerCase().replace(/\s+/g, "-")
+  url = encodeURI(parsedUrl)
+}
 </script>
 
 <div>

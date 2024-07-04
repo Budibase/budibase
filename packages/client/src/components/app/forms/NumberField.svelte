@@ -1,14 +1,14 @@
 <script>
-  import StringField from "./StringField.svelte"
+import StringField from "./StringField.svelte"
 
-  export let defaultValue
+export let defaultValue
 
-  const parseNumber = val => {
-    if (val == null) {
-      return null
-    }
-    return isNaN(val) ? null : parseFloat(val)
+const parseNumber = val => {
+  if (val == null) {
+    return null
   }
+  return isNaN(val) ? null : parseFloat(val)
+}
 </script>
 
 <StringField

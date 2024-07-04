@@ -1,16 +1,16 @@
 <script context="module">
-  export const TooltipPosition = {
-    Top: "top",
-    Right: "right",
-    Bottom: "bottom",
-    Left: "left",
-  }
-  export const TooltipType = {
-    Default: "default",
-    Info: "info",
-    Positive: "positive",
-    Negative: "negative",
-  }
+export const TooltipPosition = {
+  Top: "top",
+  Right: "right",
+  Bottom: "bottom",
+  Left: "left",
+}
+export const TooltipType = {
+  Default: "default",
+  Info: "info",
+  Positive: "positive",
+  Negative: "negative",
+}
 </script>
 
 <script>

@@ -1,306 +1,304 @@
 <script>
-  import { createEventDispatcher } from "svelte"
-  import "@spectrum-css/table/dist/index-vars.css"
-  import CellRenderer from "./CellRenderer.svelte"
-  import SelectEditRenderer from "./SelectEditRenderer.svelte"
-  import { cloneDeep, deepGet } from "../helpers"
-  import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
-  import Checkbox from "../Form/Checkbox.svelte"
+import { createEventDispatcher } from "svelte"
+import "@spectrum-css/table/dist/index-vars.css"
+import Checkbox from "../Form/Checkbox.svelte"
+import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
+import { cloneDeep, deepGet } from "../helpers"
+import CellRenderer from "./CellRenderer.svelte"
+import SelectEditRenderer from "./SelectEditRenderer.svelte"
 
-  /**
-   * The expected schema is our normal couch schemas for our tables.
-   * Each field schema can be enriched with a few extra properties to customise
-   * the behaviour.
-   * All of these are optional and do not need to be added.
-   * displayName: Overrides the field name displayed as the column title
-   * sortable: Set to false to disable sorting data by a certain column
-   * editable: Set to false to disable editing a certain column if the
-   *  allowEditColumns prop is true
-   * width: the width of the column
-   * align: the alignment of the column
-   * template: a HBS or JS binding to use as the value
-   * background: the background color
-   * color: the text color
-   * borderLeft: show a left border
-   * borderRight: show a right border
-   */
-  export let data = []
-  export let schema = {}
-  export let showAutoColumns = false
-  export let rowCount = 0
-  export let quiet = false
-  export let loading = false
-  export let allowSelectRows
-  export let allowEditRows = true
-  export let allowEditColumns = true
-  export let allowClickRows = true
-  export let selectedRows = []
-  export let customRenderers = []
-  export let disableSorting = false
-  export let autoSortColumns = true
-  export let compact = false
-  export let customPlaceholder = false
-  export let showHeaderBorder = true
-  export let placeholderText = "No rows found"
-  export let snippets = []
+/**
+ * The expected schema is our normal couch schemas for our tables.
+ * Each field schema can be enriched with a few extra properties to customise
+ * the behaviour.
+ * All of these are optional and do not need to be added.
+ * displayName: Overrides the field name displayed as the column title
+ * sortable: Set to false to disable sorting data by a certain column
+ * editable: Set to false to disable editing a certain column if the
+ *  allowEditColumns prop is true
+ * width: the width of the column
+ * align: the alignment of the column
+ * template: a HBS or JS binding to use as the value
+ * background: the background color
+ * color: the text color
+ * borderLeft: show a left border
+ * borderRight: show a right border
+ */
+export let data = []
+export let schema = {}
+export let showAutoColumns = false
+export let rowCount = 0
+export let quiet = false
+export let loading = false
+export let allowSelectRows
+export let allowEditRows = true
+export let allowEditColumns = true
+export let allowClickRows = true
+export let selectedRows = []
+export let customRenderers = []
+export let disableSorting = false
+export let autoSortColumns = true
+export let compact = false
+export let customPlaceholder = false
+export let showHeaderBorder = true
+export let placeholderText = "No rows found"
+export let snippets = []
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  // Config
-  const headerHeight = 36
-  $: rowHeight = compact ? 46 : 55
+// Config
+const headerHeight = 36
+$: rowHeight = compact ? 46 : 55
 
-  // Sorting state
-  let sortColumn
-  let sortOrder
+// Sorting state
+let sortColumn
+let sortOrder
 
-  // Table state
-  let height = 0
-  let loaded = false
-  let checkboxStatus = false
+// Table state
+let height = 0
+let loaded = false
+let checkboxStatus = false
 
-  $: schema = fixSchema(schema)
-  $: if (!loading) loaded = true
-  $: fields = getFields(schema, showAutoColumns, autoSortColumns)
-  $: rows = fields?.length ? data || [] : []
-  $: totalRowCount = rows?.length || 0
-  $: visibleRowCount = getVisibleRowCount(
-    loaded,
-    height,
-    rows.length,
-    rowCount,
-    rowHeight
+$: schema = fixSchema(schema)
+$: if (!loading) loaded = true
+$: fields = getFields(schema, showAutoColumns, autoSortColumns)
+$: rows = fields?.length ? data || [] : []
+$: totalRowCount = rows?.length || 0
+$: visibleRowCount = getVisibleRowCount(
+  loaded,
+  height,
+  rows.length,
+  rowCount,
+  rowHeight
+)
+$: heightStyle = getHeightStyle(
+  visibleRowCount,
+  rowCount,
+  totalRowCount,
+  rowHeight,
+  loading
+)
+$: sortedRows = sortRows(rows, sortColumn, sortOrder)
+$: gridStyle = getGridStyle(fields, schema, showEditColumn)
+$: showEditColumn = allowEditRows || allowSelectRows
+$: cellStyles = computeCellStyles(schema)
+
+// Deselect the "select all" checkbox when the user navigates to a new page
+$: {
+  let checkRowCount = rows.filter(o1 =>
+    selectedRows.some(o2 => o1._id === o2._id)
   )
-  $: heightStyle = getHeightStyle(
-    visibleRowCount,
-    rowCount,
-    totalRowCount,
-    rowHeight,
-    loading
-  )
-  $: sortedRows = sortRows(rows, sortColumn, sortOrder)
-  $: gridStyle = getGridStyle(fields, schema, showEditColumn)
-  $: showEditColumn = allowEditRows || allowSelectRows
-  $: cellStyles = computeCellStyles(schema)
-
-  // Deselect the "select all" checkbox when the user navigates to a new page
-  $: {
-    let checkRowCount = rows.filter(o1 =>
-      selectedRows.some(o2 => o1._id === o2._id)
-    )
-    if (checkRowCount.length === 0) {
-      checkboxStatus = false
-    }
+  if (checkRowCount.length === 0) {
+    checkboxStatus = false
   }
+}
 
-  const fixSchema = schema => {
-    let fixedSchema = {}
-    Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
-      if (typeof fieldSchema === "string") {
-        fixedSchema[fieldName] = {
-          type: fieldSchema,
-          name: fieldName,
-        }
-      } else {
-        fixedSchema[fieldName] = {
-          ...fieldSchema,
-          name: fieldName,
-        }
+const fixSchema = schema => {
+  let fixedSchema = {}
+  Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+    if (typeof fieldSchema === "string") {
+      fixedSchema[fieldName] = {
+        type: fieldSchema,
+        name: fieldName,
       }
-
-      // Delete numeric only widths as these are grid widths and should be
-      // ignored
-      const width = fixedSchema[fieldName].width
-      if (width != null && `${width}`.trim().match(/^[0-9]+$/)) {
-        delete fixedSchema[fieldName].width
+    } else {
+      fixedSchema[fieldName] = {
+        ...fieldSchema,
+        name: fieldName,
       }
-    })
-    return fixedSchema
-  }
+    }
 
-  const getVisibleRowCount = (loaded, height, allRows, rowCount, rowHeight) => {
-    if (!loaded) {
-      return rowCount || 0
+    // Delete numeric only widths as these are grid widths and should be
+    // ignored
+    const width = fixedSchema[fieldName].width
+    if (width != null && `${width}`.trim().match(/^[0-9]+$/)) {
+      delete fixedSchema[fieldName].width
     }
-    if (rowCount) {
-      return Math.min(allRows, rowCount)
-    }
-    return Math.min(allRows, Math.ceil(height / rowHeight))
-  }
+  })
+  return fixedSchema
+}
 
-  const getHeightStyle = (
-    visibleRowCount,
-    rowCount,
-    totalRowCount,
-    rowHeight,
-    loading
-  ) => {
-    if (loading) {
-      return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
-    }
-    if (!rowCount || !visibleRowCount || totalRowCount <= rowCount) {
-      return ""
-    }
+const getVisibleRowCount = (loaded, height, allRows, rowCount, rowHeight) => {
+  if (!loaded) {
+    return rowCount || 0
+  }
+  if (rowCount) {
+    return Math.min(allRows, rowCount)
+  }
+  return Math.min(allRows, Math.ceil(height / rowHeight))
+}
+
+const getHeightStyle = (
+  visibleRowCount,
+  rowCount,
+  totalRowCount,
+  rowHeight,
+  loading
+) => {
+  if (loading) {
     return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
   }
-
-  const getGridStyle = (fields, schema, showEditColumn) => {
-    let style = "grid-template-columns:"
-    if (showEditColumn) {
-      style += " auto"
-    }
-    fields?.forEach(field => {
-      const fieldSchema = schema[field]
-      if (fieldSchema.width && typeof fieldSchema.width === "string") {
-        style += ` ${fieldSchema.width}`
-      } else {
-        style += " minmax(auto, 1fr)"
-      }
-    })
-    style += ";"
-    return style
+  if (!rowCount || !visibleRowCount || totalRowCount <= rowCount) {
+    return ""
   }
+  return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
+}
 
-  const sortRows = (rows, sortColumn, sortOrder) => {
-    if (!sortColumn || !sortOrder || disableSorting) {
-      return rows
-    }
-    return rows.slice().sort((a, b) => {
-      const colA = a[sortColumn]
-      const colB = b[sortColumn]
-      if (sortOrder === "Descending") {
-        return colA > colB ? -1 : 1
-      } else {
-        return colA > colB ? 1 : -1
-      }
-    })
+const getGridStyle = (fields, schema, showEditColumn) => {
+  let style = "grid-template-columns:"
+  if (showEditColumn) {
+    style += " auto"
   }
+  fields?.forEach(field => {
+    const fieldSchema = schema[field]
+    if (fieldSchema.width && typeof fieldSchema.width === "string") {
+      style += ` ${fieldSchema.width}`
+    } else {
+      style += " minmax(auto, 1fr)"
+    }
+  })
+  style += ";"
+  return style
+}
 
-  const sortBy = fieldSchema => {
-    if (fieldSchema.sortable === false) {
+const sortRows = (rows, sortColumn, sortOrder) => {
+  if (!sortColumn || !sortOrder || disableSorting) {
+    return rows
+  }
+  return rows.slice().sort((a, b) => {
+    const colA = a[sortColumn]
+    const colB = b[sortColumn]
+    if (sortOrder === "Descending") {
+      return colA > colB ? -1 : 1
+    } else {
+      return colA > colB ? 1 : -1
+    }
+  })
+}
+
+const sortBy = fieldSchema => {
+  if (fieldSchema.sortable === false) {
+    return
+  }
+  if (fieldSchema.name === sortColumn) {
+    sortOrder = sortOrder === "Descending" ? "Ascending" : "Descending"
+  } else {
+    sortColumn = fieldSchema.name
+    sortOrder = "Descending"
+  }
+  dispatch("sort", { column: sortColumn, order: sortOrder })
+}
+
+const getDisplayName = schema => {
+  let name = schema?.displayName
+  if (schema && name === undefined) {
+    name = schema.name
+  }
+  return name || ""
+}
+
+const getFields = (schema, showAutoColumns, autoSortColumns) => {
+  let columns = []
+  let autoColumns = []
+  Object.entries(schema || {}).forEach(([field, fieldSchema]) => {
+    if (!field || !fieldSchema) {
       return
     }
-    if (fieldSchema.name === sortColumn) {
-      sortOrder = sortOrder === "Descending" ? "Ascending" : "Descending"
-    } else {
-      sortColumn = fieldSchema.name
-      sortOrder = "Descending"
+    if (!autoSortColumns || !fieldSchema?.autocolumn) {
+      columns.push(fieldSchema)
+    } else if (showAutoColumns) {
+      autoColumns.push(fieldSchema)
     }
-    dispatch("sort", { column: sortColumn, order: sortOrder })
-  }
-
-  const getDisplayName = schema => {
-    let name = schema?.displayName
-    if (schema && name === undefined) {
-      name = schema.name
-    }
-    return name || ""
-  }
-
-  const getFields = (schema, showAutoColumns, autoSortColumns) => {
-    let columns = []
-    let autoColumns = []
-    Object.entries(schema || {}).forEach(([field, fieldSchema]) => {
-      if (!field || !fieldSchema) {
-        return
+  })
+  return columns
+    .sort((a, b) => {
+      if (a.divider) {
+        return a
       }
-      if (!autoSortColumns || !fieldSchema?.autocolumn) {
-        columns.push(fieldSchema)
-      } else if (showAutoColumns) {
-        autoColumns.push(fieldSchema)
+      if (b.divider) {
+        return b
+      }
+      const orderA = a.order || Number.MAX_SAFE_INTEGER
+      const orderB = b.order || Number.MAX_SAFE_INTEGER
+      const nameA = getDisplayName(a)
+      const nameB = getDisplayName(b)
+      if (orderA !== orderB) {
+        return orderA < orderB ? a : b
+      }
+      return nameA < nameB ? a : b
+    })
+    .concat(autoColumns)
+    .map(column => column.name)
+}
+
+const editColumn = (e, field) => {
+  e.stopPropagation()
+  dispatch("editcolumn", field)
+}
+
+const editRow = (e, row) => {
+  e.stopPropagation()
+  dispatch("editrow", cloneDeep(row))
+}
+
+const toggleSelectRow = row => {
+  if (!allowSelectRows) {
+    return
+  }
+  if (selectedRows.some(selectedRow => selectedRow._id === row._id)) {
+    selectedRows = selectedRows.filter(
+      selectedRow => selectedRow._id !== row._id
+    )
+  } else {
+    selectedRows = [...selectedRows, row]
+  }
+}
+
+const toggleSelectAll = e => {
+  const select = !!e.detail
+  if (select) {
+    // Add any rows which are not already in selected rows
+    rows.forEach(row => {
+      if (selectedRows.findIndex(x => x._id === row._id) === -1) {
+        selectedRows.push(row)
       }
     })
-    return columns
-      .sort((a, b) => {
-        if (a.divider) {
-          return a
-        }
-        if (b.divider) {
-          return b
-        }
-        const orderA = a.order || Number.MAX_SAFE_INTEGER
-        const orderB = b.order || Number.MAX_SAFE_INTEGER
-        const nameA = getDisplayName(a)
-        const nameB = getDisplayName(b)
-        if (orderA !== orderB) {
-          return orderA < orderB ? a : b
-        }
-        return nameA < nameB ? a : b
-      })
-      .concat(autoColumns)
-      .map(column => column.name)
+  } else {
+    // Remove any rows from selected rows that are in the current data set
+    selectedRows = selectedRows.filter(el => rows.every(f => f._id !== el._id))
   }
+}
 
-  const editColumn = (e, field) => {
-    e.stopPropagation()
-    dispatch("editcolumn", field)
-  }
-
-  const editRow = (e, row) => {
-    e.stopPropagation()
-    dispatch("editrow", cloneDeep(row))
-  }
-
-  const toggleSelectRow = row => {
-    if (!allowSelectRows) {
-      return
+const computeCellStyles = schema => {
+  let styles = {}
+  Object.keys(schema || {}).forEach(field => {
+    styles[field] = ""
+    if (schema[field].color) {
+      styles[field] += `color: ${schema[field].color};`
     }
-    if (selectedRows.some(selectedRow => selectedRow._id === row._id)) {
-      selectedRows = selectedRows.filter(
-        selectedRow => selectedRow._id !== row._id
-      )
-    } else {
-      selectedRows = [...selectedRows, row]
+    if (schema[field].background) {
+      styles[field] += `background-color: ${schema[field].background};`
     }
-  }
-
-  const toggleSelectAll = e => {
-    const select = !!e.detail
-    if (select) {
-      // Add any rows which are not already in selected rows
-      rows.forEach(row => {
-        if (selectedRows.findIndex(x => x._id === row._id) === -1) {
-          selectedRows.push(row)
-        }
-      })
-    } else {
-      // Remove any rows from selected rows that are in the current data set
-      selectedRows = selectedRows.filter(el =>
-        rows.every(f => f._id !== el._id)
-      )
+    if (schema[field].align === "Center") {
+      styles[field] += "justify-content: center; text-align: center;"
     }
-  }
-
-  const computeCellStyles = schema => {
-    let styles = {}
-    Object.keys(schema || {}).forEach(field => {
-      styles[field] = ""
-      if (schema[field].color) {
-        styles[field] += `color: ${schema[field].color};`
-      }
-      if (schema[field].background) {
-        styles[field] += `background-color: ${schema[field].background};`
-      }
-      if (schema[field].align === "Center") {
-        styles[field] += "justify-content: center; text-align: center;"
-      }
-      if (schema[field].align === "Right") {
-        styles[field] += "justify-content: flex-end; text-align: right;"
-      }
-      if (schema[field].borderLeft) {
-        styles[field] +=
-          "border-left: 1px solid var(--spectrum-global-color-gray-200);"
-      }
-      if (schema[field].borderLeft) {
-        styles[field] +=
-          "border-right: 1px solid var(--spectrum-global-color-gray-200);"
-      }
-      if (schema[field].minWidth) {
-        styles[field] += `min-width: ${schema[field].minWidth};`
-      }
-    })
-    return styles
-  }
+    if (schema[field].align === "Right") {
+      styles[field] += "justify-content: flex-end; text-align: right;"
+    }
+    if (schema[field].borderLeft) {
+      styles[field] +=
+        "border-left: 1px solid var(--spectrum-global-color-gray-200);"
+    }
+    if (schema[field].borderLeft) {
+      styles[field] +=
+        "border-right: 1px solid var(--spectrum-global-color-gray-200);"
+    }
+    if (schema[field].minWidth) {
+      styles[field] += `min-width: ${schema[field].minWidth};`
+    }
+  })
+  return styles
+}
 </script>
 
 {#key fields?.length}

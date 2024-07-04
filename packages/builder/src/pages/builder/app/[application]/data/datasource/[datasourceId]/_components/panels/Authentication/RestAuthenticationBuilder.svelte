@@ -1,51 +1,51 @@
 <script>
-  import { Table, Modal, Layout, ActionButton, Helpers } from "@budibase/bbui"
-  import AuthTypeRenderer from "./AuthTypeRenderer.svelte"
-  import RestAuthenticationModal from "./RestAuthenticationModal.svelte"
-  import { createEventDispatcher } from "svelte"
+import { ActionButton, Helpers, Layout, Modal, Table } from "@budibase/bbui"
+import { createEventDispatcher } from "svelte"
+import AuthTypeRenderer from "./AuthTypeRenderer.svelte"
+import RestAuthenticationModal from "./RestAuthenticationModal.svelte"
 
-  export let authConfigs = []
+export let authConfigs = []
 
-  const dispatch = createEventDispatcher()
-  let currentConfig = null
-  let modal
+const dispatch = createEventDispatcher()
+let currentConfig = null
+let modal
 
-  const schema = {
-    name: "",
-    type: "",
-  }
+const schema = {
+  name: "",
+  type: "",
+}
 
-  const openConfigModal = config => {
-    currentConfig = config
-    modal.show()
-  }
+const openConfigModal = config => {
+  currentConfig = config
+  modal.show()
+}
 
-  const onConfirm = config => {
-    let newAuthConfigs
+const onConfirm = config => {
+  let newAuthConfigs
 
-    if (currentConfig) {
-      newAuthConfigs = authConfigs.map(c => {
-        // replace the current config with the new one
-        if (c._id === currentConfig._id) {
-          return config
-        }
-        return c
-      })
-    } else {
-      config._id = Helpers.uuid()
-      newAuthConfigs = [...authConfigs, config]
-    }
-
-    dispatch("change", newAuthConfigs)
-  }
-
-  const onRemove = () => {
-    const newAuthConfigs = authConfigs.filter(c => {
-      return c._id !== currentConfig._id
+  if (currentConfig) {
+    newAuthConfigs = authConfigs.map(c => {
+      // replace the current config with the new one
+      if (c._id === currentConfig._id) {
+        return config
+      }
+      return c
     })
-
-    dispatch("change", newAuthConfigs)
+  } else {
+    config._id = Helpers.uuid()
+    newAuthConfigs = [...authConfigs, config]
   }
+
+  dispatch("change", newAuthConfigs)
+}
+
+const onRemove = () => {
+  const newAuthConfigs = authConfigs.filter(c => {
+    return c._id !== currentConfig._id
+  })
+
+  dispatch("change", newAuthConfigs)
+}
 </script>
 
 <Modal bind:this={modal}>

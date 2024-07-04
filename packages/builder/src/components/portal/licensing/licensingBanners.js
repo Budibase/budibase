@@ -1,7 +1,7 @@
-import { ExpiringKeys } from "./constants"
+import { BANNER_TYPES } from "@budibase/bbui"
 import { admin, auth, licensing, temporalStore } from "stores/portal"
 import { get } from "svelte/store"
-import { BANNER_TYPES } from "@budibase/bbui"
+import { ExpiringKeys } from "./constants"
 
 const oneDayInSeconds = 86400
 

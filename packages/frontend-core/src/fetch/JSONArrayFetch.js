@@ -1,5 +1,5 @@
-import FieldFetch from "./FieldFetch.js"
 import { getJSONArrayDatasourceSchema } from "../utils/json"
+import FieldFetch from "./FieldFetch.js"
 
 export default class JSONArrayFetch extends FieldFetch {
   async getDefinition(datasource) {
@@ -9,7 +9,7 @@ export default class JSONArrayFetch extends FieldFetch {
       const table = await this.API.fetchTableDefinition(datasource.tableId)
       const schema = getJSONArrayDatasourceSchema(table?.schema, datasource)
       return { schema }
-    } catch (error) {
+    } catch (_error) {
       return null
     }
   }

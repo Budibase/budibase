@@ -1,10 +1,10 @@
+import { sdk } from "@budibase/pro"
 import { UserCtx } from "@budibase/types"
 import { Next } from "koa"
-import { sdk } from "@budibase/pro"
 import {
+  RoleAssignRequest,
   RoleAssignmentResponse,
   RoleUnAssignRequest,
-  RoleAssignRequest,
 } from "./mapping/types"
 
 async function assign(

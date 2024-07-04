@@ -1,11 +1,11 @@
 <script>
-  import { Divider, Heading } from "@budibase/bbui"
+import { Divider, Heading } from "@budibase/bbui"
 
-  export let dividerState
-  export let heading
-  export let dataSet
-  export let value
-  export let onSelect
+export let dividerState
+export let heading
+export let dataSet
+export let value
+export let onSelect
 </script>
 
 {#if dividerState}

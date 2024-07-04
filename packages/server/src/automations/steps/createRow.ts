@@ -1,10 +1,3 @@
-import { save } from "../../api/controllers/row"
-import {
-  cleanUpRow,
-  getError,
-  sendAutomationAttachmentsToStorage,
-} from "../automationUtils"
-import { buildCtx } from "./utils"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
@@ -14,6 +7,13 @@ import {
   AutomationStepSchema,
   AutomationStepType,
 } from "@budibase/types"
+import { save } from "../../api/controllers/row"
+import {
+  cleanUpRow,
+  getError,
+  sendAutomationAttachmentsToStorage,
+} from "../automationUtils"
+import { buildCtx } from "./utils"
 
 export const definition: AutomationStepSchema = {
   name: "Create Row",

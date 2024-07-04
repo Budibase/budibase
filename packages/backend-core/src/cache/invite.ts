@@ -1,8 +1,8 @@
+import { getTenantId } from "../context"
+import env from "../environment"
+import * as redis from "../redis/init"
 import * as utils from "../utils"
 import { Duration } from "../utils"
-import env from "../environment"
-import { getTenantId } from "../context"
-import * as redis from "../redis/init"
 
 const TTL_SECONDS = Duration.fromDays(7).toSeconds()
 

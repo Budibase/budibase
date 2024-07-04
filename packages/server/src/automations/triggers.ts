@@ -1,22 +1,22 @@
-import emitter from "../events/index"
-import { getAutomationParams, isDevAppID } from "../db/utils"
-import { coerce } from "../utilities/rowProcessor"
-import { definitions } from "./triggerInfo"
-// need this to call directly, so we can get a response
-import { automationQueue } from "./bullboard"
-import { checkTestFlag } from "../utilities/redis"
-import * as utils from "./utils"
-import env from "../environment"
 import { context, db as dbCore } from "@budibase/backend-core"
 import {
   Automation,
-  Row,
   AutomationData,
-  AutomationJob,
   AutomationEventType,
+  AutomationJob,
+  Row,
   UpdatedRowEventEmitter,
 } from "@budibase/types"
+import { getAutomationParams, isDevAppID } from "../db/utils"
+import env from "../environment"
+import emitter from "../events/index"
 import { executeInThread } from "../threads/automation"
+import { checkTestFlag } from "../utilities/redis"
+import { coerce } from "../utilities/rowProcessor"
+// need this to call directly, so we can get a response
+import { automationQueue } from "./bullboard"
+import { definitions } from "./triggerInfo"
+import * as utils from "./utils"
 
 export const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {

@@ -1,7 +1,7 @@
 <script>
-  import { Layout } from "@budibase/bbui"
-  import { authStore, appStore, screenStore, componentStore } from "stores"
-  import DevToolsStat from "./DevToolsStat.svelte"
+import { Layout } from "@budibase/bbui"
+import { appStore, authStore, componentStore, screenStore } from "stores"
+import DevToolsStat from "./DevToolsStat.svelte"
 </script>
 
 <Layout noPadding gap="XS">

@@ -9,8 +9,8 @@ import {
   TableSourceType,
 } from "@budibase/types"
 
-import * as setup from "./utilities"
 import * as uuid from "uuid"
+import * as setup from "./utilities"
 
 describe("test the update row action", () => {
   let table: Table, row: Row, inputs: any

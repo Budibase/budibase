@@ -1,16 +1,16 @@
 <script>
-  import { getContext, onMount } from "svelte"
-  import CreateEditColumn from "../CreateEditColumn.svelte"
+import { getContext, onMount } from "svelte"
+import CreateEditColumn from "../CreateEditColumn.svelte"
 
-  const { rows, subscribe } = getContext("grid")
+const { rows, subscribe } = getContext("grid")
 
-  let editableColumn
+let editableColumn
 
-  const editColumn = column => {
-    editableColumn = column
-  }
+const editColumn = column => {
+  editableColumn = column
+}
 
-  onMount(() => subscribe("edit-column", editColumn))
+onMount(() => subscribe("edit-column", editColumn))
 </script>
 
 {#if editableColumn}

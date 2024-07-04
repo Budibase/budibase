@@ -1,47 +1,47 @@
 <script>
-  import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
-  import { tables, datasources } from "stores/builder"
-  import { goto } from "@roxi/routify"
-  import { DB_TYPE_EXTERNAL } from "constants/backend"
+import { Body, Input, ModalContent, notifications } from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import { DB_TYPE_EXTERNAL } from "constants/backend"
+import { datasources, tables } from "stores/builder"
 
-  export let datasource
+export let datasource
 
-  let name = ""
-  let submitted = false
-  $: valid = name && name.length > 0 && !datasource?.entities?.[name]
-  $: error =
-    !submitted && name && datasource?.entities?.[name]
-      ? "Table name already in use."
-      : null
+let name = ""
+let submitted = false
+$: valid = name && name.length > 0 && !datasource?.entities?.[name]
+$: error =
+  !submitted && name && datasource?.entities?.[name]
+    ? "Table name already in use."
+    : null
 
-  function buildDefaultTable(tableName, datasourceId) {
-    return {
-      name: tableName,
-      type: "table",
-      primary: ["id"],
-      sourceId: datasourceId,
-      sourceType: DB_TYPE_EXTERNAL,
-      schema: {
-        id: {
-          autocolumn: true,
-          type: "number",
-        },
+function buildDefaultTable(tableName, datasourceId) {
+  return {
+    name: tableName,
+    type: "table",
+    primary: ["id"],
+    sourceId: datasourceId,
+    sourceType: DB_TYPE_EXTERNAL,
+    schema: {
+      id: {
+        autocolumn: true,
+        type: "number",
       },
-    }
+    },
   }
+}
 
-  async function saveTable() {
-    try {
-      submitted = true
-      const table = await tables.save(buildDefaultTable(name, datasource._id))
-      await datasources.fetch()
-      $goto(`../../table/${table._id}`)
-    } catch (error) {
-      notifications.error(
-        `Error saving table - ${error?.message || "unknown error"}`
-      )
-    }
+async function saveTable() {
+  try {
+    submitted = true
+    const table = await tables.save(buildDefaultTable(name, datasource._id))
+    await datasources.fetch()
+    $goto(`../../table/${table._id}`)
+  } catch (error) {
+    notifications.error(
+      `Error saving table - ${error?.message || "unknown error"}`
+    )
   }
+}
 </script>
 
 <ModalContent

@@ -1,10 +1,10 @@
+import { createWebsocket } from "@budibase/frontend-core"
+import { get } from "svelte/store"
 import {
   builderStore,
   environmentStore,
   notificationStore,
 } from "./stores/index.js"
-import { get } from "svelte/store"
-import { createWebsocket } from "@budibase/frontend-core"
 
 let socket
 

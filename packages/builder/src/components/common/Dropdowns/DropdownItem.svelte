@@ -1,8 +1,8 @@
 <script>
-  export let icon
-  export let title
-  export let subtitle = undefined
-  export let disabled = false
+export let icon
+export let title
+export let subtitle = undefined
+export let disabled = false
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

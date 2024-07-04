@@ -1,40 +1,40 @@
 <script>
-  import { tick } from "svelte"
-  import { Icon, Body } from "@budibase/bbui"
-  import { keyUtils } from "helpers/keyUtils"
+import { Body, Icon } from "@budibase/bbui"
+import { keyUtils } from "helpers/keyUtils"
+import { tick } from "svelte"
 
-  export let title
-  export let placeholder
-  export let value
-  export let onAdd
-  export let search
+export let title
+export let placeholder
+export let value
+export let onAdd
+export let search
 
-  let searchInput
+let searchInput
 
-  const openSearch = async () => {
-    search = true
-    await tick()
-    searchInput.focus()
+const openSearch = async () => {
+  search = true
+  await tick()
+  searchInput.focus()
+}
+
+const closeSearch = async () => {
+  search = false
+  value = ""
+}
+
+const onKeyDown = e => {
+  if (e.key === "Escape") {
+    closeSearch()
   }
+}
 
-  const closeSearch = async () => {
-    search = false
-    value = ""
+const handleAddButton = () => {
+  if (search) {
+    closeSearch()
+  } else {
+    onAdd()
   }
-
-  const onKeyDown = e => {
-    if (e.key === "Escape") {
-      closeSearch()
-    }
-  }
-
-  const handleAddButton = () => {
-    if (search) {
-      closeSearch()
-    } else {
-      onAdd()
-    }
-  }
+}
 </script>
 
 <svelte:window on:keydown={onKeyDown} />

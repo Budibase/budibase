@@ -1,18 +1,18 @@
 <script>
-  import "@spectrum-css/slider/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+import "@spectrum-css/slider/dist/index-vars.css"
+import { createEventDispatcher } from "svelte"
 
-  export let value = false
-  export let id = null
-  export let disabled = false
-  export let min = 0
-  export let max = 100
-  export let step = 1
+export let value = false
+export let id = null
+export let disabled = false
+export let min = 0
+export let max = 100
+export let step = 1
 
-  const dispatch = createEventDispatcher()
-  const onChange = event => {
-    dispatch("change", event.target.value)
-  }
+const dispatch = createEventDispatcher()
+const onChange = event => {
+  dispatch("change", event.target.value)
+}
 </script>
 
 <div>

@@ -1,86 +1,86 @@
 <script>
-  import { fade } from "svelte/transition"
-  import { goto, params } from "@roxi/routify"
-  import { Table, Heading, Layout } from "@budibase/bbui"
-  import Spinner from "components/common/Spinner.svelte"
-  import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
-  import RoleCell from "./cells/RoleCell.svelte"
-  import { createEventDispatcher } from "svelte"
-  import { canBeSortColumn } from "@budibase/shared-core"
+import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
+import { Heading, Layout, Table } from "@budibase/bbui"
+import { canBeSortColumn } from "@budibase/shared-core"
+import { goto, params } from "@roxi/routify"
+import Spinner from "components/common/Spinner.svelte"
+import { createEventDispatcher } from "svelte"
+import { fade } from "svelte/transition"
+import RoleCell from "./cells/RoleCell.svelte"
 
-  export let schema = {}
-  export let data = []
-  export let tableId
-  export let title
-  export let loading = false
-  export let hideAutocolumns
-  export let rowCount
-  export let disableSorting = false
-  export let customPlaceholder = false
-  export let allowEditing = true
-  export let allowClickRows
+export let schema = {}
+export let data = []
+export let tableId
+export let title
+export let loading = false
+export let hideAutocolumns
+export let rowCount
+export let disableSorting = false
+export let customPlaceholder = false
+export let allowEditing = true
+export let allowClickRows
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  let selectedRows = []
-  let customRenderers = []
-  let parsedSchema = {}
+let selectedRows = []
+let customRenderers = []
+let parsedSchema = {}
 
-  $: if (schema) {
-    parsedSchema = Object.keys(schema).reduce((acc, key) => {
-      acc[key] =
-        typeof schema[key] === "string" ? { type: schema[key] } : schema[key]
+$: if (schema) {
+  parsedSchema = Object.keys(schema).reduce((acc, key) => {
+    acc[key] =
+      typeof schema[key] === "string" ? { type: schema[key] } : schema[key]
 
-      if (!canBeSortColumn(acc[key].type)) {
-        acc[key].sortable = false
-      }
-      return acc
-    }, {})
-  }
+    if (!canBeSortColumn(acc[key].type)) {
+      acc[key].sortable = false
+    }
+    return acc
+  }, {})
+}
 
-  $: selectedRows, dispatch("selectionUpdated", selectedRows)
-  $: isUsersTable = tableId === TableNames.USERS
-  $: data && resetSelectedRows()
-  $: {
-    if (isUsersTable) {
-      customRenderers = [
-        {
-          column: "roleId",
-          component: RoleCell,
-        },
-      ]
-      UNEDITABLE_USER_FIELDS.forEach(field => {
-        if (parsedSchema[field]) {
-          parsedSchema[field].editable = false
-        }
-      })
-      if (parsedSchema.email) {
-        parsedSchema.email.displayName = "Email"
+$: selectedRows, dispatch("selectionUpdated", selectedRows)
+$: isUsersTable = tableId === TableNames.USERS
+$: data && resetSelectedRows()
+$: {
+  if (isUsersTable) {
+    customRenderers = [
+      {
+        column: "roleId",
+        component: RoleCell,
+      },
+    ]
+    UNEDITABLE_USER_FIELDS.forEach(field => {
+      if (parsedSchema[field]) {
+        parsedSchema[field].editable = false
       }
-      if (parsedSchema.roleId) {
-        parsedSchema.roleId.displayName = "Role"
-      }
-      if (parsedSchema.firstName) {
-        parsedSchema.firstName.displayName = "First Name"
-      }
-      if (parsedSchema.lastName) {
-        parsedSchema.lastName.displayName = "Last Name"
-      }
-      if (parsedSchema.status) {
-        parsedSchema.status.displayName = "Status"
-      }
+    })
+    if (parsedSchema.email) {
+      parsedSchema.email.displayName = "Email"
+    }
+    if (parsedSchema.roleId) {
+      parsedSchema.roleId.displayName = "Role"
+    }
+    if (parsedSchema.firstName) {
+      parsedSchema.firstName.displayName = "First Name"
+    }
+    if (parsedSchema.lastName) {
+      parsedSchema.lastName.displayName = "Last Name"
+    }
+    if (parsedSchema.status) {
+      parsedSchema.status.displayName = "Status"
     }
   }
+}
 
-  const resetSelectedRows = () => {
-    selectedRows = []
-  }
+const resetSelectedRows = () => {
+  selectedRows = []
+}
 
-  const selectRelationship = ({ tableId, rowId, fieldName }) => {
-    $goto(
-      `/builder/app/${$params.application}/data/table/${tableId}/relationship/${rowId}/${fieldName}`
-    )
-  }
+const selectRelationship = ({ tableId, rowId, fieldName }) => {
+  $goto(
+    `/builder/app/${$params.application}/data/table/${tableId}/relationship/${rowId}/${fieldName}`
+  )
+}
 </script>
 
 <Layout noPadding gap="S">

@@ -1,17 +1,17 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { Button, Table } from "@budibase/bbui"
-  import { queries } from "stores/builder"
-  import CapitaliseRenderer from "components/common/renderers/CapitaliseRenderer.svelte"
-  import RestImportButton from "./RestImportButton.svelte"
-  import Panel from "../Panel.svelte"
-  import Tooltip from "../Tooltip.svelte"
+import { Button, Table } from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import CapitaliseRenderer from "components/common/renderers/CapitaliseRenderer.svelte"
+import { queries } from "stores/builder"
+import Panel from "../Panel.svelte"
+import Tooltip from "../Tooltip.svelte"
+import RestImportButton from "./RestImportButton.svelte"
 
-  export let datasource
+export let datasource
 
-  $: queryList = $queries.list.filter(
-    query => query.datasourceId === datasource._id
-  )
+$: queryList = $queries.list.filter(
+  query => query.datasourceId === datasource._id
+)
 </script>
 
 <Panel>

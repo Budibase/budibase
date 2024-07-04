@@ -1,8 +1,8 @@
-import TestConfig from "../../../../tests/utilities/TestConfiguration"
-import * as syncRows from "../syncRows"
+import { context, db as dbCore } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { QuotaUsageType, StaticQuotaName } from "@budibase/types"
-import { db as dbCore, context } from "@budibase/backend-core"
+import TestConfig from "../../../../tests/utilities/TestConfiguration"
+import * as syncRows from "../syncRows"
 
 describe("syncRows", () => {
   const config = new TestConfig()

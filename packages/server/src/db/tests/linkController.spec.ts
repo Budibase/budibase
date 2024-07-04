@@ -1,10 +1,3 @@
-import TestConfig from "../../tests/utilities/TestConfiguration"
-import {
-  basicLinkedRow,
-  basicRow,
-  basicTable,
-} from "../../tests/utilities/structures"
-import LinkController from "../linkedRows/LinkController"
 import { context } from "@budibase/backend-core"
 import {
   FieldType,
@@ -17,6 +10,13 @@ import {
   Table,
 } from "@budibase/types"
 import { cloneDeep } from "lodash"
+import TestConfig from "../../tests/utilities/TestConfiguration"
+import {
+  basicLinkedRow,
+  basicRow,
+  basicTable,
+} from "../../tests/utilities/structures"
+import LinkController from "../linkedRows/LinkController"
 
 const baseColumn = {
   type: FieldType.LINK,

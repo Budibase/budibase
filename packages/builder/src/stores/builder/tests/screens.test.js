@@ -1,17 +1,17 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
-import { get, writable } from "svelte/store"
-import { API } from "api"
 import { Constants } from "@budibase/frontend-core"
-import { componentStore, appStore } from "stores/builder"
+import { API } from "api"
+import { appStore, componentStore } from "stores/builder"
 import { INITIAL_SCREENS_STATE, ScreenStore } from "stores/builder/screens"
+import { get, writable } from "svelte/store"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
-  getScreenFixture,
-  getComponentFixture,
   COMPONENT_DEFINITIONS,
   componentDefinitionMap,
-  getScreenDocId,
-  getPluginFixture,
   componentsToNested,
+  getComponentFixture,
+  getPluginFixture,
+  getScreenDocId,
+  getScreenFixture,
 } from "./fixtures"
 
 const COMP_PREFIX = "@budibase/standard-components"

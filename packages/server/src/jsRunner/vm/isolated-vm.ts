@@ -1,14 +1,14 @@
-import ivm from "isolated-vm"
 import bson from "bson"
+import ivm from "isolated-vm"
 
-import url from "url"
 import crypto from "crypto"
 import querystring from "querystring"
+import url from "url"
 
-import { BundleType, loadBundle } from "../bundles"
-import { Snippet, VM } from "@budibase/types"
 import { iifeWrapper } from "@budibase/string-templates"
+import { Snippet, VM } from "@budibase/types"
 import environment from "../../environment"
+import { BundleType, loadBundle } from "../bundles"
 
 class ExecutionTimeoutError extends Error {
   constructor(message: string) {
@@ -171,7 +171,7 @@ export class IsolatedVM implements VM {
 
       decode(...input: any) {
         // @ts-expect-error - this is going to run in the isolate, where this function will be available
-        // eslint-disable-next-line no-undef
+        // biome-ignore lint: no-undef
         return textDecoderCb({
           constructorArgs: this.constructorArgs,
           functionArgs: input,

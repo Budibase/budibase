@@ -1,9 +1,9 @@
-import sanitizeUrl from "helpers/sanitizeUrl"
-import { Screen } from "./Screen"
-import { Component } from "./Component"
-import { generate } from "shortid"
-import { makePropSafe as safe } from "@budibase/string-templates"
 import { Utils } from "@budibase/frontend-core"
+import { makePropSafe as safe } from "@budibase/string-templates"
+import sanitizeUrl from "helpers/sanitizeUrl"
+import { generate } from "shortid"
+import { Component } from "./Component"
+import { Screen } from "./Screen"
 
 export default function (datasources) {
   if (!Array.isArray(datasources)) {

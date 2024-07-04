@@ -4,36 +4,36 @@ import { ApiVersion } from "../constants"
 import { buildAnalyticsEndpoints } from "./analytics"
 import { buildAppEndpoints } from "./app"
 import { buildAttachmentEndpoints } from "./attachments"
+import { buildAuditLogsEndpoints } from "./auditLogs"
 import { buildAuthEndpoints } from "./auth"
 import { buildAutomationEndpoints } from "./automations"
+import { buildBackupsEndpoints } from "./backups"
 import { buildConfigEndpoints } from "./configs"
 import { buildDatasourceEndpoints } from "./datasources"
+import { buildEnvironmentVariableEndpoints } from "./environmentVariables"
+import { buildEventEndpoints } from "./events"
 import { buildFlagEndpoints } from "./flags"
+import { buildGroupsEndpoints } from "./groups"
 import { buildHostingEndpoints } from "./hosting"
 import { buildLayoutEndpoints } from "./layouts"
+import { buildLicensingEndpoints } from "./licensing"
+import { buildLogsEndpoints } from "./logs"
+import { buildMigrationEndpoints } from "./migrations"
 import { buildOtherEndpoints } from "./other"
 import { buildPermissionsEndpoints } from "./permissions"
+import { buildPluginEndpoints } from "./plugins"
 import { buildQueryEndpoints } from "./queries"
 import { buildRelationshipEndpoints } from "./relationships"
 import { buildRoleEndpoints } from "./roles"
 import { buildRouteEndpoints } from "./routes"
 import { buildRowEndpoints } from "./rows"
 import { buildScreenEndpoints } from "./screens"
+import { buildSelfEndpoints } from "./self"
 import { buildTableEndpoints } from "./tables"
 import { buildTemplateEndpoints } from "./templates"
 import { buildUserEndpoints } from "./user"
-import { buildSelfEndpoints } from "./self"
 import { buildViewEndpoints } from "./views"
 import { buildViewV2Endpoints } from "./viewsV2"
-import { buildLicensingEndpoints } from "./licensing"
-import { buildGroupsEndpoints } from "./groups"
-import { buildPluginEndpoints } from "./plugins"
-import { buildBackupsEndpoints } from "./backups"
-import { buildEnvironmentVariableEndpoints } from "./environmentVariables"
-import { buildEventEndpoints } from "./events"
-import { buildAuditLogsEndpoints } from "./auditLogs"
-import { buildLogsEndpoints } from "./logs"
-import { buildMigrationEndpoints } from "./migrations"
 
 /**
  * Random identifier to uniquely identify a session in a tab. This is
@@ -99,7 +99,7 @@ export const createAPIClient = config => {
       } else if (json?.error) {
         message = json.error
       }
-    } catch (error) {
+    } catch (_error) {
       // Do nothing
     }
     return {
@@ -156,7 +156,7 @@ export const createAPIClient = config => {
     if (json) {
       try {
         requestBody = JSON.stringify(body)
-      } catch (error) {
+      } catch (_error) {
         throw makeError("Invalid JSON body", { url, method })
       }
     }
@@ -170,7 +170,7 @@ export const createAPIClient = config => {
         body: requestBody,
         credentials: "same-origin",
       })
-    } catch (error) {
+    } catch (_error) {
       delete cache[url]
       throw makeError("Failed to send request", { url, method })
     }
@@ -184,7 +184,7 @@ export const createAPIClient = config => {
         } else {
           return await response.json()
         }
-      } catch (error) {
+      } catch (_error) {
         delete cache[url]
         return null
       }

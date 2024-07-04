@@ -1,5 +1,5 @@
-import { BaseEvent } from "./event"
 import { ConfigType } from "../../documents"
+import { BaseEvent } from "./event"
 
 export type LoginSource =
   | "local"

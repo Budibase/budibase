@@ -1,5 +1,5 @@
-import * as matchers from "../matchers"
 import { structures } from "../../../tests"
+import * as matchers from "../matchers"
 
 describe("matchers", () => {
   it("matches by path and method", () => {

@@ -1,106 +1,106 @@
 <script>
-  import {
-    automationStore,
-    selectedAutomation,
-    permissions,
-  } from "stores/builder"
-  import {
-    Icon,
-    Divider,
-    Layout,
-    Detail,
-    Modal,
-    Button,
-    notifications,
-    Label,
-    AbsTooltip,
-  } from "@budibase/bbui"
-  import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
-  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import ActionModal from "./ActionModal.svelte"
-  import FlowItemHeader from "./FlowItemHeader.svelte"
-  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+import {
+  AbsTooltip,
+  Button,
+  Detail,
+  Divider,
+  Icon,
+  Label,
+  Layout,
+  Modal,
+  notifications,
+} from "@budibase/bbui"
+import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
+import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
+import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+import {
+  automationStore,
+  permissions,
+  selectedAutomation,
+} from "stores/builder"
+import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
+import ActionModal from "./ActionModal.svelte"
+import FlowItemHeader from "./FlowItemHeader.svelte"
 
-  export let block
-  export let testDataModal
-  export let idx
+export let block
+export let testDataModal
+export let idx
 
-  let selected
-  let webhookModal
-  let actionModal
-  let open = true
-  let showLooping = false
-  let role
+let selected
+let webhookModal
+let actionModal
+let open = true
+let showLooping = false
+let role
 
-  $: collectBlockExists = $selectedAutomation.definition.steps.some(
-    step => step.stepId === ActionStepID.COLLECT
-  )
-  $: automationId = $selectedAutomation?._id
-  $: isTrigger = block.type === "TRIGGER"
-  $: steps = $selectedAutomation?.definition?.steps ?? []
-  $: blockIdx = steps.findIndex(step => step.id === block.id)
-  $: lastStep = !isTrigger && blockIdx + 1 === steps.length
-  $: totalBlocks = $selectedAutomation?.definition?.steps.length + 1
-  $: loopBlock = $selectedAutomation?.definition.steps.find(
-    x => x.blockToLoop === block.id
-  )
-  $: isAppAction = block?.stepId === TriggerStepID.APP
-  $: isAppAction && setPermissions(role)
-  $: isAppAction && getPermissions(automationId)
+$: collectBlockExists = $selectedAutomation.definition.steps.some(
+  step => step.stepId === ActionStepID.COLLECT
+)
+$: automationId = $selectedAutomation?._id
+$: isTrigger = block.type === "TRIGGER"
+$: steps = $selectedAutomation?.definition?.steps ?? []
+$: blockIdx = steps.findIndex(step => step.id === block.id)
+$: lastStep = !isTrigger && blockIdx + 1 === steps.length
+$: totalBlocks = $selectedAutomation?.definition?.steps.length + 1
+$: loopBlock = $selectedAutomation?.definition.steps.find(
+  x => x.blockToLoop === block.id
+)
+$: isAppAction = block?.stepId === TriggerStepID.APP
+$: isAppAction && setPermissions(role)
+$: isAppAction && getPermissions(automationId)
 
-  async function setPermissions(role) {
-    if (!role || !automationId) {
-      return
-    }
-    await permissions.save({
-      level: "execute",
-      role,
-      resource: automationId,
-    })
+async function setPermissions(role) {
+  if (!role || !automationId) {
+    return
   }
+  await permissions.save({
+    level: "execute",
+    role,
+    resource: automationId,
+  })
+}
 
-  async function getPermissions(automationId) {
-    if (!automationId) {
-      return
-    }
-    const perms = await permissions.forResource(automationId)
-    if (!perms["execute"]) {
-      role = "BASIC"
-    } else {
-      role = perms["execute"].role
-    }
+async function getPermissions(automationId) {
+  if (!automationId) {
+    return
   }
+  const perms = await permissions.forResource(automationId)
+  if (!perms["execute"]) {
+    role = "BASIC"
+  } else {
+    role = perms["execute"].role
+  }
+}
 
-  async function removeLooping() {
-    try {
+async function removeLooping() {
+  try {
+    await automationStore.actions.deleteAutomationBlock(loopBlock)
+  } catch (error) {
+    notifications.error("Error saving automation")
+  }
+}
+
+async function deleteStep() {
+  try {
+    if (loopBlock) {
       await automationStore.actions.deleteAutomationBlock(loopBlock)
-    } catch (error) {
-      notifications.error("Error saving automation")
     }
+    await automationStore.actions.deleteAutomationBlock(block, blockIdx)
+  } catch (error) {
+    notifications.error("Error saving automation")
   }
+}
 
-  async function deleteStep() {
-    try {
-      if (loopBlock) {
-        await automationStore.actions.deleteAutomationBlock(loopBlock)
-      }
-      await automationStore.actions.deleteAutomationBlock(block, blockIdx)
-    } catch (error) {
-      notifications.error("Error saving automation")
-    }
-  }
-
-  async function addLooping() {
-    const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
-    const loopBlock = automationStore.actions.constructBlock(
-      "ACTION",
-      "LOOP",
-      loopDefinition
-    )
-    loopBlock.blockToLoop = block.id
-    await automationStore.actions.addBlockToAutomation(loopBlock, blockIdx)
-  }
+async function addLooping() {
+  const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
+  const loopBlock = automationStore.actions.constructBlock(
+    "ACTION",
+    "LOOP",
+    loopDefinition
+  )
+  loopBlock.blockToLoop = block.id
+  await automationStore.actions.addBlockToAutomation(loopBlock, blockIdx)
+}
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

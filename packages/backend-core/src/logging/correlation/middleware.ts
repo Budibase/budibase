@@ -1,5 +1,5 @@
-import { Header } from "../../constants"
 import { v4 as uuid } from "uuid"
+import { Header } from "../../constants"
 
 const correlator = require("correlation-id")
 

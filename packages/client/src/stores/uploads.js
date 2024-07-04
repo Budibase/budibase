@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store"
+import { get, writable } from "svelte/store"
 
 export const createUploadStore = () => {
   const store = writable([])

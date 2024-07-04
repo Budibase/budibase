@@ -1,43 +1,43 @@
 <script>
-  import EditComponentPopover from "../EditComponentPopover.svelte"
-  import { Toggle, Icon } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import { cloneDeep } from "lodash/fp"
-  import { runtimeToReadableBinding } from "dataBinding"
-  import { isJSBinding } from "@budibase/string-templates"
-  import { componentStore } from "stores/builder"
+import { Icon, Toggle } from "@budibase/bbui"
+import { isJSBinding } from "@budibase/string-templates"
+import { runtimeToReadableBinding } from "dataBinding"
+import { cloneDeep } from "lodash/fp"
+import { componentStore } from "stores/builder"
+import { createEventDispatcher } from "svelte"
+import EditComponentPopover from "../EditComponentPopover.svelte"
 
-  export let item
-  export let componentBindings
-  export let bindings
-  export let anchor
+export let item
+export let componentBindings
+export let bindings
+export let anchor
 
-  const dispatch = createEventDispatcher()
-  const onToggle = item => {
-    return e => {
-      item.active = e.detail
-      dispatch("change", { ...cloneDeep(item), active: e.detail })
-    }
+const dispatch = createEventDispatcher()
+const onToggle = item => {
+  return e => {
+    item.active = e.detail
+    dispatch("change", { ...cloneDeep(item), active: e.detail })
   }
-  const getReadableText = () => {
-    if (item.label) {
-      return isJSBinding(item.label)
-        ? "(JavaScript function)"
-        : runtimeToReadableBinding([...bindings, componentBindings], item.label)
-    }
-    return item.field
+}
+const getReadableText = () => {
+  if (item.label) {
+    return isJSBinding(item.label)
+      ? "(JavaScript function)"
+      : runtimeToReadableBinding([...bindings, componentBindings], item.label)
   }
+  return item.field
+}
 
-  const parseSettings = settings => {
-    return settings
-      .filter(setting => setting.key !== "field")
-      .map(setting => {
-        return { ...setting, nested: true }
-      })
-  }
+const parseSettings = settings => {
+  return settings
+    .filter(setting => setting.key !== "field")
+    .map(setting => {
+      return { ...setting, nested: true }
+    })
+}
 
-  $: readableText = getReadableText(item)
-  $: componentDef = componentStore.getDefinition(item._component)
+$: readableText = getReadableText(item)
+$: componentDef = componentStore.getDefinition(item._component)
 </script>
 
 <div class="list-item-body">

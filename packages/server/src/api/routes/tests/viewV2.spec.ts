@@ -1,4 +1,6 @@
-import * as setup from "./utilities"
+import { db, roles } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { quotas } from "@budibase/pro"
 import {
   CreateViewRequest,
   Datasource,
@@ -10,6 +12,7 @@ import {
   Row,
   SaveTableRequest,
   SearchFilterOperator,
+  SearchResponse,
   SortOrder,
   SortType,
   StaticQuotaName,
@@ -18,13 +21,10 @@ import {
   UpdateViewRequest,
   ViewUIFieldMetadata,
   ViewV2,
-  SearchResponse,
 } from "@budibase/types"
-import { generator, mocks } from "@budibase/backend-core/tests"
-import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
-import { quotas } from "@budibase/pro"
-import { db, roles } from "@budibase/backend-core"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import * as setup from "./utilities"
 
 describe.each([
   ["lucene", undefined],
@@ -1308,7 +1308,7 @@ describe.each([
           order?: SortOrder
           type?: SortType
         },
-        string[]
+        string[],
       ][] = [
         [
           {

@@ -1,14 +1,14 @@
+import path from "path"
+import { context, objectStore } from "@budibase/backend-core"
 import {
   decodeJSBinding,
-  isJSBinding,
   encodeJSBinding,
+  isJSBinding,
 } from "@budibase/string-templates"
-import sdk from "../sdk"
 import { AutomationAttachment, FieldType, Row } from "@budibase/types"
-import { LoopInput, LoopStepType } from "../definitions/automations"
-import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
-import path from "path"
+import { LoopInput, LoopStepType } from "../definitions/automations"
+import sdk from "../sdk"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -64,7 +64,7 @@ export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
     ) {
       try {
         inputs.row[key] = JSON.parse(inputs.row[key])
-      } catch (e) {
+      } catch (_e) {
         //Link is not an array or object, so continue
       }
     }
@@ -187,9 +187,8 @@ async function generateAttachmentRow(attachment: AutomationAttachment) {
     if (extension.startsWith(".")) {
       extension = extension.substring(1, extension.length)
     }
-    const attachmentResult = await objectStore.processAutomationAttachment(
-      attachment
-    )
+    const attachmentResult =
+      await objectStore.processAutomationAttachment(attachment)
 
     let s3Key = ""
     if (
@@ -279,7 +278,7 @@ export function typecastForLooping(input: LoopInput) {
         }
         break
     }
-  } catch (err) {
+  } catch (_err) {
     throw new Error("Unable to cast to correct type")
   }
   return input.binding

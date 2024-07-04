@@ -1,10 +1,10 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+import { Icon } from "@budibase/bbui"
 
-  export let icon
-  export let text
-  export let href
-  export let disabled = false
+export let icon
+export let text
+export let href
+export let disabled = false
 </script>
 
 <a

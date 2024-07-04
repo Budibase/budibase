@@ -1,24 +1,24 @@
 <script>
-  import {
-    Detail,
-    Button,
-    Heading,
-    Layout,
-    Body,
-    TooltipWrapper,
-  } from "@budibase/bbui"
+import {
+  Body,
+  Button,
+  Detail,
+  Heading,
+  Layout,
+  TooltipWrapper,
+} from "@budibase/bbui"
 
-  export let description = ""
-  export let title = ""
-  export let primaryAction
-  export let secondaryAction
-  export let primaryActionText
-  export let secondaryActionText
-  export let primaryCta = true
-  export let textRows = []
+export let description = ""
+export let title = ""
+export let primaryAction
+export let secondaryAction
+export let primaryActionText
+export let secondaryActionText
+export let primaryCta = true
+export let textRows = []
 
-  $: primaryDefined = primaryAction && primaryActionText
-  $: secondaryDefined = secondaryAction && secondaryActionText
+$: primaryDefined = primaryAction && primaryActionText
+$: secondaryDefined = secondaryAction && secondaryActionText
 </script>
 
 <div class="dash-card">

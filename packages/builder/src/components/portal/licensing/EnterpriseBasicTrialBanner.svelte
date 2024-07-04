@@ -1,21 +1,21 @@
 <script>
-  import "@spectrum-css/toast/dist/index-vars.css"
-  import Portal from "svelte-portal"
-  import { fly } from "svelte/transition"
-  import { Banner, BANNER_TYPES } from "@budibase/bbui"
-  import { licensing } from "stores/portal"
+import "@spectrum-css/toast/dist/index-vars.css"
+import { BANNER_TYPES, Banner } from "@budibase/bbui"
+import { licensing } from "stores/portal"
+import Portal from "svelte-portal"
+import { fly } from "svelte/transition"
 
-  export let show = true
+export let show = true
 
-  const oneDayInSeconds = 86400
+const oneDayInSeconds = 86400
 
-  $: license = $licensing.license
+$: license = $licensing.license
 
-  function daysUntilCancel() {
-    const cancelAt = license?.billing?.subscription?.cancelAt
-    const diffTime = Math.abs(cancelAt - new Date().getTime()) / 1000
-    return Math.floor(diffTime / oneDayInSeconds)
-  }
+function daysUntilCancel() {
+  const cancelAt = license?.billing?.subscription?.cancelAt
+  const diffTime = Math.abs(cancelAt - new Date().getTime()) / 1000
+  return Math.floor(diffTime / oneDayInSeconds)
+}
 </script>
 
 <Portal target=".banner-container">

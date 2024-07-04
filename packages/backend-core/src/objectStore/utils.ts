@@ -1,16 +1,16 @@
-import path, { join } from "path"
-import { tmpdir } from "os"
 import fs from "fs"
-import env from "../environment"
-import { PutBucketLifecycleConfigurationRequest } from "aws-sdk/clients/s3"
-import * as objectStore from "./objectStore"
+import streamWeb from "node:stream/web"
+import { tmpdir } from "os"
+import path, { join } from "path"
+import stream from "stream"
 import {
   AutomationAttachment,
   AutomationAttachmentContent,
   BucketedContent,
 } from "@budibase/types"
-import stream from "stream"
-import streamWeb from "node:stream/web"
+import { PutBucketLifecycleConfigurationRequest } from "aws-sdk/clients/s3"
+import env from "../environment"
+import * as objectStore from "./objectStore"
 
 /****************************************************
  *      NOTE: When adding a new bucket - name       *

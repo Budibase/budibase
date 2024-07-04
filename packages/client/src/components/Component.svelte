@@ -1,11 +1,11 @@
 <script context="module">
-  // Cache the definition of settings for each component type
-  let SettingsDefinitionCache = {}
-  let SettingsDefinitionMapCache = {}
+// Cache the definition of settings for each component type
+let SettingsDefinitionCache = {}
+let SettingsDefinitionMapCache = {}
 
-  // Cache the settings of each component ID.
-  // This speeds up remounting as well as repeaters.
-  let InstanceSettingsCache = {}
+// Cache the settings of each component ID.
+// This speeds up remounting as well as repeaters.
+let InstanceSettingsCache = {}
 </script>
 
 <script>

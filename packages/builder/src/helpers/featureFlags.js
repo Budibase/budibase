@@ -1,5 +1,5 @@
-import { auth } from "../stores/portal"
 import { get } from "svelte/store"
+import { auth } from "../stores/portal"
 
 export const TENANT_FEATURE_FLAGS = {
   LICENSING: "LICENSING",

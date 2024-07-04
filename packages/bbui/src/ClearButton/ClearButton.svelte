@@ -1,6 +1,6 @@
 <script>
-  export let small = false
-  export let disabled
+export let small = false
+export let disabled
 </script>
 
 <button

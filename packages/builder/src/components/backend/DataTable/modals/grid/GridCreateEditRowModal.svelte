@@ -1,31 +1,31 @@
 <script>
-  import CreateEditRow from "../../modals/CreateEditRow.svelte"
-  import { getContext, onMount } from "svelte"
-  import { Modal, notifications } from "@budibase/bbui"
-  import { cloneDeep } from "lodash/fp"
+import { Modal, notifications } from "@budibase/bbui"
+import { cloneDeep } from "lodash/fp"
+import { getContext, onMount } from "svelte"
+import CreateEditRow from "../../modals/CreateEditRow.svelte"
 
-  const { subscribe, rows } = getContext("grid")
+const { subscribe, rows } = getContext("grid")
 
-  let modal
-  let row
+let modal
+let row
 
-  const deleteRow = e => {
-    rows.actions.deleteRows([e.detail])
-    notifications.success("Deleted 1 row")
-  }
+const deleteRow = e => {
+  rows.actions.deleteRows([e.detail])
+  notifications.success("Deleted 1 row")
+}
 
-  onMount(() =>
-    subscribe("add-row", () => {
-      row = {}
-      modal.show()
-    })
-  )
-  onMount(() =>
-    subscribe("edit-row", rowToEdit => {
-      row = cloneDeep(rowToEdit)
-      modal.show()
-    })
-  )
+onMount(() =>
+  subscribe("add-row", () => {
+    row = {}
+    modal.show()
+  })
+)
+onMount(() =>
+  subscribe("edit-row", rowToEdit => {
+    row = cloneDeep(rowToEdit)
+    modal.show()
+  })
+)
 </script>
 
 <Modal bind:this={modal}>

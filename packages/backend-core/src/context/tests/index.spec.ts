@@ -1,11 +1,11 @@
-import { testEnv } from "../../../tests/extra"
+import { IdentityType } from "@budibase/types"
 import * as context from "../"
-import { DEFAULT_TENANT_ID } from "../../constants"
-import { structures } from "../../../tests"
 import { db } from "../.."
+import { structures } from "../../../tests"
+import { testEnv } from "../../../tests/extra"
+import { DEFAULT_TENANT_ID } from "../../constants"
 import Context from "../Context"
 import { ContextMap } from "../types"
-import { IdentityType } from "@budibase/types"
 
 describe("context", () => {
   describe("doInTenant", () => {
@@ -47,7 +47,9 @@ describe("context", () => {
         test()
 
         // test after tenancy has been accessed to ensure cleanup
-        context.doInTenant("test", () => {})
+        context.doInTenant("test", () => {
+          // empty on purpose
+        })
         test()
       })
 
@@ -66,7 +68,9 @@ describe("context", () => {
         test()
 
         // test after tenancy has been accessed to ensure cleanup
-        context.doInTenant("test", () => {})
+        context.doInTenant("test", () => {
+          // empty on purpose
+        })
         test()
       })
 
@@ -202,11 +206,17 @@ describe("context", () => {
     it.each([
       [
         "doInAppMigrationContext",
-        () => context.doInAppMigrationContext(db.generateAppID(), () => {}),
+        () =>
+          context.doInAppMigrationContext(db.generateAppID(), () => {
+            // empty on purpose
+          }),
       ],
       [
         "doInAppContext",
-        () => context.doInAppContext(db.generateAppID(), () => {}),
+        () =>
+          context.doInAppContext(db.generateAppID(), () => {
+            // empty on purpose
+          }),
       ],
       [
         "doInAutomationContext",
@@ -214,13 +224,24 @@ describe("context", () => {
           context.doInAutomationContext({
             appId: db.generateAppID(),
             automationId: structures.generator.guid(),
-            task: () => {},
+            task: () => {
+              // empty on purpose
+            },
           }),
       ],
-      ["doInContext", () => context.doInContext(db.generateAppID(), () => {})],
+      [
+        "doInContext",
+        () =>
+          context.doInContext(db.generateAppID(), () => {
+            // empty on purpose
+          }),
+      ],
       [
         "doInEnvironmentContext",
-        () => context.doInEnvironmentContext({}, () => {}),
+        () =>
+          context.doInEnvironmentContext({}, () => {
+            // empty on purpose
+          }),
       ],
       [
         "doInIdentityContext",
@@ -231,13 +252,24 @@ describe("context", () => {
               type: IdentityType.USER,
               _id: structures.users.user()._id!,
             },
-            () => {}
+            () => {
+              // empty on purpose
+            }
           ),
       ],
-      ["doInScimContext", () => context.doInScimContext(() => {})],
+      [
+        "doInScimContext",
+        () =>
+          context.doInScimContext(() => {
+            // empty on purpose
+          }),
+      ],
       [
         "doInTenant",
-        () => context.doInTenant(structures.tenant.id(), () => {}),
+        () =>
+          context.doInTenant(structures.tenant.id(), () => {
+            // empty on purpose
+          }),
       ],
     ])(
       "a nested context.%s function cannot run",

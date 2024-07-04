@@ -1,39 +1,39 @@
 <script>
-  import Icon from "../Icon/Icon.svelte"
-  import { getContext, onMount } from "svelte"
-  import ErrorMessage from "./ErrorMessage.svelte"
+import { getContext, onMount } from "svelte"
+import Icon from "../Icon/Icon.svelte"
+import ErrorMessage from "./ErrorMessage.svelte"
 
-  export let disabled = false
-  export let error = null
-  export let focused = false
-  export let clickable = false
-  export let validate
-  export let value
-  export let ref
-  export let autoHeight
-  export let compact = false
+export let disabled = false
+export let error = null
+export let focused = false
+export let clickable = false
+export let validate
+export let value
+export let ref
+export let autoHeight
+export let compact = false
 
-  const formContext = getContext("fancy-form")
-  const id = Math.random()
-  const API = {
-    validate: () => {
-      if (validate) {
-        error = validate(value)
-      }
-      return !error
-    },
+const formContext = getContext("fancy-form")
+const id = Math.random()
+const API = {
+  validate: () => {
+    if (validate) {
+      error = validate(value)
+    }
+    return !error
+  },
+}
+
+onMount(() => {
+  if (formContext) {
+    formContext.registerField(id, API)
   }
-
-  onMount(() => {
+  return () => {
     if (formContext) {
-      formContext.registerField(id, API)
+      formContext.unregisterField(id)
     }
-    return () => {
-      if (formContext) {
-        formContext.unregisterField(id)
-      }
-    }
-  })
+  }
+})
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

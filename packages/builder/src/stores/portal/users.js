@@ -1,9 +1,9 @@
-import { writable } from "svelte/store"
+import { Constants } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
 import { API } from "api"
 import { update } from "lodash"
+import { writable } from "svelte/store"
 import { licensing } from "."
-import { sdk } from "@budibase/shared-core"
-import { Constants } from "@budibase/frontend-core"
 
 export function createUsersStore() {
   const { subscribe, set } = writable({})
@@ -21,7 +21,7 @@ export function createUsersStore() {
   async function get(userId) {
     try {
       return await API.getUser(userId)
-    } catch (err) {
+    } catch (_err) {
       return null
     }
   }

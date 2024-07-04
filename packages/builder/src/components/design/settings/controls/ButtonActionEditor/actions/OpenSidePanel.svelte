@@ -1,22 +1,22 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
-  import { selectedScreen } from "stores/builder"
-  import { findAllMatchingComponents } from "helpers/components"
+import { Label, Select } from "@budibase/bbui"
+import { findAllMatchingComponents } from "helpers/components"
+import { selectedScreen } from "stores/builder"
 
-  export let parameters
+export let parameters
 
-  $: sidePanelOptions = getSidePanelOptions($selectedScreen)
+$: sidePanelOptions = getSidePanelOptions($selectedScreen)
 
-  const getSidePanelOptions = screen => {
-    const sidePanelComponents = findAllMatchingComponents(
-      screen.props,
-      component => component._component.endsWith("/sidepanel")
-    )
-    return sidePanelComponents.map(sidePanel => ({
-      label: sidePanel._instanceName,
-      value: sidePanel._id,
-    }))
-  }
+const getSidePanelOptions = screen => {
+  const sidePanelComponents = findAllMatchingComponents(
+    screen.props,
+    component => component._component.endsWith("/sidepanel")
+  )
+  return sidePanelComponents.map(sidePanel => ({
+    label: sidePanel._instanceName,
+    value: sidePanel._id,
+  }))
+}
 </script>
 
 <div class="root">

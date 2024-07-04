@@ -1,5 +1,5 @@
-import { TestConfiguration, structures } from "../../tests"
 import { constants } from "@budibase/backend-core"
+import { TestConfiguration, structures } from "../../tests"
 
 describe("tenancy middleware", () => {
   const config = new TestConfiguration()

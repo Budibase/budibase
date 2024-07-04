@@ -1,8 +1,8 @@
 <script>
-  import { Heading } from "@budibase/bbui"
+import { Heading } from "@budibase/bbui"
 
-  export let title
-  export let wrap = true
+export let title
+export let wrap = true
 </script>
 
 <div class="header" class:wrap>

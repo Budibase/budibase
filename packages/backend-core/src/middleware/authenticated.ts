@@ -1,21 +1,21 @@
-import { Cookie, Header } from "../constants"
-import {
-  getCookie,
-  clearCookie,
-  openJwt,
-  isValidInternalAPIKey,
-} from "../utils"
-import { getUser } from "../cache/user"
-import { getSession, updateSessionTTL } from "../security/sessions"
-import { buildMatcherRegex, matches } from "./matchers"
-import { SEPARATOR, queryGlobalView, ViewName } from "../db"
-import { getGlobalDB, doInTenant } from "../context"
-import { decrypt } from "../security/encryption"
-import * as identity from "../context/identity"
-import env from "../environment"
 import { Ctx, EndpointMatcher, SessionCookie, User } from "@budibase/types"
-import { InvalidAPIKeyError, ErrorCode } from "../errors"
 import tracer from "dd-trace"
+import { getUser } from "../cache/user"
+import { Cookie, Header } from "../constants"
+import { doInTenant, getGlobalDB } from "../context"
+import * as identity from "../context/identity"
+import { SEPARATOR, ViewName, queryGlobalView } from "../db"
+import env from "../environment"
+import { ErrorCode, InvalidAPIKeyError } from "../errors"
+import { decrypt } from "../security/encryption"
+import { getSession, updateSessionTTL } from "../security/sessions"
+import {
+  clearCookie,
+  getCookie,
+  isValidInternalAPIKey,
+  openJwt,
+} from "../utils"
+import { buildMatcherRegex, matches } from "./matchers"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
   ? parseInt(env.SESSION_UPDATE_PERIOD)
@@ -64,7 +64,7 @@ async function checkApiKey(
         },
         db
       )) as string
-    } catch (err) {
+    } catch (_err) {
       userId = undefined
     }
     if (userId) {

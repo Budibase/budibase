@@ -1,8 +1,8 @@
+import { events } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import tk from "timekeeper"
-import * as setup from "./utilities"
-import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
+import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 mocks.licenses.useBackups()

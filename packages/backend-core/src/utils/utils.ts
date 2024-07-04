@@ -1,8 +1,3 @@
-import { getAllApps } from "../db"
-import { Header, MAX_VALID_DATE, DocumentType, SEPARATOR } from "../constants"
-import env from "../environment"
-import * as tenancy from "../tenancy"
-import * as context from "../context"
 import {
   App,
   AuditedEventFriendlyName,
@@ -12,6 +7,11 @@ import {
 } from "@budibase/types"
 import type { SetOption } from "cookies"
 import jwt, { Secret } from "jsonwebtoken"
+import { DocumentType, Header, MAX_VALID_DATE, SEPARATOR } from "../constants"
+import * as context from "../context"
+import { getAllApps } from "../db"
+import env from "../environment"
+import * as tenancy from "../tenancy"
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"

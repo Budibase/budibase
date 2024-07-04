@@ -1,6 +1,6 @@
 import { events } from "@budibase/backend-core"
-import { getDatasourceParams } from "../../../../db/utils"
 import { Datasource } from "@budibase/types"
+import { getDatasourceParams } from "../../../../db/utils"
 
 const getDatasources = async (appDb: any): Promise<Datasource[]> => {
   const response = await appDb.allDocs(

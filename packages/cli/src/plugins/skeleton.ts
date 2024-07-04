@@ -1,8 +1,8 @@
-import fetch from "node-fetch"
 import fs from "fs"
 import os from "os"
 import { join } from "path"
 import { processStringSync } from "@budibase/string-templates"
+import fetch from "node-fetch"
 
 const download = require("download")
 const tar = require("tar")
@@ -42,7 +42,7 @@ export async function getSkeleton(type: string, name: string) {
 }
 
 export async function fleshOutSkeleton(
-  type: string,
+  _type: string,
   name: string,
   description: string,
   version: string

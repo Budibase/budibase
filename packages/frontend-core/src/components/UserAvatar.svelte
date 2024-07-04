@@ -1,11 +1,11 @@
 <script>
-  import { Avatar, AbsTooltip, TooltipPosition } from "@budibase/bbui"
-  import { helpers } from "@budibase/shared-core"
+import { AbsTooltip, Avatar, TooltipPosition } from "@budibase/bbui"
+import { helpers } from "@budibase/shared-core"
 
-  export let user
-  export let size = "S"
-  export let tooltipPosition = TooltipPosition.Top
-  export let showTooltip = true
+export let user
+export let size = "S"
+export let tooltipPosition = TooltipPosition.Top
+export let showTooltip = true
 </script>
 
 {#if user}

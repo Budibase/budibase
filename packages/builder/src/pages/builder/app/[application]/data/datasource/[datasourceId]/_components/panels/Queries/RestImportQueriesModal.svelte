@@ -1,82 +1,82 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import {
-    keepOpen,
-    ModalContent,
-    notifications,
-    Body,
-    Layout,
-    Tabs,
-    Tab,
-    Heading,
-    TextArea,
-    Dropzone,
-  } from "@budibase/bbui"
-  import { datasources, queries } from "stores/builder"
-  import { writable } from "svelte/store"
+import {
+  Body,
+  Dropzone,
+  Heading,
+  Layout,
+  ModalContent,
+  Tab,
+  Tabs,
+  TextArea,
+  keepOpen,
+  notifications,
+} from "@budibase/bbui"
+import { goto } from "@roxi/routify"
+import { datasources, queries } from "stores/builder"
+import { writable } from "svelte/store"
 
-  export let navigateDatasource = false
-  export let datasourceId
-  export let createDatasource = false
-  export let onCancel
+export let navigateDatasource = false
+export let datasourceId
+export let createDatasource = false
+export let onCancel
 
-  const data = writable({
-    url: "",
-    raw: "",
-    file: undefined,
-  })
+const data = writable({
+  url: "",
+  raw: "",
+  file: undefined,
+})
 
-  let lastTouched = "url"
+let lastTouched = "url"
 
-  const getData = async () => {
-    let dataString
+const getData = async () => {
+  let dataString
 
-    // parse the file into memory and send as string
-    if (lastTouched === "file") {
-      dataString = await $data.file.text()
-    } else if (lastTouched === "url") {
-      const response = await fetch($data.url)
-      dataString = await response.text()
-    } else if (lastTouched === "raw") {
-      dataString = $data.raw
-    }
-
-    return dataString
+  // parse the file into memory and send as string
+  if (lastTouched === "file") {
+    dataString = await $data.file.text()
+  } else if (lastTouched === "url") {
+    const response = await fetch($data.url)
+    dataString = await response.text()
+  } else if (lastTouched === "raw") {
+    dataString = $data.raw
   }
 
-  async function importQueries() {
-    try {
-      const dataString = await getData()
+  return dataString
+}
 
-      if (!datasourceId && !createDatasource) {
-        throw new Error("No datasource id")
-      }
+async function importQueries() {
+  try {
+    const dataString = await getData()
 
-      const body = {
-        data: dataString,
-        datasourceId,
-      }
-
-      const importResult = await queries.import(body)
-      if (!datasourceId) {
-        datasourceId = importResult.datasourceId
-      }
-
-      // reload
-      await datasources.fetch()
-      await queries.fetch()
-
-      if (navigateDatasource) {
-        $goto(`./datasource/${datasourceId}`)
-      }
-
-      notifications.success("Imported successfully")
-    } catch (error) {
-      notifications.error("Error importing queries")
-
-      return keepOpen
+    if (!datasourceId && !createDatasource) {
+      throw new Error("No datasource id")
     }
+
+    const body = {
+      data: dataString,
+      datasourceId,
+    }
+
+    const importResult = await queries.import(body)
+    if (!datasourceId) {
+      datasourceId = importResult.datasourceId
+    }
+
+    // reload
+    await datasources.fetch()
+    await queries.fetch()
+
+    if (navigateDatasource) {
+      $goto(`./datasource/${datasourceId}`)
+    }
+
+    notifications.success("Imported successfully")
+  } catch (error) {
+    notifications.error("Error importing queries")
+
+    return keepOpen
   }
+}
 </script>
 
 <ModalContent

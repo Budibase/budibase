@@ -1,8 +1,8 @@
 <script>
-  import ExistingRelationshipButton from "../ExistingRelationshipButton.svelte"
-  import { getContext } from "svelte"
+import { getContext } from "svelte"
+import ExistingRelationshipButton from "../ExistingRelationshipButton.svelte"
 
-  const { definition, rows } = getContext("grid")
+const { definition, rows } = getContext("grid")
 </script>
 
 {#if $definition}

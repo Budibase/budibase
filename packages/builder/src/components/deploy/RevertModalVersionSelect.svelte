@@ -1,18 +1,18 @@
 <script>
-  import { API } from "api"
-  import clientVersions from "./clientVersions.json"
-  import { appStore } from "stores/builder"
-  import { Select } from "@budibase/bbui"
+import { Select } from "@budibase/bbui"
+import { API } from "api"
+import { appStore } from "stores/builder"
+import clientVersions from "./clientVersions.json"
 
-  export let revertableVersion
-  $: appId = $appStore.appId
+export let revertableVersion
+$: appId = $appStore.appId
 
-  const handleChange = e => {
-    const value = e.detail
-    if (value == null) return
+const handleChange = e => {
+  const value = e.detail
+  if (value == null) return
 
-    API.setRevertableVersion(appId, value)
-  }
+  API.setRevertableVersion(appId, value)
+}
 </script>
 
 <div class="select">

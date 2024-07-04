@@ -1,7 +1,7 @@
-import { Ctx, MaintenanceType } from "@budibase/types"
-import env from "../../../environment"
 import { env as coreEnv } from "@budibase/backend-core"
+import { Ctx, MaintenanceType } from "@budibase/types"
 import nodeFetch from "node-fetch"
+import env from "../../../environment"
 
 let sqsAvailable: boolean
 async function isSqsAvailable() {
@@ -17,7 +17,7 @@ async function isSqsAvailable() {
     })
     sqsAvailable = true
     return true
-  } catch (e) {
+  } catch (_e) {
     sqsAvailable = false
     return false
   }

@@ -1,14 +1,14 @@
 <script>
-  import { screenStore } from "stores/builder"
-  import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+import { screenStore } from "stores/builder"
 
-  export let value
-  export let bindings
-  export let placeholder
+export let value
+export let bindings
+export let placeholder
 
-  $: urlOptions = $screenStore.screens
-    .map(screen => screen.routing?.route)
-    .filter(x => x != null)
+$: urlOptions = $screenStore.screens
+  .map(screen => screen.routing?.route)
+  .filter(x => x != null)
 </script>
 
 <DrawerBindableCombobox

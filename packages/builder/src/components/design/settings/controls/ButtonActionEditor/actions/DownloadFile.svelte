@@ -1,49 +1,49 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
-  import { onMount } from "svelte"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { FieldType } from "@budibase/types"
-  import { tables, viewsV2 } from "stores/builder"
+import { Label, Select } from "@budibase/bbui"
+import { FieldType } from "@budibase/types"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+import { tables, viewsV2 } from "stores/builder"
+import { onMount } from "svelte"
 
-  export let parameters
-  export let bindings = []
+export let parameters
+export let bindings = []
 
-  const fileOptions = [
-    {
-      label: "Attachment",
-      value: "attachment",
-    },
-    {
-      label: "URL",
-      value: "url",
-    },
-  ]
+const fileOptions = [
+  {
+    label: "Attachment",
+    value: "attachment",
+  },
+  {
+    label: "URL",
+    value: "url",
+  },
+]
 
-  $: tableOptions = $tables.list.map(table => ({
-    label: table.name,
-    resourceId: table._id,
-    schema: table.schema,
-  }))
-  $: viewOptions = $viewsV2.list.map(view => ({
-    label: view.name,
-    resourceId: view.id,
-    schema: view.schema,
-  }))
-  $: options = [...(tableOptions || []), ...(viewOptions || [])]
+$: tableOptions = $tables.list.map(table => ({
+  label: table.name,
+  resourceId: table._id,
+  schema: table.schema,
+}))
+$: viewOptions = $viewsV2.list.map(view => ({
+  label: view.name,
+  resourceId: view.id,
+  schema: view.schema,
+}))
+$: options = [...(tableOptions || []), ...(viewOptions || [])]
 
-  $: selectedTable =
-    parameters.tableId && options.find(t => t.resourceId === parameters.tableId)
-  $: attachmentColumns =
-    selectedTable &&
-    Object.values(selectedTable.schema).filter(c =>
-      [FieldType.ATTACHMENTS, FieldType.ATTACHMENT_SINGLE].includes(c.type)
-    )
+$: selectedTable =
+  parameters.tableId && options.find(t => t.resourceId === parameters.tableId)
+$: attachmentColumns =
+  selectedTable &&
+  Object.values(selectedTable.schema).filter(c =>
+    [FieldType.ATTACHMENTS, FieldType.ATTACHMENT_SINGLE].includes(c.type)
+  )
 
-  onMount(() => {
-    if (!parameters.type) {
-      parameters.type = "attachment"
-    }
-  })
+onMount(() => {
+  if (!parameters.type) {
+    parameters.type = "attachment"
+  }
+})
 </script>
 
 <div class="root">

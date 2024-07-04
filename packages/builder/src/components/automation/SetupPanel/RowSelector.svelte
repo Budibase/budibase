@@ -1,238 +1,238 @@
 <script>
-  import { tables } from "stores/builder"
-  import {
-    ActionButton,
-    Popover,
-    Icon,
-    TooltipPosition,
-    TooltipType,
-  } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import { FieldType } from "@budibase/types"
+import {
+  ActionButton,
+  Icon,
+  Popover,
+  TooltipPosition,
+  TooltipType,
+} from "@budibase/bbui"
+import { FieldType } from "@budibase/types"
+import { tables } from "stores/builder"
+import { createEventDispatcher } from "svelte"
 
-  import RowSelectorTypes from "./RowSelectorTypes.svelte"
-  import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
-  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
-  import { FIELDS } from "constants/backend"
-  import { capitalise } from "helpers"
-  import { memo } from "@budibase/frontend-core"
-  import PropField from "./PropField.svelte"
-  import { cloneDeep, isPlainObject, mergeWith } from "lodash"
+import { memo } from "@budibase/frontend-core"
+import { FIELDS } from "constants/backend"
+import { capitalise } from "helpers"
+import { cloneDeep, isPlainObject, mergeWith } from "lodash"
+import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
+import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+import PropField from "./PropField.svelte"
+import RowSelectorTypes from "./RowSelectorTypes.svelte"
 
-  const dispatch = createEventDispatcher()
+const dispatch = createEventDispatcher()
 
-  export let row
-  export let meta
-  export let bindings
-  export let isTestModal
+export let row
+export let meta
+export let bindings
+export let isTestModal
 
-  const typeToField = Object.values(FIELDS).reduce((acc, field) => {
-    acc[field.type] = field
-    return acc
-  }, {})
+const typeToField = Object.values(FIELDS).reduce((acc, field) => {
+  acc[field.type] = field
+  return acc
+}, {})
 
-  const memoStore = memo({
-    row,
-    meta,
-  })
+const memoStore = memo({
+  row,
+  meta,
+})
 
-  let table
-  // Row Schema Fields
-  let schemaFields
-  let attachmentTypes = [
-    FieldType.ATTACHMENTS,
-    FieldType.ATTACHMENT_SINGLE,
-    FieldType.SIGNATURE_SINGLE,
+let table
+// Row Schema Fields
+let schemaFields
+let attachmentTypes = [
+  FieldType.ATTACHMENTS,
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.SIGNATURE_SINGLE,
+]
+
+let customPopover
+let popoverAnchor
+let editableRow = {}
+let editableFields = {}
+
+// Avoid unnecessary updates
+$: memoStore.set({
+  row,
+  meta,
+})
+
+$: parsedBindings = bindings.map(binding => {
+  let clone = Object.assign({}, binding)
+  clone.icon = "ShareAndroid"
+  return clone
+})
+
+$: tableId = $memoStore?.row?.tableId
+
+$: initData(tableId, $memoStore?.meta?.fields, $memoStore?.row)
+
+const initData = (tableId, metaFields, row) => {
+  if (!tableId) {
+    return
+  }
+
+  // Refesh the editable fields
+  editableFields = cloneDeep(metaFields || {})
+
+  // Refresh all the row data
+  editableRow = cloneDeep(row || {})
+
+  table = $tables.list.find(table => table._id === tableId)
+
+  if (table) {
+    editableRow["tableId"] = tableId
+
+    schemaFields = Object.entries(table?.schema ?? {})
+      .filter(entry => {
+        const [, field] = entry
+        return field.type !== "formula" && !field.autocolumn
+      })
+      .sort(([nameA], [nameB]) => {
+        return nameA < nameB ? -1 : 1
+      })
+
+    // Parse out any data not in the schema.
+    for (const column in editableFields) {
+      if (!Object.hasOwn(table?.schema, column)) {
+        delete editableFields[column]
+      }
+    }
+  }
+
+  // Go through the table schema and build out the editable content
+  for (const entry of schemaFields) {
+    const [key, fieldSchema] = entry
+
+    const emptyField =
+      editableRow[key] == null || editableRow[key]?.length === 0
+
+    // Put non-empty elements into the update and add their key to the fields list.
+    if (!emptyField && !Object.hasOwn(editableFields, key)) {
+      editableFields = {
+        ...editableFields,
+        [key]: {},
+      }
+    }
+
+    // Legacy - clearRelationships
+    // Init the field and add it to the update.
+    if (emptyField) {
+      if (editableFields[key]?.clearRelationships === true) {
+        const emptyField = coerce(
+          !Object.hasOwn($memoStore?.row, key) ? "" : $memoStore?.row[key],
+          fieldSchema.type
+        )
+
+        // remove this and place the field in the editable row.
+        delete editableFields[key]?.clearRelationships
+
+        // Default the field
+        editableRow = {
+          ...editableRow,
+          [key]: emptyField,
+        }
+      } else {
+        // Purge from the update as its presence is not necessary.
+        delete editableRow[key]
+      }
+    }
+  }
+
+  // Parse all known row schema keys
+  const schemaKeys = [
+    "tableId",
+    ...schemaFields.map(entry => {
+      const [key] = entry
+      return key
+    }),
   ]
 
-  let customPopover
-  let popoverAnchor
-  let editableRow = {}
-  let editableFields = {}
-
-  // Avoid unnecessary updates
-  $: memoStore.set({
-    row,
-    meta,
-  })
-
-  $: parsedBindings = bindings.map(binding => {
-    let clone = Object.assign({}, binding)
-    clone.icon = "ShareAndroid"
-    return clone
-  })
-
-  $: tableId = $memoStore?.row?.tableId
-
-  $: initData(tableId, $memoStore?.meta?.fields, $memoStore?.row)
-
-  const initData = (tableId, metaFields, row) => {
-    if (!tableId) {
-      return
-    }
-
-    // Refesh the editable fields
-    editableFields = cloneDeep(metaFields || {})
-
-    // Refresh all the row data
-    editableRow = cloneDeep(row || {})
-
-    table = $tables.list.find(table => table._id === tableId)
-
-    if (table) {
-      editableRow["tableId"] = tableId
-
-      schemaFields = Object.entries(table?.schema ?? {})
-        .filter(entry => {
-          const [, field] = entry
-          return field.type !== "formula" && !field.autocolumn
-        })
-        .sort(([nameA], [nameB]) => {
-          return nameA < nameB ? -1 : 1
-        })
-
-      // Parse out any data not in the schema.
-      for (const column in editableFields) {
-        if (!Object.hasOwn(table?.schema, column)) {
-          delete editableFields[column]
-        }
-      }
-    }
-
-    // Go through the table schema and build out the editable content
-    for (const entry of schemaFields) {
-      const [key, fieldSchema] = entry
-
-      const emptyField =
-        editableRow[key] == null || editableRow[key]?.length === 0
-
-      // Put non-empty elements into the update and add their key to the fields list.
-      if (!emptyField && !Object.hasOwn(editableFields, key)) {
-        editableFields = {
-          ...editableFields,
-          [key]: {},
-        }
-      }
-
-      // Legacy - clearRelationships
-      // Init the field and add it to the update.
-      if (emptyField) {
-        if (editableFields[key]?.clearRelationships === true) {
-          const emptyField = coerce(
-            !Object.hasOwn($memoStore?.row, key) ? "" : $memoStore?.row[key],
-            fieldSchema.type
-          )
-
-          // remove this and place the field in the editable row.
-          delete editableFields[key]?.clearRelationships
-
-          // Default the field
-          editableRow = {
-            ...editableRow,
-            [key]: emptyField,
-          }
-        } else {
-          // Purge from the update as its presence is not necessary.
-          delete editableRow[key]
-        }
-      }
-    }
-
-    // Parse all known row schema keys
-    const schemaKeys = [
-      "tableId",
-      ...schemaFields.map(entry => {
-        const [key] = entry
-        return key
-      }),
-    ]
-
-    // Purge any row keys that are not present in the schema.
-    for (const rowKey of Object.keys(editableRow)) {
-      if (!schemaKeys.includes(rowKey)) {
-        delete editableRow[rowKey]
-        delete editableFields[rowKey]
-      }
+  // Purge any row keys that are not present in the schema.
+  for (const rowKey of Object.keys(editableRow)) {
+    if (!schemaKeys.includes(rowKey)) {
+      delete editableRow[rowKey]
+      delete editableFields[rowKey]
     }
   }
+}
 
-  // Row coerce
-  const coerce = (value, type) => {
-    const re = new RegExp(/{{([^{].*?)}}/g)
-    if (typeof value === "string" && re.test(value)) {
-      return value
-    }
-    if (type === "number") {
-      if (typeof value === "number") {
-        return value
-      }
-      return Number(value)
-    }
-    if (type === "options" || type === "boolean") {
-      return value
-    }
-    if (type === "array") {
-      if (!value) {
-        return []
-      }
-      if (Array.isArray(value)) {
-        return value
-      }
-      return value.split(",").map(x => x.trim())
-    }
-
-    if (type === "link") {
-      if (!value) {
-        return []
-      } else if (Array.isArray(value)) {
-        return value
-      }
-      return value.split(",").map(x => x.trim())
-    }
-
-    if (type === "json") {
-      return value.value
-    }
-
+// Row coerce
+const coerce = (value, type) => {
+  const re = new RegExp(/{{([^{].*?)}}/g)
+  if (typeof value === "string" && re.test(value)) {
     return value
   }
-
-  const isFullWidth = type => {
-    return (
-      attachmentTypes.includes(type) ||
-      type === FieldType.JSON ||
-      type === FieldType.LONGFORM
-    )
-  }
-
-  const onChange = update => {
-    const customizer = (objValue, srcValue) => {
-      if (isPlainObject(objValue) && isPlainObject(srcValue)) {
-        const result = mergeWith({}, objValue, srcValue, customizer)
-        let outcome = Object.keys(result).reduce((acc, key) => {
-          if (result[key] !== null) {
-            acc[key] = result[key]
-          }
-          return acc
-        }, {})
-        return outcome
-      }
-      return srcValue
+  if (type === "number") {
+    if (typeof value === "number") {
+      return value
     }
-
-    const result = mergeWith(
-      {},
-      {
-        row: editableRow,
-        meta: {
-          fields: editableFields,
-        },
-      },
-      update,
-      customizer
-    )
-    dispatch("change", result)
+    return Number(value)
   }
+  if (type === "options" || type === "boolean") {
+    return value
+  }
+  if (type === "array") {
+    if (!value) {
+      return []
+    }
+    if (Array.isArray(value)) {
+      return value
+    }
+    return value.split(",").map(x => x.trim())
+  }
+
+  if (type === "link") {
+    if (!value) {
+      return []
+    } else if (Array.isArray(value)) {
+      return value
+    }
+    return value.split(",").map(x => x.trim())
+  }
+
+  if (type === "json") {
+    return value.value
+  }
+
+  return value
+}
+
+const isFullWidth = type => {
+  return (
+    attachmentTypes.includes(type) ||
+    type === FieldType.JSON ||
+    type === FieldType.LONGFORM
+  )
+}
+
+const onChange = update => {
+  const customizer = (objValue, srcValue) => {
+    if (isPlainObject(objValue) && isPlainObject(srcValue)) {
+      const result = mergeWith({}, objValue, srcValue, customizer)
+      let outcome = Object.keys(result).reduce((acc, key) => {
+        if (result[key] !== null) {
+          acc[key] = result[key]
+        }
+        return acc
+      }, {})
+      return outcome
+    }
+    return srcValue
+  }
+
+  const result = mergeWith(
+    {},
+    {
+      row: editableRow,
+      meta: {
+        fields: editableFields,
+      },
+    },
+    update,
+    customizer
+  )
+  dispatch("change", result)
+}
 </script>
 
 {#each schemaFields || [] as [field, schema]}

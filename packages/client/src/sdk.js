@@ -1,43 +1,43 @@
-import { API } from "api"
 import {
-  authStore,
-  notificationStore,
-  routeStore,
-  screenStore,
-  builderStore,
-  uploadStore,
-  rowSelectionStore,
-  componentStore,
-  currentRole,
-  environmentStore,
-  sidePanelStore,
-  modalStore,
-  dndIsDragging,
-  confirmationStore,
-  roleStore,
-  appStore,
-  stateStore,
-  createContextStore,
-} from "stores"
-import { styleable } from "utils/styleable"
-import { linkable } from "utils/linkable"
-import { getAction } from "utils/getAction"
-import Provider from "components/context/Provider.svelte"
+  Constants,
+  QueryUtils,
+  RowUtils,
+  derivedMemo,
+  fetchData,
+  memo,
+} from "@budibase/frontend-core"
+import { makePropSafe, processStringSync } from "@budibase/string-templates"
+import { API } from "api"
 import Block from "components/Block.svelte"
 import BlockComponent from "components/BlockComponent.svelte"
+import Provider from "components/context/Provider.svelte"
+import {
+  appStore,
+  authStore,
+  builderStore,
+  componentStore,
+  confirmationStore,
+  createContextStore,
+  currentRole,
+  dndIsDragging,
+  environmentStore,
+  modalStore,
+  notificationStore,
+  roleStore,
+  routeStore,
+  rowSelectionStore,
+  screenStore,
+  sidePanelStore,
+  stateStore,
+  uploadStore,
+} from "stores"
+import { getAction } from "utils/getAction"
+import { linkable } from "utils/linkable"
+import { styleable } from "utils/styleable"
 import { ActionTypes } from "./constants"
-import { fetchDatasourceSchema } from "./utils/schema.js"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
-import { processStringSync, makePropSafe } from "@budibase/string-templates"
-import {
-  fetchData,
-  QueryUtils,
-  Constants,
-  RowUtils,
-  memo,
-  derivedMemo,
-} from "@budibase/frontend-core"
+import { fetchDatasourceSchema } from "./utils/schema.js"
 
 export default {
   API,
