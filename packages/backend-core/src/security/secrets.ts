@@ -12,7 +12,6 @@ export function stringContainsSecret(str: string) {
     }
 
     if (str.includes(value)) {
-      throw new Error(`String contains secret: ${key}=${value}`)
       return true
     }
   }
