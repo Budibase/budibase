@@ -2187,6 +2187,35 @@ describe.each([
     })
 
   describe.each([
+    { low: "2024-07-03T00:00:00.000Z", high: "9999-00-00T00:00:00.000Z" },
+    { low: "2024-07-03T00:00:00.000Z", high: "9998-00-00T00:00:00.000Z" },
+    { low: "0000-00-00T00:00:00.000Z", high: "2024-07-04T00:00:00.000Z" },
+    { low: "0001-00-00T00:00:00.000Z", high: "2024-07-04T00:00:00.000Z" },
+  ])("date special cases", ({ low, high }) => {
+    const earlyDate = "2024-07-03T10:00:00.000Z",
+      laterDate = "2024-07-03T11:00:00.000Z"
+    beforeAll(async () => {
+      table = await createTable({
+        date: {
+          name: "date",
+          type: FieldType.DATETIME,
+        },
+      })
+      await createRows([{ date: earlyDate }, { date: laterDate }])
+    })
+
+    it("should be able to handle a date search", async () => {
+      await expectSearch({
+        query: {
+          range: {
+            "1:date": { low, high },
+          },
+        },
+      }).toContainExactly([{ date: earlyDate }, { date: laterDate }])
+    })
+  })
+
+  describe.each([
     "名前", // Japanese for "name"
     "Benutzer-ID", // German for "user ID", includes a hyphen
     "numéro", // French for "number", includes an accent

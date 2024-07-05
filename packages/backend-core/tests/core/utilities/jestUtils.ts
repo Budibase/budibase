@@ -1,4 +1,7 @@
-import { db } from "../../../src"
+import {
+  CONSTANT_EXTERNAL_ROW_COLS,
+  CONSTANT_INTERNAL_ROW_COLS,
+} from "@budibase/shared-core"
 
 export function expectFunctionWasCalledTimesWith(
   jestFunction: any,
@@ -11,7 +14,7 @@ export function expectFunctionWasCalledTimesWith(
 }
 
 export const expectAnyInternalColsAttributes: {
-  [K in (typeof db.CONSTANT_INTERNAL_ROW_COLS)[number]]: any
+  [K in (typeof CONSTANT_INTERNAL_ROW_COLS)[number]]: any
 } = {
   tableId: expect.anything(),
   type: expect.anything(),
@@ -22,7 +25,7 @@ export const expectAnyInternalColsAttributes: {
 }
 
 export const expectAnyExternalColsAttributes: {
-  [K in (typeof db.CONSTANT_EXTERNAL_ROW_COLS)[number]]: any
+  [K in (typeof CONSTANT_EXTERNAL_ROW_COLS)[number]]: any
 } = {
   tableId: expect.anything(),
   _id: expect.anything(),
