@@ -31,7 +31,7 @@
     if (
       tables.find(
         table =>
-          table._id === datasource.tableId &&
+          table._id === datasource?.tableId &&
           table.sourceId === DEFAULT_BB_DATASOURCE_ID
       ) &&
       !schemaFields.some(field => field.name === "_id")
