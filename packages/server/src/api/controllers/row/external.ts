@@ -72,15 +72,23 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const row = await sdk.rows.external.getRow(tableId, updatedId, {
     relationships: true,
   })
-  const enrichedRow = await outputProcessing(table, row, {
-    squash: true,
-    preserveLinks: true,
-  })
+
+  const [enrichedRow, oldRow] = await Promise.all([
+    outputProcessing(table, row, {
+      squash: true,
+      preserveLinks: true,
+    }),
+    outputProcessing(table, beforeRow, {
+      squash: true,
+      preserveLinks: true,
+    }),
+  ])
+
   return {
     ...response,
     row: enrichedRow,
     table,
-    oldRow: beforeRow,
+    oldRow,
   }
 }
 
