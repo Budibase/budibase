@@ -5,7 +5,7 @@
   export let row
 </script>
 
-<span class="email">
+<span title={value} class="email">
   {value}
 </span>
 {#if row.scimInfo?.isSync}
