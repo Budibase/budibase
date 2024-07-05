@@ -31,7 +31,6 @@ import { dataFilters } from "@budibase/shared-core"
 import { Knex } from "knex"
 import { structures } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
-import { employeeImport } from "../../../db/defaultData/employeeImport"
 
 describe.each([
   ["in-memory", undefined],
