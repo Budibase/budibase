@@ -9,7 +9,7 @@
   import { getContext } from "svelte"
   import { automationStore, tables, builderStore } from "stores/builder"
   import { TriggerStepID } from "constants/backend/automations"
-  import { goto, layout, isActive } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
 
   const { datasource } = getContext("grid")
 
