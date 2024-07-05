@@ -2076,10 +2076,10 @@
     tar-fs "2.1.1"
     uuid "^8.3.2"
 
-"@budibase/handlebars-helpers@^0.13.1":
-  version "0.13.1"
-  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.13.1.tgz#d02e73c0df8305cd675e70dc37f8427eb0842080"
-  integrity sha512-v4RbXhr3igvK3i2pj5cNltu/4NMxdPIzcUt/o0RoInhesNH1VSLRdweSFr6/Y34fsCR5jHZ6vltdcz2RgrTKgw==
+"@budibase/handlebars-helpers@^0.13.2":
+  version "0.13.2"
+  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.13.2.tgz#73ab51c464e91fd955b429017648e0257060db77"
+  integrity sha512-/IGqyDcjN9AhKSagCsqQRavpraQRjGeSZeMb62yJiK0b/9r47BjzcOeuQbfRhwK1NlL2cSExNcrkWSxisbPvJQ==
   dependencies:
     get-object "^0.2.0"
     get-value "^3.0.1"
@@ -2146,7 +2146,7 @@
 "@budibase/string-templates@2.23.12":
   version "0.0.0"
   dependencies:
-    "@budibase/handlebars-helpers" "^0.13.1"
+    "@budibase/handlebars-helpers" "^0.13.2"
     dayjs "^1.10.8"
     handlebars "^4.7.8"
     lodash.clonedeep "^4.5.0"
