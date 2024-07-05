@@ -80,6 +80,11 @@ export function DatabaseWithConnection(
   connection: string,
   opts?: DatabaseOpts
 ) {
+  if (!dbName || !connection) {
+    throw new Error(
+      "Unable to create database without database name or connection"
+    )
+  }
   const db = new DatabaseImpl(dbName, opts, connection)
   return new DDInstrumentedDatabase(db)
 }

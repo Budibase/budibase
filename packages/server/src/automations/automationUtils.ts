@@ -100,7 +100,10 @@ export function getError(err: any) {
 }
 
 export function guardAttachment(attachmentObject: any) {
-  if (!("url" in attachmentObject) || !("filename" in attachmentObject)) {
+  if (
+    attachmentObject &&
+    (!("url" in attachmentObject) || !("filename" in attachmentObject))
+  ) {
     const providedKeys = Object.keys(attachmentObject).join(", ")
     throw new Error(
       `Attachments must have both "url" and "filename" keys. You have provided: ${providedKeys}`
@@ -135,7 +138,9 @@ export async function sendAutomationAttachmentsToStorage(
   }
 
   for (const [prop, attachments] of Object.entries(attachmentRows)) {
-    if (Array.isArray(attachments)) {
+    if (!attachments) {
+      continue
+    } else if (Array.isArray(attachments)) {
       if (attachments.length) {
         row[prop] = await Promise.all(
           attachments.map(attachment => generateAttachmentRow(attachment))

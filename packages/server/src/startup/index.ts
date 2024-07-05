@@ -8,6 +8,7 @@ import {
   tenancy,
   users,
   cache,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import { watch } from "../watch"
 import * as automations from "../automations"
@@ -132,8 +133,8 @@ export async function startup(
   // check and create admin user if required
   // this must be run after the api has been initialised due to
   // the app user sync
-  const bbAdminEmail = env.BB_ADMIN_USER_EMAIL,
-    bbAdminPassword = env.BB_ADMIN_USER_PASSWORD
+  const bbAdminEmail = coreEnv.BB_ADMIN_USER_EMAIL,
+    bbAdminPassword = coreEnv.BB_ADMIN_USER_PASSWORD
   if (
     env.SELF_HOSTED &&
     !env.MULTI_TENANCY &&

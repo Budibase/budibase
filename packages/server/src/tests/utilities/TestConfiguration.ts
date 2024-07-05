@@ -290,7 +290,7 @@ export default class TestConfiguration {
    * that can be called to reset the environment variables to their original values.
    */
   setCoreEnv(newEnvVars: Partial<typeof coreEnv>): () => void {
-    const oldEnv = cloneDeep(env)
+    const oldEnv = cloneDeep(coreEnv)
 
     let key: keyof typeof newEnvVars
     for (key in newEnvVars) {
