@@ -13,6 +13,7 @@ import {
   isDocument,
   RowResponse,
   RowValue,
+  SqlClient,
   SQLiteDefinition,
   SqlQueryBinding,
 } from "@budibase/types"
@@ -25,6 +26,7 @@ import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 import { checkSlashesInUrl } from "../../helpers"
 import env from "../../environment"
+import { sqlLog } from "../../sql/utils"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -322,6 +324,7 @@ export class DatabaseImpl implements Database {
   ): Promise<T[]> {
     const dbName = this.name
     const url = `/${dbName}/${SQLITE_DESIGN_DOC_ID}`
+    sqlLog(SqlClient.SQL_LITE, sql, parameters)
     return await this._sqlQuery<T[]>(url, "POST", {
       query: sql,
       args: parameters,
