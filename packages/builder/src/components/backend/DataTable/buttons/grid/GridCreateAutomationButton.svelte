@@ -7,9 +7,9 @@
     notifications,
   } from "@budibase/bbui"
   import { getContext } from "svelte"
-  import { automationStore, tables } from "stores/builder"
+  import { automationStore, tables, builderStore } from "stores/builder"
   import { TriggerStepID } from "constants/backend/automations"
-  import { goto } from "@roxi/routify"
+  import { goto, layout, isActive } from "@roxi/routify"
 
   const { datasource } = getContext("grid")
 
@@ -46,10 +46,14 @@
         automationName,
         triggerBlock
       )
-
+      builderStore.setPreviousTopNavPath(
+        "/builder/app/:application/data",
+        window.location.pathname
+      )
       $goto(`/builder/app/${response.appId}/automation/${response.id}`)
       notifications.success(`Automation created`)
-    } catch {
+    } catch (e) {
+      console.error("Error creating automation", e)
       notifications.error("Error creating automation")
     }
   }
