@@ -50,7 +50,7 @@ describe("jsRunner (using isolated-vm)", () => {
   describe("helpers", () => {
     runJsHelpersTests({
       funcWrap: (func: any) => config.doInContext(config.getAppId(), func),
-      testsToSkip: ["random", "uuid", "lorem"],
+      testsToSkip: ["random", "uuid"],
     })
 
     describe("uuid", () => {
@@ -69,14 +69,6 @@ describe("jsRunner (using isolated-vm)", () => {
         expect(result).toBeDefined()
         expect(result).toBeGreaterThanOrEqual(min)
         expect(result).toBeLessThanOrEqual(max)
-      })
-    })
-
-    describe("lorem", () => {
-      it("should be able to generate lorem", async () => {
-        const result = await processJS(`return helpers.lorem(10)`)
-        expect(result).toBeDefined()
-        expect(result).toBe("Lorem ipsu")
       })
     })
   })
