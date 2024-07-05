@@ -30,6 +30,7 @@ import { encodeJSBinding } from "@budibase/string-templates"
 import { dataFilters } from "@budibase/shared-core"
 import { Knex } from "knex"
 import { structures } from "@budibase/backend-core/tests"
+import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 
 describe.each([
   ["in-memory", undefined],
@@ -2166,6 +2167,24 @@ describe.each([
       })
     }
   )
+
+  isInternal &&
+    describe("sample data", () => {
+      beforeAll(async () => {
+        await config.api.application.addSampleData(config.appId!)
+        table = DEFAULT_EMPLOYEE_TABLE_SCHEMA
+      })
+
+      it("should be able to search sample data", async () => {
+        await expectSearch({
+          query: {},
+        }).toContain([
+          {
+            "First Name": "Mandy",
+          },
+        ])
+      })
+    })
 
   describe.each([
     { low: "2024-07-03T00:00:00.000Z", high: "9999-00-00T00:00:00.000Z" },
