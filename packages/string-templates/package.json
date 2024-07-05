@@ -34,6 +34,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",
     "@rollup/plugin-inject": "^5.0.5",
+    "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-typescript": "8.3.0",
     "doctrine": "^3.0.0",
     "jest": "29.7.0",

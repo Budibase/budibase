@@ -74,7 +74,7 @@
     "lodash": "4.17.21",
     "posthog-js": "^1.118.0",
     "remixicon": "2.5.0",
-    "sanitize-html": "^2.7.0",
+    "sanitize-html": "^2.13.0",
     "shortid": "2.2.15",
     "svelte-dnd-action": "^0.9.8",
     "svelte-loading-spinners": "^0.1.1",

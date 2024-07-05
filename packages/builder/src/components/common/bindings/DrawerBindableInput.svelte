@@ -23,6 +23,7 @@
   export let disableBindings = false
   export let forceModal = false
   export let context = null
+  export let autocomplete
 
   const dispatch = createEventDispatcher()
 
@@ -71,6 +72,7 @@
     on:blur={onBlur}
     {placeholder}
     {updateOnChange}
+    {autocomplete}
   />
   {#if !disabled && !disableBindings}
     <div
