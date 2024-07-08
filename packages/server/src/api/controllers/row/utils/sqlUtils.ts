@@ -22,6 +22,18 @@ export function isManyToMany(
   return !!(field as ManyToManyRelationshipFieldMetadata).through
 }
 
+function isCorrectRelationship(
+  relationship: RelationshipsJson,
+  row: Row
+): boolean {
+  const junctionTableId = relationship.through!
+  const possibleColumns = [
+    `${junctionTableId}.doc1.fieldName`,
+    `${junctionTableId}.doc2.fieldName`,
+  ]
+  return !!possibleColumns.find(col => row[col] === relationship.column)
+}
+
 /**
  * This iterates through the returned rows and works out what elements of the rows
  * actually match up to another row (based on primary keys) - this is pretty specific
@@ -64,7 +76,9 @@ export async function updateRelationshipColumns(
     if (!linked._id) {
       continue
     }
-    columns[relationship.column] = linked
+    if (opts?.sqs && isCorrectRelationship(relationship, row)) {
+      columns[relationship.column] = linked
+    }
   }
   for (let [column, related] of Object.entries(columns)) {
     if (!row._id) {
