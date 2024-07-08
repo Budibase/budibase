@@ -217,8 +217,7 @@ class InternalBuilder {
         if (!opts.relationship && !isRelationshipField) {
           const alias = getTableAlias(tableName)
           fn(alias ? `${alias}.${updatedKey}` : updatedKey, value)
-        }
-        if (opts.relationship && isRelationshipField) {
+        } else if (opts.relationship && isRelationshipField) {
           const [filterTableName, property] = updatedKey.split(".")
           const alias = getTableAlias(filterTableName)
           fn(alias ? `${alias}.${property}` : property, value)

@@ -116,6 +116,9 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
     return Array.isArray(parsed) ? parsed : [parsed]
   } catch (err) {
     // wasn't json - likely was handlebars for a many to many
+    if (Array.isArray(_id)) {
+      return _id
+    }
     return [_id]
   }
 }
