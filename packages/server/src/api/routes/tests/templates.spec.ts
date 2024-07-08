@@ -2,7 +2,6 @@ import * as setup from "./utilities"
 import path from "path"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
-import { SQS } from "aws-sdk"
 
 interface App {
   background: string
