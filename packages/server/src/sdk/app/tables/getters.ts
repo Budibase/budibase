@@ -1,4 +1,4 @@
-import { context, db } from "@budibase/backend-core"
+import { context, db, env } from "@budibase/backend-core"
 import { getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
@@ -15,7 +15,6 @@ import {
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
-import env from "../../../environment"
 
 export function processTable(table: Table): Table {
   if (!table) {

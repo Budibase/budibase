@@ -69,11 +69,11 @@ function oldLinkDocument(): Omit<LinkDocument, "tableId"> {
 type SQSEnvVar = "SQS_MIGRATION_ENABLE" | "SQS_SEARCH_ENABLE"
 
 async function sqsDisabled(envVar: SQSEnvVar, cb: () => Promise<void>) {
-  await config.withEnv({ [envVar]: "" }, cb)
+  await config.withCoreEnv({ [envVar]: "" }, cb)
 }
 
 async function sqsEnabled(envVar: SQSEnvVar, cb: () => Promise<void>) {
-  await config.withEnv({ [envVar]: "1" }, cb)
+  await config.withCoreEnv({ [envVar]: "1" }, cb)
 }
 
 describe.each(["SQS_MIGRATION_ENABLE", "SQS_SEARCH_ENABLE"] as SQSEnvVar[])(

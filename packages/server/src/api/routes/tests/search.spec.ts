@@ -55,7 +55,7 @@ describe.each([
 
   beforeAll(async () => {
     if (isSqs) {
-      envCleanup = config.setEnv({ SQS_SEARCH_ENABLE: "true" })
+      envCleanup = config.setCoreEnv({ SQS_SEARCH_ENABLE: "true" })
     }
     await config.init()
 

@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
+import { SQS } from "aws-sdk"
 
 function isTest() {
   return isJest()
@@ -118,6 +119,7 @@ const environment = {
   SQS_SEARCH_ENABLE: process.env.SQS_SEARCH_ENABLE,
   SQS_SEARCH_ENABLE_TENANTS:
     process.env.SQS_SEARCH_ENABLE_TENANTS?.split(",") || [],
+  SQS_MIGRATION_ENABLE: process.env.SQS_MIGRATION_ENABLE,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
