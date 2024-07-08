@@ -1,6 +1,8 @@
 import { getCouchInfo } from "./connections"
 import fetch from "node-fetch"
 import { checkSlashesInUrl } from "../../helpers"
+import * as context from "../../context"
+import env from "../../environment"
 
 export async function directCouchCall(
   path: string,
@@ -52,4 +54,12 @@ export async function directCouchQuery(
   } else {
     throw "Cannot connect to CouchDB instance"
   }
+}
+
+export function isSqsEnabledForTenant(): boolean {
+  const tenantId = context.getTenantId()
+  return (
+    env.SQS_SEARCH_ENABLE !== undefined &&
+    env.SQS_SEARCH_ENABLE_TENANTS.includes(tenantId)
+  )
 }

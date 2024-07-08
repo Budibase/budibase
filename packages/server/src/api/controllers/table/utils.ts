@@ -15,7 +15,7 @@ import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events, context } from "@budibase/backend-core"
+import { events, context, db } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   ContextUser,
@@ -324,7 +324,7 @@ class TableSaveFunctions {
       importRows: this.importRows,
       user: this.user,
     })
-    if (env.SQS_SEARCH_ENABLE) {
+    if (db.isSqsEnabledForTenant()) {
       await sdk.tables.sqs.addTable(table)
     }
     return table
@@ -498,16 +498,16 @@ export function setStaticSchemas(datasource: Datasource, table: Table) {
 }
 
 export async function internalTableCleanup(table: Table, rows?: Row[]) {
-  const db = context.getAppDB()
+  const appDb = context.getAppDB()
   const tableId = table._id!
   // remove table search index
   if (!env.isTest() || env.COUCH_DB_URL) {
-    const currentIndexes = await db.getIndexes()
+    const currentIndexes = await appDb.getIndexes()
     const existingIndex = currentIndexes.indexes.find(
       (existing: any) => existing.name === `search:${tableId}`
     )
     if (existingIndex) {
-      await db.deleteIndex(existingIndex)
+      await appDb.deleteIndex(existingIndex)
     }
   }
 
@@ -518,7 +518,7 @@ export async function internalTableCleanup(table: Table, rows?: Row[]) {
   if (rows) {
     await AttachmentCleanup.tableDelete(table, rows)
   }
-  if (env.SQS_SEARCH_ENABLE) {
+  if (db.isSqsEnabledForTenant()) {
     await sdk.tables.sqs.removeTable(table)
   }
 }
