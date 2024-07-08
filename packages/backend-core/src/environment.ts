@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
-import { SQS } from "aws-sdk"
 
 function isTest() {
   return isJest()
