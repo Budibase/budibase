@@ -356,41 +356,71 @@
 
   /**
    * Handler for row trigger automation updates.
-    @param {object} update - An automation block.inputs update object
-    @example
-    onRowTriggerUpdate({ 
-      "tableId" : "ta_bb_employee"
-    })
+   * @param {object} update - An automation block.inputs update object
+   * @param {string} [update.tableId] - The ID of the table
+   * @param {object} [update.filters] - Filter configuration for the row trigger
+   * @param {object} [update.filters-def] - Filter definitions for the row trigger
+   * @example
+   * // Example with tableId
+   * onRowTriggerUpdate({
+   *   "tableId" : "ta_bb_employee"
+   * })
+   * @example
+   * // Example with filters
+   * onRowTriggerUpdate({
+   *   filters: {
+   *     equal: { "1:Approved": "true" }
+   *   },
+   *   "filters-def": [{
+   *     id: "oH1T4S49n",
+   *     field: "1:Approved",
+   *     operator: "equal",
+   *     value: "true",
+   *     valueType: "Value",
+   *     type: "string"
+   *   }]
+   * })
    */
   const onRowTriggerUpdate = async update => {
-    if (
-      Object.hasOwn(update, "tableId") &&
-      $selectedAutomation.testData?.row?.tableId !== update.tableId
-    ) {
+    if (Object.hasOwn(update, "tableId") || Object.hasOwn(update, "filters")) {
       try {
-        const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
-          searchableSchema: true,
-        }).schema
+        let updatedAutomation
 
-        // Parse the block inputs as usual
-        const updatedAutomation =
-          await automationStore.actions.processBlockInputs(block, {
-            schema: reqSchema,
-            ...update,
-          })
+        if (
+          Object.hasOwn(update, "tableId") &&
+          $selectedAutomation.testData?.row?.tableId !== update.tableId
+        ) {
+          const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
+            searchableSchema: true,
+          }).schema
 
-        // Save the entire automation and reset the testData
-        await automationStore.actions.save({
-          ...updatedAutomation,
-          testData: {
-            // Reset Core fields
-            row: { tableId: update.tableId },
-            oldRow: { tableId: update.tableId },
-            meta: {},
-            id: "",
-            revision: "",
-          },
-        })
+          updatedAutomation = await automationStore.actions.processBlockInputs(
+            block,
+            {
+              schema: reqSchema,
+              ...update,
+            }
+          )
+
+          // Reset testData when tableId changes
+          updatedAutomation = {
+            ...updatedAutomation,
+            testData: {
+              row: { tableId: update.tableId },
+              meta: {},
+              id: "",
+              revision: "",
+            },
+          }
+        } else {
+          // For filters update, just process block inputs without resetting testData
+          updatedAutomation = await automationStore.actions.processBlockInputs(
+            block,
+            update
+          )
+        }
+
+        await automationStore.actions.save(updatedAutomation)
 
         return
       } catch (e) {
@@ -399,7 +429,6 @@
       }
     }
   }
-
   /**
    * Handler for App trigger automation updates.
    * Ensure updates to the field list are reflected in testData
@@ -925,7 +954,9 @@
                 </div>
               </div>
             {:else if value.customType === "filters"}
-              <ActionButton on:click={drawer.show}>Define filters</ActionButton>
+              <ActionButton fullWidth on:click={drawer.show}
+                >Define filters</ActionButton
+              >
               <Drawer bind:this={drawer} title="Filtering">
                 <Button cta slot="buttons" on:click={() => saveFilters(key)}>
                   Save

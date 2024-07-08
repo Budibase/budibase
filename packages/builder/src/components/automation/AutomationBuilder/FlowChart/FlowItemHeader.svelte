@@ -16,13 +16,12 @@
   export let enableNaming = true
   let validRegex = /^[A-Za-z0-9_\s]+$/
   let typing = false
-
   const dispatch = createEventDispatcher()
 
   $: stepNames = $selectedAutomation?.definition.stepNames
   $: automationName = stepNames?.[block.id] || block?.name || ""
   $: automationNameError = getAutomationNameError(automationName)
-  $: status = updateStatus(testResult, isTrigger)
+  $: status = updateStatus(testResult)
   $: isHeaderTrigger = isTrigger || block.type === "TRIGGER"
 
   $: {
@@ -43,20 +42,19 @@
     })
   }
 
-  function updateStatus(results, isTrigger) {
+  function updateStatus(results) {
     if (!results) {
       return {}
     }
     const lcStatus = results.outputs?.status?.toLowerCase()
     if (lcStatus === "stopped" || lcStatus === "stopped_error") {
       return { yellow: true, message: "Stopped" }
-    } else if (results.outputs?.success || isTrigger) {
+    } else if (results.outputs?.success) {
       return { positive: true, message: "Success" }
     } else {
       return { negative: true, message: "Error" }
     }
   }
-
   const getAutomationNameError = name => {
     if (stepNames) {
       for (const [key, value] of Object.entries(stepNames)) {
