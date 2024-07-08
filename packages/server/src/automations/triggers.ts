@@ -7,12 +7,13 @@ import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"
 import * as utils from "./utils"
 import env from "../environment"
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, logging, db as dbCore } from "@budibase/backend-core"
 import {
   Automation,
   Row,
   AutomationData,
   AutomationJob,
+  AutomationEventType,
   UpdatedRowEventEmitter,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
@@ -65,34 +66,41 @@ async function queueRelevantRowAutomations(
         automationTrigger?.inputs &&
         automationTrigger.inputs.tableId === event.row.tableId
       ) {
-        await automationQueue.add({ automation, event }, JOB_OPTS)
+        try {
+          await automationQueue.add({ automation, event }, JOB_OPTS)
+        } catch (e) {
+          logging.logAlert("Failed to queue automation", e)
+        }
       }
     }
   })
 }
 
-emitter.on("row:save", async function (event: UpdatedRowEventEmitter) {
+emitter.on(
+  AutomationEventType.ROW_SAVE,
+  async function (event: UpdatedRowEventEmitter) {
+    /* istanbul ignore next */
+    if (!event || !event.row || !event.row.tableId) {
+      return
+    }
+    await queueRelevantRowAutomations(event, AutomationEventType.ROW_SAVE)
+  }
+)
+
+emitter.on(AutomationEventType.ROW_UPDATE, async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
   }
-  await queueRelevantRowAutomations(event, "row:save")
+  await queueRelevantRowAutomations(event, AutomationEventType.ROW_UPDATE)
 })
 
-emitter.on("row:update", async function (event) {
+emitter.on(AutomationEventType.ROW_DELETE, async function (event) {
   /* istanbul ignore next */
   if (!event || !event.row || !event.row.tableId) {
     return
   }
-  await queueRelevantRowAutomations(event, "row:update")
-})
-
-emitter.on("row:delete", async function (event) {
-  /* istanbul ignore next */
-  if (!event || !event.row || !event.row.tableId) {
-    return
-  }
-  await queueRelevantRowAutomations(event, "row:delete")
+  await queueRelevantRowAutomations(event, AutomationEventType.ROW_DELETE)
 })
 
 export async function externalTrigger(
@@ -118,7 +126,6 @@ export async function externalTrigger(
     }
     params.fields = coercedFields
   }
-
   const data: AutomationData = { automation, event: params as any }
   if (getResponses) {
     data.event = {

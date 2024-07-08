@@ -18,7 +18,11 @@ import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../api/controllers/row/utils"
-import { mapToUserColumn, USER_COLUMN_PREFIX } from "../../tables/internal/sqs"
+import {
+  decodeNonAscii,
+  mapToUserColumn,
+  USER_COLUMN_PREFIX,
+} from "../../tables/internal/sqs"
 import sdk from "../../../index"
 import {
   context,
@@ -37,6 +41,7 @@ import {
   getTableIDList,
 } from "./filters"
 import { dataFilters } from "@budibase/shared-core"
+import { DEFAULT_TABLE_IDS } from "../../../../constants"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
@@ -150,7 +155,8 @@ function reverseUserColumnMapping(rows: Row[]) {
       if (index !== -1) {
         // cut out the prefix
         const newKey = key.slice(0, index) + key.slice(index + prefixLength)
-        finalRow[newKey] = row[key]
+        const decoded = decodeNonAscii(newKey)
+        finalRow[decoded] = row[key]
       } else {
         finalRow[key] = row[key]
       }
@@ -204,6 +210,18 @@ async function runSqlQuery(
     return reverseUserColumnMapping(response)
   }
   return response
+}
+
+function resyncDefinitionsRequired(status: number, message: string) {
+  // pre data_ prefix on column names, need to resync
+  return (
+    (status === 400 && message?.match(USER_COLUMN_PREFIX_REGEX)) ||
+    // default tables aren't included in definition
+    (status === 400 &&
+      DEFAULT_TABLE_IDS.find(tableId => message?.includes(tableId))) ||
+    // no design document found, needs a full sync
+    (status === 404 && message?.includes(SQLITE_DESIGN_DOC_ID))
+  )
 }
 
 export async function search(
@@ -333,10 +351,7 @@ export async function search(
     return response
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
-    const syncAndRepeat =
-      (err.status === 400 && msg?.match(USER_COLUMN_PREFIX_REGEX)) ||
-      (err.status === 404 && msg?.includes(SQLITE_DESIGN_DOC_ID))
-    if (syncAndRepeat) {
+    if (resyncDefinitionsRequired(err.status, msg)) {
       await sdk.tables.sqs.syncDefinition()
       return search(options, table)
     }
