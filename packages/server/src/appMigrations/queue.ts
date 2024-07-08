@@ -11,26 +11,26 @@ export type AppMigrationJob = {
   appId: string
 }
 
-let appMigrationQueue: queue.Queue<AppMigrationJob> | undefined
+// always create app migration queue - so that events can be pushed and read from it
+// across the different api and automation services
+const appMigrationQueue = queue.createQueue<AppMigrationJob>(
+  queue.JobQueue.APP_MIGRATION,
+  {
+    jobOptions: {
+      attempts: MAX_ATTEMPTS,
+      removeOnComplete: true,
+      removeOnFail: true,
+    },
+    maxStalledCount: MAX_ATTEMPTS,
+    removeStalledCb: async (job: Job) => {
+      logging.logAlert(
+        `App migration failed, queue job ID: ${job.id} - reason: ${job.failedReason}`
+      )
+    },
+  }
+)
 
 export function init() {
-  appMigrationQueue = queue.createQueue<AppMigrationJob>(
-    queue.JobQueue.APP_MIGRATION,
-    {
-      jobOptions: {
-        attempts: MAX_ATTEMPTS,
-        removeOnComplete: true,
-        removeOnFail: true,
-      },
-      maxStalledCount: MAX_ATTEMPTS,
-      removeStalledCb: async (job: Job) => {
-        logging.logAlert(
-          `App migration failed, queue job ID: ${job.id} - reason: ${job.failedReason}`
-        )
-      },
-    }
-  )
-
   return appMigrationQueue.process(MIGRATION_CONCURRENCY, processMessage)
 }
 

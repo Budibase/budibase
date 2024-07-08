@@ -200,7 +200,27 @@ const environment = {
   },
   ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
   DISABLE_SCIM_CALLS: process.env.DISABLE_SCIM_CALLS,
+  BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
+  BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 }
+
+type EnvironmentKey = keyof typeof environment
+export const SECRETS: EnvironmentKey[] = [
+  "API_ENCRYPTION_KEY",
+  "BB_ADMIN_USER_PASSWORD",
+  "COUCH_DB_PASSWORD",
+  "COUCH_DB_SQL_URL",
+  "COUCH_DB_URL",
+  "GOOGLE_CLIENT_SECRET",
+  "INTERNAL_API_KEY_FALLBACK",
+  "INTERNAL_API_KEY",
+  "JWT_SECRET",
+  "MINIO_ACCESS_KEY",
+  "MINIO_SECRET_KEY",
+  "OPENAI_API_KEY",
+  "REDIS_PASSWORD",
+]
 
 // clean up any environment variable edge cases
 for (let [key, value] of Object.entries(environment)) {

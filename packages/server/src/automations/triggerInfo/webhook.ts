@@ -4,11 +4,12 @@ import {
   AutomationStepType,
   AutomationTriggerSchema,
   AutomationTriggerStepId,
+  AutomationEventType,
 } from "@budibase/types"
 
 export const definition: AutomationTriggerSchema = {
   name: "Webhook",
-  event: "web:trigger",
+  event: AutomationEventType.WEBHOOK_TRIGGER,
   icon: "Send",
   tagline: "Webhook endpoint is hit",
   description: "Trigger an automation when a HTTP POST webhook is hit",
