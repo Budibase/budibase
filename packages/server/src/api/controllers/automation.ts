@@ -335,6 +335,7 @@ export async function test(ctx: UserCtx) {
     },
     { getResponses: true }
   )
+  console.log(response)
   // save a test history run
   await updateTestHistory(ctx.appId, automation, {
     ...ctx.request.body,

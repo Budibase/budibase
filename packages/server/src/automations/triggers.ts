@@ -15,14 +15,17 @@ import {
   AutomationJob,
   AutomationEventType,
   UpdatedRowEventEmitter,
+  SearchFilters,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
+import { dataFilters } from "@budibase/shared-core"
 
 export const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
   removeOnComplete: true,
   removeOnFail: true,
 }
+import * as automationUtils from "../automations/automationUtils"
 
 async function getAllAutomations() {
   const db = context.getAppDB()
@@ -33,7 +36,7 @@ async function getAllAutomations() {
 }
 
 async function queueRelevantRowAutomations(
-  event: { appId: string; row: Row },
+  event: { appId: string; row: Row; oldRow: Row },
   eventType: string
 ) {
   if (event.appId == null) {
@@ -62,9 +65,20 @@ async function queueRelevantRowAutomations(
       ) {
         continue
       }
+      const tableId = automation.definition.trigger?.inputs?.tableId
+      const filters = automation.definition.trigger?.inputs?.filters
+
+      const shouldTrigger = await checkShouldTriggerAutomation(
+        automation,
+        filters,
+        tableId,
+        { row: event.row, oldRow: event.oldRow }
+      )
+
       if (
         automationTrigger?.inputs &&
-        automationTrigger.inputs.tableId === event.row.tableId
+        automationTrigger.inputs.tableId === event.row.tableId &&
+        shouldTrigger
       ) {
         await automationQueue.add({ automation, event }, JOB_OPTS)
       }
@@ -99,11 +113,19 @@ emitter.on(AutomationEventType.ROW_DELETE, async function (event) {
   await queueRelevantRowAutomations(event, AutomationEventType.ROW_DELETE)
 })
 
+function rowPassesFilters(row: Row, filters: SearchFilters) {
+  const filteredRows = dataFilters.runQuery([row], filters)
+  return filteredRows.length > 0
+}
+
 export async function externalTrigger(
   automation: Automation,
   params: { fields: Record<string, any>; timeout?: number },
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
+  const tableId = automation.definition.trigger?.inputs?.tableId
+  const filters = automation.definition.trigger?.inputs?.filters
+
   if (automation.disabled) {
     throw new Error("Automation is disabled")
   }
@@ -123,6 +145,27 @@ export async function externalTrigger(
     params.fields = coercedFields
   }
   const data: AutomationData = { automation, event: params as any }
+
+  const shouldTrigger = await checkShouldTriggerAutomation(
+    automation,
+    filters,
+    tableId,
+    {
+      row: data.automation.testData.row,
+      oldRow: data.automation.testData.oldRow,
+    }
+  )
+
+  if (!shouldTrigger) {
+    return {
+      outputs: {
+        success: false,
+        status: "stopped",
+      },
+      message: "Automation did not run due to filters not matching",
+    }
+  }
+
   if (getResponses) {
     data.event = {
       ...data.event,
@@ -166,4 +209,41 @@ export async function rebootTrigger() {
       await Promise.all(rebootEvents)
     })
   }
+}
+
+async function checkShouldTriggerAutomation(
+  automation: Automation,
+  filters: SearchFilters,
+  tableId: string,
+  comparisonRows: { row: Row; oldRow: Row }
+): Promise<boolean> {
+  if (
+    filters &&
+    (automation.definition.trigger.stepId === definitions.ROW_UPDATED.stepId ||
+      automation.definition.trigger.stepId === definitions.ROW_SAVED.stepId)
+  ) {
+    const newRow = await automationUtils.cleanUpRow(tableId, comparisonRows.row)
+    const newRowPasses = rowPassesFilters(newRow, filters)
+
+    if (
+      automation.definition.trigger.stepId === definitions.ROW_UPDATED.stepId
+    ) {
+      const oldRow = await automationUtils.cleanUpRow(
+        tableId,
+        comparisonRows.oldRow
+      )
+      const oldRowPasses = rowPassesFilters(oldRow, filters)
+
+      // For ROW_UPDATED, only trigger if old row didn't pass but new row does
+      return !oldRowPasses && newRowPasses
+    } else if (
+      automation.definition.trigger.stepId === definitions.ROW_SAVED.stepId
+    ) {
+      // For ROW_SAVED, trigger if new row passes the filter
+      return newRowPasses
+    }
+  }
+
+  // If there are no filters we should just run no matter whgat
+  return true
 }

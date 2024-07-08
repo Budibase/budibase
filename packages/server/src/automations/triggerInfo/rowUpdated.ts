@@ -23,6 +23,11 @@ export const definition: AutomationTriggerSchema = {
           customType: AutomationCustomIOType.TABLE,
           title: "Table",
         },
+        filters: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.FILTERS,
+          title: "Filtering",
+        },
       },
       required: ["tableId"],
     },

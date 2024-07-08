@@ -128,6 +128,15 @@ export interface Automation extends Document {
   internal?: boolean
   type?: string
   disabled?: boolean
+  testData: {
+    row: Row
+    meta: {
+      [key: string]: unknown
+    }
+    id: string
+    revision: string
+    oldRow: Row
+  }
 }
 
 interface BaseIOStructure {
