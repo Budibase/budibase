@@ -245,10 +245,10 @@ export default class TestConfiguration {
     }
   }
 
-  async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
+  async withEnv<T>(newEnvVars: Partial<typeof env>, f: () => Promise<T>) {
     let cleanup = this.setEnv(newEnvVars)
     try {
-      await f()
+      return await f()
     } finally {
       cleanup()
     }
@@ -273,13 +273,13 @@ export default class TestConfiguration {
     }
   }
 
-  async withCoreEnv(
+  async withCoreEnv<T>(
     newEnvVars: Partial<typeof coreEnv>,
-    f: () => Promise<void>
+    f: () => Promise<T>
   ) {
     let cleanup = this.setCoreEnv(newEnvVars)
     try {
-      await f()
+      return await f()
     } finally {
       cleanup()
     }
