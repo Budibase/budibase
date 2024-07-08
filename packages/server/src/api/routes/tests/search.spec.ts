@@ -54,10 +54,13 @@ describe.each([
   let rows: Row[]
 
   beforeAll(async () => {
+    await config.withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
     if (isSqs) {
-      envCleanup = config.setCoreEnv({ SQS_SEARCH_ENABLE: "true" })
+      envCleanup = config.setCoreEnv({
+        SQS_SEARCH_ENABLE: "true",
+        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+      })
     }
-    await config.init()
 
     if (config.app?.appId) {
       config.app = await config.api.application.update(config.app?.appId, {
