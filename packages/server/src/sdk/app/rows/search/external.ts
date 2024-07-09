@@ -16,9 +16,9 @@ import {
   breakExternalTableId,
   breakRowIdField,
 } from "../../../../integrations/utils"
-import { utils } from "@budibase/shared-core"
+import { utils, CONSTANT_EXTERNAL_ROW_COLS } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "./types"
-import { db, HTTPError } from "@budibase/backend-core"
+import { HTTPError } from "@budibase/backend-core"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
@@ -99,7 +99,7 @@ export async function search(
     }
 
     if (options.fields) {
-      const fields = [...options.fields, ...db.CONSTANT_EXTERNAL_ROW_COLS]
+      const fields = [...options.fields, ...CONSTANT_EXTERNAL_ROW_COLS]
       rows = rows.map((r: any) => pick(r, fields))
     }
 
