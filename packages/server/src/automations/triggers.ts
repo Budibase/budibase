@@ -16,6 +16,8 @@ import {
   AutomationEventType,
   UpdatedRowEventEmitter,
   SearchFilters,
+  AutomationStoppedReason,
+  AutomationStatus,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
 import { dataFilters } from "@budibase/shared-core"
@@ -68,7 +70,7 @@ async function queueRelevantRowAutomations(
       const tableId = automation.definition.trigger?.inputs?.tableId
       const filters = automation.definition.trigger?.inputs?.filters
 
-      const shouldTrigger = await checkShouldTriggerAutomation(
+      const shouldTrigger = await checkTriggerFilters(
         automation,
         filters,
         tableId,
@@ -127,6 +129,7 @@ export async function externalTrigger(
   params: { fields: Record<string, any>; timeout?: number },
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
+  let shouldTrigger = true
   const tableId = automation.definition.trigger?.inputs?.tableId
   const filters = automation.definition.trigger?.inputs?.filters
 
@@ -150,23 +153,27 @@ export async function externalTrigger(
   }
   const data: AutomationData = { automation, event: params as any }
 
-  const shouldTrigger = await checkShouldTriggerAutomation(
-    automation,
-    filters,
-    tableId,
-    {
-      row: data.automation?.testData?.row,
-      oldRow: data.automation?.testData?.oldRow,
-    }
-  )
+  // shouldTrigger is defaulted to true for safety, the only instances we could set to false
+  // are ones where filters exist in a create or update row trigger so just gate that
+  if (
+    filters &&
+    [definitions.ROW_UPDATED.stepId, definitions.ROW_SAVED.stepId].includes(
+      automation.definition.trigger.stepId
+    )
+  ) {
+    shouldTrigger = await checkTriggerFilters(automation, filters, tableId, {
+      row: data.automation?.testData?.row ?? {},
+      oldRow: data.automation?.testData?.oldRow ?? {},
+    })
+  }
 
   if (!shouldTrigger) {
     return {
       outputs: {
         success: false,
-        status: "stopped",
+        status: AutomationStatus.STOPPED,
       },
-      message: "Automation did not run due to filters not matching",
+      message: AutomationStoppedReason.TRIGGER_FILTER_NOT_MET,
     }
   }
 
@@ -215,39 +222,30 @@ export async function rebootTrigger() {
   }
 }
 
-async function checkShouldTriggerAutomation(
+async function checkTriggerFilters(
   automation: Automation,
   filters: SearchFilters,
   tableId: string,
   comparisonRows: { row: Row; oldRow: Row }
 ): Promise<boolean> {
-  if (
-    filters &&
-    (automation.definition.trigger.stepId === definitions.ROW_UPDATED.stepId ||
-      automation.definition.trigger.stepId === definitions.ROW_SAVED.stepId)
+  const newRow = await automationUtils.cleanUpRow(tableId, comparisonRows.row)
+  const newRowPasses = rowPassesFilters(newRow, filters)
+
+  if (automation.definition.trigger.stepId === definitions.ROW_UPDATED.stepId) {
+    const oldRow = await automationUtils.cleanUpRow(
+      tableId,
+      comparisonRows.oldRow
+    )
+    const oldRowPasses = rowPassesFilters(oldRow, filters)
+
+    // For ROW_UPDATED, only trigger if old row didn't pass but new row does
+    return !oldRowPasses && newRowPasses
+  } else if (
+    automation.definition.trigger.stepId === definitions.ROW_SAVED.stepId
   ) {
-    const newRow = await automationUtils.cleanUpRow(tableId, comparisonRows.row)
-    const newRowPasses = rowPassesFilters(newRow, filters)
-
-    if (
-      automation.definition.trigger.stepId === definitions.ROW_UPDATED.stepId
-    ) {
-      const oldRow = await automationUtils.cleanUpRow(
-        tableId,
-        comparisonRows.oldRow
-      )
-      const oldRowPasses = rowPassesFilters(oldRow, filters)
-
-      // For ROW_UPDATED, only trigger if old row didn't pass but new row does
-      return !oldRowPasses && newRowPasses
-    } else if (
-      automation.definition.trigger.stepId === definitions.ROW_SAVED.stepId
-    ) {
-      // For ROW_SAVED, trigger if new row passes the filter
-      return newRowPasses
-    }
+    // For ROW_SAVED, trigger if new row passes the filter
+    return newRowPasses
   }
 
-  // If there are no filters we should just run no matter whgat
   return true
 }

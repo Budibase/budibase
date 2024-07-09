@@ -210,6 +210,10 @@ export enum AutomationStatus {
   STOPPED_ERROR = "stopped_error",
 }
 
+export enum AutomationStoppedReason {
+  TRIGGER_FILTER_NOT_MET = "Automation did not run. Please check trigger filters",
+}
+
 export interface AutomationResults {
   automationId?: string
   status?: AutomationStatus
