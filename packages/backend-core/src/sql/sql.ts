@@ -172,6 +172,8 @@ function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
   return query
 }
 
+const COMPLEX_ID_OPERATOR = "_complexIdOperator"
+
 class InternalBuilder {
   private readonly client: string
 
@@ -214,7 +216,14 @@ class InternalBuilder {
       for (let [key, value] of Object.entries(structure)) {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
-        if (!opts.relationship && !isRelationshipField) {
+
+        if (updatedKey === COMPLEX_ID_OPERATOR) {
+          const alias = getTableAlias(tableName)
+          fn(
+            value.id.map((x: string) => (alias ? `${alias}.${x}` : x)),
+            value.values
+          )
+        } else if (!opts.relationship && !isRelationshipField) {
           const alias = getTableAlias(tableName)
           fn(alias ? `${alias}.${updatedKey}` : updatedKey, value)
         } else if (opts.relationship && isRelationshipField) {
@@ -745,6 +754,9 @@ class InternalBuilder {
 
 class SqlQueryBuilder extends SqlTableQueryBuilder {
   private readonly limit: number
+
+  public static COMPLEX_ID_OPERATOR = COMPLEX_ID_OPERATOR
+
   // pass through client to get flavour of SQL
   constructor(client: string, limit: number = BASE_LIMIT) {
     super(client)
