@@ -2086,6 +2086,58 @@ describe.each([
     })
 
   isInternal &&
+    describe("relations to same table", () => {
+      let relatedTable: Table, relatedRows: Row[]
+
+      beforeAll(async () => {
+        relatedTable = await createTable(
+          {
+            name: { name: "name", type: FieldType.STRING },
+          },
+          "productCategory"
+        )
+        table = await createTable({
+          name: { name: "name", type: FieldType.STRING },
+          related1: {
+            type: FieldType.LINK,
+            name: "related1",
+            fieldName: "main1",
+            tableId: relatedTable._id!,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+          },
+          related2: {
+            type: FieldType.LINK,
+            name: "related2",
+            fieldName: "main2",
+            tableId: relatedTable._id!,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+          },
+        })
+        relatedRows = await Promise.all([
+          config.api.row.save(relatedTable._id!, { name: "foo" }),
+          config.api.row.save(relatedTable._id!, { name: "bar" }),
+        ])
+        await config.api.row.save(table._id!, {
+          name: "test",
+          related1: [relatedRows[0]._id!],
+          related2: [relatedRows[1]._id!],
+        })
+      })
+
+      it("should be able to relate to same table", async () => {
+        await expectSearch({
+          query: {},
+        }).toContainExactly([
+          {
+            name: "test",
+            related1: [{ _id: relatedRows[0]._id }],
+            related2: [{ _id: relatedRows[1]._id }],
+          },
+        ])
+      })
+    })
+
+  isInternal &&
     describe("no column error backwards compat", () => {
       beforeAll(async () => {
         table = await createTable({
