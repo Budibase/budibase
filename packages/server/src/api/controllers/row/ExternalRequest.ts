@@ -190,8 +190,8 @@ export class ExternalRequest<T extends Operation> {
     if (filters) {
       // need to map over the filters and make sure the _id field isn't present
       let prefix = 1
-      for (let operator of Object.values(filters)) {
-        for (let field of Object.keys(operator || {})) {
+      for (const operator of Object.values(filters)) {
+        for (const field of Object.keys(operator || {})) {
           if (dbCore.removeKeyNumbering(field) === "_id") {
             if (primary) {
               const parts = breakRowIdField(operator[field])

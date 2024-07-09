@@ -21,51 +21,48 @@ export enum InternalSearchFilterOperator {
   COMPLEX_ID_OPERATOR = "_complexIdOperator",
 }
 
+type BasicFilter = Record<string, string> & {
+  [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: never
+}
+
+type ArrayFilter = Record<string, string[]> & {
+  [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: {
+    id: string[]
+    values: string[]
+  }
+}
+
+type RangeFilter = Record<
+  string,
+  | {
+      high: number | string
+      low: number | string
+    }
+  | { high: number | string }
+  | { low: number | string }
+> & {
+  [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: never
+}
+
+export type AnySearchFilter = BasicFilter | ArrayFilter | RangeFilter
+
 export interface SearchFilters {
   allOr?: boolean
   // TODO: this is just around for now - we need a better way to do or/and
   // allows just fuzzy to be or - all the fuzzy/like parameters
   fuzzyOr?: boolean
   onEmptyFilter?: EmptyFilterOption
-  [SearchFilterOperator.STRING]?: {
-    [key: string]: string
-  }
-  [SearchFilterOperator.FUZZY]?: {
-    [key: string]: string
-  }
-  [SearchFilterOperator.RANGE]?: {
-    [key: string]:
-      | {
-          high: number | string
-          low: number | string
-        }
-      | { high: number | string }
-      | { low: number | string }
-  }
-  [SearchFilterOperator.EQUAL]?: {
-    [key: string]: any
-  }
-  [SearchFilterOperator.NOT_EQUAL]?: {
-    [key: string]: any
-  }
-  [SearchFilterOperator.EMPTY]?: {
-    [key: string]: any
-  }
-  [SearchFilterOperator.NOT_EMPTY]?: {
-    [key: string]: any
-  }
-  [SearchFilterOperator.ONE_OF]?: {
-    [key: string]: any[]
-  }
-  [SearchFilterOperator.CONTAINS]?: {
-    [key: string]: any[]
-  }
-  [SearchFilterOperator.NOT_CONTAINS]?: {
-    [key: string]: any[]
-  }
-  [SearchFilterOperator.CONTAINS_ANY]?: {
-    [key: string]: any[]
-  }
+  [SearchFilterOperator.STRING]?: BasicFilter
+  [SearchFilterOperator.FUZZY]?: BasicFilter
+  [SearchFilterOperator.RANGE]?: RangeFilter
+  [SearchFilterOperator.EQUAL]?: BasicFilter
+  [SearchFilterOperator.NOT_EQUAL]?: BasicFilter
+  [SearchFilterOperator.EMPTY]?: BasicFilter
+  [SearchFilterOperator.NOT_EMPTY]?: BasicFilter
+  [SearchFilterOperator.ONE_OF]?: ArrayFilter
+  [SearchFilterOperator.CONTAINS]?: ArrayFilter
+  [SearchFilterOperator.NOT_CONTAINS]?: ArrayFilter
+  [SearchFilterOperator.CONTAINS_ANY]?: ArrayFilter
   // specific to SQS/SQLite search on internal tables this can be used
   // to make sure the documents returned are always filtered down to a
   // specific document type (such as just rows)
