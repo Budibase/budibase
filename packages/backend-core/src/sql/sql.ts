@@ -11,6 +11,7 @@ import {
 import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
+  AnySearchFilter,
   BBReferenceFieldMetadata,
   FieldSchema,
   FieldType,
@@ -41,7 +42,7 @@ const envLimit = environment.SQL_MAX_ROWS
   : null
 const BASE_LIMIT = envLimit || 5000
 
-function likeKey(client: string, key: string): string {
+function likeKey(client: string | string[], key: string): string {
   let start: string, end: string
   switch (client) {
     case SqlClient.MY_SQL:
@@ -207,18 +208,27 @@ class InternalBuilder {
       return alias || name
     }
     function iterate(
-      structure: { [key: string]: any },
-      fn: (key: string, value: any) => void
+      structure: AnySearchFilter,
+      fn: (key: string, value: any) => void,
+      complexKeyFn?: (key: string[], value: any) => void
     ) {
-      for (let [key, value] of Object.entries(structure)) {
+      for (const key in structure) {
+        const value = structure[key]
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
 
-        if (updatedKey === InternalSearchFilterOperator.COMPLEX_ID_OPERATOR) {
+        let castedTypeValue
+        if (
+          key === InternalSearchFilterOperator.COMPLEX_ID_OPERATOR &&
+          (castedTypeValue = structure[key]) &&
+          complexKeyFn
+        ) {
           const alias = getTableAlias(tableName)
-          fn(
-            value.id.map((x: string) => (alias ? `${alias}.${x}` : x)),
-            value.values
+          complexKeyFn(
+            castedTypeValue.id.map((x: string) =>
+              alias ? `${alias}.${x}` : x
+            ),
+            castedTypeValue.values
           )
         } else if (!opts.relationship && !isRelationshipField) {
           const alias = getTableAlias(tableName)
@@ -246,7 +256,7 @@ class InternalBuilder {
       }
     }
 
-    const contains = (mode: object, any: boolean = false) => {
+    const contains = (mode: AnySearchFilter, any: boolean = false) => {
       const rawFnc = allOr ? "orWhereRaw" : "whereRaw"
       const not = mode === filters?.notContains ? "NOT " : ""
       function stringifyArray(value: Array<any>, quoteStyle = '"'): string {
@@ -258,7 +268,7 @@ class InternalBuilder {
         return `[${value.join(",")}]`
       }
       if (this.client === SqlClient.POSTGRES) {
-        iterate(mode, (key: string, value: Array<any>) => {
+        iterate(mode, (key, value) => {
           const wrap = any ? "" : "'"
           const op = any ? "\\?| array" : "@>"
           const fieldNames = key.split(/\./g)
@@ -273,7 +283,7 @@ class InternalBuilder {
         })
       } else if (this.client === SqlClient.MY_SQL) {
         const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
-        iterate(mode, (key: string, value: Array<any>) => {
+        iterate(mode, (key, value) => {
           query = query[rawFnc](
             `${not}COALESCE(${jsonFnc}(${key}, '${stringifyArray(
               value
@@ -282,7 +292,7 @@ class InternalBuilder {
         })
       } else {
         const andOr = mode === filters?.containsAny ? " OR " : " AND "
-        iterate(mode, (key: string, value: Array<any>) => {
+        iterate(mode, (key, value) => {
           let statement = ""
           for (let i in value) {
             if (typeof value[i] === "string") {
@@ -306,10 +316,16 @@ class InternalBuilder {
     }
 
     if (filters.oneOf) {
-      iterate(filters.oneOf, (key, array) => {
-        const fnc = allOr ? "orWhereIn" : "whereIn"
-        query = query[fnc](key, Array.isArray(array) ? array : [array])
-      })
+      const fnc = allOr ? "orWhereIn" : "whereIn"
+      iterate(
+        filters.oneOf,
+        (key: string, array) => {
+          query = query[fnc](key, Array.isArray(array) ? array : [array])
+        },
+        (key: string[], array) => {
+          query = query[fnc](key, Array.isArray(array) ? array : [array])
+        }
+      )
     }
     if (filters.string) {
       iterate(filters.string, (key, value) => {
