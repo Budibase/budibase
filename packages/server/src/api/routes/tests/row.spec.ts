@@ -1428,22 +1428,6 @@ describe.each([
       expect(row._id).toEqual(existing._id)
     })
 
-    it("should return an error on composite keys", async () => {
-      const existing = await config.api.row.save(table._id!, {})
-      await config.api.row.exportRows(
-        table._id!,
-        {
-          rows: [`['${existing._id!}']`, "['d001', '10111']"],
-        },
-        {
-          status: 400,
-          body: {
-            message: "Export data does not support composite keys.",
-          },
-        }
-      )
-    })
-
     it("should return an error if no table is found", async () => {
       const existing = await config.api.row.save(table._id!, {})
       await config.api.row.exportRows(
@@ -1452,6 +1436,46 @@ describe.each([
         { status: 404 }
       )
     })
+
+    // MSSQL needs a setting called IDENTITY_INSERT to be set to ON to allow writing
+    // to identity columns. This is not something Budibase does currently.
+    providerType !== DatabaseName.SQL_SERVER &&
+      it("should handle filtering by composite primary keys", async () => {
+        const tableRequest = saveTableRequest({
+          primary: ["number", "string"],
+          schema: {
+            string: {
+              type: FieldType.STRING,
+              name: "string",
+            },
+            number: {
+              type: FieldType.NUMBER,
+              name: "number",
+            },
+          },
+        })
+        delete tableRequest.schema.id
+
+        const table = await config.api.table.save(tableRequest)
+
+        const rows = await Promise.all(
+          generator
+            .unique(
+              () => ({
+                string: generator.word({ length: 30 }),
+                number: generator.integer({ min: 0, max: 10000 }),
+              }),
+              10
+            )
+            .map(d => config.api.row.save(table._id!, d))
+        )
+
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: _.sampleSize(rows, 3).map(r => r._id!),
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(3)
+      })
   })
 
   let o2mTable: Table
