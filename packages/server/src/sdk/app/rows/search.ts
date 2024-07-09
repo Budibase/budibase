@@ -2,7 +2,6 @@ import {
   EmptyFilterOption,
   Row,
   RowSearchParams,
-  SearchFilterOperator,
   SearchFilters,
   SearchResponse,
   SortOrder,
