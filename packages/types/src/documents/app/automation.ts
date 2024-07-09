@@ -128,7 +128,7 @@ export interface Automation extends Document {
   internal?: boolean
   type?: string
   disabled?: boolean
-  testData: {
+  testData?: {
     row: Row
     meta: {
       [key: string]: unknown
