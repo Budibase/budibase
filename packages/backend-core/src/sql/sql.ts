@@ -15,6 +15,7 @@ import {
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  InternalSearchFilterOperator,
   JsonFieldMetadata,
   JsonTypes,
   Operation,
@@ -170,8 +171,6 @@ function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
   return query
 }
 
-const COMPLEX_ID_OPERATOR = "_complexIdOperator"
-
 class InternalBuilder {
   private readonly client: string
 
@@ -215,7 +214,7 @@ class InternalBuilder {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
 
-        if (updatedKey === COMPLEX_ID_OPERATOR) {
+        if (updatedKey === InternalSearchFilterOperator.COMPLEX_ID_OPERATOR) {
           const alias = getTableAlias(tableName)
           fn(
             value.id.map((x: string) => (alias ? `${alias}.${x}` : x)),
@@ -752,8 +751,6 @@ class InternalBuilder {
 
 class SqlQueryBuilder extends SqlTableQueryBuilder {
   private readonly limit: number
-
-  public static COMPLEX_ID_OPERATOR = COMPLEX_ID_OPERATOR
 
   // pass through client to get flavour of SQL
   constructor(client: string, limit: number = BASE_LIMIT) {

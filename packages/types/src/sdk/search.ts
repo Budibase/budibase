@@ -17,6 +17,10 @@ export enum SearchFilterOperator {
   CONTAINS_ANY = "containsAny",
 }
 
+export enum InternalSearchFilterOperator {
+  COMPLEX_ID_OPERATOR = "_complexIdOperator",
+}
+
 export interface SearchFilters {
   allOr?: boolean
   // TODO: this is just around for now - we need a better way to do or/and
