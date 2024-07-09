@@ -205,7 +205,7 @@ export class ExternalRequest<T extends Operation> {
               if (primary.length > 1) {
                 operator[sql.Sql.COMPLEX_ID_OPERATOR] = {
                   id: primary,
-                  values: parts,
+                  values: parts[0],
                 }
               } else {
                 for (let field of primary) {
