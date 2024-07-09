@@ -59,6 +59,13 @@ function buildInternalFieldList(
   opts?: { relationships?: RelationshipsJson[] }
 ) {
   let fieldList: string[] = []
+  const addJunctionFields = (relatedTable: Table, fields: string[]) => {
+    fields.forEach(field => {
+      fieldList.push(
+        `${generateJunctionTableID(table._id!, relatedTable._id!)}.${field}`
+      )
+    })
+  }
   fieldList = fieldList.concat(
     CONSTANT_INTERNAL_ROW_COLS.map(col => `${table._id}.${col}`)
   )
@@ -72,18 +79,7 @@ function buildInternalFieldList(
       const relatedTable = tables.find(table => table._id === linkCol.tableId)!
       // no relationships provided, don't go more than a layer deep
       fieldList = fieldList.concat(buildInternalFieldList(relatedTable, tables))
-      fieldList.push(
-        `${generateJunctionTableID(
-          table._id!,
-          relatedTable._id!
-        )}.doc1.fieldName`
-      )
-      fieldList.push(
-        `${generateJunctionTableID(
-          table._id!,
-          relatedTable._id!
-        )}.doc2.fieldName`
-      )
+      addJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
     } else {
       fieldList.push(`${table._id}.${mapToUserColumn(col.name)}`)
     }
