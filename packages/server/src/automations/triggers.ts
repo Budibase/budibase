@@ -151,8 +151,8 @@ export async function externalTrigger(
     filters,
     tableId,
     {
-      row: data.automation.testData.row,
-      oldRow: data.automation.testData.oldRow,
+      row: data.automation?.testData?.row,
+      oldRow: data.automation?.testData?.oldRow,
     }
   )
 
