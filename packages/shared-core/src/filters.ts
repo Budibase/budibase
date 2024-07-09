@@ -327,6 +327,35 @@ export const buildQuery = (filter: SearchFilter[]) => {
   return query
 }
 
+// The frontend can send single values for array fields sometimes, so to handle
+// this we convert them to arrays at the controller level so that nothing below
+// this has to worry about the non-array values.
+export function fixupFilterArrays(filters: SearchFilters) {
+  const arrayFields = [
+    SearchFilterOperator.ONE_OF,
+    SearchFilterOperator.CONTAINS,
+    SearchFilterOperator.NOT_CONTAINS,
+    SearchFilterOperator.CONTAINS_ANY,
+  ]
+  for (const searchField of arrayFields) {
+    const field = filters[searchField]
+    if (field == null) {
+      continue
+    }
+
+    for (const key of Object.keys(field)) {
+      if (!Array.isArray(field[key])) {
+        if (typeof field[key] !== "string") {
+          field[key] = [field[key]]
+        } else {
+          field[key] = field[key].split(",").map(x => x.trim())
+        }
+      }
+    }
+  }
+  return filters
+}
+
 export const search = (
   docs: Record<string, any>[],
   query: RowSearchParams
@@ -360,6 +389,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   }
 
   query = cleanupQuery(query)
+  query = fixupFilterArrays(query)
 
   if (
     !hasFilters(query) &&
@@ -528,9 +558,10 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     (docValue: any, testValue: any) => {
       if (typeof testValue === "string") {
         testValue = testValue.split(",")
-        if (typeof docValue === "number") {
-          testValue = testValue.map((item: string) => parseFloat(item))
-        }
+      }
+
+      if (typeof docValue === "number") {
+        testValue = testValue.map((item: string) => parseFloat(item))
       }
 
       if (!Array.isArray(testValue)) {
