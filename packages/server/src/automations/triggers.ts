@@ -7,7 +7,7 @@ import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"
 import * as utils from "./utils"
 import env from "../environment"
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, logging, db as dbCore } from "@budibase/backend-core"
 import {
   Automation,
   Row,
@@ -80,7 +80,11 @@ async function queueRelevantRowAutomations(
         automationTrigger.inputs.tableId === event.row.tableId &&
         shouldTrigger
       ) {
-        await automationQueue.add({ automation, event }, JOB_OPTS)
+        try {
+          await automationQueue.add({ automation, event }, JOB_OPTS)
+        } catch (e) {
+          logging.logAlert("Failed to queue automation", e)
+        }
       }
     }
   })
