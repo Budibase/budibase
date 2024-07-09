@@ -158,10 +158,7 @@ export async function exportRows(
         _id: rowIds.map((row: string) => {
           const ids = breakRowIdField(row)
           if (ids.length > 1) {
-            throw new HTTPError(
-              "Export data does not support composite keys.",
-              400
-            )
+            return ids
           }
           return ids[0]
         }),

@@ -3,12 +3,11 @@
   import { Modal, ActionButton, TooltipType, TempTooltip } from "@budibase/bbui"
   import GridCreateViewModal from "../../modals/grid/GridCreateViewModal.svelte"
 
-  const { rows, columns, filter } = getContext("grid")
+  const { filter } = getContext("grid")
 
   let modal
   let firstFilterUsage = false
 
-  $: disabled = !$columns.length || !$rows.length
   $: {
     if ($filter?.length && !firstFilterUsage) {
       firstFilterUsage = true
@@ -21,7 +20,7 @@
   type={TooltipType.Info}
   condition={firstFilterUsage}
 >
-  <ActionButton {disabled} icon="CollectionAdd" quiet on:click={modal.show}>
+  <ActionButton icon="CollectionAdd" quiet on:click={modal.show}>
     Create view
   </ActionButton>
 </TempTooltip>
