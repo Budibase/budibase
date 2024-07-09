@@ -76,7 +76,7 @@ export async function updateRelationshipColumns(
     if (!linked._id) {
       continue
     }
-    if (opts?.sqs && isCorrectRelationship(relationship, row)) {
+    if (!opts?.sqs || isCorrectRelationship(relationship, row)) {
       columns[relationship.column] = linked
     }
   }
