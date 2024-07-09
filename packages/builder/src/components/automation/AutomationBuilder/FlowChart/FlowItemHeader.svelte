@@ -49,7 +49,7 @@
     const lcStatus = results.outputs?.status?.toLowerCase()
     if (lcStatus === "stopped" || lcStatus === "stopped_error") {
       return { yellow: true, message: "Stopped" }
-    } else if (results.outputs?.success) {
+    } else if (results.outputs?.success || isTrigger) {
       return { positive: true, message: "Success" }
     } else {
       return { negative: true, message: "Error" }
