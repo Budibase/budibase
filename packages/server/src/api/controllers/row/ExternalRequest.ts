@@ -193,15 +193,7 @@ export class ExternalRequest<T extends Operation> {
         for (let field of Object.keys(operator || {})) {
           if (dbCore.removeKeyNumbering(field) === "_id") {
             if (primary) {
-              let idField = operator[field]
-              try {
-                // Make sure _id queries decode the Row IDs
-                idField = JSON.parse(idField)
-              } catch {
-                // It is not a JSON value
-              }
-
-              const parts = breakRowIdField(idField)
+              const parts = breakRowIdField(operator[field])
               if (primary.length > 1) {
                 operator[sql.Sql.COMPLEX_ID_OPERATOR] = {
                   id: primary,
