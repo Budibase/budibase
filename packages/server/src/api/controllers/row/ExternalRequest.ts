@@ -7,6 +7,7 @@ import {
   FieldType,
   FilterType,
   IncludeRelationship,
+  InternalSearchFilterOperator,
   isManyToOne,
   OneToManyRelationshipFieldMetadata,
   Operation,
@@ -40,7 +41,7 @@ import {
 } from "../../../sdk/app/rows/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
-import { db as dbCore, sql } from "@budibase/backend-core"
+import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
@@ -195,7 +196,7 @@ export class ExternalRequest<T extends Operation> {
             if (primary) {
               const parts = breakRowIdField(operator[field])
               if (primary.length > 1) {
-                operator[sql.Sql.COMPLEX_ID_OPERATOR] = {
+                operator[InternalSearchFilterOperator.COMPLEX_ID_OPERATOR] = {
                   id: primary,
                   values: parts[0],
                 }
