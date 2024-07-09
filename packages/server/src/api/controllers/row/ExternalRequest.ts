@@ -40,7 +40,7 @@ import {
 } from "../../../sdk/app/rows/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
-import { db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, sql } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
@@ -193,11 +193,26 @@ export class ExternalRequest<T extends Operation> {
         for (let field of Object.keys(operator || {})) {
           if (dbCore.removeKeyNumbering(field) === "_id") {
             if (primary) {
-              const parts = breakRowIdField(operator[field])
-              for (let field of primary) {
-                operator[`${prefix}:${field}`] = parts.shift()
+              let idField = operator[field]
+              try {
+                // Make sure _id queries decode the Row IDs
+                idField = JSON.parse(idField)
+              } catch {
+                // It is not a JSON value
               }
-              prefix++
+
+              const parts = breakRowIdField(idField)
+              if (primary.length > 1) {
+                operator[sql.Sql.COMPLEX_ID_OPERATOR] = {
+                  id: primary,
+                  values: parts,
+                }
+              } else {
+                for (let field of primary) {
+                  operator[`${prefix}:${field}`] = parts.shift()
+                }
+                prefix++
+              }
             }
             // make sure this field doesn't exist on any filter
             delete operator[field]
