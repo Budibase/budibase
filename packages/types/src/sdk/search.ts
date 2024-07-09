@@ -21,7 +21,7 @@ export enum InternalSearchFilterOperator {
   COMPLEX_ID_OPERATOR = "_complexIdOperator",
 }
 
-type BasicFilter = Record<string, string> & {
+type BasicFilter<T = any> = Record<string, T> & {
   [InternalSearchFilterOperator.COMPLEX_ID_OPERATOR]?: never
 }
 
@@ -52,8 +52,8 @@ export interface SearchFilters {
   // allows just fuzzy to be or - all the fuzzy/like parameters
   fuzzyOr?: boolean
   onEmptyFilter?: EmptyFilterOption
-  [SearchFilterOperator.STRING]?: BasicFilter
-  [SearchFilterOperator.FUZZY]?: BasicFilter
+  [SearchFilterOperator.STRING]?: BasicFilter<string>
+  [SearchFilterOperator.FUZZY]?: BasicFilter<string>
   [SearchFilterOperator.RANGE]?: RangeFilter
   [SearchFilterOperator.EQUAL]?: BasicFilter
   [SearchFilterOperator.NOT_EQUAL]?: BasicFilter
