@@ -142,7 +142,7 @@ export async function externalTrigger(
     }
     params.fields = coercedFields
   }
-  const data: AutomationData = { automation, event: params as any }
+  const data: AutomationData = { automation, event: params }
 
   const shouldTrigger = await checkTriggerFilters(automation, {
     row: data.event?.row ?? {},
@@ -212,7 +212,7 @@ async function checkTriggerFilters(
   const filters = trigger?.inputs?.filters
   const tableId = trigger?.inputs?.tableId
 
-  if (!filters || !tableId) {
+  if (!filters) {
     return true // No filters or tableId, so trigger by default
   }
 
