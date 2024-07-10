@@ -310,16 +310,12 @@ export const buildQuery = (filter: SearchFilter[]) => {
           query.equal = query.equal || {}
           query.equal[field] = true
         } else {
-          query[queryOperator] = {
-            ...query[queryOperator],
-            [field]: value,
-          }
+          query[queryOperator] ??= {}
+          query[queryOperator]![field] = value
         }
       } else {
-        query[queryOperator] = {
-          ...query[queryOperator],
-          [field]: value,
-        }
+        query[queryOperator] ??= {}
+        query[queryOperator]![field] = value
       }
     }
   })
