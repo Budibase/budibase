@@ -1,7 +1,12 @@
-export interface CreateRowActionRequest {}
+export interface CreateRowActionRequest {
+  name: string
+}
 
-export interface RowAction {}
+interface RowAction {
+  name: string
+}
 
 export interface RowActionsResponse {
+  tableId: string
   actions: RowAction[]
 }

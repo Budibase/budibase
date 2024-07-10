@@ -1,5 +1,5 @@
 import _ from "lodash"
-import { Table } from "@budibase/types"
+import { CreateRowActionRequest, Table } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -16,11 +16,17 @@ describe("/rowsActions", () => {
 
   afterAll(setup.afterAll)
 
+  function createRowActionRequest(): CreateRowActionRequest {
+    return {
+      name: generator.word(),
+    }
+  }
+
   function unauthorisedTests() {
     it("returns unauthorised (401) for unauthenticated requests", async () => {
       await config.api.rowAction.save(
         table._id!,
-        {},
+        createRowActionRequest(),
         {
           status: 401,
           body: {
@@ -36,12 +42,20 @@ describe("/rowsActions", () => {
         builder: {},
       })
       await config.withUser(user, async () => {
-        await config.api.rowAction.save(generator.guid(), {}, { status: 403 })
+        await config.api.rowAction.save(
+          generator.guid(),
+          createRowActionRequest(),
+          { status: 403 }
+        )
       })
     })
 
     it("rejects (404) for a non-existing table", async () => {
-      await config.api.rowAction.save(generator.guid(), {}, { status: 404 })
+      await config.api.rowAction.save(
+        generator.guid(),
+        createRowActionRequest(),
+        { status: 404 }
+      )
     })
   }
 
@@ -49,11 +63,11 @@ describe("/rowsActions", () => {
     unauthorisedTests()
 
     it("accepts creating new row actions", async () => {
-      const res = await config.api.rowAction.save(
-        table._id!,
-        {},
-        { status: 201 }
-      )
+      const rowAction = createRowActionRequest()
+
+      const res = await config.api.rowAction.save(table._id!, rowAction, {
+        status: 204,
+      })
 
       expect(res).toEqual({})
     })
@@ -63,9 +77,10 @@ describe("/rowsActions", () => {
     unauthorisedTests()
 
     it("returns empty for tables without row actions", async () => {
-      const res = await config.api.rowAction.find(table._id!, {})
+      const tableId = table._id!
+      const res = await config.api.rowAction.find(tableId)
 
-      expect(res).toEqual({ actions: [] })
+      expect(res).toEqual({ tableId, actions: [] })
     })
   })
 })

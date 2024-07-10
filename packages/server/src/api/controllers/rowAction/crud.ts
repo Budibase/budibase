@@ -1,7 +1,6 @@
 import {
   CreateRowActionRequest,
   Ctx,
-  RowAction,
   RowActionsResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -20,15 +19,18 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
 
   // TODO
 
-  ctx.body = { actions: [] }
+  ctx.body = {
+    tableId: table._id!,
+    actions: [],
+  }
 }
 
-export async function create(ctx: Ctx<CreateRowActionRequest, RowAction>) {
+export async function create(ctx: Ctx<CreateRowActionRequest, void>) {
   const table = await getTable(ctx)
 
   // TODO
 
-  ctx.status = 201
+  ctx.status = 204
 }
 
 export function update() {

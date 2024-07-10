@@ -21,14 +21,12 @@ export class RowActionAPI extends TestAPI {
 
   find = async (
     tableId: string,
-    rowAction: CreateRowActionRequest,
     expectations?: Expectations,
     config?: { publicUser?: boolean }
   ) => {
     return await this._get<RowActionsResponse>(
       `/api/tables/${tableId}/actions`,
       {
-        body: rowAction,
         expectations,
         ...config,
       }
