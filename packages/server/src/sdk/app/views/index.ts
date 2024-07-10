@@ -6,9 +6,13 @@ import {
   ViewV2,
   ViewV2Enriched,
 } from "@budibase/types"
-import { HTTPError, db as dbCore } from "@budibase/backend-core"
+import { HTTPError } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
-import { helpers } from "@budibase/shared-core"
+import {
+  helpers,
+  CONSTANT_EXTERNAL_ROW_COLS,
+  CONSTANT_INTERNAL_ROW_COLS,
+} from "@budibase/shared-core"
 import { cloneDeep } from "lodash/fp"
 
 import * as utils from "../../../db/utils"
@@ -144,8 +148,8 @@ export function allowedFields(view: View | ViewV2) {
       const fieldSchema = view.schema![key]
       return fieldSchema.visible && !fieldSchema.readonly
     }),
-    ...dbCore.CONSTANT_EXTERNAL_ROW_COLS,
-    ...dbCore.CONSTANT_INTERNAL_ROW_COLS,
+    ...CONSTANT_EXTERNAL_ROW_COLS,
+    ...CONSTANT_INTERNAL_ROW_COLS,
   ]
 }
 
