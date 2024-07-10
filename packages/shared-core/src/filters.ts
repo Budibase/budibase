@@ -18,7 +18,7 @@ import {
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet, schema } from "./helpers"
-import _ from "lodash"
+import { isPlainObject, isEmpty, isArray } from "lodash"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -335,7 +335,7 @@ export function fixupFilterArrays(filters: SearchFilters) {
   ]
   for (const searchField of arrayFields) {
     const field = filters[searchField]
-    if (field == null) {
+    if (field == null || !isPlainObject(field)) {
       continue
     }
 
@@ -444,11 +444,11 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
         return false
       }
 
-      if (_.isObject(testValue.low) && _.isEmpty(testValue.low)) {
+      if (isPlainObject(testValue.low) && isEmpty(testValue.low)) {
         testValue.low = undefined
       }
 
-      if (_.isObject(testValue.high) && _.isEmpty(testValue.high)) {
+      if (isPlainObject(testValue.high) && isEmpty(testValue.high)) {
         testValue.high = undefined
       }
 
