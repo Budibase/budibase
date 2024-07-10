@@ -2,9 +2,18 @@ import Router from "@koa/router"
 import * as rowActionController from "../controllers/rowAction"
 import { authorizedResource } from "../../middleware/authorized"
 
-import { permissions } from "@budibase/backend-core"
+import { middleware, permissions } from "@budibase/backend-core"
+import Joi from "joi"
 
 const { PermissionLevel, PermissionType } = permissions
+
+export function rowActionValidator() {
+  return middleware.joiValidator.body(
+    Joi.object({
+      name: Joi.string().required(),
+    })
+  )
+}
 
 const router: Router = new Router()
 
@@ -18,11 +27,13 @@ router
   .post(
     "/api/tables/:tableId/actions",
     authorizedResource(PermissionType.TABLE, PermissionLevel.READ, "tableId"),
+    rowActionValidator(),
     rowActionController.create
   )
   .put(
     "/api/tables/:tableId/actions/:actionId",
     authorizedResource(PermissionType.TABLE, PermissionLevel.READ, "tableId"),
+    rowActionValidator(),
     rowActionController.update
   )
   .delete(

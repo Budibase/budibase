@@ -71,6 +71,19 @@ describe("/rowsActions", () => {
 
       expect(res).toEqual({})
     })
+
+    it("rejects with bad request when creating with no name", async () => {
+      const rowAction: CreateRowActionRequest = {
+        name: undefined as any,
+      }
+
+      await config.api.rowAction.save(table._id!, rowAction, {
+        status: 400,
+        body: {
+          message: 'Invalid body - "name" is required',
+        },
+      })
+    })
   })
 
   describe("find", () => {
