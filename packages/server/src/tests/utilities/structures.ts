@@ -390,7 +390,7 @@ export function filterAutomation(tableId?: string): Automation {
   return automation as Automation
 }
 
-export function updateRowAutomationWithFilters(tableId?: string): Automation {
+export function updateRowAutomationWithFilters(): Automation {
   const automation: any = {
     type: "automation",
     definition: {
