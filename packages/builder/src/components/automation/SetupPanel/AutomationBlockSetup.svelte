@@ -382,7 +382,9 @@
    * })
    */
   const onRowTriggerUpdate = async update => {
-    if (Object.hasOwn(update, "tableId") || Object.hasOwn(update, "filters")) {
+    if (
+      ["tableId", "filters", "meta"].some(key => Object.hasOwn(update, key))
+    ) {
       try {
         let updatedAutomation
 
@@ -764,6 +766,7 @@
       value.customType !== "triggerSchema" &&
       value.customType !== "automationFields" &&
       value.customType !== "fields" &&
+      value.customType !== "trigger_filter_setting" &&
       value.type !== "signature_single" &&
       value.type !== "attachment" &&
       value.type !== "attachment_single"
@@ -1063,6 +1066,21 @@
                 options={["Array", "String"]}
                 defaultValue={"Array"}
               />
+            {:else if value.customType === "trigger_filter_setting"}
+              <div class="trigger-checkbox-setting">
+                <Checkbox
+                  text={label}
+                  value={inputData?.meta?.executeFilterOnMatch === undefined
+                    ? true
+                    : inputData?.meta?.executeFilterOnMatch}
+                  on:change={e =>
+                    onChange({
+                      meta: {
+                        executeFilterOnMatch: e.detail,
+                      },
+                    })}
+                />
+              </div>
             {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
               {#if isTestModal}
                 <ModalBindableInput
@@ -1151,5 +1169,10 @@
   .js-binding-picker {
     flex: 3;
     margin-top: calc((var(--spacing-xl) * -1) + 1px);
+  }
+
+  .trigger-checkbox-setting :global(.spectrum-Checkbox-label) {
+    opacity: 0.5;
+    font-size: small;
   }
 </style>

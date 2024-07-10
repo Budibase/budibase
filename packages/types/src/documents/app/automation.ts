@@ -35,6 +35,7 @@ export enum AutomationCustomIOType {
   AUTOMATION = "automation",
   AUTOMATION_FIELDS = "automationFields",
   MULTI_ATTACHMENTS = "multi_attachments",
+  TRIGGER_FILTER_SETTING = "trigger_filter_setting",
 }
 
 export enum AutomationTriggerStepId {

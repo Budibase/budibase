@@ -162,8 +162,8 @@ export async function externalTrigger(
     )
   ) {
     shouldTrigger = await checkTriggerFilters(automation, filters, tableId, {
-      row: data.automation?.testData?.row ?? {},
-      oldRow: data.automation?.testData?.oldRow ?? {},
+      row: data.event?.row ?? {},
+      oldRow: data.event?.oldRow ?? {},
     })
   }
 
@@ -232,14 +232,22 @@ async function checkTriggerFilters(
   const newRowPasses = rowPassesFilters(newRow, filters)
 
   if (automation.definition.trigger.stepId === definitions.ROW_UPDATED.stepId) {
+    // This variable indicates that the trigger should run even if the new row matches the old row
+    // So if the filter is "equals true" and new row is `true` and old row is `true` it will still run
+    let shouldExecuteIfNoChange =
+      automation.definition.trigger.inputs.meta?.executeFilterOnMatch ?? true
+
     const oldRow = await automationUtils.cleanUpRow(
       tableId,
       comparisonRows.oldRow
     )
     const oldRowPasses = rowPassesFilters(oldRow, filters)
 
-    // For ROW_UPDATED, only trigger if old row didn't pass but new row does
-    return !oldRowPasses && newRowPasses
+    if (shouldExecuteIfNoChange) {
+      return newRowPasses
+    } else {
+      return !oldRowPasses && newRowPasses
+    }
   } else if (
     automation.definition.trigger.stepId === definitions.ROW_SAVED.stepId
   ) {

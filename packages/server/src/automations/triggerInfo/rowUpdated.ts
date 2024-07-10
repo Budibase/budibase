@@ -28,6 +28,11 @@ export const definition: AutomationTriggerSchema = {
           customType: AutomationCustomIOType.FILTERS,
           title: "Filtering",
         },
+        executeFilterOnMatch: {
+          customType: AutomationCustomIOType.TRIGGER_FILTER_SETTING,
+          title:
+            "Execute only when the record transitions from being filtered out to being filtered in",
+        },
       },
       required: ["tableId"],
     },
