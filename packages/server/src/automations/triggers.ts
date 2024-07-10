@@ -67,16 +67,11 @@ async function queueRelevantRowAutomations(
       ) {
         continue
       }
-      const tableId = automation.definition.trigger?.inputs?.tableId
-      const filters = automation.definition.trigger?.inputs?.filters
 
-      const shouldTrigger = await checkTriggerFilters(
-        automation,
-        filters,
-        tableId,
-        { row: event.row, oldRow: event.oldRow }
-      )
-
+      const shouldTrigger = await checkTriggerFilters(automation, {
+        row: event.row,
+        oldRow: event.oldRow,
+      })
       if (
         automationTrigger?.inputs &&
         automationTrigger.inputs.tableId === event.row.tableId &&
@@ -129,10 +124,6 @@ export async function externalTrigger(
   params: { fields: Record<string, any>; timeout?: number },
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
-  let shouldTrigger = true
-  const tableId = automation.definition.trigger?.inputs?.tableId
-  const filters = automation.definition.trigger?.inputs?.filters
-
   if (automation.disabled) {
     throw new Error("Automation is disabled")
   }
@@ -153,19 +144,10 @@ export async function externalTrigger(
   }
   const data: AutomationData = { automation, event: params as any }
 
-  // shouldTrigger is defaulted to true for safety, the only instances we could set to false
-  // are ones where filters exist in a create or update row trigger so just gate that
-  if (
-    filters &&
-    [definitions.ROW_UPDATED.stepId, definitions.ROW_SAVED.stepId].includes(
-      automation.definition.trigger.stepId
-    )
-  ) {
-    shouldTrigger = await checkTriggerFilters(automation, filters, tableId, {
-      row: data.event?.row ?? {},
-      oldRow: data.event?.oldRow ?? {},
-    })
-  }
+  const shouldTrigger = await checkTriggerFilters(automation, {
+    row: data.event?.row ?? {},
+    oldRow: data.event?.oldRow ?? {},
+  })
 
   if (!shouldTrigger) {
     return {
@@ -224,24 +206,26 @@ export async function rebootTrigger() {
 
 async function checkTriggerFilters(
   automation: Automation,
-  filters: SearchFilters,
-  tableId: string,
-  comparisonRows: { row: Row; oldRow: Row }
+  event: { row: Row; oldRow: Row }
 ): Promise<boolean> {
-  const newRow = await automationUtils.cleanUpRow(tableId, comparisonRows.row)
+  const trigger = automation.definition.trigger
+  const filters = trigger?.inputs?.filters
+  const tableId = trigger?.inputs?.tableId
+
+  if (!filters || !tableId) {
+    return true // No filters or tableId, so trigger by default
+  }
+
+  const newRow = await automationUtils.cleanUpRow(tableId, event.row)
   const newRowPasses = rowPassesFilters(newRow, filters)
 
-  if (automation.definition.trigger.stepId === definitions.ROW_UPDATED.stepId) {
+  if (trigger.stepId === definitions.ROW_UPDATED.stepId) {
     // This variable indicates that the trigger should run even if the new row matches the old row
     // So if the filter is "equals true" and new row is `true` and old row is `true` it will still run
-    let onlyExecuteFilterIfChange =
-      automation.definition.trigger.inputs.meta?.onlyExecuteFilterIfChange ??
-      true
+    const onlyExecuteFilterIfChange =
+      trigger.inputs.meta?.onlyExecuteFilterIfChange ?? true
 
-    const oldRow = await automationUtils.cleanUpRow(
-      tableId,
-      comparisonRows.oldRow
-    )
+    const oldRow = await automationUtils.cleanUpRow(tableId, event.oldRow)
     const oldRowPasses = rowPassesFilters(oldRow, filters)
 
     if (onlyExecuteFilterIfChange) {
@@ -249,10 +233,7 @@ async function checkTriggerFilters(
     } else {
       return newRowPasses
     }
-  } else if (
-    automation.definition.trigger.stepId === definitions.ROW_SAVED.stepId
-  ) {
-    // For ROW_SAVED, trigger if new row passes the filter
+  } else if (trigger.stepId === definitions.ROW_SAVED.stepId) {
     return newRowPasses
   }
 

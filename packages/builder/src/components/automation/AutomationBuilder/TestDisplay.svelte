@@ -45,7 +45,7 @@
         .filter(x => x.stepId !== ActionStepID.LOOP)
     } else if (filteredResults) {
       blocks = filteredResults || []
-      // Make sure there is an ID for each block being displayed
+      // make sure there is an ID for each block being displayed
       let count = 0
       for (let block of blocks) {
         block.id = count++

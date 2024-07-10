@@ -30,8 +30,7 @@ export const definition: AutomationTriggerSchema = {
         },
         executeFilterIfChange: {
           customType: AutomationCustomIOType.TRIGGER_FILTER_SETTING,
-          title:
-            "Execute only when the record transitions from being filtered out to being filtered in",
+          title: "Only run the filter if a distinct change happens",
         },
       },
       required: ["tableId"],
