@@ -86,9 +86,10 @@ describe("/templates", () => {
       async source => {
         const env = {
           SQS_SEARCH_ENABLE: source === "sqs" ? "true" : "false",
+          SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
         }
 
-        await config.withEnv(env, async () => {
+        await config.withCoreEnv(env, async () => {
           const name = generator.guid().replaceAll("-", "")
           const url = `/${name}`
 
