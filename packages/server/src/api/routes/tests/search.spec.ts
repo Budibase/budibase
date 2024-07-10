@@ -2085,57 +2085,104 @@ describe.each([
       })
     })
 
-  isInternal &&
-    describe("relations to same table", () => {
-      let relatedTable: Table, relatedRows: Row[]
+  describe("relations to same table", () => {
+    let relatedTable: Table, relatedRows: Row[]
 
-      beforeAll(async () => {
-        relatedTable = await createTable(
-          {
-            name: { name: "name", type: FieldType.STRING },
-          },
-          "productCategory"
-        )
-        table = await createTable({
+    beforeAll(async () => {
+      relatedTable = await createTable(
+        {
           name: { name: "name", type: FieldType.STRING },
-          related1: {
-            type: FieldType.LINK,
-            name: "related1",
-            fieldName: "main1",
-            tableId: relatedTable._id!,
-            relationshipType: RelationshipType.MANY_TO_MANY,
-          },
-          related2: {
-            type: FieldType.LINK,
-            name: "related2",
-            fieldName: "main2",
-            tableId: relatedTable._id!,
-            relationshipType: RelationshipType.MANY_TO_MANY,
-          },
-        })
-        relatedRows = await Promise.all([
-          config.api.row.save(relatedTable._id!, { name: "foo" }),
-          config.api.row.save(relatedTable._id!, { name: "bar" }),
-        ])
-        await config.api.row.save(table._id!, {
+        },
+        "productCategory"
+      )
+      table = await createTable({
+        name: { name: "name", type: FieldType.STRING },
+        related1: {
+          type: FieldType.LINK,
+          name: "related1",
+          fieldName: "main1",
+          tableId: relatedTable._id!,
+          relationshipType: RelationshipType.MANY_TO_MANY,
+        },
+        related2: {
+          type: FieldType.LINK,
+          name: "related2",
+          fieldName: "main2",
+          tableId: relatedTable._id!,
+          relationshipType: RelationshipType.MANY_TO_MANY,
+        },
+      })
+      relatedRows = await Promise.all([
+        config.api.row.save(relatedTable._id!, { name: "foo" }),
+        config.api.row.save(relatedTable._id!, { name: "bar" }),
+        config.api.row.save(relatedTable._id!, { name: "baz" }),
+        config.api.row.save(relatedTable._id!, { name: "boo" }),
+      ])
+      await Promise.all([
+        config.api.row.save(table._id!, {
           name: "test",
           related1: [relatedRows[0]._id!],
           related2: [relatedRows[1]._id!],
-        })
+        }),
+        config.api.row.save(table._id!, {
+          name: "test2",
+          related1: [relatedRows[2]._id!],
+          related2: [relatedRows[3]._id!],
+        }),
+      ])
+    })
+
+    it("should be able to relate to same table", async () => {
+      await expectSearch({
+        query: {},
+      }).toContainExactly([
+        {
+          name: "test",
+          related1: [{ _id: relatedRows[0]._id }],
+          related2: [{ _id: relatedRows[1]._id }],
+        },
+        {
+          name: "test2",
+          related1: [{ _id: relatedRows[2]._id }],
+          related2: [{ _id: relatedRows[3]._id }],
+        },
+      ])
+    })
+
+    isSqs &&
+      it("should be able to filter down to second row with equal", async () => {
+        await expectSearch({
+          query: {
+            equal: {
+              ["related1.name"]: "baz",
+            },
+          },
+        }).toContainExactly([
+          {
+            name: "test2",
+            related1: [{ _id: relatedRows[2]._id }],
+          },
+        ])
       })
 
-      it("should be able to relate to same table", async () => {
+    isSqs &&
+      it("should be able to filter down to first row with not equal", async () => {
         await expectSearch({
-          query: {},
+          query: {
+            notEqual: {
+              ["1:related2.name"]: "bar",
+              ["2:related2.name"]: "baz",
+              ["3:related2.name"]: "boo",
+            },
+          },
         }).toContainExactly([
           {
             name: "test",
             related1: [{ _id: relatedRows[0]._id }],
-            related2: [{ _id: relatedRows[1]._id }],
           },
         ])
       })
-    })
+  })
 
   isInternal &&
     describe("no column error backwards compat", () => {

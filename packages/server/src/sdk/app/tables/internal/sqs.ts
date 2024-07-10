@@ -176,12 +176,10 @@ export async function addTable(table: Table) {
 export async function removeTable(table: Table) {
   const db = context.getAppDB()
   try {
-    let response = await Promise.all([
+    const [tables, definition] = await Promise.all([
       tablesSdk.getAllInternalTables(),
       db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID),
     ])
-    const tables: Table[] = response[0],
-      definition: SQLiteDefinition = response[1]
     const tableIds = tables
       .map(tbl => tbl._id!)
       .filter(id => !id.includes(table._id!))
