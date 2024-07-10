@@ -390,6 +390,33 @@ export function filterAutomation(tableId?: string): Automation {
   return automation as Automation
 }
 
+export function updateRowAutomationWithFilters(tableId?: string): Automation {
+  const automation: any = {
+    type: "automation",
+    definition: {
+      steps: [
+        {
+          id: "b",
+          type: "ACTION",
+          internal: true,
+          stepId: AutomationActionStepId.SERVER_LOG,
+          inputs: {},
+          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
+        },
+      ],
+      trigger: {
+        id: "a",
+        type: "TRIGGER",
+        event: "row:update",
+        stepId: AutomationTriggerStepId.ROW_UPDATED,
+        inputs: {},
+        schema: TRIGGER_DEFINITIONS.ROW_UPDATED.schema,
+      },
+    },
+  }
+  return automation as Automation
+}
+
 export function basicAutomationResults(
   automationId: string
 ): AutomationResults {
