@@ -324,7 +324,7 @@ class TableSaveFunctions {
       importRows: this.importRows,
       user: this.user,
     })
-    if (db.isSqsEnabledForTenant()) {
+    if (dbCore.isSqsEnabledForTenant()) {
       await sdk.tables.sqs.addTable(table)
     }
     return table

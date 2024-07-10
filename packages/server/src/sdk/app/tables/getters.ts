@@ -1,4 +1,4 @@
-import { context, db, env } from "@budibase/backend-core"
+import { context, db as dbCore, env } from "@budibase/backend-core"
 import { getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
@@ -33,7 +33,7 @@ export function processTable(table: Table): Table {
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
     }
-    if (db.isSqsEnabledForTenant()) {
+    if (dbCore.isSqsEnabledForTenant()) {
       processed.sql = !!env.SQS_SEARCH_ENABLE
     }
     return processed

@@ -16,7 +16,7 @@ import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
-import { db } from "@budibase/backend-core"
+import { db as dbCore } from "@budibase/backend-core"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -115,7 +115,7 @@ export async function search(
 
   if (isExternalTable) {
     return external.search(options, table)
-  } else if (db.isSqsEnabledForTenant()) {
+  } else if (dbCore.isSqsEnabledForTenant()) {
     return sqs.search(options, table)
   } else {
     return internal.search(options, table)
