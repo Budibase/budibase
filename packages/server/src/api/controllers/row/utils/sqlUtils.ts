@@ -24,9 +24,11 @@ export function isManyToMany(
 
 function isCorrectRelationship(
   relationship: RelationshipsJson,
+  table1: Table,
+  table2: Table,
   row: Row
 ): boolean {
-  const junctionTableId = relationship.through!
+  const junctionTableId = generateJunctionTableID(table1._id!, table2._id!)
   const possibleColumns = [
     `${junctionTableId}.doc1.fieldName`,
     `${junctionTableId}.doc2.fieldName`,
@@ -76,7 +78,10 @@ export async function updateRelationshipColumns(
     if (!linked._id) {
       continue
     }
-    if (!opts?.sqs || isCorrectRelationship(relationship, row)) {
+    if (
+      !opts?.sqs ||
+      isCorrectRelationship(relationship, table, linkedTable, row)
+    ) {
       columns[relationship.column] = linked
     }
   }
