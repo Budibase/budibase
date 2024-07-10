@@ -108,7 +108,7 @@ jobs:
       - name: Pull testcontainers images
         run: |
           docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.2.1-sql &
+          docker pull budibase/couchdb:v3.2.1-sqs &
           docker pull redis &
 
           wait $(jobs -p)
