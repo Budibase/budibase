@@ -2,10 +2,12 @@ import { DocumentType, SqlQuery, Table, TableSourceType } from "@budibase/types"
 import { DEFAULT_BB_DATASOURCE_ID } from "../constants"
 import { Knex } from "knex"
 import { SEPARATOR } from "../db"
+import environment from "../environment"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
 const ENCODED_SPACE = encodeURIComponent(" ")
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/
 
 export function isExternalTableID(tableId: string) {
   return tableId.startsWith(DocumentType.DATASOURCE + SEPARATOR)
@@ -120,15 +122,38 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
   }
 }
 
-export function isIsoDateString(str: string) {
+export function isInvalidISODateString(str: string) {
   const trimmedValue = str.trim()
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(trimmedValue)) {
+  if (!ISO_DATE_REGEX.test(trimmedValue)) {
     return false
   }
   let d = new Date(trimmedValue)
+  return isNaN(d.getTime())
+}
+
+export function isValidISODateString(str: string) {
+  const trimmedValue = str.trim()
+  if (!ISO_DATE_REGEX.test(trimmedValue)) {
+    return false
+  }
+  let d = new Date(trimmedValue)
+  if (isNaN(d.getTime())) {
+    return false
+  }
   return d.toISOString() === trimmedValue
 }
 
 export function isValidFilter(value: any) {
   return value != null && value !== ""
+}
+
+export function sqlLog(client: string, query: string, values?: any[]) {
+  if (!environment.SQL_LOGGING_ENABLE) {
+    return
+  }
+  let string = `[SQL] [${client.toUpperCase()}] query="${query}"`
+  if (values) {
+    string += ` values="${values.join(", ")}"`
+  }
+  console.log(string)
 }
