@@ -348,7 +348,7 @@ export function fixupFilterArrays(filters: SearchFilters) {
         if (typeof field[key] !== "string") {
           field[key] = [field[key]]
         } else {
-          field[key] = field[key].split(",").map(x => x.trim())
+          field[key] = field[key].split(",").map((x: string) => x.trim())
         }
       }
     }
