@@ -11,11 +11,11 @@ import * as internal from "./search/internal"
 import * as external from "./search/external"
 import { NoEmptyFilterStrings } from "../../../constants"
 import * as sqs from "./search/sqs"
-import env from "../../../environment"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
+import { db as dbCore } from "@budibase/backend-core"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -89,7 +89,7 @@ export async function search(
 
   if (isExternalTable) {
     return external.search(options, table)
-  } else if (env.SQS_SEARCH_ENABLE) {
+  } else if (dbCore.isSqsEnabledForTenant()) {
     return sqs.search(options, table)
   } else {
     return internal.search(options, table)
