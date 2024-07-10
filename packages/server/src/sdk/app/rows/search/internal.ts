@@ -1,4 +1,5 @@
-import { context, db, HTTPError } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
+import { CONSTANT_INTERNAL_ROW_COLS } from "@budibase/shared-core"
 import env from "../../../../environment"
 import { fullSearch, paginatedSearch } from "./utils"
 import { getRowParams, InternalTables } from "../../../../db/utils"
@@ -74,7 +75,7 @@ export async function search(
     }
 
     if (options.fields) {
-      const fields = [...options.fields, ...db.CONSTANT_INTERNAL_ROW_COLS]
+      const fields = [...options.fields, ...CONSTANT_INTERNAL_ROW_COLS]
       response.rows = response.rows.map((r: any) => pick(r, fields))
     }
 

@@ -15,6 +15,7 @@ import {
   generateJunctionTableID,
 } from "../../../../db/utils"
 import { isEqual } from "lodash"
+import { DEFAULT_TABLES } from "../../../../db/defaultData/datasource_bb_default"
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BOOLEAN]: SQLiteType.NUMERIC,
@@ -126,8 +127,9 @@ function mapTable(table: Table): SQLiteTables {
 // nothing exists, need to iterate though existing tables
 async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   const tables = await tablesSdk.getAllInternalTables()
+  const defaultTables = DEFAULT_TABLES
   const definition = sql.designDoc.base("tableId")
-  for (let table of tables) {
+  for (let table of tables.concat(defaultTables)) {
     definition.sql.tables = {
       ...definition.sql.tables,
       ...mapTable(table),

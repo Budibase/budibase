@@ -146,13 +146,13 @@ const automationActions = store => ({
       await store.actions.save(automation)
       notifications.success(
         `Automation ${
-          automation.disabled ? "enabled" : "disabled"
+          automation.disabled ? "disabled" : "enabled"
         } successfully`
       )
     } catch (error) {
       notifications.error(
         `Error ${
-          automation && automation.disabled ? "enabling" : "disabling"
+          automation && automation.disabled ? "disabling" : "enabling"
         } automation`
       )
     }
