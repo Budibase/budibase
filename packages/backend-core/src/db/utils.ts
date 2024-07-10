@@ -222,5 +222,13 @@ export function isSqsEnabledForTenant(): boolean {
     )
   }
 
+  // Special case to enable all tenants, for testing in QA.
+  if (
+    env.SQS_SEARCH_ENABLE_TENANTS.length === 1 &&
+    env.SQS_SEARCH_ENABLE_TENANTS[0] === "*"
+  ) {
+    return true
+  }
+
   return env.SQS_SEARCH_ENABLE_TENANTS.includes(tenantId)
 }
