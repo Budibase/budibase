@@ -3,19 +3,27 @@ import { Row, Table, DocumentType } from "../documents"
 import { SortOrder, SortType } from "../api"
 import { Knex } from "knex"
 
-export enum SearchFilterOperator {
-  STRING = "string",
-  FUZZY = "fuzzy",
-  RANGE = "range",
+export enum BasicOperator {
   EQUAL = "equal",
   NOT_EQUAL = "notEqual",
   EMPTY = "empty",
   NOT_EMPTY = "notEmpty",
-  ONE_OF = "oneOf",
+  FUZZY = "fuzzy",
+  STRING = "string",
+}
+
+export enum ArrayOperator {
   CONTAINS = "contains",
   NOT_CONTAINS = "notContains",
   CONTAINS_ANY = "containsAny",
+  ONE_OF = "oneOf",
 }
+
+export enum RangeOperator {
+  RANGE = "range",
+}
+
+export type SearchFilterOperator = BasicOperator | ArrayOperator | RangeOperator
 
 export enum InternalSearchFilterOperator {
   COMPLEX_ID_OPERATOR = "_complexIdOperator",
@@ -52,17 +60,17 @@ export interface SearchFilters {
   // allows just fuzzy to be or - all the fuzzy/like parameters
   fuzzyOr?: boolean
   onEmptyFilter?: EmptyFilterOption
-  [SearchFilterOperator.STRING]?: BasicFilter<string>
-  [SearchFilterOperator.FUZZY]?: BasicFilter<string>
-  [SearchFilterOperator.RANGE]?: RangeFilter
-  [SearchFilterOperator.EQUAL]?: BasicFilter
-  [SearchFilterOperator.NOT_EQUAL]?: BasicFilter
-  [SearchFilterOperator.EMPTY]?: BasicFilter
-  [SearchFilterOperator.NOT_EMPTY]?: BasicFilter
-  [SearchFilterOperator.ONE_OF]?: ArrayFilter
-  [SearchFilterOperator.CONTAINS]?: ArrayFilter
-  [SearchFilterOperator.NOT_CONTAINS]?: ArrayFilter
-  [SearchFilterOperator.CONTAINS_ANY]?: ArrayFilter
+  [BasicOperator.STRING]?: BasicFilter<string>
+  [BasicOperator.FUZZY]?: BasicFilter<string>
+  [RangeOperator.RANGE]?: RangeFilter
+  [BasicOperator.EQUAL]?: BasicFilter
+  [BasicOperator.NOT_EQUAL]?: BasicFilter
+  [BasicOperator.EMPTY]?: BasicFilter
+  [BasicOperator.NOT_EMPTY]?: BasicFilter
+  [ArrayOperator.ONE_OF]?: ArrayFilter
+  [ArrayOperator.CONTAINS]?: ArrayFilter
+  [ArrayOperator.NOT_CONTAINS]?: ArrayFilter
+  [ArrayOperator.CONTAINS_ANY]?: ArrayFilter
   // specific to SQS/SQLite search on internal tables this can be used
   // to make sure the documents returned are always filtered down to a
   // specific document type (such as just rows)
