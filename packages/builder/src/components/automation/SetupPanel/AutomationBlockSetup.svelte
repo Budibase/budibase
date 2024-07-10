@@ -409,6 +409,7 @@
             ...updatedAutomation,
             testData: {
               row: { tableId: update.tableId },
+              oldRow: { tableId: update.tableId },
               meta: {},
               id: "",
               revision: "",
