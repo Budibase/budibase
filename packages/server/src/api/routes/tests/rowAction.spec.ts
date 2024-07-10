@@ -16,10 +16,6 @@ describe("/rowsActions", () => {
 
   afterAll(setup.afterAll)
 
-  beforeAll(async () => {
-    table = await config.api.table.save(setup.structures.basicTable())
-  })
-
   function unauthorisedTests() {
     it("returns unauthorised (401) for unauthenticated requests", async () => {
       await config.api.rowAction.save(
@@ -43,12 +39,16 @@ describe("/rowsActions", () => {
         await config.api.rowAction.save(generator.guid(), {}, { status: 403 })
       })
     })
+
+    it("rejects (404) for a non-existing table", async () => {
+      await config.api.rowAction.save(generator.guid(), {}, { status: 404 })
+    })
   }
 
   describe("create", () => {
     unauthorisedTests()
 
-    it("rejects when using a non-existing table", async () => {
+    it("accepts creating new row actions", async () => {
       const res = await config.api.rowAction.save(
         table._id!,
         {},
@@ -57,9 +57,15 @@ describe("/rowsActions", () => {
 
       expect(res).toEqual({})
     })
+  })
 
-    it("rejects (404) for a non-existing table", async () => {
-      await config.api.rowAction.save(generator.guid(), {}, { status: 404 })
+  describe("find", () => {
+    unauthorisedTests()
+
+    it("returns empty for tables without row actions", async () => {
+      const res = await config.api.rowAction.find(table._id!, {})
+
+      expect(res).toEqual({ actions: [] })
     })
   })
 })
