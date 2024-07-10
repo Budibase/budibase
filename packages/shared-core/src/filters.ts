@@ -337,14 +337,15 @@ export function fixupFilterArrays(filters: SearchFilters) {
     }
 
     for (const key of Object.keys(field)) {
-      if (!Array.isArray(field[key])) {
-        if (typeof field[key] === "string") {
-          field[key] = (field[key] as string)
-            .split(",")
-            .map((x: string) => x.trim())
-        } else {
-          field[key] = [field[key]]
-        }
+      if (Array.isArray(field[key])) {
+        continue
+      }
+
+      const value = field[key] as any
+      if (typeof value === "string") {
+        field[key] = value.split(",").map((x: string) => x.trim())
+      } else {
+        field[key] = [value]
       }
     }
   }
