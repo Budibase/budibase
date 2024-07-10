@@ -1070,13 +1070,14 @@
               <div class="trigger-checkbox-setting">
                 <Checkbox
                   text={label}
-                  value={inputData?.meta?.executeFilterOnMatch === undefined
+                  value={inputData?.meta?.onlyExecuteFilterIfChange ===
+                  undefined
                     ? true
-                    : inputData?.meta?.executeFilterOnMatch}
+                    : inputData?.meta?.onlyExecuteFilterIfChange}
                   on:change={e =>
                     onChange({
                       meta: {
-                        executeFilterOnMatch: e.detail,
+                        onlyExecuteFilterIfChange: e.detail,
                       },
                     })}
                 />
