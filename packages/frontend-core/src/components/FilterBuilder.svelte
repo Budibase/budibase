@@ -11,7 +11,7 @@
     Label,
     Multiselect,
   } from "@budibase/bbui"
-  import { FieldType, SearchFilterOperator } from "@budibase/types"
+  import { ArrayOperator, FieldType } from "@budibase/types"
   import { generate } from "shortid"
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { getContext } from "svelte"
@@ -268,7 +268,7 @@
                 <slot name="binding" {filter} />
               {:else if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA].includes(filter.type)}
                 <Input disabled={filter.noValue} bind:value={filter.value} />
-              {:else if filter.type === FieldType.ARRAY || (filter.type === FieldType.OPTIONS && filter.operator === SearchFilterOperator.ONE_OF)}
+              {:else if filter.type === FieldType.ARRAY || (filter.type === FieldType.OPTIONS && filter.operator === ArrayOperator.ONE_OF)}
                 <Multiselect
                   disabled={filter.noValue}
                   options={getFieldOptions(filter.field)}

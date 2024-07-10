@@ -783,6 +783,32 @@ describe.each([
       it("fails to find nonexistent row", async () => {
         await expectQuery({ oneOf: { name: ["none"] } }).toFindNothing()
       })
+
+      it("can have multiple values for same column", async () => {
+        await expectQuery({
+          oneOf: {
+            name: ["foo", "bar"],
+          },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+      })
+
+      it("splits comma separated strings", async () => {
+        await expectQuery({
+          oneOf: {
+            // @ts-ignore
+            name: "foo,bar",
+          },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+      })
+
+      it("trims whitespace", async () => {
+        await expectQuery({
+          oneOf: {
+            // @ts-ignore
+            name: "foo, bar",
+          },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+      })
     })
 
     describe("fuzzy", () => {
@@ -1005,6 +1031,32 @@ describe.each([
       it("fails to find nonexistent row", async () => {
         await expectQuery({ oneOf: { age: [2] } }).toFindNothing()
       })
+
+      // I couldn't find a way to make this work in Lucene and given that
+      // we're getting rid of Lucene soon I wasn't inclined to spend time on
+      // it.
+      !isLucene &&
+        it("can convert from a string", async () => {
+          await expectQuery({
+            oneOf: {
+              // @ts-ignore
+              age: "1",
+            },
+          }).toContainExactly([{ age: 1 }])
+        })
+
+      // I couldn't find a way to make this work in Lucene and given that
+      // we're getting rid of Lucene soon I wasn't inclined to spend time on
+      // it.
+      !isLucene &&
+        it("can find multiple values for same column", async () => {
+          await expectQuery({
+            oneOf: {
+              // @ts-ignore
+              age: "1,10",
+            },
+          }).toContainExactly([{ age: 1 }, { age: 10 }])
+        })
     })
 
     describe("range", () => {
