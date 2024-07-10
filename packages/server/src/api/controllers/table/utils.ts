@@ -15,7 +15,7 @@ import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events, context, db } from "@budibase/backend-core"
+import { events, context, db as dbCore } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   ContextUser,
@@ -498,16 +498,16 @@ export function setStaticSchemas(datasource: Datasource, table: Table) {
 }
 
 export async function internalTableCleanup(table: Table, rows?: Row[]) {
-  const appDb = context.getAppDB()
+  const db = context.getAppDB()
   const tableId = table._id!
   // remove table search index
   if (!env.isTest() || env.COUCH_DB_URL) {
-    const currentIndexes = await appDb.getIndexes()
+    const currentIndexes = await db.getIndexes()
     const existingIndex = currentIndexes.indexes.find(
       (existing: any) => existing.name === `search:${tableId}`
     )
     if (existingIndex) {
-      await appDb.deleteIndex(existingIndex)
+      await db.deleteIndex(existingIndex)
     }
   }
 
@@ -518,7 +518,7 @@ export async function internalTableCleanup(table: Table, rows?: Row[]) {
   if (rows) {
     await AttachmentCleanup.tableDelete(table, rows)
   }
-  if (db.isSqsEnabledForTenant()) {
+  if (dbCore.isSqsEnabledForTenant()) {
     await sdk.tables.sqs.removeTable(table)
   }
 }
