@@ -26,7 +26,7 @@
   export let behaviourFilters = false
   export let allowBindings = false
   export let filtersLabel = "Filters"
-
+  export let showFilterEmptyDropdown = true
   $: {
     if (
       tables.find(
@@ -218,7 +218,7 @@
                 on:change={e => handleAllOr(e.detail)}
                 placeholder={null}
               />
-              {#if datasource?.type === "table"}
+              {#if datasource?.type === "table" && showFilterEmptyDropdown}
                 <Select
                   label="When filter empty"
                   value={onEmptyFilter}

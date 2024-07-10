@@ -959,7 +959,9 @@
               </div>
             {:else if value.customType === "filters"}
               <ActionButton fullWidth on:click={drawer.show}
-                >Define filters</ActionButton
+                >{filters.length > 0
+                  ? "Update Filter"
+                  : "No Filter set"}</ActionButton
               >
               <Drawer bind:this={drawer} title="Filtering">
                 <Button cta slot="buttons" on:click={() => saveFilters(key)}>
@@ -972,6 +974,7 @@
                     {schemaFields}
                     datasource={{ type: "table", tableId }}
                     panel={AutomationBindingPanel}
+                    showFilterEmptyDropdown={!rowTriggers.includes(stepId)}
                     on:change={e => (tempFilters = e.detail)}
                   />
                 </DrawerContent>
