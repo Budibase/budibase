@@ -9,7 +9,6 @@ import {
   QuotaUsageType,
   Row,
   SaveTableRequest,
-  SearchFilterOperator,
   SortOrder,
   SortType,
   StaticQuotaName,
@@ -19,6 +18,7 @@ import {
   ViewUIFieldMetadata,
   ViewV2,
   SearchResponse,
+  BasicOperator,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -88,10 +88,16 @@ describe.each([
   }
 
   beforeAll(async () => {
+    await config.withCoreEnv(
+      { SQS_SEARCH_ENABLE: isSqs ? "true" : "false" },
+      () => config.init()
+    )
     if (isSqs) {
-      envCleanup = config.setEnv({ SQS_SEARCH_ENABLE: "true" })
+      envCleanup = config.setCoreEnv({
+        SQS_SEARCH_ENABLE: "true",
+        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+      })
     }
-    await config.init()
 
     if (dsProvider) {
       datasource = await config.createDatasource({
@@ -149,7 +155,7 @@ describe.each([
         primaryDisplay: "id",
         query: [
           {
-            operator: SearchFilterOperator.EQUAL,
+            operator: BasicOperator.EQUAL,
             field: "field",
             value: "value",
           },
@@ -561,7 +567,7 @@ describe.each([
         ...view,
         query: [
           {
-            operator: SearchFilterOperator.EQUAL,
+            operator: BasicOperator.EQUAL,
             field: "newField",
             value: "thatValue",
           },
@@ -589,7 +595,7 @@ describe.each([
         primaryDisplay: "Price",
         query: [
           {
-            operator: SearchFilterOperator.EQUAL,
+            operator: BasicOperator.EQUAL,
             field: generator.word(),
             value: generator.word(),
           },
@@ -673,7 +679,7 @@ describe.each([
           tableId: generator.guid(),
           query: [
             {
-              operator: SearchFilterOperator.EQUAL,
+              operator: BasicOperator.EQUAL,
               field: "newField",
               value: "thatValue",
             },
@@ -1194,7 +1200,7 @@ describe.each([
           name: generator.guid(),
           query: [
             {
-              operator: SearchFilterOperator.EQUAL,
+              operator: BasicOperator.EQUAL,
               field: "two",
               value: "bar2",
             },

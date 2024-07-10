@@ -206,3 +206,21 @@ export function pagination<T>(
     nextPage,
   }
 }
+
+export function isSqsEnabledForTenant(): boolean {
+  const tenantId = getTenantId()
+  if (!env.SQS_SEARCH_ENABLE) {
+    return false
+  }
+
+  // This is to guard against the situation in tests where tests pass because
+  // we're not actually using SQS, we're using Lucene and the tests pass due to
+  // parity.
+  if (env.isTest() && env.SQS_SEARCH_ENABLE_TENANTS.length === 0) {
+    throw new Error(
+      "to enable SQS you must specify a list of tenants in the SQS_SEARCH_ENABLE_TENANTS env var"
+    )
+  }
+
+  return env.SQS_SEARCH_ENABLE_TENANTS.includes(tenantId)
+}
