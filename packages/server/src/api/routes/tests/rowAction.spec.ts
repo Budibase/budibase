@@ -88,7 +88,7 @@ describe("/rowsActions", () => {
       const res = await createRowAction(tableId, rowAction, { status: 201 })
 
       expect(res).toEqual({
-        _id: `${tableId}_row_actions`,
+        _id: `ra_${tableId}`,
         _rev: expect.stringMatching(/^1-\w+/),
         actions: [
           {
@@ -110,7 +110,7 @@ describe("/rowsActions", () => {
       const res = await createRowAction(tableId, rowActions[2])
 
       expect(res).toEqual({
-        _id: `${tableId}_row_actions`,
+        _id: `ra_${tableId}`,
         _rev: expect.stringMatching(/^3-\w+/),
         actions: rowActions.map(a => ({
           id: expect.any(String),
@@ -135,7 +135,7 @@ describe("/rowsActions", () => {
       const res2 = await createRowAction(otherTableId, rowAction2)
 
       expect(res1).toEqual({
-        _id: `${tableId}_row_actions`,
+        _id: `ra_${tableId}`,
         _rev: expect.stringMatching(/^1-\w+/),
         actions: [
           {
@@ -149,7 +149,7 @@ describe("/rowsActions", () => {
       })
 
       expect(res2).toEqual({
-        _id: `${otherTableId}_row_actions`,
+        _id: `ra_${otherTableId}`,
         _rev: expect.stringMatching(/^1-\w+/),
         actions: [
           {

@@ -355,5 +355,5 @@ export function isRelationshipColumn(
  * @returns The new row actions ID which the row actions doc can be stored under.
  */
 export function generateRowActionsID(tableId: string) {
-  return `${tableId}${SEPARATOR}row_actions`
+  return `${DocumentType.ROW_ACTIONS}${SEPARATOR}${tableId}`
 }
