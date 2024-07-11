@@ -52,4 +52,19 @@ export class RowActionAPI extends TestAPI {
       }
     )
   }
+
+  delete = async (
+    tableId: string,
+    rowActionId: string,
+    expectations?: Expectations,
+    config?: { publicUser?: boolean }
+  ) => {
+    return await this._delete<RowActionResponse>(
+      `/api/tables/${tableId}/actions/${rowActionId}`,
+      {
+        expectations,
+        ...config,
+      }
+    )
+  }
 }

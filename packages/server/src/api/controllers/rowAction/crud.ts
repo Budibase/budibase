@@ -69,6 +69,10 @@ export async function update(
   }
 }
 
-export function remove() {
-  throw new Error("Function not implemented.")
+export async function remove(ctx: Ctx<void, void>) {
+  const table = await getTable(ctx)
+  const { actionId } = ctx.params
+
+  await sdk.rowActions.remove(table._id!, actionId)
+  ctx.status = 204
 }

@@ -43,6 +43,7 @@ export async function docExists(tableId: string) {
   const result = await db.exists(rowActionsId)
   return result
 }
+
 export async function update(
   tableId: string,
   rowActionId: string,
@@ -65,4 +66,20 @@ export async function update(
     id: rowActionId,
     ...rowAction,
   }
+}
+
+export async function remove(tableId: string, rowActionId: string) {
+  const actionsDoc = await get(tableId)
+
+  if (!actionsDoc.actions[rowActionId]) {
+    throw new HTTPError(
+      `Row action '${rowActionId}' not found in '${tableId}'`,
+      400
+    )
+  }
+
+  delete actionsDoc.actions[rowActionId]
+
+  const db = context.getAppDB()
+  await db.put(actionsDoc)
 }
