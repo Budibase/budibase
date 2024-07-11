@@ -819,7 +819,10 @@ describe.each([
         const table = await config.api.table.save(tableRequest)
 
         const stringValue = generator.word()
-        const naturalValue = generator.integer({ min: 0, max: 1000 })
+
+        // MySQL and MariaDB auto-increment fields have a minimum value of 1. If
+        // you try to save a row with a value of 0 it will use 1 instead.
+        const naturalValue = generator.integer({ min: 1, max: 1000 })
 
         const existing = await config.api.row.save(table._id!, {
           string: stringValue,
