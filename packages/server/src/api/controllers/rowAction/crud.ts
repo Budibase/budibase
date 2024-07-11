@@ -25,12 +25,18 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
   }
 }
 
-export async function create(ctx: Ctx<CreateRowActionRequest, void>) {
+export async function create(
+  ctx: Ctx<CreateRowActionRequest, RowActionsResponse>
+) {
   const table = await getTable(ctx)
 
-  // TODO
+  const created = await sdk.rowActions.create(table._id!, ctx.request.body)
 
-  ctx.status = 204
+  ctx.body = {
+    tableId: table._id!,
+    ...created,
+  }
+  ctx.status = 201
 }
 
 export function update() {
