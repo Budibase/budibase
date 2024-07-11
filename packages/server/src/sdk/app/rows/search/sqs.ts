@@ -249,7 +249,7 @@ function resyncDefinitionsRequired(status: number, message: string) {
 export async function search(
   options: RowSearchParams,
   table: Table,
-  opts?: { retry?: boolean }
+  opts?: { retries?: number }
 ): Promise<SearchResponse<Row>> {
   let { paginate, query, ...params } = options
 
@@ -374,9 +374,10 @@ export async function search(
     return response
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
-    if (!opts?.retry && resyncDefinitionsRequired(err.status, msg)) {
+    const firstTry = !opts?.retries || opts.retries === 0
+    if (firstTry && resyncDefinitionsRequired(err.status, msg)) {
       await sdk.tables.sqs.syncDefinition()
-      return search(options, table, { retry: true })
+      return search(options, table, { retries: 1 })
     }
     // previously the internal table didn't error when a column didn't exist in search
     if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {
