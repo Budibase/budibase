@@ -250,6 +250,7 @@
                   },
                 }))
               },
+              placeholder: false,
               getOptionLabel: type => type.name,
               getOptionValue: type => type.id,
               options: [
@@ -280,14 +281,14 @@
                   tableId: inputData["row"].tableId,
                 },
                 meta: {
-                  fields: inputData["meta"].oldFields || {},
+                  fields: inputData["meta"]?.oldFields || {},
                 },
                 onChange: e => {
                   onChange({
                     oldRow: e.detail.row,
                     meta: {
-                      fields: inputData["meta"].fields,
-                      oldFields: e.detail.meta.fields,
+                      fields: inputData["meta"]?.fields || {},
+                      oldFields: e.detail?.meta?.fields || {},
                     },
                   })
                 },
@@ -304,7 +305,15 @@
               row: inputData["row"],
               meta: inputData["meta"] || {},
               onChange: e => {
-                onChange(e.detail)
+                onChange({
+                  row: e.detail.row,
+                  meta: {
+                    fields: e.detail?.meta?.fields || {},
+                    ...(isTestModal
+                      ? { oldFields: inputData["meta"]?.oldFields || {} }
+                      : {}),
+                  },
+                })
               },
               ...baseProps,
             },
@@ -452,7 +461,6 @@
    */
   const onChange = Utils.sequential(async update => {
     const request = cloneDeep(update)
-
     // Process app trigger updates
     if (isTrigger && !isTestModal) {
       // Row trigger
