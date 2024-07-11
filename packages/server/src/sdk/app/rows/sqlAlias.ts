@@ -111,7 +111,8 @@ export default class AliasTables {
   aliasField(field: string) {
     const tableNames = this.tableNames
     if (field.includes(".")) {
-      const [tableName, column] = field.split(".")
+      const [tableName, ...rest] = field.split(".")
+      const column = rest.join(".")
       const foundTableName = tableNames.find(name => {
         const idx = tableName.indexOf(name)
         if (idx === -1 || idx > 1) {

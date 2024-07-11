@@ -24,7 +24,7 @@ async function isSqsAvailable() {
 }
 
 async function isSqsMissing() {
-  return env.SQS_SEARCH_ENABLE && !(await isSqsAvailable())
+  return coreEnv.SQS_SEARCH_ENABLE && !(await isSqsAvailable())
 }
 
 export const fetch = async (ctx: Ctx) => {
