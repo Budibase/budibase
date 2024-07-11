@@ -299,15 +299,6 @@ export const PaginationLocations = [
   { label: "Request body", value: "body" },
 ]
 
-export const BannedSearchTypes = [
-  FieldType.LINK,
-  FieldType.ATTACHMENTS,
-  FieldType.FORMULA,
-  FieldType.JSON,
-  "jsonarray",
-  "queryarray",
-]
-
 export const DatasourceTypes = {
   RELATIONAL: "Relational",
   NON_RELATIONAL: "Non-relational",
