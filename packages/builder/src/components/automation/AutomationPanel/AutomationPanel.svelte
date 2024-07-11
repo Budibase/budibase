@@ -30,6 +30,16 @@
       return lowerA > lowerB ? 1 : -1
     })
 
+  $: groupedAutomations = filteredAutomations.reduce((acc, auto) => {
+    acc[auto.definition.trigger.event] ??= {
+      icon: auto.definition.trigger.icon,
+      name: (auto.definition.trigger?.name || "").toUpperCase(),
+      entries: [],
+    }
+    acc[auto.definition.trigger.event].entries.push(auto)
+    return acc
+  }, {})
+
   $: showNoResults = searchString && !filteredAutomations.length
 
   onMount(async () => {
@@ -55,16 +65,25 @@
     />
   </div>
   <div class="side-bar-nav">
-    {#each filteredAutomations as automation}
-      <NavItem
-        text={automation.name}
-        selected={automation._id === selectedAutomationId}
-        on:click={() => selectAutomation(automation._id)}
-        selectedBy={$userSelectedResourceMap[automation._id]}
-        disabled={automation.disabled}
-      >
-        <EditAutomationPopover {automation} />
-      </NavItem>
+    {#each Object.values(groupedAutomations || {}) as triggerGroup}
+      <div class="nav-group">
+        <div class="nav-group-header" title={triggerGroup?.name}>
+          {triggerGroup?.name}
+        </div>
+        {#each triggerGroup.entries as automation}
+          <NavItem
+            icon={triggerGroup.icon}
+            iconColor={"var(--spectrum-global-color-gray-900)"}
+            text={automation.name}
+            selected={automation._id === selectedAutomationId}
+            on:click={() => selectAutomation(automation._id)}
+            selectedBy={$userSelectedResourceMap[automation._id]}
+            disabled={automation.disabled}
+          >
+            <EditAutomationPopover {automation} />
+          </NavItem>
+        {/each}
+      </div>
     {/each}
 
     {#if showNoResults}
@@ -82,6 +101,17 @@
 </Modal>
 
 <style>
+  .nav-group {
+    padding-top: var(--spacing-l);
+  }
+  .nav-group-header {
+    color: var(--spectrum-global-color-gray-600);
+    padding: 0px calc(var(--spacing-l) + 4px);
+    padding-bottom: var(--spacing-l);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .side-bar {
     flex: 0 0 260px;
     display: flex;
@@ -104,7 +134,7 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-l);
-    padding: 0 var(--spacing-l);
+    padding: 0 calc(var(--spacing-l) + 4px);
   }
   .side-bar-nav {
     flex: 1 1 auto;
