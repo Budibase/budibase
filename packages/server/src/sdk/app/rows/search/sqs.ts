@@ -240,10 +240,10 @@ async function runSqlQuery(
 function resyncDefinitionsRequired(status: number, message: string) {
   // pre data_ prefix on column names, need to resync
   return (
-    (status === 400 && message?.match(USER_COLUMN_PREFIX_REGEX)) ||
-    // default tables aren't included in definition
-    (status === 400 &&
-      DEFAULT_TABLE_IDS.find(tableId => message?.includes(tableId))) ||
+    // there are tables missing - try a resync
+    (status === 400 && message.includes("no such table: ")) ||
+    // there are columns missing - try a resync
+    (status === 400 && message.includes("no such column: ")) ||
     // no design document found, needs a full sync
     (status === 404 && message?.includes(SQLITE_DESIGN_DOC_ID))
   )
@@ -251,7 +251,8 @@ function resyncDefinitionsRequired(status: number, message: string) {
 
 export async function search(
   options: RowSearchParams,
-  table: Table
+  table: Table,
+  opts?: { retry?: boolean }
 ): Promise<SearchResponse<Row>> {
   let { paginate, query, ...params } = options
 
@@ -376,9 +377,9 @@ export async function search(
     return response
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
-    if (resyncDefinitionsRequired(err.status, msg)) {
+    if (!opts?.retry && resyncDefinitionsRequired(err.status, msg)) {
       await sdk.tables.sqs.syncDefinition()
-      return search(options, table)
+      return search(options, table, { retry: true })
     }
     // previously the internal table didn't error when a column didn't exist in search
     if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {
