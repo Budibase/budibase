@@ -17,8 +17,15 @@ async function getTable(ctx: Ctx) {
 export async function find(ctx: Ctx<void, RowActionsResponse>) {
   const table = await getTable(ctx)
 
-  const actions = await sdk.rowActions.get(table._id!)
+  if (!(await sdk.rowActions.docExists(table._id!))) {
+    ctx.body = {
+      tableId: table._id!,
+      actions: [],
+    }
+    return
+  }
 
+  const actions = await sdk.rowActions.get(table._id!)
   ctx.body = {
     tableId: table._id!,
     ...actions,

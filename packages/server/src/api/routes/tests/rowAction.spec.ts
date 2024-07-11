@@ -183,8 +183,14 @@ describe("/rowsActions", () => {
       )
     })
 
-    it("returns 404 for tables without row actions", async () => {
-      await config.api.rowAction.find(tableId, { status: 404 })
+    it("returns empty for tables without row actions", async () => {
+      const response = await config.api.rowAction.find(tableId)
+      expect(response).toEqual(
+        expect.objectContaining({
+          tableId,
+          actions: [],
+        })
+      )
     })
   })
 })
