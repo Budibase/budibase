@@ -1,7 +1,7 @@
 import _ from "lodash"
 import tk from "timekeeper"
 
-import { CreateRowActionRequest } from "@budibase/types"
+import { CreateRowActionRequest, RowActionResponse } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 import { Expectations } from "src/tests/utilities/api/base"
@@ -46,6 +46,12 @@ describe("/rowsActions", () => {
     }
   }
 
+  function createRowActionRequests(count: number): CreateRowActionRequest[] {
+    return generator
+      .unique(() => generator.word(), count)
+      .map(name => ({ name }))
+  }
+
   function unauthorisedTests() {
     it("returns unauthorised (401) for unauthenticated requests", async () => {
       await createRowAction(
@@ -84,80 +90,44 @@ describe("/rowsActions", () => {
 
     it("creates new row actions for tables without existing actions", async () => {
       const rowAction = createRowActionRequest()
-
-      const res = await createRowAction(tableId, rowAction, { status: 201 })
+      const res = await createRowAction(tableId, rowAction, {
+        status: 201,
+      })
 
       expect(res).toEqual({
+        tableId: tableId,
+        actionId: expect.stringMatching(/^row_action_\w+/),
+        ...rowAction,
+      })
+
+      expect(await config.api.rowAction.find(tableId)).toEqual({
         _id: `ra_${tableId}`,
         _rev: expect.stringMatching(/^1-\w+/),
-        actions: [
-          {
-            id: expect.any(String),
-            name: rowAction.name,
-          },
-        ],
         tableId: tableId,
+        actions: {
+          [res.actionId]: rowAction,
+        },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
     })
 
     it("can create multiple row actions for the same table", async () => {
-      const rowActions = generator.unique(() => createRowActionRequest(), 3)
+      const rowActions = createRowActionRequests(3)
+      const responses: RowActionResponse[] = []
+      for (const action of rowActions) {
+        responses.push(await createRowAction(tableId, action))
+      }
 
-      await createRowAction(tableId, rowActions[0])
-      await createRowAction(tableId, rowActions[1])
-      const res = await createRowAction(tableId, rowActions[2])
-
-      expect(res).toEqual({
+      expect(await config.api.rowAction.find(tableId)).toEqual({
         _id: `ra_${tableId}`,
         _rev: expect.stringMatching(/^3-\w+/),
-        actions: rowActions.map(a => ({
-          id: expect.any(String),
-          ...a,
-        })),
+        actions: {
+          [responses[0].actionId]: rowActions[0],
+          [responses[1].actionId]: rowActions[1],
+          [responses[2].actionId]: rowActions[2],
+        },
         tableId: tableId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      })
-    })
-
-    it("can create row actions for different tables", async () => {
-      const otherTable = await config.api.table.save(
-        setup.structures.basicTable()
-      )
-      const otherTableId = otherTable._id!
-
-      const rowAction1 = createRowActionRequest()
-      const rowAction2 = createRowActionRequest()
-
-      const res1 = await createRowAction(tableId, rowAction1)
-      const res2 = await createRowAction(otherTableId, rowAction2)
-
-      expect(res1).toEqual({
-        _id: `ra_${tableId}`,
-        _rev: expect.stringMatching(/^1-\w+/),
-        actions: [
-          {
-            id: expect.any(String),
-            ...rowAction1,
-          },
-        ],
-        tableId: tableId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      })
-
-      expect(res2).toEqual({
-        _id: `ra_${otherTableId}`,
-        _rev: expect.stringMatching(/^1-\w+/),
-        actions: [
-          {
-            id: expect.any(String),
-            ...rowAction2,
-          },
-        ],
-        tableId: otherTableId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
@@ -181,25 +151,25 @@ describe("/rowsActions", () => {
     unauthorisedTests()
 
     it("returns only the actions for the requested table", async () => {
-      const rowActions = generator.unique(() => createRowActionRequest(), 5)
-      for (const rowAction of rowActions) {
-        await createRowAction(tableId, rowAction)
+      const rowActions: RowActionResponse[] = []
+      for (const action of createRowActionRequests(3)) {
+        rowActions.push(await createRowAction(tableId, action))
       }
 
       const otherTable = await config.api.table.save(
         setup.structures.basicTable()
       )
-      const otherTableId = otherTable._id!
-      await createRowAction(otherTableId, createRowActionRequest())
+      await createRowAction(otherTable._id!, createRowActionRequest())
 
       const response = await config.api.rowAction.find(tableId)
       expect(response).toEqual(
         expect.objectContaining({
           tableId,
-          actions: rowActions.map(a => ({
-            id: expect.any(String),
-            ...a,
-          })),
+          actions: {
+            [rowActions[0].actionId]: expect.any(Object),
+            [rowActions[1].actionId]: expect.any(Object),
+            [rowActions[2].actionId]: expect.any(Object),
+          },
         })
       )
     })
@@ -209,7 +179,7 @@ describe("/rowsActions", () => {
       expect(response).toEqual(
         expect.objectContaining({
           tableId,
-          actions: [],
+          actions: {},
         })
       )
     })

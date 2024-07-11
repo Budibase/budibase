@@ -69,6 +69,7 @@ export enum InternalTable {
 // documents or enriched into existence as part of get requests
 export enum VirtualDocumentType {
   VIEW = "view",
+  ROW_ACTION = "row_action",
 }
 
 export interface Document {

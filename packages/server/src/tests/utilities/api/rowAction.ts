@@ -1,4 +1,8 @@
-import { CreateRowActionRequest, RowActionsResponse } from "@budibase/types"
+import {
+  CreateRowActionRequest,
+  RowActionResponse,
+  RowActionsResponse,
+} from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
 export class RowActionAPI extends TestAPI {
@@ -8,7 +12,7 @@ export class RowActionAPI extends TestAPI {
     expectations?: Expectations,
     config?: { publicUser?: boolean }
   ) => {
-    return await this._post<RowActionsResponse>(
+    return await this._post<RowActionResponse>(
       `/api/tables/${tableId}/actions`,
       {
         body: rowAction,
