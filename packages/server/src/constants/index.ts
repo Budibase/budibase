@@ -24,16 +24,6 @@ export enum FilterTypes {
   ONE_OF = "oneOf",
 }
 
-export const NoEmptyFilterStrings = [
-  FilterTypes.STRING,
-  FilterTypes.FUZZY,
-  FilterTypes.EQUAL,
-  FilterTypes.NOT_EQUAL,
-  FilterTypes.CONTAINS,
-  FilterTypes.NOT_CONTAINS,
-  FilterTypes.CONTAINS_ANY,
-]
-
 export const CanSwitchTypes = [
   [FieldType.JSON, FieldType.ARRAY],
   [
