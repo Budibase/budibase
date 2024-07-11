@@ -809,6 +809,20 @@ describe.each([
           },
         }).toContainExactly([{ name: "foo" }, { name: "bar" }])
       })
+
+      it("empty arrays returns all when onEmptyFilter is set to return 'all'", async () => {
+        await expectQuery({
+          onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+          oneOf: { name: [] },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+      })
+
+      it("empty arrays returns all when onEmptyFilter is set to return 'none'", async () => {
+        await expectQuery({
+          onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          oneOf: { name: [] },
+        }).toContainExactly([])
+      })
     })
 
     describe("fuzzy", () => {
