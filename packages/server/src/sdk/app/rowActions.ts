@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, utils } from "@budibase/backend-core"
 
 import { generateRowActionsID } from "../../db/utils"
 import { TableRowActions } from "@budibase/types"
@@ -17,7 +17,10 @@ export async function create(tableId: string, rowAction: { name: string }) {
     doc = { _id: rowActionsId, actions: [] }
   }
 
-  doc.actions.push(rowAction)
+  doc.actions.push({
+    id: utils.newid(),
+    ...rowAction,
+  })
   await db.put(doc)
 
   return await get(tableId)
