@@ -1,8 +1,4 @@
-import {
-  CreateRowActionRequest,
-  RowAction,
-  RowActionsResponse,
-} from "@budibase/types"
+import { CreateRowActionRequest, RowActionsResponse } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
 export class RowActionAPI extends TestAPI {
@@ -12,11 +8,14 @@ export class RowActionAPI extends TestAPI {
     expectations?: Expectations,
     config?: { publicUser?: boolean }
   ) => {
-    return await this._post<RowAction>(`/api/tables/${tableId}/actions`, {
-      body: rowAction,
-      expectations,
-      ...config,
-    })
+    return await this._post<RowActionsResponse>(
+      `/api/tables/${tableId}/actions`,
+      {
+        body: rowAction,
+        expectations,
+        ...config,
+      }
+    )
   }
 
   find = async (

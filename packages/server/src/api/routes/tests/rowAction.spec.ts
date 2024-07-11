@@ -4,6 +4,7 @@ import tk from "timekeeper"
 import { CreateRowActionRequest } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
+import { Expectations } from "src/tests/utilities/api/base"
 
 describe("/rowsActions", () => {
   const config = setup.getConfig()
@@ -22,6 +23,23 @@ describe("/rowsActions", () => {
 
   afterAll(setup.afterAll)
 
+  async function createRowAction(
+    tableId: string,
+    rowAction: CreateRowActionRequest,
+    expectations?: Expectations,
+    opts?: { publicUser?: boolean }
+  ) {
+    return await config.api.rowAction.save(
+      tableId,
+      rowAction,
+      {
+        ...expectations,
+        status: expectations?.status || 201,
+      },
+      opts
+    )
+  }
+
   function createRowActionRequest(): CreateRowActionRequest {
     return {
       name: generator.word(),
@@ -30,7 +48,7 @@ describe("/rowsActions", () => {
 
   function unauthorisedTests() {
     it("returns unauthorised (401) for unauthenticated requests", async () => {
-      await config.api.rowAction.save(
+      await createRowAction(
         tableId,
         createRowActionRequest(),
         {
@@ -48,20 +66,16 @@ describe("/rowsActions", () => {
         builder: {},
       })
       await config.withUser(user, async () => {
-        await config.api.rowAction.save(
-          generator.guid(),
-          createRowActionRequest(),
-          { status: 403 }
-        )
+        await createRowAction(generator.guid(), createRowActionRequest(), {
+          status: 403,
+        })
       })
     })
 
     it("rejects (404) for a non-existing table", async () => {
-      await config.api.rowAction.save(
-        generator.guid(),
-        createRowActionRequest(),
-        { status: 404 }
-      )
+      await createRowAction(generator.guid(), createRowActionRequest(), {
+        status: 404,
+      })
     })
   }
 
@@ -71,9 +85,7 @@ describe("/rowsActions", () => {
     it("creates new row actions for tables without existing actions", async () => {
       const rowAction = createRowActionRequest()
 
-      const res = await config.api.rowAction.save(tableId, rowAction, {
-        status: 201,
-      })
+      const res = await createRowAction(tableId, rowAction, { status: 201 })
 
       expect(res).toEqual({
         _id: `${tableId}_row_actions`,
@@ -88,15 +100,9 @@ describe("/rowsActions", () => {
     it("can create multiple row actions for the same table", async () => {
       const rowActions = generator.unique(() => createRowActionRequest(), 3)
 
-      await config.api.rowAction.save(tableId, rowActions[0], {
-        status: 201,
-      })
-      await config.api.rowAction.save(tableId, rowActions[1], {
-        status: 201,
-      })
-      const res = await config.api.rowAction.save(tableId, rowActions[2], {
-        status: 201,
-      })
+      await createRowAction(tableId, rowActions[0])
+      await createRowAction(tableId, rowActions[1])
+      const res = await createRowAction(tableId, rowActions[2])
 
       expect(res).toEqual({
         _id: `${tableId}_row_actions`,
@@ -117,12 +123,8 @@ describe("/rowsActions", () => {
       const rowAction1 = createRowActionRequest()
       const rowAction2 = createRowActionRequest()
 
-      const res1 = await config.api.rowAction.save(tableId, rowAction1, {
-        status: 201,
-      })
-      const res2 = await config.api.rowAction.save(otherTableId, rowAction2, {
-        status: 201,
-      })
+      const res1 = await createRowAction(tableId, rowAction1)
+      const res2 = await createRowAction(otherTableId, rowAction2)
 
       expect(res1).toEqual({
         _id: `${tableId}_row_actions`,
@@ -148,7 +150,7 @@ describe("/rowsActions", () => {
         name: "",
       }
 
-      await config.api.rowAction.save(tableId, rowAction, {
+      await createRowAction(tableId, rowAction, {
         status: 400,
         body: {
           message: 'Invalid body - "name" is not allowed to be empty',
@@ -164,6 +166,19 @@ describe("/rowsActions", () => {
       const res = await config.api.rowAction.find(tableId)
 
       expect(res).toEqual({ tableId, actions: [] })
+    })
+
+    it("returns only the", async () => {
+      const rowActions = generator.unique(() => createRowActionRequest(), 5)
+      for (const rowAction of rowActions) {
+        await createRowAction(tableId, rowAction)
+      }
+
+      const otherTable = await config.api.table.save(
+        setup.structures.basicTable()
+      )
+      const otherTableId = otherTable._id!
+      await createRowAction(otherTableId, createRowActionRequest())
     })
   })
 })
