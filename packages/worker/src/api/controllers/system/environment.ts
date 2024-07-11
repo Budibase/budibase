@@ -1,6 +1,6 @@
 import { Ctx, MaintenanceType } from "@budibase/types"
 import env from "../../../environment"
-import { env as coreEnv } from "@budibase/backend-core"
+import { env as coreEnv, db as dbCore } from "@budibase/backend-core"
 import nodeFetch from "node-fetch"
 
 let sqsAvailable: boolean
@@ -12,7 +12,12 @@ async function isSqsAvailable() {
   }
 
   try {
-    await nodeFetch(coreEnv.COUCH_DB_SQL_URL, {
+    const couchInfo = dbCore.getCouchInfo()
+    if (!couchInfo.sqlUrl) {
+      sqsAvailable = false
+      return false
+    }
+    await nodeFetch(couchInfo.sqlUrl, {
       timeout: 1000,
     })
     sqsAvailable = true
