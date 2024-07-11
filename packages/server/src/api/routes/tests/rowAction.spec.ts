@@ -251,4 +251,49 @@ describe("/rowsActions", () => {
       )
     })
   })
+
+  describe("delete", () => {
+    unauthorisedTests()
+
+    it("can delete existing actions", async () => {
+      const actions: RowActionResponse[] = []
+      for (const rowAction of createRowActionRequests(3)) {
+        actions.push(await createRowAction(tableId, rowAction))
+      }
+
+      const actionToDelete = _.sample(actions)!
+
+      await config.api.rowAction.delete(tableId, actionToDelete.id, {
+        status: 204,
+      })
+
+      expect(await config.api.rowAction.find(tableId)).toEqual(
+        expect.objectContaining({
+          actions: actions
+            .filter(a => a.id !== actionToDelete.id)
+            .reduce((acc, c) => ({ ...acc, [c.id]: expect.any(Object) }), {}),
+        })
+      )
+    })
+
+    it("throws Bad Request when trying to delete by a non-existing id", async () => {
+      await createRowAction(tableId, createRowActionRequest())
+
+      await config.api.rowAction.delete(tableId, generator.guid(), {
+        status: 400,
+      })
+    })
+
+    it("throws Bad Request when trying to delete by a via another table id", async () => {
+      const otherTable = await config.api.table.save(
+        setup.structures.basicTable()
+      )
+      await createRowAction(otherTable._id!, createRowActionRequest())
+
+      const action = await createRowAction(tableId, createRowActionRequest())
+      await config.api.rowAction.delete(otherTable._id!, action.id, {
+        status: 400,
+      })
+    })
+  })
 })
