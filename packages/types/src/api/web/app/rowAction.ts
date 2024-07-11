@@ -5,6 +5,7 @@ export interface CreateRowActionRequest {
 export interface RowActionsResponse {
   tableId: string
   actions: {
+    id: string
     name: string
   }[]
 }

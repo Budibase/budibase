@@ -90,7 +90,12 @@ describe("/rowsActions", () => {
       expect(res).toEqual({
         _id: `${tableId}_row_actions`,
         _rev: expect.stringMatching(/^1-\w+/),
-        actions: [{ name: rowAction.name }],
+        actions: [
+          {
+            id: expect.any(String),
+            name: rowAction.name,
+          },
+        ],
         tableId: tableId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -107,7 +112,10 @@ describe("/rowsActions", () => {
       expect(res).toEqual({
         _id: `${tableId}_row_actions`,
         _rev: expect.stringMatching(/^3-\w+/),
-        actions: rowActions,
+        actions: rowActions.map(a => ({
+          id: expect.any(String),
+          ...a,
+        })),
         tableId: tableId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -129,7 +137,12 @@ describe("/rowsActions", () => {
       expect(res1).toEqual({
         _id: `${tableId}_row_actions`,
         _rev: expect.stringMatching(/^1-\w+/),
-        actions: [rowAction1],
+        actions: [
+          {
+            id: expect.any(String),
+            ...rowAction1,
+          },
+        ],
         tableId: tableId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -138,7 +151,12 @@ describe("/rowsActions", () => {
       expect(res2).toEqual({
         _id: `${otherTableId}_row_actions`,
         _rev: expect.stringMatching(/^1-\w+/),
-        actions: [rowAction2],
+        actions: [
+          {
+            id: expect.any(String),
+            ...rowAction2,
+          },
+        ],
         tableId: otherTableId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -178,7 +196,10 @@ describe("/rowsActions", () => {
       expect(response).toEqual(
         expect.objectContaining({
           tableId,
-          actions: rowActions,
+          actions: rowActions.map(a => ({
+            id: expect.any(String),
+            ...a,
+          })),
         })
       )
     })
