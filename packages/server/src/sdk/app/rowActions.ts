@@ -26,7 +26,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
   await db.put(doc)
 
   return {
-    actionId: newId,
+    id: newId,
     ...rowAction,
   }
 }
@@ -62,7 +62,7 @@ export async function update(
   await db.put(actionsDoc)
 
   return {
-    actionId: rowActionId,
+    id: rowActionId,
     ...rowAction,
   }
 }

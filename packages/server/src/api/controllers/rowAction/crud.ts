@@ -65,7 +65,6 @@ export async function update(
 
   ctx.body = {
     tableId: table._id!,
-
     ...actions,
   }
 }

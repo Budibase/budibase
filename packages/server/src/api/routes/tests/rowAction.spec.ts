@@ -95,8 +95,8 @@ describe("/rowsActions", () => {
       })
 
       expect(res).toEqual({
+        id: expect.stringMatching(/^row_action_\w+/),
         tableId: tableId,
-        actionId: expect.stringMatching(/^row_action_\w+/),
         ...rowAction,
       })
 
@@ -105,7 +105,7 @@ describe("/rowsActions", () => {
         _rev: expect.stringMatching(/^1-\w+/),
         tableId: tableId,
         actions: {
-          [res.actionId]: rowAction,
+          [res.id]: rowAction,
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -123,9 +123,9 @@ describe("/rowsActions", () => {
         _id: `ra_${tableId}`,
         _rev: expect.stringMatching(/^3-\w+/),
         actions: {
-          [responses[0].actionId]: rowActions[0],
-          [responses[1].actionId]: rowActions[1],
-          [responses[2].actionId]: rowActions[2],
+          [responses[0].id]: rowActions[0],
+          [responses[1].id]: rowActions[1],
+          [responses[2].id]: rowActions[2],
         },
         tableId: tableId,
         createdAt: new Date().toISOString(),
@@ -166,9 +166,9 @@ describe("/rowsActions", () => {
         expect.objectContaining({
           tableId,
           actions: {
-            [rowActions[0].actionId]: expect.any(Object),
-            [rowActions[1].actionId]: expect.any(Object),
-            [rowActions[2].actionId]: expect.any(Object),
+            [rowActions[0].id]: expect.any(Object),
+            [rowActions[1].id]: expect.any(Object),
+            [rowActions[2].id]: expect.any(Object),
           },
         })
       )
@@ -207,8 +207,8 @@ describe("/rowsActions", () => {
       })
 
       expect(res).toEqual({
+        id: actionId,
         tableId,
-        actionId,
         ...actionData,
         name: updatedName,
       })
@@ -245,7 +245,7 @@ describe("/rowsActions", () => {
       const action = await createRowAction(tableId, createRowActionRequest())
       await config.api.rowAction.update(
         otherTable._id!,
-        action.actionId,
+        action.id,
         createRowActionRequest(),
         { status: 400 }
       )
