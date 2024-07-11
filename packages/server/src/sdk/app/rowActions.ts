@@ -1,4 +1,4 @@
-import { context, utils } from "@budibase/backend-core"
+import { context, HTTPError, utils } from "@budibase/backend-core"
 
 import { generateRowActionsID } from "../../db/utils"
 import {
@@ -26,7 +26,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
   await db.put(doc)
 
   return {
-    id: newId,
+    actionId: newId,
     ...rowAction,
   }
 }
@@ -42,4 +42,27 @@ export async function docExists(tableId: string) {
   const rowActionsId = generateRowActionsID(tableId)
   const result = await db.exists(rowActionsId)
   return result
+}
+export async function update(
+  tableId: string,
+  rowActionId: string,
+  rowAction: { name: string }
+) {
+  const actionsDoc = await get(tableId)
+
+  if (!actionsDoc.actions[rowActionId]) {
+    throw new HTTPError(
+      `Row action '${rowActionId}' not found in '${tableId}'`,
+      400
+    )
+  }
+  actionsDoc.actions[rowActionId] = rowAction
+
+  const db = context.getAppDB()
+  await db.put(actionsDoc)
+
+  return {
+    actionId: rowActionId,
+    ...rowAction,
+  }
 }

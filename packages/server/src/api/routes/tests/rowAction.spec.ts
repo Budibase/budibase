@@ -184,4 +184,45 @@ describe("/rowsActions", () => {
       )
     })
   })
+
+  describe("update", () => {
+    unauthorisedTests()
+
+    it("can update existing actions", async () => {
+      for (const rowAction of createRowActionRequests(3)) {
+        await createRowAction(tableId, rowAction)
+      }
+
+      const persisted = await config.api.rowAction.find(tableId)
+
+      const [actionId, actionData] = _.sample(
+        Object.entries(persisted.actions)
+      )!
+
+      const updatedName = generator.word()
+
+      const res = await config.api.rowAction.update(tableId, actionId, {
+        ...actionData,
+        name: updatedName,
+      })
+
+      expect(res).toEqual({
+        tableId,
+        actionId,
+        ...actionData,
+        name: updatedName,
+      })
+
+      expect(await config.api.rowAction.find(tableId)).toEqual(
+        expect.objectContaining({
+          actions: expect.objectContaining({
+            [actionId]: {
+              ...actionData,
+              name: updatedName,
+            },
+          }),
+        })
+      )
+    })
+  })
 })

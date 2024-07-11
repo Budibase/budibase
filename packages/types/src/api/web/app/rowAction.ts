@@ -13,3 +13,8 @@ export interface RowActionsResponse {
 interface RowActionData {
   name: string
 }
+
+export interface UpdateRowActionRequest {
+  id: string
+  name: string
+}

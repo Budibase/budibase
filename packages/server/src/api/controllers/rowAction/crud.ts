@@ -3,6 +3,7 @@ import {
   Ctx,
   RowActionResponse,
   RowActionsResponse,
+  UpdateRowActionRequest,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -38,21 +39,35 @@ export async function create(
 ) {
   const table = await getTable(ctx)
 
-  const { id, ...createdAction } = await sdk.rowActions.create(
+  const createdAction = await sdk.rowActions.create(
     table._id!,
     ctx.request.body
   )
 
   ctx.body = {
     tableId: table._id!,
-    actionId: id,
     ...createdAction,
   }
   ctx.status = 201
 }
 
-export function update() {
-  throw new Error("Function not implemented.")
+export async function update(
+  ctx: Ctx<UpdateRowActionRequest, RowActionResponse>
+) {
+  const table = await getTable(ctx)
+  const { actionId } = ctx.params
+
+  const actions = await sdk.rowActions.update(
+    table._id!,
+    actionId,
+    ctx.request.body
+  )
+
+  ctx.body = {
+    tableId: table._id!,
+
+    ...actions,
+  }
 }
 
 export function remove() {
