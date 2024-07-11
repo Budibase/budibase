@@ -1,6 +1,7 @@
 import {
   CreateRowActionRequest,
   Ctx,
+  RowActionResponse,
   RowActionsResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -20,7 +21,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
   if (!(await sdk.rowActions.docExists(table._id!))) {
     ctx.body = {
       tableId: table._id!,
-      actions: [],
+      actions: {},
     }
     return
   }
@@ -33,15 +34,19 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
 }
 
 export async function create(
-  ctx: Ctx<CreateRowActionRequest, RowActionsResponse>
+  ctx: Ctx<CreateRowActionRequest, RowActionResponse>
 ) {
   const table = await getTable(ctx)
 
-  const created = await sdk.rowActions.create(table._id!, ctx.request.body)
+  const { id, ...createdAction } = await sdk.rowActions.create(
+    table._id!,
+    ctx.request.body
+  )
 
   ctx.body = {
     tableId: table._id!,
-    ...created,
+    actionId: id,
+    ...createdAction,
   }
   ctx.status = 201
 }

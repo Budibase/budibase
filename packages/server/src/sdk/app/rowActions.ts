@@ -1,7 +1,11 @@
 import { context, utils } from "@budibase/backend-core"
 
 import { generateRowActionsID } from "../../db/utils"
-import { TableRowActions } from "@budibase/types"
+import {
+  SEPARATOR,
+  TableRowActions,
+  VirtualDocumentType,
+} from "@budibase/types"
 
 export async function create(tableId: string, rowAction: { name: string }) {
   const db = context.getAppDB()
@@ -14,16 +18,17 @@ export async function create(tableId: string, rowAction: { name: string }) {
       throw e
     }
 
-    doc = { _id: rowActionsId, actions: [] }
+    doc = { _id: rowActionsId, actions: {} }
   }
 
-  doc.actions.push({
-    id: utils.newid(),
-    ...rowAction,
-  })
+  const newId = `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
+  doc.actions[newId] = rowAction
   await db.put(doc)
 
-  return await get(tableId)
+  return {
+    id: newId,
+    ...rowAction,
+  }
 }
 
 export async function get(tableId: string) {
