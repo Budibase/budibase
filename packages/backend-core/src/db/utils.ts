@@ -1,6 +1,6 @@
 import env from "../environment"
 import { DEFAULT_TENANT_ID, SEPARATOR, DocumentType } from "../constants"
-import { getTenantId, getGlobalDBName } from "../context"
+import { getTenantId, getGlobalDBName, isMultiTenant } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
 import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "../docIds/conversions"
@@ -213,6 +213,11 @@ export function isSqsEnabledForTenant(): boolean {
     return false
   }
 
+  // single tenant (self host and dev) always enabled if flag set
+  if (!isMultiTenant()) {
+    return true
+  }
+
   // This is to guard against the situation in tests where tests pass because
   // we're not actually using SQS, we're using Lucene and the tests pass due to
   // parity.
@@ -220,6 +225,14 @@ export function isSqsEnabledForTenant(): boolean {
     throw new Error(
       "to enable SQS you must specify a list of tenants in the SQS_SEARCH_ENABLE_TENANTS env var"
     )
+  }
+
+  // Special case to enable all tenants, for testing in QA.
+  if (
+    env.SQS_SEARCH_ENABLE_TENANTS.length === 1 &&
+    env.SQS_SEARCH_ENABLE_TENANTS[0] === "*"
+  ) {
+    return true
   }
 
   return env.SQS_SEARCH_ENABLE_TENANTS.includes(tenantId)

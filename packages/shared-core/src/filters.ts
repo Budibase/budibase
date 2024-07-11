@@ -106,29 +106,47 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotEquals.value,
   OperatorOptions.Contains.value,
   OperatorOptions.NotContains.value,
+  OperatorOptions.ContainsAny.value,
+  OperatorOptions.In.value,
 ] as (keyof SearchQueryFields)[]
 
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
+ *
+ * don't do a pure falsy check, as 0 is included
+ * https://github.com/Budibase/budibase/issues/10118
  */
-const cleanupQuery = (query: SearchFilters) => {
+export const cleanupQuery = (query: SearchFilters) => {
   if (!query) {
     return query
   }
   for (let filterField of NoEmptyFilterStrings) {
-    const operator = filterField as SearchFilterOperator
-    if (!query[operator]) {
+    if (!query[filterField]) {
       continue
     }
 
-    for (let [key, value] of Object.entries(query[operator]!)) {
-      if (value == null || value === "") {
-        delete query[operator]![key]
+    for (let filterType of Object.keys(query)) {
+      if (filterType !== filterField) {
+        continue
+      }
+      // don't know which one we're checking, type could be anything
+      const value = query[filterType] as unknown
+      if (typeof value === "object") {
+        for (let [key, value] of Object.entries(query[filterType] as object)) {
+          if (value == null || value === "" || isEmptyArray(value)) {
+            // @ts-ignore
+            delete query[filterField][key]
+          }
+        }
       }
     }
   }
   return query
+}
+
+function isEmptyArray(value: any) {
+  return Array.isArray(value) && value.length === 0
 }
 
 /**
