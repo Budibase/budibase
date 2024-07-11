@@ -224,5 +224,31 @@ describe("/rowsActions", () => {
         })
       )
     })
+
+    it("throws Bad Request when trying to update by a non-existing id", async () => {
+      await createRowAction(tableId, createRowActionRequest())
+
+      await config.api.rowAction.update(
+        tableId,
+        generator.guid(),
+        createRowActionRequest(),
+        { status: 400 }
+      )
+    })
+
+    it("throws Bad Request when trying to update by a via another table id", async () => {
+      const otherTable = await config.api.table.save(
+        setup.structures.basicTable()
+      )
+      await createRowAction(otherTable._id!, createRowActionRequest())
+
+      const action = await createRowAction(tableId, createRowActionRequest())
+      await config.api.rowAction.update(
+        otherTable._id!,
+        action.actionId,
+        createRowActionRequest(),
+        { status: 400 }
+      )
+    })
   })
 })
