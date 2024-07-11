@@ -1,4 +1,6 @@
 import _ from "lodash"
+import tk from "timekeeper"
+
 import { CreateRowActionRequest, Table } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
@@ -9,6 +11,7 @@ describe("/rowsActions", () => {
   let table: Table
 
   beforeAll(async () => {
+    tk.freeze(new Date())
     await config.init()
 
     table = await config.api.table.save(setup.structures.basicTable())
@@ -62,14 +65,21 @@ describe("/rowsActions", () => {
   describe("create", () => {
     unauthorisedTests()
 
-    it("accepts creating new row actions", async () => {
+    it("accepts creating new row actions for", async () => {
       const rowAction = createRowActionRequest()
 
       const res = await config.api.rowAction.save(table._id!, rowAction, {
-        status: 204,
+        status: 201,
       })
 
-      expect(res).toEqual({})
+      expect(res).toEqual({
+        _id: `${table._id}_row_actions`,
+        _rev: expect.stringMatching(/^1-\w+/),
+        actions: [{ name: rowAction.name }],
+        tableId: table._id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
     })
 
     it("rejects with bad request when creating with no name", async () => {
