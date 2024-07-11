@@ -2,6 +2,7 @@ import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { generator, structures } from "../../../tests"
 import RedisWrapper from "../redis"
 import { env } from "../.."
+import { randomUUID } from "crypto"
 
 jest.setTimeout(30000)
 
@@ -52,10 +53,10 @@ describe("redis", () => {
   describe("bulkStore", () => {
     function createRandomObject(
       keyLength: number,
-      valueGenerator: () => any = () => generator.word()
+      valueGenerator: () => any = () => randomUUID()
     ) {
       return generator
-        .unique(() => generator.word(), keyLength)
+        .unique(() => randomUUID(), keyLength)
         .reduce((acc, key) => {
           acc[key] = valueGenerator()
           return acc
