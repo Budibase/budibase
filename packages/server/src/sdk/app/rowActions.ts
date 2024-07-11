@@ -28,3 +28,10 @@ export async function get(tableId: string) {
   const rowActionsId = generateRowActionsID(tableId)
   return await db.get<TableRowActions>(rowActionsId)
 }
+
+export async function docExists(tableId: string) {
+  const db = context.getAppDB()
+  const rowActionsId = generateRowActionsID(tableId)
+  const result = await db.exists(rowActionsId)
+  return result
+}
