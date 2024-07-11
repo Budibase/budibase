@@ -85,7 +85,7 @@ describe("/rowsActions", () => {
       })
     })
 
-    it("can create multiple row actions for the same tables", async () => {
+    it("can create multiple row actions for the same table", async () => {
       const rowActions = generator.unique(() => createRowActionRequest(), 3)
 
       await config.api.rowAction.save(tableId, rowActions[0], {
@@ -103,6 +103,41 @@ describe("/rowsActions", () => {
         _rev: expect.stringMatching(/^3-\w+/),
         actions: rowActions,
         tableId: tableId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    })
+
+    it("can create row actions for different tables", async () => {
+      const otherTable = await config.api.table.save(
+        setup.structures.basicTable()
+      )
+      const otherTableId = otherTable._id!
+
+      const rowAction1 = createRowActionRequest()
+      const rowAction2 = createRowActionRequest()
+
+      const res1 = await config.api.rowAction.save(tableId, rowAction1, {
+        status: 201,
+      })
+      const res2 = await config.api.rowAction.save(otherTableId, rowAction2, {
+        status: 201,
+      })
+
+      expect(res1).toEqual({
+        _id: `${tableId}_row_actions`,
+        _rev: expect.stringMatching(/^1-\w+/),
+        actions: [rowAction1],
+        tableId: tableId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+
+      expect(res2).toEqual({
+        _id: `${otherTableId}_row_actions`,
+        _rev: expect.stringMatching(/^1-\w+/),
+        actions: [rowAction2],
+        tableId: otherTableId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
