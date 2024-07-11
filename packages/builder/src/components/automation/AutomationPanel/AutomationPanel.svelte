@@ -31,7 +31,7 @@
     })
 
   $: groupedAutomations = filteredAutomations.reduce((acc, auto) => {
-    acc[auto.definition.trigger.event] = acc[auto.definition.trigger.event] || {
+    acc[auto.definition.trigger.event] ??= {
       icon: auto.definition.trigger.icon,
       name: (auto.definition.trigger?.name || "").toUpperCase(),
       entries: [],
