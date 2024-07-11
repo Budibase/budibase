@@ -45,13 +45,10 @@ import {
   getTableIDList,
 } from "./filters"
 import { dataFilters } from "@budibase/shared-core"
-import { DEFAULT_TABLE_IDS } from "../../../../constants"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
-const USER_COLUMN_PREFIX_REGEX = new RegExp(
-  `no such column: .+${USER_COLUMN_PREFIX}`
-)
+const MISSING_TABLE_REGX = new RegExp(`no such table: .+`)
 
 function buildInternalFieldList(
   table: Table,
@@ -241,9 +238,9 @@ function resyncDefinitionsRequired(status: number, message: string) {
   // pre data_ prefix on column names, need to resync
   return (
     // there are tables missing - try a resync
-    (status === 400 && message.includes("no such table: ")) ||
+    (status === 400 && message.match(MISSING_TABLE_REGX)) ||
     // there are columns missing - try a resync
-    (status === 400 && message.includes("no such column: ")) ||
+    (status === 400 && message.match(MISSING_COLUMN_REGEX)) ||
     // no design document found, needs a full sync
     (status === 404 && message?.includes(SQLITE_DESIGN_DOC_ID))
   )
