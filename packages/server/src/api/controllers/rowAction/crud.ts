@@ -17,11 +17,11 @@ async function getTable(ctx: Ctx) {
 export async function find(ctx: Ctx<void, RowActionsResponse>) {
   const table = await getTable(ctx)
 
-  // TODO
+  const actions = await sdk.rowActions.get(table._id!)
 
   ctx.body = {
     tableId: table._id!,
-    actions: [],
+    ...actions,
   }
 }
 

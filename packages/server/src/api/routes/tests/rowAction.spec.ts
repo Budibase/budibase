@@ -162,13 +162,7 @@ describe("/rowsActions", () => {
   describe("find", () => {
     unauthorisedTests()
 
-    it("returns empty for tables without row actions", async () => {
-      const res = await config.api.rowAction.find(tableId)
-
-      expect(res).toEqual({ tableId, actions: [] })
-    })
-
-    it("returns only the", async () => {
+    it("returns only the actions for the requested table", async () => {
       const rowActions = generator.unique(() => createRowActionRequest(), 5)
       for (const rowAction of rowActions) {
         await createRowAction(tableId, rowAction)
@@ -179,6 +173,18 @@ describe("/rowsActions", () => {
       )
       const otherTableId = otherTable._id!
       await createRowAction(otherTableId, createRowActionRequest())
+
+      const response = await config.api.rowAction.find(tableId)
+      expect(response).toEqual(
+        expect.objectContaining({
+          tableId,
+          actions: rowActions,
+        })
+      )
+    })
+
+    it("returns 404 for tables without row actions", async () => {
+      await config.api.rowAction.find(tableId, { status: 404 })
     })
   })
 })
