@@ -39,6 +39,7 @@ export enum DocumentType {
   AUDIT_LOG = "al",
   APP_MIGRATION_METADATA = "_design/migrations",
   SCIM_LOG = "scimlog",
+  ROW_ACTIONS = "ra",
 }
 
 // these are the core documents that make up the data, design
