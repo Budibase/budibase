@@ -1,20 +1,23 @@
 import _ from "lodash"
 import tk from "timekeeper"
 
-import { CreateRowActionRequest, Table } from "@budibase/types"
+import { CreateRowActionRequest } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 
 describe("/rowsActions", () => {
   const config = setup.getConfig()
 
-  let table: Table
+  let tableId: string
 
   beforeAll(async () => {
     tk.freeze(new Date())
     await config.init()
+  })
 
-    table = await config.api.table.save(setup.structures.basicTable())
+  beforeEach(async () => {
+    const table = await config.api.table.save(setup.structures.basicTable())
+    tableId = table._id!
   })
 
   afterAll(setup.afterAll)
@@ -28,7 +31,7 @@ describe("/rowsActions", () => {
   function unauthorisedTests() {
     it("returns unauthorised (401) for unauthenticated requests", async () => {
       await config.api.rowAction.save(
-        table._id!,
+        tableId,
         createRowActionRequest(),
         {
           status: 401,
@@ -65,18 +68,41 @@ describe("/rowsActions", () => {
   describe("create", () => {
     unauthorisedTests()
 
-    it("accepts creating new row actions for", async () => {
+    it("creates new row actions for tables without existing actions", async () => {
       const rowAction = createRowActionRequest()
 
-      const res = await config.api.rowAction.save(table._id!, rowAction, {
+      const res = await config.api.rowAction.save(tableId, rowAction, {
         status: 201,
       })
 
       expect(res).toEqual({
-        _id: `${table._id}_row_actions`,
+        _id: `${tableId}_row_actions`,
         _rev: expect.stringMatching(/^1-\w+/),
         actions: [{ name: rowAction.name }],
-        tableId: table._id,
+        tableId: tableId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    })
+
+    it("can create multiple row actions for the same tables", async () => {
+      const rowActions = generator.unique(() => createRowActionRequest(), 3)
+
+      await config.api.rowAction.save(tableId, rowActions[0], {
+        status: 201,
+      })
+      await config.api.rowAction.save(tableId, rowActions[1], {
+        status: 201,
+      })
+      const res = await config.api.rowAction.save(tableId, rowActions[2], {
+        status: 201,
+      })
+
+      expect(res).toEqual({
+        _id: `${tableId}_row_actions`,
+        _rev: expect.stringMatching(/^3-\w+/),
+        actions: rowActions,
+        tableId: tableId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
@@ -87,7 +113,7 @@ describe("/rowsActions", () => {
         name: "",
       }
 
-      await config.api.rowAction.save(table._id!, rowAction, {
+      await config.api.rowAction.save(tableId, rowAction, {
         status: 400,
         body: {
           message: 'Invalid body - "name" is not allowed to be empty',
@@ -100,7 +126,6 @@ describe("/rowsActions", () => {
     unauthorisedTests()
 
     it("returns empty for tables without row actions", async () => {
-      const tableId = table._id!
       const res = await config.api.rowAction.find(tableId)
 
       expect(res).toEqual({ tableId, actions: [] })
