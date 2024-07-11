@@ -35,4 +35,21 @@ export class RowActionAPI extends TestAPI {
       }
     )
   }
+
+  update = async (
+    tableId: string,
+    rowActionId: string,
+    rowAction: CreateRowActionRequest,
+    expectations?: Expectations,
+    config?: { publicUser?: boolean }
+  ) => {
+    return await this._put<RowActionResponse>(
+      `/api/tables/${tableId}/actions/${rowActionId}`,
+      {
+        body: rowAction,
+        expectations,
+        ...config,
+      }
+    )
+  }
 }
