@@ -3,7 +3,7 @@
   import { getContext, onDestroy } from "svelte"
   import { ModalContent, Modal } from "@budibase/bbui"
   import FilterModal from "./FilterModal.svelte"
-  import { QueryUtils } from "@budibase/frontend-core"
+  import { QueryUtils, Constants } from "@budibase/frontend-core"
   import Button from "../Button.svelte"
 
   export let dataProvider
@@ -69,7 +69,10 @@
         }
       })
     }
+
     return Object.values(clonedSchema || {})
+      .filter(field => !Constants.BannedSearchTypes.includes(field.type))
+      .concat([{ name: "_id", type: "string" }])
   }
 
   const openEditor = () => {
@@ -94,7 +97,7 @@
     onClick={openEditor}
     icon="ri-filter-3-line"
     text="Filter"
-    size="XL"
+    {size}
     type="secondary"
     quiet
     active={filters?.length > 0}
