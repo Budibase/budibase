@@ -30,12 +30,21 @@
 
   $: hasRowActions = rowActions > 0
   $: title = "Row actions" + (hasRowActions ? ` (${rowActions.length})` : "")
+
+  function closeAllDrawers() {
+    upsertDrawer.hide()
+  }
 </script>
 
 <ActionButton icon="JourneyAction" quiet on:click={openDrawer}>
   {title}
 </ActionButton>
-<Drawer bind:this={drawer} title={"Row actions"}>
+<Drawer
+  bind:this={drawer}
+  title={"Row actions"}
+  forceModal
+  on:drawerHide={closeAllDrawers}
+>
   <div slot="buttons">
     <Button cta on:click={addNewAction}>Add new</Button>
   </div>
