@@ -6,7 +6,7 @@ function validate(
   property: string,
   opts?: { errorPrefix?: string; allowUnknown?: boolean }
 ) {
-  const errorPrefix = opts?.errorPrefix || `Invalid ${property}`
+  const errorPrefix = opts?.errorPrefix ?? `Invalid ${property}`
   // Return a Koa middleware function
   return (ctx: Ctx, next: any) => {
     if (!schema) {
