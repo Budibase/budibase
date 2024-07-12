@@ -14,7 +14,7 @@ import {
   CONSTANT_INTERNAL_ROW_COLS,
   generateJunctionTableID,
 } from "../../../../db/utils"
-import { isEqual, merge } from "lodash"
+import { isEqual } from "lodash"
 import { DEFAULT_TABLES } from "../../../../db/defaultData/datasource_bb_default"
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
@@ -127,21 +127,17 @@ function mapTable(table: Table): SQLiteTables {
 // nothing exists, need to iterate though existing tables
 async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   const tables = await tablesSdk.getAllInternalTables()
-  const defaultTables = DEFAULT_TABLES
-  const definition = sql.designDoc.base("tableId")
-  for (let table of tables.concat(defaultTables)) {
-    const tableId = table._id!
-    let existing = definition.sql.tables[tableId]
-    let mapped = mapTable(table)
-    // there are multiple definitions for this table (default table overlap)
-    // when there is overlap - we have to make sure we have columns from all definitions
-    // this problem really only applies to sample data tables where they've been expanded
-    if (existing) {
-      mapped[tableId] = merge(mapped[tableId], existing)
+  for (const defaultTable of DEFAULT_TABLES) {
+    // the default table doesn't exist in Couch, use the in-memory representation
+    if (!tables.find(table => table._id === defaultTable._id)) {
+      tables.push(defaultTable)
     }
+  }
+  const definition = sql.designDoc.base("tableId")
+  for (let table of tables) {
     definition.sql.tables = {
       ...definition.sql.tables,
-      ...mapped,
+      ...mapTable(table),
     }
   }
   return definition
