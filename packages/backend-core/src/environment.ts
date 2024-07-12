@@ -114,7 +114,7 @@ const environment = {
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
-  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || "http://localhost:4006",
+  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL,
   SQS_SEARCH_ENABLE: process.env.SQS_SEARCH_ENABLE,
   SQS_SEARCH_ENABLE_TENANTS:
     process.env.SQS_SEARCH_ENABLE_TENANTS?.split(",") || [],
