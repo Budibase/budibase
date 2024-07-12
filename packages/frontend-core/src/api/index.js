@@ -34,6 +34,7 @@ import { buildEventEndpoints } from "./events"
 import { buildAuditLogsEndpoints } from "./auditLogs"
 import { buildLogsEndpoints } from "./logs"
 import { buildMigrationEndpoints } from "./migrations"
+import { buildRowActionsEndpoints } from "./rowActions"
 
 /**
  * Random identifier to uniquely identify a session in a tab. This is
@@ -300,6 +301,7 @@ export const createAPIClient = config => {
     ...buildAuditLogsEndpoints(API),
     ...buildLogsEndpoints(API),
     ...buildMigrationEndpoints(API),
+    ...buildRowActionsEndpoints(API),
     viewV2: buildViewV2Endpoints(API),
   }
 }

@@ -86,7 +86,7 @@
       {#if !isUsersTable}
         <GridCreateAutomationButton />
       {/if}
-      <RowActionsButton />
+      <RowActionsButton tableId={id} />
       {#if relationshipsEnabled}
         <GridRelationshipButton />
       {/if}
