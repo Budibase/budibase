@@ -18,6 +18,7 @@
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
   import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
+  import RowActionsButton from "./buttons/RowActionsButton.svelte"
 
   const userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
@@ -85,6 +86,7 @@
       {#if !isUsersTable}
         <GridCreateAutomationButton />
       {/if}
+      <RowActionsButton />
       {#if relationshipsEnabled}
         <GridRelationshipButton />
       {/if}
