@@ -4,7 +4,12 @@ import {
   getDatasource,
   knexClient,
 } from "../../../integrations/tests/utils"
-import { db as dbCore, utils } from "@budibase/backend-core"
+import {
+  db as dbCore,
+  MAX_VALID_DATE,
+  MIN_VALID_DATE,
+  utils,
+} from "@budibase/backend-core"
 
 import * as setup from "./utilities"
 import {
@@ -1098,21 +1103,37 @@ describe.each([
         }).toFindNothing()
       })
 
-      // We never implemented half-open ranges in Lucene.
-      !isLucene &&
-        it("can search using just a low value", async () => {
-          await expectQuery({
-            range: { age: { low: 5 } },
-          }).toContainExactly([{ age: 10 }])
-        })
+      it("greater than equal to", async () => {
+        await expectQuery({
+          range: {
+            age: { low: 10, high: Number.MAX_SAFE_INTEGER },
+          },
+        }).toContainExactly([{ age: 10 }])
+      })
 
-      // We never implemented half-open ranges in Lucene.
-      !isLucene &&
-        it("can search using just a high value", async () => {
-          await expectQuery({
-            range: { age: { high: 5 } },
-          }).toContainExactly([{ age: 1 }])
-        })
+      it("greater than", async () => {
+        await expectQuery({
+          range: {
+            age: { low: 5, high: Number.MAX_SAFE_INTEGER },
+          },
+        }).toContainExactly([{ age: 10 }])
+      })
+
+      it("less than equal to", async () => {
+        await expectQuery({
+          range: {
+            age: { high: 1, low: Number.MIN_SAFE_INTEGER },
+          },
+        }).toContainExactly([{ age: 1 }])
+      })
+
+      it("less than", async () => {
+        await expectQuery({
+          range: {
+            age: { high: 5, low: Number.MIN_SAFE_INTEGER },
+          },
+        }).toContainExactly([{ age: 1 }])
+      })
     })
 
     describe("sort", () => {
@@ -1232,21 +1253,29 @@ describe.each([
         }).toFindNothing()
       })
 
-      // We never implemented half-open ranges in Lucene.
-      !isLucene &&
-        it("can search using just a low value", async () => {
-          await expectQuery({
-            range: { dob: { low: JAN_5TH } },
-          }).toContainExactly([{ dob: JAN_10TH }])
-        })
+      it("greater than equal to", async () => {
+        await expectQuery({
+          range: { dob: { low: JAN_10TH, high: MAX_VALID_DATE.toISOString() } },
+        }).toContainExactly([{ dob: JAN_10TH }])
+      })
 
-      // We never implemented half-open ranges in Lucene.
-      !isLucene &&
-        it("can search using just a high value", async () => {
-          await expectQuery({
-            range: { dob: { high: JAN_5TH } },
-          }).toContainExactly([{ dob: JAN_1ST }])
-        })
+      it("greater than", async () => {
+        await expectQuery({
+          range: { dob: { low: JAN_5TH, high: MAX_VALID_DATE.toISOString() } },
+        }).toContainExactly([{ dob: JAN_10TH }])
+      })
+
+      it("less than equal to", async () => {
+        await expectQuery({
+          range: { dob: { high: JAN_1ST, low: MIN_VALID_DATE.toISOString() } },
+        }).toContainExactly([{ dob: JAN_1ST }])
+      })
+
+      it("less than", async () => {
+        await expectQuery({
+          range: { dob: { high: JAN_5TH, low: MIN_VALID_DATE.toISOString() } },
+        }).toContainExactly([{ dob: JAN_1ST }])
+      })
     })
 
     describe("sort", () => {
