@@ -26,6 +26,7 @@ import {
   roles,
   sessions,
   tenancy,
+  utils,
 } from "@budibase/backend-core"
 import {
   app as appController,
@@ -40,7 +41,6 @@ import {
 } from "./controllers"
 
 import { cleanup } from "../../utilities/fileSystem"
-import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
@@ -73,6 +73,8 @@ import API from "./api"
 import { cloneDeep } from "lodash"
 import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
+
+const newid = utils.newid
 
 mocks.licenses.init(pro)
 
