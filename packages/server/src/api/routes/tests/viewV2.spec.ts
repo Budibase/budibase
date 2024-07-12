@@ -1490,7 +1490,7 @@ describe.each([
       it("does not allow public users to fetch by default", async () => {
         await config.publish()
         await config.api.viewV2.publicSearch(view.id, undefined, {
-          status: 403,
+          status: 401,
         })
       })
 
@@ -1534,7 +1534,7 @@ describe.each([
         await config.publish()
 
         await config.api.viewV2.publicSearch(view.id, undefined, {
-          status: 403,
+          status: 401,
         })
       })
     })
