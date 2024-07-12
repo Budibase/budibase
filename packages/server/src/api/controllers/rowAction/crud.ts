@@ -21,17 +21,22 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
 
   if (!(await sdk.rowActions.docExists(table._id!))) {
     ctx.body = {
-      tableId: table._id!,
       actions: {},
     }
     return
   }
 
-  const actions = await sdk.rowActions.get(table._id!)
-  ctx.body = {
-    tableId: table._id!,
-    ...actions,
+  const { actions } = await sdk.rowActions.get(table._id!)
+  const result: RowActionsResponse = {
+    actions: Object.entries(actions).reduce<Record<string, RowActionResponse>>(
+      (acc, [key, action]) => ({
+        ...acc,
+        [key]: { id: key, tableId: table._id!, ...action },
+      }),
+      {}
+    ),
   }
+  ctx.body = result
 }
 
 export async function create(
@@ -39,10 +44,9 @@ export async function create(
 ) {
   const table = await getTable(ctx)
 
-  const createdAction = await sdk.rowActions.create(
-    table._id!,
-    ctx.request.body
-  )
+  const createdAction = await sdk.rowActions.create(table._id!, {
+    name: ctx.request.body.name,
+  })
 
   ctx.body = {
     tableId: table._id!,
@@ -57,11 +61,9 @@ export async function update(
   const table = await getTable(ctx)
   const { actionId } = ctx.params
 
-  const actions = await sdk.rowActions.update(
-    table._id!,
-    actionId,
-    ctx.request.body
-  )
+  const actions = await sdk.rowActions.update(table._id!, actionId, {
+    name: ctx.request.body.name,
+  })
 
   ctx.body = {
     tableId: table._id!,

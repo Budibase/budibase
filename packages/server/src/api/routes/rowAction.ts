@@ -11,6 +11,8 @@ export function rowActionValidator() {
   return middleware.joiValidator.body(
     Joi.object({
       name: Joi.string().required(),
+      id: Joi.optional(),
+      tableId: Joi.optional(),
     })
   )
 }
