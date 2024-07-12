@@ -160,9 +160,9 @@ describe("/rowsActions", () => {
       expect(await config.api.rowAction.find(tableId)).toEqual({
         actions: {
           [res.id]: {
-            ...rowAction,
             id: res.id,
             tableId: tableId,
+            ...rowAction,
           },
         },
       })
