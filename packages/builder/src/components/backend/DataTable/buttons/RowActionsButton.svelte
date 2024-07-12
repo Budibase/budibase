@@ -1,26 +1,56 @@
 <script>
-  import { ActionButton, Modal } from "@budibase/bbui"
-  import RowActionsModal from "../modals/RowActionsModal.svelte"
-  import { rowActions } from "stores/builder/rowActions"
+  import {
+    ActionButton,
+    Body,
+    Button,
+    Drawer,
+    DrawerContent,
+    Table,
+  } from "@budibase/bbui"
 
   export let tableId
-  let modal
+  let drawer
+  let upsertDrawer
 
-  $: rowActions.fetch(tableId)
+  let rowActions = []
 
-  async function openModal() {
-    modal.show()
+  $: fetchRowActions(tableId)
+
+  async function fetchRowActions(tableId) {
+    rowActions = await API.fetchRowActions(tableId)
   }
 
-  $: rowActionsList = $rowActions.list
-  $: hasRowActions = rowActionsList > 0
-  $: title =
-    "Row actions" + (hasRowActions ? ` (${rowActionsList.length})` : "")
+  async function openDrawer() {
+    drawer.show()
+  }
+
+  function addNewAction() {
+    upsertDrawer.show()
+  }
+
+  $: hasRowActions = rowActions > 0
+  $: title = "Row actions" + (hasRowActions ? ` (${rowActions.length})` : "")
 </script>
 
-<ActionButton icon="JourneyAction" quiet on:click={openModal}>
+<ActionButton icon="JourneyAction" quiet on:click={openDrawer}>
   {title}
 </ActionButton>
-<Modal bind:this={modal}>
-  <RowActionsModal />
-</Modal>
+<Drawer bind:this={drawer} title={"Row actions"}>
+  <div slot="buttons">
+    <Button cta on:click={addNewAction}>Add new</Button>
+  </div>
+  <DrawerContent
+    slot="body"
+    title="Row actions"
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    {#if !rowActions.length}
+      <Body size="S">No row actions are created for this table.</Body>
+    {:else}
+      <Table />
+    {/if}
+  </DrawerContent>
+</Drawer>
+
+<Drawer bind:this={upsertDrawer} title={"Add new row action"} />
