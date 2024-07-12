@@ -139,6 +139,34 @@ describe("/rowsActions", () => {
         },
       })
     })
+
+    it("ignores not valid row action data", async () => {
+      const rowAction = createRowActionRequest()
+      const dirtyRowAction = {
+        ...rowAction,
+        id: generator.guid(),
+        valueToIgnore: generator.word(),
+      }
+      const res = await createRowAction(tableId, dirtyRowAction, {
+        status: 201,
+      })
+
+      expect(res).toEqual({
+        id: expect.any(String),
+        tableId,
+        ...rowAction,
+      })
+
+      expect(await config.api.rowAction.find(tableId)).toEqual({
+        actions: {
+          [res.id]: {
+            ...rowAction,
+            id: res.id,
+            tableId: tableId,
+          },
+        },
+      })
+    })
   })
 
   describe("find", () => {
