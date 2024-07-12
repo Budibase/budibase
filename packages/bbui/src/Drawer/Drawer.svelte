@@ -190,7 +190,7 @@
           {#if $$slots.title}
             <slot name="title" />
           {:else}
-            <div class="text">{title || "Bindings"}</div>
+            <div class="text">{title}</div>
           {/if}
           <div class="buttons">
             <Button secondary quiet on:click={hide}>Cancel</Button>
