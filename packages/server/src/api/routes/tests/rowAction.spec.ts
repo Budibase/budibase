@@ -101,14 +101,13 @@ describe("/rowsActions", () => {
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
-        _id: `ra_${tableId}`,
-        _rev: expect.stringMatching(/^1-\w+/),
-        tableId: tableId,
         actions: {
-          [res.id]: rowAction,
+          [res.id]: {
+            ...rowAction,
+            id: res.id,
+            tableId: tableId,
+          },
         },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       })
     })
 
@@ -120,16 +119,11 @@ describe("/rowsActions", () => {
       }
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
-        _id: `ra_${tableId}`,
-        _rev: expect.stringMatching(/^3-\w+/),
         actions: {
-          [responses[0].id]: rowActions[0],
-          [responses[1].id]: rowActions[1],
-          [responses[2].id]: rowActions[2],
+          [responses[0].id]: { ...rowActions[0], id: responses[0].id, tableId },
+          [responses[1].id]: { ...rowActions[1], id: responses[1].id, tableId },
+          [responses[2].id]: { ...rowActions[2], id: responses[2].id, tableId },
         },
-        tableId: tableId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       })
     })
 
@@ -162,26 +156,20 @@ describe("/rowsActions", () => {
       await createRowAction(otherTable._id!, createRowActionRequest())
 
       const response = await config.api.rowAction.find(tableId)
-      expect(response).toEqual(
-        expect.objectContaining({
-          tableId,
-          actions: {
-            [rowActions[0].id]: expect.any(Object),
-            [rowActions[1].id]: expect.any(Object),
-            [rowActions[2].id]: expect.any(Object),
-          },
-        })
-      )
+      expect(response).toEqual({
+        actions: {
+          [rowActions[0].id]: expect.any(Object),
+          [rowActions[1].id]: expect.any(Object),
+          [rowActions[2].id]: expect.any(Object),
+        },
+      })
     })
 
     it("returns empty for tables without row actions", async () => {
       const response = await config.api.rowAction.find(tableId)
-      expect(response).toEqual(
-        expect.objectContaining({
-          tableId,
-          actions: {},
-        })
-      )
+      expect(response).toEqual({
+        actions: {},
+      })
     })
   })
 
@@ -209,7 +197,6 @@ describe("/rowsActions", () => {
       expect(res).toEqual({
         id: actionId,
         tableId,
-        ...actionData,
         name: updatedName,
       })
 

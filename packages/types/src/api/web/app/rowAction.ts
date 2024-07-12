@@ -1,4 +1,8 @@
+interface RowActionData {
+  name: string
+}
 export interface CreateRowActionRequest extends RowActionData {}
+export interface UpdateRowActionRequest extends RowActionData {}
 
 export interface RowActionResponse extends RowActionData {
   id: string
@@ -6,12 +10,5 @@ export interface RowActionResponse extends RowActionData {
 }
 
 export interface RowActionsResponse {
-  tableId: string
-  actions: Record<string, RowActionData>
+  actions: Record<string, RowActionResponse>
 }
-
-interface RowActionData {
-  name: string
-}
-
-export interface UpdateRowActionRequest extends RowActionData {}
