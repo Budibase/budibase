@@ -1,10 +1,9 @@
 import { Thread, ThreadType } from "../threads"
 import { definitions } from "./triggerInfo"
 import { automationQueue } from "./bullboard"
-import newid from "../db/newid"
 import { updateEntityMetadata } from "../utilities"
 import { MetadataTypes } from "../constants"
-import { db as dbCore, context } from "@budibase/backend-core"
+import { db as dbCore, context, utils } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
@@ -207,7 +206,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
       )
     }
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
-    const jobId = `${appId}_cron_${newid()}`
+    const jobId = `${appId}_cron_${utils.newid()}`
     const job: any = await automationQueue.add(
       {
         automation,
