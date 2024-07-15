@@ -563,6 +563,9 @@ describe.each([
                   name: "description",
                   type: FieldType.STRING,
                   default: "default description",
+                  constraints: {
+                    presence: true,
+                  },
                 },
               },
             })
