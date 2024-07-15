@@ -1022,6 +1022,11 @@ describe.each([
           schema: {
             one: { type: FieldType.STRING, name: "one" },
             two: { type: FieldType.STRING, name: "two" },
+            default: {
+              type: FieldType.STRING,
+              name: "default",
+              default: "default",
+            },
           },
         })
       )
@@ -1042,11 +1047,13 @@ describe.each([
           _viewId: view.id,
           one: "foo",
           two: "bar",
+          default: "ohnoes",
         })
 
         const row = await config.api.row.get(table._id!, newRow._id!)
         expect(row.one).toBeUndefined()
         expect(row.two).toEqual("bar")
+        expect(row.default).toEqual("default")
       })
 
       it("can't persist readonly columns", async () => {

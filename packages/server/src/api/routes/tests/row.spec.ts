@@ -551,7 +551,9 @@ describe.each([
       expect(row.name).toEqual(`{ "foo": "2023-01-26T11:48:57.000Z" }`)
     })
 
-    describe.only("default values", () => {
+    describe("default values", () => {
+      let table: Table
+
       describe("string column", () => {
         beforeAll(async () => {
           table = await config.api.table.save(
