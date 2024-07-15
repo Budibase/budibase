@@ -57,6 +57,7 @@
       <Table
         data={rowActions}
         schema={actionSchema}
+        rowIdProp="id"
         on:editrow={e => editRowAction(e.detail)}
         on:click={e => editRowAction(e.detail)}
       />

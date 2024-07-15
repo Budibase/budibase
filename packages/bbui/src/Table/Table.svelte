@@ -43,6 +43,7 @@
   export let showHeaderBorder = true
   export let placeholderText = "No rows found"
   export let snippets = []
+  export let rowIdProp = "_id"
 
   const dispatch = createEventDispatcher()
 
@@ -86,7 +87,7 @@
   // Deselect the "select all" checkbox when the user navigates to a new page
   $: {
     let checkRowCount = rows.filter(o1 =>
-      selectedRows.some(o2 => o1._id === o2._id)
+      selectedRows.some(o2 => o1[rowIdProp] === o2[rowIdProp])
     )
     if (checkRowCount.length === 0) {
       checkboxStatus = false
@@ -245,9 +246,13 @@
     if (!allowSelectRows) {
       return
     }
-    if (selectedRows.some(selectedRow => selectedRow._id === row._id)) {
+    if (
+      selectedRows.some(
+        selectedRow => selectedRow[rowIdProp] === row[rowIdProp]
+      )
+    ) {
       selectedRows = selectedRows.filter(
-        selectedRow => selectedRow._id !== row._id
+        selectedRow => selectedRow[rowIdProp] !== row[rowIdProp]
       )
     } else {
       selectedRows = [...selectedRows, row]
@@ -259,14 +264,16 @@
     if (select) {
       // Add any rows which are not already in selected rows
       rows.forEach(row => {
-        if (selectedRows.findIndex(x => x._id === row._id) === -1) {
+        if (
+          selectedRows.findIndex(x => x[rowIdProp] === row[rowIdProp]) === -1
+        ) {
           selectedRows.push(row)
         }
       })
     } else {
       // Remove any rows from selected rows that are in the current data set
       selectedRows = selectedRows.filter(el =>
-        rows.every(f => f._id !== el._id)
+        rows.every(f => f[rowIdProp] !== el[rowIdProp])
       )
     }
   }
@@ -403,7 +410,7 @@
                   <SelectEditRenderer
                     data={row}
                     selected={selectedRows.findIndex(
-                      selectedRow => selectedRow._id === row._id
+                      selectedRow => selectedRow[rowIdProp] === row[rowIdProp]
                     ) !== -1}
                     onEdit={e => editRow(e, row)}
                     {allowSelectRows}
