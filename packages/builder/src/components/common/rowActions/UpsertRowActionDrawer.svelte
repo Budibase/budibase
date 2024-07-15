@@ -1,11 +1,15 @@
 <script>
   import { Button, Drawer, Input, Layout } from "@budibase/bbui"
+  import { rowActions } from "stores/builder"
 
+  export let tableId
   export let drawer
-  export let saveDelegate
+
+  let name
 
   async function saveAction() {
-    await saveDelegate()
+    await rowActions.save(tableId, { name })
+    drawer.hide()
   }
 </script>
 
@@ -15,7 +19,7 @@
   </div>
   <div slot="body">
     <Layout>
-      <Input label="Title" />
+      <Input label="Name" bind:value={name} />
     </Layout>
   </div>
 </Drawer>

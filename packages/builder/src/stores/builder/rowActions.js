@@ -16,11 +16,15 @@ export function createRowActionStore() {
       })
     },
     save: async (tableId, rowAction) => {
-      return await API.post({
+      const response = await API.post({
         url: `/api/tables/${tableId}/actions`,
         body: {
           ...rowAction,
         },
+      })
+
+      store.update(store => {
+        return [...store, response]
       })
     },
   }
