@@ -207,23 +207,6 @@ describe.each([
       await assertRowUsage(isInternal ? rowUsage + 1 : rowUsage)
     })
 
-    it.only("creates a new row with a default value successfully", async () => {
-      const table = await config.api.table.save(
-        saveTableRequest({
-          schema: {
-            description: {
-              name: "description",
-              type: FieldType.STRING,
-              default: "default description",
-            },
-          },
-        })
-      )
-
-      const row = await config.api.row.save(table._id!, {})
-      expect(row.description).toEqual("default description")
-    })
-
     it("fails to create a row for a table that does not exist", async () => {
       const rowUsage = await getRowUsage()
       await config.api.row.save("1234567", {}, { status: 404 })
@@ -566,6 +549,44 @@ describe.each([
       })
 
       expect(row.name).toEqual(`{ "foo": "2023-01-26T11:48:57.000Z" }`)
+    })
+
+    describe.only("default values", () => {
+      it("creates a new row with a default value successfully", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              description: {
+                name: "description",
+                type: FieldType.STRING,
+                default: "default description",
+              },
+            },
+          })
+        )
+
+        const row = await config.api.row.save(table._id!, {})
+        expect(row.description).toEqual("default description")
+      })
+
+      it("can use bindings in default values", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              description: {
+                name: "description",
+                type: FieldType.STRING,
+                default: `{{ date now "YYYY-MM-DDTHH:mm:ss" }}`,
+              },
+            },
+          })
+        )
+
+        await tk.withFreeze(new Date("2023-01-26T11:48:57.000Z"), async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.description).toEqual("2023-01-26T11:48:57")
+        })
+      })
     })
   })
 

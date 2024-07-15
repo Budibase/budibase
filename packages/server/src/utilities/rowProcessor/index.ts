@@ -19,6 +19,7 @@ import {
 } from "./bbReferenceProcessor"
 import { isExternalTableID } from "../../integrations/utils"
 import { helpers } from "@budibase/shared-core"
+import { processString } from "@budibase/string-templates"
 
 export * from "./utils"
 export * from "./attachments"
@@ -92,8 +93,9 @@ export async function processAutoColumn(
 
 async function processDeafultValues(table: Table, row: Row) {
   for (let [key, schema] of Object.entries(table.schema)) {
-    if ("default" in schema && row[key] == null) {
-      row[key] = schema.default
+    if ("default" in schema && schema.default != null && row[key] == null) {
+      const processed = await processString(schema.default, {})
+      row[key] = coerce(processed, schema.type)
     }
   }
 }
