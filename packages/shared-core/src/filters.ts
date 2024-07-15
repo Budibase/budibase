@@ -6,6 +6,7 @@ import {
   SearchFilter,
   SearchFilters,
   SearchQueryFields,
+  ArrayOperator,
   SearchFilterOperator,
   SortType,
   FieldConstraints,
@@ -14,11 +15,13 @@ import {
   EmptyFilterOption,
   SearchResponse,
   Table,
+  BasicOperator,
+  RangeOperator,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet, schema } from "./helpers"
-import _ from "lodash"
+import { isPlainObject, isEmpty } from "lodash"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -103,29 +106,47 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotEquals.value,
   OperatorOptions.Contains.value,
   OperatorOptions.NotContains.value,
+  OperatorOptions.ContainsAny.value,
+  OperatorOptions.In.value,
 ] as (keyof SearchQueryFields)[]
 
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
+ *
+ * don't do a pure falsy check, as 0 is included
+ * https://github.com/Budibase/budibase/issues/10118
  */
-const cleanupQuery = (query: SearchFilters) => {
+export const cleanupQuery = (query: SearchFilters) => {
   if (!query) {
     return query
   }
   for (let filterField of NoEmptyFilterStrings) {
-    const operator = filterField as SearchFilterOperator
-    if (!query[operator]) {
+    if (!query[filterField]) {
       continue
     }
 
-    for (let [key, value] of Object.entries(query[operator]!)) {
-      if (value == null || value === "") {
-        delete query[operator]![key]
+    for (let filterType of Object.keys(query)) {
+      if (filterType !== filterField) {
+        continue
+      }
+      // don't know which one we're checking, type could be anything
+      const value = query[filterType] as unknown
+      if (typeof value === "object") {
+        for (let [key, value] of Object.entries(query[filterType] as object)) {
+          if (value == null || value === "" || isEmptyArray(value)) {
+            // @ts-ignore
+            delete query[filterField][key]
+          }
+        }
       }
     }
   }
   return query
+}
+
+function isEmptyArray(value: any) {
+  return Array.isArray(value) && value.length === 0
 }
 
 /**
@@ -323,6 +344,32 @@ export const buildQuery = (filter: SearchFilter[]) => {
   return query
 }
 
+// The frontend can send single values for array fields sometimes, so to handle
+// this we convert them to arrays at the controller level so that nothing below
+// this has to worry about the non-array values.
+export function fixupFilterArrays(filters: SearchFilters) {
+  for (const searchField of Object.values(ArrayOperator)) {
+    const field = filters[searchField]
+    if (field == null || !isPlainObject(field)) {
+      continue
+    }
+
+    for (const key of Object.keys(field)) {
+      if (Array.isArray(field[key])) {
+        continue
+      }
+
+      const value = field[key] as any
+      if (typeof value === "string") {
+        field[key] = value.split(",").map((x: string) => x.trim())
+      } else {
+        field[key] = [value]
+      }
+    }
+  }
+  return filters
+}
+
 export const search = (
   docs: Record<string, any>[],
   query: RowSearchParams
@@ -356,6 +403,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   }
 
   query = cleanupQuery(query)
+  query = fixupFilterArrays(query)
 
   if (
     !hasFilters(query) &&
@@ -382,7 +430,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     }
 
   const stringMatch = match(
-    SearchFilterOperator.STRING,
+    BasicOperator.STRING,
     (docValue: any, testValue: any) => {
       if (!(typeof docValue === "string")) {
         return false
@@ -395,7 +443,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   )
 
   const fuzzyMatch = match(
-    SearchFilterOperator.FUZZY,
+    BasicOperator.FUZZY,
     (docValue: any, testValue: any) => {
       if (!(typeof docValue === "string")) {
         return false
@@ -408,17 +456,17 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   )
 
   const rangeMatch = match(
-    SearchFilterOperator.RANGE,
+    RangeOperator.RANGE,
     (docValue: any, testValue: any) => {
       if (docValue == null || docValue === "") {
         return false
       }
 
-      if (_.isObject(testValue.low) && _.isEmpty(testValue.low)) {
+      if (isPlainObject(testValue.low) && isEmpty(testValue.low)) {
         testValue.low = undefined
       }
 
-      if (_.isObject(testValue.high) && _.isEmpty(testValue.high)) {
+      if (isPlainObject(testValue.high) && isEmpty(testValue.high)) {
         testValue.high = undefined
       }
 
@@ -497,11 +545,8 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     (...args: T): boolean =>
       !f(...args)
 
-  const equalMatch = match(SearchFilterOperator.EQUAL, _valueMatches)
-  const notEqualMatch = match(
-    SearchFilterOperator.NOT_EQUAL,
-    not(_valueMatches)
-  )
+  const equalMatch = match(BasicOperator.EQUAL, _valueMatches)
+  const notEqualMatch = match(BasicOperator.NOT_EQUAL, not(_valueMatches))
 
   const _empty = (docValue: any) => {
     if (typeof docValue === "string") {
@@ -516,26 +561,24 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     return docValue == null
   }
 
-  const emptyMatch = match(SearchFilterOperator.EMPTY, _empty)
-  const notEmptyMatch = match(SearchFilterOperator.NOT_EMPTY, not(_empty))
+  const emptyMatch = match(BasicOperator.EMPTY, _empty)
+  const notEmptyMatch = match(BasicOperator.NOT_EMPTY, not(_empty))
 
-  const oneOf = match(
-    SearchFilterOperator.ONE_OF,
-    (docValue: any, testValue: any) => {
-      if (typeof testValue === "string") {
-        testValue = testValue.split(",")
-        if (typeof docValue === "number") {
-          testValue = testValue.map((item: string) => parseFloat(item))
-        }
-      }
-
-      if (!Array.isArray(testValue)) {
-        return false
-      }
-
-      return testValue.some(item => _valueMatches(docValue, item))
+  const oneOf = match(ArrayOperator.ONE_OF, (docValue: any, testValue: any) => {
+    if (typeof testValue === "string") {
+      testValue = testValue.split(",")
     }
-  )
+
+    if (typeof docValue === "number") {
+      testValue = testValue.map((item: string) => parseFloat(item))
+    }
+
+    if (!Array.isArray(testValue)) {
+      return false
+    }
+
+    return testValue.some(item => _valueMatches(docValue, item))
+  })
 
   const _contains =
     (f: "some" | "every") => (docValue: any, testValue: any) => {
@@ -562,7 +605,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     }
 
   const contains = match(
-    SearchFilterOperator.CONTAINS,
+    ArrayOperator.CONTAINS,
     (docValue: any, testValue: any) => {
       if (Array.isArray(testValue) && testValue.length === 0) {
         return true
@@ -571,7 +614,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     }
   )
   const notContains = match(
-    SearchFilterOperator.NOT_CONTAINS,
+    ArrayOperator.NOT_CONTAINS,
     (docValue: any, testValue: any) => {
       // Not sure if this is logically correct, but at the time this code was
       // written the search endpoint behaved this way and we wanted to make this
@@ -582,10 +625,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       return not(_contains("every"))(docValue, testValue)
     }
   )
-  const containsAny = match(
-    SearchFilterOperator.CONTAINS_ANY,
-    _contains("some")
-  )
+  const containsAny = match(ArrayOperator.CONTAINS_ANY, _contains("some"))
 
   const docMatch = (doc: Record<string, any>) => {
     const filterFunctions = {

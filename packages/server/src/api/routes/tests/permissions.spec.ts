@@ -203,7 +203,7 @@ describe("/permission", () => {
       // replicate changes before checking permissions
       await config.publish()
 
-      await config.api.viewV2.publicSearch(view.id, undefined, { status: 403 })
+      await config.api.viewV2.publicSearch(view.id, undefined, { status: 401 })
     })
 
     it("should ignore the view permissions if the flag is not on", async () => {
@@ -221,7 +221,7 @@ describe("/permission", () => {
       await config.publish()
 
       await config.api.viewV2.publicSearch(view.id, undefined, {
-        status: 403,
+        status: 401,
       })
     })
 
@@ -250,8 +250,8 @@ describe("/permission", () => {
         .send(basicRow(table._id))
         .set(config.publicHeaders())
         .expect("Content-Type", /json/)
-        .expect(403)
-      expect(res.status).toEqual(403)
+        .expect(401)
+      expect(res.status).toEqual(401)
     })
   })
 
