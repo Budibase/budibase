@@ -127,9 +127,14 @@ function mapTable(table: Table): SQLiteTables {
 // nothing exists, need to iterate though existing tables
 async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   const tables = await tablesSdk.getAllInternalTables()
-  const defaultTables = DEFAULT_TABLES
+  for (const defaultTable of DEFAULT_TABLES) {
+    // the default table doesn't exist in Couch, use the in-memory representation
+    if (!tables.find(table => table._id === defaultTable._id)) {
+      tables.push(defaultTable)
+    }
+  }
   const definition = sql.designDoc.base("tableId")
-  for (let table of tables.concat(defaultTables)) {
+  for (let table of tables) {
     definition.sql.tables = {
       ...definition.sql.tables,
       ...mapTable(table),
@@ -176,9 +181,22 @@ export async function addTable(table: Table) {
 export async function removeTable(table: Table) {
   const db = context.getAppDB()
   try {
-    const definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
-    if (definition.sql?.tables?.[table._id!]) {
-      delete definition.sql.tables[table._id!]
+    const [tables, definition] = await Promise.all([
+      tablesSdk.getAllInternalTables(),
+      db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID),
+    ])
+    const tableIds = tables
+      .map(tbl => tbl._id!)
+      .filter(id => !id.includes(table._id!))
+    let cleanup = false
+    for (let tableKey of Object.keys(definition.sql?.tables || {})) {
+      // there are no tables matching anymore
+      if (!tableIds.find(id => tableKey.includes(id))) {
+        delete definition.sql.tables[tableKey]
+        cleanup = true
+      }
+    }
+    if (cleanup) {
       await db.put(definition)
       // make sure SQS is cleaned up, tables removed
       await db.sqlDiskCleanup()
