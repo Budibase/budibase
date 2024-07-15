@@ -1,5 +1,7 @@
 import { FieldType } from "@budibase/types"
 
+const TIME_REGEX = /^(?:\d{2}:)?(?:\d{2}:)(?:\d{2})$/
+
 const parseArrayString = (value: any) => {
   if (typeof value === "string") {
     if (value === "") {
@@ -115,6 +117,8 @@ export const TYPE_TRANSFORM_MAP: any = {
     parse: (date: any) => {
       if (date instanceof Date) {
         return date.toISOString()
+      } else if (typeof date === "string" && TIME_REGEX.test(date)) {
+        return date
       } else {
         const parsed = new Date(date)
         if (isNaN(parsed.getTime())) {
