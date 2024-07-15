@@ -4,11 +4,12 @@ import {
   AutomationStepType,
   AutomationTriggerSchema,
   AutomationTriggerStepId,
+  AutomationEventType,
 } from "@budibase/types"
 
 export const definition: AutomationTriggerSchema = {
   name: "Row Created",
-  event: "row:save",
+  event: AutomationEventType.ROW_SAVE,
   icon: "TableRowAddBottom",
   tagline: "Row is added to {{inputs.enriched.table.name}}",
   description: "Fired when a row is added to your database",
