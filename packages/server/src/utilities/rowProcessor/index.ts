@@ -1,6 +1,6 @@
 import * as linkRows from "../../db/linkedRows"
 import { fixAutoColumnSubType, processFormulas } from "./utils"
-import { objectStore, utils } from "@budibase/backend-core"
+import { HTTPError, objectStore, utils } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import {
@@ -95,7 +95,15 @@ async function processDeafultValues(table: Table, row: Row) {
   for (let [key, schema] of Object.entries(table.schema)) {
     if ("default" in schema && schema.default != null && row[key] == null) {
       const processed = await processString(schema.default, {})
-      row[key] = coerce(processed, schema.type)
+
+      try {
+        row[key] = coerce(processed, schema.type)
+      } catch (err: any) {
+        throw new HTTPError(
+          `Invalid default value for field '${key}' - ${err.message}`,
+          400
+        )
+      }
     }
   }
 }

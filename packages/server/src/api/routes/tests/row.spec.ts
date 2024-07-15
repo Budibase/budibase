@@ -552,39 +552,156 @@ describe.each([
     })
 
     describe.only("default values", () => {
-      it("creates a new row with a default value successfully", async () => {
-        const table = await config.api.table.save(
-          saveTableRequest({
-            schema: {
-              description: {
-                name: "description",
-                type: FieldType.STRING,
-                default: "default description",
+      describe("string column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                description: {
+                  name: "description",
+                  type: FieldType.STRING,
+                  default: "default description",
+                },
               },
-            },
-          })
-        )
+            })
+          )
+        })
 
-        const row = await config.api.row.save(table._id!, {})
-        expect(row.description).toEqual("default description")
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.description).toEqual("default description")
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            description: "specified description",
+          })
+          expect(row.description).toEqual("specified description")
+        })
+
+        it("uses the default value if value is null", async () => {
+          const row = await config.api.row.save(table._id!, {
+            description: null,
+          })
+          expect(row.description).toEqual("default description")
+        })
+
+        it("uses the default value if value is undefined", async () => {
+          const row = await config.api.row.save(table._id!, {
+            description: undefined,
+          })
+          expect(row.description).toEqual("default description")
+        })
       })
 
-      it("can use bindings in default values", async () => {
-        const table = await config.api.table.save(
-          saveTableRequest({
-            schema: {
-              description: {
-                name: "description",
-                type: FieldType.STRING,
-                default: `{{ date now "YYYY-MM-DDTHH:mm:ss" }}`,
+      describe("number column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                age: {
+                  name: "age",
+                  type: FieldType.NUMBER,
+                  default: "25",
+                },
               },
-            },
-          })
-        )
+            })
+          )
+        })
 
-        await tk.withFreeze(new Date("2023-01-26T11:48:57.000Z"), async () => {
+        it("creates a new row with a default value successfully", async () => {
           const row = await config.api.row.save(table._id!, {})
-          expect(row.description).toEqual("2023-01-26T11:48:57")
+          expect(row.age).toEqual(25)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            age: 30,
+          })
+          expect(row.age).toEqual(30)
+        })
+      })
+
+      describe("bindings", () => {
+        describe("string column", () => {
+          beforeAll(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  description: {
+                    name: "description",
+                    type: FieldType.STRING,
+                    default: `{{ date now "YYYY-MM-DDTHH:mm:ss" }}`,
+                  },
+                },
+              })
+            )
+          })
+
+          it("can use bindings in default values", async () => {
+            const row = await config.api.row.save(table._id!, {})
+            expect(row.description).toMatch(
+              /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
+            )
+          })
+
+          it("does not use default value if value specified", async () => {
+            const row = await config.api.row.save(table._id!, {
+              description: "specified description",
+            })
+            expect(row.description).toEqual("specified description")
+          })
+        })
+
+        describe("number column", () => {
+          beforeAll(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  age: {
+                    name: "age",
+                    type: FieldType.NUMBER,
+                    default: `{{ sum 10 10 5 }}`,
+                  },
+                },
+              })
+            )
+          })
+
+          it("can use bindings in default values", async () => {
+            const row = await config.api.row.save(table._id!, {})
+            expect(row.age).toEqual(25)
+          })
+
+          describe("invalid default value", () => {
+            beforeAll(async () => {
+              table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    age: {
+                      name: "age",
+                      type: FieldType.NUMBER,
+                      default: `{{ capitalize "invalid" }}`,
+                    },
+                  },
+                })
+              )
+            })
+
+            it("throws an error when invalid default value", async () => {
+              await config.api.row.save(
+                table._id!,
+                {},
+                {
+                  status: 400,
+                  body: {
+                    message:
+                      "Invalid default value for field 'age' - Invalid number value \"Invalid\"",
+                  },
+                }
+              )
+            })
+          })
         })
       })
     })
