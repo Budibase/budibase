@@ -1,7 +1,9 @@
 <script>
   import { Body, Button, Drawer, DrawerContent, Table } from "@budibase/bbui"
+  import { rowActions as rowActionsStore } from "stores/builder"
   import UpsertRowActionDrawer from "./UpsertRowActionDrawer.svelte"
 
+  export let tableId
   export let rowActions
   export let drawer
   let upsertDrawer
@@ -15,7 +17,7 @@
   }
 
   async function saveAction() {
-    alert("TODO")
+    await rowActionsStore.save(tableId, { name: "TODO" })
   }
 </script>
 
