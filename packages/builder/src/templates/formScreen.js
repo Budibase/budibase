@@ -1,9 +1,18 @@
 import { Screen } from "./Screen"
 import { Component } from "./Component"
 import sanitizeUrl from "helpers/sanitizeUrl"
+import { makePropSafe as safe } from "@budibase/string-templates"
 
 export const FORM_TEMPLATE = "FORM_TEMPLATE"
-export const formUrl = datasource => sanitizeUrl(`/${datasource.label}-form`)
+export const formUrl = (datasource, config) => {
+  if (config.actionType === "Create") {
+    return sanitizeUrl(`/${datasource.label}/new`)
+  } else if (config.actionType === "Update") {
+    return sanitizeUrl(`/${datasource.label}/edit/:id`)
+  } else if (config.actionType === "View") {
+    return sanitizeUrl(`/${datasource.label}/view/:id`)
+  }
+}
 
 // Mode not really necessary
 export default function (datasources, config) {
@@ -29,6 +38,7 @@ const generateMultistepFormBlock = (dataSource, { actionType } = {}) => {
       actionType,
       dataSource,
       steps: [{}],
+      rowId: actionType === "new" ? undefined : `{{ url.id }}`
     })
     .instanceName(`${dataSource.label} - Multistep Form block`)
   return multistepFormBlock
@@ -36,7 +46,7 @@ const generateMultistepFormBlock = (dataSource, { actionType } = {}) => {
 
 const createScreen = (datasource, config) => {
   return new Screen()
-    .route(formUrl(datasource))
+    .route(formUrl(datasource, config))
     .instanceName(`${datasource.label} - Form`)
     .addChild(generateMultistepFormBlock(datasource, config))
     .json()
