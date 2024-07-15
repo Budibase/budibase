@@ -91,7 +91,13 @@ export const TYPE_TRANSFORM_MAP: any = {
     [null]: null,
     //@ts-ignore
     [undefined]: undefined,
-    parse: (n: any) => parseFloat(n),
+    parse: (n: any) => {
+      const parsed = parseFloat(n)
+      if (isNaN(parsed)) {
+        throw new Error(`Invalid number value "${n}"`)
+      }
+      return parsed
+    },
   },
   [FieldType.BIGINT]: {
     "": null,
