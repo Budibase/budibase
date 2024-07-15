@@ -4,10 +4,12 @@
   import { NotificationDisplay, BannerDisplay } from "@budibase/bbui"
   import { parse, stringify } from "qs"
   import LicensingOverlays from "components/portal/licensing/LicensingOverlays.svelte"
+  import ContextMenu from "components/ContextMenu.svelte"
 
   const queryHandler = { parse, stringify }
 </script>
 
+<ContextMenu />
 <div class="banner-container" />
 <BannerDisplay />
 <NotificationDisplay />

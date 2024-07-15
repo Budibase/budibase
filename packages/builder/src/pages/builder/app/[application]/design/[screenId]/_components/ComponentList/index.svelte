@@ -7,14 +7,15 @@
     componentStore,
     userSelectedResourceMap,
     hoverStore,
+    contextMenuStore,
   } from "stores/builder"
   import NavItem from "components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore, DropPosition } from "./dndStore.js"
-  import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
   import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
+  import getScreenContextMenuItems from "./getScreenContextMenuItems"
 
   let scrolling = false
 
@@ -43,6 +44,24 @@
   }
 
   const hover = hoverStore.hover
+
+  const openScreenContextMenu = (e, screenComponent) => {
+    const definition = componentStore.getDefinition(screenComponent?._component)
+    // "editable" has been repurposed for inline text editing.
+    // It remains here for legacy compatibility.
+    // Future components should define "static": true for indicate they should
+    // not show a context menu.
+    if (definition?.editable !== false && definition?.static !== true) {
+      e.preventDefault()
+      e.stopPropagation()
+
+      const items = getScreenContextMenuItems(screenComponent)
+      contextMenuStore.open(screenComponent._id, items, {
+        x: e.clientX,
+        y: e.clientY,
+      })
+    }
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -57,7 +76,9 @@
   <div class="list-panel">
     <ComponentScrollWrapper on:scroll={handleScroll}>
       <ul>
-        <li>
+        <li
+          on:contextmenu={e => openScreenContextMenu(e, $selectedScreen?.props)}
+        >
           <NavItem
             text="Screen"
             indentLevel={0}
@@ -70,14 +91,22 @@
             on:click={() => {
               componentStore.select(`${$screenStore.selectedScreenId}-screen`)
             }}
-            hovering={$hoverStore.componentId === screenComponentId}
+            hovering={$hoverStore.componentId === screenComponentId ||
+              $selectedScreen?.props._id === $contextMenuStore.id}
             on:mouseenter={() => hover(screenComponentId)}
             on:mouseleave={() => hover(null)}
             id="component-screen"
             selectedBy={$userSelectedResourceMap[screenComponentId]}
           >
-            <ScreenslotDropdownMenu component={$selectedScreen?.props} />
+            <Icon
+              size="S"
+              hoverable
+              name="MoreSmallList"
+              on:click={e => openScreenContextMenu(e, $selectedScreen?.props)}
+            />
           </NavItem>
+        </li>
+        <li>
           <NavItem
             text="Navigation"
             indentLevel={0}
