@@ -26,6 +26,7 @@ import {
   roles,
   sessions,
   tenancy,
+  utils,
 } from "@budibase/backend-core"
 import {
   app as appController,
@@ -40,7 +41,6 @@ import {
 } from "./controllers"
 
 import { cleanup } from "../../utilities/fileSystem"
-import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
@@ -73,6 +73,8 @@ import API from "./api"
 import { cloneDeep } from "lodash"
 import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
+
+const newid = utils.newid
 
 mocks.licenses.init(pro)
 
@@ -245,10 +247,10 @@ export default class TestConfiguration {
     }
   }
 
-  async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
+  async withEnv<T>(newEnvVars: Partial<typeof env>, f: () => Promise<T>) {
     let cleanup = this.setEnv(newEnvVars)
     try {
-      await f()
+      return await f()
     } finally {
       cleanup()
     }
@@ -273,13 +275,13 @@ export default class TestConfiguration {
     }
   }
 
-  async withCoreEnv(
+  async withCoreEnv<T>(
     newEnvVars: Partial<typeof coreEnv>,
-    f: () => Promise<void>
+    f: () => Promise<T>
   ) {
     let cleanup = this.setCoreEnv(newEnvVars)
     try {
-      await f()
+      return await f()
     } finally {
       cleanup()
     }
@@ -290,7 +292,7 @@ export default class TestConfiguration {
    * that can be called to reset the environment variables to their original values.
    */
   setCoreEnv(newEnvVars: Partial<typeof coreEnv>): () => void {
-    const oldEnv = cloneDeep(env)
+    const oldEnv = cloneDeep(coreEnv)
 
     let key: keyof typeof newEnvVars
     for (key in newEnvVars) {

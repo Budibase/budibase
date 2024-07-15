@@ -151,7 +151,7 @@ export const checkPermissionsEndpoint = async ({
   await exports
     .createRequest(config.request, method, url, body)
     .set(failHeader)
-    .expect(403)
+    .expect(401)
 }
 
 export const getDB = () => {

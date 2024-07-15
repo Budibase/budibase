@@ -5,6 +5,7 @@ import {
   Operation,
   QueryJson,
   RelationshipFieldMetadata,
+  RelationshipsJson,
   Row,
   RowSearchParams,
   SearchFilters,
@@ -18,6 +19,11 @@ import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../api/controllers/row/utils"
+import {
+  decodeNonAscii,
+  mapToUserColumn,
+  USER_COLUMN_PREFIX,
+} from "../../tables/internal/sqs"
 import sdk from "../../../index"
 import {
   context,
@@ -25,7 +31,10 @@ import {
   SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
 } from "@budibase/backend-core"
-import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
+import {
+  CONSTANT_INTERNAL_ROW_COLS,
+  generateJunctionTableID,
+} from "../../../../db/utils"
 import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
@@ -35,34 +44,44 @@ import {
   getRelationshipColumns,
   getTableIDList,
 } from "./filters"
+import { dataFilters } from "@budibase/shared-core"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
+const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
+const MISSING_TABLE_REGX = new RegExp(`no such table: .+`)
 
 function buildInternalFieldList(
   table: Table,
   tables: Table[],
-  opts: { relationships: boolean } = { relationships: true }
+  opts?: { relationships?: RelationshipsJson[] }
 ) {
   let fieldList: string[] = []
+  const addJunctionFields = (relatedTable: Table, fields: string[]) => {
+    fields.forEach(field => {
+      fieldList.push(
+        `${generateJunctionTableID(table._id!, relatedTable._id!)}.${field}`
+      )
+    })
+  }
   fieldList = fieldList.concat(
     CONSTANT_INTERNAL_ROW_COLS.map(col => `${table._id}.${col}`)
   )
   for (let col of Object.values(table.schema)) {
     const isRelationship = col.type === FieldType.LINK
-    if (!opts.relationships && isRelationship) {
+    if (!opts?.relationships && isRelationship) {
       continue
     }
     if (isRelationship) {
       const linkCol = col as RelationshipFieldMetadata
       const relatedTable = tables.find(table => table._id === linkCol.tableId)!
-      fieldList = fieldList.concat(
-        buildInternalFieldList(relatedTable, tables, { relationships: false })
-      )
+      // no relationships provided, don't go more than a layer deep
+      fieldList = fieldList.concat(buildInternalFieldList(relatedTable, tables))
+      addJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
     } else {
-      fieldList.push(`${table._id}.${col.name}`)
+      fieldList.push(`${table._id}.${mapToUserColumn(col.name)}`)
     }
   }
-  return fieldList
+  return [...new Set(fieldList)]
 }
 
 function cleanupFilters(
@@ -90,6 +109,34 @@ function cleanupFilters(
       )
   )
 
+  // generate a map of all possible column names (these can be duplicated across tables
+  // the map of them will always be the same
+  const userColumnMap: Record<string, string> = {}
+  allTables.forEach(table =>
+    Object.keys(table.schema).forEach(
+      key => (userColumnMap[key] = mapToUserColumn(key))
+    )
+  )
+
+  // update the keys of filters to manage user columns
+  const keyInAnyTable = (key: string): boolean =>
+    allTables.some(table => table.schema[key])
+
+  const splitter = new dataFilters.ColumnSplitter(allTables)
+  for (const filter of Object.values(filters)) {
+    for (const key of Object.keys(filter)) {
+      const { numberPrefix, relationshipPrefix, column } = splitter.run(key)
+      if (keyInAnyTable(column)) {
+        filter[
+          `${numberPrefix || ""}${relationshipPrefix || ""}${mapToUserColumn(
+            column
+          )}`
+        ] = filter[key]
+        delete filter[key]
+      }
+    }
+  }
+
   return filters
 }
 
@@ -106,18 +153,47 @@ function buildTableMap(tables: Table[]) {
   return tableMap
 }
 
-function runSqlQuery(json: QueryJson, tables: Table[]): Promise<Row[]>
+function reverseUserColumnMapping(rows: Row[]) {
+  const prefixLength = USER_COLUMN_PREFIX.length
+  return rows.map(row => {
+    const finalRow: Row = {}
+    for (let key of Object.keys(row)) {
+      // it should be the first prefix
+      const index = key.indexOf(USER_COLUMN_PREFIX)
+      if (index !== -1) {
+        // cut out the prefix
+        const newKey = key.slice(0, index) + key.slice(index + prefixLength)
+        const decoded = decodeNonAscii(newKey)
+        finalRow[decoded] = row[key]
+      } else {
+        finalRow[key] = row[key]
+      }
+    }
+    return finalRow
+  })
+}
+
 function runSqlQuery(
   json: QueryJson,
   tables: Table[],
+  relationships: RelationshipsJson[]
+): Promise<Row[]>
+function runSqlQuery(
+  json: QueryJson,
+  tables: Table[],
+  relationships: RelationshipsJson[],
   opts: { countTotalRows: true }
 ): Promise<number>
 async function runSqlQuery(
   json: QueryJson,
   tables: Table[],
+  relationships: RelationshipsJson[],
   opts?: { countTotalRows?: boolean }
 ) {
-  const alias = new AliasTables(tables.map(table => table.name))
+  const relationshipJunctionTableIds = relationships.map(rel => rel.through!)
+  const alias = new AliasTables(
+    tables.map(table => table.name).concat(relationshipJunctionTableIds)
+  )
   if (opts?.countTotalRows) {
     json.endpoint.operation = Operation.COUNT
   }
@@ -134,8 +210,13 @@ async function runSqlQuery(
     let bindings = query.bindings
 
     // quick hack for docIds
-    sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
-    sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
+
+    const fixJunctionDocs = (field: string) =>
+      ["doc1", "doc2"].forEach(doc => {
+        sql = sql.replaceAll(`\`${doc}\`.\`${field}\``, `\`${doc}.${field}\``)
+      })
+    fixJunctionDocs("rowId")
+    fixJunctionDocs("fieldName")
 
     if (Array.isArray(query)) {
       throw new Error("SQS cannot currently handle multiple queries")
@@ -147,14 +228,28 @@ async function runSqlQuery(
   const response = await alias.queryWithAliasing(json, processSQLQuery)
   if (opts?.countTotalRows) {
     return processRowCountResponse(response)
-  } else {
-    return response
+  } else if (Array.isArray(response)) {
+    return reverseUserColumnMapping(response)
   }
+  return response
+}
+
+function resyncDefinitionsRequired(status: number, message: string) {
+  // pre data_ prefix on column names, need to resync
+  return (
+    // there are tables missing - try a resync
+    (status === 400 && message.match(MISSING_TABLE_REGX)) ||
+    // there are columns missing - try a resync
+    (status === 400 && message.match(MISSING_COLUMN_REGEX)) ||
+    // no design document found, needs a full sync
+    (status === 404 && message?.includes(SQLITE_DESIGN_DOC_ID))
+  )
 }
 
 export async function search(
   options: RowSearchParams,
-  table: Table
+  table: Table,
+  opts?: { retrying?: boolean }
 ): Promise<SearchResponse<Row>> {
   let { paginate, query, ...params } = options
 
@@ -185,9 +280,10 @@ export async function search(
     meta: {
       table,
       tables: allTablesMap,
+      columnPrefix: USER_COLUMN_PREFIX,
     },
     resource: {
-      fields: buildInternalFieldList(table, allTables),
+      fields: buildInternalFieldList(table, allTables, { relationships }),
     },
     relationships,
   }
@@ -197,7 +293,7 @@ export async function search(
     const sortType =
       sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
     request.sort = {
-      [sortField.name]: {
+      [mapToUserColumn(sortField.name)]: {
         direction: params.sortOrder || SortOrder.ASCENDING,
         type: sortType as SortType,
       },
@@ -219,11 +315,11 @@ export async function search(
 
   try {
     const queries: Promise<Row[] | number>[] = []
-    queries.push(runSqlQuery(request, allTables))
+    queries.push(runSqlQuery(request, allTables, relationships))
     if (options.countRows) {
       // get the total count of rows
       queries.push(
-        runSqlQuery(request, allTables, {
+        runSqlQuery(request, allTables, relationships, {
           countTotalRows: true,
         })
       )
@@ -278,9 +374,13 @@ export async function search(
     return response
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message
-    if (err.status === 404 && msg?.includes(SQLITE_DESIGN_DOC_ID)) {
+    if (!opts?.retrying && resyncDefinitionsRequired(err.status, msg)) {
       await sdk.tables.sqs.syncDefinition()
-      return search(options, table)
+      return search(options, table, { retrying: true })
+    }
+    // previously the internal table didn't error when a column didn't exist in search
+    if (err.status === 400 && msg?.match(MISSING_COLUMN_REGEX)) {
+      return { rows: [] }
     }
     throw new Error(`Unable to search by SQL - ${msg}`, { cause: err })
   }

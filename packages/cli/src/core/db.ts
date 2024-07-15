@@ -17,7 +17,7 @@ export function getPouch(url?: string) {
       prefix: url,
     }
   }
-  const replicationStream = require("pouchdb-replication-stream")
+  const replicationStream = require("@budibase/pouchdb-replication-stream")
   PouchDB.plugin(replicationStream.plugin)
   // @ts-ignore
   PouchDB.adapter("writableStream", replicationStream.adapters.writableStream)

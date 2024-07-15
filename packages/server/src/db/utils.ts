@@ -1,5 +1,4 @@
-import newid from "./newid"
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, utils } from "@budibase/backend-core"
 import {
   DatabaseQueryOpts,
   Datasource,
@@ -14,6 +13,8 @@ import {
 } from "@budibase/types"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
+
+const newid = utils.newid
 
 type Optional = string | null
 
