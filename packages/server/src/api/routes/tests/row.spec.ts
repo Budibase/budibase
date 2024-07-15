@@ -207,6 +207,24 @@ describe.each([
       await assertRowUsage(isInternal ? rowUsage + 1 : rowUsage)
     })
 
+    it("creates a new row with a default value successfully", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            description: {
+              name: "description",
+              type: FieldType.STRING,
+              default: "default description",
+            },
+          },
+        })
+      )
+
+      const row = await config.api.row.save(table._id!, {})
+      expect(row.name).toEqual("Test Contact")
+      expect(row.description).toEqual("default description")
+    })
+
     it("fails to create a row for a table that does not exist", async () => {
       const rowUsage = await getRowUsage()
       await config.api.row.save("1234567", {}, { status: 404 })
