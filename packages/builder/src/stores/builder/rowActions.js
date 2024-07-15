@@ -5,6 +5,10 @@ export function createRowActionStore() {
   const store = writable([])
   console.error(store)
 
+  function sort(array) {
+    return array.sort((a, b) => a.name.localeCompare(b.name))
+  }
+
   return {
     subscribe: store.subscribe,
     fetch: async tableId => {
@@ -13,7 +17,7 @@ export function createRowActionStore() {
         url: `/api/tables/${tableId}/actions`,
       })
 
-      store.set(Object.values(response.actions))
+      store.set(sort(Object.values(response.actions)))
     },
     save: async (tableId, rowAction) => {
       const response = await API.post({
@@ -24,7 +28,7 @@ export function createRowActionStore() {
       })
 
       store.update(store => {
-        return [...store, response]
+        return sort([...store, response])
       })
     },
     update: async (tableId, rowAction) => {
@@ -37,7 +41,7 @@ export function createRowActionStore() {
       })
 
       store.update(store => {
-        return [...store.filter(f => f.id !== rowActionId), response]
+        return sort([...store.filter(f => f.id !== rowActionId), response])
       })
     },
   }

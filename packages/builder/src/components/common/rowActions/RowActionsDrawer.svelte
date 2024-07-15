@@ -28,6 +28,10 @@
     rowAction = action
     upsertDrawer.show()
   }
+
+  function onRowActionDrawerHide() {
+    rowAction = undefined
+  }
 </script>
 
 <Drawer
@@ -60,4 +64,9 @@
   </DrawerContent>
 </Drawer>
 
-<UpsertRowActionDrawer bind:drawer={upsertDrawer} {tableId} {rowAction} />
+<UpsertRowActionDrawer
+  bind:drawer={upsertDrawer}
+  {tableId}
+  {rowAction}
+  on:drawerHide={onRowActionDrawerHide}
+/>

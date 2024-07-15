@@ -19,13 +19,13 @@
   }
 </script>
 
-<Drawer bind:this={drawer} title={"Add new row action"}>
+<Drawer bind:this={drawer} title={"Add new row action"} on:drawerHide>
   <div slot="buttons">
     <Button cta on:click={saveAction}>Save</Button>
   </div>
   <div slot="body">
     <Layout>
-      <Input label="Name" bind:value={editableAction.name} />
+      <Input label="Name" bind:value={editableAction.name} autofocus />
     </Layout>
   </div>
 </Drawer>
