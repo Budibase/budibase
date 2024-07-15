@@ -2,7 +2,6 @@ import { BannedSearchTypes } from "../constants"
 
 export function getTableFields(tables, linkField) {
   const table = tables.find(table => table._id === linkField.tableId)
-  // TODO: mdrury - add support for this with SQS at some point
   if (!table || !table.sql) {
     return []
   }
@@ -11,7 +10,7 @@ export function getTableFields(tables, linkField) {
   })
   return linkFields.map(field => ({
     ...field,
-    name: `${table.name}.${field.name}`,
+    name: `${linkField.name}.${field.name}`,
   }))
 }
 

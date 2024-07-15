@@ -25,7 +25,7 @@ env:
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   NX_BASE_BRANCH: origin/${{ github.base_ref }}
-  USE_NX_AFFECTED: ${{ github.event_name == 'pull_request' }}
+  ONLY_AFFECTED_TASKS: ${{ github.event_name == 'pull_request' }}
   IS_OSS_CONTRIBUTOR: ${{ inputs.run_as_oss == true || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase') }}
 
 jobs:
@@ -72,7 +72,7 @@ jobs:
       # Check the types of the projects built via esbuild
       - name: Check types
         run: |
-          if ${{ env.USE_NX_AFFECTED }}; then
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
             yarn check:types --since=${{ env.NX_BASE_BRANCH }} --ignore @budibase/account-portal-server
           else
             yarn check:types --ignore @budibase/account-portal-server
@@ -108,7 +108,7 @@ jobs:
       - name: Pull testcontainers images
         run: |
           docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.2.1-sql &
+          docker pull budibase/couchdb:v3.2.1-sqs &
           docker pull redis &
 
           wait $(jobs -p)
@@ -116,7 +116,7 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
-          if ${{ env.USE_NX_AFFECTED }}; then
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
             yarn test --ignore=@budibase/worker --ignore=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn test --ignore=@budibase/worker --ignore=@budibase/server
@@ -140,8 +140,8 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Test worker
         run: |
-          if ${{ env.USE_NX_AFFECTED }}; then
-            yarn test --scope=@budibase/worker --since=${{ env.NX_BASE_BRANCH }}
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
+            node scripts/run-affected.js --task=test --scope=@budibase/worker --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn test --scope=@budibase/worker
           fi
@@ -180,8 +180,8 @@ jobs:
 
       - name: Test server
         run: |
-          if ${{ env.USE_NX_AFFECTED }}; then
-            yarn test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
+            node scripts/run-affected.js --task=test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn test --scope=@budibase/server
           fi
@@ -214,6 +214,7 @@ jobs:
             echo "pro_commit=$pro_commit"
             echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
             echo "base_commit=$base_commit"
+            echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
 
             base_commit_excluding_merges=$(git log --no-merges -n 1 --format=format:%H $base_commit)
             echo "base_commit_excluding_merges=$base_commit_excluding_merges"
@@ -230,7 +231,7 @@ jobs:
           base_commit_excluding_merges='${{ steps.get_pro_commits.outputs.base_commit_excluding_merges }}'
           pro_commit='${{ steps.get_pro_commits.outputs.pro_commit }}'
 
-          any_commit=$(git log --no-merges $base_commit...$pro_commit)
+          any_commit=$(git log --no-merges $base_commit_excluding_merges...$pro_commit)
 
           if [ -n "$any_commit" ]; then
             echo $any_commit
