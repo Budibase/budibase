@@ -114,8 +114,11 @@ const environment = {
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
-  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || "http://localhost:4006",
+  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL,
   SQS_SEARCH_ENABLE: process.env.SQS_SEARCH_ENABLE,
+  SQS_SEARCH_ENABLE_TENANTS:
+    process.env.SQS_SEARCH_ENABLE_TENANTS?.split(",") || [],
+  SQS_MIGRATION_ENABLE: process.env.SQS_MIGRATION_ENABLE,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -200,7 +203,27 @@ const environment = {
   },
   ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
   DISABLE_SCIM_CALLS: process.env.DISABLE_SCIM_CALLS,
+  BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
+  BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 }
+
+type EnvironmentKey = keyof typeof environment
+export const SECRETS: EnvironmentKey[] = [
+  "API_ENCRYPTION_KEY",
+  "BB_ADMIN_USER_PASSWORD",
+  "COUCH_DB_PASSWORD",
+  "COUCH_DB_SQL_URL",
+  "COUCH_DB_URL",
+  "GOOGLE_CLIENT_SECRET",
+  "INTERNAL_API_KEY_FALLBACK",
+  "INTERNAL_API_KEY",
+  "JWT_SECRET",
+  "MINIO_ACCESS_KEY",
+  "MINIO_SECRET_KEY",
+  "OPENAI_API_KEY",
+  "REDIS_PASSWORD",
+]
 
 // clean up any environment variable edge cases
 for (let [key, value] of Object.entries(environment)) {

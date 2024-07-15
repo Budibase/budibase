@@ -9,7 +9,6 @@ import {
   QuotaUsageType,
   Row,
   SaveTableRequest,
-  SearchFilterOperator,
   SortOrder,
   SortType,
   StaticQuotaName,
@@ -19,6 +18,7 @@ import {
   ViewUIFieldMetadata,
   ViewV2,
   SearchResponse,
+  BasicOperator,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -88,10 +88,16 @@ describe.each([
   }
 
   beforeAll(async () => {
+    await config.withCoreEnv(
+      { SQS_SEARCH_ENABLE: isSqs ? "true" : "false" },
+      () => config.init()
+    )
     if (isSqs) {
-      envCleanup = config.setEnv({ SQS_SEARCH_ENABLE: "true" })
+      envCleanup = config.setCoreEnv({
+        SQS_SEARCH_ENABLE: "true",
+        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+      })
     }
-    await config.init()
 
     if (dsProvider) {
       datasource = await config.createDatasource({
@@ -149,7 +155,7 @@ describe.each([
         primaryDisplay: "id",
         query: [
           {
-            operator: SearchFilterOperator.EQUAL,
+            operator: BasicOperator.EQUAL,
             field: "field",
             value: "value",
           },
@@ -218,6 +224,10 @@ describe.each([
             order: 1,
             width: 100,
           },
+          Category: {
+            visible: false,
+            icon: "ic",
+          },
         },
         id: createdView.id,
         version: 2,
@@ -269,9 +279,8 @@ describe.each([
         ...newView,
         schema: {
           id: { visible: true },
-          Price: {
-            visible: true,
-          },
+          Price: { visible: true },
+          Category: { visible: false },
         },
         id: expect.any(String),
         version: 2,
@@ -558,7 +567,7 @@ describe.each([
         ...view,
         query: [
           {
-            operator: SearchFilterOperator.EQUAL,
+            operator: BasicOperator.EQUAL,
             field: "newField",
             value: "thatValue",
           },
@@ -586,7 +595,7 @@ describe.each([
         primaryDisplay: "Price",
         query: [
           {
-            operator: SearchFilterOperator.EQUAL,
+            operator: BasicOperator.EQUAL,
             field: generator.word(),
             value: generator.word(),
           },
@@ -670,7 +679,7 @@ describe.each([
           tableId: generator.guid(),
           query: [
             {
-              operator: SearchFilterOperator.EQUAL,
+              operator: BasicOperator.EQUAL,
               field: "newField",
               value: "thatValue",
             },
@@ -759,6 +768,7 @@ describe.each([
             order: 1,
             width: 100,
           },
+          Category: { visible: false, icon: "ic" },
         },
         id: view.id,
         version: 2,
@@ -873,30 +883,23 @@ describe.each([
         await db.getDB(config.appId!).put(tableToUpdate)
 
         view = await config.api.viewV2.get(view.id)
-        await config.api.viewV2.update({
-          ...view,
-          schema: {
-            ...view.schema,
-            Price: {
-              visible: false,
+        await config.api.viewV2.update(
+          {
+            ...view,
+            schema: {
+              ...view.schema,
+              Price: {
+                visible: false,
+              },
             },
           },
-        })
-
-        expect(await config.api.viewV2.get(view.id)).toEqual(
-          expect.objectContaining({
-            schema: {
-              id: expect.objectContaining({
-                visible: false,
-              }),
-              Price: expect.objectContaining({
-                visible: false,
-              }),
-              Category: expect.objectContaining({
-                visible: true,
-              }),
+          {
+            status: 400,
+            body: {
+              message: 'You can\'t hide "id" because it is a required field.',
+              status: 400,
             },
-          })
+          }
         )
       })
   })
@@ -938,7 +941,6 @@ describe.each([
           Category: { visible: true },
         },
       })
-      expect(res.schema?.Price).toBeUndefined()
 
       const view = await config.api.viewV2.get(res.id)
       const updatedTable = await config.api.table.get(table._id!)
@@ -1198,13 +1200,14 @@ describe.each([
           name: generator.guid(),
           query: [
             {
-              operator: SearchFilterOperator.EQUAL,
+              operator: BasicOperator.EQUAL,
               field: "two",
               value: "bar2",
             },
           ],
           schema: {
             id: { visible: true },
+            one: { visible: false },
             two: { visible: true },
           },
         })
@@ -1487,7 +1490,7 @@ describe.each([
       it("does not allow public users to fetch by default", async () => {
         await config.publish()
         await config.api.viewV2.publicSearch(view.id, undefined, {
-          status: 403,
+          status: 401,
         })
       })
 
@@ -1531,7 +1534,7 @@ describe.each([
         await config.publish()
 
         await config.api.viewV2.publicSearch(view.id, undefined, {
-          status: 403,
+          status: 401,
         })
       })
     })

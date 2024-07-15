@@ -1,4 +1,5 @@
 import * as automationUtils from "./automationUtils"
+import { isPlainObject } from "lodash"
 
 type ObjValue = {
   [key: string]: string | ObjValue
@@ -18,6 +19,10 @@ function replaceBindingsRecursive(
   value: string | ObjValue,
   loopStepNumber: number
 ) {
+  if (value === null || value === undefined) {
+    return value
+  }
+
   if (typeof value === "object") {
     for (const [innerKey, innerValue] of Object.entries(value)) {
       if (typeof innerValue === "string") {
@@ -25,7 +30,11 @@ function replaceBindingsRecursive(
           innerValue,
           `steps.${loopStepNumber}`
         )
-      } else if (typeof innerValue === "object") {
+      } else if (
+        innerValue &&
+        isPlainObject(innerValue) &&
+        Object.keys(innerValue).length > 0
+      ) {
         value[innerKey] = replaceBindingsRecursive(innerValue, loopStepNumber)
       }
     }

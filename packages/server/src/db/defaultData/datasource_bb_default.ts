@@ -619,6 +619,13 @@ export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
   },
 }
 
+export const DEFAULT_TABLES: Table[] = [
+  DEFAULT_INVENTORY_TABLE_SCHEMA,
+  DEFAULT_EMPLOYEE_TABLE_SCHEMA,
+  DEFAULT_JOBS_TABLE_SCHEMA,
+  DEFAULT_EXPENSES_TABLE_SCHEMA,
+]
+
 export async function buildDefaultDocs() {
   const inventoryData = await tableImport(
     DEFAULT_INVENTORY_TABLE_SCHEMA,

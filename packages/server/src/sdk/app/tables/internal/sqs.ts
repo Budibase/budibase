@@ -15,6 +15,7 @@ import {
   generateJunctionTableID,
 } from "../../../../db/utils"
 import { isEqual } from "lodash"
+import { DEFAULT_TABLES } from "../../../../db/defaultData/datasource_bb_default"
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BOOLEAN]: SQLiteType.NUMERIC,
@@ -62,10 +63,37 @@ function buildRelationshipDefinitions(
   }
 }
 
+export const USER_COLUMN_PREFIX = "data_"
+
+// SQS does not support non-ASCII characters in column names, so we need to
+// replace them with unicode escape sequences.
+function encodeNonAscii(str: string): string {
+  return str
+    .split("")
+    .map(char => {
+      return char.charCodeAt(0) > 127
+        ? "\\u" + char.charCodeAt(0).toString(16).padStart(4, "0")
+        : char
+    })
+    .join("")
+}
+
+export function decodeNonAscii(str: string): string {
+  return str.replace(/\\u([0-9a-fA-F]{4})/g, (match, p1) =>
+    String.fromCharCode(parseInt(p1, 16))
+  )
+}
+
+// utility function to denote that columns in SQLite are mapped to avoid overlap issues
+// the overlaps can occur due to case insensitivity and some of the columns which Budibase requires
+export function mapToUserColumn(key: string) {
+  return `${USER_COLUMN_PREFIX}${encodeNonAscii(key)}`
+}
+
 // this can generate relationship tables as part of the mapping
 function mapTable(table: Table): SQLiteTables {
   const tables: SQLiteTables = {}
-  const fields: Record<string, SQLiteType> = {}
+  const fields: Record<string, { field: string; type: SQLiteType }> = {}
   for (let [key, column] of Object.entries(table.schema)) {
     // relationships should be handled differently
     if (column.type === FieldType.LINK) {
@@ -78,7 +106,10 @@ function mapTable(table: Table): SQLiteTables {
     if (!FieldTypeMap[column.type]) {
       throw new Error(`Unable to map type "${column.type}" to SQLite type`)
     }
-    fields[key] = FieldTypeMap[column.type]
+    fields[mapToUserColumn(key)] = {
+      field: key,
+      type: FieldTypeMap[column.type],
+    }
   }
   // there are some extra columns to map - add these in
   const constantMap: Record<string, SQLiteType> = {}
@@ -96,6 +127,12 @@ function mapTable(table: Table): SQLiteTables {
 // nothing exists, need to iterate though existing tables
 async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   const tables = await tablesSdk.getAllInternalTables()
+  for (const defaultTable of DEFAULT_TABLES) {
+    // the default table doesn't exist in Couch, use the in-memory representation
+    if (!tables.find(table => table._id === defaultTable._id)) {
+      tables.push(defaultTable)
+    }
+  }
   const definition = sql.designDoc.base("tableId")
   for (let table of tables) {
     definition.sql.tables = {
@@ -144,9 +181,22 @@ export async function addTable(table: Table) {
 export async function removeTable(table: Table) {
   const db = context.getAppDB()
   try {
-    const definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
-    if (definition.sql?.tables?.[table._id!]) {
-      delete definition.sql.tables[table._id!]
+    const [tables, definition] = await Promise.all([
+      tablesSdk.getAllInternalTables(),
+      db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID),
+    ])
+    const tableIds = tables
+      .map(tbl => tbl._id!)
+      .filter(id => !id.includes(table._id!))
+    let cleanup = false
+    for (let tableKey of Object.keys(definition.sql?.tables || {})) {
+      // there are no tables matching anymore
+      if (!tableIds.find(id => tableKey.includes(id))) {
+        delete definition.sql.tables[tableKey]
+        cleanup = true
+      }
+    }
+    if (cleanup) {
       await db.put(definition)
       // make sure SQS is cleaned up, tables removed
       await db.sqlDiskCleanup()

@@ -1,8 +1,7 @@
-import { context } from "@budibase/backend-core"
+import { context, env } from "@budibase/backend-core"
 import { allLinkDocs } from "../../db/utils"
 import LinkDocumentImpl from "../../db/linkedRows/LinkDocument"
 import sdk from "../../sdk"
-import env from "../../environment"
 
 const migration = async () => {
   const linkDocs = await allLinkDocs()
@@ -40,7 +39,7 @@ const migration = async () => {
   // only do initial search if environment is using SQS already
   // initial search makes sure that all the indexes have been created
   // and are ready to use, avoiding any initial waits for large tables
-  if (env.SQS_SEARCH_ENABLE) {
+  if (env.SQS_MIGRATION_ENABLE || env.SQS_SEARCH_ENABLE) {
     const tables = await sdk.tables.getAllInternalTables()
     // do these one by one - running in parallel could cause problems
     for (let table of tables) {

@@ -907,6 +907,15 @@
       "example": "{{uppercase 'aBcDef'}} -> ABCDEF",
       "description": "<p>Uppercase all of the characters in the given string. If used as a block helper it will uppercase the entire block. This helper does not support inverse blocks.</p>\n",
       "requiresBlock": false
+    },
+    "lorem": {
+      "args": [
+        "num"
+      ],
+      "numArgs": 1,
+      "example": "{{lorem 11}} -> Lorem ipsum",
+      "description": "<p>Takes a number and returns that many charaters of Lorem Ipsum</p>\n",
+      "requiresBlock": false
     }
   },
   "comparison": {
