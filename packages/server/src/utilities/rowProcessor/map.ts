@@ -115,8 +115,13 @@ export const TYPE_TRANSFORM_MAP: any = {
     parse: (date: any) => {
       if (date instanceof Date) {
         return date.toISOString()
+      } else {
+        const parsed = new Date(date)
+        if (isNaN(parsed.getTime())) {
+          throw new Error(`Invalid date value: "${date}"`)
+        }
+        return date
       }
-      return date
     },
   },
   [FieldType.ATTACHMENTS]: {
