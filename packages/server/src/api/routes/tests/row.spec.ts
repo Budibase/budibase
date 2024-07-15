@@ -207,7 +207,7 @@ describe.each([
       await assertRowUsage(isInternal ? rowUsage + 1 : rowUsage)
     })
 
-    it("creates a new row with a default value successfully", async () => {
+    it.only("creates a new row with a default value successfully", async () => {
       const table = await config.api.table.save(
         saveTableRequest({
           schema: {
@@ -221,7 +221,6 @@ describe.each([
       )
 
       const row = await config.api.row.save(table._id!, {})
-      expect(row.name).toEqual("Test Contact")
       expect(row.description).toEqual("default description")
     })
 

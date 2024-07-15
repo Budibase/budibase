@@ -81,11 +81,13 @@ export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
     toTable: string
     toKey: string
   }
+  default?: string
 }
 
 export interface JsonFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.JSON
   subtype?: JsonFieldSubType.ARRAY
+  default?: string
 }
 
 export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
@@ -94,17 +96,25 @@ export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   timeOnly?: boolean
   dateOnly?: boolean
   subtype?: AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT
+  default?: string
 }
 
 export interface LongFormFieldMetadata extends BaseFieldSchema {
   type: FieldType.LONGFORM
   useRichText?: boolean | null
+  default?: string
+}
+
+export interface StringFieldMetadata extends BaseFieldSchema {
+  type: FieldType.STRING
+  default?: string
 }
 
 export interface FormulaFieldMetadata extends BaseFieldSchema {
   type: FieldType.FORMULA
   formula: string
   formulaType?: FormulaType
+  default?: string
 }
 
 export interface BBReferenceFieldMetadata
@@ -171,6 +181,7 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.BB_REFERENCE
     | FieldType.BB_REFERENCE_SINGLE
     | FieldType.ATTACHMENTS
+    | FieldType.STRING
   >
 }
 
@@ -182,6 +193,7 @@ export type FieldSchema =
   | FormulaFieldMetadata
   | NumberFieldMetadata
   | LongFormFieldMetadata
+  | StringFieldMetadata
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
   | AttachmentFieldMetadata
