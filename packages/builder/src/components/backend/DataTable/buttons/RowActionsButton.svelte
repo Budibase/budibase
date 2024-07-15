@@ -1,11 +1,12 @@
 <script>
-  import { API } from "api"
   import { ActionButton } from "@budibase/bbui"
   import { rowActions } from "stores/builder"
   import RowActionsDrawer from "components/common/rowActions/RowActionsDrawer.svelte"
 
   export let tableId
   let drawer
+
+  let drawerOpen = false
 
   $: rowActions.fetch(tableId)
 
@@ -18,7 +19,18 @@
     "Row actions" + (hasRowActions ? ` (${$rowActions.list.length})` : "")
 </script>
 
-<ActionButton icon="JourneyAction" quiet on:click={openDrawer}>
+<ActionButton
+  icon="JourneyAction"
+  quiet
+  selected={hasRowActions || drawerOpen}
+  on:click={openDrawer}
+>
   {title}
 </ActionButton>
-<RowActionsDrawer bind:drawer {tableId} {rowActions} />
+<RowActionsDrawer
+  bind:drawer
+  {tableId}
+  {rowActions}
+  on:drawerShow={() => (drawerOpen = true)}
+  on:drawerHide={() => (drawerOpen = false)}
+/>

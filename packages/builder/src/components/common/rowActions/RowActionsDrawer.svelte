@@ -26,6 +26,8 @@
   title={"Row actions"}
   forceModal
   on:drawerHide={closeAllDrawers}
+  on:drawerShow
+  on:drawerHide
 >
   <div slot="buttons">
     <Button cta on:click={addNewAction}>Add new</Button>
