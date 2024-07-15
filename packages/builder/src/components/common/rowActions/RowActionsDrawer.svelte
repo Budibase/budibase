@@ -19,6 +19,13 @@
   async function saveAction() {
     await rowActionsStore.save(tableId, { name: "TODO" })
   }
+
+  const actionSchema = {
+    name: {
+      type: "string",
+      fieldName: "name",
+    },
+  }
 </script>
 
 <Drawer
@@ -41,7 +48,7 @@
     {#if !rowActions.length}
       <Body size="S">No row actions are created for this table.</Body>
     {:else}
-      <Table />
+      <Table data={rowActions} schema={actionSchema} />
     {/if}
   </DrawerContent>
 </Drawer>

@@ -14,9 +14,8 @@
     drawer.show()
   }
 
-  $: hasRowActions = $rowActions.list.length > 0
-  $: title =
-    "Row actions" + (hasRowActions ? ` (${$rowActions.list.length})` : "")
+  $: hasRowActions = $rowActions.length > 0
+  $: title = "Row actions" + (hasRowActions ? ` (${$rowActions.length})` : "")
 </script>
 
 <ActionButton
@@ -30,7 +29,7 @@
 <RowActionsDrawer
   bind:drawer
   {tableId}
-  {rowActions}
+  rowActions={$rowActions}
   on:drawerShow={() => (drawerOpen = true)}
   on:drawerHide={() => (drawerOpen = false)}
 />

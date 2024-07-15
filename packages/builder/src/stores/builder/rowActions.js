@@ -2,7 +2,7 @@ import { writable } from "svelte/store"
 import { API } from "api"
 
 export function createRowActionStore() {
-  const store = writable({ byKey: {}, list: [] })
+  const store = writable([])
 
   return {
     subscribe: store.subscribe,
@@ -11,12 +11,8 @@ export function createRowActionStore() {
         url: `/api/tables/${tableId}/actions`,
       })
 
-      store.update(store => {
-        return {
-          ...store,
-          byKey: response.actions,
-          list: Object.values(response.actions),
-        }
+      store.update(_store => {
+        return Object.values(response.actions)
       })
     },
     save: async (tableId, rowAction) => {
