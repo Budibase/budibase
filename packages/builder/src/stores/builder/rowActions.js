@@ -44,6 +44,20 @@ export function createRowActionStore() {
         return sort([...store.filter(f => f.id !== rowActionId), response])
       })
     },
+    delete: async (tableId, rowIds) => {
+      if (rowIds && !Array.isArray(rowIds)) {
+        rowIds = [rowIds]
+      }
+      for (const id of rowIds) {
+        await API.delete({
+          url: `/api/tables/${tableId}/actions/${id}`,
+        })
+
+        store.update(store => {
+          return sort(store.filter(f => f.id !== id))
+        })
+      }
+    },
   }
 }
 

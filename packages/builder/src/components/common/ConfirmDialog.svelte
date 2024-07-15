@@ -20,7 +20,7 @@
   }
 </script>
 
-<Modal bind:this={modal} on:hide={onCancel}>
+<Modal bind:this={modal} on:hide={onCancel} zIndex={9999}>
   <ModalContent
     onConfirm={onOk}
     {title}
