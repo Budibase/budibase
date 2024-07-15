@@ -1460,17 +1460,12 @@ describe.each([
         delete tableRequest.schema.id
 
         const table = await config.api.table.save(tableRequest)
+        const toCreate = generator
+          .unique(() => generator.integer({ min: 0, max: 10000 }), 10)
+          .map(number => ({ number, string: generator.word({ length: 30 }) }))
 
         const rows = await Promise.all(
-          generator
-            .unique(
-              () => ({
-                string: generator.word({ length: 30 }),
-                number: generator.integer({ min: 0, max: 10000 }),
-              }),
-              10
-            )
-            .map(d => config.api.row.save(table._id!, d))
+          toCreate.map(d => config.api.row.save(table._id!, d))
         )
 
         const res = await config.api.row.exportRows(table._id!, {
