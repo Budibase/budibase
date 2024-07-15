@@ -1,14 +1,22 @@
 import * as linkRows from "../../db/linkedRows"
 import { fixAutoColumnSubType, processFormulas } from "./utils"
-import { HTTPError, objectStore, utils } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  HTTPError,
+  objectStore,
+  utils,
+} from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import {
   AutoFieldSubType,
   FieldType,
+  IdentityType,
   Row,
   RowAttachment,
   Table,
+  User,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -92,9 +100,22 @@ export async function processAutoColumn(
 }
 
 async function processDeafultValues(table: Table, row: Row) {
+  const ctx: { ["Current User"]?: User; user?: User } = {}
+
+  const identity = context.getIdentity()
+  if (identity) {
+    if (identity._id && identity.type === IdentityType.USER) {
+      const user = await cache.user.getUser(identity._id)
+      delete user.password
+
+      ctx["Current User"] = user
+      ctx.user = user
+    }
+  }
+
   for (let [key, schema] of Object.entries(table.schema)) {
     if ("default" in schema && schema.default != null && row[key] == null) {
-      const processed = await processString(schema.default, {})
+      const processed = await processString(schema.default, ctx)
 
       try {
         row[key] = coerce(processed, schema.type)

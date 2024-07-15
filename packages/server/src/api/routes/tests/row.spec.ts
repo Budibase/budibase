@@ -622,6 +622,48 @@ describe.each([
         })
       })
 
+      describe("date column", () => {
+        it("creates a row with a default value successfully", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  default: "2023-01-26T11:48:57.000Z",
+                },
+              },
+            })
+          )
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.date).toEqual("2023-01-26T11:48:57.000Z")
+        })
+
+        it("gives an error if the default value is invalid", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  default: "invalid",
+                },
+              },
+            })
+          )
+          await config.api.row.save(
+            table._id!,
+            {},
+            {
+              status: 400,
+              body: {
+                message: `Invalid default value for field 'date' - Invalid date value: "invalid"`,
+              },
+            }
+          )
+        })
+      })
+
       describe("bindings", () => {
         describe("string column", () => {
           beforeAll(async () => {
@@ -650,6 +692,40 @@ describe.each([
               description: "specified description",
             })
             expect(row.description).toEqual("specified description")
+          })
+
+          it("can bind the current user", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  user: {
+                    name: "user",
+                    type: FieldType.STRING,
+                    default: `{{ [Current User]._id }}`,
+                  },
+                },
+              })
+            )
+            const row = await config.api.row.save(table._id!, {})
+            expect(row.user).toEqual(config.getUser()._id)
+          })
+
+          it("cannot access current user password", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  user: {
+                    name: "user",
+                    type: FieldType.STRING,
+                    default: `{{ user.password }}`,
+                  },
+                },
+              })
+            )
+            const row = await config.api.row.save(table._id!, {})
+            // For some reason it's null for internal tables, and undefined for
+            // external.
+            expect(row.user == null).toBe(true)
           })
         })
 
