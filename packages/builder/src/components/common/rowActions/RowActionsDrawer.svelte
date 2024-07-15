@@ -5,7 +5,9 @@
   export let tableId
   export let rowActions
   export let drawer
+
   let upsertDrawer
+  let rowAction
 
   function addNewAction() {
     upsertDrawer.show()
@@ -20,6 +22,11 @@
       type: "string",
       fieldName: "name",
     },
+  }
+
+  function editRowAction(action) {
+    rowAction = action
+    upsertDrawer.show()
   }
 </script>
 
@@ -43,9 +50,14 @@
     {#if !rowActions.length}
       <Body size="S">No row actions are created for this table.</Body>
     {:else}
-      <Table data={rowActions} schema={actionSchema} />
+      <Table
+        data={rowActions}
+        schema={actionSchema}
+        on:editrow={e => editRowAction(e.detail)}
+        on:click={e => editRowAction(e.detail)}
+      />
     {/if}
   </DrawerContent>
 </Drawer>
 
-<UpsertRowActionDrawer bind:drawer={upsertDrawer} {tableId} />
+<UpsertRowActionDrawer bind:drawer={upsertDrawer} {tableId} {rowAction} />

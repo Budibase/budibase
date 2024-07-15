@@ -4,11 +4,17 @@
 
   export let tableId
   export let drawer
+  export let rowAction
 
-  let name
+  $: addingNewAction = !rowAction
+  $: editableAction = rowAction || {}
 
   async function saveAction() {
-    await rowActions.save(tableId, { name })
+    if (addingNewAction) {
+      await rowActions.save(tableId, editableAction)
+    } else {
+      await rowActions.update(tableId, editableAction)
+    }
     drawer.hide()
   }
 </script>
@@ -19,7 +25,7 @@
   </div>
   <div slot="body">
     <Layout>
-      <Input label="Name" bind:value={name} />
+      <Input label="Name" bind:value={editableAction.name} />
     </Layout>
   </div>
 </Drawer>
