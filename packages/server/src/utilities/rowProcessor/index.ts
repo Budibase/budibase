@@ -88,7 +88,14 @@ export async function processAutoColumn(
         break
     }
   }
-  return { table, row }
+}
+
+async function processDeafultValues(table: Table, row: Row) {
+  for (let [key, schema] of Object.entries(table.schema)) {
+    if ("default" in schema && row[key] == null) {
+      row[key] = schema.default
+    }
+  }
 }
 
 /**
@@ -182,8 +189,10 @@ export async function inputProcessing(
     clonedRow._rev = row._rev
   }
 
-  // handle auto columns - this returns an object like {table, row}
-  return processAutoColumn(userId, table, clonedRow, opts)
+  await processAutoColumn(userId, table, clonedRow, opts)
+  await processDeafultValues(table, clonedRow)
+
+  return { table, row: clonedRow }
 }
 
 /**
