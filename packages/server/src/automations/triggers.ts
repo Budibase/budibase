@@ -219,21 +219,10 @@ async function checkTriggerFilters(
   const newRow = await automationUtils.cleanUpRow(tableId, event.row)
   const newRowPasses = rowPassesFilters(newRow, filters)
 
-  if (trigger.stepId === definitions.ROW_UPDATED.stepId) {
-    // This variable indicates that the trigger should run even if the new row matches the old row
-    // So if the filter is "equals true" and new row is `true` and old row is `true` it will still run
-    const onlyExecuteFilterIfChange =
-      trigger.inputs.meta?.onlyExecuteFilterIfChange ?? true
-
-    const oldRow = await automationUtils.cleanUpRow(tableId, event.oldRow)
-    const oldRowPasses = rowPassesFilters(oldRow, filters)
-
-    if (onlyExecuteFilterIfChange) {
-      return !oldRowPasses && newRowPasses
-    } else {
-      return newRowPasses
-    }
-  } else if (trigger.stepId === definitions.ROW_SAVED.stepId) {
+  if (
+    trigger.stepId === definitions.ROW_UPDATED.stepId ||
+    trigger.stepId === definitions.ROW_SAVED.stepId
+  ) {
     return newRowPasses
   }
 

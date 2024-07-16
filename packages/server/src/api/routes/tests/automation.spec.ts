@@ -507,17 +507,6 @@ describe("/automations", () => {
       },
       {
         description:
-          "should not run when Approved is true in both old and new row",
-        filters: {
-          equal: { "1:Approved": true },
-        },
-        row: { Approved: "true" },
-        oldRow: { Approved: "true" },
-        onlyExecuteFilterIfChange: true,
-        expectToRun: false,
-      },
-      {
-        description:
           "should run when Approved is true in both old and new row (onlyExecuteFilterIfChange: false)",
         filters: { equal: { "1:Approved": true } },
         row: { Approved: "true" },

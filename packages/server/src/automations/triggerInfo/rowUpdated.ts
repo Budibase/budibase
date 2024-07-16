@@ -25,12 +25,8 @@ export const definition: AutomationTriggerSchema = {
         },
         filters: {
           type: AutomationIOType.OBJECT,
-          customType: AutomationCustomIOType.FILTERS,
+          customType: AutomationCustomIOType.TRIGGER_FILTER,
           title: "Filtering",
-        },
-        executeFilterIfChange: {
-          customType: AutomationCustomIOType.TRIGGER_FILTER_SETTING,
-          title: "Only run the filter if a distinct change happens",
         },
       },
       required: ["tableId"],

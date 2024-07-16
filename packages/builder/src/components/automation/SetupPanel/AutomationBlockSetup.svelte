@@ -17,7 +17,9 @@
     Helpers,
     Toggle,
     Divider,
+    Icon,
   } from "@budibase/bbui"
+
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation, tables } from "stores/builder"
   import { environment, licensing } from "stores/portal"
@@ -840,13 +842,23 @@
         {@const label = getFieldLabel(key, value)}
         <div class:block-field={shouldRenderField(value)}>
           {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
-            <Label
-              tooltip={value.title === "Binding / Value"
-                ? "If using the String input type, please use a comma or newline separated string"
-                : null}
-            >
-              {label}
-            </Label>
+            <div class="label-container">
+              <Label>
+                {label}
+              </Label>
+              {#if value.customType === "trigger_filter"}
+                <Icon
+                  hoverable
+                  on:click={() =>
+                    window.open(
+                      "https://docs.budibase.com/docs/row-trigger-filters",
+                      "_blank"
+                    )}
+                  size="XS"
+                  name="InfoOutline"
+                />
+              {/if}
+            </div>
           {/if}
           <div class:field-width={shouldRenderField(value)}>
             {#if value.type === "string" && value.enum && canShowField(key, value)}
@@ -965,7 +977,7 @@
                   {/if}
                 </div>
               </div>
-            {:else if value.customType === "filters"}
+            {:else if value.customType === "filters" || value.customType === "trigger_filter"}
               <ActionButton fullWidth on:click={drawer.show}
                 >{filters.length > 0
                   ? "Update Filter"
@@ -1078,22 +1090,6 @@
                 options={["Array", "String"]}
                 defaultValue={"Array"}
               />
-            {:else if value.customType === "trigger_filter_setting"}
-              <div class="trigger-checkbox-setting">
-                <Checkbox
-                  text={label}
-                  value={inputData?.meta?.onlyExecuteFilterIfChange ===
-                  undefined
-                    ? true
-                    : inputData?.meta?.onlyExecuteFilterIfChange}
-                  on:change={e =>
-                    onChange({
-                      meta: {
-                        onlyExecuteFilterIfChange: e.detail,
-                      },
-                    })}
-                />
-              </div>
             {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
               {#if isTestModal}
                 <ModalBindableInput
@@ -1139,6 +1135,11 @@
 {/if}
 
 <style>
+  .label-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
   .field-width {
     width: 320px;
   }
@@ -1182,10 +1183,5 @@
   .js-binding-picker {
     flex: 3;
     margin-top: calc((var(--spacing-xl) * -1) + 1px);
-  }
-
-  .trigger-checkbox-setting :global(.spectrum-Checkbox-label) {
-    opacity: 0.5;
-    font-size: small;
   }
 </style>
