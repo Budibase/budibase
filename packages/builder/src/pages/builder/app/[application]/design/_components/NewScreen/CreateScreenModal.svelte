@@ -25,7 +25,6 @@
   import gridDetailsScreen from "templates/gridDetailsScreen"
 
   let mode
-  let pendingScreen
 
   // Modal refs
   let screenDetailsModal
@@ -38,7 +37,6 @@
   let screens = null
 
   let selectedDatasources = null
-  let blankScreenUrl = null
   let screenMode = null
   let formType = null
 
@@ -123,16 +121,12 @@
     templates = null
     screens = null
     selectedDatasources = null
-    blankScreenUrl = null
     screenMode = mode
-    pendingScreen = null
     formType = null
 
     if (mode === "grid" || mode === "gridDetails" || mode === "form") {
       datasourceModal.show()
     } else if (mode === "blank") {
-      const template = blankScreen();
-      pendingScreen = template
       screenDetailsModal.show()
     } else {
       throw new Error("Invalid mode provided")
@@ -165,18 +159,11 @@
     loadNewScreen(createdScreens)
   }
 
-  const confirmScreenBlank = async ({ screenUrl }) => {
-    blankScreenUrl = screenUrl
-    await confirmScreenCreation();
-  }
+  const createBlankScreen = async ({ screenUrl }) => {
+    const template = blankScreen();
+    template.routing.route = screenUrl
 
-  // Submit request for a blank screen
-  const confirmBlankScreenCreation = async (screenUrl) => {
-    if (!pendingScreen) {
-      return
-    }
-    pendingScreen.routing.route = screenUrl
-    const createdScreens = await createScreens([pendingScreen])
+    const createdScreens = await createScreens([template])
     loadNewScreen(createdScreens)
   }
 
@@ -208,8 +195,6 @@
       let screenTemplate = template.create()
       return screenTemplate
     })
-    console.log(screens);
-    return;
     const createdScreens = await createScreens(screens)
 
     if (formType === "Update" || formType === "Create") {
@@ -230,9 +215,7 @@
 
   // Submit screen config for creation.
   const confirmScreenCreation = async () => {
-    if (screenMode === "blank") {
-      confirmBlankScreenCreation(blankScreenUrl)
-    } else if (screenMode === "form") {
+    if (screenMode === "form") {
       confirmFormScreenCreation()
     } else {
       completeDatasourceScreenCreation()
@@ -246,8 +229,7 @@
 
 <Modal bind:this={screenDetailsModal}>
   <ScreenDetailsModal
-    onConfirm={confirmScreenBlank}
-    initialUrl={blankScreenUrl}
+    onConfirm={createBlankScreen}
   />
 </Modal>
 
