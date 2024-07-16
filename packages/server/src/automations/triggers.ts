@@ -213,18 +213,15 @@ async function checkTriggerFilters(
   const tableId = trigger?.inputs?.tableId
 
   if (!filters) {
-    return true // No filters or tableId, so trigger by default
+    return true
   }
-
-  const newRow = await automationUtils.cleanUpRow(tableId, event.row)
-  const newRowPasses = rowPassesFilters(newRow, filters)
 
   if (
     trigger.stepId === definitions.ROW_UPDATED.stepId ||
     trigger.stepId === definitions.ROW_SAVED.stepId
   ) {
-    return newRowPasses
+    const newRow = await automationUtils.cleanUpRow(tableId, event.row)
+    return rowPassesFilters(newRow, filters)
   }
-
   return true
 }

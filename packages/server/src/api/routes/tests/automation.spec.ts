@@ -456,14 +456,13 @@ describe("/automations", () => {
 
         let table = await config.createTable()
 
-        let automation = await filterAutomation()
+        let automation = await filterAutomation(config.appId!)
         automation.definition.trigger.inputs.tableId = table._id
         automation.definition.steps[0].inputs = {
           condition: FilterConditions.EQUAL,
           field: "{{ trigger.row.City }}",
           value: "{{ trigger.oldRow.City }}",
         }
-        automation.appId = config.appId!
         automation = await config.createAutomation(automation)
         let triggerInputs = {
           oldRow: {
@@ -502,16 +501,13 @@ describe("/automations", () => {
         },
         row: { Approved: "true" },
         oldRow: { Approved: "false" },
-        onlyExecuteFilterIfChange: true,
         expectToRun: true,
       },
       {
-        description:
-          "should run when Approved is true in both old and new row (onlyExecuteFilterIfChange: false)",
+        description: "should run when Approved is true in both old and new row",
         filters: { equal: { "1:Approved": true } },
         row: { Approved: "true" },
         oldRow: { Approved: "true" },
-        onlyExecuteFilterIfChange: false,
         expectToRun: true,
       },
 
@@ -523,7 +519,6 @@ describe("/automations", () => {
         },
         row: { opts: ["Option 1", "Option 3"] },
         oldRow: { opts: ["Option 3"] },
-        onlyExecuteFilterIfChange: true,
         expectToRun: true,
       },
       {
@@ -534,27 +529,18 @@ describe("/automations", () => {
         },
         row: { opts: ["Option 3", "Option 4"] },
         oldRow: { opts: ["Option 3", "Option 4"] },
-        onlyExecuteFilterIfChange: true,
         expectToRun: false,
       },
     ]
 
     it.each(testCases)(
       "$description",
-      async ({
-        filters,
-        row,
-        oldRow,
-        onlyExecuteFilterIfChange,
-        expectToRun,
-      }) => {
-        let automation = await updateRowAutomationWithFilters()
+      async ({ filters, row, oldRow, expectToRun }) => {
+        let automation = await updateRowAutomationWithFilters(config.appId!)
         automation.definition.trigger.inputs = {
           tableId: table._id,
           filters,
-          meta: { onlyExecuteFilterIfChange },
         }
-        automation.appId = config.appId!
         automation = await config.createAutomation(automation)
 
         const inputs = {
