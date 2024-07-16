@@ -131,8 +131,8 @@
   on:click={handleClick}
   width={column.width}
   metadata={{
-    ...row.__metadata,
-    ...row.__cellMetadata?.[column.name],
+    ...row.__metadata?.row,
+    ...row.__metadata?.cell[column.name],
   }}
 >
   <svelte:component
