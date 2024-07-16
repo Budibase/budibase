@@ -130,13 +130,13 @@ export interface Automation extends Document {
   type?: string
   disabled?: boolean
   testData?: {
-    row: Row
+    row?: Row
     meta: {
       [key: string]: unknown
     }
     id: string
     revision: string
-    oldRow: Row
+    oldRow?: Row
   }
 }
 
@@ -212,7 +212,7 @@ export enum AutomationStatus {
 }
 
 export enum AutomationStoppedReason {
-  TRIGGER_FILTER_NOT_MET = "Automation did not run. Please check trigger filters",
+  TRIGGER_FILTER_NOT_MET = "Automation did not run. Filters conditions in trigger were not met.",
 }
 
 export interface AutomationResults {

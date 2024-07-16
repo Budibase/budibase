@@ -387,7 +387,7 @@ export function filterAutomation(tableId?: string): Automation {
       },
     },
   }
-  return automation as Automation
+  return automation
 }
 
 export function updateRowAutomationWithFilters(): Automation {
@@ -414,7 +414,7 @@ export function updateRowAutomationWithFilters(): Automation {
       },
     },
   }
-  return automation as Automation
+  return automation
 }
 
 export function basicAutomationResults(
