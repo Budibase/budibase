@@ -2,7 +2,6 @@ import {
   EmptyFilterOption,
   Row,
   RowSearchParams,
-  SearchFilterOperator,
   SearchFilters,
   SearchResponse,
   SortOrder,
@@ -12,11 +11,11 @@ import * as internal from "./search/internal"
 import * as external from "./search/external"
 import { NoEmptyFilterStrings } from "../../../constants"
 import * as sqs from "./search/sqs"
-import env from "../../../environment"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
+import { db as dbCore } from "@budibase/backend-core"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -66,37 +65,12 @@ export function removeEmptyFilters(filters: SearchFilters) {
   return filters
 }
 
-// The frontend can send single values for array fields sometimes, so to handle
-// this we convert them to arrays at the controller level so that nothing below
-// this has to worry about the non-array values.
-function fixupFilterArrays(filters: SearchFilters) {
-  const arrayFields = [
-    SearchFilterOperator.ONE_OF,
-    SearchFilterOperator.CONTAINS,
-    SearchFilterOperator.NOT_CONTAINS,
-    SearchFilterOperator.CONTAINS_ANY,
-  ]
-  for (const searchField of arrayFields) {
-    const field = filters[searchField]
-    if (field == null) {
-      continue
-    }
-
-    for (const key of Object.keys(field)) {
-      if (!Array.isArray(field[key])) {
-        field[key] = [field[key]]
-      }
-    }
-  }
-  return filters
-}
-
 export async function search(
   options: RowSearchParams
 ): Promise<SearchResponse<Row>> {
   const isExternalTable = isExternalTableID(options.tableId)
   options.query = removeEmptyFilters(options.query || {})
-  options.query = fixupFilterArrays(options.query)
+  options.query = dataFilters.fixupFilterArrays(options.query)
   if (
     !dataFilters.hasFilters(options.query) &&
     options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
@@ -115,7 +89,7 @@ export async function search(
 
   if (isExternalTable) {
     return external.search(options, table)
-  } else if (env.SQS_SEARCH_ENABLE) {
+  } else if (dbCore.isSqsEnabledForTenant()) {
     return sqs.search(options, table)
   } else {
     return internal.search(options, table)

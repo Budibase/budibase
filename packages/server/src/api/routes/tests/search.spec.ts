@@ -54,10 +54,13 @@ describe.each([
   let rows: Row[]
 
   beforeAll(async () => {
+    await config.withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
     if (isSqs) {
-      envCleanup = config.setEnv({ SQS_SEARCH_ENABLE: "true" })
+      envCleanup = config.setCoreEnv({
+        SQS_SEARCH_ENABLE: "true",
+        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+      })
     }
-    await config.init()
 
     if (config.app?.appId) {
       config.app = await config.api.application.update(config.app?.appId, {
@@ -780,6 +783,32 @@ describe.each([
       it("fails to find nonexistent row", async () => {
         await expectQuery({ oneOf: { name: ["none"] } }).toFindNothing()
       })
+
+      it("can have multiple values for same column", async () => {
+        await expectQuery({
+          oneOf: {
+            name: ["foo", "bar"],
+          },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+      })
+
+      it("splits comma separated strings", async () => {
+        await expectQuery({
+          oneOf: {
+            // @ts-ignore
+            name: "foo,bar",
+          },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+      })
+
+      it("trims whitespace", async () => {
+        await expectQuery({
+          oneOf: {
+            // @ts-ignore
+            name: "foo, bar",
+          },
+        }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+      })
     })
 
     describe("fuzzy", () => {
@@ -1002,6 +1031,32 @@ describe.each([
       it("fails to find nonexistent row", async () => {
         await expectQuery({ oneOf: { age: [2] } }).toFindNothing()
       })
+
+      // I couldn't find a way to make this work in Lucene and given that
+      // we're getting rid of Lucene soon I wasn't inclined to spend time on
+      // it.
+      !isLucene &&
+        it("can convert from a string", async () => {
+          await expectQuery({
+            oneOf: {
+              // @ts-ignore
+              age: "1",
+            },
+          }).toContainExactly([{ age: 1 }])
+        })
+
+      // I couldn't find a way to make this work in Lucene and given that
+      // we're getting rid of Lucene soon I wasn't inclined to spend time on
+      // it.
+      !isLucene &&
+        it("can find multiple values for same column", async () => {
+          await expectQuery({
+            oneOf: {
+              // @ts-ignore
+              age: "1,10",
+            },
+          }).toContainExactly([{ age: 1 }, { age: 10 }])
+        })
     })
 
     describe("range", () => {
@@ -2083,6 +2138,106 @@ describe.each([
           equal: { ["name"]: "baz" },
         }).toContainExactly([{ name: "baz", productCat: undefined }])
       })
+    })
+
+  isInternal &&
+    describe("relations to same table", () => {
+      let relatedTable: Table, relatedRows: Row[]
+
+      beforeAll(async () => {
+        relatedTable = await createTable(
+          {
+            name: { name: "name", type: FieldType.STRING },
+          },
+          "productCategory"
+        )
+        table = await createTable({
+          name: { name: "name", type: FieldType.STRING },
+          related1: {
+            type: FieldType.LINK,
+            name: "related1",
+            fieldName: "main1",
+            tableId: relatedTable._id!,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+          },
+          related2: {
+            type: FieldType.LINK,
+            name: "related2",
+            fieldName: "main2",
+            tableId: relatedTable._id!,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+          },
+        })
+        relatedRows = await Promise.all([
+          config.api.row.save(relatedTable._id!, { name: "foo" }),
+          config.api.row.save(relatedTable._id!, { name: "bar" }),
+          config.api.row.save(relatedTable._id!, { name: "baz" }),
+          config.api.row.save(relatedTable._id!, { name: "boo" }),
+        ])
+        await Promise.all([
+          config.api.row.save(table._id!, {
+            name: "test",
+            related1: [relatedRows[0]._id!],
+            related2: [relatedRows[1]._id!],
+          }),
+          config.api.row.save(table._id!, {
+            name: "test2",
+            related1: [relatedRows[2]._id!],
+            related2: [relatedRows[3]._id!],
+          }),
+        ])
+      })
+
+      it("should be able to relate to same table", async () => {
+        await expectSearch({
+          query: {},
+        }).toContainExactly([
+          {
+            name: "test",
+            related1: [{ _id: relatedRows[0]._id }],
+            related2: [{ _id: relatedRows[1]._id }],
+          },
+          {
+            name: "test2",
+            related1: [{ _id: relatedRows[2]._id }],
+            related2: [{ _id: relatedRows[3]._id }],
+          },
+        ])
+      })
+
+      isSqs &&
+        it("should be able to filter down to second row with equal", async () => {
+          await expectSearch({
+            query: {
+              equal: {
+                ["related1.name"]: "baz",
+              },
+            },
+          }).toContainExactly([
+            {
+              name: "test2",
+              related1: [{ _id: relatedRows[2]._id }],
+            },
+          ])
+        })
+
+      isSqs &&
+        it("should be able to filter down to first row with not equal", async () => {
+          await expectSearch({
+            query: {
+              notEqual: {
+                ["1:related2.name"]: "bar",
+                ["2:related2.name"]: "baz",
+                ["3:related2.name"]: "boo",
+              },
+            },
+          }).toContainExactly([
+            {
+              name: "test",
+              related1: [{ _id: relatedRows[0]._id }],
+            },
+          ])
+        })
     })
 
   isInternal &&
