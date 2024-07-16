@@ -194,7 +194,7 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    border: 1px solid var(--spectrum-global-color-gray-300);
+    border: 1px solid var(--translucent-grey);
     border-radius: 4px;
     overflow: hidden;
     height: 410px;
