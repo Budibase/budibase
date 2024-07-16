@@ -19,12 +19,10 @@
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
-  import { createFromScratchScreen } from "templates/createFromScratchScreen"
+  import blankScreen from "templates/blankScreen"
   import formScreen from "templates/formScreen"
   import gridListScreen from "templates/gridListScreen"
   import gridDetailsScreen from "templates/gridDetailsScreen"
-
-  $: console.log($tables, $permissions);
 
   let mode
   let pendingScreen
@@ -51,7 +49,7 @@
     }
 
     try {
-      const screenAccessRole = null //TODO
+      const screenAccessRole = Roles.BASIC
       let createdScreens = []
 
       for (let screen of screens) {
@@ -133,8 +131,8 @@
     if (mode === "grid" || mode === "gridDetails" || mode === "form") {
       datasourceModal.show()
     } else if (mode === "blank") {
-      const blankScreenTemplate = createFromScratchScreen();
-      pendingScreen = blankScreenTemplate.create()
+      const template = blankScreen();
+      pendingScreen = template
       screenDetailsModal.show()
     } else {
       throw new Error("Invalid mode provided")
