@@ -32,13 +32,10 @@
   let formTypeModal
 
   // Cache variables for workflow
-
   let templates = null
   let screens = null
 
-  let selectedDatasources = null
-  let screenMode = null
-  let formType = null
+  let selectedDatasources = []
 
   // Creates an array of screens, checking and sanitising their URLs
   const createScreens = async (screens) => {
@@ -121,8 +118,6 @@
     templates = null
     screens = null
     selectedDatasources = null
-    screenMode = mode
-    formType = null
 
     if (mode === "grid" || mode === "gridDetails" || mode === "form") {
       datasourceModal.show()
@@ -136,10 +131,10 @@
   // Handler for DatasourceModal confirmation, move to screen access select
   const confirmScreenDatasources = async ({ datasources }) => {
     selectedDatasources = datasources
-    if (screenMode === "form") {
+    if (mode === "form") {
       formTypeModal.show()
     } else {
-      await confirmScreenCreation();
+      await completeDatasourceScreenCreation()
     }
   }
 
@@ -169,11 +164,6 @@
 
       //permissions = await permissionsStore.forResourceDetailed(resourceId)
 
-  const onConfirmFormType = async () => {
-    await confirmScreenCreation();
-    
-  }
-
   const loadNewScreen = createdScreens => {
     const lastScreen = createdScreens.slice(-1)[0]
 
@@ -189,7 +179,7 @@
     screenStore.select(lastScreen._id)
   }
 
-  const confirmFormScreenCreation = async () => {
+  const confirmFormScreenCreation = async (formType) => {
     templates = formScreen(selectedDatasources, { actionType: formType })
     screens = templates.map(template => {
       let screenTemplate = template.create()
@@ -209,22 +199,12 @@
       }
     }
 
-    // Go to new screen
     loadNewScreen(createdScreens)
-  }
-
-  // Submit screen config for creation.
-  const confirmScreenCreation = async () => {
-    if (screenMode === "form") {
-      confirmFormScreenCreation()
-    } else {
-      completeDatasourceScreenCreation()
-    }
   }
 </script>
 
 <Modal bind:this={datasourceModal} autoFocus={false}>
-  <DatasourceModal {mode} onConfirm={confirmScreenDatasources} />
+  <DatasourceModal {selectedDatasources} onConfirm={confirmScreenDatasources} />
 </Modal>
 
 <Modal bind:this={screenDetailsModal}>
@@ -235,14 +215,10 @@
 
 <Modal bind:this={formTypeModal}>
   <FormTypeModal
-    onConfirm={onConfirmFormType}
+    onConfirm={confirmFormScreenCreation}
     onCancel={() => {
       formTypeModal.hide()
       datasourceModal.show()
     }}
-    on:select={e => {
-      formType = e.detail
-    }}
-    type={formType}
   />
 </Modal>

@@ -8,8 +8,11 @@
 
   export let onCancel
   export let onConfirm
+  export let selectedDatasources
 
-  let selectedSources = []
+  $: console.log(selectedDatasources);
+
+  $: selectedSources = selectedDatasources || []
 
   $: filteredSources = $datasources.list?.filter(datasource => {
     return datasource.source !== IntegrationNames.REST && datasource["entities"]
@@ -21,7 +24,7 @@
     )
     if (exists) {
       selectedSources = selectedSources.filter(
-        d => d.resourceId === datasource.resourceId
+        d => d.resourceId !== datasource.resourceId
       )
     } else {
       selectedSources = [...selectedSources, datasource]
