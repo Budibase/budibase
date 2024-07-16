@@ -232,7 +232,7 @@
     --cell-background-alt: var(--cell-background);
     --cell-padding: 8px;
     --cell-spacing: 4px;
-    --cell-border: 1px solid var(--spectrum-global-color-gray-200);
+    --cell-border: 1px solid var(--grid-border-color, var(--translucent-grey));
     --cell-font-size: 14px;
     --cell-font-color: var(--spectrum-global-color-gray-800);
     flex: 1 1 auto;
@@ -290,7 +290,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--spectrum-global-color-gray-200);
+    border-bottom: var(--cell-border);
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
     background: var(--grid-background-alt);

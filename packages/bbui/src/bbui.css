@@ -119,6 +119,7 @@ a {
   --spectrum-global-color-blue-100: #002651;
   --spectrum-global-color-indigo-100: #1a1d61;
   --spectrum-global-color-magenta-100: #530329;
+  --translucent-grey: rgba(255, 255, 255, 0.1);
 }
 .spectrum--dark {
   --drop-shadow: rgba(0, 0, 0, 0.3);
@@ -130,6 +131,7 @@ a {
   --spectrum-global-color-blue-100: #003877;
   --spectrum-global-color-indigo-100: #282c8c;
   --spectrum-global-color-magenta-100: #76003a;
+  --translucent-grey: rgba(255, 255, 255, 0.065);
 }
 .spectrum--light,
 .spectrum--lightest {
@@ -142,4 +144,5 @@ a {
   --spectrum-global-color-blue-100: #e0f2ff;
   --spectrum-global-color-indigo-100: #edeeff;
   --spectrum-global-color-magenta-100: #ffeaf1;
+  --translucent-grey: rgba(0, 0, 0, 0.085);
 }
