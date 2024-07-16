@@ -212,7 +212,7 @@ export enum AutomationStatus {
 }
 
 export enum AutomationStoppedReason {
-  TRIGGER_FILTER_NOT_MET = "Automation did not run. Filters conditions in trigger were not met.",
+  TRIGGER_FILTER_NOT_MET = "Automation did not run. Filter conditions in trigger were not met.",
 }
 
 export interface AutomationResults {
