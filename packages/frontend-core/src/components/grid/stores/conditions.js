@@ -3,9 +3,6 @@ import { derivedMemo, QueryUtils } from "../../../utils"
 
 export const createStores = () => {
   const metadata = writable({})
-
-  metadata.subscribe(console.log)
-
   return {
     metadata,
   }
@@ -60,7 +57,6 @@ export const initialise = context => {
     let metadataUpdates = {}
     for (let row of $rows) {
       if (!row._rev || $metadata[row._id]?.version !== row._rev) {
-        console.log("reevalute", row._id)
         metadataUpdates[row._id] = evaluateConditions(row, $conditions)
       }
     }
