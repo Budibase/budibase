@@ -16,12 +16,6 @@
   export let buttonPosition = "bottom"
   export let size
 
-  $: {
-    console.log(typeof rowId)
-    console.log(rowId);
-    console.log();
-  }
-
   const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
   const component = getContext("component")
   const context = getContext("context")

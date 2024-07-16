@@ -1,4 +1,5 @@
 <script>
+  import { API } from "api"
   import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import ScreenRoleModal from "./ScreenRoleModal.svelte"
@@ -9,18 +10,21 @@
     screenStore,
     navigationStore,
     tables,
+    permissions,
     builderStore,
   } from "stores/builder"
   import { auth } from "stores/portal"
   import { get } from "svelte/store"
-  import getTemplates from "templates"
   import { Roles } from "constants/backend"
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
+  import { createFromScratchScreen } from "templates/createFromScratchScreen"
   import formScreen from "templates/formScreen"
   import gridListScreen from "templates/gridListScreen"
   import gridDetailsScreen from "templates/gridDetailsScreen"
+
+  $: console.log($tables, $permissions);
 
   let mode
   let pendingScreen
@@ -28,11 +32,9 @@
   // Modal refs
   let screenDetailsModal
   let datasourceModal
-  let screenAccessRoleModal
   let formTypeModal
 
   // Cache variables for workflow
-  let screenAccessRole = Roles.BASIC
 
   let templates = null
   let screens = null
@@ -43,20 +45,21 @@
   let formType = null
 
   // Creates an array of screens, checking and sanitising their URLs
-  const createScreens = async ({ screens, screenAccessRole }) => {
+  const createScreens = async (screens) => {
     if (!screens?.length) {
       return
     }
 
     try {
+      const screenAccessRole = null //TODO
       let createdScreens = []
 
       for (let screen of screens) {
         // Check we aren't clashing with an existing URL
-        if (hasExistingUrl(screen.routing.route)) {
+        if (hasExistingUrl(screen.routing.route, screenAccessRole)) {
           let suffix = 2
           let candidateUrl = makeCandidateUrl(screen, suffix)
-          while (hasExistingUrl(candidateUrl)) {
+          while (hasExistingUrl(candidateUrl, screenAccessRole)) {
             candidateUrl = makeCandidateUrl(screen, ++suffix)
           }
           screen.routing.route = candidateUrl
@@ -93,10 +96,9 @@
 
   // Checks if any screens exist in the store with the given route and
   // currently selected role
-  const hasExistingUrl = url => {
-    const roleId = screenAccessRole
+  const hasExistingUrl = (url, screenAccessRole) => {
     const screens = get(screenStore).screens.filter(
-      s => s.routing.roleId === roleId
+      s => s.routing.roleId === screenAccessRole
     )
     return !!screens.find(s => s.routing?.route === url)
   }
@@ -126,16 +128,12 @@
     blankScreenUrl = null
     screenMode = mode
     pendingScreen = null
-    screenAccessRole = Roles.BASIC
     formType = null
 
     if (mode === "grid" || mode === "gridDetails" || mode === "form") {
       datasourceModal.show()
     } else if (mode === "blank") {
-      let templates = getTemplates($tables.list)
-      const blankScreenTemplate = templates.find(
-        t => t.id === "createFromScratch"
-      )
+      const blankScreenTemplate = createFromScratchScreen();
       pendingScreen = blankScreenTemplate.create()
       screenDetailsModal.show()
     } else {
@@ -149,7 +147,7 @@
     if (screenMode === "form") {
       formTypeModal.show()
     } else {
-      screenAccessRoleModal.show()
+      await confirmScreenCreation();
     }
   }
 
@@ -165,33 +163,30 @@
       screenTemplate.autoTableId = template.resourceId
       return screenTemplate
     })
-    const createdScreens = await createScreens({ screens, screenAccessRole })
+    const createdScreens = await createScreens(screens)
     loadNewScreen(createdScreens)
   }
 
   const confirmScreenBlank = async ({ screenUrl }) => {
     blankScreenUrl = screenUrl
-    screenAccessRoleModal.show()
+    await confirmScreenCreation();
   }
 
   // Submit request for a blank screen
-  const confirmBlankScreenCreation = async ({
-    screenUrl,
-    screenAccessRole,
-  }) => {
+  const confirmBlankScreenCreation = async (screenUrl) => {
     if (!pendingScreen) {
       return
     }
     pendingScreen.routing.route = screenUrl
-    const createdScreens = await createScreens({
-      screens: [pendingScreen],
-      screenAccessRole,
-    })
+    const createdScreens = await createScreens([pendingScreen])
     loadNewScreen(createdScreens)
   }
 
-  const onConfirmFormType = () => {
-    screenAccessRoleModal.show()
+      //permissions = await permissionsStore.forResourceDetailed(resourceId)
+
+  const onConfirmFormType = async () => {
+    await confirmScreenCreation();
+    
   }
 
   const loadNewScreen = createdScreens => {
@@ -215,7 +210,9 @@
       let screenTemplate = template.create()
       return screenTemplate
     })
-    const createdScreens = await createScreens({ screens, screenAccessRole })
+    console.log(screens);
+    return;
+    const createdScreens = await createScreens(screens)
 
     if (formType === "Update" || formType === "Create") {
       const associatedTour =
@@ -236,40 +233,17 @@
   // Submit screen config for creation.
   const confirmScreenCreation = async () => {
     if (screenMode === "blank") {
-      confirmBlankScreenCreation({
-        screenUrl: blankScreenUrl,
-        screenAccessRole,
-      })
+      confirmBlankScreenCreation(blankScreenUrl)
     } else if (screenMode === "form") {
       confirmFormScreenCreation()
     } else {
       completeDatasourceScreenCreation()
     }
   }
-
-  const roleSelectBack = () => {
-    if (screenMode === "blank") {
-      screenDetailsModal.show()
-    } else {
-      datasourceModal.show()
-    }
-  }
 </script>
 
 <Modal bind:this={datasourceModal} autoFocus={false}>
   <DatasourceModal {mode} onConfirm={confirmScreenDatasources} />
-</Modal>
-
-<Modal bind:this={screenAccessRoleModal}>
-  <ScreenRoleModal
-    onConfirm={() => {
-      confirmScreenCreation()
-    }}
-    bind:screenAccessRole
-    onCancel={roleSelectBack}
-    screenUrl={blankScreenUrl}
-    confirmText={screenMode === "form" ? "Confirm" : "Done"}
-  />
 </Modal>
 
 <Modal bind:this={screenDetailsModal}>

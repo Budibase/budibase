@@ -1,7 +1,6 @@
 import { Screen } from "./Screen"
 import { Component } from "./Component"
 import sanitizeUrl from "helpers/sanitizeUrl"
-import { makePropSafe as safe } from "@budibase/string-templates"
 
 export const FORM_TEMPLATE = "FORM_TEMPLATE"
 export const formUrl = (datasource, config) => {
