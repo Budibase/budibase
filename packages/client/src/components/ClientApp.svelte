@@ -51,7 +51,6 @@
   let dataLoaded = false
   let permissionError = false
   let embedNoScreens = false
-  let onLoadCheck = false
 
   // Determine if we should show devtools or not
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
