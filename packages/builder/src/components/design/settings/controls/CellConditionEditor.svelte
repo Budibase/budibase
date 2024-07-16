@@ -25,13 +25,23 @@
 
   const dispatch = createEventDispatcher()
   const flipDuration = 130
+  const targetOptions = [
+    {
+      label: "Cell",
+      value: "cell",
+    },
+    {
+      label: "Row",
+      value: "row",
+    },
+  ]
   const conditionOptions = [
     {
-      label: "Update background color",
+      label: "Background color",
       value: "backgroundColor",
     },
     {
-      label: "Update text color",
+      label: "Text color",
       value: "textColor",
     },
   ]
@@ -68,6 +78,7 @@
   const addCondition = () => {
     const condition = {
       id: generate(),
+      target: targetOptions[0].value,
       metadataKey: conditionOptions[0].value,
       operator: Constants.OperatorOptions.Equals.value,
       valueType: FieldType.STRING,
@@ -123,7 +134,7 @@
   <DrawerContent slot="body">
     <div class="container">
       <Layout noPadding>
-        Update the appearance of cells based on their value.
+        Update the appearance of cells and rows based on their value.
         {#if tempValue.length}
           <div
             class="conditions"
@@ -150,6 +161,12 @@
                 >
                   <Icon name="DragHandle" size="XL" />
                 </div>
+                <span>Update</span>
+                <Select
+                  placeholder={null}
+                  options={targetOptions}
+                  bind:value={condition.target}
+                />
                 <Select
                   placeholder={null}
                   options={conditionOptions}
@@ -235,7 +252,7 @@
   }
   .condition {
     display: grid;
-    grid-template-columns: auto 1fr auto auto auto 1fr 1fr 1fr auto auto;
+    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr 1fr auto auto;
     align-items: center;
     grid-column-gap: var(--spacing-l);
   }

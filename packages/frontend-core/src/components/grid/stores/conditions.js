@@ -1,15 +1,13 @@
 import { writable, get } from "svelte/store"
 import { derivedMemo, QueryUtils } from "../../../utils"
-import { OperatorOptions } from "@budibase/shared-core"
-import { FieldType } from "@budibase/types"
-import { processString, processStringSync } from "@budibase/string-templates"
 
 export const createStores = () => {
-  const cellMetadata = writable({})
-  const rowMetadata = writable({})
+  const metadata = writable({})
+
+  metadata.subscribe(console.log)
+
   return {
-    cellMetadata,
-    rowMetadata,
+    metadata,
   }
 }
 
@@ -18,7 +16,7 @@ export const deriveStores = context => {
 
   // Derive and memoize the cell conditions present in our columns so that we
   // only recompute condition metadata when absolutely necessary
-  const cellConditions = derivedMemo(columns, $columns => {
+  const conditions = derivedMemo(columns, $columns => {
     let newConditions = []
     for (let column of $columns) {
       for (let condition of column.conditions || []) {
@@ -33,73 +31,43 @@ export const deriveStores = context => {
   })
 
   return {
-    cellConditions,
+    conditions,
   }
 }
 
 export const initialise = context => {
-  const { cellMetadata, cellConditions, rowConditions, rowMetadata, rows } =
-    context
+  const { metadata, conditions, rows } = context
 
   // Recompute all cell metadata if cell conditions change
-  cellConditions.subscribe($conditions => {
-    let metadata = {}
+  conditions.subscribe($conditions => {
+    // Build new metadata
+    let newMetadata = {}
     if ($conditions?.length) {
       for (let row of get(rows)) {
-        metadata[row._id] = evaluateCellConditions(row, $conditions)
+        newMetadata[row._id] = evaluateConditions(row, $conditions)
       }
     }
-    cellMetadata.set(metadata)
-  })
-
-  // Recompute all row metadata if row conditions change
-  rowConditions.subscribe($conditions => {
-    let metadata = {}
-    if ($conditions?.length) {
-      for (let row of get(rows)) {
-        metadata[row._id] = evaluateRowConditions(row, $conditions)
-      }
-    }
-    rowMetadata.set(metadata)
+    metadata.set(newMetadata)
   })
 
   // Recompute metadata for specific rows when they change
   rows.subscribe($rows => {
-    const $cellConditions = get(cellConditions)
-    const $rowConditions = get(rowConditions)
-    const processCells = $cellConditions?.length > 0
-    const processRows = $rowConditions?.length > 0
-    if (!processCells && !processRows) {
+    const $conditions = get(conditions)
+    if (!$conditions?.length) {
       return
     }
-    const $cellMetadata = get(cellMetadata)
-    const $rowMetadata = get(rowMetadata)
-    let cellUpdates = {}
-    let rowUpdates = {}
+    const $metadata = get(metadata)
+    let metadataUpdates = {}
     for (let row of $rows) {
-      // Process cell metadata
-      if (processCells) {
-        if (!row._rev || $cellMetadata[row._id]?.version !== row._rev) {
-          cellUpdates[row._id] = evaluateCellConditions(row, $cellConditions)
-        }
-      }
-      // Process row metadata
-      if (processRows) {
-        if (!row._rev || $rowMetadata[row._id]?.version !== row._rev) {
-          rowUpdates[row._id] = evaluateRowConditions(row, $rowConditions)
-        }
+      if (!row._rev || $metadata[row._id]?.version !== row._rev) {
+        console.log("reevalute", row._id)
+        metadataUpdates[row._id] = evaluateConditions(row, $conditions)
       }
     }
-    if (Object.keys(cellUpdates).length) {
-      cellMetadata.update(state => ({
+    if (Object.keys(metadataUpdates).length) {
+      metadata.update(state => ({
         ...state,
-        ...cellUpdates,
-      }))
-    }
-    if (Object.keys(rowUpdates).length) {
-      rowMetadata.update(state => ({
-        ...state,
-        ...rowUpdates,
+        ...metadataUpdates,
       }))
     }
   })
@@ -107,8 +75,12 @@ export const initialise = context => {
 
 // Evaluates an array of cell conditions against a certain row and returns the
 // resultant metadata
-const evaluateCellConditions = (row, conditions) => {
-  let metadata = { version: row._rev }
+const evaluateConditions = (row, conditions) => {
+  let metadata = {
+    version: row._rev,
+    row: {},
+    cell: {},
+  }
   for (let condition of conditions) {
     try {
       let {
@@ -118,6 +90,7 @@ const evaluateCellConditions = (row, conditions) => {
         operator,
         metadataKey,
         metadataValue,
+        target,
       } = condition
       let value = row[column]
 
@@ -147,29 +120,17 @@ const evaluateCellConditions = (row, conditions) => {
       const query = QueryUtils.buildQuery([luceneFilter])
       const result = QueryUtils.runQuery([{ value }], query)
       if (result.length > 0) {
-        if (!metadata[column]) {
-          metadata[column] = {}
+        if (target === "row") {
+          metadata.row = {
+            ...metadata.row,
+            [metadataKey]: metadataValue,
+          }
+        } else {
+          metadata.cell[column] = {
+            ...metadata.cell[column],
+            [metadataKey]: metadataValue,
+          }
         }
-        metadata[column][metadataKey] = metadataValue
-      }
-    } catch {
-      // Swallow
-    }
-  }
-  return metadata
-}
-
-// Evaluates an array of row conditions against a certain row and returns the
-// resultant metadata
-const evaluateRowConditions = (row, conditions) => {
-  let metadata = { version: row._rev }
-  for (let condition of conditions) {
-    try {
-      const { metadataKey, metadataValue, value } = condition
-      console.log("JS")
-      const result = processStringSync(value, { row })
-      if (result === true) {
-        metadata[metadataKey] = metadataValue
       }
     } catch {
       // Swallow
