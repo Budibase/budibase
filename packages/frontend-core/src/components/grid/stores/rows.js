@@ -371,7 +371,7 @@ export const createActions = context => {
     // Get index of row to check if it exists
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
-    const index = $rowLookupMap[id].__idx
+    const index = $rowLookupMap[id]?.__idx
 
     // Process as either an update, addition or deletion
     if (row) {
