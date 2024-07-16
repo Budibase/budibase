@@ -1,6 +1,6 @@
 import env from "../environment"
 import { DEFAULT_TENANT_ID, SEPARATOR, DocumentType } from "../constants"
-import { getTenantId, getGlobalDBName } from "../context"
+import { getTenantId, getGlobalDBName, isMultiTenant } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
 import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "../docIds/conversions"
@@ -211,6 +211,11 @@ export function isSqsEnabledForTenant(): boolean {
   const tenantId = getTenantId()
   if (!env.SQS_SEARCH_ENABLE) {
     return false
+  }
+
+  // single tenant (self host and dev) always enabled if flag set
+  if (!isMultiTenant()) {
+    return true
   }
 
   // This is to guard against the situation in tests where tests pass because

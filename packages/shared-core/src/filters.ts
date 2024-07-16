@@ -106,7 +106,7 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotEquals.value,
   OperatorOptions.Contains.value,
   OperatorOptions.NotContains.value,
-  OperatorOptions.NotContains.value,
+  OperatorOptions.ContainsAny.value,
   OperatorOptions.In.value,
 ] as (keyof SearchQueryFields)[]
 

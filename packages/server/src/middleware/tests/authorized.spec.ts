@@ -105,7 +105,7 @@ describe("Authorization middleware", () => {
     it("throws when no user data is present in context", async () => {
       await config.executeMiddleware()
 
-      expect(config.throw).toHaveBeenCalledWith(403, "No user info found")
+      expect(config.throw).toHaveBeenCalledWith(401, "No user info found")
     })
 
     it("passes on to next() middleware if user is an admin", async () => {
@@ -157,7 +157,7 @@ describe("Authorization middleware", () => {
 
       await config.executeMiddleware()
       expect(config.throw).toHaveBeenCalledWith(
-        403,
+        401,
         "Session not authenticated"
       )
     })
