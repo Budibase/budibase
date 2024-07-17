@@ -26,13 +26,13 @@ describe("/rowsActions", () => {
 
   function createRowActionRequest(): CreateRowActionRequest {
     return {
-      name: generator.word(),
+      name: generator.string(),
     }
   }
 
   function createRowActionRequests(count: number): CreateRowActionRequest[] {
     return generator
-      .unique(() => generator.word(), count)
+      .unique(() => generator.string(), count)
       .map(name => ({ name }))
   }
 
@@ -129,7 +129,7 @@ describe("/rowsActions", () => {
       const dirtyRowAction = {
         ...rowAction,
         id: generator.guid(),
-        valueToIgnore: generator.word(),
+        valueToIgnore: generator.string(),
       }
       const res = await createRowAction(tableId, dirtyRowAction, {
         status: 201,
@@ -199,7 +199,7 @@ describe("/rowsActions", () => {
         Object.entries(persisted.actions)
       )!
 
-      const updatedName = generator.word()
+      const updatedName = generator.string()
 
       const res = await config.api.rowAction.update(tableId, actionId, {
         ...actionData,
