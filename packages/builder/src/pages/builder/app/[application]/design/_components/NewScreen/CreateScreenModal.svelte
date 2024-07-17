@@ -1,8 +1,6 @@
 <script>
-  import { API } from "api"
   import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
-  import ScreenRoleModal from "./ScreenRoleModal.svelte"
   import sanitizeUrl from "helpers/sanitizeUrl"
   import FormTypeModal from "./FormTypeModal.svelte"
   import { Modal, notifications } from "@budibase/bbui"
@@ -14,7 +12,6 @@
   } from "stores/builder"
   import { auth } from "stores/portal"
   import { get } from "svelte/store"
-  import { Roles } from "constants/backend"
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
@@ -64,20 +61,6 @@
       notifications.error("Error creating screens")
     }
   }
-
-  const mapAsync = async (iterable) => {
-    const resolvedIterable = []
-    for (let promise of screens) {
-      await promise;
-    }
-
-    return resolvedIterable;
-  }
-
-  /*
-  const createScreensFromDatasources = async (callback) => {
-    const screens = await createDatasourceScreens(gridScreen);
-  }*/
 
   const addNavigationLink = async (screen) =>
     await navigationStore.saveLink(
