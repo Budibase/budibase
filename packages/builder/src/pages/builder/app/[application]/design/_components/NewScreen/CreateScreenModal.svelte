@@ -65,6 +65,20 @@
     }
   }
 
+  const mapAsync = async (iterable) => {
+    const resolvedIterable = []
+    for (let promise of screens) {
+      await promise;
+    }
+
+    return resolvedIterable;
+  }
+
+  /*
+  const createScreensFromDatasources = async (callback) => {
+    const screens = await createDatasourceScreens(gridScreen);
+  }*/
+
   const addNavigationLink = async (screen) =>
     await navigationStore.saveLink(
       screen.routing.route,
@@ -110,63 +124,67 @@
 
   const createBlankScreen = async ({ screenUrl }) => {
     const screenTemplate = blankScreen(screenUrl);
-    const createdScreen = await createScreen(screenTemplate)
+    const screen = await createScreen(screenTemplate)
+    await addNavigationLink(screenTemplate);
 
-    loadNewScreen(createdScreen)
+    loadNewScreen(screen)
   }
 
   const createGridScreen = async () => {
-    const createdScreens = await Promise.all(
-      selectedDatasources.map(async datasource => {
-        const screenTemplate = gridScreen(
-          datasource,
-          await permissions.getResource(datasource.resourceId)
-        )
+    let firstScreen = null
 
-        const screen = createScreen(screenTemplate);
-        await addNavigationLink(screen);
-        return screen;
-      })
-    )
+    for (let datasource of selectedDatasources) {
+      const screenTemplate = gridScreen(
+        datasource,
+        await permissions.getResource(datasource.resourceId)
+      )
 
-    loadNewScreen(createdScreens.at(-1))
+      const screen = await createScreen(screenTemplate);
+      await addNavigationLink(screen);
+
+      firstScreen ??= screen
+    }
+
+    loadNewScreen(firstScreen)
   }
 
   const createGridDetailsScreen = async () => {
-    const createdScreens = await Promise.all(
-      selectedDatasources.map(async datasource => {
-        const screenTemplate = gridDetailsScreen(
-          datasource,
-          await permissions.getResource(datasource.resourceId)
-        )
+    let firstScreen = null
 
-        const screen = createScreen(screenTemplate);
-        await addNavigationLink(screen);
-        return screen;
-      })
-    )
+    for (let datasource of selectedDatasources) {
+      const screenTemplate = gridDetailsScreen(
+        datasource,
+        await permissions.getResource(datasource.resourceId)
+      )
 
-    loadNewScreen(createdScreens.at(-1))
+      const screen = await createScreen(screenTemplate);
+      await addNavigationLink(screen);
+
+      firstScreen ??= screen
+    }
+
+    loadNewScreen(firstScreen)
   }
 
   const createFormScreen = async (formType) => {
-    const createdScreens = await Promise.all(
-      selectedDatasources.map(async datasource => {
-        const screenTemplate = formScreen(
-          datasource,
-          formType,
-          await permissions.getResource(datasource.resourceId)
-        )
+    let firstScreen = null
 
-        const screen = createScreen(screenTemplate);
+    for (let datasource of selectedDatasources) {
+      const screenTemplate = formScreen(
+        datasource,
+        formType,
+        await permissions.getResource(datasource.resourceId)
+      )
+
+      const screen = await createScreen(screenTemplate);
         // Only add a navigation link for `Create`, as both `Update` and `View`
         // require an `id` in their URL in order to function.
         if (formType === "Create") {
           await addNavigationLink(screen);
         }
-        return screen;
-      })
-    )
+
+      firstScreen ??= screen
+    }
 
     if (formType === "Update" || formType === "Create") {
       const associatedTour =
@@ -180,7 +198,7 @@
       }
     }
 
-    loadNewScreen(createdScreens.at(-1))
+    loadNewScreen(firstScreen)
   }
 
 
