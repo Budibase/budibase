@@ -35,9 +35,8 @@ export const deriveStores = context => {
 export const initialise = context => {
   const { metadata, conditions, rows } = context
 
-  // Recompute all cell metadata if cell conditions change
+  // Recompute all metadata if conditions change
   conditions.subscribe($conditions => {
-    // Build new metadata
     let newMetadata = {}
     if ($conditions?.length) {
       for (let row of get(rows)) {
