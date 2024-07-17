@@ -11,7 +11,7 @@
     ModalContent,
     notifications,
     Link,
-    InlineAlert
+    InlineAlert,
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
@@ -26,13 +26,13 @@
   let updatedName
 
   let screensPossiblyAffected = []
-  let viewsMessage = "";
+  let viewsMessage = ""
   let deleteTableName
 
   $: externalTable = table?.sourceType === DB_TYPE_EXTERNAL
 
   const getViewsMessage = () => {
-    const views = Object.values(table?.views ?? []);
+    const views = Object.values(table?.views ?? [])
     if (views.length < 1) {
       return ""
     }
@@ -51,7 +51,7 @@
       )
       .map(screen => ({
         text: screen.routing.route,
-        url: `/builder/app/${$appStore.appId}/design/${screen._id}`
+        url: `/builder/app/${$appStore.appId}/design/${screen._id}`,
       }))
 
     confirmDeleteDialog.show()
@@ -157,18 +157,22 @@
 
     {#if screensPossiblyAffected.length > 0}
       <div class="affectedScreens">
-        <InlineAlert header="The following screens were originally generated from this table and may no longer function as expected">
-      <ul class="affectedScreensList">
-        {#each screensPossiblyAffected as item}
-          <li><Link quiet overBackground target="_blank" href={item.url}>{item.text}</Link></li>
-        {/each}
-      </ul>
+        <InlineAlert
+          header="The following screens were originally generated from this table and may no longer function as expected"
+        >
+          <ul class="affectedScreensList">
+            {#each screensPossiblyAffected as item}
+              <li>
+                <Link quiet overBackground target="_blank" href={item.url}
+                  >{item.text}</Link
+                >
+              </li>
+            {/each}
+          </ul>
         </InlineAlert>
       </div>
     {/if}
-    <p class="fourthWarning">
-      Please enter the app name below to confirm.
-    </p>
+    <p class="fourthWarning">Please enter the app name below to confirm.</p>
     <Input bind:value={deleteTableName} placeholder={table.name} />
   </div>
 </ConfirmDialog>
