@@ -7,7 +7,25 @@ import {
   VirtualDocumentType,
 } from "@budibase/types"
 
+function ensureUniqueAndThrow(
+  doc: TableRowActions,
+  name: string,
+  existingRowActionId?: string
+) {
+  if (
+    Object.entries(doc.actions).find(
+      ([id, a]) =>
+        a.name.toLowerCase() === name.toLowerCase() &&
+        id !== existingRowActionId
+    )
+  ) {
+    throw new HTTPError("A row action with the same name already exists.", 409)
+  }
+}
+
 export async function create(tableId: string, rowAction: { name: string }) {
+  const action = { name: rowAction.name.trim() }
+
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
   let doc: TableRowActions
@@ -21,13 +39,15 @@ export async function create(tableId: string, rowAction: { name: string }) {
     doc = { _id: rowActionsId, actions: {} }
   }
 
+  ensureUniqueAndThrow(doc, action.name)
+
   const newId = `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
-  doc.actions[newId] = rowAction
+  doc.actions[newId] = action
   await db.put(doc)
 
   return {
     id: newId,
-    ...rowAction,
+    ...action,
   }
 }
 
@@ -49,6 +69,7 @@ export async function update(
   rowActionId: string,
   rowAction: { name: string }
 ) {
+  const action = { name: rowAction.name.trim() }
   const actionsDoc = await get(tableId)
 
   if (!actionsDoc.actions[rowActionId]) {
@@ -57,14 +78,17 @@ export async function update(
       400
     )
   }
-  actionsDoc.actions[rowActionId] = rowAction
+
+  ensureUniqueAndThrow(actionsDoc, action.name, rowActionId)
+
+  actionsDoc.actions[rowActionId] = action
 
   const db = context.getAppDB()
   await db.put(actionsDoc)
 
   return {
     id: rowActionId,
-    ...rowAction,
+    ...action,
   }
 }
 
