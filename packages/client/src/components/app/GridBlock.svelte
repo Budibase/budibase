@@ -193,7 +193,7 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    border: 1px solid var(--translucent-grey);
+    border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 4px;
     overflow: hidden;
     height: 410px;
