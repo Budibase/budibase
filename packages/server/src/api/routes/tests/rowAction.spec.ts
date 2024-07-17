@@ -203,6 +203,16 @@ describe("/rowsActions", () => {
         }
       )
     })
+
+    it("can reuse row action names between different tables", async () => {
+      const otherTable = await config.api.table.save(
+        setup.structures.basicTable()
+      )
+
+      const action = await createRowAction(tableId, createRowActionRequest())
+
+      await createRowAction(otherTable._id!, { name: action.name })
+    })
   })
 
   describe("find", () => {
@@ -326,6 +336,23 @@ describe("/rowsActions", () => {
         action.id,
         createRowActionRequest(),
         { status: 400 }
+      )
+    })
+
+    it("can not use existing row action names (for the same table)", async () => {
+      const action1 = await createRowAction(tableId, createRowActionRequest())
+      const action2 = await createRowAction(tableId, createRowActionRequest())
+
+      await config.api.rowAction.update(
+        tableId,
+        action1.id,
+        { name: action2.name },
+        {
+          status: 409,
+          body: {
+            message: "A row action with the same name already exists.",
+          },
+        }
       )
     })
   })

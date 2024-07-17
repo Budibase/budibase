@@ -7,10 +7,16 @@ import {
   VirtualDocumentType,
 } from "@budibase/types"
 
-function ensureUnique(doc: TableRowActions, newName: string) {
+function ensureUniqueAndThrow(
+  doc: TableRowActions,
+  name: string,
+  existingRowActionId?: string
+) {
   if (
-    Object.values(doc.actions).find(
-      a => a.name.toLowerCase() === newName.toLowerCase()
+    Object.entries(doc.actions).find(
+      ([id, a]) =>
+        a.name.toLowerCase() === name.toLowerCase() &&
+        id !== existingRowActionId
     )
   ) {
     throw new HTTPError("A row action with the same name already exists.", 409)
@@ -33,7 +39,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
     doc = { _id: rowActionsId, actions: {} }
   }
 
-  ensureUnique(doc, action.name)
+  ensureUniqueAndThrow(doc, action.name)
 
   const newId = `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
   doc.actions[newId] = action
@@ -72,6 +78,9 @@ export async function update(
       400
     )
   }
+
+  ensureUniqueAndThrow(actionsDoc, action.name, rowActionId)
+
   actionsDoc.actions[rowActionId] = action
 
   const db = context.getAppDB()
