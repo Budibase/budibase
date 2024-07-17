@@ -132,15 +132,13 @@
   }
 
   const completeDatasourceScreenCreation = async () => {
-    const templates =
-      mode === "grid"
-        ? gridListScreen(selectedDatasources)
-        : gridDetailsScreen(selectedDatasources)
+    const screens = selectedDatasources.map(datasource => {
+      let screen = mode === "grid"
+        ? gridListScreen(datasource)
+        : gridDetailsScreen(datasource)
+      screen.autoTableId = datasource.resourceId
 
-    const screens = templates.map(template => {
-      let screenTemplate = template.create()
-      screenTemplate.autoTableId = template.resourceId
-      return screenTemplate
+      return screen
     })
     const createdScreens = await createScreens(screens)
     loadNewScreen(createdScreens)
@@ -170,8 +168,12 @@
 
   const confirmFormScreenCreation = async (formType) => {
     const screens = selectedDatasources.map(datasource => {
-      return formScreen(datasource, formType)
+      let screen = formScreen(datasource, formType)
+      screen.autoTableId = datasource.resourceId
+
+      return screen;
     });
+
     const createdScreens = await createScreens(screens)
 
     if (formType === "Update" || formType === "Create") {

@@ -5,22 +5,7 @@ import { generate } from "shortid"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Utils } from "@budibase/frontend-core"
 
-export default function (datasources) {
-  if (!Array.isArray(datasources)) {
-    return []
-  }
-  return datasources.map(datasource => {
-    return {
-      name: `${datasource.label} - List with panel`,
-      create: () => createScreen(datasource),
-      id: GRID_DETAILS_TEMPLATE,
-      resourceId: datasource.resourceId,
-    }
-  })
-}
-
-export const GRID_DETAILS_TEMPLATE = "GRID_DETAILS_TEMPLATE"
-export const gridDetailsUrl = datasource => sanitizeUrl(`/${datasource.label}`)
+const gridDetailsUrl = datasource => sanitizeUrl(`/${datasource.label}`)
 
 const createScreen = datasource => {
   /*
@@ -156,3 +141,5 @@ const createScreen = datasource => {
     .addChild(detailsSidePanel)
     .json()
 }
+
+export default createScreen;
