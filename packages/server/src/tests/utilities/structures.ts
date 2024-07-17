@@ -159,7 +159,7 @@ export function automationTrigger(
 }
 
 export function newAutomation({ steps, trigger }: any = {}) {
-  const automation: any = basicAutomation()
+  const automation = basicAutomation()
 
   if (trigger) {
     automation.definition.trigger = trigger
