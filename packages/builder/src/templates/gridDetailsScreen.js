@@ -144,4 +144,4 @@ const createScreen = (datasource, permissions) => {
     .json()
 }
 
-export default createScreen;
+export default createScreen

@@ -23,7 +23,7 @@
       <div
         class="form-type"
         class:selected={type === "Create"}
-        on:click={() => type = "Create"}
+        on:click={() => (type = "Create")}
       >
         <div class="form-type-wrap">
           <div class="form-type-content">
@@ -42,7 +42,7 @@
       <div
         class="form-type"
         class:selected={type === "Update"}
-        on:click={() => type = "Update"}
+        on:click={() => (type = "Update")}
       >
         <div class="form-type-wrap">
           <div class="form-type-content">
@@ -59,7 +59,7 @@
       <div
         class="form-type"
         class:selected={type === "View"}
-        on:click={() => type = "View"}
+        on:click={() => (type = "View")}
       >
         <div class="form-type-wrap">
           <div class="form-type-content">

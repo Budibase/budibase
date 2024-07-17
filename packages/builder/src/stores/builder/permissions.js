@@ -20,17 +20,19 @@ export function createPermissionStore() {
         level,
       })
     },
-    getResource: async (resourceId) => {
-      const $store = get(store);
-      const inFlightRequest = $store[resourceId];
+    getResource: async resourceId => {
+      const $store = get(store)
+      const inFlightRequest = $store[resourceId]
 
       if (inFlightRequest instanceof Promise) {
         return inFlightRequest
       }
-      const request = API.getPermissionForResource(resourceId).then(response => response.permissions)
-      store.update((currentStore) => ({ ...currentStore, [resourceId]: request }));
+      const request = API.getPermissionForResource(resourceId).then(
+        response => response.permissions
+      )
+      store.update(currentStore => ({ ...currentStore, [resourceId]: request }))
 
-      return request;
+      return request
     },
     forResource: async resourceId => {
       return (await API.getPermissionForResource(resourceId)).permissions

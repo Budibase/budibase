@@ -41,7 +41,7 @@
     }
   }
 
-  const createScreen = async (screen) => {
+  const createScreen = async screen => {
     try {
       // Check we aren't clashing with an existing URL
       if (hasExistingUrl(screen.routing.route, screen.routing.roleId)) {
@@ -62,7 +62,7 @@
     }
   }
 
-  const addNavigationLink = async (screen) =>
+  const addNavigationLink = async screen =>
     await navigationStore.saveLink(
       screen.routing.route,
       capitalise(screen.routing.route.split("/")[1]),
@@ -106,9 +106,9 @@
   }
 
   const createBlankScreen = async ({ screenUrl }) => {
-    const screenTemplate = blankScreen(screenUrl);
+    const screenTemplate = blankScreen(screenUrl)
     const screen = await createScreen(screenTemplate)
-    await addNavigationLink(screenTemplate);
+    await addNavigationLink(screenTemplate)
 
     loadNewScreen(screen)
   }
@@ -122,8 +122,8 @@
         await permissions.getResource(datasource.resourceId)
       )
 
-      const screen = await createScreen(screenTemplate);
-      await addNavigationLink(screen);
+      const screen = await createScreen(screenTemplate)
+      await addNavigationLink(screen)
 
       firstScreen ??= screen
     }
@@ -140,8 +140,8 @@
         await permissions.getResource(datasource.resourceId)
       )
 
-      const screen = await createScreen(screenTemplate);
-      await addNavigationLink(screen);
+      const screen = await createScreen(screenTemplate)
+      await addNavigationLink(screen)
 
       firstScreen ??= screen
     }
@@ -149,7 +149,7 @@
     loadNewScreen(firstScreen)
   }
 
-  const createFormScreen = async (formType) => {
+  const createFormScreen = async formType => {
     let firstScreen = null
 
     for (let datasource of selectedDatasources) {
@@ -159,12 +159,12 @@
         await permissions.getResource(datasource.resourceId)
       )
 
-      const screen = await createScreen(screenTemplate);
-        // Only add a navigation link for `Create`, as both `Update` and `View`
-        // require an `id` in their URL in order to function.
-        if (formType === "Create") {
-          await addNavigationLink(screen);
-        }
+      const screen = await createScreen(screenTemplate)
+      // Only add a navigation link for `Create`, as both `Update` and `View`
+      // require an `id` in their URL in order to function.
+      if (formType === "Create") {
+        await addNavigationLink(screen)
+      }
 
       firstScreen ??= screen
     }
@@ -184,7 +184,6 @@
     loadNewScreen(firstScreen)
   }
 
-
   const loadNewScreen = screen => {
     if (screen?.props?._children.length) {
       // Focus on the main component for the screen type
@@ -197,7 +196,7 @@
     screenStore.select(screen._id)
   }
 
-  const prefetchDatasourcePermissions = (event) => {
+  const prefetchDatasourcePermissions = event => {
     permissions.getResource(event.detail.resourceId)
   }
 </script>
@@ -211,9 +210,7 @@
 </Modal>
 
 <Modal bind:this={screenDetailsModal}>
-  <ScreenDetailsModal
-    onConfirm={createBlankScreen}
-  />
+  <ScreenDetailsModal onConfirm={createBlankScreen} />
 </Modal>
 
 <Modal bind:this={formTypeModal}>

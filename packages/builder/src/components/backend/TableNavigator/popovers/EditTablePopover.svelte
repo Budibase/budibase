@@ -29,9 +29,11 @@
   $: externalTable = table?.sourceType === DB_TYPE_EXTERNAL
 
   function showDeleteModal() {
-    screensPossiblyAffected = $screenStore.screens.filter(
-      screen => screen.autoTableId === table._id && screen.routing?.route
-    ).map(screen => screen.routing.route);
+    screensPossiblyAffected = $screenStore.screens
+      .filter(
+        screen => screen.autoTableId === table._id && screen.routing?.route
+      )
+      .map(screen => screen.routing.route)
 
     confirmDeleteDialog.show()
   }
@@ -123,11 +125,11 @@
     <b>All table data will be deleted.</b>
 
     {#if screensPossiblyAffected.length > 0}
-        <br />
-        <br />
-        The following screens were originally generated from this table and may also no longer function correctly:
+      <br />
+      <br />
+      The following screens were originally generated from this table and may also
+      no longer function correctly:
     {/if}
-
   </p>
   <b>
     <div class="delete-items">
@@ -137,8 +139,8 @@
     </div>
   </b>
   <p>
-    This action <b>cannot be undone</b> - to continue please enter the table name below
-    to confirm.
+    This action <b>cannot be undone</b> - to continue please enter the table name
+    below to confirm.
   </p>
   <Input bind:value={deleteTableName} placeholder={table.name} />
 </ConfirmDialog>

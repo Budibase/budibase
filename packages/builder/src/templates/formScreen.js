@@ -31,7 +31,6 @@ const generateMultistepFormBlock = (datasource, actionType) => {
       datasource,
       steps: [{}],
       rowId: actionType === "new" ? undefined : `{{ url.id }}`,
-
     })
     .instanceName(`${datasource.label} - Multistep Form block`)
   return multistepFormBlock
@@ -47,4 +46,4 @@ const createScreen = (datasource, actionType, permissions) => {
     .json()
 }
 
-export default createScreen;
+export default createScreen
