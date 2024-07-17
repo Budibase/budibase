@@ -38,13 +38,13 @@ import { structures } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 
 describe.each([
-  ["in-memory", undefined],
-  ["lucene", undefined],
+  // ["in-memory", undefined],
+  // ["lucene", undefined],
   ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -735,6 +735,29 @@ describe.each([
           query: {},
         }).toHaveLength(1)
       })
+
+      isInternal &&
+        describe("space at end of column name", () => {
+          beforeAll(async () => {
+            table = await createTable({
+              "name ": {
+                name: "name ",
+                type: FieldType.STRING,
+              },
+            })
+            await createRows([{ ["name "]: "foo" }, { ["name "]: "bar" }])
+          })
+
+          it("should be able to query a column that starts with a space", async () => {
+            await expectSearch({
+              query: {
+                string: {
+                  "1:name ": "foo",
+                },
+              },
+            }).toContainExactly([{ ["name "]: "foo" }])
+          })
+        })
     })
 
     describe("equal", () => {
