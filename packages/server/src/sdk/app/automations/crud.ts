@@ -1,9 +1,9 @@
 import { context, events, HTTPError } from "@budibase/backend-core"
 import { Automation } from "@budibase/types"
-import { checkForWebhooks } from "src/automations/utils"
-import { MetadataTypes } from "src/constants"
-import { generateAutomationID, getAutomationParams } from "src/db/utils"
-import { deleteEntityMetadata } from "src/utilities"
+import { checkForWebhooks } from "../../../automations/utils"
+import { MetadataTypes } from "../../../constants"
+import { generateAutomationID, getAutomationParams } from "../../../db/utils"
+import { deleteEntityMetadata } from "../../../utilities"
 
 function getDb() {
   return context.getAppDB()
