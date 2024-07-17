@@ -154,7 +154,7 @@ describe("/automations", () => {
           tableId: table._id,
         },
       }
-      automation.appId = config.appId
+      automation.appId = config.getAppId()
       automation = await config.createAutomation(automation)
       await setup.delay(500)
       const res = await testAutomation(config, automation, {
