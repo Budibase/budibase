@@ -1,5 +1,6 @@
 import { writable, get } from "svelte/store"
 import { derivedMemo, QueryUtils } from "../../../utils"
+import { FieldType } from "@budibase/types"
 
 export const createStores = () => {
   const metadata = writable({})
@@ -90,17 +91,27 @@ const evaluateConditions = (row, conditions) => {
       let value = row[column]
 
       // Coerce values into correct types for primitives
-      if (type === "number") {
+      let coercedType = type
+      if (type === FieldType.FORMULA) {
+        // For formulas we want to ensure that the reference type matches the
+        // real type
+        if (value === true || value === false) {
+          coercedType = FieldType.BOOLEAN
+        } else if (typeof value === "number") {
+          coercedType = FieldType.NUMBER
+        }
+      }
+      if (coercedType === FieldType.NUMBER) {
         referenceValue = parseFloat(referenceValue)
         value = parseFloat(value)
-      } else if (type === "datetime") {
+      } else if (coercedType === FieldType.DATETIME) {
         if (referenceValue) {
           referenceValue = new Date(referenceValue).toISOString()
         }
         if (value) {
           value = new Date(value).toISOString()
         }
-      } else if (type === "boolean") {
+      } else if (coercedType === FieldType.BOOLEAN) {
         referenceValue = `${referenceValue}`.toLowerCase() === "true"
         value = `${value}`.toLowerCase() === "true"
       }
