@@ -16,7 +16,10 @@ export class RowActionAPI extends TestAPI {
       `/api/tables/${tableId}/actions`,
       {
         body: rowAction,
-        expectations,
+        expectations: {
+          ...expectations,
+          status: expectations?.status || 201,
+        },
         ...config,
       }
     )

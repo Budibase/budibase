@@ -4,7 +4,6 @@ import tk from "timekeeper"
 import { CreateRowActionRequest, RowActionResponse } from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
-import { Expectations } from "src/tests/utilities/api/base"
 
 describe("/rowsActions", () => {
   const config = setup.getConfig()
@@ -23,22 +22,7 @@ describe("/rowsActions", () => {
 
   afterAll(setup.afterAll)
 
-  async function createRowAction(
-    tableId: string,
-    rowAction: CreateRowActionRequest,
-    expectations?: Expectations,
-    opts?: { publicUser?: boolean }
-  ) {
-    return await config.api.rowAction.save(
-      tableId,
-      rowAction,
-      {
-        ...expectations,
-        status: expectations?.status || 201,
-      },
-      opts
-    )
-  }
+  const createRowAction = config.api.rowAction.save
 
   function createRowActionRequest(): CreateRowActionRequest {
     return {
