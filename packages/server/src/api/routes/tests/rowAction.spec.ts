@@ -355,6 +355,14 @@ describe("/rowsActions", () => {
         }
       )
     })
+
+    it("does not throw with name conflicts for the same row action", async () => {
+      const action1 = await createRowAction(tableId, createRowActionRequest())
+
+      await config.api.rowAction.update(tableId, action1.id, {
+        name: action1.name,
+      })
+    })
   })
 
   describe("delete", () => {
