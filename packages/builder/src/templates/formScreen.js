@@ -3,31 +3,17 @@ import { Component } from "./Component"
 import sanitizeUrl from "helpers/sanitizeUrl"
 
 export const FORM_TEMPLATE = "FORM_TEMPLATE"
-export const formUrl = (datasource, config) => {
-  if (config.actionType === "Create") {
+export const formUrl = (datasource, actionType) => {
+  if (actionType === "Create") {
     return sanitizeUrl(`/${datasource.label}/new`)
-  } else if (config.actionType === "Update") {
+  } else if (actionType === "Update") {
     return sanitizeUrl(`/${datasource.label}/edit/:id`)
-  } else if (config.actionType === "View") {
+  } else if (actionType === "View") {
     return sanitizeUrl(`/${datasource.label}/view/:id`)
   }
 }
 
-export default function (datasources, config) {
-  if (!Array.isArray(datasources)) {
-    return []
-  }
-  return datasources.map(datasource => {
-    return {
-      name: `${datasource.label} - Form`,
-      create: () => createScreen(datasource, config),
-      id: FORM_TEMPLATE,
-      resourceId: datasource.resourceId,
-    }
-  })
-}
-
-const generateMultistepFormBlock = (dataSource, { actionType } = {}) => {
+const generateMultistepFormBlock = (dataSource, actionType) => {
   const multistepFormBlock = new Component(
     "@budibase/standard-components/multistepformblock"
   )
@@ -42,10 +28,12 @@ const generateMultistepFormBlock = (dataSource, { actionType } = {}) => {
   return multistepFormBlock
 }
 
-const createScreen = (datasource, config) => {
+const createScreen = (datasource, actionType) => {
   return new Screen()
-    .route(formUrl(datasource, config))
+    .route(formUrl(datasource, actionType))
     .instanceName(`${datasource.label} - Form`)
-    .addChild(generateMultistepFormBlock(datasource, config))
+    .addChild(generateMultistepFormBlock(datasource, actionType))
     .json()
 }
+
+export default createScreen;

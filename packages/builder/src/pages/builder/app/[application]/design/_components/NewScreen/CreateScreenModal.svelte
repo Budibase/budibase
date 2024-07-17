@@ -31,10 +31,6 @@
   let datasourceModal
   let formTypeModal
 
-  // Cache variables for workflow
-  let templates = null
-  let screens = null
-
   let selectedDatasources = []
 
   // Creates an array of screens, checking and sanitising their URLs
@@ -112,11 +108,8 @@
     }
   }
 
-  // Handler for NewScreenModal
   export const show = newMode => {
     mode = newMode
-    templates = null
-    screens = null
     selectedDatasources = null
 
     if (mode === "grid" || mode === "gridDetails" || mode === "form") {
@@ -139,7 +132,7 @@
   }
 
   const completeDatasourceScreenCreation = async () => {
-    templates =
+    const templates =
       mode === "grid"
         ? gridListScreen(selectedDatasources)
         : gridDetailsScreen(selectedDatasources)
@@ -176,11 +169,9 @@
   }
 
   const confirmFormScreenCreation = async (formType) => {
-    templates = formScreen(selectedDatasources, { actionType: formType })
-    screens = templates.map(template => {
-      let screenTemplate = template.create()
-      return screenTemplate
-    })
+    const screens = selectedDatasources.map(datasource => {
+      return formScreen(datasource, formType)
+    });
     const createdScreens = await createScreens(screens)
 
     if (formType === "Update" || formType === "Create") {
