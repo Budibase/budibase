@@ -176,6 +176,33 @@ describe("/rowsActions", () => {
         },
       })
     })
+
+    it("can not create multiple row actions with the same name (for the same table)", async () => {
+      const action = await createRowAction(tableId, {
+        name: "Row action name  ",
+      })
+
+      await createRowAction(
+        tableId,
+        { name: action.name },
+        {
+          status: 409,
+          body: {
+            message: "A row action with the same name already exists.",
+          },
+        }
+      )
+      await createRowAction(
+        tableId,
+        { name: "row action name" },
+        {
+          status: 409,
+          body: {
+            message: "A row action with the same name already exists.",
+          },
+        }
+      )
+    })
   })
 
   describe("find", () => {

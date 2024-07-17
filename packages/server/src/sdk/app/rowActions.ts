@@ -7,6 +7,16 @@ import {
   VirtualDocumentType,
 } from "@budibase/types"
 
+function ensureUnique(doc: TableRowActions, newName: string) {
+  if (
+    Object.values(doc.actions).find(
+      a => a.name.toLowerCase() === newName.toLowerCase()
+    )
+  ) {
+    throw new HTTPError("A row action with the same name already exists.", 409)
+  }
+}
+
 export async function create(tableId: string, rowAction: { name: string }) {
   const action = { name: rowAction.name.trim() }
 
@@ -22,6 +32,8 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
     doc = { _id: rowActionsId, actions: {} }
   }
+
+  ensureUnique(doc, action.name)
 
   const newId = `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
   doc.actions[newId] = action
