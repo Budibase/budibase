@@ -1,9 +1,5 @@
 import * as triggers from "../../automations/triggers"
-import {
-  getAutomationParams,
-  generateAutomationID,
-  DocumentType,
-} from "../../db/utils"
+import { getAutomationParams, DocumentType } from "../../db/utils"
 import {
   checkForWebhooks,
   updateTestHistory,
@@ -76,7 +72,6 @@ function cleanAutomationInputs(automation: Automation) {
 export async function create(
   ctx: UserCtx<Automation, { message: string; automation: Automation }>
 ) {
-  const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
 
@@ -86,30 +81,12 @@ export async function create(
     return
   }
 
-  // Respect existing IDs if recreating a deleted automation
-  if (!automation._id) {
-    automation._id = generateAutomationID()
-  }
-
-  automation.type = "automation"
-  automation = cleanAutomationInputs(automation)
-  automation = await checkForWebhooks({
-    newAuto: automation,
-  })
-  const response = await db.put(automation)
-  await events.automation.created(automation)
-  for (let step of automation.definition.steps) {
-    await events.automation.stepCreated(automation, step)
-  }
-  automation._rev = response.rev
+  const response = await sdk.automations.create(automation)
 
   ctx.status = 200
   ctx.body = {
     message: "Automation created successfully",
-    automation: {
-      ...automation,
-      ...response,
-    },
+    automation: response,
   }
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }
