@@ -25,10 +25,9 @@ export function createPermissionStore() {
       const inFlightRequest = $store[resourceId];
 
       if (inFlightRequest instanceof Promise) {
-        console.log("exists");
         return inFlightRequest
       }
-      const request = API.getPermissionForResource(resourceId)
+      const request = API.getPermissionForResource(resourceId).then(response => response.permissions)
       store.update((currentStore) => ({ ...currentStore, [resourceId]: request }));
 
       return request;

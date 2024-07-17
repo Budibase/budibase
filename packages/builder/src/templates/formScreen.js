@@ -13,6 +13,14 @@ export const formUrl = (datasource, actionType) => {
   }
 }
 
+export const getRole = (permissions, actionType) => {
+  if (actionType === "View") {
+    return permissions.read.role
+  }
+
+  return permissions.write.role
+}
+
 const generateMultistepFormBlock = (datasource, actionType) => {
   const multistepFormBlock = new Component(
     "@budibase/standard-components/multistepformblock"
@@ -33,6 +41,7 @@ const createScreen = (datasource, actionType, permissions) => {
   return new Screen()
     .route(formUrl(datasource, actionType))
     .autoTableId(datasource.resourceId)
+    .role(getRole(permissions, actionType))
     .instanceName(`${datasource.label} - Form`)
     .addChild(generateMultistepFormBlock(datasource, actionType))
     .json()

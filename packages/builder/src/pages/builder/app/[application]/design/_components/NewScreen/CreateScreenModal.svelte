@@ -34,49 +34,33 @@
   let selectedDatasources = []
 
   // Creates an array of screens, checking and sanitising their URLs
-  const createScreens = async (screens) => {
-    if (!screens?.length) {
-      return
-    }
-
+  const createScreen = async (screen) => {
     try {
-      const screenAccessRole = Roles.BASIC
-      let createdScreens = []
-
-      for (let screen of screens) {
-        // Check we aren't clashing with an existing URL
-        if (hasExistingUrl(screen.routing.route, screenAccessRole)) {
-          let suffix = 2
-          let candidateUrl = makeCandidateUrl(screen, suffix)
-          while (hasExistingUrl(candidateUrl, screenAccessRole)) {
-            candidateUrl = makeCandidateUrl(screen, ++suffix)
-          }
-          screen.routing.route = candidateUrl
+      // Check we aren't clashing with an existing URL
+      if (hasExistingUrl(screen.routing.route, screen.routing.roleId)) {
+        let suffix = 2
+        let candidateUrl = makeCandidateUrl(screen, suffix)
+        while (hasExistingUrl(candidateUrl, screen.routing.roleId)) {
+          candidateUrl = makeCandidateUrl(screen, ++suffix)
         }
-
-        // Sanitise URL
-        screen.routing.route = sanitizeUrl(screen.routing.route)
-
-        // Use the currently selected role
-        if (!screenAccessRole) {
-          return
-        }
-        screen.routing.roleId = screenAccessRole
-
-        // Create the screen
-        const response = await screenStore.save(screen)
-        createdScreens.push(response)
-
-        // Add link in layout. We only ever actually create 1 screen now, even
-        // for autoscreens, so it's always safe to do this.
-        await navigationStore.saveLink(
-          screen.routing.route,
-          capitalise(screen.routing.route.split("/")[1]),
-          screenAccessRole
-        )
+        screen.routing.route = candidateUrl
       }
 
-      return createdScreens
+      // Sanitise URL
+      screen.routing.route = sanitizeUrl(screen.routing.route)
+
+      // Create the screen
+      const response = await screenStore.save(screen)
+
+      // Add link in layout. We only ever actually create 1 screen now, even
+      // for autoscreens, so it's always safe to do this.
+      await navigationStore.saveLink(
+        screen.routing.route,
+        capitalise(screen.routing.route.split("/")[1]),
+        screen.routing.roleId
+      )
+
+      return response
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")
@@ -136,7 +120,7 @@
         ? gridListScreen(datasource)
         : gridDetailsScreen(datasource)
     )
-    const createdScreens = await createScreens(screens)
+    const createdScreens = await createScreen(screens)
     loadNewScreen(createdScreens)
   }
 
@@ -144,7 +128,7 @@
     const template = blankScreen();
     template.routing.route = screenUrl
 
-    const createdScreens = await createScreens([Roles.BASIC, template])
+    const createdScreens = await createScreen([Roles.BASIC, template])
     loadNewScreen(createdScreens)
   }
 
@@ -163,8 +147,17 @@
   }
 
   const confirmFormScreenCreation = async (formType) => {
-    const screens = selectedDatasources.map(datasource => formScreen(datasource, formType))
-    const createdScreens = await createScreens(screens)
+    const createdScreens = await Promise.all(
+      selectedDatasources.map(async datasource => {
+        const screenTemplate = formScreen(
+          datasource,
+          formType,
+          await permissionsStore.getResource(datasource.resourceId)
+        )
+
+        return createScreen(screenTemplate);
+      })
+    )
 
     if (formType === "Update" || formType === "Create") {
       const associatedTour =
