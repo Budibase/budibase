@@ -135,6 +135,7 @@ const createScreen = (datasource, permissions) => {
   return new Screen()
     .route(gridDetailsUrl(datasource))
     .instanceName(`${datasource.label} - List and details`)
+    .role(permissions.write.role)
     .autoTableId(datasource.resourceId)
     .addChild(gridHeader)
     .addChild(gridBlock)

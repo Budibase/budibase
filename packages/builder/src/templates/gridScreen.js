@@ -2,7 +2,7 @@ import sanitizeUrl from "helpers/sanitizeUrl"
 import { Screen } from "./Screen"
 import { Component } from "./Component"
 
-const gridListUrl = datasource => sanitizeUrl(`/${datasource.label}`)
+const gridUrl = datasource => sanitizeUrl(`/${datasource.label}`)
 
 const createScreen = (datasource, permissions) => {
   const heading = new Component("@budibase/standard-components/heading")
@@ -18,9 +18,10 @@ const createScreen = (datasource, permissions) => {
     })
 
   return new Screen()
-    .route(gridListUrl(datasource))
-    .autoTableId(datasource.resourceId)
+    .route(gridUrl(datasource))
     .instanceName(`${datasource.label} - List`)
+    .role(permissions.write.role)
+    .autoTableId(datasource.resourceId)
     .addChild(heading)
     .addChild(gridBlock)
     .json()

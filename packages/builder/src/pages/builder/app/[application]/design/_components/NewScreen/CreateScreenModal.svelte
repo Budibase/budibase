@@ -9,8 +9,7 @@
   import {
     screenStore,
     navigationStore,
-    tables,
-    permissions as permissionsStore,
+    permissions,
     builderStore,
   } from "stores/builder"
   import { auth } from "stores/portal"
@@ -21,19 +20,30 @@
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import blankScreen from "templates/blankScreen"
   import formScreen from "templates/formScreen"
-  import gridListScreen from "templates/gridListScreen"
+  import gridScreen from "templates/gridScreen"
   import gridDetailsScreen from "templates/gridDetailsScreen"
 
   let mode
 
-  // Modal refs
   let screenDetailsModal
   let datasourceModal
   let formTypeModal
 
   let selectedDatasources = []
 
-  // Creates an array of screens, checking and sanitising their URLs
+  export const show = newMode => {
+    mode = newMode
+    selectedDatasources = []
+
+    if (mode === "grid" || mode === "gridDetails" || mode === "form") {
+      datasourceModal.show()
+    } else if (mode === "blank") {
+      screenDetailsModal.show()
+    } else {
+      throw new Error("Invalid mode provided")
+    }
+  }
+
   const createScreen = async (screen) => {
     try {
       // Check we aren't clashing with an existing URL
@@ -46,26 +56,21 @@
         screen.routing.route = candidateUrl
       }
 
-      // Sanitise URL
       screen.routing.route = sanitizeUrl(screen.routing.route)
 
-      // Create the screen
-      const response = await screenStore.save(screen)
-
-      // Add link in layout. We only ever actually create 1 screen now, even
-      // for autoscreens, so it's always safe to do this.
-      await navigationStore.saveLink(
-        screen.routing.route,
-        capitalise(screen.routing.route.split("/")[1]),
-        screen.routing.roleId
-      )
-
-      return response
+      return await screenStore.save(screen)
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")
     }
   }
+
+  const addNavigationLink = async (screen) =>
+    await navigationStore.saveLink(
+      screen.routing.route,
+      capitalise(screen.routing.route.split("/")[1]),
+      screen.routing.roleId
+    )
 
   // Checks if any screens exist in the store with the given route and
   // currently selected role
@@ -76,8 +81,8 @@
     return !!screens.find(s => s.routing?.route === url)
   }
 
-  // Constructs a candidate URL for a new screen, suffixing the base of the
-  // screen's URL with a given suffix.
+  // Constructs a candidate URL for a new screen, appending a given suffix to the
+  // screen's URL
   // e.g. "/sales/:id" => "/sales-1/:id"
   const makeCandidateUrl = (screen, suffix) => {
     let url = screen.routing?.route || ""
@@ -92,70 +97,74 @@
     }
   }
 
-  export const show = newMode => {
-    mode = newMode
-    selectedDatasources = null
-
-    if (mode === "grid" || mode === "gridDetails" || mode === "form") {
-      datasourceModal.show()
-    } else if (mode === "blank") {
-      screenDetailsModal.show()
-    } else {
-      throw new Error("Invalid mode provided")
-    }
-  }
-
-  // Handler for DatasourceModal confirmation, move to screen access select
   const confirmScreenDatasources = async ({ datasources }) => {
     selectedDatasources = datasources
     if (mode === "form") {
       formTypeModal.show()
-    } else {
-      await completeDatasourceScreenCreation()
+    } else if (mode === "grid") {
+      await createGridScreen()
+    } else if (mode === "gridDetails") {
+      await createGridDetailsScreen()
     }
-  }
-
-  const completeDatasourceScreenCreation = async () => {
-    const screens = selectedDatasources.map(datasource => mode === "grid"
-        ? gridListScreen(datasource)
-        : gridDetailsScreen(datasource)
-    )
-    const createdScreens = await createScreen(screens)
-    loadNewScreen(createdScreens)
   }
 
   const createBlankScreen = async ({ screenUrl }) => {
-    const template = blankScreen();
-    template.routing.route = screenUrl
+    const screenTemplate = blankScreen(screenUrl);
+    const createdScreen = await createScreen(screenTemplate)
 
-    const createdScreens = await createScreen([Roles.BASIC, template])
-    loadNewScreen(createdScreens)
+    loadNewScreen(createdScreen)
   }
 
-  const loadNewScreen = createdScreens => {
-    const lastScreen = createdScreens.slice(-1)[0]
+  const createGridScreen = async () => {
+    const createdScreens = await Promise.all(
+      selectedDatasources.map(async datasource => {
+        const screenTemplate = gridScreen(
+          datasource,
+          await permissions.getResource(datasource.resourceId)
+        )
 
-    if (lastScreen?.props?._children.length) {
-      // Focus on the main component for the screen type
-      const mainComponent = lastScreen?.props?._children?.[0]._id
-      $goto(`./${lastScreen._id}/${mainComponent}`)
-    } else {
-      $goto(`./${lastScreen._id}`)
-    }
+        const screen = createScreen(screenTemplate);
+        await addNavigationLink(screen);
+        return screen;
+      })
+    )
 
-    screenStore.select(lastScreen._id)
+    loadNewScreen(createdScreens.at(-1))
   }
 
-  const confirmFormScreenCreation = async (formType) => {
+  const createGridDetailsScreen = async () => {
+    const createdScreens = await Promise.all(
+      selectedDatasources.map(async datasource => {
+        const screenTemplate = gridDetailsScreen(
+          datasource,
+          await permissions.getResource(datasource.resourceId)
+        )
+
+        const screen = createScreen(screenTemplate);
+        await addNavigationLink(screen);
+        return screen;
+      })
+    )
+
+    loadNewScreen(createdScreens.at(-1))
+  }
+
+  const createFormScreen = async (formType) => {
     const createdScreens = await Promise.all(
       selectedDatasources.map(async datasource => {
         const screenTemplate = formScreen(
           datasource,
           formType,
-          await permissionsStore.getResource(datasource.resourceId)
+          await permissions.getResource(datasource.resourceId)
         )
 
-        return createScreen(screenTemplate);
+        const screen = createScreen(screenTemplate);
+        // Only add a navigation link for `Create`, as both `Update` and `View`
+        // require an `id` in their URL in order to function.
+        if (formType === "Create") {
+          await addNavigationLink(screen);
+        }
+        return screen;
       })
     )
 
@@ -171,11 +180,24 @@
       }
     }
 
-    loadNewScreen(createdScreens)
+    loadNewScreen(createdScreens.at(-1))
+  }
+
+
+  const loadNewScreen = screen => {
+    if (screen?.props?._children.length) {
+      // Focus on the main component for the screen type
+      const mainComponent = screen?.props?._children?.[0]._id
+      $goto(`./${screen._id}/${mainComponent}`)
+    } else {
+      $goto(`./${screen._id}`)
+    }
+
+    screenStore.select(screen._id)
   }
 
   const prefetchDatasourcePermissions = (event) => {
-    permissionsStore.getResource(event.detail.resourceId)
+    permissions.getResource(event.detail.resourceId)
   }
 </script>
 
@@ -195,7 +217,7 @@
 
 <Modal bind:this={formTypeModal}>
   <FormTypeModal
-    onConfirm={confirmFormScreenCreation}
+    onConfirm={createFormScreen}
     onCancel={() => {
       formTypeModal.hide()
       datasourceModal.show()

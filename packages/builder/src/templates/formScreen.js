@@ -40,9 +40,9 @@ const generateMultistepFormBlock = (datasource, actionType) => {
 const createScreen = (datasource, actionType, permissions) => {
   return new Screen()
     .route(formUrl(datasource, actionType))
-    .autoTableId(datasource.resourceId)
-    .role(getRole(permissions, actionType))
     .instanceName(`${datasource.label} - Form`)
+    .role(getRole(permissions, actionType))
+    .autoTableId(datasource.resourceId)
     .addChild(generateMultistepFormBlock(datasource, actionType))
     .json()
 }

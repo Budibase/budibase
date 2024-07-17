@@ -1,7 +1,10 @@
 import { Screen } from "./Screen"
 
-const blankScreen = () => {
-  return new Screen().instanceName("New Screen").json()
+const blankScreen = (route) => {
+  return new Screen()
+    .instanceName("New Screen")
+    .route(route)
+    .json()
 }
 
 export default blankScreen;
