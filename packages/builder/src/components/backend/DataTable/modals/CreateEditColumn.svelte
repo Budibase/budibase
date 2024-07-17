@@ -133,7 +133,9 @@
   }
   $: initialiseField(field, savingColumn)
   $: checkConstraints(editableColumn)
-  $: required = !!editableColumn?.constraints?.presence || primaryDisplay
+  $: required = hasDefault
+    ? false
+    : !!editableColumn?.constraints?.presence || primaryDisplay
   $: uneditable =
     $tables.selected?._id === TableNames.USERS &&
     UNEDITABLE_USER_FIELDS.includes(editableColumn.name)
@@ -165,11 +167,19 @@
     editableColumn?.type !== AUTO_TYPE &&
     editableColumn?.type !== JSON_TYPE &&
     !editableColumn.autocolumn
+  $: canHaveDefault =
+    editableColumn?.type === FieldType.NUMBER ||
+    editableColumn?.type === FieldType.JSON ||
+    editableColumn?.type === FieldType.DATETIME ||
+    editableColumn?.type === FieldType.LONGFORM ||
+    editableColumn?.type === FieldType.STRING
   $: canBeRequired =
     editableColumn?.type !== LINK_TYPE &&
     !uneditable &&
     editableColumn?.type !== AUTO_TYPE &&
     !editableColumn.autocolumn
+  $: hasDefault =
+    editableColumn?.default != null && editableColumn?.default !== ""
   $: externalTable = table.sourceType === DB_TYPE_EXTERNAL
   // in the case of internal tables the sourceId will just be undefined
   $: tableOptions = $tables.list.filter(
@@ -349,10 +359,13 @@
     }
   }
 
-  function onChangeRequired(e) {
-    const req = e.detail
+  function setRequired(req) {
     editableColumn.constraints.presence = req ? { allowEmpty: false } : false
     required = req
+  }
+
+  function onChangeRequired(e) {
+    setRequired(e.detail)
   }
 
   function openJsonSchemaEditor() {
@@ -748,11 +761,35 @@
         <Toggle
           value={required}
           on:change={onChangeRequired}
-          disabled={primaryDisplay}
+          disabled={primaryDisplay || hasDefault}
           thin
           text="Required"
         />
       {/if}
+    </div>
+  {/if}
+
+  {#if canHaveDefault}
+    <div>
+      <ModalBindableInput
+        panel={ServerBindingPanel}
+        title="Default"
+        label="Default"
+        value={editableColumn.default}
+        on:change={e => {
+          editableColumn = {
+            ...editableColumn,
+            default: e.detail,
+          }
+
+          if (e.detail) {
+            setRequired(false)
+          }
+        }}
+        bindings={getBindings({ table })}
+        allowJS
+        context={rowGoldenSample}
+      />
     </div>
   {/if}
 </Layout>
