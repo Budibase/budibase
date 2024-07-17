@@ -95,6 +95,31 @@ describe("/rowsActions", () => {
       })
     })
 
+    it("trims row action names", async () => {
+      const name = "   action  name  "
+      const res = await createRowAction(
+        tableId,
+        { name },
+        {
+          status: 201,
+        }
+      )
+
+      expect(res).toEqual({
+        id: expect.stringMatching(/^row_action_\w+/),
+        tableId: tableId,
+        name: "action  name",
+      })
+
+      expect(await config.api.rowAction.find(tableId)).toEqual({
+        actions: {
+          [res.id]: expect.objectContaining({
+            name: "action  name",
+          }),
+        },
+      })
+    })
+
     it("can create multiple row actions for the same table", async () => {
       const rowActions = createRowActionRequests(3)
       const responses: RowActionResponse[] = []
@@ -219,6 +244,33 @@ describe("/rowsActions", () => {
               ...actionData,
               name: updatedName,
             },
+          }),
+        })
+      )
+    })
+
+    it("trims row action names", async () => {
+      const rowAction = await createRowAction(
+        tableId,
+        createRowActionRequest(),
+        {
+          status: 201,
+        }
+      )
+
+      const res = await config.api.rowAction.update(tableId, rowAction.id, {
+        ...rowAction,
+        name: "   action  name  ",
+      })
+
+      expect(res).toEqual(expect.objectContaining({ name: "action  name" }))
+
+      expect(await config.api.rowAction.find(tableId)).toEqual(
+        expect.objectContaining({
+          actions: expect.objectContaining({
+            [rowAction.id]: expect.objectContaining({
+              name: "action  name",
+            }),
           }),
         })
       )

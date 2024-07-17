@@ -8,6 +8,8 @@ import {
 } from "@budibase/types"
 
 export async function create(tableId: string, rowAction: { name: string }) {
+  const action = { name: rowAction.name.trim() }
+
   const db = context.getAppDB()
   const rowActionsId = generateRowActionsID(tableId)
   let doc: TableRowActions
@@ -22,12 +24,12 @@ export async function create(tableId: string, rowAction: { name: string }) {
   }
 
   const newId = `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
-  doc.actions[newId] = rowAction
+  doc.actions[newId] = action
   await db.put(doc)
 
   return {
     id: newId,
-    ...rowAction,
+    ...action,
   }
 }
 
@@ -49,6 +51,7 @@ export async function update(
   rowActionId: string,
   rowAction: { name: string }
 ) {
+  const action = { name: rowAction.name.trim() }
   const actionsDoc = await get(tableId)
 
   if (!actionsDoc.actions[rowActionId]) {
@@ -57,14 +60,14 @@ export async function update(
       400
     )
   }
-  actionsDoc.actions[rowActionId] = rowAction
+  actionsDoc.actions[rowActionId] = action
 
   const db = context.getAppDB()
   await db.put(actionsDoc)
 
   return {
     id: rowActionId,
-    ...rowAction,
+    ...action,
   }
 }
 
