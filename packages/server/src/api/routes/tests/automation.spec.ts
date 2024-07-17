@@ -456,7 +456,7 @@ describe("/automations", () => {
 
         let table = await config.createTable()
 
-        let automation = await filterAutomation(config.appId!)
+        let automation = await filterAutomation(config.getAppId())
         automation.definition.trigger.inputs.tableId = table._id
         automation.definition.steps[0].inputs = {
           condition: FilterConditions.EQUAL,
@@ -536,7 +536,7 @@ describe("/automations", () => {
     it.each(testCases)(
       "$description",
       async ({ filters, row, oldRow, expectToRun }) => {
-        let automation = await updateRowAutomationWithFilters(config.appId!)
+        let automation = await updateRowAutomationWithFilters(config.getAppId())
         automation.definition.trigger.inputs = {
           tableId: table._id,
           filters,
