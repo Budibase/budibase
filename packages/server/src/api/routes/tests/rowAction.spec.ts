@@ -95,6 +95,31 @@ describe("/rowsActions", () => {
       })
     })
 
+    it("trims row action names", async () => {
+      const name = "   action  name  "
+      const res = await createRowAction(
+        tableId,
+        { name },
+        {
+          status: 201,
+        }
+      )
+
+      expect(res).toEqual({
+        id: expect.stringMatching(/^row_action_\w+/),
+        tableId: tableId,
+        name: "action  name",
+      })
+
+      expect(await config.api.rowAction.find(tableId)).toEqual({
+        actions: {
+          [res.id]: expect.objectContaining({
+            name: "action  name",
+          }),
+        },
+      })
+    })
+
     it("can create multiple row actions for the same table", async () => {
       const rowActions = createRowActionRequests(3)
       const responses: RowActionResponse[] = []
@@ -150,6 +175,43 @@ describe("/rowsActions", () => {
           },
         },
       })
+    })
+
+    it("can not create multiple row actions with the same name (for the same table)", async () => {
+      const action = await createRowAction(tableId, {
+        name: "Row action name  ",
+      })
+
+      await createRowAction(
+        tableId,
+        { name: action.name },
+        {
+          status: 409,
+          body: {
+            message: "A row action with the same name already exists.",
+          },
+        }
+      )
+      await createRowAction(
+        tableId,
+        { name: "row action name" },
+        {
+          status: 409,
+          body: {
+            message: "A row action with the same name already exists.",
+          },
+        }
+      )
+    })
+
+    it("can reuse row action names between different tables", async () => {
+      const otherTable = await config.api.table.save(
+        setup.structures.basicTable()
+      )
+
+      const action = await createRowAction(tableId, createRowActionRequest())
+
+      await createRowAction(otherTable._id!, { name: action.name })
     })
   })
 
@@ -224,6 +286,33 @@ describe("/rowsActions", () => {
       )
     })
 
+    it("trims row action names", async () => {
+      const rowAction = await createRowAction(
+        tableId,
+        createRowActionRequest(),
+        {
+          status: 201,
+        }
+      )
+
+      const res = await config.api.rowAction.update(tableId, rowAction.id, {
+        ...rowAction,
+        name: "   action  name  ",
+      })
+
+      expect(res).toEqual(expect.objectContaining({ name: "action  name" }))
+
+      expect(await config.api.rowAction.find(tableId)).toEqual(
+        expect.objectContaining({
+          actions: expect.objectContaining({
+            [rowAction.id]: expect.objectContaining({
+              name: "action  name",
+            }),
+          }),
+        })
+      )
+    })
+
     it("throws Bad Request when trying to update by a non-existing id", async () => {
       await createRowAction(tableId, createRowActionRequest())
 
@@ -248,6 +337,31 @@ describe("/rowsActions", () => {
         createRowActionRequest(),
         { status: 400 }
       )
+    })
+
+    it("can not use existing row action names (for the same table)", async () => {
+      const action1 = await createRowAction(tableId, createRowActionRequest())
+      const action2 = await createRowAction(tableId, createRowActionRequest())
+
+      await config.api.rowAction.update(
+        tableId,
+        action1.id,
+        { name: action2.name },
+        {
+          status: 409,
+          body: {
+            message: "A row action with the same name already exists.",
+          },
+        }
+      )
+    })
+
+    it("does not throw with name conflicts for the same row action", async () => {
+      const action1 = await createRowAction(tableId, createRowActionRequest())
+
+      await config.api.rowAction.update(tableId, action1.id, {
+        name: action1.name,
+      })
     })
   })
 
