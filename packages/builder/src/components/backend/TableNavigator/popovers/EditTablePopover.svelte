@@ -23,19 +23,16 @@
   let originalName
   let updatedName
 
-  let templateScreens
-  let willBeDeleted
+  let screensPossiblyAffected = []
   let deleteTableName
 
   $: externalTable = table?.sourceType === DB_TYPE_EXTERNAL
 
   function showDeleteModal() {
-    templateScreens = $screenStore.screens.filter(
-      screen => screen.autoTableId === table._id
-    )
-    willBeDeleted = ["All table data"].concat(
-      templateScreens.map(screen => `Screen ${screen.routing?.route || ""}`)
-    )
+    screensPossiblyAffected = $screenStore.screens.filter(
+      screen => screen.autoTableId === table._id && screen.routing?.route
+    ).map(screen => screen.routing.route);
+
     confirmDeleteDialog.show()
   }
 
@@ -43,10 +40,7 @@
     const isSelected = $params.tableId === table._id
     try {
       await tables.delete(table)
-      // Screens need deleted one at a time because of undo/redo
-      for (let screen of templateScreens) {
-        await screenStore.delete(screen)
-      }
+
       if (table.sourceType === DB_TYPE_EXTERNAL) {
         await datasources.fetch()
       }
@@ -122,26 +116,38 @@
   title="Confirm Deletion"
   disabled={deleteTableName !== table.name}
 >
-  <p>
+  <p class="content">
     Are you sure you wish to delete the table
     <b>{table.name}?</b>
-    The following will also be deleted:
+    <br />
+    <b>All table data will be deleted.</b>
+
+    {#if screensPossiblyAffected.length > 0}
+        <br />
+        <br />
+        The following screens were originally generated from this table and may also no longer function correctly:
+    {/if}
+
   </p>
   <b>
     <div class="delete-items">
-      {#each willBeDeleted as item}
+      {#each screensPossiblyAffected as item}
         <div>{item}</div>
       {/each}
     </div>
   </b>
   <p>
-    This action cannot be undone - to continue please enter the table name below
+    This action <b>cannot be undone</b> - to continue please enter the table name below
     to confirm.
   </p>
   <Input bind:value={deleteTableName} placeholder={table.name} />
 </ConfirmDialog>
 
 <style>
+  .content {
+    margin-top: 0;
+  }
+
   div.icon {
     display: flex;
     flex-direction: row;

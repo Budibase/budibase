@@ -138,7 +138,6 @@
     }
   }
 
-  // Handler for Datasource Screen Creation
   const completeDatasourceScreenCreation = async () => {
     templates =
       mode === "grid"
@@ -158,18 +157,15 @@
     const template = blankScreen();
     template.routing.route = screenUrl
 
-    const createdScreens = await createScreens([template])
+    const createdScreens = await createScreens([Roles.BASIC, template])
     loadNewScreen(createdScreens)
   }
-
-      //permissions = await permissions.forResourceDetailed(resourceId)
 
   const loadNewScreen = createdScreens => {
     const lastScreen = createdScreens.slice(-1)[0]
 
-    // Go to new screen
     if (lastScreen?.props?._children.length) {
-      // Focus on the main component for the streen type
+      // Focus on the main component for the screen type
       const mainComponent = lastScreen?.props?._children?.[0]._id
       $goto(`./${lastScreen._id}/${mainComponent}`)
     } else {

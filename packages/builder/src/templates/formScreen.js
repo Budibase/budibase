@@ -13,7 +13,6 @@ export const formUrl = (datasource, config) => {
   }
 }
 
-// Mode not really necessary
 export default function (datasources, config) {
   if (!Array.isArray(datasources)) {
     return []
