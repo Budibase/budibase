@@ -1,5 +1,5 @@
 import * as triggers from "../../automations/triggers"
-import { getAutomationParams, DocumentType } from "../../db/utils"
+import { DocumentType } from "../../db/utils"
 import { updateTestHistory, removeDeprecated } from "../../automations/utils"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events, db as dbCore } from "@budibase/backend-core"
@@ -74,18 +74,11 @@ export async function update(ctx: UserCtx) {
 }
 
 export async function fetch(ctx: UserCtx) {
-  const db = context.getAppDB()
-  const response = await db.allDocs(
-    getAutomationParams(null, {
-      include_docs: true,
-    })
-  )
-  ctx.body = response.rows.map(row => row.doc)
+  ctx.body = await sdk.automations.fetch()
 }
 
 export async function find(ctx: UserCtx) {
-  const db = context.getAppDB()
-  ctx.body = await db.get(ctx.params.id)
+  ctx.body = await sdk.automations.get(ctx.params.id)
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {

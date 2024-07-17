@@ -2,7 +2,7 @@ import { context, events, HTTPError } from "@budibase/backend-core"
 import { Automation } from "@budibase/types"
 import { checkForWebhooks } from "src/automations/utils"
 import { MetadataTypes } from "src/constants"
-import { generateAutomationID } from "src/db/utils"
+import { generateAutomationID, getAutomationParams } from "src/db/utils"
 import { deleteEntityMetadata } from "src/utilities"
 
 function getDb() {
@@ -61,6 +61,22 @@ async function handleStepEvents(
   for (let step of deletedSteps) {
     await events.automation.stepDeleted(automation, step)
   }
+}
+
+export async function fetch() {
+  const db = getDb()
+  const response = await db.allDocs<Automation>(
+    getAutomationParams(null, {
+      include_docs: true,
+    })
+  )
+  return response.rows.map(row => row.doc)
+}
+
+export async function get(automationId: string) {
+  const db = getDb()
+  const result = await db.get<Automation>(automationId)
+  return result
 }
 
 export async function create(automation: Automation) {
@@ -133,7 +149,7 @@ export async function update(automation: Automation) {
 }
 
 export async function remove(automationId: string, rev: string) {
-  const db = context.getAppDB()
+  const db = getDb()
   const existing = await db.get<Automation>(automationId)
   await checkForWebhooks({
     oldAuto: existing,
