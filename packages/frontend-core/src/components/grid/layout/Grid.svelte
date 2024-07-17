@@ -37,7 +37,6 @@
   export let API = null
   export let datasource = null
   export let schemaOverrides = null
-  export let columnWhitelist = null
   export let canAddRows = true
   export let canExpandRows = true
   export let canEditRows = true
@@ -94,7 +93,6 @@
   $: props.set({
     datasource,
     schemaOverrides,
-    columnWhitelist,
     canAddRows,
     canExpandRows,
     canEditRows,
