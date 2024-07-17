@@ -1,13 +1,10 @@
 <script>
   import { ModalContent, Layout, Body, Icon } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
 
   let type = null
 
   export let onCancel = () => {}
   export let onConfirm = () => {}
-
-  const dispatch = createEventDispatcher()
 </script>
 
 <span>

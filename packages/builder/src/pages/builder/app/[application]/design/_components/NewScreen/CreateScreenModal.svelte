@@ -10,7 +10,7 @@
     screenStore,
     navigationStore,
     tables,
-    permissions,
+    permissions as permissionsStore,
     builderStore,
   } from "stores/builder"
   import { auth } from "stores/portal"
@@ -162,7 +162,7 @@
     loadNewScreen(createdScreens)
   }
 
-      //permissions = await permissionsStore.forResourceDetailed(resourceId)
+      //permissions = await permissions.forResourceDetailed(resourceId)
 
   const loadNewScreen = createdScreens => {
     const lastScreen = createdScreens.slice(-1)[0]
@@ -201,10 +201,18 @@
 
     loadNewScreen(createdScreens)
   }
+
+  const prefetchDatasourcePermissions = (event) => {
+    permissionsStore.getResource(event.detail.resourceId)
+  }
 </script>
 
 <Modal bind:this={datasourceModal} autoFocus={false}>
-  <DatasourceModal {selectedDatasources} onConfirm={confirmScreenDatasources} />
+  <DatasourceModal
+    {selectedDatasources}
+    onConfirm={confirmScreenDatasources}
+    on:toggle={prefetchDatasourcePermissions}
+  />
 </Modal>
 
 <Modal bind:this={screenDetailsModal}>

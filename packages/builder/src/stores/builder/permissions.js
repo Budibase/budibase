@@ -1,4 +1,4 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { API } from "api"
 
 export function createPermissionStore() {
@@ -20,14 +20,16 @@ export function createPermissionStore() {
         level,
       })
     },
-    cachedForResource: async (resourceId) => {
-      const inFlightRequest = store[resourceId];
+    getResource: async (resourceId) => {
+      const $store = get(store);
+      const inFlightRequest = $store[resourceId];
 
       if (inFlightRequest instanceof Promise) {
+        console.log("exists");
         return inFlightRequest
       }
       const request = API.getPermissionForResource(resourceId)
-      store.set({ ...store, resourceId: request });
+      store.update((currentStore) => ({ ...currentStore, [resourceId]: request }));
 
       return request;
     },

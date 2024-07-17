@@ -3,14 +3,14 @@
   import { datasources } from "stores/builder"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "constants"
-  import { onMount } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import DatasourceTemplateRow from "./DatasourceTemplateRow.svelte"
 
   export let onCancel
   export let onConfirm
   export let selectedDatasources
 
-  $: console.log(selectedDatasources);
+  const dispatch = createEventDispatcher()
 
   $: selectedSources = selectedDatasources || []
 
@@ -19,6 +19,7 @@
   })
 
   const toggleSelection = datasource => {
+    dispatch("toggle", datasource)
     const exists = selectedSources.find(
       d => d.resourceId === datasource.resourceId
     )
