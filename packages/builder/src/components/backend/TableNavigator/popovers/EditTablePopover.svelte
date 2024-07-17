@@ -26,14 +26,25 @@
   let updatedName
 
   let screensPossiblyAffected = []
+  let viewsMessage = "";
   let deleteTableName
 
   $: externalTable = table?.sourceType === DB_TYPE_EXTERNAL
 
+  const getViewsMessage = () => {
+    const views = Object.values(table?.views ?? []);
+    if (views.length < 1) {
+      return ""
+    }
+    if (views.length === 1) {
+      return ", including 1 view"
+    }
+
+    return `, including ${views.length} views`
+  }
+
   function showDeleteModal() {
-    console.log($screenStore.screens);
-    console.log($appStore);
-    console.log("after");
+    viewsMessage = getViewsMessage()
     screensPossiblyAffected = $screenStore.screens
       .filter(
         screen => screen.autoTableId === table._id && screen.routing?.route
@@ -134,12 +145,15 @@
     <p class="firstWarning">
       Are you sure you wish to delete the table
       <span class="tableNameLine">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <b on:click={populateTableName} class="tableName">{table.name}</b>
         <span>?</span>
       </span>
     </p>
 
-    <p class="secondWarning">All table data will be deleted.</p>
+    <p class="secondWarning">All table data will be deleted{viewsMessage}.</p>
+    <p class="thirdWarning">This action <b>cannot be undone</b>.</p>
 
     {#if screensPossiblyAffected.length > 0}
       <div class="affectedScreens">
@@ -152,11 +166,10 @@
         </InlineAlert>
       </div>
     {/if}
-    <p class="thirdWarning">
-      This action <b>cannot be undone</b> - to continue please enter the table name
-      below to confirm.
+    <p class="fourthWarning">
+      Please enter the app name below to confirm.
     </p>
-    <Input label="Name" bind:value={deleteTableName} placeholder={table.name} />
+    <Input bind:value={deleteTableName} placeholder={table.name} />
   </div>
 </ConfirmDialog>
 
@@ -192,16 +205,17 @@
   }
 
   .secondWarning {
-    margin: 0 0 24px;
-    max-width: 100%;
-  }
-
-  .thirdWarning {
     margin: 0;
     max-width: 100%;
   }
 
+  .thirdWarning {
+    margin: 0 0 12px;
+    max-width: 100%;
+  }
+
   .affectedScreens {
+    margin: 18px 0;
     max-width: 100%;
     margin-bottom: 24px;
   }
@@ -212,6 +226,7 @@
 
   .affectedScreensList {
     padding: 0;
+    margin-bottom: 0;
   }
 
   .affectedScreensList li {
@@ -221,5 +236,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     margin-top: 4px;
+  }
+
+  .fourthWarning {
+    margin: 12px 0 6px;
+    max-width: 100%;
   }
 </style>
