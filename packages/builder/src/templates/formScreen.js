@@ -28,7 +28,7 @@ const generateMultistepFormBlock = (datasource, actionType) => {
   multistepFormBlock
     .customProps({
       actionType,
-      datasource,
+      dataSource: datasource,
       steps: [{}],
       rowId: actionType === "new" ? undefined : `{{ url.id }}`,
     })
