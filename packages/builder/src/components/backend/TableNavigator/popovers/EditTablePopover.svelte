@@ -1,7 +1,7 @@
 <script>
   import { goto, params } from "@roxi/routify"
   import { cloneDeep } from "lodash/fp"
-  import { tables, datasources, screenStore } from "stores/builder"
+  import { appStore, tables, datasources, screenStore } from "stores/builder"
   import {
     ActionMenu,
     Icon,
@@ -10,6 +10,8 @@
     Modal,
     ModalContent,
     notifications,
+    Link,
+    InlineAlert
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
@@ -29,11 +31,17 @@
   $: externalTable = table?.sourceType === DB_TYPE_EXTERNAL
 
   function showDeleteModal() {
+    console.log($screenStore.screens);
+    console.log($appStore);
+    console.log("after");
     screensPossiblyAffected = $screenStore.screens
       .filter(
         screen => screen.autoTableId === table._id && screen.routing?.route
       )
-      .map(screen => screen.routing.route)
+      .map(screen => ({
+        text: screen.routing.route,
+        url: `/builder/app/${$appStore.appId}/design/${screen._id}`
+      }))
 
     confirmDeleteDialog.show()
   }
@@ -79,6 +87,10 @@
     originalName = table.name + ""
     updatedName = table.name + ""
   }
+
+  const populateTableName = () => {
+    deleteTableName = table.name
+  }
 </script>
 
 <ActionMenu>
@@ -118,53 +130,96 @@
   title="Confirm Deletion"
   disabled={deleteTableName !== table.name}
 >
-  <p class="content">
-    Are you sure you wish to delete the table
-    <b>{table.name}?</b>
-    <br />
-    <b>All table data will be deleted.</b>
+  <div class="content">
+    <p class="firstWarning">
+      Are you sure you wish to delete the table
+      <span class="tableNameLine">
+        <b on:click={populateTableName} class="tableName">{table.name}</b>
+        <span>?</span>
+      </span>
+    </p>
+
+    <p class="secondWarning">All table data will be deleted.</p>
 
     {#if screensPossiblyAffected.length > 0}
-      <br />
-      <br />
-      The following screens were originally generated from this table and may also
-      no longer function correctly:
+      <div class="affectedScreens">
+        <InlineAlert header="The following screens were originally generated from this table and may no longer function as expected">
+      <ul class="affectedScreensList">
+        {#each screensPossiblyAffected as item}
+          <li><Link quiet overBackground target="_blank" href={item.url}>{item.text}</Link></li>
+        {/each}
+      </ul>
+        </InlineAlert>
+      </div>
     {/if}
-  </p>
-  <b>
-    <div class="delete-items">
-      {#each screensPossiblyAffected as item}
-        <div>{item}</div>
-      {/each}
-    </div>
-  </b>
-  <p>
-    This action <b>cannot be undone</b> - to continue please enter the table name
-    below to confirm.
-  </p>
-  <Input bind:value={deleteTableName} placeholder={table.name} />
+    <p class="thirdWarning">
+      This action <b>cannot be undone</b> - to continue please enter the table name
+      below to confirm.
+    </p>
+    <Input label="Name" bind:value={deleteTableName} placeholder={table.name} />
+  </div>
 </ConfirmDialog>
 
 <style>
-  .content {
-    margin-top: 0;
-  }
-
-  div.icon {
+  .icon {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
   }
 
-  div.delete-items {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    margin-left: 10px;
+  .content {
+    margin-top: 0;
+    max-width: 320px;
   }
 
-  div.delete-items div {
+  .firstWarning {
+    margin: 0 0 12px;
+    max-width: 100%;
+  }
+
+  .tableNameLine {
+    display: inline-flex;
+    max-width: 100%;
+    vertical-align: bottom;
+  }
+
+  .tableName {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .secondWarning {
+    margin: 0 0 24px;
+    max-width: 100%;
+  }
+
+  .thirdWarning {
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .affectedScreens {
+    max-width: 100%;
+    margin-bottom: 24px;
+  }
+
+  .affectedScreens :global(.spectrum-InLineAlert) {
+    max-width: 100%;
+  }
+
+  .affectedScreensList {
+    padding: 0;
+  }
+
+  .affectedScreensList li {
+    display: block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     margin-top: 4px;
-    font-weight: 600;
   }
 </style>
