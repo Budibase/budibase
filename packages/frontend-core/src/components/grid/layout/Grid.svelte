@@ -230,7 +230,7 @@
     --cell-background-alt: var(--cell-background);
     --cell-padding: 8px;
     --cell-spacing: 4px;
-    --cell-border: 1px solid var(--grid-border-color, var(--translucent-grey));
+    --cell-border: 1px solid var(--spectrum-global-color-gray-200);
     --cell-font-size: 14px;
     --cell-font-color: var(--spectrum-global-color-gray-800);
     flex: 1 1 auto;
