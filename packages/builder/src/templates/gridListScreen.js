@@ -4,7 +4,7 @@ import { Component } from "./Component"
 
 const gridListUrl = datasource => sanitizeUrl(`/${datasource.label}`)
 
-const createScreen = datasource => {
+const createScreen = (datasource, permissions) => {
   const heading = new Component("@budibase/standard-components/heading")
     .instanceName("Table heading")
     .customProps({
@@ -19,6 +19,7 @@ const createScreen = datasource => {
 
   return new Screen()
     .route(gridListUrl(datasource))
+    .autoTableId(datasource.resourceId)
     .instanceName(`${datasource.label} - List`)
     .addChild(heading)
     .addChild(gridBlock)

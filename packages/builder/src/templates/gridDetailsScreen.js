@@ -7,7 +7,7 @@ import { Utils } from "@budibase/frontend-core"
 
 const gridDetailsUrl = datasource => sanitizeUrl(`/${datasource.label}`)
 
-const createScreen = datasource => {
+const createScreen = (datasource, permissions) => {
   /*
     Create Row
    */
@@ -135,6 +135,7 @@ const createScreen = datasource => {
   return new Screen()
     .route(gridDetailsUrl(datasource))
     .instanceName(`${datasource.label} - List and details`)
+    .autoTableId(datasource.resourceId)
     .addChild(gridHeader)
     .addChild(gridBlock)
     .addChild(createRowSidePanel)

@@ -13,24 +13,26 @@ export const formUrl = (datasource, actionType) => {
   }
 }
 
-const generateMultistepFormBlock = (dataSource, actionType) => {
+const generateMultistepFormBlock = (datasource, actionType) => {
   const multistepFormBlock = new Component(
     "@budibase/standard-components/multistepformblock"
   )
   multistepFormBlock
     .customProps({
       actionType,
-      dataSource,
+      datasource,
       steps: [{}],
-      rowId: actionType === "new" ? undefined : `{{ url.id }}`
+      rowId: actionType === "new" ? undefined : `{{ url.id }}`,
+
     })
-    .instanceName(`${dataSource.label} - Multistep Form block`)
+    .instanceName(`${datasource.label} - Multistep Form block`)
   return multistepFormBlock
 }
 
-const createScreen = (datasource, actionType) => {
+const createScreen = (datasource, actionType, permissions) => {
   return new Screen()
     .route(formUrl(datasource, actionType))
+    .autoTableId(datasource.resourceId)
     .instanceName(`${datasource.label} - Form`)
     .addChild(generateMultistepFormBlock(datasource, actionType))
     .json()
