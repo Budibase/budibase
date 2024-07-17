@@ -1,9 +1,15 @@
-import { context, events, HTTPError } from "@budibase/backend-core"
-import { Automation } from "@budibase/types"
-import { checkForWebhooks } from "../../../automations/utils"
-import { MetadataTypes } from "../../../constants"
+import { Automation, Webhook, WebhookActionType } from "@budibase/types"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
+import { MetadataTypes } from "../../../constants"
+import {
+  context,
+  events,
+  HTTPError,
+  db as dbCore,
+} from "@budibase/backend-core"
+import { definitions } from "../../../automations/triggerInfo"
+import automations from "."
 
 function getDb() {
   return context.getAppDB()
@@ -167,4 +173,76 @@ export async function remove(automationId: string, rev: string) {
   await events.automation.deleted(existing)
 
   return result
+}
+
+/**
+ * This function handles checking if any webhooks need to be created or deleted for automations.
+ * @param appId The ID of the app in which we are checking for webhooks
+ * @param oldAuto The old automation object if updating/deleting
+ * @param newAuto The new automation object if creating/updating
+ * @returns After this is complete the new automation object may have been updated and should be
+ * written to DB (this does not write to DB as it would be wasteful to repeat).
+ */
+async function checkForWebhooks({ oldAuto, newAuto }: any) {
+  const WH_STEP_ID = definitions.WEBHOOK.stepId
+
+  const appId = context.getAppId()
+  if (!appId) {
+    throw new Error("Unable to check webhooks - no app ID in context.")
+  }
+  const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
+  const newTrigger = newAuto ? newAuto.definition.trigger : null
+  const triggerChanged =
+    oldTrigger && newTrigger && oldTrigger.id !== newTrigger.id
+  function isWebhookTrigger(auto: any) {
+    return (
+      auto &&
+      auto.definition.trigger &&
+      auto.definition.trigger.stepId === WH_STEP_ID
+    )
+  }
+  // need to delete webhook
+  if (
+    isWebhookTrigger(oldAuto) &&
+    (!isWebhookTrigger(newAuto) || triggerChanged) &&
+    oldTrigger.webhookId
+  ) {
+    try {
+      const db = getDb()
+      // need to get the webhook to get the rev
+      const webhook = await db.get<Webhook>(oldTrigger.webhookId)
+      // might be updating - reset the inputs to remove the URLs
+      if (newTrigger) {
+        delete newTrigger.webhookId
+        newTrigger.inputs = {}
+      }
+      await automations.webhook.destroy(webhook._id!, webhook._rev!)
+    } catch (err) {
+      // don't worry about not being able to delete, if it doesn't exist all good
+    }
+  }
+  // need to create webhook
+  if (
+    (!isWebhookTrigger(oldAuto) || triggerChanged) &&
+    isWebhookTrigger(newAuto)
+  ) {
+    const webhook = await automations.webhook.save(
+      automations.webhook.newDoc(
+        "Automation webhook",
+        WebhookActionType.AUTOMATION,
+        newAuto._id
+      )
+    )
+    const id = webhook._id
+    newTrigger.webhookId = id
+    // the app ID has to be development for this endpoint
+    // it can only be used when building the app
+    // but the trigger endpoint will always be used in production
+    const prodAppId = dbCore.getProdAppID(appId)
+    newTrigger.inputs = {
+      schemaUrl: `api/webhooks/schema/${appId}/${id}`,
+      triggerUrl: `api/webhooks/trigger/${prodAppId}/${id}`,
+    }
+  }
+  return newAuto
 }
