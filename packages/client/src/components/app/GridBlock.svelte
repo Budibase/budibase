@@ -42,7 +42,6 @@
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
   $: parsedColumns = getParsedColumns(columns)
-  $: columnWhitelist = parsedColumns.filter(x => x.active).map(x => x.field)
   $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
   $: selectedRows = deriveSelectedRows(gridContext)
@@ -98,6 +97,7 @@
         displayName: column.label,
         order: idx,
         conditions: column.conditions,
+        visible: !!column.active,
       }
       if (column.width) {
         overrides[column.field].width = column.width
@@ -170,7 +170,6 @@
     {initialSortColumn}
     {initialSortOrder}
     {fixedRowHeight}
-    {columnWhitelist}
     {schemaOverrides}
     canAddRows={allowAddRows}
     canEditRows={allowEditRows}

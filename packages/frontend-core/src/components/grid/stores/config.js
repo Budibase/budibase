@@ -12,7 +12,6 @@ export const createStores = context => {
   const initialFilter = getProp("initialFilter")
   const fixedRowHeight = getProp("fixedRowHeight")
   const schemaOverrides = getProp("schemaOverrides")
-  const columnWhitelist = getProp("columnWhitelist")
   const notifySuccess = getProp("notifySuccess")
   const notifyError = getProp("notifyError")
   const rowConditions = getProp("rowConditions")
@@ -24,7 +23,6 @@ export const createStores = context => {
     initialFilter,
     fixedRowHeight,
     schemaOverrides,
-    columnWhitelist,
     notifySuccess,
     notifyError,
     rowConditions,
