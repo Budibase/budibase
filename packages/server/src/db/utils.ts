@@ -1,5 +1,4 @@
-import newid from "./newid"
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, utils } from "@budibase/backend-core"
 import {
   DatabaseQueryOpts,
   Datasource,
@@ -14,6 +13,8 @@ import {
 } from "@budibase/types"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
+
+const newid = utils.newid
 
 type Optional = string | null
 
@@ -347,4 +348,12 @@ export function isRelationshipColumn(
   column: FieldSchema
 ): column is RelationshipFieldMetadata {
   return column.type === FieldType.LINK
+}
+
+/**
+ * Generates a new row actions ID.
+ * @returns The new row actions ID which the row actions doc can be stored under.
+ */
+export function generateRowActionsID(tableId: string) {
+  return `${DocumentType.ROW_ACTIONS}${SEPARATOR}${tableId}`
 }

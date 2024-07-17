@@ -127,9 +127,14 @@ function mapTable(table: Table): SQLiteTables {
 // nothing exists, need to iterate though existing tables
 async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   const tables = await tablesSdk.getAllInternalTables()
-  const defaultTables = DEFAULT_TABLES
+  for (const defaultTable of DEFAULT_TABLES) {
+    // the default table doesn't exist in Couch, use the in-memory representation
+    if (!tables.find(table => table._id === defaultTable._id)) {
+      tables.push(defaultTable)
+    }
+  }
   const definition = sql.designDoc.base("tableId")
-  for (let table of tables.concat(defaultTables)) {
+  for (let table of tables) {
     definition.sql.tables = {
       ...definition.sql.tables,
       ...mapTable(table),
