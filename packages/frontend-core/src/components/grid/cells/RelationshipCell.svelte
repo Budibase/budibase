@@ -29,7 +29,6 @@
   let searching = false
   let container
   let anchor
-  let cacheStr
 
   $: fieldValue = parseValue(value)
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
@@ -43,19 +42,10 @@
   }
 
   const parseValue = value => {
-    // Is it unset or a valid array? 1+
-    const isValid = val =>
-      !val ||
-      (Array.isArray(val) &&
-        (val.length === 0 ||
-          val.some(relEntry => Object.hasOwn(relEntry, "_id"))))
-
-    const stf = JSON.stringify(value)
-    if (!cacheStr || cacheStr !== stf) {
-      cacheStr = stf
-      return isValid(value) ? [...(value || [])] : []
+    if (Array.isArray(value) && value.every(x => x?._id)) {
+      return value
     }
-    return [...(value || [])]
+    return []
   }
 
   // Builds a lookup map to quickly check which rows are selected
