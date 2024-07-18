@@ -5,7 +5,7 @@
     customQueryIconColor,
     customQueryText,
   } from "helpers/data/utils"
-  import { goto, isActive } from "@roxi/routify"
+  import { goto as gotoStore, isActive } from "@roxi/routify"
   import {
     datasources,
     queries,
@@ -20,6 +20,9 @@
   export let query
 
   let confirmDeleteDialog
+
+  // goto won't work in the context menu callback if the store is called directly
+  $: goto = $gotoStore;
 
   const getContextMenuItems = () => {
     return [
@@ -40,8 +43,9 @@
         callback: async () => {
           try {
             const newQuery = await queries.duplicate(query)
-            get(goto)(`./query/${newQuery._id}`)
+            goto(`./query/${newQuery._id}`)
           } catch (error) {
+            console.log(error);
             notifications.error("Error duplicating query")
           }
         },
@@ -53,7 +57,7 @@
     try {
       // Go back to the datasource if we are deleting the active query
       if ($queries.selectedQueryId === query._id) {
-        $goto(`./datasource/${query.datasourceId}`)
+        goto(`./datasource/${query.datasourceId}`)
       }
       await queries.delete(query)
       await datasources.fetch()
@@ -82,7 +86,7 @@
   selected={$isActive("./query/:queryId") &&
     $queries.selectedQueryId === query._id}
   hovering={query._id === $contextMenuStore.id}
-  on:click={() => $goto(`./query/${query._id}`)}
+  on:click={() => goto(`./query/${query._id}`)}
   selectedBy={$userSelectedResourceMap[query._id]}
 >
   <Icon size="S" hoverable name="MoreSmallList" on:click={openContextMenu} />

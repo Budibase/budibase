@@ -5,8 +5,6 @@
   import DuplicateAppModal from "./DuplicateAppModal.svelte"
   import { licensing } from "stores/portal"
 
-  export let align = "right"
-  export let options
   export let app
 
   let exportPublishedVersion = false
@@ -24,7 +22,7 @@
     exportModal.show()
   }
 
-  export const showExportProd = () => {
+  export const showExportProdModal = () => {
     exportPublishedVersion = true
     exportModal.show()
   }

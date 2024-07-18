@@ -10,6 +10,7 @@
   import EditModal from "./EditModal.svelte"
   import DeleteConfirmationModal from "./DeleteConfirmationModal.svelte"
   import { Icon } from "@budibase/bbui"
+  import { DB_TYPE_EXTERNAL } from "constants/backend"
 
   export let table
   export let idx
@@ -31,7 +32,7 @@
         icon: "Edit",
         name: "Edit",
         keyBind: null,
-        visible: true,
+        visible: table?.sourceType !== DB_TYPE_EXTERNAL,
         disabled: false,
         callback: editModal.show,
       },

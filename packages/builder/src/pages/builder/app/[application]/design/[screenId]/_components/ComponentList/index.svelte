@@ -45,7 +45,11 @@
 
   const hover = hoverStore.hover
 
-  const openScreenContextMenu = (e, screenComponent) => {
+  // showCopy is used to hide the copy button when the user right-clicks the empty
+  // background of their component tree. Pasting in the empty space makes sense,
+  // but copying it doesn't
+  const openScreenContextMenu = (e, showCopy) => {
+    const screenComponent = $selectedScreen?.props
     const definition = componentStore.getDefinition(screenComponent?._component)
     // "editable" has been repurposed for inline text editing.
     // It remains here for legacy compatibility.
@@ -55,8 +59,8 @@
       e.preventDefault()
       e.stopPropagation()
 
-      const items = getScreenContextMenuItems(screenComponent)
-      contextMenuStore.open(screenComponent._id, items, {
+      const items = getScreenContextMenuItems(screenComponent, showCopy)
+      contextMenuStore.open(`${showCopy ? "background-" : ""}screenComponent._id`, items, {
         x: e.clientX,
         y: e.clientY,
       })
@@ -75,9 +79,12 @@
   </div>
   <div class="list-panel">
     <ComponentScrollWrapper on:scroll={handleScroll}>
-      <ul>
+      <ul
+        class="componentTree"
+        on:contextmenu={e => openScreenContextMenu(e, false)}
+      >
         <li
-          on:contextmenu={e => openScreenContextMenu(e, $selectedScreen?.props)}
+          on:contextmenu={e => openScreenContextMenu(e, true)}
         >
           <NavItem
             text="Screen"
@@ -106,7 +113,9 @@
             />
           </NavItem>
         </li>
-        <li>
+        <li
+          on:contextmenu|stopPropagation
+          >
           <NavItem
             text="Navigation"
             indentLevel={0}
@@ -192,6 +201,10 @@
     display: flex;
     flex-direction: column;
     flex: 1;
+  }
+
+  .componentTree {
+    min-height: 100%;
   }
 
   ul {

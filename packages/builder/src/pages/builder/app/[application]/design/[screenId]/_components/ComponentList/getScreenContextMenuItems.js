@@ -2,7 +2,7 @@ import { get } from "svelte/store"
 import { componentStore } from "stores/builder"
 import { notifications } from "@budibase/bbui"
 
-const getContextMenuItems = component => {
+const getContextMenuItems = (component, showCopy) => {
   const noPaste = !get(componentStore).componentToPaste
 
   const storeComponentForCopy = (cut = false) => {
@@ -22,7 +22,7 @@ const getContextMenuItems = component => {
       icon: "Copy",
       name: "Copy",
       keyBind: "Ctrl+C",
-      visible: true,
+      visible: showCopy,
       disabled: false,
       callback: () => storeComponentForCopy(false),
     },
