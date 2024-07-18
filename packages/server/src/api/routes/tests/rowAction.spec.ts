@@ -1,7 +1,11 @@
 import _ from "lodash"
 import tk from "timekeeper"
 
-import { CreateRowActionRequest, RowActionResponse } from "@budibase/types"
+import {
+  CreateRowActionRequest,
+  DocumentType,
+  RowActionResponse,
+} from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -90,6 +94,9 @@ describe("/rowsActions", () => {
             ...rowAction,
             id: res.id,
             tableId: tableId,
+            automationId: expect.stringMatching(
+              `^${DocumentType.AUTOMATION}_.+`
+            ),
           },
         },
       })
@@ -129,9 +136,24 @@ describe("/rowsActions", () => {
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
         actions: {
-          [responses[0].id]: { ...rowActions[0], id: responses[0].id, tableId },
-          [responses[1].id]: { ...rowActions[1], id: responses[1].id, tableId },
-          [responses[2].id]: { ...rowActions[2], id: responses[2].id, tableId },
+          [responses[0].id]: {
+            ...rowActions[0],
+            id: responses[0].id,
+            tableId,
+            automationId: expect.any(String),
+          },
+          [responses[1].id]: {
+            ...rowActions[1],
+            id: responses[1].id,
+            tableId,
+            automationId: expect.any(String),
+          },
+          [responses[2].id]: {
+            ...rowActions[2],
+            id: responses[2].id,
+            tableId,
+            automationId: expect.any(String),
+          },
         },
       })
     })
@@ -172,6 +194,7 @@ describe("/rowsActions", () => {
             id: res.id,
             tableId: tableId,
             ...rowAction,
+            automationId: expect.any(String),
           },
         },
       })

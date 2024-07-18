@@ -125,7 +125,10 @@ export async function update(
 
   ensureUniqueAndThrow(actionsDoc, action.name, rowActionId)
 
-  actionsDoc.actions[rowActionId] = action
+  actionsDoc.actions[rowActionId] = {
+    automationId: actionsDoc.actions[rowActionId].automationId,
+    ...action,
+  }
 
   const db = context.getAppDB()
   await db.put(actionsDoc)
