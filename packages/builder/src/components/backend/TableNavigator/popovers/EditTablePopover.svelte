@@ -99,7 +99,7 @@
     updatedName = table.name + ""
   }
 
-  const populateTableName = () => {
+  const autofillTableName = () => {
     deleteTableName = table.name
   }
 </script>
@@ -147,7 +147,7 @@
       <span class="tableNameLine">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <b on:click={populateTableName} class="tableName">{table.name}</b>
+        <b on:click={autofillTableName} class="tableName">{table.name}</b>
         <span>?</span>
       </span>
     </p>

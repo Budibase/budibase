@@ -94,7 +94,7 @@
     }
   }
 
-  const confirmScreenDatasources = async ({ datasources }) => {
+  const onSelectDatasources = async ({ datasources }) => {
     selectedDatasources = datasources
     if (mode === "form") {
       formTypeModal.show()
@@ -204,7 +204,7 @@
 <Modal bind:this={datasourceModal} autoFocus={false}>
   <DatasourceModal
     {selectedDatasources}
-    onConfirm={confirmScreenDatasources}
+    onConfirm={onSelectDatasources}
     on:toggle={prefetchDatasourcePermissions}
   />
 </Modal>
