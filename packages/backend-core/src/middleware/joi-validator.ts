@@ -4,8 +4,9 @@ import { Ctx } from "@budibase/types"
 function validate(
   schema: Joi.ObjectSchema | Joi.ArraySchema,
   property: string,
-  opts: { errorPrefix: string } = { errorPrefix: `Invalid ${property}` }
+  opts?: { errorPrefix?: string; allowUnknown?: boolean }
 ) {
+  const errorPrefix = opts?.errorPrefix ?? `Invalid ${property}`
   // Return a Koa middleware function
   return (ctx: Ctx, next: any) => {
     if (!schema) {
@@ -28,10 +29,12 @@ function validate(
       })
     }
 
-    const { error } = schema.validate(params)
+    const { error } = schema.validate(params, {
+      allowUnknown: opts?.allowUnknown,
+    })
     if (error) {
       let message = error.message
-      if (opts.errorPrefix) {
+      if (errorPrefix) {
         message = `Invalid ${property} - ${message}`
       }
       ctx.throw(400, message)
@@ -42,7 +45,7 @@ function validate(
 
 export function body(
   schema: Joi.ObjectSchema | Joi.ArraySchema,
-  opts?: { errorPrefix: string }
+  opts?: { errorPrefix?: string; allowUnknown?: boolean }
 ) {
   return validate(schema, "body", opts)
 }
