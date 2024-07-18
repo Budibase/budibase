@@ -2,10 +2,16 @@ import { context, HTTPError, utils } from "@budibase/backend-core"
 
 import { generateRowActionsID } from "../../db/utils"
 import {
+  AutomationCustomIOType,
+  AutomationIOType,
+  AutomationStepType,
+  AutomationTriggerStepId,
   SEPARATOR,
   TableRowActions,
   VirtualDocumentType,
 } from "@budibase/types"
+import automations from "./automations"
+import tables from "./tables"
 
 function ensureUniqueAndThrow(
   doc: TableRowActions,
@@ -39,10 +45,48 @@ export async function create(tableId: string, rowAction: { name: string }) {
     doc = { _id: rowActionsId, actions: {} }
   }
 
+  const { name: tableName } = await tables.getTable(tableId)
+
   ensureUniqueAndThrow(doc, action.name)
 
+  const automation = await automations.create({
+    name: `${tableName}: ${action.name}`,
+    appId: context.getAppId()!,
+    definition: {
+      trigger: {
+        type: AutomationStepType.TRIGGER,
+        id: "TODO id",
+        tagline: "TODO tagline",
+        name: "Row Action",
+        description: "TODO description",
+        icon: "Workflow",
+        stepId: AutomationTriggerStepId.ROW_ACTION,
+        inputs: {
+          tableId,
+        },
+        schema: {
+          inputs: {
+            properties: {
+              tableId: {
+                type: AutomationIOType.STRING,
+                customType: AutomationCustomIOType.TABLE,
+                title: "Table",
+              },
+            },
+            required: ["tableId"],
+          },
+          outputs: { properties: {} },
+        },
+      },
+      steps: [],
+    },
+  })
+
   const newId = `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
-  doc.actions[newId] = action
+  doc.actions[newId] = {
+    name: action.name,
+    automationId: automation._id!,
+  }
   await db.put(doc)
 
   return {

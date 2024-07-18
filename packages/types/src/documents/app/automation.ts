@@ -45,6 +45,7 @@ export enum AutomationTriggerStepId {
   WEBHOOK = "WEBHOOK",
   APP = "APP",
   CRON = "CRON",
+  ROW_ACTION = "ROW_ACTION",
 }
 
 export enum AutomationStepType {
