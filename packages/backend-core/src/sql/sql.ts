@@ -44,7 +44,7 @@ const BASE_LIMIT = envLimit || 5000
 
 // Takes a string like foo and returns a quoted string like [foo] for SQL Server
 // and "foo" for Postgres.
-function quote(client: SqlClient, str: string) {
+function quote(client: SqlClient, str: string): string {
   switch (client) {
     case SqlClient.SQL_LITE:
     case SqlClient.ORACLE:
@@ -52,7 +52,7 @@ function quote(client: SqlClient, str: string) {
       return `"${str}"`
     case SqlClient.MS_SQL:
       return `[${str}]`
-    default:
+    case SqlClient.MY_SQL:
       return `\`${str}\``
   }
 }
