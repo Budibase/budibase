@@ -14,7 +14,9 @@
     notifications,
     Label,
     AbsTooltip,
+    InlineAlert,
   } from "@budibase/bbui"
+  import { AutomationTriggerStepId } from "@budibase/types"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import ActionModal from "./ActionModal.svelte"
@@ -48,6 +50,8 @@
   $: isAppAction = block?.stepId === TriggerStepID.APP
   $: isAppAction && setPermissions(role)
   $: isAppAction && getPermissions(automationId)
+
+  $: isRowAction = block?.stepId === AutomationTriggerStepId.ROW_ACTION
 
   async function setPermissions(role) {
     if (!role || !automationId) {
@@ -183,6 +187,12 @@
           {block}
           {webhookModal}
         />
+        {#if isRowAction && isTrigger}
+          <InlineAlert
+            header="Automation trigger"
+            message="This trigger is tied to the row action TODO on your TODO"
+          />
+        {/if}
         {#if lastStep}
           <Button on:click={() => testDataModal.show()} cta>
             Finish and test automation
