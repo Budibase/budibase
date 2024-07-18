@@ -195,14 +195,14 @@ function buildDeleteTable(knex: SchemaBuilder, table: Table): SchemaBuilder {
 }
 
 class SqlTableQueryBuilder {
-  private readonly sqlClient: string
+  private readonly sqlClient: SqlClient
 
   // pass through client to get flavour of SQL
-  constructor(client: string) {
+  constructor(client: SqlClient) {
     this.sqlClient = client
   }
 
-  getSqlClient(): string {
+  getSqlClient(): SqlClient {
     return this.sqlClient
   }
 
