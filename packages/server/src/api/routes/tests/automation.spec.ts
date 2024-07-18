@@ -154,7 +154,7 @@ describe("/automations", () => {
           tableId: table._id,
         },
       }
-      automation.appId = config.appId
+      automation.appId = config.getAppId()
       automation = await config.createAutomation(automation)
       await setup.delay(500)
       const res = await testAutomation(config, automation, {
@@ -267,8 +267,7 @@ describe("/automations", () => {
     }
 
     it("updates a automations name", async () => {
-      let automation = newAutomation()
-      await config.createAutomation(automation)
+      const automation = await config.createAutomation(newAutomation())
       automation.name = "Updated Name"
       jest.clearAllMocks()
 
@@ -294,8 +293,7 @@ describe("/automations", () => {
     })
 
     it("updates a automations name using POST request", async () => {
-      let automation = newAutomation()
-      await config.createAutomation(automation)
+      const automation = await config.createAutomation(newAutomation())
       automation.name = "Updated Name"
       jest.clearAllMocks()
 
@@ -392,8 +390,7 @@ describe("/automations", () => {
   describe("fetch", () => {
     it("return all the automations for an instance", async () => {
       await clearAllAutomations(config)
-      const autoConfig = basicAutomation()
-      await config.createAutomation(autoConfig)
+      const autoConfig = await config.createAutomation(basicAutomation())
       const res = await request
         .get(`/api/automations`)
         .set(config.defaultHeaders())
