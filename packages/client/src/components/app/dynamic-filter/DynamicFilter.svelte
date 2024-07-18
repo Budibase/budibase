@@ -22,6 +22,7 @@
 
   $: dataProviderId = dataProvider?.id
   $: datasource = dataProvider?.datasource
+  $: isDSPlus = ["table", "link", "viewV2"].includes(datasource?.type)
   $: addExtension = getAction(
     dataProviderId,
     ActionTypes.AddDataProviderQueryExtension
@@ -72,7 +73,7 @@
 
     return Object.values(clonedSchema || {})
       .filter(field => !Constants.BannedSearchTypes.includes(field.type))
-      .concat([{ name: "_id", type: "string" }])
+      .concat(isDSPlus ? [{ name: "_id", type: "string" }] : [])
   }
 
   const openEditor = () => {
