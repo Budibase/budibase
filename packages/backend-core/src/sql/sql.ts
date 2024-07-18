@@ -122,17 +122,49 @@ function generateSelectStatement(
 
   const schema = meta.table.schema
   return resource.fields.map(field => {
-    const [table, column, ...rest] = field.split(/\./g)
+    const parts = field.split(/\./g)
+    let table: string | undefined = undefined
+    let column: string | undefined = undefined
+
+    // Just a column name, e.g.: "column"
+    if (parts.length === 1) {
+      column = parts[0]
+    }
+
+    // A table name and a column name, e.g.: "table.column"
+    if (parts.length === 2) {
+      table = parts[0]
+      column = parts[1]
+    }
+
+    // A link doc, e.g.: "table.doc1.fieldName"
+    if (parts.length > 2) {
+      table = parts[0]
+      column = parts.slice(1).join(".")
+    }
+
+    if (!column) {
+      throw new Error(`Invalid field name: ${field}`)
+    }
+
+    const columnSchema = schema[column]
+
     if (
       client === SqlClient.POSTGRES &&
-      schema[column].externalType?.includes("money")
+      columnSchema?.externalType?.includes("money")
     ) {
-      return knex.raw(`"${table}"."${column}"::money::numeric as "${field}"`)
+      return knex.raw(
+        `${quotedIdentifier(
+          client,
+          [table, column].join(".")
+        )}::money::numeric as ${quote(client, field)}`
+      )
     }
+
     if (
       client === SqlClient.MS_SQL &&
-      schema[column]?.type === FieldType.DATETIME &&
-      schema[column].timeOnly
+      columnSchema?.type === FieldType.DATETIME &&
+      columnSchema.timeOnly
     ) {
       // Time gets returned as timestamp from mssql, not matching the expected
       // HH:mm format
@@ -147,12 +179,16 @@ function generateSelectStatement(
     //     case, we want to split it into `table`.`doc1.column` for reasons that
     //     aren't actually clear to me, but `table`.`doc1` breaks things with the
     //     sample data tests.
-    return knex.raw(
-      `${quote(client, table)}.${quote(
-        client,
-        [column, ...rest].join(".")
-      )} as ${quote(client, field)}`
-    )
+    if (table) {
+      return knex.raw(
+        `${quote(client, table)}.${quote(client, column)} as ${quote(
+          client,
+          field
+        )}`
+      )
+    } else {
+      return knex.raw(`${quote(client, field)} as ${quote(client, field)}`)
+    }
   })
 }
 
