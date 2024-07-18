@@ -17,14 +17,6 @@
   const getContextMenuItems = () => {
     return [
       {
-        icon: "Delete",
-        name: "Delete",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: deleteConfirmationModal.show,
-      },
-      {
         icon: "Edit",
         name: "Edit",
         keyBind: null,
@@ -32,10 +24,21 @@
         disabled: false,
         callback: editModal.show,
       },
+      {
+        icon: "Delete",
+        name: "Delete",
+        keyBind: null,
+        visible: true,
+        disabled: false,
+        callback: deleteConfirmationModal.show,
+      },
     ]
   }
 
   const openContextMenu = e => {
+    if (datasource._id === BUDIBASE_INTERNAL_DB_ID) {
+      return
+    }
     e.preventDefault()
     e.stopPropagation()
 

@@ -60,10 +60,14 @@
       e.stopPropagation()
 
       const items = getScreenContextMenuItems(screenComponent, showCopy)
-      contextMenuStore.open(`${showCopy ? "background-" : ""}screenComponent._id`, items, {
-        x: e.clientX,
-        y: e.clientY,
-      })
+      contextMenuStore.open(
+        `${showCopy ? "background-" : ""}screenComponent._id`,
+        items,
+        {
+          x: e.clientX,
+          y: e.clientY,
+        }
+      )
     }
   }
 </script>
@@ -83,9 +87,7 @@
         class="componentTree"
         on:contextmenu={e => openScreenContextMenu(e, false)}
       >
-        <li
-          on:contextmenu={e => openScreenContextMenu(e, true)}
-        >
+        <li on:contextmenu={e => openScreenContextMenu(e, true)}>
           <NavItem
             text="Screen"
             indentLevel={0}
@@ -113,9 +115,7 @@
             />
           </NavItem>
         </li>
-        <li
-          on:contextmenu|stopPropagation
-          >
+        <li on:contextmenu|stopPropagation>
           <NavItem
             text="Navigation"
             indentLevel={0}

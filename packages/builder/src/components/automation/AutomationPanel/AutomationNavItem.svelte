@@ -97,7 +97,7 @@
   disabled={automation.disabled}
 >
   <div class="icon">
-    <Icon on:click={openContextMenu} s hoverable name="MoreSmallList" />
+    <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
   </div>
 </NavItem>
 

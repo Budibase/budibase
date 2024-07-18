@@ -1,5 +1,4 @@
 <script>
-  import { get } from "svelte/store"
   import {
     customQueryIconText,
     customQueryIconColor,
@@ -22,7 +21,7 @@
   let confirmDeleteDialog
 
   // goto won't work in the context menu callback if the store is called directly
-  $: goto = $gotoStore;
+  $: goto = $gotoStore
 
   const getContextMenuItems = () => {
     return [
@@ -45,7 +44,6 @@
             const newQuery = await queries.duplicate(query)
             goto(`./query/${newQuery._id}`)
           } catch (error) {
-            console.log(error);
             notifications.error("Error duplicating query")
           }
         },
