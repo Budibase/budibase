@@ -122,7 +122,7 @@ function generateSelectStatement(
 
   const schema = meta.table.schema
   return resource.fields.map(field => {
-    const [table, column, ..._rest] = field.split(/\./g)
+    const [table, column, ...rest] = field.split(/\./g)
     if (
       client === SqlClient.POSTGRES &&
       schema[column].externalType?.includes("money")
@@ -138,13 +138,21 @@ function generateSelectStatement(
       // HH:mm format
       return knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
     }
-    return `${field} as ${field}`
-    // return knex.raw(
-    //   `${quote(client, table)}.${quote(client, column)} as ${quote(
-    //     client,
-    //     field
-    //   )}`
-    // )
+
+    // There's at least two edge cases being handled in the expression below.
+    //  1. The column name could start/end with a space, and in that case we
+    //     want to preseve that space.
+    //  2. Almost all column names are specified in the form table.column, except
+    //     in the case of relationships, where it's table.doc1.column. In that
+    //     case, we want to split it into `table`.`doc1.column` for reasons that
+    //     aren't actually clear to me, but `table`.`doc1` breaks things with the
+    //     sample data tests.
+    return knex.raw(
+      `${quote(client, table)}.${quote(
+        client,
+        [column, ...rest].join(".")
+      )} as ${quote(client, field)}`
+    )
   })
 }
 
