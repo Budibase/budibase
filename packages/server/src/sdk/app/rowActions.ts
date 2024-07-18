@@ -76,6 +76,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
                 type: AutomationIOType.STRING,
                 customType: AutomationCustomIOType.TABLE,
                 title: "Table",
+                readonly: true,
               },
             },
             required: ["tableId"],

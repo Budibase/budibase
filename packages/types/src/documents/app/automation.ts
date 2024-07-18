@@ -153,6 +153,7 @@ interface BaseIOStructure {
     [key: string]: BaseIOStructure
   }
   required?: string[]
+  readonly?: true
 }
 
 export interface InputOutputBlock {
