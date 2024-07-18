@@ -869,6 +869,7 @@
                 options={value.enum}
                 getOptionLabel={(x, idx) =>
                   value.pretty ? value.pretty[idx] : x}
+                disabled={value.readonly}
               />
             {:else if value.type === "json"}
               <Editor
@@ -877,6 +878,7 @@
                 mode="json"
                 value={inputData[key]?.value}
                 on:change={e => onChange({ [key]: e.detail })}
+                readOnly={value.readonly}
               />
             {:else if value.type === "boolean"}
               <div style="margin-top: 10px">
@@ -884,6 +886,7 @@
                   text={value.title}
                   value={inputData[key]}
                   on:change={e => onChange({ [key]: e.detail })}
+                  disabled={value.readonly}
                 />
               </div>
             {:else if value.type === "date"}
@@ -897,6 +900,7 @@
                 allowJS={true}
                 updateOnChange={false}
                 drawerLeft="260px"
+                disabled={value.readonly}
               >
                 <DatePicker
                   value={inputData[key]}
@@ -908,6 +912,7 @@
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
                 options={Object.keys(table?.schema || {})}
+                disabled={value.readonly}
               />
             {:else if value.type === "attachment" || value.type === "signature_single"}
               <div class="attachment-field-wrapper">
@@ -1021,6 +1026,7 @@
                 {isTrigger}
                 value={inputData[key]}
                 on:change={e => onChange({ [key]: e.detail })}
+                disabled={value.readonly}
               />
             {:else if value.customType === "webhookUrl"}
               <WebhookDisplay value={inputData[key]} />
