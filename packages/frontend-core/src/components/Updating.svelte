@@ -44,7 +44,7 @@
   </span>
   <span class="subtext">
     {#if !timedOut}
-      Please wait and we will be back in a second!
+      Please wait and we will be back in a year!
       <br />
       Checkout the
       <a href="https://docs.budibase.com/docs/app-migrations" target="_blank"
