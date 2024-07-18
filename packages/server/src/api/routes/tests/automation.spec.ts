@@ -11,7 +11,7 @@ import {
 } from "../../../automations"
 import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import { Automation } from "@budibase/types"
+import { Automation, FieldType, Table } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
 
@@ -23,6 +23,7 @@ let {
   automationStep,
   collectAutomation,
   filterAutomation,
+  updateRowAutomationWithFilters,
 } = setup.structures
 
 describe("/automations", () => {
@@ -452,14 +453,13 @@ describe("/automations", () => {
 
         let table = await config.createTable()
 
-        let automation = await filterAutomation()
+        let automation = await filterAutomation(config.getAppId())
         automation.definition.trigger.inputs.tableId = table._id
         automation.definition.steps[0].inputs = {
           condition: FilterConditions.EQUAL,
           field: "{{ trigger.row.City }}",
           value: "{{ trigger.oldRow.City }}",
         }
-        automation.appId = config.appId!
         automation = await config.createAutomation(automation)
         let triggerInputs = {
           oldRow: {
@@ -471,6 +471,93 @@ describe("/automations", () => {
         }
         const res = await testAutomation(config, automation, triggerInputs)
         expect(res.body.steps[1].outputs.result).toEqual(expectedResult)
+      }
+    )
+  })
+  describe("Automation Update / Creator row trigger filtering", () => {
+    let table: Table
+
+    beforeAll(async () => {
+      table = await config.createTable({
+        name: "table",
+        type: "table",
+        schema: {
+          Approved: {
+            name: "Approved",
+            type: FieldType.BOOLEAN,
+          },
+        },
+      })
+    })
+
+    const testCases = [
+      {
+        description: "should run when Approved changes from false to true",
+        filters: {
+          equal: { "1:Approved": true },
+        },
+        row: { Approved: "true" },
+        oldRow: { Approved: "false" },
+        expectToRun: true,
+      },
+      {
+        description: "should run when Approved is true in both old and new row",
+        filters: { equal: { "1:Approved": true } },
+        row: { Approved: "true" },
+        oldRow: { Approved: "true" },
+        expectToRun: true,
+      },
+
+      {
+        description:
+          "should run when a contains filter matches the correct options",
+        filters: {
+          contains: { "1:opts": ["Option 1", "Option 3"] },
+        },
+        row: { opts: ["Option 1", "Option 3"] },
+        oldRow: { opts: ["Option 3"] },
+        expectToRun: true,
+      },
+      {
+        description:
+          "should not run when opts doesn't contain any specified option",
+        filters: {
+          contains: { "1:opts": ["Option 1", "Option 2"] },
+        },
+        row: { opts: ["Option 3", "Option 4"] },
+        oldRow: { opts: ["Option 3", "Option 4"] },
+        expectToRun: false,
+      },
+    ]
+
+    it.each(testCases)(
+      "$description",
+      async ({ filters, row, oldRow, expectToRun }) => {
+        let automation = await updateRowAutomationWithFilters(config.getAppId())
+        automation.definition.trigger.inputs = {
+          tableId: table._id,
+          filters,
+        }
+        automation = await config.createAutomation(automation)
+
+        const inputs = {
+          row: {
+            tableId: table._id,
+            ...row,
+          },
+          oldRow: {
+            tableId: table._id,
+            ...oldRow,
+          },
+        }
+
+        const res = await testAutomation(config, automation, inputs)
+
+        if (expectToRun) {
+          expect(res.body.steps[1].outputs.success).toEqual(true)
+        } else {
+          expect(res.body.outputs.success).toEqual(false)
+        }
       }
     )
   })

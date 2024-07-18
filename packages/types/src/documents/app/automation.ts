@@ -35,6 +35,7 @@ export enum AutomationCustomIOType {
   AUTOMATION = "automation",
   AUTOMATION_FIELDS = "automationFields",
   MULTI_ATTACHMENTS = "multi_attachments",
+  TRIGGER_FILTER = "trigger_filter",
 }
 
 export enum AutomationTriggerStepId {
@@ -128,6 +129,15 @@ export interface Automation extends Document {
   internal?: boolean
   type?: string
   disabled?: boolean
+  testData?: {
+    row?: Row
+    meta: {
+      [key: string]: unknown
+    }
+    id: string
+    revision: string
+    oldRow?: Row
+  }
 }
 
 interface BaseIOStructure {
@@ -199,6 +209,10 @@ export enum AutomationStatus {
   ERROR = "error",
   STOPPED = "stopped",
   STOPPED_ERROR = "stopped_error",
+}
+
+export enum AutomationStoppedReason {
+  TRIGGER_FILTER_NOT_MET = "Automation did not run. Filter conditions in trigger were not met.",
 }
 
 export interface AutomationResults {
