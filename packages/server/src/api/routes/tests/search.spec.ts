@@ -184,15 +184,6 @@ describe.each([
       return row
     }
 
-    // By default, the global `table` variable is used to search against. If you
-    // need to, though, you can specify a different table to search against. You
-    // may wish to do this in a nested describe block that defines a different
-    // table.
-    againstTable(table: Table) {
-      this.query.tableId = table._id!
-      return this
-    }
-
     // Asserts that the query returns rows matching exactly the set of rows
     // passed in. The order of the rows matters. Rows returned in an order
     // different to the one passed in will cause the assertion to fail.  Extra
