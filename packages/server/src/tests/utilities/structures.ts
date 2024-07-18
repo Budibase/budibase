@@ -357,18 +357,23 @@ export function collectAutomation(tableId?: string): Automation {
       },
     },
   }
-  return automation as Automation
+  return automation
 }
 
-export function filterAutomation(tableId?: string): Automation {
-  const automation: any = {
+export function filterAutomation(appId: string, tableId?: string): Automation {
+  const automation: Automation = {
     name: "looping",
     type: "automation",
+    appId,
     definition: {
       steps: [
         {
+          name: "Filter Step",
+          tagline: "An automation filter step",
+          description: "A filter automation",
           id: "b",
-          type: "ACTION",
+          icon: "Icon",
+          type: AutomationStepType.ACTION,
           internal: true,
           stepId: AutomationActionStepId.FILTER,
           inputs: {},
@@ -376,8 +381,12 @@ export function filterAutomation(tableId?: string): Automation {
         },
       ],
       trigger: {
+        name: "trigger Step",
+        tagline: "An automation trigger",
+        description: "A trigger",
+        icon: "Icon",
         id: "a",
-        type: "TRIGGER",
+        type: AutomationStepType.TRIGGER,
         event: "row:save",
         stepId: AutomationTriggerStepId.ROW_SAVED,
         inputs: {
@@ -387,7 +396,45 @@ export function filterAutomation(tableId?: string): Automation {
       },
     },
   }
-  return automation as Automation
+  return automation
+}
+
+export function updateRowAutomationWithFilters(appId: string): Automation {
+  const automation: Automation = {
+    name: "updateRowWithFilters",
+    type: "automation",
+    appId,
+    definition: {
+      steps: [
+        {
+          name: "Filter Step",
+          tagline: "An automation filter step",
+          description: "A filter automation",
+          icon: "Icon",
+          id: "b",
+          type: AutomationStepType.ACTION,
+          internal: true,
+          stepId: AutomationActionStepId.SERVER_LOG,
+          inputs: {},
+          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
+        },
+      ],
+      trigger: {
+        name: "trigger Step",
+        tagline: "An automation trigger",
+        description: "A trigger",
+        icon: "Icon",
+
+        id: "a",
+        type: AutomationStepType.TRIGGER,
+        event: "row:update",
+        stepId: AutomationTriggerStepId.ROW_UPDATED,
+        inputs: {},
+        schema: TRIGGER_DEFINITIONS.ROW_UPDATED.schema,
+      },
+    },
+  }
+  return automation
 }
 
 export function basicAutomationResults(
