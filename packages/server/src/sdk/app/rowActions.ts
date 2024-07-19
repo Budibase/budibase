@@ -91,7 +91,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   return {
     id: newId,
-    ...action,
+    ...doc.actions[newId],
   }
 }
 
@@ -135,20 +135,24 @@ export async function update(
 
   return {
     id: rowActionId,
-    ...action,
+    ...actionsDoc.actions[rowActionId],
   }
 }
 
 export async function remove(tableId: string, rowActionId: string) {
   const actionsDoc = await get(tableId)
 
-  if (!actionsDoc.actions[rowActionId]) {
+  const rowAction = actionsDoc.actions[rowActionId]
+  if (!rowAction) {
     throw new HTTPError(
       `Row action '${rowActionId}' not found in '${tableId}'`,
       400
     )
   }
 
+  const { automationId } = rowAction
+  const automation = await automations.get(automationId)
+  await automations.remove(automation._id, automation._rev)
   delete actionsDoc.actions[rowActionId]
 
   const db = context.getAppDB()

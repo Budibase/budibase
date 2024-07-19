@@ -9,6 +9,9 @@ import {
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
 
+const expectAutomationId = () =>
+  expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
+
 describe("/rowsActions", () => {
   const config = setup.getConfig()
 
@@ -83,20 +86,19 @@ describe("/rowsActions", () => {
       })
 
       expect(res).toEqual({
+        name: rowAction.name,
         id: expect.stringMatching(/^row_action_\w+/),
         tableId: tableId,
-        ...rowAction,
+        automationId: expectAutomationId(),
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
         actions: {
           [res.id]: {
-            ...rowAction,
+            name: rowAction.name,
             id: res.id,
             tableId: tableId,
-            automationId: expect.stringMatching(
-              `^${DocumentType.AUTOMATION}_.+`
-            ),
+            automationId: expectAutomationId(),
           },
         },
       })
@@ -104,19 +106,13 @@ describe("/rowsActions", () => {
 
     it("trims row action names", async () => {
       const name = "   action  name  "
-      const res = await createRowAction(
-        tableId,
-        { name },
-        {
-          status: 201,
-        }
-      )
+      const res = await createRowAction(tableId, { name }, { status: 201 })
 
-      expect(res).toEqual({
-        id: expect.stringMatching(/^row_action_\w+/),
-        tableId: tableId,
+      expect(res).toEqual(
+        expect.objectContaining({
         name: "action  name",
       })
+      )
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
         actions: {
@@ -137,19 +133,19 @@ describe("/rowsActions", () => {
       expect(await config.api.rowAction.find(tableId)).toEqual({
         actions: {
           [responses[0].id]: {
-            ...rowActions[0],
+            name: rowActions[0].name,
             id: responses[0].id,
             tableId,
             automationId: expect.any(String),
           },
           [responses[1].id]: {
-            ...rowActions[1],
+            name: rowActions[1].name,
             id: responses[1].id,
             tableId,
             automationId: expect.any(String),
           },
           [responses[2].id]: {
-            ...rowActions[2],
+            name: rowActions[2].name,
             id: responses[2].id,
             tableId,
             automationId: expect.any(String),
@@ -174,7 +170,7 @@ describe("/rowsActions", () => {
     it("ignores not valid row action data", async () => {
       const rowAction = createRowActionRequest()
       const dirtyRowAction = {
-        ...rowAction,
+        name: rowAction.name,
         id: generator.guid(),
         valueToIgnore: generator.string(),
       }
@@ -183,17 +179,18 @@ describe("/rowsActions", () => {
       })
 
       expect(res).toEqual({
+        name: rowAction.name,
         id: expect.any(String),
         tableId,
-        ...rowAction,
+        automationId: expectAutomationId(),
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
         actions: {
           [res.id]: {
+            name: rowAction.name,
             id: res.id,
             tableId: tableId,
-            ...rowAction,
             automationId: expect.any(String),
           },
         },
@@ -287,7 +284,6 @@ describe("/rowsActions", () => {
       const updatedName = generator.string()
 
       const res = await config.api.rowAction.update(tableId, actionId, {
-        ...actionData,
         name: updatedName,
       })
 
@@ -295,14 +291,17 @@ describe("/rowsActions", () => {
         id: actionId,
         tableId,
         name: updatedName,
+        automationId: actionData.automationId,
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual(
         expect.objectContaining({
           actions: expect.objectContaining({
             [actionId]: {
-              ...actionData,
               name: updatedName,
+              id: actionData.id,
+              tableId: actionData.tableId,
+              automationId: actionData.automationId,
             },
           }),
         })
@@ -319,7 +318,6 @@ describe("/rowsActions", () => {
       )
 
       const res = await config.api.rowAction.update(tableId, rowAction.id, {
-        ...rowAction,
         name: "   action  name  ",
       })
 
