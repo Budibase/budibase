@@ -5,6 +5,7 @@ import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
+import { FieldType } from "@budibase/types"
 
 export const createStores = () => {
   const rows = writable([])
@@ -421,7 +422,20 @@ export const createActions = context => {
   // valid pending change was made or not
   const stashRowChanges = (rowId, changes) => {
     const $rowLookupMap = get(rowLookupMap)
+    const $columnLookupMap = get(columnLookupMap)
     const row = $rowLookupMap[rowId]
+
+    // Coerce some values into the correct types
+    for (let column of Object.keys(changes || {})) {
+      const type = $columnLookupMap[column]?.schema?.type
+
+      // Stringify objects
+      if (type === FieldType.STRING || type == FieldType.LONGFORM) {
+        if (changes[column] != null && typeof changes[column] !== "string") {
+          changes[column] = JSON.stringify(changes[column])
+        }
+      }
+    }
 
     // Check this is a valid change
     if (!row || !changesAreValid(row, changes)) {
