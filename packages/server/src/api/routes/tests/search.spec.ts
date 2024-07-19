@@ -4,7 +4,12 @@ import {
   getDatasource,
   knexClient,
 } from "../../../integrations/tests/utils"
-import { db as dbCore, utils } from "@budibase/backend-core"
+import {
+  db as dbCore,
+  MAX_VALID_DATE,
+  MIN_VALID_DATE,
+  utils,
+} from "@budibase/backend-core"
 
 import * as setup from "./utilities"
 import {
@@ -44,7 +49,7 @@ describe.each([
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
   const isInMemory = name === "in-memory"
-  const isInternal = isSqs || isLucene
+  const isInternal = isSqs || isLucene || isInMemory
   const config = setup.getConfig()
 
   let envCleanup: (() => void) | undefined
@@ -110,10 +115,7 @@ describe.each([
       if (isInMemory) {
         return dataFilters.search(_.cloneDeep(rows), this.query)
       } else {
-        return config.api.row.search(table._id!, {
-          ...this.query,
-          tableId: table._id!,
-        })
+        return config.api.row.search(this.query.tableId, this.query)
       }
     }
 
@@ -1098,21 +1100,37 @@ describe.each([
         }).toFindNothing()
       })
 
-      // We never implemented half-open ranges in Lucene.
-      !isLucene &&
-        it("can search using just a low value", async () => {
-          await expectQuery({
-            range: { age: { low: 5 } },
-          }).toContainExactly([{ age: 10 }])
-        })
+      it("greater than equal to", async () => {
+        await expectQuery({
+          range: {
+            age: { low: 10, high: Number.MAX_SAFE_INTEGER },
+          },
+        }).toContainExactly([{ age: 10 }])
+      })
 
-      // We never implemented half-open ranges in Lucene.
-      !isLucene &&
-        it("can search using just a high value", async () => {
-          await expectQuery({
-            range: { age: { high: 5 } },
-          }).toContainExactly([{ age: 1 }])
-        })
+      it("greater than", async () => {
+        await expectQuery({
+          range: {
+            age: { low: 5, high: Number.MAX_SAFE_INTEGER },
+          },
+        }).toContainExactly([{ age: 10 }])
+      })
+
+      it("less than equal to", async () => {
+        await expectQuery({
+          range: {
+            age: { high: 1, low: Number.MIN_SAFE_INTEGER },
+          },
+        }).toContainExactly([{ age: 1 }])
+      })
+
+      it("less than", async () => {
+        await expectQuery({
+          range: {
+            age: { high: 5, low: Number.MIN_SAFE_INTEGER },
+          },
+        }).toContainExactly([{ age: 1 }])
+      })
     })
 
     describe("sort", () => {
@@ -1232,21 +1250,29 @@ describe.each([
         }).toFindNothing()
       })
 
-      // We never implemented half-open ranges in Lucene.
-      !isLucene &&
-        it("can search using just a low value", async () => {
-          await expectQuery({
-            range: { dob: { low: JAN_5TH } },
-          }).toContainExactly([{ dob: JAN_10TH }])
-        })
+      it("greater than equal to", async () => {
+        await expectQuery({
+          range: { dob: { low: JAN_10TH, high: MAX_VALID_DATE.toISOString() } },
+        }).toContainExactly([{ dob: JAN_10TH }])
+      })
 
-      // We never implemented half-open ranges in Lucene.
-      !isLucene &&
-        it("can search using just a high value", async () => {
-          await expectQuery({
-            range: { dob: { high: JAN_5TH } },
-          }).toContainExactly([{ dob: JAN_1ST }])
-        })
+      it("greater than", async () => {
+        await expectQuery({
+          range: { dob: { low: JAN_5TH, high: MAX_VALID_DATE.toISOString() } },
+        }).toContainExactly([{ dob: JAN_10TH }])
+      })
+
+      it("less than equal to", async () => {
+        await expectQuery({
+          range: { dob: { high: JAN_1ST, low: MIN_VALID_DATE.toISOString() } },
+        }).toContainExactly([{ dob: JAN_1ST }])
+      })
+
+      it("less than", async () => {
+        await expectQuery({
+          range: { dob: { high: JAN_5TH, low: MIN_VALID_DATE.toISOString() } },
+        }).toContainExactly([{ dob: JAN_1ST }])
+      })
     })
 
     describe("sort", () => {
@@ -2153,8 +2179,7 @@ describe.each([
         }).toContainExactly([{ name: "baz", productCat: undefined }])
       })
     })
-
-  isInternal &&
+  ;(isSqs || isLucene) &&
     describe("relations to same table", () => {
       let relatedTable: Table, relatedRows: Row[]
 
@@ -2342,6 +2367,7 @@ describe.each([
       beforeAll(async () => {
         await config.api.application.addSampleData(config.appId!)
         table = DEFAULT_EMPLOYEE_TABLE_SCHEMA
+        rows = await config.api.row.fetch(table._id!)
       })
 
       it("should be able to search sample data", async () => {
@@ -2426,4 +2452,76 @@ describe.each([
       }).toContainExactly([{ [name]: "a" }])
     })
   })
+
+  // This is currently not supported in external datasources, it produces SQL
+  // errors at time of writing. We supported it (potentially by accident) in
+  // Lucene, though, so we need to make sure it's supported in SQS as well. We
+  // found real cases in production of column names ending in a space.
+  isInternal &&
+    describe("space at end of column name", () => {
+      beforeAll(async () => {
+        table = await createTable({
+          "name ": {
+            name: "name ",
+            type: FieldType.STRING,
+          },
+        })
+        await createRows([{ ["name "]: "foo" }, { ["name "]: "bar" }])
+      })
+
+      it("should be able to query a column that ends with a space", async () => {
+        await expectSearch({
+          query: {
+            string: {
+              "name ": "foo",
+            },
+          },
+        }).toContainExactly([{ ["name "]: "foo" }])
+      })
+
+      it("should be able to query a column that ends with a space using numeric notation", async () => {
+        await expectSearch({
+          query: {
+            string: {
+              "1:name ": "foo",
+            },
+          },
+        }).toContainExactly([{ ["name "]: "foo" }])
+      })
+    })
+
+  // This was never actually supported in Lucene but SQS does support it, so may
+  // as well have a test for it.
+  ;(isSqs || isInMemory) &&
+    describe("space at start of column name", () => {
+      beforeAll(async () => {
+        table = await createTable({
+          " name": {
+            name: " name",
+            type: FieldType.STRING,
+          },
+        })
+        await createRows([{ [" name"]: "foo" }, { [" name"]: "bar" }])
+      })
+
+      it("should be able to query a column that starts with a space", async () => {
+        await expectSearch({
+          query: {
+            string: {
+              " name": "foo",
+            },
+          },
+        }).toContainExactly([{ [" name"]: "foo" }])
+      })
+
+      it("should be able to query a column that starts with a space using numeric notation", async () => {
+        await expectSearch({
+          query: {
+            string: {
+              "1: name": "foo",
+            },
+          },
+        }).toContainExactly([{ [" name"]: "foo" }])
+      })
+    })
 })
