@@ -60,7 +60,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
     definition: {
       trigger: {
         type: AutomationStepType.TRIGGER,
-        id: "TODO id",
+        id: "trigger",
         tagline: "TODO tagline",
         name: "Row Action",
         description: "TODO description",
