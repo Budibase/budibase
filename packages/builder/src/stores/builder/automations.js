@@ -308,7 +308,9 @@ const automationActions = store => ({
     if (!automation) {
       return
     }
-    delete newAutomation.definition.stepNames[blockId]
+    if (newAutomation.definition.stepNames) {
+      delete newAutomation.definition.stepNames[blockId]
+    }
 
     await store.actions.save(newAutomation)
   },
