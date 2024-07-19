@@ -1,6 +1,5 @@
+import { sql } from "@budibase/backend-core"
 import { FieldType } from "@budibase/types"
-
-const TIME_REGEX = /^(?:\d{2}:)?(?:\d{2}:)(?:\d{2})$/
 
 const parseArrayString = (value: any) => {
   if (typeof value === "string") {
@@ -117,7 +116,7 @@ export const TYPE_TRANSFORM_MAP: any = {
     parse: (date: any) => {
       if (date instanceof Date) {
         return date.toISOString()
-      } else if (typeof date === "string" && TIME_REGEX.test(date)) {
+      } else if (typeof date === "string" && sql.utils.isValidTime(date)) {
         return date
       } else {
         const parsed = new Date(date)
