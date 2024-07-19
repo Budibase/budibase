@@ -102,15 +102,19 @@
 
 <style>
   .nav-group {
-    padding-top: var(--spacing-l);
+    padding-top: 24px;
+  }
+  .nav-group:first-of-type {
+    padding-top: var(--spacing-m);
   }
   .nav-group-header {
     color: var(--spectrum-global-color-gray-600);
     padding: 0px calc(var(--spacing-l) + 4px);
-    padding-bottom: var(--spacing-l);
+    padding-bottom: var(--spacing-m);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-size: 12px;
   }
   .side-bar {
     flex: 0 0 260px;
