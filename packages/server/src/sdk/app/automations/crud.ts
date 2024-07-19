@@ -1,5 +1,6 @@
 import {
   Automation,
+  AutomationBuilderData,
   AutomationTriggerStepId,
   Webhook,
   WebhookActionType,
@@ -288,14 +289,26 @@ function guardInvalidUpdatesAndThrow(
   }
 }
 
-export async function enrichDisplayData(automations: Automation[]) {
-  const rowActionAutomations = automations.filter(
-    ({ definition }) =>
-      definition.trigger.stepId === AutomationTriggerStepId.ROW_ACTION
-  )
+export async function getBuilderData(
+  automations: Automation[]
+): Promise<Record<string, AutomationBuilderData>> {
+  const result: Record<string, AutomationBuilderData> = {}
+  for (const automation of automations) {
+    const isRowAction =
+      automation.definition.trigger.stepId ===
+      AutomationTriggerStepId.ROW_ACTION
+    if (!isRowAction) {
+      result[automation._id!] = { displayName: automation.name }
+      continue
+    }
 
-  for (const automation of rowActionAutomations) {
-    automation.name = `TODO: ${automation.name}`
+    result[automation._id!] = {
+      displayName: `TODO: ${automation.name}`,
+      triggerInfo: {
+        title: "Automation trigger",
+        description: "This trigger is tied to the row action TODO on your TODO",
+      },
+    }
   }
-  return automations
+  return result
 }
