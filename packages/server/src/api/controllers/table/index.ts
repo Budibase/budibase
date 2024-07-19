@@ -46,7 +46,7 @@ function checkDefaultFields(table: Table) {
     if (!("default" in field) || field.default == null) {
       continue
     }
-    if (helpers.schema.isRequired(field)) {
+    if (helpers.schema.isRequired(field.constraints)) {
       throw new HTTPError(
         `Cannot make field "${key}" required, it has a default value.`,
         400
