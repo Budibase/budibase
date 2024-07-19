@@ -49,9 +49,14 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   ensureUniqueAndThrow(doc, action.name)
 
+  const appId = context.getAppId()
+  if (!appId) {
+    throw new Error("Could not get the current appId")
+  }
+
   const automation = await automations.create({
     name: `${tableName}: ${action.name}`,
-    appId: context.getAppId()!,
+    appId,
     definition: {
       trigger: {
         type: AutomationStepType.TRIGGER,
