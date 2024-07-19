@@ -110,8 +110,8 @@ describe("/rowsActions", () => {
 
       expect(res).toEqual(
         expect.objectContaining({
-        name: "action  name",
-      })
+          name: "action  name",
+        })
       )
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
@@ -232,6 +232,17 @@ describe("/rowsActions", () => {
       const action = await createRowAction(tableId, createRowActionRequest())
 
       await createRowAction(otherTable._id!, { name: action.name })
+    })
+
+    it("an automation is created when creating a new row action", async () => {
+      const action1 = await createRowAction(tableId, createRowActionRequest())
+      const action2 = await createRowAction(tableId, createRowActionRequest())
+
+      for (const automationId of [action1.automationId, action2.automationId]) {
+        expect(
+          await config.api.automation.get(automationId, { status: 200 })
+        ).toEqual(expect.objectContaining({ _id: automationId }))
+      }
     })
   })
 
