@@ -3,7 +3,7 @@ import { componentStore } from "stores/builder"
 
 const getContextMenuItems = (component, componentCollapsed) => {
   const definition = componentStore.getDefinition(component?._component)
-  const noPaste = !get(componentStore.componentToPaste)
+  const noPaste = !get(componentStore).componentToPaste
   const isBlock = definition?.block === true
   const canEject = !(definition?.ejectable === false)
   const hasChildren = component?._children?.length
