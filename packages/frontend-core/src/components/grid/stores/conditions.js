@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
 import { derivedMemo, QueryUtils } from "../../../utils"
-import { FieldType } from "@budibase/types"
+import { FieldType, EmptyFilterOption } from "@budibase/types"
 
 export const createStores = () => {
   const metadata = writable({})
@@ -123,7 +123,8 @@ const evaluateConditions = (row, conditions) => {
         field: "value",
         value: referenceValue,
       }
-      const query = QueryUtils.buildQuery([luceneFilter])
+      let query = QueryUtils.buildQuery([luceneFilter])
+      query.onEmptyFilter = EmptyFilterOption.RETURN_NONE
       const result = QueryUtils.runQuery([{ value }], query)
       if (result.length > 0) {
         if (target === "row") {
