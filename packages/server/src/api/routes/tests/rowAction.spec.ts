@@ -440,5 +440,26 @@ describe("/rowsActions", () => {
         status: 400,
       })
     })
+
+    it("deletes the linked automation", async () => {
+      const actions: RowActionResponse[] = []
+      for (const rowAction of createRowActionRequests(3)) {
+        actions.push(await createRowAction(tableId, rowAction))
+      }
+
+      const actionToDelete = _.sample(actions)!
+      await config.api.rowAction.delete(tableId, actionToDelete.id, {
+        status: 204,
+      })
+
+      await config.api.automation.get(actionToDelete.automationId, {
+        status: 404,
+      })
+      for (const action of actions.filter(a => a.id !== actionToDelete.id)) {
+        await config.api.automation.get(action.automationId, {
+          status: 200,
+        })
+      }
+    })
   })
 })
