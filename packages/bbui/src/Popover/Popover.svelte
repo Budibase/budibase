@@ -20,10 +20,7 @@
   export let dismissible = true
   export let offset = 4
   export let customHeight
-  export let transitionIn = fly
-  export let transitionOut = fly
-  export let transitionInParams = { y: -20, duration: 130 }
-  export let transitionOutParams = { y: -20, duration: 130 }
+  export let animate = true
   export let customZindex
   export let handlePostionUpdate
   export let showPopover = true
@@ -109,8 +106,7 @@
       class:hidden={!showPopover}
       role="presentation"
       style="height: {customHeight}; --customZindex: {customZindex};"
-      in:transitionIn|local={transitionInParams}
-      out:transitionOut|local={transitionOutParams}
+      transition:fly|local={{ y: -20, duration: animate ? 260 : 0 }}
       on:mouseenter
       on:mouseleave
     >

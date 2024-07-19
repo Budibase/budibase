@@ -1,8 +1,6 @@
 <script>
   import { contextMenuStore } from "stores/builder"
   import { Popover, Menu, MenuItem } from "@budibase/bbui"
-  import { fade } from "svelte/transition"
-  import { cubicOut, cubicIn } from "svelte/easing"
 
   let dropdown
   let anchor
@@ -31,10 +29,7 @@
 
 <Popover
   open={$contextMenuStore.visible}
-  transitionIn={fade}
-  transitionOut={fade}
-  transitionInParams={{ duration: 50, easing: cubicIn }}
-  transitionOutParams={{ duration: 150, easing: cubicOut }}
+  animate={false}
   bind:this={dropdown}
   {anchor}
   resizable={false}

@@ -127,8 +127,7 @@
               {anchor}
               align="left"
               offset={0}
-              transitionInParams={{ duration: 0 }}
-              transitionOutParams={{ duration: 0 }}
+              animate={false}
               resizable={false}
             >
               <div class="colors" data-ignore-click-outside="true">
