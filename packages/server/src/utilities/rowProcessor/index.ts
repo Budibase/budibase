@@ -99,18 +99,16 @@ export async function processAutoColumn(
   }
 }
 
-async function processDeafultValues(table: Table, row: Row) {
+async function processDefaultValues(table: Table, row: Row) {
   const ctx: { ["Current User"]?: User; user?: User } = {}
 
   const identity = context.getIdentity()
-  if (identity) {
-    if (identity._id && identity.type === IdentityType.USER) {
-      const user = await cache.user.getUser(identity._id)
-      delete user.password
+  if (identity?._id && identity.type === IdentityType.USER) {
+    const user = await cache.user.getUser(identity._id)
+    delete user.password
 
-      ctx["Current User"] = user
-      ctx.user = user
-    }
+    ctx["Current User"] = user
+    ctx.user = user
   }
 
   for (let [key, schema] of Object.entries(table.schema)) {
@@ -221,7 +219,7 @@ export async function inputProcessing(
   }
 
   await processAutoColumn(userId, table, clonedRow, opts)
-  await processDeafultValues(table, clonedRow)
+  await processDefaultValues(table, clonedRow)
 
   return { table, row: clonedRow }
 }
