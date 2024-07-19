@@ -59,7 +59,7 @@ const automationActions = store => ({
   },
   fetch: async () => {
     const responses = await Promise.all([
-      API.getAutomations(),
+      API.getAutomations({ enrich: true }),
       API.getAutomationDefinitions(),
     ])
     store.update(state => {

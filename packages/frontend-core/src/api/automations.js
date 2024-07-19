@@ -26,9 +26,13 @@ export const buildAutomationEndpoints = API => ({
   /**
    * Gets a list of all automations.
    */
-  getAutomations: async () => {
+  getAutomations: async ({ enrich }) => {
+    let url = "/api/automations?"
+    if (enrich) {
+      url += "enrich=true"
+    }
     return await API.get({
-      url: "/api/automations",
+      url,
     })
   },
 
