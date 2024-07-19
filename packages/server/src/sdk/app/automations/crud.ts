@@ -1,4 +1,9 @@
-import { Automation, Webhook, WebhookActionType } from "@budibase/types"
+import {
+  Automation,
+  AutomationTriggerStepId,
+  Webhook,
+  WebhookActionType,
+} from "@budibase/types"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 import { MetadataTypes } from "../../../constants"
@@ -81,7 +86,7 @@ export async function fetch() {
       include_docs: true,
     })
   )
-  return response.rows.map(row => row.doc)
+  return response.rows.map(row => row.doc).filter(doc => !!doc)
 }
 
 export async function get(automationId: string) {
@@ -254,6 +259,7 @@ async function checkForWebhooks({ oldAuto, newAuto }: any) {
   }
   return newAuto
 }
+
 function guardInvalidUpdatesAndThrow(
   automation: Automation,
   oldAutomation: Automation
@@ -280,4 +286,16 @@ function guardInvalidUpdatesAndThrow(
       }
     })
   }
+}
+
+export async function enrichDisplayData(automations: Automation[]) {
+  const rowActionAutomations = automations.filter(
+    ({ definition }) =>
+      definition.trigger.stepId === AutomationTriggerStepId.ROW_ACTION
+  )
+
+  for (const automation of rowActionAutomations) {
+    automation.name = `TODO: ${automation.name}`
+  }
+  return automations
 }
