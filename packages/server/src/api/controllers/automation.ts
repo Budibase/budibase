@@ -11,6 +11,7 @@ import {
   AutomationResults,
   UserCtx,
   DeleteAutomationResponse,
+  FetchAutomationResponse,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
@@ -73,14 +74,13 @@ export async function update(ctx: UserCtx) {
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {
   const enrich = ctx.request.query["enrich"] === "true"
 
   const automations = await sdk.automations.fetch()
+  ctx.body = { automations }
   if (enrich) {
-    ctx.body = await sdk.automations.enrichDisplayData(automations)
-  } else {
-    ctx.body = automations
+    ctx.body.builderData = await sdk.automations.getBuilderData(automations)
   }
 }
 
