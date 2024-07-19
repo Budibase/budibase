@@ -136,19 +136,19 @@ describe("/rowsActions", () => {
             name: rowActions[0].name,
             id: responses[0].id,
             tableId,
-            automationId: expect.any(String),
+            automationId: expectAutomationId(),
           },
           [responses[1].id]: {
             name: rowActions[1].name,
             id: responses[1].id,
             tableId,
-            automationId: expect.any(String),
+            automationId: expectAutomationId(),
           },
           [responses[2].id]: {
             name: rowActions[2].name,
             id: responses[2].id,
             tableId,
-            automationId: expect.any(String),
+            automationId: expectAutomationId(),
           },
         },
       })
@@ -191,7 +191,7 @@ describe("/rowsActions", () => {
             name: rowAction.name,
             id: res.id,
             tableId: tableId,
-            automationId: expect.any(String),
+            automationId: expectAutomationId(),
           },
         },
       })
