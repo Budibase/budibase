@@ -11,6 +11,11 @@ import {
 import { definitions } from "../../../automations/triggerInfo"
 import automations from "."
 
+interface PersistedAutomation extends Automation {
+  _id: string
+  _rev: string
+}
+
 function getDb() {
   return context.getAppDB()
 }
@@ -71,7 +76,7 @@ async function handleStepEvents(
 
 export async function fetch() {
   const db = getDb()
-  const response = await db.allDocs<Automation>(
+  const response = await db.allDocs<PersistedAutomation>(
     getAutomationParams(null, {
       include_docs: true,
     })
@@ -81,7 +86,7 @@ export async function fetch() {
 
 export async function get(automationId: string) {
   const db = getDb()
-  const result = await db.get<Automation>(automationId)
+  const result = await db.get<PersistedAutomation>(automationId)
   return result
 }
 
