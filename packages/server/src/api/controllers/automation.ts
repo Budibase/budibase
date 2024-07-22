@@ -75,7 +75,8 @@ export async function update(ctx: UserCtx) {
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {
-  const enrich = ctx.request.query["enrich"] === "true"
+  const query = ctx.request.query || {}
+  const enrich = query["enrich"] === "true"
 
   const automations = await sdk.automations.fetch()
   ctx.body = { automations }
