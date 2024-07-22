@@ -5,7 +5,6 @@ import {
   AutomationTriggerStepId,
   TableRowActions,
 } from "@budibase/types"
-import sdk from "../../../sdk"
 
 export function checkForCollectStep(automation: Automation) {
   return automation.definition.steps.some(
@@ -16,6 +15,8 @@ export function checkForCollectStep(automation: Automation) {
 export async function getBuilderData(
   automations: Automation[]
 ): Promise<Record<string, AutomationBuilderData>> {
+  const sdk = (await import("../../../sdk")).default
+
   const tableNameCache: Record<string, string> = {}
   async function getTableName(tableId: string) {
     if (!tableNameCache[tableId]) {
