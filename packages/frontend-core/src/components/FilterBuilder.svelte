@@ -36,11 +36,7 @@
       ) &&
       !schemaFields.some(field => field.name === "_id")
     ) {
-      schemaFields = [
-        ...schemaFields,
-        { name: "_id", type: "string" },
-        { name: "_rev", type: "string" },
-      ]
+      schemaFields = [...schemaFields, { name: "_id", type: "string" }]
     }
   }
 
