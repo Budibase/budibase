@@ -14,7 +14,7 @@
   export let panel = ClientBindingPanel
   export let allowBindings = true
   export let datasource
-
+  export let showFilterEmptyDropdown
   const dispatch = createEventDispatcher()
 
   let rawFilters
@@ -63,6 +63,7 @@
   {schemaFields}
   {datasource}
   {allowBindings}
+  {showFilterEmptyDropdown}
 >
   <div slot="filtering-hero-content" />
 

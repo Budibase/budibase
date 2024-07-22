@@ -13,6 +13,7 @@ import { UserAPI } from "./user"
 import { QueryAPI } from "./query"
 import { RoleAPI } from "./role"
 import { TemplateAPI } from "./template"
+import { RowActionAPI } from "./rowAction"
 
 export default class API {
   table: TableAPI
@@ -29,6 +30,7 @@ export default class API {
   query: QueryAPI
   roles: RoleAPI
   templates: TemplateAPI
+  rowAction: RowActionAPI
 
   constructor(config: TestConfiguration) {
     this.table = new TableAPI(config)
@@ -45,5 +47,6 @@ export default class API {
     this.query = new QueryAPI(config)
     this.roles = new RoleAPI(config)
     this.templates = new TemplateAPI(config)
+    this.rowAction = new RowActionAPI(config)
   }
 }
