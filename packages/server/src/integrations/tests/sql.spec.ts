@@ -34,13 +34,13 @@ function endpoint(table: any, operation: any) {
 }
 
 function generateReadJson({
-                            table,
-                            fields,
-                            filters,
-                            sort,
-                            paginate,
-                          }: any = {}): QueryJson {
-  const tableObj = {...TABLE}
+  table,
+  fields,
+  filters,
+  sort,
+  paginate,
+}: any = {}): QueryJson {
+  const tableObj = { ...TABLE }
   if (table) {
     tableObj.name = table
   }
@@ -85,7 +85,7 @@ function generateRelationshipJson(config: { schema?: string } = {}): QueryJson {
         column: "products",
       },
     ],
-    extra: {idFilter: {}},
+    extra: { idFilter: {} },
     meta: {
       table: TABLE,
     },
@@ -122,7 +122,7 @@ function generateManyRelationshipJson(config: { schema?: string } = {}) {
         toPrimary: "product_id",
       },
     ],
-    extra: {idFilter: {}},
+    extra: { idFilter: {} },
     meta: {
       table: TABLE,
     },
@@ -139,7 +139,7 @@ describe("SQL query builder", () => {
   })
 
   it("should add the schema to the LEFT JOIN", () => {
-    const query = sql._query(generateRelationshipJson({schema: "production"}))
+    const query = sql._query(generateRelationshipJson({ schema: "production" }))
     expect(query).toEqual({
       bindings: [500, 5000],
       sql: `select "brands"."brand_id"       as "brands.brand_id",
@@ -170,7 +170,7 @@ describe("SQL query builder", () => {
 
   it("should add the schema to both the toTable and throughTable in many-to-many join", () => {
     const query = sql._query(
-      generateManyRelationshipJson({schema: "production"})
+      generateManyRelationshipJson({ schema: "production" })
     )
     expect(query).toEqual({
       bindings: [500, 5000],
@@ -260,7 +260,8 @@ describe("SQL query builder", () => {
             name: "John",
           },
         },
-      }))
+      })
+    )
 
     expect(query).not.toEqual({
       bindings: ["John", limit, 5000],
@@ -276,7 +277,8 @@ describe("SQL query builder", () => {
             name: "John",
           },
         },
-     }))
+      })
+    )
 
     expect(query).toEqual({
       bindings: ["John", limit, 5000],

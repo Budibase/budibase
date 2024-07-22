@@ -436,10 +436,9 @@ class InternalBuilder {
             [value]
           )
         } else if (SqlClient.ORACLE) {
-          query = query[fnc](
-            `${quotedIdentifier(this.client, key)} = ?`,
-            [value]
-          )
+          query = query[fnc](`${quotedIdentifier(this.client, key)} = ?`, [
+            value,
+          ])
         } else {
           query = query[fnc](
             `COALESCE(${quotedIdentifier(this.client, key)} = ?, FALSE)`,
