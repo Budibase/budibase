@@ -9,6 +9,7 @@
     Icon,
     DatePicker,
     Combobox,
+    Multiselect,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
@@ -116,7 +117,7 @@
       Constants.OperatorOptions.NotEmpty.value,
     ]
     condition.noValue = noValueOptions.includes(newOperator)
-    if (condition.noValue || newOperator === "oneOf") {
+    if (condition.noValue) {
       condition.referenceValue = null
       condition.valueType = "string"
     }
@@ -202,8 +203,7 @@
                 />
                 {#if hasValueOption}
                   <Select
-                    disabled={condition.noValue ||
-                      condition.operator === "oneOf"}
+                    disabled={condition.noValue}
                     options={valueTypeOptions}
                     bind:value={condition.valueType}
                     placeholder={null}
@@ -224,12 +224,23 @@
                     bind:value={condition.referenceValue}
                   />
                 {:else if (type === FieldType.OPTIONS || type === FieldType.ARRAY) && condition.valueType === type}
-                  <Combobox
-                    disabled={condition.noValue}
-                    options={componentInstance.schema?.[componentInstance.field]
-                      ?.constraints?.inclusion || []}
-                    bind:value={condition.referenceValue}
-                  />
+                  {#if condition.operator === Constants.OperatorOptions.In.value}
+                    <Multiselect
+                      disabled={condition.noValue}
+                      options={componentInstance.schema?.[
+                        componentInstance.field
+                      ]?.constraints?.inclusion || []}
+                      bind:value={condition.referenceValue}
+                    />
+                  {:else}
+                    <Combobox
+                      disabled={condition.noValue}
+                      options={componentInstance.schema?.[
+                        componentInstance.field
+                      ]?.constraints?.inclusion || []}
+                      bind:value={condition.referenceValue}
+                    />
+                  {/if}
                 {:else if (type === FieldType.BB_REFERENCE || type === FieldType.BB_REFERENCE_SINGLE) && condition.valueType === type}
                   <FilterUsers
                     bind:value={condition.referenceValue}
