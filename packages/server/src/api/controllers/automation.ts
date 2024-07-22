@@ -80,7 +80,9 @@ export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {
   const automations = await sdk.automations.fetch()
   ctx.body = { automations }
   if (enrich) {
-    ctx.body.builderData = await sdk.automations.getBuilderData(automations)
+    ctx.body.builderData = await sdk.automations.utils.getBuilderData(
+      automations
+    )
   }
 }
 
