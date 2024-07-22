@@ -2,17 +2,25 @@
   import { contextMenuStore } from "stores/builder"
   import { Popover, Menu, MenuItem } from "@budibase/bbui"
 
-  let dropdown
   let anchor
-  let subMenuAnchor
+  let secondaryMenuAnchor
+  let tertiaryMenuAnchor
+
+  let dropdown
+  let secondaryDropdown
 
   let clicked = false
 
-  const getSubMenuItems = (contextMenu) => {
+  const getSecondaryMenuItems = (contextMenu) => {
     return contextMenu.items?.[contextMenu.hoverIndex]?.children ?? []
   }
 
-  $: subMenuItems = getSubMenuItems($contextMenuStore)
+  const getTertiaryMenuItems = (contextMenu, secondaryMenuItems) => {
+    return secondaryMenuItems?.[contextMenu.secondaryHoverIndex]?.children ?? []
+  }
+
+  $: secondaryMenuItems = getSecondaryMenuItems($contextMenuStore)
+  $: tertiaryMenuItems = getTertiaryMenuItems($contextMenuStore, secondaryMenuItems)
 
   const handleKeyDown = () => {
     if ($contextMenuStore.visible) {
@@ -27,8 +35,6 @@
 
     contextMenuStore.close()
   }
-
-  $: console.log(dropdown?.clientWidth);
 </script>
 
 <svelte:window on:keydown={handleKeyDown} />
@@ -40,8 +46,14 @@
     style:left={`${$contextMenuStore.position.x}px`}
   />
   <div
-    bind:this={subMenuAnchor}
-    class="subMenuAnchor"
+    bind:this={secondaryMenuAnchor}
+    class="secondaryMenuAnchor"
+    style:top={`${$contextMenuStore.position.y + (($contextMenuStore.hoverIndex ?? 0) * 32)}px`}
+    style:left={`${$contextMenuStore.position.x + (dropdown?.clientWidth ?? 0) + 6}px`}
+  />
+  <div
+    bind:this={secondaryMenuAnchor}
+    class="secondaryMenuAnchor"
     style:top={`${$contextMenuStore.position.y + (($contextMenuStore.hoverIndex ?? 0) * 32)}px`}
     style:left={`${$contextMenuStore.position.x + (dropdown?.clientWidth ?? 0) + 6}px`}
   />
@@ -77,15 +89,44 @@
 </Popover>
 
 <Popover
-  open={$contextMenuStore.visible && subMenuItems.length > 0}
+  open={$contextMenuStore.visible && secondaryMenuItems.length > 0}
   animate={false}
-  anchor={subMenuAnchor}
+  anchor={secondaryMenuAnchor}
+  resizable={false}
+  align="left"
+  on:close={contextMenuStore.close}
+>
+  <div class="dropdown" bind:this={secondaryDropdown}>
+    <Menu>
+      {#each secondaryMenuItems as item, index}
+        {#if item.visible}
+          <MenuItem
+            on:mouseenter={() => contextMenuStore.setSecondaryHoverIndex(index)}
+            forceHover={$contextMenuStore.secondaryHoverIndex === index && !item.disabled && !clicked}
+            icon={item.icon}
+            iconRight={item.children?.length > 0 ? 'ChevronRight' : null}
+            keyBind={item.keyBind}
+            on:click={() => handleItemClick(item.callback)}
+            disabled={clicked || item.disabled}
+          >
+            {item.name}
+          </MenuItem>
+        {/if}
+      {/each}
+    </Menu>
+  </div>
+</Popover>
+
+<Popover
+  open={$contextMenuStore.visible && tertiaryMenuItems.length > 0}
+  animate={false}
+  anchor={tertiaryMenuAnchor}
   resizable={false}
   align="left"
   on:close={contextMenuStore.close}
 >
   <Menu>
-    {#each subMenuItems as item}
+    {#each tertiaryMenuItems as item}
       {#if item.visible}
         <MenuItem
           icon={item.icon}
@@ -111,7 +152,7 @@
     height: 0;
   }
 
-  .subMenuAnchor {
+  .secondaryMenuAnchor {
     z-index: 100;
     position: absolute;
   }
