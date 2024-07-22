@@ -12,14 +12,31 @@
   let blocks
 
   function prepTestResults(results) {
-    return results?.steps.filter(x => x.stepId !== ActionStepID.LOOP || [])
+    if (results.message) {
+      return [
+        {
+          inputs: {},
+          outputs: {
+            success: results.outputs?.success || false,
+            status: results.outputs?.status || "unknown",
+            message: results.message,
+          },
+        },
+      ]
+    } else {
+      return results?.steps?.filter(x => x.stepId !== ActionStepID.LOOP) || []
+    }
   }
 
   $: filteredResults = prepTestResults(testResults)
 
   $: {
-    blocks = []
-    if (automation) {
+    if (testResults.message) {
+      blocks = automation?.definition?.trigger
+        ? [automation.definition.trigger]
+        : []
+    } else if (automation) {
+      blocks = []
       if (automation.definition.trigger) {
         blocks.push(automation.definition.trigger)
       }
@@ -46,7 +63,9 @@
           open={!!openBlocks[block.id]}
           on:toggle={() => (openBlocks[block.id] = !openBlocks[block.id])}
           isTrigger={idx === 0}
-          testResult={filteredResults?.[idx]}
+          testResult={testResults.message
+            ? testResults
+            : filteredResults?.[idx]}
           showTestStatus
           {block}
           {idx}
@@ -68,7 +87,9 @@
             <Tabs quiet noHorizPadding selected="Input">
               <Tab title="Input">
                 <div class="wrap">
-                  {#if filteredResults?.[idx]?.inputs}
+                  {#if testResults.message}
+                    No input
+                  {:else if filteredResults?.[idx]?.inputs}
                     <JsonView depth={2} json={filteredResults?.[idx]?.inputs} />
                   {:else}
                     No input
@@ -77,13 +98,22 @@
               </Tab>
               <Tab title="Output">
                 <div class="wrap">
-                  {#if filteredResults?.[idx]?.outputs}
+                  {#if testResults.message}
+                    <JsonView
+                      depth={2}
+                      json={{
+                        success: testResults.outputs?.success || false,
+                        status: testResults.outputs?.status || "unknown",
+                        message: testResults.message,
+                      }}
+                    />
+                  {:else if filteredResults?.[idx]?.outputs}
                     <JsonView
                       depth={2}
                       json={filteredResults?.[idx]?.outputs}
                     />
                   {:else}
-                    No input
+                    No output
                   {/if}
                 </div>
               </Tab>

@@ -17,7 +17,9 @@
     Helpers,
     Toggle,
     Divider,
+    Icon,
   } from "@budibase/bbui"
+
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation, tables } from "stores/builder"
   import { environment, licensing } from "stores/portal"
@@ -365,41 +367,74 @@
 
   /**
    * Handler for row trigger automation updates.
-    @param {object} update - An automation block.inputs update object
-    @example
-    onRowTriggerUpdate({ 
-      "tableId" : "ta_bb_employee"
-    })
+   * @param {object} update - An automation block.inputs update object
+   * @param {string} [update.tableId] - The ID of the table
+   * @param {object} [update.filters] - Filter configuration for the row trigger
+   * @param {object} [update.filters-def] - Filter definitions for the row trigger
+   * @example
+   * // Example with tableId
+   * onRowTriggerUpdate({
+   *   "tableId" : "ta_bb_employee"
+   * })
+   * @example
+   * // Example with filters
+   * onRowTriggerUpdate({
+   *   filters: {
+   *     equal: { "1:Approved": "true" }
+   *   },
+   *   "filters-def": [{
+   *     id: "oH1T4S49n",
+   *     field: "1:Approved",
+   *     operator: "equal",
+   *     value: "true",
+   *     valueType: "Value",
+   *     type: "string"
+   *   }]
+   * })
    */
   const onRowTriggerUpdate = async update => {
     if (
-      Object.hasOwn(update, "tableId") &&
-      $selectedAutomation.testData?.row?.tableId !== update.tableId
+      ["tableId", "filters", "meta"].some(key => Object.hasOwn(update, key))
     ) {
       try {
-        const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
-          searchableSchema: true,
-        }).schema
+        let updatedAutomation
 
-        // Parse the block inputs as usual
-        const updatedAutomation =
-          await automationStore.actions.processBlockInputs(block, {
-            schema: reqSchema,
-            ...update,
-          })
+        if (
+          Object.hasOwn(update, "tableId") &&
+          $selectedAutomation.testData?.row?.tableId !== update.tableId
+        ) {
+          const reqSchema = getSchemaForDatasourcePlus(update.tableId, {
+            searchableSchema: true,
+          }).schema
 
-        // Save the entire automation and reset the testData
-        await automationStore.actions.save({
-          ...updatedAutomation,
-          testData: {
-            // Reset Core fields
-            row: { tableId: update.tableId },
-            oldRow: { tableId: update.tableId },
-            meta: {},
-            id: "",
-            revision: "",
-          },
-        })
+          updatedAutomation = await automationStore.actions.processBlockInputs(
+            block,
+            {
+              schema: reqSchema,
+              ...update,
+            }
+          )
+
+          // Reset testData when tableId changes
+          updatedAutomation = {
+            ...updatedAutomation,
+            testData: {
+              row: { tableId: update.tableId },
+              oldRow: { tableId: update.tableId },
+              meta: {},
+              id: "",
+              revision: "",
+            },
+          }
+        } else {
+          // For filters update, just process block inputs without resetting testData
+          updatedAutomation = await automationStore.actions.processBlockInputs(
+            block,
+            update
+          )
+        }
+
+        await automationStore.actions.save(updatedAutomation)
 
         return
       } catch (e) {
@@ -408,7 +443,6 @@
       }
     }
   }
-
   /**
    * Handler for App trigger automation updates.
    * Ensure updates to the field list are reflected in testData
@@ -743,6 +777,7 @@
       value.customType !== "triggerSchema" &&
       value.customType !== "automationFields" &&
       value.customType !== "fields" &&
+      value.customType !== "trigger_filter_setting" &&
       value.type !== "signature_single" &&
       value.type !== "attachment" &&
       value.type !== "attachment_single"
@@ -807,13 +842,23 @@
         {@const label = getFieldLabel(key, value)}
         <div class:block-field={shouldRenderField(value)}>
           {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
-            <Label
-              tooltip={value.title === "Binding / Value"
-                ? "If using the String input type, please use a comma or newline separated string"
-                : null}
-            >
-              {label}
-            </Label>
+            <div class="label-container">
+              <Label>
+                {label}
+              </Label>
+              {#if value.customType === "trigger_filter"}
+                <Icon
+                  hoverable
+                  on:click={() =>
+                    window.open(
+                      "https://docs.budibase.com/docs/row-trigger-filters",
+                      "_blank"
+                    )}
+                  size="XS"
+                  name="InfoOutline"
+                />
+              {/if}
+            </div>
           {/if}
           <div class:field-width={shouldRenderField(value)}>
             {#if value.type === "string" && value.enum && canShowField(key, value)}
@@ -932,8 +977,12 @@
                   {/if}
                 </div>
               </div>
-            {:else if value.customType === "filters"}
-              <ActionButton on:click={drawer.show}>Define filters</ActionButton>
+            {:else if value.customType === "filters" || value.customType === "trigger_filter"}
+              <ActionButton fullWidth on:click={drawer.show}
+                >{filters.length > 0
+                  ? "Update Filter"
+                  : "No Filter set"}</ActionButton
+              >
               <Drawer bind:this={drawer} title="Filtering">
                 <Button cta slot="buttons" on:click={() => saveFilters(key)}>
                   Save
@@ -945,6 +994,7 @@
                     {schemaFields}
                     datasource={{ type: "table", tableId }}
                     panel={AutomationBindingPanel}
+                    showFilterEmptyDropdown={!rowTriggers.includes(stepId)}
                     on:change={e => (tempFilters = e.detail)}
                   />
                 </DrawerContent>
@@ -1085,6 +1135,11 @@
 {/if}
 
 <style>
+  .label-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
   .field-width {
     width: 320px;
   }
