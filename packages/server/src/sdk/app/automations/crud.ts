@@ -94,7 +94,7 @@ export async function get(automationId: string) {
 }
 
 export async function create(automation: Automation) {
-  automation = trimUnexpectedObjectFields({ ...automation })
+  automation = trimUnexpectedObjectFields(automation)
   const db = getDb()
 
   // Respect existing IDs if recreating a deleted automation
@@ -119,7 +119,7 @@ export async function create(automation: Automation) {
 }
 
 export async function update(automation: Automation) {
-  automation = trimUnexpectedObjectFields({ ...automation })
+  automation = trimUnexpectedObjectFields(automation)
   if (!automation._id || !automation._rev) {
     throw new HTTPError("_id or _rev fields missing", 400)
   }
