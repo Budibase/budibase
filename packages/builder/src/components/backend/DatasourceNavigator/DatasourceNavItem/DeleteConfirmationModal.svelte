@@ -1,15 +1,16 @@
 <script>
   import { goto } from "@roxi/routify"
   import { datasources } from "stores/builder"
-  import { notifications, ActionMenu, MenuItem, Icon } from "@budibase/bbui"
+  import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import UpdateDatasourceModal from "components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
-  import { BUDIBASE_DATASOURCE_TYPE } from "constants/backend"
 
   export let datasource
 
   let confirmDeleteDialog
-  let updateDatasourceDialog
+
+  export const show = () => {
+    confirmDeleteDialog.show()
+  }
 
   async function deleteDatasource() {
     try {
@@ -25,16 +26,6 @@
   }
 </script>
 
-<ActionMenu>
-  <div slot="control" class="icon">
-    <Icon size="S" hoverable name="MoreSmallList" />
-  </div>
-  {#if datasource.type !== BUDIBASE_DATASOURCE_TYPE}
-    <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>Edit</MenuItem>
-  {/if}
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
-</ActionMenu>
-
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Datasource"
@@ -45,13 +36,3 @@
   <i>{datasource.name}?</i>
   This action cannot be undone.
 </ConfirmDialog>
-<UpdateDatasourceModal {datasource} bind:this={updateDatasourceDialog} />
-
-<style>
-  div.icon {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-  }
-</style>
