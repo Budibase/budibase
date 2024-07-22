@@ -9,17 +9,17 @@
     focusedRow,
     menu,
     rows,
-    columns,
-    focusedCellId,
-    stickyColumn,
     config,
-    copiedCell,
-    clipboard,
     dispatch,
-    focusedCellAPI,
     focusedRowId,
     notifications,
     hasBudibaseIdentifiers,
+    selectedRowCount,
+    copyAllowed,
+    pasteAllowed,
+    selectedCellCount,
+    visibleColumns,
+    selectedCells,
   } = getContext("grid")
 
   let anchor
@@ -32,17 +32,20 @@
   }
 
   const deleteRow = () => {
-    rows.actions.deleteRows([$focusedRow])
     menu.actions.close()
+    rows.actions.deleteRows([$focusedRow])
     $notifications.success("Deleted 1 row")
   }
 
-  const duplicate = async () => {
+  const duplicateRow = async () => {
     menu.actions.close()
     const newRow = await rows.actions.duplicateRow($focusedRow)
     if (newRow) {
-      const column = $stickyColumn?.name || $columns[0].name
-      $focusedCellId = getCellID(newRow._id, column)
+      const firstCol = $visibleColumns[0]
+      const lastCol = $visibleColumns[$visibleColumns.length - 1]
+      const startCellId = getCellID(newRow._id, firstCol.name)
+      const endCellId = getCellID(newRow._id, lastCol.name)
+      selectedCells.actions.selectRange(startCellId, endCellId)
     }
   }
 
@@ -58,59 +61,107 @@
   {#key style}
     <GridPopover {anchor} on:close={menu.actions.close} maxHeight={null}>
       <Menu>
-        <MenuItem
-          icon="Copy"
-          on:click={clipboard.actions.copy}
-          on:click={menu.actions.close}
-        >
-          Copy
-        </MenuItem>
-        <MenuItem
-          icon="Paste"
-          disabled={$copiedCell == null || $focusedCellAPI?.isReadonly()}
-          on:click={clipboard.actions.paste}
-          on:click={menu.actions.close}
-        >
-          Paste
-        </MenuItem>
-        <MenuItem
-          icon="Maximize"
-          disabled={isNewRow || !$config.canEditRows || !$config.canExpandRows}
-          on:click={() => dispatch("edit-row", $focusedRow)}
-          on:click={menu.actions.close}
-        >
-          Edit row in modal
-        </MenuItem>
-        <MenuItem
-          icon="Copy"
-          disabled={isNewRow || !$focusedRow?._id || !$hasBudibaseIdentifiers}
-          on:click={() => copyToClipboard($focusedRow?._id)}
-          on:click={menu.actions.close}
-        >
-          Copy row _id
-        </MenuItem>
-        <MenuItem
-          icon="Copy"
-          disabled={isNewRow || !$focusedRow?._rev || !$hasBudibaseIdentifiers}
-          on:click={() => copyToClipboard($focusedRow?._rev)}
-          on:click={menu.actions.close}
-        >
-          Copy row _rev
-        </MenuItem>
-        <MenuItem
-          icon="Duplicate"
-          disabled={isNewRow || !$config.canAddRows}
-          on:click={duplicate}
-        >
-          Duplicate row
-        </MenuItem>
-        <MenuItem
-          icon="Delete"
-          disabled={isNewRow || !$config.canDeleteRows}
-          on:click={deleteRow}
-        >
-          Delete row
-        </MenuItem>
+        {#if $menu.multiRowMode}
+          <MenuItem
+            icon="Duplicate"
+            disabled={!$config.canAddRows || $selectedRowCount > 50}
+            on:click={() => dispatch("request-bulk-duplicate")}
+            on:click={menu.actions.close}
+          >
+            Duplicate {$selectedRowCount} rows
+          </MenuItem>
+          <MenuItem
+            icon="Delete"
+            disabled={!$config.canDeleteRows}
+            on:click={() => dispatch("request-bulk-delete")}
+            on:click={menu.actions.close}
+          >
+            Delete {$selectedRowCount} rows
+          </MenuItem>
+        {:else if $menu.multiCellMode}
+          <MenuItem
+            icon="Copy"
+            disabled={!$copyAllowed}
+            on:click={() => dispatch("copy")}
+            on:click={menu.actions.close}
+          >
+            Copy
+          </MenuItem>
+          <MenuItem
+            icon="Paste"
+            disabled={!$pasteAllowed}
+            on:click={() => dispatch("paste")}
+            on:click={menu.actions.close}
+          >
+            Paste
+          </MenuItem>
+          <MenuItem
+            icon="Delete"
+            disabled={!$config.canEditRows}
+            on:click={() => dispatch("request-bulk-delete")}
+          >
+            Delete {$selectedCellCount} cells
+          </MenuItem>
+        {:else}
+          <MenuItem
+            icon="Copy"
+            disabled={!$copyAllowed}
+            on:click={() => dispatch("copy")}
+            on:click={menu.actions.close}
+          >
+            Copy
+          </MenuItem>
+          <MenuItem
+            icon="Paste"
+            disabled={!$pasteAllowed}
+            on:click={() => dispatch("paste")}
+            on:click={menu.actions.close}
+          >
+            Paste
+          </MenuItem>
+          <MenuItem
+            icon="Maximize"
+            disabled={isNewRow ||
+              !$config.canEditRows ||
+              !$config.canExpandRows}
+            on:click={() => dispatch("edit-row", $focusedRow)}
+            on:click={menu.actions.close}
+          >
+            Edit row in modal
+          </MenuItem>
+          <MenuItem
+            icon="Copy"
+            disabled={isNewRow || !$focusedRow?._id || !$hasBudibaseIdentifiers}
+            on:click={() => copyToClipboard($focusedRow?._id)}
+            on:click={menu.actions.close}
+          >
+            Copy row _id
+          </MenuItem>
+          <MenuItem
+            icon="Copy"
+            disabled={isNewRow ||
+              !$focusedRow?._rev ||
+              !$hasBudibaseIdentifiers}
+            on:click={() => copyToClipboard($focusedRow?._rev)}
+            on:click={menu.actions.close}
+          >
+            Copy row _rev
+          </MenuItem>
+          <MenuItem
+            icon="Duplicate"
+            disabled={isNewRow || !$config.canAddRows}
+            on:click={duplicateRow}
+          >
+            Duplicate row
+          </MenuItem>
+          <MenuItem
+            icon="Delete"
+            disabled={isNewRow || !$config.canDeleteRows}
+            on:click={deleteRow}
+          >
+            Delete row
+          </MenuItem>
+        {/if}
       </Menu>
     </GridPopover>
   {/key}

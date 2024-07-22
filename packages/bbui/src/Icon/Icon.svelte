@@ -29,6 +29,7 @@
 >
   <div class="icon" class:newStyles>
     <svg
+      on:contextmenu
       on:click
       class:hoverable
       class:disabled

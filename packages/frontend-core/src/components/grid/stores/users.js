@@ -25,7 +25,7 @@ export const deriveStores = context => {
 
   // Generate a lookup map of cell ID to the user that has it selected, to make
   // lookups inside cells extremely fast
-  const selectedCellMap = derived(
+  const userCellMap = derived(
     [users, focusedCellId],
     ([$users, $focusedCellId]) => {
       let map = {}
@@ -40,7 +40,7 @@ export const deriveStores = context => {
   )
 
   return {
-    selectedCellMap,
+    userCellMap,
   }
 }
 
