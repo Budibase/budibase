@@ -46,6 +46,7 @@
   on:touchstart
   on:touchend
   on:touchcancel
+  on:mouseenter
   {style}
 >
   {#if error}
@@ -155,6 +156,7 @@
   .cell.focused.readonly {
     --cell-background: var(--cell-background-hover);
   }
+  .cell.selected.focused,
   .cell.selected:not(.focused) {
     --cell-background: var(--spectrum-global-color-blue-100);
   }

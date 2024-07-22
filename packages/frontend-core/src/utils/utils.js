@@ -1,6 +1,8 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
 
+export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 /**
  * Utility to wrap an async function and ensure all invocations happen
  * sequentially.

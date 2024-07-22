@@ -79,17 +79,17 @@
 
     table = $tables.list.find(table => table._id === tableId)
 
+    schemaFields = Object.entries(table?.schema ?? {})
+      .filter(entry => {
+        const [, field] = entry
+        return field.type !== "formula" && !field.autocolumn
+      })
+      .sort(([nameA], [nameB]) => {
+        return nameA < nameB ? -1 : 1
+      })
+
     if (table) {
       editableRow["tableId"] = tableId
-
-      schemaFields = Object.entries(table?.schema ?? {})
-        .filter(entry => {
-          const [, field] = entry
-          return field.type !== "formula" && !field.autocolumn
-        })
-        .sort(([nameA], [nameB]) => {
-          return nameA < nameB ? -1 : 1
-        })
 
       // Parse out any data not in the schema.
       for (const column in editableFields) {
