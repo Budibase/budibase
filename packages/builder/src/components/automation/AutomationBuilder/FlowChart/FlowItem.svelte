@@ -51,6 +51,8 @@
   $: isAppAction && setPermissions(role)
   $: isAppAction && getPermissions(automationId)
 
+  $: triggerInfo = $selectedAutomationDisplayData?.triggerInfo
+
   async function setPermissions(role) {
     if (!role || !automationId) {
       return
@@ -185,10 +187,10 @@
           {block}
           {webhookModal}
         />
-        {#if isTrigger && $selectedAutomationDisplayData?.triggerInfo}
+        {#if isTrigger && triggerInfo}
           <InlineAlert
-            header={$selectedAutomationDisplayData.triggerInfo.title}
-            message={$selectedAutomationDisplayData.triggerInfo.description}
+            header={triggerInfo.type}
+            message={`This trigger is tied to the row action ${triggerInfo.rowAction.name} on your ${triggerInfo.table.name} table`}
           />
         {/if}
         {#if lastStep}

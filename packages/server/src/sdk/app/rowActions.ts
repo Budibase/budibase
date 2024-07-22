@@ -11,7 +11,6 @@ import {
   VirtualDocumentType,
 } from "@budibase/types"
 import automations from "./automations"
-import tables from "./tables"
 
 function ensureUniqueAndThrow(
   doc: TableRowActions,
@@ -45,8 +44,6 @@ export async function create(tableId: string, rowAction: { name: string }) {
     doc = { _id: rowActionsId, actions: {} }
   }
 
-  const { name: tableName } = await tables.getTable(tableId)
-
   ensureUniqueAndThrow(doc, action.name)
 
   const appId = context.getAppId()
@@ -59,7 +56,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
   }${SEPARATOR}${utils.newid()}`
 
   const automation = await automations.create({
-    name: `${tableName}: ${action.name}`,
+    name: action.name,
     appId,
     definition: {
       trigger: {

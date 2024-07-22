@@ -6,8 +6,15 @@ export interface DeleteAutomationResponse extends DocumentDestroyResponse {}
 export interface AutomationBuilderData {
   displayName: string
   triggerInfo?: {
-    title: string
-    description: string
+    type: string
+    table: {
+      id: string
+      name: string
+    }
+    rowAction: {
+      id: string
+      name: string
+    }
   }
 }
 
