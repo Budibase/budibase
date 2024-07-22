@@ -4,6 +4,8 @@
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { FIELDS } from "constants/backend"
+  import { Constants } from "@budibase/frontend-core"
+  import { FieldType } from "@budibase/types"
 
   export let item
   export let anchor
@@ -29,11 +31,21 @@
   }
 
   const parseSettings = settings => {
-    return settings
+    let columnSettings = settings
       .filter(setting => setting.key !== "field")
       .map(setting => {
         return { ...setting, nested: true }
       })
+
+    // Filter out conditions for invalid types.
+    // Allow formulas as we have all the data already loaded in the table.
+    if (
+      Constants.BannedSearchTypes.includes(item.columnType) &&
+      item.columnType !== FieldType.FORMULA
+    ) {
+      return columnSettings.filter(x => x.key !== "conditions")
+    }
+    return columnSettings
   }
 </script>
 
