@@ -81,7 +81,7 @@
   // Check the schema to see if required fields have been entered
   $: isError =
     !isTriggerValid(trigger) ||
-    !trigger.schema.outputs.required?.every(
+    !(trigger.schema.outputs.required || []).every(
       required => $memoTestData?.[required] || required !== "row"
     )
 

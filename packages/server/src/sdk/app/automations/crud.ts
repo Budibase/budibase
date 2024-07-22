@@ -11,7 +11,7 @@ import {
 import { definitions } from "../../../automations/triggerInfo"
 import automations from "."
 
-interface PersistedAutomation extends Automation {
+export interface PersistedAutomation extends Automation {
   _id: string
   _rev: string
 }
@@ -81,7 +81,7 @@ export async function fetch() {
       include_docs: true,
     })
   )
-  return response.rows.map(row => row.doc)
+  return response.rows.map(row => row.doc).filter(doc => !!doc)
 }
 
 export async function get(automationId: string) {
@@ -254,6 +254,7 @@ async function checkForWebhooks({ oldAuto, newAuto }: any) {
   }
   return newAuto
 }
+
 function guardInvalidUpdatesAndThrow(
   automation: Automation,
   oldAutomation: Automation
