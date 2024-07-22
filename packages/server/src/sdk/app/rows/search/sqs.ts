@@ -210,7 +210,6 @@ async function runSqlQuery(
     let bindings = query.bindings
 
     // quick hack for docIds
-
     const fixJunctionDocs = (field: string) =>
       ["doc1", "doc2"].forEach(doc => {
         sql = sql.replaceAll(`\`${doc}\`.\`${field}\``, `\`${doc}.${field}\``)

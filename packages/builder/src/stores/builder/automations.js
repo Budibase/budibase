@@ -208,7 +208,7 @@ const automationActions = store => ({
       const message = err.message || err.status || JSON.stringify(err)
       throw `Automation test failed - ${message}`
     }
-    if (!result?.trigger && !result?.steps?.length) {
+    if (!result?.trigger && !result?.steps?.length && !result?.message) {
       if (result?.err?.code === "usage_limit_exceeded") {
         throw "You have exceeded your automation quota"
       }
