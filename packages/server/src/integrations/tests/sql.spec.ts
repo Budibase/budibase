@@ -285,4 +285,21 @@ describe("SQL query builder", () => {
       sql: `select * from (select * from (select * from (select * from "test" where "test"."name" = :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
   })
+
+  it("should use a direct equality query for oracle when using the not equals filter", () => {
+    let query = new Sql(SqlClient.ORACLE, limit)._query(
+      generateReadJson({
+        filters: {
+          notEqual: {
+            name: "John",
+          },
+        },
+      })
+    )
+
+    expect(query).toEqual({
+      bindings: ["John", limit, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where "test"."name" != :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
+    })
+  })
 })
