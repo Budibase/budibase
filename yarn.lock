@@ -2038,7 +2038,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.23.12":
+"@budibase/backend-core@2.29.22":
   version "0.0.0"
   dependencies:
     "@budibase/nano" "10.1.5"
@@ -2119,14 +2119,14 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-  version "2.23.12"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.23.12.tgz#b2e813c547a5ed22b5bd86b1158159fe4b918260"
-  integrity sha512-DMtfkrJDSIF9V7AL6brpuWWw7Ot5XxO4YQ32ggmr0264uU9KYsTFvlFXFP3MSF2H+247ZYUouSJU76+XeC13qQ==
+  version "2.29.22"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.29.22.tgz#2608b2a76be0426879068e5a61100d6b8dde6f3a"
+  integrity sha512-flMVIpWQb9w3f4aiBSM73aLcYmfoPIf+kP8JXgRWO0k3nGrUGaMQNBKzXwC7soTkTrJCZjBh8uaY75AxTP2RdA==
   dependencies:
-    "@budibase/backend-core" "2.23.12"
-    "@budibase/shared-core" "2.23.12"
-    "@budibase/string-templates" "2.23.12"
-    "@budibase/types" "2.23.12"
+    "@budibase/backend-core" "2.29.22"
+    "@budibase/shared-core" "2.29.22"
+    "@budibase/string-templates" "2.29.22"
+    "@budibase/types" "2.29.22"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -2137,13 +2137,13 @@
     scim-patch "^0.8.1"
     scim2-parse-filter "^0.2.8"
 
-"@budibase/shared-core@2.23.12":
+"@budibase/shared-core@2.29.22":
   version "0.0.0"
   dependencies:
     "@budibase/types" "0.0.0"
     cron-validate "1.4.5"
 
-"@budibase/string-templates@2.23.12":
+"@budibase/string-templates@2.29.22":
   version "0.0.0"
   dependencies:
     "@budibase/handlebars-helpers" "^0.13.2"
@@ -2151,7 +2151,7 @@
     handlebars "^4.7.8"
     lodash.clonedeep "^4.5.0"
 
-"@budibase/types@2.23.12":
+"@budibase/types@2.29.22":
   version "0.0.0"
   dependencies:
     scim-patch "^0.8.1"
@@ -5731,13 +5731,12 @@
   dependencies:
     "@types/node" "*"
 
-"@types/oracledb@5.2.2":
-  version "5.2.2"
-  resolved "https://registry.yarnpkg.com/@types/oracledb/-/oracledb-5.2.2.tgz#ae7ba795969e3bbd8d57ab141873a1aa012b86cd"
-  integrity sha512-aYb2DdZOQVIgSCSXjXNikQuyiHAY09SkRA4cjwoj+F/mhLJDahdjNeBmvQvfFojyChCKLuupSJHqoAXPExgV5w==
+"@types/oracledb@6.5.1":
+  version "6.5.1"
+  resolved "https://registry.yarnpkg.com/@types/oracledb/-/oracledb-6.5.1.tgz#17d021cabc9d216dfa6d3d65ae3ee585c33baab3"
+  integrity sha512-Ll0bKGXmCZVngBL3juSaytA8Jeocx0VghDHTt+FEC2bs8fdl9pzoaBXYWXjBUxCCT8Y/69m5AzuTgBd79j24WA==
   dependencies:
     "@types/node" "*"
-    dotenv "^8.2.0"
 
 "@types/passport-google-oauth@^1.0.42":
   version "1.0.45"
@@ -16660,10 +16659,10 @@ ora@^5.4.1:
     strip-ansi "^6.0.0"
     wcwidth "^1.0.1"
 
-oracledb@5.3.0:
-  version "5.3.0"
-  resolved "https://registry.yarnpkg.com/oracledb/-/oracledb-5.3.0.tgz#a15e6cd16757d8711a2c006a28bd7ecd3b8466f7"
-  integrity sha512-HMJzQ6lCf287ztvvehTEmjCWA21FQ3RMvM+mgoqd4i8pkREuqFWO+y3ovsGR9moJUg4T0xjcwS8rl4mggWPxmg==
+oracledb@6.5.1:
+  version "6.5.1"
+  resolved "https://registry.yarnpkg.com/oracledb/-/oracledb-6.5.1.tgz#814d985035acdb1a6470b1152af0ca3767569ede"
+  integrity sha512-JzoSGei1wnvmqgKnAZK1W650mzHTZXx+7hClV4mwsbY/ZjUtrpnojNJMYJ2jkOhj7XG5oJPfXc4GqDKaNzkxqg==
 
 os-locale@^3.1.0:
   version "3.1.0"
