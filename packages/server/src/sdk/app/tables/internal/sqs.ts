@@ -94,6 +94,9 @@ export function mapToUserColumn(key: string) {
 function mapTable(table: Table): SQLiteTables {
   const tables: SQLiteTables = {}
   const fields: Record<string, { field: string; type: SQLiteType }> = {}
+  // a list to make sure no duplicates - the fields are mapped by SQS with case sensitivity
+  // but need to make sure there are no duplicate columns
+  const usedColumns: string[] = []
   for (let [key, column] of Object.entries(table.schema)) {
     // relationships should be handled differently
     if (column.type === FieldType.LINK) {
@@ -106,6 +109,12 @@ function mapTable(table: Table): SQLiteTables {
     if (!FieldTypeMap[column.type]) {
       throw new Error(`Unable to map type "${column.type}" to SQLite type`)
     }
+    const lcKey = key.toLowerCase()
+    // ignore duplicates
+    if (usedColumns.includes(lcKey)) {
+      continue
+    }
+    usedColumns.push(lcKey)
     fields[mapToUserColumn(key)] = {
       field: key,
       type: FieldTypeMap[column.type],
