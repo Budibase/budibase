@@ -116,7 +116,7 @@
     margin: 3px 0 0 0;
   }
   .number {
-    color: var(--spectrum-global-color-gray-500);
+    color: val(--cell-font-color, var(--spectrum-global-color-gray-500));
   }
   .checkbox.visible,
   .number.visible {
