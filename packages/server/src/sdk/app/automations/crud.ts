@@ -17,7 +17,7 @@ import {
 import { definitions } from "../../../automations/triggerInfo"
 import automations from "."
 
-interface PersistedAutomation extends Automation {
+export interface PersistedAutomation extends Automation {
   _id: string
   _rev: string
 }
