@@ -16,6 +16,7 @@ export const BannedSearchTypes = [
   FieldType.ATTACHMENTS,
   FieldType.FORMULA,
   FieldType.JSON,
+  FieldType.ATTACHMENT_SINGLE,
   FieldType.SIGNATURE_SINGLE,
   "jsonarray",
   "queryarray",
