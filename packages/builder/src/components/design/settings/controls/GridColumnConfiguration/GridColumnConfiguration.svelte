@@ -9,6 +9,7 @@
 
   export let value
   export let componentInstance
+  export let bindings
 
   const dispatch = createEventDispatcher()
   let primaryDisplayColumnAnchor
@@ -63,6 +64,7 @@
   items={columns.sortable}
   listItemKey={"_id"}
   listType={FieldSetting}
+  {bindings}
 />
 
 <style>

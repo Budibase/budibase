@@ -70,6 +70,7 @@
             rowIdx={row.__idx}
             selected={rowSelected}
             highlighted={rowHovered || rowFocused}
+            metadata={row.__metadata?.row}
           >
             <div class="buttons" class:offset={$showVScrollbar}>
               {#each buttons as button}
