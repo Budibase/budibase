@@ -153,9 +153,9 @@ export function isValidTime(value: string) {
 }
 
 export function sqlLog(client: string, query: string, values?: any[]) {
-  if (!environment.SQL_LOGGING_ENABLE) {
-    return
-  }
+  // if (!environment.SQL_LOGGING_ENABLE) {
+  //   return
+  // }
   let string = `[SQL] [${client.toUpperCase()}] query="${query}"`
   if (values) {
     string += ` values="${values.join(", ")}"`
