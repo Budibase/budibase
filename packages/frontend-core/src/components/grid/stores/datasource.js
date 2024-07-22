@@ -13,14 +13,8 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const {
-    API,
-    definition,
-    schemaOverrides,
-    columnWhitelist,
-    datasource,
-    schemaMutations,
-  } = context
+  const { API, definition, schemaOverrides, datasource, schemaMutations } =
+    context
 
   const schema = derived(definition, $definition => {
     let schema = getDatasourceSchema({
@@ -46,17 +40,13 @@ export const deriveStores = context => {
   // Derives the total enriched schema, made up of the saved schema and any
   // prop and user overrides
   const enrichedSchema = derived(
-    [schema, schemaOverrides, schemaMutations, columnWhitelist],
-    ([$schema, $schemaOverrides, $schemaMutations, $columnWhitelist]) => {
+    [schema, schemaOverrides, schemaMutations],
+    ([$schema, $schemaOverrides, $schemaMutations]) => {
       if (!$schema) {
         return null
       }
       let enrichedSchema = {}
       Object.keys($schema).forEach(field => {
-        // Apply whitelist if provided
-        if ($columnWhitelist?.length && !$columnWhitelist.includes(field)) {
-          return
-        }
         enrichedSchema[field] = {
           ...$schema[field],
           ...$schemaOverrides?.[field],

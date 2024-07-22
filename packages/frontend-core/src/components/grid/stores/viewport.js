@@ -10,6 +10,8 @@ export const deriveStores = context => {
     scrollLeft,
     width,
     height,
+    rowChangeCache,
+    metadata,
   } = context
 
   // Derive visible rows
@@ -19,25 +21,31 @@ export const deriveStores = context => {
     [scrollTop, rowHeight],
     ([$scrollTop, $rowHeight]) => {
       return Math.floor($scrollTop / $rowHeight)
-    },
-    0
+    }
   )
   const visualRowCapacity = derived(
     [height, rowHeight],
     ([$height, $rowHeight]) => {
       return Math.ceil($height / $rowHeight) + 1
-    },
-    0
+    }
   )
   const renderedRows = derived(
-    [rows, scrolledRowCount, visualRowCapacity],
-    ([$rows, $scrolledRowCount, $visualRowCapacity]) => {
-      return $rows.slice(
-        $scrolledRowCount,
-        $scrolledRowCount + $visualRowCapacity
-      )
-    },
-    []
+    [rows, scrolledRowCount, visualRowCapacity, rowChangeCache, metadata],
+    ([
+      $rows,
+      $scrolledRowCount,
+      $visualRowCapacity,
+      $rowChangeCache,
+      $metadata,
+    ]) => {
+      return $rows
+        .slice($scrolledRowCount, $scrolledRowCount + $visualRowCapacity)
+        .map(row => ({
+          ...row,
+          ...$rowChangeCache[row._id],
+          __metadata: $metadata[row._id],
+        }))
+    }
   )
 
   // Derive visible columns

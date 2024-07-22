@@ -16,5 +16,6 @@
   /* Custom additions */
   --modal-background: var(--spectrum-global-color-gray-50);
   --drop-shadow: rgba(0, 0, 0, 0.25) !important;
-  --spectrum-global-color-blue-100: rgba(36, 44, 64) !important;
+  --spectrum-global-color-blue-100: hsl(var(--hue), 48%, 24%) !important;
+  --translucent-grey: rgba(255, 255, 255, 0.075) !important;
 }
