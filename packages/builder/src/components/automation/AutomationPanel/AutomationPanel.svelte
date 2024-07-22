@@ -17,6 +17,12 @@
         automation.name.toLowerCase().includes(searchString.toLowerCase())
       )
     })
+    .map(automation => ({
+      ...automation,
+      name:
+        $automationStore.automationDisplayData[automation._id].displayName ||
+        automation.name,
+    }))
     .sort((a, b) => {
       const lowerA = a.name.toLowerCase()
       const lowerB = b.name.toLowerCase()

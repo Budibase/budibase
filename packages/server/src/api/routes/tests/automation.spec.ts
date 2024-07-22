@@ -398,7 +398,9 @@ describe("/automations", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(res.body[0]).toEqual(expect.objectContaining(autoConfig))
+      expect(res.body.automations[0]).toEqual(
+        expect.objectContaining(autoConfig)
+      )
     })
 
     it("should apply authorization to endpoint", async () => {

@@ -11,7 +11,6 @@ import {
   VirtualDocumentType,
 } from "@budibase/types"
 import automations from "./automations"
-import tables from "./tables"
 
 function ensureUniqueAndThrow(
   doc: TableRowActions,
@@ -45,8 +44,6 @@ export async function create(tableId: string, rowAction: { name: string }) {
     doc = { _id: rowActionsId, actions: {} }
   }
 
-  const { name: tableName } = await tables.getTable(tableId)
-
   ensureUniqueAndThrow(doc, action.name)
 
   const appId = context.getAppId()
@@ -54,8 +51,12 @@ export async function create(tableId: string, rowAction: { name: string }) {
     throw new Error("Could not get the current appId")
   }
 
+  const newRowActionId = `${
+    VirtualDocumentType.ROW_ACTION
+  }${SEPARATOR}${utils.newid()}`
+
   const automation = await automations.create({
-    name: `${tableName}: ${action.name}`,
+    name: action.name,
     appId,
     definition: {
       trigger: {
@@ -68,6 +69,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
         stepId: AutomationTriggerStepId.ROW_ACTION,
         inputs: {
           tableId,
+          rowActionId: newRowActionId,
         },
         schema: {
           inputs: {
@@ -88,16 +90,15 @@ export async function create(tableId: string, rowAction: { name: string }) {
     },
   })
 
-  const newId = `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
-  doc.actions[newId] = {
+  doc.actions[newRowActionId] = {
     name: action.name,
     automationId: automation._id!,
   }
   await db.put(doc)
 
   return {
-    id: newId,
-    ...doc.actions[newId],
+    id: newRowActionId,
+    ...doc.actions[newRowActionId],
   }
 }
 
