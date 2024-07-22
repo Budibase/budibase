@@ -86,6 +86,30 @@ describe.each([
       expect(events.rows.imported).toHaveBeenCalledWith(res, 1)
     })
 
+    it("should not allow a column to have a default value and be required", async () => {
+      await config.api.table.save(
+        tableForDatasource(datasource, {
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+              default: "default",
+              constraints: {
+                presence: true,
+              },
+            },
+          },
+        }),
+        {
+          status: 400,
+          body: {
+            message:
+              'Cannot make field "name" required, it has a default value.',
+          },
+        }
+      )
+    })
+
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
         config,
@@ -223,6 +247,142 @@ describe.each([
           expect(table.schema.email).toBeDefined()
           expect(table.schema.roleId).toBeDefined()
         })
+    })
+
+    describe("default field validation", () => {
+      it("should error if an existing column is set to required and has a default value", async () => {
+        const table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                default: "default",
+              },
+            },
+          })
+        )
+
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                default: "default",
+                constraints: {
+                  presence: true,
+                },
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              message:
+                'Cannot make field "name" required, it has a default value.',
+            },
+          }
+        )
+      })
+
+      it("should error if an existing column is given a default value and is required", async () => {
+        const table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                constraints: {
+                  presence: true,
+                },
+              },
+            },
+          })
+        )
+
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                default: "default",
+                constraints: {
+                  presence: true,
+                },
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              message:
+                'Cannot make field "name" required, it has a default value.',
+            },
+          }
+        )
+      })
+
+      it("should be able to set an existing column to have a default value if it's not required", async () => {
+        const table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+            },
+          })
+        )
+
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                default: "default",
+              },
+            },
+          },
+          { status: 200 }
+        )
+      })
+
+      it("should be able to remove a default value if the column is not required", async () => {
+        const table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+                default: "default",
+              },
+            },
+          })
+        )
+
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              name: {
+                name: "name",
+                type: FieldType.STRING,
+              },
+            },
+          },
+          { status: 200 }
+        )
+      })
     })
 
     describe("external table validation", () => {

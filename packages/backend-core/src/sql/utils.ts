@@ -8,6 +8,7 @@ const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
 const ENCODED_SPACE = encodeURIComponent(" ")
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/
+const TIME_REGEX = /^(?:\d{2}:)?(?:\d{2}:)(?:\d{2})$/
 
 export function isExternalTableID(tableId: string) {
   return tableId.startsWith(DocumentType.DATASOURCE + SEPARATOR)
@@ -145,6 +146,10 @@ export function isValidISODateString(str: string) {
 
 export function isValidFilter(value: any) {
   return value != null && value !== ""
+}
+
+export function isValidTime(value: string) {
+  return TIME_REGEX.test(value)
 }
 
 export function sqlLog(client: string, query: string, values?: any[]) {

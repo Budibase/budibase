@@ -1,14 +1,22 @@
 import * as linkRows from "../../db/linkedRows"
 import { fixAutoColumnSubType, processFormulas } from "./utils"
-import { objectStore, utils } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  HTTPError,
+  objectStore,
+  utils,
+} from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import {
   AutoFieldSubType,
   FieldType,
+  IdentityType,
   Row,
   RowAttachment,
   Table,
+  User,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -19,6 +27,7 @@ import {
 } from "./bbReferenceProcessor"
 import { isExternalTableID } from "../../integrations/utils"
 import { helpers } from "@budibase/shared-core"
+import { processString } from "@budibase/string-templates"
 
 export * from "./utils"
 export * from "./attachments"
@@ -88,7 +97,34 @@ export async function processAutoColumn(
         break
     }
   }
-  return { table, row }
+}
+
+async function processDefaultValues(table: Table, row: Row) {
+  const ctx: { ["Current User"]?: User; user?: User } = {}
+
+  const identity = context.getIdentity()
+  if (identity?._id && identity.type === IdentityType.USER) {
+    const user = await cache.user.getUser(identity._id)
+    delete user.password
+
+    ctx["Current User"] = user
+    ctx.user = user
+  }
+
+  for (let [key, schema] of Object.entries(table.schema)) {
+    if ("default" in schema && schema.default != null && row[key] == null) {
+      const processed = await processString(schema.default, ctx)
+
+      try {
+        row[key] = coerce(processed, schema.type)
+      } catch (err: any) {
+        throw new HTTPError(
+          `Invalid default value for field '${key}' - ${err.message}`,
+          400
+        )
+      }
+    }
+  }
 }
 
 /**
@@ -182,8 +218,10 @@ export async function inputProcessing(
     clonedRow._rev = row._rev
   }
 
-  // handle auto columns - this returns an object like {table, row}
-  return processAutoColumn(userId, table, clonedRow, opts)
+  await processAutoColumn(userId, table, clonedRow, opts)
+  await processDefaultValues(table, clonedRow)
+
+  return { table, row: clonedRow }
 }
 
 /**
