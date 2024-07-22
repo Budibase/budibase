@@ -272,9 +272,9 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     } catch (err: any) {
       let readableMessage = getReadableErrorMessage(SourceName.MYSQL, err.errno)
       if (readableMessage) {
-        throw new Error(readableMessage)
+        throw new Error(readableMessage, { cause: err })
       } else {
-        throw new Error(err.message as string)
+        throw err
       }
     } finally {
       if (opts?.connect && this.client) {
