@@ -108,12 +108,12 @@ const getColumns = ({
     createComponent,
     schema
   )
-  const primary = draggableList.find(
-    entry => entry.field === primaryDisplayColumnName
-  )
-  const sortable = draggableList.filter(
-    entry => entry.field !== primaryDisplayColumnName
-  )
+  const primary = draggableList
+    .filter(entry => entry.field === primaryDisplayColumnName)
+    .map(instance => ({ ...instance, schema }))[0]
+  const sortable = draggableList
+    .filter(entry => entry.field !== primaryDisplayColumnName)
+    .map(instance => ({ ...instance, schema }))
 
   return {
     primary,
