@@ -24,7 +24,7 @@ import {
   getSqlQuery,
   HOST_ADDRESS,
 } from "./utils"
-import {
+import oracledb, {
   BindParameters,
   Connection,
   ConnectionAttributes,
@@ -33,12 +33,10 @@ import {
 } from "oracledb"
 import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
 import { sql } from "@budibase/backend-core"
-import oracledb from "oracledb"
 
 const Sql = sql.Sql
 
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT
-
 
 interface OracleConfig {
   host: string
