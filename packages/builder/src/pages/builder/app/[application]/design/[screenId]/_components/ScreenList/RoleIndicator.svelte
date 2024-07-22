@@ -4,7 +4,10 @@
   import { roles } from "stores/builder"
   import { Roles } from "constants/backend"
 
+  export let disabled = false;
+  export let hideTooltip = false;
   export let roleId
+  $: console.log(roleId);
 
   let showTooltip = false
 
@@ -18,6 +21,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
+  class:disabled
   class="container"
   on:mouseover={() => (showTooltip = true)}
   on:mouseleave={() => (showTooltip = false)}
@@ -25,7 +29,7 @@
   style="--color: {color};"
 >
   <StatusLight square {color} />
-  {#if showTooltip}
+  {#if !hideTooltip && showTooltip}
     <div class="tooltip">
       <Tooltip textWrapping text={tooltip} direction="right" />
     </div>
@@ -54,5 +58,9 @@
   }
   .tooltip :global(.spectrum-Tooltip-tip) {
     border-top-color: var(--color);
+  }
+
+  .disabled {
+    filter: grayscale(100%);
   }
 </style>

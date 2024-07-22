@@ -6,8 +6,10 @@
   let anchor
   let subMenuAnchor
 
+  let clicked = false
+
   const getSubMenuItems = (contextMenu) => {
-    return contextMenu.items?.[contextMenu.subMenuIndex]?.children ?? []
+    return contextMenu.items?.[contextMenu.hoverIndex]?.children ?? []
   }
 
   $: subMenuItems = getSubMenuItems($contextMenuStore)
@@ -19,7 +21,10 @@
   }
 
   const handleItemClick = async itemCallback => {
+    clicked = true;
     await itemCallback()
+    clicked = false;
+
     contextMenuStore.close()
   }
 
@@ -37,15 +42,14 @@
   <div
     bind:this={subMenuAnchor}
     class="subMenuAnchor"
-    style:top={`${$contextMenuStore.position.y + (($contextMenuStore.subMenuIndex ?? 0) * 32)}px`}
-    style:left={`${$contextMenuStore.position.x + dropdown?.clientWidth ?? 0}px`}
+    style:top={`${$contextMenuStore.position.y + (($contextMenuStore.hoverIndex ?? 0) * 32)}px`}
+    style:left={`${$contextMenuStore.position.x + (dropdown?.clientWidth ?? 0) + 6}px`}
   />
 {/key}
 
 <Popover
   open={$contextMenuStore.visible}
   animate={false}
-  
   {anchor}
   resizable={false}
   align="left"
@@ -53,13 +57,16 @@
 >
   <div class="dropdown" bind:this={dropdown}>
     <Menu>
-      {#each $contextMenuStore.items as item}
+      {#each $contextMenuStore.items as item, index}
         {#if item.visible}
           <MenuItem
+            on:mouseenter={() => contextMenuStore.setHoverIndex(index)}
+            forceHover={$contextMenuStore.hoverIndex === index && !item.disabled && !clicked}
             icon={item.icon}
+            iconRight={item.children?.length > 0 ? 'ChevronRight' : null}
             keyBind={item.keyBind}
             on:click={() => handleItemClick(item.callback)}
-            disabled={item.disabled}
+            disabled={clicked || item.disabled}
           >
             {item.name}
           </MenuItem>
@@ -84,7 +91,7 @@
           icon={item.icon}
           keyBind={item.keyBind}
           on:click={() => handleItemClick(item.callback)}
-          disabled={item.disabled}
+          disabled={clicked || item.disabled}
         >
           {item.name}
         </MenuItem>

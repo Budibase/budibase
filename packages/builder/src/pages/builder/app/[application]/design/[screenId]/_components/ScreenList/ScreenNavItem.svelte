@@ -1,4 +1,5 @@
 <script>
+  import { get } from "svelte/store"
   import { Modal, Helpers, notifications, Icon } from "@budibase/bbui"
   import {
     navigationStore,
@@ -6,6 +7,7 @@
     userSelectedResourceMap,
     contextMenuStore,
     componentStore,
+    roles as rolesStore
   } from "stores/builder"
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
@@ -73,27 +75,37 @@
     const items = [
       {
         icon: "UsersLock",
-        name: "Access Level",
+        name: "Set access",
         visible: true,
         disabled: false,
-        children: [
-          {
-            icon: "Add",
-            name: "Test",
-            keyBind: null,
-            visible: true,
-            disabled: false,
-            callback: () => {}
+        children: ($rolesStore ?? []).map(role => ({
+          icon: {
+            component: RoleIndicator, 
+            props: {
+              hideTooltip: true,
+              roleId: role._id,
+              disabled: role._id === screen.routing.roleId
+            }
           },
-          {
-            icon: "Add",
-            name: "Test2",
-            keyBind: null,
-            visible: true,
-            disabled: false,
-            callback: () => {}
-          },
-        ]
+          name: role.name,
+          keyBind: null,
+          visible: true,
+          disabled: role._id === screen.routing.roleId,
+          callback: async () => {
+            const url = screen.routing.route
+            const roleConflict = get(screenStore).screens.some(
+              otherScreen =>
+                otherScreen.routing.route.toLowerCase() === url.toLowerCase() &&
+                otherScreen.routing.roleId === role._id
+            )
+
+            if (roleConflict) {
+              notifications.error("A screen exists with that name and access")
+            } else {
+              await screenStore.updateSetting(screen, 'routing.roleId', role._id)
+            }
+          }
+        })),
       },
       {
         icon: "ShowOneLayer",

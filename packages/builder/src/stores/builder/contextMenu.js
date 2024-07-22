@@ -3,7 +3,7 @@ import { writable } from "svelte/store"
 export const INITIAL_CONTEXT_MENU_STATE = {
   id: null,
   items: [],
-  subMenuIndex: null,
+  hoverIndex: null,
   position: { x: 0, y: 0 },
   visible: false,
 }
@@ -12,7 +12,11 @@ export function createViewsStore() {
   const store = writable({ ...INITIAL_CONTEXT_MENU_STATE })
 
   const open = (id, items, position) => {
-    store.set({ id, items, position, subMenuIndex: 0, visible: true })
+    store.set({ id, items, position, hoverIndex: null, visible: true })
+  }
+
+  const setHoverIndex = (newHoverIndex) => {
+    store.update($store => ({ ...$store, hoverIndex: newHoverIndex }));
   }
 
   const close = () => {
@@ -23,6 +27,7 @@ export function createViewsStore() {
     subscribe: store.subscribe,
     open,
     close,
+    setHoverIndex
   }
 }
 

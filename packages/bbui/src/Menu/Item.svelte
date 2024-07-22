@@ -5,7 +5,9 @@
   const dispatch = createEventDispatcher()
   const actionMenu = getContext("actionMenu")
 
+  export let forceHover = false
   export let icon = undefined
+  export let iconRight = undefined
   export let disabled = undefined
   export let noClose = false
   export let keyBind = undefined
@@ -35,15 +37,22 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <li
+  on:mouseenter
   on:click|preventDefault={disabled ? null : onClick}
+  class:forceHover
   class="spectrum-Menu-item"
   class:is-disabled={disabled}
   role="menuitem"
   tabindex="0"
 >
-  {#if icon}
+  {#if typeof icon === "string"}
     <div class="icon">
       <Icon name={icon} size="S" />
+    </div>
+  {/if}
+  {#if typeof icon === "object"}
+    <div class="icon">
+      <svelte:component this={icon.component} {...icon.props} />
     </div>
   {/if}
   <span class="spectrum-Menu-itemLabel"><slot /></span>
@@ -59,7 +68,12 @@
         </div>
       {/each}
     </div>
+  {:else if iconRight}
+    <div class="iconRight">
+      <Icon name={iconRight} size="S" />
+    </div>
   {/if}
+
 </li>
 
 <style>
@@ -74,6 +88,9 @@
     justify-content: flex-end;
     align-items: center;
     gap: 4px;
+  }
+  .iconRight {
+    margin-left: 30px;
   }
   .key {
     color: var(--spectrum-global-color-gray-900);
@@ -91,5 +108,10 @@
   }
   .is-disabled .key {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .forceHover {
+    background-color: var(--spectrum-listitem-m-background-color-hover, var(--spectrum-alias-background-color-hover-overlay));
+    color: var(--spectrum-listitem-m-text-color-hover, var(--spectrum-alias-text-color));
   }
 </style>
