@@ -53,17 +53,8 @@
   $: count = value?.length
   $: conditionText = `${count || "No"} condition${count !== 1 ? "s" : ""} set`
   $: type = componentInstance.columnType
-  $: invalidType = Constants.BannedSearchTypes.includes(type)
-  $: valueTypeOptions = [
-    {
-      label: "Binding",
-      value: FieldType.STRING,
-    },
-    {
-      label: "Value",
-      value: type,
-    },
-  ]
+  $: valueTypeOptions = getValueTypeOptions(type)
+  $: hasValueOption = type !== FieldType.STRING
   $: operatorOptions = QueryUtils.getValidOperatorsForType({
     type,
 
@@ -71,6 +62,22 @@
     // on the page, so adding this ensures formula columns get operators
     formulaType: FormulaType.STATIC,
   })
+
+  const getValueTypeOptions = type => {
+    let options = [
+      {
+        label: "Binding",
+        value: FieldType.STRING,
+      },
+    ]
+    if (type !== FieldType.STRING) {
+      options.push({
+        label: "Value",
+        value: type,
+      })
+    }
+    return options
+  }
 
   const openDrawer = () => {
     tempValue = cloneDeep(value || [])
@@ -87,7 +94,7 @@
       id: generate(),
       target: targetOptions[0].value,
       metadataKey: conditionOptions[0].value,
-      operator: Constants.OperatorOptions.Equals.value,
+      operator: operatorOptions[0]?.value,
       valueType: FieldType.STRING,
     }
     tempValue = [...tempValue, condition]
@@ -158,6 +165,7 @@
               <div
                 class="condition"
                 class:update={condition.action === "update"}
+                class:with-value-option={hasValueOption}
                 animate:flip={{ duration: flipDuration }}
               >
                 <div
@@ -191,13 +199,16 @@
                   bind:value={condition.operator}
                   on:change={e => onOperatorChange(condition, e.detail)}
                 />
-                <Select
-                  disabled={condition.noValue || condition.operator === "oneOf"}
-                  options={valueTypeOptions}
-                  bind:value={condition.valueType}
-                  placeholder={null}
-                  on:change={() => onValueTypeChange(condition)}
-                />
+                {#if hasValueOption}
+                  <Select
+                    disabled={condition.noValue ||
+                      condition.operator === "oneOf"}
+                    options={valueTypeOptions}
+                    bind:value={condition.valueType}
+                    placeholder={null}
+                    on:change={() => onValueTypeChange(condition)}
+                  />
+                {/if}
                 {#if type === FieldType.DATETIME && condition.valueType === type}
                   <DatePicker
                     placeholder="Value"
@@ -259,8 +270,11 @@
   }
   .condition {
     display: grid;
-    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr 1fr auto auto;
+    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr auto auto;
     align-items: center;
     grid-column-gap: var(--spacing-l);
+  }
+  .condition.with-value-option {
+    grid-template-columns: auto auto 1fr 1fr auto auto auto 1fr 1fr 1fr auto auto;
   }
 </style>
