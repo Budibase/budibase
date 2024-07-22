@@ -69,6 +69,25 @@ export const initialise = context => {
   })
 }
 
+const TypeCoercionMap = {
+  [FieldType.NUMBER]: parseFloat,
+  [FieldType.DATETIME]: val => {
+    if (val) {
+      return new Date(val).toISOString()
+    }
+    return null
+  },
+  [FieldType.BOOLEAN]: val => {
+    if (`${val}`.toLowerCase().trim() === "true") {
+      return true
+    }
+    if (`${val}`.toLowerCase().trim() === "false") {
+      return false
+    }
+    return null
+  },
+}
+
 // Evaluates an array of cell conditions against a certain row and returns the
 // resultant metadata
 const evaluateConditions = (row, conditions) => {
@@ -101,19 +120,10 @@ const evaluateConditions = (row, conditions) => {
           coercedType = FieldType.NUMBER
         }
       }
-      if (coercedType === FieldType.NUMBER) {
-        referenceValue = parseFloat(referenceValue)
-        value = parseFloat(value)
-      } else if (coercedType === FieldType.DATETIME) {
-        if (referenceValue) {
-          referenceValue = new Date(referenceValue).toISOString()
-        }
-        if (value) {
-          value = new Date(value).toISOString()
-        }
-      } else if (coercedType === FieldType.BOOLEAN) {
-        referenceValue = `${referenceValue}`.toLowerCase() === "true"
-        value = `${value}`.toLowerCase() === "true"
+      const coerce = TypeCoercionMap[coercedType]
+      if (coerce) {
+        value = coerce(value)
+        referenceValue = coerce(referenceValue)
       }
 
       // Build lucene compatible condition expression
