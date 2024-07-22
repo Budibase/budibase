@@ -5,6 +5,7 @@ import { getCellID, parseCellID } from "../lib/utils"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
 import { sleep } from "../../../utils/utils"
+import { FieldType } from "@budibase/types"
 
 export const createStores = () => {
   const rows = writable([])
@@ -17,27 +18,6 @@ export const createStores = () => {
   const error = writable(null)
   const fetch = writable(null)
 
-  // Enrich rows with an index property and any pending changes
-  const enrichedRows = derived(
-    [rows, rowChangeCache],
-    ([$rows, $rowChangeCache]) => {
-      return $rows.map((row, idx) => ({
-        ...row,
-        ...$rowChangeCache[row._id],
-        __idx: idx,
-      }))
-    }
-  )
-
-  // Generate a lookup map to quick find a row by ID
-  const rowLookupMap = derived(enrichedRows, $enrichedRows => {
-    let map = {}
-    for (let i = 0; i < $enrichedRows.length; i++) {
-      map[$enrichedRows[i]._id] = $enrichedRows[i]
-    }
-    return map
-  })
-
   // Mark loaded as true if we've ever stopped loading
   let hasStartedLoading = false
   loading.subscribe($loading => {
@@ -49,12 +29,8 @@ export const createStores = () => {
   })
 
   return {
-    rows: {
-      ...rows,
-      subscribe: enrichedRows.subscribe,
-    },
+    rows,
     fetch,
-    rowLookupMap,
     loaded,
     refreshing,
     loading,
@@ -62,6 +38,35 @@ export const createStores = () => {
     inProgressChanges,
     hasNextPage,
     error,
+  }
+}
+
+export const deriveStores = context => {
+  const { rows } = context
+
+  // Enrich rows with an index property and any pending changes
+  const enrichedRows = derived(rows, $rows => {
+    return $rows.map((row, idx) => ({
+      ...row,
+      __idx: idx,
+    }))
+  })
+
+  // Generate a lookup map to quick find a row by ID
+  const rowLookupMap = derived(enrichedRows, $enrichedRows => {
+    let map = {}
+    for (let i = 0; i < $enrichedRows.length; i++) {
+      map[$enrichedRows[i]._id] = $enrichedRows[i]
+    }
+    return map
+  })
+
+  return {
+    rows: {
+      ...rows,
+      subscribe: enrichedRows.subscribe,
+    },
+    rowLookupMap,
   }
 }
 
@@ -367,7 +372,7 @@ export const createActions = context => {
     // Get index of row to check if it exists
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
-    const index = $rowLookupMap[id].__idx
+    const index = $rowLookupMap[id]?.__idx
 
     // Process as either an update, addition or deletion
     if (row) {
@@ -417,7 +422,20 @@ export const createActions = context => {
   // valid pending change was made or not
   const stashRowChanges = (rowId, changes) => {
     const $rowLookupMap = get(rowLookupMap)
+    const $columnLookupMap = get(columnLookupMap)
     const row = $rowLookupMap[rowId]
+
+    // Coerce some values into the correct types
+    for (let column of Object.keys(changes || {})) {
+      const type = $columnLookupMap[column]?.schema?.type
+
+      // Stringify objects
+      if (type === FieldType.STRING || type == FieldType.LONGFORM) {
+        if (changes[column] != null && typeof changes[column] !== "string") {
+          changes[column] = JSON.stringify(changes[column])
+        }
+      }
+    }
 
     // Check this is a valid change
     if (!row || !changesAreValid(row, changes)) {
@@ -643,6 +661,7 @@ export const createActions = context => {
   const cleanRow = row => {
     let clone = { ...row }
     delete clone.__idx
+    delete clone.__metadata
     if (!get(hasBudibaseIdentifiers)) {
       delete clone._id
     }

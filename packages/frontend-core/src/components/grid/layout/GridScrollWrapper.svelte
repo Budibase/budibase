@@ -31,7 +31,7 @@
   const generateStyle = (scrollLeft, scrollTop, rowHeight) => {
     const offsetX = scrollHorizontally ? -1 * scrollLeft : 0
     const offsetY = scrollVertically ? -1 * (scrollTop % rowHeight) : 0
-    return `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
+    return `transform: translate(${offsetX}px, ${offsetY}px);`
   }
 
   // Handles a mouse wheel event and updates scroll state
