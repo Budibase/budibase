@@ -8,6 +8,7 @@
     Select,
     Icon,
     DatePicker,
+    Combobox,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
@@ -18,6 +19,8 @@
   import { FieldType, FormulaType } from "@budibase/types"
   import { dndzone } from "svelte-dnd-action"
   import { flip } from "svelte/animate"
+  import { getDatasourceForProvider } from "dataBinding"
+  import { selectedScreen } from "stores/builder"
 
   export let componentInstance
   export let bindings
@@ -62,6 +65,8 @@
     // on the page, so adding this ensures formula columns get operators
     formulaType: FormulaType.STATIC,
   })
+  $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
+  $: console.log(componentInstance)
 
   const getValueTypeOptions = type => {
     let options = [
@@ -220,6 +225,13 @@
                     placeholder="Value"
                     disabled={condition.noValue}
                     options={["True", "False"]}
+                    bind:value={condition.referenceValue}
+                  />
+                {:else if type === FieldType.OPTIONS && condition.valueType === type}
+                  <Combobox
+                    disabled={condition.noValue}
+                    options={componentInstance.schema?.[componentInstance.field]
+                      ?.constraints?.inclusion || []}
                     bind:value={condition.referenceValue}
                   />
                 {:else}
