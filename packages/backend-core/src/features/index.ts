@@ -1,79 +1,108 @@
 import env from "../environment"
 import * as context from "../context"
+import { cloneDeep } from "lodash"
 
-export * from "./installation"
-
-/**
- * Read the TENANT_FEATURE_FLAGS env var and return an array of features flags for each tenant.
- * The env var is formatted as:
- *  tenant1:feature1:feature2,tenant2:feature1
- */
-export function buildFeatureFlags() {
-  if (!env.TENANT_FEATURE_FLAGS) {
-    return
+class Flag<T> {
+  static withDefault<T>(value: T) {
+    return new Flag(value)
   }
 
-  const tenantFeatureFlags: Record<string, string[]> = {}
+  private constructor(public defaultValue: T) {}
+}
 
-  env.TENANT_FEATURE_FLAGS.split(",").forEach(tenantToFeatures => {
-    const [tenantId, ...features] = tenantToFeatures.split(":")
+// This is the primary source of truth for feature flags. If you want to add a
+// new flag, add it here and use the `fetch` and `get` functions to access it.
+// All of the machinery in this file is to make sure that flags have their
+// default values set correctly and their types flow through the system.
+const FLAGS = {
+  LICENSING: Flag.withDefault(false),
+  GOOGLE_SHEETS: Flag.withDefault(false),
+  USER_GROUPS: Flag.withDefault(false),
+  ONBOARDING_TOUR: Flag.withDefault(false),
+}
 
-    features.forEach(feature => {
-      if (!tenantFeatureFlags[tenantId]) {
-        tenantFeatureFlags[tenantId] = []
+const DEFAULTS = Object.keys(FLAGS).reduce((acc, key) => {
+  const typedKey = key as keyof typeof FLAGS
+  // @ts-ignore
+  acc[typedKey] = FLAGS[typedKey].defaultValue
+  return acc
+}, {} as Flags)
+
+type UnwrapFlag<F> = F extends Flag<infer U> ? U : never
+export type Flags = {
+  [K in keyof typeof FLAGS]: UnwrapFlag<(typeof FLAGS)[K]>
+}
+
+// Exported for use in tests, should not be used outside of this file.
+export function defaultFlags(): Flags {
+  return cloneDeep(DEFAULTS)
+}
+
+function isFlagName(name: string): name is keyof Flags {
+  return FLAGS[name as keyof typeof FLAGS] !== undefined
+}
+
+/**
+ * Reads the TENANT_FEATURE_FLAGS environment variable and returns a Flags object
+ * populated with the flags for the current tenant, filling in the default values
+ * if the flag is not set.
+ *
+ * Check the tests for examples of how TENANT_FEATURE_FLAGS should be formatted.
+ *
+ * In future we plan to add more ways of setting feature flags, e.g. PostHog, and
+ * they will be accessed through this function as well.
+ */
+export async function fetch(): Promise<Flags> {
+  const currentTenantId = context.getTenantId()
+  const flags = defaultFlags()
+
+  const split = (env.TENANT_FEATURE_FLAGS || "")
+    .split(",")
+    .map(x => x.split(":"))
+  for (const [tenantId, ...features] of split) {
+    if (!tenantId || (tenantId !== "*" && tenantId !== currentTenantId)) {
+      continue
+    }
+
+    for (let feature of features) {
+      let value = true
+      if (feature.startsWith("!")) {
+        feature = feature.slice(1)
+        value = false
       }
-      tenantFeatureFlags[tenantId].push(feature)
-    })
-  })
 
-  return tenantFeatureFlags
-}
+      if (!isFlagName(feature)) {
+        throw new Error(`Feature: ${feature} is not an allowed option`)
+      }
 
-export function isEnabled(featureFlag: string) {
-  const tenantId = context.getTenantId()
-  const flags = getTenantFeatureFlags(tenantId)
-  return flags.includes(featureFlag)
-}
+      if (typeof flags[feature] !== "boolean") {
+        throw new Error(`Feature: ${feature} is not a boolean`)
+      }
 
-export function getTenantFeatureFlags(tenantId: string) {
-  let flags: string[] = []
-  const envFlags = buildFeatureFlags()
-  if (envFlags) {
-    const globalFlags = envFlags["*"]
-    const tenantFlags = envFlags[tenantId] || []
-
-    // Explicitly exclude tenants from global features if required.
-    // Prefix the tenant flag with '!'
-    const tenantOverrides = tenantFlags.reduce(
-      (acc: string[], flag: string) => {
-        if (flag.startsWith("!")) {
-          let stripped = flag.substring(1)
-          acc.push(stripped)
-        }
-        return acc
-      },
-      []
-    )
-
-    if (globalFlags) {
-      flags.push(...globalFlags)
+      // @ts-ignore
+      flags[feature] = value
     }
-    if (tenantFlags.length) {
-      flags.push(...tenantFlags)
-    }
-
-    // Purge any tenant specific overrides
-    flags = flags.filter(flag => {
-      return tenantOverrides.indexOf(flag) == -1 && !flag.startsWith("!")
-    })
   }
 
   return flags
 }
 
-export enum TenantFeatureFlag {
-  LICENSING = "LICENSING",
-  GOOGLE_SHEETS = "GOOGLE_SHEETS",
-  USER_GROUPS = "USER_GROUPS",
-  ONBOARDING_TOUR = "ONBOARDING_TOUR",
+// Gets a single feature flag value. This is a convenience function for
+// `fetch().then(flags => flags[name])`.
+export async function get<K extends keyof Flags>(name: K): Promise<Flags[K]> {
+  const flags = await fetch()
+  return flags[name]
+}
+
+type BooleanFlags = {
+  [K in keyof typeof FLAGS]: (typeof FLAGS)[K] extends Flag<boolean> ? K : never
+}[keyof typeof FLAGS]
+
+// Convenience function for boolean flag values. This makes callsites more
+// readable for boolean flags.
+export async function isEnabled<K extends BooleanFlags>(
+  name: K
+): Promise<boolean> {
+  const flags = await fetch()
+  return flags[name]
 }

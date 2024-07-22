@@ -5,9 +5,10 @@ export const TENANT_FEATURE_FLAGS = {
   LICENSING: "LICENSING",
   USER_GROUPS: "USER_GROUPS",
   ONBOARDING_TOUR: "ONBOARDING_TOUR",
+  GOOGLE_SHEETS: "GOOGLE_SHEETS",
 }
 
 export const isEnabled = featureFlag => {
   const user = get(auth).user
-  return !!user?.featureFlags?.includes(featureFlag)
+  return !!user?.flags?.[featureFlag]
 }
