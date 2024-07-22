@@ -458,6 +458,10 @@ class InternalBuilder {
             )} = ? THEN 1 ELSE 0 END = 0`,
             [value]
           )
+        } else if (SqlClient.ORACLE) {
+          query = query[fnc](`${quotedIdentifier(this.client, key)} != ?`, [
+            value,
+          ])
         } else {
           query = query[fnc](
             `COALESCE(${quotedIdentifier(this.client, key)} != ?, TRUE)`,
