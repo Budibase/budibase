@@ -40,6 +40,15 @@
     {
       label: "Colors",
       colors: [
+        "red-100",
+        "orange-100",
+        "yellow-100",
+        "green-100",
+        "seafoam-100",
+        "blue-100",
+        "indigo-100",
+        "magenta-100",
+
         "red-400",
         "orange-400",
         "yellow-400",
@@ -108,10 +117,15 @@
 
   const getCheckColor = value => {
     // Use dynamic color for theme grays
-    if (value?.includes("gray")) {
+    if (value?.includes("-gray-")) {
       return /^.*(gray-(50|75|100|200|300|400|500))\)$/.test(value)
         ? "var(--spectrum-global-color-gray-900)"
         : "var(--spectrum-global-color-gray-50)"
+    }
+
+    // Use contrasating check for the dim colours
+    if (value?.includes("-100")) {
+      return "var(--spectrum-global-color-gray-900)"
     }
 
     // Use black check for static white
