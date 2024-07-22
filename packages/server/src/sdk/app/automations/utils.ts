@@ -54,8 +54,12 @@ export async function getBuilderData(
     result[automation._id!] = {
       displayName: `${tableName}: ${automation.name}`,
       triggerInfo: {
-        title: "Automation trigger",
-        description: `This trigger is tied to the row action ${rowActionName} on your ${tableName} table`,
+        type: "Automation trigger",
+        table: { id: tableId, name: tableName },
+        rowAction: {
+          id: rowActionId,
+          name: rowActionName,
+        },
       },
     }
   }
