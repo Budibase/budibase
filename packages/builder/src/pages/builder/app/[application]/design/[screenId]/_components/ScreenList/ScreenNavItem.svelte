@@ -72,6 +72,30 @@
 
     const items = [
       {
+        icon: "UsersLock",
+        name: "Access Level",
+        visible: true,
+        disabled: false,
+        children: [
+          {
+            icon: "Add",
+            name: "Test",
+            keyBind: null,
+            visible: true,
+            disabled: false,
+            callback: () => {}
+          },
+          {
+            icon: "Add",
+            name: "Test2",
+            keyBind: null,
+            visible: true,
+            disabled: false,
+            callback: () => {}
+          },
+        ]
+      },
+      {
         icon: "ShowOneLayer",
         name: "Paste inside",
         keyBind: null,
