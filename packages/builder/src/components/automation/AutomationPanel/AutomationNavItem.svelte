@@ -57,7 +57,9 @@
         name: "Duplicate",
         keyBind: null,
         visible: true,
-        disabled: automation.definition.trigger.name === "Webhook",
+        disabled:
+          automation.definition.trigger.name === "Webhook" ||
+          automation.definition.trigger.name === "Row Action",
         callback: duplicateAutomation,
       },
       {
