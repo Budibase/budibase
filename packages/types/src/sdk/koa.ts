@@ -1,6 +1,6 @@
 import { Context, Request } from "koa"
 import { User, Role, UserRoles, Account, ConfigType } from "../documents"
-import { FeatureFlag, License } from "../sdk"
+import { License } from "../sdk"
 import { Files } from "formidable"
 
 export interface ContextUser extends Omit<User, "roles"> {
@@ -11,7 +11,6 @@ export interface ContextUser extends Omit<User, "roles"> {
   role?: Role
   roles?: UserRoles
   csrfToken?: string
-  featureFlags?: FeatureFlag[]
   accountPortalAccess?: boolean
   providerType?: ConfigType
   account?: Account
