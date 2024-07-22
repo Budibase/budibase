@@ -2536,7 +2536,7 @@ describe.each([
             type: FieldType.STRING,
           },
         })
-        await context.doInAppContext(config.appId!, async () => {
+        await context.doInAppContext(config.getAppId(), async () => {
           const db = context.getAppDB()
           const tableDoc = await db.get<Table>(table._id!)
           tableDoc.schema.Name = {
