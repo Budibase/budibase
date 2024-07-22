@@ -2881,7 +2881,7 @@
         "max": 9999
       },
       {
-        "type": "cellConditions",
+        "type": "tableConditions",
         "label": "Conditions",
         "key": "conditions"
       }

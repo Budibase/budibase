@@ -53,6 +53,7 @@
   $: count = value?.length
   $: conditionText = `${count || "No"} condition${count !== 1 ? "s" : ""} set`
   $: type = componentInstance.columnType
+  $: invalidType = Constants.BannedSearchTypes.includes(type)
   $: valueTypeOptions = [
     {
       label: "Binding",
