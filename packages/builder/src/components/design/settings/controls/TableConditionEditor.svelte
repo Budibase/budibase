@@ -9,19 +9,16 @@
     Icon,
     DatePicker,
     Combobox,
-    Multiselect,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
   import ColorPicker from "./ColorPicker.svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { QueryUtils, Constants } from "@budibase/frontend-core"
+  import { QueryUtils, Constants, FilterUsers } from "@budibase/frontend-core"
   import { generate } from "shortid"
   import { FieldType, FormulaType } from "@budibase/types"
   import { dndzone } from "svelte-dnd-action"
   import { flip } from "svelte/animate"
-  import { getDatasourceForProvider } from "dataBinding"
-  import { selectedScreen } from "stores/builder"
 
   export let componentInstance
   export let bindings
@@ -66,8 +63,6 @@
     // on the page, so adding this ensures formula columns get operators
     formulaType: FormulaType.STATIC,
   })
-  $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
-  $: console.log(componentInstance)
 
   const getValueTypeOptions = type => {
     let options = [
@@ -234,6 +229,16 @@
                     options={componentInstance.schema?.[componentInstance.field]
                       ?.constraints?.inclusion || []}
                     bind:value={condition.referenceValue}
+                  />
+                {:else if (type === FieldType.BB_REFERENCE || type === FieldType.BB_REFERENCE_SINGLE) && condition.valueType === type}
+                  <FilterUsers
+                    bind:value={condition.referenceValue}
+                    multiselect={[
+                      Constants.OperatorOptions.In.value,
+                      Constants.OperatorOptions.ContainsAny.value,
+                    ].includes(condition.operator)}
+                    disabled={condition.noValue}
+                    type={condition.valueType}
                   />
                 {:else}
                   <DrawerBindableInput
