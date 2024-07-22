@@ -5,7 +5,7 @@ import {
   AutomationTriggerStepId,
   TableRowActions,
 } from "@budibase/types"
-import sdk from "src/sdk"
+import sdk from "../../../sdk"
 
 export function checkForCollectStep(automation: Automation) {
   return automation.definition.steps.some(
