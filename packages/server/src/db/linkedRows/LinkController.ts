@@ -172,6 +172,11 @@ class LinkController {
       const rowField = row[fieldName]
       const field = table.schema[fieldName]
       if (field.type === FieldType.LINK && rowField != null) {
+        // Expects an array of docs with at least their _id
+        if (!Array.isArray(rowField)) {
+          throw new Error("Relationship Error: Invalid value")
+        }
+
         // check which links actual pertain to the update in this row
         const thisFieldLinkDocs = linkDocs.filter(
           linkDoc =>
