@@ -89,7 +89,7 @@
   on:contextmenu={openContextMenu}
   {icon}
   iconColor={"var(--spectrum-global-color-gray-900)"}
-  text={automation.name}
+  text={automation.displayName}
   selected={automation._id === $selectedAutomation?._id}
   hovering={automation._id === $contextMenuStore.id}
   on:click={() => automationStore.actions.select(automation._id)}
