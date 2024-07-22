@@ -15,6 +15,22 @@ export const HelperFunctionBuiltin = [
   "with",
 ]
 
+/**
+ * full list of supported helpers can be found here:
+ * https://github.com/Budibase/handlebars-helpers
+ */
+export const EXTERNAL_FUNCTION_COLLECTIONS = [
+  "math",
+  "array",
+  "number",
+  "url",
+  "string",
+  "comparison",
+  "object",
+  "regex",
+  "uuid",
+]
+
 export const HelperFunctionNames = {
   OBJECT: "object",
   ALL: "all",
