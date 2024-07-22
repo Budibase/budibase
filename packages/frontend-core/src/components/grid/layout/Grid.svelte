@@ -7,6 +7,8 @@
   import { createAPIClient } from "../../../api"
   import { attachStores } from "../stores"
   import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
+  import BulkDuplicationHandler from "../controls/BulkDuplicationHandler.svelte"
+  import ClipboardHandler from "../controls/ClipboardHandler.svelte"
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
@@ -42,7 +44,6 @@
   export let canDeleteRows = true
   export let canEditColumns = true
   export let canSaveSchema = true
-  export let canSelectRows = false
   export let stripeRows = false
   export let quiet = false
   export let collaboration = true
@@ -99,7 +100,6 @@
     canDeleteRows,
     canEditColumns,
     canSaveSchema,
-    canSelectRows,
     stripeRows,
     quiet,
     collaboration,
@@ -209,9 +209,11 @@
       <ProgressCircle />
     </div>
   {/if}
-  {#if $config.canDeleteRows}
-    <BulkDeleteHandler />
+  {#if $config.canAddRows}
+    <BulkDuplicationHandler />
   {/if}
+  <BulkDeleteHandler />
+  <ClipboardHandler />
   <KeyboardManager />
 </div>
 

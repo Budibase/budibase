@@ -3,19 +3,12 @@
   import { Modal, notifications, Layout } from "@budibase/bbui"
   import NavHeader from "components/common/NavHeader.svelte"
   import { onMount } from "svelte"
-  import {
-    automationStore,
-    selectedAutomation,
-    userSelectedResourceMap,
-  } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
-  import EditAutomationPopover from "./EditAutomationPopover.svelte"
+  import { automationStore } from "stores/builder"
+  import AutomationNavItem from "./AutomationNavItem.svelte"
 
   export let modal
   export let webhookModal
   let searchString
-
-  $: selectedAutomationId = $selectedAutomation?._id
 
   $: filteredAutomations = $automationStore.automations
     .filter(automation => {
@@ -49,10 +42,6 @@
       notifications.error("Error getting automations list")
     }
   })
-
-  function selectAutomation(id) {
-    automationStore.actions.select(id)
-  }
 </script>
 
 <div class="side-bar">
@@ -71,17 +60,7 @@
           {triggerGroup?.name}
         </div>
         {#each triggerGroup.entries as automation}
-          <NavItem
-            icon={triggerGroup.icon}
-            iconColor={"var(--spectrum-global-color-gray-900)"}
-            text={automation.name}
-            selected={automation._id === selectedAutomationId}
-            on:click={() => selectAutomation(automation._id)}
-            selectedBy={$userSelectedResourceMap[automation._id]}
-            disabled={automation.disabled}
-          >
-            <EditAutomationPopover {automation} />
-          </NavItem>
+          <AutomationNavItem {automation} icon={triggerGroup.icon} />
         {/each}
       </div>
     {/each}

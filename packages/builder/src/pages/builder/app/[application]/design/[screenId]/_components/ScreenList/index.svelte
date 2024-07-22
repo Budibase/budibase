@@ -1,13 +1,7 @@
 <script>
   import { Layout } from "@budibase/bbui"
-  import {
-    screenStore,
-    sortedScreens,
-    userSelectedResourceMap,
-  } from "stores/builder"
-  import NavItem from "components/common/NavItem.svelte"
-  import RoleIndicator from "./RoleIndicator.svelte"
-  import DropdownMenu from "./DropdownMenu.svelte"
+  import { sortedScreens } from "stores/builder"
+  import ScreenNavItem from "./ScreenNavItem.svelte"
   import { goto } from "@roxi/routify"
   import { getVerticalResizeActions } from "components/common/resizable"
   import NavHeader from "components/common/NavHeader.svelte"
@@ -55,22 +49,7 @@
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
     {#if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
-        <NavItem
-          scrollable
-          icon={screen.routing.homeScreen ? "Home" : null}
-          indentLevel={0}
-          selected={$screenStore.selectedScreenId === screen._id}
-          text={screen.routing.route}
-          on:click={() => screenStore.select(screen._id)}
-          rightAlignIcon
-          showTooltip
-          selectedBy={$userSelectedResourceMap[screen._id]}
-        >
-          <DropdownMenu screenId={screen._id} />
-          <div slot="icon" class="icon">
-            <RoleIndicator roleId={screen.routing.roleId} />
-          </div>
-        </NavItem>
+        <ScreenNavItem {screen} />
       {/each}
     {:else}
       <Layout paddingY="none" paddingX="L">
@@ -127,11 +106,6 @@
 
   .screens :global(.nav-item) {
     padding-right: 8px !important;
-  }
-
-  .icon {
-    margin-left: 4px;
-    margin-right: 4px;
   }
 
   .no-results {
