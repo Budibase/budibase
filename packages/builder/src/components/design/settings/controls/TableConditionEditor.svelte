@@ -9,6 +9,7 @@
     Icon,
     DatePicker,
     Combobox,
+    Multiselect,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
@@ -227,7 +228,7 @@
                     options={["True", "False"]}
                     bind:value={condition.referenceValue}
                   />
-                {:else if type === FieldType.OPTIONS && condition.valueType === type}
+                {:else if (type === FieldType.OPTIONS || type === FieldType.ARRAY) && condition.valueType === type}
                   <Combobox
                     disabled={condition.noValue}
                     options={componentInstance.schema?.[componentInstance.field]
