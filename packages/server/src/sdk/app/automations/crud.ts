@@ -1,10 +1,4 @@
-import {
-  Automation,
-  AutomationBuilderData,
-  AutomationTriggerStepId,
-  Webhook,
-  WebhookActionType,
-} from "@budibase/types"
+import { Automation, Webhook, WebhookActionType } from "@budibase/types"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 import { MetadataTypes } from "../../../constants"
@@ -287,28 +281,4 @@ function guardInvalidUpdatesAndThrow(
       }
     })
   }
-}
-
-export async function getBuilderData(
-  automations: Automation[]
-): Promise<Record<string, AutomationBuilderData>> {
-  const result: Record<string, AutomationBuilderData> = {}
-  for (const automation of automations) {
-    const isRowAction =
-      automation.definition.trigger.stepId ===
-      AutomationTriggerStepId.ROW_ACTION
-    if (!isRowAction) {
-      result[automation._id!] = { displayName: automation.name }
-      continue
-    }
-
-    result[automation._id!] = {
-      displayName: `TODO: ${automation.name}`,
-      triggerInfo: {
-        title: "Automation trigger",
-        description: "This trigger is tied to the row action TODO on your TODO",
-      },
-    }
-  }
-  return result
 }
