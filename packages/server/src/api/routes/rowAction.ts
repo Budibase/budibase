@@ -11,12 +11,21 @@ import {
 
 const { PermissionLevel, PermissionType } = permissions
 
-export function rowActionValidator() {
+function rowActionValidator() {
   return middleware.joiValidator.body(
     Joi.object({
       name: Joi.string().required(),
     }),
     { allowUnknown: true }
+  )
+}
+
+function rowTriggerValidator() {
+  return middleware.joiValidator.body(
+    Joi.object({
+      rowId: Joi.string().required(),
+    }),
+    { allowUnknown: false }
   )
 }
 
@@ -51,6 +60,7 @@ router
   .post(
     "/api/tables/:tableId/actions/:actionId/trigger",
     appInfoMiddleware({ appType: AppType.PROD }),
+    rowTriggerValidator(),
     authorizedResource(PermissionType.TABLE, PermissionLevel.READ, "tableId"),
     rowActionController.run
   )
