@@ -1,9 +1,13 @@
 import Router from "@koa/router"
+import Joi from "joi"
+import { middleware, permissions } from "@budibase/backend-core"
 import * as rowActionController from "../controllers/rowAction"
 import { authorizedResource } from "../../middleware/authorized"
 
-import { middleware, permissions } from "@budibase/backend-core"
-import Joi from "joi"
+import {
+  middleware as appInfoMiddleware,
+  AppType,
+} from "../../middleware/appInfo"
 
 const { PermissionLevel, PermissionType } = permissions
 
@@ -45,7 +49,8 @@ router
 
   // Other endpoints
   .post(
-    "/api/tables/:tableId/actions/:actionId/run",
+    "/api/tables/:tableId/actions/:actionId/trigger",
+    appInfoMiddleware({ appType: AppType.PROD }),
     authorizedResource(PermissionType.TABLE, PermissionLevel.READ, "tableId"),
     rowActionController.run
   )
