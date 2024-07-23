@@ -9,7 +9,7 @@ import {
 import cloneDeep from "lodash/fp/cloneDeep"
 import isEqual from "lodash/fp/isEqual"
 
-async function getRow(
+export async function getRow(
   tableId: string,
   rowId: string,
   opts?: { relationships?: boolean }
