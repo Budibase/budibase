@@ -36,19 +36,13 @@ class AutomationBuilder {
   }
 
   async run(triggerOutputs?: any) {
-    try {
-      const automation = await this.config.createAutomation(
-        this.automationConfig
-      )
-      const results = await testAutomation(
-        this.config,
-        automation,
-        triggerOutputs
-      )
-      return this.processResults(results)
-    } catch (error) {
-      throw error
-    }
+    const automation = await this.config.createAutomation(this.automationConfig)
+    const results = await testAutomation(
+      this.config,
+      automation,
+      triggerOutputs
+    )
+    return this.processResults(results)
   }
 
   private processResults(results: any) {
@@ -56,18 +50,6 @@ class AutomationBuilder {
     return {
       trigger: results.body.trigger,
       steps: results.body.steps,
-    }
-  }
-
-  expectStepOutput(stepIndex: number, expectedOutput: any) {
-    return {
-      toMatchObject: (actual: any) => {
-        const step = actual.steps[stepIndex]
-        if (!step) {
-          throw new Error(`Step at index ${stepIndex} not found`)
-        }
-        expect(step.outputs).toMatchObject(expectedOutput)
-      },
     }
   }
 }

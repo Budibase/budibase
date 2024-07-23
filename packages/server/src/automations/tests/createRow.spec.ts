@@ -32,7 +32,7 @@ describe("test the create row action", () => {
 
   afterAll(setup.afterAll)
 
-  it("should run a ROW_SAVE and CREATE_ROW automation", async () => {
+  it("should run trigger an automation which then creates a row", async () => {
     const table = await config.createTable()
 
     const builder = createAutomationBuilder(config, {
@@ -55,16 +55,15 @@ describe("test the create row action", () => {
         },
       })
 
-    // Using the updated expectStepOutput helper
-    builder
-      .expectStepOutput(0, {
-        success: true,
-        row: {
-          name: "Test",
-          description: "TEST",
-        },
-      })
-      .toMatchObject(results)
+    expect(results.steps).toHaveLength(1)
+
+    expect(results.steps[0].outputs).toMatchObject({
+      success: true,
+      row: {
+        name: "Test",
+        description: "TEST",
+      },
+    })
   })
 
   it("should be able to run the action", async () => {

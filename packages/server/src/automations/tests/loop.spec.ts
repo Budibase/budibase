@@ -8,6 +8,7 @@ import * as loopUtils from "../loopUtils"
 import { LoopInput, LoopStepType } from "../../definitions/automations"
 import { createAutomationBuilder } from "./utilities/AutomationBuilder"
 import { TRIGGER_DEFINITIONS, BUILTIN_ACTION_DEFINITIONS } from "../"
+
 describe("Attempt to run a basic loop automation", () => {
   let config = setup.getConfig(),
     table: Table
@@ -180,15 +181,13 @@ describe("Attempt to run a basic loop automation", () => {
     expect(results.steps[0].outputs.items).toHaveLength(3)
 
     results.steps[0].outputs.items.forEach((output: any, index: number) => {
-      builder
-        .expectStepOutput(0, {
-          success: true,
-          row: {
-            name: `Item ${index + 1}`,
-            description: "Created from loop",
-          },
-        })
-        .toMatchObject({ steps: [{ outputs: output }] })
+      expect(output).toMatchObject({
+        success: true,
+        row: {
+          name: `Item ${index + 1}`,
+          description: "Created from loop",
+        },
+      })
     })
   })
 })
