@@ -35,47 +35,53 @@
   }
 
   const getContextMenuItems = () => {
-    return [
-      {
-        icon: "Delete",
-        name: "Delete",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: confirmDeleteDialog.show,
+    const isRowAction = automation.definition.trigger.name === "Row Action"
+    const result = []
+    if (!isRowAction) {
+      result.push(
+        ...[
+          {
+            icon: "Delete",
+            name: "Delete",
+            keyBind: null,
+            visible: true,
+            disabled: false,
+            callback: confirmDeleteDialog.show,
+          },
+          {
+            icon: "Edit",
+            name: "Edit",
+            keyBind: null,
+            visible: true,
+            disabled: false,
+            callback: updateAutomationDialog.show,
+          },
+          {
+            icon: "Duplicate",
+            name: "Duplicate",
+            keyBind: null,
+            visible: true,
+            disabled: automation.definition.trigger.name === "Webhook",
+            callback: duplicateAutomation,
+          },
+        ]
+      )
+    }
+
+    result.push({
+      icon: automation.disabled ? "CheckmarkCircle" : "Cancel",
+      name: automation.disabled ? "Activate" : "Pause",
+      keyBind: null,
+      visible: true,
+      disabled: false,
+      callback: () => {
+        automationStore.actions.toggleDisabled(
+          automation._id,
+          automation.disabled
+        )
       },
-      {
-        icon: "Edit",
-        name: "Edit",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: updateAutomationDialog.show,
-      },
-      {
-        icon: "Duplicate",
-        name: "Duplicate",
-        keyBind: null,
-        visible: true,
-        disabled:
-          automation.definition.trigger.name === "Webhook" ||
-          automation.definition.trigger.name === "Row Action",
-        callback: duplicateAutomation,
-      },
-      {
-        icon: automation.disabled ? "CheckmarkCircle" : "Cancel",
-        name: automation.disabled ? "Activate" : "Pause",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: () => {
-          automationStore.actions.toggleDisabled(
-            automation._id,
-            automation.disabled
-          )
-        },
-      },
-    ]
+    })
+    return result
   }
 
   const openContextMenu = e => {
