@@ -435,7 +435,7 @@ class InternalBuilder {
             )} = ? THEN 1 ELSE 0 END = 1`,
             [value]
           )
-        } else if (SqlClient.ORACLE) {
+        } else if (this.client === SqlClient.ORACLE) {
           query = query[fnc](`${quotedIdentifier(this.client, key)} = ?`, [
             value,
           ])
@@ -458,7 +458,7 @@ class InternalBuilder {
             )} = ? THEN 1 ELSE 0 END = 0`,
             [value]
           )
-        } else if (SqlClient.ORACLE) {
+        } else if (this.client === SqlClient.ORACLE) {
           query = query[fnc](`${quotedIdentifier(this.client, key)} != ?`, [
             value,
           ])
