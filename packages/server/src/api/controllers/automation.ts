@@ -99,7 +99,7 @@ export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
   if (
     automation.definition.trigger.stepId === AutomationTriggerStepId.ROW_ACTION
   ) {
-    ctx.throw("Row actions cannot be deleted", 403)
+    ctx.throw("Row actions cannot be deleted", 400)
   }
 
   ctx.body = await sdk.automations.remove(automationId, ctx.params.rev)
