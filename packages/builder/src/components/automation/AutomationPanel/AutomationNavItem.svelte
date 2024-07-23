@@ -6,6 +6,7 @@
     contextMenuStore,
   } from "stores/builder"
   import { notifications, Icon } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import UpdateAutomationModal from "components/automation/AutomationPanel/UpdateAutomationModal.svelte"
   import NavItem from "components/common/NavItem.svelte"
@@ -35,7 +36,7 @@
   }
 
   const getContextMenuItems = () => {
-    const isRowAction = automation.definition.trigger.name === "Row Action"
+    const isRowAction = sdk.automations.isRowAction(automation)
     const result = []
     if (!isRowAction) {
       result.push(
