@@ -209,24 +209,7 @@ describe("SQL query builder", () => {
     })
   })
 
-  it("should not use a coalesce query for oracle when using the equals filter", () => {
-    let query = new Sql(SqlClient.ORACLE, limit)._query(
-      generateReadJson({
-        filters: {
-          equal: {
-            name: "John",
-          },
-        },
-      })
-    )
-
-    expect(query).not.toEqual({
-      bindings: ["John", limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where COALESCE("test"."id" = :2, FALSE) order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
-    })
-  })
-
-  it("should use a direct equality query for oracle when using the equals filter", () => {
+  it("should use an oracle compatible coalesce query for oracle when using the equals filter", () => {
     let query = new Sql(SqlClient.ORACLE, limit)._query(
       generateReadJson({
         filters: {
@@ -243,7 +226,7 @@ describe("SQL query builder", () => {
     })
   })
 
-  it("should use a direct equality query for oracle when using the not equals filter", () => {
+  it("should use an oracle compatible coalesce query for oracle when using the not equals filter", () => {
     let query = new Sql(SqlClient.ORACLE, limit)._query(
       generateReadJson({
         filters: {
