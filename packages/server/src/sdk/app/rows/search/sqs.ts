@@ -49,6 +49,7 @@ import { dataFilters } from "@budibase/shared-core"
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
 const MISSING_TABLE_REGX = new RegExp(`no such table: .+`)
+const DUPLICATE_COLUMN_REGEX = new RegExp(`duplicate column name: .+`)
 
 function buildInternalFieldList(
   table: Table,
@@ -237,9 +238,11 @@ function resyncDefinitionsRequired(status: number, message: string) {
   // pre data_ prefix on column names, need to resync
   return (
     // there are tables missing - try a resync
-    (status === 400 && message.match(MISSING_TABLE_REGX)) ||
+    (status === 400 && message?.match(MISSING_TABLE_REGX)) ||
     // there are columns missing - try a resync
-    (status === 400 && message.match(MISSING_COLUMN_REGEX)) ||
+    (status === 400 && message?.match(MISSING_COLUMN_REGEX)) ||
+    // duplicate column name in definitions - need to re-run definition sync
+    (status === 400 && message?.match(DUPLICATE_COLUMN_REGEX)) ||
     // no design document found, needs a full sync
     (status === 404 && message?.includes(SQLITE_DESIGN_DOC_ID))
   )

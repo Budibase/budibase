@@ -62,7 +62,9 @@
       return placeholder || "Choose an option"
     }
 
-    return getFieldAttribute(getOptionLabel, value, options)
+    return (
+      getFieldAttribute(getOptionLabel, value, options) || "Choose an option"
+    )
   }
 
   const selectOption = value => {
