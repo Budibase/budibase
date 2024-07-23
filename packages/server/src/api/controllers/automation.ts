@@ -1,4 +1,5 @@
 import * as triggers from "../../automations/triggers"
+import { sdk as coreSdk } from "@budibase/shared-core"
 import { DocumentType } from "../../db/utils"
 import { updateTestHistory, removeDeprecated } from "../../automations/utils"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
@@ -93,6 +94,11 @@ export async function find(ctx: UserCtx) {
 
 export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
   const automationId = ctx.params.id
+
+  const automation = await sdk.automations.get(ctx.params.id)
+  if (coreSdk.automations.isRowAction(automation)) {
+    ctx.throw("Row actions automations cannot be deleted", 422)
+  }
 
   ctx.body = await sdk.automations.remove(automationId, ctx.params.rev)
   builderSocket?.emitAutomationDeletion(ctx, automationId)
