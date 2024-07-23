@@ -255,7 +255,7 @@ async function checkForWebhooks({ oldAuto, newAuto }: any) {
 }
 
 function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
-  const result: RequiredKeys<Automation> = {
+  const allRequired: RequiredKeys<Automation> = {
     _id: automation._id,
     _rev: automation._rev,
     definition: automation.definition,
@@ -270,6 +270,12 @@ function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
     testData: automation.testData,
     createdAt: automation.createdAt,
     updatedAt: automation.updatedAt,
+  }
+  const result = { ...allRequired } as T
+  for (const key in result) {
+    if (!Object.prototype.hasOwnProperty.call(automation, key)) {
+      delete result[key]
+    }
   }
   return result as T
 }
