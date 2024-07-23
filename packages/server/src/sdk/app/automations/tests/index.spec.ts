@@ -1,5 +1,6 @@
 import { sample } from "lodash/fp"
-import { Automation } from "@budibase/types"
+import { Automation, AutomationTriggerStepId } from "@budibase/types"
+import { generator } from "@budibase/backend-core/tests"
 import automationSdk from "../"
 import { structures } from "../../../../api/routes/tests/utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
@@ -12,6 +13,38 @@ describe("automation sdk", () => {
   })
 
   describe("update", () => {
+    it("can rename existing automations", async () => {
+      await config.doInContext(config.getAppId(), async () => {
+        const automation = structures.newAutomation()
+
+        const response = await automationSdk.create(automation)
+
+        const newName = generator.guid()
+        const update = { ...response, name: newName }
+        const result = await automationSdk.update(update)
+        expect(result.name).toEqual(newName)
+      })
+    })
+
+    it("cannot rename row action automations", async () => {
+      await config.doInContext(config.getAppId(), async () => {
+        const automation = structures.newAutomation({
+          trigger: {
+            ...structures.automationTrigger(),
+            stepId: AutomationTriggerStepId.ROW_ACTION,
+          },
+        })
+
+        const response = await automationSdk.create(automation)
+
+        const newName = generator.guid()
+        const update = { ...response, name: newName }
+        await expect(automationSdk.update(update)).rejects.toThrow(
+          "Row actions cannot be renamed"
+        )
+      })
+    })
+
     it.each([
       ["trigger", (a: Automation) => a.definition.trigger],
       ["step", (a: Automation) => a.definition.steps[0]],
