@@ -1,5 +1,10 @@
-import { Automation, Webhook, WebhookActionType } from "@budibase/types"
 import { sdk } from "@budibase/shared-core"
+import {
+  Automation,
+  RequiredKeys,
+  Webhook,
+  WebhookActionType,
+} from "@budibase/types"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 import { MetadataTypes } from "../../../constants"
@@ -82,17 +87,20 @@ export async function fetch() {
       include_docs: true,
     })
   )
-  return response.rows.map(row => row.doc).filter(doc => !!doc)
+  return response.rows
+    .map(row => row.doc)
+    .filter(doc => !!doc)
+    .map(trimUnexpectedObjectFields)
 }
 
 export async function get(automationId: string) {
   const db = getDb()
   const result = await db.get<PersistedAutomation>(automationId)
-  return result
+  return trimUnexpectedObjectFields(result)
 }
 
 export async function create(automation: Automation) {
-  automation = { ...automation }
+  automation = trimUnexpectedObjectFields(automation)
   const db = getDb()
 
   // Respect existing IDs if recreating a deleted automation
@@ -117,7 +125,7 @@ export async function create(automation: Automation) {
 }
 
 export async function update(automation: Automation) {
-  automation = { ...automation }
+  automation = trimUnexpectedObjectFields(automation)
   if (!automation._id || !automation._rev) {
     throw new HTTPError("_id or _rev fields missing", 400)
   }
@@ -288,4 +296,31 @@ function guardInvalidUpdatesAndThrow(
   ) {
     throw new Error("Row actions cannot be renamed")
   }
+}
+
+function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
+  // This will ensure all the automation fields (and nothing else) is mapped to the result
+  const allRequired: RequiredKeys<Automation> = {
+    _id: automation._id,
+    _rev: automation._rev,
+    definition: automation.definition,
+    screenId: automation.screenId,
+    uiTree: automation.uiTree,
+    appId: automation.appId,
+    live: automation.live,
+    name: automation.name,
+    internal: automation.internal,
+    type: automation.type,
+    disabled: automation.disabled,
+    testData: automation.testData,
+    createdAt: automation.createdAt,
+    updatedAt: automation.updatedAt,
+  }
+  const result = { ...allRequired } as T
+  for (const key in result) {
+    if (!Object.prototype.hasOwnProperty.call(automation, key)) {
+      delete result[key]
+    }
+  }
+  return result as T
 }
