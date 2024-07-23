@@ -1,6 +1,8 @@
 import * as setup from "./utilities"
 import { basicTableWithAttachmentField } from "../../tests/utilities/structures"
 import { objectStore } from "@budibase/backend-core"
+import { createAutomationBuilder } from "./utilities/AutomationBuilder"
+import { TRIGGER_DEFINITIONS, BUILTIN_ACTION_DEFINITIONS } from "../"
 
 async function uploadTestFile(filename: string) {
   let bucket = "testbucket"
@@ -29,6 +31,41 @@ describe("test the create row action", () => {
   })
 
   afterAll(setup.afterAll)
+
+  it("should run a ROW_SAVE and CREATE_ROW automation", async () => {
+    const table = await config.createTable()
+
+    const builder = createAutomationBuilder(config, {
+      name: "Test Row Save and Create",
+    })
+
+    const results = await builder
+      .trigger(TRIGGER_DEFINITIONS.ROW_SAVED, { tableId: table._id })
+      .step(BUILTIN_ACTION_DEFINITIONS.CREATE_ROW, {
+        row: {
+          name: "{{trigger.row.name}}",
+          description: "{{trigger.row.description}}",
+          tableId: table._id,
+        },
+      })
+      .run({
+        row: {
+          name: "Test",
+          description: "TEST",
+        },
+      })
+
+    // Using the updated expectStepOutput helper
+    builder
+      .expectStepOutput(0, {
+        success: true,
+        row: {
+          name: "Test",
+          description: "TEST",
+        },
+      })
+      .toMatchObject(results)
+  })
 
   it("should be able to run the action", async () => {
     const res = await setup.runStep(setup.actions.CREATE_ROW.stepId, {

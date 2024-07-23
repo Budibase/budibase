@@ -1,32 +1,24 @@
-import { testAutomation } from "../../../api/routes/tests/utilities/TestFunctions"
-import {
-  Automation,
-  AutomationTriggerSchema,
-  AutomationStepSchema,
-  AutomationTrigger,
-  AutomationResults,
-} from "@budibase/types"
-
 import { v4 as uuidv4 } from "uuid"
+import { testAutomation } from "../../../api/routes/tests/utilities/TestFunctions"
 
 class AutomationBuilder {
-  private automationConfig: Partial<Automation> = {
+  private automationConfig: any = {
     name: "",
     definition: {
-      trigger: {} as AutomationTrigger,
+      trigger: {},
       steps: [],
     },
     type: "automation",
   }
   private config: any
 
-  constructor(config: any) {
+  constructor(config: any, options: { name?: string } = {}) {
     this.config = config
-    this.automationConfig.name = `Test Automation ${uuidv4()}`
+    this.automationConfig.name = options.name || `Test Automation ${uuidv4()}`
   }
 
-  trigger(triggerSchema: AutomationTriggerSchema, inputs: any) {
-    this.automationConfig.definition!.trigger = {
+  trigger(triggerSchema: any, inputs: any) {
+    this.automationConfig.definition.trigger = {
       ...triggerSchema,
       inputs,
       id: uuidv4(),
@@ -34,8 +26,8 @@ class AutomationBuilder {
     return this
   }
 
-  step(stepSchema: AutomationStepSchema, inputs: any) {
-    this.automationConfig.definition!.steps!.push({
+  step(stepSchema: any, inputs: any) {
+    this.automationConfig.definition.steps.push({
       ...stepSchema,
       inputs,
       id: uuidv4(),
@@ -43,24 +35,46 @@ class AutomationBuilder {
     return this
   }
 
-  async run(triggerInputs?: any) {
-    const automation = await this.config.createAutomation(this.automationConfig)
-
-    const results = await testAutomation(this.config, automation, triggerInputs)
-
-    return this.processResults(results)
+  async run(triggerOutputs?: any) {
+    try {
+      const automation = await this.config.createAutomation(
+        this.automationConfig
+      )
+      const results = await testAutomation(
+        this.config,
+        automation,
+        triggerOutputs
+      )
+      return this.processResults(results)
+    } catch (error) {
+      throw error
+    }
   }
 
-  private processResults(results: { body: AutomationResults }) {
-    // shift the first index cause we do this weird thing where the trigger is also returned in the steps
+  private processResults(results: any) {
     results.body.steps.shift()
-
     return {
       trigger: results.body.trigger,
       steps: results.body.steps,
     }
   }
+
+  expectStepOutput(stepIndex: number, expectedOutput: any) {
+    return {
+      toMatchObject: (actual: any) => {
+        const step = actual.steps[stepIndex]
+        if (!step) {
+          throw new Error(`Step at index ${stepIndex} not found`)
+        }
+        expect(step.outputs).toMatchObject(expectedOutput)
+      },
+    }
+  }
 }
-export function createAutomationBuilder(config: any) {
-  return new AutomationBuilder(config)
+
+export function createAutomationBuilder(
+  config: any,
+  options?: { name?: string }
+) {
+  return new AutomationBuilder(config, options)
 }

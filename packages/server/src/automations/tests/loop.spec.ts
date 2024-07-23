@@ -6,7 +6,8 @@ import * as setup from "./utilities"
 import { Table } from "@budibase/types"
 import * as loopUtils from "../loopUtils"
 import { LoopInput, LoopStepType } from "../../definitions/automations"
-
+import { createAutomationBuilder } from "./utilities/AutomationBuilder"
+import { TRIGGER_DEFINITIONS, BUILTIN_ACTION_DEFINITIONS } from "../"
 describe("Attempt to run a basic loop automation", () => {
   let config = setup.getConfig(),
     table: Table
@@ -144,6 +145,50 @@ describe("Attempt to run a basic loop automation", () => {
       )
 
       expect(result).toEqual(originalStepInput)
+    })
+  })
+
+  it("should run an automation with a trigger, loop, and create row step", async () => {
+    const builder = createAutomationBuilder(config, {
+      name: "Test Trigger with Loop and Create Row",
+    })
+
+    const results = await builder
+      .trigger(TRIGGER_DEFINITIONS.ROW_SAVED, { tableId: table._id })
+      .step(BUILTIN_ACTION_DEFINITIONS.LOOP, {
+        option: LoopStepType.ARRAY,
+        binding: [1, 2, 3],
+      })
+      .step(BUILTIN_ACTION_DEFINITIONS.CREATE_ROW, {
+        row: {
+          name: "Item {{ loop.currentItem }}",
+          description: "Created from loop",
+          tableId: table._id,
+        },
+      })
+      .run({
+        row: {
+          name: "Trigger Row",
+          description: "This row triggers the automation",
+        },
+      })
+
+    expect(results.trigger).toBeDefined()
+    expect(results.steps).toHaveLength(1)
+
+    expect(results.steps[0].outputs.iterations).toBe(3)
+    expect(results.steps[0].outputs.items).toHaveLength(3)
+
+    results.steps[0].outputs.items.forEach((output: any, index: number) => {
+      builder
+        .expectStepOutput(0, {
+          success: true,
+          row: {
+            name: `Item ${index + 1}`,
+            description: "Created from loop",
+          },
+        })
+        .toMatchObject({ steps: [{ outputs: output }] })
     })
   })
 })
