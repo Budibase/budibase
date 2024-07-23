@@ -162,7 +162,7 @@
 
   /* Don't show borders between cells in the sticky column */
   .sticky-column :global(.cell:not(:last-child)) {
-    border-right: none;
+    border-right-color: transparent;
   }
 
   .header {
@@ -170,6 +170,9 @@
   }
   .header :global(.cell) {
     background: var(--grid-background-alt);
+  }
+  .header :global(.cell::before) {
+    display: none;
   }
   .row {
     display: flex;
