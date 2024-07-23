@@ -255,6 +255,7 @@ async function checkForWebhooks({ oldAuto, newAuto }: any) {
 }
 
 function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
+  // This will ensure all the automation fields (and nothing else) is mapped to the result
   const allRequired: RequiredKeys<Automation> = {
     _id: automation._id,
     _rev: automation._rev,
