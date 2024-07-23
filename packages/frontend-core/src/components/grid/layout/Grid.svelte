@@ -37,7 +37,6 @@
   export let API = null
   export let datasource = null
   export let schemaOverrides = null
-  export let columnWhitelist = null
   export let canAddRows = true
   export let canExpandRows = true
   export let canEditRows = true
@@ -59,6 +58,7 @@
   export let darkMode
   export let isCloud = null
   export let allowViewReadonlyColumns = false
+  export let rowConditions = null
 
   // Unique identifier for DOM nodes inside this instance
   const gridID = `grid-${Math.random().toString().slice(2)}`
@@ -93,7 +93,6 @@
   $: props.set({
     datasource,
     schemaOverrides,
-    columnWhitelist,
     canAddRows,
     canExpandRows,
     canEditRows,
@@ -114,6 +113,8 @@
     buttons,
     darkMode,
     isCloud,
+    allowViewReadonlyColumns,
+    rowConditions,
   })
 
   // Derive min height and make available in context
@@ -231,6 +232,7 @@
     --cell-spacing: 4px;
     --cell-border: 1px solid var(--spectrum-global-color-gray-200);
     --cell-font-size: 14px;
+    --cell-font-color: var(--spectrum-global-color-gray-800);
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
@@ -286,7 +288,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--spectrum-global-color-gray-200);
+    border-bottom: var(--cell-border);
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
     background: var(--grid-background-alt);
