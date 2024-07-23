@@ -28,8 +28,28 @@ export const definition: AutomationTriggerSchema = {
       },
       required: ["tableId"],
     },
-    outputs: { properties: {} },
+    outputs: {
+      properties: {
+        id: {
+          type: AutomationIOType.STRING,
+          description: "Row ID - can be used for updating",
+        },
+        revision: {
+          type: AutomationIOType.STRING,
+          description: "Revision of row",
+        },
+        table: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.TABLE,
+          title: "Table",
+        },
+        row: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.ROW,
+          description: "The new row that was created",
+        },
+      },
+    },
   },
-
   event: AutomationEventType.ROW_SAVE,
 }
