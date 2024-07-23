@@ -57,9 +57,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     throw { validation: validateResult.errors }
   }
 
-  const beforeRow = await sdk.rows.external.getRow(tableId, _id, {
-    relationships: true,
-  })
+  const beforeRow = await sdk.rows.external.find(tableId, _id)
 
   const response = await handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(_id),
@@ -69,9 +67,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   // The id might have been changed, so the refetching would fail. Recalculating the id just in case
   const updatedId =
     generateIdForRow({ ...beforeRow, ...dataToUpdate }, table) || _id
-  const row = await sdk.rows.external.getRow(tableId, updatedId, {
-    relationships: true,
-  })
+  const row = await sdk.rows.external.find(tableId, updatedId)
 
   const [enrichedRow, oldRow] = await Promise.all([
     outputProcessing(table, row, {
@@ -90,25 +86,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     table,
     oldRow,
   }
-}
-
-export async function find(ctx: UserCtx): Promise<Row> {
-  const id = ctx.params.rowId
-  const tableId = utils.getTableId(ctx)
-  const row = await sdk.rows.external.getRow(tableId, id, {
-    relationships: true,
-  })
-
-  if (!row) {
-    ctx.throw(404)
-  }
-
-  const table = await sdk.tables.getTable(tableId)
-  // Preserving links, as the outputProcessing does not support external rows yet and we don't need it in this use case
-  return await outputProcessing(table, row, {
-    squash: true,
-    preserveLinks: true,
-  })
 }
 
 export async function destroy(ctx: UserCtx) {
