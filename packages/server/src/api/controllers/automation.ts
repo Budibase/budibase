@@ -1,4 +1,5 @@
 import * as triggers from "../../automations/triggers"
+import { sdk as coreSdk } from "@budibase/shared-core"
 import { DocumentType } from "../../db/utils"
 import { updateTestHistory, removeDeprecated } from "../../automations/utils"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
@@ -12,7 +13,6 @@ import {
   UserCtx,
   DeleteAutomationResponse,
   FetchAutomationResponse,
-  AutomationTriggerStepId,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
@@ -96,9 +96,7 @@ export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
   const automationId = ctx.params.id
 
   const automation = await sdk.automations.get(ctx.params.id)
-  if (
-    automation.definition.trigger.stepId === AutomationTriggerStepId.ROW_ACTION
-  ) {
+  if (coreSdk.automations.isRowAction(automation)) {
     ctx.throw("Row actions cannot be deleted", 400)
   }
 
