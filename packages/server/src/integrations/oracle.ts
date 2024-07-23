@@ -24,7 +24,7 @@ import {
   getSqlQuery,
   HOST_ADDRESS,
 } from "./utils"
-import {
+import oracledb, {
   BindParameters,
   Connection,
   ConnectionAttributes,
@@ -36,13 +36,7 @@ import { sql } from "@budibase/backend-core"
 
 const Sql = sql.Sql
 
-let oracledb: any
-try {
-  oracledb = require("oracledb")
-  oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT
-} catch (err) {
-  console.log("ORACLEDB is not installed")
-}
+oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT
 
 interface OracleConfig {
   host: string
@@ -156,10 +150,6 @@ class OracleIntegration extends Sql implements DatasourcePlus {
 
   getStringConcat(parts: string[]): string {
     return parts.join(" || ")
-  }
-
-  static isInstalled() {
-    return oracledb != null
   }
 
   /**
