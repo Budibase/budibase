@@ -682,7 +682,7 @@
       {errors}
     />
   {:else if editableColumn.type === FORMULA_TYPE}
-    {#if !table.sql}
+    {#if !externalTable}
       <div class="split-label">
         <div class="label-length">
           <Label size="M">Formula Type</Label>
