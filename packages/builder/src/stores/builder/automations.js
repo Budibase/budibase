@@ -104,19 +104,8 @@ const automationActions = store => ({
   },
   save: async automation => {
     const response = await API.updateAutomation(automation)
-    store.update(state => {
-      const updatedAutomation = response.automation
-      const existingIdx = state.automations.findIndex(
-        existing => existing._id === automation._id
-      )
-      if (existingIdx !== -1) {
-        state.automations.splice(existingIdx, 1, updatedAutomation)
-        return state
-      } else {
-        state.automations = [...state.automations, updatedAutomation]
-      }
-      return state
-    })
+
+    await store.actions.fetch()
     return response.automation
   },
   delete: async automation => {

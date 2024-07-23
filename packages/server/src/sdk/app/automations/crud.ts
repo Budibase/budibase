@@ -1,4 +1,5 @@
 import { Automation, Webhook, WebhookActionType } from "@budibase/types"
+import { sdk } from "@budibase/shared-core"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 import { MetadataTypes } from "../../../constants"
@@ -117,7 +118,6 @@ export async function create(automation: Automation) {
 
 export async function update(automation: Automation) {
   automation = { ...automation }
-
   if (!automation._id || !automation._rev) {
     throw new HTTPError("_id or _rev fields missing", 400)
   }
@@ -280,5 +280,12 @@ function guardInvalidUpdatesAndThrow(
         )
       }
     })
+  }
+
+  if (
+    sdk.automations.isRowAction(automation) &&
+    automation.name !== oldAutomation.name
+  ) {
+    throw new Error("Row actions cannot be renamed")
   }
 }

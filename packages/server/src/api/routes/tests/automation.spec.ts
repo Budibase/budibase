@@ -425,6 +425,22 @@ describe("/automations", () => {
       expect(events.automation.deleted).toHaveBeenCalledTimes(1)
     })
 
+    it("cannot delete a row action automation", async () => {
+      const automation = await config.createAutomation(
+        setup.structures.rowActionAutomation()
+      )
+      await request
+        .delete(`/api/automations/${automation._id}/${automation._rev}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(422, {
+          message: "Row actions automations cannot be deleted",
+          status: 422,
+        })
+
+      expect(events.automation.deleted).not.toHaveBeenCalled()
+    })
+
     it("should apply authorization to endpoint", async () => {
       const automation = await config.createAutomation()
       await checkBuilderEndpoint({
