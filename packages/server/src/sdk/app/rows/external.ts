@@ -1,4 +1,5 @@
 import { IncludeRelationship, Operation, Row } from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
 import { handleRequest } from "../../../api/controllers/row/external"
 import { breakRowIdField } from "../../../integrations/utils"
 import sdk from "../../../sdk"
@@ -72,6 +73,10 @@ export async function find(tableId: string, rowId: string): Promise<Row> {
   const row = await getRow(tableId, rowId, {
     relationships: true,
   })
+
+  if (!row) {
+    throw new HTTPError("Row not found", 404)
+  }
 
   const table = await sdk.tables.getTable(tableId)
   // Preserving links, as the outputProcessing does not support external rows yet and we don't need it in this use case
