@@ -19,6 +19,8 @@
     return secondaryMenuItems?.[contextMenu.secondaryHoverIndex]?.children ?? []
   }
 
+  $: console.log(tertiaryMenuItems);
+
   $: secondaryMenuItems = getSecondaryMenuItems($contextMenuStore)
   $: tertiaryMenuItems = getTertiaryMenuItems($contextMenuStore, secondaryMenuItems)
 
@@ -52,10 +54,10 @@
     style:left={`${$contextMenuStore.position.x + (dropdown?.clientWidth ?? 0) + 6}px`}
   />
   <div
-    bind:this={secondaryMenuAnchor}
-    class="secondaryMenuAnchor"
-    style:top={`${$contextMenuStore.position.y + (($contextMenuStore.hoverIndex ?? 0) * 32)}px`}
-    style:left={`${$contextMenuStore.position.x + (dropdown?.clientWidth ?? 0) + 6}px`}
+    bind:this={tertiaryMenuAnchor}
+    class="tertiaryMenuAnchor"
+    style:top={`${$contextMenuStore.position.y + (($contextMenuStore.secondaryHoverIndex ?? 0) * 32)}px`}
+    style:left={`${$contextMenuStore.position.x + (dropdown?.clientWidth ?? 0) + (secondaryDropdown?.clientWidth ?? 0) + 12}px`}
   />
 {/key}
 
@@ -153,6 +155,11 @@
   }
 
   .secondaryMenuAnchor {
+    z-index: 100;
+    position: absolute;
+  }
+
+  .tertiaryMenuAnchor {
     z-index: 100;
     position: absolute;
   }

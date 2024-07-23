@@ -17,7 +17,7 @@ export function createViewsStore() {
   }
 
   const setHoverIndex = (newHoverIndex) => {
-    store.update($store => ({ ...$store, hoverIndex: newHoverIndex }));
+    store.update($store => ({ ...$store, hoverIndex: newHoverIndex, secondaryHoverIndex: null }));
   }
 
   const setSecondaryHoverIndex = (newSecondaryHoverIndex) => {

@@ -19,6 +19,55 @@ const getContextMenuItems = (component, showCopy) => {
 
   return [
     {
+      visible: true,
+      icon: "Add",
+      name: "Add component",
+      children: [
+        {
+      visible: true,
+          icon: "Add",
+          name: "Layout",
+          children: [
+            {
+              icon: "Copy",
+              name: "First",
+              visible: true,
+              disabled: false,
+              callback: () => {},
+            },
+            {
+              icon: "Copy",
+              name: "Second",
+              visible: true,
+              disabled: false,
+              callback: () => {},
+            }
+          ]
+        },
+        {
+      visible: true,
+          icon: "Add",
+          name: "Blocks",
+          children: [
+            {
+              icon: "Copy",
+              name: "First",
+              visible: true,
+              disabled: false,
+              callback: () => {},
+            },
+            {
+              icon: "Copy",
+              name: "Second",
+              visible: true,
+              disabled: false,
+              callback: () => {},
+            }
+          ]
+        }
+      ]
+    },
+    {
       icon: "Copy",
       name: "Copy",
       keyBind: "Ctrl+C",
