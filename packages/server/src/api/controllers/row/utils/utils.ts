@@ -8,7 +8,6 @@ import {
   RelationshipsJson,
   Row,
   Table,
-  UserCtx,
 } from "@budibase/types"
 import {
   processDates,
@@ -64,7 +63,7 @@ export async function processRelationshipFields(
   return row
 }
 
-export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
+export async function findRow(tableId: string, rowId: string) {
   const db = context.getAppDB()
   let row: Row
   // TODO remove special user case in future
