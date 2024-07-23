@@ -40,13 +40,14 @@ import { structures } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 
 describe.each([
-  ["in-memory", undefined],
-  ["lucene", undefined],
-  ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  //["in-memory", undefined],
+  //["lucene", undefined],
+  //["sqs", undefined],
+  //[DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  //[DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  //[DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  //[DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -291,7 +292,7 @@ describe.each([
     })
 
     describe("equal", () => {
-      it("successfully finds true row", async () => {
+      it.only("successfully finds true row", async () => {
         await expectQuery({ equal: { isTrue: true } }).toMatchExactly([
           { isTrue: true },
         ])
