@@ -9,7 +9,7 @@ import {
 import cloneDeep from "lodash/fp/cloneDeep"
 import isEqual from "lodash/fp/isEqual"
 
-export async function getRow(
+async function getRow(
   tableId: string,
   rowId: string,
   opts?: { relationships?: boolean }
@@ -53,7 +53,7 @@ export async function save(
 
   const rowId = response.row._id
   if (rowId) {
-    const row = await sdk.rows.external.getRow(tableId, rowId, {
+    const row = await getRow(tableId, rowId, {
       relationships: true,
     })
     return {
@@ -66,4 +66,17 @@ export async function save(
   } else {
     return response
   }
+}
+
+export async function find(tableId: string, rowId: string): Promise<Row> {
+  const row = await getRow(tableId, rowId, {
+    relationships: true,
+  })
+
+  const table = await sdk.tables.getTable(tableId)
+  // Preserving links, as the outputProcessing does not support external rows yet and we don't need it in this use case
+  return await outputProcessing(table, row, {
+    squash: true,
+    preserveLinks: true,
+  })
 }

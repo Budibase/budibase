@@ -96,15 +96,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   return { ...result, oldRow }
 }
 
-export async function find(ctx: UserCtx): Promise<Row> {
-  const tableId = utils.getTableId(ctx),
-    rowId = ctx.params.rowId
-  const table = await sdk.tables.getTable(tableId)
-  let row = await utils.findRow(tableId, rowId)
-  row = await outputProcessing(table, row)
-  return row
-}
-
 export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
   const tableId = utils.getTableId(ctx)
