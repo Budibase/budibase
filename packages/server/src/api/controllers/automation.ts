@@ -12,6 +12,7 @@ import {
   UserCtx,
   DeleteAutomationResponse,
   FetchAutomationResponse,
+  AutomationTriggerStepId,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
@@ -93,6 +94,13 @@ export async function find(ctx: UserCtx) {
 
 export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
   const automationId = ctx.params.id
+
+  const automation = await sdk.automations.get(ctx.params.id)
+  if (
+    automation.definition.trigger.stepId === AutomationTriggerStepId.ROW_ACTION
+  ) {
+    ctx.throw("Row actions cannot be renamed", 403)
+  }
 
   ctx.body = await sdk.automations.remove(automationId, ctx.params.rev)
   builderSocket?.emitAutomationDeletion(ctx, automationId)
