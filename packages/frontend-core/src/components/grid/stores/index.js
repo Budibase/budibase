@@ -20,28 +20,30 @@ import * as Table from "./datasources/table"
 import * as ViewV2 from "./datasources/viewV2"
 import * as NonPlus from "./datasources/nonPlus"
 import * as Cache from "./cache"
+import * as Conditions from "./conditions"
 
 const DependencyOrderedStores = [
   Sort,
   Filter,
   Bounds,
-  Scroll,
   Table,
   ViewV2,
   NonPlus,
   Datasource,
   Columns,
-  Rows,
-  UI,
+  Scroll,
   Validation,
+  Rows,
+  Conditions,
+  UI,
   Resize,
   Viewport,
   Reorder,
   Users,
   Menu,
   Pagination,
-  Clipboard,
   Config,
+  Clipboard,
   Notifications,
   Cache,
 ]

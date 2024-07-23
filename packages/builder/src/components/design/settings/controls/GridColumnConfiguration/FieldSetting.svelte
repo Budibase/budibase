@@ -4,9 +4,12 @@
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { FIELDS } from "constants/backend"
+  import { Constants } from "@budibase/frontend-core"
+  import { FieldType } from "@budibase/types"
 
   export let item
   export let anchor
+  export let bindings
 
   const dispatch = createEventDispatcher()
 
@@ -28,19 +31,30 @@
   }
 
   const parseSettings = settings => {
-    return settings
+    let columnSettings = settings
       .filter(setting => setting.key !== "field")
       .map(setting => {
         return { ...setting, nested: true }
       })
+
+    // Filter out conditions for invalid types.
+    // Allow formulas as we have all the data already loaded in the table.
+    if (
+      Constants.BannedSearchTypes.includes(item.columnType) &&
+      item.columnType !== FieldType.FORMULA
+    ) {
+      return columnSettings.filter(x => x.key !== "conditions")
+    }
+    return columnSettings
   }
 </script>
 
 <div class="list-item-body">
   <div class="list-item-left">
     <EditComponentPopover
-      {anchor}
       componentInstance={item}
+      {bindings}
+      {anchor}
       {parseSettings}
       on:change
     >
@@ -98,5 +112,12 @@
         var(--spectrum-alias-border-color)
       );
     align-items: center;
+  }
+  .type-icon span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 0;
+    flex: 1 1 auto;
   }
 </style>

@@ -14,6 +14,7 @@ import {
 } from "./automations.js"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
+import { contextMenuStore } from "./contextMenu.js"
 import { snippets } from "./snippets"
 
 // Backend
@@ -48,6 +49,7 @@ export {
   userStore,
   isOnlyUser,
   deploymentStore,
+  contextMenuStore,
   selectedComponent,
   tables,
   views,

@@ -3,13 +3,13 @@
   --ink: #000000;
 
   /* Brand colours */
-  --bb-coral: #FF4E4E;
-  --bb-coral-light: #F97777;
-  --bb-indigo: #6E56FF;
-  --bb-indigo-light: #9F8FFF;
-  --bb-lime: #ECFFB5;
+  --bb-coral: #ff4e4e;
+  --bb-coral-light: #f97777;
+  --bb-indigo: #6e56ff;
+  --bb-indigo-light: #9f8fff;
+  --bb-lime: #ecffb5;
   --bb-forest-green: #053835;
-  --bb-beige: #F6EFEA;
+  --bb-beige: #f6efea;
 
   --grey-1: #fafafa;
   --grey-2: #f5f5f5;
@@ -49,10 +49,10 @@
   --rounded-medium: 8px;
   --rounded-large: 16px;
 
-  --font-sans: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
-    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  --font-accent: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
-    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-sans: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Segoe UI,
+    "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-accent: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Segoe UI,
+    "Inter", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-serif: "Georgia", Cambria, Times New Roman, Times, serif;
   --font-mono: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
     monospace;
@@ -111,17 +111,38 @@ a {
 /* Custom theme additions */
 .spectrum--darkest {
   --drop-shadow: rgba(0, 0, 0, 0.6);
-  --spectrum-global-color-blue-100: rgb(28, 33, 43);
+  --spectrum-global-color-red-100: #570000;
+  --spectrum-global-color-orange-100: #481801;
+  --spectrum-global-color-yellow-100: #352400;
+  --spectrum-global-color-green-100: #002f07;
+  --spectrum-global-color-seafoam-100: #122b2a;
+  --spectrum-global-color-blue-100: #002651;
+  --spectrum-global-color-indigo-100: #1a1d61;
+  --spectrum-global-color-magenta-100: #530329;
+  --translucent-grey: rgba(255, 255, 255, 0.1);
 }
 .spectrum--dark {
   --drop-shadow: rgba(0, 0, 0, 0.3);
-  --spectrum-global-color-blue-100: rgb(42, 47, 57);
+  --spectrum-global-color-red-100: #7b0000;
+  --spectrum-global-color-orange-100: #662500;
+  --spectrum-global-color-yellow-100: #4c3600;
+  --spectrum-global-color-green-100: #00450a;
+  --spectrum-global-color-seafoam-100: #12413f;
+  --spectrum-global-color-blue-100: #003877;
+  --spectrum-global-color-indigo-100: #282c8c;
+  --spectrum-global-color-magenta-100: #76003a;
+  --translucent-grey: rgba(255, 255, 255, 0.065);
 }
-.spectrum--light {
-  --drop-shadow: rgba(0, 0, 0, 0.075);
-  --spectrum-global-color-blue-100: rgb(240, 245, 255);
-}
+.spectrum--light,
 .spectrum--lightest {
-  --drop-shadow: rgba(0, 0, 0, 0.05);
-  --spectrum-global-color-blue-100: rgb(240, 244, 255);
+  --drop-shadow: rgba(0, 0, 0, 0.075);
+  --spectrum-global-color-red-100: #ffddd6;
+  --spectrum-global-color-orange-100: #ffdfad;
+  --spectrum-global-color-yellow-100: #fbf198;
+  --spectrum-global-color-green-100: #cef8e0;
+  --spectrum-global-color-seafoam-100: #cef7f3;
+  --spectrum-global-color-blue-100: #e0f2ff;
+  --spectrum-global-color-indigo-100: #edeeff;
+  --spectrum-global-color-magenta-100: #ffeaf1;
+  --translucent-grey: rgba(0, 0, 0, 0.085);
 }

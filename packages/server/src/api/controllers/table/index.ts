@@ -10,7 +10,7 @@ import {
   isExternalTableID,
   isSQL,
 } from "../../../integrations/utils"
-import { events } from "@budibase/backend-core"
+import { events, HTTPError } from "@budibase/backend-core"
 import {
   BulkImportRequest,
   BulkImportResponse,
@@ -29,6 +29,7 @@ import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
 import { cloneDeep, isEqual } from "lodash"
+import { helpers } from "@budibase/shared-core"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -38,6 +39,20 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
     return external
   }
   return internal
+}
+
+function checkDefaultFields(table: Table) {
+  for (const [key, field] of Object.entries(table.schema)) {
+    if (!("default" in field) || field.default == null) {
+      continue
+    }
+    if (helpers.schema.isRequired(field.constraints)) {
+      throw new HTTPError(
+        `Cannot make field "${key}" required, it has a default value.`,
+        400
+      )
+    }
+  }
 }
 
 // covers both internal and external
@@ -75,6 +90,8 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const table = ctx.request.body
   const isImport = table.rows
   const renaming = ctx.request.body._rename
+
+  checkDefaultFields(table)
 
   const api = pickApi({ table })
   let savedTable = await api.save(ctx, renaming)
