@@ -121,7 +121,7 @@ function rowPassesFilters(row: Row, filters: SearchFilters) {
 
 export async function externalTrigger(
   automation: Automation,
-  params: { fields: Record<string, any>; timeout?: number },
+  params: { fields: Record<string, any>; timeout?: number; appId?: string },
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
   if (automation.disabled) {
