@@ -239,7 +239,7 @@ describe("SQL query builder", () => {
 
     expect(query).toEqual({
       bindings: ["John", limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where "test"."name" = :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
+      sql: `select * from (select * from (select * from (select * from "test" where COALESCE("test"."name", -1) = :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
   })
 
@@ -256,7 +256,7 @@ describe("SQL query builder", () => {
 
     expect(query).toEqual({
       bindings: ["John", limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where "test"."name" != :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
+      sql: `select * from (select * from (select * from (select * from "test" where COALESCE("test"."name", -1) != :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
   })
 })
