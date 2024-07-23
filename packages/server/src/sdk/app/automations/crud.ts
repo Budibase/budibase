@@ -1,9 +1,5 @@
-import {
-  Automation,
-  AutomationTriggerStepId,
-  Webhook,
-  WebhookActionType,
-} from "@budibase/types"
+import { Automation, Webhook, WebhookActionType } from "@budibase/types"
+import { sdk } from "@budibase/shared-core"
 import { generateAutomationID, getAutomationParams } from "../../../db/utils"
 import { deleteEntityMetadata } from "../../../utilities"
 import { MetadataTypes } from "../../../constants"
@@ -286,13 +282,10 @@ function guardInvalidUpdatesAndThrow(
     })
   }
 
-  if (isRowAction(automation) && automation.name !== oldAutomation.name) {
+  if (
+    sdk.automations.isRowAction(automation) &&
+    automation.name !== oldAutomation.name
+  ) {
     throw new Error("Row actions cannot be renamed")
   }
-}
-
-function isRowAction(automation: Automation) {
-  const result =
-    automation.definition.trigger.stepId === AutomationTriggerStepId.ROW_ACTION
-  return result
 }

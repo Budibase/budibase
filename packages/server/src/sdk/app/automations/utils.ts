@@ -2,9 +2,9 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationBuilderData,
-  AutomationTriggerStepId,
   TableRowActions,
 } from "@budibase/types"
+import { sdk as coreSdk } from "@budibase/shared-core"
 
 export function checkForCollectStep(automation: Automation) {
   return automation.definition.steps.some(
@@ -39,14 +39,13 @@ export async function getBuilderData(
 
   const result: Record<string, AutomationBuilderData> = {}
   for (const automation of automations) {
-    const { trigger } = automation.definition
-    const isRowAction = trigger.stepId === AutomationTriggerStepId.ROW_ACTION
+    const isRowAction = coreSdk.automations.isRowAction(automation)
     if (!isRowAction) {
       result[automation._id!] = { displayName: automation.name }
       continue
     }
 
-    const { tableId, rowActionId } = trigger.inputs
+    const { tableId, rowActionId } = automation.definition.trigger.inputs
 
     const tableName = await getTableName(tableId)
 
