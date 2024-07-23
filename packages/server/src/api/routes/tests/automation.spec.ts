@@ -433,7 +433,10 @@ describe("/automations", () => {
         .delete(`/api/automations/${automation._id}/${automation._rev}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
-        .expect(400, { message: "Row actions cannot be deleted", status: 400 })
+        .expect(422, {
+          message: "Row actions automations cannot be deleted",
+          status: 422,
+        })
 
       expect(events.automation.deleted).not.toHaveBeenCalled()
     })
