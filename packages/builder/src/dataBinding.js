@@ -29,7 +29,7 @@ import { JSONUtils, Constants } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
 import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
-import { FIELDS } from "constants/backend"
+import { FIELDS, DB_TYPE_INTERNAL } from "constants/backend"
 import { FieldType } from "@budibase/types"
 
 const { ContextScopes } = Constants
@@ -991,7 +991,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     }
 
     // Determine if we should add ID and rev to the schema
-    const isInternal = table && !table.sql
+    const isInternal = table && table?.sourceType === DB_TYPE_INTERNAL
     const isDSPlus = ["table", "link", "viewV2"].includes(datasource.type)
 
     // ID is part of the readable schema for all tables

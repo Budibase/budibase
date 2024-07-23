@@ -6,9 +6,11 @@ import {
 } from "../../../integrations/tests/utils"
 import {
   db as dbCore,
+  context,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
   utils,
+  SQLITE_DESIGN_DOC_ID,
 } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
@@ -2522,6 +2524,40 @@ describe.each([
             },
           },
         }).toContainExactly([{ [" name"]: "foo" }])
+      })
+    })
+
+  isSqs &&
+    describe("duplicate columns", () => {
+      beforeAll(async () => {
+        table = await createTable({
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+        })
+        await context.doInAppContext(config.getAppId(), async () => {
+          const db = context.getAppDB()
+          const tableDoc = await db.get<Table>(table._id!)
+          tableDoc.schema.Name = {
+            name: "Name",
+            type: FieldType.STRING,
+          }
+          try {
+            // remove the SQLite definitions so that they can be rebuilt as part of the search
+            const sqliteDoc = await db.get(SQLITE_DESIGN_DOC_ID)
+            await db.remove(sqliteDoc)
+          } catch (err) {
+            // no-op
+          }
+        })
+        await createRows([{ name: "foo", Name: "bar" }])
+      })
+
+      it("should handle invalid duplicate column names", async () => {
+        await expectSearch({
+          query: {},
+        }).toContainExactly([{ name: "foo" }])
       })
     })
 })
