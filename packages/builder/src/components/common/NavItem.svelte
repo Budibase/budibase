@@ -83,6 +83,7 @@
   on:mouseenter
   on:mouseleave
   on:click={onClick}
+  on:contextmenu
   ondragover="return false"
   ondragenter="return false"
   {id}

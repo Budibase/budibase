@@ -42,27 +42,28 @@ const envLimit = environment.SQL_MAX_ROWS
   : null
 const BASE_LIMIT = envLimit || 5000
 
-function likeKey(client: string | string[], key: string): string {
-  let start: string, end: string
+// Takes a string like foo and returns a quoted string like [foo] for SQL Server
+// and "foo" for Postgres.
+function quote(client: SqlClient, str: string): string {
   switch (client) {
-    case SqlClient.MY_SQL:
-      start = end = "`"
-      break
     case SqlClient.SQL_LITE:
     case SqlClient.ORACLE:
     case SqlClient.POSTGRES:
-      start = end = '"'
-      break
+      return `"${str}"`
     case SqlClient.MS_SQL:
-      start = "["
-      end = "]"
-      break
-    default:
-      throw new Error("Unknown client generating like key")
+      return `[${str}]`
+    case SqlClient.MY_SQL:
+      return `\`${str}\``
   }
-  const parts = key.split(".")
-  key = parts.map(part => `${start}${part}${end}`).join(".")
+}
+
+// Takes a string like a.b.c and returns a quoted identifier like [a].[b].[c]
+// for SQL Server and `a`.`b`.`c` for MySQL.
+function quotedIdentifier(client: SqlClient, key: string): string {
   return key
+    .split(".")
+    .map(part => quote(client, part))
+    .join(".")
 }
 
 function parse(input: any) {
@@ -113,34 +114,81 @@ function generateSelectStatement(
   knex: Knex
 ): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
+  const client = knex.client.config.client as SqlClient
 
   if (!resource || !resource.fields || resource.fields.length === 0) {
     return "*"
   }
 
-  const schema = meta?.table?.schema
+  const schema = meta.table.schema
   return resource.fields.map(field => {
-    const fieldNames = field.split(/\./g)
-    const tableName = fieldNames[0]
-    const columnName = fieldNames[1]
-    const columnSchema = schema?.[columnName]
-    if (columnSchema && knex.client.config.client === SqlClient.POSTGRES) {
-      const externalType = schema[columnName].externalType
-      if (externalType?.includes("money")) {
-        return knex.raw(
-          `"${tableName}"."${columnName}"::money::numeric as "${field}"`
-        )
-      }
+    const parts = field.split(/\./g)
+    let table: string | undefined = undefined
+    let column: string | undefined = undefined
+
+    // Just a column name, e.g.: "column"
+    if (parts.length === 1) {
+      column = parts[0]
     }
+
+    // A table name and a column name, e.g.: "table.column"
+    if (parts.length === 2) {
+      table = parts[0]
+      column = parts[1]
+    }
+
+    // A link doc, e.g.: "table.doc1.fieldName"
+    if (parts.length > 2) {
+      table = parts[0]
+      column = parts.slice(1).join(".")
+    }
+
+    if (!column) {
+      throw new Error(`Invalid field name: ${field}`)
+    }
+
+    const columnSchema = schema[column]
+
     if (
-      knex.client.config.client === SqlClient.MS_SQL &&
+      client === SqlClient.POSTGRES &&
+      columnSchema?.externalType?.includes("money")
+    ) {
+      return knex.raw(
+        `${quotedIdentifier(
+          client,
+          [table, column].join(".")
+        )}::money::numeric as ${quote(client, field)}`
+      )
+    }
+
+    if (
+      client === SqlClient.MS_SQL &&
       columnSchema?.type === FieldType.DATETIME &&
       columnSchema.timeOnly
     ) {
-      // Time gets returned as timestamp from mssql, not matching the expected HH:mm format
+      // Time gets returned as timestamp from mssql, not matching the expected
+      // HH:mm format
       return knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
     }
-    return `${field} as ${field}`
+
+    // There's at least two edge cases being handled in the expression below.
+    //  1. The column name could start/end with a space, and in that case we
+    //     want to preseve that space.
+    //  2. Almost all column names are specified in the form table.column, except
+    //     in the case of relationships, where it's table.doc1.column. In that
+    //     case, we want to split it into `table`.`doc1.column` for reasons that
+    //     aren't actually clear to me, but `table`.`doc1` breaks things with the
+    //     sample data tests.
+    if (table) {
+      return knex.raw(
+        `${quote(client, table)}.${quote(client, column)} as ${quote(
+          client,
+          field
+        )}`
+      )
+    } else {
+      return knex.raw(`${quote(client, field)} as ${quote(client, field)}`)
+    }
   })
 }
 
@@ -173,9 +221,9 @@ function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
 }
 
 class InternalBuilder {
-  private readonly client: string
+  private readonly client: SqlClient
 
-  constructor(client: string) {
+  constructor(client: SqlClient) {
     this.client = client
   }
 
@@ -250,9 +298,10 @@ class InternalBuilder {
       } else {
         const rawFnc = `${fnc}Raw`
         // @ts-ignore
-        query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
-          `%${value.toLowerCase()}%`,
-        ])
+        query = query[rawFnc](
+          `LOWER(${quotedIdentifier(this.client, key)}) LIKE ?`,
+          [`%${value.toLowerCase()}%`]
+        )
       }
     }
 
@@ -302,7 +351,10 @@ class InternalBuilder {
             }
             statement +=
               (statement ? andOr : "") +
-              `COALESCE(LOWER(${likeKey(this.client, key)}), '') LIKE ?`
+              `COALESCE(LOWER(${quotedIdentifier(
+                this.client,
+                key
+              )}), '') LIKE ?`
           }
 
           if (statement === "") {
@@ -336,9 +388,10 @@ class InternalBuilder {
         } else {
           const rawFnc = `${fnc}Raw`
           // @ts-ignore
-          query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
-            `${value.toLowerCase()}%`,
-          ])
+          query = query[rawFnc](
+            `LOWER(${quotedIdentifier(this.client, key)}) LIKE ?`,
+            [`${value.toLowerCase()}%`]
+          )
         }
       })
     }
@@ -376,12 +429,15 @@ class InternalBuilder {
         const fnc = allOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
           query = query[fnc](
-            `CASE WHEN ${likeKey(this.client, key)} = ? THEN 1 ELSE 0 END = 1`,
+            `CASE WHEN ${quotedIdentifier(
+              this.client,
+              key
+            )} = ? THEN 1 ELSE 0 END = 1`,
             [value]
           )
         } else {
           query = query[fnc](
-            `COALESCE(${likeKey(this.client, key)} = ?, FALSE)`,
+            `COALESCE(${quotedIdentifier(this.client, key)} = ?, FALSE)`,
             [value]
           )
         }
@@ -392,12 +448,15 @@ class InternalBuilder {
         const fnc = allOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
           query = query[fnc](
-            `CASE WHEN ${likeKey(this.client, key)} = ? THEN 1 ELSE 0 END = 0`,
+            `CASE WHEN ${quotedIdentifier(
+              this.client,
+              key
+            )} = ? THEN 1 ELSE 0 END = 0`,
             [value]
           )
         } else {
           query = query[fnc](
-            `COALESCE(${likeKey(this.client, key)} != ?, TRUE)`,
+            `COALESCE(${quotedIdentifier(this.client, key)} != ?, TRUE)`,
             [value]
           )
         }
@@ -769,7 +828,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   private readonly limit: number
 
   // pass through client to get flavour of SQL
-  constructor(client: string, limit: number = BASE_LIMIT) {
+  constructor(client: SqlClient, limit: number = BASE_LIMIT) {
     super(client)
     this.limit = limit
   }

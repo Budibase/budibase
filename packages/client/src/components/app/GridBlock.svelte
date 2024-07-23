@@ -42,7 +42,6 @@
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
   $: parsedColumns = getParsedColumns(columns)
-  $: columnWhitelist = parsedColumns.filter(x => x.active).map(x => x.field)
   $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
   $: selectedRows = deriveSelectedRows(gridContext)
@@ -62,7 +61,13 @@
     const goldenRow = generateGoldenSample(rows)
     const id = get(component).id
     return {
+      // Not sure what this one is for...
       [id]: goldenRow,
+
+      // For row conditions context
+      row: goldenRow,
+
+      // For button action context
       eventContext: {
         row: goldenRow,
       },
@@ -91,6 +96,8 @@
       overrides[column.field] = {
         displayName: column.label,
         order: idx,
+        conditions: column.conditions,
+        visible: !!column.active,
       }
       if (column.width) {
         overrides[column.field].width = column.width
@@ -124,13 +131,12 @@
       return readable([])
     }
     return derived(
-      [gridContext.selectedRows, gridContext.rowLookupMap, gridContext.rows],
-      ([$selectedRows, $rowLookupMap, $rows]) => {
+      [gridContext.selectedRows, gridContext.rowLookupMap],
+      ([$selectedRows, $rowLookupMap]) => {
         return Object.entries($selectedRows || {})
           .filter(([_, selected]) => selected)
           .map(([rowId]) => {
-            const idx = $rowLookupMap[rowId]
-            return gridContext.rows.actions.cleanRow($rows[idx])
+            return gridContext.rows.actions.cleanRow($rowLookupMap[rowId])
           })
       }
     )
@@ -164,7 +170,6 @@
     {initialSortColumn}
     {initialSortOrder}
     {fixedRowHeight}
-    {columnWhitelist}
     {schemaOverrides}
     canAddRows={allowAddRows}
     canEditRows={allowEditRows}
@@ -172,7 +177,6 @@
     canEditColumns={false}
     canExpandRows={false}
     canSaveSchema={false}
-    canSelectRows={true}
     showControls={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
@@ -189,7 +193,7 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    border: 1px solid var(--spectrum-global-color-gray-300);
+    border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 4px;
     overflow: hidden;
     height: 410px;
