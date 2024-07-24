@@ -17,6 +17,13 @@ class AutomationBuilder {
     this.automationConfig.name = options.name || `Test Automation ${uuidv4()}`
   }
 
+  rowSaved(inputs: any) {
+    return this.trigger("ROW_SAVED", inputs)
+  }
+
+  rowUpdated(inputs: any) {
+    return this.trigger("ROW_UPDATED", inputs)
+  }
   trigger(triggerSchema: any, inputs: any) {
     this.automationConfig.definition.trigger = {
       ...triggerSchema,

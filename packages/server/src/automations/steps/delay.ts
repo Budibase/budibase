@@ -2,9 +2,9 @@ import { wait } from "../../utilities"
 import {
   AutomationActionStepId,
   AutomationIOType,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
+  BaseAutomationOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -39,7 +39,17 @@ export const definition: AutomationStepSchema = {
   type: AutomationStepType.LOGIC,
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export type DelayStepInputs = {
+  time: number
+}
+
+export type DelayOutputs = BaseAutomationOutputs
+
+export async function run({
+  inputs,
+}: {
+  inputs: DelayStepInputs
+}): Promise<DelayOutputs> {
   await wait(inputs.time)
   return {
     success: true,

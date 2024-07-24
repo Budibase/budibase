@@ -10,9 +10,10 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
+  BaseAutomationOutputs,
+  Row,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -74,7 +75,25 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs, appId, emitter }: AutomationStepInput) {
+export type CreateRowStepInputs = {
+  row: Row
+}
+
+export type CreateRowStepOutputs = BaseAutomationOutputs & {
+  row?: Row
+  id?: string
+  revision?: string
+}
+
+export async function run({
+  inputs,
+  appId,
+  emitter,
+}: {
+  inputs: CreateRowStepInputs
+  appId: string
+  emitter: any
+}): Promise<CreateRowStepOutputs> {
   if (inputs.row == null || inputs.row.tableId == null) {
     return {
       success: false,
@@ -93,7 +112,7 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   try {
     inputs.row = await cleanUpRow(inputs.row.tableId, inputs.row)
     inputs.row = await sendAutomationAttachmentsToStorage(
-      inputs.row.tableId,
+      inputs.row.tableId!,
       inputs.row
     )
     await save(ctx)

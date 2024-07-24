@@ -59,3 +59,14 @@ export const definition: AutomationTriggerSchema = {
   },
   type: AutomationStepType.TRIGGER,
 }
+
+export type RowSavedInputs = {
+  tableId: string
+  filters?: Record<string, any>
+}
+
+export type RowSavedOutputs = {
+  row: Record<string, any>
+  id: string
+  revision: string
+}

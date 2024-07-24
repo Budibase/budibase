@@ -6,9 +6,9 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
+  ExternalAppStepOutputs,
 } from "@budibase/types"
 
 enum RequestType {
@@ -88,7 +88,20 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export type OutgoingWebhookStepInputs = {
+  requestMethod: RequestType
+  url: string
+  requestBody: string
+  headers: string
+}
+
+export async function run({
+  inputs,
+}: {
+  inputs: OutgoingWebhookStepInputs
+}): Promise<
+  Omit<ExternalAppStepOutputs, "httpStatus"> | ExternalAppStepOutputs
+> {
   let { requestMethod, url, requestBody, headers } = inputs
   if (!url.startsWith("http")) {
     url = `http://${url}`

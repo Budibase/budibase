@@ -3,12 +3,13 @@ import { buildCtx } from "./utils"
 import { getError } from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
   AutomationIOType,
   AutomationCustomIOType,
   AutomationFeature,
+  Row,
+  BaseAutomationOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -59,7 +60,25 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs, appId, emitter }: AutomationStepInput) {
+export type DeleteRowInput = {
+  tableId: string
+  id: string
+  revision?: string
+}
+
+export type DeleteRowOutput = BaseAutomationOutputs & {
+  row?: Row
+}
+
+export async function run({
+  inputs,
+  appId,
+  emitter,
+}: {
+  inputs: DeleteRowInput
+  appId: string
+  emitter: any
+}): Promise<DeleteRowOutput> {
   if (inputs.id == null) {
     return {
       success: false,

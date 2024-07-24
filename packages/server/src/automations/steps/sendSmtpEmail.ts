@@ -3,11 +3,12 @@ import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
   AutomationStepSchema,
-  AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
   AutomationCustomIOType,
+  EmailAttachment,
+  BaseAutomationOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -97,7 +98,27 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+type smtpEmailStepInputs = {
+  to: string
+  from: string
+  subject: string
+  contents: string
+  cc: string
+  bcc: string
+  addInvite?: boolean
+  startTime: Date
+  endTime: Date
+  summary: string
+  location?: string
+  url?: string
+  attachments?: EmailAttachment[]
+}
+
+export async function run({
+  inputs,
+}: {
+  inputs: smtpEmailStepInputs
+}): Promise<BaseAutomationOutputs> {
   let {
     to,
     from,
@@ -116,17 +137,16 @@ export async function run({ inputs }: AutomationStepInput) {
   if (!contents) {
     contents = "<h1>No content</h1>"
   }
-  to = to || undefined
-
-  if (attachments) {
-    if (Array.isArray(attachments)) {
-      attachments.forEach(item => automationUtils.guardAttachment(item))
-    } else {
-      automationUtils.guardAttachment(attachments)
-    }
-  }
 
   try {
+    if (attachments) {
+      if (Array.isArray(attachments)) {
+        attachments.forEach(item => automationUtils.guardAttachment(item))
+      } else {
+        automationUtils.guardAttachment(attachments)
+      }
+    }
+
     let response = await sendSmtpEmail({
       to,
       from,

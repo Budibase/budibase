@@ -57,3 +57,16 @@ export const definition: AutomationStepSchema = {
   },
   type: AutomationStepType.LOGIC,
 }
+
+export type LoopStepInputs = {
+  option: string
+  binding: string
+  iterations: number
+  failure: string
+}
+
+export type LoopStepOutputs = {
+  items: string
+  success: boolean
+  iterations: number
+}

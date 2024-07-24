@@ -8,13 +8,14 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
   EmptyFilterOption,
   SearchFilters,
   Table,
   SortOrder,
+  Row,
+  BaseAutomationOutputs,
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
 
@@ -84,6 +85,20 @@ export const definition: AutomationStepSchema = {
   },
 }
 
+export type QueryRowsStepInputs = {
+  tableId: string
+  filters: SearchFilters
+  "filters-def": any
+  sortColumn: string
+  sortOrder: SortOrder
+  limit: number
+  onEmptyFilter: EmptyFilterOption
+}
+
+export type QueryRowsStepOutputs = BaseAutomationOutputs & {
+  rows?: Row[]
+}
+
 async function getTable(appId: string, tableId: string) {
   const ctx: any = buildCtx(appId, null, {
     params: {
@@ -133,7 +148,13 @@ function hasNullFilters(filters: any[]) {
   )
 }
 
-export async function run({ inputs, appId }: AutomationStepInput) {
+export async function run({
+  inputs,
+  appId,
+}: {
+  inputs: QueryRowsStepInputs
+  appId: string
+}): Promise<QueryRowsStepOutputs> {
   const { tableId, filters, sortColumn, sortOrder, limit } = inputs
   if (!tableId) {
     return {

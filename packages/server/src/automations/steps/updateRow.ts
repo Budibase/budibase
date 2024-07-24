@@ -6,9 +6,10 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
+  BaseAutomationOutputs,
+  Row,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -70,8 +71,27 @@ export const definition: AutomationStepSchema = {
     },
   },
 }
+type UpdateRowStepInputs = {
+  meta: Record<string, any>
+  row: Row
+  rowId: string
+}
 
-export async function run({ inputs, appId, emitter }: AutomationStepInput) {
+type UpdateRowStepOutputs = BaseAutomationOutputs & {
+  row?: Row
+  id?: string
+  revision?: string
+}
+
+export async function run({
+  inputs,
+  appId,
+  emitter,
+}: {
+  inputs: UpdateRowStepInputs
+  appId: string
+  emitter: any
+}): Promise<UpdateRowStepOutputs> {
   if (inputs.rowId == null || inputs.row == null) {
     return {
       success: false,
