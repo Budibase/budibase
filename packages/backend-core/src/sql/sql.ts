@@ -435,6 +435,11 @@ class InternalBuilder {
             )} = ? THEN 1 ELSE 0 END = 1`,
             [value]
           )
+        } else if (this.client === SqlClient.ORACLE) {
+          query = query[fnc](
+            `COALESCE(${quotedIdentifier(this.client, key)}, -1) = ?`,
+            [value]
+          )
         } else {
           query = query[fnc](
             `COALESCE(${quotedIdentifier(this.client, key)} = ?, FALSE)`,
@@ -452,6 +457,11 @@ class InternalBuilder {
               this.client,
               key
             )} = ? THEN 1 ELSE 0 END = 0`,
+            [value]
+          )
+        } else if (this.client === SqlClient.ORACLE) {
+          query = query[fnc](
+            `COALESCE(${quotedIdentifier(this.client, key)}, -1) != ?`,
             [value]
           )
         } else {

@@ -12,7 +12,6 @@
   export let listItemKey
   export let draggable = true
   export let focus
-  export let bindings = []
 
   let zoneType = generate()
 
@@ -127,7 +126,6 @@
           anchor={anchors[draggableItem.id]}
           item={draggableItem.item}
           {...listTypeProps}
-          {bindings}
           on:change={onItemChanged}
         />
       </div>
