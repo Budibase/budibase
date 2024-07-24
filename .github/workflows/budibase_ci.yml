@@ -164,7 +164,7 @@ jobs:
 
       - name: Pull testcontainers images
         run: |
-          docker pull mcr.microsoft.com/mssql/server:2022-latest &
+          docker pull mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-22.04 &
           docker pull mysql:8.3 &
           docker pull postgres:16.1-bullseye &
           docker pull mongo:7.0-jammy &

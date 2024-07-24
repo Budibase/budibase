@@ -9,7 +9,9 @@ let ports: Promise<testContainerUtils.Port[]>
 export async function getDatasource(): Promise<Datasource> {
   if (!ports) {
     ports = startContainer(
-      new GenericContainer("mcr.microsoft.com/mssql/server:2022-latest")
+      new GenericContainer(
+        "mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-22.04"
+      )
         .withExposedPorts(1433)
         .withEnvironment({
           ACCEPT_EULA: "Y",
