@@ -744,7 +744,11 @@
     for (let [key, field] of properties) {
       // need to look for the builder definition (keyed separately, see saveFilters)
       const defKey = `${key}-def`
-      if (field.customType === "filters" && inputs?.[defKey]) {
+      if (
+        (field.customType === "filters" ||
+          field.customType === "trigger_filter") &&
+        inputs?.[defKey]
+      ) {
         filters = inputs[defKey]
         break
       }
