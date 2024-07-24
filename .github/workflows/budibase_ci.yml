@@ -163,17 +163,16 @@ jobs:
           cache: yarn
 
       - name: Load dotenv
-        run: |
-          npm install -g dotenv-cli &
-          dotenv -e packages/server/datasource-sha.env -- env > $GITHUB_ENV
+        id: dotenv
+        uses: ./.github/actions/dotenv-action
 
       - name: Pull testcontainers images
         run: |
-          docker pull mcr.microsoft.com/mssql/server@${{ env.MSSQL_SHA }} &
-          docker pull mysql@${{ env.MYSQL_SHA }} &
-          docker pull postgres@${{ env.POSTGRES_SHA }} &
-          docker pull mongo@${{ env.MONGODB_SHA }} &
-          docker pull mariadb@${{ env.MARIADB_SHA }} &
+          docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }} &
+          docker pull mysql@${{ steps.dotenv.outputs.MYSQL_SHA }} &
+          docker pull postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }} &
+          docker pull mongo@${{ steps.dotenv.outputs.MONGODB_SHA }} &
+          docker pull mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }} &
           docker pull minio/minio &
           docker pull redis &
           docker pull testcontainers/ryuk:0.5.1 &
