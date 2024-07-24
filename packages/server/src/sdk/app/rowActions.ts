@@ -2,15 +2,12 @@ import { context, HTTPError, utils } from "@budibase/backend-core"
 
 import { generateRowActionsID } from "../../db/utils"
 import {
-  AutomationCustomIOType,
-  AutomationIOType,
-  AutomationStepType,
-  AutomationTriggerStepId,
   SEPARATOR,
   TableRowActions,
   VirtualDocumentType,
 } from "@budibase/types"
 import automations from "./automations"
+import { TRIGGER_DEFINITIONS } from "../../automations"
 
 function ensureUniqueAndThrow(
   doc: TableRowActions,
@@ -60,30 +57,11 @@ export async function create(tableId: string, rowAction: { name: string }) {
     appId,
     definition: {
       trigger: {
-        type: AutomationStepType.TRIGGER,
         id: "trigger",
-        tagline: "TODO tagline",
-        name: "Row Action",
-        description: "TODO description",
-        icon: "Workflow",
-        stepId: AutomationTriggerStepId.ROW_ACTION,
+        ...TRIGGER_DEFINITIONS.ROW_ACTION,
         inputs: {
           tableId,
           rowActionId: newRowActionId,
-        },
-        schema: {
-          inputs: {
-            properties: {
-              tableId: {
-                type: AutomationIOType.STRING,
-                customType: AutomationCustomIOType.TABLE,
-                title: "Table",
-                readonly: true,
-              },
-            },
-            required: ["tableId"],
-          },
-          outputs: { properties: {} },
         },
       },
       steps: [],
