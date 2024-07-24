@@ -27,7 +27,6 @@ import Koa from "koa"
 import { Server } from "http"
 import { AddressInfo } from "net"
 import fs from "fs"
-import { c } from "tar"
 
 let STARTUP_RAN = false
 
