@@ -108,7 +108,7 @@ jobs:
       - name: Pull testcontainers images
         run: |
           docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.2.1-sqs &
+          docker pull budibase/couchdb:v3.3.3 &
           docker pull redis &
 
           wait $(jobs -p)
@@ -162,17 +162,22 @@ jobs:
           node-version: 20.x
           cache: yarn
 
+      - name: Load dotenv
+        run: |
+          npm install -g dotenv-cli &
+          dotenv -e packages/server/datasource-sha.env -- env > $GITHUB_ENV
+
       - name: Pull testcontainers images
         run: |
-          docker pull mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-22.04 &
-          docker pull mysql:8.3 &
-          docker pull postgres:16.1-bullseye &
-          docker pull mongo:7.0-jammy &
-          docker pull mariadb:lts &
-          docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.2.1-sqs &
+          docker pull mcr.microsoft.com/mssql/server@${{ env.MSSQL_SHA }} &
+          docker pull mysql@${{ env.MYSQL_SHA }} &
+          docker pull postgres@${{ env.POSTGRES_SHA }} &
+          docker pull mongo@${{ env.MONGODB_SHA }} &
+          docker pull mariadb@${{ env.MARIADB_SHA }} &
           docker pull minio/minio &
           docker pull redis &
+          docker pull testcontainers/ryuk:0.5.1 &
+          docker pull budibase/couchdb:v3.3.3 &
 
           wait $(jobs -p)
 
