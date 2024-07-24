@@ -39,3 +39,11 @@ export const definition: AutomationTriggerSchema = {
   },
   type: AutomationStepType.TRIGGER,
 }
+
+export type AppActionTriggerInputs = {
+  fields: any
+}
+
+export type AppActionTriggerOutputs = {
+  fields: any
+}

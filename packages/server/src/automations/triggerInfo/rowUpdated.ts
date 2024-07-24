@@ -5,6 +5,8 @@ import {
   AutomationTriggerSchema,
   AutomationTriggerStepId,
   AutomationEventType,
+  Row,
+  SearchFilters,
 } from "@budibase/types"
 
 export const definition: AutomationTriggerSchema = {
@@ -62,11 +64,11 @@ export const definition: AutomationTriggerSchema = {
 
 export type RowSavedInputs = {
   tableId: string
-  filters?: Record<string, any>
+  filters?: SearchFilters
 }
 
 export type RowSavedOutputs = {
-  row: Record<string, any>
+  row: Row
   id: string
   revision: string
 }
