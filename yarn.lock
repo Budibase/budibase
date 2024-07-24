@@ -2038,11 +2038,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-<<<<<<< Updated upstream
-"@budibase/backend-core@2.29.22":
-=======
 "@budibase/backend-core@2.29.24":
->>>>>>> Stashed changes
   version "0.0.0"
   dependencies:
     "@budibase/nano" "10.1.5"
@@ -2123,16 +2119,6 @@
     through2 "^2.0.0"
 
 "@budibase/pro@npm:@budibase/pro@latest":
-<<<<<<< Updated upstream
-  version "2.29.22"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.29.22.tgz#2608b2a76be0426879068e5a61100d6b8dde6f3a"
-  integrity sha512-flMVIpWQb9w3f4aiBSM73aLcYmfoPIf+kP8JXgRWO0k3nGrUGaMQNBKzXwC7soTkTrJCZjBh8uaY75AxTP2RdA==
-  dependencies:
-    "@budibase/backend-core" "2.29.22"
-    "@budibase/shared-core" "2.29.22"
-    "@budibase/string-templates" "2.29.22"
-    "@budibase/types" "2.29.22"
-=======
   version "2.29.24"
   resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.29.24.tgz#2dbd4c6c0f757aab7e17c413c6d6e4520086f9ac"
   integrity sha512-m1v24UD6O21Vbrfsuo5kC5oeg7FzjWO2w8TQMw1VvPKmdIqqclaKDPTPytxwllTMkapMDRNzM5cQzqnQ3yHf6A==
@@ -2141,7 +2127,6 @@
     "@budibase/shared-core" "2.29.24"
     "@budibase/string-templates" "2.29.24"
     "@budibase/types" "2.29.24"
->>>>>>> Stashed changes
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -2152,21 +2137,13 @@
     scim-patch "^0.8.1"
     scim2-parse-filter "^0.2.8"
 
-<<<<<<< Updated upstream
-"@budibase/shared-core@2.29.22":
-=======
 "@budibase/shared-core@2.29.24":
->>>>>>> Stashed changes
   version "0.0.0"
   dependencies:
     "@budibase/types" "0.0.0"
     cron-validate "1.4.5"
 
-<<<<<<< Updated upstream
-"@budibase/string-templates@2.29.22":
-=======
 "@budibase/string-templates@2.29.24":
->>>>>>> Stashed changes
   version "0.0.0"
   dependencies:
     "@budibase/handlebars-helpers" "^0.13.2"
@@ -2174,11 +2151,7 @@
     handlebars "^4.7.8"
     lodash.clonedeep "^4.5.0"
 
-<<<<<<< Updated upstream
-"@budibase/types@2.29.22":
-=======
 "@budibase/types@2.29.24":
->>>>>>> Stashed changes
   version "0.0.0"
   dependencies:
     scim-patch "^0.8.1"
