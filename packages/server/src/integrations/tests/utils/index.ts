@@ -68,12 +68,11 @@ export async function knexClient(ds: Datasource) {
 
 export async function startContainer(container: GenericContainer) {
   const imageName = (container as any).imageName.string as string
-  let key: string
+  let key: string = imageName
   if (imageName.includes("@sha256")) {
     key = imageName.split("@")[0]
-  } else {
-    key = imageName.replaceAll("/", "-").replaceAll(":", "-")
   }
+  key = key.replaceAll("/", "-").replaceAll(":", "-")
 
   container = container
     .withReuse()
