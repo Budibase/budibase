@@ -14,8 +14,8 @@ import {
   SearchFilters,
   Table,
   SortOrder,
-  Row,
-  BaseAutomationOutputs,
+  QueryRowsStepInputs,
+  QueryRowsStepOutputs,
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
 
@@ -83,20 +83,6 @@ export const definition: AutomationStepSchema = {
       required: ["rows", "success"],
     },
   },
-}
-
-export type QueryRowsStepInputs = {
-  tableId: string
-  filters: SearchFilters
-  "filters-def": any
-  sortColumn: string
-  sortOrder: SortOrder
-  limit: number
-  onEmptyFilter: EmptyFilterOption
-}
-
-export type QueryRowsStepOutputs = BaseAutomationOutputs & {
-  rows?: Row[]
 }
 
 async function getTable(appId: string, tableId: string) {

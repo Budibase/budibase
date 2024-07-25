@@ -12,8 +12,8 @@ import {
   AutomationIOType,
   AutomationStepSchema,
   AutomationStepType,
-  BaseAutomationOutputs,
-  Row,
+  CreateRowStepInputs,
+  CreateRowStepOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -73,16 +73,6 @@ export const definition: AutomationStepSchema = {
       required: ["success", "id", "revision"],
     },
   },
-}
-
-export type CreateRowStepInputs = {
-  row: Row
-}
-
-export type CreateRowStepOutputs = BaseAutomationOutputs & {
-  row?: Row
-  id?: string
-  revision?: string
 }
 
 export async function run({

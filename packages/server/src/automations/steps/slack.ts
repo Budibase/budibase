@@ -7,6 +7,7 @@ import {
   AutomationIOType,
   AutomationFeature,
   ExternalAppStepOutputs,
+  SlackStepInputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -52,11 +53,6 @@ export const definition: AutomationStepSchema = {
       },
     },
   },
-}
-
-type SlackStepInputs = {
-  url: string
-  text: string
 }
 
 export async function run({

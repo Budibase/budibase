@@ -8,7 +8,8 @@ import {
   AutomationIOType,
   AutomationStepSchema,
   AutomationStepType,
-  BaseAutomationOutputs,
+  ExecuteScriptStepInputs,
+  ExecuteScriptStepOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -48,14 +49,6 @@ export const definition: AutomationStepSchema = {
       required: ["success"],
     },
   },
-}
-
-export type ExecuteScriptStepInputs = {
-  code: string
-}
-
-export type ExecuteScriptStepOutputs = BaseAutomationOutputs & {
-  value?: string
 }
 
 export async function run({

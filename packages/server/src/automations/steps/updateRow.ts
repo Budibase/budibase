@@ -8,8 +8,8 @@ import {
   AutomationIOType,
   AutomationStepSchema,
   AutomationStepType,
-  BaseAutomationOutputs,
-  Row,
+  UpdateRowStepInputs,
+  UpdateRowStepOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -71,18 +71,6 @@ export const definition: AutomationStepSchema = {
     },
   },
 }
-export type UpdateRowStepInputs = {
-  meta: Record<string, any>
-  row: Row
-  rowId: string
-}
-
-export type UpdateRowStepOutputs = BaseAutomationOutputs & {
-  row?: Row
-  id?: string
-  revision?: string
-}
-
 export async function run({
   inputs,
   appId,

@@ -3,7 +3,8 @@ import {
   AutomationStepSchema,
   AutomationStepType,
   AutomationIOType,
-  BaseAutomationOutputs,
+  FilterStepInputs,
+  FilterStepOutputs,
 } from "@budibase/types"
 
 export const FilterConditions = {
@@ -67,18 +68,6 @@ export const definition: AutomationStepSchema = {
       required: ["success", "result"],
     },
   },
-}
-
-export type FilterStepInputs = {
-  field: any
-  condition: string
-  value: any
-}
-
-export type FilterStepOutputs = BaseAutomationOutputs & {
-  result: boolean
-  refValue?: any
-  comparisonValue?: any
 }
 
 export async function run({

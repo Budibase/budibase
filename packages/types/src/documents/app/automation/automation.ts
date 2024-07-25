@@ -1,9 +1,10 @@
-import { Document } from "../document"
+import { Document } from "../../document"
 import { EventEmitter } from "events"
-import { User } from "../global"
+import { User } from "../../global"
 import { ReadStream } from "fs"
-import { Row } from "./row"
-import { Table } from "./table"
+import { Row } from "../row"
+import { Table } from "../table"
+import { CreateRowStepInputs } from "./schema"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -76,6 +77,27 @@ export enum AutomationActionStepId {
   zapier = "zapier",
   integromat = "integromat",
   n8n = "n8n",
+}
+
+type smtpEmailStepInputs = {
+  to: string
+  from: string
+  subject: string
+  contents: string
+  cc: string
+  bcc: string
+  addInvite?: boolean
+  startTime: Date
+  endTime: Date
+  summary: string
+  location?: string
+  url?: string
+  attachments?: EmailAttachment[]
+}
+
+export type AutomationActionStepInputs = {
+  [AutomationActionStepId.SEND_EMAIL_SMTP]: smtpEmailStepInputs
+  [AutomationActionStepId.CREATE_ROW]: CreateRowStepInputs
 }
 
 export interface EmailInvite {
@@ -286,16 +308,7 @@ export type UpdatedRowEventEmitter = {
   appId: string
 }
 
-export type BaseAutomationOutputs = {
-  success?: boolean
-  response?: {
-    [key: string]: any
-    message?: string
-  }
-}
-
-export type ExternalAppStepOutputs = {
-  httpStatus: number
-  response: string
-  success: boolean
+export enum LoopStepType {
+  ARRAY = "Array",
+  STRING = "String",
 }

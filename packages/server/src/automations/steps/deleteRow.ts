@@ -8,8 +8,8 @@ import {
   AutomationIOType,
   AutomationCustomIOType,
   AutomationFeature,
-  Row,
-  BaseAutomationOutputs,
+  DeleteRowStepInputs,
+  DeleteRowStepOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -58,16 +58,6 @@ export const definition: AutomationStepSchema = {
       required: ["row", "success"],
     },
   },
-}
-
-export type DeleteRowStepInputs = {
-  tableId: string
-  id: string
-  revision?: string
-}
-
-export type DeleteRowStepOutputs = BaseAutomationOutputs & {
-  row?: Row
 }
 
 export async function run({

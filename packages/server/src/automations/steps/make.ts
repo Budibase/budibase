@@ -7,6 +7,7 @@ import {
   AutomationIOType,
   AutomationFeature,
   ExternalAppStepOutputs,
+  MakeIntegrationInputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -55,11 +56,6 @@ export const definition: AutomationStepSchema = {
       required: ["success", "response"],
     },
   },
-}
-
-export type MakeIntegrationInputs = {
-  url: string
-  body: any
 }
 
 export async function run({

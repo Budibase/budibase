@@ -5,7 +5,8 @@ import {
   AutomationStepSchema,
   AutomationStepType,
   AutomationIOType,
-  BaseAutomationOutputs,
+  OpenAIStepInputs,
+  OpenAIStepOutputs,
 } from "@budibase/types"
 import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
@@ -59,14 +60,6 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export type OpenAIStepInputs = {
-  prompt: string
-  model: Model
-}
-
-export type OpenAIStepOutputs = Omit<BaseAutomationOutputs, "response"> & {
-  response?: string | null
-}
 export async function run({
   inputs,
 }: {

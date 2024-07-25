@@ -7,6 +7,7 @@ import {
   AutomationIOType,
   AutomationFeature,
   ExternalAppStepOutputs,
+  DiscordStepInputs,
 } from "@budibase/types"
 
 const DEFAULT_USERNAME = "Budibase Automate"
@@ -63,13 +64,6 @@ export const definition: AutomationStepSchema = {
       },
     },
   },
-}
-
-export type DiscordStepInputs = {
-  url: string
-  username?: string
-  avatar_url?: string
-  content: string
 }
 
 export async function run({

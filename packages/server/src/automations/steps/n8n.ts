@@ -8,6 +8,7 @@ import {
   AutomationFeature,
   HttpMethod,
   ExternalAppStepOutputs,
+  n8nStepInputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -65,13 +66,6 @@ export const definition: AutomationStepSchema = {
       required: ["success", "response"],
     },
   },
-}
-
-export type n8nStepInputs = {
-  url: string
-  method: HttpMethod
-  authorization: string
-  body: any
 }
 
 export async function run({

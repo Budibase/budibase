@@ -4,7 +4,8 @@ import {
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
-  BaseAutomationOutputs,
+  serverLogStepInputs,
+  serverLogStepOutputs,
 } from "@budibase/types"
 
 /**
@@ -51,13 +52,6 @@ export const definition: AutomationStepSchema = {
       required: ["success", "message"],
     },
   },
-}
-type serverLogStepInputs = {
-  text: string
-}
-
-type serverLogStepOutputs = BaseAutomationOutputs & {
-  message: string
 }
 
 export async function run({

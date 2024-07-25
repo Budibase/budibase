@@ -7,6 +7,8 @@ import {
   AutomationIOType,
   AutomationFeature,
   ExternalAppStepOutputs,
+  ZapierStepInputs,
+  ZapierStepOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -48,15 +50,6 @@ export const definition: AutomationStepSchema = {
       },
     },
   },
-}
-
-type ZapierStepInputs = {
-  url: string
-  body: any
-}
-
-type ZapierStepOutputs = Omit<ExternalAppStepOutputs, "response"> & {
-  response: string
 }
 
 export async function run({

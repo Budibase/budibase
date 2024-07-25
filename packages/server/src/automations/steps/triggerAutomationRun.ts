@@ -6,7 +6,8 @@ import {
   AutomationResults,
   Automation,
   AutomationCustomIOType,
-  BaseAutomationOutputs,
+  TriggerAutomationStepInputs,
+  TriggerAutomationStepOutputs,
 } from "@budibase/types"
 import * as triggers from "../triggers"
 import { context } from "@budibase/backend-core"
@@ -61,22 +62,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-type AutomationStepInputs = {
-  automation: {
-    automationId: string
-  }
-  timeout: number
-}
-
-type AutomationStepOutputs = BaseAutomationOutputs & {
-  value?: AutomationResults["steps"]
-}
-
 export async function run({
   inputs,
 }: {
-  inputs: AutomationStepInputs
-}): Promise<void | AutomationStepOutputs> {
+  inputs: TriggerAutomationStepInputs
+}): Promise<void | TriggerAutomationStepOutputs> {
   const { automationId, ...fieldParams } = inputs.automation
 
   if (await features.isTriggerAutomationRunEnabled()) {

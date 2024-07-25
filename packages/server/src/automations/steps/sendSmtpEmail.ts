@@ -7,7 +7,7 @@ import {
   AutomationIOType,
   AutomationFeature,
   AutomationCustomIOType,
-  EmailAttachment,
+  smtpEmailStepInputs,
   BaseAutomationOutputs,
 } from "@budibase/types"
 
@@ -96,22 +96,6 @@ export const definition: AutomationStepSchema = {
       required: ["success"],
     },
   },
-}
-
-type smtpEmailStepInputs = {
-  to: string
-  from: string
-  subject: string
-  contents: string
-  cc: string
-  bcc: string
-  addInvite?: boolean
-  startTime: Date
-  endTime: Date
-  summary: string
-  location?: string
-  url?: string
-  attachments?: EmailAttachment[]
 }
 
 export async function run({

@@ -23,13 +23,16 @@ import {
   AutomationStepInput,
   PluginType,
   AutomationStep,
+  AutomationActionStepId,
+  AutomationActionStepInputs,
+  Automation,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
 
 const ACTION_IMPLS: Record<
-  string,
-  (opts: AutomationStepInput) => Promise<any>
+  AutomationActionStepId,
+  (opts: AutomationActionStepInputs[AutomationActionStepId]) => Promise<any>
 > = {
   SEND_EMAIL_SMTP: sendSmtpEmail.run,
   CREATE_ROW: createRow.run,
