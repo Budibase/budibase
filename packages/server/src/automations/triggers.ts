@@ -20,7 +20,7 @@ import {
   AutomationStatus,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, sdk } from "@budibase/shared-core"
 
 export const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
@@ -127,8 +127,9 @@ export async function externalTrigger(
   if (automation.disabled) {
     throw new Error("Automation is disabled")
   }
+
   if (
-    automation.definition?.trigger?.stepId === definitions.APP.stepId &&
+    sdk.automations.isAppAction(automation) &&
     !(await checkTestFlag(automation._id!))
   ) {
     // values are likely to be submitted as strings, so we shall convert to correct type
@@ -138,6 +139,8 @@ export async function externalTrigger(
       coercedFields[key] = coerce(params.fields[key], fields[key])
     }
     params.fields = coercedFields
+  } else if (sdk.automations.isRowAction(automation)) {
+    params = { ...params, ...params.fields }
   }
   const data: AutomationData = { automation, event: params }
 

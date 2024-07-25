@@ -163,8 +163,10 @@ export async function run(tableId: any, rowActionId: any, rowId: string) {
 
   const row = await sdk.rows.find(tableId, rowId)
   await triggers.externalTrigger(automation, {
-    row,
-    table,
+    fields: {
+      row,
+      table,
+    },
     appId: context.getAppId(),
   })
 }
