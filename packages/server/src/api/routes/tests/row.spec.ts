@@ -197,7 +197,7 @@ describe.each([
   })
 
   describe("create", () => {
-    it("creates a new row sucNcessfully", async () => {
+    it("creates a new row successfully", async () => {
       const rowUsage = await getRowUsage()
       const row = await config.api.row.save(table._id!, {
         name: "Test Contact",
