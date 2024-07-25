@@ -159,7 +159,10 @@ export function automationTrigger(
   }
 }
 
-export function newAutomation({ steps, trigger }: any = {}) {
+export function newAutomation({
+  steps,
+  trigger,
+}: { steps?: AutomationStep[]; trigger?: AutomationTrigger } = {}) {
   const automation = basicAutomation()
 
   if (trigger) {
@@ -174,6 +177,16 @@ export function newAutomation({ steps, trigger }: any = {}) {
     automation.definition.steps = [automationStep()]
   }
 
+  return automation
+}
+
+export function rowActionAutomation() {
+  const automation = newAutomation({
+    trigger: {
+      ...automationTrigger(),
+      stepId: AutomationTriggerStepId.ROW_ACTION,
+    },
+  })
   return automation
 }
 

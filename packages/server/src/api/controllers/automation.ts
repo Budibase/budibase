@@ -1,4 +1,5 @@
 import * as triggers from "../../automations/triggers"
+import { sdk as coreSdk } from "@budibase/shared-core"
 import { DocumentType } from "../../db/utils"
 import { updateTestHistory, removeDeprecated } from "../../automations/utils"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
@@ -11,6 +12,7 @@ import {
   AutomationResults,
   UserCtx,
   DeleteAutomationResponse,
+  FetchAutomationResponse,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
@@ -73,8 +75,17 @@ export async function update(ctx: UserCtx) {
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
-export async function fetch(ctx: UserCtx) {
-  ctx.body = await sdk.automations.fetch()
+export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {
+  const query: { enrich?: string } = ctx.request.query || {}
+  const enrich = query.enrich === "true"
+
+  const automations = await sdk.automations.fetch()
+  ctx.body = { automations }
+  if (enrich) {
+    ctx.body.builderData = await sdk.automations.utils.getBuilderData(
+      automations
+    )
+  }
 }
 
 export async function find(ctx: UserCtx) {
@@ -83,6 +94,11 @@ export async function find(ctx: UserCtx) {
 
 export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
   const automationId = ctx.params.id
+
+  const automation = await sdk.automations.get(ctx.params.id)
+  if (coreSdk.automations.isRowAction(automation)) {
+    ctx.throw("Row actions automations cannot be deleted", 422)
+  }
 
   ctx.body = await sdk.automations.remove(automationId, ctx.params.rev)
   builderSocket?.emitAutomationDeletion(ctx, automationId)
