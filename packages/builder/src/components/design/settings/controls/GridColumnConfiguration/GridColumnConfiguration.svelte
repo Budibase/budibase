@@ -64,7 +64,9 @@
   items={columns.sortable}
   listItemKey={"_id"}
   listType={FieldSetting}
-  {bindings}
+  listTypeProps={{
+    bindings,
+  }}
 />
 
 <style>
