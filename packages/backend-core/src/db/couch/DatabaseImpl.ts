@@ -56,8 +56,8 @@ class CouchDBError extends Error implements DBError {
   constructor(
     message: string,
     info: {
-      status?: number | undefined
-      statusCode?: number | undefined
+      status?: number
+      statusCode?: number
       name: string
       errid?: string
       description?: string
