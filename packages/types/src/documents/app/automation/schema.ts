@@ -2,7 +2,38 @@ import { SortOrder } from "../../../api"
 import { EmptyFilterOption, SearchFilters } from "../../../sdk"
 import { HttpMethod } from "../query"
 import { Row } from "../row"
-import { AutomationResults, EmailAttachment, LoopStepType } from "./automation"
+import {
+  AutomationActionStepId,
+  AutomationResults,
+  EmailAttachment,
+  LoopStepType,
+} from "./automation"
+
+export type AutomationStepInputMap = {
+  [AutomationActionStepId.SEND_EMAIL_SMTP]: smtpEmailStepInputs
+  [AutomationActionStepId.CREATE_ROW]: CreateRowStepInputs
+  [AutomationActionStepId.UPDATE_ROW]: UpdateRowStepInputs
+  [AutomationActionStepId.DELETE_ROW]: DeleteRowStepInputs
+  [AutomationActionStepId.EXECUTE_BASH]: BashStepInputs
+  [AutomationActionStepId.EXECUTE_SCRIPT]: ExecuteScriptStepInputs
+  [AutomationActionStepId.EXECUTE_QUERY]: ExecuteQueryStepInputs
+  [AutomationActionStepId.SERVER_LOG]: serverLogStepInputs
+  [AutomationActionStepId.OUTGOING_WEBHOOK]: OutgoingWebhookStepInputs
+  [AutomationActionStepId.DELAY]: DelayStepInputs
+  [AutomationActionStepId.FILTER]: FilterStepInputs
+  [AutomationActionStepId.QUERY_ROWS]: QueryRowsStepInputs
+  [AutomationActionStepId.LOOP]: LoopStepInputs
+  [AutomationActionStepId.COLLECT]: CollectStepInputs
+  [AutomationActionStepId.OPENAI]: OpenAIStepInputs
+  [AutomationActionStepId.TRIGGER_AUTOMATION_RUN]: TriggerAutomationStepInputs
+  [AutomationActionStepId.integromat]: MakeIntegrationInputs
+  [AutomationActionStepId.discord]: DiscordStepInputs
+  [AutomationActionStepId.slack]: SlackStepInputs
+  [AutomationActionStepId.zapier]: ZapierStepInputs
+  [AutomationActionStepId.n8n]: n8nStepInputs
+
+  // Add any missing step types here
+}
 
 export type BaseAutomationOutputs = {
   success?: boolean
@@ -208,4 +239,19 @@ export type ZapierStepInputs = {
 
 export type ZapierStepOutputs = Omit<ExternalAppStepOutputs, "response"> & {
   response: string
+}
+
+enum RequestType {
+  POST = "POST",
+  GET = "GET",
+  PUT = "PUT",
+  DELETE = "DELETE",
+  PATCH = "PATCH",
+}
+
+export type OutgoingWebhookStepInputs = {
+  requestMethod: RequestType
+  url: string
+  requestBody: string
+  headers: string
 }

@@ -9,6 +9,7 @@ import {
   AutomationStepSchema,
   AutomationStepType,
   ExternalAppStepOutputs,
+  OutgoingWebhookStepInputs,
 } from "@budibase/types"
 
 enum RequestType {
@@ -86,13 +87,6 @@ export const definition: AutomationStepSchema = {
       required: ["response", "success"],
     },
   },
-}
-
-export type OutgoingWebhookStepInputs = {
-  requestMethod: RequestType
-  url: string
-  requestBody: string
-  headers: string
 }
 
 export async function run({

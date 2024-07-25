@@ -8,17 +8,22 @@ import {
   RowUpdatedTriggerInputs,
   RowUpdatedTriggerOutputs,
 } from "../../triggerInfo/rowUpdated"
-import { CreateRowStepInputs } from "../../steps/createRow"
+import {} from "../../steps/createRow"
 import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
 import { TRIGGER_DEFINITIONS } from "../../triggers"
 import {
   RowDeletedTriggerInputs,
   RowDeletedTriggerOutputs,
 } from "../../triggerInfo/rowDeleted"
-import { UpdateRowStepInputs } from "../../steps/updateRow"
-import { DeleteRowStepInputs } from "../../steps/deleteRow"
-import { AutomationStepSchema, AutomationTriggerSchema } from "@budibase/types"
-import { LoopStepInputs } from "../../steps/loop"
+import {
+  AutomationStepSchema,
+  AutomationTriggerSchema,
+  LoopStepInputs,
+  DeleteRowStepInputs,
+  UpdateRowStepInputs,
+  CreateRowStepInputs,
+} from "@budibase/types"
+import {} from "../../steps/loop"
 
 class AutomationBuilder {
   private automationConfig: any = {

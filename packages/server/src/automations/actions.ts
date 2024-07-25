@@ -20,40 +20,41 @@ import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import env from "../environment"
 import {
   AutomationStepSchema,
-  AutomationStepInput,
   PluginType,
   AutomationStep,
   AutomationActionStepId,
-  AutomationActionStepInputs,
-  Automation,
+  AutomationStepInputMap,
+  AutomationStepInput,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
 
-const ACTION_IMPLS: Record<
-  AutomationActionStepId,
-  (opts: AutomationActionStepInputs[AutomationActionStepId]) => Promise<any>
-> = {
-  SEND_EMAIL_SMTP: sendSmtpEmail.run,
-  CREATE_ROW: createRow.run,
-  UPDATE_ROW: updateRow.run,
-  DELETE_ROW: deleteRow.run,
-  OUTGOING_WEBHOOK: outgoingWebhook.run,
-  EXECUTE_SCRIPT: executeScript.run,
-  EXECUTE_QUERY: executeQuery.run,
-  SERVER_LOG: serverLog.run,
-  DELAY: delay.run,
-  FILTER: filter.run,
-  QUERY_ROWS: queryRow.run,
-  COLLECT: collect.run,
-  TRIGGER_AUTOMATION_RUN: triggerAutomationRun.run,
+const ACTION_IMPLS: Partial<{
+  [K in keyof AutomationStepInputMap]: (
+    opts: AutomationStepInput<K>
+  ) => Promise<any>
+}> = {
+  [AutomationActionStepId.SEND_EMAIL_SMTP]: sendSmtpEmail.run,
+  [AutomationActionStepId.CREATE_ROW]: createRow.run,
+  [AutomationActionStepId.UPDATE_ROW]: updateRow.run,
+  [AutomationActionStepId.DELETE_ROW]: deleteRow.run,
+  [AutomationActionStepId.OUTGOING_WEBHOOK]: outgoingWebhook.run,
+  [AutomationActionStepId.EXECUTE_SCRIPT]: executeScript.run,
+  [AutomationActionStepId.EXECUTE_QUERY]: executeQuery.run,
+  [AutomationActionStepId.SERVER_LOG]: serverLog.run,
+  [AutomationActionStepId.DELAY]: delay.run,
+  [AutomationActionStepId.FILTER]: filter.run,
+  [AutomationActionStepId.QUERY_ROWS]: queryRow.run,
+  [AutomationActionStepId.COLLECT]: collect.run,
+  [AutomationActionStepId.TRIGGER_AUTOMATION_RUN]: triggerAutomationRun.run,
   // these used to be lowercase step IDs, maintain for backwards compat
-  discord: discord.run,
-  slack: slack.run,
-  zapier: zapier.run,
-  integromat: make.run,
-  n8n: n8n.run,
+  [AutomationActionStepId.discord]: discord.run,
+  [AutomationActionStepId.slack]: slack.run,
+  [AutomationActionStepId.zapier]: zapier.run,
+  [AutomationActionStepId.integromat]: make.run,
+  [AutomationActionStepId.n8n]: n8n.run,
 }
+
 export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
   {
     SEND_EMAIL_SMTP: sendSmtpEmail.definition,
@@ -110,10 +111,11 @@ export async function getActionDefinitions() {
 }
 
 /* istanbul ignore next */
-export async function getAction(stepId: string) {
+export async function getAction(stepId: AutomationActionStepId) {
   if (ACTION_IMPLS[stepId] != null) {
     return ACTION_IMPLS[stepId]
   }
+
   // must be a plugin
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)

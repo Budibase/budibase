@@ -4,7 +4,7 @@ import { User } from "../../global"
 import { ReadStream } from "fs"
 import { Row } from "../row"
 import { Table } from "../table"
-import { CreateRowStepInputs } from "./schema"
+import { AutomationStepInputMap, CreateRowStepInputs } from "./schema"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -93,11 +93,6 @@ type smtpEmailStepInputs = {
   location?: string
   url?: string
   attachments?: EmailAttachment[]
-}
-
-export type AutomationActionStepInputs = {
-  [AutomationActionStepId.SEND_EMAIL_SMTP]: smtpEmailStepInputs
-  [AutomationActionStepId.CREATE_ROW]: CreateRowStepInputs
 }
 
 export interface EmailInvite {
@@ -264,13 +259,17 @@ export interface AutomationLogPage {
   nextPage?: string
 }
 
-export type AutomationStepInput = {
-  inputs: Record<string, any>
+export interface AutomationStepInputBase {
   context: Record<string, any>
   emitter: EventEmitter
   appId: string
   apiKey?: string
 }
+
+export type AutomationStepInput<T extends AutomationActionStepId> =
+  AutomationStepInputBase & {
+    inputs: AutomationStepInputMap[T]
+  }
 
 export interface AutomationMetadata extends Document {
   errorCount?: number
