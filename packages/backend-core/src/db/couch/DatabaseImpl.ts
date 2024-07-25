@@ -56,24 +56,24 @@ class CouchDBError extends Error implements DBError {
   constructor(
     message: string,
     info: {
-      status: number | undefined
-      statusCode: number | undefined
+      status?: number
+      statusCode?: number
       name: string
-      errid: string
-      description: string
-      reason: string
-      error: string
+      errid?: string
+      description?: string
+      reason?: string
+      error?: string
     }
   ) {
     super(message)
     const statusCode = info.status || info.statusCode || 500
     this.status = statusCode
     this.statusCode = statusCode
-    this.reason = info.reason
+    this.reason = info.reason || "Unknown"
     this.name = info.name
-    this.errid = info.errid
-    this.description = info.description
-    this.error = info.error
+    this.errid = info.errid || "Unknown"
+    this.description = info.description || "Unknown"
+    this.error = info.error || "Not found"
   }
 }
 
@@ -244,6 +244,35 @@ export class DatabaseImpl implements Database {
       }
       return () => db.destroy(_id, _rev)
     })
+  }
+
+  async bulkRemove(documents: Document[], opts?: { silenceErrors?: boolean }) {
+    const response: Nano.DocumentBulkResponse[] = await this.performCall(db => {
+      return () =>
+        db.bulk({
+          docs: documents.map(doc => ({
+            ...doc,
+            _deleted: true,
+          })),
+        })
+    })
+    if (opts?.silenceErrors) {
+      return
+    }
+    let errorFound = false
+    let errorMessage: string = "Unable to bulk remove documents: "
+    for (let res of response) {
+      if (res.error) {
+        errorFound = true
+        errorMessage += res.error
+      }
+    }
+    if (errorFound) {
+      throw new CouchDBError(errorMessage, {
+        name: this.name,
+        status: 400,
+      })
+    }
   }
 
   async post(document: AnyDocument, opts?: DatabasePutOpts) {
