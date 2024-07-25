@@ -58,6 +58,7 @@
     AutomationEventType,
     AutomationStepType,
     AutomationActionStepId,
+    AutomationCustomIOType,
   } from "@budibase/types"
   import { FIELDS } from "constants/backend"
   import PropField from "./PropField.svelte"
@@ -394,7 +395,9 @@
    */
   const onRowTriggerUpdate = async update => {
     if (
-      ["tableId", "filters", "meta"].some(key => Object.hasOwn(update, key))
+      ["tableId", AutomationCustomIOType.FILTERS, "meta"].some(key =>
+        Object.hasOwn(update, key)
+      )
     ) {
       try {
         let updatedAutomation
@@ -744,7 +747,11 @@
     for (let [key, field] of properties) {
       // need to look for the builder definition (keyed separately, see saveFilters)
       const defKey = `${key}-def`
-      if (field.customType === "filters" && inputs?.[defKey]) {
+      if (
+        (field.customType === AutomationCustomIOType.FILTERS ||
+          field.customType === AutomationCustomIOType.TRIGGER_FILTER) &&
+        inputs?.[defKey]
+      ) {
         filters = inputs[defKey]
         break
       }
@@ -846,7 +853,7 @@
               <Label>
                 {label}
               </Label>
-              {#if value.customType === "trigger_filter"}
+              {#if value.customType === AutomationCustomIOType.TRIGGER_FILTER}
                 <Icon
                   hoverable
                   on:click={() =>
@@ -982,7 +989,7 @@
                   {/if}
                 </div>
               </div>
-            {:else if value.customType === "filters" || value.customType === "trigger_filter"}
+            {:else if value.customType === AutomationCustomIOType.FILTERS || value.customType === AutomationCustomIOType.TRIGGER_FILTER}
               <ActionButton fullWidth on:click={drawer.show}
                 >{filters.length > 0
                   ? "Update Filter"
