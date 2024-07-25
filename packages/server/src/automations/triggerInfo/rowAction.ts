@@ -7,13 +7,16 @@ import {
   AutomationEventType,
 } from "@budibase/types"
 
+// TODO
+
 export const definition: AutomationTriggerSchema = {
   type: AutomationStepType.TRIGGER,
+  name: "Row Action",
+  event: AutomationEventType.ROW_ACTION, // TODO
+  icon: "Workflow", // TODO
   tagline:
     "Row action triggered in {{inputs.enriched.table.name}} by {{inputs.enriched.row._id}}",
-  name: "Row Action",
-  description: "TODO description",
-  icon: "Workflow",
+  description: "TODO description", // TODO
   stepId: AutomationTriggerStepId.ROW_ACTION,
   inputs: {},
   schema: {
@@ -41,15 +44,14 @@ export const definition: AutomationTriggerSchema = {
         table: {
           type: AutomationIOType.OBJECT,
           customType: AutomationCustomIOType.TABLE,
-          title: "Table",
+          title: "The table linked to the row action",
         },
         row: {
           type: AutomationIOType.OBJECT,
           customType: AutomationCustomIOType.ROW,
-          description: "The new row that was created",
+          description: "The row linked to the row action",
         },
       },
     },
   },
-  event: AutomationEventType.ROW_SAVE,
 }
