@@ -10,6 +10,7 @@ import {
   Row,
   SaveTableRequest,
   Table,
+  TableSchema,
   TableSourceType,
   User,
   ViewCalculation,
@@ -1019,6 +1020,38 @@ describe.each([
           },
           { status: 400 }
         )
+      })
+    })
+  })
+
+  describe("import validation", () => {
+    const basicSchema: TableSchema = {
+      id: {
+        type: FieldType.NUMBER,
+        name: "id",
+      },
+      name: {
+        type: FieldType.STRING,
+        name: "name",
+      },
+    }
+
+    describe("validateNewTableImport", () => {
+      it("can validate basic imports", async () => {
+        const result = await config.api.table.validateNewTableImport(
+          [{ id: generator.natural(), name: generator.first() }],
+          basicSchema
+        )
+
+        expect(result).toEqual({
+          allValid: true,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+          },
+        })
       })
     })
   })

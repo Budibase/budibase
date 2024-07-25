@@ -3,9 +3,12 @@ import {
   BulkImportResponse,
   MigrateRequest,
   MigrateResponse,
+  Row,
   SaveTableRequest,
   SaveTableResponse,
   Table,
+  TableSchema,
+  ValidateTableImportResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -61,8 +64,25 @@ export class TableAPI extends TestAPI {
     revId: string,
     expectations?: Expectations
   ): Promise<void> => {
-    return await this._delete<void>(`/api/tables/${tableId}/${revId}`, {
+    return await this._delete(`/api/tables/${tableId}/${revId}`, {
       expectations,
     })
+  }
+
+  validateNewTableImport = async (
+    rows: Row[],
+    schema: TableSchema,
+    expectations?: Expectations
+  ): Promise<ValidateTableImportResponse> => {
+    return await this._post<ValidateTableImportResponse>(
+      `/api/tables/validateNewTableImport`,
+      {
+        body: {
+          rows,
+          schema,
+        },
+        expectations,
+      }
+    )
   }
 }
