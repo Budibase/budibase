@@ -71,6 +71,17 @@ describe("jsRunner (using isolated-vm)", () => {
         expect(result).toBeLessThanOrEqual(max)
       })
     })
+
+    describe("buffer", () => {
+      it("handle a buffer", async () => {
+        const base64 = Buffer.from("hello").toString("base64")
+        const result = await processJS(
+          `return Buffer.from("${base64}", "base64").toString("utf8")`
+        )
+        expect(result).toBeDefined()
+        expect(result).toEqual("hello")
+      })
+    })
   })
 
   // the test cases here were extracted from templates/real world examples of JS in Budibase
