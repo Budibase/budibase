@@ -115,6 +115,7 @@
     })
   $: fields = bindings
     .filter(x => arrayTypes.includes(x.fieldSchema?.type))
+    .filter(x => x.fieldSchema?.tableId != null)
     .map(binding => {
       const { providerId, readableBinding, runtimeBinding } = binding
       const { name, type, tableId } = binding.fieldSchema
