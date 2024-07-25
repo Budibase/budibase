@@ -108,7 +108,7 @@ jobs:
       - name: Pull testcontainers images
         run: |
           docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.2.1-sqs &
+          docker pull budibase/couchdb:v3.3.3 &
           docker pull redis &
 
           wait $(jobs -p)
@@ -162,17 +162,23 @@ jobs:
           node-version: 20.x
           cache: yarn
 
+      - name: Load dotenv
+        id: dotenv
+        uses: falti/dotenv-action@v1.1.3
+        with:
+          path: ./packages/server/datasource-sha.env
+
       - name: Pull testcontainers images
         run: |
-          docker pull mcr.microsoft.com/mssql/server:2022-latest &
-          docker pull mysql:8.3 &
-          docker pull postgres:16.1-bullseye &
-          docker pull mongo:7.0-jammy &
-          docker pull mariadb:lts &
-          docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.2.1-sqs &
+          docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }} &
+          docker pull mysql@${{ steps.dotenv.outputs.MYSQL_SHA }} &
+          docker pull postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }} &
+          docker pull mongo@${{ steps.dotenv.outputs.MONGODB_SHA }} &
+          docker pull mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }} &
           docker pull minio/minio &
           docker pull redis &
+          docker pull testcontainers/ryuk:0.5.1 &
+          docker pull budibase/couchdb:v3.3.3 &
 
           wait $(jobs -p)
 
