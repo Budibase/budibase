@@ -10,7 +10,18 @@
   },
   "targetDefaults": {
     "build": {
-      "inputs": ["{workspaceRoot}/scripts/*", "{workspaceRoot}/lerna.json"]
+      "inputs": [
+        "{workspaceRoot}/scripts/*",
+        "{workspaceRoot}/lerna.json",
+        "{workspaceRoot}/.github/workflows/*"
+      ]
+    },
+    "test": {
+      "inputs": [
+        "{workspaceRoot}/scripts/*",
+        "{workspaceRoot}/lerna.json",
+        "{workspaceRoot}/.github/workflows/*"
+      ]
     }
   },
   "namedInputs": {
