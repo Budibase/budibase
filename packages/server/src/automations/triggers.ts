@@ -140,7 +140,12 @@ export async function externalTrigger(
     }
     params.fields = coercedFields
   } else if (sdk.automations.isRowAction(automation)) {
-    params = { ...params, ...params.fields }
+    params = {
+      ...params,
+      // Until we don't refactor all the types, we want to flatten the nested "fields" object
+      ...params.fields,
+      fields: {},
+    }
   }
   const data: AutomationData = { automation, event: params }
 
