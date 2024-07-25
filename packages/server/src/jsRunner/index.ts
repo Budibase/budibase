@@ -23,6 +23,7 @@ export function init() {
             isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
           })
             .withHelpers()
+            .withBuffer()
             .withSnippets(bbCtx?.snippets)
 
         // Persist isolate in context so we can reuse it
