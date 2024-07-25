@@ -17,6 +17,7 @@ import {
   TableSchema,
   TableSourceType,
   User,
+  ValidateTableImportResponse,
   ViewCalculation,
   ViewV2Enriched,
 } from "@budibase/types"
@@ -1098,9 +1099,41 @@ describe.each([
       },
     }
 
-    describe("validateNewTableImport", () => {
+    const importCases: [
+      string,
+      (rows: Row[], schema: TableSchema) => Promise<ValidateTableImportResponse>
+    ][] = [
+      [
+        "validateNewTableImport",
+        async (rows: Row[], schema: TableSchema) => {
+          const result = await config.api.table.validateNewTableImport(
+            rows,
+            schema
+          )
+          return result
+        },
+      ],
+      [
+        "validateExistingTableImport",
+        async (rows: Row[], schema: TableSchema) => {
+          const table = await config.api.table.save(
+            tableForDatasource(datasource, {
+              primary: ["id"],
+              schema,
+            })
+          )
+          const result = await config.api.table.validateExistingTableImport({
+            tableId: table._id,
+            rows,
+          })
+          return result
+        },
+      ],
+    ]
+
+    describe.each(importCases)("%s", (_, testDelegate) => {
       it("can validate basic imports", async () => {
-        const result = await config.api.table.validateNewTableImport(
+        const result = await testDelegate(
           [{ id: generator.natural(), name: generator.first() }],
           basicSchema
         )
@@ -1182,29 +1215,6 @@ describe.each([
     })
 
     describe("validateExistingTableImport", () => {
-      it("can validate basic imports", async () => {
-        const table = await config.api.table.save(
-          tableForDatasource(datasource, {
-            primary: ["id"],
-            schema: basicSchema,
-          })
-        )
-        const result = await config.api.table.validateExistingTableImport({
-          tableId: table._id,
-          rows: [{ id: generator.natural(), name: generator.first() }],
-        })
-
-        expect(result).toEqual({
-          allValid: true,
-          errors: {},
-          invalidColumns: [],
-          schemaValidation: {
-            id: true,
-            name: true,
-          },
-        })
-      })
-
       isInternal &&
         it("can reimport _id fields for internal tables", async () => {
           const table = await config.api.table.save(
