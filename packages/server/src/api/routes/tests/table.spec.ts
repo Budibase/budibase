@@ -1054,5 +1054,30 @@ describe.each([
         })
       })
     })
+
+    describe("validateExistingTableImport", () => {
+      it("can validate basic imports", async () => {
+        const table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            primary: ["id"],
+            schema: basicSchema,
+          })
+        )
+        const result = await config.api.table.validateExistingTableImport({
+          tableId: table._id,
+          rows: [{ id: generator.natural(), name: generator.first() }],
+        })
+
+        expect(result).toEqual({
+          allValid: true,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+          },
+        })
+      })
+    })
   })
 })
