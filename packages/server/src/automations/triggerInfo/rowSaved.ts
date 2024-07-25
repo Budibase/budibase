@@ -57,7 +57,7 @@ export const definition: AutomationTriggerSchema = {
 
 export type RowCreatedTriggerInputs = {
   tableId: string
-  filters: SearchFilters
+  filters?: SearchFilters
 }
 
 export type RowCreatedTriggerOutputs = {

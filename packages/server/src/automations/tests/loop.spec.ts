@@ -7,7 +7,6 @@ import { Table } from "@budibase/types"
 import * as loopUtils from "../loopUtils"
 import { LoopInput, LoopStepType } from "../../definitions/automations"
 import { createAutomationBuilder } from "./utilities/AutomationBuilder"
-import { TRIGGER_DEFINITIONS, BUILTIN_ACTION_DEFINITIONS } from "../"
 
 describe("Attempt to run a basic loop automation", () => {
   let config = setup.getConfig(),
@@ -155,24 +154,29 @@ describe("Attempt to run a basic loop automation", () => {
     })
 
     const results = await builder
-      .trigger(TRIGGER_DEFINITIONS.ROW_SAVED, { tableId: table._id })
-      .step(BUILTIN_ACTION_DEFINITIONS.LOOP, {
+      .rowSaved(
+        { tableId: table._id! },
+        {
+          row: {
+            name: "Trigger Row",
+            description: "This row triggers the automation",
+          },
+          id: "1234",
+          revision: "1",
+        }
+      )
+      .loop({
         option: LoopStepType.ARRAY,
         binding: [1, 2, 3],
       })
-      .step(BUILTIN_ACTION_DEFINITIONS.CREATE_ROW, {
+      .createRow({
         row: {
           name: "Item {{ loop.currentItem }}",
           description: "Created from loop",
           tableId: table._id,
         },
       })
-      .run({
-        row: {
-          name: "Trigger Row",
-          description: "This row triggers the automation",
-        },
-      })
+      .run()
 
     expect(results.trigger).toBeDefined()
     expect(results.steps).toHaveLength(1)

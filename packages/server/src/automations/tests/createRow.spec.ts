@@ -2,7 +2,6 @@ import * as setup from "./utilities"
 import { basicTableWithAttachmentField } from "../../tests/utilities/structures"
 import { objectStore } from "@budibase/backend-core"
 import { createAutomationBuilder } from "./utilities/AutomationBuilder"
-import { TRIGGER_DEFINITIONS, BUILTIN_ACTION_DEFINITIONS } from "../"
 
 async function uploadTestFile(filename: string) {
   let bucket = "testbucket"
@@ -40,20 +39,21 @@ describe("test the create row action", () => {
     })
 
     const results = await builder
-      .trigger(TRIGGER_DEFINITIONS.ROW_SAVED, { tableId: table._id })
-      .step(BUILTIN_ACTION_DEFINITIONS.CREATE_ROW, {
+      .rowUpdated(
+        { tableId: table._id! },
+        {
+          row: { name: "Test", description: "TEST" },
+          id: "1234",
+        }
+      )
+      .createRow({
         row: {
           name: "{{trigger.row.name}}",
           description: "{{trigger.row.description}}",
           tableId: table._id,
         },
       })
-      .run({
-        row: {
-          name: "Test",
-          description: "TEST",
-        },
-      })
+      .run()
 
     expect(results.steps).toHaveLength(1)
 

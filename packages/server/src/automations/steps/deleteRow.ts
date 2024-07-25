@@ -60,13 +60,13 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export type DeleteRowInput = {
+export type DeleteRowStepInputs = {
   tableId: string
   id: string
   revision?: string
 }
 
-export type DeleteRowOutput = BaseAutomationOutputs & {
+export type DeleteRowStepOutputs = BaseAutomationOutputs & {
   row?: Row
 }
 
@@ -75,10 +75,10 @@ export async function run({
   appId,
   emitter,
 }: {
-  inputs: DeleteRowInput
+  inputs: DeleteRowStepInputs
   appId: string
   emitter: any
-}): Promise<DeleteRowOutput> {
+}): Promise<DeleteRowStepOutputs> {
   if (inputs.id == null) {
     return {
       success: false,

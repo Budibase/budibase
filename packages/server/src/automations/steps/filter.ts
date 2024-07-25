@@ -1,7 +1,6 @@
 import {
   AutomationActionStepId,
   AutomationStepSchema,
-  AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
   BaseAutomationOutputs,
@@ -71,16 +70,22 @@ export const definition: AutomationStepSchema = {
 }
 
 export type FilterStepInputs = {
-  field: string
+  field: any
   condition: string
-  value: string
+  value: any
 }
 
 export type FilterStepOutputs = BaseAutomationOutputs & {
   result: boolean
+  refValue?: any
+  comparisonValue?: any
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: FilterStepInputs
+}): Promise<FilterStepOutputs> {
   try {
     let { field, condition, value } = inputs
     // coerce types so that we can use them

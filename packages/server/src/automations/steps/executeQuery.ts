@@ -6,7 +6,6 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
   BaseAutomationOutputs,
@@ -70,10 +69,18 @@ export type ExecuteQueryStepInputs = {
 }
 
 export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
-  info: any
+  info?: any
 }
 
-export async function run({ inputs, appId, emitter }: AutomationStepInput) {
+export async function run({
+  inputs,
+  appId,
+  emitter,
+}: {
+  inputs: ExecuteQueryStepInputs
+  appId: string
+  emitter: any
+}): Promise<ExecuteQueryStepOutputs> {
   if (inputs.query == null) {
     return {
       success: false,

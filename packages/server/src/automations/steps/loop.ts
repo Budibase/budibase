@@ -5,6 +5,7 @@ import {
   AutomationStepSchema,
   AutomationStepType,
 } from "@budibase/types"
+import { LoopStepType } from "src/definitions/automations"
 
 export const definition: AutomationStepSchema = {
   name: "Looping",
@@ -59,10 +60,10 @@ export const definition: AutomationStepSchema = {
 }
 
 export type LoopStepInputs = {
-  option: string
-  binding: string
-  iterations: number
-  failure: string
+  option: LoopStepType
+  binding: any
+  iterations?: number
+  failure?: string
 }
 
 export type LoopStepOutputs = {

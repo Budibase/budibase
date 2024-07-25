@@ -243,7 +243,7 @@ export interface AutomationLogPage {
 }
 
 export type AutomationStepInput = {
-  inputs: Record<string, any>
+  inputs: any
   context: Record<string, any>
   emitter: EventEmitter
   appId: string

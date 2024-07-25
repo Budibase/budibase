@@ -71,13 +71,13 @@ export const definition: AutomationStepSchema = {
     },
   },
 }
-type UpdateRowStepInputs = {
+export type UpdateRowStepInputs = {
   meta: Record<string, any>
   row: Row
   rowId: string
 }
 
-type UpdateRowStepOutputs = BaseAutomationOutputs & {
+export type UpdateRowStepOutputs = BaseAutomationOutputs & {
   row?: Row
   id?: string
   revision?: string
