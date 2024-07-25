@@ -7,8 +7,6 @@ import {
   AutomationEventType,
 } from "@budibase/types"
 
-// TODO
-
 export const definition: AutomationTriggerSchema = {
   type: AutomationStepType.TRIGGER,
   name: "Row Action",
