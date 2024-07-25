@@ -4,6 +4,7 @@ import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
 import { knexClient } from "./mysql"
+import { MARIADB_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
 
@@ -27,7 +28,7 @@ class MariaDBWaitStrategy extends AbstractWaitStrategy {
 export async function getDatasource(): Promise<Datasource> {
   if (!ports) {
     ports = startContainer(
-      new GenericContainer("mariadb:lts")
+      new GenericContainer(MARIADB_IMAGE)
         .withExposedPorts(3306)
         .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
         .withWaitStrategy(new MariaDBWaitStrategy())
