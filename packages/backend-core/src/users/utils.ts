@@ -1,4 +1,10 @@
-import { CloudAccount, ContextUser, User, UserGroup } from "@budibase/types"
+import {
+  CloudAccount,
+  ContextUser,
+  PlatformUser,
+  User,
+  UserGroup,
+} from "@budibase/types"
 import * as accountSdk from "../accounts"
 import env from "../environment"
 import { getPlatformUser } from "./lookup"
@@ -51,7 +57,7 @@ async function isCreatorByGroupMembership(user?: User | ContextUser) {
 export async function validateUniqueUser(email: string, tenantId: string) {
   // check budibase users in other tenants
   if (env.MULTI_TENANCY) {
-    const tenantUser = await getPlatformUser(email)
+    const tenantUser = (await getPlatformUser(email)) as PlatformUser
     if (tenantUser != null && tenantUser.tenantId !== tenantId) {
       throw new EmailUnavailableError(email)
     }

@@ -36,7 +36,7 @@ export async function searchExistingEmails(emails: string[]) {
 // lookup, could be email or userId, either will return a doc
 export async function getPlatformUser(
   identifier: string
-): Promise<PlatformUser | null> {
+): Promise<PlatformUser[] | PlatformUser | null> {
   // use the view here and allow to find anyone regardless of casing
   // Use lowercase to ensure email login is case insensitive
   return (await dbUtils.queryPlatformView(ViewName.PLATFORM_USERS_LOWERCASE, {
