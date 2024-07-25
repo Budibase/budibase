@@ -8,6 +8,7 @@ import {
   SaveTableResponse,
   Table,
   TableSchema,
+  ValidateTableImportRequest,
   ValidateTableImportResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
@@ -81,6 +82,19 @@ export class TableAPI extends TestAPI {
           rows,
           schema,
         },
+        expectations,
+      }
+    )
+  }
+
+  validateExistingTableImport = async (
+    body: ValidateTableImportRequest,
+    expectations?: Expectations
+  ): Promise<ValidateTableImportResponse> => {
+    return await this._post<ValidateTableImportResponse>(
+      `/api/tables/validateExistingTableImport`,
+      {
+        body,
         expectations,
       }
     )
