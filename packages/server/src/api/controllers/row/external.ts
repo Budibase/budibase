@@ -92,25 +92,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   }
 }
 
-export async function find(ctx: UserCtx): Promise<Row> {
-  const id = ctx.params.rowId
-  const tableId = utils.getTableId(ctx)
-  const row = await sdk.rows.external.getRow(tableId, id, {
-    relationships: true,
-  })
-
-  if (!row) {
-    ctx.throw(404)
-  }
-
-  const table = await sdk.tables.getTable(tableId)
-  // Preserving links, as the outputProcessing does not support external rows yet and we don't need it in this use case
-  return await outputProcessing(table, row, {
-    squash: true,
-    preserveLinks: true,
-  })
-}
-
 export async function destroy(ctx: UserCtx) {
   const tableId = utils.getTableId(ctx)
   const _id = ctx.request.body._id
