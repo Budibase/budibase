@@ -21,11 +21,6 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends g++ make python3 jq
 RUN yarn global add pm2
 
-# Install client for oracle datasource
-RUN apt-get install unzip libaio1
-COPY packages/server/scripts/integrations/oracle/ scripts/integrations/oracle/
-RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh 
-
 # Install postgres client for pg_dump utils
 RUN apt update && apt upgrade -y \
     && apt install software-properties-common apt-transport-https curl gpg -y \
