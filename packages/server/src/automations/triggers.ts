@@ -128,10 +128,7 @@ export async function externalTrigger(
     throw new Error("Automation is disabled")
   }
   if (
-    automation.definition != null &&
-    automation.definition.trigger != null &&
-    automation.definition.trigger.stepId === definitions.APP.stepId &&
-    automation.definition.trigger.stepId === "APP" &&
+    automation.definition?.trigger?.stepId === definitions.APP.stepId &&
     !(await checkTestFlag(automation._id!))
   ) {
     // values are likely to be submitted as strings, so we shall convert to correct type
