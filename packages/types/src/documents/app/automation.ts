@@ -92,15 +92,15 @@ export interface EmailAttachment {
 }
 
 export interface SendEmailOpts {
-  to: string
+  to?: string
   // workspaceId If finer grain controls being used then this will lookup config for workspace.
   workspaceId?: string
   // user If sending to an existing user the object can be provided, this is used in the context.
   user: User
   // from If sending from an address that is not what is configured in the SMTP config.
-  from: string
+  from?: string
   // contents If sending a custom email then can supply contents which will be added to it.
-  contents: string
+  contents?: string
   // subject A custom subject can be specified if the config one is not desired.
   subject: string
   // info Pass in a structure of information to be stored alongside the invitation.
