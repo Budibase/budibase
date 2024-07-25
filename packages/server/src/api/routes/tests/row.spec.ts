@@ -1,3 +1,5 @@
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+
 import {
   DatabaseName,
   getDatasource,
@@ -72,7 +74,7 @@ describe.each([
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
-  const config = setup.getConfig()
+  const config = new TestConfiguration()
 
   let table: Table
   let datasource: Datasource | undefined
