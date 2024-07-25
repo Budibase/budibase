@@ -194,6 +194,7 @@ export interface AutomationStep extends AutomationStepSchema {
 }
 
 export interface AutomationTriggerSchema extends AutomationStepSchema {
+  type: AutomationStepType.TRIGGER
   event?: string
   cronJobId?: string
 }
