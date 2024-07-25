@@ -117,7 +117,9 @@ export async function fetch(ctx: any) {
 
 export async function find(ctx: UserCtx<void, GetRowResponse>) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await pickApi(tableId).find(ctx)
+  const rowId = ctx.params.rowId
+
+  ctx.body = await sdk.rows.find(tableId, rowId)
 }
 
 function isDeleteRows(input: any): input is DeleteRows {
@@ -278,7 +280,8 @@ export async function downloadAttachment(ctx: UserCtx) {
   const { columnName } = ctx.params
 
   const tableId = utils.getTableId(ctx)
-  const row = await pickApi(tableId).find(ctx)
+  const rowId = ctx.params.rowId
+  const row = await sdk.rows.find(tableId, rowId)
 
   const table = await sdk.tables.getTable(tableId)
   const columnSchema = table.schema[columnName]

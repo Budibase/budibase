@@ -36,6 +36,7 @@ import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
 import * as uuid from "uuid"
 import { Knex } from "knex"
+import { InternalTables } from "../../../db/utils"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -804,6 +805,23 @@ describe.each([
         status: 404,
       })
     })
+
+    isInternal &&
+      it("can search row from user table", async () => {
+        const res = await config.api.row.get(
+          InternalTables.USER_METADATA,
+          config.userMetadataId!
+        )
+
+        expect(res).toEqual({
+          ...config.getUser(),
+          _id: config.userMetadataId!,
+          _rev: expect.any(String),
+          roles: undefined,
+          roleId: "ADMIN",
+          tableId: InternalTables.USER_METADATA,
+        })
+      })
   })
 
   describe("fetch", () => {
