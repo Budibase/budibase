@@ -4,11 +4,6 @@ import { middleware, permissions } from "@budibase/backend-core"
 import * as rowActionController from "../controllers/rowAction"
 import { authorizedResource } from "../../middleware/authorized"
 
-import {
-  middleware as appInfoMiddleware,
-  AppType,
-} from "../../middleware/appInfo"
-
 const { PermissionLevel, PermissionType } = permissions
 
 function rowActionValidator() {
@@ -59,7 +54,6 @@ router
   // Other endpoints
   .post(
     "/api/tables/:tableId/actions/:actionId/trigger",
-    appInfoMiddleware({ appType: AppType.PROD }),
     rowTriggerValidator(),
     authorizedResource(PermissionType.TABLE, PermissionLevel.READ, "tableId"),
     rowActionController.run
