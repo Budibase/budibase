@@ -1,3 +1,4 @@
+import "./images"
 import { Datasource, SourceName } from "@budibase/types"
 import * as postgres from "./postgres"
 import * as mongodb from "./mongodb"
@@ -67,7 +68,11 @@ export async function knexClient(ds: Datasource) {
 
 export async function startContainer(container: GenericContainer) {
   const imageName = (container as any).imageName.string as string
-  const key = imageName.replaceAll("/", "-").replaceAll(":", "-")
+  let key: string = imageName
+  if (imageName.includes("@sha256")) {
+    key = imageName.split("@")[0]
+  }
+  key = key.replaceAll("/", "-").replaceAll(":", "-")
 
   container = container
     .withReuse()
