@@ -7,7 +7,7 @@ import {
   VirtualDocumentType,
 } from "@budibase/types"
 import automations from "./automations"
-import { TRIGGER_DEFINITIONS } from "../../automations"
+import { definitions as TRIGGER_DEFINITIONS } from "../../automations/triggerInfo"
 
 function ensureUniqueAndThrow(
   doc: TableRowActions,
