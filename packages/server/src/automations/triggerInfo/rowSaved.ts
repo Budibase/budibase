@@ -25,7 +25,7 @@ export const definition: AutomationTriggerSchema = {
         },
         filters: {
           type: AutomationIOType.OBJECT,
-          customType: AutomationCustomIOType.FILTERS,
+          customType: AutomationCustomIOType.TRIGGER_FILTER,
           title: "Filtering",
         },
       },
