@@ -31,10 +31,7 @@ import {
   SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
 } from "@budibase/backend-core"
-import {
-  CONSTANT_INTERNAL_ROW_COLS,
-  generateJunctionTableID,
-} from "../../../../db/utils"
+import { generateJunctionTableID } from "../../../../db/utils"
 import AliasTables from "../sqlAlias"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
@@ -44,7 +41,7 @@ import {
   getRelationshipColumns,
   getTableIDList,
 } from "./filters"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
@@ -65,7 +62,7 @@ function buildInternalFieldList(
     })
   }
   fieldList = fieldList.concat(
-    CONSTANT_INTERNAL_ROW_COLS.map(col => `${table._id}.${col}`)
+    PROTECTED_INTERNAL_COLUMNS.map(col => `${table._id}.${col}`)
   )
   for (let col of Object.values(table.schema)) {
     const isRelationship = col.type === FieldType.LINK
@@ -355,7 +352,7 @@ export async function search(
 
     // check if we need to pick specific rows out
     if (options.fields) {
-      const fields = [...options.fields, ...CONSTANT_INTERNAL_ROW_COLS]
+      const fields = [...options.fields, ...PROTECTED_INTERNAL_COLUMNS]
       finalRows = finalRows.map((r: any) => pick(r, fields))
     }
 
