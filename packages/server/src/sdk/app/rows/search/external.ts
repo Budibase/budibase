@@ -33,7 +33,7 @@ function getPaginationAndLimitParameters(
   let paginateObj: PaginationJson | undefined
 
   // only try set limits/pagination if we aren't doing a row ID search
-  if (!isSearchingByRowID(filters)) {
+  if (isSearchingByRowID(filters)) {
     return
   }
 
