@@ -54,8 +54,13 @@ export function isFormat(format: any): format is RowExportFormat {
 }
 
 export function parseCsvExport<T>(value: string) {
+  value = value.trim()
+
   // Trim enclosing quotes
-  value = value.trim().slice(1, -1)
+  if (value.startsWith('"') && value.endsWith('"')) {
+    value = value.slice(1, -1)
+  }
+
   value = value.replace(/'/g, '"')
   try {
     return JSON.parse(value) as T
