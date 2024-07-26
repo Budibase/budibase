@@ -190,9 +190,11 @@ export async function validateExistingTableImport(
     schema = table.schema
 
     if (!isExternalTable(table)) {
-      schema._id = {
-        name: "_id",
-        type: FieldType.STRING,
+      if (rows.some(r => r._id)) {
+        schema._id = {
+          name: "_id",
+          type: FieldType.STRING,
+        }
       }
       protectedColumnNames = PROTECTED_INTERNAL_COLUMNS.filter(x => x !== "_id")
     } else {

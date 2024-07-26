@@ -1132,7 +1132,7 @@ describe.each([
     ]
 
     describe.each(importCases)("%s", (_, testDelegate) => {
-      it("can validate basic imports", async () => {
+      it("validates basic imports", async () => {
         const result = await testDelegate(
           [{ id: generator.natural(), name: generator.first() }],
           basicSchema
@@ -1190,7 +1190,7 @@ describe.each([
         })
       })
 
-      it("can validate imports with some empty rows", async () => {
+      it("validates imports with some empty rows", async () => {
         const result = await testDelegate(
           [{}, { id: generator.natural(), name: generator.first() }, {}],
           basicSchema
@@ -1240,6 +1240,64 @@ describe.each([
             },
           })
         })
+
+      it("validates required fields and valid rows", async () => {
+        const schema: TableSchema = {
+          ...basicSchema,
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+            constraints: { presence: true },
+          },
+        }
+
+        const result = await testDelegate(
+          [
+            { id: generator.natural(), name: generator.first() },
+            { id: generator.natural(), name: generator.first() },
+          ],
+          schema
+        )
+
+        expect(result).toEqual({
+          allValid: true,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+          },
+        })
+      })
+
+      it("validates required fields and non-valid rows", async () => {
+        const schema: TableSchema = {
+          ...basicSchema,
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+            constraints: { presence: true },
+          },
+        }
+
+        const result = await testDelegate(
+          [
+            { id: generator.natural(), name: generator.first() },
+            { id: generator.natural(), name: "" },
+          ],
+          schema
+        )
+
+        expect(result).toEqual({
+          allValid: false,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: false,
+          },
+        })
+      })
     })
 
     describe("validateExistingTableImport", () => {

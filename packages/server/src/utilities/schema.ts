@@ -74,6 +74,10 @@ export function validate(
         results.errors[columnName] = `${columnName} is a protected column name`
         return
       }
+      if (!row[columnName] && helpers.schema.isRequired(constraints)) {
+        results.schemaValidation[columnName] = false
+        return
+      }
 
       // If the columnType is not a string, then it's not present in the schema, and should be added to the invalid columns array
       if (typeof columnType !== "string") {
@@ -85,7 +89,7 @@ export function validate(
           "Column names can't contain special characters"
       } else if (
         columnData == null &&
-        !schema[columnName].constraints?.presence
+        !helpers.schema.isRequired(constraints)
       ) {
         results.schemaValidation[columnName] = true
       } else if (
@@ -125,6 +129,11 @@ export function validate(
     if (protectedColumnNames.includes(schemaField.toLowerCase())) {
       results.schemaValidation[schemaField] = false
       results.errors[schemaField] = `${schemaField} is a protected column name`
+    } else if (rows.length && !(schemaField in results.schemaValidation)) {
+      const fieldSchema = schema[schemaField]
+      results.schemaValidation[schemaField] = !helpers.schema.isRequired(
+        fieldSchema.constraints
+      )
     }
   }
 
