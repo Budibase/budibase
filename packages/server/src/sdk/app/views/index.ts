@@ -10,7 +10,7 @@ import { HTTPError } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import {
   helpers,
-  CONSTANT_EXTERNAL_ROW_COLS,
+  PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 import { cloneDeep } from "lodash/fp"
@@ -148,7 +148,7 @@ export function allowedFields(view: View | ViewV2) {
       const fieldSchema = view.schema![key]
       return fieldSchema.visible && !fieldSchema.readonly
     }),
-    ...CONSTANT_EXTERNAL_ROW_COLS,
+    ...PROTECTED_EXTERNAL_COLUMNS,
     ...PROTECTED_INTERNAL_COLUMNS,
   ]
 }
