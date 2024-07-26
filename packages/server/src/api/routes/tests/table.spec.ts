@@ -26,6 +26,7 @@ import * as setup from "./utilities"
 import * as uuid from "uuid"
 
 import { generator } from "@budibase/backend-core/tests"
+import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import timekeeper from "timekeeper"
 import { valueToCsv } from "../../controllers/view/exporters"
@@ -1321,6 +1322,81 @@ describe.each([
               id: generator.natural(),
               name: generator.first(),
               user: valueToCsv(getUserValues()),
+            },
+          ],
+          schema
+        )
+
+        expect(result).toEqual({
+          allValid: true,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+            user: true,
+          },
+        })
+      })
+
+      it("can validate user column imports with invalid data", async () => {
+        const schema: TableSchema = {
+          ...basicSchema,
+          user: {
+            type: FieldType.BB_REFERENCE_SINGLE,
+            subtype: BBReferenceFieldSubType.USER,
+            name: "user",
+          },
+        }
+
+        const result = await testDelegate(
+          [
+            {
+              id: generator.natural(),
+              name: generator.first(),
+              user: valueToCsv(getUserValues()),
+            },
+            {
+              id: generator.natural(),
+              name: generator.first(),
+              user: getUserValues(),
+            },
+          ],
+          schema
+        )
+
+        expect(result).toEqual({
+          allValid: false,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+            user: false,
+          },
+        })
+      })
+
+      it("can validate users column imports", async () => {
+        const schema: TableSchema = {
+          ...basicSchema,
+          user: {
+            type: FieldType.BB_REFERENCE,
+            subtype: BBReferenceFieldSubType.USER,
+            name: "user",
+          },
+        }
+
+        const result = await testDelegate(
+          [
+            {
+              id: generator.natural(),
+              name: generator.first(),
+              user: valueToCsv([
+                getUserValues(),
+                getUserValues(),
+                getUserValues(),
+              ]),
             },
           ],
           schema
