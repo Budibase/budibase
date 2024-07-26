@@ -5,6 +5,7 @@
     componentStore,
     selectedComponent,
     componentTreeNodesStore,
+    screenStore,
   } from "stores/builder"
   import { findComponent, getChildIdsForComponent } from "helpers/components"
   import { goto, isActive } from "@roxi/routify"
@@ -47,6 +48,14 @@
     },
     ["Ctrl+Enter"]: () => {
       $goto(`./:componentId/new`)
+    },
+    ["CloneNodeToScreen"]: async component => {
+      const newScreen = await screenStore.createScreenFromComponent(component)
+      if (newScreen) {
+        notifications.success("Created screen successfully")
+      } else {
+        notifications.error("Error creating screen from selection.")
+      }
     },
     ["Delete"]: component => {
       // Don't show confirmation for the screen itself

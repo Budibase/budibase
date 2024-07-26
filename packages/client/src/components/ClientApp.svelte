@@ -46,11 +46,24 @@
   // Provide contexts
   setContext("sdk", SDK)
   setContext("component", writable({ id: null, ancestors: [] }))
-  setContext("context", createContextStore())
+
+  const globalContext = createContextStore()
+  setContext("context", globalContext)
 
   let dataLoaded = false
   let permissionError = false
   let embedNoScreens = false
+  let cachedActiveScreenId
+
+  // Clear component context entries from the global context
+  // when the active page changes.
+  const purgeGlobalComponentContext = screenId => {
+    if (!screenId || cachedActiveScreenId == screenId) return
+    cachedActiveScreenId = screenId
+    globalContext.actions.clearComponentContext()
+  }
+
+  $: purgeGlobalComponentContext($screenStore?.activeScreen?._id)
 
   // Determine if we should show devtools or not
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek

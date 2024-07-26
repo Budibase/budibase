@@ -78,6 +78,13 @@ const getContextMenuItems = (component, componentCollapsed) => {
       callback: () => keyboardEvent("v", true),
     },
     {
+      icon: "WebPage",
+      name: "Create screen",
+      visible: true,
+      disabled: false,
+      callback: () => keyboardEvent("CloneNodeToScreen", false),
+    },
+    {
       icon: "Export",
       name: "Eject block",
       keyBind: "Ctrl+E",

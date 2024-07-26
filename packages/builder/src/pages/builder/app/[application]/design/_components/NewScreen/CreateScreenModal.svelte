@@ -12,7 +12,6 @@
     builderStore,
   } from "stores/builder"
   import { auth } from "stores/portal"
-  import { get } from "svelte/store"
   import getTemplates from "templates"
   import { Roles } from "constants/backend"
   import { capitalise } from "helpers"
@@ -53,11 +52,13 @@
 
       for (let screen of screens) {
         // Check we aren't clashing with an existing URL
-        if (hasExistingUrl(screen.routing.route)) {
+        if (
+          screenStore.hasExistingUrl(screen.routing.route, screenAccessRole)
+        ) {
           let suffix = 2
-          let candidateUrl = makeCandidateUrl(screen, suffix)
-          while (hasExistingUrl(candidateUrl)) {
-            candidateUrl = makeCandidateUrl(screen, ++suffix)
+          let candidateUrl = screenStore.makeCandidateUrl(screen, suffix)
+          while (screenStore.hasExistingUrl(candidateUrl, screenAccessRole)) {
+            candidateUrl = screenStore.makeCandidateUrl(screen, ++suffix)
           }
           screen.routing.route = candidateUrl
         }
@@ -88,32 +89,6 @@
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")
-    }
-  }
-
-  // Checks if any screens exist in the store with the given route and
-  // currently selected role
-  const hasExistingUrl = url => {
-    const roleId = screenAccessRole
-    const screens = get(screenStore).screens.filter(
-      s => s.routing.roleId === roleId
-    )
-    return !!screens.find(s => s.routing?.route === url)
-  }
-
-  // Constructs a candidate URL for a new screen, suffixing the base of the
-  // screen's URL with a given suffix.
-  // e.g. "/sales/:id" => "/sales-1/:id"
-  const makeCandidateUrl = (screen, suffix) => {
-    let url = screen.routing?.route || ""
-    if (url.startsWith("/")) {
-      url = url.slice(1)
-    }
-    if (!url.includes("/")) {
-      return `/${url}-${suffix}`
-    } else {
-      const split = url.split("/")
-      return `/${split[0]}-${suffix}/${split.slice(1).join("/")}`
     }
   }
 

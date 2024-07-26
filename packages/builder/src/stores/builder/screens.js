@@ -2,17 +2,25 @@ import { derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { Helpers } from "@budibase/bbui"
 import { RoleUtils, Utils } from "@budibase/frontend-core"
-import { findAllMatchingComponents } from "helpers/components"
+import {
+  findAllMatchingComponents,
+  makeComponentUnique,
+} from "helpers/components"
 import {
   layoutStore,
   appStore,
   componentStore,
   navigationStore,
   selectedComponent,
+  componentTreeNodesStore,
 } from "stores/builder"
 import { createHistoryStore } from "stores/builder/history"
 import { API } from "api"
 import BudiStore from "../BudiStore"
+import { Roles } from "constants/backend"
+import { Screen } from "templates/Screen"
+import sanitizeUrl from "helpers/sanitizeUrl"
+import { capitalise } from "helpers"
 
 export const INITIAL_SCREENS_STATE = {
   screens: [],
@@ -36,6 +44,9 @@ export class ScreenStore extends BudiStore {
     this.updateSetting = this.updateSetting.bind(this)
     this.sequentialScreenPatch = this.sequentialScreenPatch.bind(this)
     this.removeCustomLayout = this.removeCustomLayout.bind(this)
+    this.hasExistingUrl = this.hasExistingUrl.bind(this)
+    this.makeCandidateUrl = this.makeCandidateUrl.bind(this)
+    this.createScreenFromComponent = this.createScreenFromComponent.bind(this)
 
     this.history = createHistoryStore({
       getDoc: id => get(this.store).screens?.find(screen => screen._id === id),
@@ -173,6 +184,106 @@ export class ScreenStore extends BudiStore {
     if (illegalChild) {
       const def = componentStore.getDefinition(illegalChild)
       throw `You can't place a ${def.name} here`
+    }
+  }
+
+  /**
+   * Checks if any screens exist in the store with the given route and
+   * currently selected role
+   *
+   * @param {string} screen
+   * @param {string} screenAccessRole
+   * @returns {boolean}
+   */
+  hasExistingUrl(url, screenAccessRole) {
+    const state = get(this.store)
+    const roleId = screenAccessRole
+    const screens = state.screens.filter(s => s.routing.roleId === roleId)
+    return !!screens.find(s => s.routing?.route === url)
+  }
+
+  /**
+   * Constructs a candidate URL for a new screen, appending a given suffix
+   * to the base of the screen's URL
+   *
+   * @param {string} screen
+   * @param {number} suffix
+   * @example "/sales/:id" => "/sales-1/:id"
+   * @returns {string} The candidate url.
+   */
+  makeCandidateUrl(screen, suffix) {
+    let url = screen.routing?.route || ""
+    if (url.startsWith("/")) {
+      url = url.slice(1)
+    }
+    if (!url.includes("/")) {
+      return `/${url}-${suffix}`
+    } else {
+      const split = url.split("/")
+      return `/${split[0]}-${suffix}/${split.slice(1).join("/")}`
+    }
+  }
+
+  /**
+   * Takes a component object and creates a brand new screen.
+   * The default screen path is '/new-screen' with a corresponding nav link.
+   * If a screen url collision is found, a numeric suffix will be added.
+   * @example "/new-screen-2"
+   *
+   * @param {object} component - The component to be copied
+   * @param {string} [accessRole='BASIC'] - Access role for the new screen. (default=BASIC)
+   *
+   * @returns {object|null} The new screen or null if it failed
+   */
+  async createScreenFromComponent(component, accessRole = Roles.BASIC) {
+    const defaultNewScreenURL = sanitizeUrl(`/new-screen`)
+    let componentCopy = Helpers.cloneDeep(component)
+
+    const screen = new Screen()
+      .route(defaultNewScreenURL)
+      .instanceName(`New Screen`)
+
+    const screenJSON = screen.json()
+
+    if (this.hasExistingUrl(defaultNewScreenURL, accessRole)) {
+      let suffix = 2
+      let candidateUrl = this.makeCandidateUrl(screenJSON, suffix)
+      while (this.hasExistingUrl(candidateUrl, accessRole)) {
+        candidateUrl = this.makeCandidateUrl(screenJSON, ++suffix)
+      }
+      screenJSON.routing.route = candidateUrl
+    }
+
+    // Ensure the component _id values are made unique.
+    const uniqueComponentCopy = makeComponentUnique(componentCopy)
+
+    screenJSON.props._children.push(uniqueComponentCopy)
+    screenJSON.routing.roleId = accessRole
+
+    try {
+      // Create the screen
+      const newScreen = await this.save(screenJSON)
+
+      // Add a new nav link
+      await navigationStore.saveLink(
+        screenJSON.routing.route,
+        capitalise(screenJSON.routing.route.split("/")[1]),
+        accessRole
+      )
+
+      // Select the new node.
+      componentStore.update(state => {
+        state.selectedComponentId = uniqueComponentCopy._id
+        return state
+      })
+
+      // Ensure the node is expanded
+      componentTreeNodesStore.makeNodeVisible(uniqueComponentCopy._id)
+
+      return newScreen
+    } catch (e) {
+      console.error(e)
+      return null
     }
   }
 
