@@ -1106,10 +1106,10 @@ describe.each([
       [
         "validateNewTableImport",
         async (rows: Row[], schema: TableSchema) => {
-          const result = await config.api.table.validateNewTableImport(
+          const result = await config.api.table.validateNewTableImport({
             rows,
-            schema
-          )
+            schema,
+          })
           return result
         },
       ],
