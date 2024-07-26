@@ -1179,6 +1179,34 @@ describe.each([
         })
       })
 
+      it("does not allow imports without rows", async () => {
+        const result = await testDelegate([], basicSchema)
+
+        expect(result).toEqual({
+          allValid: false,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {},
+        })
+      })
+
+      it("can validate imports with some empty rows", async () => {
+        const result = await testDelegate(
+          [{}, { id: generator.natural(), name: generator.first() }, {}],
+          basicSchema
+        )
+
+        expect(result).toEqual({
+          allValid: true,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+          },
+        })
+      })
+
       isInternal &&
         it.each(
           isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
