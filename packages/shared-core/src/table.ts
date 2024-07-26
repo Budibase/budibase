@@ -55,7 +55,7 @@ export function canBeSortColumn(type: FieldType): boolean {
 
 export function findDuplicateInternalColumns(
   table: Table,
-  opts?: { internalRowsAllowed: boolean }
+  opts?: { ignoreProtectedColumnNames: boolean }
 ): string[] {
   // maintains the case of keys
   const casedKeys = Object.keys(table.schema)
@@ -72,7 +72,7 @@ export function findDuplicateInternalColumns(
       }
     }
   }
-  if (!opts?.internalRowsAllowed) {
+  if (!opts?.ignoreProtectedColumnNames) {
     for (let internalColumn of CONSTANT_INTERNAL_ROW_COLS) {
       if (casedKeys.find(key => key === internalColumn)) {
         duplicates.push(internalColumn)

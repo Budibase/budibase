@@ -49,7 +49,7 @@ export async function save(
 
   // check for case sensitivity - we don't want to allow duplicated columns
   const duplicateColumn = findDuplicateInternalColumns(table, {
-    internalRowsAllowed: !!opts?.isImport,
+    ignoreProtectedColumnNames: !oldTable && !!opts?.isImport,
   })
   if (duplicateColumn.length) {
     throw new Error(
