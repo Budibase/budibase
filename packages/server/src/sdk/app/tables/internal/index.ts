@@ -31,7 +31,7 @@ export async function save(
     tableId?: string
     rowsToImport?: Row[]
     renaming?: RenameColumn
-    isImport: boolean
+    isImport?: boolean
   }
 ) {
   const db = context.getAppDB()
