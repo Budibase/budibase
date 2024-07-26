@@ -6,7 +6,9 @@ describe("exporters", () => {
     it.each([
       ["string", generator.word()],
       ["integer", generator.natural()],
-    ])("%s", (_, value) => {
+      ["float", generator.floating()],
+      ["boolean", generator.bool()],
+    ])("%s (%s)", (_, value) => {
       const exportedValue = valueToCsv(value)
       const importedValue = parseCsvExport(exportedValue)
       expect(importedValue).toEqual(value)
