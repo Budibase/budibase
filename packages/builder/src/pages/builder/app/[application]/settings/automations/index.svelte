@@ -187,7 +187,9 @@
   <Divider />
   <Layout gap="XS" noPadding>
     <Heading size="XS">History</Heading>
-    <Body size="S">Free plan stores up to 1 day of automation history</Body>
+    {#if licensePlan?.type === Constants.PlanType.FREE}
+      <Body size="S">Free plan stores up to 1 day of automation history</Body>
+    {/if}
   </Layout>
   <div class="controls">
     <div class="search">

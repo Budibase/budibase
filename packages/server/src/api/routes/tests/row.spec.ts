@@ -1,3 +1,5 @@
+import * as setup from "./utilities"
+
 import {
   DatabaseName,
   getDatasource,
@@ -7,7 +9,6 @@ import {
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import * as setup from "./utilities"
 import { context, InternalTable, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
