@@ -3,46 +3,46 @@ import { Component } from "./Component"
 import sanitizeUrl from "helpers/sanitizeUrl"
 
 export const FORM_TEMPLATE = "FORM_TEMPLATE"
-export const formUrl = (datasource, actionType) => {
+export const formUrl = (tableOrView, actionType) => {
   if (actionType === "Create") {
-    return sanitizeUrl(`/${datasource.label}/new`)
+    return sanitizeUrl(`/${tableOrView.name}/new`)
   } else if (actionType === "Update") {
-    return sanitizeUrl(`/${datasource.label}/edit/:id`)
+    return sanitizeUrl(`/${tableOrView.name}/edit/:id`)
   } else if (actionType === "View") {
-    return sanitizeUrl(`/${datasource.label}/view/:id`)
+    return sanitizeUrl(`/${tableOrView.name}/view/:id`)
   }
 }
 
 export const getRole = (permissions, actionType) => {
   if (actionType === "View") {
-    return permissions.read.role
+    return permissions.read
   }
 
-  return permissions.write.role
+  return permissions.write
 }
 
-const generateMultistepFormBlock = (datasource, actionType) => {
+const generateMultistepFormBlock = (tableOrView, actionType) => {
   const multistepFormBlock = new Component(
     "@budibase/standard-components/multistepformblock"
   )
   multistepFormBlock
     .customProps({
       actionType,
-      dataSource: datasource,
+      dataSource: tableOrView.clientData,
       steps: [{}],
       rowId: actionType === "new" ? undefined : `{{ url.id }}`,
     })
-    .instanceName(`${datasource.label} - Multistep Form block`)
+    .instanceName(`${tableOrView.name} - Multistep Form block`)
   return multistepFormBlock
 }
 
-const createScreen = (datasource, actionType, permissions) => {
+const createScreen = (tableOrView, actionType, permissions) => {
   return new Screen()
-    .route(formUrl(datasource, actionType))
-    .instanceName(`${datasource.label} - Form`)
+    .route(formUrl(tableOrView, actionType))
+    .instanceName(`${tableOrView.name} - Form`)
     .role(getRole(permissions, actionType))
-    .autoTableId(datasource.resourceId)
-    .addChild(generateMultistepFormBlock(datasource, actionType))
+    .autoTableId(tableOrView.id)
+    .addChild(generateMultistepFormBlock(tableOrView, actionType))
     .json()
 }
 

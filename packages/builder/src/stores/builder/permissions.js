@@ -1,11 +1,11 @@
-import { writable, get } from "svelte/store"
+import { writable } from "svelte/store"
 import { API } from "api"
 
 export function createPermissionStore() {
-  const store = writable({})
+  const { subscribe } = writable([])
 
   return {
-    subscribe: store.subscribe,
+    subscribe,
     save: async ({ level, role, resource }) => {
       return await API.updatePermissionForResource({
         resourceId: resource,
@@ -19,20 +19,6 @@ export function createPermissionStore() {
         roleId: role,
         level,
       })
-    },
-    getResource: async resourceId => {
-      const $store = get(store)
-      const inFlightRequest = $store[resourceId]
-
-      if (inFlightRequest instanceof Promise) {
-        return inFlightRequest
-      }
-      const request = API.getPermissionForResource(resourceId).then(
-        response => response.permissions
-      )
-      store.update(currentStore => ({ ...currentStore, [resourceId]: request }))
-
-      return request
     },
     forResource: async resourceId => {
       return (await API.getPermissionForResource(resourceId)).permissions

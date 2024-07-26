@@ -7,7 +7,7 @@
   import {
     screenStore,
     navigationStore,
-    permissions,
+    permissions as permissionsStore,
     builderStore,
   } from "stores/builder"
   import { auth } from "stores/portal"
@@ -19,6 +19,7 @@
   import formScreen from "templates/formScreen"
   import gridScreen from "templates/gridScreen"
   import gridDetailsScreen from "templates/gridDetailsScreen"
+  import { Roles } from "constants/backend"
 
   let mode
 
@@ -26,11 +27,13 @@
   let datasourceModal
   let formTypeModal
 
-  let selectedDatasources = []
+  let selectedTablesAndViews = []
+  let permissions = {}
 
   export const show = newMode => {
     mode = newMode
-    selectedDatasources = []
+    selectedTablesAndViews = []
+    permissions = {}
 
     if (mode === "grid" || mode === "gridDetails" || mode === "form") {
       datasourceModal.show()
@@ -94,8 +97,7 @@
     }
   }
 
-  const onSelectDatasources = async ({ datasources }) => {
-    selectedDatasources = datasources
+  const onSelectDatasources = async () => {
     if (mode === "form") {
       formTypeModal.show()
     } else if (mode === "grid") {
@@ -116,10 +118,10 @@
   const createGridScreen = async () => {
     let firstScreen = null
 
-    for (let datasource of selectedDatasources) {
+    for (let tableOrView of selectedTablesAndViews) {
       const screenTemplate = gridScreen(
-        datasource,
-        await permissions.getResource(datasource.resourceId)
+        tableOrView,
+        await permissions[tableOrView.id]
       )
 
       const screen = await createScreen(screenTemplate)
@@ -134,10 +136,10 @@
   const createGridDetailsScreen = async () => {
     let firstScreen = null
 
-    for (let datasource of selectedDatasources) {
+    for (let tableOrView of selectedTablesAndViews) {
       const screenTemplate = gridDetailsScreen(
-        datasource,
-        await permissions.getResource(datasource.resourceId)
+        tableOrView,
+        await permissions[tableOrView.id]
       )
 
       const screen = await createScreen(screenTemplate)
@@ -152,11 +154,11 @@
   const createFormScreen = async formType => {
     let firstScreen = null
 
-    for (let datasource of selectedDatasources) {
+    for (let tableOrView of selectedTablesAndViews) {
       const screenTemplate = formScreen(
-        datasource,
+        tableOrView,
         formType,
-        await permissions.getResource(datasource.resourceId)
+        permissions[tableOrView.id]
       )
 
       const screen = await createScreen(screenTemplate)
@@ -196,16 +198,61 @@
     screenStore.select(screen._id)
   }
 
-  const prefetchDatasourcePermissions = event => {
-    permissions.getResource(event.detail.resourceId)
+  const fetchPermission = resourceId => {
+    permissions[resourceId] = { loading: true, read: null, write: null }
+
+    permissionsStore
+      .forResource(resourceId)
+      .then(permission => {
+        if (permissions[resourceId]?.loading) {
+          permissions[resourceId] = {
+            loading: false,
+            read: permission?.read?.role,
+            write: permission?.write?.role,
+          }
+        }
+      })
+      .catch(e => {
+        console.error("Error fetching permission data: ", e)
+
+        if (permissions[resourceId]?.loading) {
+          permissions[resourceId] = {
+            loading: false,
+            read: Roles.PUBLIC,
+            write: Roles.PUBLIC,
+          }
+        }
+      })
+  }
+
+  const deletePermission = resourceId => {
+    delete permissions[resourceId]
+    permissions = permissions
+  }
+
+  const handleTableOrViewToggle = ({ detail: tableOrView }) => {
+    const alreadySelected = selectedTablesAndViews.some(
+      selected => selected.id === tableOrView.id
+    )
+
+    if (!alreadySelected) {
+      fetchPermission(tableOrView.id)
+      selectedTablesAndViews = [...selectedTablesAndViews, tableOrView]
+    } else {
+      deletePermission(tableOrView.id)
+      selectedTablesAndViews = selectedTablesAndViews.filter(
+        selected => selected.id !== tableOrView.id
+      )
+    }
   }
 </script>
 
 <Modal bind:this={datasourceModal} autoFocus={false}>
   <DatasourceModal
-    {selectedDatasources}
+    {selectedTablesAndViews}
+    {permissions}
     onConfirm={onSelectDatasources}
-    on:toggle={prefetchDatasourcePermissions}
+    on:toggle={handleTableOrViewToggle}
   />
 </Modal>
 
