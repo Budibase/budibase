@@ -25,7 +25,7 @@
       e.target
         .closest?.(".component")
         ?.parentNode.closest(".component")
-        ?.childNodes[0].classList.contains("grid") ||
+        ?.childNodes[0].classList?.contains("grid") ||
       e.target.classList.contains("anchor")
     )
   }

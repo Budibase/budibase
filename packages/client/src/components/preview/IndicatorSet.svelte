@@ -1,7 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
-  import { domDebounce } from "utils/domDebounce"
   import { builderStore } from "stores"
 
   export let componentId = null
@@ -36,20 +35,20 @@
 
   $: visibleIndicators = state.indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
-  $: $$props, debouncedUpdate()
+  // $: $$props, updatePosition()
 
   const checkInsideGrid = id => {
     const component = document.getElementsByClassName(id)[0]
     const domNode = component?.children[0]
 
     // Ignore grid itself
-    if (domNode?.classList.contains("grid")) {
+    if (domNode?.classList?.contains("grid")) {
       return false
     }
 
     return component?.parentNode
       ?.closest?.(".component")
-      ?.childNodes[0]?.classList.contains("grid")
+      ?.childNodes[0]?.classList?.contains("grid")
   }
 
   const createIntersectionCallback = idx => entries => {
@@ -145,17 +144,16 @@
       })
     })
   }
-  const debouncedUpdate = domDebounce(updatePosition)
 
   onMount(() => {
-    debouncedUpdate()
-    interval = setInterval(debouncedUpdate, 100)
-    document.addEventListener("scroll", debouncedUpdate, true)
+    updatePosition()
+    interval = setInterval(updatePosition, 100)
+    document.addEventListener("scroll", updatePosition, true)
   })
 
   onDestroy(() => {
     clearInterval(interval)
-    document.removeEventListener("scroll", debouncedUpdate, true)
+    document.removeEventListener("scroll", updatePosition, true)
     observers.forEach(o => o.disconnect())
   })
 </script>

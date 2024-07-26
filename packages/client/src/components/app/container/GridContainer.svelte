@@ -7,6 +7,9 @@
   export let cols = 12
   export let rows = 12
 
+  $: cols = cols || 12
+  $: rows = rows || 12
+
   // Deliberately non-reactive as we want this fixed whenever the grid renders
   const defaultColSpan = Math.ceil((cols + 1) / 2)
   const defaultRowSpan = Math.ceil((rows + 1) / 2)

@@ -121,6 +121,48 @@
     "settings": [
       {
         "type": "select",
+        "label": "Layout",
+        "key": "layout",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "Flex",
+            "value": "flex",
+            "barIcon": "ModernGridView",
+            "barTitle": "Flex layout"
+          },
+          {
+            "label": "Grid",
+            "value": "grid",
+            "barIcon": "ViewGrid",
+            "barTitle": "Grid layout"
+          }
+        ],
+        "defaultValue": "flex"
+      },
+      {
+        "type": "number",
+        "label": "Columns",
+        "key": "cols",
+        "placeholder": 12,
+        "dependsOn": {
+          "setting": "layout",
+          "value": "grid"
+        }
+      },
+      {
+        "type": "number",
+        "label": "Rows",
+        "key": "rows",
+        "placeholder": 12,
+        "dependsOn": {
+          "setting": "layout",
+          "value": "grid"
+        }
+      },
+      {
+        "type": "select",
         "label": "Direction",
         "key": "direction",
         "showInBar": true,
@@ -139,7 +181,12 @@
             "barTitle": "Row layout"
           }
         ],
-        "defaultValue": "column"
+        "defaultValue": "column",
+        "dependsOn": {
+          "setting": "layout",
+          "value": "grid",
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -173,7 +220,12 @@
             "barTitle": "Align stretched horizontally"
           }
         ],
-        "defaultValue": "stretch"
+        "defaultValue": "stretch",
+        "dependsOn": {
+          "setting": "layout",
+          "value": "grid",
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -207,7 +259,12 @@
             "barTitle": "Align stretched vertically"
           }
         ],
-        "defaultValue": "top"
+        "defaultValue": "top",
+        "dependsOn": {
+          "setting": "layout",
+          "value": "grid",
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -229,7 +286,12 @@
             "barTitle": "Grow container"
           }
         ],
-        "defaultValue": "shrink"
+        "defaultValue": "shrink",
+        "dependsOn": {
+          "setting": "layout",
+          "value": "grid",
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -255,7 +317,12 @@
             "value": "L"
           }
         ],
-        "defaultValue": "M"
+        "defaultValue": "M",
+        "dependsOn": {
+          "setting": "layout",
+          "value": "grid",
+          "invert": true
+        }
       },
       {
         "type": "boolean",
@@ -263,7 +330,12 @@
         "key": "wrap",
         "showInBar": true,
         "barIcon": "ModernGridView",
-        "barTitle": "Wrap"
+        "barTitle": "Wrap",
+        "dependsOn": {
+          "setting": "layout",
+          "value": "grid",
+          "invert": true
+        }
       },
       {
         "type": "event",
@@ -7166,23 +7238,6 @@
       "suffix": "repeater",
       "scope": "local"
     }
-  },
-  "grid": {
-    "name": "Grid",
-    "icon": "ViewGrid",
-    "hasChildren": true,
-    "settings": [
-      {
-        "type": "number",
-        "key": "cols",
-        "label": "Columns"
-      },
-      {
-        "type": "number",
-        "key": "rows",
-        "label": "Rows"
-      }
-    ]
   },
   "gridblock": {
     "name": "Table",
