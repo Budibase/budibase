@@ -2577,12 +2577,12 @@ describe.each([
             name: "name",
             type: FieldType.STRING,
           },
-          relationship: {
-            name: "relationship",
+          rel: {
+            name: "rel",
             type: FieldType.LINK,
             relationshipType: RelationshipType.MANY_TO_MANY,
             tableId: toRelateTable._id!,
-            fieldName: "relationship",
+            fieldName: "rel",
           },
         })
         const [row1, row2] = await Promise.all([
@@ -2591,7 +2591,7 @@ describe.each([
         ])
         row = await config.api.row.save(table._id!, {
           name: "product 1",
-          relationship: [row1._id, row2._id],
+          rel: [row1._id, row2._id],
         })
       })
 
