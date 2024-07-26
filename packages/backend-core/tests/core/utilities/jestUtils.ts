@@ -1,5 +1,5 @@
 import {
-  CONSTANT_EXTERNAL_ROW_COLS,
+  PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 
@@ -25,7 +25,7 @@ export const expectAnyInternalColsAttributes: {
 }
 
 export const expectAnyExternalColsAttributes: {
-  [K in (typeof CONSTANT_EXTERNAL_ROW_COLS)[number]]: any
+  [K in (typeof PROTECTED_EXTERNAL_COLUMNS)[number]]: any
 } = {
   tableId: expect.anything(),
   _id: expect.anything(),
