@@ -1,11 +1,15 @@
 import { context, HTTPError, utils } from "@budibase/backend-core"
 
-import { generateRowActionsID } from "../../db/utils"
 import {
   SEPARATOR,
   TableRowActions,
   VirtualDocumentType,
 } from "@budibase/types"
+import { generateRowActionsID } from "../../db/utils"
+import automations from "./automations"
+import { definitions as TRIGGER_DEFINITIONS } from "../../automations/triggerInfo"
+import * as triggers from "../../automations/triggers"
+import sdk from ".."
 
 function ensureUniqueAndThrow(
   doc: TableRowActions,
@@ -41,13 +45,40 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   ensureUniqueAndThrow(doc, action.name)
 
-  const newId = `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
-  doc.actions[newId] = action
+  const appId = context.getAppId()
+  if (!appId) {
+    throw new Error("Could not get the current appId")
+  }
+
+  const newRowActionId = `${
+    VirtualDocumentType.ROW_ACTION
+  }${SEPARATOR}${utils.newid()}`
+
+  const automation = await automations.create({
+    name: action.name,
+    appId,
+    definition: {
+      trigger: {
+        id: "trigger",
+        ...TRIGGER_DEFINITIONS.ROW_ACTION,
+        inputs: {
+          tableId,
+          rowActionId: newRowActionId,
+        },
+      },
+      steps: [],
+    },
+  })
+
+  doc.actions[newRowActionId] = {
+    name: action.name,
+    automationId: automation._id!,
+  }
   await db.put(doc)
 
   return {
-    id: newId,
-    ...action,
+    id: newRowActionId,
+    ...doc.actions[newRowActionId],
   }
 }
 
@@ -81,29 +112,61 @@ export async function update(
 
   ensureUniqueAndThrow(actionsDoc, action.name, rowActionId)
 
-  actionsDoc.actions[rowActionId] = action
+  actionsDoc.actions[rowActionId] = {
+    automationId: actionsDoc.actions[rowActionId].automationId,
+    ...action,
+  }
 
   const db = context.getAppDB()
   await db.put(actionsDoc)
 
   return {
     id: rowActionId,
-    ...action,
+    ...actionsDoc.actions[rowActionId],
   }
 }
 
 export async function remove(tableId: string, rowActionId: string) {
   const actionsDoc = await get(tableId)
 
-  if (!actionsDoc.actions[rowActionId]) {
+  const rowAction = actionsDoc.actions[rowActionId]
+  if (!rowAction) {
     throw new HTTPError(
       `Row action '${rowActionId}' not found in '${tableId}'`,
       400
     )
   }
 
+  const { automationId } = rowAction
+  const automation = await automations.get(automationId)
+  await automations.remove(automation._id, automation._rev)
   delete actionsDoc.actions[rowActionId]
 
   const db = context.getAppDB()
   await db.put(actionsDoc)
+}
+
+export async function run(tableId: any, rowActionId: any, rowId: string) {
+  const table = await sdk.tables.getTable(tableId)
+  if (!table) {
+    throw new HTTPError("Table not found", 404)
+  }
+
+  const { actions } = await get(tableId)
+
+  const rowAction = actions[rowActionId]
+  if (!rowAction) {
+    throw new HTTPError("Row action not found", 404)
+  }
+
+  const automation = await sdk.automations.get(rowAction.automationId)
+
+  const row = await sdk.rows.find(tableId, rowId)
+  await triggers.externalTrigger(automation, {
+    fields: {
+      row,
+      table,
+    },
+    appId: context.getAppId(),
+  })
 }

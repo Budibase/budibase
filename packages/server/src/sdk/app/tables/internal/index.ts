@@ -31,6 +31,7 @@ export async function save(
     tableId?: string
     rowsToImport?: Row[]
     renaming?: RenameColumn
+    isImport?: boolean
   }
 ) {
   const db = context.getAppDB()
@@ -47,7 +48,9 @@ export async function save(
   }
 
   // check for case sensitivity - we don't want to allow duplicated columns
-  const duplicateColumn = findDuplicateInternalColumns(table)
+  const duplicateColumn = findDuplicateInternalColumns(table, {
+    ignoreProtectedColumnNames: !oldTable && !!opts?.isImport,
+  })
   if (duplicateColumn.length) {
     throw new Error(
       `Column(s) "${duplicateColumn.join(
