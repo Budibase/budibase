@@ -20,7 +20,7 @@ import {
   AutomationStatus,
 } from "@budibase/types"
 import { executeInThread } from "../threads/automation"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, sdk } from "@budibase/shared-core"
 
 export const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
@@ -121,17 +121,15 @@ function rowPassesFilters(row: Row, filters: SearchFilters) {
 
 export async function externalTrigger(
   automation: Automation,
-  params: { fields: Record<string, any>; timeout?: number },
+  params: { fields: Record<string, any>; timeout?: number; appId?: string },
   { getResponses }: { getResponses?: boolean } = {}
 ): Promise<any> {
   if (automation.disabled) {
     throw new Error("Automation is disabled")
   }
+
   if (
-    automation.definition != null &&
-    automation.definition.trigger != null &&
-    automation.definition.trigger.stepId === definitions.APP.stepId &&
-    automation.definition.trigger.stepId === "APP" &&
+    sdk.automations.isAppAction(automation) &&
     !(await checkTestFlag(automation._id!))
   ) {
     // values are likely to be submitted as strings, so we shall convert to correct type
@@ -141,6 +139,13 @@ export async function externalTrigger(
       coercedFields[key] = coerce(params.fields[key], fields[key])
     }
     params.fields = coercedFields
+  } else if (sdk.automations.isRowAction(automation)) {
+    params = {
+      ...params,
+      // Until we don't refactor all the types, we want to flatten the nested "fields" object
+      ...params.fields,
+      fields: {},
+    }
   }
   const data: AutomationData = { automation, event: params }
 

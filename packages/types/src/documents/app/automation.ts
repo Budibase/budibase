@@ -279,6 +279,7 @@ export enum AutomationEventType {
   APP_TRIGGER = "app:trigger",
   CRON_TRIGGER = "cron:trigger",
   WEBHOOK_TRIGGER = "web:trigger",
+  ROW_ACTION = "row:action",
 }
 
 export type UpdatedRowEventEmitter = {

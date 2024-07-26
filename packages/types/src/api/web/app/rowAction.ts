@@ -13,3 +13,7 @@ export interface RowActionResponse extends RowActionData {
 export interface RowActionsResponse {
   actions: Record<string, RowActionResponse>
 }
+
+export interface RowActionTriggerRequest {
+  rowId: string
+}
