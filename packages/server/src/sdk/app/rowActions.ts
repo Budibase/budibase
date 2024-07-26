@@ -1,13 +1,15 @@
 import { context, HTTPError, utils } from "@budibase/backend-core"
 
-import { generateRowActionsID } from "../../db/utils"
 import {
   SEPARATOR,
   TableRowActions,
   VirtualDocumentType,
 } from "@budibase/types"
+import { generateRowActionsID } from "../../db/utils"
 import automations from "./automations"
 import { definitions as TRIGGER_DEFINITIONS } from "../../automations/triggerInfo"
+import * as triggers from "../../automations/triggers"
+import sdk from ".."
 
 function ensureUniqueAndThrow(
   doc: TableRowActions,
@@ -142,4 +144,29 @@ export async function remove(tableId: string, rowActionId: string) {
 
   const db = context.getAppDB()
   await db.put(actionsDoc)
+}
+
+export async function run(tableId: any, rowActionId: any, rowId: string) {
+  const table = await sdk.tables.getTable(tableId)
+  if (!table) {
+    throw new HTTPError("Table not found", 404)
+  }
+
+  const { actions } = await get(tableId)
+
+  const rowAction = actions[rowActionId]
+  if (!rowAction) {
+    throw new HTTPError("Row action not found", 404)
+  }
+
+  const automation = await sdk.automations.get(rowAction.automationId)
+
+  const row = await sdk.rows.find(tableId, rowId)
+  await triggers.externalTrigger(automation, {
+    fields: {
+      row,
+      table,
+    },
+    appId: context.getAppId(),
+  })
 }

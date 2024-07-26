@@ -9,11 +9,12 @@ import {
 
 export const definition: AutomationTriggerSchema = {
   type: AutomationStepType.TRIGGER,
+  name: "Row Action",
+  event: AutomationEventType.ROW_ACTION, // TODO
+  icon: "Workflow", // TODO
   tagline:
     "Row action triggered in {{inputs.enriched.table.name}} by {{inputs.enriched.row._id}}",
-  name: "Row Action",
-  description: "TODO description",
-  icon: "Workflow",
+  description: "TODO description", // TODO
   stepId: AutomationTriggerStepId.ROW_ACTION,
   inputs: {},
   schema: {
@@ -28,8 +29,27 @@ export const definition: AutomationTriggerSchema = {
       },
       required: ["tableId"],
     },
-    outputs: { properties: {} },
+    outputs: {
+      properties: {
+        id: {
+          type: AutomationIOType.STRING,
+          description: "Row ID - can be used for updating",
+        },
+        revision: {
+          type: AutomationIOType.STRING,
+          description: "Revision of row",
+        },
+        table: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.TABLE,
+          title: "The table linked to the row action",
+        },
+        row: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.ROW,
+          description: "The row linked to the row action",
+        },
+      },
+    },
   },
-
-  event: AutomationEventType.ROW_SAVE,
 }
