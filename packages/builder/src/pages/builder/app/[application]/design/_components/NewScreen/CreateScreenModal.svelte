@@ -121,7 +121,7 @@
     for (let tableOrView of selectedTablesAndViews) {
       const screenTemplate = gridScreen(
         tableOrView,
-        await permissions[tableOrView.id]
+        permissions[tableOrView.id]
       )
 
       const screen = await createScreen(screenTemplate)
@@ -139,7 +139,7 @@
     for (let tableOrView of selectedTablesAndViews) {
       const screenTemplate = gridDetailsScreen(
         tableOrView,
-        await permissions[tableOrView.id]
+        permissions[tableOrView.id]
       )
 
       const screen = await createScreen(screenTemplate)
