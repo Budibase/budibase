@@ -25,6 +25,8 @@ export async function save(
     sourceType: rest.sourceType || TableSourceType.INTERNAL,
   }
 
+  const isImport = !!rows
+
   if (!tableToSave.views) {
     tableToSave.views = {}
   }
@@ -35,6 +37,7 @@ export async function save(
       rowsToImport: rows,
       tableId: ctx.request.body._id,
       renaming,
+      isImport,
     })
 
     return table
