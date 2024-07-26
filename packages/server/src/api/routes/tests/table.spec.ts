@@ -1306,111 +1306,117 @@ describe.each([
         })
       })
 
-      it("can validate user column imports", async () => {
-        const schema: TableSchema = {
-          ...basicSchema,
-          user: {
-            type: FieldType.BB_REFERENCE_SINGLE,
-            subtype: BBReferenceFieldSubType.USER,
-            name: "user",
-          },
-        }
-
-        const result = await testDelegate(
-          [
-            {
-              id: generator.natural(),
-              name: generator.first(),
-              user: valueToCsv(getUserValues()),
+      describe.each([
+        ["csv", valueToCsv],
+        ["json", x => x],
+      ])("bb references", (format, parser) => {
+        it(`can validate user column imports (${format} format)`, async () => {
+          const schema: TableSchema = {
+            ...basicSchema,
+            user: {
+              type: FieldType.BB_REFERENCE_SINGLE,
+              subtype: BBReferenceFieldSubType.USER,
+              name: "user",
             },
-          ],
-          schema
-        )
+          }
 
-        expect(result).toEqual({
-          allValid: true,
-          errors: {},
-          invalidColumns: [],
-          schemaValidation: {
-            id: true,
-            name: true,
-            user: true,
-          },
+          const result = await testDelegate(
+            [
+              {
+                id: generator.natural(),
+                name: generator.first(),
+                user: parser(getUserValues()),
+              },
+            ],
+            schema
+          )
+
+          expect(result).toEqual({
+            allValid: true,
+            errors: {},
+            invalidColumns: [],
+            schemaValidation: {
+              id: true,
+              name: true,
+              user: true,
+            },
+          })
         })
-      })
 
-      it("can validate user column imports with invalid data", async () => {
-        const schema: TableSchema = {
-          ...basicSchema,
-          user: {
-            type: FieldType.BB_REFERENCE_SINGLE,
-            subtype: BBReferenceFieldSubType.USER,
-            name: "user",
-          },
-        }
-
-        const result = await testDelegate(
-          [
-            {
-              id: generator.natural(),
-              name: generator.first(),
-              user: valueToCsv(getUserValues()),
+        it(`can validate user column imports with invalid data (${format} format)`, async () => {
+          const schema: TableSchema = {
+            ...basicSchema,
+            user: {
+              type: FieldType.BB_REFERENCE_SINGLE,
+              subtype: BBReferenceFieldSubType.USER,
+              name: "user",
             },
-            {
-              id: generator.natural(),
-              name: generator.first(),
-              user: getUserValues(),
-            },
-          ],
-          schema
-        )
+          }
 
-        expect(result).toEqual({
-          allValid: false,
-          errors: {},
-          invalidColumns: [],
-          schemaValidation: {
-            id: true,
-            name: true,
-            user: false,
-          },
+          const result = await testDelegate(
+            [
+              {
+                id: generator.natural(),
+                name: generator.first(),
+                user: parser(getUserValues()),
+              },
+              {
+                id: generator.natural(),
+                name: generator.first(),
+                user: "no valid user data",
+              },
+            ],
+            schema
+          )
+
+          expect(result).toEqual({
+            allValid: false,
+            errors: {},
+            invalidColumns: [],
+            schemaValidation: {
+              id: true,
+              name: true,
+              user: false,
+            },
+          })
         })
-      })
 
-      it("can validate users column imports", async () => {
-        const schema: TableSchema = {
-          ...basicSchema,
-          user: {
-            type: FieldType.BB_REFERENCE,
-            subtype: BBReferenceFieldSubType.USER,
-            name: "user",
-          },
-        }
-
-        const result = await testDelegate(
-          [
-            {
-              id: generator.natural(),
-              name: generator.first(),
-              user: valueToCsv([
-                getUserValues(),
-                getUserValues(),
-                getUserValues(),
-              ]),
+        it(`can validate users column imports (${format} format)`, async () => {
+          const schema: TableSchema = {
+            ...basicSchema,
+            user: {
+              type: FieldType.BB_REFERENCE,
+              subtype: BBReferenceFieldSubType.USER,
+              name: "user",
+              externalType: "array",
             },
-          ],
-          schema
-        )
+          }
 
-        expect(result).toEqual({
-          allValid: true,
-          errors: {},
-          invalidColumns: [],
-          schemaValidation: {
-            id: true,
-            name: true,
-            user: true,
-          },
+          const result = await testDelegate(
+            [
+              {
+                id: generator.natural(),
+                name: generator.first(),
+                user: parser([
+                  getUserValues(),
+                  getUserValues(),
+                  getUserValues(),
+                ]),
+              },
+            ],
+            schema
+          )
+
+          expect(result).toEqual({
+            allValid: true,
+            errors: {},
+            invalidColumns: [],
+            schemaValidation: {
+              id: true,
+              name: true,
+              user: true,
+            },
+          })
         })
       })
     })

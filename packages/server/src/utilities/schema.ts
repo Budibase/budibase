@@ -213,22 +213,29 @@ function isValidBBReference(
   subtype: BBReferenceFieldSubType,
   isRequired: boolean
 ): boolean {
-  if (typeof data !== "string") {
-    return false
+  function parser<T>(data: any) {
+    if (typeof data === "string") {
+      return parseCsvExport<T>(data)
+    }
+    if (typeof data === "object") {
+      return data as T
+    }
+
+    throw new Error("BB reference format is no valid")
   }
 
   if (type === FieldType.BB_REFERENCE_SINGLE) {
     if (!data) {
       return !isRequired
     }
-    const user = parseCsvExport<{ _id: string }>(data)
+    const user = parser<{ _id: string }>(data)
     return db.isGlobalUserID(user._id)
   }
 
   switch (subtype) {
     case BBReferenceFieldSubType.USER:
     case BBReferenceFieldSubType.USERS: {
-      const userArray = parseCsvExport<{ _id: string }[]>(data)
+      const userArray = parser<{ _id: string }[]>(data)
       if (!Array.isArray(userArray)) {
         return false
       }
