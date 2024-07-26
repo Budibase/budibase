@@ -19,19 +19,20 @@ export function csv(
 
   for (let row of rows) {
     csv = `${csv}\n${headers
-      .map(header => {
-        let val = row[header]
-        val =
-          typeof val === "object" && !(val instanceof Date)
-            ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
-            : val !== undefined
-            ? `"${val}"`
-            : ""
-        return val.trim()
-      })
+      .map(header => valueToCsv(row[header]))
       .join(delimiter)}`
   }
   return csv
+}
+
+export function valueToCsv(val: any) {
+  val =
+    typeof val === "object" && !(val instanceof Date)
+      ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
+      : val !== undefined
+      ? `"${val}"`
+      : ""
+  return val.trim()
 }
 
 export function json(rows: Row[]) {
