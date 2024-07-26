@@ -1,6 +1,6 @@
 import {
   CONSTANT_EXTERNAL_ROW_COLS,
-  CONSTANT_INTERNAL_ROW_COLS,
+  PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 
 export function expectFunctionWasCalledTimesWith(
@@ -14,7 +14,7 @@ export function expectFunctionWasCalledTimesWith(
 }
 
 export const expectAnyInternalColsAttributes: {
-  [K in (typeof CONSTANT_INTERNAL_ROW_COLS)[number]]: any
+  [K in (typeof PROTECTED_INTERNAL_COLUMNS)[number]]: any
 } = {
   tableId: expect.anything(),
   type: expect.anything(),
