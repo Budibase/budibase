@@ -26,9 +26,9 @@ import * as setup from "./utilities"
 import * as uuid from "uuid"
 
 import { generator } from "@budibase/backend-core/tests"
-import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import timekeeper from "timekeeper"
+import { valueToCsv } from "../../controllers/view/exporters"
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
@@ -1099,6 +1099,12 @@ describe.each([
       },
     }
 
+    const getUserValues = () => ({
+      _id: docIds.generateGlobalUserID(),
+      primaryDisplay: generator.first(),
+      email: generator.email({}),
+    })
+
     const importCases: [
       string,
       (rows: Row[], schema: TableSchema) => Promise<ValidateTableImportResponse>
@@ -1295,6 +1301,39 @@ describe.each([
           schemaValidation: {
             id: true,
             name: false,
+          },
+        })
+      })
+
+      it("can validate user column imports", async () => {
+        const schema: TableSchema = {
+          ...basicSchema,
+          user: {
+            type: FieldType.BB_REFERENCE_SINGLE,
+            subtype: BBReferenceFieldSubType.USER,
+            name: "user",
+          },
+        }
+
+        const result = await testDelegate(
+          [
+            {
+              id: generator.natural(),
+              name: generator.first(),
+              user: valueToCsv(getUserValues()),
+            },
+          ],
+          schema
+        )
+
+        expect(result).toEqual({
+          allValid: true,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+            user: true,
           },
         })
       })
