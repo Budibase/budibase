@@ -86,6 +86,7 @@ export class IsolatedVM implements VM {
         }
       }`
     const helpersSource = loadBundle(BundleType.HELPERS)
+
     const script = this.isolate.compileScriptSync(
       `${injectedRequire};${helpersSource};helpers=helpers.default`
     )
@@ -110,6 +111,19 @@ export class IsolatedVM implements VM {
       const snippetCache = {};
       ${snippetsSource};
       snippets = snippets.default;
+    `)
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
+    })
+    return this
+  }
+
+  withBuffer() {
+    const bufferSource = loadBundle(BundleType.BUFFER)
+    const script = this.isolate.compileScriptSync(`
+      ${bufferSource};
+      const Buffer = buffer.default;
     `)
     script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
     new Promise(() => {

@@ -555,7 +555,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     if (Array.isArray(docValue)) {
       return docValue.length === 0
     }
-    if (typeof docValue === "object") {
+    if (docValue && typeof docValue === "object") {
       return Object.keys(docValue).length === 0
     }
     return docValue == null

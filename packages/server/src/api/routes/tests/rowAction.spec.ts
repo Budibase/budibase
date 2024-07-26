@@ -1,9 +1,16 @@
 import _ from "lodash"
 import tk from "timekeeper"
 
-import { CreateRowActionRequest, RowActionResponse } from "@budibase/types"
+import {
+  CreateRowActionRequest,
+  DocumentType,
+  RowActionResponse,
+} from "@budibase/types"
 import * as setup from "./utilities"
 import { generator } from "@budibase/backend-core/tests"
+
+const expectAutomationId = () =>
+  expect.stringMatching(`^${DocumentType.AUTOMATION}_.+`)
 
 describe("/rowsActions", () => {
   const config = setup.getConfig()
@@ -79,17 +86,19 @@ describe("/rowsActions", () => {
       })
 
       expect(res).toEqual({
+        name: rowAction.name,
         id: expect.stringMatching(/^row_action_\w+/),
         tableId: tableId,
-        ...rowAction,
+        automationId: expectAutomationId(),
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
         actions: {
           [res.id]: {
-            ...rowAction,
+            name: rowAction.name,
             id: res.id,
             tableId: tableId,
+            automationId: expectAutomationId(),
           },
         },
       })
@@ -97,19 +106,13 @@ describe("/rowsActions", () => {
 
     it("trims row action names", async () => {
       const name = "   action  name  "
-      const res = await createRowAction(
-        tableId,
-        { name },
-        {
-          status: 201,
-        }
-      )
+      const res = await createRowAction(tableId, { name }, { status: 201 })
 
-      expect(res).toEqual({
-        id: expect.stringMatching(/^row_action_\w+/),
-        tableId: tableId,
-        name: "action  name",
-      })
+      expect(res).toEqual(
+        expect.objectContaining({
+          name: "action  name",
+        })
+      )
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
         actions: {
@@ -129,9 +132,24 @@ describe("/rowsActions", () => {
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
         actions: {
-          [responses[0].id]: { ...rowActions[0], id: responses[0].id, tableId },
-          [responses[1].id]: { ...rowActions[1], id: responses[1].id, tableId },
-          [responses[2].id]: { ...rowActions[2], id: responses[2].id, tableId },
+          [responses[0].id]: {
+            name: rowActions[0].name,
+            id: responses[0].id,
+            tableId,
+            automationId: expectAutomationId(),
+          },
+          [responses[1].id]: {
+            name: rowActions[1].name,
+            id: responses[1].id,
+            tableId,
+            automationId: expectAutomationId(),
+          },
+          [responses[2].id]: {
+            name: rowActions[2].name,
+            id: responses[2].id,
+            tableId,
+            automationId: expectAutomationId(),
+          },
         },
       })
     })
@@ -152,7 +170,7 @@ describe("/rowsActions", () => {
     it("ignores not valid row action data", async () => {
       const rowAction = createRowActionRequest()
       const dirtyRowAction = {
-        ...rowAction,
+        name: rowAction.name,
         id: generator.guid(),
         valueToIgnore: generator.string(),
       }
@@ -161,17 +179,19 @@ describe("/rowsActions", () => {
       })
 
       expect(res).toEqual({
+        name: rowAction.name,
         id: expect.any(String),
         tableId,
-        ...rowAction,
+        automationId: expectAutomationId(),
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual({
         actions: {
           [res.id]: {
+            name: rowAction.name,
             id: res.id,
             tableId: tableId,
-            ...rowAction,
+            automationId: expectAutomationId(),
           },
         },
       })
@@ -212,6 +232,17 @@ describe("/rowsActions", () => {
       const action = await createRowAction(tableId, createRowActionRequest())
 
       await createRowAction(otherTable._id!, { name: action.name })
+    })
+
+    it("an automation is created when creating a new row action", async () => {
+      const action1 = await createRowAction(tableId, createRowActionRequest())
+      const action2 = await createRowAction(tableId, createRowActionRequest())
+
+      for (const automationId of [action1.automationId, action2.automationId]) {
+        expect(
+          await config.api.automation.get(automationId, { status: 200 })
+        ).toEqual(expect.objectContaining({ _id: automationId }))
+      }
     })
   })
 
@@ -264,7 +295,6 @@ describe("/rowsActions", () => {
       const updatedName = generator.string()
 
       const res = await config.api.rowAction.update(tableId, actionId, {
-        ...actionData,
         name: updatedName,
       })
 
@@ -272,14 +302,17 @@ describe("/rowsActions", () => {
         id: actionId,
         tableId,
         name: updatedName,
+        automationId: actionData.automationId,
       })
 
       expect(await config.api.rowAction.find(tableId)).toEqual(
         expect.objectContaining({
           actions: expect.objectContaining({
             [actionId]: {
-              ...actionData,
               name: updatedName,
+              id: actionData.id,
+              tableId: actionData.tableId,
+              automationId: actionData.automationId,
             },
           }),
         })
@@ -296,7 +329,6 @@ describe("/rowsActions", () => {
       )
 
       const res = await config.api.rowAction.update(tableId, rowAction.id, {
-        ...rowAction,
         name: "   action  name  ",
       })
 
@@ -407,6 +439,27 @@ describe("/rowsActions", () => {
       await config.api.rowAction.delete(otherTable._id!, action.id, {
         status: 400,
       })
+    })
+
+    it("deletes the linked automation", async () => {
+      const actions: RowActionResponse[] = []
+      for (const rowAction of createRowActionRequests(3)) {
+        actions.push(await createRowAction(tableId, rowAction))
+      }
+
+      const actionToDelete = _.sample(actions)!
+      await config.api.rowAction.delete(tableId, actionToDelete.id, {
+        status: 204,
+      })
+
+      await config.api.automation.get(actionToDelete.automationId, {
+        status: 404,
+      })
+      for (const action of actions.filter(a => a.id !== actionToDelete.id)) {
+        await config.api.automation.get(action.automationId, {
+          status: 200,
+        })
+      }
     })
   })
 })
