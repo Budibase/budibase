@@ -60,12 +60,45 @@ export const createContextStore = parentContext => {
     observers.forEach(cb => cb(key))
   }
 
+  /**
+   * Purge the global context of any component entries
+   *
+   * rowSelection (Legacy) - used by the old Table component.
+   */
+  const clearComponentContext = () => {
+    context.update(ctx => {
+      const {
+        device,
+        snippets,
+        user,
+        user_RefreshDatasource,
+        state,
+        query,
+        url,
+        rowSelection,
+      } = {
+        ...ctx,
+      }
+      return {
+        device,
+        snippets,
+        user,
+        user_RefreshDatasource,
+        state,
+        query,
+        url,
+        rowSelection,
+      }
+    })
+  }
+
   return {
     subscribe: totalContext.subscribe,
     actions: {
       provideData,
       provideAction,
       observeChanges,
+      clearComponentContext,
     },
   }
 }
