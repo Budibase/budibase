@@ -11,6 +11,7 @@ import {
   automationStore,
   selectedAutomation,
   automationHistoryStore,
+  selectedAutomationDisplayData,
 } from "./automations.js"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
@@ -44,6 +45,7 @@ export {
   previewStore,
   automationStore,
   selectedAutomation,
+  selectedAutomationDisplayData,
   automationHistoryStore,
   sortedScreens,
   userStore,
