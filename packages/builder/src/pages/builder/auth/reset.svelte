@@ -1,11 +1,17 @@
 <script>
-  import { Body, Button, Heading, Layout, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Heading,
+    Layout,
+    ProgressCircle,
+    notifications,
+  } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
   import { auth, organisation } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { onMount } from "svelte"
-  import { ProgressCircle } from "@budibase/bbui"
   import PasswordRepeatInput from "../../../components/common/users/PasswordRepeatInput.svelte"
 
   const resetCode = $params["?code"]
