@@ -28,7 +28,11 @@ import {
   isCreator,
   validateUniqueUser,
 } from "./utils"
-import { getPlatformUser, searchExistingEmails } from "./lookup"
+import {
+  getFirstPlatformUser,
+  getPlatformUsers,
+  searchExistingEmails,
+} from "./lookup"
 import { hash } from "../utils"
 import { validatePassword } from "../security"
 
@@ -451,13 +455,15 @@ export class UserDB {
 
     const ssoUsersToDelete: AnyDocument[] = []
     for (let user of usersToDelete) {
-      const platformUser = (await getPlatformUser(
+      const platformUser = (await getFirstPlatformUser(
         user._id!
       )) as PlatformUserById
       const ssoId = platformUser.ssoId
       if (ssoId) {
         // Need to get the _rev of the SSO user doc to delete it. The view also returns docs that have the ssoId property, so we need to ignore those.
-        const ssoUsers = (await getPlatformUser(ssoId)) as PlatformUserBySsoId[]
+        const ssoUsers = (await getPlatformUsers(
+          ssoId
+        )) as PlatformUserBySsoId[]
         ssoUsers
           .filter(user => user.ssoId == null)
           .forEach(user => {
