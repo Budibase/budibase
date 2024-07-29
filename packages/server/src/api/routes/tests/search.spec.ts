@@ -2405,7 +2405,7 @@ describe.each([
       await createRows([{ date: earlyDate }, { date: laterDate }])
     })
 
-    it.only("should be able to handle a date search", async () => {
+    it("should be able to handle a date search", async () => {
       await expectSearch({
         query: {
           range: {
