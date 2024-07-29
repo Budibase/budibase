@@ -109,6 +109,26 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
   return filters
 }
 
+// OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
+// so when we use them we need to wrap them in to_char(). This function
+// converts a field name to the appropriate identifier.
+function convertClobs(client: SqlClient, table: Table, field: string): string {
+  const parts = field.split(".")
+  const col = parts.pop()!
+  const schema = table.schema[col]
+  let identifier = quotedIdentifier(client, field)
+  if (
+    schema.type === FieldType.STRING ||
+    schema.type === FieldType.LONGFORM ||
+    schema.type === FieldType.BB_REFERENCE_SINGLE ||
+    schema.type === FieldType.OPTIONS ||
+    schema.type === FieldType.BARCODEQR
+  ) {
+    identifier = `to_char(${identifier})`
+  }
+  return identifier
+}
+
 function generateSelectStatement(
   json: QueryJson,
   knex: Knex
@@ -372,7 +392,15 @@ class InternalBuilder {
       iterate(
         filters.oneOf,
         (key: string, array) => {
-          query = query[fnc](key, Array.isArray(array) ? array : [array])
+          if (this.client === SqlClient.ORACLE) {
+            key = convertClobs(this.client, table, key)
+            query = query.whereRaw(
+              `${key} IN (?)`,
+              Array.isArray(array) ? array : [array]
+            )
+          } else {
+            query = query[fnc](key, Array.isArray(array) ? array : [array])
+          }
         },
         (key: string[], array) => {
           query = query[fnc](key, Array.isArray(array) ? array : [array])
@@ -436,8 +464,9 @@ class InternalBuilder {
             [value]
           )
         } else if (this.client === SqlClient.ORACLE) {
+          const identifier = convertClobs(this.client, table, key)
           query = query[fnc](
-            `COALESCE(${quotedIdentifier(this.client, key)}, -1) = ?`,
+            `(${identifier} IS NOT NULL AND ${identifier} = ?)`,
             [value]
           )
         } else {
@@ -460,8 +489,9 @@ class InternalBuilder {
             [value]
           )
         } else if (this.client === SqlClient.ORACLE) {
+          const identifier = convertClobs(this.client, table, key)
           query = query[fnc](
-            `COALESCE(${quotedIdentifier(this.client, key)}, -1) != ?`,
+            `(${identifier} IS NOT NULL AND ${identifier} != ?)`,
             [value]
           )
         } else {
@@ -707,8 +737,11 @@ class InternalBuilder {
       }
       const ret = query.insert(parsedBody).onConflict(primary).merge()
       return ret
-    } else if (this.client === SqlClient.MS_SQL) {
-      // No upsert or onConflict support in MSSQL yet, see:
+    } else if (
+      this.client === SqlClient.MS_SQL ||
+      this.client === SqlClient.ORACLE
+    ) {
+      // No upsert or onConflict support in MSSQL/Oracle yet, see:
       //   https://github.com/knex/knex/pull/6050
       return query.insert(parsedBody)
     }
@@ -867,7 +900,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     const config: Knex.Config = {
       client: sqlClient,
     }
-    if (sqlClient === SqlClient.SQL_LITE) {
+    if (sqlClient === SqlClient.SQL_LITE || sqlClient === SqlClient.ORACLE) {
       config.useNullAsDefault = true
     }
 

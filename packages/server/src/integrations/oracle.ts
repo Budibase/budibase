@@ -360,11 +360,20 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       this.index = 1
       connection = await this.getConnection()
 
-      const options: ExecuteOptions = { autoCommit: true }
+      const options: ExecuteOptions = {
+        autoCommit: true,
+        fetchTypeHandler: function (metaData) {
+          if (metaData.dbType === oracledb.CLOB) {
+            return { type: oracledb.STRING }
+          }
+          return undefined
+        },
+      }
       const bindings: BindParameters = query.bindings || []
 
       this.log(query.sql, bindings)
-      return await connection.execute<T>(query.sql, bindings, options)
+      const result = await connection.execute(query.sql, bindings, options)
+      return result as Result<T>
     } finally {
       if (connection) {
         try {
