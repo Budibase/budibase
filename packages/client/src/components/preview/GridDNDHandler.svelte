@@ -1,21 +1,20 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import { builderStore, componentStore } from "stores"
-  import { Utils } from "@budibase/frontend-core"
+  import { Utils, memo } from "@budibase/frontend-core"
 
   let dragInfo
-  let gridStyles
+  let gridStyles = memo()
   let id
 
   // Some memoisation of primitive types for performance
-  $: jsonStyles = JSON.stringify(gridStyles)
   $: id = dragInfo?.id || id
 
   // Set ephemeral grid styles on the dragged component
   $: instance = componentStore.actions.getComponentInstance(id)
   $: $instance?.setEphemeralStyles({
-    ...gridStyles,
-    ...(gridStyles ? { "z-index": 999 } : null),
+    ...$gridStyles,
+    ...($gridStyles ? { "z-index": 999 } : null),
   })
 
   // Util to check if a DND event originates from a grid (or inside a grid).
@@ -33,7 +32,7 @@
   // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
     const component = document.getElementsByClassName(id)[0]
-    return [...component.children][0]
+    return [...component?.children][0]
   }
 
   const processEvent = Utils.throttle((mouseX, mouseY) => {
@@ -76,9 +75,7 @@
         "grid-column-start": colStart + deltaX,
         "grid-column-end": colEnd + deltaX,
       }
-      if (JSON.stringify(newStyles) !== jsonStyles) {
-        gridStyles = newStyles
-      }
+      gridStyles.set(newStyles)
     } else if (mode === "resize") {
       let newStyles = {}
       if (side === "right") {
@@ -102,9 +99,7 @@
         newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
         newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
       }
-      if (JSON.stringify(newStyles) !== jsonStyles) {
-        gridStyles = newStyles
-      }
+      gridStyles.set(newStyles)
     }
   }, 100)
 
@@ -200,8 +195,8 @@
   // Callback when drag stops (whether dropped or not)
   const stopDragging = async () => {
     // Save changes
-    if (gridStyles) {
-      await builderStore.actions.updateStyles(gridStyles, dragInfo.id)
+    if ($gridStyles) {
+      await builderStore.actions.updateStyles($gridStyles, dragInfo.id)
     }
 
     // Reset listener
@@ -211,7 +206,7 @@
 
     // Reset state
     dragInfo = null
-    gridStyles = null
+    gridStyles.set(null)
   }
 
   onMount(() => {
