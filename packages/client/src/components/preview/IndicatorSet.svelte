@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
   import { builderStore } from "stores"
+  import { memo } from "@budibase/frontend-core"
 
   export let componentId = null
   export let color = null
@@ -25,6 +26,7 @@
     insideGrid: false,
     error: false,
   })
+  const config = memo($$props)
 
   let interval
   let state = defaultState()
@@ -35,7 +37,13 @@
 
   $: visibleIndicators = state.indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
-  // $: $$props, updatePosition()
+  $: config.set({
+    componentId,
+    color,
+    zIndex,
+    prefix,
+    allowResizeAnchors,
+  })
 
   const checkInsideGrid = id => {
     const component = document.getElementsByClassName(id)[0]
@@ -147,6 +155,7 @@
 
   onMount(() => {
     updatePosition()
+    config.subscribe(updatePosition)
     interval = setInterval(updatePosition, 100)
     document.addEventListener("scroll", updatePosition, true)
   })
