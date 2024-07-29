@@ -40,14 +40,14 @@ import { structures } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 
 describe.each([
-  // ["in-memory", undefined],
-  // ["lucene", undefined],
-  // ["sqs", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  ["in-memory", undefined],
+  ["lucene", undefined],
+  ["sqs", undefined],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -1318,7 +1318,7 @@ describe.each([
   })
 
   !isInternal &&
-    describe.only("datetime - time only", () => {
+    describe("datetime - time only", () => {
       const T_1000 = "10:00:00"
       const T_1045 = "10:45:00"
       const T_1200 = "12:00:00"
@@ -2389,9 +2389,9 @@ describe.each([
 
   describe.each([
     { low: "2024-07-03T00:00:00.000Z", high: "9999-00-00T00:00:00.000Z" },
-    { low: "2024-07-03T00:00:00.000Z", high: "9998-00-00T00:00:00.000Z" },
-    { low: "0000-00-00T00:00:00.000Z", high: "2024-07-04T00:00:00.000Z" },
-    { low: "0001-00-00T00:00:00.000Z", high: "2024-07-04T00:00:00.000Z" },
+    // { low: "2024-07-03T00:00:00.000Z", high: "9998-00-00T00:00:00.000Z" },
+    // { low: "0000-00-00T00:00:00.000Z", high: "2024-07-04T00:00:00.000Z" },
+    // { low: "0001-00-00T00:00:00.000Z", high: "2024-07-04T00:00:00.000Z" },
   ])("date special cases", ({ low, high }) => {
     const earlyDate = "2024-07-03T10:00:00.000Z",
       laterDate = "2024-07-03T11:00:00.000Z"
@@ -2405,7 +2405,7 @@ describe.each([
       await createRows([{ date: earlyDate }, { date: laterDate }])
     })
 
-    it("should be able to handle a date search", async () => {
+    it.only("should be able to handle a date search", async () => {
       await expectSearch({
         query: {
           range: {
@@ -2418,25 +2418,25 @@ describe.each([
 
   describe.each([
     "名前", // Japanese for "name"
-    // "Benutzer-ID", // German for "user ID", includes a hyphen
-    // "numéro", // French for "number", includes an accent
-    // "år", // Swedish for "year", includes a ring above
-    // "naïve", // English word borrowed from French, includes an umlaut
-    // "الاسم", // Arabic for "name"
-    // "оплата", // Russian for "payment"
-    // "पता", // Hindi for "address"
-    // "用戶名", // Chinese for "username"
-    // "çalışma_zamanı", // Turkish for "runtime", includes an underscore and a cedilla
-    // "preço", // Portuguese for "price", includes a cedilla
-    // "사용자명", // Korean for "username"
-    // "usuario_ñoño", // Spanish, uses an underscore and includes "ñ"
-    // "файл", // Bulgarian for "file"
-    // "δεδομένα", // Greek for "data"
-    // "geändert_am", // German for "modified on", includes an umlaut
-    // "ব্যবহারকারীর_নাম", // Bengali for "user name", includes an underscore
-    // "São_Paulo", // Portuguese, includes an underscore and a tilde
-    // "età", // Italian for "age", includes an accent
-    // "ชื่อผู้ใช้", // Thai for "username"
+    "Benutzer-ID", // German for "user ID", includes a hyphen
+    "numéro", // French for "number", includes an accent
+    "år", // Swedish for "year", includes a ring above
+    "naïve", // English word borrowed from French, includes an umlaut
+    "الاسم", // Arabic for "name"
+    "оплата", // Russian for "payment"
+    "पता", // Hindi for "address"
+    "用戶名", // Chinese for "username"
+    "çalışma_zamanı", // Turkish for "runtime", includes an underscore and a cedilla
+    "preço", // Portuguese for "price", includes a cedilla
+    "사용자명", // Korean for "username"
+    "usuario_ñoño", // Spanish, uses an underscore and includes "ñ"
+    "файл", // Bulgarian for "file"
+    "δεδομένα", // Greek for "data"
+    "geändert_am", // German for "modified on", includes an umlaut
+    "ব্যবহারকারীর_নাম", // Bengali for "user name", includes an underscore
+    "São_Paulo", // Portuguese, includes an underscore and a tilde
+    "età", // Italian for "age", includes an accent
+    "ชื่อผู้ใช้", // Thai for "username"
   ])("non-ascii column name: %s", name => {
     beforeAll(async () => {
       table = await createTable({
