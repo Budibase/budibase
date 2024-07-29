@@ -394,10 +394,9 @@ class InternalBuilder {
         (key: string, array) => {
           if (this.client === SqlClient.ORACLE) {
             key = convertClobs(this.client, table, key)
-            query = query.whereRaw(
-              `${key} IN (?)`,
-              Array.isArray(array) ? array : [array]
-            )
+            array = Array.isArray(array) ? array : [array]
+            const binding = new Array(array.length).fill("?").join(",")
+            query = query.whereRaw(`${key} IN (${binding})`, array)
           } else {
             query = query[fnc](key, Array.isArray(array) ? array : [array])
           }
