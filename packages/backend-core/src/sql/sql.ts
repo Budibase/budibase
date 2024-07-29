@@ -42,176 +42,6 @@ const envLimit = environment.SQL_MAX_ROWS
   : null
 const BASE_LIMIT = envLimit || 5000
 
-// Takes a string like foo and returns a quoted string like [foo] for SQL Server
-// and "foo" for Postgres.
-function quote(client: SqlClient, str: string): string {
-  switch (client) {
-    case SqlClient.SQL_LITE:
-    case SqlClient.ORACLE:
-    case SqlClient.POSTGRES:
-      return `"${str}"`
-    case SqlClient.MS_SQL:
-      return `[${str}]`
-    case SqlClient.MY_SQL:
-      return `\`${str}\``
-  }
-}
-
-// Takes a string like a.b.c and returns a quoted identifier like [a].[b].[c]
-// for SQL Server and `a`.`b`.`c` for MySQL.
-function quotedIdentifier(client: SqlClient, key: string): string {
-  return key
-    .split(".")
-    .map(part => quote(client, part))
-    .join(".")
-}
-
-function parse(input: any) {
-  if (Array.isArray(input)) {
-    return JSON.stringify(input)
-  }
-  if (input == undefined) {
-    return null
-  }
-  if (typeof input !== "string") {
-    return input
-  }
-  if (isInvalidISODateString(input)) {
-    return null
-  }
-  if (isValidISODateString(input)) {
-    return new Date(input.trim())
-  }
-  return input
-}
-
-function parseBody(body: any) {
-  for (let [key, value] of Object.entries(body)) {
-    body[key] = parse(value)
-  }
-  return body
-}
-
-function parseFilters(filters: SearchFilters | undefined): SearchFilters {
-  if (!filters) {
-    return {}
-  }
-  for (let [key, value] of Object.entries(filters)) {
-    let parsed
-    if (typeof value === "object") {
-      parsed = parseFilters(value)
-    } else {
-      parsed = parse(value)
-    }
-    // @ts-ignore
-    filters[key] = parsed
-  }
-  return filters
-}
-
-// OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
-// so when we use them we need to wrap them in to_char(). This function
-// converts a field name to the appropriate identifier.
-function convertClobs(client: SqlClient, table: Table, field: string): string {
-  const parts = field.split(".")
-  const col = parts.pop()!
-  const schema = table.schema[col]
-  let identifier = quotedIdentifier(client, field)
-  if (
-    schema.type === FieldType.STRING ||
-    schema.type === FieldType.LONGFORM ||
-    schema.type === FieldType.BB_REFERENCE_SINGLE ||
-    schema.type === FieldType.OPTIONS ||
-    schema.type === FieldType.BARCODEQR
-  ) {
-    identifier = `to_char(${identifier})`
-  }
-  return identifier
-}
-
-function generateSelectStatement(
-  json: QueryJson,
-  knex: Knex
-): (string | Knex.Raw)[] | "*" {
-  const { resource, meta } = json
-  const client = knex.client.config.client as SqlClient
-
-  if (!resource || !resource.fields || resource.fields.length === 0) {
-    return "*"
-  }
-
-  const schema = meta.table.schema
-  return resource.fields.map(field => {
-    const parts = field.split(/\./g)
-    let table: string | undefined = undefined
-    let column: string | undefined = undefined
-
-    // Just a column name, e.g.: "column"
-    if (parts.length === 1) {
-      column = parts[0]
-    }
-
-    // A table name and a column name, e.g.: "table.column"
-    if (parts.length === 2) {
-      table = parts[0]
-      column = parts[1]
-    }
-
-    // A link doc, e.g.: "table.doc1.fieldName"
-    if (parts.length > 2) {
-      table = parts[0]
-      column = parts.slice(1).join(".")
-    }
-
-    if (!column) {
-      throw new Error(`Invalid field name: ${field}`)
-    }
-
-    const columnSchema = schema[column]
-
-    if (
-      client === SqlClient.POSTGRES &&
-      columnSchema?.externalType?.includes("money")
-    ) {
-      return knex.raw(
-        `${quotedIdentifier(
-          client,
-          [table, column].join(".")
-        )}::money::numeric as ${quote(client, field)}`
-      )
-    }
-
-    if (
-      client === SqlClient.MS_SQL &&
-      columnSchema?.type === FieldType.DATETIME &&
-      columnSchema.timeOnly
-    ) {
-      // Time gets returned as timestamp from mssql, not matching the expected
-      // HH:mm format
-      return knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
-    }
-
-    // There's at least two edge cases being handled in the expression below.
-    //  1. The column name could start/end with a space, and in that case we
-    //     want to preseve that space.
-    //  2. Almost all column names are specified in the form table.column, except
-    //     in the case of relationships, where it's table.doc1.column. In that
-    //     case, we want to split it into `table`.`doc1.column` for reasons that
-    //     aren't actually clear to me, but `table`.`doc1` breaks things with the
-    //     sample data tests.
-    if (table) {
-      return knex.raw(
-        `${quote(client, table)}.${quote(client, column)} as ${quote(
-          client,
-          field
-        )}`
-      )
-    } else {
-      return knex.raw(`${quote(client, field)} as ${quote(client, field)}`)
-    }
-  })
-}
-
 function getTableName(table?: Table): string | undefined {
   // SQS uses the table ID rather than the table name
   if (
@@ -247,6 +77,181 @@ class InternalBuilder {
     this.client = client
   }
 
+  // Takes a string like foo and returns a quoted string like [foo] for SQL Server
+  // and "foo" for Postgres.
+  private quote(str: string): string {
+    switch (this.client) {
+      case SqlClient.SQL_LITE:
+      case SqlClient.ORACLE:
+      case SqlClient.POSTGRES:
+        return `"${str}"`
+      case SqlClient.MS_SQL:
+        return `[${str}]`
+      case SqlClient.MY_SQL:
+        return `\`${str}\``
+    }
+  }
+
+  // Takes a string like a.b.c and returns a quoted identifier like [a].[b].[c]
+  // for SQL Server and `a`.`b`.`c` for MySQL.
+  private quotedIdentifier(key: string): string {
+    return key
+      .split(".")
+      .map(part => this.quote(part))
+      .join(".")
+  }
+
+  private generateSelectStatement(
+    json: QueryJson,
+    knex: Knex
+  ): (string | Knex.Raw)[] | "*" {
+    const { resource, meta } = json
+    const client = knex.client.config.client as SqlClient
+
+    if (!resource || !resource.fields || resource.fields.length === 0) {
+      return "*"
+    }
+
+    const schema = meta.table.schema
+    return resource.fields.map(field => {
+      const parts = field.split(/\./g)
+      let table: string | undefined = undefined
+      let column: string | undefined = undefined
+
+      // Just a column name, e.g.: "column"
+      if (parts.length === 1) {
+        column = parts[0]
+      }
+
+      // A table name and a column name, e.g.: "table.column"
+      if (parts.length === 2) {
+        table = parts[0]
+        column = parts[1]
+      }
+
+      // A link doc, e.g.: "table.doc1.fieldName"
+      if (parts.length > 2) {
+        table = parts[0]
+        column = parts.slice(1).join(".")
+      }
+
+      if (!column) {
+        throw new Error(`Invalid field name: ${field}`)
+      }
+
+      const columnSchema = schema[column]
+
+      if (
+        client === SqlClient.POSTGRES &&
+        columnSchema?.externalType?.includes("money")
+      ) {
+        return knex.raw(
+          `${this.quotedIdentifier(
+            [table, column].join(".")
+          )}::money::numeric as ${this.quote(field)}`
+        )
+      }
+
+      if (
+        client === SqlClient.MS_SQL &&
+        columnSchema?.type === FieldType.DATETIME &&
+        columnSchema.timeOnly
+      ) {
+        // Time gets returned as timestamp from mssql, not matching the expected
+        // HH:mm format
+        return knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
+      }
+
+      // There's at least two edge cases being handled in the expression below.
+      //  1. The column name could start/end with a space, and in that case we
+      //     want to preseve that space.
+      //  2. Almost all column names are specified in the form table.column, except
+      //     in the case of relationships, where it's table.doc1.column. In that
+      //     case, we want to split it into `table`.`doc1.column` for reasons that
+      //     aren't actually clear to me, but `table`.`doc1` breaks things with the
+      //     sample data tests.
+      if (table) {
+        return knex.raw(
+          `${this.quote(table)}.${this.quote(column)} as ${this.quote(field)}`
+        )
+      } else {
+        return knex.raw(`${this.quote(field)} as ${this.quote(field)}`)
+      }
+    })
+  }
+
+  // OracleDB can't use character-large-objects (CLOBs) in WHERE clauses,
+  // so when we use them we need to wrap them in to_char(). This function
+  // converts a field name to the appropriate identifier.
+  private convertClobs(table: Table, field: string): string {
+    const parts = field.split(".")
+    const col = parts.pop()!
+    const schema = table.schema[col]
+    let identifier = this.quotedIdentifier(field)
+    if (
+      schema.type === FieldType.STRING ||
+      schema.type === FieldType.LONGFORM ||
+      schema.type === FieldType.BB_REFERENCE_SINGLE ||
+      schema.type === FieldType.OPTIONS ||
+      schema.type === FieldType.BARCODEQR
+    ) {
+      identifier = `to_char(${identifier})`
+    }
+    return identifier
+  }
+
+  private parse(input: any, schema: FieldSchema) {
+    if (schema.type === FieldType.DATETIME && schema.timeOnly) {
+      if (this.client === SqlClient.ORACLE) {
+        return new Date(`1970-01-01 ${input}`)
+      }
+    }
+
+    if (Array.isArray(input)) {
+      return JSON.stringify(input)
+    }
+    if (input == undefined) {
+      return null
+    }
+    if (typeof input !== "string") {
+      return input
+    }
+    if (isInvalidISODateString(input)) {
+      return null
+    }
+    if (isValidISODateString(input)) {
+      return new Date(input.trim())
+    }
+    return input
+  }
+
+  private parseBody(body: any, table: Table) {
+    for (let [key, value] of Object.entries(body)) {
+      body[key] = this.parse(value, table.schema[key])
+    }
+    return body
+  }
+
+  private parseFilters(
+    filters: SearchFilters | undefined,
+    table: Table
+  ): SearchFilters {
+    if (!filters) {
+      return {}
+    }
+    for (let [key, value] of Object.entries(filters)) {
+      let parsed
+      if (typeof value === "object") {
+        parsed = this.parseFilters(value, table)
+      } else {
+        parsed = this.parse(value, table.schema[key])
+      }
+      // @ts-ignore
+      filters[key] = parsed
+    }
+    return filters
+  }
+
   // right now we only do filters on the specific table being queried
   addFilters(
     query: Knex.QueryBuilder,
@@ -261,7 +266,7 @@ class InternalBuilder {
     if (!filters) {
       return query
     }
-    filters = parseFilters(filters)
+    filters = this.parseFilters(filters, table)
     // if all or specified in filters, then everything is an or
     const allOr = filters.allOr
     const sqlStatements = new SqlStatements(this.client, table, {
@@ -318,10 +323,9 @@ class InternalBuilder {
       } else {
         const rawFnc = `${fnc}Raw`
         // @ts-ignore
-        query = query[rawFnc](
-          `LOWER(${quotedIdentifier(this.client, key)}) LIKE ?`,
-          [`%${value.toLowerCase()}%`]
-        )
+        query = query[rawFnc](`LOWER(${this.quotedIdentifier(key)}) LIKE ?`, [
+          `%${value.toLowerCase()}%`,
+        ])
       }
     }
 
@@ -371,10 +375,7 @@ class InternalBuilder {
             }
             statement +=
               (statement ? andOr : "") +
-              `COALESCE(LOWER(${quotedIdentifier(
-                this.client,
-                key
-              )}), '') LIKE ?`
+              `COALESCE(LOWER(${this.quotedIdentifier(key)}), '') LIKE ?`
           }
 
           if (statement === "") {
@@ -393,7 +394,7 @@ class InternalBuilder {
         filters.oneOf,
         (key: string, array) => {
           if (this.client === SqlClient.ORACLE) {
-            key = convertClobs(this.client, table, key)
+            key = this.convertClobs(table, key)
             array = Array.isArray(array) ? array : [array]
             const binding = new Array(array.length).fill("?").join(",")
             query = query.whereRaw(`${key} IN (${binding})`, array)
@@ -415,10 +416,9 @@ class InternalBuilder {
         } else {
           const rawFnc = `${fnc}Raw`
           // @ts-ignore
-          query = query[rawFnc](
-            `LOWER(${quotedIdentifier(this.client, key)}) LIKE ?`,
-            [`${value.toLowerCase()}%`]
-          )
+          query = query[rawFnc](`LOWER(${this.quotedIdentifier(key)}) LIKE ?`, [
+            `${value.toLowerCase()}%`,
+          ])
         }
       })
     }
@@ -456,21 +456,18 @@ class InternalBuilder {
         const fnc = allOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
           query = query[fnc](
-            `CASE WHEN ${quotedIdentifier(
-              this.client,
-              key
-            )} = ? THEN 1 ELSE 0 END = 1`,
+            `CASE WHEN ${this.quotedIdentifier(key)} = ? THEN 1 ELSE 0 END = 1`,
             [value]
           )
         } else if (this.client === SqlClient.ORACLE) {
-          const identifier = convertClobs(this.client, table, key)
+          const identifier = this.convertClobs(table, key)
           query = query[fnc](
             `(${identifier} IS NOT NULL AND ${identifier} = ?)`,
             [value]
           )
         } else {
           query = query[fnc](
-            `COALESCE(${quotedIdentifier(this.client, key)} = ?, FALSE)`,
+            `COALESCE(${this.quotedIdentifier(key)} = ?, FALSE)`,
             [value]
           )
         }
@@ -481,21 +478,18 @@ class InternalBuilder {
         const fnc = allOr ? "orWhereRaw" : "whereRaw"
         if (this.client === SqlClient.MS_SQL) {
           query = query[fnc](
-            `CASE WHEN ${quotedIdentifier(
-              this.client,
-              key
-            )} = ? THEN 1 ELSE 0 END = 0`,
+            `CASE WHEN ${this.quotedIdentifier(key)} = ? THEN 1 ELSE 0 END = 0`,
             [value]
           )
         } else if (this.client === SqlClient.ORACLE) {
-          const identifier = convertClobs(this.client, table, key)
+          const identifier = this.convertClobs(table, key)
           query = query[fnc](
             `(${identifier} IS NOT NULL AND ${identifier} != ?)`,
             [value]
           )
         } else {
           query = query[fnc](
-            `COALESCE(${quotedIdentifier(this.client, key)} != ?, TRUE)`,
+            `COALESCE(${this.quotedIdentifier(key)} != ?, TRUE)`,
             [value]
           )
         }
@@ -692,7 +686,7 @@ class InternalBuilder {
   create(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, body } = json
     let query = this.knexWithAlias(knex, endpoint)
-    const parsedBody = parseBody(body)
+    const parsedBody = this.parseBody(body, json.meta.table)
     // make sure no null values in body for creation
     for (let [key, value] of Object.entries(parsedBody)) {
       if (value == null) {
@@ -714,7 +708,7 @@ class InternalBuilder {
     if (!Array.isArray(body)) {
       return query
     }
-    const parsedBody = body.map(row => parseBody(row))
+    const parsedBody = body.map(row => this.parseBody(row, json.meta.table))
     return query.insert(parsedBody)
   }
 
@@ -724,7 +718,7 @@ class InternalBuilder {
     if (!Array.isArray(body)) {
       return query
     }
-    const parsedBody = body.map(row => parseBody(row))
+    const parsedBody = body.map(row => this.parseBody(row, json.meta.table))
     if (
       this.client === SqlClient.POSTGRES ||
       this.client === SqlClient.SQL_LITE ||
@@ -806,7 +800,7 @@ class InternalBuilder {
     })
     // if counting, use distinct count, else select
     preQuery = !counting
-      ? preQuery.select(generateSelectStatement(json, knex))
+      ? preQuery.select(this.generateSelectStatement(json, knex))
       : this.addDistinctCount(preQuery, json)
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClient.MS_SQL && !counting) {
@@ -837,7 +831,7 @@ class InternalBuilder {
   update(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, body, filters, tableAliases } = json
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
-    const parsedBody = parseBody(body)
+    const parsedBody = this.parseBody(body, json.meta.table)
     query = this.addFilters(query, filters, json.meta.table, {
       columnPrefix: json.meta.columnPrefix,
       aliases: tableAliases,
@@ -861,7 +855,7 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.delete()
     } else {
-      return query.delete().returning(generateSelectStatement(json, knex))
+      return query.delete().returning(this.generateSelectStatement(json, knex))
     }
   }
 }

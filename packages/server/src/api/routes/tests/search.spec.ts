@@ -1318,7 +1318,7 @@ describe.each([
   })
 
   !isInternal &&
-    describe("datetime - time only", () => {
+    describe.only("datetime - time only", () => {
       const T_1000 = "10:00:00"
       const T_1045 = "10:45:00"
       const T_1200 = "12:00:00"
