@@ -142,9 +142,6 @@ const createComponentStore = () => {
   }
 
   const getComponentInstance = id => {
-    if (!id) {
-      return null
-    }
     return derived(store, $store => $store.mountedComponents[id])
   }
 
