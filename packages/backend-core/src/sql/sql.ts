@@ -205,39 +205,28 @@ class InternalBuilder {
     return identifier
   }
 
-  private parse(input: any, schema: FieldSchema) {
+  private parse(input: any) {
+    if (Array.isArray(input)) {
+      return JSON.stringify(input)
+    }
     if (input == undefined) {
       return null
     }
-
-    if (isPlainObject(input)) {
-      for (const [key, value] of Object.entries(input)) {
-        input[key] = this.parse(value, schema)
-      }
+    if (typeof input !== "string") {
       return input
     }
-
-    if (schema.type === FieldType.DATETIME && schema.timeOnly) {
-      if (this.client === SqlClient.ORACLE) {
-        return new Date(`1970-01-01 ${input}`)
-      }
+    if (isInvalidISODateString(input)) {
+      return null
     }
-
-    if (typeof input === "string") {
-      if (isInvalidISODateString(input)) {
-        return null
-      }
-      if (isValidISODateString(input)) {
-        return new Date(input.trim())
-      }
+    if (isValidISODateString(input)) {
+      return new Date(input.trim())
     }
-
     return input
   }
 
   private parseBody(body: any) {
     for (let [key, value] of Object.entries(body)) {
-      body[key] = this.parse(value, this.table.schema[key])
+      body[key] = this.parse(value)
     }
     return body
   }
@@ -246,22 +235,76 @@ class InternalBuilder {
     if (!filters) {
       return {}
     }
-
-    for (const [_, filter] of Object.entries(filters)) {
-      for (const [key, value] of Object.entries(filter)) {
-        const { column } = new ColumnSplitter([this.table]).run(key)
-        const schema = this.table.schema[column]
-        if (!schema) {
-          throw new Error(
-            `Column ${key} does not exist in table ${this.table._id}`
-          )
-        }
-        filter[key] = this.parse(value, schema)
+    for (let [key, value] of Object.entries(filters)) {
+      let parsed
+      if (typeof value === "object") {
+        parsed = this.parseFilters(value)
+      } else {
+        parsed = this.parse(value)
       }
+      // @ts-ignore
+      filters[key] = parsed
     }
-
     return filters
   }
+
+  // private parse(input: any, schema: FieldSchema) {
+  //   if (input == undefined) {
+  //     return null
+  //   }
+
+  //   if (isPlainObject(input)) {
+  //     for (const [key, value] of Object.entries(input)) {
+  //       input[key] = this.parse(value, schema)
+  //     }
+  //     return input
+  //   }
+
+  //   if (schema.type === FieldType.DATETIME && schema.timeOnly) {
+  //     if (this.client === SqlClient.ORACLE) {
+  //       return new Date(`1970-01-01 ${input}`)
+  //     }
+  //   }
+
+  //   if (typeof input === "string") {
+  //     if (isInvalidISODateString(input)) {
+  //       return null
+  //     }
+  //     if (isValidISODateString(input)) {
+  //       return new Date(input.trim())
+  //     }
+  //   }
+
+  //   return input
+  // }
+
+  // private parseBody(body: any) {
+  //   for (let [key, value] of Object.entries(body)) {
+  //     body[key] = this.parse(value, this.table.schema[key])
+  //   }
+  //   return body
+  // }
+
+  // private parseFilters(filters: SearchFilters | undefined): SearchFilters {
+  //   if (!filters) {
+  //     return {}
+  //   }
+
+  //   for (const [_, filter] of Object.entries(filters)) {
+  //     for (const [key, value] of Object.entries(filter)) {
+  //       const { column } = new ColumnSplitter([this.table]).run(key)
+  //       const schema = this.table.schema[column]
+  //       if (!schema) {
+  //         throw new Error(
+  //           `Column ${key} does not exist in table ${this.table._id}`
+  //         )
+  //       }
+  //       filter[key] = this.parse(value, schema)
+  //     }
+  //   }
+
+  //   return filters
+  // }
 
   // right now we only do filters on the specific table being queried
   addFilters(
