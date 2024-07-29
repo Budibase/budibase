@@ -7,8 +7,10 @@ import knex from "knex"
 let ports: Promise<testContainerUtils.Port[]>
 
 export async function getDatasource(): Promise<Datasource> {
+  // password needs to conform to Oracle standards
+  const password = "password"
   if (!ports) {
-    let image = "oracle/database:19.3.0.0-ee-slim-faststart"
+    let image = "gvenzl/oracle-free:23.2-slim-faststart"
     if (process.arch.startsWith("arm")) {
       image = "samhuang78/oracle-database:19.3.0-ee-slim-faststart"
     }
@@ -16,8 +18,10 @@ export async function getDatasource(): Promise<Datasource> {
     ports = startContainer(
       new GenericContainer(image)
         .withExposedPorts(1521)
-        .withEnvironment({ ORACLE_PASSWORD: "password" })
-        .withWaitStrategy(Wait.forHealthCheck().withStartupTimeout(60000))
+        .withEnvironment({
+          ORACLE_PASSWORD: password,
+        })
+        .withWaitStrategy(Wait.forLogMessage("DATABASE IS READY TO USE!"))
     )
   }
 
@@ -28,7 +32,6 @@ export async function getDatasource(): Promise<Datasource> {
 
   const host = "127.0.0.1"
   const user = "SYSTEM"
-  const password = "password"
 
   const datasource: Datasource = {
     type: "datasource_plus",
