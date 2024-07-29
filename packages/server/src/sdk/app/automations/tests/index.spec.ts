@@ -1,9 +1,9 @@
 import { sample } from "lodash/fp"
 import { Automation, AutomationTriggerStepId } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import automationSdk from "../"
 import { structures } from "../../../../api/routes/tests/utilities"
-import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe("automation sdk", () => {
   const config = new TestConfiguration()
