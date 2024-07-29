@@ -73,9 +73,7 @@ export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
       userByEmail.tenantId
     )
     // Need to get the _rev of the user doc to update
-    const userById = (await platform.users.getUserDoc(
-      userByEmail.userId
-    )) as PlatformUserById
+    const userById = await platform.users.getUserDoc(userByEmail.userId)
     await platform.users.updateUserDoc({
       ...userById,
       email,

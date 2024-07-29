@@ -48,13 +48,8 @@ export async function getPlatformUsers(
 export async function getFirstPlatformUser(
   identifier: string
 ): Promise<PlatformUser | null> {
-  // use the view here and allow to find anyone regardless of casing
-  // Use lowercase to ensure email login is case insensitive
   const platformUserDocs = await getPlatformUsers(identifier)
-  if (platformUserDocs.length > 0) {
-    return platformUserDocs[0]
-  }
-  return null
+  return platformUserDocs[0] ?? null
 }
 
 export async function getExistingTenantUsers(
