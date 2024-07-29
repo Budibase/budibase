@@ -315,13 +315,6 @@ export async function outputProcessing<T extends Row[] | Row>(
           column.subtype
         )
       }
-    } else if (column.type === FieldType.BIGINT) {
-      for (const row of enriched) {
-        if (row[property] == null) {
-          continue
-        }
-        row[property] = row[property].toString()
-      }
     }
   }
 

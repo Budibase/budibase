@@ -365,6 +365,18 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         fetchTypeHandler: function (metaData) {
           if (metaData.dbType === oracledb.CLOB) {
             return { type: oracledb.STRING }
+          } else if (
+            // When we create a new table in OracleDB from Budibase, bigints get
+            // created as NUMBER(20,0). Budibase expects bigints to be returned
+            // as strings, which is what we're doing here. However, this is
+            // likely to be brittle if we connect to externally created
+            // databases that have used different precisions and scales.
+            // We shold find a way to do better.
+            metaData.dbType === oracledb.NUMBER &&
+            metaData.precision === 20 &&
+            metaData.scale === 0
+          ) {
+            return { type: oracledb.STRING }
           }
           return undefined
         },
