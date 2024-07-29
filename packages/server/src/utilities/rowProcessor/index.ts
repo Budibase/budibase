@@ -315,12 +315,14 @@ export async function outputProcessing<T extends Row[] | Row>(
           column.subtype
         )
       }
-    } else if (column.type === FieldType.BIGINT) {
-      for (const row of enriched) {
-        if (row[property] == null) {
-          continue
+    } else if (column.type === FieldType.DATETIME && column.timeOnly) {
+      for (let row of enriched) {
+        if (row[property] instanceof Date) {
+          const hours = row[property].getHours().toString().padStart(2, "0")
+          const minutes = row[property].getMinutes().toString().padStart(2, "0")
+          const seconds = row[property].getSeconds().toString().padStart(2, "0")
+          row[property] = `${hours}:${minutes}:${seconds}`
         }
-        row[property] = row[property].toString()
       }
     }
   }
