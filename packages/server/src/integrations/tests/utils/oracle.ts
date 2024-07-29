@@ -10,9 +10,11 @@ export async function getDatasource(): Promise<Datasource> {
   // password needs to conform to Oracle standards
   const password = "password"
   if (!ports) {
-    let image = "gvenzl/oracle-free:23.2-slim-faststart"
+    // couldn't build 19.3.0 for X64
+    let image = "budibase/oracle-database:23.2-slim-faststart"
     if (process.arch.startsWith("arm")) {
-      image = "samhuang78/oracle-database:19.3.0-ee-slim-faststart"
+      // there isn't an ARM compatible 23.2 build
+      image = "budibase/oracle-database:19.3.0-ee-slim-faststart"
     }
 
     ports = startContainer(
