@@ -146,6 +146,7 @@
         "label": "Columns",
         "key": "cols",
         "placeholder": 12,
+        "min": 1,
         "dependsOn": {
           "setting": "layout",
           "value": "grid"
@@ -156,6 +157,7 @@
         "label": "Rows",
         "key": "rows",
         "placeholder": 12,
+        "min": 1,
         "dependsOn": {
           "setting": "layout",
           "value": "grid"
