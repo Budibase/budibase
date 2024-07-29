@@ -9,11 +9,6 @@
 
   $: cols = cols || 12
   $: rows = rows || 12
-
-  // Deliberately non-reactive as we want this fixed whenever the grid renders
-  const defaultColSpan = Math.ceil((cols + 1) / 2)
-  const defaultRowSpan = Math.ceil((rows + 1) / 2)
-
   $: coords = generateCoords(rows, cols)
 
   const generateCoords = (rows, cols) => {
@@ -35,8 +30,6 @@
       ...$component.styles?.normal,
       "--cols": cols,
       "--rows": rows,
-      "--default-col-span": defaultColSpan,
-      "--default-row-span": defaultRowSpan,
       gap: "0 !important",
     },
   }}
@@ -73,11 +66,14 @@
       var(--cols)
     ) !important;
     grid-column-end: min(
-      max(1, var(--grid-column-end)),
-      var(--cols)
+      max(2, var(--grid-column-end)),
+      calc(var(--cols) + 1)
     ) !important;
     grid-row-start: min(max(1, var(--grid-row-start)), var(--rows)) !important;
-    grid-row-end: min(max(1, var(--grid-row-end)), var(--rows)) !important;
+    grid-row-end: min(
+      max(2, var(--grid-row-end)),
+      calc(var(--rows) + 1)
+    ) !important;
     max-height: 100%;
     max-width: 100%;
   }

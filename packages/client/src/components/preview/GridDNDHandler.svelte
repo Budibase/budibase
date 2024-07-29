@@ -17,6 +17,9 @@
     ...($gridStyles ? { "z-index": 999 } : null),
   })
 
+  // Sugar for a combination of both min and max
+  const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
+
   // Util to check if a DND event originates from a grid (or inside a grid).
   // This is important as we do not handle grid DND in this handler.
   const isGridEvent = e => {
@@ -41,18 +44,7 @@
     }
 
     const { mode, side, gridId, grid } = dragInfo
-    const {
-      startX,
-      startY,
-      rowStart,
-      rowEnd,
-      colStart,
-      colEnd,
-      rowDeltaMin,
-      rowDeltaMax,
-      colDeltaMin,
-      colDeltaMax,
-    } = grid
+    const { startX, startY, rowStart, rowEnd, colStart, colEnd } = grid
 
     const domGrid = getDOMNode(gridId)
     const cols = parseInt(domGrid.dataset.cols)
@@ -67,13 +59,11 @@
     let deltaY = Math.round(diffY / rowHeight)
 
     if (mode === "move") {
-      deltaY = Math.min(Math.max(deltaY, rowDeltaMin), rowDeltaMax)
-      deltaX = Math.min(Math.max(deltaX, colDeltaMin), colDeltaMax)
       const newStyles = {
-        "--grid-row-start": rowStart + deltaY,
-        "--grid-row-end": rowEnd + deltaY,
-        "--grid-column-start": colStart + deltaX,
-        "--grid-column-end": colEnd + deltaX,
+        "--grid-row-start": minMax(rowStart + deltaY, 1, rows),
+        "--grid-row-end": minMax(rowEnd + deltaY, 2, rows + 1),
+        "--grid-column-start": minMax(colStart + deltaX, 1, cols),
+        "--grid-column-end": minMax(colEnd + deltaX, 2, cols + 1),
       }
       gridStyles.set(newStyles)
     } else if (mode === "resize") {
@@ -174,21 +164,14 @@
     const domNode = getDOMNode(dragInfo.id)
     const styles = window.getComputedStyle(domNode)
     if (domGrid) {
-      const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
       const getStyle = x => parseInt(styles?.getPropertyValue(x) || "0")
-      const getColStyle = x => minMax(getStyle(x), 1, gridCols + 1)
-      const getRowStyle = x => minMax(getStyle(x), 1, gridRows + 1)
       dragInfo.grid = {
         startX: e.clientX,
         startY: e.clientY,
-        rowStart: getRowStyle("--grid-row-start"),
-        rowEnd: getRowStyle("--grid-row-end"),
-        colStart: getColStyle("--grid-column-start"),
-        colEnd: getColStyle("--grid-column-end"),
-        rowDeltaMin: 1 - getRowStyle("--grid-row-start"),
-        rowDeltaMax: gridRows + 1 - getRowStyle("--grid-row-end"),
-        colDeltaMin: 1 - getColStyle("--grid-column-start"),
-        colDeltaMax: gridCols + 1 - getColStyle("--grid-column-end"),
+        rowStart: minMax(getStyle("--grid-row-start"), 1, gridRows),
+        rowEnd: minMax(getStyle("--grid-row-end"), 2, gridRows + 1),
+        colStart: minMax(getStyle("--grid-column-start"), 1, gridCols),
+        colEnd: minMax(getStyle("--grid-column-end"), 2, gridCols + 1),
       }
       handleEvent(e)
     }
