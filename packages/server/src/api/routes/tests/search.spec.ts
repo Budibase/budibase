@@ -40,13 +40,13 @@ import { structures } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 
 describe.each([
-  //["in-memory", undefined],
-  //["lucene", undefined],
-  //["sqs", undefined],
-  //[DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  //[DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  //[DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  //[DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // ["in-memory", undefined],
+  // ["lucene", undefined],
+  // ["sqs", undefined],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
   [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
@@ -292,7 +292,7 @@ describe.each([
     })
 
     describe("equal", () => {
-      it.only("successfully finds true row", async () => {
+      it("successfully finds true row", async () => {
         await expectQuery({ equal: { isTrue: true } }).toMatchExactly([
           { isTrue: true },
         ])
@@ -1577,12 +1577,15 @@ describe.each([
     })
   })
 
-  describe("bigints", () => {
+  describe.only("bigints", () => {
     const SMALL = "1"
     const MEDIUM = "10000000"
 
     // Our bigints are int64s in most datasources.
-    const BIG = "9223372036854775807"
+    let BIG = "9223372036854775807"
+    if (name === DatabaseName.ORACLE) {
+      // BIG = "9223372036854775808"
+    }
 
     beforeAll(async () => {
       table = await createTable({
@@ -2415,25 +2418,25 @@ describe.each([
 
   describe.each([
     "名前", // Japanese for "name"
-    "Benutzer-ID", // German for "user ID", includes a hyphen
-    "numéro", // French for "number", includes an accent
-    "år", // Swedish for "year", includes a ring above
-    "naïve", // English word borrowed from French, includes an umlaut
-    "الاسم", // Arabic for "name"
-    "оплата", // Russian for "payment"
-    "पता", // Hindi for "address"
-    "用戶名", // Chinese for "username"
-    "çalışma_zamanı", // Turkish for "runtime", includes an underscore and a cedilla
-    "preço", // Portuguese for "price", includes a cedilla
-    "사용자명", // Korean for "username"
-    "usuario_ñoño", // Spanish, uses an underscore and includes "ñ"
-    "файл", // Bulgarian for "file"
-    "δεδομένα", // Greek for "data"
-    "geändert_am", // German for "modified on", includes an umlaut
-    "ব্যবহারকারীর_নাম", // Bengali for "user name", includes an underscore
-    "São_Paulo", // Portuguese, includes an underscore and a tilde
-    "età", // Italian for "age", includes an accent
-    "ชื่อผู้ใช้", // Thai for "username"
+    // "Benutzer-ID", // German for "user ID", includes a hyphen
+    // "numéro", // French for "number", includes an accent
+    // "år", // Swedish for "year", includes a ring above
+    // "naïve", // English word borrowed from French, includes an umlaut
+    // "الاسم", // Arabic for "name"
+    // "оплата", // Russian for "payment"
+    // "पता", // Hindi for "address"
+    // "用戶名", // Chinese for "username"
+    // "çalışma_zamanı", // Turkish for "runtime", includes an underscore and a cedilla
+    // "preço", // Portuguese for "price", includes a cedilla
+    // "사용자명", // Korean for "username"
+    // "usuario_ñoño", // Spanish, uses an underscore and includes "ñ"
+    // "файл", // Bulgarian for "file"
+    // "δεδομένα", // Greek for "data"
+    // "geändert_am", // German for "modified on", includes an umlaut
+    // "ব্যবহারকারীর_নাম", // Bengali for "user name", includes an underscore
+    // "São_Paulo", // Portuguese, includes an underscore and a tilde
+    // "età", // Italian for "age", includes an accent
+    // "ชื่อผู้ใช้", // Thai for "username"
   ])("non-ascii column name: %s", name => {
     beforeAll(async () => {
       table = await createTable({

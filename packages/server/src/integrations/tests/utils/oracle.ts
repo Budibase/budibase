@@ -8,7 +8,7 @@ let ports: Promise<testContainerUtils.Port[]>
 
 export async function getDatasource(): Promise<Datasource> {
   if (!ports) {
-    let image = "oracle/database:19.3.0.0-ee"
+    let image = "oracle/database:19.3.0.0-ee-slim-faststart"
     if (process.arch.startsWith("arm")) {
       image = "samhuang78/oracle-database:19.3.0-ee-slim-faststart"
     }
@@ -17,7 +17,7 @@ export async function getDatasource(): Promise<Datasource> {
       new GenericContainer(image)
         .withExposedPorts(1521)
         .withEnvironment({ ORACLE_PASSWORD: "password" })
-        .withWaitStrategy(Wait.forHealthCheck().withStartupTimeout(10000))
+        .withWaitStrategy(Wait.forHealthCheck().withStartupTimeout(60000))
     )
   }
 
@@ -26,23 +26,25 @@ export async function getDatasource(): Promise<Datasource> {
     throw new Error("Oracle port not found")
   }
 
+  const host = "127.0.0.1"
+  const user = "SYSTEM"
+  const password = "password"
+
   const datasource: Datasource = {
     type: "datasource_plus",
     source: SourceName.ORACLE,
     plus: true,
-    config: {
-      host: "127.0.0.1",
-      port,
-      database: "postgres",
-      user: "SYS",
-      password: "password",
-    },
+    config: { host, port, user, password, database: "FREEPDB1" },
   }
 
-  const database = generator.guid().replaceAll("-", "")
+  const newUser = "a" + generator.guid().replaceAll("-", "")
   const client = await knexClient(datasource)
-  await client.raw(`CREATE DATABASE "${database}"`)
-  datasource.config!.database = database
+  await client.raw(`CREATE USER ${newUser} IDENTIFIED BY password`)
+  await client.raw(
+    `GRANT CONNECT, RESOURCE, CREATE VIEW, CREATE SESSION TO ${newUser}`
+  )
+  await client.raw(`GRANT UNLIMITED TABLESPACE TO ${newUser}`)
+  datasource.config!.user = newUser
 
   return datasource
 }
@@ -55,8 +57,17 @@ export async function knexClient(ds: Datasource) {
     throw new Error("Datasource source is not Oracle")
   }
 
-  return knex({
+  const db = ds.config.database || "FREEPDB1"
+  const connectString = `${ds.config.host}:${ds.config.port}/${db}`
+
+  const c = knex({
     client: "oracledb",
-    connection: ds.config,
+    connection: {
+      connectString,
+      user: ds.config.user,
+      password: ds.config.password,
+    },
   })
+
+  return c
 }
