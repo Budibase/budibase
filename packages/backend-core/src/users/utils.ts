@@ -1,10 +1,4 @@
-import {
-  CloudAccount,
-  ContextUser,
-  PlatformUser,
-  User,
-  UserGroup,
-} from "@budibase/types"
+import { CloudAccount, ContextUser, User, UserGroup } from "@budibase/types"
 import * as accountSdk from "../accounts"
 import env from "../environment"
 import { getFirstPlatformUser } from "./lookup"
