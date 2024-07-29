@@ -398,7 +398,6 @@ class OracleIntegration extends Sql implements DatasourcePlus {
   }
 
   private getConnection = async (): Promise<Connection> => {
-    //connectString : "(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))(CONNECT_DATA =(SID= ORCL)))"
     const connectString = `${this.config.host}:${this.config.port || 1521}/${
       this.config.database
     }`
