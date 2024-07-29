@@ -25,6 +25,11 @@ export async function getUserDoc(emailOrId: string): Promise<PlatformUser> {
   return db.get(emailOrId)
 }
 
+export async function updateUserDoc(platformUser: PlatformUserById) {
+  const db = getPlatformDB()
+  await db.put(platformUser)
+}
+
 // CREATE
 
 function newUserIdDoc(id: string, tenantId: string): PlatformUserById {

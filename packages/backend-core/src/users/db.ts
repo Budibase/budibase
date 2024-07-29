@@ -18,6 +18,9 @@ import {
   User,
   UserStatus,
   UserGroup,
+  PlatformUserBySsoId,
+  PlatformUserById,
+  AnyDocument,
 } from "@budibase/types"
 import {
   getAccountHolderFromUserIds,
@@ -25,7 +28,11 @@ import {
   isCreator,
   validateUniqueUser,
 } from "./utils"
-import { searchExistingEmails } from "./lookup"
+import {
+  getFirstPlatformUser,
+  getPlatformUsers,
+  searchExistingEmails,
+} from "./lookup"
 import { hash } from "../utils"
 import { validatePassword } from "../security"
 
@@ -446,9 +453,32 @@ export class UserDB {
       creator => !!creator
     ).length
 
+    const ssoUsersToDelete: AnyDocument[] = []
     for (let user of usersToDelete) {
+      const platformUser = (await getFirstPlatformUser(
+        user._id!
+      )) as PlatformUserById
+      const ssoId = platformUser.ssoId
+      if (ssoId) {
+        // Need to get the _rev of the SSO user doc to delete it. The view also returns docs that have the ssoId property, so we need to ignore those.
+        const ssoUsers = (await getPlatformUsers(
+          ssoId
+        )) as PlatformUserBySsoId[]
+        ssoUsers
+          .filter(user => user.ssoId == null)
+          .forEach(user => {
+            ssoUsersToDelete.push({
+              ...user,
+              _deleted: true,
+            })
+          })
+      }
       await bulkDeleteProcessing(user)
     }
+
+    // Delete any associated SSO user docs
+    await platform.getPlatformDB().bulkDocs(ssoUsersToDelete)
+
     await UserDB.quotas.removeUsers(toDelete.length, creatorsToDeleteCount)
 
     // Build Response
