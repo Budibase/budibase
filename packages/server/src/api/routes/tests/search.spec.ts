@@ -1577,7 +1577,7 @@ describe.each([
     })
   })
 
-  describe.only("bigints", () => {
+  describe("bigints", () => {
     const SMALL = "1"
     const MEDIUM = "10000000"
 
