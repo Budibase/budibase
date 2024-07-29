@@ -18,7 +18,6 @@ import {
   LockName,
   LockType,
   MigrationType,
-  PlatformUserById,
   PlatformUserByEmail,
   SaveUserResponse,
   SearchUsersRequest,
