@@ -278,7 +278,7 @@ export const find = async (ctx: any) => {
 
 export const tenantUserLookup = async (ctx: any) => {
   const id = ctx.params.id
-  const user = await userSdk.core.getPlatformUser(id)
+  const user = await userSdk.core.getFirstPlatformUser(id)
   if (user) {
     ctx.body = user
   } else {
