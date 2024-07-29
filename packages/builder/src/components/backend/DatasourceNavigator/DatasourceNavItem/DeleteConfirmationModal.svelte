@@ -33,6 +33,5 @@
   title="Confirm Deletion"
 >
   Are you sure you wish to delete the datasource
-  <i>{datasource.name}?</i>
-  This action cannot be undone.
+  <i>{datasource.name}</i>? This action cannot be undone.
 </ConfirmDialog>

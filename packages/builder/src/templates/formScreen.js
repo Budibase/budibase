@@ -3,41 +3,47 @@ import { Component } from "./Component"
 import sanitizeUrl from "helpers/sanitizeUrl"
 
 export const FORM_TEMPLATE = "FORM_TEMPLATE"
-export const formUrl = datasource => sanitizeUrl(`/${datasource.label}-form`)
-
-// Mode not really necessary
-export default function (datasources, config) {
-  if (!Array.isArray(datasources)) {
-    return []
+export const formUrl = (tableOrView, actionType) => {
+  if (actionType === "Create") {
+    return sanitizeUrl(`/${tableOrView.name}/new`)
+  } else if (actionType === "Update") {
+    return sanitizeUrl(`/${tableOrView.name}/edit/:id`)
+  } else if (actionType === "View") {
+    return sanitizeUrl(`/${tableOrView.name}/view/:id`)
   }
-  return datasources.map(datasource => {
-    return {
-      name: `${datasource.label} - Form`,
-      create: () => createScreen(datasource, config),
-      id: FORM_TEMPLATE,
-      resourceId: datasource.resourceId,
-    }
-  })
 }
 
-const generateMultistepFormBlock = (dataSource, { actionType } = {}) => {
+export const getRole = (permissions, actionType) => {
+  if (actionType === "View") {
+    return permissions.read
+  }
+
+  return permissions.write
+}
+
+const generateMultistepFormBlock = (tableOrView, actionType) => {
   const multistepFormBlock = new Component(
     "@budibase/standard-components/multistepformblock"
   )
   multistepFormBlock
     .customProps({
       actionType,
-      dataSource,
+      dataSource: tableOrView.clientData,
       steps: [{}],
+      rowId: actionType === "new" ? undefined : `{{ url.id }}`,
     })
-    .instanceName(`${dataSource.label} - Multistep Form block`)
+    .instanceName(`${tableOrView.name} - Multistep Form block`)
   return multistepFormBlock
 }
 
-const createScreen = (datasource, config) => {
+const createScreen = (tableOrView, actionType, permissions) => {
   return new Screen()
-    .route(formUrl(datasource))
-    .instanceName(`${datasource.label} - Form`)
-    .addChild(generateMultistepFormBlock(datasource, config))
+    .route(formUrl(tableOrView, actionType))
+    .instanceName(`${tableOrView.name} - Form`)
+    .role(getRole(permissions, actionType))
+    .autoTableId(tableOrView.id)
+    .addChild(generateMultistepFormBlock(tableOrView, actionType))
     .json()
 }
+
+export default createScreen
