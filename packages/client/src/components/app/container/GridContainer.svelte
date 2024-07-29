@@ -68,14 +68,19 @@
     overflow: hidden;
     width: auto;
     height: auto;
-    grid-column-start: 1;
-    grid-column-end: var(--default-col-span);
-    grid-row-start: 1;
-    grid-row-end: var(--default-row-span);
+    grid-column-start: min(
+      max(1, var(--grid-column-start)),
+      var(--cols)
+    ) !important;
+    grid-column-end: min(
+      max(1, var(--grid-column-end)),
+      var(--cols)
+    ) !important;
+    grid-row-start: min(max(1, var(--grid-row-start)), var(--rows)) !important;
+    grid-row-end: min(max(1, var(--grid-row-end)), var(--rows)) !important;
     max-height: 100%;
     max-width: 100%;
   }
-
   .grid {
     position: relative;
     height: 400px;

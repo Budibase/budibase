@@ -70,34 +70,43 @@
       deltaY = Math.min(Math.max(deltaY, rowDeltaMin), rowDeltaMax)
       deltaX = Math.min(Math.max(deltaX, colDeltaMin), colDeltaMax)
       const newStyles = {
-        "grid-row-start": rowStart + deltaY,
-        "grid-row-end": rowEnd + deltaY,
-        "grid-column-start": colStart + deltaX,
-        "grid-column-end": colEnd + deltaX,
+        "--grid-row-start": rowStart + deltaY,
+        "--grid-row-end": rowEnd + deltaY,
+        "--grid-column-start": colStart + deltaX,
+        "--grid-column-end": colEnd + deltaX,
       }
       gridStyles.set(newStyles)
     } else if (mode === "resize") {
       let newStyles = {}
       if (side === "right") {
-        newStyles["grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles["--grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
       } else if (side === "left") {
-        newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
+        newStyles["--grid-column-start"] = Math.min(
+          colStart + deltaX,
+          colEnd - 1
+        )
       } else if (side === "top") {
-        newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
+        newStyles["--grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
       } else if (side === "bottom") {
-        newStyles["grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
+        newStyles["--grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
       } else if (side === "bottom-right") {
-        newStyles["grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
-        newStyles["grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
+        newStyles["--grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles["--grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
       } else if (side === "bottom-left") {
-        newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
-        newStyles["grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
+        newStyles["--grid-column-start"] = Math.min(
+          colStart + deltaX,
+          colEnd - 1
+        )
+        newStyles["--grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
       } else if (side === "top-right") {
-        newStyles["grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
-        newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
+        newStyles["--grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles["--grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
       } else if (side === "top-left") {
-        newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
-        newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
+        newStyles["--grid-column-start"] = Math.min(
+          colStart + deltaX,
+          colEnd - 1
+        )
+        newStyles["--grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
       }
       gridStyles.set(newStyles)
     }
@@ -166,20 +175,20 @@
     const styles = window.getComputedStyle(domNode)
     if (domGrid) {
       const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
-      const getStyle = x => parseInt(styles?.[x] || "0")
+      const getStyle = x => parseInt(styles?.getPropertyValue(x) || "0")
       const getColStyle = x => minMax(getStyle(x), 1, gridCols + 1)
       const getRowStyle = x => minMax(getStyle(x), 1, gridRows + 1)
       dragInfo.grid = {
         startX: e.clientX,
         startY: e.clientY,
-        rowStart: getRowStyle("grid-row-start"),
-        rowEnd: getRowStyle("grid-row-end"),
-        colStart: getColStyle("grid-column-start"),
-        colEnd: getColStyle("grid-column-end"),
-        rowDeltaMin: 1 - getRowStyle("grid-row-start"),
-        rowDeltaMax: gridRows + 1 - getRowStyle("grid-row-end"),
-        colDeltaMin: 1 - getColStyle("grid-column-start"),
-        colDeltaMax: gridCols + 1 - getColStyle("grid-column-end"),
+        rowStart: getRowStyle("--grid-row-start"),
+        rowEnd: getRowStyle("--grid-row-end"),
+        colStart: getColStyle("--grid-column-start"),
+        colEnd: getColStyle("--grid-column-end"),
+        rowDeltaMin: 1 - getRowStyle("--grid-row-start"),
+        rowDeltaMax: gridRows + 1 - getRowStyle("--grid-row-end"),
+        colDeltaMin: 1 - getColStyle("--grid-column-start"),
+        colDeltaMax: gridCols + 1 - getColStyle("--grid-column-end"),
       }
       handleEvent(e)
     }
