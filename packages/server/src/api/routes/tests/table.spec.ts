@@ -1507,20 +1507,36 @@ describe.each([
         [FieldType.NUMBER]: rowValues[FieldType.NUMBER],
         [FieldType.BOOLEAN]: rowValues[FieldType.BOOLEAN],
         [FieldType.DATETIME]: rowValues[FieldType.DATETIME],
-        [FieldType.ATTACHMENTS]: expect.anything(),
-        [FieldType.ATTACHMENT_SINGLE]: expect.anything(),
-        [FieldType.LINK]: [
-          expect.objectContaining({ _id: rowValues[FieldType.LINK][0]._id }),
-        ],
+        [FieldType.ATTACHMENTS]: rowValues[FieldType.ATTACHMENTS].map(
+          (a: any) =>
+            expect.objectContaining({
+              ...a,
+              url: expect.any(String),
+            })
+        ),
+        [FieldType.ATTACHMENT_SINGLE]: expect.objectContaining({
+          ...rowValues[FieldType.ATTACHMENT_SINGLE],
+          url: expect.any(String),
+        }),
+        [FieldType.LINK]: rowValues[FieldType.LINK].map((l: any) =>
+          expect.objectContaining({ _id: l._id })
+        ),
         [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
         [FieldType.AUTO]: expect.any(Number),
         [FieldType.JSON]: rowValues[FieldType.JSON],
         [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
         [FieldType.BARCODEQR]: rowValues[FieldType.BARCODEQR],
-        [FieldType.SIGNATURE_SINGLE]: expect.anything(),
+        [FieldType.SIGNATURE_SINGLE]: expect.objectContaining({
+          ...rowValues[FieldType.SIGNATURE_SINGLE],
+          url: expect.any(String),
+        }),
         [FieldType.BIGINT]: rowValues[FieldType.BIGINT],
-        [FieldType.BB_REFERENCE]: expect.anything(),
-        [FieldType.BB_REFERENCE_SINGLE]: expect.anything(),
+        [FieldType.BB_REFERENCE]: rowValues[FieldType.BB_REFERENCE].map(
+          expect.objectContaining
+        ),
+        [FieldType.BB_REFERENCE_SINGLE]: expect.objectContaining(
+          rowValues[FieldType.BB_REFERENCE_SINGLE]
+        ),
       })
 
       expect(await config.api.row.search(table._id!)).toEqual({
