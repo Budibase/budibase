@@ -26,6 +26,10 @@ import {
   WebhookActionType,
   AutomationEventType,
   LoopStepType,
+  FieldSchema,
+  BBReferenceFieldSubType,
+  RelationshipType,
+  OneToManyRelationshipFieldMetadata,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -572,4 +576,161 @@ export function basicEnvironmentVariable(
     production: prod,
     development: dev || prod,
   }
+}
+
+export function fullSchema({
+  otherTableId,
+  allRequired,
+}: {
+  otherTableId: string
+  allRequired?: boolean
+}) {
+  const schema: {
+    [type in FieldType]: FieldSchema & { type: type }
+  } = {
+    [FieldType.STRING]: {
+      name: "string",
+      type: FieldType.STRING,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.LONGFORM]: {
+      name: "longform",
+      type: FieldType.LONGFORM,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.OPTIONS]: {
+      name: "options",
+      type: FieldType.OPTIONS,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.NUMBER]: {
+      name: "number",
+      type: FieldType.NUMBER,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.BOOLEAN]: {
+      name: "boolean",
+      type: FieldType.BOOLEAN,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.ARRAY]: {
+      name: "array",
+      type: FieldType.ARRAY,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.DATETIME]: {
+      name: "datetime",
+      type: FieldType.DATETIME,
+      dateOnly: true,
+      timeOnly: false,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.LINK]: {
+      name: "link",
+      type: FieldType.LINK,
+      tableId: otherTableId,
+      relationshipType: RelationshipType.ONE_TO_MANY,
+      fieldName: "link",
+      constraints: {
+        presence: allRequired,
+      },
+    } as OneToManyRelationshipFieldMetadata,
+    [FieldType.FORMULA]: {
+      name: "formula",
+      type: FieldType.FORMULA,
+      formula: "any formula",
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.BARCODEQR]: {
+      name: "barcodeqr",
+      type: FieldType.BARCODEQR,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.BIGINT]: {
+      name: "bigint",
+      type: FieldType.BIGINT,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.BB_REFERENCE]: {
+      name: "user",
+      type: FieldType.BB_REFERENCE,
+      subtype: BBReferenceFieldSubType.USER,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.BB_REFERENCE_SINGLE]: {
+      name: "users",
+      type: FieldType.BB_REFERENCE_SINGLE,
+      subtype: BBReferenceFieldSubType.USER,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.ATTACHMENTS]: {
+      name: "attachments",
+      type: FieldType.ATTACHMENTS,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.ATTACHMENT_SINGLE]: {
+      name: "attachment_single",
+      type: FieldType.ATTACHMENT_SINGLE,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.AUTO]: {
+      name: "auto",
+      type: FieldType.AUTO,
+      autocolumn: true,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.JSON]: {
+      name: "json",
+      type: FieldType.JSON,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.INTERNAL]: {
+      name: "internal",
+      type: FieldType.INTERNAL,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.SIGNATURE_SINGLE]: {
+      name: "signature_single",
+      type: FieldType.SIGNATURE_SINGLE,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+  }
+
+  return schema
 }
