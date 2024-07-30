@@ -54,7 +54,7 @@
             name: "Edit",
             keyBind: null,
             visible: true,
-            disabled: false,
+            disabled: !automation.definition.trigger,
             callback: updateAutomationDialog.show,
           },
           {
@@ -62,7 +62,9 @@
             name: "Duplicate",
             keyBind: null,
             visible: true,
-            disabled: automation.definition.trigger.name === "Webhook",
+            disabled:
+              !automation.definition.trigger ||
+              automation.definition.trigger?.name === "Webhook",
             callback: duplicateAutomation,
           },
         ]
@@ -74,7 +76,7 @@
       name: automation.disabled ? "Activate" : "Pause",
       keyBind: null,
       visible: true,
-      disabled: false,
+      disabled: !automation.definition.trigger,
       callback: () => {
         automationStore.actions.toggleDisabled(
           automation._id,
