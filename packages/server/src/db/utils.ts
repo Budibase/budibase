@@ -57,14 +57,6 @@ export const getUserMetadataParams = dbCore.getUserMetadataParams
 export const generateUserMetadataID = dbCore.generateUserMetadataID
 export const getGlobalIDFromUserMetadataID =
   dbCore.getGlobalIDFromUserMetadataID
-export const CONSTANT_INTERNAL_ROW_COLS = [
-  "_id",
-  "_rev",
-  "type",
-  "createdAt",
-  "updatedAt",
-  "tableId",
-]
 
 /**
  * Gets parameters for retrieving tables, this is a utility function for the getDocParams function.
