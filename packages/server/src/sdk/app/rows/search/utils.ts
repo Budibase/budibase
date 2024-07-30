@@ -115,7 +115,7 @@ export function isSearchingByRowID(query: SearchFilters): boolean {
       continue
     }
     const hasId = Object.keys(searchField).find(
-      key => key.endsWith("_id") && searchField[key]
+      key => dbCore.removeKeyNumbering(key) === "_id" && searchField[key]
     )
     if (hasId) {
       return true
