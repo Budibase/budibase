@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import { builderStore, componentStore } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
+  import { isGridEvent, getGridParentID } from "utils/grid"
 
   // Enum for device preview type, included in CSS variables
   const Devices = {
@@ -66,18 +67,6 @@
 
   // Sugar for a combination of both min and max
   const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
-
-  // Util to check if a DND event originates from a grid (or inside a grid).
-  // This is important as we do not handle grid DND in this handler.
-  const isGridEvent = e => {
-    return (
-      e.target
-        .closest?.(".component")
-        ?.parentNode.closest(".component")
-        ?.childNodes[0].classList?.contains("grid") ||
-      e.target.classList.contains("anchor")
-    )
-  }
 
   // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
@@ -172,7 +161,7 @@
 
     // Find grid parent
     const domComponent = getDOMNode(id)
-    const gridId = domComponent?.closest(".grid")?.parentNode.dataset.id
+    const gridId = getGridParentID(domComponent)
     if (!gridId) {
       return
     }

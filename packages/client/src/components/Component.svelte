@@ -198,7 +198,9 @@
   $: darkMode = !currentTheme?.includes("light")
 
   // Build meta styles and stringify to apply to the wrapper node
+  $: definitionMetaStyles = getDefinitonMetaStyles(definition)
   $: metaStyles = {
+    ...definitionMetaStyles,
     ...instance._styles?.meta,
     ...ephemeralStyles,
   }
@@ -618,6 +620,22 @@
     builderStore.actions.selectComponent(id)
   }
 
+  // Util to generate meta styles based on component definition
+  const alignToStyleMap = {
+    start: "flex-start",
+    center: "center",
+    end: "flex-end",
+    stretch: "stretch",
+  }
+  const getDefinitonMetaStyles = definition => {
+    const gridHAlign = definition.grid?.hAlign || "stretch"
+    const gridVAlign = definition.grid?.vAlign || "center"
+    return {
+      ["align-items"]: alignToStyleMap[gridHAlign],
+      ["justify-content"]: alignToStyleMap[gridVAlign],
+    }
+  }
+
   onMount(() => {
     // Register this component instance for external access
     if ($appStore.isDevApp) {
@@ -661,6 +679,7 @@
     class:parent={hasChildren}
     class:block={isBlock}
     class:error={errorState}
+    class:fill={definition.grid?.fill}
     data-id={id}
     data-name={name}
     data-icon={icon}

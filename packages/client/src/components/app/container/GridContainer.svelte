@@ -123,4 +123,11 @@
     --row-start: var(--grid-mobile-row-start, var(--grid-desktop-row-start, 1));
     --row-end: var(--grid-mobile-row-end, var(--grid-desktop-row-end, 2));
   }
+
+  /* Handle grid children which need to fill the outer component wrapper */
+  .grid :global(> .component.fill > *) {
+    width: 100%;
+    height: 100%;
+    flex: 1 1 0;
+  }
 </style>
