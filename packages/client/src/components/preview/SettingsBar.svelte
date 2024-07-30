@@ -4,7 +4,8 @@
   import SettingsColorPicker from "./SettingsColorPicker.svelte"
   import SettingsPicker from "./SettingsPicker.svelte"
   import { builderStore, componentStore, dndIsDragging } from "stores"
-  import { domDebounce } from "utils/domDebounce"
+  import { Utils } from "@budibase/frontend-core"
+  import { isGridChild } from "utils/grid"
 
   const verticalOffset = 36
   const horizontalOffset = 2
@@ -49,8 +50,10 @@
       return
     }
     const id = $builderStore.selectedComponentId
-    const parent = document.getElementsByClassName(id)?.[0]
-    const element = parent?.children?.[0]
+    let element = document.getElementsByClassName(id)?.[0]
+    if (!isGridChild(element)) {
+      element = element?.children?.[0]
+    }
 
     // The settings bar is higher in the dom tree than the selection indicators
     // as we want to be able to render the settings bar wider than the screen,
@@ -111,7 +114,7 @@
       measured = true
     }
   }
-  const debouncedUpdate = domDebounce(updatePosition)
+  const debouncedUpdate = Utils.domDebounce(updatePosition)
 
   onMount(() => {
     debouncedUpdate()

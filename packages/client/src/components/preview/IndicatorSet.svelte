@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
   import { builderStore, componentStore } from "stores"
-  import { memo } from "@budibase/frontend-core"
+  import { memo, Utils } from "@budibase/frontend-core"
   import { writable } from "svelte/store"
 
   export let componentId = null
@@ -47,12 +47,12 @@
     prefix,
     allowResizeAnchors,
   })
-  $: $config, updatePosition()
+  $: $config, debouncedUpdate()
 
   // Update position when component state changes
   $: instance = componentStore.actions.getComponentInstance(componentId)
   $: componentState = $instance?.state || writable()
-  $: $componentState, updatePosition()
+  $: $componentState, debouncedUpdate()
 
   const checkInsideGrid = id => {
     const component = document.getElementsByClassName(id)[0]
@@ -160,16 +160,17 @@
       })
     })
   }
+  const debouncedUpdate = Utils.domDebounce(updatePosition)
 
   onMount(() => {
-    updatePosition()
-    interval = setInterval(updatePosition, 100)
-    document.addEventListener("scroll", updatePosition, true)
+    debouncedUpdate()
+    interval = setInterval(debouncedUpdate, 100)
+    document.addEventListener("scroll", debouncedUpdate, true)
   })
 
   onDestroy(() => {
     clearInterval(interval)
-    document.removeEventListener("scroll", updatePosition, true)
+    document.removeEventListener("scroll", v, true)
     observers.forEach(o => o.disconnect())
   })
 </script>

@@ -117,6 +117,9 @@
       "width": 400,
       "height": 200
     },
+    "grid": {
+      "fill": true
+    },
     "styles": ["padding", "size", "background", "border", "shadow"],
     "settings": [
       {
@@ -560,6 +563,10 @@
     "size": {
       "width": 105,
       "height": 32
+    },
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "center"
     },
     "settings": [
       {
