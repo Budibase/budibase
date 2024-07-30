@@ -29,8 +29,7 @@ export async function getBuilderData(
   const rowActionNameCache: Record<string, TableRowActions> = {}
   async function getRowActionName(tableId: string, rowActionId: string) {
     if (!rowActionNameCache[tableId]) {
-      const rowActions = await sdk.rowActions.get(tableId)
-      rowActionNameCache[tableId] = rowActions
+      rowActionNameCache[tableId] = await sdk.rowActions.get(tableId)
     }
 
     return rowActionNameCache[tableId].actions[rowActionId]?.name
@@ -45,9 +44,11 @@ export async function getBuilderData(
     }
 
     const { tableId, rowActionId } = automation.definition.trigger.inputs
+    if (!tableId || !rowActionId) {
+      continue
+    }
 
     const tableName = await getTableName(tableId)
-
     const rowActionName = await getRowActionName(tableId, rowActionId)
 
     result[automation._id!] = {

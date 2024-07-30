@@ -21,7 +21,9 @@
 
   $: nameError =
     nameTouched && !name ? "Please specify a name for the automation." : null
-  $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
+  $: triggers = Object.entries(
+    $automationStore.blockDefinitions.CREATABLE_TRIGGER
+  )
 
   async function createAutomation() {
     try {
