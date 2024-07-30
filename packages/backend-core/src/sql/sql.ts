@@ -209,6 +209,7 @@ class InternalBuilder {
       schema.type === FieldType.STRING ||
       schema.type === FieldType.LONGFORM ||
       schema.type === FieldType.BB_REFERENCE_SINGLE ||
+      schema.type === FieldType.BB_REFERENCE ||
       schema.type === FieldType.OPTIONS ||
       schema.type === FieldType.BARCODEQR
     ) {
