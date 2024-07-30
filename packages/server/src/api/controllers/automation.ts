@@ -1,7 +1,10 @@
 import * as triggers from "../../automations/triggers"
 import { sdk as coreSdk } from "@budibase/shared-core"
 import { DocumentType } from "../../db/utils"
-import { updateTestHistory, removeDeprecated } from "../../automations/utils"
+import {
+  updateTestHistory,
+  removeInvalidDefinitions,
+} from "../../automations/utils"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events, db as dbCore } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
@@ -20,11 +23,11 @@ import { builderSocket } from "../../websockets"
 import env from "../../environment"
 
 async function getActionDefinitions() {
-  return removeDeprecated(await actionDefs())
+  return removeInvalidDefinitions(await actionDefs())
 }
 
 function getTriggerDefinitions() {
-  return removeDeprecated(triggers.TRIGGER_DEFINITIONS)
+  return removeInvalidDefinitions(triggers.TRIGGER_DEFINITIONS)
 }
 
 /*************************

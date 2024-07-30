@@ -20,7 +20,7 @@
     .map(automation => ({
       ...automation,
       displayName:
-        $automationStore.automationDisplayData[automation._id].displayName ||
+        $automationStore.automationDisplayData[automation._id]?.displayName ||
         automation.name,
     }))
     .sort((a, b) => {
