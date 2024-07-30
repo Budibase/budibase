@@ -117,16 +117,12 @@ export async function updateTestHistory(
   )
 }
 
-export function removeInvalidDefinitions(
+export function removeDeprecated(
   definitions: Record<string, AutomationStepSchema>
 ) {
-  const disallowedStepIds: (
-    | AutomationTriggerStepId
-    | AutomationActionStepId
-  )[] = [AutomationTriggerStepId.ROW_ACTION]
   const base = cloneDeep(definitions)
   for (let key of Object.keys(base)) {
-    if (base[key].deprecated || disallowedStepIds.includes(base[key].stepId)) {
+    if (base[key].deprecated) {
       delete base[key]
     }
   }

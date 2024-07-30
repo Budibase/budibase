@@ -14,7 +14,7 @@ import sdk from "../../../sdk"
 import { Automation, FieldType, Table } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
-import { removeInvalidDefinitions } from "../../../automations/utils"
+import { removeDeprecated } from "../../../automations/utils"
 
 const MAX_RETRIES = 4
 let {
@@ -71,14 +71,14 @@ describe("/automations", () => {
         .expect(200)
 
       let definitionsLength = Object.keys(
-        removeInvalidDefinitions(BUILTIN_ACTION_DEFINITIONS)
+        removeDeprecated(BUILTIN_ACTION_DEFINITIONS)
       ).length
 
       expect(Object.keys(res.body.action).length).toBeGreaterThanOrEqual(
         definitionsLength
       )
       expect(Object.keys(res.body.trigger).length).toEqual(
-        Object.keys(removeInvalidDefinitions(TRIGGER_DEFINITIONS)).length
+        Object.keys(removeDeprecated(TRIGGER_DEFINITIONS)).length
       )
     })
   })
