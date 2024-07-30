@@ -1,5 +1,5 @@
 import { FieldType, Table } from "@budibase/types"
-import { CONSTANT_INTERNAL_ROW_COLS } from "./constants"
+import { PROTECTED_INTERNAL_COLUMNS } from "./constants"
 
 const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.STRING]: true,
@@ -53,7 +53,10 @@ export function canBeSortColumn(type: FieldType): boolean {
   return !!allowSortColumnByType[type]
 }
 
-export function findDuplicateInternalColumns(table: Table): string[] {
+export function findDuplicateInternalColumns(
+  table: Table,
+  opts?: { ignoreProtectedColumnNames: boolean }
+): string[] {
   // maintains the case of keys
   const casedKeys = Object.keys(table.schema)
   // get the column names
@@ -69,9 +72,11 @@ export function findDuplicateInternalColumns(table: Table): string[] {
       }
     }
   }
-  for (let internalColumn of CONSTANT_INTERNAL_ROW_COLS) {
-    if (casedKeys.find(key => key === internalColumn)) {
-      duplicates.push(internalColumn)
+  if (!opts?.ignoreProtectedColumnNames) {
+    for (let internalColumn of PROTECTED_INTERNAL_COLUMNS) {
+      if (casedKeys.find(key => key === internalColumn)) {
+        duplicates.push(internalColumn)
+      }
     }
   }
   return duplicates

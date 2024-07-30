@@ -45,6 +45,7 @@ export enum AutomationTriggerStepId {
   WEBHOOK = "WEBHOOK",
   APP = "APP",
   CRON = "CRON",
+  ROW_ACTION = "ROW_ACTION",
 }
 
 export enum AutomationStepType {
@@ -152,6 +153,7 @@ interface BaseIOStructure {
     [key: string]: BaseIOStructure
   }
   required?: string[]
+  readonly?: true
 }
 
 export interface InputOutputBlock {
@@ -192,6 +194,7 @@ export interface AutomationStep extends AutomationStepSchema {
 }
 
 export interface AutomationTriggerSchema extends AutomationStepSchema {
+  type: AutomationStepType.TRIGGER
   event?: string
   cronJobId?: string
 }
@@ -276,6 +279,7 @@ export enum AutomationEventType {
   APP_TRIGGER = "app:trigger",
   CRON_TRIGGER = "cron:trigger",
   WEBHOOK_TRIGGER = "web:trigger",
+  ROW_ACTION = "row:action",
 }
 
 export type UpdatedRowEventEmitter = {

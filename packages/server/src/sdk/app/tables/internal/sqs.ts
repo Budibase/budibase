@@ -10,13 +10,10 @@ import {
   Table,
 } from "@budibase/types"
 import tablesSdk from "../"
-import {
-  CONSTANT_INTERNAL_ROW_COLS,
-  generateJunctionTableID,
-} from "../../../../db/utils"
+import { generateJunctionTableID } from "../../../../db/utils"
 import { isEqual } from "lodash"
 import { DEFAULT_TABLES } from "../../../../db/defaultData/datasource_bb_default"
-import { helpers } from "@budibase/shared-core"
+import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BOOLEAN]: SQLiteType.NUMERIC,
@@ -104,7 +101,7 @@ function mapTable(table: Table): SQLiteTables {
   }
   // there are some extra columns to map - add these in
   const constantMap: Record<string, SQLiteType> = {}
-  CONSTANT_INTERNAL_ROW_COLS.forEach(col => {
+  PROTECTED_INTERNAL_COLUMNS.forEach(col => {
     constantMap[col] = SQLiteType.TEXT
   })
   const thisTable: SQLiteTable = {

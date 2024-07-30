@@ -5,24 +5,9 @@ import { generate } from "shortid"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Utils } from "@budibase/frontend-core"
 
-export default function (datasources) {
-  if (!Array.isArray(datasources)) {
-    return []
-  }
-  return datasources.map(datasource => {
-    return {
-      name: `${datasource.label} - List with panel`,
-      create: () => createScreen(datasource),
-      id: GRID_DETAILS_TEMPLATE,
-      resourceId: datasource.resourceId,
-    }
-  })
-}
+const gridDetailsUrl = tableOrView => sanitizeUrl(`/${tableOrView.name}`)
 
-export const GRID_DETAILS_TEMPLATE = "GRID_DETAILS_TEMPLATE"
-export const gridDetailsUrl = datasource => sanitizeUrl(`/${datasource.label}`)
-
-const createScreen = datasource => {
+const createScreen = (tableOrView, permissions) => {
   /*
     Create Row
    */
@@ -47,7 +32,7 @@ const createScreen = datasource => {
     type: "cta",
   })
 
-  buttonGroup.instanceName(`${datasource.label} - Create`).customProps({
+  buttonGroup.instanceName(`${tableOrView.name} - Create`).customProps({
     hAlign: "right",
     buttons: [createButton.json()],
   })
@@ -62,7 +47,7 @@ const createScreen = datasource => {
   const heading = new Component("@budibase/standard-components/heading")
     .instanceName("Table heading")
     .customProps({
-      text: datasource?.label,
+      text: tableOrView.name,
     })
 
   gridHeader.addChild(heading)
@@ -72,7 +57,7 @@ const createScreen = datasource => {
     "@budibase/standard-components/formblock"
   )
   createFormBlock.instanceName("Create row form block").customProps({
-    dataSource: datasource,
+    dataSource: tableOrView.clientData,
     labelPosition: "left",
     buttonPosition: "top",
     actionType: "Create",
@@ -83,7 +68,7 @@ const createScreen = datasource => {
       showSaveButton: true,
       saveButtonLabel: "Save",
       actionType: "Create",
-      dataSource: datasource,
+      dataSource: tableOrView.clientData,
     }),
   })
 
@@ -99,7 +84,7 @@ const createScreen = datasource => {
 
   const editFormBlock = new Component("@budibase/standard-components/formblock")
   editFormBlock.instanceName("Edit row form block").customProps({
-    dataSource: datasource,
+    dataSource: tableOrView.clientData,
     labelPosition: "left",
     buttonPosition: "top",
     actionType: "Update",
@@ -112,7 +97,7 @@ const createScreen = datasource => {
       saveButtonLabel: "Save",
       deleteButtonLabel: "Delete",
       actionType: "Update",
-      dataSource: datasource,
+      dataSource: tableOrView.clientData,
     }),
   })
 
@@ -121,7 +106,7 @@ const createScreen = datasource => {
   const gridBlock = new Component("@budibase/standard-components/gridblock")
   gridBlock
     .customProps({
-      table: datasource,
+      table: tableOrView.clientData,
       allowAddRows: false,
       allowEditRows: false,
       allowDeleteRows: false,
@@ -145,14 +130,18 @@ const createScreen = datasource => {
         },
       ],
     })
-    .instanceName(`${datasource.label} - Table`)
+    .instanceName(`${tableOrView.name} - Table`)
 
   return new Screen()
-    .route(gridDetailsUrl(datasource))
-    .instanceName(`${datasource.label} - List and details`)
+    .route(gridDetailsUrl(tableOrView))
+    .instanceName(`${tableOrView.name} - List and details`)
+    .role(permissions.write)
+    .autoTableId(tableOrView.resourceId)
     .addChild(gridHeader)
     .addChild(gridBlock)
     .addChild(createRowSidePanel)
     .addChild(detailsSidePanel)
     .json()
 }
+
+export default createScreen
