@@ -14,6 +14,7 @@ import sdk from "../../../sdk"
 import { Automation, FieldType, Table } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
+import { removeInvalidDefinitions } from "../../../automations/utils"
 
 const MAX_RETRIES = 4
 let {
@@ -69,14 +70,15 @@ describe("/automations", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      let definitionsLength = Object.keys(BUILTIN_ACTION_DEFINITIONS).length
-      definitionsLength-- // OUTGOING_WEBHOOK is deprecated
+      let definitionsLength = Object.keys(
+        removeInvalidDefinitions(BUILTIN_ACTION_DEFINITIONS)
+      ).length
 
       expect(Object.keys(res.body.action).length).toBeGreaterThanOrEqual(
         definitionsLength
       )
       expect(Object.keys(res.body.trigger).length).toEqual(
-        Object.keys(TRIGGER_DEFINITIONS).length
+        Object.keys(removeInvalidDefinitions(TRIGGER_DEFINITIONS)).length
       )
     })
   })
