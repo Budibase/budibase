@@ -219,6 +219,23 @@ class InternalBuilder {
     if (input == undefined) {
       return null
     }
+
+    if (
+      this.client === SqlClient.ORACLE &&
+      schema.type === FieldType.DATETIME &&
+      schema.timeOnly
+    ) {
+      if (input instanceof Date) {
+        const hours = input.getHours().toString().padStart(2, "0")
+        const minutes = input.getMinutes().toString().padStart(2, "0")
+        const seconds = input.getSeconds().toString().padStart(2, "0")
+        return `${hours}:${minutes}:${seconds}`
+      }
+      if (typeof input === "string") {
+        return new Date(`1970-01-01 ${input}`)
+      }
+    }
+
     if (typeof input === "string") {
       if (isInvalidISODateString(input)) {
         return null
@@ -531,7 +548,7 @@ class InternalBuilder {
         } else if (this.client === SqlClient.ORACLE) {
           const identifier = this.convertClobs(key)
           query = query[fnc](
-            `(${identifier} IS NOT NULL AND ${identifier} != ?)`,
+            `(${identifier} IS NOT NULL AND ${identifier} != ?) OR ${identifier} IS NULL`,
             [value]
           )
         } else {
@@ -605,8 +622,12 @@ class InternalBuilder {
         const direction =
           value.direction === SortOrder.ASCENDING ? "asc" : "desc"
         let nulls
-        if (this.client === SqlClient.POSTGRES) {
-          // All other clients already sort this as expected by default, and adding this to the rest of the clients is causing issues
+        if (
+          this.client === SqlClient.POSTGRES ||
+          this.client === SqlClient.ORACLE
+        ) {
+          // All other clients already sort this as expected by default, and
+          // adding this to the rest of the clients is causing issues
           nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
