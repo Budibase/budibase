@@ -108,3 +108,18 @@ export function searchInputMapping(table: Table, options: RowSearchParams) {
   }
   return options
 }
+
+export function isSearchingByRowID(query: SearchFilters): boolean {
+  for (let searchField of Object.values(query)) {
+    if (typeof searchField !== "object") {
+      continue
+    }
+    const hasId = Object.keys(searchField).find(
+      key => dbCore.removeKeyNumbering(key) === "_id" && searchField[key]
+    )
+    if (hasId) {
+      return true
+    }
+  }
+  return false
+}
