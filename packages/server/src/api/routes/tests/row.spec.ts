@@ -39,6 +39,7 @@ import _, { merge } from "lodash"
 import * as uuid from "uuid"
 import { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
+import { Format } from "../../controllers/view/exporters"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -1976,7 +1977,7 @@ describe.each([
           rows: [expectedExportedRow],
         })
       })
-      })
+    })
   })
 
   let o2mTable: Table
