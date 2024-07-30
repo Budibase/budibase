@@ -406,7 +406,10 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       password: this.config.password,
       connectString,
     }
-    return await oracledb.getConnection(attributes)
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const connection = await oracledb.getConnection(attributes)
+    await connection.execute(`ALTER SESSION SET TIME_ZONE = '${tz}'`)
+    return connection
   }
 
   async create(query: SqlQuery | string): Promise<any[]> {
