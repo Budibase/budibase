@@ -87,8 +87,6 @@ const automationActions = store => ({
       disabled: false,
     }
     const response = await store.actions.save(automation)
-    await store.actions.fetch()
-    store.actions.select(response._id)
     return response
   },
   duplicate: async automation => {
@@ -98,14 +96,13 @@ const automationActions = store => ({
       _id: undefined,
       _ref: undefined,
     })
-    await store.actions.fetch()
-    store.actions.select(response._id)
     return response
   },
   save: async automation => {
     const response = await API.updateAutomation(automation)
 
     await store.actions.fetch()
+    store.actions.select(response._id)
     return response.automation
   },
   delete: async automation => {
@@ -113,18 +110,22 @@ const automationActions = store => ({
       automationId: automation?._id,
       automationRev: automation?._rev,
     })
+
     store.update(state => {
       // Remove the automation
       state.automations = state.automations.filter(
         x => x._id !== automation._id
       )
+
       // Select a new automation if required
       if (automation._id === state.selectedAutomationId) {
-        store.actions.select(state.automations[0]?._id)
+        state.selectedAutomationId = state.automations[0]?._id || null
       }
+
+      // Clear out automationDisplayData for the automation
+      delete state.automationDisplayData[automation._id]
       return state
     })
-    await store.actions.fetch()
   },
   toggleDisabled: async automationId => {
     let automation
@@ -381,7 +382,7 @@ export const selectedAutomation = derived(automationStore, $automationStore => {
 export const selectedAutomationDisplayData = derived(
   [automationStore, selectedAutomation],
   ([$automationStore, $selectedAutomation]) => {
-    if (!$selectedAutomation._id) {
+    if (!$selectedAutomation?._id) {
       return null
     }
     return $automationStore.automationDisplayData[$selectedAutomation._id]
