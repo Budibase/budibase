@@ -6,7 +6,6 @@ import {
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
-  ExternalAppStepOutputs,
   ZapierStepInputs,
   ZapierStepOutputs,
 } from "@budibase/types"

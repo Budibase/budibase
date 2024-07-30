@@ -34,7 +34,7 @@ describe("test the create row action", () => {
   it("should run trigger an automation which then creates a row", async () => {
     const table = await config.createTable()
 
-    const builder = createAutomationBuilder(config, {
+    const builder = createAutomationBuilder({
       name: "Test Row Save and Create",
     })
 

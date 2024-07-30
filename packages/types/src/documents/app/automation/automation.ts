@@ -4,7 +4,7 @@ import { User } from "../../global"
 import { ReadStream } from "fs"
 import { Row } from "../row"
 import { Table } from "../table"
-import { AutomationStepInputMap, CreateRowStepInputs } from "./schema"
+import { AutomationStepInputMap } from "./schema"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -78,22 +78,6 @@ export enum AutomationActionStepId {
   zapier = "zapier",
   integromat = "integromat",
   n8n = "n8n",
-}
-
-type smtpEmailStepInputs = {
-  to: string
-  from: string
-  subject: string
-  contents: string
-  cc: string
-  bcc: string
-  addInvite?: boolean
-  startTime: Date
-  endTime: Date
-  summary: string
-  location?: string
-  url?: string
-  attachments?: EmailAttachment[]
 }
 
 export interface EmailInvite {

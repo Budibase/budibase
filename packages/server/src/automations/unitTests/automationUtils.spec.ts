@@ -4,6 +4,7 @@ import {
   substituteLoopStep,
 } from "../automationUtils"
 import { LoopStepType } from "@budibase/types"
+
 describe("automationUtils", () => {
   describe("substituteLoopStep", () => {
     it("should allow multiple loop binding substitutes", () => {

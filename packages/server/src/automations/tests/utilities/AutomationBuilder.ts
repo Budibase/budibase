@@ -22,24 +22,39 @@ import {
   DeleteRowStepInputs,
   UpdateRowStepInputs,
   CreateRowStepInputs,
+  Automation,
+  AutomationTrigger,
+  AutomationResults,
 } from "@budibase/types"
 import {} from "../../steps/loop"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import * as setup from "../utilities"
+import { AppActionTriggerOutputs } from "../../triggerInfo/app"
+import { CronTriggerOutputs } from "../../triggerInfo/cron"
+
+type TriggerOutputs =
+  | RowCreatedTriggerOutputs
+  | RowUpdatedTriggerOutputs
+  | RowDeletedTriggerOutputs
+  | AppActionTriggerOutputs
+  | CronTriggerOutputs
+  | undefined
 
 class AutomationBuilder {
-  private automationConfig: any = {
+  private automationConfig: Automation = {
     name: "",
     definition: {
-      trigger: {},
       steps: [],
+      trigger: {} as AutomationTrigger,
     },
     type: "automation",
+    appId: "",
   }
-  private config: any
-  private triggerOutputs: any
+  private config: TestConfiguration = setup.getConfig()
+  private triggerOutputs: TriggerOutputs
   private triggerSet: boolean = false
 
-  constructor(config: any, options: { name?: string } = {}) {
-    this.config = config
+  constructor(options: { name?: string } = {}) {
     this.automationConfig.name = options.name || `Test Automation ${uuidv4()}`
   }
 
@@ -81,10 +96,10 @@ class AutomationBuilder {
   loop(inputs: LoopStepInputs): this {
     return this.step(BUILTIN_ACTION_DEFINITIONS.LOOP, inputs)
   }
-  private trigger(
+  private trigger<T extends { [key: string]: any }>(
     triggerSchema: AutomationTriggerSchema,
-    inputs: any,
-    outputs: any
+    inputs: T,
+    outputs: TriggerOutputs
   ): this {
     if (this.triggerSet) {
       throw new Error("Only one trigger can be set for an automation.")
@@ -100,7 +115,10 @@ class AutomationBuilder {
     return this
   }
 
-  private step(stepSchema: AutomationStepSchema, inputs: any): this {
+  private step<T extends { [key: string]: any }>(
+    stepSchema: AutomationStepSchema,
+    inputs: T
+  ): this {
     this.automationConfig.definition.steps.push({
       ...stepSchema,
       inputs,
@@ -119,7 +137,7 @@ class AutomationBuilder {
     return this.processResults(results)
   }
 
-  private processResults(results: any) {
+  private processResults(results: { body: AutomationResults }) {
     results.body.steps.shift()
     return {
       trigger: results.body.trigger,
@@ -128,9 +146,6 @@ class AutomationBuilder {
   }
 }
 
-export function createAutomationBuilder(
-  config: any,
-  options?: { name?: string }
-) {
-  return new AutomationBuilder(config, options)
+export function createAutomationBuilder(options?: { name?: string }) {
+  return new AutomationBuilder(options)
 }

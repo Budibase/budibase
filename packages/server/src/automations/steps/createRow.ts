@@ -15,6 +15,7 @@ import {
   CreateRowStepInputs,
   CreateRowStepOutputs,
 } from "@budibase/types"
+import { EventEmitter } from "events"
 
 export const definition: AutomationStepSchema = {
   name: "Create Row",
@@ -82,7 +83,7 @@ export async function run({
 }: {
   inputs: CreateRowStepInputs
   appId: string
-  emitter: any
+  emitter: EventEmitter
 }): Promise<CreateRowStepOutputs> {
   if (inputs.row == null || inputs.row.tableId == null) {
     return {

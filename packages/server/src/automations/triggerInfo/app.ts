@@ -41,9 +41,9 @@ export const definition: AutomationTriggerSchema = {
 }
 
 export type AppActionTriggerInputs = {
-  fields: any
+  fields: object
 }
 
 export type AppActionTriggerOutputs = {
-  fields: any
+  fields: object
 }

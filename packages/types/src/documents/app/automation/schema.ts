@@ -17,7 +17,7 @@ export type AutomationStepInputMap = {
   [AutomationActionStepId.EXECUTE_BASH]: BashStepInputs
   [AutomationActionStepId.EXECUTE_SCRIPT]: ExecuteScriptStepInputs
   [AutomationActionStepId.EXECUTE_QUERY]: ExecuteQueryStepInputs
-  [AutomationActionStepId.SERVER_LOG]: serverLogStepInputs
+  [AutomationActionStepId.SERVER_LOG]: ServerLogStepInputs
   [AutomationActionStepId.OUTGOING_WEBHOOK]: OutgoingWebhookStepInputs
   [AutomationActionStepId.DELAY]: DelayStepInputs
   [AutomationActionStepId.FILTER]: FilterStepInputs
@@ -31,8 +31,6 @@ export type AutomationStepInputMap = {
   [AutomationActionStepId.slack]: SlackStepInputs
   [AutomationActionStepId.zapier]: ZapierStepInputs
   [AutomationActionStepId.n8n]: n8nStepInputs
-
-  // Add any missing step types here
 }
 
 export type BaseAutomationOutputs = {
@@ -197,11 +195,11 @@ export type smtpEmailStepInputs = {
   url?: string
   attachments?: EmailAttachment[]
 }
-export type serverLogStepInputs = {
+export type ServerLogStepInputs = {
   text: string
 }
 
-export type serverLogStepOutputs = BaseAutomationOutputs & {
+export type ServerLogStepOutputs = BaseAutomationOutputs & {
   message: string
 }
 export type SlackStepInputs = {
