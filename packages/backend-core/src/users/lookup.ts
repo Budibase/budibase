@@ -34,15 +34,22 @@ export async function searchExistingEmails(emails: string[]) {
 }
 
 // lookup, could be email or userId, either will return a doc
-export async function getPlatformUser(
+export async function getPlatformUsers(
   identifier: string
-): Promise<PlatformUser | null> {
+): Promise<PlatformUser[]> {
   // use the view here and allow to find anyone regardless of casing
   // Use lowercase to ensure email login is case insensitive
-  return (await dbUtils.queryPlatformView(ViewName.PLATFORM_USERS_LOWERCASE, {
+  return await dbUtils.queryPlatformView(ViewName.PLATFORM_USERS_LOWERCASE, {
     keys: [identifier.toLowerCase()],
     include_docs: true,
-  })) as PlatformUser
+  })
+}
+
+export async function getFirstPlatformUser(
+  identifier: string
+): Promise<PlatformUser | null> {
+  const platformUserDocs = await getPlatformUsers(identifier)
+  return platformUserDocs[0] ?? null
 }
 
 export async function getExistingTenantUsers(
@@ -74,15 +81,10 @@ export async function getExistingPlatformUsers(
     keys: lcEmails,
     include_docs: true,
   }
-
-  const opts = {
-    arrayResponse: true,
-  }
-  return (await dbUtils.queryPlatformView(
+  return await dbUtils.queryPlatformView(
     ViewName.PLATFORM_USERS_LOWERCASE,
-    params,
-    opts
-  )) as PlatformUserByEmail[]
+    params
+  )
 }
 
 export async function getExistingAccounts(
@@ -93,14 +95,5 @@ export async function getExistingAccounts(
     keys: lcEmails,
     include_docs: true,
   }
-
-  const opts = {
-    arrayResponse: true,
-  }
-
-  return (await dbUtils.queryPlatformView(
-    ViewName.ACCOUNT_BY_EMAIL,
-    params,
-    opts
-  )) as AccountMetadata[]
+  return await dbUtils.queryPlatformView(ViewName.ACCOUNT_BY_EMAIL, params)
 }

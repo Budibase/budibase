@@ -6,6 +6,7 @@
     contextMenuStore,
   } from "stores/builder"
   import { notifications, Icon } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import UpdateAutomationModal from "components/automation/AutomationPanel/UpdateAutomationModal.svelte"
   import NavItem from "components/common/NavItem.svelte"
@@ -35,45 +36,53 @@
   }
 
   const getContextMenuItems = () => {
-    return [
-      {
-        icon: "Delete",
-        name: "Delete",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: confirmDeleteDialog.show,
+    const isRowAction = sdk.automations.isRowAction(automation)
+    const result = []
+    if (!isRowAction) {
+      result.push(
+        ...[
+          {
+            icon: "Delete",
+            name: "Delete",
+            keyBind: null,
+            visible: true,
+            disabled: false,
+            callback: confirmDeleteDialog.show,
+          },
+          {
+            icon: "Edit",
+            name: "Edit",
+            keyBind: null,
+            visible: true,
+            disabled: false,
+            callback: updateAutomationDialog.show,
+          },
+          {
+            icon: "Duplicate",
+            name: "Duplicate",
+            keyBind: null,
+            visible: true,
+            disabled: automation.definition.trigger.name === "Webhook",
+            callback: duplicateAutomation,
+          },
+        ]
+      )
+    }
+
+    result.push({
+      icon: automation.disabled ? "CheckmarkCircle" : "Cancel",
+      name: automation.disabled ? "Activate" : "Pause",
+      keyBind: null,
+      visible: true,
+      disabled: false,
+      callback: () => {
+        automationStore.actions.toggleDisabled(
+          automation._id,
+          automation.disabled
+        )
       },
-      {
-        icon: "Edit",
-        name: "Edit",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: updateAutomationDialog.show,
-      },
-      {
-        icon: "Duplicate",
-        name: "Duplicate",
-        keyBind: null,
-        visible: true,
-        disabled: automation.definition.trigger.name === "Webhook",
-        callback: duplicateAutomation,
-      },
-      {
-        icon: automation.disabled ? "CheckmarkCircle" : "Cancel",
-        name: automation.disabled ? "Activate" : "Pause",
-        keyBind: null,
-        visible: true,
-        disabled: false,
-        callback: () => {
-          automationStore.actions.toggleDisabled(
-            automation._id,
-            automation.disabled
-          )
-        },
-      },
-    ]
+    })
+    return result
   }
 
   const openContextMenu = e => {
@@ -89,7 +98,7 @@
   on:contextmenu={openContextMenu}
   {icon}
   iconColor={"var(--spectrum-global-color-gray-900)"}
-  text={automation.name}
+  text={automation.displayName}
   selected={automation._id === $selectedAutomation?._id}
   hovering={automation._id === $contextMenuStore.id}
   on:click={() => automationStore.actions.select(automation._id)}

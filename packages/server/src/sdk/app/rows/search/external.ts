@@ -16,7 +16,7 @@ import {
   breakExternalTableId,
   breakRowIdField,
 } from "../../../../integrations/utils"
-import { utils, CONSTANT_EXTERNAL_ROW_COLS } from "@budibase/shared-core"
+import { utils, PROTECTED_EXTERNAL_COLUMNS } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "./types"
 import { HTTPError } from "@budibase/backend-core"
 import pick from "lodash/pick"
@@ -99,7 +99,7 @@ export async function search(
     }
 
     if (options.fields) {
-      const fields = [...options.fields, ...CONSTANT_EXTERNAL_ROW_COLS]
+      const fields = [...options.fields, ...PROTECTED_EXTERNAL_COLUMNS]
       rows = rows.map((r: any) => pick(r, fields))
     }
 

@@ -137,6 +137,10 @@ export interface Database {
   ): Promise<T[]>
   remove(idOrDoc: Document): Promise<Nano.DocumentDestroyResponse>
   remove(idOrDoc: string, rev?: string): Promise<Nano.DocumentDestroyResponse>
+  bulkRemove(
+    documents: Document[],
+    opts?: { silenceErrors?: boolean }
+  ): Promise<void>
   put(
     document: AnyDocument,
     opts?: DatabasePutOpts

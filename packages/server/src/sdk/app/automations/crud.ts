@@ -1,3 +1,4 @@
+import { sdk } from "@budibase/shared-core"
 import {
   Automation,
   RequiredKeys,
@@ -15,6 +16,11 @@ import {
 } from "@budibase/backend-core"
 import { definitions } from "../../../automations/triggerInfo"
 import automations from "."
+
+export interface PersistedAutomation extends Automation {
+  _id: string
+  _rev: string
+}
 
 function getDb() {
   return context.getAppDB()
@@ -76,7 +82,7 @@ async function handleStepEvents(
 
 export async function fetch() {
   const db = getDb()
-  const response = await db.allDocs<Automation>(
+  const response = await db.allDocs<PersistedAutomation>(
     getAutomationParams(null, {
       include_docs: true,
     })
@@ -89,7 +95,7 @@ export async function fetch() {
 
 export async function get(automationId: string) {
   const db = getDb()
-  const result = await db.get<Automation>(automationId)
+  const result = await db.get<PersistedAutomation>(automationId)
   return trimUnexpectedObjectFields(result)
 }
 
@@ -127,6 +133,9 @@ export async function update(automation: Automation) {
   const db = getDb()
 
   const oldAutomation = await db.get<Automation>(automation._id)
+
+  guardInvalidUpdatesAndThrow(automation, oldAutomation)
+
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({
     oldAuto: oldAutomation,
@@ -252,6 +261,41 @@ async function checkForWebhooks({ oldAuto, newAuto }: any) {
     }
   }
   return newAuto
+}
+
+function guardInvalidUpdatesAndThrow(
+  automation: Automation,
+  oldAutomation: Automation
+) {
+  const stepDefinitions = [
+    automation.definition.trigger,
+    ...automation.definition.steps,
+  ]
+  const oldStepDefinitions = [
+    oldAutomation.definition.trigger,
+    ...oldAutomation.definition.steps,
+  ]
+  for (const step of stepDefinitions) {
+    const readonlyFields = Object.keys(
+      step.schema.inputs.properties || {}
+    ).filter(k => step.schema.inputs.properties[k].readonly)
+    readonlyFields.forEach(readonlyField => {
+      const oldStep = oldStepDefinitions.find(i => i.id === step.id)
+      if (step.inputs[readonlyField] !== oldStep?.inputs[readonlyField]) {
+        throw new HTTPError(
+          `Field ${readonlyField} is readonly and it cannot be modified`,
+          400
+        )
+      }
+    })
+  }
+
+  if (
+    sdk.automations.isRowAction(automation) &&
+    automation.name !== oldAutomation.name
+  ) {
+    throw new Error("Row actions cannot be renamed")
+  }
 }
 
 function trimUnexpectedObjectFields<T extends Automation>(automation: T): T {
