@@ -308,8 +308,12 @@ export class DatabaseImpl implements Database {
   }
 
   async bulkDocs(documents: AnyDocument[]) {
+    const now = new Date().toISOString()
     return this.performCall(db => {
-      return () => db.bulk({ docs: documents })
+      return () =>
+        db.bulk({
+          docs: documents.map(d => ({ createdAt: now, ...d, updatedAt: now })),
+        })
     })
   }
 

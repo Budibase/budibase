@@ -87,10 +87,10 @@ export async function fetch() {
       include_docs: true,
     })
   )
-  return response.rows
-    .map(row => row.doc)
-    .filter(doc => !!doc)
-    .map(trimUnexpectedObjectFields)
+  const automations: PersistedAutomation[] = response.rows
+    .filter(row => !!row.doc)
+    .map(row => row.doc!)
+  return automations.map(trimUnexpectedObjectFields)
 }
 
 export async function get(automationId: string) {
