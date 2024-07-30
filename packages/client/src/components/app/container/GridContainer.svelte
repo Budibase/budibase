@@ -66,6 +66,7 @@
     height: auto;
     max-height: 100%;
     max-width: 100%;
+    min-width: 0;
 
     /* On desktop, use desktop metadata and fall back to mobile */
     --col-start: var(--grid-desktop-col-start, var(--grid-mobile-col-start, 1));
