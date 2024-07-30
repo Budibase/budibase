@@ -318,9 +318,15 @@ export async function outputProcessing<T extends Row[] | Row>(
     } else if (column.type === FieldType.DATETIME && column.timeOnly) {
       for (let row of enriched) {
         if (row[property] instanceof Date) {
-          const hours = row[property].getHours().toString().padStart(2, "0")
-          const minutes = row[property].getMinutes().toString().padStart(2, "0")
-          const seconds = row[property].getSeconds().toString().padStart(2, "0")
+          const hours = row[property].getUTCHours().toString().padStart(2, "0")
+          const minutes = row[property]
+            .getUTCMinutes()
+            .toString()
+            .padStart(2, "0")
+          const seconds = row[property]
+            .getUTCSeconds()
+            .toString()
+            .padStart(2, "0")
           row[property] = `${hours}:${minutes}:${seconds}`
         }
       }
