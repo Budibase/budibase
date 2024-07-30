@@ -1454,4 +1454,35 @@ describe.each([
         })
     })
   })
+
+  describe("import/export", () => {
+    it("can export and import all column types", async () => {
+      const auxTable = await config.api.table.save(
+        setup.structures.basicTable()
+      )
+
+      const fullSchema = setup.structures.fullSchema({
+        otherTableId: auxTable._id!,
+      })
+
+      const table = await config.api.table.save({
+        ...setup.structures.basicTable(),
+        schema: fullSchema,
+      })
+
+      const rowValues = {
+        // TODO: all values
+      }
+
+      await config.api.row.save(table._id!, rowValues)
+
+      expect(await config.api.row.search(table._id!)).toEqual({
+        rows: [expect.objectContaining(rowValues)],
+      })
+
+      // export
+      // import
+      // check
+    })
+  })
 })
