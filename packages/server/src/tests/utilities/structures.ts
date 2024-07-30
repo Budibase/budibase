@@ -29,9 +29,9 @@ import {
   FieldSchema,
   BBReferenceFieldSubType,
   RelationshipType,
-  OneToManyRelationshipFieldMetadata,
   JsonFieldSubType,
   AutoFieldSubType,
+  ManyToManyRelationshipFieldMetadata,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -647,13 +647,14 @@ export function fullSchema({
     [FieldType.LINK]: {
       name: "link",
       type: FieldType.LINK,
-      tableId: otherTableId,
-      relationshipType: RelationshipType.ONE_TO_MANY,
+      relationshipType: RelationshipType.MANY_TO_MANY,
       fieldName: "link",
+      tableId: otherTableId,
       constraints: {
+        type: "array",
         presence: allRequired,
       },
-    } as OneToManyRelationshipFieldMetadata,
+    } as ManyToManyRelationshipFieldMetadata,
     [FieldType.FORMULA]: {
       name: "formula",
       type: FieldType.FORMULA,
