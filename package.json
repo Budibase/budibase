@@ -10,7 +10,7 @@
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/parser": "6.9.0",
     "esbuild": "^0.18.17",
-    "esbuild-node-externals": "^1.8.0",
+    "esbuild-node-externals": "^1.14.0",
     "eslint": "^8.52.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-jest": "^27.9.0",
