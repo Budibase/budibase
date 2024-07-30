@@ -1543,7 +1543,22 @@ describe.each([
         rows: [expectedRow],
       })
 
-      // export
+      const exportedValue = await config.api.row.exportRows(
+        table._id!,
+        {
+          query: {},
+        },
+        Format.CSV
+      )
+
+      const jsonRequest = await config.api.table.csvToJson({
+        csvString: exportedValue,
+      })
+
+      await config.api.row.bulkImport(table._id!, {
+        rows: jsonRequest,
+      })
+
       // import
       // check
     })

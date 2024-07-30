@@ -13,6 +13,7 @@ import {
   PaginatedSearchRowResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
+import { Format } from "../../../api/controllers/view/exporters"
 
 export class RowAPI extends TestAPI {
   get = async (
@@ -105,6 +106,7 @@ export class RowAPI extends TestAPI {
   exportRows = async (
     tableId: string,
     body: ExportRowsRequest,
+    format: Format = Format.JSON,
     expectations?: Expectations
   ) => {
     const response = await this._requestRaw(
@@ -112,7 +114,7 @@ export class RowAPI extends TestAPI {
       `/api/${tableId}/rows/exportRows`,
       {
         body,
-        query: { format: "json" },
+        query: { format },
         expectations,
       }
     )
