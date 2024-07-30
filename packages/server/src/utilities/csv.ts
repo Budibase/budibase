@@ -1,6 +1,6 @@
 import * as csvUtils from "csv/sync"
 
-export async function jsonFromCsvString(csvString: string) {
+export function jsonFromCsvString<T = any>(csvString: string) {
   const result = csvUtils.parse(csvString, {
     columns: true,
     cast: value => {
@@ -17,10 +17,9 @@ export async function jsonFromCsvString(csvString: string) {
       } catch {
         return value
       }
-
     },
   })
-  return result
+  return result as T
 }
 
 function getHeaders(

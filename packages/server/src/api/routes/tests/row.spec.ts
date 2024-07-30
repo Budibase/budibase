@@ -1854,15 +1854,10 @@ describe.each([
 
     describe("should allow exporting all column types", () => {
       let tableId: string
-      let expectedExportedRow: Row
+      let expectedRow: Row
 
       beforeAll(async () => {
-        const auxTable = await config.api.table.save(
-          setup.structures.basicTable()
-        )
-
-        const fullSchema = setup.structures.fullSchema({
-          otherTableId: auxTable._id!,
+        const fullSchema = setup.structures.fullSchemaWithoutLinks({
           allRequired: true,
         })
 
@@ -1872,7 +1867,6 @@ describe.each([
         })
         tableId = table._id!
 
-        const createAuxRow = () => config.api.row.save(auxTable._id!, {})
         const rowValues: Record<keyof typeof fullSchema, any> = {
           [FieldType.STRING]: generator.guid(),
           [FieldType.LONGFORM]: generator.paragraph(),
@@ -1883,7 +1877,6 @@ describe.each([
           [FieldType.DATETIME]: generator.date().toISOString(),
           [FieldType.ATTACHMENTS]: [setup.structures.basicAttachment()],
           [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
-          [FieldType.LINK]: [await createAuxRow()],
           [FieldType.FORMULA]: undefined, // generated field
           [FieldType.AUTO]: undefined, // generated field
           [FieldType.JSON]: { name: generator.guid() },
@@ -1895,7 +1888,7 @@ describe.each([
           [FieldType.BB_REFERENCE_SINGLE]: { _id: config.getUser()._id },
         }
         const row = await config.api.row.save(table._id!, rowValues)
-        expectedExportedRow = {
+        expectedRow = {
           _id: row._id,
           _rev: row._rev,
           type: "row",
@@ -1936,7 +1929,6 @@ describe.each([
           [FieldType.BB_REFERENCE_SINGLE]: expect.objectContaining(
             rowValues[FieldType.BB_REFERENCE_SINGLE]
           ),
-          [FieldType.LINK]: undefined, // Links are not exported
         }
       })
 
@@ -1950,7 +1942,7 @@ describe.each([
         const json = await config.api.table.csvToJson({
           csvString: exportedValue,
         })
-        expect(json).toEqual([expectedExportedRow])
+        expect(json).toEqual([expectedRow])
       })
 
       it("as json", async () => {
@@ -1961,7 +1953,7 @@ describe.each([
         )
 
         const json = JSON.parse(exportedValue)
-        expect(json).toEqual([expectedExportedRow])
+        expect(json).toEqual([expectedRow])
       })
 
       it("as json with schema", async () => {
@@ -1974,8 +1966,47 @@ describe.each([
         const json = JSON.parse(exportedValue)
         expect(json).toEqual({
           schema: expect.any(Object),
-          rows: [expectedExportedRow],
+          rows: [expectedRow],
         })
+      })
+
+      it("exported data can be re-imported", async () => {
+        // export all
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          Format.CSV
+        )
+
+        // import all twice
+        const rows = await config.api.table.csvToJson({
+          csvString: exportedValue,
+        })
+        await config.api.row.bulkImport(tableId, {
+          rows,
+        })
+        await config.api.row.bulkImport(table._id!, {
+          rows,
+        })
+
+        const { rows: allRows } = await config.api.row.search(tableId)
+        expect(allRows).toEqual([
+          {
+            ...expectedRow,
+            _id: expect.any(String),
+            _rev: expect.any(String),
+          },
+          {
+            ...expectedRow,
+            _id: expect.any(String),
+            _rev: expect.any(String),
+          },
+          {
+            ...expectedRow,
+            _id: expect.any(String),
+            _rev: expect.any(String),
+          },
+        ])
       })
     })
   })

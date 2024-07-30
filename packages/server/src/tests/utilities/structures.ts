@@ -28,10 +28,8 @@ import {
   LoopStepType,
   FieldSchema,
   BBReferenceFieldSubType,
-  RelationshipType,
   JsonFieldSubType,
   AutoFieldSubType,
-  ManyToManyRelationshipFieldMetadata,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -580,15 +578,13 @@ export function basicEnvironmentVariable(
   }
 }
 
-export function fullSchema({
-  otherTableId,
+export function fullSchemaWithoutLinks({
   allRequired,
 }: {
-  otherTableId: string
   allRequired?: boolean
 }) {
   const schema: {
-    [type in FieldType]: FieldSchema & { type: type }
+    [type in Exclude<FieldType, FieldType.LINK>]: FieldSchema & { type: type }
   } = {
     [FieldType.STRING]: {
       name: "string",
@@ -644,17 +640,6 @@ export function fullSchema({
         presence: allRequired,
       },
     },
-    [FieldType.LINK]: {
-      name: "link",
-      type: FieldType.LINK,
-      relationshipType: RelationshipType.MANY_TO_MANY,
-      fieldName: "link",
-      tableId: otherTableId,
-      constraints: {
-        type: "array",
-        presence: allRequired,
-      },
-    } as ManyToManyRelationshipFieldMetadata,
     [FieldType.FORMULA]: {
       name: "formula",
       type: FieldType.FORMULA,
