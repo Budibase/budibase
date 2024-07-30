@@ -30,6 +30,7 @@ import {
   BBReferenceFieldSubType,
   RelationshipType,
   OneToManyRelationshipFieldMetadata,
+  JsonFieldSubType,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -607,6 +608,16 @@ export function fullSchema({
       type: FieldType.OPTIONS,
       constraints: {
         presence: allRequired,
+        inclusion: ["option 1", "option 2", "option 3", "option 4"],
+      },
+    },
+    [FieldType.ARRAY]: {
+      name: "array",
+      type: FieldType.ARRAY,
+      constraints: {
+        presence: allRequired,
+        type: JsonFieldSubType.ARRAY,
+        inclusion: ["options 1", "options 2", "options 3", "options 4"],
       },
     },
     [FieldType.NUMBER]: {
@@ -619,13 +630,6 @@ export function fullSchema({
     [FieldType.BOOLEAN]: {
       name: "boolean",
       type: FieldType.BOOLEAN,
-      constraints: {
-        presence: allRequired,
-      },
-    },
-    [FieldType.ARRAY]: {
-      name: "array",
-      type: FieldType.ARRAY,
       constraints: {
         presence: allRequired,
       },
@@ -733,4 +737,13 @@ export function fullSchema({
   }
 
   return schema
+}
+export function basicAttachment() {
+  return {
+    key: generator.guid(),
+    name: generator.word(),
+    extension: generator.word(),
+    size: generator.natural(),
+    url: `/${generator.guid()}`,
+  }
 }
