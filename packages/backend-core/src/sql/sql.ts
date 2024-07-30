@@ -438,9 +438,13 @@ class InternalBuilder {
             } else {
               value[i] = `%${value[i]}%`
             }
-            statement +=
-              (statement ? andOr : "") +
-              `COALESCE(LOWER(${this.quotedIdentifier(key)}), '') LIKE ?`
+            const identifier = this.quotedIdentifier(key)
+            statement += statement ? andOr : ""
+            if (not) {
+              statement += `(NOT COALESCE(LOWER(${identifier}), '') LIKE ? OR ${identifier} IS NULL)`
+            } else {
+              statement += `COALESCE(LOWER(${identifier}), '') LIKE ?`
+            }
           }
 
           if (statement === "") {
@@ -448,7 +452,7 @@ class InternalBuilder {
           }
 
           // @ts-ignore
-          query = query[rawFnc](`${not}(${statement})`, value)
+          query = query[rawFnc](statement, value)
         })
       }
     }
