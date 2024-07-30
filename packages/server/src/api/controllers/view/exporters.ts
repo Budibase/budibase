@@ -1,29 +1,11 @@
 import { Row, RowExportFormat, TableSchema } from "@budibase/types"
+import * as csvUtils from "../../../utilities/csv"
 
 export { RowExportFormat as Format } from "@budibase/types"
 
-function getHeaders(
-  headers: string[],
-  customHeaders: { [key: string]: string }
-) {
-  return headers.map(header => `"${customHeaders[header] || header}"`)
-}
+export const csv = csvUtils.csv
 
-export function csv(
-  headers: string[],
-  rows: Row[],
-  delimiter: string = ",",
-  customHeaders: { [key: string]: string } = {}
-) {
-  let csv = getHeaders(headers, customHeaders).join(delimiter)
-
-  for (let row of rows) {
-    csv = `${csv}\n${headers
-      .map(header => valueToCsv(row[header]))
-      .join(delimiter)}`
-  }
-  return csv
-}
+export const parseCsvExport = csvUtils.jsonFromCsvString
 
 export function valueToCsv(val: any) {
   val =
@@ -51,20 +33,4 @@ export function jsonWithSchema(schema: TableSchema, rows: Row[]) {
 
 export function isFormat(format: any): format is RowExportFormat {
   return Object.values(RowExportFormat).includes(format as RowExportFormat)
-}
-
-export function parseCsvExport<T>(value: string) {
-  value = value.trim()
-
-  // Trim enclosing quotes
-  if (value.startsWith('"') && value.endsWith('"')) {
-    value = value.slice(1, -1)
-  }
-
-  value = value.replace(/'/g, '"')
-  try {
-    return JSON.parse(value) as T
-  } catch {
-    return value as T
-  }
 }
