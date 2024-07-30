@@ -5,14 +5,16 @@ import { generate } from "shortid"
 import { createHistoryStore } from "stores/builder/history"
 import { notifications } from "@budibase/bbui"
 import { updateReferencesInObject } from "dataBinding"
+import { AutomationTriggerStepId } from "@budibase/types"
 
 const initialAutomationState = {
   automations: [],
   testResults: null,
   showTestPanel: false,
   blockDefinitions: {
-    TRIGGER: [],
-    ACTION: [],
+    TRIGGER: {},
+    CREATABLE_TRIGGER: {},
+    ACTION: {},
   },
   selectedAutomationId: null,
   automationDisplayData: {},
@@ -46,14 +48,29 @@ const updateStepReferences = (steps, modifiedIndex, action) => {
   })
 }
 
+const getFinalDefinitions = (triggers, actions) => {
+  const creatable = {}
+  Object.entries(triggers).forEach(entry => {
+    if (entry[0] === AutomationTriggerStepId.ROW_ACTION) {
+      return
+    }
+    creatable[entry[0]] = entry[1]
+  })
+  return {
+    TRIGGER: triggers,
+    CREATABLE_TRIGGER: creatable,
+    ACTION: actions,
+  }
+}
+
 const automationActions = store => ({
   definitions: async () => {
     const response = await API.getAutomationDefinitions()
     store.update(state => {
-      state.blockDefinitions = {
-        TRIGGER: response.trigger,
-        ACTION: response.action,
-      }
+      state.blockDefinitions = getFinalDefinitions(
+        response.trigger,
+        response.action
+      )
       return state
     })
     return response
@@ -69,10 +86,10 @@ const automationActions = store => ({
         return a.name < b.name ? -1 : 1
       })
       state.automationDisplayData = automationResponse.builderData
-      state.blockDefinitions = {
-        TRIGGER: definitions.trigger,
-        ACTION: definitions.action,
-      }
+      state.blockDefinitions = getFinalDefinitions(
+        definitions.trigger,
+        definitions.action
+      )
       return state
     })
   },
@@ -87,8 +104,6 @@ const automationActions = store => ({
       disabled: false,
     }
     const response = await store.actions.save(automation)
-    await store.actions.fetch()
-    store.actions.select(response._id)
     return response
   },
   duplicate: async automation => {
@@ -98,14 +113,13 @@ const automationActions = store => ({
       _id: undefined,
       _ref: undefined,
     })
-    await store.actions.fetch()
-    store.actions.select(response._id)
     return response
   },
   save: async automation => {
     const response = await API.updateAutomation(automation)
 
     await store.actions.fetch()
+    store.actions.select(response._id)
     return response.automation
   },
   delete: async automation => {
@@ -113,18 +127,22 @@ const automationActions = store => ({
       automationId: automation?._id,
       automationRev: automation?._rev,
     })
+
     store.update(state => {
       // Remove the automation
       state.automations = state.automations.filter(
         x => x._id !== automation._id
       )
+
       // Select a new automation if required
       if (automation._id === state.selectedAutomationId) {
-        store.actions.select(state.automations[0]?._id)
+        state.selectedAutomationId = state.automations[0]?._id || null
       }
+
+      // Clear out automationDisplayData for the automation
+      delete state.automationDisplayData[automation._id]
       return state
     })
-    await store.actions.fetch()
   },
   toggleDisabled: async automationId => {
     let automation
@@ -381,7 +399,7 @@ export const selectedAutomation = derived(automationStore, $automationStore => {
 export const selectedAutomationDisplayData = derived(
   [automationStore, selectedAutomation],
   ([$automationStore, $selectedAutomation]) => {
-    if (!$selectedAutomation._id) {
+    if (!$selectedAutomation?._id) {
       return null
     }
     return $automationStore.automationDisplayData[$selectedAutomation._id]
