@@ -958,7 +958,7 @@ describe.each([
           }).toMatchExactly([{ name: "bar" }, { name: "foo" }])
         })
 
-        it.only("sorts descending", async () => {
+        it("sorts descending", async () => {
           await expectSearch({
             query: {},
             sort: "name",
