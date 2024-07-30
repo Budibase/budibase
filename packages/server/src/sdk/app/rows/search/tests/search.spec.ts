@@ -1,4 +1,10 @@
-import { Datasource, FieldType, Row, Table } from "@budibase/types"
+import {
+  AutoFieldSubType,
+  Datasource,
+  FieldType,
+  Row,
+  Table,
+} from "@budibase/types"
 
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { search } from "../../../../../sdk/app/rows/search"
@@ -56,6 +62,7 @@ describe.each([
           id: {
             name: "id",
             type: FieldType.AUTO,
+            subtype: AutoFieldSubType.AUTO_ID,
             autocolumn: true,
           },
           name: {
