@@ -174,9 +174,7 @@ export interface AutomationStepSchema {
   deprecated?: boolean
   stepId: AutomationTriggerStepId | AutomationActionStepId
   blockToLoop?: string
-  inputs: {
-    [key: string]: any
-  }
+  inputs: Record<string, any>
   schema: {
     inputs: InputOutputBlock
     outputs: InputOutputBlock
