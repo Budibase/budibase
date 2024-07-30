@@ -7,7 +7,7 @@ import {
   AutomationIOType,
   AutomationFeature,
   AutomationCustomIOType,
-  smtpEmailStepInputs,
+  SmtpEmailStepInputs,
   BaseAutomationOutputs,
 } from "@budibase/types"
 
@@ -101,7 +101,7 @@ export const definition: AutomationStepSchema = {
 export async function run({
   inputs,
 }: {
-  inputs: smtpEmailStepInputs
+  inputs: SmtpEmailStepInputs
 }): Promise<BaseAutomationOutputs> {
   let {
     to,

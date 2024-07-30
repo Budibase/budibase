@@ -152,7 +152,7 @@ export async function run({
   }
   const table = await getTable(appId, tableId)
   let sortType = FieldType.STRING
-  if (table && table.schema && table.schema[sortColumn] && sortColumn) {
+  if (sortColumn && table && table.schema && table.schema[sortColumn]) {
     const fieldType = table.schema[sortColumn].type
     sortType =
       fieldType === FieldType.NUMBER ? FieldType.NUMBER : FieldType.STRING

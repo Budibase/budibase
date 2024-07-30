@@ -10,7 +10,7 @@ import {
 } from "./automation"
 
 export type AutomationStepInputMap = {
-  [AutomationActionStepId.SEND_EMAIL_SMTP]: smtpEmailStepInputs
+  [AutomationActionStepId.SEND_EMAIL_SMTP]: SmtpEmailStepInputs
   [AutomationActionStepId.CREATE_ROW]: CreateRowStepInputs
   [AutomationActionStepId.UPDATE_ROW]: UpdateRowStepInputs
   [AutomationActionStepId.DELETE_ROW]: DeleteRowStepInputs
@@ -168,19 +168,19 @@ export type OpenAIStepOutputs = Omit<BaseAutomationOutputs, "response"> & {
 
 export type QueryRowsStepInputs = {
   tableId: string
-  filters: SearchFilters
-  "filters-def": any
-  sortColumn: string
-  sortOrder: SortOrder
-  limit: number
-  onEmptyFilter: EmptyFilterOption
+  filters?: SearchFilters
+  "filters-def"?: any
+  sortColumn?: string
+  sortOrder?: SortOrder
+  limit?: number
+  onEmptyFilter?: EmptyFilterOption
 }
 
 export type QueryRowsStepOutputs = BaseAutomationOutputs & {
   rows?: Row[]
 }
 
-export type smtpEmailStepInputs = {
+export type SmtpEmailStepInputs = {
   to: string
   from: string
   subject: string

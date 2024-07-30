@@ -25,11 +25,17 @@ import {
   Automation,
   AutomationTrigger,
   AutomationResults,
+  SmtpEmailStepInputs,
+  ExecuteQueryStepInputs,
+  QueryRowsStepInputs,
 } from "@budibase/types"
 import {} from "../../steps/loop"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
-import { AppActionTriggerOutputs } from "../../triggerInfo/app"
+import {
+  AppActionTriggerInputs,
+  AppActionTriggerOutputs,
+} from "../../triggerInfo/app"
 import { CronTriggerOutputs } from "../../triggerInfo/cron"
 
 type TriggerOutputs =
@@ -48,7 +54,7 @@ class AutomationBuilder {
       trigger: {} as AutomationTrigger,
     },
     type: "automation",
-    appId: "",
+    appId: setup.getConfig().getAppId(),
   }
   private config: TestConfiguration = setup.getConfig()
   private triggerOutputs: TriggerOutputs
@@ -80,6 +86,11 @@ class AutomationBuilder {
     return this.trigger(TRIGGER_DEFINITIONS.ROW_DELETED, inputs, outputs)
   }
 
+  appAction(outputs: AppActionTriggerOutputs, inputs?: AppActionTriggerInputs) {
+    this.triggerOutputs = outputs
+    return this.trigger(TRIGGER_DEFINITIONS.APP, inputs, outputs)
+  }
+
   // STEPS
   createRow(inputs: CreateRowStepInputs): this {
     return this.step(BUILTIN_ACTION_DEFINITIONS.CREATE_ROW, inputs)
@@ -93,20 +104,32 @@ class AutomationBuilder {
     return this.step(BUILTIN_ACTION_DEFINITIONS.DELETE_ROW, inputs)
   }
 
+  sendSmtpEmail(inputs: SmtpEmailStepInputs): this {
+    return this.step(BUILTIN_ACTION_DEFINITIONS.SEND_EMAIL_SMTP, inputs)
+  }
+
+  executeQuery(inputs: ExecuteQueryStepInputs): this {
+    return this.step(BUILTIN_ACTION_DEFINITIONS.EXECUTE_QUERY, inputs)
+  }
+
+  queryRows(inputs: QueryRowsStepInputs): this {
+    return this.step(BUILTIN_ACTION_DEFINITIONS.QUERY_ROWS, inputs)
+  }
   loop(inputs: LoopStepInputs): this {
     return this.step(BUILTIN_ACTION_DEFINITIONS.LOOP, inputs)
   }
+
   private trigger<T extends { [key: string]: any }>(
     triggerSchema: AutomationTriggerSchema,
-    inputs: T,
-    outputs: TriggerOutputs
+    inputs?: T,
+    outputs?: TriggerOutputs
   ): this {
     if (this.triggerSet) {
       throw new Error("Only one trigger can be set for an automation.")
     }
     this.automationConfig.definition.trigger = {
       ...triggerSchema,
-      inputs,
+      inputs: inputs || {},
       id: uuidv4(),
     }
     this.triggerOutputs = outputs
