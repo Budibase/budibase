@@ -103,8 +103,7 @@ describe.each([
   ): SaveTableRequest {
     const defaultSchema: TableSchema = {
       id: {
-        type: FieldType.AUTO,
-        subtype: AutoFieldSubType.AUTO_ID,
+        type: FieldType.NUMBER,
         name: "id",
         autocolumn: true,
         constraints: {
