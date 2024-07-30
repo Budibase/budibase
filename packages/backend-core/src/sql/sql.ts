@@ -12,6 +12,8 @@ import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
   AnySearchFilter,
+  ArrayOperator,
+  BasicOperator,
   BBReferenceFieldMetadata,
   FieldSchema,
   FieldType,
@@ -23,6 +25,7 @@ import {
   prefixed,
   QueryJson,
   QueryOptions,
+  RangeOperator,
   RelationshipsJson,
   SearchFilters,
   SortOrder,
@@ -33,9 +36,7 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import environment from "../environment"
-import { helpers } from "@budibase/shared-core"
-import { isPlainObject } from "lodash"
-import { ColumnSplitter } from "@budibase/shared-core/src/filters"
+import { dataFilters, helpers } from "@budibase/shared-core"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
@@ -75,10 +76,16 @@ function convertBooleans(query: SqlQuery | SqlQuery[]): SqlQuery | SqlQuery[] {
 class InternalBuilder {
   private readonly client: SqlClient
   private readonly query: QueryJson
+  private readonly splitter: dataFilters.ColumnSplitter
 
   constructor(client: SqlClient, query: QueryJson) {
     this.client = client
     this.query = query
+
+    this.splitter = new dataFilters.ColumnSplitter([this.table], {
+      aliases: this.query.tableAliases,
+      columnPrefix: this.query.meta.columnPrefix,
+    })
   }
 
   get table(): Table {
@@ -205,106 +212,94 @@ class InternalBuilder {
     return identifier
   }
 
-  private parse(input: any) {
+  private parse(input: any, schema: FieldSchema) {
     if (Array.isArray(input)) {
       return JSON.stringify(input)
     }
     if (input == undefined) {
       return null
     }
-    if (typeof input !== "string") {
-      return input
-    }
-    if (isInvalidISODateString(input)) {
-      return null
-    }
-    if (isValidISODateString(input)) {
-      return new Date(input.trim())
+    if (typeof input === "string") {
+      if (isInvalidISODateString(input)) {
+        return null
+      }
+      if (isValidISODateString(input)) {
+        return new Date(input.trim())
+      }
     }
     return input
   }
 
   private parseBody(body: any) {
     for (let [key, value] of Object.entries(body)) {
-      body[key] = this.parse(value)
+      const { column } = this.splitter.run(key)
+      const schema = this.table.schema[column]
+      if (!schema) {
+        continue
+      }
+      body[key] = this.parse(value, schema)
     }
     return body
   }
 
-  private parseFilters(filters: SearchFilters | undefined): SearchFilters {
-    if (!filters) {
-      return {}
-    }
-    for (let [key, value] of Object.entries(filters)) {
-      let parsed
-      if (typeof value === "object") {
-        parsed = this.parseFilters(value)
-      } else {
-        parsed = this.parse(value)
+  private parseFilters(filters: SearchFilters): SearchFilters {
+    for (const op of Object.values(BasicOperator)) {
+      const filter = filters[op]
+      if (!filter) {
+        continue
       }
-      // @ts-ignore
-      filters[key] = parsed
+      for (const key of Object.keys(filter)) {
+        if (Array.isArray(filter[key])) {
+          filter[key] = JSON.stringify(filter[key])
+          continue
+        }
+        const { column } = this.splitter.run(key)
+        const schema = this.table.schema[column]
+        if (!schema) {
+          continue
+        }
+        filter[key] = this.parse(filter[key], schema)
+      }
     }
+
+    for (const op of Object.values(ArrayOperator)) {
+      const filter = filters[op]
+      if (!filter) {
+        continue
+      }
+      for (const key of Object.keys(filter)) {
+        const { column } = this.splitter.run(key)
+        const schema = this.table.schema[column]
+        if (!schema) {
+          continue
+        }
+        filter[key] = filter[key].map(v => this.parse(v, schema))
+      }
+    }
+
+    for (const op of Object.values(RangeOperator)) {
+      const filter = filters[op]
+      if (!filter) {
+        continue
+      }
+      for (const key of Object.keys(filter)) {
+        const { column } = this.splitter.run(key)
+        const schema = this.table.schema[column]
+        if (!schema) {
+          continue
+        }
+        const value = filter[key]
+        if ("low" in value) {
+          value.low = this.parse(value.low, schema)
+        }
+        if ("high" in value) {
+          value.high = this.parse(value.high, schema)
+        }
+      }
+    }
+
     return filters
   }
-
-  // private parse(input: any, schema: FieldSchema) {
-  //   if (input == undefined) {
-  //     return null
-  //   }
-
-  //   if (isPlainObject(input)) {
-  //     for (const [key, value] of Object.entries(input)) {
-  //       input[key] = this.parse(value, schema)
-  //     }
-  //     return input
-  //   }
-
-  //   if (schema.type === FieldType.DATETIME && schema.timeOnly) {
-  //     if (this.client === SqlClient.ORACLE) {
-  //       return new Date(`1970-01-01 ${input}`)
-  //     }
-  //   }
-
-  //   if (typeof input === "string") {
-  //     if (isInvalidISODateString(input)) {
-  //       return null
-  //     }
-  //     if (isValidISODateString(input)) {
-  //       return new Date(input.trim())
-  //     }
-  //   }
-
-  //   return input
-  // }
-
-  // private parseBody(body: any) {
-  //   for (let [key, value] of Object.entries(body)) {
-  //     body[key] = this.parse(value, this.table.schema[key])
-  //   }
-  //   return body
-  // }
-
-  // private parseFilters(filters: SearchFilters | undefined): SearchFilters {
-  //   if (!filters) {
-  //     return {}
-  //   }
-
-  //   for (const [_, filter] of Object.entries(filters)) {
-  //     for (const [key, value] of Object.entries(filter)) {
-  //       const { column } = new ColumnSplitter([this.table]).run(key)
-  //       const schema = this.table.schema[column]
-  //       if (!schema) {
-  //         throw new Error(
-  //           `Column ${key} does not exist in table ${this.table._id}`
-  //         )
-  //       }
-  //       filter[key] = this.parse(value, schema)
-  //     }
-  //   }
-
-  //   return filters
-  // }
 
   // right now we only do filters on the specific table being queried
   addFilters(
