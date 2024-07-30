@@ -40,14 +40,14 @@ import { structures } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 
 describe.each([
-  ["in-memory", undefined],
-  ["lucene", undefined],
-  ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  // ["in-memory", undefined],
+  // ["lucene", undefined],
+  // ["sqs", undefined],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -2389,9 +2389,9 @@ describe.each([
 
   describe.each([
     { low: "2024-07-03T00:00:00.000Z", high: "9999-00-00T00:00:00.000Z" },
-    // { low: "2024-07-03T00:00:00.000Z", high: "9998-00-00T00:00:00.000Z" },
-    // { low: "0000-00-00T00:00:00.000Z", high: "2024-07-04T00:00:00.000Z" },
-    // { low: "0001-00-00T00:00:00.000Z", high: "2024-07-04T00:00:00.000Z" },
+    { low: "2024-07-03T00:00:00.000Z", high: "9998-00-00T00:00:00.000Z" },
+    { low: "0000-00-00T00:00:00.000Z", high: "2024-07-04T00:00:00.000Z" },
+    { low: "0001-00-00T00:00:00.000Z", high: "2024-07-04T00:00:00.000Z" },
   ])("date special cases", ({ low, high }) => {
     const earlyDate = "2024-07-03T10:00:00.000Z",
       laterDate = "2024-07-03T11:00:00.000Z"

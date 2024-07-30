@@ -237,7 +237,7 @@ class InternalBuilder {
         return `${hours}:${minutes}:${seconds}`
       }
       if (typeof input === "string") {
-        return new Date(`1970-01-01 ${input}`)
+        return new Date(`1970-01-01T${input}Z`)
       }
     }
 
