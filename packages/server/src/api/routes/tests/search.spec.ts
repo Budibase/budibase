@@ -5,12 +5,12 @@ import {
   knexClient,
 } from "../../../integrations/tests/utils"
 import {
-  db as dbCore,
   context,
+  db as dbCore,
   MAX_VALID_DATE,
   MIN_VALID_DATE,
-  utils,
   SQLITE_DESIGN_DOC_ID,
+  utils,
 } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
@@ -2558,6 +2558,50 @@ describe.each([
         await expectSearch({
           query: {},
         }).toContainExactly([{ name: "foo" }])
+      })
+    })
+
+  !isInMemory &&
+    describe("search by _id", () => {
+      let row: Row
+
+      beforeAll(async () => {
+        const toRelateTable = await createTable({
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+        })
+        table = await createTable({
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+          rel: {
+            name: "rel",
+            type: FieldType.LINK,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+            tableId: toRelateTable._id!,
+            fieldName: "rel",
+          },
+        })
+        const [row1, row2] = await Promise.all([
+          config.api.row.save(toRelateTable._id!, { name: "tag 1" }),
+          config.api.row.save(toRelateTable._id!, { name: "tag 2" }),
+        ])
+        row = await config.api.row.save(table._id!, {
+          name: "product 1",
+          rel: [row1._id, row2._id],
+        })
+      })
+
+      it("can filter by the row ID with limit 1", async () => {
+        await expectSearch({
+          query: {
+            equal: { _id: row._id },
+          },
+          limit: 1,
+        }).toContainExactly([row])
       })
     })
 })
