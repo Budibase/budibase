@@ -74,6 +74,7 @@
     "chokidar": "3.5.3",
     "content-disposition": "^0.5.4",
     "cookies": "0.8.0",
+    "csv": "^6.3.10",
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",
     "dd-trace": "5.2.0",
