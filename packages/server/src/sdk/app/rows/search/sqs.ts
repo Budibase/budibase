@@ -42,6 +42,7 @@ import {
   getTableIDList,
 } from "./filters"
 import { dataFilters, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
+import { isSearchingByRowID } from "./utils"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
@@ -264,6 +265,10 @@ export async function search(
 
   const relationships = buildInternalRelationships(table)
 
+  const searchFilters: SearchFilters = {
+    ...cleanupFilters(query, table, allTables),
+    documentType: DocumentType.ROW,
+  }
   const request: QueryJson = {
     endpoint: {
       // not important, we query ourselves
@@ -271,10 +276,7 @@ export async function search(
       entityId: table._id!,
       operation: Operation.READ,
     },
-    filters: {
-      ...cleanupFilters(query, table, allTables),
-      documentType: DocumentType.ROW,
-    },
+    filters: searchFilters,
     table,
     meta: {
       table,
@@ -304,7 +306,8 @@ export async function search(
   }
 
   const bookmark: number = (params.bookmark as number) || 0
-  if (params.limit) {
+  // limits don't apply if we doing a row ID search
+  if (!isSearchingByRowID(searchFilters) && params.limit) {
     paginate = true
     request.paginate = {
       limit: params.limit + 1,
