@@ -11,7 +11,13 @@ export async function jsonFromCsvString(csvString: string) {
         return false
       }
 
-      return value
+      try {
+        const casted = JSON.parse(value)
+        return casted
+      } catch {
+        return value
+      }
+
     },
   })
   return result
