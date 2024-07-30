@@ -200,7 +200,7 @@
     const domGrid = getDOMNode(dragInfo.gridId)
     const gridCols = parseInt(domGrid.dataset.cols)
     const gridRows = parseInt(domGrid.dataset.rows)
-    const domNode = getDOMNode(dragInfo.id)
+    const domNode = getDOMNode(dragInfo.id)?.parentNode
     const styles = window.getComputedStyle(domNode)
     if (domGrid) {
       // Util to get the current grid CSS variable for this device. If unset,
@@ -237,7 +237,7 @@
   const stopDragging = async () => {
     // Save changes
     if ($gridStyles) {
-      await builderStore.actions.updateStyles($gridStyles, dragInfo.id)
+      await builderStore.actions.updateMetaStyles($gridStyles, dragInfo.id)
     }
 
     // Reset listener

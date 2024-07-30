@@ -39,6 +39,7 @@
     getActionContextKey,
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
+  import { buildStyleString } from "utils/styleable.js"
 
   export let instance = {}
   export let isLayout = false
@@ -102,8 +103,8 @@
   let settingsDefinitionMap
   let missingRequiredSettings = false
 
-  // Temporary styles which can be added in the app preview for things like DND.
-  // We clear these whenever a new instance is received.
+  // Temporary meta styles which can be added in the app preview for things like
+  // DND. We clear these whenever a new instance is received.
   let ephemeralStyles
 
   // Single string of all HBS blocks, used to check if we use a certain binding
@@ -196,16 +197,20 @@
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
 
+  // Build meta styles and stringify to apply to the wrapper node
+  $: metaStyles = {
+    ...instance._styles?.meta,
+    ...ephemeralStyles,
+  }
+  $: metaCSS = buildStyleString(metaStyles)
+
   // Update component context
   $: store.set({
     id,
     children: children.length,
     styles: {
       ...instance._styles,
-      normal: {
-        ...instance._styles?.normal,
-        ...ephemeralStyles,
-      },
+      meta: metaStyles,
       custom: customCSS,
       id,
       empty: emptyState,
@@ -605,6 +610,14 @@
     }
   }
 
+  const select = e => {
+    if (isBlock) {
+      return
+    }
+    e.stopPropagation()
+    builderStore.actions.selectComponent(id)
+  }
+
   onMount(() => {
     // Register this component instance for external access
     if ($appStore.isDevApp) {
@@ -635,6 +648,8 @@
 {#if constructor && initialSettings && (visible || inSelectedPath) && !builderHidden}
   <!-- The ID is used as a class because getElementsByClassName is O(1) -->
   <!-- and the performance matters for the selection indicators -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class={`component ${id}`}
     class:draggable
@@ -650,6 +665,9 @@
     data-name={name}
     data-icon={icon}
     data-parent={$component.id}
+    style={metaCSS}
+    {draggable}
+    on:click={select}
   >
     {#if errorState}
       <ComponentErrorState

@@ -3,7 +3,7 @@ import { builderStore } from "stores"
 /**
  * Helper to build a CSS string from a style object.
  */
-const buildStyleString = (styleObject, customStyles) => {
+export const buildStyleString = (styleObject, customStyles) => {
   let str = ""
   Object.entries(styleObject || {}).forEach(([style, value]) => {
     if (style && value != null) {

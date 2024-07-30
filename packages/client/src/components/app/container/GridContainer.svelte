@@ -8,10 +8,16 @@
   export let cols = 12
   export let rows = 12
 
+  let width
+  let height
+
   $: cols = cols || 12
   $: rows = rows || 12
   $: coords = generateCoords(rows, cols)
   $: mobile = $context.device.mobile
+  $: empty = $component.empty
+  $: colSize = width / cols
+  $: rowSize = height / rows
 
   const generateCoords = (rows, cols) => {
     let grid = []
@@ -27,14 +33,18 @@
 <div
   class="grid"
   class:mobile
+  bind:clientWidth={width}
+  bind:clientHeight={height}
   use:styleable={{
     ...$component.styles,
     normal: {
       ...$component.styles?.normal,
       "--cols": cols,
       "--rows": rows,
-      gap: "0 !important",
+      "--col-size": `${colSize}px`,
+      "--row-size": `${rowSize}px`,
     },
+    empty: false,
   }}
   data-rows={rows}
   data-cols={cols}
@@ -46,55 +56,18 @@
       {/each}
     </div>
   {/if}
-  <slot />
+
+  <!-- Only render the slot if not empty, as we don't want the placeholder -->
+  {#if !empty}
+    <slot />
+  {/if}
 </div>
 
 <style>
-  /*
-    Ensure all children of containers which are top level children of
-    grids do not overflow
-  */
-  :global(.grid > .component > .valid-container > .component > *) {
-    max-height: 100%;
-    max-width: 100%;
-  }
-
-  /* Ensure all top level children have some grid styles set */
-  :global(.grid > .component > *) {
-    overflow: hidden;
-    width: auto;
-    height: auto;
-    max-height: 100%;
-    max-width: 100%;
-    min-width: 0;
-
-    /* On desktop, use desktop metadata and fall back to mobile */
-    --col-start: var(--grid-desktop-col-start, var(--grid-mobile-col-start, 1));
-    --col-end: var(--grid-desktop-col-end, var(--grid-mobile-col-end, 2));
-    --row-start: var(--grid-desktop-row-start, var(--grid-mobile-row-start, 1));
-    --row-end: var(--grid-desktop-row-end, var(--grid-mobile-row-end, 2));
-
-    /* Ensure grid metadata falls within limits */
-    grid-column-start: min(max(1, var(--col-start)), var(--cols)) !important;
-    grid-column-end: min(
-      max(2, var(--col-end)),
-      calc(var(--cols) + 1)
-    ) !important;
-    grid-row-start: min(max(1, var(--row-start)), var(--rows)) !important;
-    grid-row-end: min(max(2, var(--row-end)), calc(var(--rows) + 1)) !important;
-  }
-
-  /* On mobile, use mobile metadata and fall back to desktop */
-  :global(.grid.mobile > .component > *) {
-    --col-start: var(--grid-mobile-col-start, var(--grid-desktop-col-start, 1));
-    --col-end: var(--grid-mobile-col-end, var(--grid-desktop-col-end, 2));
-    --row-start: var(--grid-mobile-row-start, var(--grid-desktop-row-start, 1));
-    --row-end: var(--grid-mobile-row-end, var(--grid-desktop-row-end, 2));
-  }
-
   .grid {
     position: relative;
     height: 400px;
+    gap: 0;
   }
   .grid,
   .underlay {
@@ -117,5 +90,37 @@
   }
   .placeholder {
     background-color: var(--spectrum-global-color-gray-100);
+  }
+
+  /* Ensure all top level children have grid styles applied */
+  .grid :global(> .component) {
+    display: flex;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+
+    /* On desktop, use desktop metadata and fall back to mobile */
+    --col-start: var(--grid-desktop-col-start, var(--grid-mobile-col-start, 1));
+    --col-end: var(--grid-desktop-col-end, var(--grid-mobile-col-end, 2));
+    --row-start: var(--grid-desktop-row-start, var(--grid-mobile-row-start, 1));
+    --row-end: var(--grid-desktop-row-end, var(--grid-mobile-row-end, 2));
+
+    /* Ensure grid metadata falls within limits */
+    grid-column-start: min(max(1, var(--col-start)), var(--cols)) !important;
+    grid-column-end: min(
+      max(2, var(--col-end)),
+      calc(var(--cols) + 1)
+    ) !important;
+    grid-row-start: min(max(1, var(--row-start)), var(--rows)) !important;
+    grid-row-end: min(max(2, var(--row-end)), calc(var(--rows) + 1)) !important;
+  }
+
+  /* On mobile, use mobile metadata and fall back to desktop */
+  .grid.mobile :global(> .component) {
+    --col-start: var(--grid-mobile-col-start, var(--grid-desktop-col-start, 1));
+    --col-end: var(--grid-mobile-col-end, var(--grid-desktop-col-end, 2));
+    --row-start: var(--grid-mobile-row-start, var(--grid-desktop-row-start, 1));
+    --row-end: var(--grid-mobile-row-end, var(--grid-desktop-row-end, 2));
   }
 </style>

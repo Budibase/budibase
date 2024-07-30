@@ -124,9 +124,8 @@
 
     // Extract valid children
     // Sanity limit of 100 active indicators
-    const children = Array.from(
-      document.getElementsByClassName(`${componentId}-dom`)
-    )
+    const className = nextState.insideGrid ? componentId : `${componentId}-dom`
+    const children = Array.from(document.getElementsByClassName(className))
       .filter(x => x != null)
       .slice(0, 100)
 
