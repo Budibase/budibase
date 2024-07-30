@@ -663,7 +663,14 @@ class InternalBuilder {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
           value.direction === SortOrder.ASCENDING ? "asc" : "desc"
-        const nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
+
+        let nulls: "first" | "last" | undefined = undefined
+        if (
+          this.client === SqlClient.ORACLE ||
+          this.client === SqlClient.POSTGRES
+        ) {
+          nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
+        }
 
         let composite = `${aliased}.${key}`
         if (this.client === SqlClient.ORACLE) {
