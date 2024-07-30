@@ -64,7 +64,7 @@ export interface AutoColumnFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.AUTO
   autocolumn: true
-  subtype?: AutoFieldSubType
+  subtype: AutoFieldSubType
   lastID?: number
   // if the column was turned to an auto-column for SQL, explains why (primary, foreign etc)
   autoReason?: AutoReason
