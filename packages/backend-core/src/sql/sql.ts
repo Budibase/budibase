@@ -8,7 +8,6 @@ import {
   sqlLog,
   isInvalidISODateString,
 } from "./utils"
-import { SqlStatements } from "./sqlStatements"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
   AnySearchFilter,
@@ -77,10 +76,12 @@ class InternalBuilder {
   private readonly client: SqlClient
   private readonly query: QueryJson
   private readonly splitter: dataFilters.ColumnSplitter
+  private readonly knex: Knex
 
-  constructor(client: SqlClient, query: QueryJson) {
+  constructor(client: SqlClient, knex: Knex, query: QueryJson) {
     this.client = client
     this.query = query
+    this.knex = knex
 
     this.splitter = new dataFilters.ColumnSplitter([this.table], {
       aliases: this.query.tableAliases,
@@ -90,6 +91,11 @@ class InternalBuilder {
 
   get table(): Table {
     return this.query.meta.table
+  }
+
+  getFieldSchema(key: string): FieldSchema | undefined {
+    const { column } = this.splitter.run(key)
+    return this.table.schema[column]
   }
 
   // Takes a string like foo and returns a quoted string like [foo] for SQL Server
@@ -116,9 +122,8 @@ class InternalBuilder {
       .join(".")
   }
 
-  private generateSelectStatement(knex: Knex): (string | Knex.Raw)[] | "*" {
+  private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
     const { resource, meta } = this.query
-    const client = knex.client.config.client as SqlClient
 
     if (!resource || !resource.fields || resource.fields.length === 0) {
       return "*"
@@ -154,10 +159,10 @@ class InternalBuilder {
       const columnSchema = schema[column]
 
       if (
-        client === SqlClient.POSTGRES &&
+        this.client === SqlClient.POSTGRES &&
         columnSchema?.externalType?.includes("money")
       ) {
-        return knex.raw(
+        return this.knex.raw(
           `${this.quotedIdentifier(
             [table, column].join(".")
           )}::money::numeric as ${this.quote(field)}`
@@ -165,13 +170,13 @@ class InternalBuilder {
       }
 
       if (
-        client === SqlClient.MS_SQL &&
+        this.client === SqlClient.MS_SQL &&
         columnSchema?.type === FieldType.DATETIME &&
         columnSchema.timeOnly
       ) {
         // Time gets returned as timestamp from mssql, not matching the expected
         // HH:mm format
-        return knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
+        return this.knex.raw(`CONVERT(varchar, ${field}, 108) as "${field}"`)
       }
 
       // There's at least two edge cases being handled in the expression below.
@@ -183,11 +188,11 @@ class InternalBuilder {
       //     aren't actually clear to me, but `table`.`doc1` breaks things with the
       //     sample data tests.
       if (table) {
-        return knex.raw(
+        return this.knex.raw(
           `${this.quote(table)}.${this.quote(column)} as ${this.quote(field)}`
         )
       } else {
-        return knex.raw(`${this.quote(field)} as ${this.quote(field)}`)
+        return this.knex.raw(`${this.quote(field)} as ${this.quote(field)}`)
       }
     })
   }
@@ -333,10 +338,6 @@ class InternalBuilder {
     const aliases = this.query.tableAliases
     // if all or specified in filters, then everything is an or
     const allOr = filters.allOr
-    const sqlStatements = new SqlStatements(this.client, this.table, {
-      allOr,
-      columnPrefix: this.query.meta.columnPrefix,
-    })
     const tableName =
       this.client === SqlClient.SQL_LITE ? this.table._id! : this.table.name
 
@@ -506,12 +507,53 @@ class InternalBuilder {
         }
         const lowValid = isValidFilter(value.low),
           highValid = isValidFilter(value.high)
+
+        const schema = this.getFieldSchema(key)
+
+        if (this.client === SqlClient.ORACLE) {
+          // @ts-ignore
+          key = this.knex.raw(this.convertClobs(key))
+        }
+
         if (lowValid && highValid) {
-          query = sqlStatements.between(query, key, value.low, value.high)
+          if (
+            schema?.type === FieldType.BIGINT &&
+            this.client === SqlClient.SQL_LITE
+          ) {
+            query = query.whereRaw(
+              `CAST(${key} AS INTEGER) BETWEEN CAST(? AS INTEGER) AND CAST(? AS INTEGER)`,
+              [value.low, value.high]
+            )
+          } else {
+            const fnc = allOr ? "orWhereBetween" : "whereBetween"
+            query = query[fnc](key, [value.low, value.high])
+          }
         } else if (lowValid) {
-          query = sqlStatements.lte(query, key, value.low)
+          if (
+            schema?.type === FieldType.BIGINT &&
+            this.client === SqlClient.SQL_LITE
+          ) {
+            query = query.whereRaw(
+              `CAST(${key} AS INTEGER) >= CAST(? AS INTEGER)`,
+              [value.low]
+            )
+          } else {
+            const fnc = allOr ? "orWhere" : "where"
+            query = query[fnc](key, ">=", value.low)
+          }
         } else if (highValid) {
-          query = sqlStatements.gte(query, key, value.high)
+          if (
+            schema?.type === FieldType.BIGINT &&
+            this.client === SqlClient.SQL_LITE
+          ) {
+            query = query.whereRaw(
+              `CAST(${key} AS INTEGER) <= CAST(? AS INTEGER)`,
+              [value.high]
+            )
+          } else {
+            const fnc = allOr ? "orWhere" : "where"
+            query = query[fnc](key, "<=", value.high)
+          }
         }
       })
     }
@@ -621,17 +663,19 @@ class InternalBuilder {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
           value.direction === SortOrder.ASCENDING ? "asc" : "desc"
-        let nulls
-        if (
-          this.client === SqlClient.POSTGRES ||
-          this.client === SqlClient.ORACLE
-        ) {
-          // All other clients already sort this as expected by default, and
-          // adding this to the rest of the clients is causing issues
-          nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
-        }
+        const nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
 
-        query = query.orderBy(`${aliased}.${key}`, direction, nulls)
+        let composite = `${aliased}.${key}`
+        if (this.client === SqlClient.ORACLE) {
+          query = query.orderBy(
+            // @ts-ignore
+            this.knex.raw(this.convertClobs(composite)),
+            direction,
+            nulls
+          )
+        } else {
+          query = query.orderBy(composite, direction, nulls)
+        }
       }
     }
 
@@ -732,17 +776,14 @@ class InternalBuilder {
     return query
   }
 
-  qualifiedKnex(
-    knex: Knex,
-    opts?: { alias?: string | boolean }
-  ): Knex.QueryBuilder {
+  qualifiedKnex(opts?: { alias?: string | boolean }): Knex.QueryBuilder {
     let alias = this.query.tableAliases?.[this.query.endpoint.entityId]
     if (opts?.alias === false) {
       alias = undefined
     } else if (typeof opts?.alias === "string") {
       alias = opts.alias
     }
-    return knex(
+    return this.knex(
       this.tableNameWithSchema(this.query.endpoint.entityId, {
         alias,
         schema: this.query.endpoint.schema,
@@ -750,9 +791,9 @@ class InternalBuilder {
     )
   }
 
-  create(knex: Knex, opts: QueryOptions): Knex.QueryBuilder {
+  create(opts: QueryOptions): Knex.QueryBuilder {
     const { body } = this.query
-    let query = this.qualifiedKnex(knex, { alias: false })
+    let query = this.qualifiedKnex({ alias: false })
     const parsedBody = this.parseBody(body)
     // make sure no null values in body for creation
     for (let [key, value] of Object.entries(parsedBody)) {
@@ -769,9 +810,9 @@ class InternalBuilder {
     }
   }
 
-  bulkCreate(knex: Knex): Knex.QueryBuilder {
+  bulkCreate(): Knex.QueryBuilder {
     const { body } = this.query
-    let query = this.qualifiedKnex(knex, { alias: false })
+    let query = this.qualifiedKnex({ alias: false })
     if (!Array.isArray(body)) {
       return query
     }
@@ -779,9 +820,9 @@ class InternalBuilder {
     return query.insert(parsedBody)
   }
 
-  bulkUpsert(knex: Knex): Knex.QueryBuilder {
+  bulkUpsert(): Knex.QueryBuilder {
     const { body } = this.query
-    let query = this.qualifiedKnex(knex, { alias: false })
+    let query = this.qualifiedKnex({ alias: false })
     if (!Array.isArray(body)) {
       return query
     }
@@ -809,7 +850,6 @@ class InternalBuilder {
   }
 
   read(
-    knex: Knex,
     opts: {
       limits?: { base: number; query: number }
     } = {}
@@ -821,7 +861,7 @@ class InternalBuilder {
 
     const tableName = endpoint.entityId
     // start building the query
-    let query = this.qualifiedKnex(knex)
+    let query = this.qualifiedKnex()
     // handle pagination
     let foundOffset: number | null = null
     let foundLimit = limits?.query || limits?.base
@@ -855,7 +895,7 @@ class InternalBuilder {
     query = this.addFilters(query, filters)
 
     const alias = tableAliases?.[tableName] || tableName
-    let preQuery: Knex.QueryBuilder = knex({
+    let preQuery: Knex.QueryBuilder = this.knex({
       // the typescript definition for the knex constructor doesn't support this
       // syntax, but it is the only way to alias a pre-query result as part of
       // a query - there is an alias dictionary type, but it assumes it can only
@@ -864,7 +904,7 @@ class InternalBuilder {
     })
     // if counting, use distinct count, else select
     preQuery = !counting
-      ? preQuery.select(this.generateSelectStatement(knex))
+      ? preQuery.select(this.generateSelectStatement())
       : this.addDistinctCount(preQuery)
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClient.MS_SQL && !counting) {
@@ -888,9 +928,9 @@ class InternalBuilder {
     return this.addFilters(query, filters, { relationship: true })
   }
 
-  update(knex: Knex, opts: QueryOptions): Knex.QueryBuilder {
+  update(opts: QueryOptions): Knex.QueryBuilder {
     const { body, filters } = this.query
-    let query = this.qualifiedKnex(knex)
+    let query = this.qualifiedKnex()
     const parsedBody = this.parseBody(body)
     query = this.addFilters(query, filters)
     // mysql can't use returning
@@ -901,15 +941,15 @@ class InternalBuilder {
     }
   }
 
-  delete(knex: Knex, opts: QueryOptions): Knex.QueryBuilder {
+  delete(opts: QueryOptions): Knex.QueryBuilder {
     const { filters } = this.query
-    let query = this.qualifiedKnex(knex)
+    let query = this.qualifiedKnex()
     query = this.addFilters(query, filters)
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.delete()
     } else {
-      return query.delete().returning(this.generateSelectStatement(knex))
+      return query.delete().returning(this.generateSelectStatement())
     }
   }
 }
@@ -953,13 +993,13 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
 
     const client = knex(config)
     let query: Knex.QueryBuilder
-    const builder = new InternalBuilder(sqlClient, json)
+    const builder = new InternalBuilder(sqlClient, client, json)
     switch (this._operation(json)) {
       case Operation.CREATE:
-        query = builder.create(client, opts)
+        query = builder.create(opts)
         break
       case Operation.READ:
-        query = builder.read(client, {
+        query = builder.read({
           limits: {
             query: this.limit,
             base: BASE_LIMIT,
@@ -968,19 +1008,19 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         break
       case Operation.COUNT:
         // read without any limits to count
-        query = builder.read(client)
+        query = builder.read()
         break
       case Operation.UPDATE:
-        query = builder.update(client, opts)
+        query = builder.update(opts)
         break
       case Operation.DELETE:
-        query = builder.delete(client, opts)
+        query = builder.delete(opts)
         break
       case Operation.BULK_CREATE:
-        query = builder.bulkCreate(client)
+        query = builder.bulkCreate()
         break
       case Operation.BULK_UPSERT:
-        query = builder.bulkUpsert(client)
+        query = builder.bulkUpsert()
         break
       case Operation.CREATE_TABLE:
       case Operation.UPDATE_TABLE:
