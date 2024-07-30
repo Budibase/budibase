@@ -149,7 +149,7 @@ describe("Attempt to run a basic loop automation", () => {
   })
 
   it("should run an automation with a trigger, loop, and create row step", async () => {
-    const builder = createAutomationBuilder(config, {
+    const builder = createAutomationBuilder({
       name: "Test Trigger with Loop and Create Row",
     })
 
