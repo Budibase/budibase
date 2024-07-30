@@ -31,6 +31,7 @@ import {
   RelationshipType,
   OneToManyRelationshipFieldMetadata,
   JsonFieldSubType,
+  AutoFieldSubType,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -708,6 +709,7 @@ export function fullSchema({
     [FieldType.AUTO]: {
       name: "auto",
       type: FieldType.AUTO,
+      subtype: AutoFieldSubType.AUTO_ID,
       autocolumn: true,
       constraints: {
         presence: allRequired,
