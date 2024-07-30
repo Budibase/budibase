@@ -19,11 +19,7 @@ import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../api/controllers/row/utils"
-import {
-  decodeNonAscii,
-  mapToUserColumn,
-  USER_COLUMN_PREFIX,
-} from "../../tables/internal/sqs"
+import { mapToUserColumn, USER_COLUMN_PREFIX } from "../../tables/internal/sqs"
 import sdk from "../../../index"
 import {
   context,
@@ -44,7 +40,7 @@ import {
   getRelationshipColumns,
   getTableIDList,
 } from "./filters"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, helpers } from "@budibase/shared-core"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
@@ -164,7 +160,7 @@ function reverseUserColumnMapping(rows: Row[]) {
       if (index !== -1) {
         // cut out the prefix
         const newKey = key.slice(0, index) + key.slice(index + prefixLength)
-        const decoded = decodeNonAscii(newKey)
+        const decoded = helpers.schema.decodeNonAscii(newKey)
         finalRow[decoded] = row[key]
       } else {
         finalRow[key] = row[key]

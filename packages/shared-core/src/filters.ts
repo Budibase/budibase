@@ -22,6 +22,7 @@ import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet, schema } from "./helpers"
 import { isPlainObject, isEmpty } from "lodash"
+import { decodeNonAscii } from "./helpers/schema"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -181,8 +182,16 @@ export class ColumnSplitter {
   tableIds: string[]
   relationshipColumnNames: string[]
   relationships: string[]
+  aliases?: Record<string, string>
+  columnPrefix?: string
 
-  constructor(tables: Table[]) {
+  constructor(
+    tables: Table[],
+    opts?: {
+      aliases?: Record<string, string>
+      columnPrefix?: string
+    }
+  ) {
     this.tableNames = tables.map(table => table.name)
     this.tableIds = tables.map(table => table._id!)
     this.relationshipColumnNames = tables.flatMap(table =>
@@ -195,16 +204,38 @@ export class ColumnSplitter {
       .concat(this.relationshipColumnNames)
       // sort by length - makes sure there's no mis-matches due to similarities (sub column names)
       .sort((a, b) => b.length - a.length)
+
+    if (opts?.aliases) {
+      this.aliases = {}
+      for (const [key, value] of Object.entries(opts.aliases)) {
+        this.aliases[value] = key
+      }
+    }
+
+    this.columnPrefix = opts?.columnPrefix
   }
 
   run(key: string): {
     numberPrefix?: string
     relationshipPrefix?: string
+    tableName?: string
     column: string
   } {
     let { prefix, key: splitKey } = getKeyNumbering(key)
+
+    let tableName: string | undefined = undefined
+    if (this.aliases) {
+      for (const possibleAlias of Object.keys(this.aliases || {})) {
+        const withDot = `${possibleAlias}.`
+        if (splitKey.startsWith(withDot)) {
+          tableName = this.aliases[possibleAlias]!
+          splitKey = splitKey.slice(withDot.length)
+        }
+      }
+    }
+
     let relationship: string | undefined
-    for (let possibleRelationship of this.relationships) {
+    for (const possibleRelationship of this.relationships) {
       const withDot = `${possibleRelationship}.`
       if (splitKey.startsWith(withDot)) {
         const finalKeyParts = splitKey.split(withDot)
@@ -214,7 +245,15 @@ export class ColumnSplitter {
         break
       }
     }
+
+    if (this.columnPrefix) {
+      if (splitKey.startsWith(this.columnPrefix)) {
+        splitKey = decodeNonAscii(splitKey.slice(this.columnPrefix.length))
+      }
+    }
+
     return {
+      tableName,
       numberPrefix: prefix,
       relationshipPrefix: relationship,
       column: splitKey,
