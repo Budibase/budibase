@@ -19,7 +19,6 @@ import {
   ViewV2,
   SearchResponse,
   BasicOperator,
-  AutoFieldSubType,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
@@ -57,8 +56,7 @@ describe.each([
       primary: ["id"],
       schema: {
         id: {
-          type: FieldType.AUTO,
-          subtype: AutoFieldSubType.AUTO_ID,
+          type: FieldType.NUMBER,
           name: "id",
           autocolumn: true,
           constraints: {
@@ -243,8 +241,7 @@ describe.each([
         schema: {
           id: {
             name: "id",
-            type: FieldType.AUTO,
-            subtype: AutoFieldSubType.AUTO_ID,
+            type: FieldType.NUMBER,
             autocolumn: true,
             visible: true,
           },
@@ -1558,8 +1555,7 @@ describe.each([
             schema: {
               id: {
                 name: "id",
-                type: FieldType.AUTO,
-                subtype: AutoFieldSubType.AUTO_ID,
+                type: FieldType.NUMBER,
                 autocolumn: true,
               },
               name: {
