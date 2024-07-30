@@ -64,6 +64,7 @@ export class ComponentStore extends BudiStore {
     this.moveDown = this.moveDown.bind(this)
     this.updateStyle = this.updateStyle.bind(this)
     this.updateStyles = this.updateStyles.bind(this)
+    this.updateMetaStyles = this.updateMetaStyles.bind(this)
     this.updateCustomStyle = this.updateCustomStyle.bind(this)
     this.updateConditions = this.updateConditions.bind(this)
     this.requestEjectBlock = this.requestEjectBlock.bind(this)
@@ -972,6 +973,16 @@ export class ComponentStore extends BudiStore {
     const patchFn = component => {
       component._styles.normal = {
         ...component._styles.normal,
+        ...styles,
+      }
+    }
+    await this.patch(patchFn, id)
+  }
+
+  async updateMetaStyles(styles, id) {
+    const patchFn = component => {
+      component._styles.meta = {
+        ...component._styles.meta,
         ...styles,
       }
     }
