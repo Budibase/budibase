@@ -666,19 +666,16 @@ class InternalBuilder {
 
         let nulls: "first" | "last" | undefined = undefined
         if (
-          this.client === SqlClient.ORACLE ||
-          this.client === SqlClient.POSTGRES
+          this.client === SqlClient.POSTGRES ||
+          this.client === SqlClient.ORACLE
         ) {
           nulls = value.direction === SortOrder.ASCENDING ? "first" : "last"
         }
 
         let composite = `${aliased}.${key}`
         if (this.client === SqlClient.ORACLE) {
-          query = query.orderBy(
-            // @ts-ignore
-            this.knex.raw(this.convertClobs(composite)),
-            direction,
-            nulls
+          query = query.orderByRaw(
+            `${this.convertClobs(composite)} ${direction} nulls ${nulls}`
           )
         } else {
           query = query.orderBy(composite, direction, nulls)
