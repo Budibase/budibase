@@ -3,10 +3,10 @@ import * as dbCore from "../db"
 import {
   getNativeSql,
   isExternalTable,
-  isValidISODateString,
-  isValidFilter,
-  sqlLog,
   isInvalidISODateString,
+  isValidFilter,
+  isValidISODateString,
+  sqlLog,
 } from "./utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
@@ -433,27 +433,30 @@ class InternalBuilder {
         const andOr = mode === filters?.containsAny ? " OR " : " AND "
         iterate(mode, (key, value) => {
           let statement = ""
+          const identifier = this.quotedIdentifier(key)
           for (let i in value) {
             if (typeof value[i] === "string") {
               value[i] = `%"${value[i].toLowerCase()}"%`
             } else {
               value[i] = `%${value[i]}%`
             }
-            const identifier = this.quotedIdentifier(key)
-            statement += statement ? andOr : ""
-            if (not) {
-              statement += `(NOT COALESCE(LOWER(${identifier}), '') LIKE ? OR ${identifier} IS NULL)`
-            } else {
-              statement += `COALESCE(LOWER(${identifier}), '') LIKE ?`
-            }
+            statement += `${
+              statement ? andOr : ""
+            }COALESCE(LOWER(${identifier}), '') LIKE ?`
           }
 
           if (statement === "") {
             return
           }
 
-          // @ts-ignore
-          query = query[rawFnc](statement, value)
+          if (not) {
+            query = query[rawFnc](
+              `(NOT (${statement}) OR ${identifier} IS NULL)`,
+              value
+            )
+          } else {
+            query = query[rawFnc](statement, value)
+          }
         })
       }
     }
