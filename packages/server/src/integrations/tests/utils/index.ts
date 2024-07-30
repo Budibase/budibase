@@ -77,7 +77,7 @@ export async function startContainer(container: GenericContainer) {
   container = container
     .withReuse()
     .withLabels({ "com.budibase": "true" })
-    .withName(key)
+    .withName(`${key}_testcontainer`)
 
   let startedContainer: StartedTestContainer | undefined = undefined
   let lastError = undefined
