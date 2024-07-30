@@ -9,10 +9,8 @@ import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import {
   Automation,
-  AutomationActionStepId,
   AutomationJob,
   AutomationStepSchema,
-  AutomationTriggerStepId,
 } from "@budibase/types"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
