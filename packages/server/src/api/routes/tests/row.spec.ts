@@ -1811,6 +1811,7 @@ describe.each([
       await config.api.row.exportRows(
         "1234567",
         { rows: [existing._id!] },
+        Format.JSON,
         { status: 404 }
       )
     })
@@ -1848,6 +1849,133 @@ describe.each([
         })
         const results = JSON.parse(res)
         expect(results.length).toEqual(3)
+      })
+
+    describe("should allow exporting all column types", () => {
+      let tableId: string
+      let expectedExportedRow: Row
+
+      beforeAll(async () => {
+        const auxTable = await config.api.table.save(
+          setup.structures.basicTable()
+        )
+
+        const fullSchema = setup.structures.fullSchema({
+          otherTableId: auxTable._id!,
+          allRequired: true,
+        })
+
+        const table = await config.api.table.save({
+          ...setup.structures.basicTable(),
+          schema: fullSchema,
+        })
+        tableId = table._id!
+
+        const createAuxRow = () => config.api.row.save(auxTable._id!, {})
+        const rowValues: Record<keyof typeof fullSchema, any> = {
+          [FieldType.STRING]: generator.guid(),
+          [FieldType.LONGFORM]: generator.paragraph(),
+          [FieldType.OPTIONS]: "option 2",
+          [FieldType.ARRAY]: ["options 2", "options 4"],
+          [FieldType.NUMBER]: generator.natural(),
+          [FieldType.BOOLEAN]: generator.bool(),
+          [FieldType.DATETIME]: generator.date().toISOString(),
+          [FieldType.ATTACHMENTS]: [setup.structures.basicAttachment()],
+          [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
+          [FieldType.LINK]: [await createAuxRow()],
+          [FieldType.FORMULA]: undefined, // generated field
+          [FieldType.AUTO]: undefined, // generated field
+          [FieldType.JSON]: { name: generator.guid() },
+          [FieldType.INTERNAL]: generator.guid(),
+          [FieldType.BARCODEQR]: generator.guid(),
+          [FieldType.SIGNATURE_SINGLE]: setup.structures.basicAttachment(),
+          [FieldType.BIGINT]: generator.integer(),
+          [FieldType.BB_REFERENCE]: [{ _id: config.getUser()._id }],
+          [FieldType.BB_REFERENCE_SINGLE]: { _id: config.getUser()._id },
+        }
+        const row = await config.api.row.save(table._id!, rowValues)
+        expectedExportedRow = {
+          _id: row._id,
+          _rev: row._rev,
+          type: "row",
+          tableId: table._id!,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          [FieldType.STRING]: rowValues[FieldType.STRING],
+          [FieldType.LONGFORM]: rowValues[FieldType.LONGFORM],
+          [FieldType.OPTIONS]: rowValues[FieldType.OPTIONS],
+          [FieldType.ARRAY]: rowValues[FieldType.ARRAY],
+          [FieldType.NUMBER]: rowValues[FieldType.NUMBER],
+          [FieldType.BOOLEAN]: rowValues[FieldType.BOOLEAN],
+          [FieldType.DATETIME]: rowValues[FieldType.DATETIME],
+          [FieldType.ATTACHMENTS]: rowValues[FieldType.ATTACHMENTS].map(
+            (a: any) =>
+              expect.objectContaining({
+                ...a,
+                url: expect.any(String),
+              })
+          ),
+          [FieldType.ATTACHMENT_SINGLE]: expect.objectContaining({
+            ...rowValues[FieldType.ATTACHMENT_SINGLE],
+            url: expect.any(String),
+          }),
+          [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
+          [FieldType.AUTO]: expect.any(Number),
+          [FieldType.JSON]: rowValues[FieldType.JSON],
+          [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
+          [FieldType.BARCODEQR]: rowValues[FieldType.BARCODEQR],
+          [FieldType.SIGNATURE_SINGLE]: expect.objectContaining({
+            ...rowValues[FieldType.SIGNATURE_SINGLE],
+            url: expect.any(String),
+          }),
+          [FieldType.BIGINT]: rowValues[FieldType.BIGINT],
+          [FieldType.BB_REFERENCE]: rowValues[FieldType.BB_REFERENCE].map(
+            expect.objectContaining
+          ),
+          [FieldType.BB_REFERENCE_SINGLE]: expect.objectContaining(
+            rowValues[FieldType.BB_REFERENCE_SINGLE]
+          ),
+          [FieldType.LINK]: undefined, // Links are not exported
+        }
+      })
+
+      it("as csv", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          Format.CSV
+        )
+
+        const json = await config.api.table.csvToJson({
+          csvString: exportedValue,
+        })
+        expect(json).toEqual([expectedExportedRow])
+      })
+
+      it("as json", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          Format.JSON
+        )
+
+        const json = JSON.parse(exportedValue)
+        expect(json).toEqual([expectedExportedRow])
+      })
+
+      it("as json with schema", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          Format.JSON_WITH_SCHEMA
+        )
+
+        const json = JSON.parse(exportedValue)
+        expect(json).toEqual({
+          schema: expect.any(Object),
+          rows: [expectedExportedRow],
+        })
+      })
       })
   })
 
