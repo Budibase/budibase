@@ -3,6 +3,7 @@
 
   const component = getContext("component")
   const { styleable, builderStore } = getContext("sdk")
+  const context = getContext("context")
 
   export let cols = 12
   export let rows = 12
@@ -10,6 +11,7 @@
   $: cols = cols || 12
   $: rows = rows || 12
   $: coords = generateCoords(rows, cols)
+  $: mobile = $context.device.mobile
 
   const generateCoords = (rows, cols) => {
     let grid = []
@@ -24,6 +26,7 @@
 
 <div
   class="grid"
+  class:mobile
   use:styleable={{
     ...$component.styles,
     normal: {
@@ -61,22 +64,33 @@
     overflow: hidden;
     width: auto;
     height: auto;
-    grid-column-start: min(
-      max(1, var(--grid-column-start)),
-      var(--cols)
-    ) !important;
-    grid-column-end: min(
-      max(2, var(--grid-column-end)),
-      calc(var(--cols) + 1)
-    ) !important;
-    grid-row-start: min(max(1, var(--grid-row-start)), var(--rows)) !important;
-    grid-row-end: min(
-      max(2, var(--grid-row-end)),
-      calc(var(--rows) + 1)
-    ) !important;
     max-height: 100%;
     max-width: 100%;
+
+    /* On desktop, use desktop metadata and fall back to mobile */
+    --col-start: var(--grid-desktop-col-start, var(--grid-mobile-col-start, 1));
+    --col-end: var(--grid-desktop-col-end, var(--grid-mobile-col-end, 2));
+    --row-start: var(--grid-desktop-row-start, var(--grid-mobile-row-start, 1));
+    --row-end: var(--grid-desktop-row-end, var(--grid-mobile-row-end, 2));
+
+    /* Ensure grid metadata falls within limits */
+    grid-column-start: min(max(1, var(--col-start)), var(--cols)) !important;
+    grid-column-end: min(
+      max(2, var(--col-end)),
+      calc(var(--cols) + 1)
+    ) !important;
+    grid-row-start: min(max(1, var(--row-start)), var(--rows)) !important;
+    grid-row-end: min(max(2, var(--row-end)), calc(var(--rows) + 1)) !important;
   }
+
+  /* On mobile, use mobile metadata and fall back to desktop */
+  :global(.grid.mobile > .component > *) {
+    --col-start: var(--grid-mobile-col-start, var(--grid-desktop-col-start, 1));
+    --col-end: var(--grid-mobile-col-end, var(--grid-desktop-col-end, 2));
+    --row-start: var(--grid-mobile-row-start, var(--grid-desktop-row-start, 1));
+    --row-end: var(--grid-mobile-row-end, var(--grid-desktop-row-end, 2));
+  }
+
   .grid {
     position: relative;
     height: 400px;
