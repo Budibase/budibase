@@ -1,5 +1,8 @@
 import { context, docIds, events } from "@budibase/backend-core"
-import { PROTECTED_EXTERNAL_COLUMNS } from "@budibase/shared-core"
+import {
+  PROTECTED_EXTERNAL_COLUMNS,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
 import {
   AutoFieldSubType,
   BBReferenceFieldSubType,
@@ -1055,10 +1058,9 @@ describe.each([
         })
       })
 
-      isInternal &&
-        it.each(PROTECTED_EXTERNAL_COLUMNS)(
-          "don't allow protected names (%s)",
-          async columnName => {
+      it.each(
+        isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
+      )("don't allow protected names (%s)", async columnName => {
             const result = await config.api.table.validateNewTableImport(
               [
                 {
