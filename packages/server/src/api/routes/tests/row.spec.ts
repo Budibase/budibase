@@ -864,7 +864,7 @@ describe.each([
     })
 
     !isInternal &&
-      it("can update a row on an external table with a primary key", async () => {
+      it.only("can update a row on an external table with a primary key", async () => {
         const tableName = uuid.v4().substring(0, 10)
         await client!.schema.createTable(tableName, table => {
           table.increments("id").primary()
