@@ -146,6 +146,41 @@ describe.each([
       ])
       expect(persistedRows.rows[0].nonValid).toBeUndefined()
     })
+
+    it.each(
+      isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
+    )(
+      "cannot use protected column names (%s) while importing a table",
+      async columnName => {
+        const table: SaveTableRequest = basicTable()
+        table.rows = [
+          {
+            name: "test-name",
+            description: "test-desc",
+          },
+        ]
+
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              [columnName]: {
+                name: columnName,
+                type: FieldType.STRING,
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              message: `Column(s) "${columnName}" are duplicated - check for other columns with these name (case in-sensitive)`,
+              status: 400,
+            },
+          }
+        )
+      }
+    )
   })
 
   describe("update", () => {
