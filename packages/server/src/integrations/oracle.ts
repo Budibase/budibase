@@ -98,7 +98,7 @@ const SCHEMA: Integration = {
   },
 }
 
-const UNSUPPORTED_TYPES = ["BLOB", "CLOB", "NCLOB"]
+const UNSUPPORTED_TYPES = ["BLOB", "NCLOB"]
 
 const OracleContraintTypes = {
   PRIMARY: "P",
