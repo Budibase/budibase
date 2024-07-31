@@ -246,7 +246,7 @@ export interface AutomationLogPage {
 export interface AutomationStepInputBase {
   context: Record<string, any>
   emitter: EventEmitter
-  appId?: string
+  appId: string
   apiKey?: string
 }
 
