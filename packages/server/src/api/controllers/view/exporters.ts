@@ -1,4 +1,6 @@
-import { Row, TableSchema } from "@budibase/types"
+import { Row, RowExportFormat, TableSchema } from "@budibase/types"
+
+export { RowExportFormat as Format } from "@budibase/types"
 
 function getHeaders(
   headers: string[],
@@ -46,14 +48,8 @@ export function jsonWithSchema(schema: TableSchema, rows: Row[]) {
   return JSON.stringify({ schema: newSchema, rows }, undefined, 2)
 }
 
-export enum Format {
-  CSV = "csv",
-  JSON = "json",
-  JSON_WITH_SCHEMA = "jsonWithSchema",
-}
-
-export function isFormat(format: any): format is Format {
-  return Object.values(Format).includes(format as Format)
+export function isFormat(format: any): format is RowExportFormat {
+  return Object.values(RowExportFormat).includes(format as RowExportFormat)
 }
 
 export function parseCsvExport<T>(value: string) {
