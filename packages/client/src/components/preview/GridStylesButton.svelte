@@ -1,14 +1,16 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { builderStore, componentStore } from "stores"
+  import { builderStore } from "stores"
   import { getGridVarValue } from "utils/grid"
 
   export let style
   export let value
   export let icon
   export let title
+  export let gridStyles
+  export let componentId
 
-  $: currentValue = getGridVarValue($componentStore.selectedComponent, style)
+  $: currentValue = getGridVarValue(gridStyles, style)
   $: active = currentValue === value
 </script>
 
@@ -18,10 +20,7 @@
   {title}
   class:active
   on:click={() => {
-    builderStore.actions.updateStyles(
-      { [style]: value },
-      $componentStore.selectedComponent._id
-    )
+    builderStore.actions.updateStyles({ [style]: value }, componentId)
   }}
 >
   <Icon name={icon} size="S" />

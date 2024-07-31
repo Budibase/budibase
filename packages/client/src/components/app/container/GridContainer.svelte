@@ -95,7 +95,7 @@
   /* Ensure all top level children have grid styles applied */
   .grid :global(> .component) {
     display: flex;
-    overflow: hidden;
+    overflow: auto;
 
     /* On desktop, use desktop metadata and fall back to mobile */
     /* Position vars */

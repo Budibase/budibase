@@ -20,11 +20,12 @@
 
   // TODO: respect dependsOn keys
 
-  $: id = $builderStore.selectedComponentId
-  $: parent = findComponentParent($builderStore.screen.props, id)
-  $: instance = componentStore.actions.getComponentInstance(id)
-  $: state = $instance?.state
+  $: componentId = $builderStore.selectedComponentId
+  $: component = $componentStore.selectedComponent
   $: definition = $componentStore.selectedComponentDefinition
+  $: parent = findComponentParent($builderStore.screen.props, componentId)
+  $: instance = componentStore.actions.getComponentInstance(componentId)
+  $: state = $instance?.state
   $: showBar =
     definition?.showSettingsBar !== false &&
     !$dndIsDragging &&
@@ -36,12 +37,13 @@
     }
   }
   $: settings = getBarSettings(definition)
-  $: isRoot = id === $builderStore.screen?.props?._id
+  $: isRoot = componentId === $builderStore.screen?.props?._id
   $: insideGrid =
     parent?._component.endsWith("/container") && parent.layout === "grid"
   $: showGridStyles = insideGrid && definition?.grid?.showControls !== false
   $: gridHAlignVar = $getGridVar("h-align")
   $: gridVAlignVar = $getGridVar("v-align")
+  $: gridStyles = $state?.styles?.variables
 
   const getBarSettings = definition => {
     let allSettings = []
@@ -141,7 +143,7 @@
 {#if showBar}
   <div
     class="bar"
-    style="top: {top}px; left: {left}px;"
+    style="top:{top}px; left:{left}px;"
     bind:this={self}
     class:visible={measured}
   >
@@ -151,24 +153,32 @@
         value="start"
         icon="AlignLeft"
         title="Align left"
+        {gridStyles}
+        {componentId}
       />
       <GridStylesButton
         style={gridHAlignVar}
         value="center"
         icon="AlignCenter"
         title="Align center"
+        {gridStyles}
+        {componentId}
       />
       <GridStylesButton
         style={gridHAlignVar}
         value="end"
         icon="AlignRight"
         title="Align right"
+        {gridStyles}
+        {componentId}
       />
       <GridStylesButton
         style={gridHAlignVar}
         value="stretch"
         icon="MoveLeftRight"
         title="Stretch horizontally"
+        {gridStyles}
+        {componentId}
       />
       <div class="divider" />
       <GridStylesButton
@@ -176,24 +186,32 @@
         value="start"
         icon="AlignTop"
         title="Align top"
+        {gridStyles}
+        {componentId}
       />
       <GridStylesButton
         style={gridVAlignVar}
         value="center"
         icon="AlignMiddle"
         title="Align middle"
+        {gridStyles}
+        {componentId}
       />
       <GridStylesButton
         style={gridVAlignVar}
         value="end"
         icon="AlignBottom"
         title="Align bottom"
+        {gridStyles}
+        {componentId}
       />
       <GridStylesButton
         style={gridVAlignVar}
         value="stretch"
         icon="MoveUpDown"
         title="Stretch vertically"
+        {gridStyles}
+        {componentId}
       />
       <div class="divider" />
     {/if}
@@ -206,6 +224,7 @@
               value={option.value}
               icon={option.barIcon}
               title={option.barTitle || option.label}
+              {component}
             />
           {/each}
         {:else}

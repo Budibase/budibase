@@ -1,5 +1,5 @@
-import { builderStore } from "stores"
-import { derived, get } from "svelte/store"
+import { builderStore, componentStore } from "stores"
+import { derived, get, readable } from "svelte/store"
 
 /**
  * We use CSS variables on components to control positioning and layout of
@@ -91,13 +91,13 @@ export const getBaseGridVars = definition => {
 }
 
 // Gets the current value of a certain grid CSS variable for a component
-export const getGridVarValue = (component, variable) => {
+export const getGridVarValue = (styles, variable) => {
   // Try the desired variable
-  let val = component?._styles?.normal?.[variable]
+  let val = styles?.[variable]
 
   // Otherwise try the other device variables
   if (!val) {
-    val = component?._styles?.normal?.[getOtherDeviceGridVar(variable)]
+    val = styles?.[getOtherDeviceGridVar(variable)]
   }
 
   // Otherwise use the default

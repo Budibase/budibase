@@ -200,11 +200,12 @@
 
   // Build up full styles and split them into variables and non-variables
   $: baseStyles = getBaseStyles(definition)
-  $: parsedStyles = parseStyles({
+  $: styles = {
     ...baseStyles,
     ...instance._styles?.normal,
     ...ephemeralStyles,
-  })
+  }
+  $: parsedStyles = parseStyles(styles)
   $: wrapperCSS = buildStyleString(parsedStyles.variables)
 
   // Update component context
@@ -214,6 +215,7 @@
     styles: {
       ...instance._styles,
       normal: parsedStyles.nonVariables,
+      variables: parsedStyles.variables,
       custom: customCSS,
       id,
       empty: emptyState,
