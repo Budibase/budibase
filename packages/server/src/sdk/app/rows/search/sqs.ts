@@ -382,7 +382,7 @@ export async function search(
     // check for pagination
     if (paginate && nextRow) {
       response.hasNextPage = true
-      response.bookmark = processed.length
+      response.bookmark = bookmark + processed.length
     }
     if (paginate && !nextRow) {
       response.hasNextPage = false
