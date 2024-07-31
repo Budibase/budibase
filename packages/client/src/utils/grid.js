@@ -77,8 +77,8 @@ const alignmentToStyleMap = {
   stretch: "stretch",
 }
 export const getBaseGridVars = definition => {
-  const gridHAlign = definition.grid?.hAlign || "stretch"
-  const gridVAlign = definition.grid?.vAlign || "center"
+  const gridHAlign = definition?.grid?.hAlign || "stretch"
+  const gridVAlign = definition?.grid?.vAlign || "center"
   const flexStyles = gridVAlign === "stretch" ? "1 1 0" : "0 0 auto"
   return {
     ["--grid-desktop-h-align"]: alignmentToStyleMap[gridHAlign],

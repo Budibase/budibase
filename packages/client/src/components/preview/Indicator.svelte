@@ -69,7 +69,7 @@
     z-index: var(--zIndex);
     border: 2px solid var(--color);
     pointer-events: none;
-    border-radius: 4px;
+    border-radius: 2px;
   }
   .indicator.withText {
     border-top-left-radius: 0;
