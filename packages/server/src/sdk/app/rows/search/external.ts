@@ -23,6 +23,7 @@ import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
 import { isSearchingByRowID } from "./utils"
+import { ExternalReadRequestReturnType } from "../../../../api/controllers/row/ExternalRequest"
 
 function getPaginationAndLimitParameters(
   filters: SearchFilters,
@@ -47,7 +48,7 @@ function getPaginationAndLimitParameters(
       limit: limit + 1,
     }
     if (bookmark) {
-      paginateObj.offset = limit * bookmark
+      paginateObj.offset = bookmark
     }
   } else if (limit) {
     paginateObj = {
@@ -105,37 +106,42 @@ export async function search(
       paginate: paginateObj as PaginationJson,
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     }
-    const queries: Promise<Row[] | number>[] = []
-    queries.push(handleRequest(Operation.READ, tableId, parameters))
+    const queries: [
+      Promise<ExternalReadRequestReturnType>,
+      Promise<number> | undefined
+    ] = [handleRequest(Operation.READ, tableId, parameters), undefined]
     if (countRows) {
-      queries.push(handleRequest(Operation.COUNT, tableId, parameters))
+      queries[1] = handleRequest(Operation.COUNT, tableId, parameters)
     }
     const responses = await Promise.all(queries)
-    let rows = responses[0] as Row[]
-    const totalRows =
-      responses.length > 1 ? (responses[1] as number) : undefined
+    let rows = responses[0].rows
+    const rawResponseSize = responses[0].rawResponseSize
+    const totalRows = responses.length > 1 ? responses[1] : undefined
 
-    let hasNextPage = false
-    // remove the extra row if it's there
-    if (paginate && limit && rows.length > limit) {
-      rows.pop()
-      hasNextPage = true
-    }
-
-    if (options.fields) {
-      const fields = [...options.fields, ...PROTECTED_EXTERNAL_COLUMNS]
-      rows = rows.map((r: any) => pick(r, fields))
-    }
-
-    rows = await outputProcessing<Row[]>(table, rows, {
+    let processed = await outputProcessing<Row[]>(table, rows, {
       preserveLinks: true,
       squash: true,
     })
 
+    let hasNextPage = false
+    // if the raw rows is greater than the limit then we likely need to paginate
+    if (paginate && limit && rawResponseSize > limit) {
+      hasNextPage = true
+      // processed rows has merged relationships down, this might not be more than limit
+      if (processed.length > limit) {
+        processed.pop()
+      }
+    }
+
+    if (options.fields) {
+      const fields = [...options.fields, ...PROTECTED_EXTERNAL_COLUMNS]
+      processed = processed.map((r: any) => pick(r, fields))
+    }
+
     // need wrapper object for bookmarks etc when paginating
-    const response: SearchResponse<Row> = { rows, hasNextPage }
+    const response: SearchResponse<Row> = { rows: processed, hasNextPage }
     if (hasNextPage && bookmark != null) {
-      response.bookmark = bookmark + 1
+      response.bookmark = processed.length
     }
     if (totalRows != null) {
       response.totalRows = totalRows
@@ -255,24 +261,21 @@ export async function exportRows(
 }
 
 export async function fetch(tableId: string): Promise<Row[]> {
-  const response = await handleRequest<Operation.READ>(
-    Operation.READ,
-    tableId,
-    {
-      includeSqlRelationships: IncludeRelationship.INCLUDE,
-    }
-  )
+  const response = await handleRequest(Operation.READ, tableId, {
+    includeSqlRelationships: IncludeRelationship.INCLUDE,
+  })
   const table = await sdk.tables.getTable(tableId)
-  return await outputProcessing<Row[]>(table, response, {
+  return await outputProcessing<Row[]>(table, response.rows, {
     preserveLinks: true,
     squash: true,
   })
 }
 
 export async function fetchRaw(tableId: string): Promise<Row[]> {
-  return await handleRequest<Operation.READ>(Operation.READ, tableId, {
+  const response = await handleRequest(Operation.READ, tableId, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
+  return response.rows
 }
 
 export async function fetchView(viewName: string) {
