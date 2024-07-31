@@ -1,33 +1,28 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import { builderStore, componentStore } from "stores"
-  import { createEventDispatcher } from "svelte"
+  import { getGridVarValue } from "utils/grid"
 
-  export let prop
+  export let style
   export let value
   export let icon
   export let title
-  export let rotate = false
-  export let bool = false
-  export let active = false
 
-  const dispatch = createEventDispatcher()
-  $: currentValue = $componentStore.selectedComponent?.[prop]
-  $: active = prop && (bool ? !!currentValue : currentValue === value)
+  $: currentValue = getGridVarValue($componentStore.selectedComponent, style)
+  $: console.log(style, currentValue)
+  $: active = currentValue === value
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   {title}
-  class:rotate
   class:active
   on:click={() => {
-    if (prop) {
-      const newValue = bool ? !currentValue : value
-      builderStore.actions.updateProp(prop, newValue)
-    }
-    dispatch("click")
+    builderStore.actions.updateStyles(
+      { [style]: value },
+      $componentStore.selectedComponent._id
+    )
   }}
 >
   <Icon name={icon} size="S" />
@@ -49,8 +44,5 @@
   .active:hover {
     background-color: rgba(13, 102, 208, 0.1);
     color: var(--spectrum-global-color-blue-600);
-  }
-  .rotate {
-    transform: rotate(90deg);
   }
 </style>

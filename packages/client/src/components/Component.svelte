@@ -40,6 +40,7 @@
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
   import { buildStyleString } from "utils/styleable.js"
+  import { getBaseGridVars } from "utils/grid.js"
 
   export let instance = {}
   export let isLayout = false
@@ -103,7 +104,7 @@
   let settingsDefinitionMap
   let missingRequiredSettings = false
 
-  // Temporary meta styles which can be added in the app preview for things like
+  // Temporary styles which can be added in the app preview for things like
   // DND. We clear these whenever a new instance is received.
   let ephemeralStyles
 
@@ -197,14 +198,14 @@
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
 
-  // Build meta styles and stringify to apply to the wrapper node
-  $: definitionMetaStyles = getDefinitonMetaStyles(definition)
-  $: metaStyles = {
-    ...definitionMetaStyles,
-    ...instance._styles?.meta,
+  // Build up full styles and split them into variables and non-variables
+  $: baseStyles = getBaseStyles(definition)
+  $: parsedStyles = parseStyles({
+    ...baseStyles,
+    ...instance._styles?.normal,
     ...ephemeralStyles,
-  }
-  $: metaCSS = buildStyleString(metaStyles)
+  })
+  $: wrapperCSS = buildStyleString(parsedStyles.variables)
 
   // Update component context
   $: store.set({
@@ -212,7 +213,7 @@
     children: children.length,
     styles: {
       ...instance._styles,
-      meta: metaStyles,
+      normal: parsedStyles.nonVariables,
       custom: customCSS,
       id,
       empty: emptyState,
@@ -612,7 +613,7 @@
     }
   }
 
-  const select = e => {
+  const handleWrapperClick = e => {
     if (isBlock) {
       return
     }
@@ -620,19 +621,21 @@
     builderStore.actions.selectComponent(id)
   }
 
-  // Util to generate meta styles based on component definition
-  const alignToStyleMap = {
-    start: "flex-start",
-    center: "center",
-    end: "flex-end",
-    stretch: "stretch",
+  // Splits component styles into variables and non-variables
+  const parseStyles = styles => {
+    let variables = {}
+    let nonVariables = {}
+    for (let style of Object.keys(styles || {})) {
+      const group = style.startsWith("--") ? variables : nonVariables
+      group[style] = styles[style]
+    }
+    return { variables, nonVariables }
   }
-  const getDefinitonMetaStyles = definition => {
-    const gridHAlign = definition.grid?.hAlign || "stretch"
-    const gridVAlign = definition.grid?.vAlign || "center"
+
+  // Generates any required base styles based on the component definition
+  const getBaseStyles = definition => {
     return {
-      ["align-items"]: alignToStyleMap[gridHAlign],
-      ["justify-content"]: alignToStyleMap[gridVAlign],
+      ...getBaseGridVars(definition),
     }
   }
 
@@ -684,9 +687,9 @@
     data-name={name}
     data-icon={icon}
     data-parent={$component.id}
-    style={metaCSS}
+    style={wrapperCSS}
     {draggable}
-    on:click={select}
+    on:click={handleWrapperClick}
   >
     {#if errorState}
       <ComponentErrorState
