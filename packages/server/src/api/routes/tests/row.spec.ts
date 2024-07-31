@@ -1985,7 +1985,7 @@ describe.each([
         await config.api.row.bulkImport(tableId, {
           rows,
         })
-        await config.api.row.bulkImport(table._id!, {
+        await config.api.row.bulkImport(tableId, {
           rows,
         })
 
