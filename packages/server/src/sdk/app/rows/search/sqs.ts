@@ -43,6 +43,7 @@ import {
 } from "./filters"
 import { dataFilters, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 import { isSearchingByRowID } from "./utils"
+import tracer from "dd-trace"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
@@ -225,7 +226,11 @@ async function runSqlQuery(
     }
 
     const db = context.getAppDB()
-    return await db.sql<Row>(sql, bindings)
+
+    return await tracer.trace("sqs.runSqlQuery", async span => {
+      span?.addTags({ sql })
+      return await db.sql<Row>(sql, bindings)
+    })
   }
   const response = await alias.queryWithAliasing(json, processSQLQuery)
   if (opts?.countTotalRows) {
