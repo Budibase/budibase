@@ -21,7 +21,8 @@ export async function getRow(
       ? IncludeRelationship.INCLUDE
       : IncludeRelationship.EXCLUDE,
   })
-  return response ? response[0] : response
+  const rows = response?.rows || []
+  return rows[0]
 }
 
 export async function save(
