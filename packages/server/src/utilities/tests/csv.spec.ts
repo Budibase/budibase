@@ -11,7 +11,9 @@ describe("csv", () => {
         { id: "1", title: "aaa" },
         { id: "2", title: "bbb" },
       ])
-      result.forEach(r => expect(Object.keys(r)).toEqual(["id", "title"]))
+      result.forEach((r: any) =>
+        expect(Object.keys(r)).toEqual(["id", "title"])
+      )
     })
 
     test("empty values are casted as undefined", async () => {
@@ -25,7 +27,7 @@ describe("csv", () => {
         { id: "2", optional: "value", title: "bbb" },
         { id: "3", optional: null, title: "ccc" },
       ])
-      result.forEach(r =>
+      result.forEach((r: any) =>
         expect(Object.keys(r)).toEqual(["id", "optional", "title"])
       )
     })
