@@ -1118,38 +1118,67 @@ describe.each([
 
       it.each(
         isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
-      )("don't allow protected names (%s)", async columnName => {
-            const result = await config.api.table.validateNewTableImport(
-              [
-                {
-                  id: generator.natural(),
-                  name: generator.first(),
-                  [columnName]: generator.word(),
-                },
-              ],
-              {
-                ...basicSchema,
-                [columnName]: {
-                  name: columnName,
-                  type: FieldType.STRING,
-                },
-              }
-            )
-
-            expect(result).toEqual({
-              allValid: false,
-              errors: {
-                [columnName]: `${columnName} is a protected name`,
-              },
-              invalidColumns: [],
-              schemaValidation: {
-                id: true,
-                name: true,
-                [columnName]: false,
-              },
-            })
+      )("don't allow protected names in schema (%s)", async columnName => {
+        const result = await config.api.table.validateNewTableImport(
+          [
+            {
+              id: generator.natural(),
+              name: generator.first(),
+              [columnName]: generator.word(),
+            },
+          ],
+          {
+            ...basicSchema,
           }
         )
+
+        expect(result).toEqual({
+          allValid: false,
+          errors: {
+            [columnName]: `${columnName} is a protected column name`,
+          },
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+            [columnName]: false,
+          },
+        })
+      })
+
+      isInternal &&
+        it.each(
+          isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
+        )("don't allow protected names in the rows (%s)", async columnName => {
+          const result = await config.api.table.validateNewTableImport(
+            [
+              {
+                id: generator.natural(),
+                name: generator.first(),
+              },
+            ],
+            {
+              ...basicSchema,
+              [columnName]: {
+                name: columnName,
+                type: FieldType.STRING,
+              },
+            }
+          )
+
+          expect(result).toEqual({
+            allValid: false,
+            errors: {
+              [columnName]: `${columnName} is a protected column name`,
+            },
+            invalidColumns: [],
+            schemaValidation: {
+              id: true,
+              name: true,
+              [columnName]: false,
+            },
+          })
+        })
     })
 
     describe("validateExistingTableImport", () => {
