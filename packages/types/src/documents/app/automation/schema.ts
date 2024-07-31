@@ -1,5 +1,5 @@
 import { SortOrder } from "../../../api"
-import { EmptyFilterOption, SearchFilters } from "../../../sdk"
+import { EmptyFilterOption, Hosting, SearchFilters } from "../../../sdk"
 import { HttpMethod } from "../query"
 import { Row } from "../row"
 import {
@@ -7,31 +7,96 @@ import {
   AutomationResults,
   EmailAttachment,
   LoopStepType,
+  ActionImplementation,
 } from "./automation"
 
-export type AutomationStepInputMap = {
-  [AutomationActionStepId.SEND_EMAIL_SMTP]: SmtpEmailStepInputs
-  [AutomationActionStepId.CREATE_ROW]: CreateRowStepInputs
-  [AutomationActionStepId.UPDATE_ROW]: UpdateRowStepInputs
-  [AutomationActionStepId.DELETE_ROW]: DeleteRowStepInputs
-  [AutomationActionStepId.EXECUTE_BASH]: BashStepInputs
-  [AutomationActionStepId.EXECUTE_SCRIPT]: ExecuteScriptStepInputs
-  [AutomationActionStepId.EXECUTE_QUERY]: ExecuteQueryStepInputs
-  [AutomationActionStepId.SERVER_LOG]: ServerLogStepInputs
-  [AutomationActionStepId.OUTGOING_WEBHOOK]: OutgoingWebhookStepInputs
-  [AutomationActionStepId.DELAY]: DelayStepInputs
-  [AutomationActionStepId.FILTER]: FilterStepInputs
-  [AutomationActionStepId.QUERY_ROWS]: QueryRowsStepInputs
-  [AutomationActionStepId.LOOP]: LoopStepInputs
-  [AutomationActionStepId.COLLECT]: CollectStepInputs
-  [AutomationActionStepId.OPENAI]: OpenAIStepInputs
-  [AutomationActionStepId.TRIGGER_AUTOMATION_RUN]: TriggerAutomationStepInputs
-  [AutomationActionStepId.integromat]: MakeIntegrationInputs
-  [AutomationActionStepId.discord]: DiscordStepInputs
-  [AutomationActionStepId.slack]: SlackStepInputs
-  [AutomationActionStepId.zapier]: ZapierStepInputs
-  [AutomationActionStepId.n8n]: n8nStepInputs
-}
+export type ActionImplementations<T extends Hosting> = {
+  [AutomationActionStepId.COLLECT]: ActionImplementation<
+    CollectStepInputs,
+    CollectStepOutputs
+  >
+  [AutomationActionStepId.CREATE_ROW]: ActionImplementation<
+    CreateRowStepInputs,
+    CreateRowStepOutputs
+  >
+  [AutomationActionStepId.DELAY]: ActionImplementation<
+    DelayStepInputs,
+    DelayStepOutputs
+  >
+  [AutomationActionStepId.DELETE_ROW]: ActionImplementation<
+    DeleteRowStepInputs,
+    DeleteRowStepOutputs
+  >
+
+  [AutomationActionStepId.EXECUTE_QUERY]: ActionImplementation<
+    ExecuteQueryStepInputs,
+    ExecuteQueryStepOutputs
+  >
+  [AutomationActionStepId.EXECUTE_SCRIPT]: ActionImplementation<
+    ExecuteScriptStepInputs,
+    ExecuteScriptStepOutputs
+  >
+  [AutomationActionStepId.FILTER]: ActionImplementation<
+    FilterStepInputs,
+    FilterStepOutputs
+  >
+  [AutomationActionStepId.QUERY_ROWS]: ActionImplementation<
+    QueryRowsStepInputs,
+    QueryRowsStepOutputs
+  >
+  [AutomationActionStepId.SEND_EMAIL_SMTP]: ActionImplementation<
+    SmtpEmailStepInputs,
+    BaseAutomationOutputs
+  >
+  [AutomationActionStepId.SERVER_LOG]: ActionImplementation<
+    ServerLogStepInputs,
+    ServerLogStepOutputs
+  >
+  [AutomationActionStepId.TRIGGER_AUTOMATION_RUN]: ActionImplementation<
+    TriggerAutomationStepInputs,
+    TriggerAutomationStepOutputs
+  >
+  [AutomationActionStepId.UPDATE_ROW]: ActionImplementation<
+    UpdateRowStepInputs,
+    UpdateRowStepOutputs
+  >
+  [AutomationActionStepId.OUTGOING_WEBHOOK]: ActionImplementation<
+    OutgoingWebhookStepInputs,
+    ExternalAppStepOutputs
+  >
+  [AutomationActionStepId.discord]: ActionImplementation<
+    DiscordStepInputs,
+    ExternalAppStepOutputs
+  >
+  [AutomationActionStepId.slack]: ActionImplementation<
+    SlackStepInputs,
+    ExternalAppStepOutputs
+  >
+
+  [AutomationActionStepId.zapier]: ActionImplementation<
+    ZapierStepInputs,
+    ZapierStepOutputs
+  >
+  [AutomationActionStepId.integromat]: ActionImplementation<
+    MakeIntegrationInputs,
+    ExternalAppStepOutputs
+  >
+  [AutomationActionStepId.n8n]: ActionImplementation<
+    n8nStepInputs,
+    ExternalAppStepOutputs
+  >
+} & (T extends "self"
+  ? {
+      [AutomationActionStepId.EXECUTE_BASH]: ActionImplementation<
+        BashStepInputs,
+        BashStepOutputs
+      >
+      [AutomationActionStepId.OPENAI]: ActionImplementation<
+        OpenAIStepInputs,
+        OpenAIStepOutputs
+      >
+    }
+  : {})
 
 export type BaseAutomationOutputs = {
   success?: boolean
@@ -42,7 +107,7 @@ export type BaseAutomationOutputs = {
 }
 
 export type ExternalAppStepOutputs = {
-  httpStatus: number
+  httpStatus?: number
   response: string
   success: boolean
 }

@@ -66,7 +66,7 @@ export async function run({
   inputs,
 }: {
   inputs: TriggerAutomationStepInputs
-}): Promise<void | TriggerAutomationStepOutputs> {
+}): Promise<TriggerAutomationStepOutputs> {
   const { automationId, ...fieldParams } = inputs.automation
 
   if (await features.isTriggerAutomationRunEnabled()) {
@@ -92,6 +92,10 @@ export async function run({
         success: true,
         value: response.steps,
       }
+    }
+  } else {
+    return {
+      success: false,
     }
   }
 }

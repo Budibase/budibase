@@ -4,7 +4,6 @@ import { User } from "../../global"
 import { ReadStream } from "fs"
 import { Row } from "../row"
 import { Table } from "../table"
-import { AutomationStepInputMap } from "./schema"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -248,14 +247,13 @@ export interface AutomationStepInputBase {
   context: Record<string, any>
   emitter: EventEmitter
   appId: string
-  apiKey?: string
 }
 
-export interface AutomationStepInput<T extends AutomationActionStepId>
-  extends AutomationStepInputBase {
-  inputs: AutomationStepInputMap[T]
-}
-
+export type ActionImplementation<TInputs, TOutputs> = (
+  params: {
+    inputs: TInputs
+  } & AutomationStepInputBase
+) => Promise<TOutputs>
 export interface AutomationMetadata extends Document {
   errorCount?: number
   automationChainCount?: number

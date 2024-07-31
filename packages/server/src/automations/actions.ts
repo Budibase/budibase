@@ -23,14 +23,18 @@ import {
   PluginType,
   AutomationStep,
   AutomationActionStepId,
-  AutomationStepInput,
+  ActionImplementations,
+  Hosting,
+  ActionImplementation,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
 
-const ACTION_IMPLS: {
-  [K in AutomationActionStepId]?: (opts: AutomationStepInput<K>) => Promise<any>
-} = {
+type ActionImplType = ActionImplementations<
+  typeof env.SELF_HOSTED extends "true" ? Hosting.SELF : Hosting.CLOUD
+>
+
+const ACTION_IMPLS: ActionImplType = {
   SEND_EMAIL_SMTP: sendSmtpEmail.run,
   CREATE_ROW: createRow.run,
   UPDATE_ROW: updateRow.run,
@@ -87,6 +91,7 @@ if (env.SELF_HOSTED) {
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   // @ts-ignore
   BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
+  // @ts-ignore
   ACTION_IMPLS.OPENAI = openai.run
   BUILTIN_ACTION_DEFINITIONS.OPENAI = openai.definition
 }
@@ -107,9 +112,11 @@ export async function getActionDefinitions() {
 }
 
 /* istanbul ignore next */
-export async function getAction(stepId: AutomationActionStepId) {
-  if (ACTION_IMPLS[stepId] != null) {
-    return ACTION_IMPLS[stepId]
+export async function getAction(
+  stepId: AutomationActionStepId
+): Promise<ActionImplementation<any, any> | undefined> {
+  if (ACTION_IMPLS[stepId as keyof ActionImplType] != null) {
+    return ACTION_IMPLS[stepId as keyof ActionImplType]
   }
 
   // must be a plugin
