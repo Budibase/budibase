@@ -275,6 +275,7 @@
     src="/app/preview"
     class:hidden={loading || error}
   />
+  <div class="underlay" />
   <div
     class="add-component"
     class:active={isAddingComponent}
@@ -295,11 +296,10 @@
 <style>
   .loading {
     position: absolute;
-    container-type: inline-size;
-    width: 100%;
-    height: 100%;
-    border: 2px solid transparent;
-    box-sizing: border-box;
+    width: calc(100% - 12px);
+    height: calc(100% - 12px);
+    left: 6px;
+    top: 6px;
   }
 
   .loading.tablet {
@@ -318,7 +318,6 @@
     display: grid;
     place-items: center;
     position: relative;
-    overflow: hidden;
     margin: auto;
     height: 100%;
   }
@@ -361,6 +360,17 @@
   iframe {
     width: 100%;
     height: 100%;
+  }
+
+  .underlay {
+    position: absolute;
+    background: var(--spectrum-global-color-gray-200);
+    z-index: -1;
+    --offset: 2px;
+    width: calc(100% - 12px + 2 * var(--offset));
+    height: calc(100% - 12px + 2 * var(--offset));
+    left: calc(6px - var(--offset));
+    top: calc(6px - var(--offset));
   }
 
   .add-component {
