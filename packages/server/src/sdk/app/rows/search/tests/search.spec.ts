@@ -55,7 +55,7 @@ describe.each([
         schema: {
           id: {
             name: "id",
-            type: FieldType.AUTO,
+            type: FieldType.NUMBER,
             autocolumn: true,
           },
           name: {
