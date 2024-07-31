@@ -122,11 +122,12 @@ export function makeSureTableUpToDate(table: Table, tableToSave: Table) {
 export async function importToRows(
   data: Row[],
   table: Table,
-  user?: ContextUser
+  user?: ContextUser,
+  opts?: { keepCouchId: boolean }
 ) {
   const originalTable = table
   const finalData: Row[] = []
-  const keepCouchId = "_id" in table.schema
+  const keepCouchId = !!opts?.keepCouchId
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
     row._id = (keepCouchId && row._id) || generateRowID(table._id!)
@@ -181,7 +182,9 @@ export async function handleDataImport(
   const db = context.getAppDB()
   const data = parse(importRows, table)
 
-  const finalData = await importToRows(data, table, user)
+  const finalData = await importToRows(data, table, user, {
+    keepCouchId: identifierFields.includes("_id"),
+  })
 
   let newRowCount = finalData.length
 
