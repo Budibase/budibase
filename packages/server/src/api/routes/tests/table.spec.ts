@@ -123,6 +123,29 @@ describe.each([
         body: basicTable(),
       })
     })
+
+    it("does not persist the row fields that are not on the table schema", async () => {
+      const table: SaveTableRequest = basicTable()
+      table.rows = [
+        {
+          name: "test-name",
+          description: "test-desc",
+          nonValid: "test-non-valid",
+        },
+      ]
+
+      const res = await config.api.table.save(table)
+
+      const persistedRows = await config.api.row.search(res._id!)
+
+      expect(persistedRows.rows).toEqual([
+        expect.objectContaining({
+          name: "test-name",
+          description: "test-desc",
+        }),
+      ])
+      expect(persistedRows.rows[0].nonValid).toBeUndefined()
+    })
   })
 
   describe("update", () => {
