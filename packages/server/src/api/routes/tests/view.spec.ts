@@ -434,7 +434,7 @@ describe("/views", () => {
     }
 
     const assertCSVExport = (res: string) => {
-      expect(res).toBe(`"name","description"\n"test-name","ùúûü"`)
+      expect(res).toBe(`name,description\ntest-name,ùúûü\n`)
     }
 
     it("should be able to export a table as JSON", async () => {
