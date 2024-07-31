@@ -178,7 +178,6 @@
         colStart: minMax(getCurrent(vars.colStart), 1, gridCols),
         colEnd: minMax(getCurrent(vars.colEnd), 2, gridCols + 1),
       }
-      console.log(dragInfo.grid)
       handleEvent(e)
     }
   }
