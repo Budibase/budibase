@@ -619,6 +619,7 @@
     if (isBlock) {
       return
     }
+    console.log("select", id)
     e.stopPropagation()
     builderStore.actions.selectComponent(id)
   }
@@ -691,7 +692,7 @@
     data-parent={$component.id}
     style={wrapperCSS}
     {draggable}
-    on:click={handleWrapperClick}
+    on:click|self={handleWrapperClick}
   >
     {#if errorState}
       <ComponentErrorState
