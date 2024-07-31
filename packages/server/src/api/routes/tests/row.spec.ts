@@ -1861,10 +1861,13 @@ describe.each([
           allRequired: true,
         })
 
-        const table = await config.api.table.save({
-          ...setup.structures.basicTable(),
-          schema: fullSchema,
-        })
+        const table = await config.api.table.save(
+          saveTableRequest({
+            ...setup.structures.basicTable(),
+            schema: fullSchema,
+            primary: ["string"],
+          })
+        )
         tableId = table._id!
 
         const rowValues: Record<keyof typeof fullSchema, any> = {
