@@ -158,7 +158,7 @@ export async function csvToJson(
 ) {
   const { csvString } = ctx.request.body
 
-  const result = await jsonFromCsvString(csvString)
+  const result = jsonFromCsvString(csvString)
 
   ctx.status = 200
   ctx.body = result

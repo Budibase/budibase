@@ -5,7 +5,7 @@ describe("csv", () => {
     test("multiple lines csv can be casted", async () => {
       const csvString = '"id","title"\n"1","aaa"\n"2","bbb"'
 
-      const result = await jsonFromCsvString(csvString)
+      const result = jsonFromCsvString(csvString)
 
       expect(result).toEqual([
         { id: "1", title: "aaa" },
@@ -20,7 +20,7 @@ describe("csv", () => {
       const csvString =
         '"id","optional","title"\n1,,"aaa"\n2,"value","bbb"\n3,,"ccc"'
 
-      const result = await jsonFromCsvString(csvString)
+      const result = jsonFromCsvString(csvString)
 
       expect(result).toEqual([
         { id: "1", optional: null, title: "aaa" },
