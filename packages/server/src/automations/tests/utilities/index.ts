@@ -42,7 +42,7 @@ export async function runStep(stepId: string, inputs: any, stepContext?: any) {
     return step({
       context: stepContext || {},
       inputs,
-      appId: config ? config.getAppId() : null,
+      appId: config ? config.getAppId() : undefined,
       // don't really need an API key, mocked out usage quota, not being tested here
       apiKey,
       emitter,
