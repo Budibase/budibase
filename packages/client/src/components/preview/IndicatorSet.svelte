@@ -37,7 +37,6 @@
   let callbackCount = 0
 
   $: visibleIndicators = state.indicators.filter(x => x.visible)
-  $: offset = $builderStore.inBuilder ? 0 : 2
 
   // Update position when any props change
   $: config.set({
@@ -150,10 +149,10 @@
 
       const elBounds = child.getBoundingClientRect()
       nextState.indicators.push({
-        top: elBounds.top + scrollY - deviceBounds.top - offset,
-        left: elBounds.left + scrollX - deviceBounds.left - offset,
-        width: elBounds.width + 4,
-        height: elBounds.height + 4,
+        top: Math.round(elBounds.top + scrollY - deviceBounds.top + 1),
+        left: Math.round(elBounds.left + scrollX - deviceBounds.left + 1),
+        width: Math.round(elBounds.width + 2),
+        height: Math.round(elBounds.height + 2),
         visible: false,
         insideSidePanel: !!child.closest(".side-panel"),
         insideModal: !!child.closest(".modal-content"),
