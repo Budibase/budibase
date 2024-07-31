@@ -227,10 +227,10 @@ async function runSqlQuery(
 
     const db = context.getAppDB()
 
-    return await tracer.trace(
-      "sqs.runSqlQuery",
-      async () => await db.sql<Row>(sql, bindings)
-    )
+    return await tracer.trace("sqs.runSqlQuery", async span => {
+      span?.addTags({ sql })
+      return await db.sql<Row>(sql, bindings)
+    })
   }
   const response = await alias.queryWithAliasing(json, processSQLQuery)
   if (opts?.countTotalRows) {
