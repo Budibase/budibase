@@ -14,16 +14,20 @@ import { events, HTTPError } from "@budibase/backend-core"
 import {
   BulkImportRequest,
   BulkImportResponse,
+  CsvToJsonRequest,
+  CsvToJsonResponse,
   FetchTablesResponse,
   MigrateRequest,
   MigrateResponse,
-  Row,
   SaveTableRequest,
   SaveTableResponse,
   Table,
   TableResponse,
   TableSourceType,
   UserCtx,
+  ValidateNewTableImportRequest,
+  ValidateTableImportRequest,
+  ValidateTableImportResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
@@ -144,7 +148,9 @@ export async function bulkImport(
   ctx.body = { message: `Bulk rows created.` }
 }
 
-export async function csvToJson(ctx: UserCtx) {
+export async function csvToJson(
+  ctx: UserCtx<CsvToJsonRequest, CsvToJsonResponse>
+) {
   const { csvString } = ctx.request.body
 
   const result = await jsonFromCsvString(csvString)
@@ -153,8 +159,10 @@ export async function csvToJson(ctx: UserCtx) {
   ctx.body = result
 }
 
-export async function validateNewTableImport(ctx: UserCtx) {
-  const { rows, schema }: { rows: unknown; schema: unknown } = ctx.request.body
+export async function validateNewTableImport(
+  ctx: UserCtx<ValidateNewTableImportRequest, ValidateTableImportResponse>
+) {
+  const { rows, schema } = ctx.request.body
 
   if (isRows(rows) && isSchema(schema)) {
     ctx.status = 200
@@ -164,8 +172,10 @@ export async function validateNewTableImport(ctx: UserCtx) {
   }
 }
 
-export async function validateExistingTableImport(ctx: UserCtx) {
-  const { rows, tableId }: { rows: Row[]; tableId?: string } = ctx.request.body
+export async function validateExistingTableImport(
+  ctx: UserCtx<ValidateTableImportRequest, ValidateTableImportResponse>
+) {
+  const { rows, tableId } = ctx.request.body
 
   let schema = null
   if (tableId) {
