@@ -1,13 +1,13 @@
 <script>
   import { onMount, onDestroy } from "svelte"
+  import { get } from "svelte/store"
   import { builderStore, componentStore } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
   import {
     isGridEvent,
     getGridParentID,
     getGridVar,
-    getDefaultGridVarValue,
-    getOtherDeviceGridVar,
+    getGridVarValue,
   } from "utils/grid"
 
   // Grid CSS variables
@@ -153,30 +153,25 @@
       return
     }
 
-    const domGrid = getDOMNode(dragInfo.gridId)
+    const { id, gridId } = dragInfo
+    const domGrid = getDOMNode(gridId)
     const gridCols = parseInt(domGrid.dataset.cols)
     const gridRows = parseInt(domGrid.dataset.rows)
-    const domNode = getDOMNode(dragInfo.id)?.parentNode
-    const styles = window.getComputedStyle(domNode)
+    const instance = get(componentStore.actions.getComponentInstance(id))
+    if (!instance) {
+      return
+    }
+    const styles = get(instance.state).styles
     if (domGrid) {
-      // Util to get the current grid CSS variable for this device. If unset,
-      // fall back to using the other device type.
-      const getCurrent = cssVar => {
-        let style = styles?.getPropertyValue(cssVar)
-        if (!style) {
-          style = styles?.getPropertyValue(getOtherDeviceGridVar(cssVar))
-        }
-        return parseInt(style || getDefaultGridVarValue(cssVar))
-      }
       dragInfo.grid = {
         startX: e.clientX,
         startY: e.clientY,
 
         // Ensure things are within limits
-        rowStart: minMax(getCurrent(vars.rowStart), 1, gridRows),
-        rowEnd: minMax(getCurrent(vars.rowEnd), 2, gridRows + 1),
-        colStart: minMax(getCurrent(vars.colStart), 1, gridCols),
-        colEnd: minMax(getCurrent(vars.colEnd), 2, gridCols + 1),
+        rowStart: minMax(getGridVarValue(styles, vars.rowStart), 1, gridRows),
+        rowEnd: minMax(getGridVarValue(styles, vars.rowEnd), 2, gridRows + 1),
+        colStart: minMax(getGridVarValue(styles, vars.colStart), 1, gridCols),
+        colEnd: minMax(getGridVarValue(styles, vars.colEnd), 2, gridCols + 1),
       }
       handleEvent(e)
     }

@@ -36,8 +36,8 @@
   export let logoLinkUrl
   export let openLogoLinkInNewTab
   export let textAlign
-
   export let embedded = false
+  export let pageLayout = "flex"
 
   const NavigationClasses = {
     Top: "top",
@@ -319,7 +319,7 @@
         }
       }}
     >
-      <div class="main size--{pageWidthClass}">
+      <div class="main size--{pageWidthClass} layout--{pageLayout}">
         <slot />
       </div>
     </div>
@@ -481,8 +481,9 @@
     position: relative;
     padding: 32px;
   }
-  .main.size--max {
-    padding: 0;
+  .main.layout--grid {
+    padding-top: 0;
+    padding-bottom: 0;
   }
   .layout--none .main {
     padding: 0;
@@ -501,6 +502,7 @@
   }
   .size--max {
     width: 100%;
+    padding: 0;
   }
 
   /*  Nav components */

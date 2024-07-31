@@ -43,7 +43,7 @@
   $: showGridStyles = insideGrid && definition?.grid?.showControls !== false
   $: gridHAlignVar = $getGridVar("h-align")
   $: gridVAlignVar = $getGridVar("v-align")
-  $: gridStyles = $state?.styles?.variables
+  $: gridStyles = $state?.styles
 
   const getBarSettings = definition => {
     let allSettings = []
