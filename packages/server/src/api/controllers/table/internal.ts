@@ -3,6 +3,7 @@ import { handleDataImport } from "./utils"
 import {
   BulkImportRequest,
   BulkImportResponse,
+  FieldType,
   RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
@@ -69,10 +70,22 @@ export async function bulkImport(
 ) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows, identifierFields } = ctx.request.body
-  await handleDataImport(table, {
-    importRows: rows,
-    identifierFields,
-    user: ctx.user,
-  })
+  await handleDataImport(
+    {
+      ...table,
+      schema: {
+        _id: {
+          name: "_id",
+          type: FieldType.STRING,
+        },
+        ...table.schema,
+      },
+    },
+    {
+      importRows: rows,
+      identifierFields,
+      user: ctx.user,
+    }
+  )
   return table
 }
