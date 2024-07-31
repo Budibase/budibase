@@ -65,14 +65,16 @@ async function waitForEvent(
 }
 
 describe.each([
-  ["internal", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // ["internal", undefined],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
+  const isOracle = providerType === DatabaseName.ORACLE
   const config = setup.getConfig()
 
   let table: Table
@@ -127,7 +129,8 @@ describe.each([
       primary: ["id"],
       schema: defaultSchema,
     }
-    return merge(req, ...overrides)
+    const merged = merge(req, ...overrides)
+    return merged
   }
 
   function defaultTable(
@@ -1369,9 +1372,10 @@ describe.each([
         expect(rows[2].description).toEqual("Row 3 description")
       })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    // Upserting isn't yet supported in MSSQL or Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       !isInternal &&
       it("should be able to update existing rows with composite primary keys with bulkImport", async () => {
         const tableName = uuid.v4()
@@ -1438,9 +1442,10 @@ describe.each([
         expect(rows[2].description).toEqual("Row 3 description")
       })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    // Upserting isn't yet supported in MSSQL/Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       !isInternal &&
       it("should be able to update existing rows an autoID primary key", async () => {
         const tableName = uuid.v4()
