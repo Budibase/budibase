@@ -1,4 +1,5 @@
 import { context, docIds, events } from "@budibase/backend-core"
+import { PROTECTED_EXTERNAL_COLUMNS } from "@budibase/shared-core"
 import {
   AutoFieldSubType,
   BBReferenceFieldSubType,
@@ -1053,6 +1054,42 @@ describe.each([
           },
         })
       })
+
+      isInternal &&
+        it.each(PROTECTED_EXTERNAL_COLUMNS)(
+          "don't allow protected names (%s)",
+          async columnName => {
+            const result = await config.api.table.validateNewTableImport(
+              [
+                {
+                  id: generator.natural(),
+                  name: generator.first(),
+                  [columnName]: generator.word(),
+                },
+              ],
+              {
+                ...basicSchema,
+                [columnName]: {
+                  name: columnName,
+                  type: FieldType.STRING,
+                },
+              }
+            )
+
+            expect(result).toEqual({
+              allValid: false,
+              errors: {
+                [columnName]: `${columnName} is a protected name`,
+              },
+              invalidColumns: [],
+              schemaValidation: {
+                id: true,
+                name: true,
+                [columnName]: false,
+              },
+            })
+          }
+        )
     })
 
     describe("validateExistingTableImport", () => {
