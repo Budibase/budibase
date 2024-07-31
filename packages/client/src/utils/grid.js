@@ -20,7 +20,7 @@ const Devices = {
 
 // Generates the CSS variable for a certain grid param suffix, for the current
 // device
-const previewDevice = derived(builderStore, $store => $store.device)
+const previewDevice = derived(builderStore, $store => $store.previewDevice)
 export const getGridVar = derived(previewDevice, device => suffix => {
   const prefix = device === Devices.Mobile ? Devices.Mobile : Devices.Desktop
   return `--grid-${prefix}-${suffix}`
