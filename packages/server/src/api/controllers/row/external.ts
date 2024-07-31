@@ -163,10 +163,14 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
       },
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     })
-    row[fieldName] = await outputProcessing(linkedTable, relatedRows, {
-      squash: true,
-      preserveLinks: true,
-    })
+    row[fieldName] = await outputProcessing<Row[]>(
+      linkedTable,
+      relatedRows.rows,
+      {
+        squash: true,
+        preserveLinks: true,
+      }
+    )
   }
   return row
 }
