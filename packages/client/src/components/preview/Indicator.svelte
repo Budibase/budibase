@@ -69,7 +69,7 @@
     z-index: var(--zIndex);
     border: 2px solid var(--color);
     pointer-events: none;
-    border-radius: 2px;
+    border-radius: 4px;
   }
   .indicator.withText {
     border-top-left-radius: 0;
@@ -123,7 +123,7 @@
 
   /* Anchor */
   .anchor {
-    --size: 24px;
+    --size: 20px;
     position: absolute;
     width: var(--size);
     height: var(--size);
@@ -133,11 +133,12 @@
     border-radius: 50%;
   }
   .anchor-inner {
-    width: 12px;
-    height: 12px;
+    width: calc(var(--size) / 2);
+    height: calc(var(--size) / 2);
     background: white;
     border: 2px solid var(--color);
     pointer-events: none;
+    border-radius: 2px;
   }
   .anchor.right {
     right: calc(var(--size) / -2 - 1px);

@@ -96,6 +96,7 @@
   .grid :global(> .component) {
     display: flex;
     overflow: auto;
+    pointer-events: all;
 
     /* On desktop, use desktop metadata and fall back to mobile */
     /* Position vars */

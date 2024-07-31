@@ -11,6 +11,8 @@
   export let prefix = null
   export let allowResizeAnchors = false
 
+  // Offset = 6 (clip-root padding) - 1 (half the border thickness)
+  const offset = 6 - 1
   const config = memo($$props)
   const errorColor = "var(--spectrum-global-color-static-red-600)"
   const defaultState = () => ({
@@ -146,11 +148,10 @@
       })
       observer.observe(child)
       observers.push(observer)
-
       const elBounds = child.getBoundingClientRect()
       nextState.indicators.push({
-        top: Math.round(elBounds.top + scrollY - deviceBounds.top + 1),
-        left: Math.round(elBounds.left + scrollX - deviceBounds.left + 1),
+        top: Math.round(elBounds.top + scrollY - deviceBounds.top + offset),
+        left: Math.round(elBounds.left + scrollX - deviceBounds.left + offset),
         width: Math.round(elBounds.width + 2),
         height: Math.round(elBounds.height + 2),
         visible: false,

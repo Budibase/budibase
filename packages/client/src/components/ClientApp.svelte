@@ -356,22 +356,16 @@
   }
 
   /* Preview styles */
-  /* The additional 6px of size is to account for 4px padding and 2px border */
   #clip-root.preview {
-    padding: 2px;
+    padding: 6px;
   }
   #clip-root.tablet-preview {
-    width: calc(1024px + 6px);
-    height: calc(768px + 6px);
+    width: calc(1024px + 12px);
+    height: calc(768px + 12px);
   }
   #clip-root.mobile-preview {
-    width: calc(390px + 6px);
-    height: calc(844px + 6px);
-  }
-
-  .preview #app-root {
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 4px;
+    width: calc(390px + 12px);
+    height: calc(844px + 12px);
   }
 
   /* Print styles */
