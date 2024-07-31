@@ -17,6 +17,7 @@ import {
   AutoFieldSubType,
   Datasource,
   FieldType,
+  JsonFieldSubType,
   RelationshipType,
   Row,
   SourceName,
@@ -131,7 +132,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
     "Item Tags": {
       type: FieldType.ARRAY,
       constraints: {
-        type: FieldType.ARRAY,
+        type: JsonFieldSubType.ARRAY,
         presence: {
           allowEmpty: false,
         },
@@ -153,7 +154,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
     Status: {
       type: FieldType.ARRAY,
       constraints: {
-        type: FieldType.ARRAY,
+        type: JsonFieldSubType.ARRAY,
         presence: {
           allowEmpty: false,
         },
@@ -291,7 +292,7 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
     "Employee Level": {
       type: FieldType.ARRAY,
       constraints: {
-        type: FieldType.ARRAY,
+        type: JsonFieldSubType.ARRAY,
         presence: false,
         inclusion: ["Manager", "Junior", "Senior", "Apprentice", "Contractor"],
       },
@@ -535,7 +536,7 @@ export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
     "Expense Tags": {
       type: FieldType.ARRAY,
       constraints: {
-        type: FieldType.ARRAY,
+        type: JsonFieldSubType.ARRAY,
         presence: {
           allowEmpty: false,
         },

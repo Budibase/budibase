@@ -22,20 +22,20 @@ import { HTTPError } from "@budibase/backend-core"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
+import { isSearchingByRowID } from "./utils"
 
-export async function search(
-  options: RowSearchParams,
-  table: Table
-): Promise<SearchResponse<Row>> {
-  const { tableId } = options
-  const { countRows, paginate, query, ...params } = options
-  const { limit } = params
-  let bookmark =
-    (params.bookmark && parseInt(params.bookmark as string)) || undefined
-  if (paginate && !bookmark) {
-    bookmark = 0
-  }
+function getPaginationAndLimitParameters(
+  filters: SearchFilters,
+  paginate: boolean | undefined,
+  bookmark: number | undefined,
+  limit: number | undefined
+): PaginationJson | undefined {
   let paginateObj: PaginationJson | undefined
+
+  // only try set limits/pagination if we aren't doing a row ID search
+  if (isSearchingByRowID(filters)) {
+    return
+  }
 
   if (paginate && !limit) {
     throw new Error("Cannot paginate query without a limit")
@@ -49,11 +49,35 @@ export async function search(
     if (bookmark) {
       paginateObj.offset = limit * bookmark
     }
-  } else if (params && limit) {
+  } else if (limit) {
     paginateObj = {
       limit: limit,
     }
   }
+
+  return paginateObj
+}
+
+export async function search(
+  options: RowSearchParams,
+  table: Table
+): Promise<SearchResponse<Row>> {
+  const { tableId } = options
+  const { countRows, paginate, query, ...params } = options
+  const { limit } = params
+  let bookmark =
+    (params.bookmark && parseInt(params.bookmark as string)) || undefined
+  if (paginate && !bookmark) {
+    bookmark = 0
+  }
+
+  let paginateObj = getPaginationAndLimitParameters(
+    query,
+    paginate,
+    bookmark,
+    limit
+  )
+
   let sort: SortJson | undefined
   if (params.sort) {
     const direction =

@@ -42,6 +42,8 @@ import {
   getTableIDList,
 } from "./filters"
 import { dataFilters, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
+import { isSearchingByRowID } from "./utils"
+import tracer from "dd-trace"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
@@ -71,10 +73,14 @@ function buildInternalFieldList(
     }
     if (isRelationship) {
       const linkCol = col as RelationshipFieldMetadata
-      const relatedTable = tables.find(table => table._id === linkCol.tableId)!
+      const relatedTable = tables.find(table => table._id === linkCol.tableId)
       // no relationships provided, don't go more than a layer deep
-      fieldList = fieldList.concat(buildInternalFieldList(relatedTable, tables))
-      addJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
+      if (relatedTable) {
+        fieldList = fieldList.concat(
+          buildInternalFieldList(relatedTable, tables)
+        )
+        addJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
+      }
     } else {
       fieldList.push(`${table._id}.${mapToUserColumn(col.name)}`)
     }
@@ -220,7 +226,11 @@ async function runSqlQuery(
     }
 
     const db = context.getAppDB()
-    return await db.sql<Row>(sql, bindings)
+
+    return await tracer.trace("sqs.runSqlQuery", async span => {
+      span?.addTags({ sql })
+      return await db.sql<Row>(sql, bindings)
+    })
   }
   const response = await alias.queryWithAliasing(json, processSQLQuery)
   if (opts?.countTotalRows) {
@@ -264,6 +274,10 @@ export async function search(
 
   const relationships = buildInternalRelationships(table)
 
+  const searchFilters: SearchFilters = {
+    ...cleanupFilters(query, table, allTables),
+    documentType: DocumentType.ROW,
+  }
   const request: QueryJson = {
     endpoint: {
       // not important, we query ourselves
@@ -271,10 +285,7 @@ export async function search(
       entityId: table._id!,
       operation: Operation.READ,
     },
-    filters: {
-      ...cleanupFilters(query, table, allTables),
-      documentType: DocumentType.ROW,
-    },
+    filters: searchFilters,
     table,
     meta: {
       table,
@@ -304,7 +315,8 @@ export async function search(
   }
 
   const bookmark: number = (params.bookmark as number) || 0
-  if (params.limit) {
+  // limits don't apply if we doing a row ID search
+  if (!isSearchingByRowID(searchFilters) && params.limit) {
     paginate = true
     request.paginate = {
       limit: params.limit + 1,

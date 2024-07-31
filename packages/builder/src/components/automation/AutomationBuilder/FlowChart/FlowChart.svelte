@@ -54,6 +54,7 @@
   </div>
   <div class="controls">
     <div
+      class:disabled={!$selectedAutomation?.definition?.trigger}
       on:click={() => {
         testDataModal.show()
       }}
@@ -80,6 +81,7 @@
           automation._id,
           automation.disabled
         )}
+        disabled={!$selectedAutomation?.definition?.trigger}
         value={!automation.disabled}
       />
     </div>
