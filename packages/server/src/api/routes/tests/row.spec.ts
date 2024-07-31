@@ -1298,6 +1298,56 @@ describe.each([
       await assertRowUsage(isInternal ? rowUsage + 2 : rowUsage)
     })
 
+    isInternal &&
+      it("should be able to update existing rows on bulkImport", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+              },
+              description: {
+                type: FieldType.STRING,
+                name: "description",
+              },
+            },
+          })
+        )
+
+        const existingRow = await config.api.row.save(table._id!, {
+          name: "Existing row",
+          description: "Existing description",
+        })
+
+
+        await config.api.row.bulkImport(table._id!, {
+          rows: [
+            {
+              name: "Row 1",
+              description: "Row 1 description",
+            },
+            { ...existingRow, name: "Updated existing row" },
+            {
+              name: "Row 2",
+              description: "Row 2 description",
+            },
+          ],
+          identifierFields: ["_id"],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(3)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Row 1")
+        expect(rows[0].description).toEqual("Row 1 description")
+        expect(rows[1].name).toEqual("Row 2")
+        expect(rows[1].description).toEqual("Row 2 description")
+        expect(rows[2].name).toEqual("Updated existing row")
+        expect(rows[2].description).toEqual("Existing description")
+      })
+
     // Upserting isn't yet supported in MSSQL, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&

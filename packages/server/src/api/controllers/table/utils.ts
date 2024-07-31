@@ -124,11 +124,12 @@ export async function importToRows(
   table: Table,
   user?: ContextUser
 ) {
-  let originalTable = table
-  let finalData: any = []
+  const originalTable = table
+  const finalData: Row[] = []
+  const keepCouchId = "_id" in table.schema
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
-    row._id = generateRowID(table._id!)
+    row._id = (keepCouchId && row._id) || generateRowID(table._id!)
     row.type = "row"
     row.tableId = table._id
 
@@ -180,7 +181,7 @@ export async function handleDataImport(
   const db = context.getAppDB()
   const data = parse(importRows, table)
 
-  let finalData: any = await importToRows(data, table, user)
+  const finalData = await importToRows(data, table, user)
 
   //Set IDs of finalData to match existing row if an update is expected
   if (identifierFields.length > 0) {
