@@ -1320,6 +1320,7 @@ describe.each([
           description: "Existing description",
         })
 
+        const rowUsage = await getRowUsage()
 
         await config.api.row.bulkImport(table._id!, {
           rows: [
@@ -1346,6 +1347,8 @@ describe.each([
         expect(rows[1].description).toEqual("Row 2 description")
         expect(rows[2].name).toEqual("Updated existing row")
         expect(rows[2].description).toEqual("Existing description")
+
+        await assertRowUsage(rowUsage + 2)
       })
 
     // Upserting isn't yet supported in MSSQL, see:
