@@ -71,7 +71,7 @@ export function validate(
 
       if (protectedColumnNames.includes(columnName.toLowerCase())) {
         results.schemaValidation[columnName] = false
-        results.errors[columnName] = `${columnName} is a protected name`
+        results.errors[columnName] = `${columnName} is a protected column name`
         return
       }
 
@@ -120,6 +120,13 @@ export function validate(
       }
     })
   })
+
+  for (const schemaField of Object.keys(schema)) {
+    if (protectedColumnNames.includes(schemaField.toLowerCase())) {
+      results.schemaValidation[schemaField] = false
+      results.errors[schemaField] = `${schemaField} is a protected column name`
+    }
+  }
 
   results.allValid =
     Object.values(results.schemaValidation).length > 0 &&
