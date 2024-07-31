@@ -150,22 +150,28 @@ export function generateColumnDefinition(config: {
     }).internal
   }
 
-  const constraints: {
-    presence: boolean
-    inclusion?: string[]
-  } = {
-    presence,
-  }
+  let schema: FieldSchema
   if (foundType === FieldType.OPTIONS) {
-    constraints.inclusion = options
-  }
-
-  const schema: FieldSchema = {
-    type: foundType,
-    externalType,
-    autocolumn,
-    name,
-    constraints,
+    schema = {
+      type: foundType,
+      externalType,
+      autocolumn,
+      name,
+      constraints: {
+        presence,
+        inclusion: options!,
+      },
+    }
+  } else {
+    schema = {
+      type: foundType,
+      externalType,
+      autocolumn,
+      name,
+      constraints: {
+        presence,
+      },
+    }
   }
   if (schema.type === FieldType.DATETIME) {
     schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lowerCaseType)

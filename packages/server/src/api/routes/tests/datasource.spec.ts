@@ -15,6 +15,7 @@ import {
   Table,
   TableSchema,
   SupportedSqlTypes,
+  JsonFieldSubType,
 } from "@budibase/types"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
@@ -288,7 +289,10 @@ describe("/datasources", () => {
             name: "options",
             type: FieldType.OPTIONS,
             constraints: {
-              presence: { allowEmpty: false },
+              presence: {
+                allowEmpty: false,
+              },
+              inclusion: [],
             },
           },
           [FieldType.NUMBER]: {
@@ -302,6 +306,10 @@ describe("/datasources", () => {
           [FieldType.ARRAY]: {
             name: "array",
             type: FieldType.ARRAY,
+            constraints: {
+              type: JsonFieldSubType.ARRAY,
+              inclusion: [],
+            },
           },
           [FieldType.DATETIME]: {
             name: "datetime",

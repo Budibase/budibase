@@ -398,6 +398,7 @@ describe.each([
                   name: "auto",
                   autocolumn: true,
                   type: FieldType.AUTO,
+                  subtype: AutoFieldSubType.AUTO_ID,
                 },
               },
             },

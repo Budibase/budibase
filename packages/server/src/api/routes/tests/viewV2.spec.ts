@@ -56,7 +56,7 @@ describe.each([
       primary: ["id"],
       schema: {
         id: {
-          type: FieldType.AUTO,
+          type: FieldType.NUMBER,
           name: "id",
           autocolumn: true,
           constraints: {
@@ -241,7 +241,7 @@ describe.each([
         schema: {
           id: {
             name: "id",
-            type: FieldType.AUTO,
+            type: FieldType.NUMBER,
             autocolumn: true,
             visible: true,
           },
@@ -1555,7 +1555,7 @@ describe.each([
             schema: {
               id: {
                 name: "id",
-                type: FieldType.AUTO,
+                type: FieldType.NUMBER,
                 autocolumn: true,
               },
               name: {
