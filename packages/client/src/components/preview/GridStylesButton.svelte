@@ -9,7 +9,6 @@
   export let title
 
   $: currentValue = getGridVarValue($componentStore.selectedComponent, style)
-  $: console.log(style, currentValue)
   $: active = currentValue === value
 </script>
 
