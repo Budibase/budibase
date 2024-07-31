@@ -32,6 +32,7 @@ import {
   TableSourceType,
   UpdatedRowEventEmitter,
   TableSchema,
+  JsonFieldSubType,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -104,7 +105,7 @@ describe.each([
   ): SaveTableRequest {
     const defaultSchema: TableSchema = {
       id: {
-        type: FieldType.AUTO,
+        type: FieldType.NUMBER,
         name: "id",
         autocolumn: true,
         constraints: {
@@ -387,7 +388,7 @@ describe.each([
         const arrayField: FieldSchema = {
           type: FieldType.ARRAY,
           constraints: {
-            type: "array",
+            type: JsonFieldSubType.ARRAY,
             presence: false,
             inclusion: ["One", "Two", "Three"],
           },
