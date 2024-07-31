@@ -246,13 +246,13 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="component-container">
+<div
+  class="component-container"
+  class:tablet={$previewStore.previewDevice === "tablet"}
+  class:mobile={$previewStore.previewDevice === "mobile"}
+>
   {#if loading}
-    <div
-      class={`loading ${$themeStore.baseTheme} ${$themeStore.theme}`}
-      class:tablet={$previewStore.previewDevice === "tablet"}
-      class:mobile={$previewStore.previewDevice === "mobile"}
-    >
+    <div class={`loading ${$themeStore.baseTheme} ${$themeStore.theme}`}>
       <ClientAppSkeleton
         sideNav={$navigationStore?.navigation === "Left"}
         hideFooter
@@ -294,32 +294,13 @@
 />
 
 <style>
-  .loading {
-    position: absolute;
-    width: calc(100% - 12px);
-    height: calc(100% - 12px);
-    left: 6px;
-    top: 6px;
-  }
-
-  .loading.tablet {
-    width: calc(1024px + 6px);
-    max-height: calc(768px + 6px);
-  }
-
-  .loading.mobile {
-    width: calc(390px + 6px);
-    max-height: calc(844px + 6px);
-  }
-
   .component-container {
-    grid-row-start: middle;
-    grid-column-start: middle;
     display: grid;
     place-items: center;
     position: relative;
     margin: auto;
     height: 100%;
+    --client-padding: 6px;
   }
   .component-container iframe {
     border: 0;
@@ -328,6 +309,33 @@
     width: 100%;
     background-color: transparent;
   }
+
+  .loading,
+  .underlay {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    width: calc(100% - var(--client-padding) * 2);
+    height: calc(100% - var(--client-padding) * 2);
+  }
+  .tablet .loading,
+  .tablet .underlay {
+    width: 1024px;
+    height: 768px;
+  }
+  .mobile .loading,
+  .mobile .underlay {
+    width: 390px;
+    height: 844px;
+  }
+
+  .underlay {
+    background: var(--spectrum-global-color-gray-200);
+    z-index: -1;
+    padding: 2px;
+  }
+
   .center {
     position: absolute;
     width: 100%;
@@ -360,17 +368,6 @@
   iframe {
     width: 100%;
     height: 100%;
-  }
-
-  .underlay {
-    position: absolute;
-    background: var(--spectrum-global-color-gray-200);
-    z-index: -1;
-    --offset: 2px;
-    width: calc(100% - 12px + 2 * var(--offset));
-    height: calc(100% - 12px + 2 * var(--offset));
-    left: calc(6px - var(--offset));
-    top: calc(6px - var(--offset));
   }
 
   .add-component {
