@@ -111,7 +111,6 @@ export async function getAction(stepId: AutomationActionStepId) {
   if (ACTION_IMPLS[stepId] != null) {
     return ACTION_IMPLS[stepId]
   }
-  ACTION_IMPLS["CREATE_ROW"]
 
   // must be a plugin
   if (env.SELF_HOSTED) {

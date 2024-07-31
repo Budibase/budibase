@@ -1,3 +1,4 @@
+import { EventEmitter } from "events"
 import { destroy } from "../../api/controllers/row"
 import { buildCtx } from "./utils"
 import { getError } from "../automationUtils"
@@ -67,7 +68,7 @@ export async function run({
 }: {
   inputs: DeleteRowStepInputs
   appId: string
-  emitter: any
+  emitter: EventEmitter
 }): Promise<DeleteRowStepOutputs> {
   if (inputs.id == null) {
     return {

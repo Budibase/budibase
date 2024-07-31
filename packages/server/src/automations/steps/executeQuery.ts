@@ -1,3 +1,4 @@
+import { EventEmitter } from "events"
 import * as queryController from "../../api/controllers/query"
 import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
@@ -70,7 +71,7 @@ export async function run({
 }: {
   inputs: ExecuteQueryStepInputs
   appId: string
-  emitter: any
+  emitter: EventEmitter
 }): Promise<ExecuteQueryStepOutputs> {
   if (inputs.query == null) {
     return {

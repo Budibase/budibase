@@ -1,3 +1,4 @@
+import { EventEmitter } from "events"
 import * as rowController from "../../api/controllers/row"
 import * as automationUtils from "../automationUtils"
 import { buildCtx } from "./utils"
@@ -78,7 +79,7 @@ export async function run({
 }: {
   inputs: UpdateRowStepInputs
   appId: string
-  emitter: any
+  emitter: EventEmitter
 }): Promise<UpdateRowStepOutputs> {
   if (inputs.rowId == null || inputs.row == null) {
     return {

@@ -251,10 +251,10 @@ export interface AutomationStepInputBase {
   apiKey?: string
 }
 
-export type AutomationStepInput<T extends AutomationActionStepId> =
-  AutomationStepInputBase & {
-    inputs: AutomationStepInputMap[T]
-  }
+export interface AutomationStepInput<T extends AutomationActionStepId>
+  extends AutomationStepInputBase {
+  inputs: AutomationStepInputMap[T]
+}
 
 export interface AutomationMetadata extends Document {
   errorCount?: number
