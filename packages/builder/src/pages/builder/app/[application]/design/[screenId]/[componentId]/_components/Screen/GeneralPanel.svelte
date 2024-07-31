@@ -14,6 +14,7 @@
   import sanitizeUrl from "helpers/sanitizeUrl"
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "dataBinding"
+  import BarButtonList from "components/design/settings/controls/BarButtonList.svelte"
 
   $: bindings = getBindableProperties($selectedScreen, null)
 
@@ -124,6 +125,24 @@
         disabled: !!$selectedScreen.layoutId,
       },
     },
+    {
+      key: "layout",
+      label: "Layout",
+      defaultValue: "flex",
+      control: BarButtonList,
+      props: {
+        options: [
+          {
+            barIcon: "ModernGridView",
+            value: "flex",
+          },
+          {
+            barIcon: "ViewGrid",
+            value: "grid",
+          },
+        ],
+      },
+    },
   ]
 
   const removeCustomLayout = async () => {
@@ -149,6 +168,7 @@
     value={Helpers.deepGet($selectedScreen, setting.key)}
     onChange={val => setScreenSetting(setting, val)}
     props={{ ...setting.props, error: errors[setting.key] }}
+    defaultValue={setting.defaultValue}
     {bindings}
   />
 {/each}

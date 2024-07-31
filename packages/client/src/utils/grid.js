@@ -93,7 +93,7 @@ export const getBaseGridVars = definition => {
 // Gets the current value of a certain grid CSS variable for a component
 export const getGridVarValue = (styles, variable) => {
   // Try the desired variable
-  let val = styles?.[variable]
+  let val = styles?.variables?.[variable]
 
   // Otherwise try the other device variables
   if (!val) {

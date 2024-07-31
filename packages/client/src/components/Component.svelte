@@ -619,7 +619,6 @@
     if (isBlock) {
       return
     }
-    console.log("select", id)
     e.stopPropagation()
     builderStore.actions.selectComponent(id)
   }

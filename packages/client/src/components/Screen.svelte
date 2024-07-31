@@ -13,9 +13,28 @@
   const onLoadActions = memo()
 
   // Get the screen definition for the current route
-  $: screenDefinition = $screenStore.activeScreen?.props
+  $: screenDefinition = getScreenDefinition($screenStore.activeScreen)
   $: onLoadActions.set($screenStore.activeScreen?.onLoad)
   $: runOnLoadActions($onLoadActions, params)
+
+  const getScreenDefinition = activeScreen => {
+    if (!activeScreen) {
+      return null
+    }
+
+    // Enrich screen definition with some builder screen props and styles
+    return {
+      ...activeScreen.props,
+      layout: activeScreen.layout,
+      _styles: {
+        ...activeScreen.props._styles,
+        normal: {
+          ...activeScreen.props._styles?.normal,
+          flex: "1 1 auto",
+        },
+      },
+    }
+  }
 
   // Enrich and execute any on load actions.
   // We manually construct the full context here as this component is the
