@@ -41,13 +41,19 @@ export function isRows(rows: any): rows is Rows {
   return Array.isArray(rows) && rows.every(row => typeof row === "object")
 }
 
-export function validate(rows: Rows, schema: TableSchema): ValidationResults {
+export function validate(
+  rows: Rows,
+  schema: TableSchema,
+  protectedColumnNames: readonly string[]
+): ValidationResults {
   const results: ValidationResults = {
     schemaValidation: {},
     allValid: false,
     invalidColumns: [],
     errors: {},
   }
+
+  protectedColumnNames = protectedColumnNames.map(x => x.toLowerCase())
 
   rows.forEach(row => {
     Object.entries(row).forEach(([columnName, columnData]) => {
@@ -60,6 +66,12 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
 
       // If the column had an invalid value we don't want to override it
       if (results.schemaValidation[columnName] === false) {
+        return
+      }
+
+      if (protectedColumnNames.includes(columnName.toLowerCase())) {
+        results.schemaValidation[columnName] = false
+        results.errors[columnName] = `${columnName} is a protected name`
         return
       }
 
