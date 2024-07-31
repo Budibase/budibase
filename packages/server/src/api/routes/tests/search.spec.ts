@@ -20,6 +20,7 @@ import {
   Datasource,
   EmptyFilterOption,
   FieldType,
+  JsonFieldSubType,
   RelationshipType,
   Row,
   RowSearchParams,
@@ -1494,7 +1495,10 @@ describe.each([
         numbers: {
           name: "numbers",
           type: FieldType.ARRAY,
-          constraints: { inclusion: ["one", "two", "three"] },
+          constraints: {
+            type: JsonFieldSubType.ARRAY,
+            inclusion: ["one", "two", "three"],
+          },
         },
       })
       await createRows([{ numbers: ["one", "two"] }, { numbers: ["three"] }])
