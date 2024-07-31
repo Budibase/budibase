@@ -141,7 +141,7 @@ export async function search(
     // need wrapper object for bookmarks etc when paginating
     const response: SearchResponse<Row> = { rows: processed, hasNextPage }
     if (hasNextPage && bookmark != null) {
-      response.bookmark = processed.length
+      response.bookmark = bookmark + processed.length
     }
     if (totalRows != null) {
       response.totalRows = totalRows
