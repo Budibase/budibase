@@ -1640,23 +1640,38 @@ describe.each([
       table = await config.api.table.save(defaultTable())
     })
 
-    it("should allow exporting all columns", async () => {
-      const existing = await config.api.row.save(table._id!, {})
-      const res = await config.api.row.exportRows(table._id!, {
-        rows: [existing._id!],
-      })
-      const results = JSON.parse(res)
-      expect(results.length).toEqual(1)
-      const row = results[0]
+    isInternal &&
+      it("should not export internal couchdb fields", async () => {
+        const existing = await config.api.row.save(table._id!, {
+          name: generator.guid(),
+          description: generator.paragraph(),
+        })
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: [existing._id!],
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(1)
+        const row = results[0]
 
-      // Ensure all original columns were exported
-      expect(Object.keys(row).length).toBeGreaterThanOrEqual(
-        Object.keys(existing).length
-      )
-      Object.keys(existing).forEach(key => {
-        expect(row[key]).toEqual(existing[key])
+        expect(Object.keys(row)).toEqual(["_id", "name", "description"])
       })
-    })
+
+    !isInternal &&
+      it("should allow exporting all columns", async () => {
+        const existing = await config.api.row.save(table._id!, {})
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: [existing._id!],
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(1)
+        const row = results[0]
+
+        // Ensure all original columns were exported
+        expect(Object.keys(row).length).toBe(Object.keys(existing).length)
+        Object.keys(existing).forEach(key => {
+          expect(row[key]).toEqual(existing[key])
+        })
+      })
 
     it("should allow exporting only certain columns", async () => {
       const existing = await config.api.row.save(table._id!, {})
