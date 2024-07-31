@@ -96,15 +96,21 @@
   .grid :global(> .component) {
     display: flex;
     overflow: hidden;
-    flex-direction: column;
-    justify-content: center;
-    align-items: stretch;
 
     /* On desktop, use desktop metadata and fall back to mobile */
+    /* Position vars */
     --col-start: var(--grid-desktop-col-start, var(--grid-mobile-col-start, 1));
     --col-end: var(--grid-desktop-col-end, var(--grid-mobile-col-end, 2));
     --row-start: var(--grid-desktop-row-start, var(--grid-mobile-row-start, 1));
     --row-end: var(--grid-desktop-row-end, var(--grid-mobile-row-end, 2));
+
+    /*  Flex vars */
+    --h-align: var(--grid-desktop-h-align, var(--grid-mobile-h-align, stretch));
+    --v-align: var(--grid-desktop-v-align, var(--grid-mobile-v-align, center));
+    --child-flex: var(
+      --grid-desktop-child-flex,
+      var(--grid-mobile-child-flex, 0 0 auto)
+    );
 
     /* Ensure grid metadata falls within limits */
     grid-column-start: min(max(1, var(--col-start)), var(--cols)) !important;
@@ -114,20 +120,32 @@
     ) !important;
     grid-row-start: min(max(1, var(--row-start)), var(--rows)) !important;
     grid-row-end: min(max(2, var(--row-end)), calc(var(--rows) + 1)) !important;
+
+    /* Flex container styles */
+    flex-direction: column;
+    align-items: var(--h-align);
+    justify-content: var(--v-align);
   }
 
   /* On mobile, use mobile metadata and fall back to desktop */
   .grid.mobile :global(> .component) {
+    /*   Position vars */
     --col-start: var(--grid-mobile-col-start, var(--grid-desktop-col-start, 1));
     --col-end: var(--grid-mobile-col-end, var(--grid-desktop-col-end, 2));
     --row-start: var(--grid-mobile-row-start, var(--grid-desktop-row-start, 1));
     --row-end: var(--grid-mobile-row-end, var(--grid-desktop-row-end, 2));
+
+    /* Flex vars */
+    --h-align: var(--grid-mobile-h-align, var(--grid-desktop-h-align, stretch));
+    --v-align: var(--grid-mobile-v-align, var(--grid-desktop-v-align, center));
+    --child-flex: var(
+      --grid-mobile-child-flex,
+      var(--grid-desktop-child-flex, 0 0 auto)
+    );
   }
 
   /* Handle grid children which need to fill the outer component wrapper */
-  .grid :global(> .component.fill > *) {
-    width: 100%;
-    height: 100%;
-    flex: 1 1 0;
+  .grid :global(> .component > *) {
+    flex: var(--child-flex) !important;
   }
 </style>

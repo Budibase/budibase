@@ -2,53 +2,20 @@
   import { onMount, onDestroy } from "svelte"
   import { builderStore, componentStore } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
-  import { isGridEvent, getGridParentID } from "utils/grid"
+  import {
+    isGridEvent,
+    getGridParentID,
+    getGridVar,
+    getDefaultGridVarValue,
+    getOtherDeviceGridVar,
+  } from "utils/grid"
 
-  // Enum for device preview type, included in CSS variables
-  const Devices = {
-    Desktop: "desktop",
-    Mobile: "mobile",
-  }
-
-  // Generates the CSS variable for a certain grid param suffix, for the current
-  // device
-  const getCSSVar = suffix => {
-    const device =
-      $builderStore.previewDevice === Devices.Mobile
-        ? Devices.Mobile
-        : Devices.Desktop
-    return `--grid-${device}-${suffix}`
-  }
-
-  // Generates the CSS variable for a certain grid param suffix, for the other
-  // device variant than the one included in this variable
-  const getOtherDeviceCSSVar = cssVar => {
-    if (cssVar.includes(Devices.Desktop)) {
-      return cssVar.replace(Devices.Desktop, Devices.Mobile)
-    } else {
-      return cssVar.replace(Devices.Mobile, Devices.Desktop)
-    }
-  }
-
-  // Gets the default value for a certain grid CSS variable
-  const getDefaultValue = cssVar => {
-    return cssVar.endsWith("-start") ? 1 : 2
-  }
-
-  // Enums for our grid CSS variables, for the current device
-  const Vars = {
-    get ColStart() {
-      return getCSSVar("col-start")
-    },
-    get ColEnd() {
-      return getCSSVar("col-end")
-    },
-    get RowStart() {
-      return getCSSVar("row-start")
-    },
-    get RowEnd() {
-      return getCSSVar("row-end")
-    },
+  // Grid CSS variables
+  $: vars = {
+    colStart: $getGridVar("col-start"),
+    colEnd: $getGridVar("col-end"),
+    rowStart: $getGridVar("row-start"),
+    rowEnd: $getGridVar("row-end"),
   }
 
   let dragInfo
@@ -97,34 +64,34 @@
       deltaX = minMax(deltaX, 1 - colStart, cols + 1 - colEnd)
       deltaY = minMax(deltaY, 1 - rowStart, rows + 1 - rowEnd)
       const newStyles = {
-        [Vars.ColStart]: colStart + deltaX,
-        [Vars.ColEnd]: colEnd + deltaX,
-        [Vars.RowStart]: rowStart + deltaY,
-        [Vars.RowEnd]: rowEnd + deltaY,
+        [vars.colStart]: colStart + deltaX,
+        [vars.colEnd]: colEnd + deltaX,
+        [vars.rowStart]: rowStart + deltaY,
+        [vars.rowEnd]: rowEnd + deltaY,
       }
       gridStyles.set(newStyles)
     } else if (mode === "resize") {
       let newStyles = {}
       if (side === "right") {
-        newStyles[Vars.ColEnd] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles[vars.colEnd] = Math.max(colEnd + deltaX, colStart + 1)
       } else if (side === "left") {
-        newStyles[Vars.ColStart] = Math.min(colStart + deltaX, colEnd - 1)
+        newStyles[vars.colStart] = Math.min(colStart + deltaX, colEnd - 1)
       } else if (side === "top") {
-        newStyles[Vars.RowStart] = Math.min(rowStart + deltaY, rowEnd - 1)
+        newStyles[vars.rowStart] = Math.min(rowStart + deltaY, rowEnd - 1)
       } else if (side === "bottom") {
-        newStyles[Vars.RowEnd] = Math.max(rowEnd + deltaY, rowStart + 1)
+        newStyles[vars.rowEnd] = Math.max(rowEnd + deltaY, rowStart + 1)
       } else if (side === "bottom-right") {
-        newStyles[Vars.ColEnd] = Math.max(colEnd + deltaX, colStart + 1)
-        newStyles[Vars.RowEnd] = Math.max(rowEnd + deltaY, rowStart + 1)
+        newStyles[vars.colEnd] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles[vars.rowEnd] = Math.max(rowEnd + deltaY, rowStart + 1)
       } else if (side === "bottom-left") {
-        newStyles[Vars.ColStart] = Math.min(colStart + deltaX, colEnd - 1)
-        newStyles[Vars.RowEnd] = Math.max(rowEnd + deltaY, rowStart + 1)
+        newStyles[vars.colStart] = Math.min(colStart + deltaX, colEnd - 1)
+        newStyles[vars.rowEnd] = Math.max(rowEnd + deltaY, rowStart + 1)
       } else if (side === "top-right") {
-        newStyles[Vars.ColEnd] = Math.max(colEnd + deltaX, colStart + 1)
-        newStyles[Vars.RowStart] = Math.min(rowStart + deltaY, rowEnd - 1)
+        newStyles[vars.colEnd] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles[vars.rowStart] = Math.min(rowStart + deltaY, rowEnd - 1)
       } else if (side === "top-left") {
-        newStyles[Vars.ColStart] = Math.min(colStart + deltaX, colEnd - 1)
-        newStyles[Vars.RowStart] = Math.min(rowStart + deltaY, rowEnd - 1)
+        newStyles[vars.colStart] = Math.min(colStart + deltaX, colEnd - 1)
+        newStyles[vars.rowStart] = Math.min(rowStart + deltaY, rowEnd - 1)
       }
       gridStyles.set(newStyles)
     }
@@ -197,20 +164,21 @@
       const getCurrent = cssVar => {
         let style = styles?.getPropertyValue(cssVar)
         if (!style) {
-          style = styles?.getPropertyValue(getOtherDeviceCSSVar(cssVar))
+          style = styles?.getPropertyValue(getOtherDeviceGridVar(cssVar))
         }
-        return parseInt(style || getDefaultValue(cssVar))
+        return parseInt(style || getDefaultGridVarValue(cssVar))
       }
       dragInfo.grid = {
         startX: e.clientX,
         startY: e.clientY,
 
         // Ensure things are within limits
-        rowStart: minMax(getCurrent(Vars.RowStart), 1, gridRows),
-        rowEnd: minMax(getCurrent(Vars.RowEnd), 2, gridRows + 1),
-        colStart: minMax(getCurrent(Vars.ColStart), 1, gridCols),
-        colEnd: minMax(getCurrent(Vars.ColEnd), 2, gridCols + 1),
+        rowStart: minMax(getCurrent(vars.rowStart), 1, gridRows),
+        rowEnd: minMax(getCurrent(vars.rowEnd), 2, gridRows + 1),
+        colStart: minMax(getCurrent(vars.colStart), 1, gridCols),
+        colEnd: minMax(getCurrent(vars.colEnd), 2, gridCols + 1),
       }
+      console.log(dragInfo.grid)
       handleEvent(e)
     }
   }
@@ -226,7 +194,7 @@
   const stopDragging = async () => {
     // Save changes
     if ($gridStyles) {
-      await builderStore.actions.updateMetaStyles($gridStyles, dragInfo.id)
+      await builderStore.actions.updateStyles($gridStyles, dragInfo.id)
     }
 
     // Reset listener

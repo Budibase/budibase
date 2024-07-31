@@ -132,8 +132,8 @@
       hoverStore.hover(data.id, false)
     } else if (type === "update-prop") {
       await componentStore.updateSetting(data.prop, data.value)
-    } else if (type === "update-meta-styles") {
-      await componentStore.updateMetaStyles(data.styles, data.id)
+    } else if (type === "update-styles") {
+      await componentStore.updateStyles(data.styles, data.id)
     } else if (type === "delete-component" && data.id) {
       // Legacy type, can be deleted in future
       confirmDeleteComponent(data.id)

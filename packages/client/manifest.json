@@ -118,7 +118,9 @@
       "height": 200
     },
     "grid": {
-      "fill": true
+      "hAlign": "stretch",
+      "vAlign": "stretch",
+      "showControls": false
     },
     "styles": ["padding", "size", "background", "border", "shadow"],
     "settings": [
@@ -2789,6 +2791,10 @@
     "size": {
       "width": 400,
       "height": 400
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
     },
     "settings": [
       {
@@ -6915,6 +6921,10 @@
       "width": 400,
       "height": 400
     },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "start"
+    },
     "settings": [
       {
         "type": "table",
@@ -7255,6 +7265,11 @@
     "size": {
       "width": 600,
       "height": 400
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch",
+      "showControls": false
     },
     "settings": [
       {

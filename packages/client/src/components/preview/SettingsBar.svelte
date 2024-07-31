@@ -1,11 +1,13 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import SettingsButton from "./SettingsButton.svelte"
+  import GridStylesButton from "./GridStylesButton.svelte"
   import SettingsColorPicker from "./SettingsColorPicker.svelte"
   import SettingsPicker from "./SettingsPicker.svelte"
   import { builderStore, componentStore, dndIsDragging } from "stores"
   import { Utils } from "@budibase/frontend-core"
-  import { isGridChild } from "utils/grid"
+  import { findComponentParent } from "utils/components"
+  import { getGridVar } from "utils/grid"
 
   const verticalOffset = 36
   const horizontalOffset = 2
@@ -16,7 +18,10 @@
   let self
   let measured = false
 
+  // TODO: respect dependsOn keys
+
   $: id = $builderStore.selectedComponentId
+  $: parent = findComponentParent($builderStore.screen.props, id)
   $: instance = componentStore.actions.getComponentInstance(id)
   $: state = $instance?.state
   $: definition = $componentStore.selectedComponentDefinition
@@ -32,6 +37,11 @@
   }
   $: settings = getBarSettings(definition)
   $: isRoot = id === $builderStore.screen?.props?._id
+  $: insideGrid =
+    parent?._component.endsWith("/container") && parent.layout === "grid"
+  $: showGridStyles = insideGrid && definition?.grid?.showControls !== false
+  $: gridHAlignVar = $getGridVar("h-align")
+  $: gridVAlignVar = $getGridVar("v-align")
 
   const getBarSettings = definition => {
     let allSettings = []
@@ -51,7 +61,7 @@
     }
     const id = $builderStore.selectedComponentId
     let element = document.getElementsByClassName(id)?.[0]
-    if (!isGridChild(element)) {
+    if (!insideGrid) {
       element = element?.children?.[0]
     }
 
@@ -135,6 +145,58 @@
     bind:this={self}
     class:visible={measured}
   >
+    {#if showGridStyles}
+      <GridStylesButton
+        style={gridHAlignVar}
+        value="start"
+        icon="AlignLeft"
+        title="Align left"
+      />
+      <GridStylesButton
+        style={gridHAlignVar}
+        value="center"
+        icon="AlignCenter"
+        title="Align center"
+      />
+      <GridStylesButton
+        style={gridHAlignVar}
+        value="end"
+        icon="AlignRight"
+        title="Align right"
+      />
+      <GridStylesButton
+        style={gridHAlignVar}
+        value="stretch"
+        icon="MoveLeftRight"
+        title="Stretch horizontally"
+      />
+      <div class="divider" />
+      <GridStylesButton
+        style={gridVAlignVar}
+        value="start"
+        icon="AlignTop"
+        title="Align top"
+      />
+      <GridStylesButton
+        style={gridVAlignVar}
+        value="center"
+        icon="AlignMiddle"
+        title="Align middle"
+      />
+      <GridStylesButton
+        style={gridVAlignVar}
+        value="end"
+        icon="AlignBottom"
+        title="Align bottom"
+      />
+      <GridStylesButton
+        style={gridVAlignVar}
+        value="stretch"
+        icon="MoveUpDown"
+        title="Stretch vertically"
+      />
+      <div class="divider" />
+    {/if}
     {#each settings as setting, idx}
       {#if setting.type === "select"}
         {#if setting.barStyle === "buttons"}
