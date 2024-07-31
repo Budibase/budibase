@@ -7,16 +7,6 @@ export const csv = csvUtils.csv
 
 export const parseCsvExport = csvUtils.jsonFromCsvString
 
-export function valueToCsv(val: any) {
-  val =
-    typeof val === "object" && !(val instanceof Date)
-      ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
-      : val !== undefined
-      ? `"${val}"`
-      : ""
-  return val.trim()
-}
-
 export function json(rows: Row[]) {
   return JSON.stringify(rows, undefined, 2)
 }

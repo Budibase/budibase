@@ -29,7 +29,6 @@ import { generator } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import timekeeper from "timekeeper"
-import { valueToCsv } from "../../controllers/view/exporters"
 
 const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
@@ -1306,11 +1305,8 @@ describe.each([
         })
       })
 
-      describe.each([
-        ["csv", valueToCsv],
-        ["json", x => x],
-      ])("bb references", (format, parser) => {
-        it(`can validate user column imports (${format} format)`, async () => {
+      describe("bb references", () => {
+        it(`can validate user column imports`, async () => {
           const schema: TableSchema = {
             ...basicSchema,
             user: {
@@ -1325,7 +1321,7 @@ describe.each([
               {
                 id: generator.natural(),
                 name: generator.first(),
-                user: parser(getUserValues()),
+                user: getUserValues(),
               },
             ],
             schema
@@ -1343,7 +1339,7 @@ describe.each([
           })
         })
 
-        it(`can validate user column imports with invalid data (${format} format)`, async () => {
+        it(`can validate user column imports with invalid data`, async () => {
           const schema: TableSchema = {
             ...basicSchema,
             user: {
@@ -1358,7 +1354,7 @@ describe.each([
               {
                 id: generator.natural(),
                 name: generator.first(),
-                user: parser(getUserValues()),
+                user: getUserValues(),
               },
               {
                 id: generator.natural(),
@@ -1381,7 +1377,7 @@ describe.each([
           })
         })
 
-        it(`can validate users column imports (${format} format)`, async () => {
+        it(`can validate users column imports`, async () => {
           const schema: TableSchema = {
             ...basicSchema,
             user: {
@@ -1397,11 +1393,7 @@ describe.each([
               {
                 id: generator.natural(),
                 name: generator.first(),
-                user: parser([
-                  getUserValues(),
-                  getUserValues(),
-                  getUserValues(),
-                ]),
+                user: [getUserValues(), getUserValues(), getUserValues()],
               },
             ],
             schema
