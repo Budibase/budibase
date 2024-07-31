@@ -183,6 +183,8 @@ export async function handleDataImport(
 
   const finalData = await importToRows(data, table, user)
 
+  let newRowCount = finalData.length
+
   //Set IDs of finalData to match existing row if an update is expected
   if (identifierFields.length > 0) {
     const allDocs = await db.allDocs(
@@ -204,12 +206,14 @@ export async function handleDataImport(
           if (match) {
             finalItem._id = doc._id
             finalItem._rev = doc._rev
+
+            newRowCount--
           }
         })
       })
   }
 
-  await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
+  await quotas.addRows(newRowCount, () => db.bulkDocs(finalData), {
     tableId: table._id,
   })
 
