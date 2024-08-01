@@ -23,7 +23,6 @@ import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
 import { isSearchingByRowID } from "./utils"
-import { ExternalReadRequestReturnType } from "../../../../api/controllers/row/ExternalRequest"
 
 function getPaginationAndLimitParameters(
   filters: SearchFilters,
