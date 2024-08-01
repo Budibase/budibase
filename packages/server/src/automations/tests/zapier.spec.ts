@@ -47,12 +47,8 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should return a 400 if the JSON payload string is malformed", async () => {
-    const payload = `{ value1 1 }`
     const res = await runStep(actions.zapier.stepId, {
-      value1: "ONE",
-      body: {
-        value: payload,
-      },
+      body: { value: "{ invalid json }" },
       url: "http://www.example.com",
     })
     expect(res.httpStatus).toEqual(400)
