@@ -1,4 +1,5 @@
 import type { GoogleSpreadsheetWorksheet } from "google-spreadsheet"
+import nock from "nock"
 
 jest.mock("google-auth-library")
 const { OAuth2Client } = require("google-auth-library")
@@ -62,29 +63,14 @@ describe("Google Sheets Integration", () => {
     await config.init()
 
     jest.clearAllMocks()
+
+    nock.cleanAll()
+    nock("https://www.googleapis.com/").post("/oauth2/v4/token").reply(200, {
+      grant_type: "client_credentials",
+      client_id: "your-client-id",
+      client_secret: "your-client-secret",
+    })
   })
-
-  // nock("https://www.googleapis.com/").post("/oauth2/v4/token").reply(200, {
-  //   grant_type: "client_credentials",
-  //   client_id: "your-client-id",
-  //   client_secret: "your-client-secret",
-  // })
-
-  // nock("https://oauth2.googleapis.com").post("/token").reply(200, {
-  //   access_token: "your-access-token",
-  // })
-
-  // nock("https://sheets.googleapis.com")
-  //   .get("/v4/spreadsheets/randomId/")
-  //   .reply(200, {
-  //     sheets: [
-  //       {
-  //         properties: {
-  //           title: "test",
-  //         },
-  //       },
-  //     ],
-  //   })
 
   function createBasicTable(name: string, columns: string[]): Table {
     return {
