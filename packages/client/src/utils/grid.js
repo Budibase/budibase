@@ -66,7 +66,7 @@ export const isGridChild = node => {
 
 // Gets the component ID of the closest parent grid
 export const getGridParentID = node => {
-  return node?.closest(".grid")?.parentNode.dataset.id
+  return node?.parentNode?.closest(".grid")?.parentNode.dataset.id
 }
 
 // Generates the base set of grid CSS vars from a component definition
