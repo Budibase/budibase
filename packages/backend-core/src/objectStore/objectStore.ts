@@ -463,14 +463,8 @@ export async function retrieveDirectory(bucketName: string, path: string) {
 }
 
 export async function exists(bucketName: string, filepath: string) {
-  const objectStore = ObjectStore(bucketName)
   try {
-    await objectStore
-      .headObject({
-        Bucket: bucketName,
-        Key: sanitizeKey(filepath),
-      })
-      .promise()
+    await getObjectMetadata(bucketName, filepath)
     return true
   } catch (err) {
     return false
