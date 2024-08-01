@@ -3,10 +3,11 @@ import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
   AutomationStepSchema,
-  AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  ExternalAppStepOutputs,
+  SlackStepInputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -54,7 +55,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: SlackStepInputs
+}): Promise<ExternalAppStepOutputs> {
   let { url, text } = inputs
   if (!url?.trim()?.length) {
     return {
