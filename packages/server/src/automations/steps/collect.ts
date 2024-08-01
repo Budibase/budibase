@@ -1,9 +1,10 @@
 import {
   AutomationActionStepId,
   AutomationStepSchema,
-  AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
+  CollectStepInputs,
+  CollectStepOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -43,7 +44,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: CollectStepInputs
+}): Promise<CollectStepOutputs> {
   if (!inputs.collection) {
     return {
       success: false,
