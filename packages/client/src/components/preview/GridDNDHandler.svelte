@@ -27,10 +27,8 @@
 
   // Set ephemeral grid styles on the dragged component
   $: instance = componentStore.actions.getComponentInstance(id)
-  $: $instance?.setEphemeralStyles({
-    ...$gridStyles,
-    ...($gridStyles ? { "z-index": 999 } : null),
-  })
+  $: componentStyles = getComponentStyles($gridStyles)
+  $: $instance?.setEphemeralStyles(componentStyles)
 
   // Sugar for a combination of both min and max
   const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
@@ -39,6 +37,15 @@
   const getDOMNode = id => {
     const component = document.getElementsByClassName(id)[0]
     return [...component?.children][0]
+  }
+
+  const getComponentStyles = gridStyles => {
+    let styles = { ...gridStyles }
+    if (gridStyles) {
+      styles["z-index"] = 999
+      styles["pointer-events"] = "none"
+    }
+    return styles
   }
 
   const processEvent = Utils.throttle((mouseX, mouseY) => {
