@@ -1158,18 +1158,18 @@ describe.each([
       it.each(
         isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
       )("don't allow protected names in schema (%s)", async columnName => {
-        const result = await config.api.table.validateNewTableImport(
-          [
+        const result = await config.api.table.validateNewTableImport({
+          rows: [
             {
               id: generator.natural(),
               name: generator.first(),
               [columnName]: generator.word(),
             },
           ],
-          {
+          schema: {
             ...basicSchema,
-          }
-        )
+          },
+        })
 
         expect(result).toEqual({
           allValid: false,
@@ -1217,21 +1217,21 @@ describe.each([
         it.each(
           isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
         )("don't allow protected names in the rows (%s)", async columnName => {
-          const result = await config.api.table.validateNewTableImport(
-            [
+          const result = await config.api.table.validateNewTableImport({
+            rows: [
               {
                 id: generator.natural(),
                 name: generator.first(),
               },
             ],
-            {
+            schema: {
               ...basicSchema,
               [columnName]: {
                 name: columnName,
                 type: FieldType.STRING,
               },
-            }
-          )
+            },
+          })
 
           expect(result).toEqual({
             allValid: false,
