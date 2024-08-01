@@ -10,6 +10,15 @@
     getGridVarValue,
   } from "utils/grid"
 
+  // Smallest possible 1x1 transparent GIF
+  const ghost = new Image(1, 1)
+  ghost.src =
+    "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+
+  let dragInfo
+  let gridStyles = memo()
+  let id
+
   // Grid CSS variables
   $: vars = {
     colStart: $getGridVar("col-start"),
@@ -17,10 +26,6 @@
     rowStart: $getGridVar("row-start"),
     rowEnd: $getGridVar("row-end"),
   }
-
-  let dragInfo
-  let gridStyles = memo()
-  let id
 
   // Some memoisation of primitive types for performance
   $: id = dragInfo?.id || id
@@ -117,7 +122,7 @@
     }
 
     // Hide drag ghost image
-    e.dataTransfer.setDragImage(new Image(), 0, 0)
+    e.dataTransfer.setDragImage(ghost, 0, 0)
 
     // Extract state
     let mode, id, side
