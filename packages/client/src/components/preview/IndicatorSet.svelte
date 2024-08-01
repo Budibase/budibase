@@ -163,7 +163,7 @@
 
   onDestroy(() => {
     clearInterval(interval)
-    document.removeEventListener("scroll", v, true)
+    document.removeEventListener("scroll", debouncedUpdate, true)
     observers.forEach(o => o.disconnect())
   })
 </script>
