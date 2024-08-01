@@ -1,14 +1,8 @@
 <script>
   import { onMount, onDestroy } from "svelte"
-  import { get } from "svelte/store"
   import { builderStore, componentStore } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
-  import {
-    isGridEvent,
-    getGridParentID,
-    getGridVar,
-    getGridVarValue,
-  } from "utils/grid"
+  import { isGridEvent, getGridParentID, getGridVar } from "utils/grid"
 
   // Smallest possible 1x1 transparent GIF
   const ghost = new Image(1, 1)
@@ -166,24 +160,21 @@
     }
 
     const { id, gridId } = dragInfo
+    const domComponent = getDOMNode(id)
     const domGrid = getDOMNode(gridId)
     const gridCols = parseInt(domGrid.dataset.cols)
     const gridRows = parseInt(domGrid.dataset.rows)
-    const instance = get(componentStore.actions.getComponentInstance(id))
-    if (!instance) {
-      return
-    }
-    const styles = get(instance.state).styles
+    const styles = getComputedStyle(domComponent.parentNode)
     if (domGrid) {
       dragInfo.grid = {
         startX: e.clientX,
         startY: e.clientY,
 
         // Ensure things are within limits
-        rowStart: minMax(getGridVarValue(styles, vars.rowStart), 1, gridRows),
-        rowEnd: minMax(getGridVarValue(styles, vars.rowEnd), 2, gridRows + 1),
-        colStart: minMax(getGridVarValue(styles, vars.colStart), 1, gridCols),
-        colEnd: minMax(getGridVarValue(styles, vars.colEnd), 2, gridCols + 1),
+        rowStart: minMax(styles["grid-row-start"], 1, gridRows),
+        rowEnd: minMax(styles["grid-row-end"], 2, gridRows + 1),
+        colStart: minMax(styles["grid-column-start"], 1, gridCols),
+        colEnd: minMax(styles["grid-column-end"], 2, gridCols + 1),
       }
       handleEvent(e)
     }

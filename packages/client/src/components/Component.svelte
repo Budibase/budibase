@@ -634,6 +634,8 @@
   // Generates any required base styles based on the component definition
   const getBaseStyles = definition => {
     return {
+      "--default-width": definition.size?.width || 100,
+      "--default-height": definition.size?.height || 100,
       ...getBaseGridVars(definition),
     }
   }

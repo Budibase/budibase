@@ -114,13 +114,12 @@
     "icon": "Selection",
     "hasChildren": true,
     "size": {
-      "width": 400,
+      "width": 500,
       "height": 200
     },
     "grid": {
       "hAlign": "stretch",
-      "vAlign": "stretch",
-      "showControls": false
+      "vAlign": "stretch"
     },
     "styles": ["padding", "size", "background", "border", "shadow"],
     "settings": [
@@ -363,8 +362,12 @@
     "illegalChildren": ["section"],
     "showEmptyState": false,
     "size": {
-      "width": 400,
-      "height": 100
+      "width": 600,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
     },
     "settings": [
       {
@@ -735,8 +738,12 @@
     "illegalChildren": ["section"],
     "hasChildren": true,
     "size": {
-      "width": 400,
-      "height": 100
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
     },
     "settings": [
       {
@@ -4963,8 +4970,12 @@
     "hasChildren": true,
     "actions": ["RefreshDatasource"],
     "size": {
-      "width": 400,
-      "height": 100
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
     },
     "settings": [
       {
@@ -5281,6 +5292,10 @@
       "width": 100,
       "height": 35
     },
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "center"
+    },
     "settings": [
       {
         "type": "dataProvider",
@@ -5327,6 +5342,14 @@
     "name": "Chart Block",
     "icon": "GraphPie",
     "hasChildren": false,
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
     "settings": [
       {
         "type": "select",
@@ -6250,6 +6273,10 @@
       "width": 600,
       "height": 400
     },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
     "settings": [
       {
         "type": "text",
@@ -6459,8 +6486,12 @@
     "illegalChildren": ["section", "rowexplorer"],
     "hasChildren": true,
     "size": {
-      "width": 400,
-      "height": 100
+      "width": 500,
+      "height": 200
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
     },
     "settings": [
       {
@@ -6731,8 +6762,12 @@
     "hasChildren": false,
     "ejectable": false,
     "size": {
-      "width": 400,
+      "width": 600,
       "height": 400
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "start"
     },
     "styles": ["size"],
     "settings": [
@@ -6922,7 +6957,7 @@
     "block": true,
     "info": "Form blocks are only compatible with internal or SQL tables",
     "size": {
-      "width": 400,
+      "width": 600,
       "height": 400
     },
     "grid": {
@@ -7147,8 +7182,12 @@
     "name": "Row Explorer Block",
     "icon": "PersonalizationField",
     "size": {
-      "width": 600,
-      "height": 400
+      "width": 800,
+      "height": 426
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "start"
     },
     "settings": [
       {
@@ -7272,8 +7311,7 @@
     },
     "grid": {
       "hAlign": "stretch",
-      "vAlign": "stretch",
-      "showControls": false
+      "vAlign": "stretch"
     },
     "settings": [
       {
