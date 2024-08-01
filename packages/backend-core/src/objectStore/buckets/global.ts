@@ -30,5 +30,5 @@ export const getGlobalFileS3Key = (type: string, name: string) => {
 
 export const getGlobalPublicFileUrl = (type: string, name: string) => {
   const s3Key = getGlobalFileS3Key(type, name)
-  return `${env.GLOBAL_BUCKET_NAME}/${s3Key}`
+  return `${env.GLOBAL_BUCKET_NAME}/${objectStore.sanitizeKey(s3Key)}`
 }

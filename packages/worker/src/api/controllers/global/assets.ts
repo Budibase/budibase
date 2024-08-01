@@ -38,7 +38,7 @@ export async function upload(ctx: Ctx) {
 }
 
 export async function fetch(ctx: Ctx) {
-  let assets: { name: string; url: string }[]
+  let assets: { name: string; url: string; size: number }[]
   try {
     const globalDir = objectStore.getGlobalFileS3Key(ASSETS, "")
     const objects = await objectStore.listAllObjects(
@@ -52,6 +52,7 @@ export async function fetch(ctx: Ctx) {
         return {
           name: filename,
           url: objectStore.getGlobalPublicFileUrl(ASSETS, filename),
+          size: object.Size || 0,
         }
       })
   } catch (err) {
@@ -59,5 +60,16 @@ export async function fetch(ctx: Ctx) {
   }
   ctx.body = {
     assets,
+    totalSize: assets.reduce((agg, asset) => agg + asset.size, 0),
+  }
+}
+
+export async function destroy(ctx: Ctx) {
+  const filename = ctx.params.filename
+
+  await objectStore.deleteFile(objectStore.ObjectStoreBuckets.GLOBAL, filename)
+
+  ctx.body = {
+    message: `File "${filename}" successfully deleted.`,
   }
 }
