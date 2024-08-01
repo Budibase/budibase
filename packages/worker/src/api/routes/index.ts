@@ -14,6 +14,7 @@ import tenantsRoutes from "./system/tenants"
 import statusRoutes from "./system/status"
 import selfRoutes from "./global/self"
 import licenseRoutes from "./global/license"
+import assetRoutes from "./global/assets"
 import migrationRoutes from "./system/migrations"
 import accountRoutes from "./system/accounts"
 import restoreRoutes from "./system/restore"
@@ -43,6 +44,7 @@ export const routes: Router[] = [
   eventRoutes,
   tenantRoutes,
   pro.scim,
+  assetRoutes,
 ]
 
 if (env.SELF_HOSTED) {
