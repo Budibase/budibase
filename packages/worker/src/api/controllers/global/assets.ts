@@ -66,8 +66,15 @@ export async function fetch(ctx: Ctx) {
 
 export async function destroy(ctx: Ctx) {
   const filename = ctx.params.filename
+  const s3Key = objectStore.getGlobalFileS3Key(ASSETS, filename)
 
-  await objectStore.deleteFile(objectStore.ObjectStoreBuckets.GLOBAL, filename)
+  if (
+    !(await objectStore.exists(objectStore.ObjectStoreBuckets.GLOBAL, s3Key))
+  ) {
+    ctx.throw(404, "File name not found")
+  }
+
+  await objectStore.deleteFile(objectStore.ObjectStoreBuckets.GLOBAL, s3Key)
 
   ctx.body = {
     message: `File "${filename}" successfully deleted.`,
