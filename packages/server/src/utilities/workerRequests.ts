@@ -103,8 +103,8 @@ export async function sendSmtpEmail({
   from: string
   subject: string
   contents: string
-  cc: string
-  bcc: string
+  cc?: string
+  bcc?: string
   automation: boolean
   attachments?: EmailAttachment[]
   invite?: EmailInvite
