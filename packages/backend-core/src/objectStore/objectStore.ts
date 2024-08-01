@@ -16,6 +16,16 @@ import fsp from "fs/promises"
 import { HeadObjectOutput } from "aws-sdk/clients/s3"
 import { ReadableStream } from "stream/web"
 
+type BucketPolicy = {
+  Version: string
+  Statement: {
+    Effect: string
+    Principal: string
+    Action: string | string[]
+    Resource: string | string[]
+  }[]
+}
+
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
 const STATE = {
@@ -211,6 +221,54 @@ export async function upload({
   }
 
   return objectStore.upload(config).promise()
+}
+
+export async function makePathPublic(bucket: string, path: string) {
+  const objectStore = ObjectStore(bucket)
+
+  let currentPolicy: string | undefined
+  try {
+    const policy = await objectStore
+      .getBucketPolicy({
+        Bucket: bucket,
+      })
+      .promise()
+    currentPolicy = policy.Policy
+  } catch (err) {
+    // ignore
+  }
+
+  let newPolicy: BucketPolicy = {
+    Version: "2012-10-17",
+    Statement: [],
+  }
+  if (currentPolicy) {
+    newPolicy = {
+      ...newPolicy,
+      ...JSON.parse(currentPolicy),
+    }
+  }
+
+  for (let statement of newPolicy.Statement) {
+    // this object is already listed, drop out
+    if (statement.Resource[0].endsWith(path)) {
+      return
+    }
+  }
+
+  newPolicy.Statement.push({
+    Effect: "Allow",
+    Principal: "*",
+    Action: "s3:GetObject",
+    Resource: `arn:aws:s3:::${bucket}/${path}`,
+  })
+
+  return objectStore
+    .putBucketPolicy({
+      Bucket: bucket,
+      Policy: JSON.stringify(newPolicy),
+    })
+    .promise()
 }
 
 /**

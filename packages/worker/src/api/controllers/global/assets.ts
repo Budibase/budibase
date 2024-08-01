@@ -18,24 +18,45 @@ export async function upload(ctx: Ctx) {
       path: file.path,
       type: file.type,
     })
+    await objectStore.makePathPublic(
+      objectStore.ObjectStoreBuckets.GLOBAL,
+      s3Key
+    )
 
     return {
       size: file.size,
       name: file.name,
-      url: objectStore.getGlobalFileUrl(ASSETS, file.name),
+      url: objectStore.getGlobalPublicFileUrl(ASSETS, file.name),
       key: response.Key,
     }
   })
 
-  await Promise.all(uploads)
+  const outputs = await Promise.all(uploads)
+  ctx.body = {
+    urls: outputs.map(upload => upload.url),
+  }
 }
 
 export async function fetch(ctx: Ctx) {
-  const globalDir = objectStore.getGlobalFileS3Key(ASSETS, "")
-  const assets = await objectStore.listAllObjects(
-    objectStore.ObjectStoreBuckets.GLOBAL,
-    globalDir
-  )
+  let assets: { name: string; url: string }[]
+  try {
+    const globalDir = objectStore.getGlobalFileS3Key(ASSETS, "")
+    const objects = await objectStore.listAllObjects(
+      objectStore.ObjectStoreBuckets.GLOBAL,
+      globalDir
+    )
+    assets = objects
+      .filter(object => object.Key)
+      .map(object => {
+        const filename = object.Key!.split("/").pop()!
+        return {
+          name: filename,
+          url: objectStore.getGlobalPublicFileUrl(ASSETS, filename),
+        }
+      })
+  } catch (err) {
+    assets = []
+  }
   ctx.body = {
     assets,
   }
