@@ -8,40 +8,49 @@ function globalBucket() {
 }
 
 export async function upload(ctx: Ctx) {
-  const file = ctx.request?.files?.file
+  let file = ctx.request?.files?.file
   const isPrivate = ctx.request.body.private
-  let files = objectStore.validateFiles(
-    file && Array.isArray(file) ? Array.from(file) : [file]
+  const name = ctx.request.body.name
+
+  if (file && Array.isArray(file)) {
+    if (file.length > 1) {
+      ctx.throw(400, "Can only upload single file")
+    }
+    file = file[0]
+  }
+
+  let validatedFile = objectStore.validateFile(file)
+
+  const metadata: any = isPrivate ? { private: "true" } : undefined
+  if (name) {
+    metadata.filename = validatedFile.name
+  }
+  const s3Key = objectStore.getGlobalFileS3Key(
+    ASSETS,
+    name || validatedFile.name
   )
-
-  const metadata = isPrivate ? { private: "true" } : undefined
-
-  const uploads = files.map(async file => {
-    const s3Key = objectStore.getGlobalFileS3Key(ASSETS, file.name)
-    const response = await objectStore.upload({
-      bucket: globalBucket(),
-      filename: s3Key,
-      path: file.path,
-      type: file.type,
-      metadata,
-    })
-    if (!isPrivate) {
-      await objectStore.makePathPublic(globalBucket(), s3Key)
-    }
-
-    return {
-      size: file.size,
-      name: file.name,
-      url: isPrivate
-        ? objectStore.getGlobalFileUrl(ASSETS, file.name, response.ETag)
-        : objectStore.getGlobalPublicFileUrl(ASSETS, file.name),
-      key: response.Key,
-    }
+  const response = await objectStore.upload({
+    bucket: globalBucket(),
+    filename: s3Key,
+    path: validatedFile.path,
+    type: validatedFile.type,
+    metadata,
   })
+  if (!isPrivate) {
+    await objectStore.makePathPublic(globalBucket(), s3Key)
+  }
 
-  const outputs = await Promise.all(uploads)
+  const upload = {
+    size: validatedFile.size,
+    name: validatedFile.name,
+    url: isPrivate
+      ? objectStore.getGlobalFileUrl(ASSETS, validatedFile.name, response.ETag)
+      : objectStore.getGlobalPublicFileUrl(ASSETS, validatedFile.name),
+    key: response.Key,
+  }
+
   ctx.body = {
-    urls: outputs.map(upload => upload.url),
+    ...upload,
   }
 }
 
@@ -62,6 +71,7 @@ export async function fetch(ctx: Ctx) {
           const isPrivate = metadata.Metadata
             ? !!metadata.Metadata?.private
             : false
+          const realFilename = metadata.Metadata?.filename
           return {
             name: filename,
             url: isPrivate
@@ -69,6 +79,7 @@ export async function fetch(ctx: Ctx) {
               : objectStore.getGlobalPublicFileUrl(ASSETS, filename),
             size: object.Size || 0,
             private: isPrivate,
+            filename: realFilename,
           }
         })
     )
