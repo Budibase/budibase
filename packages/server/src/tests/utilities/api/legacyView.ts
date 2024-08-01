@@ -1,5 +1,5 @@
 import { Expectations, TestAPI } from "./base"
-import { Row, View, ViewCalculation } from "@budibase/types"
+import { Row, RowExportFormat, View, ViewCalculation } from "@budibase/types"
 
 export class LegacyViewAPI extends TestAPI {
   get = async (
@@ -24,7 +24,7 @@ export class LegacyViewAPI extends TestAPI {
 
   export = async (
     viewName: string,
-    format: "json" | "csv" | "jsonWithSchema",
+    format: `${RowExportFormat}`,
     expectations?: Expectations
   ) => {
     const response = await this._requestRaw("get", `/api/views/export`, {
