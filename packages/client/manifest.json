@@ -151,7 +151,9 @@
         "label": "Columns",
         "key": "cols",
         "placeholder": 12,
-        "min": 1,
+        "defaultValue": 12,
+        "min": 2,
+        "max": 50,
         "dependsOn": {
           "setting": "layout",
           "value": "grid"
@@ -162,7 +164,9 @@
         "label": "Rows",
         "key": "rows",
         "placeholder": 12,
-        "min": 1,
+        "defaultValue": 12,
+        "min": 2,
+        "max": 50,
         "dependsOn": {
           "setting": "layout",
           "value": "grid"
