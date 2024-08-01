@@ -1,4 +1,4 @@
-import { context, events } from "@budibase/backend-core"
+import { context, docIds, events } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   BBReferenceFieldSubType,
@@ -10,6 +10,7 @@ import {
   Row,
   SaveTableRequest,
   Table,
+  TableSchema,
   TableSourceType,
   User,
   ViewCalculation,
@@ -1020,6 +1021,94 @@ describe.each([
           { status: 400 }
         )
       })
+    })
+  })
+
+  describe("import validation", () => {
+    const basicSchema: TableSchema = {
+      id: {
+        type: FieldType.NUMBER,
+        name: "id",
+      },
+      name: {
+        type: FieldType.STRING,
+        name: "name",
+      },
+    }
+
+    describe("validateNewTableImport", () => {
+      it("can validate basic imports", async () => {
+        const result = await config.api.table.validateNewTableImport(
+          [{ id: generator.natural(), name: generator.first() }],
+          basicSchema
+        )
+
+        expect(result).toEqual({
+          allValid: true,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+          },
+        })
+      })
+    })
+
+    describe("validateExistingTableImport", () => {
+      it("can validate basic imports", async () => {
+        const table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            primary: ["id"],
+            schema: basicSchema,
+          })
+        )
+        const result = await config.api.table.validateExistingTableImport({
+          tableId: table._id,
+          rows: [{ id: generator.natural(), name: generator.first() }],
+        })
+
+        expect(result).toEqual({
+          allValid: true,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+          },
+        })
+      })
+
+      isInternal &&
+        it("can reimport _id fields for internal tables", async () => {
+          const table = await config.api.table.save(
+            tableForDatasource(datasource, {
+              primary: ["id"],
+              schema: basicSchema,
+            })
+          )
+          const result = await config.api.table.validateExistingTableImport({
+            tableId: table._id,
+            rows: [
+              {
+                _id: docIds.generateRowID(table._id!),
+                id: generator.natural(),
+                name: generator.first(),
+              },
+            ],
+          })
+
+          expect(result).toEqual({
+            allValid: true,
+            errors: {},
+            invalidColumns: [],
+            schemaValidation: {
+              _id: true,
+              id: true,
+              name: true,
+            },
+          })
+        })
     })
   })
 })

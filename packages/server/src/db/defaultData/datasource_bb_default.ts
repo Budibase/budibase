@@ -651,10 +651,10 @@ export async function buildDefaultDocs() {
       return new LinkDocument(
         employeeData.table._id!,
         "Jobs",
-        employeeData.rows[index]._id,
+        employeeData.rows[index]._id!,
         jobData.table._id!,
         "Assigned",
-        jobData.rows[index]._id
+        jobData.rows[index]._id!
       )
     }
   )
