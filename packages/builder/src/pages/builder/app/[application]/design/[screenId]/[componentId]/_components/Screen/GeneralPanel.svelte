@@ -6,6 +6,7 @@
     Checkbox,
     Banner,
     Select,
+    Stepper,
     notifications,
   } from "@budibase/bbui"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
@@ -17,8 +18,112 @@
   import BarButtonList from "components/design/settings/controls/BarButtonList.svelte"
 
   $: bindings = getBindableProperties($selectedScreen, null)
+  $: screenSettings = getScreenSettings($selectedScreen)
 
   let errors = {}
+
+  const getScreenSettings = screen => {
+    let settings = [
+      {
+        key: "routing.homeScreen",
+        control: Checkbox,
+        props: {
+          text: "Set as home screen",
+        },
+      },
+      {
+        key: "routing.route",
+        label: "Route",
+        control: Input,
+        parser: val => {
+          if (!val.startsWith("/")) {
+            val = "/" + val
+          }
+          return sanitizeUrl(val)
+        },
+        validate: route => {
+          const existingRoute = screen.routing.route
+          if (route !== existingRoute && routeTaken(route)) {
+            return "That URL is already in use for this role"
+          }
+          return null
+        },
+      },
+      {
+        key: "routing.roleId",
+        label: "Access",
+        control: RoleSelect,
+        validate: role => {
+          const existingRole = screen.routing.roleId
+          if (role !== existingRole && roleTaken(role)) {
+            return "That role is already in use for this URL"
+          }
+          return null
+        },
+      },
+      {
+        key: "onLoad",
+        label: "On screen load",
+        control: ButtonActionEditor,
+      },
+      {
+        key: "width",
+        label: "Width",
+        control: Select,
+        props: {
+          options: ["Extra small", "Small", "Medium", "Large", "Max"],
+          placeholder: "Default",
+          disabled: !!screen.layoutId,
+        },
+      },
+      {
+        key: "props.layout",
+        label: "Layout",
+        defaultValue: "flex",
+        control: BarButtonList,
+        props: {
+          options: [
+            {
+              barIcon: "ModernGridView",
+              value: "flex",
+            },
+            {
+              barIcon: "ViewGrid",
+              value: "grid",
+            },
+          ],
+        },
+      },
+    ]
+
+    // Add grid layout settings if required
+    if (screen.props.layout === "grid") {
+      settings = settings.concat([
+        {
+          key: "props.cols",
+          label: "Columns",
+          control: Stepper,
+          defaultValue: 12,
+          props: {
+            min: 2,
+            max: 50,
+          },
+        },
+        {
+          key: "props.rows",
+          label: "Rows",
+          control: Stepper,
+          defaultValue: 12,
+          props: {
+            min: 2,
+            max: 50,
+          },
+        },
+      ])
+    }
+
+    return settings
+  }
 
   const routeTaken = url => {
     const roleId = get(selectedScreen).routing.roleId || "BASIC"
@@ -71,79 +176,6 @@
       notifications.error("Error saving screen settings")
     }
   }
-
-  $: screenSettings = [
-    {
-      key: "routing.homeScreen",
-      control: Checkbox,
-      props: {
-        text: "Set as home screen",
-      },
-    },
-    {
-      key: "routing.route",
-      label: "Route",
-      control: Input,
-      parser: val => {
-        if (!val.startsWith("/")) {
-          val = "/" + val
-        }
-        return sanitizeUrl(val)
-      },
-      validate: route => {
-        const existingRoute = get(selectedScreen).routing.route
-        if (route !== existingRoute && routeTaken(route)) {
-          return "That URL is already in use for this role"
-        }
-        return null
-      },
-    },
-    {
-      key: "routing.roleId",
-      label: "Access",
-      control: RoleSelect,
-      validate: role => {
-        const existingRole = get(selectedScreen).routing.roleId
-        if (role !== existingRole && roleTaken(role)) {
-          return "That role is already in use for this URL"
-        }
-        return null
-      },
-    },
-    {
-      key: "onLoad",
-      label: "On screen load",
-      control: ButtonActionEditor,
-    },
-    {
-      key: "width",
-      label: "Width",
-      control: Select,
-      props: {
-        options: ["Extra small", "Small", "Medium", "Large", "Max"],
-        placeholder: "Default",
-        disabled: !!$selectedScreen.layoutId,
-      },
-    },
-    {
-      key: "props.layout",
-      label: "Layout",
-      defaultValue: "flex",
-      control: BarButtonList,
-      props: {
-        options: [
-          {
-            barIcon: "ModernGridView",
-            value: "flex",
-          },
-          {
-            barIcon: "ViewGrid",
-            value: "grid",
-          },
-        ],
-      },
-    },
-  ]
 
   const removeCustomLayout = async () => {
     return screenStore.removeCustomLayout(get(selectedScreen))
