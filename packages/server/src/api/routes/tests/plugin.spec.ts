@@ -172,6 +172,28 @@ describe("/plugins", () => {
   })
   describe("npm", () => {
     it("should be able to create a plugin from npm", async () => {
+      nock("https://registry.npmjs.org")
+        .get("/budibase-component")
+        .reply(200, {
+          name: "budibase-component",
+          "dist-tags": {
+            latest: "1.0.0",
+          },
+          versions: {
+            "1.0.0": {
+              dist: {
+                tarball:
+                  "https://registry.npmjs.org/budibase-component/-/budibase-component-1.0.1.tgz",
+              },
+            },
+          },
+        })
+        .get("/budibase-component/-/budibase-component-1.0.1.tgz")
+        .replyWithFile(
+          200,
+          "src/api/routes/tests/data/budibase-component-1.0.1.tgz"
+        )
+
       const { plugin } = await config.api.plugin.create({
         source: PluginSource.NPM,
         url: "https://www.npmjs.com/package/budibase-component",
