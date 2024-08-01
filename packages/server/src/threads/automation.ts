@@ -16,6 +16,7 @@ import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
 import {
   Automation,
+  AutomationActionStepId,
   AutomationData,
   AutomationJob,
   AutomationMetadata,
@@ -108,7 +109,7 @@ class Orchestrator {
     return triggerOutput
   }
 
-  async getStepFunctionality(stepId: string) {
+  async getStepFunctionality(stepId: AutomationActionStepId) {
     let step = await actions.getAction(stepId)
     if (step == null) {
       throw `Cannot find automation step by name ${stepId}`
@@ -422,7 +423,9 @@ class Orchestrator {
                 continue
               }
 
-              let stepFn = await this.getStepFunctionality(step.stepId)
+              let stepFn = await this.getStepFunctionality(
+                step.stepId as AutomationActionStepId
+              )
               let inputs = await processObject(originalStepInput, this._context)
               inputs = automationUtils.cleanInputValues(
                 inputs,
