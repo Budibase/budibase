@@ -83,9 +83,8 @@ export const uploadFile = async function (
   )
   ctx.body = await Promise.all(
     files.map(async file => {
-      const extension = [...file.name.split(".")].pop()
       // filenames converted to UUIDs so they are unique
-      const processedFileName = `${uuid.v4()}.${extension}`
+      const processedFileName = `${uuid.v4()}.${file.extension}`
 
       const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
 
@@ -100,7 +99,7 @@ export const uploadFile = async function (
         size: file.size,
         name: file.name,
         url: objectStore.getAppFileUrl(s3Key),
-        extension,
+        extension: file.extension,
         key: response.Key,
       }
     })

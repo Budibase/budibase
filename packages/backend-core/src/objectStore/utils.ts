@@ -17,6 +17,7 @@ import { InvalidFileExtensions } from "@budibase/shared-core"
 
 interface ValidatedFile extends Omit<File, "name"> {
   name: string
+  extension: string
 }
 
 /****************************************************
@@ -120,6 +121,7 @@ export async function processAutomationAttachment(
 }
 
 export function validateFiles(files: (File | undefined)[]): ValidatedFile[] {
+  const validatedFiles: ValidatedFile[] = []
   for (let file of files) {
     if (!file?.name) {
       throw new BadRequestError("Attempted to upload a file without a filename")
@@ -140,7 +142,12 @@ export function validateFiles(files: (File | undefined)[]): ValidatedFile[] {
         `File "${file.name}" has an invalid extension: "${extension}"`
       )
     }
+    validatedFiles.push({
+      ...file,
+      name: file.name!,
+      extension,
+    })
   }
   // errors confirm this is a valid cast
-  return files as ValidatedFile[]
+  return validatedFiles
 }
