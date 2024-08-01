@@ -29,6 +29,7 @@ import { getReadableErrorMessage } from "./base/errorMapping"
 import sqlServer from "mssql"
 import { sql } from "@budibase/backend-core"
 import { ConfidentialClientApplication } from "@azure/msal-node"
+import env from "../environment"
 
 import { utils } from "@budibase/shared-core"
 
@@ -246,6 +247,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         options: {
           encrypt,
           enableArithAbort: true,
+          requestTimeout: env.QUERY_THREAD_TIMEOUT,
         },
       }
       if (encrypt) {
