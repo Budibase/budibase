@@ -126,7 +126,7 @@
       },
     },
     {
-      key: "layout",
+      key: "props.layout",
       label: "Layout",
       defaultValue: "flex",
       control: BarButtonList,
