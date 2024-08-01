@@ -1,4 +1,5 @@
 import {
+  BodyType,
   DatasourceFieldType,
   HttpMethod,
   Integration,
@@ -15,7 +16,7 @@ import {
 import get from "lodash/get"
 import * as https from "https"
 import qs from "querystring"
-import type { Response } from "node-fetch"
+import type { Response, RequestInit } from "node-fetch"
 import fetch from "node-fetch"
 import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
@@ -27,15 +28,6 @@ import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
-
-enum BodyType {
-  NONE = "none",
-  FORM_DATA = "form",
-  XML = "xml",
-  ENCODED = "encoded",
-  JSON = "json",
-  TEXT = "text",
-}
 
 const coreFields = {
   path: {
@@ -127,7 +119,23 @@ const SCHEMA: Integration = {
   },
 }
 
-class RestIntegration implements IntegrationBase {
+interface ParsedResponse {
+  data: any
+  info: {
+    code: number
+    size: string
+    time: string
+  }
+  extra?: {
+    raw: string | undefined
+    headers: Record<string, string[] | string>
+  }
+  pagination?: {
+    cursor: any
+  }
+}
+
+export class RestIntegration implements IntegrationBase {
   private config: RestConfig
   private headers: {
     [key: string]: string
@@ -138,7 +146,10 @@ class RestIntegration implements IntegrationBase {
     this.config = config
   }
 
-  async parseResponse(response: Response, pagination: PaginationConfig | null) {
+  async parseResponse(
+    response: Response,
+    pagination?: PaginationConfig
+  ): Promise<ParsedResponse> {
     let data: any[] | string | undefined,
       raw: string | undefined,
       headers: Record<string, string[] | string> = {},
@@ -235,8 +246,8 @@ class RestIntegration implements IntegrationBase {
   getUrl(
     path: string,
     queryString: string,
-    pagination: PaginationConfig | null,
-    paginationValues: PaginationValues | null
+    pagination?: PaginationConfig,
+    paginationValues?: PaginationValues
   ): string {
     // Add pagination params to query string if required
     if (pagination?.location === "query" && paginationValues) {
@@ -279,10 +290,10 @@ class RestIntegration implements IntegrationBase {
   addBody(
     bodyType: string,
     body: string | any,
-    input: any,
-    pagination: PaginationConfig | null,
-    paginationValues: PaginationValues | null
-  ) {
+    input: RequestInit,
+    pagination?: PaginationConfig,
+    paginationValues?: PaginationValues
+  ): RequestInit {
     if (!input.headers) {
       input.headers = {}
     }
@@ -345,6 +356,7 @@ class RestIntegration implements IntegrationBase {
           string = new XmlBuilder().buildObject(object)
         }
         input.body = string
+        // @ts-ignore
         input.headers["Content-Type"] = "application/xml"
         break
       case BodyType.JSON:
@@ -356,13 +368,14 @@ class RestIntegration implements IntegrationBase {
           object[key] = value
         })
         input.body = JSON.stringify(object)
+        // @ts-ignore
         input.headers["Content-Type"] = "application/json"
         break
     }
     return input
   }
 
-  getAuthHeaders(authConfigId: string): { [key: string]: any } {
+  getAuthHeaders(authConfigId?: string): { [key: string]: any } {
     let headers: any = {}
 
     if (this.config.authConfigs && authConfigId) {
@@ -398,7 +411,7 @@ class RestIntegration implements IntegrationBase {
       headers = {},
       method = HttpMethod.GET,
       disabledHeaders,
-      bodyType,
+      bodyType = BodyType.NONE,
       requestBody,
       authConfigId,
       pagination,
@@ -407,7 +420,7 @@ class RestIntegration implements IntegrationBase {
     const authHeaders = this.getAuthHeaders(authConfigId)
 
     this.headers = {
-      ...this.config.defaultHeaders,
+      ...(this.config.defaultHeaders || {}),
       ...headers,
       ...authHeaders,
     }
@@ -420,7 +433,7 @@ class RestIntegration implements IntegrationBase {
       }
     }
 
-    let input: any = { method, headers: this.headers }
+    let input: RequestInit = { method, headers: this.headers }
     input = this.addBody(
       bodyType,
       requestBody,
@@ -437,7 +450,12 @@ class RestIntegration implements IntegrationBase {
 
     // Deprecated by rejectUnauthorized
     if (this.config.legacyHttpParser) {
+      // NOTE(samwho): it seems like this code doesn't actually work because it requires
+      // node-fetch >=3, and we're not on that because upgrading to it produces errors to
+      // do with ESM that are above my pay grade.
+
       // https://github.com/nodejs/node/issues/43798
+      // @ts-ignore
       input.extraHttpOptions = { insecureHTTPParser: true }
     }
 
