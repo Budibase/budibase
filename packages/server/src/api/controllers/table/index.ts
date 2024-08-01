@@ -17,6 +17,7 @@ import {
   CsvToJsonRequest,
   CsvToJsonResponse,
   FetchTablesResponse,
+  FieldType,
   MigrateRequest,
   MigrateResponse,
   SaveTableRequest,
@@ -178,9 +179,17 @@ export async function validateExistingTableImport(
   const { rows, tableId } = ctx.request.body
 
   let schema = null
+
   if (tableId) {
     const table = await sdk.tables.getTable(tableId)
     schema = table.schema
+
+    if (!isExternalTable(table)) {
+      schema._id = {
+        name: "_id",
+        type: FieldType.STRING,
+      }
+    }
   } else {
     ctx.status = 422
     return
