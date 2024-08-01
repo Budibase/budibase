@@ -11,6 +11,7 @@ import {
   SearchResponse,
   SortType,
   Table,
+  TableSchema,
   User,
 } from "@budibase/types"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
@@ -137,6 +138,9 @@ export async function exportRows(
   let rows: Row[] = []
   let schema = table.schema
   let headers
+
+  result = trimFields(result, schema)
+
   // Filter data to only specified columns if required
   if (columns && columns.length) {
     for (let i = 0; i < result.length; i++) {
@@ -298,4 +302,14 @@ async function getView(db: Database, viewName: string) {
     throw "View does not exist."
   }
   return viewInfo
+}
+
+function trimFields(rows: Row[], schema: TableSchema) {
+  const allowedFields = ["_id", ...Object.keys(schema)]
+  const result = rows.map(row =>
+    Object.keys(row)
+      .filter(key => allowedFields.includes(key))
+      .reduce((acc, key) => ({ ...acc, [key]: row[key] }), {} as Row)
+  )
+  return result
 }
