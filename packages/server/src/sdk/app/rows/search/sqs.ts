@@ -332,20 +332,14 @@ export async function search(
   }
 
   try {
-    const queries: Promise<Row[] | number>[] = []
-    queries.push(runSqlQuery(request, allTables, relationships))
-    if (options.countRows) {
-      // get the total count of rows
-      queries.push(
-        runSqlQuery(request, allTables, relationships, {
-          countTotalRows: true,
-        })
-      )
-    }
-    const responses = await Promise.all(queries)
-    let rows = responses[0] as Row[]
-    const totalRows =
-      responses.length > 1 ? (responses[1] as number) : undefined
+    const [rows, totalRows] = await Promise.all([
+      runSqlQuery(request, allTables, relationships),
+      options.countRows
+        ? runSqlQuery(request, allTables, relationships, {
+            countTotalRows: true,
+          })
+        : Promise.resolve(undefined),
+    ])
 
     // process from the format of tableId.column to expected format also
     // make sure JSON columns corrected
