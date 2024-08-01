@@ -31,7 +31,12 @@ import oracledb, {
   ExecuteOptions,
   Result,
 } from "oracledb"
-import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
+import {
+  OracleTable,
+  OracleColumn,
+  OracleColumnsResponse,
+  OracleTriggersResponse,
+} from "./base/types"
 import { sql } from "@budibase/backend-core"
 
 const Sql = sql.Sql
@@ -111,7 +116,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
   private readonly config: OracleConfig
   private index: number = 1
 
-  private readonly COLUMNS_SQL = `
+  private static readonly COLUMNS_SQL = `
     SELECT
       tabs.table_name,
       cols.column_name,
@@ -139,6 +144,11 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       (cons.status = 'ENABLED'
         OR cons.status IS NULL)
   `
+
+  private static readonly TRIGGERS_SQL = `
+    SELECT table_name, trigger_name, trigger_type, triggering_event, trigger_body FROM all_triggers WHERE status = 'ENABLED';
+  `
+
   constructor(config: OracleConfig) {
     super(SqlClient.ORACLE)
     this.config = config
@@ -255,7 +265,10 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     entities: Record<string, Table>
   ): Promise<Schema> {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
-      sql: this.COLUMNS_SQL,
+      sql: OracleIntegration.COLUMNS_SQL,
+    })
+    const triggersResponse = await this.internalQuery<OracleTriggersResponse>({
+      sql: OracleIntegration.TRIGGERS_SQL,
     })
     const oracleTables = this.mapColumns(columnsResponse)
 
@@ -325,7 +338,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
 
   async getTableNames() {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
-      sql: this.COLUMNS_SQL,
+      sql: OracleIntegration.COLUMNS_SQL,
     })
     return (columnsResponse.rows || []).map(row => row.TABLE_NAME)
   }

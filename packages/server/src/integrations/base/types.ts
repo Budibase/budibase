@@ -104,6 +104,14 @@ export interface OracleColumnsResponse {
   SEARCH_CONDITION: null | string
 }
 
+export interface OracleTriggersResponse {
+  TABLE_NAME: string
+  TRIGGER_NAME: string
+  TRIGGER_TYPE: string
+  TRIGGERING_EVENT: string
+  TRIGGER_BODY: string
+}
+
 /**
  * An oracle constraint
  */
