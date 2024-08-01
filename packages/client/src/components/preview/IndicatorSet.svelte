@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
-  import { componentStore } from "stores"
+  import { componentStore, builderStore } from "stores"
   import { memo, Utils } from "@budibase/frontend-core"
   import { writable } from "svelte/store"
   import { isGridChild } from "utils/grid"
@@ -13,7 +13,6 @@
   export let allowResizeAnchors = false
 
   // Offset = 6 (clip-root padding) - 1 (half the border thickness)
-  const offset = 6 - 1
   const config = memo($$props)
   const errorColor = "var(--spectrum-global-color-static-red-600)"
   const defaultState = () => ({
@@ -39,6 +38,7 @@
   let observers = []
   let callbackCount = 0
 
+  $: offset = $builderStore.inBuilder ? 5 : -1
   $: visibleIndicators = state.indicators.filter(x => x.visible)
 
   // Update position when any props change
