@@ -132,7 +132,6 @@ const createScreenStore = () => {
         let layoutSettings = {
           navigation: "None",
           pageWidth: activeScreen?.width || "Large",
-          pageLayout: activeScreen?.layout || "flex",
           embedded: $appStore.embedded,
         }
         if (activeScreen?.showNavigation) {

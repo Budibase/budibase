@@ -1,9 +1,10 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
-  import { builderStore, componentStore } from "stores"
+  import { componentStore } from "stores"
   import { memo, Utils } from "@budibase/frontend-core"
   import { writable } from "svelte/store"
+  import { isGridChild } from "utils/grid"
 
   export let componentId = null
   export let color = null
@@ -58,15 +59,7 @@
   const checkInsideGrid = id => {
     const component = document.getElementsByClassName(id)[0]
     const domNode = component?.children[0]
-
-    // Ignore grid itself
-    if (domNode?.classList?.contains("grid")) {
-      return false
-    }
-
-    return component?.parentNode
-      ?.closest?.(".component")
-      ?.childNodes[0]?.classList?.contains("grid")
+    return isGridChild(domNode)
   }
 
   const createIntersectionCallback = idx => entries => {
