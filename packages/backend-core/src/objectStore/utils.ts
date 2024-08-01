@@ -11,6 +11,13 @@ import {
 } from "@budibase/types"
 import stream from "stream"
 import streamWeb from "node:stream/web"
+import { File } from "formidable"
+import { BadRequestError } from "../errors"
+import { InvalidFileExtensions } from "@budibase/shared-core"
+
+interface ValidatedFile extends Omit<File, "name"> {
+  name: string
+}
 
 /****************************************************
  *      NOTE: When adding a new bucket - name       *
@@ -110,4 +117,30 @@ export async function processAutomationAttachment(
   } else {
     return await processObjectStoreAttachment(attachment)
   }
+}
+
+export function validateFiles(files: (File | undefined)[]): ValidatedFile[] {
+  for (let file of files) {
+    if (!file?.name) {
+      throw new BadRequestError("Attempted to upload a file without a filename")
+    }
+
+    const extension = [...file.name.split(".")].pop()
+    if (!extension) {
+      throw new BadRequestError(
+        `File "${file.name}" has no extension, an extension is required to upload a file`
+      )
+    }
+
+    if (
+      !env.SELF_HOSTED &&
+      InvalidFileExtensions.includes(extension.toLowerCase())
+    ) {
+      throw new BadRequestError(
+        `File "${file.name}" has an invalid extension: "${extension}"`
+      )
+    }
+  }
+  // errors confirm this is a valid cast
+  return files as ValidatedFile[]
 }

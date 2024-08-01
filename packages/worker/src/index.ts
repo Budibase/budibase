@@ -48,7 +48,14 @@ app.keys = ["secret", "key"]
 
 // set up top level koa middleware
 app.use(handleScimBody)
-app.use(koaBody({ multipart: true }))
+app.use(
+  koaBody({
+    multipart: true,
+    formidable: {
+      maxFileSize: parseInt(env.MAX_IMPORT_SIZE_MB || "100") * 1024 * 1024,
+    },
+  })
+)
 
 app.use(koaSession(app))
 app.use(middleware.correlation)

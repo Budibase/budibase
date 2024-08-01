@@ -58,6 +58,7 @@ const environment = {
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   ENCRYPTED_TEST_PUBLIC_API_KEY: process.env.ENCRYPTED_TEST_PUBLIC_API_KEY,
   SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
+  MAX_IMPORT_SIZE_MB: process.env.MAX_IMPORT_SIZE_MB,
   /**
    * Mock the email service in use - links to ethereal hosted emails are logged instead.
    */

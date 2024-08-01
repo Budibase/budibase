@@ -78,32 +78,12 @@ export const uploadFile = async function (
     throw new BadRequestError("No file provided")
   }
 
-  let files = file && Array.isArray(file) ? Array.from(file) : [file]
-
+  let files = objectStore.validateFiles(
+    file && Array.isArray(file) ? Array.from(file) : [file]
+  )
   ctx.body = await Promise.all(
     files.map(async file => {
-      if (!file.name) {
-        throw new BadRequestError(
-          "Attempted to upload a file without a filename"
-        )
-      }
-
       const extension = [...file.name.split(".")].pop()
-      if (!extension) {
-        throw new BadRequestError(
-          `File "${file.name}" has no extension, an extension is required to upload a file`
-        )
-      }
-
-      if (
-        !env.SELF_HOSTED &&
-        InvalidFileExtensions.includes(extension.toLowerCase())
-      ) {
-        throw new BadRequestError(
-          `File "${file.name}" has an invalid extension: "${extension}"`
-        )
-      }
-
       // filenames converted to UUIDs so they are unique
       const processedFileName = `${uuid.v4()}.${extension}`
 
