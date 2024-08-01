@@ -616,9 +616,6 @@
   }
 
   const handleWrapperClick = e => {
-    if (isBlock) {
-      return
-    }
     e.stopPropagation()
     builderStore.actions.selectComponent(id)
   }
@@ -691,7 +688,7 @@
     data-parent={$component.id}
     style={wrapperCSS}
     {draggable}
-    on:click|self={handleWrapperClick}
+    on:click|self={interactive ? handleWrapperClick : null}
   >
     {#if errorState}
       <ComponentErrorState
