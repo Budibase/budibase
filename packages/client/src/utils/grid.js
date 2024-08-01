@@ -70,23 +70,17 @@ export const getGridParentID = node => {
 }
 
 // Generates the base set of grid CSS vars from a component definition
-const alignmentToStyleMap = {
-  start: "flex-start",
-  center: "center",
-  end: "flex-end",
-  stretch: "stretch",
-}
 export const getBaseGridVars = definition => {
   const gridHAlign = definition?.grid?.hAlign || "stretch"
   const gridVAlign = definition?.grid?.vAlign || "center"
   const flexStyles = gridVAlign === "stretch" ? "1 1 0" : "0 0 auto"
   return {
-    ["--grid-desktop-h-align"]: alignmentToStyleMap[gridHAlign],
-    ["--grid-mobile-h-align"]: alignmentToStyleMap[gridHAlign],
-    ["--grid-desktop-v-align"]: alignmentToStyleMap[gridVAlign],
-    ["--grid-mobile-v-align"]: alignmentToStyleMap[gridVAlign],
-    ["--grid-desktop-child-flex"]: flexStyles,
-    ["--grid-mobile-child-flex"]: flexStyles,
+    "--grid-desktop-h-align": gridHAlign,
+    "--grid-mobile-h-align": gridHAlign,
+    "--grid-desktop-v-align": gridVAlign,
+    "--grid-mobile-v-align": gridVAlign,
+    "--grid-desktop-child-flex": flexStyles,
+    "--grid-mobile-child-flex": flexStyles,
   }
 }
 

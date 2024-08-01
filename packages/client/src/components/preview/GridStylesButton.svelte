@@ -11,6 +11,7 @@
   export let componentId
 
   $: currentValue = getGridVarValue(gridStyles, style)
+  $: console.log(style, currentValue, value)
   $: active = currentValue === value
 </script>
 

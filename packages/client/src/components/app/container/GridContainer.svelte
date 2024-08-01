@@ -41,8 +41,8 @@
       ...$component.styles?.normal,
       "--cols": cols,
       "--rows": rows,
-      "--col-size": `${colSize}px`,
-      "--row-size": `${rowSize}px`,
+      "--col-size": colSize,
+      "--row-size": rowSize,
     },
     empty: false,
   }}
@@ -70,14 +70,14 @@
     gap: 0;
 
     /* Prevent cross-grid variable inheritance */
-    --grid-desktop-col-start: initial;
+    /*    --grid-desktop-col-start: initial;
     --grid-desktop-col-end: initial;
     --grid-desktop-row-start: initial;
     --grid-desktop-row-end: initial;
     --grid-mobile-col-start: initial;
     --grid-mobile-col-end: initial;
     --grid-mobile-row-start: initial;
-    --grid-mobile-row-end: initial;
+    --grid-mobile-row-end: initial;*/
   }
   .grid,
   .underlay {
@@ -111,9 +111,22 @@
     /* On desktop, use desktop metadata and fall back to mobile */
     /* Position vars */
     --col-start: var(--grid-desktop-col-start, var(--grid-mobile-col-start, 1));
-    --col-end: var(--grid-desktop-col-end, var(--grid-mobile-col-end, 2));
+    --col-end: var(
+      --grid-desktop-col-end,
+      var(
+        --grid-mobile-col-end,
+        /* Our final*/
+          round(up, calc(var(--default-width) / var(--col-size) + 1))
+      )
+    );
     --row-start: var(--grid-desktop-row-start, var(--grid-mobile-row-start, 1));
-    --row-end: var(--grid-desktop-row-end, var(--grid-mobile-row-end, 2));
+    --row-end: var(
+      --grid-desktop-row-end,
+      var(
+        --grid-mobile-row-end,
+        round(up, calc(var(--default-height) / var(--row-size) + 1))
+      )
+    );
 
     /*  Flex vars */
     --h-align: var(--grid-desktop-h-align, var(--grid-mobile-h-align, stretch));

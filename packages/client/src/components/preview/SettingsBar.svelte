@@ -40,7 +40,10 @@
   $: isRoot = componentId === $builderStore.screen?.props?._id
   $: insideGrid =
     parent?._component.endsWith("/container") && parent.layout === "grid"
-  $: showGridStyles = insideGrid && definition?.grid?.showControls !== false
+  $: showGridStyles =
+    insideGrid &&
+    (definition?.grid?.hAlign !== "stretch" ||
+      definition?.grid?.vAlign !== "stretch")
   $: gridHAlignVar = $getGridVar("h-align")
   $: gridVAlignVar = $getGridVar("v-align")
   $: gridStyles = $state?.styles
