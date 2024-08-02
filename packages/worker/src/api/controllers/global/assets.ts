@@ -37,7 +37,7 @@ export async function upload(ctx: Ctx) {
     metadata,
   })
   if (!isPrivate) {
-    await objectStore.makePathPublic(globalBucket(), s3Key)
+    await objectStore.makePathPublic(globalBucket(), response.Key)
   }
 
   const upload = {
