@@ -84,7 +84,7 @@ export function validate(
           "Column names can't contain special characters"
       } else if (
         columnData == null &&
-        !schema[columnName].constraints?.presence
+        !helpers.schema.isRequired(constraints)
       ) {
         results.schemaValidation[columnName] = true
       } else if (
@@ -94,6 +94,11 @@ export function validate(
         isAutoColumn
       ) {
         return
+      } else if (
+        [FieldType.STRING].includes(columnType) &&
+        helpers.schema.isRequired(constraints)
+      ) {
+        results.schemaValidation[columnName] = false
       } else if (columnType === FieldType.NUMBER && isNaN(Number(columnData))) {
         // If provided must be a valid number
         results.schemaValidation[columnName] = false
