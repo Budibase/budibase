@@ -1,5 +1,4 @@
 import { builderStore } from "stores"
-import { derived } from "svelte/store"
 import { buildStyleString } from "utils/styleable.js"
 
 /**
@@ -11,10 +10,13 @@ import { buildStyleString } from "utils/styleable.js"
  *
  * Component definitions define their default layout preference via the
  * `grid.hAlign` and `grid.vAlign` keys in the manifest.
+ *
+ * We also apply grid-[mobile/desktop]-grow CSS classes to component wrapper
+ * DOM nodes to use later in selectors, to control the sizing of children.
  */
 
 // Enum representing the different CSS variables we use for grid metadata
-export const GridVars = {
+export const GridParams = {
   HAlign: "h-align",
   VAlign: "v-align",
   ColStart: "col-start",
@@ -35,38 +37,8 @@ const Devices = {
   Mobile: "mobile",
 }
 
-// A derived map of all CSS variables for the current device
-const previewDevice = derived(builderStore, $store => $store.previewDevice)
-export const gridCSSVars = derived(previewDevice, $device => {
-  const device = $device === Devices.Mobile ? Devices.Mobile : Devices.Desktop
-  let vars = {}
-  for (let type of Object.values(GridVars)) {
-    vars[type] = `--grid-${device}-${type}`
-  }
-  return vars
-})
-
 // Builds a CSS variable name for a certain piece of grid metadata
-export const getGridCSSVar = (device, type) => `--grid-${device}-${type}`
-
-// Generates the CSS variable for a certain grid param suffix, for the other
-// device variant than the one included in this variable
-export const getOtherDeviceGridVar = cssVar => {
-  if (cssVar.includes(Devices.Desktop)) {
-    return cssVar.replace(Devices.Desktop, Devices.Mobile)
-  } else {
-    return cssVar.replace(Devices.Mobile, Devices.Desktop)
-  }
-}
-
-// Gets the default value for a certain grid CSS variable
-export const getDefaultGridVarValue = cssVar => {
-  if (cssVar.includes("align")) {
-    return cssVar.includes("-h-") ? "stretch" : "center"
-  } else {
-    return cssVar.endsWith("-start") ? 1 : 2
-  }
-}
+export const getGridVar = (device, param) => `--grid-${device}-${param}`
 
 // Determines whether a JS event originated from immediately within a grid
 export const isGridEvent = e => {
@@ -92,32 +64,18 @@ export const getGridParentID = node => {
   return node?.parentNode?.closest(".grid")?.parentNode.dataset.id
 }
 
-// Gets the current value of a certain grid CSS variable for a component
-export const getGridVarValue = (styles, variable) => {
-  // Try the desired variable
-  let val = styles?.variables?.[variable]
-
-  // Otherwise try the other device variables
-  if (!val) {
-    val = styles?.[getOtherDeviceGridVar(variable)]
-  }
-
-  // Otherwise use the default
-  return val ? val : getDefaultGridVarValue(variable)
-}
-
 // Svelte action to apply required class names and styles to our component
 // wrappers
 export const gridLayout = (node, metadata) => {
   let selectComponent
 
+  // Applies the required listeners, CSS and classes to a component DOM node
   const applyMetadata = metadata => {
     const { id, styles, interactive, errored, definition } = metadata
-    consol.log(styles)
 
     // Callback to select the component when clicking on the wrapper
     selectComponent = e => {
-      e.preventDefault()
+      e.stopPropagation()
       builderStore.actions.selectComponent(id)
     }
 
@@ -145,13 +103,14 @@ export const gridLayout = (node, metadata) => {
     node.style = buildStyleString(vars)
 
     // Toggle classes to specify whether our children should fill
-    const desktopVar = getGridCSSVar(Devices.Desktop, GridVars.VAlign)
-    const mobileVar = getGridCSSVar(Devices.Mobile, GridVars.VAlign)
     node.classList.toggle(
       GridClasses.DesktopFill,
-      vars[desktopVar] === "stretch"
+      vars[getGridVar(Devices.Desktop, GridParams.VAlign)] === "stretch"
     )
-    node.classList.toggle(GridClasses.MobileFill, vars[mobileVar] === "stretch")
+    node.classList.toggle(
+      GridClasses.MobileFill,
+      vars[getGridVar(Devices.Mobile, GridParams.VAlign)] === "stretch"
+    )
 
     // Add a listener to select this node on click
     if (interactive) {
@@ -159,6 +118,7 @@ export const gridLayout = (node, metadata) => {
     }
   }
 
+  // Removes the previously set up listeners
   const removeListeners = () => {
     node.removeEventListener("click", selectComponent)
   }
