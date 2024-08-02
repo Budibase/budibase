@@ -36,6 +36,8 @@ import {
   OracleColumn,
   OracleColumnsResponse,
   OracleTriggersResponse,
+  TriggeringEvent,
+  TriggerType,
 } from "./base/types"
 import { sql } from "@budibase/backend-core"
 
@@ -146,7 +148,15 @@ class OracleIntegration extends Sql implements DatasourcePlus {
   `
 
   private static readonly TRIGGERS_SQL = `
-    SELECT table_name, trigger_name, trigger_type, triggering_event, trigger_body FROM all_triggers WHERE status = 'ENABLED';
+    SELECT 
+      table_name, 
+      trigger_name, 
+      trigger_type, 
+      triggering_event, 
+      trigger_body 
+    FROM 
+      all_triggers 
+    WHERE status = 'ENABLED'
   `
 
   constructor(config: OracleConfig) {
@@ -219,6 +229,75 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     }
 
     return oracleTables
+  }
+
+  private getTriggersFor(
+    tableName: string,
+    triggersResponse: Result<OracleTriggersResponse>,
+    opts?: { event?: TriggeringEvent; type?: TriggerType }
+  ): OracleTriggersResponse[] {
+    const triggers: OracleTriggersResponse[] = []
+    for (const trigger of triggersResponse.rows || []) {
+      if (trigger.TABLE_NAME !== tableName) {
+        continue
+      }
+      if (opts?.event && opts.event !== trigger.TRIGGERING_EVENT) {
+        continue
+      }
+      if (opts?.type && opts.type !== trigger.TRIGGER_TYPE) {
+        continue
+      }
+      triggers.push(trigger)
+    }
+    return triggers
+  }
+
+  private markAutoIncrementColumns(
+    triggersResponse: Result<OracleTriggersResponse>,
+    tables: Record<string, Table>
+  ) {
+    for (const table of Object.values(tables)) {
+      const triggers = this.getTriggersFor(table.name, triggersResponse, {
+        type: TriggerType.BEFORE_EACH_ROW,
+        event: TriggeringEvent.INSERT,
+      })
+
+      // This is the trigger body Knex generates for an auto increment column
+      // called "id" on a table called "foo":
+      //
+      //   declare checking number := 1;
+      //   begin if (:new. "id" is null) then while checking >= 1 loop
+      //   select
+      //       "foo_seq".nextval into :new. "id"
+      //   from
+      //       dual;
+      //   select
+      //       count("id") into checking
+      //   from
+      //       "foo"
+      //   where
+      //       "id" = :new. "id";
+      //   end loop;
+      //   end if;
+      //   end;
+      for (const [columnName, schema] of Object.entries(table.schema)) {
+        const autoIncrementTriggers = triggers.filter(
+          trigger =>
+            // This is a bit heuristic, but I think it's the best we can do with
+            // the information we have. We're looking for triggers that run
+            // before each row is inserted, and that have a body that contains a
+            // call to a function that generates a new value for the column.  We
+            // also check that the column name is in the trigger body, to make
+            // sure we're not picking up triggers that don't affect the column.
+            trigger.TRIGGER_BODY.includes(`"${columnName}"`) &&
+            trigger.TRIGGER_BODY.includes(`.nextval`)
+        )
+
+        if (autoIncrementTriggers.length > 0) {
+          schema.autocolumn = true
+        }
+      }
+    }
   }
 
   private static isSupportedColumn(column: OracleColumn) {
@@ -330,6 +409,8 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           })
         })
     })
+
+    this.markAutoIncrementColumns(triggersResponse, tables)
 
     let externalTables = finaliseExternalTables(tables, entities)
     let errors = checkExternalTables(externalTables)
