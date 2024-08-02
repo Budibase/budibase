@@ -45,15 +45,15 @@ export interface DynamicVariable {
 
 export interface RestConfig {
   url: string
-  rejectUnauthorized: boolean
+  rejectUnauthorized?: boolean
   downloadImages?: boolean
-  defaultHeaders: {
+  defaultHeaders?: {
     [key: string]: any
   }
-  legacyHttpParser: boolean
-  authConfigs: RestAuthConfig[]
-  staticVariables: {
+  legacyHttpParser?: boolean
+  authConfigs?: RestAuthConfig[]
+  staticVariables?: {
     [key: string]: string
   }
-  dynamicVariables: DynamicVariable[]
+  dynamicVariables?: DynamicVariable[]
 }
