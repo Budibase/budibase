@@ -478,7 +478,15 @@ class InternalBuilder {
           }
         },
         (key: string[], array) => {
-          query = query[fnc](key, Array.isArray(array) ? array : [array])
+          if (this.client === SqlClient.ORACLE) {
+            const keyStr = `(${key.map(k => this.convertClobs(k)).join(",")})`
+            const binding = `(${array
+              .map((a: any) => `(${new Array(a.length).fill("?").join(",")})`)
+              .join(",")})`
+            query = query.whereRaw(`${keyStr} IN ${binding}`, array.flat())
+          } else {
+            query = query[fnc](key, Array.isArray(array) ? array : [array])
+          }
         }
       )
     }
