@@ -1983,9 +1983,9 @@ describe.each([
         await config.api.row.bulkImport(tableId, {
           rows,
         })
-        // await config.api.row.bulkImport(tableId, {
-        //   rows,
-        // })
+        await config.api.row.bulkImport(tableId, {
+          rows,
+        })
 
         const { rows: allRows } = await config.api.row.search(tableId)
 
@@ -1998,11 +1998,7 @@ describe.each([
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
-        expect(allRows).toEqual([
-          expectedRow,
-          expectedRow,
-          // expectedRow
-        ])
+        expect(allRows).toEqual([expectedRow, expectedRow, expectedRow])
       })
     })
   })
