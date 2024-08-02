@@ -1391,6 +1391,10 @@
       "width": 25,
       "height": 25
     },
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "center"
+    },
     "settings": [
       {
         "type": "icon",
@@ -1704,6 +1708,10 @@
       "width": 260,
       "height": 143
     },
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "center"
+    },
     "settings": [
       {
         "type": "text",
@@ -1736,6 +1744,10 @@
     "size": {
       "width": 400,
       "height": 100
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
     },
     "settings": [
       {
@@ -5239,6 +5251,10 @@
     "size": {
       "width": 300,
       "height": 120
+    },
+    "grid": {
+      "hAlign": "center",
+      "vAlign": "center"
     },
     "settings": [
       {

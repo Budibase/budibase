@@ -2,7 +2,12 @@
   import { onMount, onDestroy } from "svelte"
   import { builderStore, componentStore } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
-  import { isGridEvent, getGridParentID, getGridVar } from "utils/grid"
+  import {
+    isGridEvent,
+    getGridParentID,
+    gridCSSVars,
+    GridVars,
+  } from "utils/grid"
 
   // Smallest possible 1x1 transparent GIF
   const ghost = new Image(1, 1)
@@ -15,10 +20,10 @@
 
   // Grid CSS variables
   $: vars = {
-    colStart: $getGridVar("col-start"),
-    colEnd: $getGridVar("col-end"),
-    rowStart: $getGridVar("row-start"),
-    rowEnd: $getGridVar("row-end"),
+    colStart: $gridCSSVars[GridVars.ColStart],
+    colEnd: $gridCSSVars[GridVars.ColEnd],
+    rowStart: $gridCSSVars[GridVars.RowStart],
+    rowEnd: $gridCSSVars[GridVars.RowEnd],
   }
 
   // Some memoisation of primitive types for performance

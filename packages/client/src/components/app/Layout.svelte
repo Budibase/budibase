@@ -480,7 +480,7 @@
     position: relative;
     padding: 32px;
   }
-  .main:has(> .grid) {
+  .main:has(.screenslot-dom > .component > .grid) {
     padding-top: 0;
     padding-bottom: 0;
   }

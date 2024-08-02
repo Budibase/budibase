@@ -39,8 +39,7 @@
     getActionContextKey,
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
-  import { buildStyleString } from "utils/styleable.js"
-  import { getBaseGridVars } from "utils/grid.js"
+  import { gridLayout } from "utils/grid.js"
 
   export let instance = {}
   export let isLayout = false
@@ -198,15 +197,18 @@
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
 
-  // Build up full styles and split them into variables and non-variables
-  $: baseStyles = getBaseStyles(definition, errorState)
-  $: styles = {
-    ...baseStyles,
+  $: normalStyles = {
     ...instance._styles?.normal,
     ...ephemeralStyles,
   }
-  $: parsedStyles = parseStyles(styles)
-  $: wrapperCSS = buildStyleString(parsedStyles.variables)
+  $: gridMetadata = {
+    id,
+    interactive,
+    styles: normalStyles,
+    draggable,
+    definition,
+    errored: errorState,
+  }
 
   // Update component context
   $: store.set({
@@ -214,8 +216,7 @@
     children: children.length,
     styles: {
       ...instance._styles,
-      normal: parsedStyles.nonVariables,
-      variables: parsedStyles.variables,
+      normal: normalStyles,
       custom: customCSS,
       id,
       empty: emptyState,
@@ -615,31 +616,6 @@
     }
   }
 
-  const handleWrapperClick = e => {
-    e.stopPropagation()
-    builderStore.actions.selectComponent(id)
-  }
-
-  // Splits component styles into variables and non-variables
-  const parseStyles = styles => {
-    let variables = {}
-    let nonVariables = {}
-    for (let style of Object.keys(styles || {})) {
-      const group = style.startsWith("--") ? variables : nonVariables
-      group[style] = styles[style]
-    }
-    return { variables, nonVariables }
-  }
-
-  // Generates any required base styles based on the component definition
-  const getBaseStyles = (definition, errored = false) => {
-    return {
-      "--default-width": errored ? 500 : definition.size?.width || 100,
-      "--default-height": errored ? 60 : definition.size?.height || 100,
-      ...getBaseGridVars(definition, errored),
-    }
-  }
-
   onMount(() => {
     // Register this component instance for external access
     if ($appStore.isDevApp) {
@@ -683,14 +659,11 @@
     class:parent={hasChildren}
     class:block={isBlock}
     class:error={errorState}
-    class:fill={definition.grid?.fill}
     data-id={id}
     data-name={name}
     data-icon={icon}
     data-parent={$component.id}
-    style={wrapperCSS}
-    {draggable}
-    on:click|self={interactive ? handleWrapperClick : null}
+    use:gridLayout={gridMetadata}
   >
     {#if errorState}
       <ComponentErrorState

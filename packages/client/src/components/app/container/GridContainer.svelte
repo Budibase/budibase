@@ -68,16 +68,6 @@
     position: relative;
     height: 400px;
     gap: 0;
-
-    /* Prevent cross-grid variable inheritance */
-    /*    --grid-desktop-col-start: initial;
-    --grid-desktop-col-end: initial;
-    --grid-desktop-row-start: initial;
-    --grid-desktop-row-end: initial;
-    --grid-mobile-col-start: initial;
-    --grid-mobile-col-end: initial;
-    --grid-mobile-row-start: initial;
-    --grid-mobile-row-end: initial;*/
   }
   .grid,
   .underlay {
@@ -128,12 +118,8 @@
     );
 
     /* Flex vars */
-    --h-align: var(--grid-desktop-h-align, var(--grid-mobile-h-align, stretch));
-    --v-align: var(--grid-desktop-v-align, var(--grid-mobile-v-align, center));
-    --child-flex: var(
-      --grid-desktop-child-flex,
-      var(--grid-mobile-child-flex, 0 0 auto)
-    );
+    --h-align: var(--grid-desktop-h-align, var(--grid-mobile-h-align));
+    --v-align: var(--grid-desktop-v-align, var(--grid-mobile-v-align));
 
     /* Ensure grid metadata falls within limits */
     grid-column-start: min(max(1, var(--col-start)), var(--cols)) !important;
@@ -171,16 +157,20 @@
     );
 
     /* Flex vars */
-    --h-align: var(--grid-mobile-h-align, var(--grid-desktop-h-align, stretch));
-    --v-align: var(--grid-mobile-v-align, var(--grid-desktop-v-align, center));
-    --child-flex: var(
-      --grid-mobile-child-flex,
-      var(--grid-desktop-child-flex, 0 0 auto)
-    );
+    --h-align: var(--grid-mobile-h-align, var(--grid-desktop-h-align));
+    --v-align: var(--grid-mobile-v-align, var(--grid-desktop-v-align));
   }
 
   /* Handle grid children which need to fill the outer component wrapper */
   .grid :global(> .component > *) {
-    flex: var(--child-flex) !important;
+    flex: 0 0 auto !important;
+  }
+  .grid:not(.mobile) :global(> .component.grid-desktop-grow > *) {
+    flex: 1 1 0 !important;
+    height: 0 !important;
+  }
+  .grid.mobile :global(> .component.grid-mobile-grow > *) {
+    flex: 1 1 0 !important;
+    height: 0 !important;
   }
 </style>
