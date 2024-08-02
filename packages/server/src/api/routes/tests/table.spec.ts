@@ -1,5 +1,9 @@
 import { context, docIds, events } from "@budibase/backend-core"
 import {
+  PROTECTED_EXTERNAL_COLUMNS,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
+import {
   AutoFieldSubType,
   BBReferenceFieldSubType,
   Datasource,
@@ -13,8 +17,10 @@ import {
   TableSchema,
   TableSourceType,
   User,
+  ValidateTableImportResponse,
   ViewCalculation,
   ViewV2Enriched,
+  RowExportFormat,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -119,6 +125,64 @@ describe.each([
         body: basicTable(),
       })
     })
+
+    it("does not persist the row fields that are not on the table schema", async () => {
+      const table: SaveTableRequest = basicTable()
+      table.rows = [
+        {
+          name: "test-name",
+          description: "test-desc",
+          nonValid: "test-non-valid",
+        },
+      ]
+
+      const res = await config.api.table.save(table)
+
+      const persistedRows = await config.api.row.search(res._id!)
+
+      expect(persistedRows.rows).toEqual([
+        expect.objectContaining({
+          name: "test-name",
+          description: "test-desc",
+        }),
+      ])
+      expect(persistedRows.rows[0].nonValid).toBeUndefined()
+    })
+
+    it.each(
+      isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
+    )(
+      "cannot use protected column names (%s) while importing a table",
+      async columnName => {
+        const table: SaveTableRequest = basicTable()
+        table.rows = [
+          {
+            name: "test-name",
+            description: "test-desc",
+          },
+        ]
+
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              [columnName]: {
+                name: columnName,
+                type: FieldType.STRING,
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              message: `Column(s) "${columnName}" are duplicated - check for other columns with these name (case in-sensitive)`,
+              status: 400,
+            },
+          }
+        )
+      }
+    )
   })
 
   describe("update", () => {
@@ -1024,7 +1088,10 @@ describe.each([
     })
   })
 
-  describe("import validation", () => {
+  describe.each([
+    [RowExportFormat.CSV, (val: any) => JSON.stringify(val).replace(/"/g, "'")],
+    [RowExportFormat.JSON, (val: any) => val],
+  ])("import validation (%s)", (_, userParser) => {
     const basicSchema: TableSchema = {
       id: {
         type: FieldType.NUMBER,
@@ -1036,9 +1103,41 @@ describe.each([
       },
     }
 
-    describe("validateNewTableImport", () => {
-      it("can validate basic imports", async () => {
-        const result = await config.api.table.validateNewTableImport(
+    const importCases: [
+      string,
+      (rows: Row[], schema: TableSchema) => Promise<ValidateTableImportResponse>
+    ][] = [
+      [
+        "validateNewTableImport",
+        async (rows: Row[], schema: TableSchema) => {
+          const result = await config.api.table.validateNewTableImport({
+            rows,
+            schema,
+          })
+          return result
+        },
+      ],
+      [
+        "validateExistingTableImport",
+        async (rows: Row[], schema: TableSchema) => {
+          const table = await config.api.table.save(
+            tableForDatasource(datasource, {
+              primary: ["id"],
+              schema,
+            })
+          )
+          const result = await config.api.table.validateExistingTableImport({
+            tableId: table._id,
+            rows,
+          })
+          return result
+        },
+      ],
+    ]
+
+    describe.each(importCases)("%s", (_, testDelegate) => {
+      it("validates basic imports", async () => {
+        const result = await testDelegate(
           [{ id: generator.natural(), name: generator.first() }],
           basicSchema
         )
@@ -1053,20 +1152,53 @@ describe.each([
           },
         })
       })
-    })
 
-    describe("validateExistingTableImport", () => {
-      it("can validate basic imports", async () => {
-        const table = await config.api.table.save(
-          tableForDatasource(datasource, {
-            primary: ["id"],
-            schema: basicSchema,
-          })
-        )
-        const result = await config.api.table.validateExistingTableImport({
-          tableId: table._id,
-          rows: [{ id: generator.natural(), name: generator.first() }],
+      it.each(
+        isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
+      )("don't allow protected names in schema (%s)", async columnName => {
+        const result = await config.api.table.validateNewTableImport({
+          rows: [
+            {
+              id: generator.natural(),
+              name: generator.first(),
+              [columnName]: generator.word(),
+            },
+          ],
+          schema: {
+            ...basicSchema,
+          },
         })
+
+        expect(result).toEqual({
+          allValid: false,
+          errors: {
+            [columnName]: `${columnName} is a protected column name`,
+          },
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+            [columnName]: false,
+          },
+        })
+      })
+
+      it("does not allow imports without rows", async () => {
+        const result = await testDelegate([], basicSchema)
+
+        expect(result).toEqual({
+          allValid: false,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {},
+        })
+      })
+
+      it("validates imports with some empty rows", async () => {
+        const result = await testDelegate(
+          [{}, { id: generator.natural(), name: generator.first() }, {}],
+          basicSchema
+        )
 
         expect(result).toEqual({
           allValid: true,
@@ -1079,6 +1211,217 @@ describe.each([
         })
       })
 
+      isInternal &&
+        it.each(
+          isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
+        )("don't allow protected names in the rows (%s)", async columnName => {
+          const result = await config.api.table.validateNewTableImport({
+            rows: [
+              {
+                id: generator.natural(),
+                name: generator.first(),
+              },
+            ],
+            schema: {
+              ...basicSchema,
+              [columnName]: {
+                name: columnName,
+                type: FieldType.STRING,
+              },
+            },
+          })
+
+          expect(result).toEqual({
+            allValid: false,
+            errors: {
+              [columnName]: `${columnName} is a protected column name`,
+            },
+            invalidColumns: [],
+            schemaValidation: {
+              id: true,
+              name: true,
+              [columnName]: false,
+            },
+          })
+        })
+
+      it("validates required fields and valid rows", async () => {
+        const schema: TableSchema = {
+          ...basicSchema,
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+            constraints: { presence: true },
+          },
+        }
+
+        const result = await testDelegate(
+          [
+            { id: generator.natural(), name: generator.first() },
+            { id: generator.natural(), name: generator.first() },
+          ],
+          schema
+        )
+
+        expect(result).toEqual({
+          allValid: true,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+          },
+        })
+      })
+
+      it("validates required fields and non-valid rows", async () => {
+        const schema: TableSchema = {
+          ...basicSchema,
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+            constraints: { presence: true },
+          },
+        }
+
+        const result = await testDelegate(
+          [
+            { id: generator.natural(), name: generator.first() },
+            { id: generator.natural(), name: "" },
+          ],
+          schema
+        )
+
+        expect(result).toEqual({
+          allValid: false,
+          errors: {},
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: false,
+          },
+        })
+      })
+
+      describe("bb references", () => {
+        const getUserValues = () => ({
+          _id: docIds.generateGlobalUserID(),
+          primaryDisplay: generator.first(),
+          email: generator.email({}),
+        })
+
+        it("can validate user column imports", async () => {
+          const schema: TableSchema = {
+            ...basicSchema,
+            user: {
+              type: FieldType.BB_REFERENCE_SINGLE,
+              subtype: BBReferenceFieldSubType.USER,
+              name: "user",
+            },
+          }
+
+          const result = await testDelegate(
+            [
+              {
+                id: generator.natural(),
+                name: generator.first(),
+                user: userParser(getUserValues()),
+              },
+            ],
+            schema
+          )
+
+          expect(result).toEqual({
+            allValid: true,
+            errors: {},
+            invalidColumns: [],
+            schemaValidation: {
+              id: true,
+              name: true,
+              user: true,
+            },
+          })
+        })
+
+        it("can validate user column imports with invalid data", async () => {
+          const schema: TableSchema = {
+            ...basicSchema,
+            user: {
+              type: FieldType.BB_REFERENCE_SINGLE,
+              subtype: BBReferenceFieldSubType.USER,
+              name: "user",
+            },
+          }
+
+          const result = await testDelegate(
+            [
+              {
+                id: generator.natural(),
+                name: generator.first(),
+                user: userParser(getUserValues()),
+              },
+              {
+                id: generator.natural(),
+                name: generator.first(),
+                user: "no valid user data",
+              },
+            ],
+            schema
+          )
+
+          expect(result).toEqual({
+            allValid: false,
+            errors: {},
+            invalidColumns: [],
+            schemaValidation: {
+              id: true,
+              name: true,
+              user: false,
+            },
+          })
+        })
+
+        it("can validate users column imports", async () => {
+          const schema: TableSchema = {
+            ...basicSchema,
+            user: {
+              type: FieldType.BB_REFERENCE,
+              subtype: BBReferenceFieldSubType.USER,
+              name: "user",
+              externalType: "array",
+            },
+          }
+
+          const result = await testDelegate(
+            [
+              {
+                id: generator.natural(),
+                name: generator.first(),
+                user: userParser([
+                  getUserValues(),
+                  getUserValues(),
+                  getUserValues(),
+                ]),
+              },
+            ],
+            schema
+          )
+
+          expect(result).toEqual({
+            allValid: true,
+            errors: {},
+            invalidColumns: [],
+            schemaValidation: {
+              id: true,
+              name: true,
+              user: true,
+            },
+          })
+        })
+      })
+    })
+
+    describe("validateExistingTableImport", () => {
       isInternal &&
         it("can reimport _id fields for internal tables", async () => {
           const table = await config.api.table.save(

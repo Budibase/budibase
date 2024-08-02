@@ -1,6 +1,13 @@
 import { npmUpload, urlUpload, githubUpload } from "./uploaders"
 import { plugins as pluginCore } from "@budibase/backend-core"
-import { PluginType, FileType, PluginSource } from "@budibase/types"
+import {
+  PluginType,
+  FileType,
+  PluginSource,
+  Ctx,
+  CreatePluginRequest,
+  CreatePluginResponse,
+} from "@budibase/types"
 import env from "../../../environment"
 import { clientAppSocket } from "../../../websockets"
 import sdk from "../../../sdk"
@@ -29,7 +36,9 @@ export async function upload(ctx: any) {
   }
 }
 
-export async function create(ctx: any) {
+export async function create(
+  ctx: Ctx<CreatePluginRequest, CreatePluginResponse>
+) {
   const { source, url, headers, githubToken } = ctx.request.body
 
   try {
@@ -75,14 +84,9 @@ export async function create(ctx: any) {
     const doc = await pro.plugins.storePlugin(metadata, directory, source)
 
     clientAppSocket?.emit("plugins-update", { name, hash: doc.hash })
-    ctx.body = {
-      message: "Plugin uploaded successfully",
-      plugins: [doc],
-    }
     ctx.body = { plugin: doc }
   } catch (err: any) {
     const errMsg = err?.message ? err?.message : err
-
     ctx.throw(400, `Failed to import plugin: ${errMsg}`)
   }
 }

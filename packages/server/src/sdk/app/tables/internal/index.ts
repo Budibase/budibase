@@ -48,9 +48,7 @@ export async function save(
   }
 
   // check for case sensitivity - we don't want to allow duplicated columns
-  const duplicateColumn = findDuplicateInternalColumns(table, {
-    ignoreProtectedColumnNames: !oldTable && !!opts?.isImport,
-  })
+  const duplicateColumn = findDuplicateInternalColumns(table)
   if (duplicateColumn.length) {
     throw new Error(
       `Column(s) "${duplicateColumn.join(
