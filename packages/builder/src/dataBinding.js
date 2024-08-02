@@ -16,6 +16,7 @@ import {
   tables as tablesStore,
   roles as rolesStore,
   selectedScreen,
+  mediaStore,
 } from "stores/builder"
 import {
   makePropSafe,
@@ -45,6 +46,20 @@ const UpdateReferenceAction = {
   MOVE: "move",
 }
 
+const getMediaBindings = () => {
+  return Object.entries(get(mediaStore) || {}).map(entry => {
+    const [name] = entry
+    return {
+      type: "context",
+      runtimeBinding: `media.[${name}]`,
+      readableBinding: `Media.${makePropSafe(name)}`,
+      category: "Media",
+      icon: "AppleFiles",
+      display: { type: "string", name },
+    }
+  })
+}
+
 /**
  * Gets all bindable data context fields and instance fields.
  */
@@ -56,6 +71,7 @@ export const getBindableProperties = (asset, componentId) => {
   const stateBindings = getStateBindings()
   const selectedRowsBindings = getSelectedRowsBindings(asset)
   const roleBindings = getRoleBindings()
+  const mediaBindings = getMediaBindings()
   return [
     ...contextBindings,
     ...urlBindings,
@@ -64,6 +80,7 @@ export const getBindableProperties = (asset, componentId) => {
     ...deviceBindings,
     ...selectedRowsBindings,
     ...roleBindings,
+    ...mediaBindings,
   ]
 }
 

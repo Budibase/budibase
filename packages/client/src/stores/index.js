@@ -18,6 +18,7 @@ export { environmentStore } from "./environment"
 export { eventStore } from "./events"
 export { orgStore } from "./org"
 export { roleStore } from "./roles"
+export { mediaStore } from "./media"
 export {
   dndStore,
   dndIndex,

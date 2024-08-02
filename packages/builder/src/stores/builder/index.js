@@ -7,6 +7,7 @@ import { screenStore, selectedScreen, sortedScreens } from "./screens.js"
 import { builderStore } from "./builder.js"
 import { hoverStore } from "./hover.js"
 import { previewStore } from "./preview.js"
+import { mediaStore } from "./media.js"
 import {
   automationStore,
   selectedAutomation,
@@ -65,6 +66,7 @@ export {
   flags,
   hoverStore,
   snippets,
+  mediaStore,
 }
 
 export const reset = () => {
@@ -86,6 +88,7 @@ const refreshBuilderData = async () => {
     roles.fetch(),
     flags.fetch(),
   ])
+  await mediaStore.syncMedia()
 }
 
 const resetBuilderHistory = () => {

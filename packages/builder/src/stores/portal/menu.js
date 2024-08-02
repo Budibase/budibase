@@ -39,6 +39,10 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
       title: "Plugins",
       href: "/builder/portal/plugins",
     })
+    menu.push({
+      title: "Media",
+      href: "/builder/portal/media",
+    })
   }
 
   // Add settings page for admins

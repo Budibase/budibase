@@ -18,6 +18,7 @@ import {
   appStore,
   stateStore,
   createContextStore,
+  mediaStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -44,6 +45,7 @@ export default {
 
   // Stores
   authStore,
+  mediaStore,
   appStore,
   notificationStore,
   routeStore,
