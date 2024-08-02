@@ -51,7 +51,3 @@ export function jsonWithSchema(schema: TableSchema, rows: Row[]) {
 export function isFormat(format: any): format is RowExportFormat {
   return Object.values(RowExportFormat).includes(format as RowExportFormat)
 }
-
-export function parseCsvExport<T>(value: string) {
-  return JSON.parse(value) as T
-}
