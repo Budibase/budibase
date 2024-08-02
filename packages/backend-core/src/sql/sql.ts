@@ -809,10 +809,33 @@ class InternalBuilder {
     const { body } = this.query
     let query = this.qualifiedKnex({ alias: false })
     const parsedBody = this.parseBody(body)
-    // make sure no null values in body for creation
-    for (let [key, value] of Object.entries(parsedBody)) {
-      if (value == null) {
-        delete parsedBody[key]
+
+    if (this.client === SqlClient.ORACLE) {
+      // Oracle doesn't seem to automatically insert nulls
+      // if we don't specify them, so we need to do that here
+      for (const [column, schema] of Object.entries(
+        this.query.meta.table.schema
+      )) {
+        if (
+          schema.constraints?.presence === true ||
+          schema.type === FieldType.FORMULA ||
+          schema.type === FieldType.AUTO ||
+          schema.type === FieldType.LINK
+        ) {
+          continue
+        }
+
+        const value = parsedBody[column]
+        if (value == null) {
+          parsedBody[column] = null
+        }
+      }
+    } else {
+      // make sure no null values in body for creation
+      for (let [key, value] of Object.entries(parsedBody)) {
+        if (value == null) {
+          delete parsedBody[key]
+        }
       }
     }
 
