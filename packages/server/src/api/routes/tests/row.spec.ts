@@ -67,11 +67,11 @@ async function waitForEvent(
 }
 
 describe.each([
-  // ["internal", undefined],
-  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  ["internal", undefined],
+  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
   [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
@@ -1409,9 +1409,10 @@ describe.each([
         await assertRowUsage(rowUsage + 3)
       })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    // Upserting isn't yet supported in MSSQL / Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       it("should be able to update existing rows with bulkImport", async () => {
         const table = await config.api.table.save(
           saveTableRequest({
