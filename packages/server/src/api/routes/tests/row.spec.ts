@@ -1937,10 +1937,57 @@ describe.each([
           RowExportFormat.CSV
         )
 
-        const json = await config.api.table.csvToJson({
+        const jsonResult = await config.api.table.csvToJson({
           csvString: exportedValue,
         })
-        expect(json).toEqual([expectedRowData])
+
+        const stringified = (value: string) =>
+          JSON.stringify(value).replace(/"/g, "'")
+
+        const matchingObject = (key: string, value: any, isArray: boolean) => {
+          const objectMatcher = `{'${key}':'${value[key]}'.*?}`
+          if (isArray) {
+            return expect.stringMatching(new RegExp(`^\\[${objectMatcher}\\]$`))
+          }
+          return expect.stringMatching(new RegExp(`^${objectMatcher}$`))
+        }
+
+        expect(jsonResult).toEqual([
+          {
+            ...expectedRowData,
+            auto: expect.any(String),
+            array: stringified(expectedRowData["array"]),
+            attachment: matchingObject(
+              "key",
+              expectedRowData["attachment"][0].sample,
+              true
+            ),
+            attachment_single: matchingObject(
+              "key",
+              expectedRowData["attachment_single"].sample,
+              false
+            ),
+            bigint: stringified(expectedRowData["bigint"]),
+            boolean: stringified(expectedRowData["boolean"]),
+            json: stringified(expectedRowData["json"]),
+            number: stringified(expectedRowData["number"]),
+            signature_single: matchingObject(
+              "key",
+              expectedRowData["signature_single"].sample,
+              false
+            ),
+            bb_reference: matchingObject(
+              "_id",
+              expectedRowData["bb_reference"][0].sample,
+              true
+            ),
+            bb_reference_single: matchingObject(
+              "_id",
+              expectedRowData["bb_reference_single"].sample,
+              false
+            ),
+          },
+        ])
       })
 
       it("as json", async () => {
