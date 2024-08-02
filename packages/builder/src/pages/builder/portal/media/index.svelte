@@ -92,6 +92,8 @@
       return
     } finally {
       uploadFile = null
+      fileInput.value = null
+      saving = false
     }
     await fetchTenantMedia()
   }
