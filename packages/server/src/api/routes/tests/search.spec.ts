@@ -53,6 +53,7 @@ describe.each([
   const isLucene = name === "lucene"
   const isInMemory = name === "in-memory"
   const isInternal = isSqs || isLucene || isInMemory
+  const isSql = !isInMemory && !isLucene
   const config = setup.getConfig()
 
   let envCleanup: (() => void) | undefined
@@ -192,7 +193,8 @@ describe.each([
     // different to the one passed in will cause the assertion to fail.  Extra
     // rows returned by the query will also cause the assertion to fail.
     async toMatchExactly(expectedRows: any[]) {
-      const { rows: foundRows } = await this.performSearch()
+      const response = await this.performSearch()
+      const foundRows = response.rows
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
@@ -202,13 +204,15 @@ describe.each([
           expect.objectContaining(this.popRow(expectedRow, foundRows))
         )
       )
+      return response
     }
 
     // Asserts that the query returns rows matching exactly the set of rows
     // passed in. The order of the rows is not important, but extra rows will
     // cause the assertion to fail.
     async toContainExactly(expectedRows: any[]) {
-      const { rows: foundRows } = await this.performSearch()
+      const response = await this.performSearch()
+      const foundRows = response.rows
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect(foundRows).toHaveLength(expectedRows.length)
@@ -220,6 +224,7 @@ describe.each([
           )
         )
       )
+      return response
     }
 
     // Asserts that the query returns some property values - this cannot be used
@@ -236,6 +241,7 @@ describe.each([
           expect(response[key]).toEqual(properties[key])
         }
       }
+      return response
     }
 
     // Asserts that the query doesn't return a property, e.g. pagination parameters.
@@ -245,13 +251,15 @@ describe.each([
         // eslint-disable-next-line jest/no-standalone-expect
         expect(response[property]).toBeUndefined()
       }
+      return response
     }
 
     // Asserts that the query returns rows matching the set of rows passed in.
     // The order of the rows is not important. Extra rows will not cause the
     // assertion to fail.
     async toContain(expectedRows: any[]) {
-      const { rows: foundRows } = await this.performSearch()
+      const response = await this.performSearch()
+      const foundRows = response.rows
 
       // eslint-disable-next-line jest/no-standalone-expect
       expect([...foundRows]).toEqual(
@@ -261,6 +269,7 @@ describe.each([
           )
         )
       )
+      return response
     }
 
     async toFindNothing() {
@@ -2606,6 +2615,81 @@ describe.each([
           },
           limit: 1,
         }).toContainExactly([row])
+      })
+    })
+
+  isSql &&
+    describe("pagination edge case with relationships", () => {
+      let mainRows: Row[] = []
+
+      beforeAll(async () => {
+        const toRelateTable = await createTable({
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+        })
+        table = await createTable({
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+          rel: {
+            name: "rel",
+            type: FieldType.LINK,
+            relationshipType: RelationshipType.MANY_TO_ONE,
+            tableId: toRelateTable._id!,
+            fieldName: "rel",
+          },
+        })
+        const relatedRows = await Promise.all([
+          config.api.row.save(toRelateTable._id!, { name: "tag 1" }),
+          config.api.row.save(toRelateTable._id!, { name: "tag 2" }),
+          config.api.row.save(toRelateTable._id!, { name: "tag 3" }),
+          config.api.row.save(toRelateTable._id!, { name: "tag 4" }),
+          config.api.row.save(toRelateTable._id!, { name: "tag 5" }),
+          config.api.row.save(toRelateTable._id!, { name: "tag 6" }),
+        ])
+        mainRows = await Promise.all([
+          config.api.row.save(table._id!, {
+            name: "product 1",
+            rel: relatedRows.map(row => row._id),
+          }),
+          config.api.row.save(table._id!, {
+            name: "product 2",
+            rel: [],
+          }),
+          config.api.row.save(table._id!, {
+            name: "product 3",
+            rel: [],
+          }),
+        ])
+      })
+
+      it("can still page when the hard limit is hit", async () => {
+        await config.withCoreEnv(
+          {
+            SQL_MAX_ROWS: "6",
+          },
+          async () => {
+            const params: Omit<RowSearchParams, "tableId"> = {
+              query: {},
+              paginate: true,
+              limit: 3,
+              sort: "name",
+              sortType: SortType.STRING,
+              sortOrder: SortOrder.ASCENDING,
+            }
+            const page1 = await expectSearch(params).toContain([mainRows[0]])
+            expect(page1.hasNextPage).toBe(true)
+            expect(page1.bookmark).toBeDefined()
+            const page2 = await expectSearch({
+              ...params,
+              bookmark: page1.bookmark,
+            }).toContain([mainRows[1], mainRows[2]])
+            expect(page2.hasNextPage).toBe(false)
+          }
+        )
       })
     })
 })
