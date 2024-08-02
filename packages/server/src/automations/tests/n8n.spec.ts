@@ -1,4 +1,5 @@
 import { getConfig, afterAll, runStep, actions } from "./utilities"
+import nock from "nock"
 
 describe("test the outgoing webhook action", () => {
   let config = getConfig()
@@ -9,31 +10,33 @@ describe("test the outgoing webhook action", () => {
 
   afterAll()
 
+  beforeEach(() => {
+    nock.cleanAll()
+  })
+
   it("should be able to run the action and default to 'get'", async () => {
+    nock("http://www.example.com/").get("/").reply(200, { foo: "bar" })
     const res = await runStep(actions.n8n.stepId, {
       url: "http://www.example.com",
       body: {
         test: "IGNORE_ME",
       },
     })
-    expect(res.response.url).toEqual("http://www.example.com")
-    expect(res.response.method).toEqual("GET")
-    expect(res.response.body).toBeUndefined()
+    expect(res.response.foo).toEqual("bar")
     expect(res.success).toEqual(true)
   })
 
   it("should add the payload props when a JSON string is provided", async () => {
-    const payload = `{ "name": "Adam", "age": 9 }`
+    nock("http://www.example.com/")
+      .post("/", { name: "Adam", age: 9 })
+      .reply(200)
     const res = await runStep(actions.n8n.stepId, {
       body: {
-        value: payload,
+        value: JSON.stringify({ name: "Adam", age: 9 }),
       },
       method: "POST",
       url: "http://www.example.com",
     })
-    expect(res.response.url).toEqual("http://www.example.com")
-    expect(res.response.method).toEqual("POST")
-    expect(res.response.body).toEqual(`{"name":"Adam","age":9}`)
     expect(res.success).toEqual(true)
   })
 
@@ -53,6 +56,9 @@ describe("test the outgoing webhook action", () => {
   })
 
   it("should not append the body if the method is HEAD", async () => {
+    nock("http://www.example.com/")
+      .head("/", body => body === "")
+      .reply(200)
     const res = await runStep(actions.n8n.stepId, {
       url: "http://www.example.com",
       method: "HEAD",
@@ -60,9 +66,6 @@ describe("test the outgoing webhook action", () => {
         test: "IGNORE_ME",
       },
     })
-    expect(res.response.url).toEqual("http://www.example.com")
-    expect(res.response.method).toEqual("HEAD")
-    expect(res.response.body).toBeUndefined()
     expect(res.success).toEqual(true)
   })
 })
