@@ -18,31 +18,31 @@ import {
 import {
   buildInternalRelationships,
   sqlOutputProcessing,
-} from "../../../../api/controllers/row/utils"
+} from "../../../../../api/controllers/row/utils"
 import {
   decodeNonAscii,
   mapToUserColumn,
   USER_COLUMN_PREFIX,
-} from "../../tables/internal/sqs"
-import sdk from "../../../index"
+} from "../../../tables/internal/sqs"
+import sdk from "../../../../index"
 import {
   context,
   sql,
   SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
 } from "@budibase/backend-core"
-import { generateJunctionTableID } from "../../../../db/utils"
-import AliasTables from "../sqlAlias"
-import { outputProcessing } from "../../../../utilities/rowProcessor"
+import { generateJunctionTableID } from "../../../../../db/utils"
+import AliasTables from "../../sqlAlias"
+import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
-import { processRowCountResponse } from "../utils"
+import { processRowCountResponse } from "../../utils"
 import {
   updateFilterKeys,
   getRelationshipColumns,
   getTableIDList,
-} from "./filters"
+} from "../filters"
 import { dataFilters, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
-import { isSearchingByRowID } from "./utils"
+import { isSearchingByRowID } from "../utils"
 import tracer from "dd-trace"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
