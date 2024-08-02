@@ -72,6 +72,7 @@
     "@spectrum-css/switch": "1.0.2",
     "@spectrum-css/table": "3.0.1",
     "@spectrum-css/tabs": "3.2.12",
+    "@spectrum-css/tag": "3.0.0",
     "@spectrum-css/tags": "3.0.2",
     "@spectrum-css/textfield": "3.0.1",
     "@spectrum-css/toast": "3.0.1",
