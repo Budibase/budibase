@@ -8,7 +8,6 @@ import {
 } from "@budibase/types"
 import { ValidColumnNameRegex, helpers, utils } from "@budibase/shared-core"
 import { db } from "@budibase/backend-core"
-import { parseCsvExport } from "../api/controllers/view/exporters"
 
 type Rows = Array<Row>
 
@@ -159,7 +158,7 @@ export function parse(rows: Rows, table: Table): Rows {
 
       const columnSchema = schema[columnName]
       const { type: columnType } = columnSchema
-      if (columnType === FieldType.NUMBER) {
+      if ([FieldType.NUMBER, FieldType.BIGINT].includes(columnType)) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
       } else if (
@@ -171,16 +170,23 @@ export function parse(rows: Rows, table: Table): Rows {
         parsedRow[columnName] = columnData
           ? new Date(columnData).toISOString()
           : columnData
+      } else if (
+        columnType === FieldType.JSON &&
+        typeof columnData === "string"
+      ) {
+        parsedRow[columnName] = parseJsonExport(columnData)
       } else if (columnType === FieldType.BB_REFERENCE) {
         let parsedValues: { _id: string }[] = columnData || []
-        if (columnData) {
-          parsedValues = parseCsvExport<{ _id: string }[]>(columnData)
+        if (columnData && typeof columnData === "string") {
+          parsedValues = parseJsonExport<{ _id: string }[]>(columnData)
         }
 
         parsedRow[columnName] = parsedValues?.map(u => u._id)
       } else if (columnType === FieldType.BB_REFERENCE_SINGLE) {
-        const parsedValue =
-          columnData && parseCsvExport<{ _id: string }>(columnData)
+        let parsedValue = columnData
+        if (columnData && typeof columnData === "string") {
+          parsedValue = parseJsonExport<{ _id: string }>(columnData)
+        }
         parsedRow[columnName] = parsedValue?._id
       } else if (
         (columnType === FieldType.ATTACHMENTS ||
@@ -188,7 +194,7 @@ export function parse(rows: Rows, table: Table): Rows {
           columnType === FieldType.SIGNATURE_SINGLE) &&
         typeof columnData === "string"
       ) {
-        parsedRow[columnName] = parseCsvExport(columnData)
+        parsedRow[columnName] = parseJsonExport(columnData)
       } else {
         parsedRow[columnName] = columnData
       }
@@ -212,14 +218,14 @@ function isValidBBReference(
     if (!data) {
       return !isRequired
     }
-    const user = parseCsvExport<{ _id: string }>(data)
+    const user = parseJsonExport<{ _id: string }>(data)
     return db.isGlobalUserID(user._id)
   }
 
   switch (subtype) {
     case BBReferenceFieldSubType.USER:
     case BBReferenceFieldSubType.USERS: {
-      const userArray = parseCsvExport<{ _id: string }[]>(data)
+      const userArray = parseJsonExport<{ _id: string }[]>(data)
       if (!Array.isArray(userArray)) {
         return false
       }
@@ -231,5 +237,24 @@ function isValidBBReference(
     }
     default:
       throw utils.unreachable(subtype)
+  }
+}
+
+function parseJsonExport<T>(value: string) {
+  try {
+    const parsed = JSON.parse(value)
+
+    return parsed as T
+  } catch (e: any) {
+    if (
+      e.message.startsWith("Expected property name or '}' in JSON at position ")
+    ) {
+      // This was probably converted as CSV and it has single quotes instead of double ones
+      const parsed = JSON.parse(value.replace(/'/g, '"'))
+      return parsed as T
+    }
+
+    // It is no a valid JSON
+    throw e
   }
 }
