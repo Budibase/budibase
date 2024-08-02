@@ -96,6 +96,7 @@ export function validate(
         return
       } else if (
         [FieldType.STRING].includes(columnType) &&
+        !columnData &&
         helpers.schema.isRequired(constraints)
       ) {
         results.schemaValidation[columnName] = false
@@ -215,29 +216,33 @@ function isValidBBReference(
   subtype: BBReferenceFieldSubType,
   isRequired: boolean
 ): boolean {
-  if (type === FieldType.BB_REFERENCE_SINGLE) {
-    if (!data) {
-      return !isRequired
-    }
-    const user = parseJsonExport<{ _id: string }>(data)
-    return db.isGlobalUserID(user._id)
-  }
-
-  switch (subtype) {
-    case BBReferenceFieldSubType.USER:
-    case BBReferenceFieldSubType.USERS: {
-      const userArray = parseJsonExport<{ _id: string }[]>(data)
-      if (!Array.isArray(userArray)) {
-        return false
+  try {
+    if (type === FieldType.BB_REFERENCE_SINGLE) {
+      if (!data) {
+        return !isRequired
       }
-
-      const constainsWrongId = userArray.find(
-        user => !db.isGlobalUserID(user._id)
-      )
-      return !constainsWrongId
+      const user = parseJsonExport<{ _id: string }>(data)
+      return db.isGlobalUserID(user._id)
     }
-    default:
-      throw utils.unreachable(subtype)
+
+    switch (subtype) {
+      case BBReferenceFieldSubType.USER:
+      case BBReferenceFieldSubType.USERS: {
+        const userArray = parseJsonExport<{ _id: string }[]>(data)
+        if (!Array.isArray(userArray)) {
+          return false
+        }
+
+        const constainsWrongId = userArray.find(
+          user => !db.isGlobalUserID(user._id)
+        )
+        return !constainsWrongId
+      }
+      default:
+        throw utils.unreachable(subtype)
+    }
+  } catch {
+    return false
   }
 }
 
