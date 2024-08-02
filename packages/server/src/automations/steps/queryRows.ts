@@ -8,13 +8,14 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
   EmptyFilterOption,
   SearchFilters,
   Table,
   SortOrder,
+  QueryRowsStepInputs,
+  QueryRowsStepOutputs,
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
 
@@ -133,7 +134,13 @@ function hasNullFilters(filters: any[]) {
   )
 }
 
-export async function run({ inputs, appId }: AutomationStepInput) {
+export async function run({
+  inputs,
+  appId,
+}: {
+  inputs: QueryRowsStepInputs
+  appId: string
+}): Promise<QueryRowsStepOutputs> {
   const { tableId, filters, sortColumn, sortOrder, limit } = inputs
   if (!tableId) {
     return {
@@ -145,7 +152,7 @@ export async function run({ inputs, appId }: AutomationStepInput) {
   }
   const table = await getTable(appId, tableId)
   let sortType = FieldType.STRING
-  if (table && table.schema && table.schema[sortColumn] && sortColumn) {
+  if (sortColumn && table && table.schema && table.schema[sortColumn]) {
     const fieldType = table.schema[sortColumn].type
     sortType =
       fieldType === FieldType.NUMBER ? FieldType.NUMBER : FieldType.STRING
