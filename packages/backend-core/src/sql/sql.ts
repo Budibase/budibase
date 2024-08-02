@@ -39,10 +39,12 @@ import { dataFilters, helpers } from "@budibase/shared-core"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
-const envLimit = environment.SQL_MAX_ROWS
-  ? parseInt(environment.SQL_MAX_ROWS)
-  : null
-const BASE_LIMIT = envLimit || 5000
+function getBaseLimit() {
+  const envLimit = environment.SQL_MAX_ROWS
+    ? parseInt(environment.SQL_MAX_ROWS)
+    : null
+  return envLimit || 5000
+}
 
 function getTableName(table?: Table): string | undefined {
   // SQS uses the table ID rather than the table name
@@ -970,7 +972,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   private readonly limit: number
 
   // pass through client to get flavour of SQL
-  constructor(client: SqlClient, limit: number = BASE_LIMIT) {
+  constructor(client: SqlClient, limit: number = getBaseLimit()) {
     super(client)
     this.limit = limit
   }
@@ -1014,7 +1016,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         query = builder.read({
           limits: {
             query: this.limit,
-            base: BASE_LIMIT,
+            base: getBaseLimit(),
           },
         })
         break
