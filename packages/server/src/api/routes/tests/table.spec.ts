@@ -1,5 +1,9 @@
 import { context, docIds, events } from "@budibase/backend-core"
 import {
+  PROTECTED_EXTERNAL_COLUMNS,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
+import {
   AutoFieldSubType,
   BBReferenceFieldSubType,
   Datasource,
@@ -119,6 +123,64 @@ describe.each([
         body: basicTable(),
       })
     })
+
+    it("does not persist the row fields that are not on the table schema", async () => {
+      const table: SaveTableRequest = basicTable()
+      table.rows = [
+        {
+          name: "test-name",
+          description: "test-desc",
+          nonValid: "test-non-valid",
+        },
+      ]
+
+      const res = await config.api.table.save(table)
+
+      const persistedRows = await config.api.row.search(res._id!)
+
+      expect(persistedRows.rows).toEqual([
+        expect.objectContaining({
+          name: "test-name",
+          description: "test-desc",
+        }),
+      ])
+      expect(persistedRows.rows[0].nonValid).toBeUndefined()
+    })
+
+    it.each(
+      isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
+    )(
+      "cannot use protected column names (%s) while importing a table",
+      async columnName => {
+        const table: SaveTableRequest = basicTable()
+        table.rows = [
+          {
+            name: "test-name",
+            description: "test-desc",
+          },
+        ]
+
+        await config.api.table.save(
+          {
+            ...table,
+            schema: {
+              ...table.schema,
+              [columnName]: {
+                name: columnName,
+                type: FieldType.STRING,
+              },
+            },
+          },
+          {
+            status: 400,
+            body: {
+              message: `Column(s) "${columnName}" are duplicated - check for other columns with these name (case in-sensitive)`,
+              status: 400,
+            },
+          }
+        )
+      }
+    )
   })
 
   describe("update", () => {
@@ -1053,6 +1115,70 @@ describe.each([
           },
         })
       })
+
+      it.each(
+        isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
+      )("don't allow protected names in schema (%s)", async columnName => {
+        const result = await config.api.table.validateNewTableImport(
+          [
+            {
+              id: generator.natural(),
+              name: generator.first(),
+              [columnName]: generator.word(),
+            },
+          ],
+          {
+            ...basicSchema,
+          }
+        )
+
+        expect(result).toEqual({
+          allValid: false,
+          errors: {
+            [columnName]: `${columnName} is a protected column name`,
+          },
+          invalidColumns: [],
+          schemaValidation: {
+            id: true,
+            name: true,
+            [columnName]: false,
+          },
+        })
+      })
+
+      isInternal &&
+        it.each(
+          isInternal ? PROTECTED_INTERNAL_COLUMNS : PROTECTED_EXTERNAL_COLUMNS
+        )("don't allow protected names in the rows (%s)", async columnName => {
+          const result = await config.api.table.validateNewTableImport(
+            [
+              {
+                id: generator.natural(),
+                name: generator.first(),
+              },
+            ],
+            {
+              ...basicSchema,
+              [columnName]: {
+                name: columnName,
+                type: FieldType.STRING,
+              },
+            }
+          )
+
+          expect(result).toEqual({
+            allValid: false,
+            errors: {
+              [columnName]: `${columnName} is a protected column name`,
+            },
+            invalidColumns: [],
+            schemaValidation: {
+              id: true,
+              name: true,
+              [columnName]: false,
+            },
+          })
+        })
     })
 
     describe("validateExistingTableImport", () => {
