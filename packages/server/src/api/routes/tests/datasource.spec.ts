@@ -19,6 +19,7 @@ import {
 } from "@budibase/types"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
+import nock from "nock"
 
 describe("/datasources", () => {
   const config = setup.getConfig()
@@ -37,6 +38,7 @@ describe("/datasources", () => {
       config: {},
     })
     jest.clearAllMocks()
+    nock.cleanAll()
   })
 
   describe("create", () => {
@@ -71,6 +73,12 @@ describe("/datasources", () => {
 
   describe("dynamic variables", () => {
     it("should invalidate changed or removed variables", async () => {
+      nock("http://www.example.com/")
+        .get("/")
+        .reply(200, [{ value: "test" }])
+        .get("/?test=test")
+        .reply(200, [{ value: 1 }])
+
       let datasource = await config.api.datasource.create({
         type: "datasource",
         name: "Rest",
@@ -81,7 +89,7 @@ describe("/datasources", () => {
       const query = await config.api.query.save({
         datasourceId: datasource._id!,
         fields: {
-          path: "www.google.com",
+          path: "www.example.com",
         },
         parameters: [],
         transformer: null,
