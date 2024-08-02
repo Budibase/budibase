@@ -25,8 +25,9 @@ import {
   Webhook,
   WebhookActionType,
   AutomationEventType,
+  LoopStepType,
 } from "@budibase/types"
-import { LoopInput, LoopStepType } from "../../definitions/automations"
+import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 

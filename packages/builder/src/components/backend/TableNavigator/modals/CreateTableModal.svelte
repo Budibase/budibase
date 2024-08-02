@@ -78,7 +78,7 @@
       await datasources.fetch()
       await afterSave(table)
     } catch (e) {
-      notifications.error(e)
+      notifications.error(e.message || e)
       // reload in case the table was created
       await tables.fetch()
     }

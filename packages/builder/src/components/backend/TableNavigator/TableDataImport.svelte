@@ -1,9 +1,9 @@
 <script>
   import { Select, Icon } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
+  import { canBeDisplayColumn, utils } from "@budibase/shared-core"
   import { API } from "api"
   import { parseFile } from "./utils"
-  import { canBeDisplayColumn } from "@budibase/shared-core"
 
   export let rows = []
   export let schema = {}
@@ -97,6 +97,8 @@
   let errors = {}
   let selectedColumnTypes = {}
 
+  let rawRows = []
+
   $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
     return validation[column] && canBeDisplayColumn(schema[column].type)
   })
@@ -106,6 +108,8 @@
   }
 
   $: {
+    rows = rawRows.map(row => utils.trimOtherProps(row, Object.keys(schema)))
+
     // binding in consumer is causing double renders here
     const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
     if (newValidateHash !== validateHash) {
@@ -122,7 +126,7 @@
 
     try {
       const response = await parseFile(e)
-      rows = response.rows
+      rawRows = response.rows
       schema = response.schema
       fileName = response.fileName
       selectedColumnTypes = Object.entries(response.schema).reduce(
@@ -188,7 +192,7 @@
     type="file"
     on:change={handleFile}
   />
-  <label for="file-upload" class:uploaded={rows.length > 0}>
+  <label for="file-upload" class:uploaded={rawRows.length > 0}>
     {#if error}
       Error: {error}
     {:else if fileName}
@@ -198,7 +202,7 @@
     {/if}
   </label>
 </div>
-{#if rows.length > 0 && !error}
+{#if rawRows.length > 0 && !error}
   <div class="schema-fields">
     {#each Object.entries(schema) as [name, column]}
       <div class="field">
