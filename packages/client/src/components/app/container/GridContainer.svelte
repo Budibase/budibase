@@ -115,8 +115,7 @@
       --grid-desktop-col-end,
       var(
         --grid-mobile-col-end,
-        /* Our final*/
-          round(up, calc(var(--default-width) / var(--col-size) + 1))
+        round(up, calc(var(--default-width) / var(--col-size) + 1))
       )
     );
     --row-start: var(--grid-desktop-row-start, var(--grid-mobile-row-start, 1));
@@ -128,7 +127,7 @@
       )
     );
 
-    /*  Flex vars */
+    /* Flex vars */
     --h-align: var(--grid-desktop-h-align, var(--grid-mobile-h-align, stretch));
     --v-align: var(--grid-desktop-v-align, var(--grid-mobile-v-align, center));
     --child-flex: var(
@@ -153,11 +152,23 @@
 
   /* On mobile, use mobile metadata and fall back to desktop */
   .grid.mobile :global(> .component) {
-    /*   Position vars */
+    /* Position vars */
     --col-start: var(--grid-mobile-col-start, var(--grid-desktop-col-start, 1));
-    --col-end: var(--grid-mobile-col-end, var(--grid-desktop-col-end, 2));
+    --col-end: var(
+      --grid-mobile-col-end,
+      var(
+        --grid-desktop-col-end,
+        round(up, calc(var(--default-width) / var(--col-size) + 1))
+      )
+    );
     --row-start: var(--grid-mobile-row-start, var(--grid-desktop-row-start, 1));
-    --row-end: var(--grid-mobile-row-end, var(--grid-desktop-row-end, 2));
+    --row-end: var(
+      --grid-mobile-row-end,
+      var(
+        --grid-desktop-row-end,
+        round(up, calc(var(--default-height) / var(--row-size) + 1))
+      )
+    );
 
     /* Flex vars */
     --h-align: var(--grid-mobile-h-align, var(--grid-desktop-h-align, stretch));
