@@ -1,17 +1,28 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import { builderStore } from "stores"
-  import { getGridVarValue } from "utils/grid"
 
   export let style
   export let value
   export let icon
   export let title
-  export let gridStyles
   export let componentId
 
-  $: currentValue = getGridVarValue(gridStyles, style)
+  // Needs to update in real time
+
+  let currentValue
+
+  $: fetchCurrentValue(componentId, style)
   $: active = currentValue === value
+
+  const fetchCurrentValue = (id, style) => {
+    const node = document.getElementsByClassName(`${id}-dom`)[0]?.parentNode
+    if (!node) {
+      return null
+    }
+    const styles = getComputedStyle(node)
+    currentValue = styles.getPropertyValue(style)
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

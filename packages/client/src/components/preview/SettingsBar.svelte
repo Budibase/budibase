@@ -7,7 +7,7 @@
   import { builderStore, componentStore, dndIsDragging } from "stores"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentParent } from "utils/components"
-  import { gridCSSVars, GridVars } from "utils/grid"
+  import { getGridVar, GridParams } from "utils/grid"
 
   const verticalOffset = 36
   const horizontalOffset = 2
@@ -44,9 +44,9 @@
     insideGrid &&
     (definition?.grid?.hAlign !== "stretch" ||
       definition?.grid?.vAlign !== "stretch")
-  $: gridHAlignVar = $gridCSSVars[GridVars.HAlign]
-  $: gridVAlignVar = $gridCSSVars[GridVars.VAlign]
-  $: gridStyles = $state?.styles
+  $: device = $builderStore.previewDevice
+  $: gridHAlignVar = getGridVar(device, GridParams.HAlign)
+  $: gridVAlignVar = getGridVar(device, GridParams.VAlign)
 
   const getBarSettings = definition => {
     let allSettings = []
@@ -156,7 +156,6 @@
         value="start"
         icon="AlignLeft"
         title="Align left"
-        {gridStyles}
         {componentId}
       />
       <GridStylesButton
@@ -164,7 +163,6 @@
         value="center"
         icon="AlignCenter"
         title="Align center"
-        {gridStyles}
         {componentId}
       />
       <GridStylesButton
@@ -172,7 +170,6 @@
         value="end"
         icon="AlignRight"
         title="Align right"
-        {gridStyles}
         {componentId}
       />
       <GridStylesButton
@@ -180,7 +177,6 @@
         value="stretch"
         icon="MoveLeftRight"
         title="Stretch horizontally"
-        {gridStyles}
         {componentId}
       />
       <div class="divider" />
@@ -189,7 +185,6 @@
         value="start"
         icon="AlignTop"
         title="Align top"
-        {gridStyles}
         {componentId}
       />
       <GridStylesButton
@@ -197,7 +192,6 @@
         value="center"
         icon="AlignMiddle"
         title="Align middle"
-        {gridStyles}
         {componentId}
       />
       <GridStylesButton
@@ -205,7 +199,6 @@
         value="end"
         icon="AlignBottom"
         title="Align bottom"
-        {gridStyles}
         {componentId}
       />
       <GridStylesButton
@@ -213,7 +206,6 @@
         value="stretch"
         icon="MoveUpDown"
         title="Stretch vertically"
-        {gridStyles}
         {componentId}
       />
       <div class="divider" />

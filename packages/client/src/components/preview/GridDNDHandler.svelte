@@ -5,8 +5,8 @@
   import {
     isGridEvent,
     getGridParentID,
-    gridCSSVars,
-    GridVars,
+    GridParams,
+    getGridVar,
   } from "utils/grid"
 
   // Smallest possible 1x1 transparent GIF
@@ -19,11 +19,12 @@
   let id
 
   // Grid CSS variables
+  $: device = $builderStore.previewDevice
   $: vars = {
-    colStart: $gridCSSVars[GridVars.ColStart],
-    colEnd: $gridCSSVars[GridVars.ColEnd],
-    rowStart: $gridCSSVars[GridVars.RowStart],
-    rowEnd: $gridCSSVars[GridVars.RowEnd],
+    colStart: getGridVar(device, GridParams.ColStart),
+    colEnd: getGridVar(device, GridParams.ColEnd),
+    rowStart: getGridVar(device, GridParams.RowStart),
+    rowEnd: getGridVar(device, GridParams.RowEnd),
   }
 
   // Some memoisation of primitive types for performance
