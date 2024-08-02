@@ -33,6 +33,7 @@ import {
   UpdatedRowEventEmitter,
   TableSchema,
   JsonFieldSubType,
+  RowExportFormat,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -1811,6 +1812,7 @@ describe.each([
       await config.api.row.exportRows(
         "1234567",
         { rows: [existing._id!] },
+        RowExportFormat.JSON,
         { status: 404 }
       )
     })
