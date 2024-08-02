@@ -1,4 +1,5 @@
 import { getConfig, afterAll, runStep, actions } from "./utilities"
+import nock from "nock"
 
 describe("test the outgoing webhook action", () => {
   let config = getConfig()
@@ -9,44 +10,45 @@ describe("test the outgoing webhook action", () => {
 
   afterAll()
 
+  beforeEach(() => {
+    nock.cleanAll()
+  })
+
   it("should be able to run the action", async () => {
+    nock("http://www.example.com/").post("/").reply(200, { foo: "bar" })
     const res = await runStep(actions.zapier.stepId, {
-      value1: "test",
       url: "http://www.example.com",
     })
-    expect(res.response.url).toEqual("http://www.example.com")
-    expect(res.response.method).toEqual("post")
+    expect(res.response.foo).toEqual("bar")
     expect(res.success).toEqual(true)
   })
 
   it("should add the payload props when a JSON string is provided", async () => {
-    const payload = `{ "value1": 1, "value2": 2, "value3": 3, "value4": 4, "value5": 5, "name": "Adam", "age": 9 }`
+    const payload = {
+      value1: 1,
+      value2: 2,
+      value3: 3,
+      value4: 4,
+      value5: 5,
+      name: "Adam",
+      age: 9,
+    }
+
+    nock("http://www.example.com/")
+      .post("/", { ...payload, platform: "budibase" })
+      .reply(200, { foo: "bar" })
+
     const res = await runStep(actions.zapier.stepId, {
-      value1: "ONE",
-      value2: "TWO",
-      value3: "THREE",
-      value4: "FOUR",
-      value5: "FIVE",
-      body: {
-        value: payload,
-      },
+      body: { value: JSON.stringify(payload) },
       url: "http://www.example.com",
     })
-    expect(res.response.url).toEqual("http://www.example.com")
-    expect(res.response.method).toEqual("post")
-    expect(res.response.body).toEqual(
-      `{"platform":"budibase","value1":1,"value2":2,"value3":3,"value4":4,"value5":5,"name":"Adam","age":9}`
-    )
+    expect(res.response.foo).toEqual("bar")
     expect(res.success).toEqual(true)
   })
 
   it("should return a 400 if the JSON payload string is malformed", async () => {
-    const payload = `{ value1 1 }`
     const res = await runStep(actions.zapier.stepId, {
-      value1: "ONE",
-      body: {
-        value: payload,
-      },
+      body: { value: "{ invalid json }" },
       url: "http://www.example.com",
     })
     expect(res.httpStatus).toEqual(400)
