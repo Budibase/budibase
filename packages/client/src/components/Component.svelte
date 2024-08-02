@@ -199,7 +199,7 @@
   $: darkMode = !currentTheme?.includes("light")
 
   // Build up full styles and split them into variables and non-variables
-  $: baseStyles = getBaseStyles(definition)
+  $: baseStyles = getBaseStyles(definition, errorState)
   $: styles = {
     ...baseStyles,
     ...instance._styles?.normal,
@@ -632,11 +632,11 @@
   }
 
   // Generates any required base styles based on the component definition
-  const getBaseStyles = definition => {
+  const getBaseStyles = (definition, errored = false) => {
     return {
-      "--default-width": definition.size?.width || 100,
-      "--default-height": definition.size?.height || 100,
-      ...getBaseGridVars(definition),
+      "--default-width": errored ? 500 : definition.size?.width || 100,
+      "--default-height": errored ? 60 : definition.size?.height || 100,
+      ...getBaseGridVars(definition, errored),
     }
   }
 

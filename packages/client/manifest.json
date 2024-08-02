@@ -5344,11 +5344,11 @@
     "hasChildren": false,
     "size": {
       "width": 600,
-      "height": 400
+      "height": 420
     },
     "grid": {
       "hAlign": "stretch",
-      "vAlign": "stretch"
+      "vAlign": "center"
     },
     "settings": [
       {
