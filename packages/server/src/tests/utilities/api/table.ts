@@ -1,6 +1,8 @@
 import {
   BulkImportRequest,
   BulkImportResponse,
+  CsvToJsonRequest,
+  CsvToJsonResponse,
   MigrateRequest,
   MigrateResponse,
   Row,
@@ -98,5 +100,15 @@ export class TableAPI extends TestAPI {
         expectations,
       }
     )
+  }
+
+  csvToJson = async (
+    body: CsvToJsonRequest,
+    expectations?: Expectations
+  ): Promise<CsvToJsonResponse> => {
+    return await this._post<CsvToJsonResponse>(`/api/convert/csvToJson`, {
+      body,
+      expectations,
+    })
   }
 }
