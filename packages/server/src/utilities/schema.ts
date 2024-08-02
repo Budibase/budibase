@@ -210,10 +210,6 @@ function isValidBBReference(
   subtype: BBReferenceFieldSubType,
   isRequired: boolean
 ): boolean {
-  if (typeof data !== "string") {
-    return false
-  }
-
   if (type === FieldType.BB_REFERENCE_SINGLE) {
     if (!data) {
       return !isRequired
@@ -240,7 +236,10 @@ function isValidBBReference(
   }
 }
 
-function parseJsonExport<T>(value: string) {
+function parseJsonExport<T>(value: any) {
+  if (typeof value !== "string") {
+    return value
+  }
   try {
     const parsed = JSON.parse(value)
 
