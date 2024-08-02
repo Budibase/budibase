@@ -5,8 +5,6 @@ import { getCachedVariable } from "../../../../threads/utils"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
 
-jest.unmock("node-fetch")
-
 describe("rest", () => {
   let config: TestConfiguration
   let datasource: Datasource
