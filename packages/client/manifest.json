@@ -388,6 +388,14 @@
     "name": "Button group",
     "icon": "Button",
     "hasChildren": false,
+    "size": {
+      "width": 200,
+      "height": 60
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
+    },
     "settings": [
       {
         "section": true,
@@ -570,7 +578,7 @@
     "icon": "Button",
     "editable": true,
     "size": {
-      "width": 105,
+      "width": 120,
       "height": 32
     },
     "grid": {
