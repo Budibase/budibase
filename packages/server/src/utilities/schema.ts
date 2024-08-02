@@ -164,7 +164,7 @@ export function parse(rows: Rows, table: Table): Rows {
 
       const columnSchema = schema[columnName]
       const { type: columnType } = columnSchema
-      if ([FieldType.NUMBER, FieldType.BIGINT].includes(columnType)) {
+      if ([FieldType.NUMBER].includes(columnType)) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
       } else if (

@@ -1886,7 +1886,7 @@ describe.each([
           [FieldType.INTERNAL]: generator.guid(),
           [FieldType.BARCODEQR]: generator.guid(),
           [FieldType.SIGNATURE_SINGLE]: setup.structures.basicAttachment(),
-          [FieldType.BIGINT]: generator.integer(),
+          [FieldType.BIGINT]: generator.integer().toString(),
           [FieldType.BB_REFERENCE]: [{ _id: config.getUser()._id }],
           [FieldType.BB_REFERENCE_SINGLE]: { _id: config.getUser()._id },
         }
@@ -1967,7 +1967,6 @@ describe.each([
               expectedRowData["attachment_single"].sample,
               false
             ),
-            bigint: stringified(expectedRowData["bigint"]),
             boolean: stringified(expectedRowData["boolean"]),
             json: stringified(expectedRowData["json"]),
             number: stringified(expectedRowData["number"]),
