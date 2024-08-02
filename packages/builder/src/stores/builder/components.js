@@ -574,14 +574,25 @@ export class ComponentStore extends BudiStore {
       return
     }
 
-    // Determine the next component to select after deletion
+    // Determine the next component to select, and select it before deletion
+    // to avoid an intermediate state of no component selection
     const state = get(this.store)
-    let nextSelectedComponentId
+    let nextId
     if (state.selectedComponentId === component._id) {
-      nextSelectedComponentId = this.getNext()
-      if (!nextSelectedComponentId) {
-        nextSelectedComponentId = this.getPrevious()
+      nextId = this.getNext()
+      if (!nextId) {
+        nextId = this.getPrevious()
       }
+    }
+    if (nextId) {
+      // If this is the nav, select the screen instead
+      if (nextId.endsWith("-navigation")) {
+        nextId = nextId.replace("-navigation", "-screen")
+      }
+      this.update(state => {
+        state.selectedComponentId = nextId
+        return state
+      })
     }
 
     // Patch screen
@@ -601,14 +612,6 @@ export class ComponentStore extends BudiStore {
         child => child._id !== component._id
       )
     })
-
-    // Update selected component if required
-    if (nextSelectedComponentId) {
-      this.update(state => {
-        state.selectedComponentId = nextSelectedComponentId
-        return state
-      })
-    }
   }
 
   copy(component, cut = false, selectParent = true) {
