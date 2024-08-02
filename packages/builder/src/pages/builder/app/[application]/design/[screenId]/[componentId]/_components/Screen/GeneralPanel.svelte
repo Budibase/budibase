@@ -103,7 +103,7 @@
           key: "props.cols",
           label: "Columns",
           control: Stepper,
-          defaultValue: 12,
+          defaultValue: 24,
           props: {
             min: 2,
             max: 50,
@@ -113,7 +113,7 @@
           key: "props.rows",
           label: "Rows",
           control: Stepper,
-          defaultValue: 12,
+          defaultValue: 24,
           props: {
             min: 2,
             max: 50,

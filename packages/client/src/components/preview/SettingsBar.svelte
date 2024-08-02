@@ -7,7 +7,7 @@
   import { builderStore, componentStore, dndIsDragging } from "stores"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentParent } from "utils/components"
-  import { getGridVar } from "utils/grid"
+  import { gridCSSVars, GridVars } from "utils/grid"
 
   const verticalOffset = 36
   const horizontalOffset = 2
@@ -44,8 +44,8 @@
     insideGrid &&
     (definition?.grid?.hAlign !== "stretch" ||
       definition?.grid?.vAlign !== "stretch")
-  $: gridHAlignVar = $getGridVar("h-align")
-  $: gridVAlignVar = $getGridVar("v-align")
+  $: gridHAlignVar = $gridCSSVars[GridVars.HAlign]
+  $: gridVAlignVar = $gridCSSVars[GridVars.VAlign]
   $: gridStyles = $state?.styles
 
   const getBarSettings = definition => {
