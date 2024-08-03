@@ -17,10 +17,13 @@
   let interval
   let self
   let measured = false
+  let observer
+  let computedStyles
 
   // TODO: respect dependsOn keys
 
   $: componentId = $builderStore.selectedComponentId
+  $: measured, observeComputedStyles(componentId)
   $: component = $componentStore.selectedComponent
   $: definition = $componentStore.selectedComponentDefinition
   $: parent = findComponentParent($builderStore.screen.props, componentId)
@@ -131,6 +134,21 @@
   }
   const debouncedUpdate = Utils.domDebounce(updatePosition)
 
+  const observeComputedStyles = id => {
+    observer?.disconnect()
+    const node = document.getElementsByClassName(`${id}-dom`)[0]?.parentNode
+    if (node) {
+      observer = new MutationObserver(() => {
+        computedStyles = getComputedStyle(node)
+      })
+      observer.observe(node, {
+        attributes: true,
+        attributeFilter: ["style"],
+      })
+      computedStyles = getComputedStyle(node)
+    }
+  }
+
   onMount(() => {
     debouncedUpdate()
     interval = setInterval(debouncedUpdate, 100)
@@ -140,6 +158,7 @@
   onDestroy(() => {
     clearInterval(interval)
     document.removeEventListener("scroll", debouncedUpdate, true)
+    observer?.disconnect()
   })
 </script>
 
@@ -157,6 +176,7 @@
         icon="AlignLeft"
         title="Align left"
         {componentId}
+        {computedStyles}
       />
       <GridStylesButton
         style={gridHAlignVar}
@@ -164,6 +184,7 @@
         icon="AlignCenter"
         title="Align center"
         {componentId}
+        {computedStyles}
       />
       <GridStylesButton
         style={gridHAlignVar}
@@ -171,6 +192,7 @@
         icon="AlignRight"
         title="Align right"
         {componentId}
+        {computedStyles}
       />
       <GridStylesButton
         style={gridHAlignVar}
@@ -178,6 +200,7 @@
         icon="MoveLeftRight"
         title="Stretch horizontally"
         {componentId}
+        {computedStyles}
       />
       <div class="divider" />
       <GridStylesButton
@@ -186,6 +209,7 @@
         icon="AlignTop"
         title="Align top"
         {componentId}
+        {computedStyles}
       />
       <GridStylesButton
         style={gridVAlignVar}
@@ -193,6 +217,7 @@
         icon="AlignMiddle"
         title="Align middle"
         {componentId}
+        {computedStyles}
       />
       <GridStylesButton
         style={gridVAlignVar}
@@ -200,6 +225,7 @@
         icon="AlignBottom"
         title="Align bottom"
         {componentId}
+        {computedStyles}
       />
       <GridStylesButton
         style={gridVAlignVar}
@@ -207,6 +233,7 @@
         icon="MoveUpDown"
         title="Stretch vertically"
         {componentId}
+        {computedStyles}
       />
       <div class="divider" />
     {/if}

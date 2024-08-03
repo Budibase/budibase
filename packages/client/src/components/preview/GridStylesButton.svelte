@@ -7,22 +7,9 @@
   export let icon
   export let title
   export let componentId
+  export let computedStyles
 
-  // Needs to update in real time
-
-  let currentValue
-
-  $: fetchCurrentValue(componentId, style)
-  $: active = currentValue === value
-
-  const fetchCurrentValue = (id, style) => {
-    const node = document.getElementsByClassName(`${id}-dom`)[0]?.parentNode
-    if (!node) {
-      return null
-    }
-    const styles = getComputedStyle(node)
-    currentValue = styles.getPropertyValue(style)
-  }
+  $: active = computedStyles?.getPropertyValue(style) === value
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
