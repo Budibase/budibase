@@ -1326,6 +1326,7 @@
     "icon": "Images",
     "hasChildren": true,
     "styles": ["size"],
+    "showEmptyState": false,
     "size": {
       "width": 400,
       "height": 300
@@ -1765,7 +1766,11 @@
     "icon": "GraphBarVertical",
     "size": {
       "width": 600,
-      "height": 400
+      "height": 420
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
     },
     "settings": [
       {
@@ -1934,7 +1939,11 @@
     "icon": "GraphTrend",
     "size": {
       "width": 600,
-      "height": 400
+      "height": 420
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
     },
     "settings": [
       {
@@ -2098,7 +2107,11 @@
     "icon": "GraphAreaStacked",
     "size": {
       "width": 600,
-      "height": 400
+      "height": 420
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
     },
     "settings": [
       {
@@ -2274,7 +2287,11 @@
     "icon": "GraphPie",
     "size": {
       "width": 600,
-      "height": 400
+      "height": 420
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
     },
     "settings": [
       {
@@ -2414,7 +2431,11 @@
     "icon": "GraphDonut",
     "size": {
       "width": 600,
-      "height": 400
+      "height": 420
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
     },
     "settings": [
       {
@@ -2554,7 +2575,11 @@
     "icon": "GraphBarVerticalStacked",
     "size": {
       "width": 600,
-      "height": 400
+      "height": 420
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
     },
     "settings": [
       {
@@ -2671,7 +2696,11 @@
     "icon": "Histogram",
     "size": {
       "width": 600,
-      "height": 400
+      "height": 420
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
     },
     "settings": [
       {
@@ -4424,6 +4453,10 @@
     "size": {
       "width": 400,
       "height": 320
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "stretch"
     },
     "settings": [
       {
