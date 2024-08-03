@@ -19,20 +19,11 @@
   }
 </script>
 
-{#if url}
-  <div class="outer" use:styleable={$component.styles}>
-    <div class="inner" {style}>
-      <slot />
-    </div>
+<div class="outer" use:styleable={$component.styles}>
+  <div class="inner" {style}>
+    <slot />
   </div>
-{:else if $builderStore.inBuilder}
-  <div
-    class="placeholder"
-    use:styleable={{ ...$component.styles, empty: true }}
-  >
-    <Placeholder />
-  </div>
-{/if}
+</div>
 
 <style>
   .outer {
