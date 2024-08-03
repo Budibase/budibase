@@ -321,13 +321,13 @@
   }
   .tablet .loading,
   .tablet .underlay {
-    width: 1024px;
-    height: 768px;
+    max-width: 1024px;
+    max-height: 768px;
   }
   .mobile .loading,
   .mobile .underlay {
-    width: 390px;
-    height: 844px;
+    max-width: 390px;
+    max-height: 844px;
   }
 
   .underlay {
