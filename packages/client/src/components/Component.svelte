@@ -208,6 +208,7 @@
     draggable,
     definition,
     errored: errorState,
+    draggable,
   }
 
   // Update component context
