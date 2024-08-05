@@ -208,7 +208,6 @@
     draggable,
     definition,
     errored: errorState,
-    draggable,
   }
 
   // Update component context
@@ -647,8 +646,6 @@
 {#if constructor && initialSettings && (visible || inSelectedPath) && !builderHidden}
   <!-- The ID is used as a class because getElementsByClassName is O(1) -->
   <!-- and the performance matters for the selection indicators -->
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class={`component ${id}`}
     class:draggable

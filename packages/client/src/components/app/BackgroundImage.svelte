@@ -1,8 +1,7 @@
 <script>
   import { getContext } from "svelte"
-  import Placeholder from "./Placeholder.svelte"
 
-  const { styleable, builderStore } = getContext("sdk")
+  const { styleable } = getContext("sdk")
   const component = getContext("component")
 
   export let url
@@ -39,10 +38,5 @@
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center center;
-  }
-
-  .placeholder {
-    display: grid;
-    place-items: center;
   }
 </style>

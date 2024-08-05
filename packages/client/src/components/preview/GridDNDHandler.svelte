@@ -41,7 +41,7 @@
   // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
     const component = document.getElementsByClassName(id)[0]
-    return [...component?.children][0]
+    return Array.from(component?.children || [])[0]
   }
 
   const getComponentStyles = gridStyles => {
