@@ -105,6 +105,7 @@
     datetime: isValidDate,
     link: hasValidLinks,
     bb_reference: hasValidLinks,
+    bb_reference_single: hasValidLinks,
     array: hasValidOptions,
     longform: value => !isJSBinding(value),
     json: value => !isJSBinding(value),
