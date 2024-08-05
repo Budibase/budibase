@@ -2736,5 +2736,117 @@ describe.each([
         { age: 8, name: "Jan" },
       ])
       })
+
+    it("successfully finds rows for nested filters", async () => {
+      await expectQuery({
+        $and: {
+          conditions: [
+            {
+              $and: {
+                conditions: [
+                  {
+                    range: { age: { low: 1, high: 10 } },
+                  },
+                  { string: { name: "Ja" } },
+                ],
+              },
+              equal: { name: "Jane" },
+            },
+          ],
+        },
+      }).toContainExactly([{ age: 1, name: "Jane" }])
+    })
+
+    it("returns nothing when filtering out all data", async () => {
+      await expectQuery({
+        $and: {
+          conditions: [{ equal: { age: 7 } }, { equal: { name: "Jack" } }],
+        },
+      }).toFindNothing()
+    })
+  })
+
+  describe("$or", () => {
+    beforeAll(async () => {
+      table = await createTable({
+        age: { name: "age", type: FieldType.NUMBER },
+        name: { name: "name", type: FieldType.STRING },
+      })
+      await createRows([
+        { age: 1, name: "Jane" },
+        { age: 10, name: "Jack" },
+        { age: 7, name: "Hanna" },
+        { age: 8, name: "Jan" },
+      ])
+    })
+
+    it("successfully finds a row for one level condition", async () => {
+      await expectQuery({
+        $or: {
+          conditions: [{ equal: { age: 7 } }, { equal: { name: "Jack" } }],
+        },
+      }).toContainExactly([
+        { age: 10, name: "Jack" },
+        { age: 7, name: "Hanna" },
+      ])
+    })
+
+    it("successfully finds a row for one level with multiple conditions", async () => {
+      await expectQuery({
+        $or: {
+          conditions: [{ equal: { age: 7 } }, { equal: { name: "Jack" } }],
+        },
+      }).toContainExactly([
+        { age: 10, name: "Jack" },
+        { age: 7, name: "Hanna" },
+      ])
+    })
+
+    it("successfully finds multiple rows for one level with multiple conditions", async () => {
+      await expectQuery({
+        $or: {
+          conditions: [
+            { range: { age: { low: 1, high: 9 } } },
+            { string: { name: "Ja" } },
+          ],
+        },
+      }).toContainExactly([
+        { age: 1, name: "Jane" },
+        { age: 7, name: "Hanna" },
+        { age: 8, name: "Jan" },
+      ])
+    })
+
+    it("successfully finds rows for nested filters", async () => {
+      await expectQuery({
+        $or: {
+          conditions: [
+            {
+              $or: {
+                conditions: [
+                  {
+                    range: { age: { low: 1, high: 7 } },
+                  },
+                  { string: { name: "Jan" } },
+                ],
+              },
+              equal: { name: "Jane" },
+            },
+          ],
+        },
+      }).toContainExactly([
+        { age: 1, name: "Jane" },
+        { age: 7, name: "Hanna" },
+        { age: 8, name: "Jan" },
+      ])
+    })
+
+    it("returns nothing when filtering out all data", async () => {
+      await expectQuery({
+        $or: {
+          conditions: [{ equal: { age: 6 } }, { equal: { name: "John" } }],
+        },
+      }).toFindNothing()
+    })
     })
 })
