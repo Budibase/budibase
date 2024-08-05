@@ -81,15 +81,16 @@
     left: 0;
     width: 100%;
     height: 100%;
-    grid-gap: 2px;
-    background-color: var(--spectrum-global-color-gray-200);
-    border: 2px solid var(--spectrum-global-color-gray-200);
+    /*    grid-gap: 2px;*/
+    /*    background-color: var(--spectrum-global-color-gray-200);*/
+    border: 1px solid var(--spectrum-global-color-gray-200);
   }
   .underlay {
     z-index: -1;
   }
   .placeholder {
-    background-color: var(--spectrum-global-color-gray-100);
+    /*    background-color: var(--spectrum-global-color-gray-100);*/
+    border: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   /* Ensure all top level children have grid styles applied */
