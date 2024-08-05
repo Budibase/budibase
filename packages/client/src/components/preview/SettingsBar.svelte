@@ -254,6 +254,7 @@
             prop={setting.key}
             options={setting.options}
             label={setting.label}
+            {component}
           />
         {/if}
       {:else if setting.type === "boolean"}
@@ -262,9 +263,10 @@
           icon={setting.barIcon}
           title={setting.barTitle || setting.label}
           bool
+          {component}
         />
       {:else if setting.type === "color"}
-        <SettingsColorPicker prop={setting.key} />
+        <SettingsColorPicker prop={setting.key} {component} />
       {/if}
       {#if setting.barSeparator !== false && (settings.length != idx + 1 || !isRoot)}
         <div class="divider" />
