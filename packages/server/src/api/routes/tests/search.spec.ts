@@ -2693,7 +2693,7 @@ describe.each([
       })
     })
 
-  !isInternal &&
+  isSql &&
     describe("$and", () => {
       beforeAll(async () => {
         table = await createTable({
@@ -2767,7 +2767,7 @@ describe.each([
       })
     })
 
-  !isInternal &&
+  isSql &&
     describe("$or", () => {
       beforeAll(async () => {
         table = await createTable({
