@@ -2850,5 +2850,48 @@ describe.each([
           },
         }).toFindNothing()
       })
+
+      it("can nest $and under $or filters", async () => {
+        await expectQuery({
+          $or: {
+            conditions: [
+              {
+                $and: {
+                  conditions: [
+                    {
+                      range: { age: { low: 1, high: 8 } },
+                    },
+                    { equal: { name: "Jan" } },
+                  ],
+                },
+                equal: { name: "Jane" },
+              },
+            ],
+          },
+        }).toContainExactly([
+          { age: 1, name: "Jane" },
+          { age: 8, name: "Jan" },
+        ])
+      })
+
+      it("can nest $or under $and filters", async () => {
+        await expectQuery({
+          $and: {
+            conditions: [
+              {
+                $or: {
+                  conditions: [
+                    {
+                      range: { age: { low: 1, high: 8 } },
+                    },
+                    { equal: { name: "Jan" } },
+                  ],
+                },
+                equal: { name: "Jane" },
+              },
+            ],
+          },
+        }).toContainExactly([{ age: 1, name: "Jane" }])
+      })
     })
 })
