@@ -75,6 +75,13 @@ export interface SearchFilters {
   // to make sure the documents returned are always filtered down to a
   // specific document type (such as just rows)
   documentType?: DocumentType
+
+  $and?: {
+    conditions: SearchFilters[]
+  }
+  $or?: {
+    conditions: SearchFilters[]
+  }
 }
 
 export type SearchFilterKey = keyof Omit<
