@@ -13,21 +13,10 @@
 
   $: cols = cols || 12
   $: rows = rows || 12
-  $: coords = generateCoords(rows, cols)
   $: mobile = $context.device.mobile
   $: empty = $component.empty
   $: colSize = width / cols
   $: rowSize = height / rows
-
-  const generateCoords = (rows, cols) => {
-    let grid = []
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        grid.push({ row, col })
-      }
-    }
-    return grid
-  }
 </script>
 
 <div
@@ -52,7 +41,7 @@
 >
   {#if $builderStore.inBuilder}
     <div class="underlay">
-      {#each coords as _}
+      {#each { length: cols * rows } as _}
         <div class="placeholder" />
       {/each}
     </div>
