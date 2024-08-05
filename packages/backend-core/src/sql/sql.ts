@@ -370,12 +370,11 @@ class InternalBuilder {
     }
 
     if (filters.$and) {
-      iterate(filters.$and, (key: string, conditions: any[]) => {
-        query = query.where(x => {
-          for (const condition of conditions) {
-            x = this.addFilters(x, condition, table, opts)
-          }
-        })
+      const { $and } = filters
+      query = query.where(x => {
+        for (const condition of $and.conditions) {
+          x = this.addFilters(x, condition, table, opts)
+        }
       })
     }
 
