@@ -5,7 +5,7 @@
   import SettingsColorPicker from "./SettingsColorPicker.svelte"
   import SettingsPicker from "./SettingsPicker.svelte"
   import { builderStore, componentStore, dndIsDragging } from "stores"
-  import { Utils } from "@budibase/frontend-core"
+  import { Utils, shouldDisplaySetting } from "@budibase/frontend-core"
   import { findComponentParent } from "utils/components"
   import { getGridVar, GridParams } from "utils/grid"
 
@@ -39,7 +39,7 @@
       measured = false
     }
   }
-  $: settings = getBarSettings(definition)
+  $: settings = getBarSettings(component, definition)
   $: isRoot = componentId === $builderStore.screen?.props?._id
   $: insideGrid =
     parent?._component.endsWith("/container") && parent.layout === "grid"
@@ -51,16 +51,21 @@
   $: gridHAlignVar = getGridVar(device, GridParams.HAlign)
   $: gridVAlignVar = getGridVar(device, GridParams.VAlign)
 
-  const getBarSettings = definition => {
+  const getBarSettings = (component, definition) => {
     let allSettings = []
     definition?.settings?.forEach(setting => {
-      if (setting.section) {
+      if (setting.section && shouldDisplaySetting(component, setting)) {
         allSettings = allSettings.concat(setting.settings || [])
       } else {
         allSettings.push(setting)
       }
     })
-    return allSettings.filter(setting => setting.showInBar && !setting.hidden)
+    return allSettings.filter(
+      setting =>
+        setting.showInBar &&
+        !setting.hidden &&
+        shouldDisplaySetting(component, setting)
+    )
   }
 
   const updatePosition = () => {
