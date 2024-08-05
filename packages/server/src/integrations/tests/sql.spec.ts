@@ -1,12 +1,16 @@
 import {
   FieldType,
   Operation,
+  PaginationJson,
   QueryJson,
+  SearchFilters,
+  SortJson,
+  SqlClient,
   Table,
   TableSourceType,
-  SqlClient,
 } from "@budibase/types"
 import { sql } from "@budibase/backend-core"
+import { merge } from "lodash"
 
 const Sql = sql.Sql
 
@@ -25,7 +29,16 @@ const TABLE: Table = {
   primary: ["id"],
 }
 
-function endpoint(table: any, operation: any) {
+const ORACLE_TABLE: Partial<Table> = {
+  schema: {
+    name: {
+      name: "name",
+      type: FieldType.STRING,
+    },
+  },
+}
+
+function endpoint(table: string, operation: Operation) {
   return {
     datasourceId: "Postgres",
     operation: operation,
@@ -39,19 +52,25 @@ function generateReadJson({
   filters,
   sort,
   paginate,
-}: any = {}): QueryJson {
-  const tableObj = { ...TABLE }
+}: {
+  table?: Partial<Table>
+  fields?: string[]
+  filters?: SearchFilters
+  sort?: SortJson
+  paginate?: PaginationJson
+} = {}): QueryJson {
+  let tableObj: Table = { ...TABLE }
   if (table) {
-    tableObj.name = table
+    tableObj = merge(TABLE, table)
   }
   return {
-    endpoint: endpoint(table || TABLE_NAME, "READ"),
+    endpoint: endpoint(tableObj.name || TABLE_NAME, Operation.READ),
     resource: {
       fields: fields || [],
     },
     filters: filters || {},
     sort: sort || {},
-    paginate: paginate || {},
+    paginate: paginate || undefined,
     meta: {
       table: tableObj,
     },
@@ -191,7 +210,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where (COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2) and (COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4) order by "test"."id" asc) where rownum <= :5) "test" order by "test"."id" asc) where rownum <= :6`,
+      sql: `select * from (select * from (select * from (select * from "test" where COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2 and COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4 order by "test"."id" asc) where rownum <= :5) "test" order by "test"."id" asc) where rownum <= :6`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -212,6 +231,7 @@ describe("SQL query builder", () => {
   it("should use an oracle compatible coalesce query for oracle when using the equals filter", () => {
     let query = new Sql(SqlClient.ORACLE, limit)._query(
       generateReadJson({
+        table: ORACLE_TABLE,
         filters: {
           equal: {
             name: "John",
@@ -222,13 +242,14 @@ describe("SQL query builder", () => {
 
     expect(query).toEqual({
       bindings: ["John", limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where COALESCE("test"."name", -1) = :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
+      sql: `select * from (select * from (select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") = :1) order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
   })
 
   it("should use an oracle compatible coalesce query for oracle when using the not equals filter", () => {
     let query = new Sql(SqlClient.ORACLE, limit)._query(
       generateReadJson({
+        table: ORACLE_TABLE,
         filters: {
           notEqual: {
             name: "John",
@@ -239,7 +260,7 @@ describe("SQL query builder", () => {
 
     expect(query).toEqual({
       bindings: ["John", limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where COALESCE("test"."name", -1) != :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
+      sql: `select * from (select * from (select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") != :1) OR to_char("test"."name") IS NULL order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
   })
 })

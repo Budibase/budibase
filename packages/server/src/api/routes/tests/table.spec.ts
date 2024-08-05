@@ -40,7 +40,8 @@ describe.each([
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-])("/tables (%s)", (_, dsProvider) => {
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+])("/tables (%s)", (name, dsProvider) => {
   const isInternal: boolean = !dsProvider
   let datasource: Datasource | undefined
   let config = setup.getConfig()
@@ -59,15 +60,20 @@ describe.each([
       jest.clearAllMocks()
     })
 
-    it.each([
+    let names = [
       "alphanum",
       "with spaces",
       "with-dashes",
       "with_underscores",
-      'with "double quotes"',
-      "with 'single quotes'",
       "with `backticks`",
-    ])("creates a table with name: %s", async name => {
+    ]
+
+    if (name !== DatabaseName.ORACLE) {
+      names.push(`with "double quotes"`)
+      names.push(`with 'single quotes'`)
+    }
+
+    it.each(names)("creates a table with name: %s", async name => {
       const table = await config.api.table.save(
         tableForDatasource(datasource, { name })
       )

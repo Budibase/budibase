@@ -315,6 +315,21 @@ export async function outputProcessing<T extends Row[] | Row>(
           column.subtype
         )
       }
+    } else if (column.type === FieldType.DATETIME && column.timeOnly) {
+      for (let row of enriched) {
+        if (row[property] instanceof Date) {
+          const hours = row[property].getUTCHours().toString().padStart(2, "0")
+          const minutes = row[property]
+            .getUTCMinutes()
+            .toString()
+            .padStart(2, "0")
+          const seconds = row[property]
+            .getUTCSeconds()
+            .toString()
+            .padStart(2, "0")
+          row[property] = `${hours}:${minutes}:${seconds}`
+        }
+      }
     }
   }
 
