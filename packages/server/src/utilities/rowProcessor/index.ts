@@ -28,7 +28,6 @@ import {
 import { isExternalTableID } from "../../integrations/utils"
 import { helpers } from "@budibase/shared-core"
 import { processString } from "@budibase/string-templates"
-import { DateTime } from "mssql"
 
 export * from "./utils"
 export * from "./attachments"

@@ -13,7 +13,6 @@ import {
   RelationshipType,
   Row,
   SaveTableRequest,
-  SourceName,
   Table,
   TableSchema,
   TableSourceType,
