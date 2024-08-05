@@ -4,9 +4,9 @@ export interface SaveRoleRequest {
   _id?: string
   _rev?: string
   name: string
-  inherits: string
+  inherits?: string | string[]
   permissionId: string
-  version: string
+  version?: string
 }
 
 export interface SaveRoleResponse extends Role {}
