@@ -175,6 +175,7 @@ jobs:
           docker pull postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }} &
           docker pull mongo@${{ steps.dotenv.outputs.MONGODB_SHA }} &
           docker pull mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }} &
+          docker pull budibase/oracle-database:23.2-slim-faststart &
           docker pull minio/minio &
           docker pull redis &
           docker pull testcontainers/ryuk:0.5.1 &
