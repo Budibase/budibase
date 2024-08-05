@@ -2807,7 +2807,7 @@ describe.each([
         $or: {
           conditions: [
             { range: { age: { low: 1, high: 9 } } },
-            { string: { name: "Ja" } },
+            { string: { name: "Jan" } },
           ],
         },
       }).toContainExactly([
