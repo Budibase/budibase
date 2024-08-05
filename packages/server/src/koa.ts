@@ -69,6 +69,10 @@ export default function createKoaApp() {
     server.destroy()
   }
 
+  process.on("unhandledRejection", err => {
+    logging.logAlert("Unhandled rejection.", err)
+  })
+
   process.on("uncaughtException", err => {
     // @ts-ignore
     // don't worry about this error, comes from zlib isn't important
