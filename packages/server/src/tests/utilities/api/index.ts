@@ -14,6 +14,8 @@ import { QueryAPI } from "./query"
 import { RoleAPI } from "./role"
 import { TemplateAPI } from "./template"
 import { RowActionAPI } from "./rowAction"
+import { AutomationAPI } from "./automation"
+import { PluginAPI } from "./plugin"
 
 export default class API {
   table: TableAPI
@@ -31,6 +33,8 @@ export default class API {
   roles: RoleAPI
   templates: TemplateAPI
   rowAction: RowActionAPI
+  automation: AutomationAPI
+  plugin: PluginAPI
 
   constructor(config: TestConfiguration) {
     this.table = new TableAPI(config)
@@ -48,5 +52,7 @@ export default class API {
     this.roles = new RoleAPI(config)
     this.templates = new TemplateAPI(config)
     this.rowAction = new RowActionAPI(config)
+    this.automation = new AutomationAPI(config)
+    this.plugin = new PluginAPI(config)
   }
 }

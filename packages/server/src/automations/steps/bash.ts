@@ -7,9 +7,10 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
+  BashStepInputs,
+  BashStepOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -51,7 +52,13 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs, context }: AutomationStepInput) {
+export async function run({
+  inputs,
+  context,
+}: {
+  inputs: BashStepInputs
+  context: object
+}): Promise<BashStepOutputs> {
   if (inputs.code == null) {
     return {
       stdout: "Budibase bash automation failed: Invalid inputs",

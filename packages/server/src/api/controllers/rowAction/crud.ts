@@ -31,7 +31,12 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
     actions: Object.entries(actions).reduce<Record<string, RowActionResponse>>(
       (acc, [key, action]) => ({
         ...acc,
-        [key]: { id: key, tableId: table._id!, ...action },
+        [key]: {
+          id: key,
+          tableId: table._id!,
+          name: action.name,
+          automationId: action.automationId,
+        },
       }),
       {}
     ),
@@ -50,7 +55,9 @@ export async function create(
 
   ctx.body = {
     tableId: table._id!,
-    ...createdAction,
+    id: createdAction.id,
+    name: createdAction.name,
+    automationId: createdAction.automationId,
   }
   ctx.status = 201
 }
@@ -61,13 +68,15 @@ export async function update(
   const table = await getTable(ctx)
   const { actionId } = ctx.params
 
-  const actions = await sdk.rowActions.update(table._id!, actionId, {
+  const action = await sdk.rowActions.update(table._id!, actionId, {
     name: ctx.request.body.name,
   })
 
   ctx.body = {
     tableId: table._id!,
-    ...actions,
+    id: action.id,
+    name: action.name,
+    automationId: action.automationId,
   }
 }
 

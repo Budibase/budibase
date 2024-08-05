@@ -10,12 +10,10 @@ import {
   Table,
 } from "@budibase/types"
 import tablesSdk from "../"
-import {
-  CONSTANT_INTERNAL_ROW_COLS,
-  generateJunctionTableID,
-} from "../../../../db/utils"
+import { generateJunctionTableID } from "../../../../db/utils"
 import { isEqual } from "lodash"
 import { DEFAULT_TABLES } from "../../../../db/defaultData/datasource_bb_default"
+import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BOOLEAN]: SQLiteType.NUMERIC,
@@ -65,29 +63,10 @@ function buildRelationshipDefinitions(
 
 export const USER_COLUMN_PREFIX = "data_"
 
-// SQS does not support non-ASCII characters in column names, so we need to
-// replace them with unicode escape sequences.
-function encodeNonAscii(str: string): string {
-  return str
-    .split("")
-    .map(char => {
-      return char.charCodeAt(0) > 127
-        ? "\\u" + char.charCodeAt(0).toString(16).padStart(4, "0")
-        : char
-    })
-    .join("")
-}
-
-export function decodeNonAscii(str: string): string {
-  return str.replace(/\\u([0-9a-fA-F]{4})/g, (match, p1) =>
-    String.fromCharCode(parseInt(p1, 16))
-  )
-}
-
 // utility function to denote that columns in SQLite are mapped to avoid overlap issues
 // the overlaps can occur due to case insensitivity and some of the columns which Budibase requires
 export function mapToUserColumn(key: string) {
-  return `${USER_COLUMN_PREFIX}${encodeNonAscii(key)}`
+  return `${USER_COLUMN_PREFIX}${helpers.schema.encodeNonAscii(key)}`
 }
 
 // this can generate relationship tables as part of the mapping
@@ -122,7 +101,7 @@ function mapTable(table: Table): SQLiteTables {
   }
   // there are some extra columns to map - add these in
   const constantMap: Record<string, SQLiteType> = {}
-  CONSTANT_INTERNAL_ROW_COLS.forEach(col => {
+  PROTECTED_INTERNAL_COLUMNS.forEach(col => {
     constantMap[col] = SQLiteType.TEXT
   })
   const thisTable: SQLiteTable = {

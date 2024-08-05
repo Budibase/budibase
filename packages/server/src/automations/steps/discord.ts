@@ -3,10 +3,11 @@ import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
   AutomationStepSchema,
-  AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  ExternalAppStepOutputs,
+  DiscordStepInputs,
 } from "@budibase/types"
 
 const DEFAULT_USERNAME = "Budibase Automate"
@@ -65,7 +66,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: DiscordStepInputs
+}): Promise<ExternalAppStepOutputs> {
   let { url, username, avatar_url, content } = inputs
   if (!username) {
     username = DEFAULT_USERNAME

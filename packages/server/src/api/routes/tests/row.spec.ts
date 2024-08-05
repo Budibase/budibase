@@ -1,3 +1,5 @@
+import * as setup from "./utilities"
+
 import {
   DatabaseName,
   getDatasource,
@@ -7,7 +9,6 @@ import {
 import tk from "timekeeper"
 import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import * as setup from "./utilities"
 import { context, InternalTable, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
@@ -31,6 +32,8 @@ import {
   TableSourceType,
   UpdatedRowEventEmitter,
   TableSchema,
+  JsonFieldSubType,
+  RowExportFormat,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
@@ -69,9 +72,11 @@ describe.each([
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
+  const isOracle = providerType === DatabaseName.ORACLE
   const config = setup.getConfig()
 
   let table: Table
@@ -101,7 +106,7 @@ describe.each([
   ): SaveTableRequest {
     const defaultSchema: TableSchema = {
       id: {
-        type: FieldType.AUTO,
+        type: FieldType.NUMBER,
         name: "id",
         autocolumn: true,
         constraints: {
@@ -126,7 +131,8 @@ describe.each([
       primary: ["id"],
       schema: defaultSchema,
     }
-    return merge(req, ...overrides)
+    const merged = merge(req, ...overrides)
+    return merged
   }
 
   function defaultTable(
@@ -383,7 +389,7 @@ describe.each([
         const arrayField: FieldSchema = {
           type: FieldType.ARRAY,
           constraints: {
-            type: "array",
+            type: JsonFieldSubType.ARRAY,
             presence: false,
             inclusion: ["One", "Two", "Three"],
           },
@@ -1296,9 +1302,117 @@ describe.each([
       await assertRowUsage(isInternal ? rowUsage + 2 : rowUsage)
     })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    isInternal &&
+      it("should be able to update existing rows on bulkImport", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+              },
+              description: {
+                type: FieldType.STRING,
+                name: "description",
+              },
+            },
+          })
+        )
+
+        const existingRow = await config.api.row.save(table._id!, {
+          name: "Existing row",
+          description: "Existing description",
+        })
+
+        const rowUsage = await getRowUsage()
+
+        await config.api.row.bulkImport(table._id!, {
+          rows: [
+            {
+              name: "Row 1",
+              description: "Row 1 description",
+            },
+            { ...existingRow, name: "Updated existing row" },
+            {
+              name: "Row 2",
+              description: "Row 2 description",
+            },
+          ],
+          identifierFields: ["_id"],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(3)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Row 1")
+        expect(rows[0].description).toEqual("Row 1 description")
+        expect(rows[1].name).toEqual("Row 2")
+        expect(rows[1].description).toEqual("Row 2 description")
+        expect(rows[2].name).toEqual("Updated existing row")
+        expect(rows[2].description).toEqual("Existing description")
+
+        await assertRowUsage(rowUsage + 2)
+      })
+
+    isInternal &&
+      it("should create new rows if not identifierFields are provided", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+              },
+              description: {
+                type: FieldType.STRING,
+                name: "description",
+              },
+            },
+          })
+        )
+
+        const existingRow = await config.api.row.save(table._id!, {
+          name: "Existing row",
+          description: "Existing description",
+        })
+
+        const rowUsage = await getRowUsage()
+
+        await config.api.row.bulkImport(table._id!, {
+          rows: [
+            {
+              name: "Row 1",
+              description: "Row 1 description",
+            },
+            { ...existingRow, name: "Updated existing row" },
+            {
+              name: "Row 2",
+              description: "Row 2 description",
+            },
+          ],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(4)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Existing row")
+        expect(rows[0].description).toEqual("Existing description")
+        expect(rows[1].name).toEqual("Row 1")
+        expect(rows[1].description).toEqual("Row 1 description")
+        expect(rows[2].name).toEqual("Row 2")
+        expect(rows[2].description).toEqual("Row 2 description")
+        expect(rows[3].name).toEqual("Updated existing row")
+        expect(rows[3].description).toEqual("Existing description")
+
+        await assertRowUsage(rowUsage + 3)
+      })
+
+    // Upserting isn't yet supported in MSSQL / Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       it("should be able to update existing rows with bulkImport", async () => {
         const table = await config.api.table.save(
           saveTableRequest({
@@ -1368,9 +1482,10 @@ describe.each([
         expect(rows[2].description).toEqual("Row 3 description")
       })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    // Upserting isn't yet supported in MSSQL or Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       !isInternal &&
       it("should be able to update existing rows with composite primary keys with bulkImport", async () => {
         const tableName = uuid.v4()
@@ -1437,9 +1552,10 @@ describe.each([
         expect(rows[2].description).toEqual("Row 3 description")
       })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    // Upserting isn't yet supported in MSSQL/Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       !isInternal &&
       it("should be able to update existing rows an autoID primary key", async () => {
         const tableName = uuid.v4()
@@ -1638,23 +1754,38 @@ describe.each([
       table = await config.api.table.save(defaultTable())
     })
 
-    it("should allow exporting all columns", async () => {
-      const existing = await config.api.row.save(table._id!, {})
-      const res = await config.api.row.exportRows(table._id!, {
-        rows: [existing._id!],
-      })
-      const results = JSON.parse(res)
-      expect(results.length).toEqual(1)
-      const row = results[0]
+    isInternal &&
+      it("should not export internal couchdb fields", async () => {
+        const existing = await config.api.row.save(table._id!, {
+          name: generator.guid(),
+          description: generator.paragraph(),
+        })
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: [existing._id!],
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(1)
+        const row = results[0]
 
-      // Ensure all original columns were exported
-      expect(Object.keys(row).length).toBeGreaterThanOrEqual(
-        Object.keys(existing).length
-      )
-      Object.keys(existing).forEach(key => {
-        expect(row[key]).toEqual(existing[key])
+        expect(Object.keys(row)).toEqual(["_id", "name", "description"])
       })
-    })
+
+    !isInternal &&
+      it("should allow exporting all columns", async () => {
+        const existing = await config.api.row.save(table._id!, {})
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: [existing._id!],
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(1)
+        const row = results[0]
+
+        // Ensure all original columns were exported
+        expect(Object.keys(row).length).toBe(Object.keys(existing).length)
+        Object.keys(existing).forEach(key => {
+          expect(row[key]).toEqual(existing[key])
+        })
+      })
 
     it("should allow exporting only certain columns", async () => {
       const existing = await config.api.row.save(table._id!, {})
@@ -1687,6 +1818,7 @@ describe.each([
       await config.api.row.exportRows(
         "1234567",
         { rows: [existing._id!] },
+        RowExportFormat.JSON,
         { status: 404 }
       )
     })
@@ -1725,6 +1857,202 @@ describe.each([
         const results = JSON.parse(res)
         expect(results.length).toEqual(3)
       })
+
+    describe("should allow exporting all column types", () => {
+      let tableId: string
+      let expectedRowData: Row
+
+      beforeAll(async () => {
+        const fullSchema = setup.structures.fullSchemaWithoutLinks({
+          allRequired: true,
+        })
+
+        const table = await config.api.table.save(
+          saveTableRequest({
+            ...setup.structures.basicTable(),
+            schema: fullSchema,
+            primary: ["string"],
+          })
+        )
+        tableId = table._id!
+
+        const rowValues: Record<keyof typeof fullSchema, any> = {
+          [FieldType.STRING]: generator.guid(),
+          [FieldType.LONGFORM]: generator.paragraph(),
+          [FieldType.OPTIONS]: "option 2",
+          [FieldType.ARRAY]: ["options 2", "options 4"],
+          [FieldType.NUMBER]: generator.natural(),
+          [FieldType.BOOLEAN]: generator.bool(),
+          [FieldType.DATETIME]: generator.date().toISOString(),
+          [FieldType.ATTACHMENTS]: [setup.structures.basicAttachment()],
+          [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
+          [FieldType.FORMULA]: undefined, // generated field
+          [FieldType.AUTO]: undefined, // generated field
+          [FieldType.JSON]: { name: generator.guid() },
+          [FieldType.INTERNAL]: generator.guid(),
+          [FieldType.BARCODEQR]: generator.guid(),
+          [FieldType.SIGNATURE_SINGLE]: setup.structures.basicAttachment(),
+          [FieldType.BIGINT]: generator.integer().toString(),
+          [FieldType.BB_REFERENCE]: [{ _id: config.getUser()._id }],
+          [FieldType.BB_REFERENCE_SINGLE]: { _id: config.getUser()._id },
+        }
+        const row = await config.api.row.save(table._id!, rowValues)
+        expectedRowData = {
+          _id: row._id,
+          [FieldType.STRING]: rowValues[FieldType.STRING],
+          [FieldType.LONGFORM]: rowValues[FieldType.LONGFORM],
+          [FieldType.OPTIONS]: rowValues[FieldType.OPTIONS],
+          [FieldType.ARRAY]: rowValues[FieldType.ARRAY],
+          [FieldType.NUMBER]: rowValues[FieldType.NUMBER],
+          [FieldType.BOOLEAN]: rowValues[FieldType.BOOLEAN],
+          [FieldType.DATETIME]: rowValues[FieldType.DATETIME],
+          [FieldType.ATTACHMENTS]: rowValues[FieldType.ATTACHMENTS].map(
+            (a: any) =>
+              expect.objectContaining({
+                ...a,
+                url: expect.any(String),
+              })
+          ),
+          [FieldType.ATTACHMENT_SINGLE]: expect.objectContaining({
+            ...rowValues[FieldType.ATTACHMENT_SINGLE],
+            url: expect.any(String),
+          }),
+          [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
+          [FieldType.AUTO]: expect.any(Number),
+          [FieldType.JSON]: rowValues[FieldType.JSON],
+          [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
+          [FieldType.BARCODEQR]: rowValues[FieldType.BARCODEQR],
+          [FieldType.SIGNATURE_SINGLE]: expect.objectContaining({
+            ...rowValues[FieldType.SIGNATURE_SINGLE],
+            url: expect.any(String),
+          }),
+          [FieldType.BIGINT]: rowValues[FieldType.BIGINT],
+          [FieldType.BB_REFERENCE]: rowValues[FieldType.BB_REFERENCE].map(
+            expect.objectContaining
+          ),
+          [FieldType.BB_REFERENCE_SINGLE]: expect.objectContaining(
+            rowValues[FieldType.BB_REFERENCE_SINGLE]
+          ),
+        }
+      })
+
+      it("as csv", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.CSV
+        )
+
+        const jsonResult = await config.api.table.csvToJson({
+          csvString: exportedValue,
+        })
+
+        const stringified = (value: string) =>
+          JSON.stringify(value).replace(/"/g, "'")
+
+        const matchingObject = (key: string, value: any, isArray: boolean) => {
+          const objectMatcher = `{'${key}':'${value[key]}'.*?}`
+          if (isArray) {
+            return expect.stringMatching(new RegExp(`^\\[${objectMatcher}\\]$`))
+          }
+          return expect.stringMatching(new RegExp(`^${objectMatcher}$`))
+        }
+
+        expect(jsonResult).toEqual([
+          {
+            ...expectedRowData,
+            auto: expect.any(String),
+            array: stringified(expectedRowData["array"]),
+            attachment: matchingObject(
+              "key",
+              expectedRowData["attachment"][0].sample,
+              true
+            ),
+            attachment_single: matchingObject(
+              "key",
+              expectedRowData["attachment_single"].sample,
+              false
+            ),
+            boolean: stringified(expectedRowData["boolean"]),
+            json: stringified(expectedRowData["json"]),
+            number: stringified(expectedRowData["number"]),
+            signature_single: matchingObject(
+              "key",
+              expectedRowData["signature_single"].sample,
+              false
+            ),
+            bb_reference: matchingObject(
+              "_id",
+              expectedRowData["bb_reference"][0].sample,
+              true
+            ),
+            bb_reference_single: matchingObject(
+              "_id",
+              expectedRowData["bb_reference_single"].sample,
+              false
+            ),
+          },
+        ])
+      })
+
+      it("as json", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.JSON
+        )
+
+        const json = JSON.parse(exportedValue)
+        expect(json).toEqual([expectedRowData])
+      })
+
+      it("as json with schema", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.JSON_WITH_SCHEMA
+        )
+
+        const json = JSON.parse(exportedValue)
+        expect(json).toEqual({
+          schema: expect.any(Object),
+          rows: [expectedRowData],
+        })
+      })
+
+      it("exported data can be re-imported", async () => {
+        // export all
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.CSV
+        )
+
+        // import all twice
+        const rows = await config.api.table.csvToJson({
+          csvString: exportedValue,
+        })
+        await config.api.row.bulkImport(tableId, {
+          rows,
+        })
+        await config.api.row.bulkImport(tableId, {
+          rows,
+        })
+
+        const { rows: allRows } = await config.api.row.search(tableId)
+
+        const expectedRow = {
+          ...expectedRowData,
+          _id: expect.any(String),
+          _rev: expect.any(String),
+          type: "row",
+          tableId: tableId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+        expect(allRows).toEqual([expectedRow, expectedRow, expectedRow])
+      })
+    })
   })
 
   let o2mTable: Table

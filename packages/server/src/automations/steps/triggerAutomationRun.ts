@@ -1,12 +1,13 @@
 import {
   AutomationActionStepId,
   AutomationStepSchema,
-  AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
   AutomationResults,
   Automation,
   AutomationCustomIOType,
+  TriggerAutomationStepInputs,
+  TriggerAutomationStepOutputs,
 } from "@budibase/types"
 import * as triggers from "../triggers"
 import { context } from "@budibase/backend-core"
@@ -61,7 +62,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: TriggerAutomationStepInputs
+}): Promise<TriggerAutomationStepOutputs> {
   const { automationId, ...fieldParams } = inputs.automation
 
   if (await features.isTriggerAutomationRunEnabled()) {
@@ -87,6 +92,10 @@ export async function run({ inputs }: AutomationStepInput) {
         success: true,
         value: response.steps,
       }
+    }
+  } else {
+    return {
+      success: false,
     }
   }
 }

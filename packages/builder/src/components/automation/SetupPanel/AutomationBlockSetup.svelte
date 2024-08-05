@@ -58,6 +58,7 @@
     AutomationEventType,
     AutomationStepType,
     AutomationActionStepId,
+    AutomationCustomIOType,
   } from "@budibase/types"
   import { FIELDS } from "constants/backend"
   import PropField from "./PropField.svelte"
@@ -394,7 +395,9 @@
    */
   const onRowTriggerUpdate = async update => {
     if (
-      ["tableId", "filters", "meta"].some(key => Object.hasOwn(update, key))
+      ["tableId", AutomationCustomIOType.FILTERS, "meta"].some(key =>
+        Object.hasOwn(update, key)
+      )
     ) {
       try {
         let updatedAutomation
@@ -744,7 +747,11 @@
     for (let [key, field] of properties) {
       // need to look for the builder definition (keyed separately, see saveFilters)
       const defKey = `${key}-def`
-      if (field.customType === "filters" && inputs?.[defKey]) {
+      if (
+        (field.customType === AutomationCustomIOType.FILTERS ||
+          field.customType === AutomationCustomIOType.TRIGGER_FILTER) &&
+        inputs?.[defKey]
+      ) {
         filters = inputs[defKey]
         break
       }
@@ -846,7 +853,7 @@
               <Label>
                 {label}
               </Label>
-              {#if value.customType === "trigger_filter"}
+              {#if value.customType === AutomationCustomIOType.TRIGGER_FILTER}
                 <Icon
                   hoverable
                   on:click={() =>
@@ -869,6 +876,7 @@
                 options={value.enum}
                 getOptionLabel={(x, idx) =>
                   value.pretty ? value.pretty[idx] : x}
+                disabled={value.readonly}
               />
             {:else if value.type === "json"}
               <Editor
@@ -877,6 +885,7 @@
                 mode="json"
                 value={inputData[key]?.value}
                 on:change={e => onChange({ [key]: e.detail })}
+                readOnly={value.readonly}
               />
             {:else if value.type === "boolean"}
               <div style="margin-top: 10px">
@@ -884,6 +893,7 @@
                   text={value.title}
                   value={inputData[key]}
                   on:change={e => onChange({ [key]: e.detail })}
+                  disabled={value.readonly}
                 />
               </div>
             {:else if value.type === "date"}
@@ -897,6 +907,7 @@
                 allowJS={true}
                 updateOnChange={false}
                 drawerLeft="260px"
+                disabled={value.readonly}
               >
                 <DatePicker
                   value={inputData[key]}
@@ -908,6 +919,7 @@
                 on:change={e => onChange({ [key]: e.detail })}
                 value={inputData[key]}
                 options={Object.keys(table?.schema || {})}
+                disabled={value.readonly}
               />
             {:else if value.type === "attachment" || value.type === "signature_single"}
               <div class="attachment-field-wrapper">
@@ -977,7 +989,7 @@
                   {/if}
                 </div>
               </div>
-            {:else if value.customType === "filters" || value.customType === "trigger_filter"}
+            {:else if value.customType === AutomationCustomIOType.FILTERS || value.customType === AutomationCustomIOType.TRIGGER_FILTER}
               <ActionButton fullWidth on:click={drawer.show}
                 >{filters.length > 0
                   ? "Update Filter"
@@ -1021,6 +1033,7 @@
                 {isTrigger}
                 value={inputData[key]}
                 on:change={e => onChange({ [key]: e.detail })}
+                disabled={value.readonly}
               />
             {:else if value.customType === "webhookUrl"}
               <WebhookDisplay value={inputData[key]} />

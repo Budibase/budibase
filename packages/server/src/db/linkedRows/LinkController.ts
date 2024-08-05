@@ -6,7 +6,6 @@ import {
   Database,
   FieldSchema,
   FieldType,
-  LinkDocumentValue,
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
@@ -213,11 +212,10 @@ class LinkController {
             linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY
           ) {
             let links = (
-              (await getLinkDocuments({
+              await getLinkDocuments({
                 tableId: field.tableId,
                 rowId: linkId,
-                includeDocs: IncludeDocs.EXCLUDE,
-              })) as LinkDocumentValue[]
+              })
             ).filter(
               link =>
                 link.id !== row._id && link.fieldName === linkedSchema.name
@@ -295,13 +293,7 @@ class LinkController {
     if (linkDocs.length === 0) {
       return null
     }
-    const toDelete = linkDocs.map(doc => {
-      return {
-        ...doc,
-        _deleted: true,
-      }
-    })
-    await this._db.bulkDocs(toDelete)
+    await this._db.bulkRemove(linkDocs, { silenceErrors: true })
     return row
   }
 
@@ -321,14 +313,8 @@ class LinkController {
           : linkDoc.doc2.fieldName
       return correctFieldName === fieldName
     })
-    await this._db.bulkDocs(
-      toDelete.map(doc => {
-        return {
-          ...doc,
-          _deleted: true,
-        }
-      })
-    )
+    await this._db.bulkRemove(toDelete, { silenceErrors: true })
+
     try {
       // remove schema from other table, if it exists
       let linkedTable = await this._db.get<Table>(field.tableId)
@@ -453,13 +439,7 @@ class LinkController {
       return null
     }
     // get link docs for this table and configure for deletion
-    const toDelete = linkDocs.map(doc => {
-      return {
-        ...doc,
-        _deleted: true,
-      }
-    })
-    await this._db.bulkDocs(toDelete)
+    await this._db.bulkRemove(linkDocs, { silenceErrors: true })
     return table
   }
 }

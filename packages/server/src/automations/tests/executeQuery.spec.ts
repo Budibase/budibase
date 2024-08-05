@@ -1,20 +1,12 @@
-import { Datasource, Query, SourceName } from "@budibase/types"
+import { Datasource, Query } from "@budibase/types"
 import * as setup from "./utilities"
-import { DatabaseName, getDatasource } from "../../integrations/tests/utils"
-import knex, { Knex } from "knex"
+import {
+  DatabaseName,
+  getDatasource,
+  knexClient,
+} from "../../integrations/tests/utils"
+import { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
-
-function getKnexClientName(source: SourceName) {
-  switch (source) {
-    case SourceName.MYSQL:
-      return "mysql2"
-    case SourceName.SQL_SERVER:
-      return "mssql"
-    case SourceName.POSTGRES:
-      return "pg"
-  }
-  throw new Error(`Unsupported source: ${source}`)
-}
 
 describe.each(
   [
@@ -22,6 +14,7 @@ describe.each(
     DatabaseName.MYSQL,
     DatabaseName.SQL_SERVER,
     DatabaseName.MARIADB,
+    DatabaseName.ORACLE,
   ].map(name => [name, getDatasource(name)])
 )("execute query action (%s)", (_, dsProvider) => {
   let tableName: string
@@ -35,10 +28,7 @@ describe.each(
 
     const ds = await dsProvider
     datasource = await config.api.datasource.create(ds)
-    client = knex({
-      client: getKnexClientName(ds.source),
-      connection: ds.config,
-    })
+    client = await knexClient(ds)
   })
 
   beforeEach(async () => {

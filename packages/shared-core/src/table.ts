@@ -1,5 +1,5 @@
 import { FieldType, Table } from "@budibase/types"
-import { CONSTANT_INTERNAL_ROW_COLS } from "./constants"
+import { PROTECTED_INTERNAL_COLUMNS } from "./constants"
 
 const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.STRING]: true,
@@ -69,7 +69,8 @@ export function findDuplicateInternalColumns(table: Table): string[] {
       }
     }
   }
-  for (let internalColumn of CONSTANT_INTERNAL_ROW_COLS) {
+
+  for (let internalColumn of PROTECTED_INTERNAL_COLUMNS) {
     if (casedKeys.find(key => key === internalColumn)) {
       duplicates.push(internalColumn)
     }

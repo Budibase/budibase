@@ -1,6 +1,5 @@
 import LinkController from "./LinkController"
 import {
-  IncludeDocs,
   getLinkDocuments,
   getUniqueByProp,
   getRelatedTableForField,
@@ -56,12 +55,9 @@ async function getLinksForRows(rows: Row[]): Promise<LinkDocumentValue[]> {
   const promises = tableIds.map(tableId =>
     getLinkDocuments({
       tableId: tableId,
-      includeDocs: IncludeDocs.EXCLUDE,
     })
   )
-  const responses = flatten(
-    (await Promise.all(promises)) as LinkDocumentValue[][]
-  )
+  const responses = flatten(await Promise.all(promises))
   // have to get unique as the previous table query can
   // return duplicates, could be querying for both tables in a relation
   return getUniqueByProp(

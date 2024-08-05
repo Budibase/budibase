@@ -1,14 +1,16 @@
+import { EventEmitter } from "events"
 import { destroy } from "../../api/controllers/row"
 import { buildCtx } from "./utils"
 import { getError } from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
   AutomationIOType,
   AutomationCustomIOType,
   AutomationFeature,
+  DeleteRowStepInputs,
+  DeleteRowStepOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -59,7 +61,15 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs, appId, emitter }: AutomationStepInput) {
+export async function run({
+  inputs,
+  appId,
+  emitter,
+}: {
+  inputs: DeleteRowStepInputs
+  appId: string
+  emitter: EventEmitter
+}): Promise<DeleteRowStepOutputs> {
   if (inputs.id == null) {
     return {
       success: false,

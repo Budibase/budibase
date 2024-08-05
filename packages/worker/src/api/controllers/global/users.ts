@@ -62,7 +62,7 @@ export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
   const { email, ssoId } = ctx.request.body
   try {
     // Status is changed to 404 from getUserDoc if user is not found
-    let userByEmail = (await platform.users.getUserDoc(
+    const userByEmail = (await platform.users.getUserDoc(
       email
     )) as PlatformUserByEmail
     await platform.users.addSsoUser(
@@ -71,6 +71,13 @@ export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
       userByEmail.userId,
       userByEmail.tenantId
     )
+    // Need to get the _rev of the user doc to update
+    const userById = await platform.users.getUserDoc(userByEmail.userId)
+    await platform.users.updateUserDoc({
+      ...userById,
+      email,
+      ssoId,
+    })
     ctx.status = 200
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
@@ -268,7 +275,7 @@ export const find = async (ctx: any) => {
 
 export const tenantUserLookup = async (ctx: any) => {
   const id = ctx.params.id
-  const user = await userSdk.core.getPlatformUser(id)
+  const user = await userSdk.core.getFirstPlatformUser(id)
   if (user) {
     ctx.body = user
   } else {

@@ -8,7 +8,6 @@ import {
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
-import * as sqs from "./search/sqs"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
@@ -55,9 +54,9 @@ export async function search(
   if (isExternalTable) {
     return external.search(options, table)
   } else if (dbCore.isSqsEnabledForTenant()) {
-    return sqs.search(options, table)
+    return internal.sqs.search(options, table)
   } else {
-    return internal.search(options, table)
+    return internal.lucene.search(options, table)
   }
 }
 

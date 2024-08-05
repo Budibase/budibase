@@ -1,12 +1,10 @@
 <script>
   import { ModalContent, Layout, Body, Icon } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+
+  let type = null
 
   export let onCancel = () => {}
   export let onConfirm = () => {}
-  export let type
-
-  const dispatch = createEventDispatcher()
 </script>
 
 <span>
@@ -14,7 +12,7 @@
     title="Select form type"
     confirmText="Done"
     cancelText="Back"
-    {onConfirm}
+    onConfirm={() => onConfirm(type)}
     {onCancel}
     disabled={!type}
     size="L"
@@ -25,9 +23,7 @@
       <div
         class="form-type"
         class:selected={type === "Create"}
-        on:click={() => {
-          dispatch("select", "Create")
-        }}
+        on:click={() => (type = "Create")}
       >
         <div class="form-type-wrap">
           <div class="form-type-content">
@@ -46,9 +42,7 @@
       <div
         class="form-type"
         class:selected={type === "Update"}
-        on:click={() => {
-          dispatch("select", "Update")
-        }}
+        on:click={() => (type = "Update")}
       >
         <div class="form-type-wrap">
           <div class="form-type-content">
@@ -65,9 +59,7 @@
       <div
         class="form-type"
         class:selected={type === "View"}
-        on:click={() => {
-          dispatch("select", "View")
-        }}
+        on:click={() => (type = "View")}
       >
         <div class="form-type-wrap">
           <div class="form-type-content">

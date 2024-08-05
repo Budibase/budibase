@@ -1,281 +1,222 @@
-jest.mock("node-fetch", () => {
-  const obj = {
-    my_next_cursor: 123,
-  }
-  const str = JSON.stringify(obj)
-  return jest.fn(() => ({
-    headers: {
-      raw: () => {
-        return {
-          "content-type": ["application/json"],
-          "content-length": str.length,
-        }
-      },
-      get: (name: string) => {
-        const lcName = name.toLowerCase()
-        if (lcName === "content-type") {
-          return ["application/json"]
-        } else if (lcName === "content-length") {
-          return str.length
-        }
-      },
-    },
-    json: jest.fn(() => obj),
-    text: jest.fn(() => str),
-  }))
-})
+import nock from "nock"
+import { RestIntegration } from "../rest"
+import { BodyType, RestAuthType } from "@budibase/types"
+import { Response } from "node-fetch"
+import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
 
-jest.mock("@budibase/backend-core", () => {
-  const core = jest.requireActual("@budibase/backend-core")
-  return {
-    ...core,
-    context: {
-      ...core.context,
-      getProdAppId: jest.fn(() => "app-id"),
-    },
-  }
-})
-jest.mock("uuid", () => ({ v4: () => "00000000-0000-0000-0000-000000000000" }))
-
-import { default as RestIntegration } from "../rest"
-import { RestAuthType } from "@budibase/types"
-import fetch from "node-fetch"
-import { Readable } from "stream"
-
-const FormData = require("form-data")
-const { URLSearchParams } = require("url")
-
+const UUID_REGEX =
+  "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
 const HEADERS = {
   Accept: "application/json",
   "Content-Type": "application/json",
 }
 
-class TestConfiguration {
-  integration: any
-
-  constructor(config: any = {}) {
-    this.integration = new RestIntegration.integration(config)
-  }
-}
-
 describe("REST Integration", () => {
-  const BASE_URL = "https://myapi.com"
-  let config: any
+  let integration: RestIntegration
+  const config = new TestConfiguration()
+
+  beforeAll(async () => {
+    await config.init()
+  })
+
+  afterAll(async () => {
+    config.end()
+  })
 
   beforeEach(() => {
-    config = new TestConfiguration({
-      url: BASE_URL,
-    })
-    jest.clearAllMocks()
+    integration = new RestIntegration({ url: "https://example.com" })
+    nock.cleanAll()
   })
 
   it("calls the create method with the correct params", async () => {
-    const query = {
+    const body = { name: "test" }
+    nock("https://example.com", { reqheaders: HEADERS })
+      .post("/api?test=1", JSON.stringify(body))
+      .reply(200, { foo: "bar" })
+
+    const { data } = await integration.create({
       path: "api",
       queryString: "test=1",
       headers: HEADERS,
-      bodyType: "json",
-      requestBody: JSON.stringify({
-        name: "test",
-      }),
-    }
-    await config.integration.create(query)
-    expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
-      method: "POST",
-      body: '{"name":"test"}',
-      headers: HEADERS,
+      bodyType: BodyType.JSON,
+      requestBody: JSON.stringify(body),
     })
+    expect(data).toEqual({ foo: "bar" })
   })
 
   it("calls the read method with the correct params", async () => {
-    const query = {
+    nock("https://example.com")
+      .get("/api?test=1")
+      .matchHeader("Accept", "text/html")
+      .reply(200, { foo: "bar" })
+
+    const { data } = await integration.read({
       path: "api",
       queryString: "test=1",
       headers: {
         Accept: "text/html",
       },
-    }
-    await config.integration.read(query)
-    expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
-      headers: {
-        Accept: "text/html",
-      },
-      method: "GET",
     })
+    expect(data).toEqual({ foo: "bar" })
   })
 
   it("calls the update method with the correct params", async () => {
-    const query = {
+    nock("https://example.com")
+      .put("/api?test=1", { name: "test" })
+      .matchHeader("Accept", "application/json")
+      .reply(200, { foo: "bar" })
+
+    const { data } = await integration.update({
       path: "api",
       queryString: "test=1",
       headers: {
         Accept: "application/json",
       },
-      bodyType: "json",
+      bodyType: BodyType.JSON,
       requestBody: JSON.stringify({
         name: "test",
       }),
-    }
-    await config.integration.update(query)
-    expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
-      method: "PUT",
-      body: '{"name":"test"}',
-      headers: HEADERS,
     })
+    expect(data).toEqual({ foo: "bar" })
   })
 
   it("calls the delete method with the correct params", async () => {
-    const query = {
+    nock("https://example.com")
+      .delete("/api?test=1", { name: "test" })
+      .matchHeader("Accept", "application/json")
+      .reply(200, { foo: "bar" })
+
+    const { data } = await integration.delete({
       path: "api",
       queryString: "test=1",
       headers: {
         Accept: "application/json",
       },
-      bodyType: "json",
+      bodyType: BodyType.JSON,
       requestBody: JSON.stringify({
         name: "test",
       }),
-    }
-    await config.integration.delete(query)
-    expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
-      method: "DELETE",
-      headers: HEADERS,
-      body: '{"name":"test"}',
     })
+    expect(data).toEqual({ foo: "bar" })
   })
 
   describe("request body", () => {
     const input = { a: 1, b: 2 }
 
     it("should allow no body", () => {
-      const output = config.integration.addBody("none", null, {})
+      const output = integration.addBody("none", null, {})
       expect(output.body).toBeUndefined()
-      expect(Object.keys(output.headers).length).toEqual(0)
+      expect(Object.keys(output.headers!).length).toEqual(0)
     })
 
     it("should allow text body", () => {
-      const output = config.integration.addBody("text", "hello world", {})
+      const output = integration.addBody("text", "hello world", {})
       expect(output.body).toEqual("hello world")
       // gets added by fetch
-      expect(Object.keys(output.headers).length).toEqual(0)
+      expect(Object.keys(output.headers!).length).toEqual(0)
     })
 
     it("should allow form data", () => {
       const FormData = require("form-data")
-      const output = config.integration.addBody("form", input, {})
+      const output = integration.addBody("form", input, {})
       expect(output.body instanceof FormData).toEqual(true)
-      expect(output.body._valueLength).toEqual(2)
+      expect((output.body! as any)._valueLength).toEqual(2)
       // gets added by fetch
-      expect(Object.keys(output.headers).length).toEqual(0)
+      expect(Object.keys(output.headers!).length).toEqual(0)
     })
 
     it("should allow encoded form data", () => {
       const { URLSearchParams } = require("url")
-      const output = config.integration.addBody("encoded", input, {})
+      const output = integration.addBody("encoded", input, {})
       expect(output.body instanceof URLSearchParams).toEqual(true)
-      expect(output.body.toString()).toEqual("a=1&b=2")
+      expect(output.body!.toString()).toEqual("a=1&b=2")
       // gets added by fetch
-      expect(Object.keys(output.headers).length).toEqual(0)
+      expect(Object.keys(output.headers!).length).toEqual(0)
     })
 
     it("should allow JSON", () => {
-      const output = config.integration.addBody("json", input, {})
+      const output = integration.addBody("json", input, {})
       expect(output.body).toEqual(JSON.stringify(input))
-      expect(output.headers["Content-Type"]).toEqual("application/json")
+      expect((output.headers! as any)["Content-Type"]).toEqual(
+        "application/json"
+      )
     })
 
     it("should allow raw XML", () => {
-      const output = config.integration.addBody("xml", "<a>1</a><b>2</b>", {})
-      expect(output.body.includes("<a>1</a>")).toEqual(true)
-      expect(output.body.includes("<b>2</b>")).toEqual(true)
-      expect(output.headers["Content-Type"]).toEqual("application/xml")
+      const output = integration.addBody("xml", "<a>1</a><b>2</b>", {})
+      const body = output.body?.toString()
+      expect(body!.includes("<a>1</a>")).toEqual(true)
+      expect(body!.includes("<b>2</b>")).toEqual(true)
+      expect((output.headers! as any)["Content-Type"]).toEqual(
+        "application/xml"
+      )
     })
 
     it("should allow a valid js object and parse the contents to xml", () => {
-      const output = config.integration.addBody("xml", input, {})
-      expect(output.body.includes("<a>1</a>")).toEqual(true)
-      expect(output.body.includes("<b>2</b>")).toEqual(true)
-      expect(output.headers["Content-Type"]).toEqual("application/xml")
+      const output = integration.addBody("xml", input, {})
+      const body = output.body?.toString()
+      expect(body!.includes("<a>1</a>")).toEqual(true)
+      expect(body!.includes("<b>2</b>")).toEqual(true)
+      expect((output.headers! as any)["Content-Type"]).toEqual(
+        "application/xml"
+      )
     })
 
     it("should allow a valid json string and parse the contents to xml", () => {
-      const output = config.integration.addBody(
-        "xml",
-        JSON.stringify(input),
-        {}
+      const output = integration.addBody("xml", JSON.stringify(input), {})
+      const body = output.body?.toString()
+      expect(body!.includes("<a>1</a>")).toEqual(true)
+      expect(body!.includes("<b>2</b>")).toEqual(true)
+      expect((output.headers! as any)["Content-Type"]).toEqual(
+        "application/xml"
       )
-      expect(output.body.includes("<a>1</a>")).toEqual(true)
-      expect(output.body.includes("<b>2</b>")).toEqual(true)
-      expect(output.headers["Content-Type"]).toEqual("application/xml")
     })
   })
 
   describe("response", () => {
-    const contentTypes = ["application/json", "text/plain", "application/xml"]
-    function buildInput(
-      json: any,
-      text: any,
-      header: any,
-      status: number = 200
-    ) {
-      return {
-        status,
-        json: json ? async () => json : undefined,
-        text: text ? async () => text : undefined,
-        headers: {
-          get: (key: string) => {
-            switch (key.toLowerCase()) {
-              case "content-length":
-                return 100
-              case "content-type":
-                return header
-              default:
-                return ""
-            }
-          },
-          raw: () => ({ "content-type": header }),
-        },
-      }
-    }
-
     it("should be able to parse JSON response", async () => {
       const obj = { a: 1 }
-      const input = buildInput(obj, JSON.stringify(obj), "application/json")
-      const output = await config.integration.parseResponse(input)
-      expect(output.data).toEqual({ a: 1 })
+      const output = await integration.parseResponse(
+        new Response(JSON.stringify(obj), {
+          headers: { "content-type": "application/json" },
+        })
+      )
+      expect(output.data).toEqual(obj)
       expect(output.info.code).toEqual(200)
-      expect(output.info.size).toEqual("100B")
-      expect(output.extra.raw).toEqual(JSON.stringify({ a: 1 }))
-      expect(output.extra.headers["content-type"]).toEqual("application/json")
+      expect(output.info.size).toEqual("7B")
     })
 
     it("should be able to parse text response", async () => {
       const text = "hello world"
-      const input = buildInput(null, text, "text/plain")
-      const output = await config.integration.parseResponse(input)
+      const output = await integration.parseResponse(
+        new Response(text, {
+          headers: { "content-type": "text/plain" },
+        })
+      )
       expect(output.data).toEqual(text)
-      expect(output.extra.raw).toEqual(text)
-      expect(output.extra.headers["content-type"]).toEqual("text/plain")
     })
 
     it("should be able to parse XML response", async () => {
       const text = "<root><a>1</a><b>2</b></root>"
-      const input = buildInput(null, text, "application/xml")
-      const output = await config.integration.parseResponse(input)
+      const output = await integration.parseResponse(
+        new Response(text, {
+          headers: { "content-type": "application/xml" },
+        })
+      )
       expect(output.data).toEqual({ a: "1", b: "2" })
-      expect(output.extra.raw).toEqual(text)
-      expect(output.extra.headers["content-type"]).toEqual("application/xml")
     })
 
-    test.each([...contentTypes, undefined])(
-      "should not throw an error on 204 no content",
+    test.each(["application/json", "text/plain", "application/xml", undefined])(
+      "should not throw an error on 204 no content for content type: %s",
       async contentType => {
-        const input = buildInput(undefined, "", contentType, 204)
-        const output = await config.integration.parseResponse(input)
+        const output = await integration.parseResponse(
+          new Response(undefined, {
+            headers: { "content-type": contentType! },
+            status: 204,
+          })
+        )
         expect(output.data).toEqual([])
-        expect(output.extra.raw).toEqual("")
         expect(output.info.code).toEqual(204)
-        expect(output.extra.headers["content-type"]).toEqual(contentType)
       }
     )
   })
@@ -301,443 +242,311 @@ describe("REST Integration", () => {
     }
 
     beforeEach(() => {
-      config = new TestConfiguration({
-        url: BASE_URL,
+      integration = new RestIntegration({
+        url: "https://example.com",
         authConfigs: [basicAuth, bearerAuth],
       })
     })
 
     it("adds basic auth", async () => {
-      const query = {
-        authConfigId: "c59c14bd1898a43baa08da68959b24686",
-      }
-      await config.integration.read(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/`, {
-        method: "GET",
-        headers: {
-          Authorization: "Basic dXNlcjpwYXNzd29yZA==",
-        },
-      })
+      const auth = `Basic ${Buffer.from("user:password").toString("base64")}`
+      nock("https://example.com", { reqheaders: { Authorization: auth } })
+        .get("/")
+        .reply(200, { foo: "bar" })
+
+      const { data } = await integration.read({ authConfigId: basicAuth._id })
+      expect(data).toEqual({ foo: "bar" })
     })
 
     it("adds bearer auth", async () => {
-      const query = {
-        authConfigId: "0d91d732f34e4befabeff50b392a8ff3",
-      }
-      await config.integration.read(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/`, {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer mytoken",
-        },
+      nock("https://example.com", {
+        reqheaders: { Authorization: "Bearer mytoken" },
       })
+        .get("/")
+        .reply(200, { foo: "bar" })
+      const { data } = await integration.read({ authConfigId: bearerAuth._id })
+      expect(data).toEqual({ foo: "bar" })
     })
   })
 
   describe("page based pagination", () => {
     it("can paginate using query params", async () => {
-      const pageParam = "my_page_param"
-      const sizeParam = "my_size_param"
-      const pageValue = 3
-      const sizeValue = 10
-      const query = {
+      nock("https://example.com")
+        .get("/api?page=3&size=10")
+        .reply(200, { foo: "bar" })
+      const { data } = await integration.read({
         path: "api",
         pagination: {
           type: "page",
           location: "query",
-          pageParam,
-          sizeParam,
+          pageParam: "page",
+          sizeParam: "size",
         },
-        paginationValues: {
-          page: pageValue,
-          limit: sizeValue,
-        },
-      }
-      await config.integration.read(query)
-      expect(fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/api?${pageParam}=${pageValue}&${sizeParam}=${sizeValue}`,
-        {
-          headers: {},
-          method: "GET",
-        }
-      )
+        paginationValues: { page: 3, limit: 10 },
+      })
+      expect(data).toEqual({ foo: "bar" })
     })
 
     it("can paginate using JSON request body", async () => {
-      const pageParam = "my_page_param"
-      const sizeParam = "my_size_param"
-      const pageValue = 3
-      const sizeValue = 10
-      const query = {
-        bodyType: "json",
+      nock("https://example.com")
+        .post("/api", JSON.stringify({ page: 3, size: 10 }))
+        .reply(200, { foo: "bar" })
+      const { data } = await integration.create({
+        bodyType: BodyType.JSON,
         path: "api",
         pagination: {
           type: "page",
           location: "body",
-          pageParam,
-          sizeParam,
+          pageParam: "page",
+          sizeParam: "size",
         },
-        paginationValues: {
-          page: pageValue,
-          limit: sizeValue,
-        },
-      }
-      await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
-        body: JSON.stringify({
-          [pageParam]: pageValue,
-          [sizeParam]: sizeValue,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
+        paginationValues: { page: 3, limit: 10 },
       })
+      expect(data).toEqual({ foo: "bar" })
     })
 
     it("can paginate using form-data request body", async () => {
-      const pageParam = "my_page_param"
-      const sizeParam = "my_size_param"
-      const pageValue = 3
-      const sizeValue = 10
-      const query = {
-        bodyType: "form",
+      nock("https://example.com")
+        .post("/api", body => {
+          return (
+            body.includes(`name="page"\r\n\r\n3\r\n`) &&
+            body.includes(`name="size"\r\n\r\n10\r\n`)
+          )
+        })
+        .reply(200, { foo: "bar" })
+
+      const { data } = await integration.create({
+        bodyType: BodyType.FORM_DATA,
         path: "api",
         pagination: {
           type: "page",
           location: "body",
-          pageParam,
-          sizeParam,
+          pageParam: "page",
+          sizeParam: "size",
         },
-        paginationValues: {
-          page: pageValue,
-          limit: sizeValue,
-        },
-      }
-      await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
-        body: expect.any(FormData),
-        headers: {},
-        method: "POST",
+        paginationValues: { page: 3, limit: 10 },
       })
-      // @ts-ignore
-      const sentData = JSON.stringify(fetch.mock.calls[0][1].body)
-      expect(sentData).toContain(pageParam)
-      expect(sentData).toContain(sizeParam)
+      expect(data).toEqual({ foo: "bar" })
     })
 
     it("can paginate using form-encoded request body", async () => {
-      const pageParam = "my_page_param"
-      const sizeParam = "my_size_param"
-      const pageValue = 3
-      const sizeValue = 10
-      const query = {
-        bodyType: "encoded",
+      nock("https://example.com")
+        .post("/api", { page: "3", size: "10" })
+        .reply(200, { foo: "bar" })
+
+      const { data } = await integration.create({
+        bodyType: BodyType.ENCODED,
         path: "api",
         pagination: {
           type: "page",
           location: "body",
-          pageParam,
-          sizeParam,
+          pageParam: "page",
+          sizeParam: "size",
         },
-        paginationValues: {
-          page: pageValue,
-          limit: sizeValue,
-        },
-      }
-      await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
-        body: expect.any(URLSearchParams),
-        headers: {},
-        method: "POST",
+        paginationValues: { page: 3, limit: 10 },
       })
-      // @ts-ignore
-      const sentData = fetch.mock.calls[0][1].body
-      expect(sentData.has(pageParam)).toEqual(true)
-      expect(sentData.get(pageParam)).toEqual(pageValue.toString())
-      expect(sentData.has(pageParam)).toEqual(true)
-      expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
+      expect(data).toEqual({ foo: "bar" })
     })
   })
 
   describe("cursor based pagination", () => {
     it("can paginate using query params", async () => {
-      const pageParam = "my_page_param"
-      const sizeParam = "my_size_param"
-      const pageValue = 3
-      const sizeValue = 10
-      const query = {
+      nock("https://example.com")
+        .get("/api?page=3&size=10")
+        .reply(200, { cursor: 123, foo: "bar" })
+      const { data, pagination } = await integration.read({
         path: "api",
         pagination: {
           type: "cursor",
           location: "query",
-          pageParam,
-          sizeParam,
-          responseParam: "my_next_cursor",
+          pageParam: "page",
+          sizeParam: "size",
+          responseParam: "cursor",
         },
-        paginationValues: {
-          page: pageValue,
-          limit: sizeValue,
-        },
-      }
-      const res = await config.integration.read(query)
-      expect(fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/api?${pageParam}=${pageValue}&${sizeParam}=${sizeValue}`,
-        {
-          headers: {},
-          method: "GET",
-        }
-      )
-      expect(res.pagination.cursor).toEqual(123)
+        paginationValues: { page: 3, limit: 10 },
+      })
+      expect(pagination?.cursor).toEqual(123)
+      expect(data).toEqual({ cursor: 123, foo: "bar" })
     })
 
     it("can paginate using JSON request body", async () => {
-      const pageParam = "my_page_param"
-      const sizeParam = "my_size_param"
-      const pageValue = 3
-      const sizeValue = 10
-      const query = {
-        bodyType: "json",
+      nock("https://example.com")
+        .post("/api", JSON.stringify({ page: 3, size: 10 }))
+        .reply(200, { cursor: 123, foo: "bar" })
+      const { data, pagination } = await integration.create({
+        bodyType: BodyType.JSON,
         path: "api",
         pagination: {
           type: "page",
           location: "body",
-          pageParam,
-          sizeParam,
-          responseParam: "my_next_cursor",
+          pageParam: "page",
+          sizeParam: "size",
+          responseParam: "cursor",
         },
-        paginationValues: {
-          page: pageValue,
-          limit: sizeValue,
-        },
-      }
-      const res = await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
-        body: JSON.stringify({
-          [pageParam]: pageValue,
-          [sizeParam]: sizeValue,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
+        paginationValues: { page: 3, limit: 10 },
       })
-      expect(res.pagination.cursor).toEqual(123)
+      expect(data).toEqual({ cursor: 123, foo: "bar" })
+      expect(pagination?.cursor).toEqual(123)
     })
 
     it("can paginate using form-data request body", async () => {
-      const pageParam = "my_page_param"
-      const sizeParam = "my_size_param"
-      const pageValue = 3
-      const sizeValue = 10
-      const query = {
-        bodyType: "form",
+      nock("https://example.com")
+        .post("/api", body => {
+          return (
+            body.includes(`name="page"\r\n\r\n3\r\n`) &&
+            body.includes(`name="size"\r\n\r\n10\r\n`)
+          )
+        })
+        .reply(200, { cursor: 123, foo: "bar" })
+      const { data, pagination } = await integration.create({
+        bodyType: BodyType.FORM_DATA,
         path: "api",
         pagination: {
           type: "page",
           location: "body",
-          pageParam,
-          sizeParam,
-          responseParam: "my_next_cursor",
+          pageParam: "page",
+          sizeParam: "size",
+          responseParam: "cursor",
         },
-        paginationValues: {
-          page: pageValue,
-          limit: sizeValue,
-        },
-      }
-      const res = await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
-        body: expect.any(FormData),
-        headers: {},
-        method: "POST",
+        paginationValues: { page: 3, limit: 10 },
       })
-      // @ts-ignore
-      const sentData = JSON.stringify(fetch.mock.calls[0][1].body)
-      expect(sentData).toContain(pageParam)
-      expect(sentData).toContain(sizeParam)
-      expect(res.pagination.cursor).toEqual(123)
+      expect(data).toEqual({ cursor: 123, foo: "bar" })
+      expect(pagination?.cursor).toEqual(123)
     })
 
     it("can paginate using form-encoded request body", async () => {
-      const pageParam = "my_page_param"
-      const sizeParam = "my_size_param"
-      const pageValue = 3
-      const sizeValue = 10
-      const query = {
-        bodyType: "encoded",
+      nock("https://example.com")
+        .post("/api", { page: "3", size: "10" })
+        .reply(200, { cursor: 123, foo: "bar" })
+      const { data, pagination } = await integration.create({
+        bodyType: BodyType.ENCODED,
         path: "api",
         pagination: {
           type: "page",
           location: "body",
-          pageParam,
-          sizeParam,
-          responseParam: "my_next_cursor",
+          pageParam: "page",
+          sizeParam: "size",
+          responseParam: "cursor",
         },
-        paginationValues: {
-          page: pageValue,
-          limit: sizeValue,
-        },
-      }
-      const res = await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
-        body: expect.any(URLSearchParams),
-        headers: {},
-        method: "POST",
+        paginationValues: { page: 3, limit: 10 },
       })
-      // @ts-ignore
-      const sentData = fetch.mock.calls[0][1].body
-      expect(sentData.has(pageParam)).toEqual(true)
-      expect(sentData.get(pageParam)).toEqual(pageValue.toString())
-      expect(sentData.has(pageParam)).toEqual(true)
-      expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
-      expect(res.pagination.cursor).toEqual(123)
+      expect(data).toEqual({ cursor: 123, foo: "bar" })
+      expect(pagination?.cursor).toEqual(123)
     })
 
     it("should encode query string correctly", async () => {
-      const query = {
+      nock("https://example.com", { reqheaders: HEADERS })
+        .post("/api?test=1%202", JSON.stringify({ name: "test" }))
+        .reply(200, { foo: "bar" })
+      const { data } = await integration.create({
         path: "api",
         queryString: "test=1 2",
         headers: HEADERS,
-        bodyType: "json",
+        bodyType: BodyType.JSON,
         requestBody: JSON.stringify({
           name: "test",
         }),
-      }
-      await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1%202`, {
-        method: "POST",
-        body: '{"name":"test"}',
-        headers: HEADERS,
       })
+      expect(data).toEqual({ foo: "bar" })
     })
   })
 
   describe("Configuration options", () => {
-    it("Attaches insecureHttpParams when legacy HTTP Parser option is set", async () => {
-      config = new TestConfiguration({
-        url: BASE_URL,
+    // NOTE(samwho): it seems like this code doesn't actually work because it requires
+    // node-fetch >=3, and we're not on that because upgrading to it produces errors to
+    // do with ESM that are above my pay grade.
+
+    // eslint-disable-next-line jest/no-commented-out-tests
+    // it("doesn't fail when legacyHttpParser is set", async () => {
+    //   const server = createServer((req, res) => {
+    //     res.writeHead(200, {
+    //       "Transfer-Encoding": "chunked",
+    //       "Content-Length": "10",
+    //     })
+    //     res.end(JSON.stringify({ foo: "bar" }))
+    //   })
+
+    //   server.listen()
+    //   await new Promise(resolve => server.once("listening", resolve))
+
+    //   const address = server.address() as AddressInfo
+
+    //   const integration = new RestIntegration({
+    //     url: `http://localhost:${address.port}`,
+    //     legacyHttpParser: true,
+    //   })
+    //   const { data } = await integration.read({})
+    //   expect(data).toEqual({ foo: "bar" })
+    // })
+
+    it("doesn't fail when legacyHttpParser is true", async () => {
+      nock("https://example.com").get("/").reply(200, { foo: "bar" })
+      const integration = new RestIntegration({
+        url: "https://example.com",
         legacyHttpParser: true,
       })
-      await config.integration.read({})
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/`, {
-        method: "GET",
-        headers: {},
-        extraHttpOptions: {
-          insecureHTTPParser: true,
-        },
+      const { data } = await integration.read({})
+      expect(data).toEqual({ foo: "bar" })
+    })
+
+    it("doesn't fail when rejectUnauthorized is false", async () => {
+      nock("https://example.com").get("/").reply(200, { foo: "bar" })
+      const integration = new RestIntegration({
+        url: "https://example.com",
+        rejectUnauthorized: false,
       })
+      const { data } = await integration.read({})
+      expect(data).toEqual({ foo: "bar" })
     })
-  })
-
-  it("Attaches custom agent when Reject Unauthorized option is false", async () => {
-    config = new TestConfiguration({
-      url: BASE_URL,
-      rejectUnauthorized: false,
-    })
-    await config.integration.read({})
-
-    // @ts-ignore
-    const calls: any = fetch.mock.calls[0]
-    const url = calls[0]
-    expect(url).toBe(`${BASE_URL}/`)
-
-    const calledConfig = calls[1]
-    expect(calledConfig.method).toBe("GET")
-    expect(calledConfig.headers).toEqual({})
-    expect(calledConfig.agent.options.rejectUnauthorized).toBe(false)
   })
 
   describe("File Handling", () => {
     it("uploads file to object store and returns signed URL", async () => {
-      const responseData = Buffer.from("teest file contnt")
-      const filename = "test.tar.gz"
-      const contentType = "application/gzip"
-      const mockReadable = new Readable()
-      mockReadable.push(responseData)
-      mockReadable.push(null)
-      ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
-        Promise.resolve({
-          status: 200,
-          headers: {
-            raw: () => ({
-              "content-type": [contentType],
-              "content-disposition": [`attachment; filename="${filename}"`],
-            }),
-            get: (header: any) => {
-              if (header === "content-type") return contentType
-              if (header === "content-length") return responseData.byteLength
-              if (header === "content-disposition")
-                return `attachment; filename="${filename}"`
-            },
-          },
-          body: mockReadable,
+      await config.doInContext(config.getAppId(), async () => {
+        const content = "test file content"
+        nock("https://example.com").get("/api").reply(200, content, {
+          "content-disposition": `attachment; filename="testfile.tar.gz"`,
+          "content-type": "text/plain",
         })
-      )
 
-      const query = {
-        path: "api",
-      }
-
-      const response = await config.integration.read(query)
-
-      expect(response.data).toEqual({
-        size: responseData.byteLength,
-        name: "00000000-0000-0000-0000-000000000000.tar.gz",
-        url: expect.stringContaining(
-          "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.tar.gz"
-        ),
-        extension: "tar.gz",
-        key: expect.stringContaining(
-          "app-id/00000000-0000-0000-0000-000000000000.tar.gz"
-        ),
+        const { data } = await integration.read({ path: "api" })
+        expect(data).toEqual({
+          size: content.length,
+          name: expect.stringMatching(new RegExp(`^${UUID_REGEX}.tar.gz$`)),
+          url: expect.stringMatching(
+            new RegExp(
+              `^/files/signed/tmp-file-attachments/app.*?/${UUID_REGEX}.tar.gz.*$`
+            )
+          ),
+          extension: "tar.gz",
+          key: expect.stringMatching(
+            new RegExp(`^app.*?/${UUID_REGEX}.tar.gz$`)
+          ),
+        })
       })
     })
 
     it("uploads file with non ascii filename to object store and returns signed URL", async () => {
-      const responseData = Buffer.from("teest file contnt")
-      const contentType = "text/plain"
-      const mockReadable = new Readable()
-      mockReadable.push(responseData)
-      mockReadable.push(null)
-      ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
-        Promise.resolve({
-          status: 200,
-          headers: {
-            raw: () => ({
-              "content-type": [contentType],
-              "content-disposition": [
-                // eslint-disable-next-line no-useless-escape
-                `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
-              ],
-            }),
-            get: (header: any) => {
-              if (header === "content-type") return contentType
-              if (header === "content-length") return responseData.byteLength
-              if (header === "content-disposition")
-                // eslint-disable-next-line no-useless-escape
-                return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
-            },
-          },
-          body: mockReadable,
+      await config.doInContext(config.getAppId(), async () => {
+        const content = "test file content"
+        nock("https://example.com").get("/api").reply(200, content, {
+          // eslint-disable-next-line no-useless-escape
+          "content-disposition": `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
+          "content-type": "text/plain",
         })
-      )
 
-      const query = {
-        path: "api",
-      }
-
-      const response = await config.integration.read(query)
-
-      expect(response.data).toEqual({
-        size: responseData.byteLength,
-        name: "00000000-0000-0000-0000-000000000000.pdf",
-        url: expect.stringContaining(
-          "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.pdf"
-        ),
-        extension: "pdf",
-        key: expect.stringContaining(
-          "app-id/00000000-0000-0000-0000-000000000000.pdf"
-        ),
+        const { data } = await integration.read({ path: "api" })
+        expect(data).toEqual({
+          size: content.length,
+          name: expect.stringMatching(new RegExp(`^${UUID_REGEX}.pdf$`)),
+          url: expect.stringMatching(
+            new RegExp(
+              `^/files/signed/tmp-file-attachments/app.*?/${UUID_REGEX}.pdf.*$`
+            )
+          ),
+          extension: "pdf",
+          key: expect.stringMatching(new RegExp(`^app.*?/${UUID_REGEX}.pdf$`)),
+        })
       })
     })
   })

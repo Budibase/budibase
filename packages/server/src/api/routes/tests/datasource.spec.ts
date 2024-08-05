@@ -15,9 +15,11 @@ import {
   Table,
   TableSchema,
   SupportedSqlTypes,
+  JsonFieldSubType,
 } from "@budibase/types"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
+import nock from "nock"
 
 describe("/datasources", () => {
   const config = setup.getConfig()
@@ -36,6 +38,7 @@ describe("/datasources", () => {
       config: {},
     })
     jest.clearAllMocks()
+    nock.cleanAll()
   })
 
   describe("create", () => {
@@ -70,6 +73,12 @@ describe("/datasources", () => {
 
   describe("dynamic variables", () => {
     it("should invalidate changed or removed variables", async () => {
+      nock("http://www.example.com/")
+        .get("/")
+        .reply(200, [{ value: "test" }])
+        .get("/?test=test")
+        .reply(200, [{ value: 1 }])
+
       let datasource = await config.api.datasource.create({
         type: "datasource",
         name: "Rest",
@@ -80,7 +89,7 @@ describe("/datasources", () => {
       const query = await config.api.query.save({
         datasourceId: datasource._id!,
         fields: {
-          path: "www.google.com",
+          path: "www.example.com",
         },
         parameters: [],
         transformer: null,
@@ -288,7 +297,10 @@ describe("/datasources", () => {
             name: "options",
             type: FieldType.OPTIONS,
             constraints: {
-              presence: { allowEmpty: false },
+              presence: {
+                allowEmpty: false,
+              },
+              inclusion: [],
             },
           },
           [FieldType.NUMBER]: {
@@ -302,6 +314,10 @@ describe("/datasources", () => {
           [FieldType.ARRAY]: {
             name: "array",
             type: FieldType.ARRAY,
+            constraints: {
+              type: JsonFieldSubType.ARRAY,
+              inclusion: [],
+            },
           },
           [FieldType.DATETIME]: {
             name: "datetime",

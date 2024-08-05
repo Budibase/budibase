@@ -14,6 +14,7 @@ import sdk from "../../../sdk"
 import { Automation, FieldType, Table } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 import { FilterConditions } from "../../../automations/steps/filter"
+import { removeDeprecated } from "../../../automations/utils"
 
 const MAX_RETRIES = 4
 let {
@@ -69,14 +70,15 @@ describe("/automations", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      let definitionsLength = Object.keys(BUILTIN_ACTION_DEFINITIONS).length
-      definitionsLength-- // OUTGOING_WEBHOOK is deprecated
+      let definitionsLength = Object.keys(
+        removeDeprecated(BUILTIN_ACTION_DEFINITIONS)
+      ).length
 
       expect(Object.keys(res.body.action).length).toBeGreaterThanOrEqual(
         definitionsLength
       )
       expect(Object.keys(res.body.trigger).length).toEqual(
-        Object.keys(TRIGGER_DEFINITIONS).length
+        Object.keys(removeDeprecated(TRIGGER_DEFINITIONS)).length
       )
     })
   })
@@ -398,7 +400,9 @@ describe("/automations", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(res.body[0]).toEqual(expect.objectContaining(autoConfig))
+      expect(res.body.automations[0]).toEqual(
+        expect.objectContaining(autoConfig)
+      )
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -421,6 +425,22 @@ describe("/automations", () => {
 
       expect(res.body.id).toEqual(automation._id)
       expect(events.automation.deleted).toHaveBeenCalledTimes(1)
+    })
+
+    it("cannot delete a row action automation", async () => {
+      const automation = await config.createAutomation(
+        setup.structures.rowActionAutomation()
+      )
+      await request
+        .delete(`/api/automations/${automation._id}/${automation._rev}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(422, {
+          message: "Row actions automations cannot be deleted",
+          status: 422,
+        })
+
+      expect(events.automation.deleted).not.toHaveBeenCalled()
     })
 
     it("should apply authorization to endpoint", async () => {

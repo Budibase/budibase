@@ -6,6 +6,7 @@ export interface TableRowActions extends Document {
     string,
     {
       name: string
+      automationId: string
     }
   >
 }
