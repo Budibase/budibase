@@ -1,9 +1,10 @@
 import {
   AutomationActionStepId,
   AutomationStepSchema,
-  AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
+  FilterStepInputs,
+  FilterStepOutputs,
 } from "@budibase/types"
 
 export const FilterConditions = {
@@ -69,7 +70,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: FilterStepInputs
+}): Promise<FilterStepOutputs> {
   try {
     let { field, condition, value } = inputs
     // coerce types so that we can use them

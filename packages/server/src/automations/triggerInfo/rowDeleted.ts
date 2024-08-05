@@ -5,6 +5,7 @@ import {
   AutomationTriggerSchema,
   AutomationTriggerStepId,
   AutomationEventType,
+  Row,
 } from "@budibase/types"
 
 export const definition: AutomationTriggerSchema = {
@@ -38,4 +39,12 @@ export const definition: AutomationTriggerSchema = {
     },
   },
   type: AutomationStepType.TRIGGER,
+}
+
+export type RowDeletedTriggerInputs = {
+  tableId: string
+}
+
+export type RowDeletedTriggerOutputs = {
+  row: Row
 }

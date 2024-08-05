@@ -1,10 +1,11 @@
 import {
   AutomationActionStepId,
   AutomationStepSchema,
-  AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  ServerLogStepInputs,
+  ServerLogStepOutputs,
 } from "@budibase/types"
 
 /**
@@ -53,7 +54,13 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs, appId }: AutomationStepInput) {
+export async function run({
+  inputs,
+  appId,
+}: {
+  inputs: ServerLogStepInputs
+  appId: string
+}): Promise<ServerLogStepOutputs> {
   const message = `App ${appId} - ${inputs.text}`
   console.log(message)
   return {

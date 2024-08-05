@@ -8,7 +8,6 @@ import {
 } from "@budibase/types"
 import { ValidColumnNameRegex, helpers, utils } from "@budibase/shared-core"
 import { db } from "@budibase/backend-core"
-import { parseCsvExport } from "../api/controllers/view/exporters"
 
 type Rows = Array<Row>
 
@@ -41,13 +40,19 @@ export function isRows(rows: any): rows is Rows {
   return Array.isArray(rows) && rows.every(row => typeof row === "object")
 }
 
-export function validate(rows: Rows, schema: TableSchema): ValidationResults {
+export function validate(
+  rows: Rows,
+  schema: TableSchema,
+  protectedColumnNames: readonly string[]
+): ValidationResults {
   const results: ValidationResults = {
     schemaValidation: {},
     allValid: false,
     invalidColumns: [],
     errors: {},
   }
+
+  protectedColumnNames = protectedColumnNames.map(x => x.toLowerCase())
 
   rows.forEach(row => {
     Object.entries(row).forEach(([columnName, columnData]) => {
@@ -63,6 +68,12 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
         return
       }
 
+      if (protectedColumnNames.includes(columnName.toLowerCase())) {
+        results.schemaValidation[columnName] = false
+        results.errors[columnName] = `${columnName} is a protected column name`
+        return
+      }
+
       // If the columnType is not a string, then it's not present in the schema, and should be added to the invalid columns array
       if (typeof columnType !== "string") {
         results.invalidColumns.push(columnName)
@@ -73,7 +84,7 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
           "Column names can't contain special characters"
       } else if (
         columnData == null &&
-        !schema[columnName].constraints?.presence
+        !helpers.schema.isRequired(constraints)
       ) {
         results.schemaValidation[columnName] = true
       } else if (
@@ -83,6 +94,12 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
         isAutoColumn
       ) {
         return
+      } else if (
+        [FieldType.STRING].includes(columnType) &&
+        !columnData &&
+        helpers.schema.isRequired(constraints)
+      ) {
+        results.schemaValidation[columnName] = false
       } else if (columnType === FieldType.NUMBER && isNaN(Number(columnData))) {
         // If provided must be a valid number
         results.schemaValidation[columnName] = false
@@ -108,6 +125,13 @@ export function validate(rows: Rows, schema: TableSchema): ValidationResults {
       }
     })
   })
+
+  for (const schemaField of Object.keys(schema)) {
+    if (protectedColumnNames.includes(schemaField.toLowerCase())) {
+      results.schemaValidation[schemaField] = false
+      results.errors[schemaField] = `${schemaField} is a protected column name`
+    }
+  }
 
   results.allValid =
     Object.values(results.schemaValidation).length > 0 &&
@@ -140,7 +164,7 @@ export function parse(rows: Rows, table: Table): Rows {
 
       const columnSchema = schema[columnName]
       const { type: columnType } = columnSchema
-      if (columnType === FieldType.NUMBER) {
+      if ([FieldType.NUMBER].includes(columnType)) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
       } else if (
@@ -152,16 +176,23 @@ export function parse(rows: Rows, table: Table): Rows {
         parsedRow[columnName] = columnData
           ? new Date(columnData).toISOString()
           : columnData
+      } else if (
+        columnType === FieldType.JSON &&
+        typeof columnData === "string"
+      ) {
+        parsedRow[columnName] = parseJsonExport(columnData)
       } else if (columnType === FieldType.BB_REFERENCE) {
         let parsedValues: { _id: string }[] = columnData || []
-        if (columnData) {
-          parsedValues = parseCsvExport<{ _id: string }[]>(columnData)
+        if (columnData && typeof columnData === "string") {
+          parsedValues = parseJsonExport<{ _id: string }[]>(columnData)
         }
 
         parsedRow[columnName] = parsedValues?.map(u => u._id)
       } else if (columnType === FieldType.BB_REFERENCE_SINGLE) {
-        const parsedValue =
-          columnData && parseCsvExport<{ _id: string }>(columnData)
+        let parsedValue = columnData
+        if (columnData && typeof columnData === "string") {
+          parsedValue = parseJsonExport<{ _id: string }>(columnData)
+        }
         parsedRow[columnName] = parsedValue?._id
       } else if (
         (columnType === FieldType.ATTACHMENTS ||
@@ -169,7 +200,7 @@ export function parse(rows: Rows, table: Table): Rows {
           columnType === FieldType.SIGNATURE_SINGLE) &&
         typeof columnData === "string"
       ) {
-        parsedRow[columnName] = parseCsvExport(columnData)
+        parsedRow[columnName] = parseJsonExport(columnData)
       } else {
         parsedRow[columnName] = columnData
       }
@@ -185,32 +216,54 @@ function isValidBBReference(
   subtype: BBReferenceFieldSubType,
   isRequired: boolean
 ): boolean {
-  if (typeof data !== "string") {
+  try {
+    if (type === FieldType.BB_REFERENCE_SINGLE) {
+      if (!data) {
+        return !isRequired
+      }
+      const user = parseJsonExport<{ _id: string }>(data)
+      return db.isGlobalUserID(user._id)
+    }
+
+    switch (subtype) {
+      case BBReferenceFieldSubType.USER:
+      case BBReferenceFieldSubType.USERS: {
+        const userArray = parseJsonExport<{ _id: string }[]>(data)
+        if (!Array.isArray(userArray)) {
+          return false
+        }
+
+        const constainsWrongId = userArray.find(
+          user => !db.isGlobalUserID(user._id)
+        )
+        return !constainsWrongId
+      }
+      default:
+        throw utils.unreachable(subtype)
+    }
+  } catch {
     return false
   }
+}
 
-  if (type === FieldType.BB_REFERENCE_SINGLE) {
-    if (!data) {
-      return !isRequired
-    }
-    const user = parseCsvExport<{ _id: string }>(data)
-    return db.isGlobalUserID(user._id)
+function parseJsonExport<T>(value: any) {
+  if (typeof value !== "string") {
+    return value
   }
+  try {
+    const parsed = JSON.parse(value)
 
-  switch (subtype) {
-    case BBReferenceFieldSubType.USER:
-    case BBReferenceFieldSubType.USERS: {
-      const userArray = parseCsvExport<{ _id: string }[]>(data)
-      if (!Array.isArray(userArray)) {
-        return false
-      }
-
-      const constainsWrongId = userArray.find(
-        user => !db.isGlobalUserID(user._id)
-      )
-      return !constainsWrongId
+    return parsed as T
+  } catch (e: any) {
+    if (
+      e.message.startsWith("Expected property name or '}' in JSON at position ")
+    ) {
+      // This was probably converted as CSV and it has single quotes instead of double ones
+      const parsed = JSON.parse(value.replace(/'/g, '"'))
+      return parsed as T
     }
-    default:
-      throw utils.unreachable(subtype)
+
+    // It is no a valid JSON
+    throw e
   }
 }

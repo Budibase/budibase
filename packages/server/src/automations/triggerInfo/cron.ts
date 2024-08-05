@@ -38,3 +38,11 @@ export const definition: AutomationTriggerSchema = {
   },
   type: AutomationStepType.TRIGGER,
 }
+
+export type CronTriggerInputs = {
+  cron: string
+}
+
+export type CronTriggerOutputs = {
+  timestamp: number
+}

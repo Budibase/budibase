@@ -1,9 +1,8 @@
-import { AutomationResults, AutomationStep } from "@budibase/types"
-
-export enum LoopStepType {
-  ARRAY = "Array",
-  STRING = "String",
-}
+import {
+  AutomationResults,
+  AutomationStep,
+  LoopStepType,
+} from "@budibase/types"
 
 export interface LoopStep extends AutomationStep {
   inputs: LoopInput

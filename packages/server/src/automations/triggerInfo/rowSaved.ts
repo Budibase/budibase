@@ -5,7 +5,9 @@ import {
   AutomationTriggerSchema,
   AutomationTriggerStepId,
   AutomationEventType,
+  Row,
 } from "@budibase/types"
+import { SearchFilters } from "aws-sdk/clients/elasticbeanstalk"
 
 export const definition: AutomationTriggerSchema = {
   name: "Row Created",
@@ -51,4 +53,15 @@ export const definition: AutomationTriggerSchema = {
     },
   },
   type: AutomationStepType.TRIGGER,
+}
+
+export type RowCreatedTriggerInputs = {
+  tableId: string
+  filters?: SearchFilters
+}
+
+export type RowCreatedTriggerOutputs = {
+  row: Row
+  id: string
+  revision: string
 }

@@ -30,3 +30,9 @@ export interface SearchResponse<T> {
   bookmark?: string | number
   totalRows?: number
 }
+
+export enum RowExportFormat {
+  CSV = "csv",
+  JSON = "json",
+  JSON_WITH_SCHEMA = "jsonWithSchema",
+}

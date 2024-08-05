@@ -53,10 +53,7 @@ export function canBeSortColumn(type: FieldType): boolean {
   return !!allowSortColumnByType[type]
 }
 
-export function findDuplicateInternalColumns(
-  table: Table,
-  opts?: { ignoreProtectedColumnNames: boolean }
-): string[] {
+export function findDuplicateInternalColumns(table: Table): string[] {
   // maintains the case of keys
   const casedKeys = Object.keys(table.schema)
   // get the column names
@@ -72,11 +69,10 @@ export function findDuplicateInternalColumns(
       }
     }
   }
-  if (!opts?.ignoreProtectedColumnNames) {
-    for (let internalColumn of PROTECTED_INTERNAL_COLUMNS) {
-      if (casedKeys.find(key => key === internalColumn)) {
-        duplicates.push(internalColumn)
-      }
+
+  for (let internalColumn of PROTECTED_INTERNAL_COLUMNS) {
+    if (casedKeys.find(key => key === internalColumn)) {
+      duplicates.push(internalColumn)
     }
   }
   return duplicates

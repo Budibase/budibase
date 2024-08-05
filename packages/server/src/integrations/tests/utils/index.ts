@@ -5,6 +5,7 @@ import * as mongodb from "./mongodb"
 import * as mysql from "./mysql"
 import * as mssql from "./mssql"
 import * as mariadb from "./mariadb"
+import * as oracle from "./oracle"
 import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import cloneDeep from "lodash/cloneDeep"
@@ -17,6 +18,7 @@ export enum DatabaseName {
   MYSQL = "mysql",
   SQL_SERVER = "mssql",
   MARIADB = "mariadb",
+  ORACLE = "oracle",
 }
 
 const providers: Record<DatabaseName, DatasourceProvider> = {
@@ -25,6 +27,7 @@ const providers: Record<DatabaseName, DatasourceProvider> = {
   [DatabaseName.MYSQL]: mysql.getDatasource,
   [DatabaseName.SQL_SERVER]: mssql.getDatasource,
   [DatabaseName.MARIADB]: mariadb.getDatasource,
+  [DatabaseName.ORACLE]: oracle.getDatasource,
 }
 
 export function getDatasourceProviders(
@@ -59,6 +62,9 @@ export async function knexClient(ds: Datasource) {
     }
     case SourceName.SQL_SERVER: {
       return mssql.knexClient(ds)
+    }
+    case SourceName.ORACLE: {
+      return oracle.knexClient(ds)
     }
     default: {
       throw new Error(`Unsupported source: ${ds.source}`)

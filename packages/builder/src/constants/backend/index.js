@@ -9,7 +9,10 @@ import { Constants } from "@budibase/frontend-core"
 
 const { TypeIconMap } = Constants
 
-export { RelationshipType } from "@budibase/types"
+export {
+  RelationshipType,
+  RowExportFormat as ROW_EXPORT_FORMATS,
+} from "@budibase/types"
 
 export const AUTO_COLUMN_SUB_TYPES = AutoFieldSubType
 
@@ -306,10 +309,4 @@ export const DatasourceTypes = {
   OBJECT_STORE: "Object store",
   GRAPH: "Graph",
   API: "API",
-}
-
-export const ROW_EXPORT_FORMATS = {
-  CSV: "csv",
-  JSON: "json",
-  JSON_WITH_SCHEMA: "jsonWithSchema",
 }

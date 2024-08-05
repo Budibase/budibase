@@ -3,9 +3,10 @@ import { OpenAI } from "openai"
 import {
   AutomationActionStepId,
   AutomationStepSchema,
-  AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
+  OpenAIStepInputs,
+  OpenAIStepOutputs,
 } from "@budibase/types"
 import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
@@ -59,7 +60,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: OpenAIStepInputs
+}): Promise<OpenAIStepOutputs> {
   if (!env.OPENAI_API_KEY) {
     return {
       success: false,
