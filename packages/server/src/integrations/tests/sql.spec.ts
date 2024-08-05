@@ -210,7 +210,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where (COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2) and (COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4) order by "test"."id" asc) where rownum <= :5) "test" order by "test"."id" asc) where rownum <= :6`,
+      sql: `select * from (select * from (select * from (select * from "test" where COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2 and COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4 order by "test"."id" asc) where rownum <= :5) "test" order by "test"."id" asc) where rownum <= :6`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
