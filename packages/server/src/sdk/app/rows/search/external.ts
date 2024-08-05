@@ -147,7 +147,8 @@ export async function search(
   } catch (err: any) {
     if (err.message && err.message.includes("does not exist")) {
       throw new Error(
-        `Table updated externally, please re-fetch - ${err.message}`
+        `Table updated externally, please re-fetch - ${err.message}`,
+        { cause: err }
       )
     } else {
       throw err

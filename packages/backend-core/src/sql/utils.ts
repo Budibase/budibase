@@ -22,6 +22,7 @@ export function getNativeSql(
   query: Knex.SchemaBuilder | Knex.QueryBuilder
 ): SqlQuery | SqlQuery[] {
   let sql = query.toSQL()
+
   if (Array.isArray(sql)) {
     return sql as SqlQuery[]
   }
