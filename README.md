@@ -116,7 +116,7 @@ As with anything that we build in Budibase, our new public API is simple to use,
 You can learn more about the Budibase API at the following places:
 
 - [General documentation](https://docs.budibase.com/docs/public-api): Learn how to get your API key, how to use spec, and how to use Postman
-- [Interactive API documentation](https://docs.budibase.com/reference/post_applications) : Learn how to interact with the API
+- [Interactive API documentation](https://docs.budibase.com/reference/appcreate) : Learn how to interact with the API
 
 <br /><br />
 
