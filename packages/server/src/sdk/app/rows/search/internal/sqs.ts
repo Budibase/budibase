@@ -2,6 +2,7 @@ import {
   Datasource,
   DocumentType,
   FieldType,
+  LogicalOperator,
   Operation,
   QueryJson,
   RelationshipFieldMetadata,
