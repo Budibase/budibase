@@ -30,6 +30,7 @@ import {
   BBReferenceFieldSubType,
   JsonFieldSubType,
   AutoFieldSubType,
+  Role,
 } from "@budibase/types"
 import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
@@ -492,11 +493,12 @@ export function basicLinkedRow(
   }
 }
 
-export function basicRole() {
+export function basicRole(): Role {
   return {
     name: `NewRole_${utils.newid()}`,
     inherits: roles.BUILTIN_ROLE_IDS.BASIC,
     permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+    permissions: {},
     version: "name",
   }
 }

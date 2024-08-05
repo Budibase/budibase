@@ -42,7 +42,7 @@ export class Role implements RoleDoc {
   _rev?: string
   name: string
   permissionId: string
-  inherits?: string
+  inherits?: string | string[]
   version?: string
   permissions = {}
 
@@ -54,8 +54,10 @@ export class Role implements RoleDoc {
     this.version = RoleIDVersion.NAME
   }
 
-  addInheritance(inherits: string) {
-    this.inherits = inherits
+  addInheritance(inherits?: string | string[]) {
+    if (inherits) {
+      this.inherits = inherits
+    }
     return this
   }
 }
@@ -113,7 +115,11 @@ export function builtinRoleToNumber(id: string) {
     if (!role) {
       break
     }
-    role = builtins[role.inherits!]
+    if (Array.isArray(role.inherits)) {
+      // TODO: role inheritance
+    } else {
+      role = builtins[role.inherits!]
+    }
     count++
   } while (role !== null)
   return count
@@ -130,7 +136,12 @@ export async function roleToNumber(id: string) {
     defaultPublic: true,
   })) as RoleDoc[]
   for (let role of hierarchy) {
-    if (role?.inherits && isBuiltin(role.inherits)) {
+    if (!role.inherits) {
+      continue
+    }
+    if (Array.isArray(role.inherits)) {
+      // TODO: role inheritance
+    } else if (isBuiltin(role.inherits)) {
       return builtinRoleToNumber(role.inherits) + 1
     }
   }
@@ -202,16 +213,27 @@ async function getAllUserRoles(
   let currentRole = await getRole(userRoleId, opts)
   let roles = currentRole ? [currentRole] : []
   let roleIds = [userRoleId]
+  const rolesFound = (ids: string | string[]) => {
+    if (Array.isArray(ids)) {
+      return ids.filter(id => roleIds.includes(id)).length === ids.length
+    } else {
+      return roleIds.includes(ids)
+    }
+  }
   // get all the inherited roles
   while (
     currentRole &&
     currentRole.inherits &&
-    roleIds.indexOf(currentRole.inherits) === -1
+    !rolesFound(currentRole.inherits)
   ) {
-    roleIds.push(currentRole.inherits)
-    currentRole = await getRole(currentRole.inherits)
-    if (currentRole) {
-      roles.push(currentRole)
+    if (Array.isArray(currentRole.inherits)) {
+      // TODO: role inheritance
+    } else {
+      roleIds.push(currentRole.inherits)
+      currentRole = await getRole(currentRole.inherits)
+      if (currentRole) {
+        roles.push(currentRole)
+      }
     }
   }
   return roles

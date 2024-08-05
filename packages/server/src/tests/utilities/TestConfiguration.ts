@@ -517,6 +517,7 @@ export default class TestConfiguration {
 
     const headers: any = {
       Accept: "application/json",
+      Cookie: "",
     }
     if (appId) {
       headers[constants.Header.APP_ID] = appId
