@@ -1,9 +1,9 @@
-import { Document } from "../document"
+import { Document } from "../../document"
 import { EventEmitter } from "events"
-import { User } from "../global"
+import { User } from "../../global"
 import { ReadStream } from "fs"
-import { Row } from "./row"
-import { Table } from "./table"
+import { Row } from "../row"
+import { Table } from "../table"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -93,6 +93,7 @@ export interface EmailAttachment {
 }
 
 export interface SendEmailOpts {
+  to?: string
   // workspaceId If finer grain controls being used then this will lookup config for workspace.
   workspaceId?: string
   // user If sending to an existing user the object can be provided, this is used in the context.
@@ -102,7 +103,7 @@ export interface SendEmailOpts {
   // contents If sending a custom email then can supply contents which will be added to it.
   contents?: string
   // subject A custom subject can be specified if the config one is not desired.
-  subject?: string
+  subject: string
   // info Pass in a structure of information to be stored alongside the invitation.
   info?: any
   cc?: boolean
@@ -242,14 +243,18 @@ export interface AutomationLogPage {
   nextPage?: string
 }
 
-export type AutomationStepInput = {
-  inputs: Record<string, any>
+export interface AutomationStepInputBase {
   context: Record<string, any>
   emitter: EventEmitter
   appId: string
   apiKey?: string
 }
 
+export type ActionImplementation<TInputs, TOutputs> = (
+  params: {
+    inputs: TInputs
+  } & AutomationStepInputBase
+) => Promise<TOutputs>
 export interface AutomationMetadata extends Document {
   errorCount?: number
   automationChainCount?: number
@@ -285,4 +290,9 @@ export type UpdatedRowEventEmitter = {
   oldRow: Row
   table: Table
   appId: string
+}
+
+export enum LoopStepType {
+  ARRAY = "Array",
+  STRING = "String",
 }

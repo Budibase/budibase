@@ -17,6 +17,7 @@ import {
   CsvToJsonRequest,
   CsvToJsonResponse,
   FetchTablesResponse,
+  FieldType,
   MigrateRequest,
   MigrateResponse,
   SaveTableRequest,
@@ -33,7 +34,11 @@ import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
 import { cloneDeep, isEqual } from "lodash"
-import { helpers } from "@budibase/shared-core"
+import {
+  helpers,
+  PROTECTED_EXTERNAL_COLUMNS,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -166,7 +171,7 @@ export async function validateNewTableImport(
 
   if (isRows(rows) && isSchema(schema)) {
     ctx.status = 200
-    ctx.body = validateSchema(rows, schema)
+    ctx.body = validateSchema(rows, schema, PROTECTED_INTERNAL_COLUMNS)
   } else {
     ctx.status = 422
   }
@@ -178,9 +183,21 @@ export async function validateExistingTableImport(
   const { rows, tableId } = ctx.request.body
 
   let schema = null
+
+  let protectedColumnNames
   if (tableId) {
     const table = await sdk.tables.getTable(tableId)
     schema = table.schema
+
+    if (!isExternalTable(table)) {
+      schema._id = {
+        name: "_id",
+        type: FieldType.STRING,
+      }
+      protectedColumnNames = PROTECTED_INTERNAL_COLUMNS.filter(x => x !== "_id")
+    } else {
+      protectedColumnNames = PROTECTED_EXTERNAL_COLUMNS
+    }
   } else {
     ctx.status = 422
     return
@@ -188,7 +205,7 @@ export async function validateExistingTableImport(
 
   if (tableId && isRows(rows) && isSchema(schema)) {
     ctx.status = 200
-    ctx.body = validateSchema(rows, schema)
+    ctx.body = validateSchema(rows, schema, protectedColumnNames)
   } else {
     ctx.status = 422
   }

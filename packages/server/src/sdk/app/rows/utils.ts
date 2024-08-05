@@ -76,7 +76,7 @@ export async function getDatasourceAndQuery(
 }
 
 export function cleanExportRows(
-  rows: any[],
+  rows: Row[],
   schema: TableSchema,
   format: string,
   columns?: string[],

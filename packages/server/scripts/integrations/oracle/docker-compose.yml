@@ -6,9 +6,9 @@ services:
   db:
     restart: unless-stopped
     platform: linux/x86_64
-    image: container-registry.oracle.com/database/express:18.4.0-xe
+    image: gvenzl/oracle-free:23.2-slim-faststart
     environment:
-      ORACLE_PWD: oracle
+      ORACLE_PWD: Password1
     ports:
       - 1521:1521
       - 5500:5500

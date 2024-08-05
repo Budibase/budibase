@@ -136,7 +136,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
   const table: Table = tables[tableName]
-  const row = response[0]
+  const row = response.rows[0]
   // this seems like a lot of work, but basically we need to dig deeper for the enrich
   // for a single row, there is probably a better way to do this with some smart multi-layer joins
   for (let [fieldName, field] of Object.entries(table.schema)) {
@@ -163,10 +163,14 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
       },
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     })
-    row[fieldName] = await outputProcessing(linkedTable, relatedRows, {
-      squash: true,
-      preserveLinks: true,
-    })
+    row[fieldName] = await outputProcessing<Row[]>(
+      linkedTable,
+      relatedRows.rows,
+      {
+        squash: true,
+        preserveLinks: true,
+      }
+    )
   }
   return row
 }
