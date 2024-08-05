@@ -467,7 +467,7 @@ class InternalBuilder {
       const { $and } = filters
       query = query.where(x => {
         for (const condition of $and.conditions) {
-          x = this.addFilters(x, condition, table, opts)
+          x = this.addFilters(x, condition, opts)
         }
       })
     }
@@ -476,7 +476,7 @@ class InternalBuilder {
       const { $or } = filters
       query = query.where(x => {
         for (const condition of $or.conditions) {
-          x = this.addFilters(x, { ...condition, allOr: true }, table, opts)
+          x = this.addFilters(x, { ...condition, allOr: true }, opts)
         }
       })
     }
