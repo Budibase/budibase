@@ -31,7 +31,14 @@ import oracledb, {
   ExecuteOptions,
   Result,
 } from "oracledb"
-import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
+import {
+  OracleTable,
+  OracleColumn,
+  OracleColumnsResponse,
+  OracleTriggersResponse,
+  TriggeringEvent,
+  TriggerType,
+} from "./base/types"
 import { sql } from "@budibase/backend-core"
 
 const Sql = sql.Sql
@@ -98,7 +105,7 @@ const SCHEMA: Integration = {
   },
 }
 
-const UNSUPPORTED_TYPES = ["BLOB", "CLOB", "NCLOB"]
+const UNSUPPORTED_TYPES = ["BLOB", "NCLOB"]
 
 const OracleContraintTypes = {
   PRIMARY: "P",
@@ -111,7 +118,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
   private readonly config: OracleConfig
   private index: number = 1
 
-  private readonly COLUMNS_SQL = `
+  private static readonly COLUMNS_SQL = `
     SELECT
       tabs.table_name,
       cols.column_name,
@@ -139,6 +146,19 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       (cons.status = 'ENABLED'
         OR cons.status IS NULL)
   `
+
+  private static readonly TRIGGERS_SQL = `
+    SELECT 
+      table_name, 
+      trigger_name, 
+      trigger_type, 
+      triggering_event, 
+      trigger_body 
+    FROM 
+      all_triggers 
+    WHERE status = 'ENABLED'
+  `
+
   constructor(config: OracleConfig) {
     super(SqlClient.ORACLE)
     this.config = config
@@ -211,6 +231,75 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     return oracleTables
   }
 
+  private getTriggersFor(
+    tableName: string,
+    triggersResponse: Result<OracleTriggersResponse>,
+    opts?: { event?: TriggeringEvent; type?: TriggerType }
+  ): OracleTriggersResponse[] {
+    const triggers: OracleTriggersResponse[] = []
+    for (const trigger of triggersResponse.rows || []) {
+      if (trigger.TABLE_NAME !== tableName) {
+        continue
+      }
+      if (opts?.event && opts.event !== trigger.TRIGGERING_EVENT) {
+        continue
+      }
+      if (opts?.type && opts.type !== trigger.TRIGGER_TYPE) {
+        continue
+      }
+      triggers.push(trigger)
+    }
+    return triggers
+  }
+
+  private markAutoIncrementColumns(
+    triggersResponse: Result<OracleTriggersResponse>,
+    tables: Record<string, Table>
+  ) {
+    for (const table of Object.values(tables)) {
+      const triggers = this.getTriggersFor(table.name, triggersResponse, {
+        type: TriggerType.BEFORE_EACH_ROW,
+        event: TriggeringEvent.INSERT,
+      })
+
+      // This is the trigger body Knex generates for an auto increment column
+      // called "id" on a table called "foo":
+      //
+      //   declare checking number := 1;
+      //   begin if (:new. "id" is null) then while checking >= 1 loop
+      //   select
+      //       "foo_seq".nextval into :new. "id"
+      //   from
+      //       dual;
+      //   select
+      //       count("id") into checking
+      //   from
+      //       "foo"
+      //   where
+      //       "id" = :new. "id";
+      //   end loop;
+      //   end if;
+      //   end;
+      for (const [columnName, schema] of Object.entries(table.schema)) {
+        const autoIncrementTriggers = triggers.filter(
+          trigger =>
+            // This is a bit heuristic, but I think it's the best we can do with
+            // the information we have. We're looking for triggers that run
+            // before each row is inserted, and that have a body that contains a
+            // call to a function that generates a new value for the column.  We
+            // also check that the column name is in the trigger body, to make
+            // sure we're not picking up triggers that don't affect the column.
+            trigger.TRIGGER_BODY.includes(`"${columnName}"`) &&
+            trigger.TRIGGER_BODY.includes(`.nextval`)
+        )
+
+        if (autoIncrementTriggers.length > 0) {
+          schema.autocolumn = true
+        }
+      }
+    }
+  }
+
   private static isSupportedColumn(column: OracleColumn) {
     return !UNSUPPORTED_TYPES.includes(column.type)
   }
@@ -255,7 +344,10 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     entities: Record<string, Table>
   ): Promise<Schema> {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
-      sql: this.COLUMNS_SQL,
+      sql: OracleIntegration.COLUMNS_SQL,
+    })
+    const triggersResponse = await this.internalQuery<OracleTriggersResponse>({
+      sql: OracleIntegration.TRIGGERS_SQL,
     })
     const oracleTables = this.mapColumns(columnsResponse)
 
@@ -318,6 +410,8 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         })
     })
 
+    this.markAutoIncrementColumns(triggersResponse, tables)
+
     let externalTables = finaliseExternalTables(tables, entities)
     let errors = checkExternalTables(externalTables)
     return { tables: externalTables, errors }
@@ -325,7 +419,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
 
   async getTableNames() {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
-      sql: this.COLUMNS_SQL,
+      sql: OracleIntegration.COLUMNS_SQL,
     })
     return (columnsResponse.rows || []).map(row => row.TABLE_NAME)
   }
@@ -360,11 +454,32 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       this.index = 1
       connection = await this.getConnection()
 
-      const options: ExecuteOptions = { autoCommit: true }
+      const options: ExecuteOptions = {
+        autoCommit: true,
+        fetchTypeHandler: function (metaData) {
+          if (metaData.dbType === oracledb.CLOB) {
+            return { type: oracledb.STRING }
+          } else if (
+            // When we create a new table in OracleDB from Budibase, bigints get
+            // created as NUMBER(20,0). Budibase expects bigints to be returned
+            // as strings, which is what we're doing here. However, this is
+            // likely to be brittle if we connect to externally created
+            // databases that have used different precisions and scales.
+            // We shold find a way to do better.
+            metaData.dbType === oracledb.NUMBER &&
+            metaData.precision === 20 &&
+            metaData.scale === 0
+          ) {
+            return { type: oracledb.STRING }
+          }
+          return undefined
+        },
+      }
       const bindings: BindParameters = query.bindings || []
 
       this.log(query.sql, bindings)
-      return await connection.execute<T>(query.sql, bindings, options)
+      const result = await connection.execute(query.sql, bindings, options)
+      return result as Result<T>
     } finally {
       if (connection) {
         try {
@@ -377,7 +492,6 @@ class OracleIntegration extends Sql implements DatasourcePlus {
   }
 
   private getConnection = async (): Promise<Connection> => {
-    //connectString : "(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))(CONNECT_DATA =(SID= ORCL)))"
     const connectString = `${this.config.host}:${this.config.port || 1521}/${
       this.config.database
     }`
@@ -386,7 +500,10 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       password: this.config.password,
       connectString,
     }
-    return oracledb.getConnection(attributes)
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const connection = await oracledb.getConnection(attributes)
+    await connection.execute(`ALTER SESSION SET TIME_ZONE = '${tz}'`)
+    return connection
   }
 
   async create(query: SqlQuery | string): Promise<any[]> {

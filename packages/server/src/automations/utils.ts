@@ -3,11 +3,15 @@ import { definitions } from "./triggerInfo"
 import { automationQueue } from "./bullboard"
 import { updateEntityMetadata } from "../utilities"
 import { MetadataTypes } from "../constants"
-import { db as dbCore, context, utils } from "@budibase/backend-core"
+import { context, db as dbCore, utils } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { Automation, AutomationJob } from "@budibase/types"
+import {
+  Automation,
+  AutomationJob,
+  AutomationStepSchema,
+} from "@budibase/types"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
@@ -111,7 +115,9 @@ export async function updateTestHistory(
   )
 }
 
-export function removeDeprecated(definitions: any) {
+export function removeDeprecated(
+  definitions: Record<string, AutomationStepSchema>
+) {
   const base = cloneDeep(definitions)
   for (let key of Object.keys(base)) {
     if (base[key].deprecated) {

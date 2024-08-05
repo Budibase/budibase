@@ -1,3 +1,4 @@
+import { EventEmitter } from "events"
 import * as queryController from "../../api/controllers/query"
 import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
@@ -6,9 +7,10 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
+  ExecuteQueryStepInputs,
+  ExecuteQueryStepOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -62,7 +64,15 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs, appId, emitter }: AutomationStepInput) {
+export async function run({
+  inputs,
+  appId,
+  emitter,
+}: {
+  inputs: ExecuteQueryStepInputs
+  appId: string
+  emitter: EventEmitter
+}): Promise<ExecuteQueryStepOutputs> {
   if (inputs.query == null) {
     return {
       success: false,

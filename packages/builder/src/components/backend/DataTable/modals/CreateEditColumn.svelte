@@ -17,8 +17,8 @@
     SWITCHABLE_TYPES,
     ValidColumnNameRegex,
     helpers,
-    CONSTANT_INTERNAL_ROW_COLS,
-    CONSTANT_EXTERNAL_ROW_COLS,
+    PROTECTED_INTERNAL_COLUMNS,
+    PROTECTED_EXTERNAL_COLUMNS,
   } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
@@ -489,8 +489,8 @@
     }
     const newError = {}
     const prohibited = externalTable
-      ? CONSTANT_EXTERNAL_ROW_COLS
-      : CONSTANT_INTERNAL_ROW_COLS
+      ? PROTECTED_EXTERNAL_COLUMNS
+      : PROTECTED_INTERNAL_COLUMNS
     if (!externalTable && fieldInfo.name?.startsWith("_")) {
       newError.name = `Column name cannot start with an underscore.`
     } else if (fieldInfo.name && !fieldInfo.name.match(ValidColumnNameRegex)) {

@@ -63,6 +63,11 @@ export class Screen extends BaseStructure {
     return this
   }
 
+  autoTableId(autoTableId) {
+    this._json.autoTableId = autoTableId
+    return this
+  }
+
   instanceName(name) {
     this._json.props._instanceName = name
     return this

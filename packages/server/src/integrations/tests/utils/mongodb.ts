@@ -2,13 +2,14 @@ import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { startContainer } from "."
+import { MONGODB_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
 
 export async function getDatasource(): Promise<Datasource> {
   if (!ports) {
     ports = startContainer(
-      new GenericContainer("mongo:7.0-jammy")
+      new GenericContainer(MONGODB_IMAGE)
         .withExposedPorts(27017)
         .withEnvironment({
           MONGO_INITDB_ROOT_USERNAME: "mongo",

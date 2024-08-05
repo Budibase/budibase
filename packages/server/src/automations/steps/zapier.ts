@@ -3,10 +3,11 @@ import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
   AutomationStepSchema,
-  AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  ZapierStepInputs,
+  ZapierStepOutputs,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -50,7 +51,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: ZapierStepInputs
+}): Promise<ZapierStepOutputs> {
   const { url, body } = inputs
 
   let payload = {}

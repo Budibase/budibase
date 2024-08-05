@@ -64,7 +64,7 @@ export interface AutoColumnFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.AUTO
   autocolumn: true
-  subtype?: AutoFieldSubType
+  subtype: AutoFieldSubType
   lastID?: number
   // if the column was turned to an auto-column for SQL, explains why (primary, foreign etc)
   autoReason?: AutoReason
@@ -157,6 +157,21 @@ export interface FieldConstraints {
   }
 }
 
+export interface OptionsFieldMetadata extends BaseFieldSchema {
+  type: FieldType.OPTIONS
+  constraints: FieldConstraints & {
+    inclusion: string[]
+  }
+}
+
+export interface ArrayFieldMetadata extends BaseFieldSchema {
+  type: FieldType.ARRAY
+  constraints: FieldConstraints & {
+    type: JsonFieldSubType.ARRAY
+    inclusion: string[]
+  }
+}
+
 interface BaseFieldSchema extends UIFieldMetadata {
   type: FieldType
   name: string
@@ -182,6 +197,8 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.BB_REFERENCE_SINGLE
     | FieldType.ATTACHMENTS
     | FieldType.STRING
+    | FieldType.ARRAY
+    | FieldType.OPTIONS
   >
 }
 
@@ -198,6 +215,8 @@ export type FieldSchema =
   | JsonFieldMetadata
   | AttachmentFieldMetadata
   | BBReferenceSingleFieldMetadata
+  | ArrayFieldMetadata
+  | OptionsFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema

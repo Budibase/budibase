@@ -13,7 +13,7 @@
 
   const { datasource } = getContext("grid")
 
-  $: triggers = $automationStore.blockDefinitions.TRIGGER
+  $: triggers = $automationStore.blockDefinitions.CREATABLE_TRIGGER
 
   $: table = $tables.list.find(table => table._id === $datasource.tableId)
 

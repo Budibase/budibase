@@ -4,8 +4,13 @@ import {
   encodeJSBinding,
 } from "@budibase/string-templates"
 import sdk from "../sdk"
-import { AutomationAttachment, FieldType, Row } from "@budibase/types"
-import { LoopInput, LoopStepType } from "../definitions/automations"
+import {
+  AutomationAttachment,
+  FieldType,
+  Row,
+  LoopStepType,
+} from "@budibase/types"
+import { LoopInput } from "../definitions/automations"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
 import path from "path"

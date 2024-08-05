@@ -1,8 +1,7 @@
 // need to handle table name + field or just field, depending on if relationships used
 import { FieldType, Row, Table } from "@budibase/types"
-import { helpers } from "@budibase/shared-core"
+import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 import { generateRowIdField } from "../../../../integrations/utils"
-import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 
 function extractFieldValue({
   row,
@@ -94,7 +93,7 @@ export function basicProcessing({
     thisRow._rev = "rev"
   } else {
     const columns = Object.keys(table.schema)
-    for (let internalColumn of [...CONSTANT_INTERNAL_ROW_COLS, ...columns]) {
+    for (let internalColumn of [...PROTECTED_INTERNAL_COLUMNS, ...columns]) {
       thisRow[internalColumn] = extractFieldValue({
         row,
         tableName: table._id!,
