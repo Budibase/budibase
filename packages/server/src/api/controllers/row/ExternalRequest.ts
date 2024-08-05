@@ -66,9 +66,14 @@ export interface RunConfig {
   includeSqlRelationships?: IncludeRelationship
 }
 
+export type ExternalReadRequestReturnType = {
+  rows: Row[]
+  rawResponseSize: number
+}
+
 export type ExternalRequestReturnType<T extends Operation> =
   T extends Operation.READ
-    ? Row[]
+    ? ExternalReadRequestReturnType
     : T extends Operation.COUNT
     ? number
     : { row: Row; table: Table }
@@ -741,9 +746,11 @@ export class ExternalRequest<T extends Operation> {
     )
     // if reading it'll just be an array of rows, return whole thing
     if (operation === Operation.READ) {
-      return (
-        Array.isArray(output) ? output : [output]
-      ) as ExternalRequestReturnType<T>
+      const rows = Array.isArray(output) ? output : [output]
+      return {
+        rows,
+        rawResponseSize: responseRows.length,
+      } as ExternalRequestReturnType<T>
     } else {
       return { row: output[0], table } as ExternalRequestReturnType<T>
     }

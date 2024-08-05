@@ -18,34 +18,35 @@ import {
 import {
   buildInternalRelationships,
   sqlOutputProcessing,
-} from "../../../../api/controllers/row/utils"
+} from "../../../../../api/controllers/row/utils"
 import {
   decodeNonAscii,
   mapToUserColumn,
   USER_COLUMN_PREFIX,
-} from "../../tables/internal/sqs"
-import sdk from "../../../index"
+} from "../../../tables/internal/sqs"
+import sdk from "../../../../index"
 import {
   context,
   sql,
   SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
 } from "@budibase/backend-core"
-import { generateJunctionTableID } from "../../../../db/utils"
-import AliasTables from "../sqlAlias"
-import { outputProcessing } from "../../../../utilities/rowProcessor"
+import { generateJunctionTableID } from "../../../../../db/utils"
+import AliasTables from "../../sqlAlias"
+import { outputProcessing } from "../../../../../utilities/rowProcessor"
 import pick from "lodash/pick"
-import { processRowCountResponse } from "../utils"
+import { processRowCountResponse } from "../../utils"
 import {
   updateFilterKeys,
   getRelationshipColumns,
   getTableIDList,
-} from "./filters"
+} from "../filters"
 import { dataFilters, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
-import { isSearchingByRowID } from "./utils"
+import { isSearchingByRowID } from "../utils"
 import tracer from "dd-trace"
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
+const SQLITE_COLUMN_LIMIT = 2000
 const MISSING_COLUMN_REGEX = new RegExp(`no such column: .+`)
 const MISSING_TABLE_REGX = new RegExp(`no such table: .+`)
 const DUPLICATE_COLUMN_REGEX = new RegExp(`duplicate column name: .+`)
@@ -56,12 +57,14 @@ function buildInternalFieldList(
   opts?: { relationships?: RelationshipsJson[] }
 ) {
   let fieldList: string[] = []
-  const addJunctionFields = (relatedTable: Table, fields: string[]) => {
+  const getJunctionFields = (relatedTable: Table, fields: string[]) => {
+    const junctionFields: string[] = []
     fields.forEach(field => {
-      fieldList.push(
+      junctionFields.push(
         `${generateJunctionTableID(table._id!, relatedTable._id!)}.${field}`
       )
     })
+    return junctionFields
   }
   fieldList = fieldList.concat(
     PROTECTED_INTERNAL_COLUMNS.map(col => `${table._id}.${col}`)
@@ -71,18 +74,22 @@ function buildInternalFieldList(
     if (!opts?.relationships && isRelationship) {
       continue
     }
-    if (isRelationship) {
+    if (!isRelationship) {
+      fieldList.push(`${table._id}.${mapToUserColumn(col.name)}`)
+    } else {
       const linkCol = col as RelationshipFieldMetadata
       const relatedTable = tables.find(table => table._id === linkCol.tableId)
-      // no relationships provided, don't go more than a layer deep
-      if (relatedTable) {
-        fieldList = fieldList.concat(
-          buildInternalFieldList(relatedTable, tables)
-        )
-        addJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
+      if (!relatedTable) {
+        continue
       }
-    } else {
-      fieldList.push(`${table._id}.${mapToUserColumn(col.name)}`)
+      const relatedFields = buildInternalFieldList(relatedTable, tables).concat(
+        getJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
+      )
+      // break out of the loop if we have reached the max number of columns
+      if (relatedFields.length + fieldList.length > SQLITE_COLUMN_LIMIT) {
+        break
+      }
+      fieldList = fieldList.concat(relatedFields)
     }
   }
   return [...new Set(fieldList)]
@@ -320,25 +327,19 @@ export async function search(
     paginate = true
     request.paginate = {
       limit: params.limit + 1,
-      offset: bookmark * params.limit,
+      offset: bookmark,
     }
   }
 
   try {
-    const queries: Promise<Row[] | number>[] = []
-    queries.push(runSqlQuery(request, allTables, relationships))
-    if (options.countRows) {
-      // get the total count of rows
-      queries.push(
-        runSqlQuery(request, allTables, relationships, {
-          countTotalRows: true,
-        })
-      )
-    }
-    const responses = await Promise.all(queries)
-    let rows = responses[0] as Row[]
-    const totalRows =
-      responses.length > 1 ? (responses[1] as number) : undefined
+    const [rows, totalRows] = await Promise.all([
+      runSqlQuery(request, allTables, relationships),
+      options.countRows
+        ? runSqlQuery(request, allTables, relationships, {
+            countTotalRows: true,
+          })
+        : Promise.resolve(undefined),
+    ])
 
     // process from the format of tableId.column to expected format also
     // make sure JSON columns corrected
@@ -350,10 +351,13 @@ export async function search(
     )
 
     // check for pagination final row
-    let nextRow: Row | undefined
+    let nextRow: boolean = false
     if (paginate && params.limit && rows.length > params.limit) {
       // remove the extra row that confirmed if there is another row to move to
-      nextRow = processed.pop()
+      nextRow = true
+      if (processed.length > params.limit) {
+        processed.pop()
+      }
     }
 
     // get the rows
@@ -377,7 +381,7 @@ export async function search(
     // check for pagination
     if (paginate && nextRow) {
       response.hasNextPage = true
-      response.bookmark = bookmark + 1
+      response.bookmark = bookmark + processed.length
     }
     if (paginate && !nextRow) {
       response.hasNextPage = false
