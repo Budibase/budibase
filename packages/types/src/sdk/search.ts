@@ -23,7 +23,16 @@ export enum RangeOperator {
   RANGE = "range",
 }
 
-export type SearchFilterOperator = BasicOperator | ArrayOperator | RangeOperator
+export enum LogicalOperator {
+  AND = "$and",
+  OR = "$or",
+}
+
+export type SearchFilterOperator =
+  | BasicOperator
+  | ArrayOperator
+  | RangeOperator
+  | LogicalOperator
 
 export enum InternalSearchFilterOperator {
   COMPLEX_ID_OPERATOR = "_complexIdOperator",
@@ -76,10 +85,10 @@ export interface SearchFilters {
   // specific document type (such as just rows)
   documentType?: DocumentType
 
-  $and?: {
+  [LogicalOperator.AND]?: {
     conditions: SearchFilters[]
   }
-  $or?: {
+  [LogicalOperator.OR]?: {
     conditions: SearchFilters[]
   }
 }
