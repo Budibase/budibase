@@ -83,8 +83,8 @@ export const gridLayout = (node, metadata) => {
     const hAlign = errored ? "stretch" : definition?.grid?.hAlign || "stretch"
     const vAlign = errored ? "stretch" : definition?.grid?.vAlign || "center"
     const vars = {
-      "--default-width": errored ? 500 : definition.size?.width || 100,
-      "--default-height": errored ? 60 : definition.size?.height || 100,
+      "--default-width": errored ? 500 : definition.size?.width || 200,
+      "--default-height": errored ? 60 : definition.size?.height || 200,
       "--grid-desktop-h-align": hAlign,
       "--grid-mobile-h-align": hAlign,
       "--grid-desktop-v-align": vAlign,
