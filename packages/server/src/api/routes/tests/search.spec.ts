@@ -2692,4 +2692,49 @@ describe.each([
         )
       })
     })
+
+  describe("$and", () => {
+    beforeAll(async () => {
+      table = await createTable({
+        age: { name: "age", type: FieldType.NUMBER },
+        name: { name: "name", type: FieldType.STRING },
+      })
+      await createRows([
+        { age: 1, name: "Jane" },
+        { age: 10, name: "Jack" },
+        { age: 7, name: "Hanna" },
+        { age: 8, name: "Jan" },
+      ])
+    })
+
+    it("successfully finds a row for one level condition", async () => {
+      await expectQuery({
+        $and: {
+          conditions: [{ equal: { age: 10 } }, { equal: { name: "Jack" } }],
+        },
+      }).toContainExactly([{ age: 10, name: "Jack" }])
+    })
+
+    it("successfully finds a row for one level with multiple conditions", async () => {
+      await expectQuery({
+        $and: {
+          conditions: [{ equal: { age: 10 } }, { equal: { name: "Jack" } }],
+        },
+      }).toContainExactly([{ age: 10, name: "Jack" }])
+    })
+
+    it("successfully finds multiple rows for one level with multiple conditions", async () => {
+      await expectQuery({
+        $and: {
+          conditions: [
+            { range: { age: { low: 1, high: 9 } } },
+            { string: { name: "Ja" } },
+          ],
+        },
+      }).toContainExactly([
+        { age: 1, name: "Jane" },
+        { age: 8, name: "Jan" },
+      ])
+      })
+    })
 })
