@@ -22,9 +22,13 @@ describe.each(
     DatabaseName.MYSQL,
     DatabaseName.SQL_SERVER,
     DatabaseName.MARIADB,
+    DatabaseName.ORACLE,
   ].map(name => [name, getDatasource(name)])
 )("queries (%s)", (dbName, dsProvider) => {
   const config = setup.getConfig()
+  const isOracle = dbName === DatabaseName.ORACLE
+  const isMsSQL = dbName === DatabaseName.SQL_SERVER
+
   let rawDatasource: Datasource
   let datasource: Datasource
   let client: Knex
@@ -97,7 +101,7 @@ describe.each(
         const query = await createQuery({
           name: "New Query",
           fields: {
-            sql: "SELECT * FROM test_table",
+            sql: client("test_table").select("*").toString(),
           },
         })
 
@@ -106,7 +110,7 @@ describe.each(
           name: "New Query",
           parameters: [],
           fields: {
-            sql: "SELECT * FROM test_table",
+            sql: client("test_table").select("*").toString(),
           },
           schema: {},
           queryVerb: "read",
@@ -125,7 +129,7 @@ describe.each(
       it("should be able to update a query", async () => {
         const query = await createQuery({
           fields: {
-            sql: "SELECT * FROM test_table",
+            sql: client("test_table").select("*").toString(),
           },
         })
 
@@ -135,7 +139,7 @@ describe.each(
           ...query,
           name: "Updated Query",
           fields: {
-            sql: "SELECT * FROM test_table WHERE id = 1",
+            sql: client("test_table").where({ id: 1 }).toString(),
           },
         })
 
@@ -144,7 +148,7 @@ describe.each(
           name: "Updated Query",
           parameters: [],
           fields: {
-            sql: "SELECT * FROM test_table WHERE id = 1",
+            sql: client("test_table").where({ id: 1 }).toString(),
           },
           schema: {},
           queryVerb: "read",
@@ -161,7 +165,7 @@ describe.each(
       it("should be able to delete a query", async () => {
         const query = await createQuery({
           fields: {
-            sql: "SELECT * FROM test_table",
+            sql: client("test_table").select("*").toString(),
           },
         })
 
@@ -180,7 +184,7 @@ describe.each(
       it("should be able to list queries", async () => {
         const query = await createQuery({
           fields: {
-            sql: "SELECT * FROM test_table",
+            sql: client("test_table").select("*").toString(),
           },
         })
 
@@ -191,7 +195,7 @@ describe.each(
       it("should strip sensitive fields for prod apps", async () => {
         const query = await createQuery({
           fields: {
-            sql: "SELECT * FROM test_table",
+            sql: client("test_table").select("*").toString(),
           },
         })
 
@@ -212,7 +216,7 @@ describe.each(
         datasourceId: datasource._id!,
         queryVerb: "read",
         fields: {
-          sql: `SELECT * FROM test_table WHERE id = 1`,
+          sql: client("test_table").where({ id: 1 }).toString(),
         },
         parameters: [],
         transformer: "return data",
@@ -270,7 +274,7 @@ describe.each(
         name: "Test Query",
         queryVerb: "read",
         fields: {
-          sql: `SELECT * FROM ${tableName}`,
+          sql: client(tableName).select("*").toString(),
         },
         parameters: [],
         transformer: "return data",
@@ -284,11 +288,13 @@ describe.each(
         })
       )
 
+      await client(tableName).delete()
       await client.schema.alterTable(tableName, table => {
         table.string("data").alter()
       })
 
-      await client(tableName).update({
+      await client(tableName).insert({
+        name: "test",
         data: "string value",
       })
 
@@ -297,7 +303,7 @@ describe.each(
         name: "Test Query",
         queryVerb: "read",
         fields: {
-          sql: `SELECT * FROM ${tableName}`,
+          sql: client(tableName).select("*").toString(),
         },
         parameters: [],
         transformer: "return data",
@@ -311,6 +317,7 @@ describe.each(
         })
       )
     })
+
     it("should work with static variables", async () => {
       await config.api.datasource.update({
         ...datasource,
@@ -326,7 +333,7 @@ describe.each(
         datasourceId: datasource._id!,
         queryVerb: "read",
         fields: {
-          sql: `SELECT '{{ foo }}' as foo`,
+          sql: `SELECT '{{ foo }}' AS foo ${isOracle ? "FROM dual" : ""}`,
         },
         parameters: [],
         transformer: "return data",
@@ -337,16 +344,17 @@ describe.each(
 
       const response = await config.api.query.preview(request)
 
+      let key = isOracle ? "FOO" : "foo"
       expect(response.schema).toEqual({
-        foo: {
-          name: "foo",
+        [key]: {
+          name: key,
           type: "string",
         },
       })
 
       expect(response.rows).toEqual([
         {
-          foo: "bar",
+          [key]: "bar",
         },
       ])
     })
@@ -354,7 +362,7 @@ describe.each(
     it("should work with dynamic variables", async () => {
       const basedOnQuery = await createQuery({
         fields: {
-          sql: "SELECT name FROM test_table WHERE id = 1",
+          sql: client("test_table").select("name").where({ id: 1 }).toString(),
         },
       })
 
@@ -376,7 +384,7 @@ describe.each(
         datasourceId: datasource._id!,
         queryVerb: "read",
         fields: {
-          sql: `SELECT '{{ foo }}' as foo`,
+          sql: `SELECT '{{ foo }}' AS foo ${isOracle ? "FROM dual" : ""}`,
         },
         parameters: [],
         transformer: "return data",
@@ -385,16 +393,17 @@ describe.each(
         readable: true,
       })
 
+      let key = isOracle ? "FOO" : "foo"
       expect(preview.schema).toEqual({
-        foo: {
-          name: "foo",
+        [key]: {
+          name: key,
           type: "string",
         },
       })
 
       expect(preview.rows).toEqual([
         {
-          foo: "one",
+          [key]: "one",
         },
       ])
     })
@@ -402,7 +411,7 @@ describe.each(
     it("should handle the dynamic base query being deleted", async () => {
       const basedOnQuery = await createQuery({
         fields: {
-          sql: "SELECT name FROM test_table WHERE id = 1",
+          sql: client("test_table").select("name").where({ id: 1 }).toString(),
         },
       })
 
@@ -426,7 +435,7 @@ describe.each(
         datasourceId: datasource._id!,
         queryVerb: "read",
         fields: {
-          sql: `SELECT '{{ foo }}' as foo`,
+          sql: `SELECT '{{ foo }}' AS foo ${isOracle ? "FROM dual" : ""}`,
         },
         parameters: [],
         transformer: "return data",
@@ -435,16 +444,17 @@ describe.each(
         readable: true,
       })
 
+      let key = isOracle ? "FOO" : "foo"
       expect(preview.schema).toEqual({
-        foo: {
-          name: "foo",
+        [key]: {
+          name: key,
           type: "string",
         },
       })
 
       expect(preview.rows).toEqual([
         {
-          foo: datasource.source === SourceName.SQL_SERVER ? "" : null,
+          [key]: datasource.source === SourceName.SQL_SERVER ? "" : null,
         },
       ])
     })
@@ -455,7 +465,7 @@ describe.each(
       it("should be able to insert with bindings", async () => {
         const query = await createQuery({
           fields: {
-            sql: "INSERT INTO test_table (name) VALUES ({{ foo }})",
+            sql: client("test_table").insert({ name: "{{ foo }}" }).toString(),
           },
           parameters: [
             {
@@ -488,7 +498,7 @@ describe.each(
       it("should not allow handlebars as parameters", async () => {
         const query = await createQuery({
           fields: {
-            sql: "INSERT INTO test_table (name) VALUES ({{ foo }})",
+            sql: client("test_table").insert({ name: "{{ foo }}" }).toString(),
           },
           parameters: [
             {
@@ -516,46 +526,55 @@ describe.each(
         )
       })
 
-      it.each(["2021-02-05T12:01:00.000Z", "2021-02-05"])(
-        "should coerce %s into a date",
-        async datetimeStr => {
-          const date = new Date(datetimeStr)
-          const query = await createQuery({
-            fields: {
-              sql: `INSERT INTO test_table (name, birthday) VALUES ('foo', {{ birthday }})`,
-            },
-            parameters: [
-              {
-                name: "birthday",
-                default: "",
+      // Oracle doesn't automatically coerce strings into dates.
+      !isOracle &&
+        it.each(["2021-02-05T12:01:00.000Z", "2021-02-05"])(
+          "should coerce %s into a date",
+          async datetimeStr => {
+            const date = new Date(datetimeStr)
+            const query = await createQuery({
+              fields: {
+                sql: client("test_table")
+                  .insert({
+                    name: "foo",
+                    birthday: client.raw("{{ birthday }}"),
+                  })
+                  .toString(),
               },
-            ],
-            queryVerb: "create",
-          })
+              parameters: [
+                {
+                  name: "birthday",
+                  default: "",
+                },
+              ],
+              queryVerb: "create",
+            })
 
-          const result = await config.api.query.execute(query._id!, {
-            parameters: { birthday: datetimeStr },
-          })
+            const result = await config.api.query.execute(query._id!, {
+              parameters: { birthday: datetimeStr },
+            })
 
-          expect(result.data).toEqual([{ created: true }])
+            expect(result.data).toEqual([{ created: true }])
 
-          const rows = await client("test_table")
-            .where({ birthday: datetimeStr })
-            .select()
-          expect(rows).toHaveLength(1)
+            const rows = await client("test_table")
+              .where({ birthday: datetimeStr })
+              .select()
+            expect(rows).toHaveLength(1)
 
-          for (const row of rows) {
-            expect(new Date(row.birthday)).toEqual(date)
+            for (const row of rows) {
+              expect(new Date(row.birthday)).toEqual(date)
+            }
           }
-        }
-      )
+        )
 
       it.each(["2021,02,05", "202205-1500"])(
         "should not coerce %s as a date",
         async notDateStr => {
           const query = await createQuery({
             fields: {
-              sql: "INSERT INTO test_table (name) VALUES ({{ name }})",
+              sql: client("test_table")
+                .insert({ name: client.raw("{{ name }}") })
+                .toString(),
             },
             parameters: [
               {
@@ -586,7 +605,7 @@ describe.each(
       it("should execute a query", async () => {
         const query = await createQuery({
           fields: {
-            sql: "SELECT * FROM test_table ORDER BY id",
+            sql: client("test_table").select("*").orderBy("id").toString(),
           },
         })
 
@@ -629,7 +648,7 @@ describe.each(
       it("should be able to transform a query", async () => {
         const query = await createQuery({
           fields: {
-            sql: "SELECT * FROM test_table WHERE id = 1",
+            sql: client("test_table").where({ id: 1 }).select("*").toString(),
           },
           transformer: `
             data[0].id = data[0].id + 1;
@@ -652,7 +671,10 @@ describe.each(
       it("should coerce numeric bindings", async () => {
         const query = await createQuery({
           fields: {
-            sql: "SELECT * FROM test_table WHERE id = {{ id }}",
+            sql: client("test_table")
+              .where({ id: client.raw("{{ id }}") })
+              .select("*")
+              .toString(),
           },
           parameters: [
             {
@@ -683,7 +705,10 @@ describe.each(
       it("should be able to update rows", async () => {
         const query = await createQuery({
           fields: {
-            sql: "UPDATE test_table SET name = {{ name }} WHERE id = {{ id }}",
+            sql: client("test_table")
+              .update({ name: client.raw("{{ name }}") })
+              .where({ id: client.raw("{{ id }}") })
+              .toString(),
           },
           parameters: [
             {
@@ -698,18 +723,12 @@ describe.each(
           queryVerb: "update",
         })
 
-        const result = await config.api.query.execute(query._id!, {
+        await config.api.query.execute(query._id!, {
           parameters: {
             id: "1",
             name: "foo",
           },
         })
-
-        expect(result.data).toEqual([
-          {
-            updated: true,
-          },
-        ])
 
         const rows = await client("test_table").where({ id: 1 }).select()
         expect(rows).toEqual([
@@ -720,35 +739,34 @@ describe.each(
       it("should be able to execute an update that updates no rows", async () => {
         const query = await createQuery({
           fields: {
-            sql: "UPDATE test_table SET name = 'updated' WHERE id = 100",
+            sql: client("test_table")
+              .update({ name: "updated" })
+              .where({ id: 100 })
+              .toString(),
           },
           queryVerb: "update",
         })
 
-        const result = await config.api.query.execute(query._id!)
+        await config.api.query.execute(query._id!)
 
-        expect(result.data).toEqual([
-          {
-            updated: true,
-          },
-        ])
+        const rows = await client("test_table").select()
+        for (const row of rows) {
+          expect(row.name).not.toEqual("updated")
+        }
       })
 
       it("should be able to execute a delete that deletes no rows", async () => {
         const query = await createQuery({
           fields: {
-            sql: "DELETE FROM test_table WHERE id = 100",
+            sql: client("test_table").where({ id: 100 }).delete().toString(),
           },
           queryVerb: "delete",
         })
 
-        const result = await config.api.query.execute(query._id!)
+        await config.api.query.execute(query._id!)
 
-        expect(result.data).toEqual([
-          {
-            deleted: true,
-          },
-        ])
+        const rows = await client("test_table").select()
+        expect(rows).toHaveLength(5)
       })
     })
 
@@ -756,7 +774,10 @@ describe.each(
       it("should be able to delete rows", async () => {
         const query = await createQuery({
           fields: {
-            sql: "DELETE FROM test_table WHERE id = {{ id }}",
+            sql: client("test_table")
+              .where({ id: client.raw("{{ id }}") })
+              .delete()
+              .toString(),
           },
           parameters: [
             {
@@ -767,17 +788,11 @@ describe.each(
           queryVerb: "delete",
         })
 
-        const result = await config.api.query.execute(query._id!, {
+        await config.api.query.execute(query._id!, {
           parameters: {
             id: "1",
           },
         })
-
-        expect(result.data).toEqual([
-          {
-            deleted: true,
-          },
-        ])
 
         const rows = await client("test_table").where({ id: 1 }).select()
         expect(rows).toHaveLength(0)
@@ -823,72 +838,63 @@ describe.each(
       })
     })
 
-    it("should be able to execute an update that updates no rows", async () => {
-      const query = await createQuery({
-        fields: {
-          sql: "UPDATE test_table SET name = 'updated' WHERE id = 100",
-        },
-        queryVerb: "update",
+    // this parameter really only impacts SQL queries
+    describe("confirm nullDefaultSupport", () => {
+      let queryParams: Partial<Query>
+      beforeAll(async () => {
+        queryParams = {
+          fields: {
+            sql: client("test_table")
+              .insert({
+                name: client.raw("{{ bindingName }}"),
+                number: client.raw("{{ bindingNumber }}"),
+              })
+              .toString(),
+          },
+          parameters: [
+            {
+              name: "bindingName",
+              default: "",
+            },
+            {
+              name: "bindingNumber",
+              default: "",
+            },
+          ],
+          queryVerb: "create",
+        }
       })
 
-      const result = await config.api.query.execute(query._id!, {})
+      it("should error for old queries", async () => {
+        const query = await createQuery(queryParams)
+        await config.api.query.save({ ...query, nullDefaultSupport: false })
+        let error: string | undefined
+        try {
+          await config.api.query.execute(query._id!, {
+            parameters: {
+              bindingName: "testing",
+            },
+          })
+        } catch (err: any) {
+          error = err.message
+        }
+        if (isMsSQL || isOracle) {
+          expect(error).toBeUndefined()
+        } else {
+          expect(error).toBeDefined()
+          expect(error).toContain("integer")
+        }
+      })
 
-      expect(result.data).toEqual([
-        {
-          updated: true,
-        },
-      ])
-    })
-  })
-
-  // this parameter really only impacts SQL queries
-  describe("confirm nullDefaultSupport", () => {
-    const queryParams = {
-      fields: {
-        sql: "INSERT INTO test_table (name, number) VALUES ({{ bindingName }}, {{ bindingNumber }})",
-      },
-      parameters: [
-        {
-          name: "bindingName",
-          default: "",
-        },
-        {
-          name: "bindingNumber",
-          default: "",
-        },
-      ],
-      queryVerb: "create",
-    }
-
-    it("should error for old queries", async () => {
-      const query = await createQuery(queryParams)
-      await config.api.query.save({ ...query, nullDefaultSupport: false })
-      let error: string | undefined
-      try {
-        await config.api.query.execute(query._id!, {
+      it("should not error for new queries", async () => {
+        const query = await createQuery(queryParams)
+        const results = await config.api.query.execute(query._id!, {
           parameters: {
             bindingName: "testing",
           },
         })
-      } catch (err: any) {
-        error = err.message
-      }
-      if (dbName === "mssql") {
-        expect(error).toBeUndefined()
-      } else {
-        expect(error).toBeDefined()
-        expect(error).toContain("integer")
-      }
-    })
-
-    it("should not error for new queries", async () => {
-      const query = await createQuery(queryParams)
-      const results = await config.api.query.execute(query._id!, {
-        parameters: {
-          bindingName: "testing",
-        },
+        expect(results).toEqual({ data: [{ created: true }] })
       })
-      expect(results).toEqual({ data: [{ created: true }] })
     })
   })
 })

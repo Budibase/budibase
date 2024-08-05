@@ -19,12 +19,11 @@ import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../../api/controllers/row/utils"
+import sdk from "../../../../index"
 import {
-  decodeNonAscii,
   mapToUserColumn,
   USER_COLUMN_PREFIX,
 } from "../../../tables/internal/sqs"
-import sdk from "../../../../index"
 import {
   context,
   sql,
@@ -41,7 +40,11 @@ import {
   getRelationshipColumns,
   getTableIDList,
 } from "../filters"
-import { dataFilters, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
+import {
+  dataFilters,
+  helpers,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
 import { isSearchingByRowID } from "../utils"
 import tracer from "dd-trace"
 
@@ -174,7 +177,7 @@ function reverseUserColumnMapping(rows: Row[]) {
       if (index !== -1) {
         // cut out the prefix
         const newKey = key.slice(0, index) + key.slice(index + prefixLength)
-        const decoded = decodeNonAscii(newKey)
+        const decoded = helpers.schema.decodeNonAscii(newKey)
         finalRow[decoded] = row[key]
       } else {
         finalRow[key] = row[key]

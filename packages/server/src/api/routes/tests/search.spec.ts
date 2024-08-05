@@ -48,6 +48,7 @@ describe.each([
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -1594,7 +1595,10 @@ describe.each([
     const MEDIUM = "10000000"
 
     // Our bigints are int64s in most datasources.
-    const BIG = "9223372036854775807"
+    let BIG = "9223372036854775807"
+    if (name === DatabaseName.ORACLE) {
+      // BIG = "9223372036854775808"
+    }
 
     beforeAll(async () => {
       table = await createTable({
