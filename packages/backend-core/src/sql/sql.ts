@@ -369,6 +369,25 @@ class InternalBuilder {
       }
     }
 
+    if (filters.$and) {
+      iterate(filters.$and, (key: string, conditions: any[]) => {
+        query = query.where(x => {
+          for (const condition of conditions) {
+            x = this.addFilters(x, condition, table, opts)
+          }
+        })
+      })
+    }
+
+    if (filters.$or) {
+      const { $or } = filters
+      query = query.where(x => {
+        for (const condition of $or.conditions) {
+          x = this.addFilters(x, { ...condition, allOr: true }, table, opts)
+        }
+      })
+    }
+
     if (filters.oneOf) {
       const fnc = allOr ? "orWhereIn" : "whereIn"
       iterate(
