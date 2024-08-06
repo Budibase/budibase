@@ -400,7 +400,9 @@ class OracleIntegration extends Sql implements DatasourcePlus {
             if (oracleConstraint.type === OracleContraintTypes.PRIMARY) {
               table.primary!.push(columnName)
             } else if (
-              oracleConstraint.type === OracleContraintTypes.NOT_NULL_OR_CHECK
+              oracleConstraint.type ===
+                OracleContraintTypes.NOT_NULL_OR_CHECK &&
+              oracleConstraint.searchCondition?.endsWith("IS NOT NULL")
             ) {
               table.schema[columnName].constraints = {
                 presence: true,
