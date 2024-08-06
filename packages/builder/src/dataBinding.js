@@ -56,6 +56,7 @@ export const getBindableProperties = (asset, componentId) => {
   const stateBindings = getStateBindings()
   const selectedRowsBindings = getSelectedRowsBindings(asset)
   const roleBindings = getRoleBindings()
+  const embedBindings = getEmbedBindings()
   return [
     ...contextBindings,
     ...urlBindings,
@@ -64,6 +65,7 @@ export const getBindableProperties = (asset, componentId) => {
     ...deviceBindings,
     ...selectedRowsBindings,
     ...roleBindings,
+    ...embedBindings,
   ]
 }
 
@@ -820,6 +822,26 @@ export const getActionBindings = (actions, actionId) => {
       })
     }
   })
+  return bindings
+}
+
+/**
+ * Gets all device bindings for embeds.
+ */
+const getEmbedBindings = () => {
+  let bindings = []
+  const safeEmbed = makePropSafe("embed")
+
+  bindings = [
+    {
+      type: "context",
+      runtimeBinding: `${safeEmbed}.`,
+      readableBinding: `ParentData`,
+      category: "Embed",
+      icon: "DevicePhone",
+      display: { type: "object", name: "Parent Data" },
+    },
+  ]
   return bindings
 }
 
