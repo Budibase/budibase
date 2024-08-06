@@ -25,7 +25,6 @@ import {
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import nock from "nock"
 import { Knex } from "knex"
-import { uuid } from "@budibase/backend-core/tests/core/utilities/structures"
 
 describe("/datasources", () => {
   const config = setup.getConfig()
@@ -443,9 +442,9 @@ describe("/datasources", () => {
       })
     })
 
-    describe.only("info", () => {
+    describe("info", () => {
       it("should fetch information about a datasource with a single table", async () => {
-        const tableName = uuid()
+        const tableName = generator.guid()
         await client.schema.createTable(tableName, table => {
           table.increments("id").primary()
           table.string("name")
@@ -456,7 +455,12 @@ describe("/datasources", () => {
       })
 
       it("should fetch information about a datasource with multiple tables", async () => {
-        const tableNames = [uuid(), uuid(), uuid(), uuid()]
+        const tableNames = [
+          generator.guid(),
+          generator.guid(),
+          generator.guid(),
+          generator.guid(),
+        ]
         for (const tableName of tableNames) {
           await client.schema.createTable(tableName, table => {
             table.increments("id").primary()
