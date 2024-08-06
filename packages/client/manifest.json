@@ -146,32 +146,6 @@
         "defaultValue": "flex"
       },
       {
-        "type": "number",
-        "label": "Columns",
-        "key": "cols",
-        "placeholder": 12,
-        "defaultValue": 12,
-        "min": 2,
-        "max": 50,
-        "dependsOn": {
-          "setting": "layout",
-          "value": "grid"
-        }
-      },
-      {
-        "type": "number",
-        "label": "Rows",
-        "key": "rows",
-        "placeholder": 12,
-        "defaultValue": 12,
-        "min": 2,
-        "max": 50,
-        "dependsOn": {
-          "setting": "layout",
-          "value": "grid"
-        }
-      },
-      {
         "type": "select",
         "label": "Direction",
         "key": "direction",
