@@ -414,6 +414,9 @@
     color: var(--navTextColor);
     opacity: 1;
   }
+  .layout:has(.screenslot-dom > .component > .grid) .nav {
+    padding: 24px 42px 20px 42px;
+  }
 
   .nav :global(h1) {
     color: var(--navTextColor);
@@ -480,10 +483,7 @@
     position: relative;
     padding: 32px;
   }
-  /*  .main:has(.screenslot-dom > .component > .grid) {
-    padding-top: 0;
-    padding-bottom: 0;
-  }*/
+
   .layout--none .main {
     padding: 0;
   }
