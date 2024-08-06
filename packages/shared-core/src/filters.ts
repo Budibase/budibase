@@ -17,6 +17,7 @@ import {
   Table,
   BasicOperator,
   RangeOperator,
+  LogicalOperator,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -358,6 +359,11 @@ export const buildQuery = (filter: SearchFilter[]) => {
           high: value,
         }
       }
+    } else if (
+      queryOperator === LogicalOperator.AND ||
+      queryOperator === LogicalOperator.OR
+    ) {
+      // TODO
     } else if (query[queryOperator] && operator !== "onEmptyFilter") {
       if (type === "boolean") {
         // Transform boolean filters to cope with null.
@@ -666,8 +672,26 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   )
   const containsAny = match(ArrayOperator.CONTAINS_ANY, _contains("some"))
 
+  const and = match(
+    LogicalOperator.AND,
+    (_docValue: Record<string, any>, _testValue: any) => {
+      // TODO
+      return false
+    }
+  )
+  const or = match(
+    LogicalOperator.AND,
+    (_docValue: Record<string, any>, _testValue: any) => {
+      // TODO
+      return false
+    }
+  )
+
   const docMatch = (doc: Record<string, any>) => {
-    const filterFunctions = {
+    const filterFunctions: Record<
+      SearchFilterOperator,
+      (doc: Record<string, any>) => boolean
+    > = {
       string: stringMatch,
       fuzzy: fuzzyMatch,
       range: rangeMatch,
@@ -679,6 +703,8 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       contains: contains,
       containsAny: containsAny,
       notContains: notContains,
+      [LogicalOperator.AND]: and,
+      [LogicalOperator.OR]: or,
     }
 
     const results = Object.entries(query || {})
