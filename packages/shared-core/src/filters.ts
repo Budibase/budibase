@@ -464,14 +464,18 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     ) =>
     (doc: Record<string, any>) => {
       for (const [key, testValue] of Object.entries(query[type] || {})) {
-        const result = test(deepGet(doc, removeKeyNumbering(key)), testValue)
+        const valueToCheck =
+          type === LogicalOperator.AND || type === LogicalOperator.OR
+            ? doc
+            : deepGet(doc, removeKeyNumbering(key))
+        const result = test(valueToCheck, testValue)
         if (query.allOr && result) {
           return true
         } else if (!query.allOr && !result) {
           return false
         }
       }
-      return true
+      return !query.allOr
     }
 
   const stringMatch = match(
@@ -674,15 +678,34 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
 
   const and = match(
     LogicalOperator.AND,
-    (_docValue: Record<string, any>, _testValue: any) => {
-      // TODO
-      return false
+    (docValue: Record<string, any>, conditions: any) => {
+      if (!conditions.length) {
+        return false
+      }
+      for (const condition of conditions) {
+        const matchesCondition = runQuery([docValue], condition)
+        if (!matchesCondition.length) {
+          return false
+        }
+      }
+      return true
     }
   )
   const or = match(
-    LogicalOperator.AND,
-    (_docValue: Record<string, any>, _testValue: any) => {
-      // TODO
+    LogicalOperator.OR,
+    (docValue: Record<string, any>, conditions: any) => {
+      if (!conditions.length) {
+        return false
+      }
+      for (const condition of conditions) {
+        const matchesCondition = runQuery([docValue], {
+          ...condition,
+          allOr: true,
+        })
+        if (matchesCondition.length) {
+          return true
+        }
+      }
       return false
     }
   )
