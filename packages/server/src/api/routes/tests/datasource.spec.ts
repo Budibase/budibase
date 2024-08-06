@@ -444,6 +444,10 @@ describe("/datasources", () => {
 
     describe("info", () => {
       it("should fetch information about a datasource with a single table", async () => {
+        const existingTableNames = (
+          await config.api.datasource.info(datasource)
+        ).tableNames
+
         const tableName = generator.guid()
         await client.schema.createTable(tableName, table => {
           table.increments("id").primary()
@@ -451,10 +455,17 @@ describe("/datasources", () => {
         })
 
         const info = await config.api.datasource.info(datasource)
-        expect(info.tableNames).toEqual([tableName])
+        expect(info.tableNames).toEqual(
+          expect.arrayContaining([tableName, ...existingTableNames])
+        )
+        expect(info.tableNames).toHaveLength(existingTableNames.length + 1)
       })
 
       it("should fetch information about a datasource with multiple tables", async () => {
+        const existingTableNames = (
+          await config.api.datasource.info(datasource)
+        ).tableNames
+
         const tableNames = [
           generator.guid(),
           generator.guid(),
@@ -469,7 +480,12 @@ describe("/datasources", () => {
         }
 
         const info = await config.api.datasource.info(datasource)
-        expect(info.tableNames).toEqual(expect.arrayContaining(tableNames))
+        expect(info.tableNames).toEqual(
+          expect.arrayContaining([...tableNames, ...existingTableNames])
+        )
+        expect(info.tableNames).toHaveLength(
+          existingTableNames.length + tableNames.length
+        )
       })
     })
   })
