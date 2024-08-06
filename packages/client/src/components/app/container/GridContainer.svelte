@@ -54,6 +54,20 @@
     position: relative;
     height: 400px;
     --spacing: 10;
+
+    /*
+      Prevent cross-grid variable inheritance. The other variables for alignment
+      are always set on each component, so we don't need to worry about
+      inheritance.
+    */
+    --grid-desktop-col-start: initial;
+    --grid-desktop-col-end: initial;
+    --grid-desktop-row-start: initial;
+    --grid-desktop-row-end: initial;
+    --grid-mobile-col-start: initial;
+    --grid-mobile-col-end: initial;
+    --grid-mobile-row-start: initial;
+    --grid-mobile-row-end: initial;
   }
 
   .grid,
