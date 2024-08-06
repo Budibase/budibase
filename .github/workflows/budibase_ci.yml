@@ -147,7 +147,7 @@ jobs:
           fi
 
   test-server:
-    runs-on: budi-tubby-tornado-quad-core-150gb
+    runs-on: budi-tubby-tornado-quad-core-300gb
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
