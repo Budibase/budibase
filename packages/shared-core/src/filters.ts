@@ -678,7 +678,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
 
   const and = match(
     LogicalOperator.AND,
-    (docValue: Record<string, any>, conditions: any) => {
+    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
       if (!conditions.length) {
         return false
       }
@@ -693,7 +693,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   )
   const or = match(
     LogicalOperator.OR,
-    (docValue: Record<string, any>, conditions: any) => {
+    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
       if (!conditions.length) {
         return false
       }
