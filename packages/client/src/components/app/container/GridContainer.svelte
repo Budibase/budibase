@@ -2,19 +2,18 @@
   import { getContext } from "svelte"
 
   const component = getContext("component")
-  const { styleable, builderStore } = getContext("sdk")
+  const { styleable } = getContext("sdk")
   const context = getContext("context")
 
-  export let cols = 12
-  export let rows = 12
+  const cols = 12
+  const rowHeight = 24
 
   let width
   let height
 
-  $: cols = cols || 12
-  $: rows = rows || 12
   $: mobile = $context.device.mobile
   $: empty = $component.empty
+  $: rows = Math.max(1, Math.floor(height / rowHeight))
   $: colSize = width / cols
   $: rowSize = height / rows
 </script>
@@ -22,7 +21,6 @@
 <div
   class="grid"
   class:mobile
-  class:builder={$builderStore.inBuilder}
   bind:clientWidth={width}
   bind:clientHeight={height}
   use:styleable={{
@@ -39,13 +37,11 @@
   data-rows={rows}
   data-cols={cols}
 >
-  {#if $builderStore.inBuilder}
-    <div class="underlay">
-      {#each { length: cols * rows } as _}
-        <div class="placeholder" />
-      {/each}
-    </div>
-  {/if}
+  <div class="underlay">
+    {#each { length: cols * rows } as _}
+      <div class="placeholder" />
+    {/each}
+  </div>
 
   <!-- Only render the slot if not empty, as we don't want the placeholder -->
   {#if !empty}
@@ -57,32 +53,53 @@
   .grid {
     position: relative;
     height: 400px;
-    gap: 0;
+    --spacing: 10;
   }
-  .grid.builder {
-    background: var(--spectrum-alias-background-color-secondary);
-  }
+
   .grid,
   .underlay {
     display: grid;
     grid-template-rows: repeat(var(--rows), 1fr);
     grid-template-columns: repeat(var(--cols), 1fr);
+    gap: 0;
   }
   .underlay {
+    display: none;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    border: 1px solid var(--spectrum-global-color-gray-900);
-    opacity: 0.07;
+    border-top: 1px solid var(--spectrum-global-color-gray-900);
+    border-left: 1px solid var(--spectrum-global-color-gray-900);
+    opacity: 0.1;
     pointer-events: none;
   }
   .underlay {
     z-index: 0;
   }
   .placeholder {
-    border: 1px solid var(--spectrum-global-color-gray-900);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-900);
+    border-right: 1px solid var(--spectrum-global-color-gray-900);
+  }
+
+  /* Highlight grid lines when resizing children */
+  :global(.grid.highlight > .underlay) {
+    display: grid;
+  }
+
+  /* Highlight sibling borders when resizing childern */
+  :global(.grid.highlight > .component:not(.dragging):after) {
+    content: "";
+    display: block;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    border: 1px solid var(--spectrum-global-color-static-blue-200);
+    pointer-events: none;
+    z-index: 1;
+    top: 0;
+    left: 0;
   }
 
   /* Ensure all top level children have grid styles applied */
@@ -90,6 +107,9 @@
     display: flex;
     overflow: auto;
     pointer-events: all;
+    position: relative;
+    padding: 5px;
+    margin: 5px;
 
     /* On desktop, use desktop metadata and fall back to mobile */
     /* Position vars */
@@ -98,7 +118,12 @@
       --grid-desktop-col-end,
       var(
         --grid-mobile-col-end,
-        round(up, calc(var(--default-width) / var(--col-size) + 1))
+        round(
+          up,
+          calc(
+            (var(--spacing) * 2 + var(--default-width)) / var(--col-size) + 1
+          )
+        )
       )
     );
     --row-start: var(--grid-desktop-row-start, var(--grid-mobile-row-start, 1));
@@ -106,7 +131,12 @@
       --grid-desktop-row-end,
       var(
         --grid-mobile-row-end,
-        round(up, calc(var(--default-height) / var(--row-size) + 1))
+        round(
+          up,
+          calc(
+            (var(--spacing) * 2 + var(--default-height)) / var(--row-size) + 1
+          )
+        )
       )
     );
 
@@ -137,7 +167,12 @@
       --grid-mobile-col-end,
       var(
         --grid-desktop-col-end,
-        round(up, calc(var(--default-width) / var(--col-size) + 1))
+        round(
+          up,
+          calc(
+            (var(--spacing) * 2 + var(--default-width)) / var(--col-size) + 1
+          )
+        )
       )
     );
     --row-start: var(--grid-mobile-row-start, var(--grid-desktop-row-start, 1));
@@ -145,7 +180,12 @@
       --grid-mobile-row-end,
       var(
         --grid-desktop-row-end,
-        round(up, calc(var(--default-height) / var(--row-size) + 1))
+        round(
+          up,
+          calc(
+            (var(--spacing) * 2 + var(--default-height)) / var(--row-size) + 1
+          )
+        )
       )
     );
 

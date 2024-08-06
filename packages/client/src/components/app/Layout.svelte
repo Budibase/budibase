@@ -480,10 +480,10 @@
     position: relative;
     padding: 32px;
   }
-  .main:has(.screenslot-dom > .component > .grid) {
+  /*  .main:has(.screenslot-dom > .component > .grid) {
     padding-top: 0;
     padding-bottom: 0;
-  }
+  }*/
   .layout--none .main {
     padding: 0;
   }

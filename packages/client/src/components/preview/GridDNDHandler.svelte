@@ -4,7 +4,7 @@
   import { Utils, memo } from "@budibase/frontend-core"
   import {
     isGridEvent,
-    getGridParentID,
+    getGridParent,
     GridParams,
     getGridVar,
   } from "utils/grid"
@@ -62,6 +62,9 @@
     const { startX, startY, rowStart, rowEnd, colStart, colEnd } = grid
 
     const domGrid = getDOMNode(gridId)
+    if (!domGrid) {
+      return
+    }
     const cols = parseInt(domGrid.dataset.cols)
     const rows = parseInt(domGrid.dataset.rows)
     const { width, height } = domGrid.getBoundingClientRect()
@@ -107,7 +110,7 @@
       }
       gridStyles.set(newStyles)
     }
-  }, 100)
+  }, 10)
 
   const handleEvent = e => {
     e.preventDefault()
@@ -140,16 +143,20 @@
 
     // Find grid parent
     const domComponent = getDOMNode(id)
-    const gridId = getGridParentID(domComponent)
-    if (!gridId) {
+    const domGrid = getGridParent(domComponent)
+    if (!domGrid) {
       return
     }
+
+    // Apply active class to grid
+    domComponent.parentNode.classList.add("dragging")
+    domGrid.classList.add("highlight")
 
     // Update state
     dragInfo = {
       domTarget: e.target,
       id,
-      gridId,
+      gridId: domGrid.parentNode.dataset.id,
       mode,
       side,
     }
@@ -168,22 +175,23 @@
     const { id, gridId } = dragInfo
     const domComponent = getDOMNode(id)
     const domGrid = getDOMNode(gridId)
+    if (!domComponent || !domGrid) {
+      return
+    }
     const gridCols = parseInt(domGrid.dataset.cols)
     const gridRows = parseInt(domGrid.dataset.rows)
     const styles = getComputedStyle(domComponent.parentNode)
-    if (domGrid) {
-      dragInfo.grid = {
-        startX: e.clientX,
-        startY: e.clientY,
+    dragInfo.grid = {
+      startX: e.clientX,
+      startY: e.clientY,
 
-        // Ensure things are within limits
-        rowStart: minMax(styles["grid-row-start"], 1, gridRows),
-        rowEnd: minMax(styles["grid-row-end"], 2, gridRows + 1),
-        colStart: minMax(styles["grid-column-start"], 1, gridCols),
-        colEnd: minMax(styles["grid-column-end"], 2, gridCols + 1),
-      }
-      handleEvent(e)
+      // Ensure things are within limits
+      rowStart: minMax(styles["grid-row-start"], 1, gridRows),
+      rowEnd: minMax(styles["grid-row-end"], 2, gridRows + 1),
+      colStart: minMax(styles["grid-column-start"], 1, gridCols),
+      colEnd: minMax(styles["grid-column-end"], 2, gridCols + 1),
     }
+    handleEvent(e)
   }
 
   const onDragOver = e => {
@@ -195,15 +203,26 @@
 
   // Callback when drag stops (whether dropped or not)
   const stopDragging = async () => {
+    if (!dragInfo) {
+      return
+    }
+    const { id, gridId, domTarget } = dragInfo
+
     // Save changes
     if ($gridStyles) {
-      await builderStore.actions.updateStyles($gridStyles, dragInfo.id)
+      await builderStore.actions.updateStyles($gridStyles, id)
     }
 
-    // Reset listener
-    if (dragInfo?.domTarget) {
-      dragInfo.domTarget.removeEventListener("dragend", stopDragging)
+    // Reset DOM
+    const domComponent = getDOMNode(id)
+    if (domComponent) {
+      domComponent.parentNode.classList.remove("dragging")
     }
+    const domGrid = getDOMNode(gridId)
+    if (domGrid) {
+      domGrid.classList.remove("highlight")
+    }
+    domTarget.removeEventListener("dragend", stopDragging)
 
     // Reset state
     dragInfo = null

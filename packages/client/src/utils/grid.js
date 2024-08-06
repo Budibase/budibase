@@ -60,8 +60,8 @@ export const isGridChild = node => {
 }
 
 // Gets the component ID of the closest parent grid
-export const getGridParentID = node => {
-  return node?.parentNode?.closest(".grid")?.parentNode.dataset.id
+export const getGridParent = node => {
+  return node?.parentNode?.closest(".grid")
 }
 
 // Svelte action to apply required class names and styles to our component
