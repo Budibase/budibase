@@ -2825,7 +2825,7 @@
       "UpdateFieldValue",
       "ScrollTo"
     ],
-    "styles": ["size"],
+    "styles": ["padding", "size", "background", "border", "shadow"],
     "size": {
       "width": 400,
       "height": 400
@@ -6804,7 +6804,7 @@
       "hAlign": "stretch",
       "vAlign": "start"
     },
-    "styles": ["size"],
+    "styles": ["padding", "size", "background", "border", "shadow"],
     "settings": [
       {
         "type": "table",
@@ -6988,7 +6988,7 @@
   "formblock": {
     "name": "Form Block",
     "icon": "Form",
-    "styles": ["size"],
+    "styles": ["padding", "size", "background", "border", "shadow"],
     "block": true,
     "info": "Form blocks are only compatible with internal or SQL tables",
     "size": {
