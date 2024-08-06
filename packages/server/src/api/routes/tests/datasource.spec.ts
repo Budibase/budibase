@@ -164,6 +164,7 @@ describe("/datasources", () => {
     [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
     [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
     [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+    [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
   ])("%s", (_, dsProvider) => {
     let rawDatasource: Datasource
     beforeEach(async () => {
@@ -285,9 +286,6 @@ describe("/datasources", () => {
           [FieldType.STRING]: {
             name: stringName,
             type: FieldType.STRING,
-            constraints: {
-              presence: true,
-            },
           },
           [FieldType.LONGFORM]: {
             name: "longform",
@@ -381,10 +379,6 @@ describe("/datasources", () => {
                   ),
                   schema: Object.entries(table.schema).reduce<TableSchema>(
                     (acc, [fieldName, field]) => {
-                      // the constraint will be unset - as the DB doesn't recognise it as not null
-                      if (fieldName === stringName) {
-                        field.constraints = {}
-                      }
                       acc[fieldName] = expect.objectContaining({
                         ...field,
                       })
@@ -441,7 +435,7 @@ describe("/datasources", () => {
     })
 
     describe("info", () => {
-      it("should fetch information about postgres datasource", async () => {
+      it("should fetch information about a datasource", async () => {
         const table = await config.api.table.save(
           tableForDatasource(datasource, {
             schema: {
