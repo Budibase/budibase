@@ -6,7 +6,6 @@
     Checkbox,
     Banner,
     Select,
-    Stepper,
     notifications,
   } from "@budibase/bbui"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
