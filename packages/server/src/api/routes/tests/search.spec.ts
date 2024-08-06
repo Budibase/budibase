@@ -2697,7 +2697,7 @@ describe.each([
       })
     })
 
-  isSql &&
+  !isLucene &&
     describe("$and", () => {
       beforeAll(async () => {
         table = await createTable({
@@ -2771,7 +2771,7 @@ describe.each([
       })
     })
 
-  isSql &&
+  !isLucene &&
     describe("$or", () => {
       beforeAll(async () => {
         table = await createTable({
