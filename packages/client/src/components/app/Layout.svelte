@@ -406,6 +406,9 @@
     max-width: 100%;
     gap: var(--spacing-xl);
   }
+  .nav.size--max {
+    padding: 10px;
+  }
   .nav :global(.spectrum-Icon) {
     color: var(--navTextColor);
     opacity: 0.75;
@@ -414,10 +417,6 @@
     color: var(--navTextColor);
     opacity: 1;
   }
-  .layout:has(.screenslot-dom > .component > .grid) .nav {
-    padding: 24px 42px 20px 42px;
-  }
-
   .nav :global(h1) {
     color: var(--navTextColor);
   }
@@ -482,6 +481,9 @@
     max-width: 100%;
     position: relative;
     padding: 32px;
+  }
+  .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
+    padding: 22px;
   }
 
   .layout--none .main {
@@ -613,6 +615,10 @@
   /* Reduce padding */
   .mobile:not(.layout--none) .main {
     padding: 16px;
+  }
+  .mobile:not(.layout--none)
+    .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
+    padding: 6px;
   }
   .mobile .main.size--max {
     padding: 0;
