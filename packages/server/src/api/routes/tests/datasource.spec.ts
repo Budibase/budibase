@@ -17,9 +17,14 @@ import {
   SupportedSqlTypes,
   JsonFieldSubType,
 } from "@budibase/types"
-import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import {
+  DatabaseName,
+  getDatasource,
+  knexClient,
+} from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import nock from "nock"
+import { Knex } from "knex"
 
 describe("/datasources", () => {
   const config = setup.getConfig()
@@ -167,9 +172,12 @@ describe("/datasources", () => {
     [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
   ])("%s", (_, dsProvider) => {
     let rawDatasource: Datasource
+    let client: Knex
+
     beforeEach(async () => {
       rawDatasource = await dsProvider
       datasource = await config.api.datasource.create(rawDatasource)
+      client = await knexClient(rawDatasource)
     })
 
     describe("get", () => {
@@ -435,20 +443,49 @@ describe("/datasources", () => {
     })
 
     describe("info", () => {
-      it("should fetch information about a datasource", async () => {
-        const table = await config.api.table.save(
-          tableForDatasource(datasource, {
-            schema: {
-              name: {
-                name: "name",
-                type: FieldType.STRING,
-              },
-            },
-          })
-        )
+      it("should fetch information about a datasource with a single table", async () => {
+        const existingTableNames = (
+          await config.api.datasource.info(datasource)
+        ).tableNames
+
+        const tableName = generator.guid()
+        await client.schema.createTable(tableName, table => {
+          table.increments("id").primary()
+          table.string("name")
+        })
 
         const info = await config.api.datasource.info(datasource)
-        expect(info.tableNames).toContain(table.name)
+        expect(info.tableNames).toEqual(
+          expect.arrayContaining([tableName, ...existingTableNames])
+        )
+        expect(info.tableNames).toHaveLength(existingTableNames.length + 1)
+      })
+
+      it("should fetch information about a datasource with multiple tables", async () => {
+        const existingTableNames = (
+          await config.api.datasource.info(datasource)
+        ).tableNames
+
+        const tableNames = [
+          generator.guid(),
+          generator.guid(),
+          generator.guid(),
+          generator.guid(),
+        ]
+        for (const tableName of tableNames) {
+          await client.schema.createTable(tableName, table => {
+            table.increments("id").primary()
+            table.string("name")
+          })
+        }
+
+        const info = await config.api.datasource.info(datasource)
+        expect(info.tableNames).toEqual(
+          expect.arrayContaining([...tableNames, ...existingTableNames])
+        )
+        expect(info.tableNames).toHaveLength(
+          existingTableNames.length + tableNames.length
+        )
       })
     })
   })
