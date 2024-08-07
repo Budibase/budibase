@@ -89,6 +89,11 @@ export function datasourceValidator() {
 }
 
 function filterObject() {
+  const conditionalFilteringObject = () =>
+    Joi.object({
+      conditions: Joi.array().items(Joi.link("#schema")).required(),
+    })
+
   const filtersValidators: Record<keyof SearchFilters, any> = {
     string: Joi.object().optional(),
     fuzzy: Joi.object().optional(),
@@ -105,10 +110,12 @@ function filterObject() {
     onEmptyFilter: Joi.string()
       .optional()
       .valid(...Object.values(EmptyFilterOption)),
-    fuzzyOr: Joi.disallow(),
-    documentType: Joi.disallow(),
+    $and: conditionalFilteringObject(),
+    $or: conditionalFilteringObject(),
+    fuzzyOr: Joi.forbidden(),
+    documentType: Joi.forbidden(),
   }
-  return Joi.object(filtersValidators).unknown(true)
+  return Joi.object(filtersValidators).unknown(true).id("schema")
 }
 
 export function internalSearchValidator() {
