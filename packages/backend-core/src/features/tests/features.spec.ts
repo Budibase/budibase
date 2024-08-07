@@ -1,16 +1,8 @@
-import { defaultFlags, fetch, get, Flags } from "../"
+import { IdentityContext, IdentityType } from "@budibase/types"
+import { defaultFlags, fetch, get, Flags, init } from "../"
 import { context } from "../.."
-import env from "../../environment"
-
-async function withFlags<T>(flags: string, f: () => T): Promise<T> {
-  const oldFlags = env.TENANT_FEATURE_FLAGS
-  env._set("TENANT_FEATURE_FLAGS", flags)
-  try {
-    return await f()
-  } finally {
-    env._set("TENANT_FEATURE_FLAGS", oldFlags)
-  }
-}
+import { setEnv, withEnv } from "../../environment"
+import nock from "nock"
 
 describe("feature flags", () => {
   interface TestCase {
@@ -48,8 +40,8 @@ describe("feature flags", () => {
   ])(
     'should find flags $expected for $tenant with string "$flags"',
     ({ tenant, flags, expected }) =>
-      context.doInTenant(tenant, () =>
-        withFlags(flags, async () => {
+      context.doInTenant(tenant, async () =>
+        withEnv({ TENANT_FEATURE_FLAGS: flags }, async () => {
           const flags = await fetch()
           expect(flags).toMatchObject(expected)
 
@@ -75,12 +67,51 @@ describe("feature flags", () => {
     },
   ])(
     "should fail with message \"$expected\" for $tenant with string '$flags'",
-    async ({ tenant, flags, expected }) => {
+    ({ tenant, flags, expected }) =>
       context.doInTenant(tenant, () =>
-        withFlags(flags, async () => {
-          await expect(fetch()).rejects.toThrow(expected)
-        })
+        withEnv({ TENANT_FEATURE_FLAGS: flags }, () =>
+          expect(fetch()).rejects.toThrow(expected)
+        )
       )
-    }
   )
+
+  // describe("posthog", () => {
+  //   const identity: IdentityContext = {
+  //     _id: "us_1234",
+  //     tenantId: "budibase",
+  //     type: IdentityType.USER,
+  //     email: "test@example.com",
+  //     firstName: "Test",
+  //     lastName: "User",
+  //   }
+
+  //   let cleanup: () => void
+
+  //   beforeAll(() => {
+  //     cleanup = setEnv({ POSTHOG_TOKEN: "test" })
+  //     init()
+  //   })
+
+  //   afterAll(() => {
+  //     cleanup()
+  //   })
+
+  //   beforeEach(() => {
+  //     nock.cleanAll()
+  //   })
+
+  //   it("should be able to read flags from posthog", () =>
+  //     context.doInIdentityContext(identity, async () => {
+  //       nock("https://app.posthog.com")
+  //         .get("/api/feature_flags/tenant/budibase")
+  //         .reply(200, {
+  //           flags: {
+  //             "budibase:onboardingTour": true,
+  //           },
+  //         })
+
+  //       const flags = await fetch()
+  //       expect(flags.ONBOARDING_TOUR).toBe(true)
+  //     }))
+  // })
 })

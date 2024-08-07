@@ -1,13 +1,40 @@
 import env from "../environment"
 import * as context from "../context"
 import { cloneDeep } from "lodash"
+import { PostHog } from "posthog-node"
+import { IdentityType } from "@budibase/types"
 
-class Flag<T> {
-  static withDefault<T>(value: T) {
-    return new Flag(value)
+let posthog: PostHog | undefined
+export function init() {
+  if (env.POSTHOG_TOKEN) {
+    posthog = new PostHog(env.POSTHOG_TOKEN, {
+      host: "https://us.i.posthog.com",
+    })
+  }
+}
+
+abstract class Flag<T> {
+  static boolean(defaultValue: boolean): Flag<boolean> {
+    return new BooleanFlag(defaultValue)
   }
 
-  private constructor(public defaultValue: T) {}
+  protected constructor(public defaultValue: T) {}
+
+  abstract parse(value: any): T
+}
+
+class BooleanFlag extends Flag<boolean> {
+  parse(value: any) {
+    if (typeof value === "string") {
+      return ["true", "t", "1"].includes(value.toLowerCase())
+    }
+
+    if (typeof value === "boolean") {
+      return value
+    }
+
+    throw new Error(`could not parse value "${value}" as boolean`)
+  }
 }
 
 // This is the primary source of truth for feature flags. If you want to add a
@@ -15,10 +42,10 @@ class Flag<T> {
 // All of the machinery in this file is to make sure that flags have their
 // default values set correctly and their types flow through the system.
 const FLAGS = {
-  LICENSING: Flag.withDefault(false),
-  GOOGLE_SHEETS: Flag.withDefault(false),
-  USER_GROUPS: Flag.withDefault(false),
-  ONBOARDING_TOUR: Flag.withDefault(false),
+  LICENSING: Flag.boolean(false),
+  GOOGLE_SHEETS: Flag.boolean(false),
+  USER_GROUPS: Flag.boolean(false),
+  ONBOARDING_TOUR: Flag.boolean(false),
 }
 
 const DEFAULTS = Object.keys(FLAGS).reduce((acc, key) => {
@@ -53,8 +80,9 @@ function isFlagName(name: string): name is keyof Flags {
  * they will be accessed through this function as well.
  */
 export async function fetch(): Promise<Flags> {
-  const currentTenantId = context.getTenantId()
   const flags = defaultFlags()
+
+  const currentTenantId = context.getTenantId()
 
   const split = (env.TENANT_FEATURE_FLAGS || "")
     .split(",")
@@ -79,8 +107,30 @@ export async function fetch(): Promise<Flags> {
         throw new Error(`Feature: ${feature} is not a boolean`)
       }
 
-      // @ts-ignore
       flags[feature] = value
+    }
+  }
+
+  const identity = context.getIdentity()
+  if (posthog && identity?.type === IdentityType.USER) {
+    const posthogFlags = await posthog.getAllFlagsAndPayloads(identity._id)
+    for (const [name, value] of Object.entries(posthogFlags)) {
+      const key = name as keyof typeof FLAGS
+      const flag = FLAGS[key]
+      if (!flag) {
+        // We don't want an unexpected PostHog flag to break the app, so we
+        // just log it and continue.
+        console.warn(`Unexpected posthog flag "${name}": ${value}`)
+        continue
+      }
+
+      try {
+        flags[key] = flag.parse(value)
+      } catch (err) {
+        // We don't want an invalid PostHog flag to break the app, so we just
+        // log it and continue.
+        console.warn(`Error parsing posthog flag "${name}": ${value}`, err)
+      }
     }
   }
 
