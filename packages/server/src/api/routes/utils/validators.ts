@@ -1,6 +1,6 @@
 import { auth, permissions } from "@budibase/backend-core"
 import { DataSourceOperation } from "../../../constants"
-import { Table, WebhookActionType } from "@budibase/types"
+import { SearchFilters, Table, WebhookActionType } from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
@@ -84,7 +84,7 @@ export function datasourceValidator() {
 }
 
 function filterObject() {
-  return Joi.object({
+  const filtersValidators: Record<keyof SearchFilters, any> = {
     string: Joi.object().optional(),
     fuzzy: Joi.object().optional(),
     range: Joi.object().optional(),
@@ -96,7 +96,8 @@ function filterObject() {
     contains: Joi.object().optional(),
     notContains: Joi.object().optional(),
     allOr: Joi.boolean().optional(),
-  }).unknown(true)
+  }
+  return Joi.object(filtersValidators).unknown(true)
 }
 
 export function internalSearchValidator() {
