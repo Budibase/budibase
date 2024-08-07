@@ -2353,6 +2353,35 @@ describe.each([
       })
     })
 
+  describe("Invalid column definitions", () => {
+    beforeAll(async () => {
+      // need to create an invalid table - means ignoring typescript
+      table = await createTable({
+        // @ts-ignore
+        invalid: {
+          type: FieldType.STRING,
+        },
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+        },
+      })
+      await createRows([
+        { name: "foo", invalid: "id1" },
+        { name: "bar", invalid: "id2" },
+      ])
+    })
+
+    it("can get rows with all table data", async () => {
+      await expectSearch({
+        query: {},
+      }).toContain([
+        { name: "foo", invalid: "id1" },
+        { name: "bar", invalid: "id2" },
+      ])
+    })
+  })
+
   describe.each(["data_name_test", "name_data_test", "name_test_data_"])(
     "special (%s) case",
     column => {
