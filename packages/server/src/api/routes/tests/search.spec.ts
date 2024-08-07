@@ -2771,37 +2771,37 @@ describe.each([
       })
 
       !isInMemory &&
-      it("validates conditions that are not objects", async () => {
-        await expect(
-          expectQuery({
-            $and: {
-              conditions: [{ equal: { age: 10 } }, "invalidCondition" as any],
-            },
-          }).toFindNothing()
-        ).rejects.toThrow(
-          'Invalid body - "query.$and.conditions[1]" must be of type object'
-        )
-      })
+        it("validates conditions that are not objects", async () => {
+          await expect(
+            expectQuery({
+              $and: {
+                conditions: [{ equal: { age: 10 } }, "invalidCondition" as any],
+              },
+            }).toFindNothing()
+          ).rejects.toThrow(
+            'Invalid body - "query.$and.conditions[1]" must be of type object'
+          )
+        })
 
       !isInMemory &&
-      it("validates $and without conditions", async () => {
-        await expect(
-          expectQuery({
-            $and: {
-              conditions: [
-                { equal: { age: 10 } },
-                {
-                  $and: {
-                    conditions: undefined as any,
+        it("validates $and without conditions", async () => {
+          await expect(
+            expectQuery({
+              $and: {
+                conditions: [
+                  { equal: { age: 10 } },
+                  {
+                    $and: {
+                      conditions: undefined as any,
+                    },
                   },
-                },
-              ],
-            },
-          }).toFindNothing()
-        ).rejects.toThrow(
-          'Invalid body - "query.$and.conditions[1].$and.conditions" is required'
-        )
-      })
+                ],
+              },
+            }).toFindNothing()
+          ).rejects.toThrow(
+            'Invalid body - "query.$and.conditions[1].$and.conditions" is required'
+          )
+        })
     })
 
   !isLucene &&
