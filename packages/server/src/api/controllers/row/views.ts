@@ -5,11 +5,14 @@ import {
   SearchViewRowRequest,
   RequiredKeys,
   RowSearchParams,
+  SearchFilterKey,
+  LogicalOperator,
 } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
-import { context } from "@budibase/backend-core"
+import { db, context } from "@budibase/backend-core"
 import { enrichSearchContext } from "./utils"
+import { isExternalTableID } from "../../../integrations/utils"
 
 export async function searchView(
   ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
@@ -38,10 +41,28 @@ export async function searchView(
     delete body.query.allOr
     delete body.query.onEmptyFilter
 
-    query = {
-      $and: {
-        conditions: [query, body.query],
-      },
+    if (!isExternalTableID(view.tableId) && !db.isSqsEnabledForTenant()) {
+      // Extract existing fields
+      const existingFields =
+        view.query
+          ?.filter(filter => filter.field)
+          .map(filter => db.removeKeyNumbering(filter.field)) || []
+
+      // Carry over filters for unused fields
+      Object.keys(body.query).forEach(key => {
+        const operator = key as Exclude<SearchFilterKey, LogicalOperator>
+        Object.keys(body.query[operator] || {}).forEach(field => {
+          if (!existingFields.includes(db.removeKeyNumbering(field))) {
+            query[operator]![field] = body.query[operator]![field]
+          }
+        })
+      })
+    } else {
+      query = {
+        $and: {
+          conditions: [query, body.query],
+        },
+      }
     }
   }
 
