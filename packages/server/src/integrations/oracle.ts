@@ -400,7 +400,9 @@ class OracleIntegration extends Sql implements DatasourcePlus {
             if (oracleConstraint.type === OracleContraintTypes.PRIMARY) {
               table.primary!.push(columnName)
             } else if (
-              oracleConstraint.type === OracleContraintTypes.NOT_NULL_OR_CHECK
+              oracleConstraint.type ===
+                OracleContraintTypes.NOT_NULL_OR_CHECK &&
+              oracleConstraint.searchCondition?.endsWith("IS NOT NULL")
             ) {
               table.schema[columnName].constraints = {
                 presence: true,
@@ -421,7 +423,11 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: OracleIntegration.COLUMNS_SQL,
     })
-    return (columnsResponse.rows || []).map(row => row.TABLE_NAME)
+    const tableNames = new Set<string>()
+    for (const row of columnsResponse.rows || []) {
+      tableNames.add(row.TABLE_NAME)
+    }
+    return Array.from(tableNames)
   }
 
   async testConnection() {
