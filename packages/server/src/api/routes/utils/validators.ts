@@ -1,6 +1,11 @@
 import { auth, permissions } from "@budibase/backend-core"
 import { DataSourceOperation } from "../../../constants"
-import { SearchFilters, Table, WebhookActionType } from "@budibase/types"
+import {
+  EmptyFilterOption,
+  SearchFilters,
+  Table,
+  WebhookActionType,
+} from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
@@ -97,6 +102,9 @@ function filterObject() {
     notContains: Joi.object().optional(),
     containsAny: Joi.object().optional(),
     allOr: Joi.boolean().optional(),
+    onEmptyFilter: Joi.string()
+      .optional()
+      .valid(...Object.values(EmptyFilterOption)),
     fuzzyOr: Joi.disallow(),
     documentType: Joi.disallow(),
   }
