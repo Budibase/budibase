@@ -71,7 +71,7 @@ describe("feature flags", () => {
     ({ tenant, flags, expected }) =>
       context.doInTenant(tenant, () =>
         withEnv({ TENANT_FEATURE_FLAGS: flags }, () =>
-          expect(fetch()).rejects.toThrow(expected)
+          expect(fetch).rejects.toThrow(expected)
         )
       )
   )
@@ -157,6 +157,18 @@ describe("feature flags", () => {
       await context.doInIdentityContext(identity, async () => {
         const flags = await fetch()
         expect(flags._TEST_NUMBER).toBe(123)
+      })
+    })
+
+    it("should not fail when a flag is not known", async () => {
+      mockFlags({
+        featureFlags: {
+          _SOME_RANDOM_FLAG: true,
+        },
+      })
+
+      await context.doInIdentityContext(identity, async () => {
+        await expect(fetch()).resolves.not.toThrow()
       })
     })
   })
