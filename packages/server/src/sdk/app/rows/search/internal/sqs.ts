@@ -2,7 +2,7 @@ import {
   Datasource,
   DocumentType,
   FieldType,
-  LogicalOperator,
+  isLogicalSearchOperator,
   Operation,
   QueryJson,
   RelationshipFieldMetadata,
@@ -141,10 +141,7 @@ function cleanupFilters(
 
   const prefixFilters = (filters: SearchFilters) => {
     for (const filterKey of Object.keys(filters) as (keyof SearchFilters)[]) {
-      if (
-        filterKey === LogicalOperator.AND ||
-        filterKey === LogicalOperator.OR
-      ) {
+      if (isLogicalSearchOperator(filterKey)) {
         for (const condition of filters[filterKey]!.conditions) {
           prefixFilters(condition)
         }

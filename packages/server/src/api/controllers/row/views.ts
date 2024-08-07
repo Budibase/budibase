@@ -12,6 +12,7 @@ import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import { db, context } from "@budibase/backend-core"
 import { enrichSearchContext } from "./utils"
+import { isExternalTableID } from "../../../integrations/utils"
 
 export async function searchView(
   ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
@@ -36,33 +37,33 @@ export async function searchView(
   // that could let users find rows they should not be allowed to access.
   let query = dataFilters.buildQuery(view.query || [])
   if (body.query) {
-    // Extract existing fields
-    const existingFields =
-      view.query
-        ?.filter(filter => filter.field)
-        .map(filter => db.removeKeyNumbering(filter.field)) || []
-
     // Delete extraneous search params that cannot be overridden
     delete body.query.allOr
     delete body.query.onEmptyFilter
 
-    // Carry over filters for unused fields
-    Object.keys(body.query).forEach(key => {
-      const operator = key as SearchFilterKey
+    if (!isExternalTableID(view.tableId) && !db.isSqsEnabledForTenant()) {
+      // Extract existing fields
+      const existingFields =
+        view.query
+          ?.filter(filter => filter.field)
+          .map(filter => db.removeKeyNumbering(filter.field)) || []
 
-      Object.keys(body.query[operator] || {}).forEach(field => {
-        if (!existingFields.includes(db.removeKeyNumbering(field))) {
-          if (
-            operator === LogicalOperator.AND ||
-            operator === LogicalOperator.OR
-          ) {
-            // TODO
-          } else {
+      // Carry over filters for unused fields
+      Object.keys(body.query).forEach(key => {
+        const operator = key as Exclude<SearchFilterKey, LogicalOperator>
+        Object.keys(body.query[operator] || {}).forEach(field => {
+          if (!existingFields.includes(db.removeKeyNumbering(field))) {
             query[operator]![field] = body.query[operator]![field]
           }
-        }
+        })
       })
-    })
+    } else {
+      query = {
+        $and: {
+          conditions: [query, body.query],
+        },
+      }
+    }
   }
 
   await context.ensureSnippetContext(true)
