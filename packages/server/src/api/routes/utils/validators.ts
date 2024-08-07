@@ -97,6 +97,8 @@ function filterObject() {
     notContains: Joi.object().optional(),
     containsAny: Joi.object().optional(),
     allOr: Joi.boolean().optional(),
+    fuzzyOr: Joi.disallow(),
+    documentType: Joi.disallow(),
   }
   return Joi.object(filtersValidators).unknown(true)
 }
