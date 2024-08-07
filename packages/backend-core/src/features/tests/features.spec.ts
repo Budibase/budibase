@@ -79,7 +79,7 @@ describe("feature flags", () => {
   describe("posthog", () => {
     const identity: IdentityContext = {
       _id: "us_1234",
-      tenantId: "budibase",
+      tenantId: "tenant1",
       type: IdentityType.USER,
       email: "test@example.com",
       firstName: "Test",
@@ -170,6 +170,42 @@ describe("feature flags", () => {
       await context.doInIdentityContext(identity, async () => {
         await expect(fetch()).resolves.not.toThrow()
       })
+    })
+
+    it("should not override flags set in the environment", async () => {
+      mockFlags({
+        featureFlags: {
+          _TEST_BOOLEAN: false,
+        },
+      })
+
+      await withEnv(
+        { TENANT_FEATURE_FLAGS: `${identity.tenantId}:_TEST_BOOLEAN` },
+        async () => {
+          await context.doInIdentityContext(identity, async () => {
+            const flags = await fetch()
+            expect(flags._TEST_BOOLEAN).toBe(true)
+          })
+        }
+      )
+    })
+
+    it("should not override flags set in the environment with a ! prefix", async () => {
+      mockFlags({
+        featureFlags: {
+          _TEST_BOOLEAN: true,
+        },
+      })
+
+      await withEnv(
+        { TENANT_FEATURE_FLAGS: `${identity.tenantId}:!_TEST_BOOLEAN` },
+        async () => {
+          await context.doInIdentityContext(identity, async () => {
+            const flags = await fetch()
+            expect(flags._TEST_BOOLEAN).toBe(false)
+          })
+        }
+      )
     })
   })
 })

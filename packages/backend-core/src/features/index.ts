@@ -3,6 +3,7 @@ import * as context from "../context"
 import { cloneDeep } from "lodash"
 import { PostHog, PostHogOptions } from "posthog-node"
 import { IdentityType } from "@budibase/types"
+import tracer from "dd-trace"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
@@ -119,65 +120,84 @@ function isFlagName(name: string): name is keyof Flags {
  * they will be accessed through this function as well.
  */
 export async function fetch(): Promise<Flags> {
-  const flags = defaultFlags()
+  return await tracer.trace("features.fetch", async span => {
+    const tags: Record<string, any> = {}
 
-  const currentTenantId = context.getTenantId()
+    const flags = defaultFlags()
 
-  const split = (env.TENANT_FEATURE_FLAGS || "")
-    .split(",")
-    .map(x => x.split(":"))
-  for (const [tenantId, ...features] of split) {
-    if (!tenantId || (tenantId !== "*" && tenantId !== currentTenantId)) {
-      continue
-    }
+    const currentTenantId = context.getTenantId()
+    const specificallySetFalse = new Set<string>()
 
-    for (let feature of features) {
-      let value = true
-      if (feature.startsWith("!")) {
-        feature = feature.slice(1)
-        value = false
-      }
-
-      if (!isFlagName(feature)) {
-        throw new Error(`Feature: ${feature} is not an allowed option`)
-      }
-
-      if (typeof flags[feature] !== "boolean") {
-        throw new Error(`Feature: ${feature} is not a boolean`)
-      }
-
-      // @ts-ignore
-      flags[feature] = value
-    }
-  }
-
-  const identity = context.getIdentity()
-  if (posthog && identity?.type === IdentityType.USER) {
-    const posthogFlags = await posthog.getAllFlagsAndPayloads(identity._id)
-    for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
-      const key = name as keyof typeof FLAGS
-      const flag = FLAGS[key]
-      if (!flag) {
-        // We don't want an unexpected PostHog flag to break the app, so we
-        // just log it and continue.
-        console.warn(`Unexpected posthog flag "${name}": ${value}`)
+    const split = (env.TENANT_FEATURE_FLAGS || "")
+      .split(",")
+      .map(x => x.split(":"))
+    for (const [tenantId, ...features] of split) {
+      if (!tenantId || (tenantId !== "*" && tenantId !== currentTenantId)) {
         continue
       }
 
-      const payload = posthogFlags.featureFlagPayloads?.[name]
+      for (let feature of features) {
+        let value = true
+        if (feature.startsWith("!")) {
+          feature = feature.slice(1)
+          value = false
+          specificallySetFalse.add(feature)
+        }
 
-      try {
+        if (!isFlagName(feature)) {
+          throw new Error(`Feature: ${feature} is not an allowed option`)
+        }
+
+        if (typeof flags[feature] !== "boolean") {
+          throw new Error(`Feature: ${feature} is not a boolean`)
+        }
+
         // @ts-ignore
-        flags[key] = flag.parse(payload || value)
-      } catch (err) {
-        // We don't want an invalid PostHog flag to break the app, so we just
-        // log it and continue.
-        console.warn(`Error parsing posthog flag "${name}": ${value}`, err)
+        flags[feature] = value
+        tags[`flags.${feature}.source`] = "environment"
       }
     }
-  }
 
-  return flags
+    const identity = context.getIdentity()
+    if (posthog && identity?.type === IdentityType.USER) {
+      const posthogFlags = await posthog.getAllFlagsAndPayloads(identity._id)
+      for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
+        const key = name as keyof typeof FLAGS
+        const flag = FLAGS[key]
+        if (!flag) {
+          // We don't want an unexpected PostHog flag to break the app, so we
+          // just log it and continue.
+          console.warn(`Unexpected posthog flag "${name}": ${value}`)
+          continue
+        }
+
+        if (flags[key] === true || specificallySetFalse.has(key)) {
+          // If the flag is already set to through environment variables, we
+          // don't want to override it back to false here.
+          continue
+        }
+
+        const payload = posthogFlags.featureFlagPayloads?.[name]
+
+        try {
+          // @ts-ignore
+          flags[key] = flag.parse(payload || value)
+          tags[`flags.${key}.source`] = "posthog"
+        } catch (err) {
+          // We don't want an invalid PostHog flag to break the app, so we just
+          // log it and continue.
+          console.warn(`Error parsing posthog flag "${name}": ${value}`, err)
+        }
+      }
+    }
+
+    for (const [key, value] of Object.entries(flags)) {
+      tags[`flags.${key}.value`] = value
+    }
+    span?.addTags(tags)
+
+    return flags
+  })
 }
 
 // Gets a single feature flag value. This is a convenience function for
