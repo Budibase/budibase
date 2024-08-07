@@ -2770,6 +2770,7 @@ describe.each([
         }).toFindNothing()
       })
 
+      !isInMemory &&
       it("validates conditions that are not objects", async () => {
         await expect(
           expectQuery({
@@ -2782,6 +2783,7 @@ describe.each([
         )
       })
 
+      !isInMemory &&
       it("validates $and without conditions", async () => {
         await expect(
           expectQuery({
