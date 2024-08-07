@@ -1,6 +1,6 @@
 import * as userSdk from "../../../sdk/users"
 import {
-  featureFlags,
+  features,
   tenancy,
   db as dbCore,
   utils,
@@ -104,8 +104,8 @@ export async function getSelf(ctx: any) {
   ctx.body = await groups.enrichUserRolesFromGroups(user)
 
   // add the feature flags for this tenant
-  const tenantId = tenancy.getTenantId()
-  ctx.body.featureFlags = featureFlags.getTenantFeatureFlags(tenantId)
+  const flags = await features.fetch()
+  ctx.body.flags = flags
 
   addSessionAttributesToUser(ctx)
 }
