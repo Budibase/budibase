@@ -95,6 +95,7 @@ function filterObject() {
     oneOf: Joi.object().optional(),
     contains: Joi.object().optional(),
     notContains: Joi.object().optional(),
+    containsAny: Joi.object().optional(),
     allOr: Joi.boolean().optional(),
   }
   return Joi.object(filtersValidators).unknown(true)
