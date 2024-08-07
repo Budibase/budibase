@@ -1,4 +1,4 @@
-import { structures, mocks } from "../../../../../tests"
+import { structures } from "../../../../../tests"
 import { testEnv } from "../../../../../tests/extra"
 import { SSOAuthDetails, User } from "@budibase/types"
 
