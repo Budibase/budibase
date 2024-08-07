@@ -5,12 +5,10 @@ import {
   SearchViewRowRequest,
   RequiredKeys,
   RowSearchParams,
-  SearchFilterKey,
-  LogicalOperator,
 } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
-import { db, context } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { enrichSearchContext } from "./utils"
 
 export async function searchView(
@@ -36,33 +34,15 @@ export async function searchView(
   // that could let users find rows they should not be allowed to access.
   let query = dataFilters.buildQuery(view.query || [])
   if (body.query) {
-    // Extract existing fields
-    const existingFields =
-      view.query
-        ?.filter(filter => filter.field)
-        .map(filter => db.removeKeyNumbering(filter.field)) || []
-
     // Delete extraneous search params that cannot be overridden
     delete body.query.allOr
     delete body.query.onEmptyFilter
 
-    // Carry over filters for unused fields
-    Object.keys(body.query).forEach(key => {
-      const operator = key as SearchFilterKey
-
-      Object.keys(body.query[operator] || {}).forEach(field => {
-        if (!existingFields.includes(db.removeKeyNumbering(field))) {
-          if (
-            operator === LogicalOperator.AND ||
-            operator === LogicalOperator.OR
-          ) {
-            // TODO
-          } else {
-            query[operator]![field] = body.query[operator]![field]
-          }
-        }
-      })
-    })
+    query = {
+      $and: {
+        conditions: [query, body.query],
+      },
+    }
   }
 
   await context.ensureSnippetContext(true)
