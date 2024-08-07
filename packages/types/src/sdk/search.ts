@@ -28,6 +28,12 @@ export enum LogicalOperator {
   OR = "$or",
 }
 
+export function isLogicalSearchOperator(
+  value: string
+): value is LogicalOperator {
+  return value === LogicalOperator.AND || value === LogicalOperator.OR
+}
+
 export type SearchFilterOperator =
   | BasicOperator
   | ArrayOperator
