@@ -1596,9 +1596,6 @@ describe.each([
 
     // Our bigints are int64s in most datasources.
     let BIG = "9223372036854775807"
-    if (name === DatabaseName.ORACLE) {
-      // BIG = "9223372036854775808"
-    }
 
     beforeAll(async () => {
       table = await createTable({
