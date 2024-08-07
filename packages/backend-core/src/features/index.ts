@@ -1,14 +1,15 @@
 import env from "../environment"
 import * as context from "../context"
 import { cloneDeep } from "lodash"
-import { PostHog } from "posthog-node"
+import { PostHog, PostHogOptions } from "posthog-node"
 import { IdentityType } from "@budibase/types"
 
 let posthog: PostHog | undefined
-export function init() {
+export function init(opts?: PostHogOptions) {
   if (env.POSTHOG_TOKEN) {
     posthog = new PostHog(env.POSTHOG_TOKEN, {
       host: "https://us.i.posthog.com",
+      ...opts,
     })
   }
 }
@@ -16,6 +17,14 @@ export function init() {
 abstract class Flag<T> {
   static boolean(defaultValue: boolean): Flag<boolean> {
     return new BooleanFlag(defaultValue)
+  }
+
+  static string(defaultValue: string): Flag<string> {
+    return new StringFlag(defaultValue)
+  }
+
+  static number(defaultValue: number): Flag<number> {
+    return new NumberFlag(defaultValue)
   }
 
   protected constructor(public defaultValue: T) {}
@@ -37,6 +46,32 @@ class BooleanFlag extends Flag<boolean> {
   }
 }
 
+class StringFlag extends Flag<string> {
+  parse(value: any) {
+    if (typeof value === "string") {
+      return value
+    }
+    throw new Error(`could not parse value "${value}" as string`)
+  }
+}
+
+class NumberFlag extends Flag<number> {
+  parse(value: any) {
+    if (typeof value === "number") {
+      return value
+    }
+
+    if (typeof value === "string") {
+      const parsed = parseFloat(value)
+      if (!isNaN(parsed)) {
+        return parsed
+      }
+    }
+
+    throw new Error(`could not parse value "${value}" as number`)
+  }
+}
+
 // This is the primary source of truth for feature flags. If you want to add a
 // new flag, add it here and use the `fetch` and `get` functions to access it.
 // All of the machinery in this file is to make sure that flags have their
@@ -46,6 +81,10 @@ const FLAGS = {
   GOOGLE_SHEETS: Flag.boolean(false),
   USER_GROUPS: Flag.boolean(false),
   ONBOARDING_TOUR: Flag.boolean(false),
+
+  _TEST_BOOLEAN: Flag.boolean(false),
+  _TEST_STRING: Flag.string("default value"),
+  _TEST_NUMBER: Flag.number(0),
 }
 
 const DEFAULTS = Object.keys(FLAGS).reduce((acc, key) => {
@@ -107,6 +146,7 @@ export async function fetch(): Promise<Flags> {
         throw new Error(`Feature: ${feature} is not a boolean`)
       }
 
+      // @ts-ignore
       flags[feature] = value
     }
   }
@@ -114,7 +154,7 @@ export async function fetch(): Promise<Flags> {
   const identity = context.getIdentity()
   if (posthog && identity?.type === IdentityType.USER) {
     const posthogFlags = await posthog.getAllFlagsAndPayloads(identity._id)
-    for (const [name, value] of Object.entries(posthogFlags)) {
+    for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
       const key = name as keyof typeof FLAGS
       const flag = FLAGS[key]
       if (!flag) {
@@ -124,8 +164,11 @@ export async function fetch(): Promise<Flags> {
         continue
       }
 
+      const payload = posthogFlags.featureFlagPayloads?.[name]
+
       try {
-        flags[key] = flag.parse(value)
+        // @ts-ignore
+        flags[key] = flag.parse(payload || value)
       } catch (err) {
         // We don't want an invalid PostHog flag to break the app, so we just
         // log it and continue.

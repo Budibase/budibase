@@ -2,6 +2,7 @@ import { IdentityContext, IdentityType } from "@budibase/types"
 import { defaultFlags, fetch, get, Flags, init } from "../"
 import { context } from "../.."
 import { setEnv, withEnv } from "../../environment"
+import nodeFetch from "node-fetch"
 import nock from "nock"
 
 describe("feature flags", () => {
@@ -14,23 +15,23 @@ describe("feature flags", () => {
   it.each<TestCase>([
     {
       tenant: "tenant1",
-      flags: "tenant1:ONBOARDING_TOUR",
-      expected: { ONBOARDING_TOUR: true },
+      flags: "tenant1:_TEST_BOOLEAN",
+      expected: { _TEST_BOOLEAN: true },
     },
     {
       tenant: "tenant1",
-      flags: "tenant1:!ONBOARDING_TOUR",
-      expected: { ONBOARDING_TOUR: false },
+      flags: "tenant1:!_TEST_BOOLEAN",
+      expected: { _TEST_BOOLEAN: false },
     },
     {
       tenant: "tenant1",
-      flags: "*:ONBOARDING_TOUR",
-      expected: { ONBOARDING_TOUR: true },
+      flags: "*:_TEST_BOOLEAN",
+      expected: { _TEST_BOOLEAN: true },
     },
     {
       tenant: "tenant1",
-      flags: "tenant2:ONBOARDING_TOUR",
-      expected: { ONBOARDING_TOUR: false },
+      flags: "tenant2:_TEST_BOOLEAN",
+      expected: { _TEST_BOOLEAN: false },
     },
     {
       tenant: "tenant1",
@@ -62,7 +63,7 @@ describe("feature flags", () => {
   it.each<FailedTestCase>([
     {
       tenant: "tenant1",
-      flags: "tenant1:ONBOARDING_TOUR,tenant1:FOO",
+      flags: "tenant1:_TEST_BOOLEAN,tenant1:FOO",
       expected: "Feature: FOO is not an allowed option",
     },
   ])(
@@ -75,43 +76,88 @@ describe("feature flags", () => {
       )
   )
 
-  // describe("posthog", () => {
-  //   const identity: IdentityContext = {
-  //     _id: "us_1234",
-  //     tenantId: "budibase",
-  //     type: IdentityType.USER,
-  //     email: "test@example.com",
-  //     firstName: "Test",
-  //     lastName: "User",
-  //   }
+  describe("posthog", () => {
+    const identity: IdentityContext = {
+      _id: "us_1234",
+      tenantId: "budibase",
+      type: IdentityType.USER,
+      email: "test@example.com",
+      firstName: "Test",
+      lastName: "User",
+    }
 
-  //   let cleanup: () => void
+    let cleanup: () => void
 
-  //   beforeAll(() => {
-  //     cleanup = setEnv({ POSTHOG_TOKEN: "test" })
-  //     init()
-  //   })
+    beforeAll(() => {
+      cleanup = setEnv({ POSTHOG_TOKEN: "test" })
+    })
 
-  //   afterAll(() => {
-  //     cleanup()
-  //   })
+    afterAll(() => {
+      cleanup()
+    })
 
-  //   beforeEach(() => {
-  //     nock.cleanAll()
-  //   })
+    beforeEach(() => {
+      nock.cleanAll()
 
-  //   it("should be able to read flags from posthog", () =>
-  //     context.doInIdentityContext(identity, async () => {
-  //       nock("https://app.posthog.com")
-  //         .get("/api/feature_flags/tenant/budibase")
-  //         .reply(200, {
-  //           flags: {
-  //             "budibase:onboardingTour": true,
-  //           },
-  //         })
+      // We need to pass in node-fetch here otherwise nock won't get used
+      // because posthog-node uses axios under the hood.
+      init({ fetch: nodeFetch })
+    })
 
-  //       const flags = await fetch()
-  //       expect(flags.ONBOARDING_TOUR).toBe(true)
-  //     }))
-  // })
+    function mockFlags(flags: {
+      featureFlags?: Record<string, boolean>
+      featureFlagPayloads?: Record<string, any>
+    }) {
+      nock("https://us.i.posthog.com")
+        .post("/decide/?v=3", body => {
+          return body.token === "test" && body.distinct_id === "us_1234"
+        })
+        .reply(200, flags)
+    }
+
+    it("should be able to read flags from posthog", async () => {
+      mockFlags({
+        featureFlags: {
+          _TEST_BOOLEAN: true,
+        },
+      })
+
+      await context.doInIdentityContext(identity, async () => {
+        const flags = await fetch()
+        expect(flags._TEST_BOOLEAN).toBe(true)
+      })
+    })
+
+    it("should be able to read flags from posthog with payloads", async () => {
+      mockFlags({
+        featureFlags: {
+          _TEST_STRING: true,
+        },
+        featureFlagPayloads: {
+          _TEST_STRING: "test payload",
+        },
+      })
+
+      await context.doInIdentityContext(identity, async () => {
+        const flags = await fetch()
+        expect(flags._TEST_STRING).toBe("test payload")
+      })
+    })
+
+    it("should be able to read flags from posthog with numbers", async () => {
+      mockFlags({
+        featureFlags: {
+          _TEST_NUMBER: true,
+        },
+        featureFlagPayloads: {
+          _TEST_NUMBER: 123,
+        },
+      })
+
+      await context.doInIdentityContext(identity, async () => {
+        const flags = await fetch()
+        expect(flags._TEST_NUMBER).toBe(123)
+      })
+    })
+  })
 })
