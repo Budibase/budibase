@@ -1486,6 +1486,39 @@ describe.each([
         )
       })
 
+      it("can filter a view without a view filter", async () => {
+        const one = await config.api.row.save(table._id!, {
+          one: "foo",
+          two: "bar",
+        })
+        await config.api.row.save(table._id!, {
+          one: "foo2",
+          two: "bar2",
+        })
+
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+            one: { visible: false },
+            two: { visible: true },
+          },
+        })
+
+        const response = await config.api.viewV2.search(view.id, {
+          query: {
+            equal: {
+              two: "bar",
+            },
+          },
+        })
+        expect(response.rows).toHaveLength(1)
+        expect(response.rows).toEqual([
+          expect.objectContaining({ _id: one._id }),
+        ])
+      })
+
       it("cannot bypass a view filter", async () => {
         await config.api.row.save(table._id!, {
           one: "foo",
