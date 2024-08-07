@@ -18,6 +18,7 @@ import {
   BasicOperator,
   RangeOperator,
   LogicalOperator,
+  isLogicalSearchOperator,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -359,10 +360,7 @@ export const buildQuery = (filter: SearchFilter[]) => {
           high: value,
         }
       }
-    } else if (
-      queryOperator === LogicalOperator.AND ||
-      queryOperator === LogicalOperator.OR
-    ) {
+    } else if (isLogicalSearchOperator(queryOperator)) {
       // TODO
     } else if (query[queryOperator] && operator !== "onEmptyFilter") {
       if (type === "boolean") {
@@ -464,10 +462,9 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     ) =>
     (doc: Record<string, any>) => {
       for (const [key, testValue] of Object.entries(query[type] || {})) {
-        const valueToCheck =
-          type === LogicalOperator.AND || type === LogicalOperator.OR
-            ? doc
-            : deepGet(doc, removeKeyNumbering(key))
+        const valueToCheck = isLogicalSearchOperator(type)
+          ? doc
+          : deepGet(doc, removeKeyNumbering(key))
         const result = test(valueToCheck, testValue)
         if (query.allOr && result) {
           return true
