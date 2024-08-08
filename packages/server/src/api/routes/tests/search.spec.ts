@@ -39,6 +39,7 @@ import { dataFilters } from "@budibase/shared-core"
 import { Knex } from "knex"
 import { structures } from "@budibase/backend-core/tests"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
+import { generateRowIdField } from "../../../integrations/utils"
 
 describe.each([
   ["in-memory", undefined],
@@ -2645,6 +2646,42 @@ describe.each([
           },
           limit: 1,
         }).toContainExactly([row])
+      })
+    })
+
+  !isInternal &&
+    describe("search by composite key", () => {
+      beforeAll(async () => {
+        table = await config.api.table.save(
+          tableForDatasource(datasource, {
+            schema: {
+              idColumn1: {
+                name: "idColumn1",
+                type: FieldType.NUMBER,
+              },
+              idColumn2: {
+                name: "idColumn2",
+                type: FieldType.NUMBER,
+              },
+            },
+            primary: ["idColumn1", "idColumn2"],
+          })
+        )
+        await createRows([{ idColumn1: 1, idColumn2: 2 }])
+      })
+
+      it("can filter by the row ID with limit 1", async () => {
+        await expectSearch({
+          query: {
+            equal: { _id: generateRowIdField([1, 2]) },
+          },
+          limit: 1,
+        }).toContain([
+          {
+            idColumn1: 1,
+            idColumn2: 2,
+          },
+        ])
       })
     })
 
