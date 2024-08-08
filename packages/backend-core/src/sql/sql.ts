@@ -700,6 +700,8 @@ class InternalBuilder {
         const direction =
           value.direction === SortOrder.ASCENDING ? "asc" : "desc"
 
+        // TODO: figure out a way to remove this conditional, not relying on
+        // the defaults of each datastore.
         let nulls: "first" | "last" | undefined = undefined
         if (
           this.client === SqlClient.POSTGRES ||
