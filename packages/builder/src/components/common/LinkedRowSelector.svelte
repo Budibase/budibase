@@ -15,7 +15,7 @@
   let rows = []
   let linkedIds = []
 
-  $: fieldValue = getFieldValue(linkedData)
+  $: fieldValue = getFieldValue(linkedData, schema)
   $: label = label || capitalise(schema.name)
   $: linkedTableId = linkedTableId || schema.tableId
   $: linkedTable = $tables.list.find(table => table._id === linkedTableId)
