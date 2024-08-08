@@ -1,5 +1,6 @@
 import dayjs from "dayjs"
 import {
+  ArrayOperator,
   AutoFieldSubType,
   AutoReason,
   Datasource,
@@ -196,11 +197,12 @@ export class ExternalRequest<T extends Operation> {
       // need to map over the filters and make sure the _id field isn't present
       let prefix = 1
       for (const operator of Object.values(filters)) {
+        const isArrayOperator = Object.values(ArrayOperator).includes(operator)
         for (const field of Object.keys(operator || {})) {
           if (dbCore.removeKeyNumbering(field) === "_id") {
             if (primary) {
               const parts = breakRowIdField(operator[field])
-              if (primary.length > 1) {
+              if (primary.length > 1 && isArrayOperator) {
                 operator[InternalSearchFilterOperator.COMPLEX_ID_OPERATOR] = {
                   id: primary,
                   values: parts[0],
