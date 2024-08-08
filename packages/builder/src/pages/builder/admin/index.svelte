@@ -35,14 +35,25 @@
       await API.createAdminUser(adminUser)
       notifications.success("Admin user created")
       await admin.init()
+      await auth.login({
+        username: formData?.email.trim(),
+        password: formData?.password,
+      })
       $goto("../portal")
     } catch (error) {
       submitted = false
       notifications.error(error.message || "Failed to create admin user")
     }
   }
+
+  const handleKeydown = evt => {
+    if (evt.key === "Enter") {
+      save()
+    }
+  }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 <TestimonialPage>
   <Layout gap="M" noPadding>
     <Layout justifyItems="center" noPadding>
@@ -83,9 +94,13 @@
           validate={() => {
             let fieldError = {}
 
-            fieldError["password"] = !formData.password
-              ? "Please enter a password"
-              : undefined
+            if (!formData.password) {
+              fieldError["password"] = "Please enter a password"
+            } else if (formData.password.length < 12) {
+              fieldError["password"] = "Password must be at least 12 characters"
+            } else {
+              fieldError["password"] = undefined
+            }
 
             fieldError["confirmationPassword"] =
               !passwordsMatch(
