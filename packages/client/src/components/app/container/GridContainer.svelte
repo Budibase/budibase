@@ -103,17 +103,8 @@
   }
 
   /* Highlight sibling borders when resizing childern */
-  :global(.grid.highlight > .component:not(.dragging):after) {
-    content: "";
-    display: block;
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    border: 1px solid var(--spectrum-global-color-static-blue-200);
-    pointer-events: none;
-    z-index: 1;
-    top: 0;
-    left: 0;
+  :global(.grid.highlight > .component:not(.dragging)) {
+    outline: 1px solid var(--spectrum-global-color-static-blue-200);
   }
 
   /* Ensure all top level children have grid styles applied */
