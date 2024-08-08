@@ -9,7 +9,7 @@
     FancyInput,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { users, organisation, auth } from "stores/portal"
+  import { users, organisation, auth, admin } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { onMount } from "svelte"
@@ -23,6 +23,7 @@
   let loaded = false
 
   $: company = $organisation.company || "Budibase"
+  $: passwordMinLength = $admin.passwordMinLength ?? 12
 
   async function acceptInvite() {
     form.validate()
@@ -85,8 +86,15 @@
       notifications.error("Error getting invite config")
     }
   })
+
+  const handleKeydown = evt => {
+    if (evt.key === "Enter") {
+      acceptInvite()
+    }
+  }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 {#if loaded}
   <TestimonialPage>
     <Layout gap="M" noPadding>
@@ -154,8 +162,8 @@
                 function validatePassword() {
                   if (!formData.password) {
                     return "Please enter a password"
-                  } else if (formData.password.length < 8) {
-                    return "Please enter at least 8 characters"
+                  } else if (formData.password.length < passwordMinLength) {
+                    return `Please enter at least ${passwordMinLength} characters`
                   }
                   return undefined
                 }
