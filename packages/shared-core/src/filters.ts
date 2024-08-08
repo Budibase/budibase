@@ -17,6 +17,8 @@ import {
   Table,
   BasicOperator,
   RangeOperator,
+  LogicalOperator,
+  isLogicalSearchOperator,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
@@ -358,6 +360,8 @@ export const buildQuery = (filter: SearchFilter[]) => {
           high: value,
         }
       }
+    } else if (isLogicalSearchOperator(queryOperator)) {
+      // TODO
     } else if (query[queryOperator] && operator !== "onEmptyFilter") {
       if (type === "boolean") {
         // Transform boolean filters to cope with null.
@@ -458,14 +462,17 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     ) =>
     (doc: Record<string, any>) => {
       for (const [key, testValue] of Object.entries(query[type] || {})) {
-        const result = test(deepGet(doc, removeKeyNumbering(key)), testValue)
+        const valueToCheck = isLogicalSearchOperator(type)
+          ? doc
+          : deepGet(doc, removeKeyNumbering(key))
+        const result = test(valueToCheck, testValue)
         if (query.allOr && result) {
           return true
         } else if (!query.allOr && !result) {
           return false
         }
       }
-      return true
+      return !query.allOr
     }
 
   const stringMatch = match(
@@ -666,8 +673,45 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   )
   const containsAny = match(ArrayOperator.CONTAINS_ANY, _contains("some"))
 
+  const and = match(
+    LogicalOperator.AND,
+    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
+      if (!conditions.length) {
+        return false
+      }
+      for (const condition of conditions) {
+        const matchesCondition = runQuery([docValue], condition)
+        if (!matchesCondition.length) {
+          return false
+        }
+      }
+      return true
+    }
+  )
+  const or = match(
+    LogicalOperator.OR,
+    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
+      if (!conditions.length) {
+        return false
+      }
+      for (const condition of conditions) {
+        const matchesCondition = runQuery([docValue], {
+          ...condition,
+          allOr: true,
+        })
+        if (matchesCondition.length) {
+          return true
+        }
+      }
+      return false
+    }
+  )
+
   const docMatch = (doc: Record<string, any>) => {
-    const filterFunctions = {
+    const filterFunctions: Record<
+      SearchFilterOperator,
+      (doc: Record<string, any>) => boolean
+    > = {
       string: stringMatch,
       fuzzy: fuzzyMatch,
       range: rangeMatch,
@@ -679,6 +723,8 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       contains: contains,
       containsAny: containsAny,
       notContains: notContains,
+      [LogicalOperator.AND]: and,
+      [LogicalOperator.OR]: or,
     }
 
     const results = Object.entries(query || {})

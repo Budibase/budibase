@@ -80,7 +80,11 @@ ln -s ${DATA_DIR}/.env /worker/.env
 # make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
 chown -R couchdb:couchdb ${DATA_DIR}/couch
-redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
+if [[ -n "${REDIS_PASSWORD}" ]]; then
+  redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
+else
+  redis-server > /dev/stdout 2>&1 &
+fi
 /bbcouch-runner.sh &
 
 # only start minio if use s3 isn't passed
