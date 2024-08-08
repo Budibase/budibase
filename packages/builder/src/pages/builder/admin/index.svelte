@@ -21,6 +21,7 @@
   let submitted = false
 
   $: tenantId = $auth.tenantId
+  $: passwordMinLength = $admin.passwordMinLength ?? 12
 
   async function save() {
     form.validate()
@@ -96,8 +97,10 @@
 
             if (!formData.password) {
               fieldError["password"] = "Please enter a password"
-            } else if (formData.password.length < 12) {
-              fieldError["password"] = "Password must be at least 12 characters"
+            } else if (formData.password.length < passwordMinLength) {
+              fieldError[
+                "password"
+              ] = `Password must be at least ${passwordMinLength} characters`
             } else {
               fieldError["password"] = undefined
             }
