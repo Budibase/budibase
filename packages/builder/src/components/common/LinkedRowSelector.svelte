@@ -25,10 +25,11 @@
     const linkedIds = (Array.isArray(val) ? val : [])?.map(
       row => row?._id || row
     )
-    if (schema.relationshipType === "one-to-many") {
-      return linkedIds?.[0]
-    } else if (schema.type === "bb_reference_single") {
-      return val
+    if (
+      schema.relationshipType === "one-to-many" ||
+      schema.type === "bb_reference_single"
+    ) {
+      return linkedIds[0]
     } else {
       return linkedIds
     }
