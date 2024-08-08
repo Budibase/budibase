@@ -71,7 +71,11 @@ export const gridLayout = (node, metadata) => {
 
   // Applies the required listeners, CSS and classes to a component DOM node
   const applyMetadata = metadata => {
-    const { id, styles, interactive, errored, definition, draggable } = metadata
+    const { id, styles, interactive, errored, definition, draggable, active } =
+      metadata
+    if (!active) {
+      return
+    }
 
     // Callback to select the component when clicking on the wrapper
     selectComponent = e => {

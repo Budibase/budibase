@@ -42,6 +42,7 @@
   import { gridLayout } from "utils/grid.js"
 
   export let instance = {}
+  export let parent = null
   export let isLayout = false
   export let isRoot = false
   export let isBlock = false
@@ -194,14 +195,20 @@
   $: pad = pad || (interactive && hasChildren && inDndPath)
   $: $dndIsDragging, (pad = false)
 
+  // Themes
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
 
+  // Apply ephemeral styles (such as when resizing grid components)
   $: normalStyles = {
     ...instance._styles?.normal,
     ...ephemeralStyles,
   }
+
+  // Metadata to pass into grid action to apply CSS
   $: gridMetadata = {
+    active:
+      parent?._component.endsWith("/container") && parent?.layout === "grid",
     id,
     interactive,
     styles: normalStyles,
@@ -672,7 +679,7 @@
       <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
         {#if children.length}
           {#each children as child (child._id)}
-            <svelte:self instance={child} />
+            <svelte:self instance={child} parent={instance} />
           {/each}
         {:else if emptyState}
           {#if isRoot}
