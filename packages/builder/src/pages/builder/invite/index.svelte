@@ -85,8 +85,15 @@
       notifications.error("Error getting invite config")
     }
   })
+
+  const handleKeydown = evt => {
+    if (evt.key === "Enter") {
+      acceptInvite()
+    }
+  }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 {#if loaded}
   <TestimonialPage>
     <Layout gap="M" noPadding>
@@ -154,8 +161,8 @@
                 function validatePassword() {
                   if (!formData.password) {
                     return "Please enter a password"
-                  } else if (formData.password.length < 8) {
-                    return "Please enter at least 8 characters"
+                  } else if (formData.password.length < 12) {
+                    return "Please enter at least 12 characters"
                   }
                   return undefined
                 }
