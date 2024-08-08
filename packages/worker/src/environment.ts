@@ -19,8 +19,6 @@ function parseIntSafe(number: any) {
 }
 
 const environment = {
-  // features
-  WORKER_FEATURES: process.env.WORKER_FEATURES,
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,

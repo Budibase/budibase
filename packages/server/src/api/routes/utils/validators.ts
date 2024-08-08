@@ -1,6 +1,11 @@
 import { auth, permissions } from "@budibase/backend-core"
 import { DataSourceOperation } from "../../../constants"
-import { Table, WebhookActionType } from "@budibase/types"
+import {
+  EmptyFilterOption,
+  SearchFilters,
+  Table,
+  WebhookActionType,
+} from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
@@ -84,7 +89,12 @@ export function datasourceValidator() {
 }
 
 function filterObject() {
-  return Joi.object({
+  const conditionalFilteringObject = () =>
+    Joi.object({
+      conditions: Joi.array().items(Joi.link("#schema")).required(),
+    })
+
+  const filtersValidators: Record<keyof SearchFilters, any> = {
     string: Joi.object().optional(),
     fuzzy: Joi.object().optional(),
     range: Joi.object().optional(),
@@ -95,8 +105,17 @@ function filterObject() {
     oneOf: Joi.object().optional(),
     contains: Joi.object().optional(),
     notContains: Joi.object().optional(),
+    containsAny: Joi.object().optional(),
     allOr: Joi.boolean().optional(),
-  }).unknown(true)
+    onEmptyFilter: Joi.string()
+      .optional()
+      .valid(...Object.values(EmptyFilterOption)),
+    $and: conditionalFilteringObject(),
+    $or: conditionalFilteringObject(),
+    fuzzyOr: Joi.forbidden(),
+    documentType: Joi.forbidden(),
+  }
+  return Joi.object(filtersValidators).unknown(true).id("schema")
 }
 
 export function internalSearchValidator() {

@@ -11,13 +11,10 @@ import {
   AutomationStepSchema,
   AutomationStepType,
   EmptyFilterOption,
-  SearchFilters,
-  Table,
   SortOrder,
   QueryRowsStepInputs,
   QueryRowsStepOutputs,
 } from "@budibase/types"
-import { db as dbCore } from "@budibase/backend-core"
 
 const SortOrderPretty = {
   [SortOrder.ASCENDING]: "Ascending",
@@ -95,38 +92,6 @@ async function getTable(appId: string, tableId: string) {
   return ctx.body
 }
 
-function typeCoercion(filters: SearchFilters, table: Table) {
-  if (!filters || !table) {
-    return filters
-  }
-  for (let key of Object.keys(filters)) {
-    const searchParam = filters[key as keyof SearchFilters]
-    if (typeof searchParam === "object") {
-      for (let [property, value] of Object.entries(searchParam)) {
-        // We need to strip numerical prefixes here, so that we can look up
-        // the correct field name in the schema
-        const columnName = dbCore.removeKeyNumbering(property)
-        const column = table.schema[columnName]
-
-        // convert string inputs
-        if (!column || typeof value !== "string") {
-          continue
-        }
-        if (column.type === FieldType.NUMBER) {
-          if (key === "oneOf") {
-            searchParam[property] = value
-              .split(",")
-              .map(item => parseFloat(item))
-          } else {
-            searchParam[property] = parseFloat(value)
-          }
-        }
-      }
-    }
-  }
-  return filters
-}
-
 function hasNullFilters(filters: any[]) {
   return (
     filters.length === 0 ||
@@ -157,7 +122,7 @@ export async function run({
     sortType =
       fieldType === FieldType.NUMBER ? FieldType.NUMBER : FieldType.STRING
   }
-  const ctx: any = buildCtx(appId, null, {
+  const ctx = buildCtx(appId, null, {
     params: {
       tableId,
     },
@@ -165,7 +130,7 @@ export async function run({
       sortType,
       limit,
       sort: sortColumn,
-      query: typeCoercion(filters || {}, table),
+      query: filters || {},
       // default to ascending, like data tab
       sortOrder: sortOrder || SortOrder.ASCENDING,
     },
