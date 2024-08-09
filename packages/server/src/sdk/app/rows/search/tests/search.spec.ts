@@ -4,6 +4,10 @@ import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { search } from "../../../../../sdk/app/rows/search"
 import { generator } from "@budibase/backend-core/tests"
 import {
+  withEnv as withCoreEnv,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
+import {
   DatabaseName,
   getDatasource,
 } from "../../../../../integrations/tests/utils"
@@ -31,13 +35,12 @@ describe.each([
   let rows: Row[]
 
   beforeAll(async () => {
-    await config.withCoreEnv(
-      { SQS_SEARCH_ENABLE: isSqs ? "true" : "false" },
-      () => config.init()
+    await withCoreEnv({ SQS_SEARCH_ENABLE: isSqs ? "true" : "false" }, () =>
+      config.init()
     )
 
     if (isSqs) {
-      envCleanup = config.setCoreEnv({
+      envCleanup = setCoreEnv({
         SQS_SEARCH_ENABLE: "true",
         SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
       })

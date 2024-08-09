@@ -247,65 +247,6 @@ export default class TestConfiguration {
     }
   }
 
-  async withEnv<T>(newEnvVars: Partial<typeof env>, f: () => Promise<T>) {
-    let cleanup = this.setEnv(newEnvVars)
-    try {
-      return await f()
-    } finally {
-      cleanup()
-    }
-  }
-
-  /*
-   * Sets the environment variables to the given values and returns a function
-   * that can be called to reset the environment variables to their original values.
-   */
-  setEnv(newEnvVars: Partial<typeof env>): () => void {
-    const oldEnv = cloneDeep(env)
-
-    let key: keyof typeof newEnvVars
-    for (key in newEnvVars) {
-      env._set(key, newEnvVars[key])
-    }
-
-    return () => {
-      for (const [key, value] of Object.entries(oldEnv)) {
-        env._set(key, value)
-      }
-    }
-  }
-
-  async withCoreEnv<T>(
-    newEnvVars: Partial<typeof coreEnv>,
-    f: () => Promise<T>
-  ) {
-    let cleanup = this.setCoreEnv(newEnvVars)
-    try {
-      return await f()
-    } finally {
-      cleanup()
-    }
-  }
-
-  /*
-   * Sets the environment variables to the given values and returns a function
-   * that can be called to reset the environment variables to their original values.
-   */
-  setCoreEnv(newEnvVars: Partial<typeof coreEnv>): () => void {
-    const oldEnv = cloneDeep(coreEnv)
-
-    let key: keyof typeof newEnvVars
-    for (key in newEnvVars) {
-      coreEnv._set(key, newEnvVars[key])
-    }
-
-    return () => {
-      for (const [key, value] of Object.entries(oldEnv)) {
-        coreEnv._set(key, value)
-      }
-    }
-  }
-
   async withUser(user: User, f: () => Promise<void>) {
     const oldUser = this.user
     this.user = user
