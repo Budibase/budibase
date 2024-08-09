@@ -352,6 +352,9 @@
     z-index: 1;
     overflow: hidden;
     position: relative;
+
+    /* Deliberately unitless as we need to do unitless calculations in grids */
+    --grid-spacing: 4;
   }
   .component {
     display: contents;
@@ -407,7 +410,7 @@
     gap: var(--spacing-xl);
   }
   .nav.size--max {
-    padding: 10px;
+    padding: calc(var(--grid-spacing) * 2px);
   }
   .nav :global(.spectrum-Icon) {
     color: var(--navTextColor);
@@ -483,7 +486,7 @@
     padding: 32px;
   }
   .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
-    padding: 22px;
+    padding: calc(32px - var(--grid-spacing) * 2px);
   }
 
   .layout--none .main {

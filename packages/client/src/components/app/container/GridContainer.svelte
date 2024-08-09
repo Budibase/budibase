@@ -53,7 +53,6 @@
   .grid {
     position: relative;
     height: 400px;
-    --spacing: 8;
 
     /*
       Prevent cross-grid variable inheritance. The other variables for alignment
@@ -113,8 +112,8 @@
     overflow: auto;
     pointer-events: all;
     position: relative;
-    padding: 4px;
-    margin: 4px;
+    padding: calc(var(--grid-spacing) * 1px);
+    margin: calc(var(--grid-spacing) * 1px);
 
     /* On desktop, use desktop metadata and fall back to mobile */
     /* Position vars */
@@ -126,7 +125,8 @@
         round(
           up,
           calc(
-            (var(--spacing) * 2 + var(--default-width)) / var(--col-size) + 1
+            (var(--grid-spacing) * 2 + var(--default-width)) / var(--col-size) +
+              1
           )
         )
       )
@@ -139,7 +139,8 @@
         round(
           up,
           calc(
-            (var(--spacing) * 2 + var(--default-height)) / var(--row-size) + 1
+            (var(--grid-spacing) * 2 + var(--default-height)) / var(--row-size) +
+              1
           )
         )
       )
