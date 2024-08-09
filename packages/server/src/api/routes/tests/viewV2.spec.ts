@@ -1605,7 +1605,7 @@ describe.each([
           expect(response.rows).toHaveLength(0)
         })
 
-      it.only("queries the row api passing the view fields only", async () => {
+      it("queries the row api passing the view fields only", async () => {
         const searchSpy = jest.spyOn(sdk.rows, "search")
 
         const view = await config.api.viewV2.create({
