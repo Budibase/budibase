@@ -14,6 +14,7 @@ import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
 import { db as dbCore } from "@budibase/backend-core"
 import tracer from "dd-trace"
+import { removeInvalidFilters } from "./queryUtils"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -72,6 +73,24 @@ export async function search(
 
     const table = await sdk.tables.getTable(options.tableId)
     options = searchInputMapping(table, options)
+
+    const visibleTableFields = Object.keys(table.schema).filter(
+      f => table.schema[f].visible !== false
+    )
+
+    if (options.fields) {
+      const tableFields = visibleTableFields.map(f => f.toLowerCase())
+      options.fields = options.fields.filter(f =>
+        tableFields.includes(f.toLowerCase())
+      )
+    } else {
+      options.fields = visibleTableFields
+    }
+
+    options.query = removeInvalidFilters(options.query, [
+      "_id",
+      ...options.fields,
+    ])
 
     let result: SearchResponse<Row>
     if (isExternalTable) {
