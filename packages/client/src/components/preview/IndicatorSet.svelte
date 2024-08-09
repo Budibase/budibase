@@ -32,15 +32,8 @@
 
   let interval
   let state = defaultState()
-  let nextState = null
-  let updating = false
-  let observers = []
-  let callbackCount = 0
 
   $: offset = $builderStore.inBuilder ? 5 : -1
-  $: visibleIndicators = state.indicators.filter(x => x.visible)
-
-  // Update position when any props change
   $: config.set({
     componentId,
     color,
@@ -48,43 +41,21 @@
     prefix,
     allowResizeAnchors,
   })
+
+  // Update position when any props change
   $: $config, debouncedUpdate()
 
   const checkInsideGrid = id => {
     return isGridChild(document.getElementsByClassName(id)[0])
   }
 
-  const createIntersectionCallback = idx => entries => {
-    if (callbackCount >= observers.length) {
-      return
-    }
-    nextState.indicators[idx].visible =
-      nextState.indicators[idx].insideModal ||
-      nextState.indicators[idx].insideSidePanel ||
-      entries[0].isIntersecting
-    if (++callbackCount === observers.length) {
-      state = nextState
-      updating = false
-    }
-  }
-
   const updatePosition = () => {
-    if (updating) {
-      return
-    }
-
     // Sanity check
     if (!componentId) {
       state = defaultState()
       return
     }
-
-    // Reset state
-    updating = true
-    callbackCount = 0
-    observers.forEach(o => o.disconnect())
-    observers = []
-    nextState = defaultState()
+    let nextState = defaultState()
 
     // Check if we're inside a grid
     if (allowResizeAnchors) {
@@ -109,7 +80,7 @@
     const scrollY = window.scrollY
 
     // Extract valid children
-    // Sanity limit of 100 active indicators
+    // Sanity limit of active indicators
     const className = nextState.insideGrid ? componentId : `${componentId}-dom`
     const children = Array.from(document.getElementsByClassName(className))
       .filter(x => x != null)
@@ -118,32 +89,21 @@
     // If there aren't any nodes then reset
     if (!children.length) {
       state = defaultState()
-      updating = false
       return
     }
 
     const device = document.getElementById("app-root")
     const deviceBounds = device.getBoundingClientRect()
-    children.forEach((child, idx) => {
-      const callback = createIntersectionCallback(idx)
-      const threshold = children.length > 1 ? 1 : 0
-      const observer = new IntersectionObserver(callback, {
-        threshold,
-        root: device,
-      })
-      observer.observe(child)
-      observers.push(observer)
+    nextState.indicators = children.map(child => {
       const elBounds = child.getBoundingClientRect()
-      nextState.indicators.push({
+      return {
         top: Math.round(elBounds.top + scrollY - deviceBounds.top + offset),
         left: Math.round(elBounds.left + scrollX - deviceBounds.left + offset),
         width: Math.round(elBounds.width + 2),
         height: Math.round(elBounds.height + 2),
-        visible: false,
-        insideSidePanel: !!child.closest(".side-panel"),
-        insideModal: !!child.closest(".modal-content"),
-      })
+      }
     })
+    state = nextState
   }
   const debouncedUpdate = Utils.domDebounce(updatePosition)
 
@@ -156,11 +116,10 @@
   onDestroy(() => {
     clearInterval(interval)
     document.removeEventListener("scroll", debouncedUpdate, true)
-    observers.forEach(o => o.disconnect())
   })
 </script>
 
-{#each visibleIndicators as indicator, idx}
+{#each state.indicators as indicator, idx}
   <Indicator
     top={indicator.top}
     left={indicator.left}
