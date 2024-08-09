@@ -55,10 +55,7 @@ export const isGridEvent = e => {
 
 // Determines whether a DOM element is an immediate child of a grid
 export const isGridChild = node => {
-  return node
-    ?.closest(".component")
-    ?.parentNode.closest(".component")
-    ?.childNodes[0]?.classList?.contains("grid")
+  return node?.parentNode.classList.contains("grid")
 }
 
 // Gets the component ID of the closest parent grid
