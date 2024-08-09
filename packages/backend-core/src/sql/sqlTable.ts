@@ -70,7 +70,12 @@ function generateSchema(
       case FieldType.LONGFORM:
       case FieldType.BARCODEQR:
       case FieldType.BB_REFERENCE_SINGLE:
-        schema.text(key)
+        // primary key strings have to have a length in some DBs
+        if (primaryKeys.includes(key)) {
+          schema.string(key, 255)
+        } else {
+          schema.text(key)
+        }
         break
       case FieldType.NUMBER:
         // if meta is specified then this is a junction table entry
