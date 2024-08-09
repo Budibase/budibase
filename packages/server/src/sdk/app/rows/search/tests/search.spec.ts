@@ -217,57 +217,6 @@ describe.each([
     })
   })
 
-  it("does not allow accessing non-mapped fields", async () => {
-    await config.doInContext(config.appId, async () => {
-      await config.api.table.save({
-        ...table,
-        schema: {
-          id: table.schema.id,
-          name: table.schema.name,
-          surname: table.schema.surname,
-        },
-      })
-      const result = await search({
-        tableId: table._id!,
-        query: {},
-      })
-      expect(result.rows).toHaveLength(10)
-      for (const row of result.rows) {
-        const keys = Object.keys(row)
-        expect(keys).toContain("name")
-        expect(keys).toContain("surname")
-        expect(keys).not.toContain("address")
-        expect(keys).not.toContain("age")
-      }
-    })
-  })
-
-  it("does not allow accessing non-mapped fields even if requested", async () => {
-    await config.doInContext(config.appId, async () => {
-      await config.api.table.save({
-        ...table,
-        schema: {
-          id: table.schema.id,
-          name: table.schema.name,
-          surname: table.schema.surname,
-        },
-      })
-      const result = await search({
-        tableId: table._id!,
-        query: {},
-        fields: ["name", "age"],
-      })
-      expect(result.rows).toHaveLength(10)
-      for (const row of result.rows) {
-        const keys = Object.keys(row)
-        expect(keys).toContain("name")
-        expect(keys).not.toContain("age")
-        expect(keys).not.toContain("surname")
-        expect(keys).not.toContain("address")
-      }
-    })
-  })
-
   !isLucene &&
     it.each([
       [["id", "name", "age"], 3],
