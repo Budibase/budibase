@@ -30,6 +30,7 @@ import {
   withEnv as withCoreEnv,
   setEnv as setCoreEnv,
 } from "@budibase/backend-core"
+import sdk from "../../../sdk"
 
 describe.each([
   ["lucene", undefined],
@@ -1623,7 +1624,7 @@ describe.each([
             fields: ["id"],
           })
         )
-        })
+      })
     })
 
     describe("permissions", () => {
