@@ -1,5 +1,5 @@
 import * as setup from "./utilities"
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { checkBuilderEndpoint, allowUndefined } from "./utilities/TestFunctions"
 import { getCachedVariable } from "../../../threads/utils"
 import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
@@ -25,14 +25,6 @@ import {
 import { tableForDatasource } from "../../../tests/utilities/structures"
 import nock from "nock"
 import { Knex } from "knex"
-
-function fetchedSchemaProps() {
-  return {
-    externalType: expect.toBeOneOf([expect.any(String), undefined, null]),
-    constraints: expect.toBeOneOf([expect.anything(), undefined, null]),
-    autocolumn: expect.toBeOneOf([expect.anything(), undefined, null]),
-  }
-}
 
 describe("/datasources", () => {
   const config = setup.getConfig()
@@ -397,7 +389,9 @@ describe("/datasources", () => {
                     (acc, [fieldName, field]) => {
                       acc[fieldName] = {
                         ...field,
-                        ...fetchedSchemaProps(),
+                        externalType: allowUndefined(expect.any(String)),
+                        constraints: allowUndefined(expect.any(Object)),
+                        autocolumn: allowUndefined(expect.any(Boolean)),
                       }
                       return acc
                     },
