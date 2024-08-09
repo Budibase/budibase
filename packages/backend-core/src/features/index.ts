@@ -1,6 +1,5 @@
 import env from "../environment"
 import * as context from "../context"
-import { cloneDeep } from "lodash"
 import { PostHog, PostHogOptions } from "posthog-node"
 import { IdentityType } from "@budibase/types"
 import tracer from "dd-trace"
@@ -9,13 +8,13 @@ let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
   if (env.POSTHOG_TOKEN) {
     posthog = new PostHog(env.POSTHOG_TOKEN, {
-      host: "https://us.i.posthog.com",
+      host: env.POSTHOG_API_HOST,
       ...opts,
     })
   }
 }
 
-abstract class Flag<T> {
+export abstract class Flag<T> {
   static boolean(defaultValue: boolean): Flag<boolean> {
     return new BooleanFlag(defaultValue)
   }
@@ -32,6 +31,16 @@ abstract class Flag<T> {
 
   abstract parse(value: any): T
 }
+
+type UnwrapFlag<F> = F extends Flag<infer U> ? U : never
+
+export type FlagValues<T> = {
+  [K in keyof T]: UnwrapFlag<T[K]>
+}
+
+type KeysOfType<T, U> = {
+  [K in keyof T]: T[K] extends Flag<U> ? K : never
+}[keyof T]
 
 class BooleanFlag extends Flag<boolean> {
   parse(value: any) {
@@ -73,149 +82,123 @@ class NumberFlag extends Flag<number> {
   }
 }
 
+export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
+  private readonly flags: T
+
+  constructor(flags: T) {
+    this.flags = flags
+  }
+
+  defaults(): FlagValues<T> {
+    return Object.keys(this.flags).reduce((acc, key) => {
+      const typedKey = key as keyof T
+      acc[typedKey] = this.flags[key].defaultValue
+      return acc
+    }, {} as FlagValues<T>)
+  }
+
+  isFlagName(name: string | number | symbol): name is keyof T {
+    return this.flags[name as keyof T] !== undefined
+  }
+
+  async get<K extends keyof T>(key: K): Promise<FlagValues<T>[K]> {
+    const flags = await this.fetch()
+    return flags[key]
+  }
+
+  async isEnabled<K extends KeysOfType<T, boolean>>(key: K): Promise<boolean> {
+    const flags = await this.fetch()
+    return flags[key]
+  }
+
+  async fetch(): Promise<FlagValues<T>> {
+    return await tracer.trace("features.fetch", async span => {
+      const tags: Record<string, any> = {}
+
+      const flags = this.defaults()
+
+      const currentTenantId = context.getTenantId()
+      const specificallySetFalse = new Set<string>()
+
+      const split = (env.TENANT_FEATURE_FLAGS || "")
+        .split(",")
+        .map(x => x.split(":"))
+      for (const [tenantId, ...features] of split) {
+        if (!tenantId || (tenantId !== "*" && tenantId !== currentTenantId)) {
+          continue
+        }
+
+        for (let feature of features) {
+          let value = true
+          if (feature.startsWith("!")) {
+            feature = feature.slice(1)
+            value = false
+            specificallySetFalse.add(feature)
+          }
+
+          if (!this.isFlagName(feature)) {
+            throw new Error(`Feature: ${feature} is not an allowed option`)
+          }
+
+          if (typeof flags[feature] !== "boolean") {
+            throw new Error(`Feature: ${feature} is not a boolean`)
+          }
+
+          // @ts-ignore
+          flags[feature] = value
+          tags[`flags.${feature}.source`] = "environment"
+        }
+      }
+
+      const identity = context.getIdentity()
+      if (posthog && identity?.type === IdentityType.USER) {
+        const posthogFlags = await posthog.getAllFlagsAndPayloads(identity._id)
+        for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
+          const flag = this.flags[name]
+          if (!flag) {
+            // We don't want an unexpected PostHog flag to break the app, so we
+            // just log it and continue.
+            console.warn(`Unexpected posthog flag "${name}": ${value}`)
+            continue
+          }
+
+          if (flags[name] === true || specificallySetFalse.has(name)) {
+            // If the flag is already set to through environment variables, we
+            // don't want to override it back to false here.
+            continue
+          }
+
+          const payload = posthogFlags.featureFlagPayloads?.[name]
+
+          try {
+            // @ts-ignore
+            flags[name] = flag.parse(payload || value)
+            tags[`flags.${name}.source`] = "posthog"
+          } catch (err) {
+            // We don't want an invalid PostHog flag to break the app, so we just
+            // log it and continue.
+            console.warn(`Error parsing posthog flag "${name}": ${value}`, err)
+          }
+        }
+      }
+
+      for (const [key, value] of Object.entries(flags)) {
+        tags[`flags.${key}.value`] = value
+      }
+      span?.addTags(tags)
+
+      return flags
+    })
+  }
+}
+
 // This is the primary source of truth for feature flags. If you want to add a
 // new flag, add it here and use the `fetch` and `get` functions to access it.
 // All of the machinery in this file is to make sure that flags have their
 // default values set correctly and their types flow through the system.
-const FLAGS = {
+export const flags = new FlagSet({
   LICENSING: Flag.boolean(false),
   GOOGLE_SHEETS: Flag.boolean(false),
   USER_GROUPS: Flag.boolean(false),
   ONBOARDING_TOUR: Flag.boolean(false),
-
-  _TEST_BOOLEAN: Flag.boolean(false),
-  _TEST_STRING: Flag.string("default value"),
-  _TEST_NUMBER: Flag.number(0),
-}
-
-const DEFAULTS = Object.keys(FLAGS).reduce((acc, key) => {
-  const typedKey = key as keyof typeof FLAGS
-  // @ts-ignore
-  acc[typedKey] = FLAGS[typedKey].defaultValue
-  return acc
-}, {} as Flags)
-
-type UnwrapFlag<F> = F extends Flag<infer U> ? U : never
-export type Flags = {
-  [K in keyof typeof FLAGS]: UnwrapFlag<(typeof FLAGS)[K]>
-}
-
-// Exported for use in tests, should not be used outside of this file.
-export function defaultFlags(): Flags {
-  return cloneDeep(DEFAULTS)
-}
-
-function isFlagName(name: string): name is keyof Flags {
-  return FLAGS[name as keyof typeof FLAGS] !== undefined
-}
-
-/**
- * Reads the TENANT_FEATURE_FLAGS environment variable and returns a Flags object
- * populated with the flags for the current tenant, filling in the default values
- * if the flag is not set.
- *
- * Check the tests for examples of how TENANT_FEATURE_FLAGS should be formatted.
- *
- * In future we plan to add more ways of setting feature flags, e.g. PostHog, and
- * they will be accessed through this function as well.
- */
-export async function fetch(): Promise<Flags> {
-  return await tracer.trace("features.fetch", async span => {
-    const tags: Record<string, any> = {}
-
-    const flags = defaultFlags()
-
-    const currentTenantId = context.getTenantId()
-    const specificallySetFalse = new Set<string>()
-
-    const split = (env.TENANT_FEATURE_FLAGS || "")
-      .split(",")
-      .map(x => x.split(":"))
-    for (const [tenantId, ...features] of split) {
-      if (!tenantId || (tenantId !== "*" && tenantId !== currentTenantId)) {
-        continue
-      }
-
-      for (let feature of features) {
-        let value = true
-        if (feature.startsWith("!")) {
-          feature = feature.slice(1)
-          value = false
-          specificallySetFalse.add(feature)
-        }
-
-        if (!isFlagName(feature)) {
-          throw new Error(`Feature: ${feature} is not an allowed option`)
-        }
-
-        if (typeof flags[feature] !== "boolean") {
-          throw new Error(`Feature: ${feature} is not a boolean`)
-        }
-
-        // @ts-ignore
-        flags[feature] = value
-        tags[`flags.${feature}.source`] = "environment"
-      }
-    }
-
-    const identity = context.getIdentity()
-    if (posthog && identity?.type === IdentityType.USER) {
-      const posthogFlags = await posthog.getAllFlagsAndPayloads(identity._id)
-      for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
-        const key = name as keyof typeof FLAGS
-        const flag = FLAGS[key]
-        if (!flag) {
-          // We don't want an unexpected PostHog flag to break the app, so we
-          // just log it and continue.
-          console.warn(`Unexpected posthog flag "${name}": ${value}`)
-          continue
-        }
-
-        if (flags[key] === true || specificallySetFalse.has(key)) {
-          // If the flag is already set to through environment variables, we
-          // don't want to override it back to false here.
-          continue
-        }
-
-        const payload = posthogFlags.featureFlagPayloads?.[name]
-
-        try {
-          // @ts-ignore
-          flags[key] = flag.parse(payload || value)
-          tags[`flags.${key}.source`] = "posthog"
-        } catch (err) {
-          // We don't want an invalid PostHog flag to break the app, so we just
-          // log it and continue.
-          console.warn(`Error parsing posthog flag "${name}": ${value}`, err)
-        }
-      }
-    }
-
-    for (const [key, value] of Object.entries(flags)) {
-      tags[`flags.${key}.value`] = value
-    }
-    span?.addTags(tags)
-
-    return flags
-  })
-}
-
-// Gets a single feature flag value. This is a convenience function for
-// `fetch().then(flags => flags[name])`.
-export async function get<K extends keyof Flags>(name: K): Promise<Flags[K]> {
-  const flags = await fetch()
-  return flags[name]
-}
-
-type BooleanFlags = {
-  [K in keyof typeof FLAGS]: (typeof FLAGS)[K] extends Flag<boolean> ? K : never
-}[keyof typeof FLAGS]
-
-// Convenience function for boolean flag values. This makes callsites more
-// readable for boolean flags.
-export async function isEnabled<K extends BooleanFlags>(
-  name: K
-): Promise<boolean> {
-  const flags = await fetch()
-  return flags[name]
-}
+})
