@@ -50,6 +50,7 @@ export function createAdminStore() {
       store.baseUrl = environment.baseUrl
       store.offlineMode = environment.offlineMode
       store.maintenance = environment.maintenance
+      store.passwordMinLength = environment.passwordMinLength
       return store
     })
   }

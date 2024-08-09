@@ -48,7 +48,7 @@ export class UserAPI extends TestAPI {
     return this.request
       .post(`/api/global/users/invite/accept`)
       .send({
-        password: "newpassword",
+        password: "newpassword1",
         inviteCode: code,
         firstName: "Ted",
       })
@@ -101,7 +101,7 @@ export class UserAPI extends TestAPI {
     if (!request) {
       request = {
         email: structures.email(),
-        password: generator.string({ length: 8 }),
+        password: generator.string({ length: 12 }),
         tenantId: structures.tenant.id(),
       }
     }
