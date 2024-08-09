@@ -32,6 +32,7 @@
 
   let interval
   let state = defaultState()
+  let observing = false
 
   $: offset = $builderStore.inBuilder ? 5 : -1
   $: config.set({
@@ -45,6 +46,26 @@
   // Update position when any props change
   $: $config, debouncedUpdate()
 
+  // Observe style changes
+  $: observeChanges(componentId)
+
+  const observer = new MutationObserver(() => debouncedUpdate())
+
+  const observeChanges = id => {
+    observer.disconnect()
+    observing = false
+    const node = document.getElementsByClassName(id)[0]
+    if (node) {
+      observer.observe(node, {
+        attributes: true,
+        attributeFilter: ["style"],
+        childList: false,
+        subtree: false,
+      })
+      observing = true
+    }
+  }
+
   const checkInsideGrid = id => {
     return isGridChild(document.getElementsByClassName(id)[0])
   }
@@ -55,6 +76,17 @@
       state = defaultState()
       return
     }
+    const parents = document.getElementsByClassName(componentId)
+    if (!parents.length) {
+      state = defaultState()
+      return
+    }
+
+    // Start observing if this is the first time we've seen our component
+    // in the DOM
+    if (!observing) {
+      observeChanges(componentId)
+    }
     let nextState = defaultState()
 
     // Check if we're inside a grid
@@ -62,18 +94,15 @@
       nextState.insideGrid = checkInsideGrid(componentId)
     }
 
-    // Determine next set of indicators
-    const parents = document.getElementsByClassName(componentId)
-    if (parents.length) {
-      nextState.text = parents[0].dataset.name
-      if (nextState.prefix) {
-        nextState.text = `${nextState.prefix} ${nextState.text}`
-      }
-      if (parents[0].dataset.icon) {
-        nextState.icon = parents[0].dataset.icon
-      }
+    // Get text to display
+    nextState.text = parents[0].dataset.name
+    if (nextState.prefix) {
+      nextState.text = `${nextState.prefix} ${nextState.text}`
     }
-    nextState.error = parents?.[0]?.classList.contains("error")
+    if (parents[0].dataset.icon) {
+      nextState.icon = parents[0].dataset.icon
+    }
+    nextState.error = parents[0].classList.contains("error")
 
     // Batch reads to minimize reflow
     const scrollX = window.scrollX
@@ -114,6 +143,7 @@
   })
 
   onDestroy(() => {
+    observer.disconnect()
     clearInterval(interval)
     document.removeEventListener("scroll", debouncedUpdate, true)
   })
