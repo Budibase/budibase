@@ -205,6 +205,7 @@ describe.each([
       await config.api.table.save({
         ...table,
         schema: {
+          id: table.schema.id,
           name: table.schema.name,
           surname: table.schema.surname,
         },
