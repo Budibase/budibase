@@ -66,7 +66,7 @@ describe("/api/global/auth", () => {
       it("should return 403 with incorrect credentials", async () => {
         const tenantId = config.tenantId!
         const email = config.user?.email!
-        const password = "incorrect"
+        const password = "incorrect123"
 
         const response = await config.api.auth.login(
           tenantId,
@@ -83,7 +83,7 @@ describe("/api/global/auth", () => {
       it("should return 403 when user doesn't exist", async () => {
         const tenantId = config.tenantId!
         const email = "invaliduser@example.com"
-        const password = "password"
+        const password = "password123!"
 
         const response = await config.api.auth.login(
           tenantId,
@@ -203,7 +203,7 @@ describe("/api/global/auth", () => {
         )
         delete user.password
 
-        const newPassword = "newpassword"
+        const newPassword = "newpassword1"
         const res = await config.api.auth.updatePassword(code!, newPassword)
 
         user = (await config.getUser(user.email))!
