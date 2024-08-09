@@ -2,6 +2,7 @@ import * as setup from "./utilities"
 import path from "path"
 import nock from "nock"
 import { generator } from "@budibase/backend-core/tests"
+import { withEnv as withCoreEnv } from "@budibase/backend-core"
 
 interface App {
   background: string
@@ -89,7 +90,7 @@ describe("/templates", () => {
           SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
         }
 
-        await config.withCoreEnv(env, async () => {
+        await withCoreEnv(env, async () => {
           const name = generator.guid().replaceAll("-", "")
           const url = `/${name}`
 
