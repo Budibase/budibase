@@ -1,12 +1,12 @@
 import env from "../environment"
 import * as context from "../context"
 import { PostHog, PostHogOptions } from "posthog-node"
-import { IdentityType } from "@budibase/types"
+import { IdentityType, UserCtx } from "@budibase/types"
 import tracer from "dd-trace"
 
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
-  if (env.POSTHOG_TOKEN) {
+  if (env.POSTHOG_TOKEN && env.POSTHOG_API_HOST) {
     posthog = new PostHog(env.POSTHOG_TOKEN, {
       host: env.POSTHOG_API_HOST,
       ...opts,
@@ -101,17 +101,23 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
     return this.flags[name as keyof T] !== undefined
   }
 
-  async get<K extends keyof T>(key: K): Promise<FlagValues<T>[K]> {
-    const flags = await this.fetch()
+  async get<K extends keyof T>(
+    key: K,
+    ctx?: UserCtx
+  ): Promise<FlagValues<T>[K]> {
+    const flags = await this.fetch(ctx)
     return flags[key]
   }
 
-  async isEnabled<K extends KeysOfType<T, boolean>>(key: K): Promise<boolean> {
-    const flags = await this.fetch()
+  async isEnabled<K extends KeysOfType<T, boolean>>(
+    key: K,
+    ctx?: UserCtx
+  ): Promise<boolean> {
+    const flags = await this.fetch(ctx)
     return flags[key]
   }
 
-  async fetch(): Promise<FlagValues<T>> {
+  async fetch(ctx?: UserCtx): Promise<FlagValues<T>> {
     return await tracer.trace("features.fetch", async span => {
       const tags: Record<string, any> = {}
 
@@ -147,6 +153,26 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
           // @ts-ignore
           flags[feature] = value
           tags[`flags.${feature}.source`] = "environment"
+        }
+      }
+
+      const license = ctx?.user?.license
+      if (license) {
+        for (const feature of license.features) {
+          const flag = this.flags[feature]
+          if (!flag) {
+            continue
+          }
+
+          if (flags[feature] === true || specificallySetFalse.has(feature)) {
+            // If the flag is already set to through environment variables, we
+            // don't want to override it back to false here.
+            continue
+          }
+
+          // @ts-ignore
+          flags[feature] = true
+          tags[`flags.${feature}.source`] = "license"
         }
       }
 
