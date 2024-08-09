@@ -80,6 +80,7 @@ const componentMap = {
   "field/barcodeqr": FormFieldSelect,
   "field/signature_single": FormFieldSelect,
   "field/bb_reference": FormFieldSelect,
+  "field/bb_reference_single": FormFieldSelect,
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,
