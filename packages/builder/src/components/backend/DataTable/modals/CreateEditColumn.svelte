@@ -44,6 +44,7 @@
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import OptionsEditor from "./OptionsEditor.svelte"
+  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   const AUTO_TYPE = FieldType.AUTO
   const FORMULA_TYPE = FieldType.FORMULA
@@ -168,11 +169,12 @@
     editableColumn?.type !== JSON_TYPE &&
     !editableColumn.autocolumn
   $: canHaveDefault =
-    editableColumn?.type === FieldType.NUMBER ||
-    editableColumn?.type === FieldType.JSON ||
-    editableColumn?.type === FieldType.DATETIME ||
-    editableColumn?.type === FieldType.LONGFORM ||
-    editableColumn?.type === FieldType.STRING
+    isEnabled(TENANT_FEATURE_FLAGS.DEFAULT_VALUES) &&
+    (editableColumn?.type === FieldType.NUMBER ||
+      editableColumn?.type === FieldType.JSON ||
+      editableColumn?.type === FieldType.DATETIME ||
+      editableColumn?.type === FieldType.LONGFORM ||
+      editableColumn?.type === FieldType.STRING)
   $: canBeRequired =
     editableColumn?.type !== LINK_TYPE &&
     !uneditable &&
