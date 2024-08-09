@@ -14,6 +14,7 @@ import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
 import { db as dbCore } from "@budibase/backend-core"
 import tracer from "dd-trace"
+import { removeInvalidFilters } from "./queryUtils"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -85,6 +86,11 @@ export async function search(
     } else {
       options.fields = visibleTableFields
     }
+
+    options.query = removeInvalidFilters(options.query, [
+      "_id",
+      ...options.fields,
+    ])
 
     let result: SearchResponse<Row>
     if (isExternalTable) {
