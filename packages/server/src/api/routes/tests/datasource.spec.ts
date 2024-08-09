@@ -26,6 +26,14 @@ import { tableForDatasource } from "../../../tests/utilities/structures"
 import nock from "nock"
 import { Knex } from "knex"
 
+function fetchedSchemaProps() {
+  return {
+    externalType: expect.toBeOneOf([expect.any(String), undefined, null]),
+    constraints: expect.toBeOneOf([expect.anything(), undefined, null]),
+    autocolumn: expect.toBeOneOf([expect.anything(), undefined, null]),
+  }
+}
+
 describe("/datasources", () => {
   const config = setup.getConfig()
   let datasource: Datasource
@@ -380,21 +388,22 @@ describe("/datasources", () => {
             persisted?.entities &&
             Object.entries(persisted.entities).reduce<Record<string, Table>>(
               (acc, [tableName, table]) => {
-                acc[tableName] = {
+                acc[tableName] = expect.objectContaining({
                   ...table,
                   primaryDisplay: expect.not.stringMatching(
                     new RegExp(`^${table.primaryDisplay || ""}$`)
                   ),
                   schema: Object.entries(table.schema).reduce<TableSchema>(
                     (acc, [fieldName, field]) => {
-                      acc[fieldName] = expect.objectContaining({
+                      acc[fieldName] = {
                         ...field,
-                      })
+                        ...fetchedSchemaProps(),
+                      }
                       return acc
                     },
                     {}
                   ),
-                }
+                })
                 return acc
               },
               {}
