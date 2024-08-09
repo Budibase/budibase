@@ -1,19 +1,20 @@
-import sanitizeUrl from "helpers/sanitizeUrl"
-import { Screen } from "./Screen"
-import { Component } from "./Component"
+import { Screen } from "../Screen"
+import { Component } from "../../Component"
 import { generate } from "shortid"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Utils } from "@budibase/frontend-core"
+import { capitalise } from "helpers"
+import getValidRoute from "../getValidRoute"
 
-const gridDetailsUrl = tableOrView => sanitizeUrl(`/${tableOrView.name}`)
-
-const createScreen = (tableOrView, permissions) => {
+const modal = ({ tableOrView, permissions, screens }) => {
   /*
     Create Row
    */
-  const createRowSidePanel = new Component(
-    "@budibase/standard-components/sidepanel"
-  ).instanceName("New row side panel")
+  const createRowModal = new Component("@budibase/standard-components/modal")
+    .instanceName("New row modal")
+    .customProps({
+      size: "large",
+    })
 
   const buttonGroup = new Component("@budibase/standard-components/buttongroup")
   const createButton = new Component("@budibase/standard-components/button")
@@ -22,9 +23,9 @@ const createScreen = (tableOrView, permissions) => {
     onClick: [
       {
         id: 0,
-        "##eventHandlerType": "Open Side Panel",
+        "##eventHandlerType": "Open Modal",
         parameters: {
-          id: createRowSidePanel._json._id,
+          id: createRowModal._json._id,
         },
       },
     ],
@@ -37,7 +38,7 @@ const createScreen = (tableOrView, permissions) => {
     buttons: [createButton.json()],
   })
 
-  const gridHeader = new Component("@budibase/standard-components/container")
+  const tableHeader = new Component("@budibase/standard-components/container")
     .instanceName("Heading container")
     .customProps({
       direction: "row",
@@ -50,14 +51,14 @@ const createScreen = (tableOrView, permissions) => {
       text: tableOrView.name,
     })
 
-  gridHeader.addChild(heading)
-  gridHeader.addChild(buttonGroup)
+  tableHeader.addChild(heading)
+  tableHeader.addChild(buttonGroup)
 
   const createFormBlock = new Component(
     "@budibase/standard-components/formblock"
   )
   createFormBlock.instanceName("Create row form block").customProps({
-    dataSource: tableOrView.clientData,
+    dataSource: tableOrView.tableSelectFormat,
     labelPosition: "left",
     buttonPosition: "top",
     actionType: "Create",
@@ -68,23 +69,25 @@ const createScreen = (tableOrView, permissions) => {
       showSaveButton: true,
       saveButtonLabel: "Save",
       actionType: "Create",
-      dataSource: tableOrView.clientData,
+      dataSource: tableOrView.tableSelectFormat,
     }),
   })
 
-  createRowSidePanel.addChild(createFormBlock)
+  createRowModal.addChild(createFormBlock)
 
   /*
     Edit Row
    */
   const stateKey = `ID_${generate()}`
-  const detailsSidePanel = new Component(
-    "@budibase/standard-components/sidepanel"
-  ).instanceName("Edit row side panel")
+  const detailsModal = new Component("@budibase/standard-components/modal")
+    .instanceName("Edit row modal")
+    .customProps({
+      size: "large",
+    })
 
   const editFormBlock = new Component("@budibase/standard-components/formblock")
   editFormBlock.instanceName("Edit row form block").customProps({
-    dataSource: tableOrView.clientData,
+    dataSource: tableOrView.tableSelectFormat,
     labelPosition: "left",
     buttonPosition: "top",
     actionType: "Update",
@@ -97,16 +100,16 @@ const createScreen = (tableOrView, permissions) => {
       saveButtonLabel: "Save",
       deleteButtonLabel: "Delete",
       actionType: "Update",
-      dataSource: tableOrView.clientData,
+      dataSource: tableOrView.tableSelectFormat,
     }),
   })
 
-  detailsSidePanel.addChild(editFormBlock)
+  detailsModal.addChild(editFormBlock)
 
-  const gridBlock = new Component("@budibase/standard-components/gridblock")
-  gridBlock
+  const tableBlock = new Component("@budibase/standard-components/gridblock")
+  tableBlock
     .customProps({
-      table: tableOrView.clientData,
+      table: tableOrView.datasourceSelectFormat,
       allowAddRows: false,
       allowEditRows: false,
       allowDeleteRows: false,
@@ -123,25 +126,32 @@ const createScreen = (tableOrView, permissions) => {
         },
         {
           id: 1,
-          "##eventHandlerType": "Open Side Panel",
+          "##eventHandlerType": "Open Modal",
           parameters: {
-            id: detailsSidePanel._json._id,
+            id: detailsModal._json._id,
           },
         },
       ],
     })
     .instanceName(`${tableOrView.name} - Table`)
 
-  return new Screen()
-    .route(gridDetailsUrl(tableOrView))
+  const template = new Screen()
+    .route(getValidRoute(screens, tableOrView.name, permissions.write))
     .instanceName(`${tableOrView.name} - List and details`)
     .role(permissions.write)
-    .autoTableId(tableOrView.resourceId)
-    .addChild(gridHeader)
-    .addChild(gridBlock)
-    .addChild(createRowSidePanel)
-    .addChild(detailsSidePanel)
+    .autoTableId(tableOrView.id)
+    .addChild(tableHeader)
+    .addChild(tableBlock)
+    .addChild(createRowModal)
+    .addChild(detailsModal)
     .json()
+
+  return [
+    {
+      data: template,
+      navigationLinkLabel: capitalise(tableOrView.name),
+    },
+  ]
 }
 
-export default createScreen
+export default modal

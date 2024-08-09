@@ -1,10 +1,9 @@
 <script>
   import { Body } from "@budibase/bbui"
   import CreationPage from "components/common/CreationPage.svelte"
-  import blankImage from "./images/blank.png"
-  import tableInline from "./images/tableInline.png"
-  import tableDetails from "./images/tableDetails.png"
-  import formImage from "./images/form.png"
+  import blank from "./images/blank.svg"
+  import table from "./images/tableInline.svg"
+  import form from "./images/formUpdate.svg"
   import CreateScreenModal from "./CreateScreenModal.svelte"
   import { screenStore } from "stores/builder"
 
@@ -30,37 +29,27 @@
     <div class="cards">
       <div class="card" on:click={() => createScreenModal.show("blank")}>
         <div class="image">
-          <img alt="" src={blankImage} />
+          <img alt="A blank screen" src={blank} />
         </div>
         <div class="text">
-          <Body size="S">Blank screen</Body>
+          <Body size="S">Blank</Body>
           <Body size="XS">Add an empty blank screen</Body>
         </div>
       </div>
 
-      <div class="card" on:click={() => createScreenModal.show("grid")}>
+      <div class="card" on:click={() => createScreenModal.show("table")}>
         <div class="image">
-          <img alt="" src={tableInline} />
+          <img alt="A table of data" src={table} />
         </div>
         <div class="text">
-          <Body size="S">Table with inline editing</Body>
-          <Body size="XS">View, edit and delete rows inline</Body>
-        </div>
-      </div>
-
-      <div class="card" on:click={() => createScreenModal.show("gridDetails")}>
-        <div class="image">
-          <img alt="" src={tableDetails} />
-        </div>
-        <div class="text">
-          <Body size="S">Table with details panel</Body>
-          <Body size="XS">Manage your row details in a side panel</Body>
+          <Body size="S">Table</Body>
+          <Body size="XS">List rows in a table</Body>
         </div>
       </div>
 
       <div class="card" on:click={() => createScreenModal.show("form")}>
         <div class="image">
-          <img alt="" src={formImage} />
+          <img alt="A form containing data" src={form} />
         </div>
         <div class="text">
           <Body size="S">Form</Body>
@@ -114,8 +103,9 @@
   }
 
   .card .image {
-    min-height: 130px;
     min-width: 235px;
+    height: 127px;
+    background-color: var(--grey-2);
   }
 
   .text {

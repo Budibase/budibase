@@ -6,8 +6,8 @@
 
   export let onConfirm
   export let onCancel
-  export let screenUrl
-  export let screenRole
+  export let route
+  export let role
   export let confirmText = "Continue"
 
   const appPrefix = "/app"
@@ -15,17 +15,17 @@
   let error
   let modal
 
-  $: appUrl = screenUrl
-    ? `${window.location.origin}${appPrefix}${screenUrl}`
+  $: appUrl = route
+    ? `${window.location.origin}${appPrefix}${route}`
     : `${window.location.origin}${appPrefix}`
 
   const routeChanged = event => {
     if (!event.detail.startsWith("/")) {
-      screenUrl = "/" + event.detail
+      route = "/" + event.detail
     }
     touched = true
-    screenUrl = sanitizeUrl(screenUrl)
-    if (routeExists(screenUrl)) {
+    route = sanitizeUrl(route)
+    if (routeExists(route)) {
       error = "This URL is already taken for this access role"
     } else {
       error = null
@@ -33,19 +33,19 @@
   }
 
   const routeExists = url => {
-    if (!screenRole) {
+    if (!role) {
       return false
     }
     return get(screenStore).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
-        screen.routing.roleId === screenRole
+        screen.routing.roleId === role
     )
   }
 
   const confirmScreenDetails = async () => {
     await onConfirm({
-      screenUrl,
+      route,
     })
   }
 </script>
@@ -58,13 +58,13 @@
   onConfirm={confirmScreenDetails}
   {onCancel}
   cancelText={"Back"}
-  disabled={!screenUrl || error || !touched}
+  disabled={!route || error || !touched}
 >
   <form on:submit|preventDefault={() => modal.confirm()}>
     <Input
       label="Enter a URL for the new screen"
       {error}
-      bind:value={screenUrl}
+      bind:value={route}
       on:change={routeChanged}
     />
     <div class="app-server" title={appUrl}>

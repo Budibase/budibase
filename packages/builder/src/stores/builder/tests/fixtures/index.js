@@ -1,6 +1,6 @@
 import { v4 } from "uuid"
 import { Component } from "templates/Component"
-import { Screen } from "templates/Screen"
+import { Screen } from "templates/screenTemplating/Screen"
 import { get } from "svelte/store"
 import {
   BUDIBASE_INTERNAL_DB_ID,
