@@ -1,8 +1,10 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
-  import { domDebounce } from "utils/domDebounce"
-  import { builderStore } from "stores"
+  import { componentStore, builderStore } from "stores"
+  import { memo, Utils } from "@budibase/frontend-core"
+  import { writable } from "svelte/store"
+  import { isGridChild } from "utils/grid"
 
   export let componentId = null
   export let color = null
@@ -10,6 +12,8 @@
   export let prefix = null
   export let allowResizeAnchors = false
 
+  // Offset = 6 (clip-root padding) - 1 (half the border thickness)
+  const config = memo($$props)
   const errorColor = "var(--spectrum-global-color-static-red-600)"
   const defaultState = () => ({
     // Cached props
@@ -34,22 +38,28 @@
   let observers = []
   let callbackCount = 0
 
+  $: offset = $builderStore.inBuilder ? 5 : -1
   $: visibleIndicators = state.indicators.filter(x => x.visible)
-  $: offset = $builderStore.inBuilder ? 0 : 2
-  $: $$props, debouncedUpdate()
+
+  // Update position when any props change
+  $: config.set({
+    componentId,
+    color,
+    zIndex,
+    prefix,
+    allowResizeAnchors,
+  })
+  $: $config, debouncedUpdate()
+
+  // Update position when component state changes
+  $: instance = componentStore.actions.getComponentInstance(componentId)
+  $: componentState = $instance?.state || writable()
+  $: $componentState, debouncedUpdate()
 
   const checkInsideGrid = id => {
     const component = document.getElementsByClassName(id)[0]
     const domNode = component?.children[0]
-
-    // Ignore grid itself
-    if (domNode?.classList.contains("grid")) {
-      return false
-    }
-
-    return component?.parentNode
-      ?.closest?.(".component")
-      ?.childNodes[0]?.classList.contains("grid")
+    return isGridChild(domNode)
   }
 
   const createIntersectionCallback = idx => entries => {
@@ -108,9 +118,8 @@
 
     // Extract valid children
     // Sanity limit of 100 active indicators
-    const children = Array.from(
-      document.getElementsByClassName(`${componentId}-dom`)
-    )
+    const className = nextState.insideGrid ? componentId : `${componentId}-dom`
+    const children = Array.from(document.getElementsByClassName(className))
       .filter(x => x != null)
       .slice(0, 100)
 
@@ -132,20 +141,19 @@
       })
       observer.observe(child)
       observers.push(observer)
-
       const elBounds = child.getBoundingClientRect()
       nextState.indicators.push({
-        top: elBounds.top + scrollY - deviceBounds.top - offset,
-        left: elBounds.left + scrollX - deviceBounds.left - offset,
-        width: elBounds.width + 4,
-        height: elBounds.height + 4,
+        top: Math.round(elBounds.top + scrollY - deviceBounds.top + offset),
+        left: Math.round(elBounds.left + scrollX - deviceBounds.left + offset),
+        width: Math.round(elBounds.width + 2),
+        height: Math.round(elBounds.height + 2),
         visible: false,
         insideSidePanel: !!child.closest(".side-panel"),
         insideModal: !!child.closest(".modal-content"),
       })
     })
   }
-  const debouncedUpdate = domDebounce(updatePosition)
+  const debouncedUpdate = Utils.domDebounce(updatePosition)
 
   onMount(() => {
     debouncedUpdate()

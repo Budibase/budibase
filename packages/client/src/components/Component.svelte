@@ -39,8 +39,10 @@
     getActionContextKey,
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
+  import { gridLayout } from "utils/grid.js"
 
   export let instance = {}
+  export let parent = null
   export let isLayout = false
   export let isRoot = false
   export let isBlock = false
@@ -102,8 +104,8 @@
   let settingsDefinitionMap
   let missingRequiredSettings = false
 
-  // Temporary styles which can be added in the app preview for things like DND.
-  // We clear these whenever a new instance is received.
+  // Temporary styles which can be added in the app preview for things like
+  // DND. We clear these whenever a new instance is received.
   let ephemeralStyles
 
   // Single string of all HBS blocks, used to check if we use a certain binding
@@ -193,8 +195,27 @@
   $: pad = pad || (interactive && hasChildren && inDndPath)
   $: $dndIsDragging, (pad = false)
 
+  // Themes
   $: currentTheme = $context?.device?.theme
   $: darkMode = !currentTheme?.includes("light")
+
+  // Apply ephemeral styles (such as when resizing grid components)
+  $: normalStyles = {
+    ...instance._styles?.normal,
+    ...ephemeralStyles,
+  }
+
+  // Metadata to pass into grid action to apply CSS
+  $: gridMetadata = {
+    active:
+      parent?._component.endsWith("/container") && parent?.layout === "grid",
+    id,
+    interactive,
+    styles: normalStyles,
+    draggable,
+    definition,
+    errored: errorState,
+  }
 
   // Update component context
   $: store.set({
@@ -202,10 +223,7 @@
     children: children.length,
     styles: {
       ...instance._styles,
-      normal: {
-        ...instance._styles?.normal,
-        ...ephemeralStyles,
-      },
+      normal: normalStyles,
       custom: customCSS,
       id,
       empty: emptyState,
@@ -650,6 +668,7 @@
     data-name={name}
     data-icon={icon}
     data-parent={$component.id}
+    use:gridLayout={gridMetadata}
   >
     {#if errorState}
       <ComponentErrorState
@@ -660,7 +679,7 @@
       <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
         {#if children.length}
           {#each children as child (child._id)}
-            <svelte:self instance={child} />
+            <svelte:self instance={child} parent={instance} />
           {/each}
         {:else if emptyState}
           {#if isRoot}

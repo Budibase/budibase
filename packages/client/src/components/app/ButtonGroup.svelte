@@ -19,6 +19,11 @@
       gap,
       wrap: true,
     }}
+    styles={{
+      normal: {
+        height: "100%",
+      },
+    }}
   >
     {#each buttons as { text, type, quiet, disabled, onClick, size, icon, gap }}
       <BlockComponent

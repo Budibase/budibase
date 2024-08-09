@@ -71,4 +71,7 @@
   div {
     position: relative;
   }
+  div :global(> .component > *) {
+    flex: 1 1 auto;
+  }
 </style>

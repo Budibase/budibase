@@ -1,20 +1,15 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import { builderStore } from "stores"
-  import { createEventDispatcher } from "svelte"
 
-  export let prop
+  export let style
   export let value
   export let icon
   export let title
-  export let bool = false
-  export let active = false
-  export let component
+  export let componentId
+  export let computedStyles
 
-  const dispatch = createEventDispatcher()
-
-  $: currentValue = component?.[prop]
-  $: active = prop && (bool ? !!currentValue : currentValue === value)
+  $: active = computedStyles?.getPropertyValue(style) === value
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -23,11 +18,7 @@
   {title}
   class:active
   on:click={() => {
-    if (prop) {
-      const newValue = bool ? !currentValue : value
-      builderStore.actions.updateProp(prop, newValue)
-    }
-    dispatch("click")
+    builderStore.actions.updateStyles({ [style]: value }, componentId)
   }}
 >
   <Icon name={icon} size="S" />

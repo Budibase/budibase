@@ -1,10 +1,11 @@
 <script>
   import { ColorPicker } from "@budibase/bbui"
-  import { builderStore, componentStore } from "stores"
+  import { builderStore } from "stores"
 
   export let prop
+  export let component
 
-  $: currentValue = $componentStore.selectedComponent?.[prop]
+  $: currentValue = component?.[prop]
 </script>
 
 <div>

@@ -14,10 +14,89 @@
   import sanitizeUrl from "helpers/sanitizeUrl"
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "dataBinding"
+  import BarButtonList from "components/design/settings/controls/BarButtonList.svelte"
 
   $: bindings = getBindableProperties($selectedScreen, null)
+  $: screenSettings = getScreenSettings($selectedScreen)
 
   let errors = {}
+
+  const getScreenSettings = screen => {
+    let settings = [
+      {
+        key: "routing.homeScreen",
+        control: Checkbox,
+        props: {
+          text: "Set as home screen",
+        },
+      },
+      {
+        key: "routing.route",
+        label: "Route",
+        control: Input,
+        parser: val => {
+          if (!val.startsWith("/")) {
+            val = "/" + val
+          }
+          return sanitizeUrl(val)
+        },
+        validate: route => {
+          const existingRoute = screen.routing.route
+          if (route !== existingRoute && routeTaken(route)) {
+            return "That URL is already in use for this role"
+          }
+          return null
+        },
+      },
+      {
+        key: "routing.roleId",
+        label: "Access",
+        control: RoleSelect,
+        validate: role => {
+          const existingRole = screen.routing.roleId
+          if (role !== existingRole && roleTaken(role)) {
+            return "That role is already in use for this URL"
+          }
+          return null
+        },
+      },
+      {
+        key: "onLoad",
+        label: "On screen load",
+        control: ButtonActionEditor,
+      },
+      {
+        key: "width",
+        label: "Width",
+        control: Select,
+        props: {
+          options: ["Extra small", "Small", "Medium", "Large", "Max"],
+          placeholder: "Default",
+          disabled: !!screen.layoutId,
+        },
+      },
+      {
+        key: "props.layout",
+        label: "Layout",
+        defaultValue: "flex",
+        control: BarButtonList,
+        props: {
+          options: [
+            {
+              barIcon: "ModernGridView",
+              value: "flex",
+            },
+            {
+              barIcon: "ViewGrid",
+              value: "grid",
+            },
+          ],
+        },
+      },
+    ]
+
+    return settings
+  }
 
   const routeTaken = url => {
     const roleId = get(selectedScreen).routing.roleId || "BASIC"
@@ -71,61 +150,6 @@
     }
   }
 
-  $: screenSettings = [
-    {
-      key: "routing.homeScreen",
-      control: Checkbox,
-      props: {
-        text: "Set as home screen",
-      },
-    },
-    {
-      key: "routing.route",
-      label: "Route",
-      control: Input,
-      parser: val => {
-        if (!val.startsWith("/")) {
-          val = "/" + val
-        }
-        return sanitizeUrl(val)
-      },
-      validate: route => {
-        const existingRoute = get(selectedScreen).routing.route
-        if (route !== existingRoute && routeTaken(route)) {
-          return "That URL is already in use for this role"
-        }
-        return null
-      },
-    },
-    {
-      key: "routing.roleId",
-      label: "Access",
-      control: RoleSelect,
-      validate: role => {
-        const existingRole = get(selectedScreen).routing.roleId
-        if (role !== existingRole && roleTaken(role)) {
-          return "That role is already in use for this URL"
-        }
-        return null
-      },
-    },
-    {
-      key: "onLoad",
-      label: "On screen load",
-      control: ButtonActionEditor,
-    },
-    {
-      key: "width",
-      label: "Width",
-      control: Select,
-      props: {
-        options: ["Extra small", "Small", "Medium", "Large", "Max"],
-        placeholder: "Default",
-        disabled: !!$selectedScreen.layoutId,
-      },
-    },
-  ]
-
   const removeCustomLayout = async () => {
     return screenStore.removeCustomLayout(get(selectedScreen))
   }
@@ -149,6 +173,7 @@
     value={Helpers.deepGet($selectedScreen, setting.key)}
     onChange={val => setScreenSetting(setting, val)}
     props={{ ...setting.props, error: errors[setting.key] }}
+    defaultValue={setting.defaultValue}
     {bindings}
   />
 {/each}

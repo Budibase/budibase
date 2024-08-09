@@ -129,29 +129,30 @@ const createScreenStore = () => {
       // If we don't have a legacy custom layout, build a layout structure
       // from the screen navigation settings
       if (!activeLayout) {
-        let navigationSettings = {
+        let layoutSettings = {
           navigation: "None",
           pageWidth: activeScreen?.width || "Large",
+          embedded: $appStore.embedded,
         }
         if (activeScreen?.showNavigation) {
-          navigationSettings = {
-            ...navigationSettings,
+          layoutSettings = {
+            ...layoutSettings,
             ...($builderStore.navigation || $appStore.application?.navigation),
           }
 
           // Default navigation to top
-          if (!navigationSettings.navigation) {
-            navigationSettings.navigation = "Top"
+          if (!layoutSettings.navigation) {
+            layoutSettings.navigation = "Top"
           }
 
           // Default title to app name
-          if (!navigationSettings.title && !navigationSettings.hideTitle) {
-            navigationSettings.title = $appStore.application?.name
+          if (!layoutSettings.title && !layoutSettings.hideTitle) {
+            layoutSettings.title = $appStore.application?.name
           }
 
           // Default to the org logo
-          if (!navigationSettings.logoUrl) {
-            navigationSettings.logoUrl = $orgStore?.logoUrl
+          if (!layoutSettings.logoUrl) {
+            layoutSettings.logoUrl = $orgStore?.logoUrl
           }
         }
         activeLayout = {
@@ -173,8 +174,7 @@ const createScreenStore = () => {
                 },
               },
             ],
-            ...navigationSettings,
-            embedded: $appStore.embedded,
+            ...layoutSettings,
           },
         }
       }

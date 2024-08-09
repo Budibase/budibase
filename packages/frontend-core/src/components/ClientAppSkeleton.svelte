@@ -58,7 +58,6 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    border-radius: 4px;
     overflow: hidden;
     background-color: var(--spectrum-global-color-gray-200);
   }
