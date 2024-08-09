@@ -15,7 +15,7 @@ import { helpers, utils } from "@budibase/shared-core"
 import { pipeline } from "stream/promises"
 import tmp from "tmp"
 import fs from "fs"
-import { merge } from "lodash"
+import { merge, cloneDeep } from "lodash"
 
 type PrimitiveTypes =
   | FieldType.STRING
@@ -293,7 +293,11 @@ function copyExistingPropsOver(
           table.schema[key]
         table.schema[key] = {
           // merge the properties - anything missing will be filled in, old definition preferred
-          ...merge(fetchedColumnDefinition, existingTableSchema[key]),
+          // have to clone due to the way merge works
+          ...merge(
+            cloneDeep(fetchedColumnDefinition),
+            existingTableSchema[key]
+          ),
           // always take externalType and autocolumn from the fetched definition
           externalType:
             existingTableSchema[key].externalType ||
