@@ -145,6 +145,7 @@ const environment = {
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL || "",
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
+  POSTHOG_API_HOST: process.env.POSTHOG_API_HOST || "https://us.i.posthog.com",
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   CLOUDFRONT_CDN: process.env.CLOUDFRONT_CDN,
