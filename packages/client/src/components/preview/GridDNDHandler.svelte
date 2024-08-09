@@ -147,6 +147,7 @@
     if (!domGrid) {
       return
     }
+    builderStore.actions.selectComponent(id)
 
     // Apply active class to grid
     domComponent.parentNode.classList.add("dragging")
