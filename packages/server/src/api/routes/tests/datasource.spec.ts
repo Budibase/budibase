@@ -1,5 +1,5 @@
 import * as setup from "./utilities"
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { checkBuilderEndpoint, allowUndefined } from "./utilities/TestFunctions"
 import { getCachedVariable } from "../../../threads/utils"
 import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
@@ -380,21 +380,24 @@ describe("/datasources", () => {
             persisted?.entities &&
             Object.entries(persisted.entities).reduce<Record<string, Table>>(
               (acc, [tableName, table]) => {
-                acc[tableName] = {
+                acc[tableName] = expect.objectContaining({
                   ...table,
                   primaryDisplay: expect.not.stringMatching(
                     new RegExp(`^${table.primaryDisplay || ""}$`)
                   ),
                   schema: Object.entries(table.schema).reduce<TableSchema>(
                     (acc, [fieldName, field]) => {
-                      acc[fieldName] = expect.objectContaining({
+                      acc[fieldName] = {
                         ...field,
-                      })
+                        externalType: allowUndefined(expect.any(String)),
+                        constraints: allowUndefined(expect.any(Object)),
+                        autocolumn: allowUndefined(expect.any(Boolean)),
+                      }
                       return acc
                     },
                     {}
                   ),
-                }
+                })
                 return acc
               },
               {}
