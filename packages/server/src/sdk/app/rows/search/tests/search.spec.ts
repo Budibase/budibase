@@ -1,4 +1,11 @@
-import { Datasource, FieldType, Table } from "@budibase/types"
+import {
+  AutoColumnFieldMetadata,
+  AutoFieldSubType,
+  Datasource,
+  FieldType,
+  NumberFieldMetadata,
+  Table,
+} from "@budibase/types"
 
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { search } from "../../../../../sdk/app/rows/search"
@@ -53,15 +60,25 @@ describe.each([
   })
 
   beforeEach(async () => {
+    const idFieldSchema: NumberFieldMetadata | AutoColumnFieldMetadata =
+      isInternal
+        ? {
+            name: "id",
+            type: FieldType.AUTO,
+            subtype: AutoFieldSubType.AUTO_ID,
+            autocolumn: true,
+          }
+        : {
+            name: "id",
+            type: FieldType.NUMBER,
+            autocolumn: true,
+          }
+
     table = await config.api.table.save(
       tableForDatasource(datasource, {
         primary: ["id"],
         schema: {
-          id: {
-            name: "id",
-            type: FieldType.NUMBER,
-            autocolumn: true,
-          },
+          id: idFieldSchema,
           name: {
             name: "name",
             type: FieldType.STRING,
@@ -256,7 +273,7 @@ describe.each([
       [["id", "name", "age"], 3],
       [["name", "age"], 10],
     ])(
-      "cannot query by non search fields",
+      "cannot query by non search fields (fields: %s)",
       async (queryFields, expectedRows) => {
         await config.doInContext(config.appId, async () => {
           const { rows } = await search({
