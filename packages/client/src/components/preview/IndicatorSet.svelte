@@ -1,9 +1,8 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
-  import { componentStore, builderStore } from "stores"
+  import { builderStore } from "stores"
   import { memo, Utils } from "@budibase/frontend-core"
-  import { writable } from "svelte/store"
   import { isGridChild } from "utils/grid"
 
   export let componentId = null
@@ -51,15 +50,8 @@
   })
   $: $config, debouncedUpdate()
 
-  // Update position when component state changes
-  $: instance = componentStore.actions.getComponentInstance(componentId)
-  $: componentState = $instance?.state || writable()
-  $: $componentState, debouncedUpdate()
-
   const checkInsideGrid = id => {
-    const component = document.getElementsByClassName(id)[0]
-    const domNode = component?.children[0]
-    return isGridChild(domNode)
+    return isGridChild(document.getElementsByClassName(id)[0])
   }
 
   const createIntersectionCallback = idx => entries => {

@@ -34,6 +34,8 @@
   class:line
   style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex};"
   class:withText={!!text}
+  class:vCompact={height < 40}
+  class:hCompact={width < 40}
 >
   {#if text || icon}
     <div class="label" class:flipped class:line class:right={alignRight}>
@@ -153,13 +155,21 @@
   }
   .anchor.right .anchor-inner,
   .anchor.left .anchor-inner {
-    height: calc(var(--size) * 1.4);
+    height: calc(var(--size) * 1.2);
     width: calc(var(--size) * 0.3);
   }
   .anchor.top .anchor-inner,
   .anchor.bottom .anchor-inner {
-    width: calc(var(--size) * 1.4);
+    width: calc(var(--size) * 1.2);
     height: calc(var(--size) * 0.3);
+  }
+
+  /* Hide side indicators when they don't fit */
+  .indicator.hCompact .anchor.top,
+  .indicator.hCompact .anchor.bottom,
+  .indicator.vCompact .anchor.left,
+  .indicator.vCompact .anchor.right {
+    display: none;
   }
 
   /* Anchor positions */
