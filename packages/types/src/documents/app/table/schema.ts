@@ -114,7 +114,6 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
   type: FieldType.FORMULA
   formula: string
   formulaType?: FormulaType
-  default?: string
 }
 
 export interface BBReferenceFieldMetadata
