@@ -182,6 +182,7 @@ export enum BpmStatusValue {
   COMPLETING_ACCOUNT_INFO = "completing_account_info",
   VERIFYING_EMAIL = "verifying_email",
   COMPLETED = "completed",
+  FAILED = "failed",
 }
 
 export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
