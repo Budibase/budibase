@@ -70,7 +70,6 @@ import {
 } from "@budibase/types"
 
 import API from "./api"
-import { cloneDeep } from "lodash"
 import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
 
