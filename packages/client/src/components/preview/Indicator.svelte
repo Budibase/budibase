@@ -131,6 +131,7 @@
     display: grid;
     place-items: center;
     border-radius: 50%;
+    transform: translateX(-50%) translateY(-50%);
   }
   .anchor-inner {
     width: calc(var(--size) / 2);
@@ -140,45 +141,66 @@
     pointer-events: none;
     border-radius: 2px;
   }
+
+  /* Thinner anchors for each edge */
+  .anchor.right,
+  .anchor.left {
+    height: calc(var(--size) * 2);
+  }
+  .anchor.top,
+  .anchor.bottom {
+    width: calc(var(--size) * 2);
+  }
+  .anchor.right .anchor-inner,
+  .anchor.left .anchor-inner {
+    height: calc(var(--size) * 1.4);
+    width: calc(var(--size) * 0.3);
+  }
+  .anchor.top .anchor-inner,
+  .anchor.bottom .anchor-inner {
+    width: calc(var(--size) * 1.4);
+    height: calc(var(--size) * 0.3);
+  }
+
+  /* Anchor positions */
   .anchor.right {
-    right: calc(var(--size) / -2 - 1px);
-    top: calc(50% - var(--size) / 2);
+    left: calc(100% + 1px);
+    top: 50%;
     cursor: e-resize;
   }
   .anchor.left {
-    left: calc(var(--size) / -2 - 1px);
-    top: calc(50% - var(--size) / 2);
+    left: -1px;
+    top: 50%;
     cursor: w-resize;
   }
   .anchor.bottom {
-    left: calc(50% - var(--size) / 2 + 1px);
-    bottom: calc(var(--size) / -2 - 1px);
+    left: 50%;
+    top: calc(100% + 1px);
     cursor: s-resize;
   }
   .anchor.top {
-    left: calc(50% - var(--size) / 2 + 1px);
-    top: calc(var(--size) / -2 - 1px);
+    left: 50%;
+    top: -1px;
     cursor: n-resize;
   }
-
   .anchor.bottom-right {
-    right: calc(var(--size) / -2 - 1px);
-    bottom: calc(var(--size) / -2 - 1px);
+    top: 100%;
+    left: 100%;
     cursor: se-resize;
   }
   .anchor.bottom-left {
-    left: calc(var(--size) / -2 - 1px);
-    bottom: calc(var(--size) / -2 - 1px);
+    left: 0;
+    top: 100%;
     cursor: sw-resize;
   }
   .anchor.top-right {
-    right: calc(var(--size) / -2 - 1px);
-    top: calc(var(--size) / -2 - 1px);
+    left: 100%;
+    top: 0;
     cursor: ne-resize;
   }
   .anchor.top-left {
-    left: calc(var(--size) / -2 - 1px);
-    top: calc(var(--size) / -2 - 1px);
+    left: 0;
+    top: 0;
     cursor: nw-resize;
   }
 </style>
