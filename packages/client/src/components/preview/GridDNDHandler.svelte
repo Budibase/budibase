@@ -56,13 +56,12 @@
     return clone
   }
 
-  const processEvent = Utils.throttle((mouseX, mouseY) => {
+  const processEvent = Utils.domDebounce((mouseX, mouseY) => {
     if (!dragInfo?.grid) {
       return
     }
-    const { mode, side, gridId, grid } = dragInfo
+    const { mode, side, grid, domGrid } = dragInfo
     const { startX, startY, rowStart, rowEnd, colStart, colEnd } = grid
-    const domGrid = getDOMNode(gridId)
     if (!domGrid) {
       return
     }
@@ -107,7 +106,7 @@
       }
       styles.set(newStyles)
     }
-  }, 10)
+  })
 
   const handleEvent = e => {
     e.preventDefault()
@@ -138,61 +137,47 @@
       id = component.dataset.id
     }
 
-    // Find grid parent
+    // Find grid parent and read from DOM
     const domComponent = getDOMNode(id)
     const domGrid = getGridParent(domComponent)
     if (!domGrid) {
       return
     }
-    builderStore.actions.selectComponent(id)
+    const gridCols = parseInt(domGrid.dataset.cols)
+    const styles = getComputedStyle(domComponent.parentNode)
 
-    // Apply active class to grid
+    // Show as active
+    builderStore.actions.selectComponent(id)
     domComponent.parentNode.classList.add("dragging")
     domGrid.classList.add("highlight")
 
     // Update state
     dragInfo = {
       domTarget: e.target,
+      domComponent,
+      domGrid,
       id,
       gridId: domGrid.parentNode.dataset.id,
       mode,
       side,
+      grid: {
+        startX: e.clientX,
+        startY: e.clientY,
+
+        // Ensure things are within limits
+        rowStart: Math.max(styles["grid-row-start"], 1),
+        rowEnd: Math.max(styles["grid-row-end"], 2),
+        colStart: minMax(styles["grid-column-start"], 1, gridCols),
+        colEnd: minMax(styles["grid-column-end"], 2, gridCols + 1),
+      },
     }
 
     // Add event handler to clear all drag state when dragging ends
     dragInfo.domTarget.addEventListener("dragend", stopDragging)
   }
 
-  // Callback when entering a potential drop target
-  const onDragEnter = e => {
-    // Skip if we aren't validly dragging currently
-    if (!dragInfo || dragInfo.grid) {
-      return
-    }
-
-    const { id, gridId } = dragInfo
-    const domComponent = getDOMNode(id)
-    const domGrid = getDOMNode(gridId)
-    if (!domComponent || !domGrid) {
-      return
-    }
-    const gridCols = parseInt(domGrid.dataset.cols)
-    const styles = getComputedStyle(domComponent.parentNode)
-    dragInfo.grid = {
-      startX: e.clientX,
-      startY: e.clientY,
-
-      // Ensure things are within limits
-      rowStart: Math.max(styles["grid-row-start"], 1),
-      rowEnd: Math.max(styles["grid-row-end"], 2),
-      colStart: minMax(styles["grid-column-start"], 1, gridCols),
-      colEnd: minMax(styles["grid-column-end"], 2, gridCols + 1),
-    }
-    handleEvent(e)
-  }
-
   const onDragOver = e => {
-    if (!dragInfo?.grid) {
+    if (!dragInfo) {
       return
     }
     handleEvent(e)
@@ -203,7 +188,12 @@
     if (!dragInfo) {
       return
     }
-    const { id, gridId, domTarget } = dragInfo
+    const { id, gridId, domTarget, domGrid, domComponent } = dragInfo
+
+    // Reset DOM
+    domComponent.parentNode.classList.remove("dragging")
+    domGrid.classList.remove("highlight")
+    domTarget.removeEventListener("dragend", stopDragging)
 
     // Save changes
     if ($styles) {
@@ -213,44 +203,19 @@
       await builderStore.actions.updateStyles($gridStyles, gridId)
     }
 
-    // Reset DOM
-    const domComponent = getDOMNode(id)
-    if (domComponent) {
-      domComponent.parentNode.classList.remove("dragging")
-    }
-    const domGrid = getDOMNode(gridId)
-    if (domGrid) {
-      domGrid.classList.remove("highlight")
-    }
-    domTarget.removeEventListener("dragend", stopDragging)
-
     // Reset state
     dragInfo = null
     styles.set(null)
     gridStyles.set(null)
   }
 
-  const calculateRequiredRows = () => {
-    let required = 1
-    const children = document.querySelectorAll(`.${gridId}-dom > .component`)
-    for (let child of children) {
-      const rowEnd = child.dataset.grid_desktop_col_end
-      if (rowEnd > required) {
-        required = rowEnd
-      }
-    }
-    return required - 1
-  }
-
   onMount(() => {
     document.addEventListener("dragstart", onDragStart, false)
-    document.addEventListener("dragenter", onDragEnter, false)
     document.addEventListener("dragover", onDragOver, false)
   })
 
   onDestroy(() => {
     document.removeEventListener("dragstart", onDragStart, false)
-    document.removeEventListener("dragenter", onDragEnter, false)
     document.removeEventListener("dragover", onDragOver, false)
   })
 </script>
