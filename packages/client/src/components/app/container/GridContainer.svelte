@@ -1,50 +1,136 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
+  import { writable } from "svelte/store"
+  import { GridRowHeight, GridColumns } from "constants"
 
   const component = getContext("component")
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const context = getContext("context")
 
-  const cols = 12
-  const rowHeight = 24
-
   let width
-  let height
+  let ref
+  let rows = 1
+  let children = writable({})
+  let mounted = false
 
+  $: rows = calculateRequiredRows($children, mobile)
   $: mobile = $context.device.mobile
   $: empty = $component.empty
-  $: rows = Math.max(1, Math.floor(height / rowHeight))
-  $: colSize = width / cols
-  $: rowSize = height / rows
+  $: colSize = width / GridColumns
+  $: height = rows * GridRowHeight
+
+  // Calculates the minimum number of rows required to render all child
+  // components, on a certain device type
+  const calculateRequiredRows = (children, mobile) => {
+    const key = mobile ? "mobileRowEnd" : "desktopRowEnd"
+    let max = 2
+    for (let id of Object.keys(children)) {
+      if (children[id][key] > max) {
+        max = children[id][key]
+      }
+    }
+    return max - 1
+  }
+
+  // Stores metadata about a child node as constraints for determining grid size
+  const storeChild = node => {
+    children.update(state => ({
+      ...state,
+      [node.dataset.id]: {
+        desktopRowEnd: parseInt(node.dataset.gridDesktopRowEnd),
+        mobileRowEnd: parseInt(node.dataset.gridMobileRowEnd),
+      },
+    }))
+  }
+
+  // Removes constraint metadata for a certain child node
+  const removeChild = node => {
+    children.update(state => {
+      delete state[node.dataset.id]
+      return { ...state }
+    })
+  }
+
+  onMount(() => {
+    let observer
+    if ($builderStore.inBuilder) {
+      // Set up an observer to watch for changes in metadata attributes of child
+      // components, as well as child addition and deletion
+      observer = new MutationObserver(mutations => {
+        for (let mutation of mutations) {
+          const { target, type, addedNodes, removedNodes } = mutation
+          if (target === ref) {
+            if (addedNodes[0]?.classList?.contains("component")) {
+              // We've added a new child component inside the grid, so we need
+              // to consider it when determining required rows
+              storeChild(addedNodes[0])
+            } else if (removedNodes[0]?.classList?.contains("component")) {
+              // We've removed a child component inside the grid, so we need
+              // to stop considering it when determining required rows
+              removeChild(removedNodes[0])
+            }
+          } else if (
+            type === "attributes" &&
+            target.parentNode === ref &&
+            target.classList.contains("component")
+          ) {
+            // We've updated the size or position of a child
+            storeChild(target)
+          }
+        }
+      })
+      observer.observe(ref, {
+        childList: true,
+        attributes: true,
+        subtree: true,
+        attributeFilter: [
+          "data-grid-desktop-row-end",
+          "data-grid-mobile-row-end",
+        ],
+      })
+    }
+
+    // Now that the observer is set up, we mark the grid as mounted to mount
+    // our child components
+    mounted = true
+
+    // Cleanup our observer
+    return () => {
+      observer?.disconnect()
+    }
+  })
 </script>
 
 <div
+  bind:this={ref}
   class="grid"
   class:mobile
   bind:clientWidth={width}
-  bind:clientHeight={height}
   use:styleable={{
     ...$component.styles,
     normal: {
       ...$component.styles?.normal,
-      "--cols": cols,
+      "--height": `${height}px`,
+      "--cols": GridColumns,
       "--rows": rows,
       "--col-size": colSize,
-      "--row-size": rowSize,
+      "--row-size": GridRowHeight,
     },
     empty: false,
   }}
-  data-rows={rows}
-  data-cols={cols}
+  data-cols={GridColumns}
+  data-col-size={colSize}
 >
-  <div class="underlay">
-    {#each { length: cols * rows } as _}
-      <div class="placeholder" />
-    {/each}
-  </div>
+  {#if $builderStore.inBuilder}
+    <div class="underlay">
+      {#each { length: GridColumns * rows } as _, idx}
+        <div class="placeholder" class:first-col={idx % GridColumns === 0} />
+      {/each}
+    </div>
+  {/if}
 
   <!-- Only render the slot if not empty, as we don't want the placeholder -->
-  {#if !empty}
+  {#if !empty && mounted}
     <slot />
   {/if}
 </div>
@@ -52,7 +138,6 @@
 <style>
   .grid {
     position: relative;
-    height: 400px;
 
     /*
       Prevent cross-grid variable inheritance. The other variables for alignment
@@ -71,8 +156,11 @@
 
   .grid,
   .underlay {
+    height: var(--height) !important;
+    min-height: none !important;
+    max-height: none !important;
     display: grid;
-    grid-template-rows: repeat(var(--rows), 1fr);
+    grid-template-rows: repeat(var(--rows), calc(var(--row-size) * 1px));
     grid-template-columns: repeat(var(--cols), 1fr);
     gap: 0;
   }
@@ -84,7 +172,6 @@
     width: 100%;
     height: 100%;
     border-top: 1px solid var(--spectrum-global-color-gray-900);
-    border-left: 1px solid var(--spectrum-global-color-gray-900);
     opacity: 0.1;
     pointer-events: none;
   }
@@ -94,6 +181,9 @@
   .placeholder {
     border-bottom: 1px solid var(--spectrum-global-color-gray-900);
     border-right: 1px solid var(--spectrum-global-color-gray-900);
+  }
+  .placeholder.first-col {
+    border-left: 1px solid var(--spectrum-global-color-gray-900);
   }
 
   /* Highlight grid lines when resizing children */
@@ -131,20 +221,10 @@
         )
       )
     );
+
+    /* Row end is always provided by the gridLayout action */
     --row-start: var(--grid-desktop-row-start, var(--grid-mobile-row-start, 1));
-    --row-end: var(
-      --grid-desktop-row-end,
-      var(
-        --grid-mobile-row-end,
-        round(
-          up,
-          calc(
-            (var(--grid-spacing) * 2 + var(--default-height)) / var(--row-size) +
-              1
-          )
-        )
-      )
-    );
+    --row-end: var(--grid-desktop-row-end, var(--grid-mobile-row-end));
 
     /* Flex vars */
     --h-align: var(--grid-desktop-h-align, var(--grid-mobile-h-align));
@@ -156,8 +236,8 @@
       max(2, var(--col-end)),
       calc(var(--cols) + 1)
     ) !important;
-    grid-row-start: min(max(1, var(--row-start)), var(--rows)) !important;
-    grid-row-end: min(max(2, var(--row-end)), calc(var(--rows) + 1)) !important;
+    grid-row-start: max(1, var(--row-start)) !important;
+    grid-row-end: max(2, var(--row-end)) !important;
 
     /* Flex container styles */
     flex-direction: column;
@@ -182,18 +262,7 @@
       )
     );
     --row-start: var(--grid-mobile-row-start, var(--grid-desktop-row-start, 1));
-    --row-end: var(
-      --grid-mobile-row-end,
-      var(
-        --grid-desktop-row-end,
-        round(
-          up,
-          calc(
-            (var(--spacing) * 2 + var(--default-height)) / var(--row-size) + 1
-          )
-        )
-      )
-    );
+    --row-end: var(--grid-mobile-row-end, var(--grid-desktop-row-end));
 
     /* Flex vars */
     --h-align: var(--grid-mobile-h-align, var(--grid-desktop-h-align));

@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import { builderStore, componentStore } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
+  import { GridRowHeight } from "constants"
   import {
     isGridEvent,
     getGridParent,
@@ -15,8 +16,8 @@
     "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
 
   let dragInfo
+  let styles = memo()
   let gridStyles = memo()
-  let id
 
   // Grid CSS variables
   $: device = $builderStore.previewDevice
@@ -28,12 +29,14 @@
   }
 
   // Some memoisation of primitive types for performance
-  $: id = dragInfo?.id || id
+  $: id = dragInfo?.id
+  $: gridId = dragInfo?.gridId
 
-  // Set ephemeral grid styles on the dragged component
+  // Set ephemeral styles
   $: instance = componentStore.actions.getComponentInstance(id)
-  $: componentStyles = getComponentStyles($gridStyles)
-  $: $instance?.setEphemeralStyles(componentStyles)
+  $: gridInstance = componentStore.actions.getComponentInstance(gridId)
+  $: $instance?.setEphemeralStyles(enrichComponentStyles($styles))
+  $: $gridInstance?.setEphemeralStyles($gridStyles)
 
   // Sugar for a combination of both min and max
   const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
@@ -44,47 +47,41 @@
     return Array.from(component?.children || [])[0]
   }
 
-  const getComponentStyles = gridStyles => {
-    let styles = { ...gridStyles }
-    if (gridStyles) {
-      styles["z-index"] = 999
-      styles["pointer-events"] = "none"
+  const enrichComponentStyles = styles => {
+    let clone = { ...styles }
+    if (styles) {
+      clone["z-index"] = 999
+      clone["pointer-events"] = "none"
     }
-    return styles
+    return clone
   }
 
   const processEvent = Utils.throttle((mouseX, mouseY) => {
     if (!dragInfo?.grid) {
       return
     }
-
     const { mode, side, gridId, grid } = dragInfo
     const { startX, startY, rowStart, rowEnd, colStart, colEnd } = grid
-
     const domGrid = getDOMNode(gridId)
     if (!domGrid) {
       return
     }
     const cols = parseInt(domGrid.dataset.cols)
-    const rows = parseInt(domGrid.dataset.rows)
-    const { width, height } = domGrid.getBoundingClientRect()
-
-    const colWidth = width / cols
+    const colSize = parseInt(domGrid.dataset.colSize)
     const diffX = mouseX - startX
-    let deltaX = Math.round(diffX / colWidth)
-    const rowHeight = height / rows
+    let deltaX = Math.round(diffX / colSize)
     const diffY = mouseY - startY
-    let deltaY = Math.round(diffY / rowHeight)
+    let deltaY = Math.round(diffY / GridRowHeight)
     if (mode === "move") {
       deltaX = minMax(deltaX, 1 - colStart, cols + 1 - colEnd)
-      deltaY = minMax(deltaY, 1 - rowStart, rows + 1 - rowEnd)
+      deltaY = Math.max(deltaY, 1 - rowStart)
       const newStyles = {
         [vars.colStart]: colStart + deltaX,
         [vars.colEnd]: colEnd + deltaX,
         [vars.rowStart]: rowStart + deltaY,
         [vars.rowEnd]: rowEnd + deltaY,
       }
-      gridStyles.set(newStyles)
+      styles.set(newStyles)
     } else if (mode === "resize") {
       let newStyles = {}
       if (side === "right") {
@@ -108,7 +105,7 @@
         newStyles[vars.colStart] = Math.min(colStart + deltaX, colEnd - 1)
         newStyles[vars.rowStart] = Math.min(rowStart + deltaY, rowEnd - 1)
       }
-      gridStyles.set(newStyles)
+      styles.set(newStyles)
     }
   }, 10)
 
@@ -180,15 +177,14 @@
       return
     }
     const gridCols = parseInt(domGrid.dataset.cols)
-    const gridRows = parseInt(domGrid.dataset.rows)
     const styles = getComputedStyle(domComponent.parentNode)
     dragInfo.grid = {
       startX: e.clientX,
       startY: e.clientY,
 
       // Ensure things are within limits
-      rowStart: minMax(styles["grid-row-start"], 1, gridRows),
-      rowEnd: minMax(styles["grid-row-end"], 2, gridRows + 1),
+      rowStart: Math.max(styles["grid-row-start"], 1),
+      rowEnd: Math.max(styles["grid-row-end"], 2),
       colStart: minMax(styles["grid-column-start"], 1, gridCols),
       colEnd: minMax(styles["grid-column-end"], 2, gridCols + 1),
     }
@@ -210,8 +206,11 @@
     const { id, gridId, domTarget } = dragInfo
 
     // Save changes
+    if ($styles) {
+      await builderStore.actions.updateStyles($styles, id)
+    }
     if ($gridStyles) {
-      await builderStore.actions.updateStyles($gridStyles, id)
+      await builderStore.actions.updateStyles($gridStyles, gridId)
     }
 
     // Reset DOM
@@ -227,7 +226,20 @@
 
     // Reset state
     dragInfo = null
+    styles.set(null)
     gridStyles.set(null)
+  }
+
+  const calculateRequiredRows = () => {
+    let required = 1
+    const children = document.querySelectorAll(`.${gridId}-dom > .component`)
+    for (let child of children) {
+      const rowEnd = child.dataset.grid_desktop_col_end
+      if (rowEnd > required) {
+        required = rowEnd
+      }
+    }
+    return required - 1
   }
 
   onMount(() => {

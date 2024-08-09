@@ -1,3 +1,5 @@
+import { GridSpacing } from "constants"
+import { GridRowHeight } from "constants"
 import { builderStore } from "stores"
 import { buildStyleString } from "utils/styleable.js"
 
@@ -84,15 +86,23 @@ export const gridLayout = (node, metadata) => {
     }
 
     // Generate base set of grid CSS vars based for this component
+    let width = errored ? 500 : definition.size?.width || 200
+    let height = errored ? 60 : definition.size?.height || 200
+    width += 2 * GridSpacing
+    height += 2 * GridSpacing
     const hAlign = errored ? "stretch" : definition?.grid?.hAlign || "stretch"
     const vAlign = errored ? "stretch" : definition?.grid?.vAlign || "center"
     const vars = {
-      "--default-width": errored ? 500 : definition.size?.width || 200,
-      "--default-height": errored ? 60 : definition.size?.height || 200,
+      "--default-width": width,
+      "--default-height": height,
       "--grid-desktop-h-align": hAlign,
       "--grid-mobile-h-align": hAlign,
       "--grid-desktop-v-align": vAlign,
       "--grid-mobile-v-align": vAlign,
+
+      // Variables for automatically determining grid height
+      "--grid-desktop-row-end": Math.ceil(height / GridRowHeight) + 1,
+      "--grid-mobile-row-end": Math.ceil(height / GridRowHeight) + 1,
     }
 
     // Extract any other CSS variables from the saved component styles
@@ -101,6 +111,16 @@ export const gridLayout = (node, metadata) => {
         vars[style] = styles[style]
         delete styles[style]
       }
+    }
+
+    // Apply some metadata to data attributes to speed up lookups
+    const desktopRowEnd = `${vars["--grid-desktop-row-end"]}`
+    const mobileRowEnd = `${vars["--grid-mobile-row-end"]}`
+    if (node.dataset.gridDesktopRowEnd !== desktopRowEnd) {
+      node.dataset.gridDesktopRowEnd = desktopRowEnd
+    }
+    if (node.dataset.gridMobileRowEnd !== mobileRowEnd) {
+      node.dataset.gridMobileRowEnd = mobileRowEnd
     }
 
     // Apply all CSS variables to the wrapper
