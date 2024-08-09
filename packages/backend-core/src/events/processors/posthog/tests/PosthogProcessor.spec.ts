@@ -16,6 +16,9 @@ const newIdentity = () => {
 }
 
 describe("PosthogProcessor", () => {
+  let processor: PosthogProcessor
+  let spy: jest.SpyInstance
+
   beforeAll(() => {
     testEnv.singleTenant()
   })
@@ -25,25 +28,21 @@ describe("PosthogProcessor", () => {
     await cache.bustCache(
       `${CacheKey.EVENTS_RATE_LIMIT}:${Event.SERVED_BUILDER}`
     )
+
+    processor = new PosthogProcessor("test")
+    spy = jest.spyOn(processor.posthog, "capture")
   })
 
   describe("processEvent", () => {
     it("processes event", async () => {
-      const processor = new PosthogProcessor("test")
-      const spy = jest.spyOn(processor.posthog, "capture")
-
       const identity = newIdentity()
       const properties = {}
 
       await processor.processEvent(Event.APP_CREATED, identity, properties)
-
       expect(spy).toHaveBeenCalledTimes(1)
     })
 
     it("honours exclusions", async () => {
-      const processor = new PosthogProcessor("test")
-      const spy = jest.spyOn(processor.posthog, "capture")
-
       const identity = newIdentity()
       const properties = {}
 
@@ -52,9 +51,6 @@ describe("PosthogProcessor", () => {
     })
 
     it("removes audited information", async () => {
-      const processor = new PosthogProcessor("test")
-      const spy = jest.spyOn(processor.posthog, "capture")
-
       const identity = newIdentity()
       const properties = {
         email: "test",
@@ -65,6 +61,7 @@ describe("PosthogProcessor", () => {
 
       await processor.processEvent(Event.USER_CREATED, identity, properties)
       expect(spy).toHaveBeenCalled()
+
       // @ts-ignore
       const call = processor.posthog.capture.mock.calls[0][0]
       expect(call.properties.audited).toBeUndefined()
@@ -73,9 +70,6 @@ describe("PosthogProcessor", () => {
 
     describe("rate limiting", () => {
       it("sends daily event once in same day", async () => {
-        const processor = new PosthogProcessor("test")
-        const spy = jest.spyOn(processor.posthog, "capture")
-
         const identity = newIdentity()
         const properties = {}
 
@@ -89,8 +83,6 @@ describe("PosthogProcessor", () => {
       })
 
       it("sends daily event once per unique day", async () => {
-        const processor = new PosthogProcessor("test")
-        const spy = jest.spyOn(processor.posthog, "capture")
         const identity = newIdentity()
         const properties = {}
 
@@ -110,9 +102,6 @@ describe("PosthogProcessor", () => {
       })
 
       it("sends event again after cache expires", async () => {
-        const processor = new PosthogProcessor("test")
-        const spy = jest.spyOn(processor.posthog, "capture")
-
         const identity = newIdentity()
         const properties = {}
 
@@ -130,8 +119,6 @@ describe("PosthogProcessor", () => {
       })
 
       it("sends per app events once per day per app", async () => {
-        const processor = new PosthogProcessor("test")
-        const spy = jest.spyOn(processor.posthog, "capture")
         const identity = newIdentity()
         const properties = {}
 
