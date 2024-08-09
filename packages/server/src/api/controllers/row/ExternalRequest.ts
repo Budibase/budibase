@@ -195,12 +195,13 @@ export class ExternalRequest<T extends Operation> {
     if (filters) {
       // need to map over the filters and make sure the _id field isn't present
       let prefix = 1
-      for (const operator of Object.values(filters)) {
+      for (const [operatorType, operator] of Object.entries(filters)) {
+        const isArrayOp = sdk.rows.utils.isArrayFilter(operatorType)
         for (const field of Object.keys(operator || {})) {
           if (dbCore.removeKeyNumbering(field) === "_id") {
             if (primary) {
               const parts = breakRowIdField(operator[field])
-              if (primary.length > 1) {
+              if (primary.length > 1 && isArrayOp) {
                 operator[InternalSearchFilterOperator.COMPLEX_ID_OPERATOR] = {
                   id: primary,
                   values: parts[0],
