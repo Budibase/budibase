@@ -1,4 +1,4 @@
-import { generator, mocks, structures } from "../../../../../tests"
+import { generator, structures } from "../../../../../tests"
 import {
   JwtClaims,
   OIDCInnerConfig,
@@ -7,6 +7,7 @@ import {
 } from "@budibase/types"
 import * as _sso from "../sso"
 import * as oidc from "../oidc"
+import nock from "nock"
 
 jest.mock("@techpass/passport-openidconnect")
 const mockStrategy = require("@techpass/passport-openidconnect").Strategy
@@ -22,16 +23,9 @@ describe("oidc", () => {
   const oidcConfig: OIDCInnerConfig = structures.sso.oidcConfig()
   const wellKnownConfig = structures.sso.oidcWellKnownConfig()
 
-  function mockRetrieveWellKnownConfig() {
-    // mock the request to retrieve the oidc configuration
-    mocks.fetch.mockReturnValue({
-      ok: true,
-      json: () => wellKnownConfig,
-    })
-  }
-
   beforeEach(() => {
-    mockRetrieveWellKnownConfig()
+    nock.cleanAll()
+    nock(oidcConfig.configUrl).get("/").reply(200, wellKnownConfig)
   })
 
   describe("strategyFactory", () => {
@@ -41,8 +35,6 @@ describe("oidc", () => {
         callbackUrl
       )
       await oidc.strategyFactory(strategyConfiguration, mockSaveUser)
-
-      expect(mocks.fetch).toHaveBeenCalledWith(oidcConfig.configUrl)
 
       const expectedOptions = {
         issuer: wellKnownConfig.issuer,

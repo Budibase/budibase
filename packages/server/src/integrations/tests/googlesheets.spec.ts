@@ -1,3 +1,4 @@
+import { setEnv as setCoreEnv } from "@budibase/backend-core"
 import type { GoogleSpreadsheetWorksheet } from "google-spreadsheet"
 import nock from "nock"
 
@@ -40,7 +41,7 @@ describe("Google Sheets Integration", () => {
   let cleanupEnv: () => void
 
   beforeAll(() => {
-    cleanupEnv = config.setCoreEnv({
+    cleanupEnv = setCoreEnv({
       GOOGLE_CLIENT_ID: "test",
       GOOGLE_CLIENT_SECRET: "test",
     })

@@ -14,7 +14,12 @@ jest.mock("../../../utilities/redis", () => ({
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
-import { events, utils, context } from "@budibase/backend-core"
+import {
+  events,
+  utils,
+  context,
+  withEnv as withCoreEnv,
+} from "@budibase/backend-core"
 import env from "../../../environment"
 import { type App } from "@budibase/types"
 import tk from "timekeeper"
@@ -353,7 +358,7 @@ describe("/applications", () => {
         .delete(`/api/global/roles/${prodAppId}`)
         .reply(200, {})
 
-      await config.withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, async () => {
+      await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, async () => {
         await config.api.application.delete(app.appId)
       })
     })

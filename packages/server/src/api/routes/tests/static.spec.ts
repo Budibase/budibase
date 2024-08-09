@@ -8,23 +8,24 @@ jest.mock("aws-sdk", () => ({
   })),
 }))
 
-const setup = require("./utilities")
-const { constants } = require("@budibase/backend-core")
+import { Datasource, SourceName } from "@budibase/types"
+import { setEnv } from "../../../environment"
+import { getRequest, getConfig, afterAll as _afterAll } from "./utilities"
+import { constants } from "@budibase/backend-core"
 
 describe("/static", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
-  let app
-  let cleanupEnv
+  let request = getRequest()
+  let config = getConfig()
+  let cleanupEnv: () => void
 
   afterAll(() => {
-    setup.afterAll()
+    _afterAll()
     cleanupEnv()
   })
 
   beforeAll(async () => {
-    cleanupEnv = config.setEnv({ SELF_HOSTED: "true" })
-    app = await config.init()
+    cleanupEnv = setEnv({ SELF_HOSTED: "true" })
+    await config.init()
   })
 
   describe("/app", () => {
@@ -49,7 +50,7 @@ describe("/static", () => {
       delete headers[constants.Header.APP_ID]
 
       const res = await request
-        .get(`/app${config.prodApp.url}`)
+        .get(`/app${config.getProdApp().url}`)
         .set(headers)
         .expect(200)
 
@@ -68,14 +69,14 @@ describe("/static", () => {
 
   describe("/attachments", () => {
     describe("generateSignedUrls", () => {
-      let datasource
+      let datasource: Datasource
 
       beforeEach(async () => {
         datasource = await config.createDatasource({
           datasource: {
             type: "datasource",
             name: "Test",
-            source: "S3",
+            source: SourceName.S3,
             config: {},
           },
         })

@@ -1,9 +1,7 @@
 import { testEnv } from "../../../../../tests/extra"
 import PosthogProcessor from "../PosthogProcessor"
 import { Event, IdentityType, Hosting } from "@budibase/types"
-
-const tk = require("timekeeper")
-
+import tk from "timekeeper"
 import * as cache from "../../../../cache/generic"
 import { CacheKey } from "../../../../cache/generic"
 import * as context from "../../../../context"
@@ -18,6 +16,9 @@ const newIdentity = () => {
 }
 
 describe("PosthogProcessor", () => {
+  let processor: PosthogProcessor
+  let spy: jest.SpyInstance
+
   beforeAll(() => {
     testEnv.singleTenant()
   })
@@ -27,33 +28,29 @@ describe("PosthogProcessor", () => {
     await cache.bustCache(
       `${CacheKey.EVENTS_RATE_LIMIT}:${Event.SERVED_BUILDER}`
     )
+
+    processor = new PosthogProcessor("test")
+    spy = jest.spyOn(processor.posthog, "capture")
   })
 
   describe("processEvent", () => {
     it("processes event", async () => {
-      const processor = new PosthogProcessor("test")
-
       const identity = newIdentity()
       const properties = {}
 
       await processor.processEvent(Event.APP_CREATED, identity, properties)
-
-      expect(processor.posthog.capture).toHaveBeenCalledTimes(1)
+      expect(spy).toHaveBeenCalledTimes(1)
     })
 
     it("honours exclusions", async () => {
-      const processor = new PosthogProcessor("test")
-
       const identity = newIdentity()
       const properties = {}
 
       await processor.processEvent(Event.AUTH_SSO_UPDATED, identity, properties)
-      expect(processor.posthog.capture).toHaveBeenCalledTimes(0)
+      expect(spy).toHaveBeenCalledTimes(0)
     })
 
     it("removes audited information", async () => {
-      const processor = new PosthogProcessor("test")
-
       const identity = newIdentity()
       const properties = {
         email: "test",
@@ -63,7 +60,8 @@ describe("PosthogProcessor", () => {
       }
 
       await processor.processEvent(Event.USER_CREATED, identity, properties)
-      expect(processor.posthog.capture).toHaveBeenCalled()
+      expect(spy).toHaveBeenCalled()
+
       // @ts-ignore
       const call = processor.posthog.capture.mock.calls[0][0]
       expect(call.properties.audited).toBeUndefined()
@@ -72,7 +70,6 @@ describe("PosthogProcessor", () => {
 
     describe("rate limiting", () => {
       it("sends daily event once in same day", async () => {
-        const processor = new PosthogProcessor("test")
         const identity = newIdentity()
         const properties = {}
 
@@ -82,11 +79,10 @@ describe("PosthogProcessor", () => {
         tk.freeze(new Date(2022, 0, 1, 15, 0))
         await processor.processEvent(Event.SERVED_BUILDER, identity, properties)
 
-        expect(processor.posthog.capture).toHaveBeenCalledTimes(1)
+        expect(spy).toHaveBeenCalledTimes(1)
       })
 
       it("sends daily event once per unique day", async () => {
-        const processor = new PosthogProcessor("test")
         const identity = newIdentity()
         const properties = {}
 
@@ -102,11 +98,10 @@ describe("PosthogProcessor", () => {
         tk.freeze(new Date(2022, 0, 3, 6, 0))
         await processor.processEvent(Event.SERVED_BUILDER, identity, properties)
 
-        expect(processor.posthog.capture).toHaveBeenCalledTimes(3)
+        expect(spy).toHaveBeenCalledTimes(3)
       })
 
       it("sends event again after cache expires", async () => {
-        const processor = new PosthogProcessor("test")
         const identity = newIdentity()
         const properties = {}
 
@@ -120,11 +115,10 @@ describe("PosthogProcessor", () => {
         tk.freeze(new Date(2022, 0, 1, 14, 0))
         await processor.processEvent(Event.SERVED_BUILDER, identity, properties)
 
-        expect(processor.posthog.capture).toHaveBeenCalledTimes(2)
+        expect(spy).toHaveBeenCalledTimes(2)
       })
 
       it("sends per app events once per day per app", async () => {
-        const processor = new PosthogProcessor("test")
         const identity = newIdentity()
         const properties = {}
 
@@ -160,10 +154,10 @@ describe("PosthogProcessor", () => {
         }
 
         await runAppEvents("app_1")
-        expect(processor.posthog.capture).toHaveBeenCalledTimes(4)
+        expect(spy).toHaveBeenCalledTimes(4)
 
         await runAppEvents("app_2")
-        expect(processor.posthog.capture).toHaveBeenCalledTimes(8)
+        expect(spy).toHaveBeenCalledTimes(8)
       })
     })
   })

@@ -9,6 +9,7 @@ import {
   users,
   cache,
   env as coreEnv,
+  features,
 } from "@budibase/backend-core"
 import { watch } from "../watch"
 import * as automations from "../automations"
@@ -95,6 +96,9 @@ export async function startup(
 
   console.log("Initialising events")
   eventInit()
+
+  console.log("Initialising feature flags")
+  features.init()
 
   if (app && server) {
     console.log("Initialising websockets")

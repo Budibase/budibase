@@ -40,7 +40,7 @@ export class ConfigAPI extends TestAPI {
     const sessionContent = JSON.parse(
       Buffer.from(koaSession, "base64").toString("utf-8")
     )
-    const handle = sessionContent["openidconnect:localhost"].state.handle
+    const handle = sessionContent["openidconnect:example.com"].state.handle
     return this.request
       .get(`/api/global/auth/${this.config.getTenantId()}/oidc/callback`)
       .query({ code: "test", state: handle })
