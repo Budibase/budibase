@@ -8,7 +8,7 @@
 
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
-  import { isJSBinding } from "@budibase/string-templates"
+  import { isJSBinding, findHBSBlocks } from "@budibase/string-templates"
 
   export let panel = ClientBindingPanel
   export let value = ""
@@ -105,9 +105,11 @@
     datetime: isValidDate,
     link: hasValidLinks,
     bb_reference: hasValidLinks,
+    bb_reference_single: hasValidLinks,
     array: hasValidOptions,
     longform: value => !isJSBinding(value),
     json: value => !isJSBinding(value),
+    options: value => !isJSBinding(value) && !findHBSBlocks(value)?.length,
     boolean: isValidBoolean,
     attachment: false,
     attachment_single: false,
