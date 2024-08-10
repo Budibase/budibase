@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from "svelte"
+  import { onMount, onDestroy, getContext } from "svelte"
   import { builderStore, componentStore } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
   import { GridRowHeight } from "constants"
@@ -8,7 +8,10 @@
     getGridParent,
     GridParams,
     getGridVar,
+    Devices,
   } from "utils/grid"
+
+  const context = getContext("context")
 
   // Smallest possible 1x1 transparent GIF
   const ghost = new Image(1, 1)
@@ -20,7 +23,7 @@
   let gridStyles = memo()
 
   // Grid CSS variables
-  $: device = $builderStore.previewDevice
+  $: device = $context.device.mobile ? Devices.Mobile : Devices.Desktop
   $: vars = {
     colStart: getGridVar(device, GridParams.ColStart),
     colEnd: getGridVar(device, GridParams.ColEnd),
@@ -143,7 +146,6 @@
     if (!domGrid) {
       return
     }
-    const gridCols = parseInt(domGrid.dataset.cols)
     const styles = getComputedStyle(domComponent.parentNode)
 
     // Show as active
@@ -163,12 +165,10 @@
       grid: {
         startX: e.clientX,
         startY: e.clientY,
-
-        // Ensure things are within limits
-        rowStart: Math.max(styles["grid-row-start"], 1),
-        rowEnd: Math.max(styles["grid-row-end"], 2),
-        colStart: minMax(styles["grid-column-start"], 1, gridCols),
-        colEnd: minMax(styles["grid-column-end"], 2, gridCols + 1),
+        rowStart: parseInt(styles["grid-row-start"]),
+        rowEnd: parseInt(styles["grid-row-end"]),
+        colStart: parseInt(styles["grid-column-start"]),
+        colEnd: parseInt(styles["grid-column-end"]),
       },
     }
 
