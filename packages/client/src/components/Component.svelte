@@ -40,6 +40,7 @@
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
   import { gridLayout } from "utils/grid.js"
+  import { memo } from "@budibase/frontend-core"
 
   export let instance = {}
   export let parent = null
@@ -53,7 +54,7 @@
   const component = getContext("component")
 
   // Create component context
-  const store = writable({})
+  const store = memo({})
   setContext("component", store)
 
   // Ref to the svelte component
@@ -206,7 +207,8 @@
   }
 
   // Metadata to pass into grid action to apply CSS
-  $: gridMetadata = {
+  let gridMetadata = memo()
+  $: gridMetadata.set({
     active:
       parent?._component.endsWith("/container") && parent?.layout === "grid",
     id,
@@ -215,7 +217,7 @@
     draggable,
     definition,
     errored: errorState,
-  }
+  })
 
   // Update component context
   $: store.set({
@@ -668,7 +670,7 @@
     data-name={name}
     data-icon={icon}
     data-parent={$component.id}
-    use:gridLayout={gridMetadata}
+    use:gridLayout={$gridMetadata}
   >
     {#if errorState}
       <ComponentErrorState

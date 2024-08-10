@@ -132,6 +132,8 @@ export const gridLayout = (node, metadata) => {
     }
     addDataTag("gridDesktopRowEnd", Devices.Desktop, GridParams.RowEnd)
     addDataTag("gridMobileRowEnd", Devices.Mobile, GridParams.RowEnd)
+    addDataTag("gridDesktopHAlign", Devices.Desktop, GridParams.HAlign)
+    addDataTag("gridMobileHAlign", Devices.Mobile, GridParams.HAlign)
     addDataTag("gridDesktopVAlign", Devices.Desktop, GridParams.VAlign)
     addDataTag("gridMobileVAlign", Devices.Mobile, GridParams.VAlign)
 
@@ -149,7 +151,7 @@ export const gridLayout = (node, metadata) => {
 
   // Removes the previously set up listeners
   const removeListeners = () => {
-    node.removeEventListener("click", selectComponent)
+    node.removeEventListener("click", selectComponent, false)
   }
 
   applyMetadata(metadata)

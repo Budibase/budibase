@@ -1,14 +1,14 @@
 <script>
-  import { onMount, onDestroy } from "svelte"
+  import { onMount, onDestroy, getContext } from "svelte"
   import SettingsButton from "./SettingsButton.svelte"
   import GridStylesButton from "./GridStylesButton.svelte"
   import SettingsColorPicker from "./SettingsColorPicker.svelte"
   import SettingsPicker from "./SettingsPicker.svelte"
   import { builderStore, componentStore, dndIsDragging } from "stores"
   import { Utils, shouldDisplaySetting } from "@budibase/frontend-core"
-  import { findComponentParent } from "utils/components"
-  import { getGridVar, GridParams } from "utils/grid"
+  import { getGridVar, GridParams, Devices } from "utils/grid"
 
+  const context = getContext("context")
   const verticalOffset = 36
   const horizontalOffset = 2
 
@@ -18,7 +18,10 @@
   let self
   let measured = false
   let observer
-  let computedStyles
+
+  let insideGrid = false
+  let gridHAlign
+  let gridVAlign
 
   // TODO: respect dependsOn keys
 
@@ -26,7 +29,6 @@
   $: measured, observeComputedStyles(componentId)
   $: component = $componentStore.selectedComponent
   $: definition = $componentStore.selectedComponentDefinition
-  $: parent = findComponentParent($builderStore.screen.props, componentId)
   $: instance = componentStore.actions.getComponentInstance(componentId)
   $: state = $instance?.state
   $: showBar =
@@ -34,20 +36,14 @@
     !$dndIsDragging &&
     definition &&
     !$state?.errorState
-  $: {
-    if (!showBar) {
-      measured = false
-    }
-  }
   $: settings = getBarSettings(component, definition)
   $: isRoot = componentId === $builderStore.screen?.props?._id
-  $: insideGrid =
-    parent?._component.endsWith("/container") && parent.layout === "grid"
   $: showGridStyles =
     insideGrid &&
     (definition?.grid?.hAlign !== "stretch" ||
       definition?.grid?.vAlign !== "stretch")
-  $: device = $builderStore.previewDevice
+  $: mobile = $context.device.mobile
+  $: device = mobile ? Devices.Mobile : Devices.Desktop
   $: gridHAlignVar = getGridVar(device, GridParams.HAlign)
   $: gridVAlignVar = getGridVar(device, GridParams.VAlign)
 
@@ -74,6 +70,9 @@
     }
     const id = $builderStore.selectedComponentId
     let element = document.getElementsByClassName(id)?.[0]
+
+    // Check if we're inside a grid
+    insideGrid = element.parentNode.classList.contains("grid")
     if (!insideGrid) {
       element = element?.children?.[0]
     }
@@ -91,6 +90,17 @@
       const width = self.offsetWidth
       const height = self.offsetHeight
       const { scrollX, scrollY, innerWidth } = window
+
+      // Read grid metadata from data attributes
+      if (insideGrid) {
+        if (mobile) {
+          gridHAlign = element.dataset.gridMobileHAlign
+          gridVAlign = element.dataset.gridMobileVAlign
+        } else {
+          gridHAlign = element.dataset.gridDesktopHAlign
+          gridVAlign = element.dataset.gridDesktopVAlign
+        }
+      }
 
       // Vertically, always render above unless no room, then render inside
       let newTop = elBounds.top + scrollY - verticalOffset - height
@@ -143,18 +153,13 @@
     observer?.disconnect()
     const node = document.getElementsByClassName(`${id}-dom`)[0]?.parentNode
     if (node) {
-      observer = new MutationObserver(() => {
-        console.log("get computed")
-        computedStyles = getComputedStyle(node)
-        updatePosition()
-      })
+      observer = new MutationObserver(updatePosition)
       observer.observe(node, {
         attributes: true,
         attributeFilter: ["style"],
         childList: false,
         subtree: false,
       })
-      computedStyles = getComputedStyle(node)
     }
   }
 
@@ -184,32 +189,32 @@
         value="start"
         icon="AlignLeft"
         title="Align left"
+        active={gridHAlign === "start"}
         {componentId}
-        {computedStyles}
       />
       <GridStylesButton
         style={gridHAlignVar}
         value="center"
         icon="AlignCenter"
         title="Align center"
+        active={gridHAlign === "center"}
         {componentId}
-        {computedStyles}
       />
       <GridStylesButton
         style={gridHAlignVar}
         value="end"
         icon="AlignRight"
         title="Align right"
+        active={gridHAlign === "end"}
         {componentId}
-        {computedStyles}
       />
       <GridStylesButton
         style={gridHAlignVar}
         value="stretch"
         icon="MoveLeftRight"
         title="Stretch horizontally"
+        active={gridHAlign === "stretch"}
         {componentId}
-        {computedStyles}
       />
       <div class="divider" />
       <GridStylesButton
@@ -217,32 +222,32 @@
         value="start"
         icon="AlignTop"
         title="Align top"
+        active={gridVAlign === "start"}
         {componentId}
-        {computedStyles}
       />
       <GridStylesButton
         style={gridVAlignVar}
         value="center"
         icon="AlignMiddle"
         title="Align middle"
+        active={gridVAlign === "center"}
         {componentId}
-        {computedStyles}
       />
       <GridStylesButton
         style={gridVAlignVar}
         value="end"
         icon="AlignBottom"
         title="Align bottom"
+        active={gridVAlign === "end"}
         {componentId}
-        {computedStyles}
       />
       <GridStylesButton
         style={gridVAlignVar}
         value="stretch"
         icon="MoveUpDown"
         title="Stretch vertically"
+        active={gridVAlign === "stretch"}
         {componentId}
-        {computedStyles}
       />
       <div class="divider" />
     {/if}
