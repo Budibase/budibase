@@ -36,7 +36,6 @@
   // Set ephemeral styles
   $: instance = componentStore.actions.getComponentInstance(id)
   $: $instance?.setEphemeralStyles(enrichComponentStyles($styles))
-  $: $styles, console.log("new styles")
 
   // Sugar for a combination of both min and max
   const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
