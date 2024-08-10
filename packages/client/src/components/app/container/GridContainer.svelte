@@ -2,6 +2,7 @@
   import { getContext, onMount } from "svelte"
   import { writable } from "svelte/store"
   import { GridRowHeight, GridColumns } from "constants"
+  import { memo } from "@budibase/frontend-core"
 
   const component = getContext("component")
   const { styleable, builderStore } = getContext("sdk")
@@ -12,12 +13,25 @@
   let rows = 1
   let children = writable({})
   let mounted = false
+  let styles = memo({})
 
   $: rows = calculateRequiredRows($children, mobile)
   $: mobile = $context.device.mobile
   $: empty = $component.empty
   $: colSize = width / GridColumns
   $: height = rows * GridRowHeight
+  $: styles.set({
+    ...$component.styles,
+    normal: {
+      ...$component.styles?.normal,
+      "--height": `${height}px`,
+      "--cols": GridColumns,
+      "--rows": rows,
+      "--col-size": colSize,
+      "--row-size": GridRowHeight,
+    },
+    empty: false,
+  })
 
   // Calculates the minimum number of rows required to render all child
   // components, on a certain device type
@@ -104,18 +118,7 @@
   class="grid"
   class:mobile
   bind:clientWidth={width}
-  use:styleable={{
-    ...$component.styles,
-    normal: {
-      ...$component.styles?.normal,
-      "--height": `${height}px`,
-      "--cols": GridColumns,
-      "--rows": rows,
-      "--col-size": colSize,
-      "--row-size": GridRowHeight,
-    },
-    empty: false,
-  }}
+  use:styleable={$styles}
   data-cols={GridColumns}
   data-col-size={colSize}
 >
@@ -134,9 +137,6 @@
 </div>
 
 <style>
-  .grid {
-    position: relative;
-  }
   .grid,
   .underlay {
     height: var(--height) !important;

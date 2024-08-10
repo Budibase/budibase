@@ -7,9 +7,7 @@
   export let icon
   export let title
   export let componentId
-  export let computedStyles
-
-  $: active = computedStyles?.getPropertyValue(style) === value
+  export let active
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

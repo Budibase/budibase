@@ -20,7 +20,6 @@
 
   let dragInfo
   let styles = memo()
-  let gridStyles = memo()
 
   // Grid CSS variables
   $: device = $context.device.mobile ? Devices.Mobile : Devices.Desktop
@@ -33,13 +32,11 @@
 
   // Some memoisation of primitive types for performance
   $: id = dragInfo?.id
-  $: gridId = dragInfo?.gridId
 
   // Set ephemeral styles
   $: instance = componentStore.actions.getComponentInstance(id)
-  $: gridInstance = componentStore.actions.getComponentInstance(gridId)
   $: $instance?.setEphemeralStyles(enrichComponentStyles($styles))
-  $: $gridInstance?.setEphemeralStyles($gridStyles)
+  $: $styles, console.log("new styles")
 
   // Sugar for a combination of both min and max
   const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
@@ -188,7 +185,7 @@
     if (!dragInfo) {
       return
     }
-    const { id, gridId, domTarget, domGrid, domComponent } = dragInfo
+    const { id, domTarget, domGrid, domComponent } = dragInfo
 
     // Reset DOM
     domComponent.parentNode.classList.remove("dragging")
@@ -199,14 +196,10 @@
     if ($styles) {
       await builderStore.actions.updateStyles($styles, id)
     }
-    if ($gridStyles) {
-      await builderStore.actions.updateStyles($gridStyles, gridId)
-    }
 
     // Reset state
     dragInfo = null
     styles.set(null)
-    gridStyles.set(null)
   }
 
   onMount(() => {
