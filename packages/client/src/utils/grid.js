@@ -82,56 +82,61 @@ export const gridLayout = (node, metadata) => {
       builderStore.actions.selectComponent(id)
     }
 
-    // Generate base set of grid CSS vars based for this component
+    // Determine default width and height of component
     let width = errored ? 500 : definition.size?.width || 200
     let height = errored ? 60 : definition.size?.height || 200
     width += 2 * GridSpacing
     height += 2 * GridSpacing
-    const hAlign = errored ? "stretch" : definition?.grid?.hAlign || "stretch"
-    const vAlign = errored ? "stretch" : definition?.grid?.vAlign || "center"
-    const vars = {
+    let vars = {
       "--default-width": width,
       "--default-height": height,
-      "--grid-desktop-h-align": hAlign,
-      "--grid-mobile-h-align": hAlign,
-      "--grid-desktop-v-align": vAlign,
-      "--grid-mobile-v-align": vAlign,
-
-      // Variables for automatically determining grid height
-      "--grid-desktop-row-end": Math.ceil(height / GridRowHeight) + 1,
-      "--grid-mobile-row-end": Math.ceil(height / GridRowHeight) + 1,
     }
 
-    // Extract any other CSS variables from the saved component styles
-    for (let style of Object.keys(styles)) {
-      if (style.startsWith("--")) {
-        vars[style] = styles[style]
-        delete styles[style]
-      }
+    // Generate defaults for all grid params
+    const defaults = {
+      [GridParams.HAlign]: definition?.grid?.hAlign || "stretch",
+      [GridParams.VAlign]: definition?.grid?.vAlign || "center",
+      [GridParams.ColStart]: 1,
+      [GridParams.ColEnd]:
+        "round(up, calc((var(--grid-spacing) * 2 + var(--default-width)) / var(--col-size) + 1))",
+      [GridParams.RowStart]: 1,
+      [GridParams.RowEnd]: Math.ceil(height / GridRowHeight) + 1,
+    }
+
+    // Specify values for all grid params for all devices, and strip these CSS
+    // variables from the styles being applied to the inner component, as we
+    // want to apply these to the wrapper instead
+    for (let param of Object.values(GridParams)) {
+      let dVar = getGridVar(Devices.Desktop, param)
+      let mVar = getGridVar(Devices.Mobile, param)
+      vars[dVar] = styles[dVar] || styles[mVar] || defaults[param]
+      vars[mVar] = styles[mVar] || styles[dVar] || defaults[param]
+      delete styles[dVar]
+      delete styles[mVar]
+    }
+
+    // Apply some overrides depending on component state
+    if (errored) {
+      vars[getGridVar(Devices.Desktop, GridParams.HAlign)] = "stretch"
+      vars[getGridVar(Devices.Mobile, GridParams.HAlign)] = "stretch"
+      vars[getGridVar(Devices.Desktop, GridParams.VAlign)] = "stretch"
+      vars[getGridVar(Devices.Mobile, GridParams.VAlign)] = "stretch"
     }
 
     // Apply some metadata to data attributes to speed up lookups
-    const desktopRowEnd = `${vars["--grid-desktop-row-end"]}`
-    const mobileRowEnd = `${vars["--grid-mobile-row-end"]}`
-    if (node.dataset.gridDesktopRowEnd !== desktopRowEnd) {
-      node.dataset.gridDesktopRowEnd = desktopRowEnd
+    const addDataTag = (tagName, device, param) => {
+      const val = `${vars[getGridVar(device, param)]}`
+      if (node.dataset[tagName] !== val) {
+        node.dataset[tagName] = val
+      }
     }
-    if (node.dataset.gridMobileRowEnd !== mobileRowEnd) {
-      node.dataset.gridMobileRowEnd = mobileRowEnd
-    }
+    addDataTag("gridDesktopRowEnd", Devices.Desktop, GridParams.RowEnd)
+    addDataTag("gridMobileRowEnd", Devices.Mobile, GridParams.RowEnd)
+    addDataTag("gridDesktopVAlign", Devices.Desktop, GridParams.VAlign)
+    addDataTag("gridMobileVAlign", Devices.Mobile, GridParams.VAlign)
 
     // Apply all CSS variables to the wrapper
     node.style = buildStyleString(vars)
-
-    // Toggle classes to specify whether our children should fill
-    node.classList.toggle(
-      GridClasses.DesktopFill,
-      vars[getGridVar(Devices.Desktop, GridParams.VAlign)] === "stretch"
-    )
-    node.classList.toggle(
-      GridClasses.MobileFill,
-      vars[getGridVar(Devices.Mobile, GridParams.VAlign)] === "stretch"
-    )
 
     // Add a listener to select this node on click
     if (interactive) {

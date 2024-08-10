@@ -53,42 +53,40 @@
 
   onMount(() => {
     let observer
-    if ($builderStore.inBuilder) {
-      // Set up an observer to watch for changes in metadata attributes of child
-      // components, as well as child addition and deletion
-      observer = new MutationObserver(mutations => {
-        for (let mutation of mutations) {
-          const { target, type, addedNodes, removedNodes } = mutation
-          if (target === ref) {
-            if (addedNodes[0]?.classList?.contains("component")) {
-              // We've added a new child component inside the grid, so we need
-              // to consider it when determining required rows
-              storeChild(addedNodes[0])
-            } else if (removedNodes[0]?.classList?.contains("component")) {
-              // We've removed a child component inside the grid, so we need
-              // to stop considering it when determining required rows
-              removeChild(removedNodes[0])
-            }
-          } else if (
-            type === "attributes" &&
-            target.parentNode === ref &&
-            target.classList.contains("component")
-          ) {
-            // We've updated the size or position of a child
-            storeChild(target)
+    // Set up an observer to watch for changes in metadata attributes of child
+    // components, as well as child addition and deletion
+    observer = new MutationObserver(mutations => {
+      for (let mutation of mutations) {
+        const { target, type, addedNodes, removedNodes } = mutation
+        if (target === ref) {
+          if (addedNodes[0]?.classList?.contains("component")) {
+            // We've added a new child component inside the grid, so we need
+            // to consider it when determining required rows
+            storeChild(addedNodes[0])
+          } else if (removedNodes[0]?.classList?.contains("component")) {
+            // We've removed a child component inside the grid, so we need
+            // to stop considering it when determining required rows
+            removeChild(removedNodes[0])
           }
+        } else if (
+          type === "attributes" &&
+          target.parentNode === ref &&
+          target.classList.contains("component")
+        ) {
+          // We've updated the size or position of a child
+          storeChild(target)
         }
-      })
-      observer.observe(ref, {
-        childList: true,
-        attributes: true,
-        subtree: true,
-        attributeFilter: [
-          "data-grid-desktop-row-end",
-          "data-grid-mobile-row-end",
-        ],
-      })
-    }
+      }
+    })
+    observer.observe(ref, {
+      childList: true,
+      attributes: true,
+      subtree: true,
+      attributeFilter: [
+        "data-grid-desktop-row-end",
+        "data-grid-mobile-row-end",
+      ],
+    })
 
     // Now that the observer is set up, we mark the grid as mounted to mount
     // our child components
@@ -138,26 +136,11 @@
 <style>
   .grid {
     position: relative;
-
-    /*
-      Prevent cross-grid variable inheritance. The other variables for alignment
-      are always set on each component, so we don't need to worry about
-      inheritance.
-    */
-    --grid-desktop-col-start: initial;
-    --grid-desktop-col-end: initial;
-    --grid-desktop-row-start: initial;
-    --grid-desktop-row-end: initial;
-    --grid-mobile-col-start: initial;
-    --grid-mobile-col-end: initial;
-    --grid-mobile-row-start: initial;
-    --grid-mobile-row-end: initial;
   }
-
   .grid,
   .underlay {
     height: var(--height) !important;
-    min-height: none !important;
+    min-height: 0 !important;
     max-height: none !important;
     display: grid;
     grid-template-rows: repeat(var(--rows), calc(var(--row-size) * 1px));
@@ -206,27 +189,10 @@
     margin: calc(var(--grid-spacing) * 1px);
 
     /* On desktop, use desktop metadata and fall back to mobile */
-    /* Position vars */
-    --col-start: var(--grid-desktop-col-start, var(--grid-mobile-col-start, 1));
-    --col-end: var(
-      --grid-desktop-col-end,
-      var(
-        --grid-mobile-col-end,
-        round(
-          up,
-          calc(
-            (var(--grid-spacing) * 2 + var(--default-width)) / var(--col-size) +
-              1
-          )
-        )
-      )
-    );
-
-    /* Row end is always provided by the gridLayout action */
-    --row-start: var(--grid-desktop-row-start, var(--grid-mobile-row-start, 1));
+    --col-start: var(--grid-desktop-col-start, var(--grid-mobile-col-start));
+    --col-end: var(--grid-desktop-col-end, var(--grid-mobile-col-end));
+    --row-start: var(--grid-desktop-row-start, var(--grid-mobile-row-start));
     --row-end: var(--grid-desktop-row-end, var(--grid-mobile-row-end));
-
-    /* Flex vars */
     --h-align: var(--grid-desktop-h-align, var(--grid-mobile-h-align));
     --v-align: var(--grid-desktop-v-align, var(--grid-mobile-v-align));
 
@@ -247,24 +213,10 @@
 
   /* On mobile, use mobile metadata and fall back to desktop */
   .grid.mobile :global(> .component) {
-    /* Position vars */
-    --col-start: var(--grid-mobile-col-start, var(--grid-desktop-col-start, 1));
-    --col-end: var(
-      --grid-mobile-col-end,
-      var(
-        --grid-desktop-col-end,
-        round(
-          up,
-          calc(
-            (var(--spacing) * 2 + var(--default-width)) / var(--col-size) + 1
-          )
-        )
-      )
-    );
-    --row-start: var(--grid-mobile-row-start, var(--grid-desktop-row-start, 1));
+    --col-start: var(--grid-mobile-col-start, var(--grid-desktop-col-start));
+    --col-end: var(--grid-mobile-col-end, var(--grid-desktop-col-end));
+    --row-start: var(--grid-mobile-row-start, var(--grid-desktop-row-start));
     --row-end: var(--grid-mobile-row-end, var(--grid-desktop-row-end));
-
-    /* Flex vars */
     --h-align: var(--grid-mobile-h-align, var(--grid-desktop-h-align));
     --v-align: var(--grid-mobile-v-align, var(--grid-desktop-v-align));
   }
@@ -273,11 +225,12 @@
   .grid :global(> .component > *) {
     flex: 0 0 auto !important;
   }
-  .grid:not(.mobile) :global(> .component.grid-desktop-grow > *) {
+  .grid:not(.mobile)
+    :global(> .component[data-grid-desktop-v-align="stretch"] > *) {
     flex: 1 1 0 !important;
     height: 0 !important;
   }
-  .grid.mobile :global(> .component.grid-mobile-grow > *) {
+  .grid.mobile :global(> .component[data-grid-mobile-v-align="stretch"] > *) {
     flex: 1 1 0 !important;
     height: 0 !important;
   }
