@@ -144,11 +144,15 @@
     const node = document.getElementsByClassName(`${id}-dom`)[0]?.parentNode
     if (node) {
       observer = new MutationObserver(() => {
+        console.log("get computed")
         computedStyles = getComputedStyle(node)
+        updatePosition()
       })
       observer.observe(node, {
         attributes: true,
         attributeFilter: ["style"],
+        childList: false,
+        subtree: false,
       })
       computedStyles = getComputedStyle(node)
     }
