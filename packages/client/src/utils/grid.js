@@ -34,7 +34,7 @@ export const GridClasses = {
 }
 
 // Enum for device preview type, included in grid CSS variables
-const Devices = {
+export const Devices = {
   Desktop: "desktop",
   Mobile: "mobile",
 }
@@ -100,7 +100,7 @@ export const gridLayout = (node, metadata) => {
       [GridParams.ColEnd]:
         "round(up, calc((var(--grid-spacing) * 2 + var(--default-width)) / var(--col-size) + 1))",
       [GridParams.RowStart]: 1,
-      [GridParams.RowEnd]: Math.ceil(height / GridRowHeight) + 1,
+      [GridParams.RowEnd]: Math.max(2, Math.ceil(height / GridRowHeight) + 1),
     }
 
     // Specify values for all grid params for all devices, and strip these CSS
