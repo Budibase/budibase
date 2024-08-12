@@ -296,10 +296,9 @@ export const onboardUsers = async (
 
   let createdPasswords: Record<string, string> = {}
   const users: User[] = ctx.request.body.map(invite => {
-    // Minimum password length is 12 characters, but Math random will generate at most 11 characters, so add another 5.
-    const password =
-      Math.random().toString(36).substring(2, 22) +
-      Math.random().toString(36).substring(2, 7)
+    const password = crypto
+      .getRandomValues(new BigUint64Array(1))[0]
+      .toString(36)
     createdPasswords[invite.email] = password
 
     return {
