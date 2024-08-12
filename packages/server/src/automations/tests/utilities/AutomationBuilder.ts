@@ -27,6 +27,7 @@ import {
   AppActionTriggerOutputs,
   CronTriggerOutputs,
   AppActionTriggerInputs,
+  AutomationStepInputsOnly,
 } from "@budibase/types"
 import {} from "../../steps/loop"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -95,7 +96,7 @@ class AutomationBuilder {
     )
   }
 
-  appAction(outputs: AppActionTriggerOutputs, inputs: AppActionTriggerInputs) {
+  appAction(outputs: AppActionTriggerOutputs, inputs?: AppActionTriggerInputs) {
     this.triggerOutputs = outputs
     return this.trigger(
       TRIGGER_DEFINITIONS.APP,
@@ -164,7 +165,7 @@ class AutomationBuilder {
   private trigger<T extends { [key: string]: any }>(
     triggerSchema: AutomationTriggerDefinition,
     stepId: AutomationTriggerStepId,
-    inputs: T,
+    inputs?: T,
     outputs?: TriggerOutputs
   ): this {
     if (this.triggerSet) {
@@ -172,7 +173,7 @@ class AutomationBuilder {
     }
     this.automationConfig.definition.trigger = {
       ...triggerSchema,
-      inputs: inputs,
+      inputs: inputs || {},
       id: uuidv4(),
       stepId,
     }
@@ -189,9 +190,9 @@ class AutomationBuilder {
   ): this {
     this.automationConfig.definition.steps.push({
       ...stepSchema,
-      stepId,
       inputs,
       id: uuidv4(),
+      stepId,
     })
     return this
   }

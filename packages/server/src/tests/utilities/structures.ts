@@ -147,6 +147,8 @@ export function automationStep(
   return {
     id: utils.newid(),
     ...actionDefinition,
+    stepId: AutomationActionStepId.CREATE_ROW,
+    inputs: { row: {} },
   }
 }
 
@@ -390,7 +392,7 @@ export function filterAutomation(appId: string, tableId?: string): Automation {
           type: AutomationStepType.ACTION,
           internal: true,
           stepId: AutomationActionStepId.FILTER,
-          inputs: {},
+          inputs: { field: "name", value: "test", condition: "EQ" },
           schema: BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT.schema,
         },
       ],
@@ -429,7 +431,7 @@ export function updateRowAutomationWithFilters(appId: string): Automation {
           type: AutomationStepType.ACTION,
           internal: true,
           stepId: AutomationActionStepId.SERVER_LOG,
-          inputs: {},
+          inputs: { text: "log statement" },
           schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
         },
       ],

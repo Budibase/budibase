@@ -329,7 +329,7 @@ class Orchestrator {
                 }
                 try {
                   loopStep.inputs.binding = automationUtils.typecastForLooping(
-                    loopStep.inputs as LoopInput
+                    loopStep.inputs
                   )
                 } catch (err) {
                   this.updateContextAndOutput(

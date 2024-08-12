@@ -9,8 +9,8 @@ import {
   FieldType,
   Row,
   LoopStepType,
+  LoopStepInputs,
 } from "@budibase/types"
-import { LoopInput } from "../definitions/automations"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
 import path from "path"
@@ -269,7 +269,7 @@ export function stringSplit(value: string | string[]) {
   return value.split(",")
 }
 
-export function typecastForLooping(input: LoopInput) {
+export function typecastForLooping(input: LoopStepInputs) {
   if (!input || !input.binding) {
     return null
   }
