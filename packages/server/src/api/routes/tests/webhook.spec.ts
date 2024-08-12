@@ -2,6 +2,7 @@ import { Webhook } from "@budibase/types"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { mocks } from "@budibase/backend-core/tests"
+import { setEnv } from "../../../environment"
 
 const { basicWebhook, basicAutomation, collectAutomation } = setup.structures
 
@@ -17,7 +18,7 @@ describe("/webhooks", () => {
   })
 
   const setupTest = async () => {
-    cleanupEnv = config.setEnv({ SELF_HOSTED: "true" })
+    cleanupEnv = setEnv({ SELF_HOSTED: "true" })
     await config.init()
     const autoConfig = basicAutomation()
     autoConfig.definition.trigger.schema = {
