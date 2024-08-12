@@ -177,6 +177,7 @@
   /* Highlight sibling borders when resizing childern */
   :global(.grid.highlight > .component:not(.dragging)) {
     outline: 2px solid var(--spectrum-global-color-static-blue-200);
+    pointer-events: none !important;
   }
 
   /* Ensure all top level children have grid styles applied */
