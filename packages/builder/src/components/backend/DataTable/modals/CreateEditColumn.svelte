@@ -19,6 +19,8 @@
     helpers,
     PROTECTED_INTERNAL_COLUMNS,
     PROTECTED_EXTERNAL_COLUMNS,
+    canBeDisplayColumn,
+    canHaveDefaultColumn,
   } from "@budibase/shared-core"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
@@ -164,17 +166,10 @@
     : availableAutoColumns
   // used to select what different options can be displayed for column type
   $: canBeDisplay =
-    editableColumn?.type !== LINK_TYPE &&
-    editableColumn?.type !== AUTO_TYPE &&
-    editableColumn?.type !== JSON_TYPE &&
-    !editableColumn.autocolumn
+    canBeDisplayColumn(editableColumn.type) && !editableColumn.autocolumn
   $: canHaveDefault =
     isEnabled(TENANT_FEATURE_FLAGS.DEFAULT_VALUES) &&
-    (editableColumn?.type === FieldType.NUMBER ||
-      editableColumn?.type === FieldType.JSON ||
-      editableColumn?.type === FieldType.DATETIME ||
-      editableColumn?.type === FieldType.LONGFORM ||
-      editableColumn?.type === FieldType.STRING)
+    canHaveDefaultColumn(editableColumn.type)
   $: canBeRequired =
     editableColumn?.type !== LINK_TYPE &&
     !uneditable &&
