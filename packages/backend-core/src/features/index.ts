@@ -7,10 +7,13 @@ import tracer from "dd-trace"
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
   if (env.POSTHOG_TOKEN && env.POSTHOG_API_HOST) {
+    console.log("initializing posthog client...")
     posthog = new PostHog(env.POSTHOG_TOKEN, {
       host: env.POSTHOG_API_HOST,
       ...opts,
     })
+  } else {
+    console.log("posthog disabled")
   }
 }
 
@@ -128,6 +131,8 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
           continue
         }
 
+        tags[`readFromEnvironmentVars`] = true
+
         for (let feature of features) {
           let value = true
           if (feature.startsWith("!")) {
@@ -153,6 +158,8 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 
       const license = ctx?.user?.license
       if (license) {
+        tags[`readFromLicense`] = true
+
         for (const feature of license.features) {
           if (!this.isFlagName(feature)) {
             continue
@@ -175,7 +182,13 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
       }
 
       const identity = context.getIdentity()
+      tags[`identity.type`] = identity?.type
+      tags[`identity.tenantId`] = identity?.tenantId
+      tags[`identity._id`] = identity?._id
+
       if (posthog && identity?.type === IdentityType.USER) {
+        tags[`readFromPostHog`] = true
+
         const posthogFlags = await posthog.getAllFlagsAndPayloads(identity._id)
         for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
           if (!this.isFlagName(name)) {
