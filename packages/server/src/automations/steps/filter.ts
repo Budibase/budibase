@@ -1,6 +1,6 @@
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   FilterStepInputs,
@@ -21,7 +21,7 @@ export const PrettyFilterConditions = {
   [FilterConditions.LESS_THAN]: "Less than",
 }
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Condition",
   tagline: "{{inputs.field}} {{inputs.condition}} {{inputs.value}}",
   icon: "Branch2",

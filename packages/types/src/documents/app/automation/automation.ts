@@ -4,6 +4,7 @@ import { User } from "../../global"
 import { ReadStream } from "fs"
 import { Row } from "../row"
 import { Table } from "../table"
+import { AutomationStep, AutomationTrigger } from "./schema"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -164,42 +165,8 @@ export interface InputOutputBlock {
   required?: string[]
 }
 
-export interface AutomationStepSchema {
-  name: string
-  stepTitle?: string
-  tagline: string
-  icon: string
-  description: string
-  type: AutomationStepType
-  internal?: boolean
-  deprecated?: boolean
-  stepId: AutomationTriggerStepId | AutomationActionStepId
-  blockToLoop?: string
-  inputs: Record<string, any>
-  schema: {
-    inputs: InputOutputBlock
-    outputs: InputOutputBlock
-  }
-  custom?: boolean
-  features?: Partial<Record<AutomationFeature, boolean>>
-}
-
 export enum AutomationFeature {
   LOOPING = "LOOPING",
-}
-
-export interface AutomationStep extends AutomationStepSchema {
-  id: string
-}
-
-export interface AutomationTriggerSchema extends AutomationStepSchema {
-  type: AutomationStepType.TRIGGER
-  event?: string
-  cronJobId?: string
-}
-
-export interface AutomationTrigger extends AutomationTriggerSchema {
-  id: string
 }
 
 export enum AutomationStepStatus {

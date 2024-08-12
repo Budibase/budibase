@@ -1,5 +1,10 @@
 import { sample } from "lodash/fp"
-import { Automation, AutomationTriggerStepId } from "@budibase/types"
+import {
+  Automation,
+  AutomationStep,
+  AutomationTrigger,
+  AutomationTriggerStepId,
+} from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import automationSdk from "../"
@@ -64,10 +69,17 @@ describe("automation sdk", () => {
       })
     })
 
-    it.each([
-      ["trigger", (a: Automation) => a.definition.trigger],
-      ["step", (a: Automation) => a.definition.steps[0]],
-    ])("cannot update readonly fields (for a %s)", async (_, getStep) => {
+    type AutomationStepOrTrigger = AutomationStep | AutomationTrigger
+
+    type StepGetter = (a: Automation) => AutomationStepOrTrigger
+
+    const getTrigger: StepGetter = (a: Automation) => a.definition.trigger
+    const getFirstStep: StepGetter = (a: Automation) => a.definition.steps[0]
+
+    it.each<[string, StepGetter]>([
+      ["trigger", getTrigger],
+      ["step", getFirstStep],
+    ])("can update input fields (for a %s)", async (_, getStep) => {
       await config.doInContext(config.getAppId(), async () => {
         const automation = structures.newAutomation()
         getStep(automation).schema.inputs.properties["readonlyProperty"] = {

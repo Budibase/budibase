@@ -1,14 +1,56 @@
-import { SortOrder } from "../../../api"
-import { EmptyFilterOption, Hosting, SearchFilters } from "../../../sdk"
-import { HttpMethod } from "../query"
-import { Row } from "../row"
+import { Hosting } from "../../../sdk"
 import {
   AutomationActionStepId,
-  AutomationResults,
-  EmailAttachment,
-  LoopStepType,
   ActionImplementation,
+  AutomationStepType,
+  AutomationFeature,
+  InputOutputBlock,
+  AutomationTriggerStepId,
 } from "./automation"
+import {
+  CollectStepInputs,
+  CollectStepOutputs,
+  CreateRowStepInputs,
+  CreateRowStepOutputs,
+  DelayStepInputs,
+  DelayStepOutputs,
+  DeleteRowStepInputs,
+  DeleteRowStepOutputs,
+  ExecuteQueryStepInputs,
+  ExecuteQueryStepOutputs,
+  ExecuteScriptStepInputs,
+  ExecuteScriptStepOutputs,
+  FilterStepInputs,
+  FilterStepOutputs,
+  QueryRowsStepInputs,
+  QueryRowsStepOutputs,
+  SmtpEmailStepInputs,
+  BaseAutomationOutputs,
+  ServerLogStepInputs,
+  ServerLogStepOutputs,
+  TriggerAutomationStepInputs,
+  TriggerAutomationStepOutputs,
+  UpdateRowStepInputs,
+  UpdateRowStepOutputs,
+  OutgoingWebhookStepInputs,
+  ExternalAppStepOutputs,
+  DiscordStepInputs,
+  SlackStepInputs,
+  ZapierStepInputs,
+  ZapierStepOutputs,
+  MakeIntegrationInputs,
+  n8nStepInputs,
+  BashStepInputs,
+  BashStepOutputs,
+  OpenAIStepInputs,
+  OpenAIStepOutputs,
+  LoopStepInputs,
+  AppActionTriggerInputs,
+  CronTriggerInputs,
+  RowUpdatedTriggerInputs,
+  RowCreatedTriggerInputs,
+  RowDeletedTriggerInputs,
+} from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
   [AutomationActionStepId.COLLECT]: ActionImplementation<
@@ -27,7 +69,6 @@ export type ActionImplementations<T extends Hosting> = {
     DeleteRowStepInputs,
     DeleteRowStepOutputs
   >
-
   [AutomationActionStepId.EXECUTE_QUERY]: ActionImplementation<
     ExecuteQueryStepInputs,
     ExecuteQueryStepOutputs
@@ -72,7 +113,6 @@ export type ActionImplementations<T extends Hosting> = {
     SlackStepInputs,
     ExternalAppStepOutputs
   >
-
   [AutomationActionStepId.zapier]: ActionImplementation<
     ZapierStepInputs,
     ZapierStepOutputs
@@ -98,223 +138,220 @@ export type ActionImplementations<T extends Hosting> = {
     }
   : {})
 
-export type BaseAutomationOutputs = {
-  success?: boolean
-  response?: {
-    [key: string]: any
-    message?: string
+export interface AutomationStepSchemaBase {
+  name: string
+  stepTitle?: string
+  tagline: string
+  icon: string
+  description: string
+  type: AutomationStepType
+  internal?: boolean
+  deprecated?: boolean
+  blockToLoop?: string
+  schema: {
+    inputs: InputOutputBlock
+    outputs: InputOutputBlock
   }
+  custom?: boolean
+  features?: Partial<Record<AutomationFeature, boolean>>
 }
 
-export type ExternalAppStepOutputs = {
-  httpStatus?: number
-  response: string
-  success: boolean
-}
-
-export type BashStepInputs = {
-  code: string
-}
-
-export type BashStepOutputs = BaseAutomationOutputs & {
-  stdout?: string
-}
-
-export type CollectStepInputs = {
-  collection: string
-}
-
-export type CollectStepOutputs = BaseAutomationOutputs & {
-  value?: any
-}
-
-export type CreateRowStepInputs = {
-  row: Row
-}
-
-export type CreateRowStepOutputs = BaseAutomationOutputs & {
-  row?: Row
-  id?: string
-  revision?: string
-}
-
-export type DelayStepInputs = {
-  time: number
-}
-
-export type DelayStepOutputs = BaseAutomationOutputs
-
-export type DeleteRowStepInputs = {
-  tableId: string
+export interface AutomationStepSchema extends AutomationStepSchemaBase {
   id: string
-  revision?: string
 }
 
-export type DeleteRowStepOutputs = BaseAutomationOutputs & {
-  row?: Row
+export interface CollectStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.COLLECT
+  inputs: CollectStepInputs
 }
 
-export type DiscordStepInputs = {
-  url: string
-  username?: string
-  avatar_url?: string
-  content: string
+export interface CreateRowStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.CREATE_ROW
+  inputs: CreateRowStepInputs
 }
 
-export type ExecuteQueryStepInputs = {
-  query: {
-    queryId: string
-  }
+export interface DelayStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.DELAY
+  inputs: DelayStepInputs
 }
 
-export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
-  info?: any
+export interface DeleteRowStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.DELETE_ROW
+  inputs: DeleteRowStepInputs
 }
 
-export type ExecuteScriptStepInputs = {
-  code: string
+export interface ExecuteQueryStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.EXECUTE_QUERY
+  inputs: ExecuteQueryStepInputs
 }
 
-export type ExecuteScriptStepOutputs = BaseAutomationOutputs & {
-  value?: string
+export interface ExecuteScriptStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.EXECUTE_SCRIPT
+  inputs: ExecuteScriptStepInputs
 }
 
-export type FilterStepInputs = {
-  field: any
-  condition: string
-  value: any
+export interface FilterStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.FILTER
+  inputs: FilterStepInputs
 }
 
-export type FilterStepOutputs = BaseAutomationOutputs & {
-  result: boolean
-  refValue?: any
-  comparisonValue?: any
+export interface QueryRowsStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.QUERY_ROWS
+  inputs: QueryRowsStepInputs
 }
 
-export type LoopStepInputs = {
-  option: LoopStepType
-  binding: any
-  iterations?: number
-  failure?: string
+export interface SendEmailSmtpStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.SEND_EMAIL_SMTP
+  inputs: SmtpEmailStepInputs
 }
 
-export type LoopStepOutputs = {
-  items: string
-  success: boolean
-  iterations: number
+export interface ServerLogStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.SERVER_LOG
+  inputs: ServerLogStepInputs
 }
 
-export type MakeIntegrationInputs = {
-  url: string
-  body: any
+export interface TriggerAutomationRunStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.TRIGGER_AUTOMATION_RUN
+  inputs: TriggerAutomationStepInputs
 }
 
-export type n8nStepInputs = {
-  url: string
-  method: HttpMethod
-  authorization: string
-  body: any
+export interface UpdateRowStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.UPDATE_ROW
+  inputs: UpdateRowStepInputs
 }
 
-export type OpenAIStepInputs = {
-  prompt: string
-  model: Model
+export interface OutgoingWebhookStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.OUTGOING_WEBHOOK
+  inputs: OutgoingWebhookStepInputs
 }
 
-enum Model {
-  GPT_35_TURBO = "gpt-3.5-turbo",
-  // will only work with api keys that have access to the GPT4 API
-  GPT_4 = "gpt-4",
+export interface DiscordStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.discord
+  inputs: DiscordStepInputs
 }
 
-export type OpenAIStepOutputs = Omit<BaseAutomationOutputs, "response"> & {
-  response?: string | null
+export interface SlackStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.slack
+  inputs: SlackStepInputs
 }
 
-export type QueryRowsStepInputs = {
-  tableId: string
-  filters?: SearchFilters
-  "filters-def"?: any
-  sortColumn?: string
-  sortOrder?: SortOrder
-  limit?: number
-  onEmptyFilter?: EmptyFilterOption
+export interface ZapierStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.zapier
+  inputs: ZapierStepInputs
 }
 
-export type QueryRowsStepOutputs = BaseAutomationOutputs & {
-  rows?: Row[]
+export interface IntegromatStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.integromat
+  inputs: MakeIntegrationInputs
 }
 
-export type SmtpEmailStepInputs = {
-  to: string
-  from: string
-  subject: string
-  contents: string
-  cc: string
-  bcc: string
-  addInvite?: boolean
-  startTime: Date
-  endTime: Date
-  summary: string
-  location?: string
-  url?: string
-  attachments?: EmailAttachment[]
-}
-export type ServerLogStepInputs = {
-  text: string
+export interface N8nStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.n8n
+  inputs: n8nStepInputs
 }
 
-export type ServerLogStepOutputs = BaseAutomationOutputs & {
-  message: string
-}
-export type SlackStepInputs = {
-  url: string
-  text: string
+export interface ExecuteBashStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.EXECUTE_BASH
+  inputs: BashStepInputs
 }
 
-export type TriggerAutomationStepInputs = {
-  automation: {
-    automationId: string
-  }
-  timeout: number
+export interface OpenAIStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.OPENAI
+  inputs: OpenAIStepInputs
 }
 
-export type TriggerAutomationStepOutputs = BaseAutomationOutputs & {
-  value?: AutomationResults["steps"]
+export interface LoopStep extends AutomationStepSchema {
+  stepId: AutomationActionStepId.LOOP
+  inputs: LoopStepInputs
 }
 
-export type UpdateRowStepInputs = {
-  meta: Record<string, any>
-  row: Row
-  rowId: string
+export type AutomationStep =
+  | CollectStep
+  | CreateRowStep
+  | DelayStep
+  | DeleteRowStep
+  | ExecuteQueryStep
+  | ExecuteScriptStep
+  | FilterStep
+  | QueryRowsStep
+  | SendEmailSmtpStep
+  | ServerLogStep
+  | TriggerAutomationRunStep
+  | UpdateRowStep
+  | OutgoingWebhookStep
+  | DiscordStep
+  | SlackStep
+  | ZapierStep
+  | IntegromatStep
+  | N8nStep
+  | LoopStep
+  | ExecuteBashStep
+  | OpenAIStep
+
+// export type AutomationTrigger =
+//   | AppActionTrigger
+//   | CronTrigger
+//   | RowActionTrigger
+//   | RowDeletedTrigger
+//   | RowSavedTrigger
+//   | RowUpdatedTrigger
+//   | WebhookTrigger
+
+type EmptyInputs = {}
+export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {
+  inputs: EmptyInputs
 }
 
-export type UpdateRowStepOutputs = BaseAutomationOutputs & {
-  row?: Row
-  id?: string
-  revision?: string
+export type AutomationTriggerDefinition = Omit<
+  AutomationTrigger,
+  "id" | "inputs"
+> & {
+  inputs: EmptyInputs
 }
 
-export type ZapierStepInputs = {
-  url: string
-  body: any
+export interface AutomationTriggerSchema extends AutomationStepSchemaBase {
+  id: string
+  type: AutomationStepType.TRIGGER
+  event?: string
+  cronJobId?: string
 }
 
-export type ZapierStepOutputs = Omit<ExternalAppStepOutputs, "response"> & {
-  response: string
+export interface AutomationTrigger extends AutomationTriggerSchema {
+  stepId: AutomationTriggerStepId
+  inputs: Record<string, any>
 }
 
-enum RequestType {
-  POST = "POST",
-  GET = "GET",
-  PUT = "PUT",
-  DELETE = "DELETE",
-  PATCH = "PATCH",
+export interface AppActionTrigger extends AutomationTriggerSchema {
+  stepId: AutomationTriggerStepId.APP
+  inputs: AppActionTriggerInputs
 }
 
-export type OutgoingWebhookStepInputs = {
-  requestMethod: RequestType
-  url: string
-  requestBody: string
-  headers: string
+export interface CronTrigger extends AutomationTriggerSchema {
+  stepId: AutomationTriggerStepId.CRON
+  inputs: CronTriggerInputs
+}
+
+export interface RowActionTrigger extends AutomationTriggerSchema {
+  stepId: AutomationTriggerStepId.ROW_ACTION
+  inputs: Record<string, any>
+}
+
+export interface RowDeletedTrigger extends AutomationTriggerSchema {
+  stepId: AutomationTriggerStepId.ROW_DELETED
+  inputs: RowDeletedTriggerInputs
+}
+
+export interface RowSavedTrigger extends AutomationTriggerSchema {
+  stepId: AutomationTriggerStepId.ROW_SAVED
+  inputs: RowCreatedTriggerInputs
+}
+
+export interface RowUpdatedTrigger extends AutomationTriggerSchema {
+  stepId: AutomationTriggerStepId.ROW_UPDATED
+  inputs: RowUpdatedTriggerInputs
+}
+
+export interface WebhookTrigger extends AutomationTriggerSchema {
+  stepId: AutomationTriggerStepId.WEBHOOK
+  inputs: Record<string, any>
 }

@@ -2,14 +2,12 @@ import {
   AutomationCustomIOType,
   AutomationIOType,
   AutomationStepType,
-  AutomationTriggerSchema,
   AutomationTriggerStepId,
   AutomationEventType,
-  Row,
+  AutomationTriggerDefinition,
 } from "@budibase/types"
-import { SearchFilters } from "aws-sdk/clients/elasticbeanstalk"
 
-export const definition: AutomationTriggerSchema = {
+export const definition: AutomationTriggerDefinition = {
   name: "Row Created",
   event: AutomationEventType.ROW_SAVE,
   icon: "TableRowAddBottom",
@@ -53,15 +51,4 @@ export const definition: AutomationTriggerSchema = {
     },
   },
   type: AutomationStepType.TRIGGER,
-}
-
-export type RowCreatedTriggerInputs = {
-  tableId: string
-  filters?: SearchFilters
-}
-
-export type RowCreatedTriggerOutputs = {
-  row: Row
-  id: string
-  revision: string
 }

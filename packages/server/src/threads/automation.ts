@@ -23,11 +23,11 @@ import {
   AutomationStatus,
   AutomationStep,
   AutomationStepStatus,
+  LoopStep,
 } from "@budibase/types"
 import {
   AutomationContext,
   LoopInput,
-  LoopStep,
   TriggerOutput,
 } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
@@ -40,8 +40,6 @@ import env from "../environment"
 import tracer from "dd-trace"
 
 threadUtils.threadSetup()
-const FILTER_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.FILTER.stepId
-const LOOP_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
@@ -256,7 +254,7 @@ class Orchestrator {
         this._context.env = await sdkUtils.getEnvironmentVariables()
         let automation = this._automation
         let stopped = false
-        let loopStep: LoopStep | undefined = undefined
+        let loopStep: LoopStep | undefined
 
         let stepCount = 0
         let currentLoopStepIndex: number = 0
@@ -293,7 +291,7 @@ class Orchestrator {
             },
           })
 
-          let input: LoopInput | undefined,
+          let input,
             iterations = 1,
             iterationCount = 0
 
@@ -310,8 +308,8 @@ class Orchestrator {
             }
 
             stepCount++
-            if (step.stepId === LOOP_STEP_ID) {
-              loopStep = step as LoopStep
+            if (step.stepId === AutomationActionStepId.LOOP) {
+              loopStep = step
               currentLoopStepIndex = stepCount
               continue
             }
@@ -368,7 +366,7 @@ class Orchestrator {
                 if (
                   stepIndex === env.AUTOMATION_MAX_ITERATIONS ||
                   (loopStep.inputs.iterations &&
-                    stepIndex === parseInt(loopStep.inputs.iterations))
+                    stepIndex === loopStep.inputs.iterations)
                 ) {
                   this.updateContextAndOutput(
                     currentLoopStepIndex,
@@ -430,7 +428,7 @@ class Orchestrator {
               inputs = automationUtils.cleanInputValues(
                 inputs,
                 step.schema.inputs
-              )
+              ) as any
               try {
                 // appId is always passed
                 const outputs = await stepFn({
@@ -443,7 +441,10 @@ class Orchestrator {
                 this._context.steps[stepCount] = outputs
                 // if filter causes us to stop execution don't break the loop, set a var
                 // so that we can finish iterating through the steps and record that it stopped
-                if (step.stepId === FILTER_STEP_ID && !outputs.result) {
+                if (
+                  step.stepId === AutomationActionStepId.FILTER &&
+                  !outputs.result
+                ) {
                   stopped = true
                   this.updateExecutionOutput(
                     step.id,
