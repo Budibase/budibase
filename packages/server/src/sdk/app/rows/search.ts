@@ -13,6 +13,7 @@ import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
 import { db as dbCore } from "@budibase/backend-core"
+import tracer from "dd-trace"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -32,32 +33,65 @@ function pickApi(tableId: any) {
 export async function search(
   options: RowSearchParams
 ): Promise<SearchResponse<Row>> {
-  const isExternalTable = isExternalTableID(options.tableId)
-  options.query = dataFilters.cleanupQuery(options.query || {})
-  options.query = dataFilters.fixupFilterArrays(options.query)
-  if (
-    !dataFilters.hasFilters(options.query) &&
-    options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
-  ) {
-    return {
-      rows: [],
+  return await tracer.trace("search", async span => {
+    span?.addTags({
+      tableId: options.tableId,
+      query: options.query,
+      sort: options.sort,
+      sortOrder: options.sortOrder,
+      sortType: options.sortType,
+      limit: options.limit,
+      bookmark: options.bookmark,
+      paginate: options.paginate,
+      fields: options.fields,
+      countRows: options.countRows,
+    })
+
+    const isExternalTable = isExternalTableID(options.tableId)
+    options.query = dataFilters.cleanupQuery(options.query || {})
+    options.query = dataFilters.fixupFilterArrays(options.query)
+
+    span?.addTags({
+      cleanedQuery: options.query,
+      isExternalTable,
+    })
+
+    if (
+      !dataFilters.hasFilters(options.query) &&
+      options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
+    ) {
+      span?.addTags({ emptyQuery: true })
+      return {
+        rows: [],
+      }
     }
-  }
 
-  if (options.sortOrder) {
-    options.sortOrder = options.sortOrder.toLowerCase() as SortOrder
-  }
+    if (options.sortOrder) {
+      options.sortOrder = options.sortOrder.toLowerCase() as SortOrder
+    }
 
-  const table = await sdk.tables.getTable(options.tableId)
-  options = searchInputMapping(table, options)
+    const table = await sdk.tables.getTable(options.tableId)
+    options = searchInputMapping(table, options)
 
-  if (isExternalTable) {
-    return external.search(options, table)
-  } else if (dbCore.isSqsEnabledForTenant()) {
-    return internal.sqs.search(options, table)
-  } else {
-    return internal.lucene.search(options, table)
-  }
+    let result: SearchResponse<Row>
+    if (isExternalTable) {
+      span?.addTags({ searchType: "external" })
+      result = await external.search(options, table)
+    } else if (dbCore.isSqsEnabledForTenant()) {
+      span?.addTags({ searchType: "sqs" })
+      result = await internal.sqs.search(options, table)
+    } else {
+      span?.addTags({ searchType: "lucene" })
+      result = await internal.lucene.search(options, table)
+    }
+
+    span?.addTags({
+      foundRows: result.rows.length,
+      totalRows: result.totalRows,
+    })
+
+    return result
+  })
 }
 
 export async function exportRows(

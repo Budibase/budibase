@@ -40,6 +40,7 @@ import _, { merge } from "lodash"
 import * as uuid from "uuid"
 import { Knex } from "knex"
 import { InternalTables } from "../../../db/utils"
+import { withEnv } from "../../../environment"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -72,9 +73,11 @@ describe.each([
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
+  const isOracle = providerType === DatabaseName.ORACLE
   const config = setup.getConfig()
 
   let table: Table
@@ -129,7 +132,8 @@ describe.each([
       primary: ["id"],
       schema: defaultSchema,
     }
-    return merge(req, ...overrides)
+    const merged = merge(req, ...overrides)
+    return merged
   }
 
   function defaultTable(
@@ -1406,9 +1410,10 @@ describe.each([
         await assertRowUsage(rowUsage + 3)
       })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    // Upserting isn't yet supported in MSSQL / Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       it("should be able to update existing rows with bulkImport", async () => {
         const table = await config.api.table.save(
           saveTableRequest({
@@ -1478,9 +1483,10 @@ describe.each([
         expect(rows[2].description).toEqual("Row 3 description")
       })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    // Upserting isn't yet supported in MSSQL or Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       !isInternal &&
       it("should be able to update existing rows with composite primary keys with bulkImport", async () => {
         const tableName = uuid.v4()
@@ -1547,9 +1553,10 @@ describe.each([
         expect(rows[2].description).toEqual("Row 3 description")
       })
 
-    // Upserting isn't yet supported in MSSQL, see:
+    // Upserting isn't yet supported in MSSQL/Oracle, see:
     //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
+      !isOracle &&
       !isInternal &&
       it("should be able to update existing rows an autoID primary key", async () => {
         const tableName = uuid.v4()
@@ -1682,7 +1689,7 @@ describe.each([
         }
         const row = await config.api.row.save(testTable._id!, draftRow)
 
-        await config.withEnv({ SELF_HOSTED: "true" }, async () => {
+        await withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
             const enriched: Row[] = await outputProcessing(table, [row])
             const [targetRow] = enriched
@@ -2450,7 +2457,7 @@ describe.each([
 
   describe("Formula JS protection", () => {
     it("should time out JS execution if a single cell takes too long", async () => {
-      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 40 }, async () => {
+      await withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 40 }, async () => {
         const js = Buffer.from(
           `
               let i = 0;
@@ -2488,7 +2495,7 @@ describe.each([
     })
 
     it("should time out JS execution if a multiple cells take too long", async () => {
-      await config.withEnv(
+      await withEnv(
         {
           JS_PER_INVOCATION_TIMEOUT_MS: 40,
           JS_PER_REQUEST_TIMEOUT_MS: 80,
