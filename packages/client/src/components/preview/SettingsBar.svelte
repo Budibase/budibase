@@ -72,7 +72,7 @@
     let element = document.getElementsByClassName(id)?.[0]
 
     // Check if we're inside a grid
-    insideGrid = element.parentNode.classList.contains("grid")
+    insideGrid = element?.parentNode.classList.contains("grid")
     if (!insideGrid) {
       element = element?.children?.[0]
     }
