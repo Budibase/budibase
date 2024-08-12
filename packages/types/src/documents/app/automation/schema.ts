@@ -288,12 +288,6 @@ export type AutomationStep =
   | ExecuteBashStep
   | OpenAIStep
 
-export type AutomationStepInputsOnly = {
-  [K in keyof typeof AutomationActionStepId]: Extract<
-    AutomationStep,
-    { stepId: (typeof AutomationActionStepId)[K] }
-  >["inputs"]
-}
 // export type AutomationTrigger =
 //   | AppActionTrigger
 //   | CronTrigger
