@@ -54,7 +54,7 @@
   const component = getContext("component")
 
   // Create component context
-  const store = memo({})
+  const store = writable({})
   setContext("component", store)
 
   // Ref to the svelte component
