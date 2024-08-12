@@ -16,7 +16,7 @@
 
   export let showOnboardingTypeModal
 
-  const password = generatePassword()
+  const password = generatePassword(12)
   let disabled
   let userGroups = []
 
@@ -44,7 +44,7 @@
       {
         email: "",
         role: "appUser",
-        password: generatePassword(),
+        password: generatePassword(12),
         forceResetPassword: true,
         error: null,
       },
@@ -69,8 +69,12 @@
     return userData[index].error == null
   }
 
-  function generatePassword() {
-    return crypto.getRandomValues(new BigUint64Array(1))[0].toString(36)
+  function generatePassword(length) {
+    const array = new Uint8Array(length)
+    window.crypto.getRandomValues(array)
+    return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
+      .join("")
+      .slice(0, length)
   }
 
   const onConfirm = () => {
