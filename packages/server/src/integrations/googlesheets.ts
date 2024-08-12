@@ -566,7 +566,13 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
         }
       }
-      let filtered = dataFilters.runQuery(rows, query.filters || {})
+      let filtered = dataFilters.runQuery(
+        rows,
+        query.filters || {},
+        (row: GoogleSpreadsheetRow, headerKey: string) => {
+          return row.get(headerKey)
+        }
+      )
       if (hasFilters && query.paginate) {
         filtered = filtered.slice(offset, offset + limit)
       }

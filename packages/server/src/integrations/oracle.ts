@@ -400,7 +400,9 @@ class OracleIntegration extends Sql implements DatasourcePlus {
             if (oracleConstraint.type === OracleContraintTypes.PRIMARY) {
               table.primary!.push(columnName)
             } else if (
-              oracleConstraint.type === OracleContraintTypes.NOT_NULL_OR_CHECK
+              oracleConstraint.type ===
+                OracleContraintTypes.NOT_NULL_OR_CHECK &&
+              oracleConstraint.searchCondition?.endsWith("IS NOT NULL")
             ) {
               table.schema[columnName].constraints = {
                 presence: true,
@@ -421,7 +423,11 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: OracleIntegration.COLUMNS_SQL,
     })
-    return (columnsResponse.rows || []).map(row => row.TABLE_NAME)
+    const tableNames = new Set<string>()
+    for (const row of columnsResponse.rows || []) {
+      tableNames.add(row.TABLE_NAME)
+    }
+    return Array.from(tableNames)
   }
 
   async testConnection() {
@@ -500,6 +506,13 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       password: this.config.password,
       connectString,
     }
+
+    // We set the timezone of the connection to match the timezone of the
+    // Budibase server, this is because several column types (e.g. time-only
+    // timestamps) do not store timezone information, so to avoid storing one
+    // time and getting a different one back we need to make sure the timezone
+    // of the server matches the timezone of the database. There's an assumption
+    // here that the server is running in the same timezone as the database.
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const connection = await oracledb.getConnection(attributes)
     await connection.execute(`ALTER SESSION SET TIME_ZONE = '${tz}'`)
