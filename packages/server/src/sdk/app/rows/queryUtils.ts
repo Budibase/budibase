@@ -31,14 +31,10 @@ export const removeInvalidFilters = (
 
     const filter = result[filterKey]
     for (const columnKey of Object.keys(filter)) {
-      if (
-        !validFields
-          .map(f => f.toLowerCase())
-          .includes(columnKey.toLowerCase()) &&
-        !validFields
-          .map(f => f.toLowerCase())
-          .includes(db.removeKeyNumbering(columnKey).toLowerCase())
-      ) {
+      const possibleKeys = [columnKey, db.removeKeyNumbering(columnKey)].map(
+        c => c.toLowerCase()
+      )
+      if (!validFields.some(f => possibleKeys.includes(f.toLowerCase()))) {
         delete filter[columnKey]
       }
     }
