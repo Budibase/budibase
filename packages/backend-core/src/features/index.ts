@@ -190,6 +190,8 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
         tags[`readFromPostHog`] = true
 
         const posthogFlags = await posthog.getAllFlagsAndPayloads(identity._id)
+        console.log("posthog flags", JSON.stringify(posthogFlags))
+
         for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
           if (!this.isFlagName(name)) {
             // We don't want an unexpected PostHog flag to break the app, so we
