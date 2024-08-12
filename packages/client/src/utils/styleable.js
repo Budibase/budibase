@@ -5,11 +5,11 @@ import { builderStore } from "stores"
  */
 export const buildStyleString = (styleObject, customStyles) => {
   let str = ""
-  Object.entries(styleObject || {}).forEach(([style, value]) => {
-    if (style && value != null) {
-      str += `${style}: ${value}; `
+  for (let key of Object.keys(styleObject || {})) {
+    if (styleObject[key] != null) {
+      str += `${key}:${styleObject[key]};`
     }
-  })
+  }
   return str + (customStyles || "")
 }
 
