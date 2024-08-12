@@ -10,6 +10,7 @@ export function init(opts?: PostHogOptions) {
     console.log("initializing posthog client...")
     posthog = new PostHog(env.POSTHOG_TOKEN, {
       host: env.POSTHOG_API_HOST,
+      personalApiKey: env.POSTHOG_PERSONAL_TOKEN,
       ...opts,
     })
   } else {
@@ -186,10 +187,23 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
       tags[`identity.tenantId`] = identity?.tenantId
       tags[`identity._id`] = identity?._id
 
-      if (posthog && identity?.type === IdentityType.USER) {
+      // Until we're confident this performs well, we're only enabling it in QA
+      // and test environments.
+      const usePosthog = env.isTest() || env.isQA()
+      if (usePosthog && posthog && identity?.type === IdentityType.USER) {
         tags[`readFromPostHog`] = true
 
-        const posthogFlags = await posthog.getAllFlagsAndPayloads(identity._id)
+        const personProperties: Record<string, string> = {}
+        if (identity.tenantId) {
+          personProperties.tenantId = identity.tenantId
+        }
+
+        const posthogFlags = await posthog.getAllFlagsAndPayloads(
+          identity._id,
+          {
+            personProperties,
+          }
+        )
         console.log("posthog flags", JSON.stringify(posthogFlags))
 
         for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
