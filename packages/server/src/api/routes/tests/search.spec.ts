@@ -11,6 +11,8 @@ import {
   MIN_VALID_DATE,
   SQLITE_DESIGN_DOC_ID,
   utils,
+  withEnv as withCoreEnv,
+  setEnv as setCoreEnv,
 } from "@budibase/backend-core"
 
 import * as setup from "./utilities"
@@ -65,9 +67,9 @@ describe.each([
   let rows: Row[]
 
   beforeAll(async () => {
-    await config.withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
+    await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, () => config.init())
     if (isSqs) {
-      envCleanup = config.setCoreEnv({
+      envCleanup = setCoreEnv({
         SQS_SEARCH_ENABLE: "true",
         SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
       })
@@ -2734,7 +2736,7 @@ describe.each([
       })
 
       it("can still page when the hard limit is hit", async () => {
-        await config.withCoreEnv(
+        await withCoreEnv(
           {
             SQL_MAX_ROWS: "6",
           },
