@@ -69,7 +69,6 @@
     return userData[index].error == null
   }
 
-  // Minimum password length is 12 characters, but Math random will generate at most 11 characters, so add another 5.
   function generatePassword() {
     return crypto.getRandomValues(new BigUint64Array(1))[0].toString(36)
   }
