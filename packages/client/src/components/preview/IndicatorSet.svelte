@@ -33,7 +33,12 @@
   let interval
   let state = defaultState()
   let observing = false
+  let updating = false
+  let observers = []
+  let callbackCount = 0
+  let nextState
 
+  $: visibleIndicators = state.indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 5 : -1
   $: config.set({
     componentId,
@@ -70,7 +75,25 @@
     return isGridChild(document.getElementsByClassName(id)[0])
   }
 
+  const createIntersectionCallback = idx => entries => {
+    if (callbackCount >= observers.length) {
+      return
+    }
+    nextState.indicators[idx].visible =
+      nextState.indicators[idx].insideModal ||
+      nextState.indicators[idx].insideSidePanel ||
+      entries[0].isIntersecting
+    if (++callbackCount === observers.length) {
+      state = nextState
+      updating = false
+    }
+  }
+
   const updatePosition = () => {
+    if (updating) {
+      return
+    }
+
     // Sanity check
     if (!componentId) {
       state = defaultState()
@@ -81,13 +104,17 @@
       state = defaultState()
       return
     }
+    updating = true
+    callbackCount = 0
+    observers.forEach(o => o.disconnect())
+    observers = []
+    nextState = defaultState()
 
     // Start observing if this is the first time we've seen our component
     // in the DOM
     if (!observing) {
       observeChanges(componentId)
     }
-    let nextState = defaultState()
 
     // Check if we're inside a grid
     if (allowResizeAnchors) {
@@ -114,6 +141,7 @@
     const children = Array.from(document.getElementsByClassName(className))
       .filter(x => x != null)
       .slice(0, 100)
+    const multi = children.length > 1
 
     // If there aren't any nodes then reset
     if (!children.length) {
@@ -123,16 +151,39 @@
 
     const device = document.getElementById("app-root")
     const deviceBounds = device.getBoundingClientRect()
-    nextState.indicators = children.map(child => {
+    nextState.indicators = children.map((child, idx) => {
       const elBounds = child.getBoundingClientRect()
-      return {
+      let indicator = {
         top: Math.round(elBounds.top + scrollY - deviceBounds.top + offset),
         left: Math.round(elBounds.left + scrollX - deviceBounds.left + offset),
         width: Math.round(elBounds.width + 2),
         height: Math.round(elBounds.height + 2),
+        visible: true,
       }
+
+      // If observing more than one node then we need to use an intersection
+      // observer to determine whether each indicator should be visible
+      if (multi) {
+        const callback = createIntersectionCallback(idx)
+        const observer = new IntersectionObserver(callback, {
+          threshold: 1,
+          root: device,
+        })
+        observer.observe(child)
+        observers.push(observer)
+        indicator.visible = false
+        indicator.insideSidePanel = !!child.closest(".side-panel")
+        indicator.insideModal = !!child.closest(".modal-content")
+      }
+
+      return indicator
     })
-    state = nextState
+
+    // Immediately apply the update if we're just observing a single node
+    if (!multi) {
+      state = nextState
+      updating = false
+    }
   }
   const debouncedUpdate = Utils.domDebounce(updatePosition)
 
@@ -149,7 +200,7 @@
   })
 </script>
 
-{#each state.indicators as indicator, idx}
+{#each visibleIndicators as indicator, idx}
   <Indicator
     top={indicator.top}
     left={indicator.left}
