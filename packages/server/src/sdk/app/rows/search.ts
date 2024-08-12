@@ -6,7 +6,6 @@ import {
   SearchResponse,
   SortOrder,
   Table,
-  TableSchema,
 } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
@@ -92,7 +91,7 @@ export async function search(
 
     options.query = removeInvalidFilters(
       options.query,
-      await getQueriableFields(options.fields, table.schema)
+      await getQueriableFields(options.fields, table)
     )
 
     let result: SearchResponse<Row>
@@ -140,29 +139,35 @@ export async function fetchView(
 
 async function getQueriableFields(
   fields: string[],
-  schema: TableSchema
+  table: Table
 ): Promise<string[]> {
-  const handledTables: Record<string, Table> = {}
+  const handledTables = new Set<string>([table._id!])
   const extractTableFields = async (
-    fromField: string,
-    tableId: string
+    table: Table,
+    allowedFields: string[]
   ): Promise<string[]> => {
     const result = []
-    if (handledTables[tableId]) {
-      return []
-    }
-    const table = await sdk.tables.getTable(tableId)
-    handledTables[tableId] = table
-
-    for (const field of Object.keys(table.schema)) {
-      const formattedColumn = `${fromField}.${field}`
+    for (const field of Object.keys(table.schema).filter(f =>
+      allowedFields.includes(f)
+    )) {
       const subSchema = table.schema[field]
       if (subSchema.type === FieldType.LINK) {
-        result.push(
-          ...(await extractTableFields(formattedColumn, subSchema.tableId))
+        if (handledTables.has(`${table._id}_${subSchema.tableId}`)) {
+          // avoid circular loops
+          continue
+        }
+        handledTables.add(`${subSchema.tableId}_${table._id}`)
+        const relatedTable = await sdk.tables.getTable(subSchema.tableId)
+        const relatedFields = await extractTableFields(
+          relatedTable,
+          Object.keys(relatedTable.schema)
         )
+
+        result.push(...relatedFields.map(f => `${subSchema.name}.${f}`))
+        // should be able to filter by relationship using table name
+        result.push(...relatedFields.map(f => `${relatedTable.name}.${f}`))
       } else {
-        result.push(formattedColumn)
+        result.push(field)
       }
     }
     return result
@@ -172,13 +177,7 @@ async function getQueriableFields(
     "_id", // Querying by _id is always allowed, even if it's never part of the schema
   ]
 
-  for (const field of fields) {
-    if (schema[field].type === FieldType.LINK) {
-      result.push(...(await extractTableFields(field, schema[field].tableId)))
-    } else {
-      result.push(field)
-    }
-  }
+  result.push(...(await extractTableFields(table, fields)))
 
   return result
 }
