@@ -40,12 +40,6 @@
   // Sugar for a combination of both min and max
   const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
 
-  // Util to get the inner DOM node by a component ID
-  const getDOMNode = id => {
-    const component = document.getElementsByClassName(id)[0]
-    return Array.from(component?.children || [])[0]
-  }
-
   const enrichComponentStyles = styles => {
     let clone = { ...styles }
     if (styles) {
@@ -137,16 +131,16 @@
     }
 
     // Find grid parent and read from DOM
-    const domComponent = getDOMNode(id)
-    const domGrid = getGridParent(domComponent)
+    const domComponent = document.getElementsByClassName(id)[0]
+    const domGrid = domComponent?.closest(".grid")
     if (!domGrid) {
       return
     }
-    const styles = getComputedStyle(domComponent.parentNode)
+    const styles = getComputedStyle(domComponent)
 
     // Show as active
     builderStore.actions.selectComponent(id)
-    domComponent.parentNode.classList.add("dragging")
+    domComponent.classList.add("dragging")
     domGrid.classList.add("highlight")
 
     // Update state
@@ -187,7 +181,7 @@
     const { id, domTarget, domGrid, domComponent } = dragInfo
 
     // Reset DOM
-    domComponent.parentNode.classList.remove("dragging")
+    domComponent.classList.remove("dragging")
     domGrid.classList.remove("highlight")
     domTarget.removeEventListener("dragend", stopDragging)
 
