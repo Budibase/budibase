@@ -153,6 +153,7 @@ describe("feature flags", () => {
         mockPosthogFlags(posthogFlags)
         env.POSTHOG_TOKEN = "test"
         env.POSTHOG_API_HOST = "https://us.i.posthog.com"
+        env.POSTHOG_PERSONAL_TOKEN = "test"
       }
 
       const ctx = { user: { license: { features: licenseFlags || [] } } }
@@ -160,7 +161,11 @@ describe("feature flags", () => {
       await withEnv(env, async () => {
         // We need to pass in node-fetch here otherwise nock won't get used
         // because posthog-node uses axios under the hood.
-        init({ fetch: nodeFetch })
+        init({
+          fetch: (url, opts) => {
+            return nodeFetch(url, opts)
+          },
+        })
 
         const fullIdentity: IdentityContext = {
           _id: "us_1234",
