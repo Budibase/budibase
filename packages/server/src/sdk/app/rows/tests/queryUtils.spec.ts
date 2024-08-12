@@ -145,5 +145,38 @@ describe("query utils", () => {
         },
       })
     })
+
+    it("handles relationship filters", () => {
+      const prefixedFilters: SearchFilters = {
+        $or: {
+          conditions: [
+            { equal: { "1:other.one": "foo" } },
+            {
+              equal: {
+                "2:other.one": "foo2",
+                "3:other.two": "bar",
+                "4:other.three": "baz",
+              },
+            },
+            { equal: { "another.three": "baz2" } },
+          ],
+        },
+      }
+
+      const result = removeInvalidFilters(prefixedFilters, [
+        "other.one",
+        "other.two",
+        "another.three",
+      ])
+      expect(result).toEqual({
+        $or: {
+          conditions: [
+            { equal: { "1:other.one": "foo" } },
+            { equal: { "2:other.one": "foo2", "3:other.two": "bar" } },
+            { equal: { "another.three": "baz2" } },
+          ],
+        },
+      })
+    })
   })
 })
