@@ -70,10 +70,6 @@
     }
   }
 
-  const checkInsideGrid = id => {
-    return isGridChild(document.getElementsByClassName(id)[0])
-  }
-
   const createIntersectionCallback = idx => entries => {
     if (callbackCount >= observers.length) {
       return
@@ -117,7 +113,7 @@
 
     // Check if we're inside a grid
     if (allowResizeAnchors) {
-      nextState.insideGrid = checkInsideGrid(componentId)
+      nextState.insideGrid = parents[0]?.dataset.insideGrid === "true"
     }
 
     // Get text to display
