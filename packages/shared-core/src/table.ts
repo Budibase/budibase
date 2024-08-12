@@ -11,6 +11,7 @@ const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.AUTO]: true,
   [FieldType.INTERNAL]: true,
   [FieldType.BARCODEQR]: true,
+
   [FieldType.BIGINT]: true,
   [FieldType.BOOLEAN]: false,
   [FieldType.ARRAY]: false,
@@ -35,6 +36,30 @@ const allowSortColumnByType: Record<FieldType, boolean> = {
   [FieldType.BIGINT]: true,
   [FieldType.BOOLEAN]: true,
   [FieldType.JSON]: true,
+
+  [FieldType.FORMULA]: false,
+  [FieldType.ATTACHMENTS]: false,
+  [FieldType.ATTACHMENT_SINGLE]: false,
+  [FieldType.SIGNATURE_SINGLE]: false,
+  [FieldType.ARRAY]: false,
+  [FieldType.LINK]: false,
+  [FieldType.BB_REFERENCE]: false,
+  [FieldType.BB_REFERENCE_SINGLE]: false,
+}
+
+const allowDefaultColumnByType: Record<FieldType, boolean> = {
+  [FieldType.NUMBER]: true,
+  [FieldType.JSON]: true,
+  [FieldType.DATETIME]: true,
+  [FieldType.LONGFORM]: true,
+  [FieldType.STRING]: true,
+
+  [FieldType.OPTIONS]: false,
+  [FieldType.AUTO]: false,
+  [FieldType.INTERNAL]: false,
+  [FieldType.BARCODEQR]: false,
+  [FieldType.BIGINT]: false,
+  [FieldType.BOOLEAN]: false,
   [FieldType.FORMULA]: false,
   [FieldType.ATTACHMENTS]: false,
   [FieldType.ATTACHMENT_SINGLE]: false,
@@ -51,6 +76,10 @@ export function canBeDisplayColumn(type: FieldType): boolean {
 
 export function canBeSortColumn(type: FieldType): boolean {
   return !!allowSortColumnByType[type]
+}
+
+export function canHaveDefaultColumn(type: FieldType): boolean {
+  return !!allowDefaultColumnByType[type]
 }
 
 export function findDuplicateInternalColumns(table: Table): string[] {
