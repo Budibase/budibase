@@ -92,5 +92,58 @@ describe("query utils", () => {
       }
       expect(result).toEqual(expected)
     })
+
+    it("keeps filter key numering", () => {
+      const prefixedFilters: SearchFilters = {
+        equal: { "1:one": "foo" },
+        $or: {
+          conditions: [
+            {
+              equal: { "2:one": "foo2", "3:two": "bar" },
+              notEmpty: { "4:one": null },
+              $and: {
+                conditions: [
+                  {
+                    equal: { "5:three": "baz", two: "bar2" },
+                    notEmpty: { forth: null },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        $and: {
+          conditions: [{ equal: { "6:one": "foo2" }, notEmpty: { one: null } }],
+        },
+      }
+
+      const result = removeInvalidFilters(prefixedFilters, [
+        "one",
+        "three",
+        "forth",
+      ])
+      expect(result).toEqual({
+        equal: { "1:one": "foo" },
+        $or: {
+          conditions: [
+            {
+              equal: { "2:one": "foo2" },
+              notEmpty: { "4:one": null },
+              $and: {
+                conditions: [
+                  {
+                    equal: { "5:three": "baz" },
+                    notEmpty: { forth: null },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        $and: {
+          conditions: [{ equal: { "6:one": "foo2" }, notEmpty: { one: null } }],
+        },
+      })
+    })
   })
 })

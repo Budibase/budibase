@@ -1,3 +1,4 @@
+import { db } from "@budibase/backend-core"
 import { isLogicalSearchOperator, SearchFilters } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 
@@ -31,7 +32,12 @@ export const removeInvalidFilters = (
     const filter = result[filterKey]
     for (const columnKey of Object.keys(filter)) {
       if (
-        !validFields.map(f => f.toLowerCase()).includes(columnKey.toLowerCase())
+        !validFields
+          .map(f => f.toLowerCase())
+          .includes(columnKey.toLowerCase()) &&
+        !validFields
+          .map(f => f.toLowerCase())
+          .includes(db.removeKeyNumbering(columnKey).toLowerCase())
       ) {
         delete filter[columnKey]
       }
