@@ -29,19 +29,10 @@
 
   // Set ephemeral styles
   $: instance = componentStore.actions.getComponentInstance(id)
-  $: $instance?.setEphemeralStyles(enrichComponentStyles($styles))
+  $: $instance?.setEphemeralStyles($styles)
 
   // Sugar for a combination of both min and max
   const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
-
-  const enrichComponentStyles = styles => {
-    let clone = { ...styles }
-    if (styles) {
-      clone["z-index"] = 999
-      clone["pointer-events"] = "none"
-    }
-    return clone
-  }
 
   const processEvent = Utils.domDebounce((mouseX, mouseY) => {
     if (!dragInfo?.grid) {

@@ -150,7 +150,7 @@
     display: grid;
     gap: 0;
     grid-template-rows: repeat(var(--rows), calc(var(--row-size) * 1px));
-    grid-template-columns: repeat(var(--cols), 1fr);
+    grid-template-columns: repeat(var(--cols), calc(var(--col-size) * 1px));
     position: relative;
   }
   .underlay {
@@ -184,6 +184,9 @@
   :global(.grid.highlight > .component:not(.dragging)) {
     outline: 2px solid var(--spectrum-global-color-static-blue-200);
     pointer-events: none !important;
+  }
+  :global(.grid.highlight > .component.dragging) {
+    z-index: 999 !important;
   }
 
   /* Ensure all top level children have grid styles applied */
