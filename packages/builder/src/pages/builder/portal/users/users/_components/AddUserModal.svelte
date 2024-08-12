@@ -16,7 +16,7 @@
 
   export let showOnboardingTypeModal
 
-  const password = Math.random().toString(36).substring(2, 22)
+  const password = generatePassword()
   let disabled
   let userGroups = []
 
@@ -44,7 +44,7 @@
       {
         email: "",
         role: "appUser",
-        password: Math.random().toString(36).substring(2, 22),
+        password: generatePassword(),
         forceResetPassword: true,
         error: null,
       },
@@ -67,6 +67,14 @@
       userData[index].error = "Please enter an email address"
     }
     return userData[index].error == null
+  }
+
+  // Minimum password length is 12 characters, but Math random will generate at most 11 characters, so add another 5.
+  function generatePassword() {
+    return (
+      Math.random().toString(36).substring(2, 22) +
+      Math.random().toString(36).substring(2, 7)
+    )
   }
 
   const onConfirm = () => {

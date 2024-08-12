@@ -216,7 +216,10 @@
       const newUser = {
         email: email,
         role: usersRole,
-        password: Math.random().toString(36).substring(2, 22),
+        // Minimum password length is 12 characters, but Math random will generate at most 11 characters, so add another 5.
+        password:
+          Math.random().toString(36).substring(2, 22) +
+          Math.random().toString(36).substring(2, 7),
         forceResetPassword: true,
       }
 
