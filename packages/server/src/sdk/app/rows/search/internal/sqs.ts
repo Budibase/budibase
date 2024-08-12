@@ -2,6 +2,7 @@ import {
   Datasource,
   DocumentType,
   FieldType,
+  isLogicalSearchOperator,
   Operation,
   QueryJson,
   RelationshipFieldMetadata,
@@ -19,12 +20,11 @@ import {
   buildInternalRelationships,
   sqlOutputProcessing,
 } from "../../../../../api/controllers/row/utils"
+import sdk from "../../../../index"
 import {
-  decodeNonAscii,
   mapToUserColumn,
   USER_COLUMN_PREFIX,
 } from "../../../tables/internal/sqs"
-import sdk from "../../../../index"
 import {
   context,
   sql,
@@ -41,7 +41,11 @@ import {
   getRelationshipColumns,
   getTableIDList,
 } from "../filters"
-import { dataFilters, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
+import {
+  dataFilters,
+  helpers,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
 import { isSearchingByRowID } from "../utils"
 import tracer from "dd-trace"
 
@@ -69,13 +73,14 @@ function buildInternalFieldList(
   fieldList = fieldList.concat(
     PROTECTED_INTERNAL_COLUMNS.map(col => `${table._id}.${col}`)
   )
-  for (let col of Object.values(table.schema)) {
+  for (let key of Object.keys(table.schema)) {
+    const col = table.schema[key]
     const isRelationship = col.type === FieldType.LINK
     if (!opts?.relationships && isRelationship) {
       continue
     }
     if (!isRelationship) {
-      fieldList.push(`${table._id}.${mapToUserColumn(col.name)}`)
+      fieldList.push(`${table._id}.${mapToUserColumn(key)}`)
     } else {
       const linkCol = col as RelationshipFieldMetadata
       const relatedTable = tables.find(table => table._id === linkCol.tableId)
@@ -134,20 +139,33 @@ function cleanupFilters(
     allTables.some(table => table.schema[key])
 
   const splitter = new dataFilters.ColumnSplitter(allTables)
-  for (const filter of Object.values(filters)) {
-    for (const key of Object.keys(filter)) {
-      const { numberPrefix, relationshipPrefix, column } = splitter.run(key)
-      if (keyInAnyTable(column)) {
-        filter[
-          `${numberPrefix || ""}${relationshipPrefix || ""}${mapToUserColumn(
-            column
-          )}`
-        ] = filter[key]
-        delete filter[key]
+
+  const prefixFilters = (filters: SearchFilters) => {
+    for (const filterKey of Object.keys(filters) as (keyof SearchFilters)[]) {
+      if (isLogicalSearchOperator(filterKey)) {
+        for (const condition of filters[filterKey]!.conditions) {
+          prefixFilters(condition)
+        }
+      } else {
+        const filter = filters[filterKey]!
+        if (typeof filter !== "object") {
+          continue
+        }
+        for (const key of Object.keys(filter)) {
+          const { numberPrefix, relationshipPrefix, column } = splitter.run(key)
+          if (keyInAnyTable(column)) {
+            filter[
+              `${numberPrefix || ""}${
+                relationshipPrefix || ""
+              }${mapToUserColumn(column)}`
+            ] = filter[key]
+            delete filter[key]
+          }
+        }
       }
     }
   }
-
+  prefixFilters(filters)
   return filters
 }
 
@@ -174,7 +192,7 @@ function reverseUserColumnMapping(rows: Row[]) {
       if (index !== -1) {
         // cut out the prefix
         const newKey = key.slice(0, index) + key.slice(index + prefixLength)
-        const decoded = decodeNonAscii(newKey)
+        const decoded = helpers.schema.decodeNonAscii(newKey)
         finalRow[decoded] = row[key]
       } else {
         finalRow[key] = row[key]

@@ -304,7 +304,7 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     try {
       const s3 = new AWS.S3({
         region: awsRegion,
-        endpoint: datasource?.config?.endpoint as string,
+        endpoint: datasource?.config?.endpoint || undefined,
         accessKeyId: datasource?.config?.accessKeyId as string,
         secretAccessKey: datasource?.config?.secretAccessKey as string,
         apiVersion: "2006-03-01",
