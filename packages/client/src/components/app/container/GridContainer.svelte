@@ -5,7 +5,7 @@
   import { memo } from "@budibase/frontend-core"
 
   const component = getContext("component")
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const context = getContext("context")
 
   let width
@@ -127,7 +127,7 @@
   data-cols={GridColumns}
   data-col-size={colSize}
 >
-  {#if inBuilder}
+  {#if $builderStore.inBuilder}
     <div class="underlay">
       {#each { length: GridColumns * rows } as _, idx}
         <div class="placeholder" class:first-col={idx % GridColumns === 0} />
