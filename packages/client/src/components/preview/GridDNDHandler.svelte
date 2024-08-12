@@ -3,13 +3,7 @@
   import { builderStore, componentStore } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
   import { GridRowHeight } from "constants"
-  import {
-    isGridEvent,
-    getGridParent,
-    GridParams,
-    getGridVar,
-    Devices,
-  } from "utils/grid"
+  import { isGridEvent, GridParams, getGridVar, Devices } from "utils/grid"
 
   const context = getContext("context")
 
