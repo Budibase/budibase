@@ -135,6 +135,9 @@ export const gridLayout = (node, metadata) => {
     addDataTag("gridMobileHAlign", Devices.Mobile, GridParams.HAlign)
     addDataTag("gridDesktopVAlign", Devices.Desktop, GridParams.VAlign)
     addDataTag("gridMobileVAlign", Devices.Mobile, GridParams.VAlign)
+    if (node.dataset.insideGrid !== true) {
+      node.dataset.insideGrid = true
+    }
 
     // Apply all CSS variables to the wrapper
     node.style = buildStyleString(vars)

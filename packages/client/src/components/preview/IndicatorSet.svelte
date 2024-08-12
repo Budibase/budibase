@@ -14,6 +14,7 @@
   // Offset = 6 (clip-root padding) - 1 (half the border thickness)
   const config = memo($$props)
   const errorColor = "var(--spectrum-global-color-static-red-600)"
+  const observer = new MutationObserver(() => debouncedUpdate())
   const defaultState = () => ({
     // Cached props
     componentId,
@@ -53,8 +54,6 @@
 
   // Observe style changes
   $: observeChanges(componentId)
-
-  const observer = new MutationObserver(() => debouncedUpdate())
 
   const observeChanges = id => {
     observer.disconnect()
