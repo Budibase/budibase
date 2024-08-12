@@ -9,22 +9,26 @@
   const context = getContext("context")
 
   let width
+  let height
   let ref
   let rows = 1
   let children = writable({})
   let mounted = false
   let styles = memo({})
 
-  $: rows = calculateRequiredRows($children, mobile)
+  $: requiredRows = calculateRequiredRows($children, mobile)
+  $: requiredHeight = requiredRows * GridRowHeight
+  $: availableRows = Math.floor(height / GridRowHeight)
+  $: rows = Math.max(requiredRows, availableRows)
   $: mobile = $context.device.mobile
   $: empty = $component.empty
   $: colSize = width / GridColumns
-  $: height = rows * GridRowHeight
   $: styles.set({
     ...$component.styles,
     normal: {
       ...$component.styles?.normal,
-      "--height": `${height}px`,
+      "--height": `${requiredHeight}px`,
+      "--min-height": $component.styles?.normal?.height || 0,
       "--cols": GridColumns,
       "--rows": rows,
       "--col-size": colSize,
@@ -118,6 +122,7 @@
   class="grid"
   class:mobile
   bind:clientWidth={width}
+  bind:clientHeight={height}
   use:styleable={$styles}
   data-cols={GridColumns}
   data-col-size={colSize}
@@ -140,12 +145,13 @@
   .grid,
   .underlay {
     height: var(--height) !important;
-    min-height: 0 !important;
+    min-height: var(--min-height) !important;
     max-height: none !important;
     display: grid;
+    gap: 0;
     grid-template-rows: repeat(var(--rows), calc(var(--row-size) * 1px));
     grid-template-columns: repeat(var(--cols), 1fr);
-    gap: 0;
+    position: relative;
   }
   .underlay {
     display: none;
