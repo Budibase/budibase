@@ -1,9 +1,12 @@
 import {
   EmptyFilterOption,
+  FieldType,
   Row,
   RowSearchParams,
   SearchResponse,
   SortOrder,
+  Table,
+  TableSchema,
 } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
@@ -87,10 +90,10 @@ export async function search(
       options.fields = visibleTableFields
     }
 
-    options.query = removeInvalidFilters(options.query, [
-      "_id",
-      ...options.fields,
-    ])
+    options.query = removeInvalidFilters(
+      options.query,
+      await getQueriableFields(options.fields, table.schema)
+    )
 
     let result: SearchResponse<Row>
     if (isExternalTable) {
@@ -133,4 +136,49 @@ export async function fetchView(
   params: ViewParams
 ): Promise<Row[]> {
   return pickApi(tableId).fetchView(viewName, params)
+}
+
+async function getQueriableFields(
+  fields: string[],
+  schema: TableSchema
+): Promise<string[]> {
+  const handledTables: Record<string, Table> = {}
+  const extractTableFields = async (
+    fromField: string,
+    tableId: string
+  ): Promise<string[]> => {
+    const result = []
+    if (handledTables[tableId]) {
+      return []
+    }
+    const table = await sdk.tables.getTable(tableId)
+    handledTables[tableId] = table
+
+    for (const field of Object.keys(table.schema)) {
+      const formattedColumn = `${fromField}.${field}`
+      const subSchema = table.schema[field]
+      if (subSchema.type === FieldType.LINK) {
+        result.push(
+          ...(await extractTableFields(formattedColumn, subSchema.tableId))
+        )
+      } else {
+        result.push(formattedColumn)
+      }
+    }
+    return result
+  }
+
+  const result = [
+    "_id", // Querying by _id is always allowed, even if it's never part of the schema
+  ]
+
+  for (const field of fields) {
+    if (schema[field].type === FieldType.LINK) {
+      result.push(...(await extractTableFields(field, schema[field].tableId)))
+    } else {
+      result.push(field)
+    }
+  }
+
+  return result
 }
