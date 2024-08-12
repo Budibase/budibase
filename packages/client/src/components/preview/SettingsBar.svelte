@@ -22,7 +22,6 @@
   let insideGrid = false
   let gridHAlign
   let gridVAlign
-  let deviceEl
 
   $: id = $builderStore.selectedComponentId
   $: id, reset()
@@ -114,6 +113,7 @@
     }
 
     // Batch reads to minimize reflow
+    const deviceEl = document.getElementById("clip-root")
     const deviceBounds = deviceEl.getBoundingClientRect()
     const elBounds = domBoundary.getBoundingClientRect()
     const width = self.offsetWidth
@@ -177,7 +177,6 @@
   const debouncedUpdate = Utils.domDebounce(updatePosition)
 
   onMount(() => {
-    deviceEl = document.getElementById("clip-root")
     debouncedUpdate()
     interval = setInterval(debouncedUpdate, 100)
     document.addEventListener("scroll", debouncedUpdate, true)
