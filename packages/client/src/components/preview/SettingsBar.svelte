@@ -11,25 +11,24 @@
   const context = getContext("context")
   const verticalOffset = 36
   const horizontalOffset = 2
+  const observer = new MutationObserver(() => debouncedUpdate())
 
   let top = 0
   let left = 0
   let interval
   let self
   let measured = false
-  let observer
-
+  let observing = false
   let insideGrid = false
   let gridHAlign
   let gridVAlign
+  let deviceEl
 
-  // TODO: respect dependsOn keys
-
-  $: componentId = $builderStore.selectedComponentId
-  $: measured, observeComputedStyles(componentId)
+  $: id = $builderStore.selectedComponentId
+  $: id, reset()
   $: component = $componentStore.selectedComponent
   $: definition = $componentStore.selectedComponentDefinition
-  $: instance = componentStore.actions.getComponentInstance(componentId)
+  $: instance = componentStore.actions.getComponentInstance(id)
   $: state = $instance?.state
   $: showBar =
     definition?.showSettingsBar !== false &&
@@ -37,7 +36,7 @@
     definition &&
     !$state?.errorState
   $: settings = getBarSettings(component, definition)
-  $: isRoot = componentId === $builderStore.screen?.props?._id
+  $: isRoot = id === $builderStore.screen?.props?._id
   $: showGridStyles =
     insideGrid &&
     (definition?.grid?.hAlign !== "stretch" ||
@@ -46,6 +45,21 @@
   $: device = mobile ? Devices.Mobile : Devices.Desktop
   $: gridHAlignVar = getGridVar(device, GridParams.HAlign)
   $: gridVAlignVar = getGridVar(device, GridParams.VAlign)
+
+  const reset = () => {
+    observer.disconnect()
+    measured = false
+    observing = false
+    insideGrid = false
+  }
+
+  const startObserving = domBoundary => {
+    observer.observe(domBoundary, {
+      attributes: true,
+      attributeFilter: ["style"],
+    })
+    observing = true
+  }
 
   const getBarSettings = (component, definition) => {
     let allSettings = []
@@ -68,102 +82,102 @@
     if (!showBar) {
       return
     }
-    const id = $builderStore.selectedComponentId
-    let element = document.getElementsByClassName(id)?.[0]
 
-    // Check if we're inside a grid
-    insideGrid = element?.parentNode.classList.contains("grid")
+    // Find DOM boundary and ensure it is valid
+    let domBoundary = document.getElementsByClassName(id)[0]
+    if (!domBoundary) {
+      return reset()
+    }
+
+    // If we're inside a grid, allow time for buttons to render
+    const nextInsideGrid = domBoundary.dataset.insideGrid === "true"
+    if (nextInsideGrid && !insideGrid) {
+      insideGrid = true
+      return
+    } else {
+      insideGrid = nextInsideGrid
+    }
+
+    // Get the correct DOM boundary depending if we're inside a grid or not
     if (!insideGrid) {
-      element = element?.children?.[0]
+      domBoundary =
+        domBoundary.getElementsByClassName(`${id}-dom`)[0] ||
+        domBoundary.children?.[0]
+    }
+    if (!domBoundary || !self) {
+      return reset()
     }
 
-    // The settings bar is higher in the dom tree than the selection indicators
-    // as we want to be able to render the settings bar wider than the screen,
-    // or outside the screen.
-    // Therefore we use the clip root rather than the app root to determine
-    // its position.
-    const device = document.getElementById("clip-root")
-    if (element && self) {
-      // Batch reads to minimize reflow
-      const deviceBounds = device.getBoundingClientRect()
-      const elBounds = element.getBoundingClientRect()
-      const width = self.offsetWidth
-      const height = self.offsetHeight
-      const { scrollX, scrollY, innerWidth } = window
+    // Start observing if required
+    if (!observing) {
+      startObserving(domBoundary)
+    }
 
-      // Read grid metadata from data attributes
-      if (insideGrid) {
-        if (mobile) {
-          gridHAlign = element.dataset.gridMobileHAlign
-          gridVAlign = element.dataset.gridMobileVAlign
-        } else {
-          gridHAlign = element.dataset.gridDesktopHAlign
-          gridVAlign = element.dataset.gridDesktopVAlign
-        }
-      }
+    // Batch reads to minimize reflow
+    const deviceBounds = deviceEl.getBoundingClientRect()
+    const elBounds = domBoundary.getBoundingClientRect()
+    const width = self.offsetWidth
+    const height = self.offsetHeight
+    const { scrollX, scrollY, innerWidth } = window
 
-      // Vertically, always render above unless no room, then render inside
-      let newTop = elBounds.top + scrollY - verticalOffset - height
-      if (newTop < deviceBounds.top - 50) {
-        newTop = deviceBounds.top - 50
+    // Read grid metadata from data attributes
+    if (insideGrid) {
+      if (mobile) {
+        gridHAlign = domBoundary.dataset.gridMobileHAlign
+        gridVAlign = domBoundary.dataset.gridMobileVAlign
+      } else {
+        gridHAlign = domBoundary.dataset.gridDesktopHAlign
+        gridVAlign = domBoundary.dataset.gridDesktopVAlign
       }
-      if (newTop < 0) {
-        newTop = 0
-      }
-      const deviceBottom = deviceBounds.top + deviceBounds.height
-      if (newTop > deviceBottom - 44) {
-        newTop = deviceBottom - 44
-      }
+    }
 
-      //If element is at the very top of the screen, put the bar below the element
-      if (elBounds.top < elBounds.height && elBounds.height < 80) {
-        newTop = elBounds.bottom + verticalOffset
-      }
+    // Vertically, always render above unless no room, then render inside
+    let newTop = elBounds.top + scrollY - verticalOffset - height
+    if (newTop < deviceBounds.top - 50) {
+      newTop = deviceBounds.top - 50
+    }
+    if (newTop < 0) {
+      newTop = 0
+    }
+    const deviceBottom = deviceBounds.top + deviceBounds.height
+    if (newTop > deviceBottom - 44) {
+      newTop = deviceBottom - 44
+    }
 
-      // Horizontally, try to center first.
-      // Failing that, render to left edge of component.
-      // Failing that, render to right edge of component,
-      // Failing that, render to window left edge and accept defeat.
-      let elCenter = elBounds.left + scrollX + elBounds.width / 2
-      let newLeft = elCenter - width / 2
+    //If element is at the very top of the screen, put the bar below the element
+    if (elBounds.top < elBounds.height && elBounds.height < 80) {
+      newTop = elBounds.bottom + verticalOffset
+    }
+
+    // Horizontally, try to center first.
+    // Failing that, render to left edge of component.
+    // Failing that, render to right edge of component,
+    // Failing that, render to window left edge and accept defeat.
+    let elCenter = elBounds.left + scrollX + elBounds.width / 2
+    let newLeft = elCenter - width / 2
+    if (newLeft < 0 || newLeft + width > innerWidth) {
+      newLeft = elBounds.left + scrollX - horizontalOffset
       if (newLeft < 0 || newLeft + width > innerWidth) {
-        newLeft = elBounds.left + scrollX - horizontalOffset
+        newLeft = elBounds.right + scrollX - width + horizontalOffset
         if (newLeft < 0 || newLeft + width > innerWidth) {
-          newLeft = elBounds.right + scrollX - width + horizontalOffset
-          if (newLeft < 0 || newLeft + width > innerWidth) {
-            newLeft = horizontalOffset
-          }
+          newLeft = horizontalOffset
         }
       }
-
-      // Only update state when things changes to minimize renders
-      if (Math.round(newTop) !== Math.round(top)) {
-        top = newTop
-      }
-      if (Math.round(newLeft) !== Math.round(left)) {
-        left = newLeft
-      }
-
-      measured = true
     }
+
+    // Only update state when things changes to minimize renders
+    if (Math.round(newTop) !== Math.round(top)) {
+      top = newTop
+    }
+    if (Math.round(newLeft) !== Math.round(left)) {
+      left = newLeft
+    }
+    measured = true
   }
   const debouncedUpdate = Utils.domDebounce(updatePosition)
 
-  const observeComputedStyles = id => {
-    observer?.disconnect()
-    const node = document.getElementsByClassName(`${id}-dom`)[0]?.parentNode
-    if (node) {
-      observer = new MutationObserver(updatePosition)
-      observer.observe(node, {
-        attributes: true,
-        attributeFilter: ["style"],
-        childList: false,
-        subtree: false,
-      })
-    }
-  }
-
   onMount(() => {
+    deviceEl = document.getElementById("clip-root")
     debouncedUpdate()
     interval = setInterval(debouncedUpdate, 100)
     document.addEventListener("scroll", debouncedUpdate, true)
@@ -172,7 +186,7 @@
   onDestroy(() => {
     clearInterval(interval)
     document.removeEventListener("scroll", debouncedUpdate, true)
-    observer?.disconnect()
+    reset()
   })
 </script>
 
@@ -190,7 +204,7 @@
         icon="AlignLeft"
         title="Align left"
         active={gridHAlign === "start"}
-        {componentId}
+        componentId={id}
       />
       <GridStylesButton
         style={gridHAlignVar}
@@ -198,7 +212,7 @@
         icon="AlignCenter"
         title="Align center"
         active={gridHAlign === "center"}
-        {componentId}
+        componentId={id}
       />
       <GridStylesButton
         style={gridHAlignVar}
@@ -206,7 +220,7 @@
         icon="AlignRight"
         title="Align right"
         active={gridHAlign === "end"}
-        {componentId}
+        componentId={id}
       />
       <GridStylesButton
         style={gridHAlignVar}
@@ -214,7 +228,7 @@
         icon="MoveLeftRight"
         title="Stretch horizontally"
         active={gridHAlign === "stretch"}
-        {componentId}
+        componentId={id}
       />
       <div class="divider" />
       <GridStylesButton
@@ -223,7 +237,7 @@
         icon="AlignTop"
         title="Align top"
         active={gridVAlign === "start"}
-        {componentId}
+        componentId={id}
       />
       <GridStylesButton
         style={gridVAlignVar}
@@ -231,7 +245,7 @@
         icon="AlignMiddle"
         title="Align middle"
         active={gridVAlign === "center"}
-        {componentId}
+        componentId={id}
       />
       <GridStylesButton
         style={gridVAlignVar}
@@ -239,7 +253,7 @@
         icon="AlignBottom"
         title="Align bottom"
         active={gridVAlign === "end"}
-        {componentId}
+        componentId={id}
       />
       <GridStylesButton
         style={gridVAlignVar}
@@ -247,7 +261,7 @@
         icon="MoveUpDown"
         title="Stretch vertically"
         active={gridVAlign === "stretch"}
-        {componentId}
+        componentId={id}
       />
       <div class="divider" />
     {/if}

@@ -198,7 +198,7 @@
     overflow: hidden;
     height: 410px;
   }
-  div.in-builder {
+  div.in-builder :global(> *) {
     pointer-events: none !important;
   }
 </style>
