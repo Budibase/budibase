@@ -102,7 +102,9 @@
   {onOptionMouseenter}
   {onOptionMouseleave}
   isPlaceholder={value == null || value === ""}
-  placeholderOption={placeholder === false ? null : placeholder}
+  placeholderOption={placeholder === false
+    ? null
+    : placeholder || "Choose an option"}
   isOptionSelected={option => compareOptionAndValue(option, value)}
   onSelectOption={selectOption}
   {loading}

@@ -184,3 +184,7 @@ export const runInProd = async (func: any) => {
   env._set("NODE_ENV", nodeEnv)
   env._set("JEST_WORKER_ID", workerId)
 }
+
+export function allowUndefined(expectation: jest.Expect) {
+  return expect.toBeOneOf([expectation, undefined, null])
+}

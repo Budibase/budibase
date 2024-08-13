@@ -1,13 +1,14 @@
 import {
   BulkImportRequest,
   BulkImportResponse,
+  CsvToJsonRequest,
+  CsvToJsonResponse,
   MigrateRequest,
   MigrateResponse,
-  Row,
   SaveTableRequest,
   SaveTableResponse,
   Table,
-  TableSchema,
+  ValidateNewTableImportRequest,
   ValidateTableImportRequest,
   ValidateTableImportResponse,
 } from "@budibase/types"
@@ -71,17 +72,13 @@ export class TableAPI extends TestAPI {
   }
 
   validateNewTableImport = async (
-    rows: Row[],
-    schema: TableSchema,
+    body: ValidateNewTableImportRequest,
     expectations?: Expectations
   ): Promise<ValidateTableImportResponse> => {
     return await this._post<ValidateTableImportResponse>(
       `/api/tables/validateNewTableImport`,
       {
-        body: {
-          rows,
-          schema,
-        },
+        body,
         expectations,
       }
     )
@@ -98,5 +95,15 @@ export class TableAPI extends TestAPI {
         expectations,
       }
     )
+  }
+
+  csvToJson = async (
+    body: CsvToJsonRequest,
+    expectations?: Expectations
+  ): Promise<CsvToJsonResponse> => {
+    return await this._post<CsvToJsonResponse>(`/api/convert/csvToJson`, {
+      body,
+      expectations,
+    })
   }
 }

@@ -12,6 +12,33 @@ const nodemailer = require("nodemailer")
 // for the real email tests give them a long time to try complete/fail
 jest.setTimeout(30000)
 
+function cancelableTimeout(timeout: number): [Promise<unknown>, () => void] {
+  let timeoutId: NodeJS.Timeout
+  return [
+    new Promise((resolve, reject) => {
+      timeoutId = setTimeout(() => {
+        reject({
+          status: 301,
+          errno: "ETIME",
+        })
+      }, timeout)
+    }),
+    () => {
+      clearTimeout(timeoutId)
+    },
+  ]
+}
+
+async function withTimeout<T>(
+  timeout: number,
+  promise: Promise<T>
+): Promise<T> {
+  const [timeoutPromise, cancel] = cancelableTimeout(timeout)
+  const result = (await Promise.race([promise, timeoutPromise])) as T
+  cancel()
+  return result
+}
+
 describe("/api/global/email", () => {
   const config = new TestConfiguration()
 
@@ -30,19 +57,8 @@ describe("/api/global/email", () => {
   ) {
     let response, text
     try {
-      const timeout = () =>
-        new Promise((resolve, reject) =>
-          setTimeout(
-            () =>
-              reject({
-                status: 301,
-                errno: "ETIME",
-              }),
-            20000
-          )
-        )
-      await Promise.race([config.saveEtherealSmtpConfig(), timeout()])
-      await Promise.race([config.saveSettingsConfig(), timeout()])
+      await withTimeout(20000, config.saveEtherealSmtpConfig())
+      await withTimeout(20000, config.saveSettingsConfig())
       let res
       if (attachments) {
         res = await config.api.emails

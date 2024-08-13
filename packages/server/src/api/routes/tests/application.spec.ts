@@ -14,12 +14,18 @@ jest.mock("../../../utilities/redis", () => ({
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
-import { events, utils, context } from "@budibase/backend-core"
+import {
+  events,
+  utils,
+  context,
+  withEnv as withCoreEnv,
+} from "@budibase/backend-core"
 import env from "../../../environment"
 import { type App } from "@budibase/types"
 import tk from "timekeeper"
 import * as uuid from "uuid"
 import { structures } from "@budibase/backend-core/tests"
+import nock from "nock"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -35,6 +41,7 @@ describe("/applications", () => {
       throw new Error("Failed to publish app")
     }
     jest.clearAllMocks()
+    nock.cleanAll()
   })
 
   // These need to go first for the app totals to make sense
@@ -324,19 +331,34 @@ describe("/applications", () => {
 
   describe("delete", () => {
     it("should delete published app and dev apps with dev app ID", async () => {
+      const prodAppId = app.appId.replace("_dev", "")
+      nock("http://localhost:10000")
+        .delete(`/api/global/roles/${prodAppId}`)
+        .reply(200, {})
+
       await config.api.application.delete(app.appId)
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
 
     it("should delete published app and dev app with prod app ID", async () => {
-      await config.api.application.delete(app.appId.replace("_dev", ""))
+      const prodAppId = app.appId.replace("_dev", "")
+      nock("http://localhost:10000")
+        .delete(`/api/global/roles/${prodAppId}`)
+        .reply(200, {})
+
+      await config.api.application.delete(prodAppId)
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
       expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
 
     it("should be able to delete an app after SQS_SEARCH_ENABLE has been set but app hasn't been migrated", async () => {
-      await config.withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, async () => {
+      const prodAppId = app.appId.replace("_dev", "")
+      nock("http://localhost:10000")
+        .delete(`/api/global/roles/${prodAppId}`)
+        .reply(200, {})
+
+      await withCoreEnv({ SQS_SEARCH_ENABLE: "true" }, async () => {
         await config.api.application.delete(app.appId)
       })
     })
