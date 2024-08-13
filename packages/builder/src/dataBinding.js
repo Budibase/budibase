@@ -298,8 +298,7 @@ export const getActionProviders = (
       // Find the definition of the action in question, if one is provided
       .map(context => ({
         ...context,
-
-        action: context.contexts[0].actions.find(x => x.type === actionType),
+        action: context.contexts[0]?.actions?.find(x => x.type === actionType),
       }))
       // Filter out contexts which don't have this action
       .filter(({ action }) => action != null)
