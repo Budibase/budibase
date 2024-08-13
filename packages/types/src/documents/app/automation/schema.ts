@@ -98,6 +98,24 @@ export type ActionImplementations<T extends Hosting> = {
     }
   : {})
 
+export type AutomationStepOutputs =
+  | CollectStepOutputs
+  | CreateRowStepOutputs
+  | DelayStepOutputs
+  | DeleteRowStepOutputs
+  | ExecuteQueryStepOutputs
+  | ExecuteScriptStepOutputs
+  | FilterStepOutputs
+  | QueryRowsStepOutputs
+  | BaseAutomationOutputs
+  | BashStepOutputs
+  | ExternalAppStepOutputs
+  | OpenAIStepOutputs
+  | ServerLogStepOutputs
+  | TriggerAutomationStepOutputs
+  | UpdateRowStepOutputs
+  | ZapierStepOutputs
+
 export type BaseAutomationOutputs = {
   success?: boolean
   response?: {
@@ -199,7 +217,7 @@ export type LoopStepInputs = {
 }
 
 export type LoopStepOutputs = {
-  items: string
+  items: AutomationStepOutputs[]
   success: boolean
   iterations: number
 }
