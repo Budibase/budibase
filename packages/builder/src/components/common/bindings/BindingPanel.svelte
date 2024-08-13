@@ -67,10 +67,6 @@
   let targetMode = null
   let expressionResult
   let evaluating = false
-  let mounted = false
-
-  // Value updates must be reprocessed to avoid timing issues
-  $: processUpdate(value, mounted)
 
   $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
@@ -96,13 +92,6 @@
     if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
       sidePanel = sidePanelOptions[0]
     }
-  }
-
-  const processUpdate = value => {
-    if (!mounted) return
-    let isJS = value?.startsWith?.("{{ js ")
-    jsValue = isJS ? value : null
-    hbsValue = isJS ? null : value
   }
 
   const getHBSCompletions = bindingCompletions => {
@@ -277,8 +266,6 @@
 
     // Set the initial side panel
     sidePanel = sidePanelOptions[0]
-
-    mounted = true
   })
 </script>
 
