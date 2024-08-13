@@ -24,7 +24,12 @@ import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { db, roles } from "@budibase/backend-core"
+import {
+  db,
+  roles,
+  withEnv as withCoreEnv,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
 
 describe.each([
   ["lucene", undefined],
@@ -89,12 +94,11 @@ describe.each([
   }
 
   beforeAll(async () => {
-    await config.withCoreEnv(
-      { SQS_SEARCH_ENABLE: isSqs ? "true" : "false" },
-      () => config.init()
+    await withCoreEnv({ SQS_SEARCH_ENABLE: isSqs ? "true" : "false" }, () =>
+      config.init()
     )
     if (isSqs) {
-      envCleanup = config.setCoreEnv({
+      envCleanup = setCoreEnv({
         SQS_SEARCH_ENABLE: "true",
         SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
       })

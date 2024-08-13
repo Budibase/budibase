@@ -42,6 +42,7 @@ export const fetch = async (ctx: Ctx) => {
     baseUrl: env.PLATFORM_URL,
     isDev: env.isDev() && !env.isTest(),
     maintenance: [],
+    passwordMinLength: env.PASSWORD_MIN_LENGTH,
   }
 
   if (env.SELF_HOSTED) {

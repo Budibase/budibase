@@ -104,7 +104,7 @@ export async function getSelf(ctx: any) {
   ctx.body = await groups.enrichUserRolesFromGroups(user)
 
   // add the feature flags for this tenant
-  const flags = await features.fetch()
+  const flags = await features.flags.fetch()
   ctx.body.flags = flags
 
   addSessionAttributesToUser(ctx)
