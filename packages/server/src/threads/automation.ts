@@ -25,11 +25,7 @@ import {
   AutomationStepStatus,
   LoopStep,
 } from "@budibase/types"
-import {
-  AutomationContext,
-  LoopInput,
-  TriggerOutput,
-} from "../definitions/automations"
+import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
 import { processObject } from "@budibase/string-templates"
@@ -274,7 +270,7 @@ class Orchestrator {
           }
         }
         const start = performance.now()
-        for (let step of automation.definition.steps) {
+        for (const step of automation.definition.steps) {
           const stepSpan = tracer.startSpan("Orchestrator.execute.step", {
             childOf: span,
           })

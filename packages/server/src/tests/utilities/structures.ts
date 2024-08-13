@@ -162,7 +162,7 @@ export function automationTrigger(
   return {
     id: utils.newid(),
     ...triggerDefinition,
-  }
+  } as AutomationTrigger
 }
 
 export function newAutomation({
@@ -211,7 +211,9 @@ export function basicAutomation(appId?: string): Automation {
         description: "test",
         type: AutomationStepType.TRIGGER,
         id: "test",
-        inputs: {},
+        inputs: {
+          fields: {},
+        },
         schema: {
           inputs: {
             properties: {},
@@ -243,7 +245,7 @@ export function serverLogAutomation(appId?: string): Automation {
         description: "test",
         type: AutomationStepType.TRIGGER,
         id: "test",
-        inputs: {},
+        inputs: { fields: {} },
         schema: {
           inputs: {
             properties: {},
@@ -410,7 +412,7 @@ export function filterAutomation(appId: string, tableId?: string): Automation {
         event: "row:save",
         stepId: AutomationTriggerStepId.ROW_SAVED,
         inputs: {
-          tableId,
+          tableId: tableId!,
         },
         schema: TRIGGER_DEFINITIONS.ROW_SAVED.schema,
       },
@@ -419,7 +421,10 @@ export function filterAutomation(appId: string, tableId?: string): Automation {
   return automation
 }
 
-export function updateRowAutomationWithFilters(appId: string): Automation {
+export function updateRowAutomationWithFilters(
+  appId: string,
+  tableId: string
+): Automation {
   const automation: Automation = {
     name: "updateRowWithFilters",
     type: "automation",
@@ -444,12 +449,11 @@ export function updateRowAutomationWithFilters(appId: string): Automation {
         tagline: "An automation trigger",
         description: "A trigger",
         icon: "Icon",
-
         id: "a",
         type: AutomationStepType.TRIGGER,
         event: "row:update",
         stepId: AutomationTriggerStepId.ROW_UPDATED,
-        inputs: {},
+        inputs: { tableId },
         schema: TRIGGER_DEFINITIONS.ROW_UPDATED.schema,
       },
     },

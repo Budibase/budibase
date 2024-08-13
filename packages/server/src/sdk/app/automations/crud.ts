@@ -1,7 +1,6 @@
 import { sdk } from "@budibase/shared-core"
 import {
   Automation,
-  CollectStepInputs,
   RequiredKeys,
   Webhook,
   WebhookActionType,
