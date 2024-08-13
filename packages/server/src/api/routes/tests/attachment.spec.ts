@@ -1,3 +1,4 @@
+import { withEnv } from "../../../environment"
 import * as setup from "./utilities"
 import { APIError } from "@budibase/types"
 
@@ -28,7 +29,7 @@ describe("/api/applications/:appId/sync", () => {
     })
 
     it("should reject an upload with a malicious file extension", async () => {
-      await config.withEnv({ SELF_HOSTED: undefined }, async () => {
+      await withEnv({ SELF_HOSTED: undefined }, async () => {
         let resp = (await config.api.attachment.process(
           "ohno.exe",
           Buffer.from([0]),
@@ -39,7 +40,7 @@ describe("/api/applications/:appId/sync", () => {
     })
 
     it("should reject an upload with a malicious uppercase file extension", async () => {
-      await config.withEnv({ SELF_HOSTED: undefined }, async () => {
+      await withEnv({ SELF_HOSTED: undefined }, async () => {
         let resp = (await config.api.attachment.process(
           "OHNO.EXE",
           Buffer.from([0]),

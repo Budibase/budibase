@@ -28,16 +28,25 @@ function generateSchema(
   oldTable: null | Table = null,
   renamed?: RenameColumn
 ) {
-  let primaryKey = table && table.primary ? table.primary[0] : null
+  let primaryKeys = table && table.primary ? table.primary : []
   const columns = Object.values(table.schema)
   // all columns in a junction table will be meta
   let metaCols = columns.filter(col => (col as NumberFieldMetadata).meta)
   let isJunction = metaCols.length === columns.length
+  let columnTypeSet: string[] = []
+
   // can't change primary once its set for now
-  if (primaryKey && !oldTable && !isJunction) {
-    schema.increments(primaryKey).primary()
-  } else if (!oldTable && isJunction) {
-    schema.primary(metaCols.map(col => col.name))
+  if (!oldTable) {
+    // junction tables are special - we have an expected format
+    if (isJunction) {
+      schema.primary(metaCols.map(col => col.name))
+    } else if (primaryKeys.length === 1) {
+      schema.increments(primaryKeys[0]).primary()
+      // note that we've set its type
+      columnTypeSet.push(primaryKeys[0])
+    } else {
+      schema.primary(primaryKeys)
+    }
   }
 
   // check if any columns need added
@@ -49,7 +58,7 @@ function generateSchema(
     const oldColumn = oldTable ? oldTable.schema[key] : null
     if (
       (oldColumn && oldColumn.type) ||
-      (primaryKey === key && !isJunction) ||
+      columnTypeSet.includes(key) ||
       renamed?.updated === key
     ) {
       continue
@@ -61,7 +70,12 @@ function generateSchema(
       case FieldType.LONGFORM:
       case FieldType.BARCODEQR:
       case FieldType.BB_REFERENCE_SINGLE:
-        schema.text(key)
+        // primary key strings have to have a length in some DBs
+        if (primaryKeys.includes(key)) {
+          schema.string(key, 255)
+        } else {
+          schema.text(key)
+        }
         break
       case FieldType.NUMBER:
         // if meta is specified then this is a junction table entry

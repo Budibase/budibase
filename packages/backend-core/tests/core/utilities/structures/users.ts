@@ -21,7 +21,7 @@ export const user = (userProps?: Partial<Omit<User, "userId">>): User => {
     _id: userId,
     userId,
     email: newEmail(),
-    password: "password",
+    password: "password123!",
     roles: { app_test: "admin" },
     firstName: generator.first(),
     lastName: generator.last(),
