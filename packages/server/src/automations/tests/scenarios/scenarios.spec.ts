@@ -272,7 +272,7 @@ describe("Automation Scenarios", () => {
       table.string("name")
       table.integer("age")
     })
-    // insert multiple rows
+
     await client(tableName).insert([
       { name: "Joe", age: 20 },
       { name: "Bob", age: 25 },
@@ -338,7 +338,6 @@ describe("Automation Scenarios", () => {
       }
     )
 
-    // Assertions for the final query step
     expect(results.steps[2].outputs.rows).toHaveLength(3)
     results.steps[2].outputs.rows.forEach((row: Row, index: number) => {
       expect(row).toMatchObject({
