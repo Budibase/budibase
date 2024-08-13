@@ -129,6 +129,11 @@
     width: 100%;
     min-width: unset;
   }
+  .signature-cell img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
   .signature-cell.light img {
     -webkit-filter: invert(100%);
     filter: invert(100%);
