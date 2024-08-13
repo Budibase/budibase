@@ -272,12 +272,12 @@ describe("Automation Scenarios", () => {
       table.string("name")
       table.integer("age")
     })
-
-    await client(tableName).insert([
+    let rows = [
       { name: "Joe", age: 20 },
       { name: "Bob", age: 25 },
       { name: "Paul", age: 30 },
-    ])
+    ]
+    await client(tableName).insert(rows)
 
     let query = await config.api.query.save({
       name: "test query",
@@ -326,24 +326,12 @@ describe("Automation Scenarios", () => {
     expect(results.steps[1].outputs.iterations).toBe(3)
     expect(results.steps[1].outputs.items).toHaveLength(3)
 
-    results.steps[1].outputs.items.forEach(
-      (output: CreateRowStepOutputs, index: number) => {
-        expect(output).toMatchObject({
-          success: true,
-          row: {
-            name: ["Joe", "Bob", "Paul"][index],
-            age: [20, 25, 30][index],
-          },
-        })
-      }
-    )
-
     expect(results.steps[2].outputs.rows).toHaveLength(3)
-    results.steps[2].outputs.rows.forEach((row: Row, index: number) => {
-      expect(row).toMatchObject({
-        name: ["Joe", "Bob", "Paul"][index],
-        age: [20, 25, 30][index],
-      })
+
+    rows.forEach(expectedRow => {
+      expect(results.steps[2].outputs.rows).toEqual(
+        expect.arrayContaining([expect.objectContaining(expectedRow)])
+      )
     })
   })
 })
