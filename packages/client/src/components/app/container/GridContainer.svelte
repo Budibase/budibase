@@ -13,7 +13,6 @@
   let width
   let height
   let ref
-  let rows = 1
   let children = writable({})
   let mounted = false
   let styles = memo({})
@@ -49,11 +48,11 @@
         max = children[id][key]
       }
     }
-    let rows = max - 1
+    let requiredRows = max - 1
     if (addEmptyRows) {
-      return Math.ceil((rows + 10) / 10) * 10
+      return Math.ceil((requiredRows + 10) / 10) * 10
     } else {
-      return rows
+      return requiredRows
     }
   }
 
