@@ -24,7 +24,7 @@
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
-  const subType = $licensing.license.plan.type
+  const subType = $licensing.license.plan.type ?? null
 
   $: enrichLabel = label => (labelPrefix ? `${labelPrefix} ${label}` : label)
   $: options = getOptions(
@@ -69,19 +69,13 @@
     }))
 
     // Add creator if required
-    if (
-      allowCreator ||
-      subType === Constants.PlanType.ENTERPRISE ||
-      subType === Constants.PlanType.ENTERPRISE_BASIC
-    ) {
+    if (allowCreator || isEnterprisePlan(subType)) {
       options.unshift({
         _id: Constants.Roles.CREATOR,
         name: "Can edit",
-        tag:
-          subType === Constants.PlanType.ENTERPRISE ||
-          subType === Constants.PlanType.ENTERPRISE_BASIC
-            ? null
-            : capitalise(Constants.PlanType.ENTERPRISE),
+        tag: isEnterprisePlan(subType)
+          ? null
+          : capitalise(Constants.PlanType.ENTERPRISE),
       })
     }
 
@@ -124,6 +118,14 @@
       dispatch("change", e.detail)
     }
   }
+
+  function isEnterprisePlan(subType) {
+    return (
+      subType === Constants.PlanType.ENTERPRISE ||
+      subType === Constants.PlanType.ENTERPRISE_BASIC ||
+      subType === Constants.PlanType.ENTERPRISE_BASIC_trial
+    )
+  }
 </script>
 
 {#if fancySelect}
@@ -143,11 +145,7 @@
     getOptionIcon={getIcon}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
-        return (
-          subType === Constants.PlanType.ENTERPRISE ||
-          (subType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL &&
-            $licensing.perAppBuildersEnabled)
-        )
+        return isEnterprisePlan(subType)
       }
       return true
     }}
@@ -170,11 +168,7 @@
     getOptionIcon={getIcon}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
-        return (
-          subType === Constants.PlanType.ENTERPRISE ||
-          (subType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL &&
-            $licensing.perAppBuildersEnabled)
-        )
+        return isEnterprisePlan(subType)
       }
       return option.enabled !== false
     }}
