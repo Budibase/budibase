@@ -1,7 +1,21 @@
 import * as automation from "../../index"
 import * as setup from "../utilities"
-import { Table, LoopStepType } from "@budibase/types"
+import {
+  Table,
+  LoopStepType,
+  CreateRowStepOutputs,
+  ServerLogStepOutputs,
+  FieldType,
+  Row,
+} from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationBuilder"
+import {
+  DatabaseName,
+  getDatasource,
+  knexClient,
+} from "../../../integrations/tests/utils"
+import { Knex } from "knex"
+import { generator } from "@budibase/backend-core/tests"
 
 describe("Automation Scenarios", () => {
   let config = setup.getConfig(),
@@ -62,6 +76,72 @@ describe("Automation Scenarios", () => {
           },
         })
       })
+    })
+
+    it("should run an automation where a loop is successfully run twice", async () => {
+      const builder = createAutomationBuilder({
+        name: "Test Trigger with Loop and Create Row",
+      })
+
+      const results = await builder
+        .rowSaved(
+          { tableId: table._id! },
+          {
+            row: {
+              name: "Trigger Row",
+              description: "This row triggers the automation",
+            },
+            id: "1234",
+            revision: "1",
+          }
+        )
+        .loop({
+          option: LoopStepType.ARRAY,
+          binding: [1, 2, 3],
+        })
+        .createRow({
+          row: {
+            name: "Item {{ loop.currentItem }}",
+            description: "Created from loop",
+            tableId: table._id,
+          },
+        })
+        .loop({
+          option: LoopStepType.STRING,
+          binding: "Message 1,Message 2,Message 3",
+        })
+        .serverLog({ text: "{{loop.currentItem}}" })
+        .run()
+
+      expect(results.trigger).toBeDefined()
+      expect(results.steps).toHaveLength(2)
+
+      expect(results.steps[0].outputs.iterations).toBe(3)
+      expect(results.steps[0].outputs.items).toHaveLength(3)
+
+      results.steps[0].outputs.items.forEach(
+        (output: CreateRowStepOutputs, index: number) => {
+          expect(output).toMatchObject({
+            success: true,
+            row: {
+              name: `Item ${index + 1}`,
+              description: "Created from loop",
+            },
+          })
+        }
+      )
+
+      expect(results.steps[1].outputs.iterations).toBe(3)
+      expect(results.steps[1].outputs.items).toHaveLength(3)
+
+      results.steps[1].outputs.items.forEach(
+        (output: ServerLogStepOutputs, index: number) => {
+          expect(output).toMatchObject({
+            success: true,
+          })
+          expect(output.message).toContain(`Message ${index + 1}`)
+        }
+      )
     })
   })
 
@@ -156,5 +236,115 @@ describe("Automation Scenarios", () => {
     expect(results.steps).toHaveLength(3)
     expect(results.steps[1].outputs.success).toBeTruthy()
     expect(results.steps[2].outputs.rows).toHaveLength(1)
+  })
+
+  it("should query an external database for some data then insert than into an internal table", async () => {
+    let newTable = await config.createTable({
+      name: "table",
+      type: "table",
+      schema: {
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+          constraints: {
+            type: FieldType.STRING,
+            presence: true,
+          },
+        },
+        age: {
+          name: "age",
+          type: FieldType.NUMBER,
+          constraints: {
+            type: FieldType.NUMBER,
+            presence: true,
+          },
+        },
+      },
+    })
+
+    let client: Knex
+
+    let db = await getDatasource(DatabaseName.MYSQL)
+    let datasource = await config.api.datasource.create(db)
+    client = await knexClient(db)
+    let tableName = generator.guid()
+    await client.schema.createTable(tableName, table => {
+      table.string("name")
+      table.integer("age")
+    })
+    // insert multiple rows
+    await client(tableName).insert([
+      { name: "Joe", age: 20 },
+      { name: "Bob", age: 25 },
+      { name: "Paul", age: 30 },
+    ])
+
+    let query = await config.api.query.save({
+      name: "test query",
+      datasourceId: datasource._id!,
+      parameters: [],
+      fields: {
+        sql: client(tableName).select("*").toSQL().toNative().sql,
+      },
+      transformer: "",
+      schema: {},
+      readable: true,
+      queryVerb: "read",
+    })
+
+    const builder = createAutomationBuilder({
+      name: "Test external query and save",
+    })
+
+    const results = await builder
+      .appAction({
+        fields: {},
+      })
+      .executeQuery({
+        query: {
+          queryId: query._id!,
+        },
+      })
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: "{{ steps.1.response }}",
+      })
+      .createRow({
+        row: {
+          name: "{{ loop.currentItem.name }}",
+          age: "{{ loop.currentItem.age }}",
+          tableId: newTable._id!,
+        },
+      })
+      .queryRows({
+        tableId: newTable._id!,
+      })
+      .run()
+
+    expect(results.steps).toHaveLength(3)
+
+    expect(results.steps[1].outputs.iterations).toBe(3)
+    expect(results.steps[1].outputs.items).toHaveLength(3)
+
+    results.steps[1].outputs.items.forEach(
+      (output: CreateRowStepOutputs, index: number) => {
+        expect(output).toMatchObject({
+          success: true,
+          row: {
+            name: ["Joe", "Bob", "Paul"][index],
+            age: [20, 25, 30][index],
+          },
+        })
+      }
+    )
+
+    // Assertions for the final query step
+    expect(results.steps[2].outputs.rows).toHaveLength(3)
+    results.steps[2].outputs.rows.forEach((row: Row, index: number) => {
+      expect(row).toMatchObject({
+        name: ["Joe", "Bob", "Paul"][index],
+        age: [20, 25, 30][index],
+      })
+    })
   })
 })
