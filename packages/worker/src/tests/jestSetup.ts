@@ -1,13 +1,21 @@
 import { mocks, testContainerUtils } from "@budibase/backend-core/tests"
 import env from "../environment"
 import { env as coreEnv, timers } from "@budibase/backend-core"
-
-// must explicitly enable fetch mock
-mocks.fetch.enable()
+import nock from "nock"
 
 // mock all dates to 2020-01-01T00:00:00.000Z
 // use tk.reset() to use real dates in individual tests
-const tk = require("timekeeper")
+import tk from "timekeeper"
+
+nock.disableNetConnect()
+nock.enableNetConnect(host => {
+  return (
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    host.includes("::1") ||
+    host.includes("ethereal.email") // used in realEmail.spec.ts
+  )
+})
 
 tk.freeze(mocks.date.MOCK_DATE)
 
