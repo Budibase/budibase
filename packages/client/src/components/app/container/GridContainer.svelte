@@ -17,7 +17,12 @@
   let mounted = false
   let styles = memo({})
 
-  $: requiredRows = calculateRequiredRows($children, mobile, addEmptyRows)
+  $: inBuilder = $builderStore.inBuilder
+  $: requiredRows = calculateRequiredRows(
+    $children,
+    mobile,
+    addEmptyRows && inBuilder
+  )
   $: requiredHeight = requiredRows * GridRowHeight
   $: availableRows = Math.floor(height / GridRowHeight)
   $: rows = Math.max(requiredRows, availableRows)
@@ -133,7 +138,7 @@
   data-cols={GridColumns}
   data-col-size={colSize}
 >
-  {#if $builderStore.inBuilder}
+  {#if inBuilder}
     <div class="underlay">
       {#each { length: GridColumns * rows } as _, idx}
         <div class="placeholder" class:first-col={idx % GridColumns === 0} />
