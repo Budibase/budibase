@@ -139,7 +139,6 @@
 {:else if schema.type === "longform"}
   <TextArea
     value={readableValue}
-    bindings={parsedBindings}
     on:change={e =>
       onChange({
         row: {
