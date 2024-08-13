@@ -74,7 +74,7 @@
         name: "Can edit",
         tag:
           !$licensing.perAppBuildersEnabled &&
-          capitalise(Constants.PlanType.BUSINESS),
+          capitalise(Constants.PlanType.PREMIUM),
       })
     }
 
