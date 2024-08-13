@@ -6,7 +6,6 @@ import {
   CreateRowStepOutputs,
   ServerLogStepOutputs,
   FieldType,
-  Row,
 } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationBuilder"
 import {
