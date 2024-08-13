@@ -4,6 +4,8 @@
   import { GridRowHeight, GridColumns } from "constants"
   import { memo } from "@budibase/frontend-core"
 
+  export let addEmptyRows = false
+
   const component = getContext("component")
   const { styleable, builderStore } = getContext("sdk")
   const context = getContext("context")
@@ -16,7 +18,7 @@
   let mounted = false
   let styles = memo({})
 
-  $: requiredRows = calculateRequiredRows($children, mobile)
+  $: requiredRows = calculateRequiredRows($children, mobile, addEmptyRows)
   $: requiredHeight = requiredRows * GridRowHeight
   $: availableRows = Math.floor(height / GridRowHeight)
   $: rows = Math.max(requiredRows, availableRows)
@@ -39,7 +41,7 @@
 
   // Calculates the minimum number of rows required to render all child
   // components, on a certain device type
-  const calculateRequiredRows = (children, mobile) => {
+  const calculateRequiredRows = (children, mobile, addEmptyRows) => {
     const key = mobile ? "mobileRowEnd" : "desktopRowEnd"
     let max = 2
     for (let id of Object.keys(children)) {
@@ -47,7 +49,12 @@
         max = children[id][key]
       }
     }
-    return max - 1
+    let rows = max - 1
+    if (addEmptyRows) {
+      return Math.ceil((rows + 10) / 10) * 10
+    } else {
+      return rows
+    }
   }
 
   // Stores metadata about a child node as constraints for determining grid size
