@@ -1,36 +1,27 @@
 import { Datasource, Query } from "@budibase/types"
 import * as setup from "./utilities"
-import {
-  DatabaseName,
-  getDatasource,
-  knexClient,
-} from "../../integrations/tests/utils"
+import { DatabaseName } from "../../integrations/tests/utils"
 import { Knex } from "knex"
 
-describe.each(
-  [
-    DatabaseName.POSTGRES,
-    DatabaseName.MYSQL,
-    DatabaseName.SQL_SERVER,
-    DatabaseName.MARIADB,
-    DatabaseName.ORACLE,
-  ].map(name => [name])
-)("execute query action (%s)", name => {
+describe.each([
+  DatabaseName.POSTGRES,
+  DatabaseName.MYSQL,
+  DatabaseName.SQL_SERVER,
+  DatabaseName.MARIADB,
+  DatabaseName.ORACLE,
+])("execute query action (%s)", name => {
   let tableName: string
   let client: Knex
   let datasource: Datasource
   let query: Query
-  let config = setup.getConfig()
+  const config = setup.getConfig()
 
   beforeAll(async () => {
     await config.init()
 
-    const { datasource: ds, client: cl } = await setup.setupTestDatasource(
-      config,
-      name
-    )
-    datasource = ds
-    client = cl
+    const testSetup = await setup.setupTestDatasource(config, name)
+    datasource = testSetup.datasource
+    client = testSetup.client
   })
 
   beforeEach(async () => {

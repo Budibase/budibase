@@ -3,9 +3,8 @@ import { context } from "@budibase/backend-core"
 import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../../actions"
 import emitter from "../../../events/index"
 import env from "../../../environment"
-import { AutomationActionStepId } from "@budibase/types"
+import { AutomationActionStepId, Datasource } from "@budibase/types"
 import { Knex } from "knex"
-import { Datasource, Query } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import {
   getDatasource,
