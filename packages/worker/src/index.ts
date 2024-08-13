@@ -18,6 +18,7 @@ import {
   timers,
   redis,
   cache,
+  features,
 } from "@budibase/backend-core"
 
 db.init()
@@ -95,6 +96,7 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(startupLog)
   await initPro()
   await redis.clients.init()
+  features.init()
   cache.docWritethrough.init()
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
