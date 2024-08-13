@@ -14,7 +14,7 @@
 
   // Get the screen definition for the current route
   $: screen = $screenStore.activeScreen
-  $: screenDefinition = { cols: 24, rows: 24, ...screen?.props }
+  $: screenDefinition = { ...screen?.props, addEmptyRows: true }
   $: onLoadActions.set(screen?.onLoad)
   $: runOnLoadActions($onLoadActions, params)
 
