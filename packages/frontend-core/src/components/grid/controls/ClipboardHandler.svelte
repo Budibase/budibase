@@ -2,9 +2,16 @@
   import { Modal, ModalContent, ProgressBar } from "@budibase/bbui"
   import { getContext, onMount } from "svelte"
   import { sleep } from "../../../utils/utils"
+  import { get } from "svelte/store"
 
-  const { clipboard, subscribe, copyAllowed, pasteAllowed, selectedCellCount } =
-    getContext("grid")
+  const {
+    clipboard,
+    subscribe,
+    copyAllowed,
+    pasteAllowed,
+    selectedCellCount,
+    focusedCellAPI,
+  } = getContext("grid")
   const duration = 260
 
   let modal
@@ -19,10 +26,15 @@
   }
 
   const handlePasteRequest = async () => {
+    // If a cell is active then let the native paste action take over
+    if (get(focusedCellAPI)?.isActive()) {
+      return
+    }
     progressPercentage = 0
     if (!$pasteAllowed) {
       return
     }
+
     // Prompt if paste will update multiple cells
     const multiCellPaste = $selectedCellCount > 1
     const prompt = $clipboard.multiCellCopy || multiCellPaste
