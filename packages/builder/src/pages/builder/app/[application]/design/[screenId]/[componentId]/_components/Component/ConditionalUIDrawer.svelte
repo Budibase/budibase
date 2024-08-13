@@ -151,7 +151,7 @@
   const onSettingChange = (e, condition) => {
     const setting = settings.find(x => x.key === e.detail)
     if (setting?.defaultValue != null) {
-      condition.settingValue = setting?.defaultValue
+      condition.settingValue = setting.defaultValue
     } else {
       delete condition.settingValue
     }
