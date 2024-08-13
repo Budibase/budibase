@@ -71,8 +71,7 @@ export function basicProcessing({
 }): Row {
   const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
-  for (let field of Object.values(table.schema)) {
-    const fieldName = field.name
+  for (let fieldName of Object.keys(table.schema)) {
     let value = extractFieldValue({
       row,
       tableName: table.name,

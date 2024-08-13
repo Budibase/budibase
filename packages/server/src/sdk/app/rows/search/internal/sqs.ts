@@ -73,13 +73,14 @@ function buildInternalFieldList(
   fieldList = fieldList.concat(
     PROTECTED_INTERNAL_COLUMNS.map(col => `${table._id}.${col}`)
   )
-  for (let col of Object.values(table.schema)) {
+  for (let key of Object.keys(table.schema)) {
+    const col = table.schema[key]
     const isRelationship = col.type === FieldType.LINK
     if (!opts?.relationships && isRelationship) {
       continue
     }
     if (!isRelationship) {
-      fieldList.push(`${table._id}.${mapToUserColumn(col.name)}`)
+      fieldList.push(`${table._id}.${mapToUserColumn(key)}`)
     } else {
       const linkCol = col as RelationshipFieldMetadata
       const relatedTable = tables.find(table => table._id === linkCol.tableId)

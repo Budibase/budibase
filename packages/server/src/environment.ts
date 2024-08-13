@@ -1,5 +1,6 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
+import cloneDeep from "lodash/cloneDeep"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import { join } from "path"
@@ -131,6 +132,32 @@ const environment = {
   getDefaults: () => {
     return DEFAULTS
   },
+}
+
+export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
+  const oldEnv = cloneDeep(environment)
+
+  let key: keyof typeof newEnvVars
+  for (key in newEnvVars) {
+    environment._set(key, newEnvVars[key])
+  }
+
+  return () => {
+    for (const [key, value] of Object.entries(oldEnv)) {
+      environment._set(key, value)
+    }
+  }
+}
+
+export function withEnv<T>(envVars: Partial<typeof environment>, f: () => T) {
+  const cleanup = setEnv(envVars)
+  const result = f()
+  if (result instanceof Promise) {
+    return result.finally(cleanup)
+  } else {
+    cleanup()
+    return result
+  }
 }
 
 function cleanVariables() {
