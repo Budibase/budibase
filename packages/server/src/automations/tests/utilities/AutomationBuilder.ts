@@ -28,6 +28,7 @@ import {
   SmtpEmailStepInputs,
   ExecuteQueryStepInputs,
   QueryRowsStepInputs,
+  ServerLogStepInputs,
 } from "@budibase/types"
 import {} from "../../steps/loop"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -117,6 +118,10 @@ class AutomationBuilder {
   }
   loop(inputs: LoopStepInputs): this {
     return this.step(BUILTIN_ACTION_DEFINITIONS.LOOP, inputs)
+  }
+
+  serverLog(input: ServerLogStepInputs): this {
+    return this.step(BUILTIN_ACTION_DEFINITIONS.SERVER_LOG, input)
   }
 
   private trigger<T extends { [key: string]: any }>(
