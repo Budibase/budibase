@@ -8,13 +8,7 @@ import {
   FieldType,
 } from "@budibase/types"
 import { createAutomationBuilder } from "../utilities/AutomationBuilder"
-import {
-  DatabaseName,
-  getDatasource,
-  knexClient,
-} from "../../../integrations/tests/utils"
-import { Knex } from "knex"
-import { generator } from "@budibase/backend-core/tests"
+import { DatabaseName } from "../../../integrations/tests/utils"
 
 describe("Automation Scenarios", () => {
   let config = setup.getConfig(),
@@ -238,7 +232,12 @@ describe("Automation Scenarios", () => {
   })
 
   it("should query an external database for some data then insert than into an internal table", async () => {
-    let newTable = await config.createTable({
+    const { datasource, client } = await setup.setupTestDatasource(
+      config,
+      DatabaseName.MYSQL
+    )
+
+    const newTable = await config.createTable({
       name: "table",
       type: "table",
       schema: {
@@ -246,7 +245,6 @@ describe("Automation Scenarios", () => {
           name: "name",
           type: FieldType.STRING,
           constraints: {
-            type: FieldType.STRING,
             presence: true,
           },
         },
@@ -254,42 +252,31 @@ describe("Automation Scenarios", () => {
           name: "age",
           type: FieldType.NUMBER,
           constraints: {
-            type: FieldType.NUMBER,
             presence: true,
           },
         },
       },
     })
 
-    let client: Knex
-
-    let db = await getDatasource(DatabaseName.MYSQL)
-    let datasource = await config.api.datasource.create(db)
-    client = await knexClient(db)
-    let tableName = generator.guid()
-    await client.schema.createTable(tableName, table => {
-      table.string("name")
-      table.integer("age")
+    const tableName = await setup.createTestTable(client, {
+      name: { type: "string" },
+      age: { type: "number" },
     })
-    let rows = [
+
+    const rows = [
       { name: "Joe", age: 20 },
       { name: "Bob", age: 25 },
       { name: "Paul", age: 30 },
     ]
-    await client(tableName).insert(rows)
 
-    let query = await config.api.query.save({
-      name: "test query",
-      datasourceId: datasource._id!,
-      parameters: [],
-      fields: {
-        sql: client(tableName).select("*").toSQL().toNative().sql,
-      },
-      transformer: "",
-      schema: {},
-      readable: true,
-      queryVerb: "read",
-    })
+    await setup.insertTestData(client, tableName, rows)
+
+    const query = await setup.saveTestQuery(
+      config,
+      client,
+      tableName,
+      datasource
+    )
 
     const builder = createAutomationBuilder({
       name: "Test external query and save",
