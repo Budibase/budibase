@@ -1,5 +1,9 @@
 import { getConfig, runStep, afterAll as _afterAll } from "./utilities"
 import { OpenAI } from "openai"
+import {
+  withEnv as withCoreEnv,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
 
 jest.mock("openai", () => ({
   OpenAI: jest.fn().mockImplementation(() => ({
@@ -32,7 +36,7 @@ describe("test the openai action", () => {
   })
 
   beforeEach(() => {
-    resetEnv = config.setCoreEnv({ OPENAI_API_KEY: "abc123" })
+    resetEnv = setCoreEnv({ OPENAI_API_KEY: "abc123" })
   })
 
   afterEach(() => {
@@ -42,7 +46,7 @@ describe("test the openai action", () => {
   afterAll(_afterAll)
 
   it("should present the correct error message when the OPENAI_API_KEY variable isn't set", async () => {
-    await config.withCoreEnv({ OPENAI_API_KEY: "" }, async () => {
+    await withCoreEnv({ OPENAI_API_KEY: "" }, async () => {
       let res = await runStep("OPENAI", { prompt: OPENAI_PROMPT })
       expect(res.response).toEqual(
         "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable."

@@ -157,7 +157,7 @@
   </span>
 {:else if schema.type === "link"}
   <LinkedRowSelector
-    linkedRows={fieldData}
+    linkedData={fieldData}
     {schema}
     on:change={e =>
       onChange({
@@ -169,7 +169,7 @@
   />
 {:else if schema.type === "bb_reference" || schema.type === "bb_reference_single"}
   <LinkedRowSelector
-    linkedRows={fieldData}
+    linkedData={fieldData}
     {schema}
     linkedTableId={"ta_users"}
     on:change={e =>

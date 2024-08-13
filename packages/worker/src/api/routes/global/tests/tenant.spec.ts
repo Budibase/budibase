@@ -29,7 +29,7 @@ describe("/api/global/tenant", () => {
       const tenantInfo: TenantInfo = {
         owner: {
           email: "test@example.com",
-          password: "PASSWORD",
+          password: "PASSWORD123!",
           ssoId: "SSO_ID",
           givenName: "Jane",
           familyName: "Doe",
