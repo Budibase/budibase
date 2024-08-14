@@ -2,13 +2,12 @@ import {
   AutomationCustomIOType,
   AutomationIOType,
   AutomationStepType,
-  AutomationTriggerSchema,
+  AutomationTriggerDefinition,
   AutomationTriggerStepId,
   AutomationEventType,
-  Row,
 } from "@budibase/types"
 
-export const definition: AutomationTriggerSchema = {
+export const definition: AutomationTriggerDefinition = {
   name: "Row Deleted",
   event: AutomationEventType.ROW_DELETE,
   icon: "TableRowRemoveCenter",
@@ -39,12 +38,4 @@ export const definition: AutomationTriggerSchema = {
     },
   },
   type: AutomationStepType.TRIGGER,
-}
-
-export type RowDeletedTriggerInputs = {
-  tableId: string
-}
-
-export type RowDeletedTriggerOutputs = {
-  row: Row
 }

@@ -1,6 +1,7 @@
 import { context, HTTPError, utils } from "@budibase/backend-core"
 
 import {
+  AutomationTriggerStepId,
   SEPARATOR,
   TableRowActions,
   VirtualDocumentType,
@@ -61,6 +62,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
       trigger: {
         id: "trigger",
         ...TRIGGER_DEFINITIONS.ROW_ACTION,
+        stepId: AutomationTriggerStepId.ROW_ACTION,
         inputs: {
           tableId,
           rowActionId: newRowActionId,

@@ -1,6 +1,6 @@
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
@@ -14,7 +14,7 @@ import {
  * GET/DELETE requests cannot handle body elements so they will not be sent if configured.
  */
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Backend log",
   tagline: "Console log a value in the backend",
   icon: "Monitoring",

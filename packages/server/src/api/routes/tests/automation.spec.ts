@@ -553,7 +553,10 @@ describe("/automations", () => {
     it.each(testCases)(
       "$description",
       async ({ filters, row, oldRow, expectToRun }) => {
-        let automation = await updateRowAutomationWithFilters(config.getAppId())
+        let automation = await updateRowAutomationWithFilters(
+          config.getAppId(),
+          table._id!
+        )
         automation.definition.trigger.inputs = {
           tableId: table._id,
           filters,
