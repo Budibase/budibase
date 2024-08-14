@@ -203,11 +203,11 @@ describe("query utils", () => {
         },
       }
 
-      const result = await getQueryableFields(["name", "age"], table)
+      const result = await getQueryableFields(Object.keys(table.schema), table)
       expect(result).toEqual(["_id", "name", "age"])
     })
 
-    it("does not return hidden fields", async () => {
+    it("excludes hidden fields", async () => {
       const table: Table = {
         ...structures.basicTable(),
         schema: {
@@ -216,7 +216,7 @@ describe("query utils", () => {
         },
       }
 
-      const result = await getQueryableFields(["name", "age"], table)
+      const result = await getQueryableFields(Object.keys(table.schema), table)
       expect(result).toEqual(["_id", "name"])
     })
 
@@ -234,7 +234,6 @@ describe("query utils", () => {
         ...structures.basicTable(),
         schema: {
           name: { name: "name", type: FieldType.STRING },
-          age: { name: "age", type: FieldType.NUMBER, visible: false },
           aux: {
             name: "aux",
             type: FieldType.LINK,
@@ -246,15 +245,133 @@ describe("query utils", () => {
       }
 
       const result = await config.doInContext(config.appId, () => {
-        return getQueryableFields(["name", "age", "aux"], table)
+        return getQueryableFields(Object.keys(table.schema), table)
       })
       expect(result).toEqual([
         "_id",
         "name",
         "aux.title",
-        "aux.name",
         "auxTable.title",
+        "aux.name",
         "auxTable.name",
+      ])
+    })
+
+    it("excludes hidden relationship fields", async () => {
+      const aux: Table = await config.api.table.save({
+        ...structures.basicTable(),
+        name: "auxTable",
+        schema: {
+          title: { name: "title", type: FieldType.STRING, visible: false },
+          name: { name: "name", type: FieldType.STRING, visible: true },
+        },
+      })
+
+      const table: Table = {
+        ...structures.basicTable(),
+        schema: {
+          name: { name: "name", type: FieldType.STRING },
+          aux: {
+            name: "aux",
+            type: FieldType.LINK,
+            tableId: aux._id!,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            fieldName: "table",
+          },
+        },
+      }
+
+      const result = await config.doInContext(config.appId, () => {
+        return getQueryableFields(Object.keys(table.schema), table)
+      })
+      expect(result).toEqual(["_id", "name", "aux.name", "auxTable.name"])
+    })
+
+    it("excludes all relationship fields if hidden", async () => {
+      const aux: Table = await config.api.table.save({
+        ...structures.basicTable(),
+        name: "auxTable",
+        schema: {
+          title: { name: "title", type: FieldType.STRING, visible: false },
+          name: { name: "name", type: FieldType.STRING, visible: true },
+        },
+      })
+
+      const table: Table = {
+        ...structures.basicTable(),
+        schema: {
+          name: { name: "name", type: FieldType.STRING },
+          aux: {
+            name: "aux",
+            type: FieldType.LINK,
+            tableId: aux._id!,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            fieldName: "table",
+            visible: false,
+          },
+        },
+      }
+
+      const result = await config.doInContext(config.appId, () => {
+        return getQueryableFields(Object.keys(table.schema), table)
+      })
+      expect(result).toEqual(["_id", "name"])
+    })
+
+    it("includes nested relationship fields", async () => {
+      const aux1: Table = await config.api.table.save({
+        ...structures.basicTable(),
+        name: "aux1Table",
+        schema: {
+          name: { name: "name", type: FieldType.STRING },
+        },
+      })
+      const aux2: Table = await config.api.table.save({
+        ...structures.basicTable(),
+        name: "aux2Table",
+        schema: {
+          title: { name: "title", type: FieldType.STRING },
+          aux1: {
+            name: "aux1",
+            type: FieldType.LINK,
+            tableId: aux1._id!,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            fieldName: "aux2",
+          },
+        },
+      })
+
+      const table: Table = {
+        ...structures.basicTable(),
+        schema: {
+          name: { name: "name", type: FieldType.STRING },
+          aux: {
+            name: "aux",
+            type: FieldType.LINK,
+            tableId: aux2._id!,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            fieldName: "table",
+          },
+        },
+      }
+
+      const result = await config.doInContext(config.appId, () => {
+        return getQueryableFields(Object.keys(table.schema), table)
+      })
+      expect(result).toEqual([
+        "_id",
+        "name",
+        // Aux primitive props
+        "aux.title",
+        "aux2Table.title",
+
+        // Aux deep 1 primitive props
+        "aux.aux1.name",
+        "aux2Table.aux1.name",
+
+        // Aux deep 2 primitive props
+        "aux.aux1Table.name",
+        "aux2Table.aux1Table.name",
       ])
     })
   })
