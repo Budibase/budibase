@@ -1,5 +1,6 @@
-import { SearchFilters } from "@budibase/types"
-import { removeInvalidFilters } from "../queryUtils"
+import { FieldType, SearchFilters, Table } from "@budibase/types"
+import { getQueryableFields, removeInvalidFilters } from "../queryUtils"
+import { structures } from "../../../../api/routes/tests/utilities"
 
 describe("query utils", () => {
   describe("removeInvalidFilters", () => {
@@ -177,6 +178,21 @@ describe("query utils", () => {
           ],
         },
       })
+    })
+  })
+
+  describe("getQueryableFields", () => {
+    it("allows querying by table schema fields and _id", async () => {
+      const table: Table = {
+        ...structures.basicTable(),
+        schema: {
+          name: { name: "name", type: FieldType.STRING },
+          age: { name: "age", type: FieldType.NUMBER },
+        },
+      }
+
+      const result = await getQueryableFields(["name", "age"], table)
+      expect(result).toEqual(["_id", "name", "age"])
     })
   })
 })
