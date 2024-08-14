@@ -207,8 +207,7 @@
   }
 
   // Metadata to pass into grid action to apply CSS
-  let gridMetadata = memo()
-  $: gridMetadata.set({
+  $: gridMetadata = {
     insideGrid:
       parent?._component.endsWith("/container") && parent?.layout === "grid",
     ignoresLayout: definition?.ignoresLayout === true,
@@ -218,7 +217,7 @@
     draggable,
     definition,
     errored: errorState,
-  })
+  }
 
   // Update component context
   $: store.set({
@@ -674,7 +673,7 @@
     data-name={name}
     data-icon={icon}
     data-parent={$component.id}
-    use:gridLayout={$gridMetadata}
+    use:gridLayout={gridMetadata}
   >
     {#if errorState}
       <ComponentErrorState

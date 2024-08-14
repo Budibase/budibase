@@ -92,8 +92,8 @@ export const gridLayout = (node, metadata) => {
     }
 
     // Determine default width and height of component
-    let width = errored ? 500 : definition.size?.width || 200
-    let height = errored ? 60 : definition.size?.height || 200
+    let width = errored ? 500 : definition?.size?.width || 200
+    let height = errored ? 60 : definition?.size?.height || 200
     width += 2 * GridSpacing
     height += 2 * GridSpacing
     let vars = {
