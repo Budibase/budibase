@@ -3,7 +3,13 @@
   import { builderStore, componentStore } from "stores"
   import { Utils, memo } from "@budibase/frontend-core"
   import { GridRowHeight } from "constants"
-  import { isGridEvent, GridParams, getGridVar, Devices } from "utils/grid"
+  import {
+    isGridEvent,
+    GridParams,
+    getGridVar,
+    Devices,
+    GridDragModes,
+  } from "utils/grid"
 
   const context = getContext("context")
 
@@ -49,7 +55,7 @@
     let deltaX = Math.round(diffX / colSize)
     const diffY = mouseY - startY
     let deltaY = Math.round(diffY / GridRowHeight)
-    if (mode === "move") {
+    if (mode === GridDragModes.Move) {
       deltaX = minMax(deltaX, 1 - colStart, cols + 1 - colEnd)
       deltaY = Math.max(deltaY, 1 - rowStart)
       const newStyles = {
@@ -59,7 +65,7 @@
         [vars.rowEnd]: rowEnd + deltaY,
       }
       styles.set(newStyles)
-    } else if (mode === "resize") {
+    } else if (mode === GridDragModes.Resize) {
       let newStyles = {}
       if (side === "right") {
         newStyles[vars.colEnd] = Math.max(colEnd + deltaX, colStart + 1)
@@ -103,14 +109,13 @@
 
     // Extract state
     let mode, id, side
-    if (e.target.classList.contains("anchor")) {
-      // Handle resize
-      mode = "resize"
+    if (e.target.dataset.indicator === "true") {
+      mode = e.target.dataset.dragMode
       id = e.target.dataset.id
       side = e.target.dataset.side
     } else {
       // Handle move
-      mode = "move"
+      mode = GridDragModes.Move
       const component = e.target.closest(".component")
       id = component.dataset.id
     }
