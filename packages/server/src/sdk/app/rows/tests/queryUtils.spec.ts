@@ -1,6 +1,12 @@
-import { FieldType, SearchFilters, Table } from "@budibase/types"
+import {
+  FieldType,
+  RelationshipType,
+  SearchFilters,
+  Table,
+} from "@budibase/types"
 import { getQueryableFields, removeInvalidFilters } from "../queryUtils"
 import { structures } from "../../../../api/routes/tests/utilities"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe("query utils", () => {
   describe("removeInvalidFilters", () => {
@@ -182,7 +188,13 @@ describe("query utils", () => {
   })
 
   describe("getQueryableFields", () => {
-    it("allows querying by table schema fields and _id", async () => {
+    const config = new TestConfiguration()
+
+    beforeAll(async () => {
+      await config.init()
+    })
+
+    it("returns table schema fields and _id", async () => {
       const table: Table = {
         ...structures.basicTable(),
         schema: {
@@ -193,6 +205,57 @@ describe("query utils", () => {
 
       const result = await getQueryableFields(["name", "age"], table)
       expect(result).toEqual(["_id", "name", "age"])
+    })
+
+    it("does not return hidden fields", async () => {
+      const table: Table = {
+        ...structures.basicTable(),
+        schema: {
+          name: { name: "name", type: FieldType.STRING },
+          age: { name: "age", type: FieldType.NUMBER, visible: false },
+        },
+      }
+
+      const result = await getQueryableFields(["name", "age"], table)
+      expect(result).toEqual(["_id", "name"])
+    })
+
+    it("includes relationship fields", async () => {
+      const aux: Table = await config.api.table.save({
+        ...structures.basicTable(),
+        name: "auxTable",
+        schema: {
+          title: { name: "title", type: FieldType.STRING },
+          name: { name: "name", type: FieldType.STRING },
+        },
+      })
+
+      const table: Table = {
+        ...structures.basicTable(),
+        schema: {
+          name: { name: "name", type: FieldType.STRING },
+          age: { name: "age", type: FieldType.NUMBER, visible: false },
+          aux: {
+            name: "aux",
+            type: FieldType.LINK,
+            tableId: aux._id!,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            fieldName: "table",
+          },
+        },
+      }
+
+      const result = await config.doInContext(config.appId, () => {
+        return getQueryableFields(["name", "age", "aux"], table)
+      })
+      expect(result).toEqual([
+        "_id",
+        "name",
+        "aux.title",
+        "aux.name",
+        "auxTable.title",
+        "auxTable.name",
+      ])
     })
   })
 })
