@@ -59,9 +59,24 @@ export const gridLayout = (node, metadata) => {
 
   // Applies the required listeners, CSS and classes to a component DOM node
   const applyMetadata = metadata => {
-    const { id, styles, interactive, errored, definition, draggable, active } =
-      metadata
-    if (!active) {
+    const {
+      id,
+      styles,
+      interactive,
+      errored,
+      definition,
+      draggable,
+      insideGrid,
+      ignoresLayout,
+    } = metadata
+    if (!insideGrid) {
+      return
+    }
+
+    // If this component ignores layout, flag it as such so that we can avoid
+    // selecting it later
+    if (ignoresLayout) {
+      node.classList.add("ignores-layout")
       return
     }
 
@@ -143,7 +158,12 @@ export const gridLayout = (node, metadata) => {
 
   // Removes the previously set up listeners
   const removeListeners = () => {
-    node.removeEventListener("click", selectComponent, false)
+    // By checking if this is defined we can avoid trying to remove event
+    // listeners on every component
+    if (selectComponent) {
+      node.removeEventListener("click", selectComponent, false)
+      selectComponent = null
+    }
   }
 
   applyMetadata(metadata)

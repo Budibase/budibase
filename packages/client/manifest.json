@@ -18,14 +18,37 @@
     "numberLike": {
       "supported": ["number", "boolean"],
       "partialSupport": [
-        { "type": "longform", "message": "stringAsNumber" },
-        { "type": "string", "message": "stringAsNumber" },
-        { "type": "bigint", "message": "stringAsNumber" },
-        { "type": "options", "message": "stringAsNumber" },
-        { "type": "formula", "message": "stringAsNumber" },
-        { "type": "datetime", "message": "dateAsNumber" }
+        {
+          "type": "longform",
+          "message": "stringAsNumber"
+        },
+        {
+          "type": "string",
+          "message": "stringAsNumber"
+        },
+        {
+          "type": "bigint",
+          "message": "stringAsNumber"
+        },
+        {
+          "type": "options",
+          "message": "stringAsNumber"
+        },
+        {
+          "type": "formula",
+          "message": "stringAsNumber"
+        },
+        {
+          "type": "datetime",
+          "message": "dateAsNumber"
+        }
       ],
-      "unsupported": [{ "type": "json", "message": "jsonPrimitivesOnly" }]
+      "unsupported": [
+        {
+          "type": "json",
+          "message": "jsonPrimitivesOnly"
+        }
+      ]
     },
     "stringLike": {
       "supported": [
@@ -37,19 +60,47 @@
         "boolean",
         "datetime"
       ],
-      "unsupported": [{ "type": "json", "message": "jsonPrimitivesOnly" }]
+      "unsupported": [
+        {
+          "type": "json",
+          "message": "jsonPrimitivesOnly"
+        }
+      ]
     },
     "datetimeLike": {
       "supported": ["datetime"],
       "partialSupport": [
-        { "type": "longform", "message": "stringAsDate" },
-        { "type": "string", "message": "stringAsDate" },
-        { "type": "options", "message": "stringAsDate" },
-        { "type": "formula", "message": "stringAsDate" },
-        { "type": "bigint", "message": "stringAsDate" },
-        { "type": "number", "message": "numberAsDate" }
+        {
+          "type": "longform",
+          "message": "stringAsDate"
+        },
+        {
+          "type": "string",
+          "message": "stringAsDate"
+        },
+        {
+          "type": "options",
+          "message": "stringAsDate"
+        },
+        {
+          "type": "formula",
+          "message": "stringAsDate"
+        },
+        {
+          "type": "bigint",
+          "message": "stringAsDate"
+        },
+        {
+          "type": "number",
+          "message": "numberAsDate"
+        }
       ],
-      "unsupported": [{ "type": "json", "message": "jsonPrimitivesOnly" }]
+      "unsupported": [
+        {
+          "type": "json",
+          "message": "jsonPrimitivesOnly"
+        }
+      ]
     }
   },
   "layout": {
@@ -4292,7 +4343,10 @@
             "label": "High",
             "value": 3136
           },
-          { "label": "Custom", "value": "custom" }
+          {
+            "label": "Custom",
+            "value": "custom"
+          }
         ]
       },
       {
@@ -7148,6 +7202,7 @@
     "name": "Side Panel",
     "icon": "RailRight",
     "hasChildren": true,
+    "ignoresLayout": true,
     "illegalChildren": ["section", "sidepanel", "modal"],
     "showEmptyState": false,
     "draggable": false,
@@ -7171,6 +7226,7 @@
     "icon": "MBox",
     "hasChildren": true,
     "illegalChildren": ["section", "modal", "sidepanel"],
+    "ignoresLayout": true,
     "showEmptyState": false,
     "draggable": false,
     "info": "Modals are hidden by default. They will only be revealed when triggered by the 'Open Modal' action.",
