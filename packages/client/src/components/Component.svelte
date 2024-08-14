@@ -646,9 +646,6 @@
         })
       }
     }
-
-    console.log("mounted")
-
     return () => {
       // Unregister component
       if (componentStore.actions.isComponentRegistered(id)) {
