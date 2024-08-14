@@ -19,7 +19,6 @@ import {
   User,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
-import { pick } from "lodash"
 import {
   processInputBBReference,
   processInputBBReferences,
@@ -368,9 +367,16 @@ export async function outputProcessing<T extends Row[] | Row>(
     const tableFields = Object.keys(table.schema).filter(
       f => table.schema[f].visible !== false
     )
-    enriched = enriched.map((r: Row) =>
-      pick(r, [...tableFields, ...protectedColumns])
+    const fields = [...tableFields, ...protectedColumns].map(f =>
+      f.toLowerCase()
     )
+    for (const row of enriched) {
+      for (const key of Object.keys(row)) {
+        if (!fields.includes(key.toLowerCase())) {
+          delete row[key]
+        }
+      }
+    }
   }
 
   return (wasArray ? enriched : enriched[0]) as T
