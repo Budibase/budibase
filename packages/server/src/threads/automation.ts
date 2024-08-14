@@ -424,7 +424,7 @@ class Orchestrator {
               inputs = automationUtils.cleanInputValues(
                 inputs,
                 step.schema.inputs
-              ) as any
+              )
               try {
                 // appId is always passed
                 const outputs = await stepFn({

@@ -31,7 +31,10 @@ import path from "path"
  * @returns The inputs object which has had all the various types supported by this function converted to their
  * primitive types.
  */
-export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
+export function cleanInputValues<T extends Record<string, any>>(
+  inputs: any,
+  schema?: any
+): T {
   if (schema == null) {
     return inputs
   }
