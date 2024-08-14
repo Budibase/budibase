@@ -40,7 +40,6 @@
     getActionDependentContextKeys,
   } from "../utils/buttonActions.js"
   import { gridLayout } from "utils/grid.js"
-  import { memo } from "@budibase/frontend-core"
 
   export let instance = {}
   export let parent = null
