@@ -27,7 +27,8 @@ import {
   AppActionTriggerOutputs,
   CronTriggerOutputs,
   AppActionTriggerInputs,
-  AutomationStepInputsOnly,
+  AutomationStepInputs,
+  AutomationTriggerInputs,
 } from "@budibase/types"
 import {} from "../../steps/loop"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -162,20 +163,21 @@ class AutomationBuilder {
     )
   }
 
-  private trigger<T extends { [key: string]: any }>(
+  private trigger<TStep extends AutomationTriggerStepId>(
     triggerSchema: AutomationTriggerDefinition,
-    stepId: AutomationTriggerStepId,
-    inputs?: T,
+    stepId: TStep,
+    inputs?: AutomationTriggerInputs<TStep>,
     outputs?: TriggerOutputs
   ): this {
     if (this.triggerSet) {
       throw new Error("Only one trigger can be set for an automation.")
     }
+
     this.automationConfig.definition.trigger = {
       ...triggerSchema,
-      inputs: inputs || {},
-      id: uuidv4(),
       stepId,
+      inputs: inputs || ({} as any),
+      id: uuidv4(),
     }
     this.triggerOutputs = outputs
     this.triggerSet = true
@@ -183,14 +185,14 @@ class AutomationBuilder {
     return this
   }
 
-  private step<T extends { [key: string]: any }>(
-    stepId: AutomationActionStepId,
+  private step<TStep extends AutomationActionStepId>(
+    stepId: TStep,
     stepSchema: Omit<AutomationStep, "id" | "stepId" | "inputs">,
-    inputs: T
+    inputs: AutomationStepInputs<TStep>
   ): this {
     this.automationConfig.definition.steps.push({
       ...stepSchema,
-      inputs,
+      inputs: inputs as any,
       id: uuidv4(),
       stepId,
     })
