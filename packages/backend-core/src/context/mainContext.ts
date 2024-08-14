@@ -375,3 +375,22 @@ export function getCurrentContext(): ContextMap | undefined {
     return undefined
   }
 }
+
+export function getFeatureFlags<T extends Record<string, any>>(
+  key: string
+): T | undefined {
+  const context = getCurrentContext()
+  if (!context) {
+    return undefined
+  }
+  return context.featureFlagCache?.[key] as T
+}
+
+export function setFeatureFlags(key: string, value: Record<string, any>) {
+  const context = getCurrentContext()
+  if (!context) {
+    return
+  }
+  context.featureFlagCache ??= {}
+  context.featureFlagCache[key] = value
+}
