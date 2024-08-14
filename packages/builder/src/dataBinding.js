@@ -6,6 +6,7 @@ import {
   findAllMatchingComponents,
   findComponent,
   findComponentPath,
+  getComponentContexts,
 } from "helpers/components"
 import {
   componentStore,
@@ -213,7 +214,7 @@ export const getComponentBindableProperties = (asset, componentId) => {
  * both global and local bindings, taking into account a component's position
  * in the component tree.
  */
-export const getComponentContexts = (
+export const getAllComponentContexts = (
   asset,
   componentId,
   type,
@@ -229,11 +230,6 @@ export const getComponentContexts = (
 
   // Processes all contexts exposed by a component
   const processContexts = scope => component => {
-    const def = componentStore.getDefinition(component._component)
-    if (!def?.context) {
-      return
-    }
-
     // Filter out global contexts not in the same branch.
     // Global contexts are only valid if their branch root is an ancestor of
     // this component.
@@ -242,8 +238,8 @@ export const getComponentContexts = (
       return
     }
 
-    // Process all contexts provided by this component
-    const contexts = Array.isArray(def.context) ? def.context : [def.context]
+    const componentType = component._component
+    const contexts = getComponentContexts(componentType)
     contexts.forEach(context => {
       // Ensure type matches
       if (type && context.type !== type) {
@@ -261,7 +257,7 @@ export const getComponentContexts = (
       if (!map[component._id]) {
         map[component._id] = {
           component,
-          definition: def,
+          definition: componentStore.getDefinition(componentType),
           contexts: [],
         }
       }
@@ -286,7 +282,7 @@ export const getComponentContexts = (
 }
 
 /**
- * Gets all data provider components above a component.
+ * Gets all components available to this component that expose a certain action
  */
 export const getActionProviders = (
   asset,
@@ -294,36 +290,30 @@ export const getActionProviders = (
   actionType,
   options = { includeSelf: false }
 ) => {
-  if (!asset) {
-    return []
-  }
-
-  // Get all components
-  const components = findAllComponents(asset.props)
-
-  // Find matching contexts and generate bindings
-  let providers = []
-  components.forEach(component => {
-    if (!options?.includeSelf && component._id === componentId) {
-      return
-    }
-    const def = componentStore.getDefinition(component._component)
-    const actions = (def?.actions || []).map(action => {
-      return typeof action === "string" ? { type: action } : action
-    })
-    const action = actions.find(x => x.type === actionType)
-    if (action) {
-      let runtimeBinding = component._id
-      if (action.suffix) {
-        runtimeBinding += `-${action.suffix}`
-      }
-      providers.push({
-        readableBinding: component._instanceName,
-        runtimeBinding,
-      })
-    }
+  const contexts = getAllComponentContexts(asset, componentId, "action", {
+    includeSelf: options?.includeSelf,
   })
-  return providers
+  return (
+    contexts
+      // Find the definition of the action in question, if one is provided
+      .map(context => ({
+        ...context,
+        action: context.contexts[0]?.actions?.find(x => x.type === actionType),
+      }))
+      // Filter out contexts which don't have this action
+      .filter(({ action }) => action != null)
+      // Generate bindings for this component and action
+      .map(({ component, action }) => {
+        let runtimeBinding = component._id
+        if (action.suffix) {
+          runtimeBinding += `-${action.suffix}`
+        }
+        return {
+          readableBinding: component._instanceName,
+          runtimeBinding,
+        }
+      })
+  )
 }
 
 /**
@@ -371,7 +361,7 @@ export const getDatasourceForProvider = (asset, component) => {
  */
 const getContextBindings = (asset, componentId) => {
   // Get all available contexts for this component
-  const componentContexts = getComponentContexts(asset, componentId)
+  const componentContexts = getAllComponentContexts(asset, componentId)
 
   // Generate bindings for each context
   return componentContexts
