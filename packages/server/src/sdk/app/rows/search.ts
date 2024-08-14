@@ -81,7 +81,7 @@ export async function search(
         f => table.schema[f].visible !== false
       )
 
-      const queriableFields = await getQueriableFields(
+      const queriableFields = await getQueryableFields(
         options.fields?.filter(f => tableFields.includes(f)) ?? tableFields,
         table
       )
@@ -131,7 +131,7 @@ export async function fetchView(
   return pickApi(tableId).fetchView(viewName, params)
 }
 
-async function getQueriableFields(
+async function getQueryableFields(
   fields: string[],
   table: Table
 ): Promise<string[]> {
