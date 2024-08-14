@@ -255,4 +255,5 @@ export const flags = new FlagSet({
   GOOGLE_SHEETS: Flag.boolean(false),
   USER_GROUPS: Flag.boolean(false),
   ONBOARDING_TOUR: Flag.boolean(false),
+  DEFAULT_VALUES: Flag.boolean(true),
 })
