@@ -120,6 +120,11 @@
       id = component.dataset.id
     }
 
+    // If holding ctrl/cmd then leave behind a duplicate of this component
+    if (mode === GridDragModes.Move && (e.ctrlKey || e.metaKey)) {
+      builderStore.actions.duplicateComponent(id, "above", false)
+    }
+
     // Find grid parent and read from DOM
     const domComponent = document.getElementsByClassName(id)[0]
     const domGrid = domComponent?.closest(".grid")
