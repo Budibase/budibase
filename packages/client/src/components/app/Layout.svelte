@@ -322,20 +322,22 @@
         <slot />
       </div>
     </div>
-  </div>
-  <div
-    id="side-panel-container"
-    class:open={$sidePanelStore.open}
-    use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
-    class:builder={$builderStore.inBuilder}
-  >
-    <div class="side-panel-header">
-      <Icon
-        color="var(--spectrum-global-color-gray-600)"
-        name="RailRightClose"
-        hoverable
-        on:click={sidePanelStore.actions.close}
-      />
+    <div
+      id="side-panel-container"
+      class:open={$sidePanelStore.open}
+      use:clickOutside={autoCloseSidePanel
+        ? sidePanelStore.actions.close
+        : null}
+      class:builder={$builderStore.inBuilder}
+    >
+      <div class="side-panel-header">
+        <Icon
+          color="var(--spectrum-global-color-gray-600)"
+          name="RailRightClose"
+          hoverable
+          on:click={sidePanelStore.actions.close}
+        />
+      </div>
     </div>
   </div>
 </div>
