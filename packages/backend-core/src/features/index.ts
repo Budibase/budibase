@@ -130,10 +130,7 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 
   async fetch(ctx?: UserCtx): Promise<FlagValues<T>> {
     return await tracer.trace("features.fetch", async span => {
-      const requestContext = context.getCurrentContext()
-      const cachedFlags = requestContext?.featureFlagCache?.[this.setId] as
-        | FlagValues<T>
-        | undefined
+      const cachedFlags = context.getFeatureFlags<FlagValues<T>>(this.setId)
       if (cachedFlags) {
         span?.addTags({ fromCache: true })
         return cachedFlags
@@ -252,11 +249,7 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
         }
       }
 
-      if (requestContext) {
-        requestContext.featureFlagCache ??= {}
-        requestContext.featureFlagCache[this.setId] = flagValues
-      }
-
+      context.setFeatureFlags(this.setId, flagValues)
       for (const [key, value] of Object.entries(flagValues)) {
         tags[`flags.${key}.value`] = value
       }
