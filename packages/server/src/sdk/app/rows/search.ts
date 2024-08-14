@@ -76,23 +76,17 @@ export async function search(
     const table = await sdk.tables.getTable(options.tableId)
     options = searchInputMapping(table, options)
 
-    const visibleTableFields = Object.keys(table.schema).filter(
-      f => table.schema[f].visible !== false
-    )
-
-    if (options.fields) {
-      const tableFields = visibleTableFields.map(f => f.toLowerCase())
-      options.fields = options.fields.filter(f =>
-        tableFields.includes(f.toLowerCase())
+    if (options.query) {
+      const tableFields = Object.keys(table.schema).filter(
+        f => table.schema[f].visible !== false
       )
-    } else {
-      options.fields = visibleTableFields
-    }
 
-    options.query = removeInvalidFilters(
-      options.query,
-      await getQueriableFields(options.fields, table)
-    )
+      const queriableFields = await getQueriableFields(
+        options.fields?.filter(f => tableFields.includes(f)) ?? tableFields,
+        table
+      )
+      options.query = removeInvalidFilters(options.query, queriableFields)
+    }
 
     let result: SearchResponse<Row>
     if (isExternalTable) {
