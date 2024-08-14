@@ -134,9 +134,9 @@
     const styles = getComputedStyle(domComponent)
 
     // Show as active
-    builderStore.actions.selectComponent(id)
     domComponent.classList.add("dragging")
     domGrid.classList.add("highlight")
+    builderStore.actions.selectComponent(id)
 
     // Update state
     dragInfo = {

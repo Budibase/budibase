@@ -9,7 +9,7 @@
 </script>
 
 <script>
-  import { getContext, setContext, onMount } from "svelte"
+  import { getContext, setContext, onMount, tick } from "svelte"
   import { writable, get } from "svelte/store"
   import {
     enrichProps,
@@ -206,9 +206,10 @@
   }
 
   // Metadata to pass into grid action to apply CSS
+  const insideGrid =
+    parent?._component.endsWith("/container") && parent?.layout === "grid"
   $: gridMetadata = {
-    insideGrid:
-      parent?._component.endsWith("/container") && parent?.layout === "grid",
+    insideGrid,
     ignoresLayout: definition?.ignoresLayout === true,
     id,
     interactive,
@@ -583,19 +584,22 @@
     }
   }
 
-  const scrollIntoView = () => {
-    // Don't scroll into view if we selected this component because we were
-    // starting dragging on it
-    if (get(dndIsDragging)) {
-      return
-    }
-    const node = document.getElementsByClassName(id)?.[0]?.children[0]
+  const scrollIntoView = async () => {
+    const className = insideGrid ? id : `${id}-dom`
+    const node = document.getElementsByClassName(className)[0]
     if (!node) {
       return
     }
-    node.style.scrollMargin = "100px"
+    // Don't scroll into view if we selected this component because we were
+    // starting dragging on it
+    if (
+      get(dndIsDragging) ||
+      (insideGrid && node.classList.contains("dragging"))
+    ) {
+      return
+    }
     node.scrollIntoView({
-      behavior: "smooth",
+      behavior: "instant",
       block: "nearest",
       inline: "start",
     })
@@ -642,6 +646,9 @@
         })
       }
     }
+
+    console.log("mounted")
+
     return () => {
       // Unregister component
       if (componentStore.actions.isComponentRegistered(id)) {
