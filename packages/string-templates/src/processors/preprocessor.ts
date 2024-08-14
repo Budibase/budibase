@@ -13,12 +13,10 @@ export const PreprocessorNames = {
 class Preprocessor {
   name: string
   private fn: any
-  private helperNames: string[]
 
   constructor(name: string, fn: any) {
     this.name = name
     this.fn = fn
-    this.helperNames = HelperNames()
   }
 
   process(fullString: string, statement: string, opts: Object) {
@@ -81,7 +79,7 @@ export const processors = [
       if (
         !noHelpers &&
         !opts.disabledHelpers?.includes(testHelper) &&
-        this.helperNames.some(option => testHelper === option.toLowerCase())
+        HelperNames().some(option => testHelper === option.toLowerCase())
       ) {
         insideStatement = `(${insideStatement})`
       }

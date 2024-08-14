@@ -47,7 +47,10 @@ function testObject(object: any) {
   }
 }
 
-function findOverlappingHelpers(context: object) {
+function findOverlappingHelpers(context?: object) {
+  if (!context) {
+    return []
+  }
   const contextKeys = Object.keys(context)
   return contextKeys.filter(key => helperNames.includes(key))
 }
