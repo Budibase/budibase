@@ -262,6 +262,9 @@
       lastInstanceKey = instanceKey
     }
 
+    // Reset ephemeral state
+    ephemeralStyles = null
+
     // Pull definition and constructor
     const component = instance._component
     constructor = componentStore.actions.getComponentConstructor(component)
