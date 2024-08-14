@@ -255,4 +255,10 @@
     flex: 1 1 0 !important;
     height: 0 !important;
   }
+
+  /* Grid specific CSS overrides for certain components */
+  .grid :global(> .component > img) {
+    object-fit: contain;
+    max-height: 100%;
+  }
 </style>
