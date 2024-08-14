@@ -653,7 +653,7 @@ export class ComponentStore extends BudiStore {
    * @param {object} targetScreen
    * @returns
    */
-  async paste(targetComponent, mode, targetScreen) {
+  async paste(targetComponent, mode, targetScreen, selectComponent = true) {
     const state = get(this.store)
     if (!state.componentToPaste) {
       return
@@ -728,12 +728,13 @@ export class ComponentStore extends BudiStore {
     await screenStore.patch(patch, targetScreenId)
 
     // Select the new component
-    this.update(state => {
-      state.selectedScreenId = targetScreenId
-      state.selectedComponentId = newComponentId
-
-      return state
-    })
+    if (selectComponent) {
+      this.update(state => {
+        state.selectedScreenId = targetScreenId
+        state.selectedComponentId = newComponentId
+        return state
+      })
+    }
 
     componentTreeNodesStore.makeNodeVisible(newComponentId)
   }

@@ -144,7 +144,12 @@
       const rootComponent = get(selectedScreen).props
       const component = findComponent(rootComponent, data.id)
       componentStore.copy(component)
-      await componentStore.paste(component)
+      await componentStore.paste(
+        component,
+        data.mode,
+        null,
+        data.selectComponent
+      )
     } else if (type === "preview-loaded") {
       // Wait for this event to show the client library if intelligent
       // loading is supported

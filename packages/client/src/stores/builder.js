@@ -49,8 +49,12 @@ const createBuilderStore = () => {
     keyDown: (key, ctrlKey) => {
       eventStore.actions.dispatchEvent("key-down", { key, ctrlKey })
     },
-    duplicateComponent: id => {
-      eventStore.actions.dispatchEvent("duplicate-component", { id })
+    duplicateComponent: (id, mode = "below", selectComponent = true) => {
+      eventStore.actions.dispatchEvent("duplicate-component", {
+        id,
+        mode,
+        selectComponent,
+      })
     },
     deleteComponent: id => {
       eventStore.actions.dispatchEvent("delete-component", { id })
