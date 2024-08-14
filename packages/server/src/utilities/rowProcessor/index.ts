@@ -33,6 +33,7 @@ import {
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 import { processString } from "@budibase/string-templates"
+import { isUserMetadataTable } from "../../api/controllers/row/utils"
 
 export * from "./utils"
 export * from "./attachments"
@@ -359,16 +360,18 @@ export async function outputProcessing<T extends Row[] | Row>(
     }
   }
 
-  const protectedColumns = isExternal
-    ? PROTECTED_EXTERNAL_COLUMNS
-    : PROTECTED_INTERNAL_COLUMNS
+  if (!isUserMetadataTable(table._id!)) {
+    const protectedColumns = isExternal
+      ? PROTECTED_EXTERNAL_COLUMNS
+      : PROTECTED_INTERNAL_COLUMNS
 
-  const tableFields = Object.keys(table.schema).filter(
-    f => table.schema[f].visible !== false
-  )
-  enriched = enriched.map((r: Row) =>
-    pick(r, [...tableFields, ...protectedColumns])
-  )
+    const tableFields = Object.keys(table.schema).filter(
+      f => table.schema[f].visible !== false
+    )
+    enriched = enriched.map((r: Row) =>
+      pick(r, [...tableFields, ...protectedColumns])
+    )
+  }
 
   return (wasArray ? enriched : enriched[0]) as T
 }
