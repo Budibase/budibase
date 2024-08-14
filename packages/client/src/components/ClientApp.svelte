@@ -324,6 +324,7 @@
     justify-content: flex-start;
     align-items: stretch;
     overflow: hidden;
+    position: relative;
   }
 
   .error {
