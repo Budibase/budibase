@@ -78,9 +78,13 @@ export const getQueryableFields = async (
           Object.keys(relatedTable.schema)
         )
 
-        result.push(...relatedFields.map(f => `${subSchema.name}.${f}`))
-        // should be able to filter by relationship using table name
-        result.push(...relatedFields.map(f => `${relatedTable.name}.${f}`))
+        result.push(
+          ...relatedFields.flatMap(f => [
+            `${subSchema.name}.${f}`,
+            // should be able to filter by relationship using table name
+            `${relatedTable.name}.${f}`,
+          ])
+        )
       } else {
         result.push(field)
       }
