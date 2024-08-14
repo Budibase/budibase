@@ -70,6 +70,7 @@
 
   // Stop unnecessary rendering
   const memoBlock = memo(block)
+  const memoEnvVariables = memo($environment.variables)
 
   const rowTriggers = [
     TriggerStepID.ROW_UPDATED,
@@ -91,11 +92,20 @@
   let insertAtPos, getCaretPosition
   let stepLayouts = {}
 
+  $: memoEnvVariables.set($environment.variables)
   $: memoBlock.set(block)
+
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
-  $: stepId = block.stepId
-  $: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
+  $: stepId = $memoBlock.stepId
+
+  $: automationBindings = getAvailableBindings(
+    $memoBlock,
+    $selectedAutomation?.definition
+  )
+  $: environmentBindings = buildEnvironmentBindings($memoEnvVariables)
+  $: bindings = [...automationBindings, ...environmentBindings]
+
   $: getInputData(testData, $memoBlock.inputs)
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
@@ -110,7 +120,7 @@
     { allowLinks: true }
   )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
-  $: isTrigger = block?.type === AutomationStepType.TRIGGER
+  $: isTrigger = $memoBlock?.type === AutomationStepType.TRIGGER
   $: codeMode =
     stepId === AutomationActionStepId.EXECUTE_BASH
       ? EditorModes.Handlebars
@@ -119,12 +129,29 @@
     disableWrapping: true,
   })
   $: editingJs = codeMode === EditorModes.JS
-  $: requiredProperties = isTestModal ? [] : block.schema["inputs"].required
+  $: requiredProperties = isTestModal
+    ? []
+    : $memoBlock.schema["inputs"].required
 
   $: stepCompletions =
     codeMode === EditorModes.Handlebars
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
+
+  const buildEnvironmentBindings = () => {
+    if ($licensing.environmentVariablesEnabled) {
+      return getEnvironmentBindings().map(binding => {
+        return {
+          ...binding,
+          display: {
+            ...binding.display,
+            rank: 98,
+          },
+        }
+      })
+    }
+    return []
+  }
 
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
@@ -151,9 +178,9 @@
 
   // Store for any UX related data
   const stepStore = writable({})
-  $: currentStep = $stepStore?.[block.id]
+  $: stepState = $stepStore?.[block.id]
 
-  $: customStepLayouts($memoBlock, schemaProperties, currentStep)
+  $: customStepLayouts($memoBlock, schemaProperties, stepState)
 
   const customStepLayouts = block => {
     if (
@@ -185,7 +212,6 @@
                   onChange: e => {
                     onChange({ ["revision"]: e.detail })
                   },
-                  bindings,
                   updateOnChange: false,
                   forceModal: true,
                 },
@@ -214,7 +240,6 @@
               onChange: e => {
                 onChange({ [rowIdentifier]: e.detail })
               },
-              bindings,
               updateOnChange: false,
               forceModal: true,
             },
@@ -275,7 +300,7 @@
           isUpdateRow: block.stepId === ActionStepID.UPDATE_ROW,
         }
 
-        if (isTestModal && currentStep?.rowType === "oldRow") {
+        if (isTestModal && stepState?.rowType === "oldRow") {
           return [
             {
               type: RowSelector,
@@ -722,22 +747,9 @@
       )
     }
 
-    // Environment bindings
-    if ($licensing.environmentVariablesEnabled) {
-      bindings = bindings.concat(
-        getEnvironmentBindings().map(binding => {
-          return {
-            ...binding,
-            display: {
-              ...binding.display,
-              rank: 98,
-            },
-          }
-        })
-      )
-    }
     return bindings
   }
+
   function lookForFilters(properties) {
     if (!properties) {
       return []
@@ -770,7 +782,7 @@
     drawer.hide()
   }
 
-  function canShowField(key, value) {
+  function canShowField(value) {
     const dependsOn = value?.dependsOn
     return !dependsOn || !!inputData[dependsOn]
   }
@@ -829,6 +841,7 @@
               <svelte:component
                 this={config.type}
                 {...config.props}
+                {bindings}
                 on:change={config.props.onChange}
               />
             </PropField>
@@ -836,6 +849,7 @@
             <svelte:component
               this={config.type}
               {...config.props}
+              {bindings}
               on:change={config.props.onChange}
             />
           {/if}

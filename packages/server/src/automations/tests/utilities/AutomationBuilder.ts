@@ -29,6 +29,7 @@ import {
   AppActionTriggerInputs,
   AutomationStepInputs,
   AutomationTriggerInputs,
+  ServerLogStepInputs,
 } from "@budibase/types"
 import {} from "../../steps/loop"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -160,6 +161,14 @@ class AutomationBuilder {
       AutomationActionStepId.LOOP,
       BUILTIN_ACTION_DEFINITIONS.LOOP,
       inputs
+    )
+  }
+
+  serverLog(input: ServerLogStepInputs): this {
+    return this.step(
+      AutomationActionStepId.SERVER_LOG,
+      BUILTIN_ACTION_DEFINITIONS.SERVER_LOG,
+      input
     )
   }
 

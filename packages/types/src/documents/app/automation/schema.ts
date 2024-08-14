@@ -25,7 +25,6 @@ import {
   QueryRowsStepInputs,
   QueryRowsStepOutputs,
   SmtpEmailStepInputs,
-  BaseAutomationOutputs,
   ServerLogStepInputs,
   ServerLogStepOutputs,
   TriggerAutomationStepInputs,
@@ -51,6 +50,7 @@ import {
   RowCreatedTriggerInputs,
   RowDeletedTriggerInputs,
   BranchStepInputs,
+  BaseAutomationOutputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -156,6 +156,24 @@ export interface AutomationStepSchemaBase {
   custom?: boolean
   features?: Partial<Record<AutomationFeature, boolean>>
 }
+
+export type AutomationStepOutputs =
+  | CollectStepOutputs
+  | CreateRowStepOutputs
+  | DelayStepOutputs
+  | DeleteRowStepOutputs
+  | ExecuteQueryStepOutputs
+  | ExecuteScriptStepOutputs
+  | FilterStepOutputs
+  | QueryRowsStepOutputs
+  | BaseAutomationOutputs
+  | BashStepOutputs
+  | ExternalAppStepOutputs
+  | OpenAIStepOutputs
+  | ServerLogStepOutputs
+  | TriggerAutomationStepOutputs
+  | UpdateRowStepOutputs
+  | ZapierStepOutputs
 
 export type AutomationStepInputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT

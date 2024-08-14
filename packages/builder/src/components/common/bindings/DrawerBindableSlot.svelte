@@ -20,7 +20,6 @@
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
-  export let drawerLeft
   export let type
   export let schema
 
@@ -170,14 +169,7 @@
       <Icon disabled={isJS} size="S" name="Close" />
     </div>
   {:else}
-    <slot
-      {label}
-      {disabled}
-      readonly={isJS}
-      value={isJS ? "(JavaScript function)" : readableValue}
-      {placeholder}
-      {updateOnChange}
-    />
+    <slot />
   {/if}
   {#if !disabled && type !== "formula" && !disabled && !attachmentTypes.includes(type)}
     <div
@@ -195,7 +187,7 @@
   on:drawerShow
   bind:this={bindingDrawer}
   title={title ?? placeholder ?? "Bindings"}
-  left={drawerLeft}
+  forceModal={true}
 >
   <Button cta slot="buttons" on:click={saveBinding}>Save</Button>
   <svelte:component

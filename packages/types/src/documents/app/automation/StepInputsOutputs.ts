@@ -3,7 +3,7 @@ import { SearchFilters, EmptyFilterOption } from "../../../sdk"
 import { HttpMethod } from "../query"
 import { Row } from "../row"
 import { LoopStepType, EmailAttachment, AutomationResults } from "./automation"
-import { AutomationStep } from "./schema"
+import { AutomationStep, AutomationStepOutputs } from "./schema"
 
 export type BaseAutomationOutputs = {
   success?: boolean
@@ -12,7 +12,6 @@ export type BaseAutomationOutputs = {
     message?: string
   }
 }
-
 export type ExternalAppStepOutputs = {
   httpStatus?: number
   response: string
@@ -106,7 +105,7 @@ export type LoopStepInputs = {
 }
 
 export type LoopStepOutputs = {
-  items: string
+  items: AutomationStepOutputs[]
   success: boolean
   iterations: number
 }
