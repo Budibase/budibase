@@ -3040,7 +3040,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 32
+      "height": 60
     },
     "settings": [
       {
@@ -3071,7 +3071,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 32
+      "height": 60
     },
     "settings": [
       {
@@ -3207,7 +3207,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 50
+      "height": 60
     },
     "settings": [
       {
@@ -3309,7 +3309,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 50
+      "height": 60
     },
     "settings": [
       {
@@ -3395,7 +3395,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 50
+      "height": 60
     },
     "settings": [
       {
@@ -3481,7 +3481,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 50
+      "height": 60
     },
     "settings": [
       {
@@ -3695,7 +3695,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 50
+      "height": 60
     },
     "settings": [
       {
@@ -3901,8 +3901,8 @@
     "editable": true,
     "requiredAncestors": ["form"],
     "size": {
-      "width": 20,
-      "height": 20
+      "width": 400,
+      "height": 60
     },
     "settings": [
       {
@@ -4028,7 +4028,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 150
+      "height": 100
     },
     "settings": [
       {
@@ -4152,7 +4152,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 50
+      "height": 60
     },
     "settings": [
       {
@@ -4270,7 +4270,7 @@
     "styles": ["size"],
     "size": {
       "width": 400,
-      "height": 50
+      "height": 60
     },
     "settings": [
       {
@@ -4430,7 +4430,7 @@
     "styles": ["size"],
     "size": {
       "width": 400,
-      "height": 50
+      "height": 60
     },
     "settings": [
       {
@@ -4785,7 +4785,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 50
+      "height": 60
     },
     "settings": [
       {

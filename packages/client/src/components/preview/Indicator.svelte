@@ -1,5 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
+  import { GridDragModes } from "utils/grid"
 
   export let top
   export let left
@@ -38,7 +39,16 @@
   class:hCompact={width < 40}
 >
   {#if text || icon}
-    <div class="label" class:flipped class:line class:right={alignRight}>
+    <div
+      class="label"
+      class:flipped
+      class:line
+      class:right={alignRight}
+      draggable="true"
+      data-indicator="true"
+      data-drag-mode={GridDragModes.Move}
+      data-id={componentId}
+    >
       {#if icon}
         <Icon name={icon} size="S" color="white" />
       {/if}
@@ -52,8 +62,10 @@
   {#if showResizeAnchors}
     {#each AnchorSides as side}
       <div
-        draggable="true"
         class="anchor {side}"
+        draggable="true"
+        data-indicator="true"
+        data-drag-mode={GridDragModes.Resize}
         data-side={side}
         data-id={componentId}
       >
@@ -101,6 +113,7 @@
     justify-content: flex-start;
     align-items: center;
     gap: 6px;
+    pointer-events: all;
   }
   .label.line {
     transform: translateY(-50%);

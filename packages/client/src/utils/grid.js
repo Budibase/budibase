@@ -38,17 +38,22 @@ export const Devices = {
   Mobile: "mobile",
 }
 
+export const GridDragModes = {
+  Resize: "resize",
+  Move: "move",
+}
+
 // Builds a CSS variable name for a certain piece of grid metadata
 export const getGridVar = (device, param) => `--grid-${device}-${param}`
 
 // Determines whether a JS event originated from immediately within a grid
 export const isGridEvent = e => {
   return (
+    e.target.dataset.indicator === "true" ||
     e.target
       .closest?.(".component")
       ?.parentNode.closest(".component")
-      ?.childNodes[0]?.classList?.contains("grid") ||
-    e.target.classList.contains("anchor")
+      ?.childNodes[0]?.classList?.contains("grid")
   )
 }
 
