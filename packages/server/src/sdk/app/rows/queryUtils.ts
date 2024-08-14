@@ -1,6 +1,12 @@
 import { db } from "@budibase/backend-core"
-import { isLogicalSearchOperator, SearchFilters } from "@budibase/types"
+import {
+  FieldType,
+  isLogicalSearchOperator,
+  SearchFilters,
+  Table,
+} from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
+import sdk from "../../../sdk"
 
 export const removeInvalidFilters = (
   filters: SearchFilters,
@@ -42,6 +48,51 @@ export const removeInvalidFilters = (
       delete result[filterKey]
     }
   }
+
+  return result
+}
+
+export const getQueryableFields = async (
+  fields: string[],
+  table: Table
+): Promise<string[]> => {
+  const handledTables = new Set<string>([table._id!])
+  const extractTableFields = async (
+    table: Table,
+    allowedFields: string[]
+  ): Promise<string[]> => {
+    const result = []
+    for (const field of Object.keys(table.schema).filter(f =>
+      allowedFields.includes(f)
+    )) {
+      const subSchema = table.schema[field]
+      if (subSchema.type === FieldType.LINK) {
+        if (handledTables.has(`${table._id}_${subSchema.tableId}`)) {
+          // avoid circular loops
+          continue
+        }
+        handledTables.add(`${table._id}_${subSchema.tableId}`)
+        const relatedTable = await sdk.tables.getTable(subSchema.tableId)
+        const relatedFields = await extractTableFields(
+          relatedTable,
+          Object.keys(relatedTable.schema)
+        )
+
+        result.push(...relatedFields.map(f => `${subSchema.name}.${f}`))
+        // should be able to filter by relationship using table name
+        result.push(...relatedFields.map(f => `${relatedTable.name}.${f}`))
+      } else {
+        result.push(field)
+      }
+    }
+    return result
+  }
+
+  const result = [
+    "_id", // Querying by _id is always allowed, even if it's never part of the schema
+  ]
+
+  result.push(...(await extractTableFields(table, fields)))
 
   return result
 }
