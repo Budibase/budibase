@@ -235,9 +235,6 @@
                               />
                             {/key}
 
-                            <!-- Modal container to ensure they sit on top -->
-                            <div class="modal-container" />
-
                             <!-- Layers on top of app -->
                             <NotificationDisplay />
                             <ConfirmationDisplay />
