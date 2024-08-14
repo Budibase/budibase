@@ -211,7 +211,7 @@
   $: gridMetadata.set({
     insideGrid:
       parent?._component.endsWith("/container") && parent?.layout === "grid",
-    ignoresLayout: definition.ignoresLayout === true,
+    ignoresLayout: definition?.ignoresLayout === true,
     id,
     interactive,
     styles: normalStyles,
