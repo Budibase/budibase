@@ -62,8 +62,8 @@ export const getQueryableFields = async (
     allowedFields: string[]
   ): Promise<string[]> => {
     const result = []
-    for (const field of Object.keys(table.schema).filter(f =>
-      allowedFields.includes(f)
+    for (const field of Object.keys(table.schema).filter(
+      f => allowedFields.includes(f) && table.schema[f].visible !== false
     )) {
       const subSchema = table.schema[field]
       if (subSchema.type === FieldType.LINK) {
