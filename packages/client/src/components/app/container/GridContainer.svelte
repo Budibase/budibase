@@ -201,7 +201,7 @@
   }
 
   /* Ensure all top level children have grid styles applied */
-  .grid :global(> .component) {
+  .grid :global(> .component:not(.ignores-layout)) {
     display: flex;
     overflow: auto;
     pointer-events: all;

@@ -209,8 +209,9 @@
   // Metadata to pass into grid action to apply CSS
   let gridMetadata = memo()
   $: gridMetadata.set({
-    active:
+    insideGrid:
       parent?._component.endsWith("/container") && parent?.layout === "grid",
+    ignoresLayout: definition.ignoresLayout === true,
     id,
     interactive,
     styles: normalStyles,
