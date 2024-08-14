@@ -6,7 +6,7 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   ExternalAppStepOutputs,
   OutgoingWebhookStepInputs,
@@ -26,7 +26,7 @@ const BODY_REQUESTS = [RequestType.POST, RequestType.PUT, RequestType.PATCH]
  * NOTE: this functionality is deprecated - it no longer should be used.
  */
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   deprecated: true,
   name: "Outgoing webhook",
   tagline: "Send a {{inputs.requestMethod}} request",

@@ -7,13 +7,13 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   BashStepInputs,
   BashStepOutputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Bash Scripting",
   tagline: "Execute a bash command",
   icon: "JourneyEvent",

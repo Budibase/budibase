@@ -23,13 +23,9 @@ import {
   AutomationStatus,
   AutomationStep,
   AutomationStepStatus,
-} from "@budibase/types"
-import {
-  AutomationContext,
-  LoopInput,
   LoopStep,
-  TriggerOutput,
-} from "../definitions/automations"
+} from "@budibase/types"
+import { AutomationContext, TriggerOutput } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
 import { processObject } from "@budibase/string-templates"
@@ -40,8 +36,6 @@ import env from "../environment"
 import tracer from "dd-trace"
 
 threadUtils.threadSetup()
-const FILTER_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.FILTER.stepId
-const LOOP_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
@@ -256,7 +250,7 @@ class Orchestrator {
         this._context.env = await sdkUtils.getEnvironmentVariables()
         let automation = this._automation
         let stopped = false
-        let loopStep: LoopStep | undefined = undefined
+        let loopStep: LoopStep | undefined
 
         let stepCount = 0
         let currentLoopStepIndex: number = 0
@@ -276,7 +270,7 @@ class Orchestrator {
           }
         }
         const start = performance.now()
-        for (let step of automation.definition.steps) {
+        for (const step of automation.definition.steps) {
           const stepSpan = tracer.startSpan("Orchestrator.execute.step", {
             childOf: span,
           })
@@ -293,7 +287,7 @@ class Orchestrator {
             },
           })
 
-          let input: LoopInput | undefined,
+          let input,
             iterations = 1,
             iterationCount = 0
 
@@ -310,8 +304,8 @@ class Orchestrator {
             }
 
             stepCount++
-            if (step.stepId === LOOP_STEP_ID) {
-              loopStep = step as LoopStep
+            if (step.stepId === AutomationActionStepId.LOOP) {
+              loopStep = step
               currentLoopStepIndex = stepCount
               continue
             }
@@ -331,7 +325,7 @@ class Orchestrator {
                 }
                 try {
                   loopStep.inputs.binding = automationUtils.typecastForLooping(
-                    loopStep.inputs as LoopInput
+                    loopStep.inputs
                   )
                 } catch (err) {
                   this.updateContextAndOutput(
@@ -368,7 +362,7 @@ class Orchestrator {
                 if (
                   stepIndex === env.AUTOMATION_MAX_ITERATIONS ||
                   (loopStep.inputs.iterations &&
-                    stepIndex === parseInt(loopStep.inputs.iterations))
+                    stepIndex === loopStep.inputs.iterations)
                 ) {
                   this.updateContextAndOutput(
                     currentLoopStepIndex,
@@ -443,7 +437,10 @@ class Orchestrator {
                 this._context.steps[stepCount] = outputs
                 // if filter causes us to stop execution don't break the loop, set a var
                 // so that we can finish iterating through the steps and record that it stopped
-                if (step.stepId === FILTER_STEP_ID && !outputs.result) {
+                if (
+                  step.stepId === AutomationActionStepId.FILTER &&
+                  !outputs.result
+                ) {
                   stopped = true
                   this.updateExecutionOutput(
                     step.id,
