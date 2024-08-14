@@ -50,6 +50,7 @@ import {
   RowUpdatedTriggerInputs,
   RowCreatedTriggerInputs,
   RowDeletedTriggerInputs,
+  BranchStepInputs,
 } from "./StepInputsOutputs"
 
 export type ActionImplementations<T extends Hosting> = {
@@ -199,6 +200,8 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
     ? OpenAIStepInputs
     : T extends AutomationActionStepId.LOOP
     ? LoopStepInputs
+    : T extends AutomationActionStepId.BRANCH
+    ? BranchStepInputs
     : never
 
 export interface AutomationStepSchema<TStep extends AutomationActionStepId>
@@ -262,6 +265,7 @@ export type OpenAIStep = AutomationStepSchema<AutomationActionStepId.OPENAI>
 
 export type LoopStep = AutomationStepSchema<AutomationActionStepId.LOOP>
 
+export type BranchStep = AutomationStepSchema<AutomationActionStepId.BRANCH>
 export type AutomationStep =
   | CollectStep
   | CreateRowStep
@@ -284,15 +288,7 @@ export type AutomationStep =
   | LoopStep
   | ExecuteBashStep
   | OpenAIStep
-
-// export type AutomationTrigger =
-//   | AppActionTrigger
-//   | CronTrigger
-//   | RowActionTrigger
-//   | RowDeletedTrigger
-//   | RowSavedTrigger
-//   | RowUpdatedTrigger
-//   | WebhookTrigger
+  | BranchStep
 
 type EmptyInputs = {}
 export type AutomationStepDefinition = Omit<AutomationStep, "id" | "inputs"> & {

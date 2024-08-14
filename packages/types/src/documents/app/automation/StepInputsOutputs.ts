@@ -3,6 +3,7 @@ import { SearchFilters, EmptyFilterOption } from "../../../sdk"
 import { HttpMethod } from "../query"
 import { Row } from "../row"
 import { LoopStepType, EmailAttachment, AutomationResults } from "./automation"
+import { AutomationStep } from "./schema"
 
 export type BaseAutomationOutputs = {
   success?: boolean
@@ -108,6 +109,11 @@ export type LoopStepOutputs = {
   items: string
   success: boolean
   iterations: number
+}
+
+export type BranchStepInputs = {
+  conditions: SearchFilters
+  children?: Record<string, AutomationStep[]>
 }
 
 export type MakeIntegrationInputs = {
