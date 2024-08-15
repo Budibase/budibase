@@ -136,10 +136,9 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
         return cachedFlags
       }
 
-      const currentContext = context.getCurrentContext()
       const tags: Record<string, any> = {}
       const flagValues = this.defaults()
-      const currentTenantId = currentContext?.tenantId
+      const currentTenantId = context.getTenantId()
       const specificallySetFalse = new Set<string>()
 
       const split = (env.TENANT_FEATURE_FLAGS || "")
