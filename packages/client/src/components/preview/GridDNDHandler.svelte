@@ -182,7 +182,7 @@
 
     // Save changes
     if ($styles) {
-      await builderStore.actions.updateStyles($styles, id)
+      builderStore.actions.updateStyles($styles, id)
     }
 
     // Reset state
