@@ -57,64 +57,52 @@
   }
 </script>
 
-<div class="wrapper">
-  <Grid
-    {API}
-    {darkMode}
-    datasource={gridDatasource}
-    canAddRows={!isUsersTable}
-    canDeleteRows={!isUsersTable}
-    canEditRows={!isUsersTable || !$appStore.features.disableUserMetadata}
-    canEditColumns={!isUsersTable || !$appStore.features.disableUserMetadata}
-    schemaOverrides={isUsersTable ? userSchemaOverrides : null}
-    showAvatars={false}
-    on:updatedatasource={handleGridTableUpdate}
-    isCloud={$admin.cloud}
-  >
-    <svelte:fragment slot="filter">
-      {#if isUsersTable && $appStore.features.disableUserMetadata}
-        <GridUsersTableButton />
-      {/if}
-      <GridFilterButton />
-    </svelte:fragment>
-    <svelte:fragment slot="controls">
-      {#if !isUsersTable}
-        <GridCreateViewButton />
-      {/if}
-      <GridManageAccessButton />
-      {#if !isUsersTable}
-        <GridCreateAutomationButton />
-      {/if}
-      {#if relationshipsEnabled}
-        <GridRelationshipButton />
-      {/if}
-      {#if isUsersTable}
-        <EditRolesButton />
-      {:else}
-        <GridImportButton />
-      {/if}
-      <GridExportButton />
-      {#if isUsersTable}
-        <GridEditUserModal />
-      {:else}
-        <GridCreateEditRowModal />
-      {/if}
-    </svelte:fragment>
-    <svelte:fragment slot="edit-column">
-      <GridEditColumnModal />
-    </svelte:fragment>
-    <svelte:fragment slot="add-column">
-      <GridAddColumnModal />
-    </svelte:fragment>
-  </Grid>
-</div>
-
-<style>
-  .wrapper {
-    flex: 1 1 auto;
-    margin: -28px -40px -40px -40px;
-    display: flex;
-    flex-direction: column;
-    background: var(--background);
-  }
-</style>
+<Grid
+  {API}
+  {darkMode}
+  datasource={gridDatasource}
+  canAddRows={!isUsersTable}
+  canDeleteRows={!isUsersTable}
+  canEditRows={!isUsersTable || !$appStore.features.disableUserMetadata}
+  canEditColumns={!isUsersTable || !$appStore.features.disableUserMetadata}
+  schemaOverrides={isUsersTable ? userSchemaOverrides : null}
+  showAvatars={false}
+  on:updatedatasource={handleGridTableUpdate}
+  isCloud={$admin.cloud}
+>
+  <svelte:fragment slot="filter">
+    {#if isUsersTable && $appStore.features.disableUserMetadata}
+      <GridUsersTableButton />
+    {/if}
+    <GridFilterButton />
+  </svelte:fragment>
+  <svelte:fragment slot="controls">
+    {#if !isUsersTable}
+      <GridCreateViewButton />
+    {/if}
+    <GridManageAccessButton />
+    {#if !isUsersTable}
+      <GridCreateAutomationButton />
+    {/if}
+    {#if relationshipsEnabled}
+      <GridRelationshipButton />
+    {/if}
+    {#if isUsersTable}
+      <EditRolesButton />
+    {:else}
+      <GridImportButton />
+    {/if}
+    <GridExportButton />
+    {#if isUsersTable}
+      <GridEditUserModal />
+    {:else}
+      <GridCreateEditRowModal />
+    {/if}
+  </svelte:fragment>
+  <svelte:fragment slot="edit-column">
+    <GridEditColumnModal />
+  </svelte:fragment>
+  <svelte:fragment slot="add-column">
+    <GridAddColumnModal />
+  </svelte:fragment>
+</Grid>

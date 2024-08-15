@@ -19,34 +19,21 @@
   }
 </script>
 
-<div class="wrapper">
-  <Grid
-    {API}
-    {datasource}
-    allowAddRows
-    allowDeleteRows
-    showAvatars={false}
-    on:updatedatasource={handleGridViewUpdate}
-    isCloud={$admin.cloud}
-    allowViewReadonlyColumns={$licensing.isViewReadonlyColumnsEnabled}
-  >
-    <svelte:fragment slot="filter">
-      <GridFilterButton />
-    </svelte:fragment>
-    <svelte:fragment slot="controls">
-      <GridCreateEditRowModal />
-      <GridManageAccessButton />
-    </svelte:fragment>
-  </Grid>
-</div>
-
-<style>
-  .wrapper {
-    flex: 1 1 auto;
-    margin: -28px -40px -40px -40px;
-    display: flex;
-    flex-direction: column;
-    background: var(--background);
-    overflow: hidden;
-  }
-</style>
+<Grid
+  {API}
+  {datasource}
+  allowAddRows
+  allowDeleteRows
+  showAvatars={false}
+  on:updatedatasource={handleGridViewUpdate}
+  isCloud={$admin.cloud}
+  allowViewReadonlyColumns={$licensing.isViewReadonlyColumnsEnabled}
+>
+  <svelte:fragment slot="filter">
+    <GridFilterButton />
+  </svelte:fragment>
+  <svelte:fragment slot="controls">
+    <GridCreateEditRowModal />
+    <GridManageAccessButton />
+  </svelte:fragment>
+</Grid>
