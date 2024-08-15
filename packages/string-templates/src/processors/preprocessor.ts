@@ -1,25 +1,28 @@
 import { HelperNames } from "../helpers"
 import { swapStrings, isAlphaNumeric } from "../utilities"
+import { ProcessOptions } from "../types"
 
 const FUNCTION_CASES = ["#", "else", "/"]
 
-export const PreprocessorNames = {
-  SWAP_TO_DOT: "swap-to-dot-notation",
-  FIX_FUNCTIONS: "fix-functions",
-  FINALISE: "finalise",
-  NORMALIZE_SPACES: "normalize-spaces",
+export enum PreprocessorNames {
+  SWAP_TO_DOT = "swap-to-dot-notation",
+  FIX_FUNCTIONS = "fix-functions",
+  FINALISE = "finalise",
+  NORMALIZE_SPACES = "normalize-spaces",
 }
+
+type PreprocessorFn = (statement: string, opts?: ProcessOptions) => string
 
 class Preprocessor {
   name: string
-  private fn: any
+  private readonly fn: PreprocessorFn
 
-  constructor(name: string, fn: any) {
+  constructor(name: PreprocessorNames, fn: PreprocessorFn) {
     this.name = name
     this.fn = fn
   }
 
-  process(fullString: string, statement: string, opts: Object) {
+  process(fullString: string, statement: string, opts: ProcessOptions) {
     const output = this.fn(statement, opts)
     const idx = fullString.indexOf(statement)
     return swapStrings(fullString, idx, statement.length, output)
@@ -56,8 +59,9 @@ export const processors = [
   }),
   new Preprocessor(
     PreprocessorNames.FINALISE,
-    (statement: string, opts: { noHelpers: any }) => {
-      const noHelpers = opts && opts.noHelpers
+    (statement: string, opts?: ProcessOptions) => {
+      const noHelpers = opts?.noHelpers
+      const helpersEnabled = !noHelpers
       let insideStatement = statement.slice(2, statement.length - 2)
       if (insideStatement.charAt(0) === " ") {
         insideStatement = insideStatement.slice(1)
@@ -74,7 +78,8 @@ export const processors = [
       }
       const testHelper = possibleHelper.trim().toLowerCase()
       if (
-        !noHelpers &&
+        helpersEnabled &&
+        !opts?.disabledHelpers?.includes(testHelper) &&
         HelperNames().some(option => testHelper === option.toLowerCase())
       ) {
         insideStatement = `(${insideStatement})`
