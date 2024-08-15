@@ -30,10 +30,13 @@ import {
   AutomationStepInputs,
   AutomationTriggerInputs,
   ServerLogStepInputs,
+  BranchStepInputs,
+  SearchFilters,
+  Branch,
 } from "@budibase/types"
-import {} from "../../steps/loop"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
+import { definition } from "../../../automations/steps/branch"
 
 type TriggerOutputs =
   | RowCreatedTriggerOutputs
@@ -43,69 +46,55 @@ type TriggerOutputs =
   | CronTriggerOutputs
   | undefined
 
-class AutomationBuilder {
-  private automationConfig: Automation = {
-    name: "",
-    definition: {
-      steps: [],
-      trigger: {} as AutomationTrigger,
-    },
-    type: "automation",
-    appId: setup.getConfig().getAppId(),
+type BranchConfig = {
+  [key: string]: {
+    steps: (stepBuilder: StepBuilder) => StepBuilder
+    condition: SearchFilters
   }
-  private config: TestConfiguration = setup.getConfig()
-  private triggerOutputs: TriggerOutputs
-  private triggerSet: boolean = false
+}
 
-  constructor(options: { name?: string } = {}) {
-    this.automationConfig.name = options.name || `Test Automation ${uuidv4()}`
-  }
+class BaseStepBuilder {
+  protected steps: AutomationStep[] = []
 
-  // TRIGGERS
-  rowSaved(inputs: RowCreatedTriggerInputs, outputs: RowCreatedTriggerOutputs) {
-    this.triggerOutputs = outputs
-    return this.trigger(
-      TRIGGER_DEFINITIONS.ROW_SAVED,
-      AutomationTriggerStepId.ROW_SAVED,
-      inputs,
-      outputs
-    )
+  protected step<TStep extends AutomationActionStepId>(
+    stepId: TStep,
+    stepSchema: Omit<AutomationStep, "id" | "stepId" | "inputs">,
+    inputs: AutomationStepInputs<TStep>
+  ): this {
+    this.steps.push({
+      ...stepSchema,
+      inputs: inputs as any,
+      id: uuidv4(),
+      stepId,
+    })
+    return this
   }
 
-  rowUpdated(
-    inputs: RowUpdatedTriggerInputs,
-    outputs: RowUpdatedTriggerOutputs
-  ) {
-    this.triggerOutputs = outputs
-    return this.trigger(
-      TRIGGER_DEFINITIONS.ROW_UPDATED,
-      AutomationTriggerStepId.ROW_UPDATED,
-      inputs,
-      outputs
-    )
-  }
+  branch(branchConfig: BranchConfig): this {
+    const branchStepInputs: BranchStepInputs = {
+      branches: [] as Branch[],
+      children: {},
+    }
 
-  rowDeleted(
-    inputs: RowDeletedTriggerInputs,
-    outputs: RowDeletedTriggerOutputs
-  ) {
-    this.triggerOutputs = outputs
-    return this.trigger(
-      TRIGGER_DEFINITIONS.ROW_DELETED,
-      AutomationTriggerStepId.ROW_DELETED,
-      inputs,
-      outputs
-    )
-  }
+    Object.entries(branchConfig).forEach(([key, branch]) => {
+      const stepBuilder = new StepBuilder()
+      branch.steps(stepBuilder)
 
-  appAction(outputs: AppActionTriggerOutputs, inputs?: AppActionTriggerInputs) {
-    this.triggerOutputs = outputs
-    return this.trigger(
-      TRIGGER_DEFINITIONS.APP,
-      AutomationTriggerStepId.APP,
-      inputs,
-      outputs
-    )
+      branchStepInputs.branches.push({
+        name: key,
+        condition: branch.condition,
+      })
+      branchStepInputs.children![key] = stepBuilder.build()
+    })
+
+    const branchStep: AutomationStep = {
+      ...definition,
+      id: uuidv4(),
+      stepId: AutomationActionStepId.BRANCH,
+      inputs: branchStepInputs,
+    }
+    this.steps.push(branchStep)
+    return this
   }
 
   // STEPS
@@ -171,6 +160,79 @@ class AutomationBuilder {
       input
     )
   }
+}
+class StepBuilder extends BaseStepBuilder {
+  build(): AutomationStep[] {
+    return this.steps
+  }
+}
+
+class AutomationBuilder extends BaseStepBuilder {
+  private automationConfig: Automation
+  private config: TestConfiguration
+  private triggerOutputs: any
+  private triggerSet: boolean = false
+
+  constructor(options: { name?: string } = {}) {
+    super()
+    this.automationConfig = {
+      name: options.name || `Test Automation ${uuidv4()}`,
+      definition: {
+        steps: [],
+        trigger: {} as AutomationTrigger,
+      },
+      type: "automation",
+      appId: setup.getConfig().getAppId(),
+    }
+    this.config = setup.getConfig()
+  }
+
+  // TRIGGERS
+  rowSaved(inputs: RowCreatedTriggerInputs, outputs: RowCreatedTriggerOutputs) {
+    this.triggerOutputs = outputs
+    return this.trigger(
+      TRIGGER_DEFINITIONS.ROW_SAVED,
+      AutomationTriggerStepId.ROW_SAVED,
+      inputs,
+      outputs
+    )
+  }
+
+  rowUpdated(
+    inputs: RowUpdatedTriggerInputs,
+    outputs: RowUpdatedTriggerOutputs
+  ) {
+    this.triggerOutputs = outputs
+    return this.trigger(
+      TRIGGER_DEFINITIONS.ROW_UPDATED,
+      AutomationTriggerStepId.ROW_UPDATED,
+      inputs,
+      outputs
+    )
+  }
+
+  rowDeleted(
+    inputs: RowDeletedTriggerInputs,
+    outputs: RowDeletedTriggerOutputs
+  ) {
+    this.triggerOutputs = outputs
+    return this.trigger(
+      TRIGGER_DEFINITIONS.ROW_DELETED,
+      AutomationTriggerStepId.ROW_DELETED,
+      inputs,
+      outputs
+    )
+  }
+
+  appAction(outputs: AppActionTriggerOutputs, inputs?: AppActionTriggerInputs) {
+    this.triggerOutputs = outputs
+    return this.trigger(
+      TRIGGER_DEFINITIONS.APP,
+      AutomationTriggerStepId.APP,
+      inputs,
+      outputs
+    )
+  }
 
   private trigger<TStep extends AutomationTriggerStepId>(
     triggerSchema: AutomationTriggerDefinition,
@@ -181,7 +243,6 @@ class AutomationBuilder {
     if (this.triggerSet) {
       throw new Error("Only one trigger can be set for an automation.")
     }
-
     this.automationConfig.definition.trigger = {
       ...triggerSchema,
       stepId,
@@ -194,21 +255,11 @@ class AutomationBuilder {
     return this
   }
 
-  private step<TStep extends AutomationActionStepId>(
-    stepId: TStep,
-    stepSchema: Omit<AutomationStep, "id" | "stepId" | "inputs">,
-    inputs: AutomationStepInputs<TStep>
-  ): this {
-    this.automationConfig.definition.steps.push({
-      ...stepSchema,
-      inputs: inputs as any,
-      id: uuidv4(),
-      stepId,
-    })
-    return this
-  }
-
   async run() {
+    if (!Object.keys(this.automationConfig.definition.trigger).length) {
+      throw new Error("Please add a trigger to this automation test")
+    }
+    this.automationConfig.definition.steps = this.steps
     const automation = await this.config.createAutomation(this.automationConfig)
     const results = await testAutomation(
       this.config,
