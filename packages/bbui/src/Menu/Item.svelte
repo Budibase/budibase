@@ -35,7 +35,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <li
-  on:click|preventDefault={disabled ? null : onClick}
+  on:click={disabled ? null : onClick}
   class="spectrum-Menu-item"
   class:is-disabled={disabled}
   role="menuitem"
