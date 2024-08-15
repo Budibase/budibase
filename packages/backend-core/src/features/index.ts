@@ -160,7 +160,7 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
           }
 
           // ignore unknown flags
-          if (this.isFlagName(feature)) {
+          if (!this.isFlagName(feature)) {
             continue
           }
 
@@ -170,7 +170,7 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 
           // @ts-expect-error - TS does not like you writing into a generic type,
           // but we know that it's okay in this case because it's just an object.
-          flagValues[feature] = value
+          flagValues[feature as keyof FlagValues] = value
           tags[`flags.${feature}.source`] = "environment"
         }
       }
