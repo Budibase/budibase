@@ -65,6 +65,7 @@ function createTemplate(
   context?: object
 ) {
   opts = { ...defaultOpts, ...opts }
+  const helpersEnabled = !opts?.noHelpers
 
   // Finalising adds a helper, can't do this with no helpers
   const key = `${string}-${JSON.stringify(opts)}`
@@ -74,7 +75,7 @@ function createTemplate(
     return templateCache[key]
   }
 
-  const overlappingHelpers = !opts?.noHelpers
+  const overlappingHelpers = helpersEnabled
     ? findOverlappingHelpers(context)
     : []
 
@@ -83,9 +84,9 @@ function createTemplate(
     disabledHelpers: overlappingHelpers,
   })
 
-  if (context && !opts?.noHelpers) {
+  if (context && helpersEnabled) {
     if (overlappingHelpers.length > 0) {
-      for (let block of findHBSBlocks(string)) {
+      for (const block of findHBSBlocks(string)) {
         string = string.replace(
           block,
           prefixStrings(block, overlappingHelpers, "./")

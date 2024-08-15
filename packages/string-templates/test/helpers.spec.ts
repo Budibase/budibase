@@ -505,4 +505,15 @@ describe("helper overlap", () => {
     })
     expect(output).toEqual(["a", "b"])
   })
+
+  it("should work as expected when no helpers are set", async () => {
+    const output = await processString(
+      "{{ sum }}",
+      {
+        sum: "a",
+      },
+      { noHelpers: true }
+    )
+    expect(output).toEqual("a")
+  })
 })
