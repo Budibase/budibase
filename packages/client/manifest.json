@@ -7282,7 +7282,7 @@
     },
     "grid": {
       "hAlign": "stretch",
-      "vAlign": "start"
+      "vAlign": "stretch"
     },
     "settings": [
       {
