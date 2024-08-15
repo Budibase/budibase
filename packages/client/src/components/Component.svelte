@@ -9,7 +9,7 @@
 </script>
 
 <script>
-  import { getContext, setContext, onMount, tick } from "svelte"
+  import { getContext, setContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
   import {
     enrichProps,
