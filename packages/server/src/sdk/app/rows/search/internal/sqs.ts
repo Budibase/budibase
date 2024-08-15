@@ -139,34 +139,29 @@ function cleanupFilters(
     allTables.some(table => table.schema[key])
 
   const splitter = new dataFilters.ColumnSplitter(allTables)
-
-  const prefixFilters = (filters: SearchFilters) => {
-    for (const filterKey of Object.keys(filters) as (keyof SearchFilters)[]) {
-      if (isLogicalSearchOperator(filterKey)) {
-        for (const condition of filters[filterKey]!.conditions) {
-          prefixFilters(condition)
-        }
-      } else {
-        const filter = filters[filterKey]!
-        if (typeof filter !== "object") {
-          continue
-        }
-        for (const key of Object.keys(filter)) {
-          const { numberPrefix, relationshipPrefix, column } = splitter.run(key)
-          if (keyInAnyTable(column)) {
-            filter[
-              `${numberPrefix || ""}${
-                relationshipPrefix || ""
-              }${mapToUserColumn(column)}`
-            ] = filter[key]
-            delete filter[key]
-          }
+  for (const filterKey of Object.keys(filters) as (keyof SearchFilters)[]) {
+    if (!isLogicalSearchOperator(filterKey)) {
+      const filter = filters[filterKey]!
+      if (typeof filter !== "object") {
+        continue
+      }
+      for (const key of Object.keys(filter)) {
+        const { numberPrefix, relationshipPrefix, column } = splitter.run(key)
+        if (keyInAnyTable(column)) {
+          filter[
+            `${numberPrefix || ""}${relationshipPrefix || ""}${mapToUserColumn(
+              column
+            )}`
+          ] = filter[key]
+          delete filter[key]
         }
       }
     }
   }
-  prefixFilters(filters)
-  return filters
+
+  return dataFilters.recurseLogicalOperators(filters, (f: SearchFilters) => {
+    return cleanupFilters(f, table, allTables)
+  })
 }
 
 function buildTableMap(tables: Table[]) {
