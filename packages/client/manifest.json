@@ -194,7 +194,7 @@
             "barTitle": "Grid layout"
           }
         ],
-        "defaultValue": "flex"
+        "defaultValue": "grid"
       },
       {
         "type": "select",

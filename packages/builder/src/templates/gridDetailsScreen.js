@@ -40,6 +40,7 @@ const createScreen = (tableOrView, permissions) => {
   const gridHeader = new Component("@budibase/standard-components/container")
     .instanceName("Heading container")
     .customProps({
+      layout: "flex",
       direction: "row",
       hAlign: "stretch",
     })
