@@ -7,7 +7,7 @@ import {
   ServerLogStepOutputs,
   FieldType,
 } from "@budibase/types"
-import { createAutomationBuilder } from "../utilities/AutomationBuilder"
+import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { DatabaseName } from "../../../integrations/tests/utils"
 
 describe("Automation Scenarios", () => {
