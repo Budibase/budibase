@@ -29,9 +29,9 @@ export function preprocess(string: string, opts: ProcessOptions) {
       processor => processor.name !== preprocessor.PreprocessorNames.FINALISE
     )
   }
+
   return process(string, processors, opts)
 }
 export function postprocess(string: string) {
-  let processors = postprocessor.processors
-  return process(string, processors)
+  return process(string, postprocessor.processors)
 }
