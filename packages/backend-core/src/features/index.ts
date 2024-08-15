@@ -159,11 +159,12 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
             specificallySetFalse.add(feature)
           }
 
-          // check it's a known flag, confirm its boolean
-          if (
-            this.isFlagName(feature) &&
-            typeof flagValues[feature] !== "boolean"
-          ) {
+          // ignore unknown flags
+          if (this.isFlagName(feature)) {
+            continue
+          }
+
+          if (typeof flagValues[feature] !== "boolean") {
             throw new Error(`Feature: ${feature} is not a boolean`)
           }
 
