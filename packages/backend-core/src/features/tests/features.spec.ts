@@ -1,6 +1,6 @@
 import { IdentityContext, IdentityType, UserCtx } from "@budibase/types"
 import { Flag, FlagSet, FlagValues, init, shutdown } from "../"
-import { context } from "../.."
+import * as context from "../../context"
 import environment, { withEnv } from "../../environment"
 import nodeFetch from "node-fetch"
 import nock from "nock"
