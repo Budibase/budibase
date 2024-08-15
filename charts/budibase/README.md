@@ -139,7 +139,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | globals.smtp.user | string | `""` | The username to use when authenticating with your SMTP server. |
 | globals.sqs.enabled | bool | `false` | Whether to use the CouchDB "structured query service" or not. This is disabled by default for now, but will become the default in a future release. |
 | globals.tempBucketName | string | `""` |  |
-| globals.tenantFeatureFlags | string | `"*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"` | Sets what feature flags are enabled and for which tenants. Should not ordinarily need to be changed. |
+| globals.tenantFeatureFlags | string | `` | Sets what feature flags are enabled and for which tenants. Should not ordinarily need to be changed. |
 | imagePullSecrets | list | `[]` | Passed to all pods created by this chart. Should not ordinarily need to be changed. |
 | ingress.className | string | `""` | What ingress class to use. |
 | ingress.enabled | bool | `true` | Whether to create an Ingress resource pointing to the Budibase proxy. |
