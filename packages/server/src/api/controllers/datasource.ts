@@ -27,7 +27,7 @@ import {
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { isEqual } from "lodash"
-import { processTable } from "src/sdk/app/tables/getters"
+import { processTable } from "../../sdk/app/tables/getters"
 
 export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.datasources.fetch()
