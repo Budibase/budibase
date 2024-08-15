@@ -62,7 +62,7 @@ globals:
   budibaseEnv: PRODUCTION
   # -- Sets what feature flags are enabled and for which tenants. Should not ordinarily need to be
   # changed.
-  tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
+  tenantFeatureFlags: ""
   # -- Whether to enable analytics or not. You can read more about our analytics here:
   # <https://docs.budibase.com/docs/analytics>.
   enableAnalytics: "1"

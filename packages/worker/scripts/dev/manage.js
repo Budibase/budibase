@@ -26,7 +26,6 @@ async function init() {
     APPS_URL: "http://localhost:4001",
     SERVICE: "worker-service",
     DEPLOYMENT_ENVIRONMENT: "development",
-    TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR",
     ENABLE_EMAIL_TEST_MODE: "1",
     HTTP_LOGGING: "0",
     VERSION: "0.0.0+local",
