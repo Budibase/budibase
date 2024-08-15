@@ -120,8 +120,6 @@ export const gridLayout = (node, metadata) => {
       let mVar = getGridVar(Devices.Mobile, param)
       vars[dVar] = styles[dVar] || styles[mVar] || defaults[param]
       vars[mVar] = styles[mVar] || styles[dVar] || defaults[param]
-      delete styles[dVar]
-      delete styles[mVar]
     }
 
     // Apply some overrides depending on component state
