@@ -35,8 +35,8 @@ import {
   Branch,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import * as setup from "../utilities"
-import { definition } from "../../../automations/steps/branch"
+import * as setup from "."
+import { definition } from "../../steps/branch"
 
 type TriggerOutputs =
   | RowCreatedTriggerOutputs
