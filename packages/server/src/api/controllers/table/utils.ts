@@ -15,7 +15,7 @@ import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events, context, db as dbCore, features } from "@budibase/backend-core"
+import { events, context, features } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   ContextUser,

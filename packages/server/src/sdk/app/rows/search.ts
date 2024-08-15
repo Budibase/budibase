@@ -12,7 +12,7 @@ import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
-import { db as dbCore, features } from "@budibase/backend-core"
+import { features } from "@budibase/backend-core"
 import tracer from "dd-trace"
 
 export { isValidFilter } from "../../../integrations/utils"
