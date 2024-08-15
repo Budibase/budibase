@@ -9,8 +9,8 @@ import {
   FieldType,
   Row,
   LoopStepType,
+  LoopStepInputs,
 } from "@budibase/types"
-import { LoopInput } from "../definitions/automations"
 import { objectStore, context } from "@budibase/backend-core"
 import * as uuid from "uuid"
 import path from "path"
@@ -31,7 +31,10 @@ import path from "path"
  * @returns The inputs object which has had all the various types supported by this function converted to their
  * primitive types.
  */
-export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
+export function cleanInputValues<T extends Record<string, any>>(
+  inputs: any,
+  schema?: any
+): T {
   if (schema == null) {
     return inputs
   }
@@ -61,16 +64,18 @@ export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
     }
   }
   //Check if input field for Update Row should be a relationship and cast to array
-  for (let key in inputs.row) {
-    if (
-      inputs.schema?.[key]?.type === "link" &&
-      inputs.row[key] &&
-      typeof inputs.row[key] === "string"
-    ) {
-      try {
-        inputs.row[key] = JSON.parse(inputs.row[key])
-      } catch (e) {
-        //Link is not an array or object, so continue
+  if (inputs?.row) {
+    for (let key in inputs.row) {
+      if (
+        inputs.schema?.[key]?.type === "link" &&
+        inputs.row[key] &&
+        typeof inputs.row[key] === "string"
+      ) {
+        try {
+          inputs.row[key] = JSON.parse(inputs.row[key])
+        } catch (e) {
+          //Link is not an array or object, so continue
+        }
       }
     }
   }
@@ -267,7 +272,7 @@ export function stringSplit(value: string | string[]) {
   return value.split(",")
 }
 
-export function typecastForLooping(input: LoopInput) {
+export function typecastForLooping(input: LoopStepInputs) {
   if (!input || !input.binding) {
     return null
   }
