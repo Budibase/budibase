@@ -9,7 +9,9 @@
   let modal
 
   $: views = Object.keys(table?.views || {}).map(x => x.toLowerCase())
-  $: nameExists = views.includes(name?.trim().toLowerCase())
+  $: trimmedName = name?.trim()
+  $: nameExists = views.includes(trimmedName?.toLowerCase())
+  $: nameValid = trimmedName?.length && !nameExists
 
   export const show = () => {
     name = null
@@ -29,15 +31,15 @@
   }
 
   const saveView = async () => {
-    name = name?.trim()
     try {
       const newView = await viewsV2.create({
-        name,
+        name: trimmedName,
         tableId: table._id,
         schema: enrichSchema(table.schema),
         primaryDisplay: table.primaryDisplay,
       })
       notifications.success(`View ${name} created`)
+      name = null
       $goto(`./${newView.id}`)
     } catch (error) {
       notifications.error("Error creating view")
@@ -50,7 +52,7 @@
     title="Create view"
     confirmText="Create view"
     onConfirm={saveView}
-    disabled={nameExists}
+    disabled={!nameValid}
   >
     <Input
       label="View name"
