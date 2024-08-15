@@ -2,7 +2,7 @@ import fetch, { HeadersInit } from "node-fetch"
 import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
@@ -11,7 +11,7 @@ import {
   n8nStepInputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "n8n Integration",
   stepTitle: "n8n",
   tagline: "Trigger an n8n workflow",

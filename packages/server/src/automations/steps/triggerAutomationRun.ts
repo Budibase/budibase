@@ -1,6 +1,6 @@
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   AutomationResults,
@@ -14,7 +14,7 @@ import { context } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import env from "../../environment"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Trigger an automation",
   tagline: "Triggers an automation synchronously",
   icon: "Sync",
