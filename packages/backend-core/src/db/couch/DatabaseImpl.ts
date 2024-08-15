@@ -26,7 +26,7 @@ import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 import { checkSlashesInUrl } from "../../helpers"
 import { sqlLog } from "../../sql/utils"
-import { features } from "../.."
+import { flags } from "../../features"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -402,7 +402,7 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     if (
-      (await features.flags.isEnabled("SQS")) &&
+      (await flags.isEnabled("SQS")) &&
       (await this.exists(SQLITE_DESIGN_DOC_ID))
     ) {
       // delete the design document, then run the cleanup operation
