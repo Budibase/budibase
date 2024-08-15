@@ -1,5 +1,5 @@
 import { IdentityContext, IdentityType, UserCtx } from "@budibase/types"
-import { Flag, FlagSet, FlagValues, init } from "../"
+import { Flag, FlagSet, FlagValues, init, shutdown } from "../"
 import { context } from "../.."
 import environment, { withEnv } from "../../environment"
 import nodeFetch from "node-fetch"
@@ -197,6 +197,8 @@ describe("feature flags", () => {
             throw new Error("No expected value")
           }
         })
+
+        shutdown()
       })
     }
   )
