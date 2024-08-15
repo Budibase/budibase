@@ -35,8 +35,8 @@ import {
   Branch,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
-import * as setup from "."
-import { definition } from "../../steps/branch"
+import * as setup from "../utilities"
+import { definition } from "../../../automations/steps/branch"
 
 type TriggerOutputs =
   | RowCreatedTriggerOutputs
@@ -46,9 +46,11 @@ type TriggerOutputs =
   | CronTriggerOutputs
   | undefined
 
+type StepBuilderFunction = (stepBuilder: StepBuilder) => void
+
 type BranchConfig = {
   [key: string]: {
-    steps: (stepBuilder: StepBuilder) => StepBuilder
+    steps: StepBuilderFunction
     condition: SearchFilters
   }
 }
@@ -70,7 +72,7 @@ class BaseStepBuilder {
     return this
   }
 
-  branch(branchConfig: BranchConfig): this {
+  protected addBranchStep(branchConfig: BranchConfig): void {
     const branchStepInputs: BranchStepInputs = {
       branches: [] as Branch[],
       children: {},
@@ -94,7 +96,6 @@ class BaseStepBuilder {
       inputs: branchStepInputs,
     }
     this.steps.push(branchStep)
-    return this
   }
 
   // STEPS
@@ -164,6 +165,11 @@ class BaseStepBuilder {
 class StepBuilder extends BaseStepBuilder {
   build(): AutomationStep[] {
     return this.steps
+  }
+
+  branch(branchConfig: BranchConfig): this {
+    this.addBranchStep(branchConfig)
+    return this
   }
 }
 
@@ -255,6 +261,15 @@ class AutomationBuilder extends BaseStepBuilder {
     return this
   }
 
+  branch(branchConfig: BranchConfig): {
+    run: () => Promise<AutomationResults>
+  } {
+    this.addBranchStep(branchConfig)
+    return {
+      run: () => this.run(),
+    }
+  }
+
   async run() {
     if (!Object.keys(this.automationConfig.definition.trigger).length) {
       throw new Error("Please add a trigger to this automation test")
@@ -269,7 +284,9 @@ class AutomationBuilder extends BaseStepBuilder {
     return this.processResults(results)
   }
 
-  private processResults(results: { body: AutomationResults }) {
+  private processResults(results: {
+    body: AutomationResults
+  }): AutomationResults {
     results.body.steps.shift()
     return {
       trigger: results.body.trigger,

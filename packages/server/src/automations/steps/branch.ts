@@ -36,8 +36,12 @@ export const definition: AutomationStepDefinition = {
     },
     outputs: {
       properties: {
-        output: {
-          type: AutomationIOType.OBJECT,
+        branchName: {
+          type: AutomationIOType.STRING,
+        },
+        result: {
+          type: AutomationIOType.BOOLEAN,
+          description: "Whether the condition was met",
         },
       },
       required: ["output"],

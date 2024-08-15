@@ -26,37 +26,38 @@ describe("Automation Scenarios", () => {
   // eslint-disable-next-line jest/no-commented-out-tests
   // describe("Branching automations", () => {
   // eslint-disable-next-line jest/no-commented-out-tests
-  //   it.only("should run an automation with a trigger, loop, and create row step", async () => {
-  //     const builder = createAutomationBuilder({
-  //       name: "Test Trigger with Loop and Create Row",
-  //     })
-
-  //     builder
-  //       .serverLog({ text: "Starting automation" })
-  //       .branch({
-  //         topLevelBranch1: {
-  //           steps: stepBuilder =>
-  //             stepBuilder.serverLog({ text: "Branch 1" }).branch({
-  //               branch1: {
-  //                 steps: stepBuilder =>
-  //                   stepBuilder.serverLog({ text: "Branch 1.1" }),
-  //                 condition: { notEmpty: { column: 10 } },
-  //               },
-  //               branch2: {
-  //                 steps: stepBuilder =>
-  //                   stepBuilder.serverLog({ text: "Branch 1.2" }),
-  //                 condition: { fuzzy: { column: "sadsd" } },
-  //               },
-  //             }),
-  //           condition: { equal: { column: 10 } },
-  //         },
-  //         topLevelBranch2: {
-  //           steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
-  //           condition: { equal: { column: 20 } },
-  //         },
-  //       })
-  //       .run()
+  // it("should run an automation with a trigger, loop, and create row step", async () => {
+  //   const builder = createAutomationBuilder({
+  //     name: "Test Trigger with Loop and Create Row",
   //   })
+
+  //   builder
+  //     .serverLog({ text: "Starting automation" })
+  //     .branch({
+  //       topLevelBranch1: {
+  //         steps: stepBuilder =>
+  //           stepBuilder.serverLog({ text: "Branch 1" }).branch({
+  //             branch1: {
+  //               steps: stepBuilder =>
+  //                 stepBuilder.serverLog({ text: "Branch 1.1" }),
+  //               condition: { notEmpty: { column: 10 } },
+  //             },
+  //             branch2: {
+  //               steps: stepBuilder =>
+  //                 stepBuilder.serverLog({ text: "Branch 1.2" }),
+  //               condition: { fuzzy: { column: "sadsd" } },
+  //             },
+  //           }),
+  //         condition: { equal: { column: 10 } },
+  //       },
+  //       topLevelBranch2: {
+  //         steps: stepBuilder => stepBuilder.serverLog({ text: "Branch 2" }),
+  //         condition: { equal: { column: 20 } },
+  //       },
+  //     })
+  //     .run()
+  // })
+
   // })
 
   describe("Loop automations", () => {
