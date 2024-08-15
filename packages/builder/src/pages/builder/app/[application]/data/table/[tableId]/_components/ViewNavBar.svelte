@@ -6,7 +6,7 @@
     contextMenuStore,
   } from "stores/builder"
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
-  import { Icon } from "@budibase/bbui"
+  import { Icon, Button } from "@budibase/bbui"
   import { params, url } from "@roxi/routify"
   import EditViewModal from "./EditViewModal.svelte"
   import DeleteViewModal from "./DeleteViewModal.svelte"
@@ -16,8 +16,11 @@
   import { tick } from "svelte"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
   import { TableNames } from "constants"
+  import { alphabetical } from "components/backend/TableNavigator/utils"
+  import CreateViewModal from "./CreateViewModal.svelte"
 
   // Editing table
+  let createViewModal
   let editTableModal
   let deleteTableModal
 
@@ -101,10 +104,6 @@
       }
     )
   }
-
-  const alphabetical = (a, b) => {
-    return a.name < b.name ? -1 : 1
-  }
 </script>
 
 <div class="view-nav-bar">
@@ -126,7 +125,13 @@
       <UserAvatars size="XS" users={tableSelectedBy} />
     {/if}
     {#if tableEditable}
-      <Icon on:click={openTableContextMenu} s hoverable name="MoreSmallList" />
+      <Icon
+        on:click={openTableContextMenu}
+        hoverable
+        name="MoreSmallList"
+        color="var(--spectrum-global-color-gray-600)"
+        hoverColor="var(--spectrum-global-color-gray-900)"
+      />
     {/if}
   </a>
   {#each views as view (view.id)}
@@ -145,15 +150,33 @@
       {/if}
       <Icon
         on:click={e => openViewContextMenu(e, view)}
-        s
         hoverable
         name="MoreSmallList"
+        color="var(--spectrum-global-color-gray-600)"
+        hoverColor="var(--spectrum-global-color-gray-900)"
       />
     </a>
   {/each}
+  {#if !views.length && tableEditable}
+    <Button cta on:click={createViewModal?.show}>Create a view</Button>
+    <span>
+      To create subsets of data, control access and more, create a view.
+    </span>
+  {/if}
+  {#if views.length}
+    <Icon
+      name="Add"
+      size="L"
+      hoverable
+      color="var(--spectrum-global-color-gray-600)"
+      hoverColor="var(--spectrum-global-color-gray-900)"
+      on:click={createViewModal?.show}
+    />
+  {/if}
 </div>
 
-{#if table}
+{#if table && tableEditable}
+  <CreateViewModal {table} bind:this={createViewModal} />
   <EditTableModal {table} bind:this={editTableModal} />
   <DeleteTableModal {table} bind:this={deleteTableModal} />
 {/if}
@@ -183,7 +206,7 @@
     align-items: center;
     gap: var(--spacing-m);
     transition: background 130ms ease-out, color 130ms ease-out;
-    color: var(--spectrum-global-color-gray-700);
+    color: var(--spectrum-global-color-gray-600);
   }
   .title {
     font-size: 16px;

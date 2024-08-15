@@ -9,7 +9,6 @@
   import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
-  import GridCreateViewButton from "components/backend/DataTable/buttons/grid/GridCreateViewButton.svelte"
   import GridImportButton from "components/backend/DataTable/buttons/grid/GridImportButton.svelte"
   import GridExportButton from "components/backend/DataTable/buttons/grid/GridExportButton.svelte"
   import GridFilterButton from "components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
@@ -77,9 +76,6 @@
     <GridFilterButton />
   </svelte:fragment>
   <svelte:fragment slot="controls">
-    {#if !isUsersTable}
-      <GridCreateViewButton />
-    {/if}
     <GridManageAccessButton />
     {#if !isUsersTable}
       <GridCreateAutomationButton />
