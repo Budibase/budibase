@@ -18,6 +18,10 @@ export function init(opts?: PostHogOptions) {
   }
 }
 
+export function shutdown() {
+  posthog?.shutdown()
+}
+
 export abstract class Flag<T> {
   static boolean(defaultValue: boolean): Flag<boolean> {
     return new BooleanFlag(defaultValue)
@@ -87,7 +91,14 @@ class NumberFlag extends Flag<number> {
 }
 
 export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
-  constructor(private readonly flagSchema: T) {}
+  // This is used to safely cache flags sets in the current request context.
+  // Because multiple sets could theoretically exist, we don't want the cache of
+  // one to leak into another.
+  private readonly setId: string
+
+  constructor(private readonly flagSchema: T) {
+    this.setId = crypto.randomUUID()
+  }
 
   defaults(): FlagValues<T> {
     return Object.keys(this.flagSchema).reduce((acc, key) => {
@@ -119,6 +130,12 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 
   async fetch(ctx?: UserCtx): Promise<FlagValues<T>> {
     return await tracer.trace("features.fetch", async span => {
+      const cachedFlags = context.getFeatureFlags<FlagValues<T>>(this.setId)
+      if (cachedFlags) {
+        span?.addTags({ fromCache: true })
+        return cachedFlags
+      }
+
       const tags: Record<string, any> = {}
       const flagValues = this.defaults()
       const currentTenantId = context.getTenantId()
@@ -187,10 +204,7 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
       tags[`identity.tenantId`] = identity?.tenantId
       tags[`identity._id`] = identity?._id
 
-      // Until we're confident this performs well, we're only enabling it in QA
-      // and test environments.
-      const usePosthog = env.isTest() || env.isQA()
-      if (usePosthog && posthog && identity?.type === IdentityType.USER) {
+      if (posthog && identity?.type === IdentityType.USER) {
         tags[`readFromPostHog`] = true
 
         const personProperties: Record<string, string> = {}
@@ -204,7 +218,6 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
             personProperties,
           }
         )
-        console.log("posthog flags", JSON.stringify(posthogFlags))
 
         for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
           if (!this.isFlagName(name)) {
@@ -236,6 +249,7 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
         }
       }
 
+      context.setFeatureFlags(this.setId, flagValues)
       for (const [key, value] of Object.entries(flagValues)) {
         tags[`flags.${key}.value`] = value
       }
@@ -255,5 +269,5 @@ export const flags = new FlagSet({
   GOOGLE_SHEETS: Flag.boolean(false),
   USER_GROUPS: Flag.boolean(false),
   ONBOARDING_TOUR: Flag.boolean(false),
-  DEFAULT_VALUES: Flag.boolean(true),
+  DEFAULT_VALUES: Flag.boolean(false),
 })

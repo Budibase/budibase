@@ -1,5 +1,5 @@
 import {
-  AutomationTriggerSchema,
+  AutomationTriggerDefinition,
   AutomationTriggerStepId,
 } from "@budibase/types"
 import * as app from "./app"
@@ -12,7 +12,7 @@ import * as rowAction from "./rowAction"
 
 export const definitions: Record<
   keyof typeof AutomationTriggerStepId,
-  AutomationTriggerSchema
+  AutomationTriggerDefinition
 > = {
   ROW_SAVED: rowSaved.definition,
   ROW_UPDATED: rowUpdated.definition,

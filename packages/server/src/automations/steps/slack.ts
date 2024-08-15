@@ -2,7 +2,7 @@ import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
@@ -10,7 +10,7 @@ import {
   SlackStepInputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Slack Message",
   tagline: "Send a message to Slack",
   description: "Send a message to Slack",
