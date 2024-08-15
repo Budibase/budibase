@@ -1,14 +1,11 @@
 <script>
   import TableNavItem from "./TableNavItem/TableNavItem.svelte"
+  import { alphabetical } from "./utils"
 
   export let tables
   export let selectTable
 
   $: sortedTables = tables.sort(alphabetical)
-
-  const alphabetical = (a, b) => {
-    return a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
-  }
 </script>
 
 <div class="hierarchy-items-container">

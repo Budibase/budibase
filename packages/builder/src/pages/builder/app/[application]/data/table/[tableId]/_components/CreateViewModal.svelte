@@ -1,15 +1,20 @@
 <script>
-  import { getContext } from "svelte"
-  import { Input, notifications, ModalContent } from "@budibase/bbui"
+  import { Modal, Input, notifications, ModalContent } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { viewsV2 } from "stores/builder"
 
-  const { filter, sort, definition } = getContext("grid")
+  export let table
 
   let name
+  let modal
 
-  $: views = Object.keys($definition?.views || {}).map(x => x.toLowerCase())
+  $: views = Object.keys(table?.views || {}).map(x => x.toLowerCase())
   $: nameExists = views.includes(name?.trim().toLowerCase())
+
+  export const show = () => {
+    name = null
+    modal?.show()
+  }
 
   const enrichSchema = schema => {
     // We need to sure that "visible" is set to true for any fields which have
@@ -28,33 +33,30 @@
     try {
       const newView = await viewsV2.create({
         name,
-        tableId: $definition._id,
-        query: $filter,
-        sort: {
-          field: $sort.column,
-          order: $sort.order,
-        },
-        schema: enrichSchema($definition.schema),
-        primaryDisplay: $definition.primaryDisplay,
+        tableId: table._id,
+        schema: enrichSchema(table.schema),
+        primaryDisplay: table.primaryDisplay,
       })
       notifications.success(`View ${name} created`)
-      $goto(`../../view/v2/${newView.id}`)
+      $goto(`./${newView.id}`)
     } catch (error) {
       notifications.error("Error creating view")
     }
   }
 </script>
 
-<ModalContent
-  title="Create view"
-  confirmText="Create view"
-  onConfirm={saveView}
-  disabled={nameExists}
->
-  <Input
-    label="View name"
-    thin
-    bind:value={name}
-    error={nameExists ? "A view already exists with that name" : null}
-  />
-</ModalContent>
+<Modal bind:this={modal}>
+  <ModalContent
+    title="Create view"
+    confirmText="Create view"
+    onConfirm={saveView}
+    disabled={nameExists}
+  >
+    <Input
+      label="View name"
+      thin
+      bind:value={name}
+      error={nameExists ? "A view already exists with that name" : null}
+    />
+  </ModalContent>
+</Modal>
