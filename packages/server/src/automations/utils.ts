@@ -10,7 +10,8 @@ import { quotas } from "@budibase/pro"
 import {
   Automation,
   AutomationJob,
-  AutomationStepSchema,
+  AutomationStepDefinition,
+  AutomationTriggerDefinition,
 } from "@budibase/types"
 import { automationsEnabled } from "../features"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
@@ -116,7 +117,10 @@ export async function updateTestHistory(
 }
 
 export function removeDeprecated(
-  definitions: Record<string, AutomationStepSchema>
+  definitions: Record<
+    string,
+    AutomationStepDefinition | AutomationTriggerDefinition
+  >
 ) {
   const base = cloneDeep(definitions)
   for (let key of Object.keys(base)) {

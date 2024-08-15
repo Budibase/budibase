@@ -2,7 +2,7 @@ import { OpenAI } from "openai"
 
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   OpenAIStepInputs,
@@ -17,7 +17,7 @@ enum Model {
   GPT_4 = "gpt-4",
 }
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "OpenAI",
   tagline: "Send prompts to ChatGPT",
   icon: "Algorithm",

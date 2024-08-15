@@ -1,23 +1,9 @@
 import { v4 as uuidv4 } from "uuid"
 import { testAutomation } from "../../../api/routes/tests/utilities/TestFunctions"
-import {
-  RowCreatedTriggerInputs,
-  RowCreatedTriggerOutputs,
-} from "../../triggerInfo/rowSaved"
-import {
-  RowUpdatedTriggerInputs,
-  RowUpdatedTriggerOutputs,
-} from "../../triggerInfo/rowUpdated"
 import {} from "../../steps/createRow"
 import { BUILTIN_ACTION_DEFINITIONS } from "../../actions"
 import { TRIGGER_DEFINITIONS } from "../../triggers"
 import {
-  RowDeletedTriggerInputs,
-  RowDeletedTriggerOutputs,
-} from "../../triggerInfo/rowDeleted"
-import {
-  AutomationStepSchema,
-  AutomationTriggerSchema,
   LoopStepInputs,
   DeleteRowStepInputs,
   UpdateRowStepInputs,
@@ -28,16 +14,26 @@ import {
   SmtpEmailStepInputs,
   ExecuteQueryStepInputs,
   QueryRowsStepInputs,
+  AutomationActionStepId,
+  AutomationTriggerStepId,
+  AutomationStep,
+  AutomationTriggerDefinition,
+  RowDeletedTriggerInputs,
+  RowDeletedTriggerOutputs,
+  RowUpdatedTriggerOutputs,
+  RowUpdatedTriggerInputs,
+  RowCreatedTriggerInputs,
+  RowCreatedTriggerOutputs,
+  AppActionTriggerOutputs,
+  CronTriggerOutputs,
+  AppActionTriggerInputs,
+  AutomationStepInputs,
+  AutomationTriggerInputs,
   ServerLogStepInputs,
 } from "@budibase/types"
 import {} from "../../steps/loop"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as setup from "../utilities"
-import {
-  AppActionTriggerInputs,
-  AppActionTriggerOutputs,
-} from "../../triggerInfo/app"
-import { CronTriggerOutputs } from "../../triggerInfo/cron"
 
 type TriggerOutputs =
   | RowCreatedTriggerOutputs
@@ -68,7 +64,12 @@ class AutomationBuilder {
   // TRIGGERS
   rowSaved(inputs: RowCreatedTriggerInputs, outputs: RowCreatedTriggerOutputs) {
     this.triggerOutputs = outputs
-    return this.trigger(TRIGGER_DEFINITIONS.ROW_SAVED, inputs, outputs)
+    return this.trigger(
+      TRIGGER_DEFINITIONS.ROW_SAVED,
+      AutomationTriggerStepId.ROW_SAVED,
+      inputs,
+      outputs
+    )
   }
 
   rowUpdated(
@@ -76,7 +77,12 @@ class AutomationBuilder {
     outputs: RowUpdatedTriggerOutputs
   ) {
     this.triggerOutputs = outputs
-    return this.trigger(TRIGGER_DEFINITIONS.ROW_UPDATED, inputs, outputs)
+    return this.trigger(
+      TRIGGER_DEFINITIONS.ROW_UPDATED,
+      AutomationTriggerStepId.ROW_UPDATED,
+      inputs,
+      outputs
+    )
   }
 
   rowDeleted(
@@ -84,57 +90,102 @@ class AutomationBuilder {
     outputs: RowDeletedTriggerOutputs
   ) {
     this.triggerOutputs = outputs
-    return this.trigger(TRIGGER_DEFINITIONS.ROW_DELETED, inputs, outputs)
+    return this.trigger(
+      TRIGGER_DEFINITIONS.ROW_DELETED,
+      AutomationTriggerStepId.ROW_DELETED,
+      inputs,
+      outputs
+    )
   }
 
   appAction(outputs: AppActionTriggerOutputs, inputs?: AppActionTriggerInputs) {
     this.triggerOutputs = outputs
-    return this.trigger(TRIGGER_DEFINITIONS.APP, inputs, outputs)
+    return this.trigger(
+      TRIGGER_DEFINITIONS.APP,
+      AutomationTriggerStepId.APP,
+      inputs,
+      outputs
+    )
   }
 
   // STEPS
   createRow(inputs: CreateRowStepInputs): this {
-    return this.step(BUILTIN_ACTION_DEFINITIONS.CREATE_ROW, inputs)
+    return this.step(
+      AutomationActionStepId.CREATE_ROW,
+      BUILTIN_ACTION_DEFINITIONS.CREATE_ROW,
+      inputs
+    )
   }
 
   updateRow(inputs: UpdateRowStepInputs): this {
-    return this.step(BUILTIN_ACTION_DEFINITIONS.UPDATE_ROW, inputs)
+    return this.step(
+      AutomationActionStepId.UPDATE_ROW,
+      BUILTIN_ACTION_DEFINITIONS.UPDATE_ROW,
+      inputs
+    )
   }
 
   deleteRow(inputs: DeleteRowStepInputs): this {
-    return this.step(BUILTIN_ACTION_DEFINITIONS.DELETE_ROW, inputs)
+    return this.step(
+      AutomationActionStepId.DELETE_ROW,
+      BUILTIN_ACTION_DEFINITIONS.DELETE_ROW,
+      inputs
+    )
   }
 
   sendSmtpEmail(inputs: SmtpEmailStepInputs): this {
-    return this.step(BUILTIN_ACTION_DEFINITIONS.SEND_EMAIL_SMTP, inputs)
+    return this.step(
+      AutomationActionStepId.SEND_EMAIL_SMTP,
+      BUILTIN_ACTION_DEFINITIONS.SEND_EMAIL_SMTP,
+      inputs
+    )
   }
 
   executeQuery(inputs: ExecuteQueryStepInputs): this {
-    return this.step(BUILTIN_ACTION_DEFINITIONS.EXECUTE_QUERY, inputs)
+    return this.step(
+      AutomationActionStepId.EXECUTE_QUERY,
+      BUILTIN_ACTION_DEFINITIONS.EXECUTE_QUERY,
+      inputs
+    )
   }
 
   queryRows(inputs: QueryRowsStepInputs): this {
-    return this.step(BUILTIN_ACTION_DEFINITIONS.QUERY_ROWS, inputs)
+    return this.step(
+      AutomationActionStepId.QUERY_ROWS,
+      BUILTIN_ACTION_DEFINITIONS.QUERY_ROWS,
+      inputs
+    )
   }
   loop(inputs: LoopStepInputs): this {
-    return this.step(BUILTIN_ACTION_DEFINITIONS.LOOP, inputs)
+    return this.step(
+      AutomationActionStepId.LOOP,
+      BUILTIN_ACTION_DEFINITIONS.LOOP,
+      inputs
+    )
   }
 
   serverLog(input: ServerLogStepInputs): this {
-    return this.step(BUILTIN_ACTION_DEFINITIONS.SERVER_LOG, input)
+    return this.step(
+      AutomationActionStepId.SERVER_LOG,
+      BUILTIN_ACTION_DEFINITIONS.SERVER_LOG,
+      input
+    )
   }
 
-  private trigger<T extends { [key: string]: any }>(
-    triggerSchema: AutomationTriggerSchema,
-    inputs?: T,
+  private trigger<TStep extends AutomationTriggerStepId>(
+    triggerSchema: AutomationTriggerDefinition,
+    stepId: TStep,
+    inputs?: AutomationTriggerInputs<TStep>,
     outputs?: TriggerOutputs
   ): this {
     if (this.triggerSet) {
       throw new Error("Only one trigger can be set for an automation.")
     }
+
     this.automationConfig.definition.trigger = {
       ...triggerSchema,
-      inputs: inputs || {},
+      stepId,
+      inputs: inputs || ({} as any),
       id: uuidv4(),
     }
     this.triggerOutputs = outputs
@@ -143,14 +194,16 @@ class AutomationBuilder {
     return this
   }
 
-  private step<T extends { [key: string]: any }>(
-    stepSchema: AutomationStepSchema,
-    inputs: T
+  private step<TStep extends AutomationActionStepId>(
+    stepId: TStep,
+    stepSchema: Omit<AutomationStep, "id" | "stepId" | "inputs">,
+    inputs: AutomationStepInputs<TStep>
   ): this {
     this.automationConfig.definition.steps.push({
       ...stepSchema,
-      inputs,
+      inputs: inputs as any,
       id: uuidv4(),
+      stepId,
     })
     return this
   }
