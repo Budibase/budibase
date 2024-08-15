@@ -101,10 +101,6 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   await events.processors.init(proSdk.auditLogs.write)
-
-  if (await features.flags.isEnabled("SQS")) {
-    sdk.auditLogs.useSQLSearch()
-  }
 })
 
 process.on("uncaughtException", err => {
