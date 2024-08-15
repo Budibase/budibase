@@ -7,7 +7,7 @@ import env from "./environment"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
-import { sdk as proSdk, sdk } from "@budibase/pro"
+import { sdk as proSdk } from "@budibase/pro"
 import {
   auth,
   logging,
