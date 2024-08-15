@@ -49,7 +49,7 @@ export const getGridVar = (device, param) => `--grid-${device}-${param}`
 // Determines whether a JS event originated from immediately within a grid
 export const isGridEvent = e => {
   return (
-    e.target.dataset.indicator === "true" ||
+    e.target.dataset?.indicator === "true" ||
     e.target
       .closest?.(".component")
       ?.parentNode.closest(".component")
