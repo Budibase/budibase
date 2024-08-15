@@ -118,8 +118,8 @@ export const gridLayout = (node, metadata) => {
     for (let param of Object.values(GridParams)) {
       let dVar = getGridVar(Devices.Desktop, param)
       let mVar = getGridVar(Devices.Mobile, param)
-      vars[dVar] = styles[dVar] || styles[mVar] || defaults[param]
-      vars[mVar] = styles[mVar] || styles[dVar] || defaults[param]
+      vars[dVar] = styles[dVar] ?? styles[mVar] ?? defaults[param]
+      vars[mVar] = styles[mVar] ?? styles[dVar] ?? defaults[param]
     }
 
     // Apply some overrides depending on component state
