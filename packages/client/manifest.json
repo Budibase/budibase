@@ -6835,6 +6835,10 @@
       "width": 400,
       "height": 100
     },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "start"
+    },
     "settings": [
       {
         "type": "text",
