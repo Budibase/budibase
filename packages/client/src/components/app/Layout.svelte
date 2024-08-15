@@ -410,9 +410,6 @@
     max-width: 100%;
     gap: var(--spacing-xl);
   }
-  .nav.size--max {
-    padding: calc(var(--grid-spacing) * 2px);
-  }
   .nav :global(.spectrum-Icon) {
     color: var(--navTextColor);
     opacity: 0.75;
@@ -507,6 +504,8 @@
   }
   .size--max {
     width: 100%;
+  }
+  .main.size--max {
     padding: 0;
   }
 
