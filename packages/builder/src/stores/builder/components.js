@@ -619,6 +619,7 @@ export class ComponentStore extends BudiStore {
     this.update(state => {
       state.componentToPaste = cloneDeep(component)
       state.componentToPaste.isCut = cut
+      state.componentToPaste.screenId = get(screenStore).selectedScreenId
       return state
     })
 
@@ -677,14 +678,29 @@ export class ComponentStore extends BudiStore {
         return false
       }
       const cut = componentToPaste.isCut
+      const sourceScreenId = componentToPaste.screenId
       const originalId = componentToPaste._id
       delete componentToPaste.isCut
+      delete componentToPaste.screenId
 
       // Make new component unique if copying
       if (!cut) {
         componentToPaste = makeComponentUnique(componentToPaste)
       }
       newComponentId = componentToPaste._id
+
+      // Strip grid position metadata if pasting into a new screen, but keep
+      // alignment metadata
+      if (sourceScreenId && sourceScreenId !== screen._id) {
+        for (let style of Object.keys(componentToPaste._styles?.normal || {})) {
+          if (
+            style.startsWith("--grid") &&
+            (style.endsWith("-start") || style.endsWith("-end"))
+          ) {
+            delete componentToPaste._styles.normal[style]
+          }
+        }
+      }
 
       // Delete old component if cutting
       if (cut) {
