@@ -111,8 +111,13 @@ export type LoopStepOutputs = {
 }
 
 export type BranchStepInputs = {
-  conditions: SearchFilters
+  branches: Branch[]
   children?: Record<string, AutomationStep[]>
+}
+
+export type Branch = {
+  name: string
+  condition: SearchFilters
 }
 
 export type MakeIntegrationInputs = {
