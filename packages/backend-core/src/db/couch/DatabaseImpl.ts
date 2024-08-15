@@ -25,8 +25,8 @@ import { newid } from "../../docIds/newid"
 import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 import { checkSlashesInUrl } from "../../helpers"
-import env from "../../environment"
 import { sqlLog } from "../../sql/utils"
+import { features } from "../.."
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
@@ -401,7 +401,10 @@ export class DatabaseImpl implements Database {
   }
 
   async destroy() {
-    if (env.SQS_SEARCH_ENABLE && (await this.exists(SQLITE_DESIGN_DOC_ID))) {
+    if (
+      (await features.flags.isEnabled("SQS")) &&
+      (await this.exists(SQLITE_DESIGN_DOC_ID))
+    ) {
       // delete the design document, then run the cleanup operation
       const definition = await this.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
       // remove all tables - save the definition then trigger a cleanup

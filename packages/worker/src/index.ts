@@ -7,7 +7,7 @@ import env from "./environment"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
-import { sdk as proSdk } from "@budibase/pro"
+import { sdk as proSdk, sdk } from "@budibase/pro"
 import {
   auth,
   logging,
@@ -101,6 +101,10 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   await events.processors.init(proSdk.auditLogs.write)
+
+  if (await features.flags.isEnabled("SQS")) {
+    sdk.auditLogs.useSQLSearch()
+  }
 })
 
 process.on("uncaughtException", err => {
