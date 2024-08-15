@@ -67,9 +67,9 @@ describe("feature flags", () => {
       expected: flags.defaults(),
     },
     {
-      it: "should fail when an environment flag is not recognised",
+      it: "should ignore unknown feature flags",
       environmentFlags: "default:TEST_BOOLEAN,default:FOO",
-      errorMessage: "Feature: FOO is not an allowed option",
+      expected: { TEST_BOOLEAN: true },
     },
     {
       it: "should be able to read boolean flags from PostHog",
