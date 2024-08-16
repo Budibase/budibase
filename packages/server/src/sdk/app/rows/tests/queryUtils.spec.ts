@@ -195,26 +195,26 @@ describe("query utils", () => {
     })
 
     it("returns table schema fields and _id", async () => {
-      const table: Table = {
+      const table: Table = await config.api.table.save({
         ...structures.basicTable(),
         schema: {
           name: { name: "name", type: FieldType.STRING },
           age: { name: "age", type: FieldType.NUMBER },
         },
-      }
+      })
 
       const result = await getQueryableFields(Object.keys(table.schema), table)
       expect(result).toEqual(["_id", "name", "age"])
     })
 
     it("excludes hidden fields", async () => {
-      const table: Table = {
+      const table: Table = await config.api.table.save({
         ...structures.basicTable(),
         schema: {
           name: { name: "name", type: FieldType.STRING },
           age: { name: "age", type: FieldType.NUMBER, visible: false },
         },
-      }
+      })
 
       const result = await getQueryableFields(Object.keys(table.schema), table)
       expect(result).toEqual(["_id", "name"])
@@ -230,7 +230,7 @@ describe("query utils", () => {
         },
       })
 
-      const table: Table = {
+      const table: Table = await config.api.table.save({
         ...structures.basicTable(),
         schema: {
           name: { name: "name", type: FieldType.STRING },
@@ -242,7 +242,7 @@ describe("query utils", () => {
             fieldName: "table",
           },
         },
-      }
+      })
 
       const result = await config.doInContext(config.appId, () => {
         return getQueryableFields(Object.keys(table.schema), table)
@@ -267,7 +267,7 @@ describe("query utils", () => {
         },
       })
 
-      const table: Table = {
+      const table: Table = await config.api.table.save({
         ...structures.basicTable(),
         schema: {
           name: { name: "name", type: FieldType.STRING },
@@ -279,7 +279,7 @@ describe("query utils", () => {
             fieldName: "table",
           },
         },
-      }
+      })
 
       const result = await config.doInContext(config.appId, () => {
         return getQueryableFields(Object.keys(table.schema), table)
@@ -297,7 +297,7 @@ describe("query utils", () => {
         },
       })
 
-      const table: Table = {
+      const table: Table = await config.api.table.save({
         ...structures.basicTable(),
         schema: {
           name: { name: "name", type: FieldType.STRING },
@@ -310,7 +310,7 @@ describe("query utils", () => {
             visible: false,
           },
         },
-      }
+      })
 
       const result = await config.doInContext(config.appId, () => {
         return getQueryableFields(Object.keys(table.schema), table)
@@ -318,61 +318,82 @@ describe("query utils", () => {
       expect(result).toEqual(["_id", "name"])
     })
 
-    it("includes nested relationship fields", async () => {
-      const aux1: Table = await config.api.table.save({
-        ...structures.basicTable(),
-        name: "aux1Table",
-        schema: {
-          name: { name: "name", type: FieldType.STRING },
-        },
-      })
-      const aux2: Table = await config.api.table.save({
-        ...structures.basicTable(),
-        name: "aux2Table",
-        schema: {
-          title: { name: "title", type: FieldType.STRING },
-          aux1: {
-            name: "aux1",
-            type: FieldType.LINK,
-            tableId: aux1._id!,
-            relationshipType: RelationshipType.ONE_TO_MANY,
-            fieldName: "aux2",
+    describe("nested relationship", () => {
+      let table: Table, aux1: Table, aux2: Table
+
+      beforeAll(async () => {
+        aux1 = await config.api.table.save({
+          ...structures.basicTable(),
+          name: "aux1Table",
+          schema: {
+            name: { name: "name", type: FieldType.STRING },
           },
-        },
-      })
-
-      const table: Table = {
-        ...structures.basicTable(),
-        schema: {
-          name: { name: "name", type: FieldType.STRING },
-          aux: {
-            name: "aux",
-            type: FieldType.LINK,
-            tableId: aux2._id!,
-            relationshipType: RelationshipType.ONE_TO_MANY,
-            fieldName: "table",
+        })
+        aux2 = await config.api.table.save({
+          ...structures.basicTable(),
+          name: "aux2Table",
+          schema: {
+            title: { name: "title", type: FieldType.STRING },
+            aux1_1: {
+              name: "aux1_1",
+              type: FieldType.LINK,
+              tableId: aux1._id!,
+              relationshipType: RelationshipType.ONE_TO_MANY,
+              fieldName: "aux2_1",
+            },
           },
-        },
-      }
+        })
 
-      const result = await config.doInContext(config.appId, () => {
-        return getQueryableFields(Object.keys(table.schema), table)
+        table = await config.api.table.save({
+          ...structures.basicTable(),
+          schema: {
+            name: { name: "name", type: FieldType.STRING },
+            aux1: {
+              name: "aux1",
+              type: FieldType.LINK,
+              tableId: aux1._id!,
+              relationshipType: RelationshipType.ONE_TO_MANY,
+              fieldName: "table",
+            },
+            aux2: {
+              name: "aux2",
+              type: FieldType.LINK,
+              tableId: aux2._id!,
+              relationshipType: RelationshipType.ONE_TO_MANY,
+              fieldName: "table",
+            },
+          },
+        })
       })
-      expect(result).toEqual([
-        "_id",
-        "name",
-        // Aux primitive props
-        "aux.title",
-        "aux2Table.title",
 
-        // Aux deep 1 primitive props
-        "aux.aux1.name",
-        "aux2Table.aux1.name",
+      it("includes nested relationship fields from main table", async () => {
+        const result = await config.doInContext(config.appId, () => {
+          return getQueryableFields(Object.keys(table.schema), table)
+        })
+        expect(result).toEqual([
+          "_id",
+          "name",
+          // deep 1 aux1 primitive props
+          "aux1.name",
+          "aux1Table.name",
 
-        // Aux deep 2 primitive props
-        "aux.aux1Table.name",
-        "aux2Table.aux1Table.name",
-      ])
+          // deep 2 aux1 primitive props
+          "aux1.aux2_1.title",
+          "aux1Table.aux2_1.title",
+          "aux1.aux2Table.title",
+          "aux1Table.aux2Table.title",
+
+          // deep 1 aux2 primitive props
+          "aux2.title",
+          "aux2Table.title",
+
+          // deep 2 aux2 primitive props
+          "aux2.aux1_1.name",
+          "aux2Table.aux1_1.name",
+          "aux2.aux1Table.name",
+          "aux2Table.aux1Table.name",
+        ])
+      })
     })
   })
 })
