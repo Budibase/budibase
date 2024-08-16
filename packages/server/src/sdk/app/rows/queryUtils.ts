@@ -56,10 +56,10 @@ export const getQueryableFields = async (
   fields: string[],
   table: Table
 ): Promise<string[]> => {
-  const handledTables = new Set<string>([table._id!])
   const extractTableFields = async (
     table: Table,
-    allowedFields: string[]
+    allowedFields: string[],
+    fromTables: string[]
   ): Promise<string[]> => {
     const result = []
     for (const field of Object.keys(table.schema).filter(
@@ -67,15 +67,15 @@ export const getQueryableFields = async (
     )) {
       const subSchema = table.schema[field]
       if (subSchema.type === FieldType.LINK) {
-        if (handledTables.has(`${table._id}_${subSchema.tableId}`)) {
+        if (fromTables.includes(subSchema.tableId)) {
           // avoid circular loops
           continue
         }
-        handledTables.add(`${table._id}_${subSchema.tableId}`)
         const relatedTable = await sdk.tables.getTable(subSchema.tableId)
         const relatedFields = await extractTableFields(
           relatedTable,
-          Object.keys(relatedTable.schema)
+          Object.keys(relatedTable.schema),
+          [...fromTables, subSchema.tableId]
         )
 
         result.push(
@@ -96,7 +96,7 @@ export const getQueryableFields = async (
     "_id", // Querying by _id is always allowed, even if it's never part of the schema
   ]
 
-  result.push(...(await extractTableFields(table, fields)))
+  result.push(...(await extractTableFields(table, fields, [table._id!])))
 
   return result
 }
