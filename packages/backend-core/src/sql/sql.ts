@@ -124,6 +124,21 @@ class InternalBuilder {
       .join(".")
   }
 
+  private generateRowNumberWindow(
+    sortOrder: SortOrder = SortOrder.ASCENDING
+  ): Knex.Raw {
+    if (!this.table.primary) {
+      throw new Error(
+        "Cannot generate pagination information without primary keys"
+      )
+    }
+    const direction = sortOrder === SortOrder.ASCENDING ? "asc" : "desc"
+    return this.knex.raw(
+      `ROW_NUMBER() OVER (ORDER BY ?? ${direction}) AS _row_num`,
+      this.table.primary
+    )
+  }
+
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
     const { resource, meta } = this.query
 
@@ -902,8 +917,7 @@ class InternalBuilder {
       if (!primary) {
         throw new Error("Primary key is required for upsert")
       }
-      const ret = query.insert(parsedBody).onConflict(primary).merge()
-      return ret
+      return query.insert(parsedBody).onConflict(primary).merge()
     } else if (
       this.client === SqlClient.MS_SQL ||
       this.client === SqlClient.ORACLE
@@ -943,22 +957,6 @@ class InternalBuilder {
     } else if (paginate && paginate.limit) {
       foundLimit = paginate.limit
     }
-    // counting should not sort, limit or offset
-    if (!counting) {
-      // add the found limit if supplied
-      if (foundLimit != null) {
-        query = query.limit(foundLimit)
-      }
-      // add overall pagination
-      if (foundOffset != null) {
-        query = query.offset(foundOffset)
-      }
-      // add sorting to pre-query
-      // no point in sorting when counting
-      query = this.addSorting(query)
-    }
-    // add filters to the query (where)
-    query = this.addFilters(query, filters)
 
     const alias = tableAliases?.[tableName] || tableName
     let preQuery: Knex.QueryBuilder = this.knex({
@@ -966,7 +964,7 @@ class InternalBuilder {
       // syntax, but it is the only way to alias a pre-query result as part of
       // a query - there is an alias dictionary type, but it assumes it can only
       // be a table name, not a pre-query
-      [alias]: query as any,
+      [alias]: query.select(["*", this.generateRowNumberWindow()]) as any,
     })
     // if counting, use distinct count, else select
     preQuery = !counting
@@ -989,6 +987,20 @@ class InternalBuilder {
     // if counting we can't set this limit
     if (limits?.base) {
       query = query.limit(limits.base)
+    }
+
+    // counting should not sort, limit or offset
+    // these are based on the _row_num
+    if (!counting && foundLimit) {
+      filters = filters ? filters : {}
+      filters.range = filters.range ? filters.range : {}
+      const offset = foundOffset || 1
+      filters.range._row_num = {
+        // our low/high is inclusive - to not exceed limit we need to exclude
+        // a single row on the end
+        low: offset,
+        high: offset + foundLimit - 1,
+      }
     }
 
     return this.addFilters(query, filters, { relationship: true })
