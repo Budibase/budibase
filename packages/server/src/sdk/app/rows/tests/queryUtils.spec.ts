@@ -319,182 +319,244 @@ describe("query utils", () => {
     })
 
     describe("nested relationship", () => {
-      let table: Table, aux1: Table, aux2: Table
+      describe("one-to-many", () => {
+        let table: Table, aux1: Table, aux2: Table
 
-      beforeAll(async () => {
-        const { _id: aux1Id } = await config.api.table.save({
-          ...structures.basicTable(),
-          name: "aux1Table",
-          schema: {
-            name: { name: "name", type: FieldType.STRING },
-          },
-        })
-        const { _id: aux2Id } = await config.api.table.save({
-          ...structures.basicTable(),
-          name: "aux2Table",
-          schema: {
-            title: { name: "title", type: FieldType.STRING },
-            aux1_1: {
-              name: "aux1_1",
-              type: FieldType.LINK,
-              tableId: aux1Id!,
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              fieldName: "aux2_1",
+        beforeAll(async () => {
+          const { _id: aux1Id } = await config.api.table.save({
+            ...structures.basicTable(),
+            name: "aux1Table",
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
             },
-            aux1_2: {
-              name: "aux1_2",
-              type: FieldType.LINK,
-              tableId: aux1Id!,
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              fieldName: "aux2_2",
+          })
+          const { _id: aux2Id } = await config.api.table.save({
+            ...structures.basicTable(),
+            name: "aux2Table",
+            schema: {
+              title: { name: "title", type: FieldType.STRING },
+              aux1_1: {
+                name: "aux1_1",
+                type: FieldType.LINK,
+                tableId: aux1Id!,
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                fieldName: "aux2_1",
+              },
+              aux1_2: {
+                name: "aux1_2",
+                type: FieldType.LINK,
+                tableId: aux1Id!,
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                fieldName: "aux2_2",
+              },
             },
-          },
+          })
+
+          const { _id: tableId } = await config.api.table.save({
+            ...structures.basicTable(),
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+              aux1: {
+                name: "aux1",
+                type: FieldType.LINK,
+                tableId: aux1Id!,
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                fieldName: "table",
+              },
+              aux2: {
+                name: "aux2",
+                type: FieldType.LINK,
+                tableId: aux2Id!,
+                relationshipType: RelationshipType.ONE_TO_MANY,
+                fieldName: "table",
+              },
+            },
+          })
+
+          // We need to refech them to get the updated foreign keys
+          aux1 = await config.api.table.get(aux1Id!)
+          aux2 = await config.api.table.get(aux2Id!)
+          table = await config.api.table.get(tableId!)
         })
 
-        const { _id: tableId } = await config.api.table.save({
-          ...structures.basicTable(),
-          schema: {
-            name: { name: "name", type: FieldType.STRING },
-            aux1: {
-              name: "aux1",
-              type: FieldType.LINK,
-              tableId: aux1Id!,
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              fieldName: "table",
-            },
-            aux2: {
-              name: "aux2",
-              type: FieldType.LINK,
-              tableId: aux2Id!,
-              relationshipType: RelationshipType.ONE_TO_MANY,
-              fieldName: "table",
-            },
-          },
+        it("includes nested relationship fields from main table", async () => {
+          const result = await config.doInContext(config.appId, () => {
+            return getQueryableFields(Object.keys(table.schema), table)
+          })
+          expect(result).toEqual([
+            "_id",
+            "name",
+            // deep 1 aux1 primitive props
+            "aux1.name",
+            "aux1Table.name",
+
+            // deep 2 aux1 primitive props
+            "aux1.aux2_1.title",
+            "aux1Table.aux2_1.title",
+            "aux1.aux2Table.title",
+            "aux1Table.aux2Table.title",
+
+            // deep 2 aux2 primitive props
+            "aux1.aux2_2.title",
+            "aux1Table.aux2_2.title",
+            "aux1.aux2Table.title",
+            "aux1Table.aux2Table.title",
+
+            // deep 1 aux2 primitive props
+            "aux2.title",
+            "aux2Table.title",
+
+            // deep 2 aux2 primitive props
+            "aux2.aux1_1.name",
+            "aux2Table.aux1_1.name",
+            "aux2.aux1Table.name",
+            "aux2Table.aux1Table.name",
+            "aux2.aux1_2.name",
+            "aux2Table.aux1_2.name",
+            "aux2.aux1Table.name",
+            "aux2Table.aux1Table.name",
+          ])
         })
 
-        // We need to refech them to get the updated foreign keys
-        aux1 = await config.api.table.get(aux1Id!)
-        aux2 = await config.api.table.get(aux2Id!)
-        table = await config.api.table.get(tableId!)
+        it("includes nested relationship fields from aux 1 table", async () => {
+          const result = await config.doInContext(config.appId, () => {
+            return getQueryableFields(Object.keys(aux1.schema), aux1)
+          })
+          expect(result).toEqual([
+            "_id",
+            "name",
+
+            // deep 1 aux2_1 primitive props
+            "aux2_1.title",
+            "aux2Table.title",
+
+            // deep 2 aux2_1 primitive props
+            "aux2_1.table.name",
+            "aux2Table.table.name",
+            "aux2_1.TestTable.name",
+            "aux2Table.TestTable.name",
+
+            // deep 1 aux2_2 primitive props
+            "aux2_2.title",
+            "aux2Table.title",
+
+            // deep 2 aux2_2 primitive props
+            "aux2_2.table.name",
+            "aux2Table.table.name",
+            "aux2_2.TestTable.name",
+            "aux2Table.TestTable.name",
+
+            // deep 1 table primitive props
+            "table.name",
+            "TestTable.name",
+
+            // deep 2 table primitive props
+            "table.aux2.title",
+            "TestTable.aux2.title",
+            "table.aux2Table.title",
+            "TestTable.aux2Table.title",
+          ])
+        })
+
+        it("includes nested relationship fields from aux 2 table", async () => {
+          const result = await config.doInContext(config.appId, () => {
+            return getQueryableFields(Object.keys(aux2.schema), aux2)
+          })
+          expect(result).toEqual([
+            "_id",
+            "title",
+
+            // deep 1 aux1_1 primitive props
+            "aux1_1.name",
+            "aux1Table.name",
+
+            // deep 2 aux1_1 primitive props
+            "aux1_1.table.name",
+            "aux1Table.table.name",
+            "aux1_1.TestTable.name",
+            "aux1Table.TestTable.name",
+
+            // deep 1 aux1_2 primitive props
+            "aux1_2.name",
+            "aux1Table.name",
+
+            // deep 2 aux1_2 primitive props
+            "aux1_2.table.name",
+            "aux1Table.table.name",
+            "aux1_2.TestTable.name",
+            "aux1Table.TestTable.name",
+
+            // deep 1 table primitive props
+            "table.name",
+            "TestTable.name",
+
+            // deep 2 table primitive props
+            "table.aux1.name",
+            "TestTable.aux1.name",
+            "table.aux1Table.name",
+            "TestTable.aux1Table.name",
+          ])
+        })
       })
 
-      it("includes nested relationship fields from main table", async () => {
-        const result = await config.doInContext(config.appId, () => {
-          return getQueryableFields(Object.keys(table.schema), table)
+      describe("many-to-many", () => {
+        let table: Table, aux: Table
+
+        beforeAll(async () => {
+          const { _id: auxId } = await config.api.table.save({
+            ...structures.basicTable(),
+            name: "auxTable",
+            schema: {
+              title: { name: "title", type: FieldType.STRING },
+            },
+          })
+
+          const { _id: tableId } = await config.api.table.save({
+            ...structures.basicTable(),
+            schema: {
+              name: { name: "name", type: FieldType.STRING },
+              aux: {
+                name: "aux",
+                type: FieldType.LINK,
+                tableId: auxId!,
+                relationshipType: RelationshipType.MANY_TO_MANY,
+                fieldName: "table",
+              },
+            },
+          })
+
+          // We need to refech them to get the updated foreign keys
+          aux = await config.api.table.get(auxId!)
+          table = await config.api.table.get(tableId!)
         })
-        expect(result).toEqual([
-          "_id",
-          "name",
-          // deep 1 aux1 primitive props
-          "aux1.name",
-          "aux1Table.name",
 
-          // deep 2 aux1 primitive props
-          "aux1.aux2_1.title",
-          "aux1Table.aux2_1.title",
-          "aux1.aux2Table.title",
-          "aux1Table.aux2Table.title",
+        it("includes nested relationship fields from main table", async () => {
+          const result = await config.doInContext(config.appId, () => {
+            return getQueryableFields(Object.keys(table.schema), table)
+          })
+          expect(result).toEqual([
+            "_id",
+            "name",
 
-          // deep 2 aux2 primitive props
-          "aux1.aux2_2.title",
-          "aux1Table.aux2_2.title",
-          "aux1.aux2Table.title",
-          "aux1Table.aux2Table.title",
-
-          // deep 1 aux2 primitive props
-          "aux2.title",
-          "aux2Table.title",
-
-          // deep 2 aux2 primitive props
-          "aux2.aux1_1.name",
-          "aux2Table.aux1_1.name",
-          "aux2.aux1Table.name",
-          "aux2Table.aux1Table.name",
-          "aux2.aux1_2.name",
-          "aux2Table.aux1_2.name",
-          "aux2.aux1Table.name",
-          "aux2Table.aux1Table.name",
-        ])
-      })
-
-      it("includes nested relationship fields from aux 1 table", async () => {
-        const result = await config.doInContext(config.appId, () => {
-          return getQueryableFields(Object.keys(aux1.schema), aux1)
+            // deep 1 aux primitive props
+            "aux.title",
+            "auxTable.title",
+          ])
         })
-        expect(result).toEqual([
-          "_id",
-          "name",
 
-          // deep 1 aux2_1 primitive props
-          "aux2_1.title",
-          "aux2Table.title",
+        it("includes nested relationship fields from aux table", async () => {
+          const result = await config.doInContext(config.appId, () => {
+            return getQueryableFields(Object.keys(aux.schema), aux)
+          })
+          expect(result).toEqual([
+            "_id",
+            "title",
 
-          // deep 2 aux2_1 primitive props
-          "aux2_1.table.name",
-          "aux2Table.table.name",
-          "aux2_1.TestTable.name",
-          "aux2Table.TestTable.name",
-
-          // deep 1 aux2_2 primitive props
-          "aux2_2.title",
-          "aux2Table.title",
-
-          // deep 2 aux2_2 primitive props
-          "aux2_2.table.name",
-          "aux2Table.table.name",
-          "aux2_2.TestTable.name",
-          "aux2Table.TestTable.name",
-
-          // deep 1 table primitive props
-          "table.name",
-          "TestTable.name",
-
-          // deep 2 table primitive props
-          "table.aux2.title",
-          "TestTable.aux2.title",
-          "table.aux2Table.title",
-          "TestTable.aux2Table.title",
-        ])
-      })
-
-      it("includes nested relationship fields from aux 2 table", async () => {
-        const result = await config.doInContext(config.appId, () => {
-          return getQueryableFields(Object.keys(aux2.schema), aux2)
+            // deep 1 dependency primitive props
+            "table.name",
+            "TestTable.name",
+          ])
         })
-        expect(result).toEqual([
-          "_id",
-          "title",
-
-          // deep 1 aux1_1 primitive props
-          "aux1_1.name",
-          "aux1Table.name",
-
-          // deep 2 aux1_1 primitive props
-          "aux1_1.table.name",
-          "aux1Table.table.name",
-          "aux1_1.TestTable.name",
-          "aux1Table.TestTable.name",
-
-          // deep 1 aux1_2 primitive props
-          "aux1_2.name",
-          "aux1Table.name",
-
-          // deep 2 aux1_2 primitive props
-          "aux1_2.table.name",
-          "aux1Table.table.name",
-          "aux1_2.TestTable.name",
-          "aux1Table.TestTable.name",
-
-          // deep 1 table primitive props
-          "table.name",
-          "TestTable.name",
-
-          // deep 2 table primitive props
-          "table.aux1.name",
-          "TestTable.aux1.name",
-          "table.aux1Table.name",
-          "TestTable.aux1Table.name",
-        ])
       })
     })
   })
