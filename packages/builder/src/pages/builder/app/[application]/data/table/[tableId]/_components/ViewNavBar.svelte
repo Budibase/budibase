@@ -6,7 +6,13 @@
     contextMenuStore,
   } from "stores/builder"
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
-  import { Icon, Button, Popover, ActionMenu, MenuItem } from "@budibase/bbui"
+  import {
+    Icon,
+    Button,
+    ActionButton,
+    ActionMenu,
+    MenuItem,
+  } from "@budibase/bbui"
   import { params, url } from "@roxi/routify"
   import EditViewModal from "./EditViewModal.svelte"
   import DeleteViewModal from "./DeleteViewModal.svelte"
@@ -19,12 +25,13 @@
   import { alphabetical } from "components/backend/TableNavigator/utils"
   import CreateViewModal from "./CreateViewModal.svelte"
   import { onDestroy } from "svelte"
+  import { derived } from "svelte/store"
 
-  let viewContainer
+  // View overflow
   let observer
+  let viewContainer
   let viewVisibiltyMap = {}
-  let overflowPopover
-  let anchor
+  let overflowMenu
 
   // Editing table
   let createViewModal
@@ -46,8 +53,15 @@
     .filter(x => x.version === 2)
     .slice()
     .sort(alphabetical)
-  $: setUpObserver(viewContainer, views)
+  $: setUpObserver(views)
   $: overflowedViews = views.filter(view => !viewVisibiltyMap[view.id])
+  $: viewHidden = viewVisibiltyMap[activeId] === false
+
+  const viewUrl = derived([url, params], ([$url, $params]) => viewId => {
+    return $url(`../${$params.tableId}/${encodeURIComponent(viewId)}`)
+  })
+
+  const tableUrl = derived(url, $url => tableId => $url(`../${tableId}`))
 
   const openTableContextMenu = e => {
     if (!tableEditable) {
@@ -114,11 +128,24 @@
     )
   }
 
-  const setUpObserver = (viewContainer, views) => {
-    if (!views.length || !viewContainer) {
-      observer?.disconnect()
+  const editOverflowView = async view => {
+    editableView = view
+    await tick()
+    editViewModal?.show()
+  }
+
+  const deleteOverflowView = async view => {
+    editableView = view
+    await tick()
+    deleteViewModal?.show()
+  }
+
+  const setUpObserver = async views => {
+    observer?.disconnect()
+    if (!views.length) {
       return
     }
+    await tick()
     observer = new IntersectionObserver(
       entries => {
         let updates = {}
@@ -136,7 +163,9 @@
       }
     )
     for (let child of viewContainer.children) {
-      observer.observe(child)
+      if (child.dataset.id) {
+        observer.observe(child)
+      }
     }
   }
 
@@ -152,7 +181,7 @@
     size="24"
   />
   <a
-    href={$url(`../${tableId}`)}
+    href={$tableUrl(tableId)}
     class="nav-item"
     class:active={tableId === activeId}
     on:contextmenu={openTableContextMenu}
@@ -178,7 +207,7 @@
       {#each views as view (view.id)}
         {@const selectedBy = $userSelectedResourceMap[view.id]}
         <a
-          href={$url(`../${tableId}/${encodeURIComponent(view.id)}`)}
+          href={$viewUrl(view.id)}
           class="nav-item"
           class:active={view.id === activeId}
           class:hidden={!viewVisibiltyMap[view.id]}
@@ -209,27 +238,42 @@
     </span>
   {/if}
   {#if overflowedViews.length}
-    <ActionMenu align="right">
+    <ActionMenu align="right" bind:this={overflowMenu}>
       <div slot="control">
-        <Icon
-          name="ChevronDown"
-          size="XL"
-          hoverable
-          color="var(--spectrum-global-color-gray-600)"
-          hoverColor="var(--spectrum-global-color-gray-900)"
-          on:click={overflowPopover?.show}
-        />
+        <ActionButton icon="ChevronDown" quiet selected={viewHidden}>
+          {overflowedViews.length} more
+        </ActionButton>
       </div>
       {#each overflowedViews as view}
-        <a
-          class="nav-overflow-item"
-          class:active={view.id === activeId}
-          href={$url(`../${tableId}/${encodeURIComponent(view.id)}`)}
+        <ActionMenu
+          align="left-context-menu"
+          openOnHover
+          animate={false}
+          offset={-4}
         >
-          <MenuItem>
-            {view.name}
+          <div slot="control">
+            <a
+              href={$viewUrl(view.id)}
+              class="nav-overflow-item"
+              class:active={view.id === activeId}
+              on:click={overflowMenu?.hide}
+            >
+              <MenuItem icon={viewHidden ? "Checkmark" : null}>
+                {view.name}
+                <Icon slot="right" name="ChevronRight" />
+              </MenuItem>
+            </a>
+          </div>
+          <a href={$viewUrl(view.id)}>
+            <MenuItem icon="Checkmark">Select</MenuItem>
+          </a>
+          <MenuItem icon="Edit" on:click={() => editOverflowView(view)}>
+            Edit
           </MenuItem>
-        </a>
+          <MenuItem icon="Delete" on:click={() => deleteOverflowView(view)}>
+            Delete
+          </MenuItem>
+        </ActionMenu>
       {/each}
     </ActionMenu>
   {/if}
@@ -266,22 +310,23 @@
     justify-content: flex-start;
     align-items: center;
     padding: 0 var(--spacing-xl);
-    gap: 8px;
+    gap: 12px;
   }
   .nav__views {
-    width: 0;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     overflow: hidden;
     gap: 8px;
+    margin-left: -4px;
   }
 
   /* Table and view items */
   .nav-item {
-    padding: 6px 8px;
+    padding: 0 8px;
+    height: 32px;
     border-radius: 4px;
     display: flex;
     flex-direction: row;
@@ -308,5 +353,10 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+  }
+
+  /* OVerflow items */
+  .nav-overflow-item:not(.active) :global(> .spectrum-Menu-item > .icon) {
+    visibility: hidden;
   }
 </style>
