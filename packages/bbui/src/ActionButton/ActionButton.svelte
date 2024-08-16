@@ -115,6 +115,7 @@
   }
   .spectrum-ActionButton--quiet.is-selected {
     color: var(--spectrum-global-color-gray-900);
+    background: var(--spectrum-global-color-gray-300);
   }
   .noPadding {
     padding: 0;
