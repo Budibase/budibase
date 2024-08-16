@@ -4,10 +4,13 @@
   import { getColumnIcon } from "../lib/utils"
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
+  import { FieldType } from "@budibase/types"
 
   export let allowViewReadonlyColumns = false
 
   const { columns, datasource, dispatch } = getContext("grid")
+
+  $: allowRelationshipSchemas = true // TODO
 
   const toggleColumn = async (column, permission) => {
     const visible = permission !== PERMISSION_OPTIONS.HIDDEN
@@ -94,11 +97,16 @@
           {column.label}
         </div>
       </div>
-      <ToggleActionButtonGroup
-        on:click={e => toggleColumn(column, e.detail)}
-        value={columnToPermissionOptions(column)}
-        options={column.options}
-      />
+      <div class="column-options">
+        <ToggleActionButtonGroup
+          on:click={e => toggleColumn(column, e.detail)}
+          value={columnToPermissionOptions(column)}
+          options={column.options}
+        />
+        {#if allowRelationshipSchemas && column.schema.type === FieldType.LINK}
+          <Icon size="S" name="ChevronRight" />
+        {/if}
+      </div>
     {/each}
   </div>
 </div>
@@ -130,5 +138,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+  }
+  .column-options {
+    display: flex;
+    gap: var(--spacing-s);
   }
 </style>
