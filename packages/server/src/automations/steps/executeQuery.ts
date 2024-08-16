@@ -7,13 +7,13 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   ExecuteQueryStepInputs,
   ExecuteQueryStepOutputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "External Data Connector",
   tagline: "Execute Data Connector",
   icon: "Data",

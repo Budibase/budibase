@@ -2,12 +2,12 @@ import {
   AutomationCustomIOType,
   AutomationIOType,
   AutomationStepType,
-  AutomationTriggerSchema,
   AutomationTriggerStepId,
   AutomationEventType,
+  AutomationTriggerDefinition,
 } from "@budibase/types"
 
-export const definition: AutomationTriggerSchema = {
+export const definition: AutomationTriggerDefinition = {
   name: "App Action",
   event: AutomationEventType.APP_TRIGGER,
   icon: "Apps",
@@ -38,12 +38,4 @@ export const definition: AutomationTriggerSchema = {
     },
   },
   type: AutomationStepType.TRIGGER,
-}
-
-export type AppActionTriggerInputs = {
-  fields: object
-}
-
-export type AppActionTriggerOutputs = {
-  fields: object
 }

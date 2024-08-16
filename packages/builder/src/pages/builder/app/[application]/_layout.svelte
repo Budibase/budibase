@@ -9,7 +9,6 @@
     deploymentStore,
   } from "stores/builder"
   import { auth, appsStore } from "stores/portal"
-  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
     Icon,
     Tabs,
@@ -90,16 +89,14 @@
 
   const initTour = async () => {
     // Check if onboarding is enabled.
-    if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
-      if (!$auth.user?.onboardedAt) {
-        builderStore.startBuilderOnboarding()
-      } else {
-        // Feature tour date
-        const release_date = new Date("2023-03-01T00:00:00.000Z")
-        const onboarded = new Date($auth.user?.onboardedAt)
-        if (onboarded < release_date) {
-          builderStore.setTour(TOUR_KEYS.FEATURE_ONBOARDING)
-        }
+    if (!$auth.user?.onboardedAt) {
+      builderStore.startBuilderOnboarding()
+    } else {
+      // Feature tour date
+      const release_date = new Date("2023-03-01T00:00:00.000Z")
+      const onboarded = new Date($auth.user?.onboardedAt)
+      if (onboarded < release_date) {
+        builderStore.setTour(TOUR_KEYS.FEATURE_ONBOARDING)
       }
     }
   }
