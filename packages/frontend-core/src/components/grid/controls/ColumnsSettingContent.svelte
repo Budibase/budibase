@@ -1,17 +1,21 @@
 <script>
   import { getContext } from "svelte"
-  import { Icon, notifications, ActionButton } from "@budibase/bbui"
+  import { Icon, notifications, ActionButton, Popover } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
   import { FieldType } from "@budibase/types"
+  import { tables } from "stores/builder"
 
-  export let allowViewReadonlyColumns = false
+  export let allowViewReadonlyColumns
   export let columns
 
   const { datasource, dispatch } = getContext("grid")
 
   $: allowRelationshipSchemas = true // TODO
+  let relationshipPanelOpen = false
+  let relationshipPanelAnchor
+  let relationshipPanelColumns = []
 
   const toggleColumn = async (column, permission) => {
     const visible = permission !== PERMISSION_OPTIONS.HIDDEN
@@ -107,7 +111,24 @@
         {#if allowRelationshipSchemas && column.schema.type === FieldType.LINK}
           <div class="relationship-columns">
             <ActionButton
-              on:click={() => dispatch("click", "")}
+              on:click={e => {
+                const relTable = $tables.list.find(
+                  table => table._id === column.schema.tableId
+                )
+                relationshipPanelColumns = Object.values(
+                  relTable?.schema || {}
+                ).map(schema => ({
+                  name: schema.name,
+                  label: schema.name,
+                  schema,
+                }))
+                console.warn({
+                  columns,
+                  relationshipPanelColumns,
+                })
+                relationshipPanelAnchor = e.currentTarget
+                relationshipPanelOpen = !relationshipPanelOpen
+              }}
               size="S"
               icon="ChevronRight"
               quiet
@@ -118,6 +139,19 @@
     {/each}
   </div>
 </div>
+
+{#if allowRelationshipSchemas}
+  <Popover
+    bind:open={relationshipPanelOpen}
+    anchor={relationshipPanelAnchor}
+    align="right-outside"
+  >
+    <svelte:self
+      {allowViewReadonlyColumns}
+      columns={relationshipPanelColumns}
+    />
+  </Popover>
+{/if}
 
 <style>
   .relationship-columns :global(.spectrum-ActionButton) {
