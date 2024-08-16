@@ -132,10 +132,14 @@ class InternalBuilder {
         "Cannot generate pagination information without primary keys"
       )
     }
+    const tableName = getTableName(this.table)
+    const aliases = this.query.tableAliases
+    const aliased =
+      tableName && aliases?.[tableName] ? aliases[tableName] : this.table?.name
     const direction = sortOrder === SortOrder.ASCENDING ? "asc" : "desc"
     return this.knex.raw(
-      `ROW_NUMBER() OVER (ORDER BY ?? ${direction}) AS _row_num`,
-      this.table.primary
+      `ROW_NUMBER() over (order by ?? ${direction}) as _row_num`,
+      this.knex.raw(`\`${aliased}.${this.table.primary[0]}\``)
     )
   }
 
@@ -347,6 +351,7 @@ class InternalBuilder {
     filters: SearchFilters | undefined,
     opts?: {
       relationship?: boolean
+      disableAliasing?: boolean
     }
   ): Knex.QueryBuilder {
     if (!filters) {
@@ -379,7 +384,9 @@ class InternalBuilder {
           (castedTypeValue = structure[key]) &&
           complexKeyFn
         ) {
-          const alias = getTableAlias(tableName)
+          const alias = opts?.disableAliasing
+            ? undefined
+            : getTableAlias(tableName)
           complexKeyFn(
             castedTypeValue.id.map((x: string) =>
               alias ? `${alias}.${x}` : x
@@ -387,7 +394,9 @@ class InternalBuilder {
             castedTypeValue.values
           )
         } else if (!isRelationshipField) {
-          const alias = getTableAlias(tableName)
+          const alias = opts?.disableAliasing
+            ? undefined
+            : getTableAlias(tableName)
           fn(alias ? `${alias}.${updatedKey}` : updatedKey, value)
         }
         if (opts?.relationship && isRelationshipField) {
@@ -958,25 +967,17 @@ class InternalBuilder {
       foundLimit = paginate.limit
     }
 
-    const alias = tableAliases?.[tableName] || tableName
-    let preQuery: Knex.QueryBuilder = this.knex({
-      // the typescript definition for the knex constructor doesn't support this
-      // syntax, but it is the only way to alias a pre-query result as part of
-      // a query - there is an alias dictionary type, but it assumes it can only
-      // be a table name, not a pre-query
-      [alias]: query.select(["*", this.generateRowNumberWindow()]) as any,
-    })
     // if counting, use distinct count, else select
-    preQuery = !counting
-      ? preQuery.select(this.generateSelectStatement())
-      : this.addDistinctCount(preQuery)
+    query = !counting
+      ? query.select(this.generateSelectStatement())
+      : this.addDistinctCount(query)
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClient.MS_SQL && !counting) {
-      preQuery = this.addSorting(preQuery)
+      query = this.addSorting(query)
     }
     // handle joins
     query = this.addRelationships(
-      preQuery,
+      query,
       tableName,
       relationships,
       endpoint.schema,
@@ -991,19 +992,32 @@ class InternalBuilder {
 
     // counting should not sort, limit or offset
     // these are based on the _row_num
+    let paginationFilters: SearchFilters | undefined
     if (!counting && foundLimit) {
-      filters = filters ? filters : {}
-      filters.range = filters.range ? filters.range : {}
       const offset = foundOffset || 1
-      filters.range._row_num = {
-        // our low/high is inclusive - to not exceed limit we need to exclude
-        // a single row on the end
-        low: offset,
-        high: offset + foundLimit - 1,
+      paginationFilters = {
+        range: {
+          _row_num: {
+            // our low/high is inclusive - to not exceed limit we need to exclude
+            // a single row on the end
+            low: offset,
+            high: offset + foundLimit - 1,
+          },
+        },
       }
     }
 
-    return this.addFilters(query, filters, { relationship: true })
+    const mainQuery = this.addFilters(query, filters, { relationship: true })
+    if (paginationFilters) {
+      const cte = this.knex
+        .select("*")
+        .from(
+          this.knex.select("*", this.generateRowNumberWindow()).from(mainQuery)
+        )
+      return this.addFilters(cte, paginationFilters, { disableAliasing: true })
+    } else {
+      return mainQuery
+    }
   }
 
   update(opts: QueryOptions): Knex.QueryBuilder {
