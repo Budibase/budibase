@@ -43,6 +43,7 @@
       },
       "rules": {
         "no-unused-vars": "off",
+        "local-rules/no-barrel-imports": "error",
         "local-rules/no-budibase-imports": "error",
         "local-rules/no-console-error": "error",
         "@typescript-eslint/no-unused-vars": [

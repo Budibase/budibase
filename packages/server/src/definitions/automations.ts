@@ -1,12 +1,4 @@
-import {
-  AutomationResults,
-  AutomationStep,
-  LoopStepType,
-} from "@budibase/types"
-
-export interface LoopStep extends AutomationStep {
-  inputs: LoopInput
-}
+import { AutomationResults, LoopStepType } from "@budibase/types"
 
 export interface LoopInput {
   option: LoopStepType

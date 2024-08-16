@@ -54,9 +54,9 @@ async function queueRelevantRowAutomations(
       return trigger && trigger.event === eventType && !automation.disabled
     })
 
-    for (let automation of automations) {
-      let automationDef = automation.definition
-      let automationTrigger = automationDef?.trigger
+    for (const automation of automations) {
+      const automationDef = automation.definition
+      const automationTrigger = automationDef?.trigger
       // don't queue events which are for dev apps, only way to test automations is
       // running tests on them, in production the test flag will never
       // be checked due to lazy evaluation (first always false)

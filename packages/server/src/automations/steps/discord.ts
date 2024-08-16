@@ -2,18 +2,18 @@ import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
   ExternalAppStepOutputs,
   DiscordStepInputs,
+  AutomationStepDefinition,
 } from "@budibase/types"
 
 const DEFAULT_USERNAME = "Budibase Automate"
 const DEFAULT_AVATAR_URL = "https://i.imgur.com/a1cmTKM.png"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Discord Message",
   tagline: "Send a message to a Discord server",
   description: "Send a message to a Discord server",

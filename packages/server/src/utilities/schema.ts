@@ -146,7 +146,8 @@ export function parse(rows: Rows, table: Table): Rows {
   return rows.map(row => {
     const parsedRow: Row = {}
 
-    Object.entries(row).forEach(([columnName, columnData]) => {
+    Object.keys(row).forEach(columnName => {
+      const columnData = row[columnName]
       const schema = table.schema
       if (!(columnName in schema)) {
         // Objects can be present in the row data but not in the schema, so make sure we don't proceed in such a case
