@@ -1,14 +1,15 @@
 <script>
   import { getContext } from "svelte"
-  import { Icon, notifications } from "@budibase/bbui"
+  import { Icon, notifications, ActionButton } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
   import { FieldType } from "@budibase/types"
 
   export let allowViewReadonlyColumns = false
+  export let columns
 
-  const { columns, datasource, dispatch } = getContext("grid")
+  const { datasource, dispatch } = getContext("grid")
 
   $: allowRelationshipSchemas = true // TODO
 
@@ -37,7 +38,7 @@
     HIDDEN: "hidden",
   }
 
-  $: displayColumns = $columns.map(c => {
+  $: displayColumns = columns.map(c => {
     const isRequired = helpers.schema.isRequired(c.schema.constraints)
     const requiredTooltip = isRequired && "Required columns must be writable"
     const editEnabled =
@@ -104,7 +105,14 @@
           options={column.options}
         />
         {#if allowRelationshipSchemas && column.schema.type === FieldType.LINK}
-          <Icon size="S" name="ChevronRight" />
+          <div class="relationship-columns">
+            <ActionButton
+              on:click={() => dispatch("click", "")}
+              size="S"
+              icon="ChevronRight"
+              quiet
+            />
+          </div>
         {/if}
       </div>
     {/each}
@@ -112,6 +120,11 @@
 </div>
 
 <style>
+  .relationship-columns :global(.spectrum-ActionButton) {
+    width: 28px;
+    height: 28px;
+  }
+
   .content {
     padding: 12px 12px;
     display: flex;
@@ -141,6 +154,6 @@
   }
   .column-options {
     display: flex;
-    gap: var(--spacing-s);
+    gap: var(--spacing-xs);
   }
 </style>
