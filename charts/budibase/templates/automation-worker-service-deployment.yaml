@@ -209,7 +209,7 @@ spec:
               key: {{ .secretKey | quote }}
         {{- end}}
 
-        image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
+        image: {{ .Values.globals.dockerRegistry }}budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         {{- if .Values.services.automationWorkers.startupProbe }}
         {{- with .Values.services.automationWorkers.startupProbe }}
