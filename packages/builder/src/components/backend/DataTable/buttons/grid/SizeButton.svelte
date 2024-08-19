@@ -66,6 +66,7 @@
   }
 </script>
 
+#
 <div bind:this={anchor}>
   <ActionButton
     icon="MoveUpDown"
