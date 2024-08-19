@@ -91,6 +91,34 @@
 
     return PERMISSION_OPTIONS.WRITABLE
   }
+
+  function onRelationshipOpen(column, domElement) {
+    const relTable = $tables.list.find(
+      table => table._id === column.schema.tableId
+    )
+    relationshipPanelColumns = Object.values(relTable?.schema || {})
+      .filter(
+        schema => ![FieldType.LINK, FieldType.FORMULA].includes(schema.type)
+      )
+      .map(column => {
+        const isPrimaryDisplay = relTable.primaryDisplay === column.name
+        return {
+          name: column.name,
+          label: column.name,
+          primaryDisplay: isPrimaryDisplay,
+          schema: {
+            ...column,
+            visible: !!isPrimaryDisplay,
+          },
+        }
+      })
+      .sort((a, b) =>
+        a.primaryDisplay === b.primaryDisplay ? 0 : a.primaryDisplay ? -1 : 1
+      )
+
+    relationshipPanelAnchor = domElement
+    relationshipPanelOpen = !relationshipPanelOpen
+  }
 </script>
 
 <div class="content">
@@ -111,23 +139,7 @@
         {#if allowRelationshipSchemas && column.schema.type === FieldType.LINK}
           <div class="relationship-columns">
             <ActionButton
-              on:click={e => {
-                const relTable = $tables.list.find(
-                  table => table._id === column.schema.tableId
-                )
-                relationshipPanelColumns = Object.values(relTable?.schema || {})
-                  .filter(
-                    schema =>
-                      ![FieldType.LINK, FieldType.FORMULA].includes(schema.type)
-                  )
-                  .map(schema => ({
-                    name: schema.name,
-                    label: schema.name,
-                    schema,
-                  }))
-                relationshipPanelAnchor = e.currentTarget
-                relationshipPanelOpen = !relationshipPanelOpen
-              }}
+              on:click={e => onRelationshipOpen(column, e.currentTarget)}
               size="S"
               icon="ChevronRight"
               quiet
