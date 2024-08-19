@@ -56,7 +56,7 @@ describe("Captures of real examples", () => {
       const queryJson = getJson("basicFetchWithRelationships.json")
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
-        bindings: [relationshipLimit, limit],
+        bindings: [1, relationshipLimit, limit],
         sql: expect.stringContaining(
           multiline(`select "a"."year" as "a.year", "a"."firstname" as "a.firstname", "a"."personid" as "a.personid", 
               "a"."address" as "a.address", "a"."age" as "a.age", "a"."type" as "a.type", "a"."city" as "a.city", 
@@ -72,10 +72,9 @@ describe("Captures of real examples", () => {
       const queryJson = getJson("filterByRelationship.json")
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
-        bindings: [relationshipLimit, "assembling", limit],
+        bindings: ["assembling", 1, relationshipLimit, limit],
         sql: expect.stringContaining(
-          multiline(`where COALESCE("b"."taskname" = $2, FALSE) 
-            order by "a"."productname" asc nulls first, "a"."productid" asc limit $3`)
+          `where COALESCE("b"."taskname" = $1, FALSE) order by "a"."productname" asc nulls first, "a"."productid" asc`
         ),
       })
     })
@@ -84,7 +83,7 @@ describe("Captures of real examples", () => {
       const queryJson = getJson("fetchManyToMany.json")
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
-        bindings: [relationshipLimit, limit],
+        bindings: [1, relationshipLimit, limit],
         sql: expect.stringContaining(
           multiline(`left join "products_tasks" as "c" on "a"."productid" = "c"."productid" 
               left join "tasks" as "b" on "b"."taskid" = "c"."taskid" `)
@@ -97,13 +96,14 @@ describe("Captures of real examples", () => {
       const filters = queryJson.filters?.oneOf?.taskid as number[]
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
-        bindings: [...filters, limit, ...filters, limit],
+        bindings: [...filters, 1, limit, limit],
         sql: multiline(
-          `select "a"."executorid" as "a.executorid", "a"."taskname" as "a.taskname", "a"."taskid" as "a.taskid",
-          "a"."completed" as "a.completed", "a"."qaid" as "a.qaid", "b"."productname" as "b.productname", "b"."productid" as "b.productid"
-          from (select * from "tasks" as "a" where "a"."taskid" in ($1, $2) order by "a"."taskid" asc limit $3) as "a"
-          left join "products_tasks" as "c" on "a"."taskid" = "c"."taskid" left join "products" as "b" on "b"."productid" = "c"."productid"
-          where "a"."taskid" in ($4, $5) order by "a"."taskid" asc limit $6`
+          `select * from (select *, DENSE_RANK() over (order by "a.taskid" asc) as _row_num 
+               from (select "a"."executorid" as "a.executorid", "a"."taskname" as "a.taskname", "a"."taskid" as "a.taskid", 
+               "a"."completed" as "a.completed", "a"."qaid" as "a.qaid", "b"."productname" as "b.productname", "b"."productid" as "b.productid" 
+               from "tasks" as "a" left join "products_tasks" as "c" on "a"."taskid" = "c"."taskid" 
+               left join "products" as "b" on "b"."productid" = "c"."productid" 
+               where "a"."taskid" in ($1, $2) order by "a"."taskid" asc)) where "_row_num" between $3 and $4 limit $5`
         ),
       })
     })
@@ -119,17 +119,19 @@ describe("Captures of real examples", () => {
 
       expect(query).toEqual({
         bindings: [
-          notEqualsValue,
-          relationshipLimit,
           rangeValue.low,
           rangeValue.high,
           equalValue,
-          true,
+          notEqualsValue,
+          1,
+          relationshipLimit,
+
           limit,
         ],
         sql: expect.stringContaining(
           multiline(
-            `where "c"."year" between $3 and $4 and COALESCE("b"."productname" = $5, FALSE)`
+            `where "c"."year" between $1 and $2 and COALESCE("b"."productname" = $3, FALSE) and 
+            COALESCE("a"."completed" != $4, TRUE) order by "a"."taskname" asc nulls first, "a"."taskid" asc`
           )
         ),
       })
@@ -187,10 +189,12 @@ describe("Captures of real examples", () => {
         returningQuery = input
       }, queryJson)
       expect(returningQuery).toEqual({
-        sql: multiline(`select top (@p0) * from (select top (@p1) * from [people] where CASE WHEN [people].[name] = @p2 
-             THEN 1 ELSE 0 END = 1 and CASE WHEN [people].[age] = @p3 THEN 1 ELSE 0 END = 1 order by [people].[name] asc) as [people] 
-             where CASE WHEN [people].[name] = @p4 THEN 1 ELSE 0 END = 1 and CASE WHEN [people].[age] = @p5 THEN 1 ELSE 0 END = 1`),
-        bindings: [5000, 1, "Test", 22, "Test", 22],
+        bindings: [5000, "Test", 22, 1, 1],
+        sql: multiline(
+          `select top (@p0) * from (select *, DENSE_RANK() over (order by [people.name] asc) as _row_num from (select * from [people] 
+                 where CASE WHEN [people].[name] = @p1 THEN 1 ELSE 0 END = 1 and CASE 
+                 WHEN [people].[age] = @p2 THEN 1 ELSE 0 END = 1)) where [_row_num] between @p3 and @p4`
+        ),
       })
     })
   })
