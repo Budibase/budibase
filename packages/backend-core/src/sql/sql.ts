@@ -232,12 +232,13 @@ class InternalBuilder {
     const schema = this.table.schema[col]
     let identifier = this.quotedIdentifier(field)
     if (
-      schema.type === FieldType.STRING ||
-      schema.type === FieldType.LONGFORM ||
-      schema.type === FieldType.BB_REFERENCE_SINGLE ||
-      schema.type === FieldType.BB_REFERENCE ||
-      schema.type === FieldType.OPTIONS ||
-      schema.type === FieldType.BARCODEQR
+      schema &&
+      (schema.type === FieldType.STRING ||
+        schema.type === FieldType.LONGFORM ||
+        schema.type === FieldType.BB_REFERENCE_SINGLE ||
+        schema.type === FieldType.BB_REFERENCE ||
+        schema.type === FieldType.OPTIONS ||
+        schema.type === FieldType.BARCODEQR)
     ) {
       identifier = `to_char(${identifier})`
     }

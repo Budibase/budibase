@@ -160,16 +160,16 @@ describe("SQL query builder", () => {
   it("should add the schema to the LEFT JOIN", () => {
     const query = sql._query(generateRelationshipJson({ schema: "production" }))
     expect(query).toEqual({
-      bindings: [500, 5000],
-      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" order by "test"."id" asc limit $1) as "brands" left join "production"."products" as "products" on "brands"."brand_id" = "products"."brand_id" order by "test"."id" asc limit $2`,
+      bindings: [1, 500, 5000],
+      sql: `select * from (select *, DENSE_RANK() over (order by "test.id" asc) as _row_num from (select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from "production"."brands" left join "production"."products" as "products" on "brands"."brand_id" = "products"."brand_id" order by "test"."id" asc)) where "_row_num" between $1 and $2 limit $3`,
     })
   })
 
   it("should handle if the schema is not present when doing a LEFT JOIN", () => {
     const query = sql._query(generateRelationshipJson())
     expect(query).toEqual({
-      bindings: [500, 5000],
-      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" order by "test"."id" asc limit $1) as "brands" left join "products" as "products" on "brands"."brand_id" = "products"."brand_id" order by "test"."id" asc limit $2`,
+      bindings: [1, 500, 5000],
+      sql: `select * from (select *, DENSE_RANK() over (order by "test.id" asc) as _row_num from (select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from "brands" left join "products" as "products" on "brands"."brand_id" = "products"."brand_id" order by "test"."id" asc)) where "_row_num" between $1 and $2 limit $3`,
     })
   })
 
@@ -178,14 +178,15 @@ describe("SQL query builder", () => {
       generateManyRelationshipJson({ schema: "production" })
     )
     expect(query).toEqual({
-      bindings: [500, 5000],
-      sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" order by "test"."id" asc limit $1) as "stores" left join "production"."stocks" as "stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" as "products" on "products"."product_id" = "stocks"."product_id" order by "test"."id" asc limit $2`,
+      bindings: [1, 500, 5000],
+      sql: `select * from (select *, DENSE_RANK() over (order by "test.id" asc) as _row_num from (select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from "production"."stores" left join "production"."stocks" as "stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" as "products" on "products"."product_id" = "stocks"."product_id" order by "test"."id" asc)) where "_row_num" between $1 and $2 limit $3`,
     })
   })
 
   it("should lowercase the values for Oracle LIKE statements", () => {
     let query = new Sql(SqlClient.ORACLE, limit)._query(
       generateReadJson({
+        table: ORACLE_TABLE,
         filters: {
           string: {
             name: "John",
@@ -194,8 +195,8 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: ["john%", limit, "john%", 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc) where rownum <= :2) "test" where LOWER("test"."name") LIKE :3 order by "test"."id" asc) where rownum <= :4`,
+      bindings: ["john%", 1, limit, 5000],
+      sql: `select * from (select * from (select *, DENSE_RANK() over (order by "test.id" asc) as _row_num from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc)) where "_row_num" between :2 and :3) where rownum <= :4`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -208,10 +209,9 @@ describe("SQL query builder", () => {
         },
       })
     )
-    const filterSet = [`%20%`, `%25%`, `%"john"%`, `%"mary"%`]
     expect(query).toEqual({
-      bindings: [...filterSet, limit, ...filterSet, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2 and COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4 order by "test"."id" asc) where rownum <= :5) "test" where COALESCE(LOWER("test"."age"), '') LIKE :6 AND COALESCE(LOWER("test"."age"), '') LIKE :7 and COALESCE(LOWER("test"."name"), '') LIKE :8 AND COALESCE(LOWER("test"."name"), '') LIKE :9 order by "test"."id" asc) where rownum <= :10`,
+      bindings: [`%20%`, `%25%`, `%"john"%`, `%"mary"%`, 1, limit, 5000],
+      sql: `select * from (select * from (select *, DENSE_RANK() over (order by "test.id" asc) as _row_num from (select * from "test" where COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2 and COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4 order by "test"."id" asc)) where "_row_num" between :5 and :6) where rownum <= :7`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -224,8 +224,8 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: [`%jo%`, limit, `%jo%`, 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc) where rownum <= :2) "test" where LOWER("test"."name") LIKE :3 order by "test"."id" asc) where rownum <= :4`,
+      bindings: [`%jo%`, 1, limit, 5000],
+      sql: `select * from (select * from (select *, DENSE_RANK() over (order by "test.id" asc) as _row_num from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc)) where "_row_num" between :2 and :3) where rownum <= :4`,
     })
   })
 
@@ -242,8 +242,8 @@ describe("SQL query builder", () => {
     )
 
     expect(query).toEqual({
-      bindings: ["John", limit, "John", 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") = :1) order by "test"."id" asc) where rownum <= :2) "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") = :3) order by "test"."id" asc) where rownum <= :4`,
+      bindings: ["John", 1, limit, 5000],
+      sql: `select * from (select * from (select *, DENSE_RANK() over (order by "test.id" asc) as _row_num from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") = :1) order by "test"."id" asc)) where "_row_num" between :2 and :3) where rownum <= :4`,
     })
   })
 
@@ -260,8 +260,8 @@ describe("SQL query builder", () => {
     )
 
     expect(query).toEqual({
-      bindings: ["John", limit, "John", 5000],
-      sql: `select * from (select * from (select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") != :1) OR to_char("test"."name") IS NULL order by "test"."id" asc) where rownum <= :2) "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") != :3) OR to_char("test"."name") IS NULL order by "test"."id" asc) where rownum <= :4`,
+      bindings: ["John", 1, limit, 5000],
+      sql: `select * from (select * from (select *, DENSE_RANK() over (order by "test.id" asc) as _row_num from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") != :1) OR to_char("test"."name") IS NULL order by "test"."id" asc)) where "_row_num" between :2 and :3) where rownum <= :4`,
     })
   })
 })
