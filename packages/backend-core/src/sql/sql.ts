@@ -36,6 +36,7 @@ import {
 } from "@budibase/types"
 import environment from "../environment"
 import { dataFilters, helpers } from "@budibase/shared-core"
+import { cloneDeep } from "lodash"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
@@ -291,6 +292,7 @@ class InternalBuilder {
   }
 
   private parseFilters(filters: SearchFilters): SearchFilters {
+    filters = cloneDeep(filters)
     for (const op of Object.values(BasicOperator)) {
       const filter = filters[op]
       if (!filter) {
