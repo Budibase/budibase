@@ -47,6 +47,15 @@ function getBaseLimit() {
   return envLimit || 5000
 }
 
+function subquery(
+  query: Knex.QueryBuilder,
+  alias: string,
+  subQuery: Knex.QueryBuilder
+): Knex.QueryBuilder {
+  // this part of knex is poorly typed - created a utility function to avoid all the weird typing
+  return query.from({ [alias]: subQuery as any }) as Knex.QueryBuilder
+}
+
 function getTableName(table?: Table): string | undefined {
   // SQS uses the table ID rather than the table name
   if (
@@ -135,16 +144,17 @@ class InternalBuilder {
     }
     const tableName = getTableName(this.table)
     const aliases = this.query.tableAliases
-    const aliased =
-      tableName && aliases?.[tableName] ? aliases[tableName] : this.table?.name
     const direction = sortOrder === SortOrder.ASCENDING ? "asc" : "desc"
     // don't want to use quoted identifier here, the actual column is called alias.primary key, with dot
-    const quotedAliasedPrimary = this.quote(
-      `${aliased}.${this.table.primary[0]}`
-    )
-
+    const primary = this.table.primary[0]
+    const quotedAliasedPrimary =
+      tableName && aliases?.[tableName]
+        ? this.quote(`${aliases?.[tableName]}.${primary}`)
+        : primary
     return this.knex.raw(
-      `DENSE_RANK() over (order by ${quotedAliasedPrimary} ${direction}) as _row_num`
+      `DENSE_RANK() over (order by ${quotedAliasedPrimary} ${direction}) as ${this.quote(
+        "_row_num"
+      )}`
     )
   }
 
@@ -1010,11 +1020,12 @@ class InternalBuilder {
 
     const mainQuery = this.addFilters(query, filters, { relationship: true })
     if (paginationFilters) {
-      const cte = this.knex
-        .select("*")
-        .from(
-          this.knex.select("*", this.generateRowNumberWindow()).from(mainQuery)
-        )
+      const rowNumberingSubQuery = subquery(
+        this.knex.select("a1.*", this.generateRowNumberWindow()),
+        "a1",
+        mainQuery
+      )
+      const cte = subquery(this.knex.select("*"), "a2", rowNumberingSubQuery)
       const finalQuery = this.addFilters(cte, paginationFilters, {
         disableAliasing: true,
       })
