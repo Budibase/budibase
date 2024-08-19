@@ -290,7 +290,7 @@ const newScreen = ({ tableOrView, permissions, screens }) => {
 
   const createScreenRoute = getValidRoute(
     screens,
-    `/${tableOrView.name}/create`,
+    `/${tableOrView.name}/new`,
     permissions.write
   )
 

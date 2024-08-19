@@ -2,7 +2,7 @@
   import { Select } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
   import { tables as tablesStore, viewsV2 } from "stores/builder"
-  import format from "helpers/data/tableSelectFormat"
+  import { tableSelect as format } from "helpers/data/format"
 
   export let value
 

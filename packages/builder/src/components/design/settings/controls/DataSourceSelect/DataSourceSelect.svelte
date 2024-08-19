@@ -34,7 +34,7 @@
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "api"
-  import format from "helpers/data/datasourceSelectFormat"
+  import { datasourceSelect as format } from "helpers/data/format"
 
   export let value = {}
   export let otherSources
