@@ -19,9 +19,6 @@
   import StickyColumn from "./StickyColumn.svelte"
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
-  import SortButton from "../controls/SortButton.svelte"
-  import ColumnsSettingButton from "../controls/ColumnsSettingButton.svelte"
-  import SizeButton from "../controls/SizeButton.svelte"
   import NewRow from "./NewRow.svelte"
   import { createGridWebsocket } from "../lib/websocket"
   import {
@@ -47,7 +44,6 @@
   export let quiet = false
   export let collaboration = true
   export let showAvatars = true
-  export let showControls = true
   export let initialFilter = null
   export let initialSortColumn = null
   export let initialSortOrder = null
@@ -57,7 +53,6 @@
   export let buttons = null
   export let darkMode
   export let isCloud = null
-  export let allowViewReadonlyColumns = false
   export let rowConditions = null
 
   // Unique identifier for DOM nodes inside this instance
@@ -103,7 +98,6 @@
     quiet,
     collaboration,
     showAvatars,
-    showControls,
     initialFilter,
     initialSortColumn,
     initialSortOrder,
@@ -113,13 +107,12 @@
     buttons,
     darkMode,
     isCloud,
-    allowViewReadonlyColumns,
     rowConditions,
   })
 
   // Derive min height and make available in context
   const minHeight = derived(rowHeight, $height => {
-    const heightForControls = showControls ? ControlsHeight : 0
+    const heightForControls = $$slots.controls ? ControlsHeight : 0
     return VPadding + SmallRowHeight + $height + heightForControls
   })
   context = { ...context, minHeight }
@@ -150,13 +143,9 @@
   on:mouseleave={() => gridFocused.set(false)}
   style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{ControlsHeight}px; --scroll-bar-size:{ScrollBarSize}px;"
 >
-  {#if showControls}
+  {#if $$slots.controls}
     <div class="controls">
       <div class="controls-left">
-        <slot name="filter" />
-        <SortButton />
-        <ColumnsSettingButton {allowViewReadonlyColumns} />
-        <SizeButton />
         <slot name="controls" />
       </div>
       <div class="controls-right">
@@ -216,6 +205,7 @@
   <BulkDeleteHandler />
   <ClipboardHandler />
   <KeyboardManager />
+  <slot />
 </div>
 
 <style>
