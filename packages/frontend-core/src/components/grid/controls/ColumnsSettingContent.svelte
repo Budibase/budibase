@@ -73,7 +73,7 @@
   })
 
   function columnToPermissionOptions(column) {
-    if (!column.schema.visible) {
+    if (column.schema.visible === false) {
       return PERMISSION_OPTIONS.HIDDEN
     }
 
