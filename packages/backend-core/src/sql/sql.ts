@@ -137,9 +137,11 @@ class InternalBuilder {
     const aliased =
       tableName && aliases?.[tableName] ? aliases[tableName] : this.table?.name
     const direction = sortOrder === SortOrder.ASCENDING ? "asc" : "desc"
-    const quotedAliasedPrimary = this.quotedIdentifier(
+    // don't want to use quoted identifier here, the actual column is called alias.primary key, with dot
+    const quotedAliasedPrimary = this.quote(
       `${aliased}.${this.table.primary[0]}`
     )
+
     return this.knex.raw(
       `DENSE_RANK() over (order by ${quotedAliasedPrimary} ${direction}) as _row_num`
     )
