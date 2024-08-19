@@ -1,4 +1,4 @@
-import { BaseStructure } from "./BaseStructure"
+import { BaseStructure } from "../BaseStructure"
 import { Helpers } from "@budibase/bbui"
 
 export class Screen extends BaseStructure {
