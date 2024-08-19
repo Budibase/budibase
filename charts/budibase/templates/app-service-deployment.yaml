@@ -65,7 +65,10 @@ spec:
         - name: ENABLE_ANALYTICS
           value: {{ .Values.globals.enableAnalytics | quote }}
         - name: API_ENCRYPTION_KEY
-          value: {{ .Values.globals.apiEncryptionKey | quote }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: apiEncryptionKey
         - name: HTTP_LOGGING
           value: {{ .Values.services.apps.httpLogging | quote }}
         - name: INTERNAL_API_KEY
@@ -161,7 +164,10 @@ spec:
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
         - name: ENCRYPTION_KEY
-          value: {{ .Values.globals.bbEncryptionKey | quote }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: bbEncryptionKey
         {{ if .Values.globals.bbAdminUserEmail }}
         - name: BB_ADMIN_USER_EMAIL
           value: {{ .Values.globals.bbAdminUserEmail | quote }}
