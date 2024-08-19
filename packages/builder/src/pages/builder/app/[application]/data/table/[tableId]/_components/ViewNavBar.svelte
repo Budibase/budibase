@@ -264,9 +264,6 @@
               </MenuItem>
             </a>
           </div>
-          <a href={$viewUrl(view.id)}>
-            <MenuItem icon="Checkmark">Select</MenuItem>
-          </a>
           <MenuItem icon="Edit" on:click={() => editOverflowView(view)}>
             Edit
           </MenuItem>
