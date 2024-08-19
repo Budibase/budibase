@@ -115,9 +115,7 @@
       {#if relationshipsEnabled}
         <GridRelationshipButton />
       {/if}
-      {#if isUsersTable}
-        <EditRolesButton />
-      {:else}
+      {#if !isUsersTable}
         <GridImportButton />
       {/if}
       <GridExportButton />
