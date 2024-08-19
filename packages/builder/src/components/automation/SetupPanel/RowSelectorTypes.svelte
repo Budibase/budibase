@@ -13,6 +13,10 @@
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
+  import {
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "dataBinding"
 
   export let onChange
   export let field
@@ -29,6 +33,8 @@
     clone.icon = "ShareAndroid"
     return clone
   })
+
+  $: readableValue = runtimeToReadableBinding(parsedBindings, fieldData)
 
   let attachmentTypes = [
     FieldType.ATTACHMENTS,
@@ -132,11 +138,11 @@
   />
 {:else if schema.type === "longform"}
   <TextArea
-    value={fieldData}
+    value={readableValue}
     on:change={e =>
       onChange({
         row: {
-          [field]: e.detail,
+          [field]: readableToRuntimeBinding(parsedBindings, e.detail),
         },
       })}
   />
@@ -144,11 +150,11 @@
   <span>
     <div class="field-wrap json-field">
       <CodeEditor
-        value={fieldData}
-        on:change={e => {
+        value={readableValue}
+        on:blur={e => {
           onChange({
             row: {
-              [field]: e.detail,
+              [field]: readableToRuntimeBinding(parsedBindings, e.detail),
             },
           })
         }}
@@ -157,7 +163,7 @@
   </span>
 {:else if schema.type === "link"}
   <LinkedRowSelector
-    linkedRows={fieldData}
+    linkedData={fieldData}
     {schema}
     on:change={e =>
       onChange({
@@ -169,7 +175,7 @@
   />
 {:else if schema.type === "bb_reference" || schema.type === "bb_reference_single"}
   <LinkedRowSelector
-    linkedRows={fieldData}
+    linkedData={fieldData}
     {schema}
     linkedTableId={"ta_users"}
     on:change={e =>

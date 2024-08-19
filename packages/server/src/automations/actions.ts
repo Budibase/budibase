@@ -19,13 +19,12 @@ import * as collect from "./steps/collect"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import env from "../environment"
 import {
-  AutomationStepSchema,
   PluginType,
-  AutomationStep,
   AutomationActionStepId,
   ActionImplementations,
   Hosting,
   ActionImplementation,
+  AutomationStepDefinition,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { getAutomationPlugin } from "../utilities/fileSystem"
@@ -56,29 +55,31 @@ const ACTION_IMPLS: ActionImplType = {
   n8n: n8n.run,
 }
 
-export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
-  {
-    SEND_EMAIL_SMTP: sendSmtpEmail.definition,
-    CREATE_ROW: createRow.definition,
-    UPDATE_ROW: updateRow.definition,
-    DELETE_ROW: deleteRow.definition,
-    OUTGOING_WEBHOOK: outgoingWebhook.definition,
-    EXECUTE_SCRIPT: executeScript.definition,
-    EXECUTE_QUERY: executeQuery.definition,
-    SERVER_LOG: serverLog.definition,
-    DELAY: delay.definition,
-    FILTER: filter.definition,
-    QUERY_ROWS: queryRow.definition,
-    LOOP: loop.definition,
-    COLLECT: collect.definition,
-    TRIGGER_AUTOMATION_RUN: triggerAutomationRun.definition,
-    // these used to be lowercase step IDs, maintain for backwards compat
-    discord: discord.definition,
-    slack: slack.definition,
-    zapier: zapier.definition,
-    integromat: make.definition,
-    n8n: n8n.definition,
-  }
+export const BUILTIN_ACTION_DEFINITIONS: Record<
+  string,
+  AutomationStepDefinition
+> = {
+  SEND_EMAIL_SMTP: sendSmtpEmail.definition,
+  CREATE_ROW: createRow.definition,
+  UPDATE_ROW: updateRow.definition,
+  DELETE_ROW: deleteRow.definition,
+  OUTGOING_WEBHOOK: outgoingWebhook.definition,
+  EXECUTE_SCRIPT: executeScript.definition,
+  EXECUTE_QUERY: executeQuery.definition,
+  SERVER_LOG: serverLog.definition,
+  DELAY: delay.definition,
+  FILTER: filter.definition,
+  QUERY_ROWS: queryRow.definition,
+  LOOP: loop.definition,
+  COLLECT: collect.definition,
+  TRIGGER_AUTOMATION_RUN: triggerAutomationRun.definition,
+  // these used to be lowercase step IDs, maintain for backwards compat
+  discord: discord.definition,
+  slack: slack.definition,
+  zapier: zapier.definition,
+  integromat: make.definition,
+  n8n: n8n.definition,
+}
 
 // don't add the bash script/definitions unless in self host
 // the fact this isn't included in any definitions means it cannot be
@@ -101,7 +102,7 @@ export async function getActionDefinitions() {
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)
     for (let plugin of plugins) {
-      const schema = plugin.schema.schema as AutomationStep
+      const schema = plugin.schema.schema as AutomationStepDefinition
       actionDefinitions[schema.stepId] = {
         ...schema,
         custom: true,

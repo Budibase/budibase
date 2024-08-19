@@ -463,6 +463,24 @@ class InternalBuilder {
       }
     }
 
+    if (filters.$and) {
+      const { $and } = filters
+      query = query.where(x => {
+        for (const condition of $and.conditions) {
+          x = this.addFilters(x, condition, opts)
+        }
+      })
+    }
+
+    if (filters.$or) {
+      const { $or } = filters
+      query = query.where(x => {
+        for (const condition of $or.conditions) {
+          x = this.addFilters(x, { ...condition, allOr: true }, opts)
+        }
+      })
+    }
+
     if (filters.oneOf) {
       const fnc = allOr ? "orWhereIn" : "whereIn"
       iterate(
@@ -682,6 +700,8 @@ class InternalBuilder {
         const direction =
           value.direction === SortOrder.ASCENDING ? "asc" : "desc"
 
+        // TODO: figure out a way to remove this conditional, not relying on
+        // the defaults of each datastore.
         let nulls: "first" | "last" | undefined = undefined
         if (
           this.client === SqlClient.POSTGRES ||
