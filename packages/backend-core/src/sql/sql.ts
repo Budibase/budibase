@@ -137,9 +137,11 @@ class InternalBuilder {
     const aliased =
       tableName && aliases?.[tableName] ? aliases[tableName] : this.table?.name
     const direction = sortOrder === SortOrder.ASCENDING ? "asc" : "desc"
+    const quotedAliasedPrimary = this.quotedIdentifier(
+      `${aliased}.${this.table.primary[0]}`
+    )
     return this.knex.raw(
-      `ROW_NUMBER() over (order by ?? ${direction}) as _row_num`,
-      this.knex.raw(`\`${aliased}.${this.table.primary[0]}\``)
+      `DENSE_RANK() over (order by ${quotedAliasedPrimary} ${direction}) as _row_num`
     )
   }
 
@@ -984,12 +986,6 @@ class InternalBuilder {
       tableAliases
     )
 
-    // add a base limit over the whole query
-    // if counting we can't set this limit
-    if (limits?.base) {
-      query = query.limit(limits.base)
-    }
-
     // counting should not sort, limit or offset
     // these are based on the _row_num
     let paginationFilters: SearchFilters | undefined
@@ -1014,7 +1010,15 @@ class InternalBuilder {
         .from(
           this.knex.select("*", this.generateRowNumberWindow()).from(mainQuery)
         )
-      return this.addFilters(cte, paginationFilters, { disableAliasing: true })
+      const finalQuery = this.addFilters(cte, paginationFilters, {
+        disableAliasing: true,
+      })
+      // add a base limit over the whole query - make sure result set always smaller than a base
+      if (limits?.base) {
+        return finalQuery.limit(limits.base)
+      } else {
+        return finalQuery
+      }
     } else {
       return mainQuery
     }
