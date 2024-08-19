@@ -825,11 +825,11 @@ const getEmbedBindings = () => {
   bindings = [
     {
       type: "context",
-      runtimeBinding: `${safeEmbed}.`,
-      readableBinding: `ParentData`,
+      runtimeBinding: `${safeEmbed}`,
+      readableBinding: `ParentWindow`,
       category: "Embed",
-      icon: "DevicePhone",
-      display: { type: "object", name: "Parent Data" },
+      icon: "DistributeVertically",
+      display: { type: "object", name: "Parent Window" },
     },
   ]
   return bindings
