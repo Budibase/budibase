@@ -115,13 +115,16 @@
                 const relTable = $tables.list.find(
                   table => table._id === column.schema.tableId
                 )
-                relationshipPanelColumns = Object.values(
-                  relTable?.schema || {}
-                ).map(schema => ({
-                  name: schema.name,
-                  label: schema.name,
-                  schema,
-                }))
+                relationshipPanelColumns = Object.values(relTable?.schema || {})
+                  .filter(
+                    schema =>
+                      ![FieldType.LINK, FieldType.FORMULA].includes(schema.type)
+                  )
+                  .map(schema => ({
+                    name: schema.name,
+                    label: schema.name,
+                    schema,
+                  }))
                 console.warn({
                   columns,
                   relationshipPanelColumns,
