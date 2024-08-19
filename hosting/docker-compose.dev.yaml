@@ -42,7 +42,7 @@ services:
   couchdb-service:
     container_name: budi-couchdb3-dev
     restart: on-failure
-    image: budibase/couchdb:v3.2.1-sqs
+    image: budibase/couchdb:v3.3.3
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}

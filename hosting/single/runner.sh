@@ -10,7 +10,6 @@ declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONME
 [[ -z "${MINIO_URL}" ]] && [[ -z "${USE_S3}" ]] && export MINIO_URL=http://127.0.0.1:9000
 [[ -z "${NODE_ENV}" ]] && export NODE_ENV=production
 [[ -z "${POSTHOG_TOKEN}" ]] && export POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
-[[ -z "${TENANT_FEATURE_FLAGS}" ]] && export TENANT_FEATURE_FLAGS="*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
 [[ -z "${ACCOUNT_PORTAL_URL}" ]] && export ACCOUNT_PORTAL_URL=https://account.budibase.app
 [[ -z "${REDIS_URL}" ]] && export REDIS_URL=127.0.0.1:6379
 [[ -z "${SELF_HOSTED}" ]] && export SELF_HOSTED=1

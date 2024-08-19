@@ -207,7 +207,7 @@ spec:
               name: {{ .secretName }}
               key: {{ .secretKey | quote }}
         {{- end}}
-        image: budibase/worker:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
+        image: {{ .Values.globals.dockerRegistry }}budibase/worker:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         {{- if .Values.services.worker.startupProbe }}
         {{- with .Values.services.worker.startupProbe }}

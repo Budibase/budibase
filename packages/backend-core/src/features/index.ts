@@ -7,11 +7,19 @@ import tracer from "dd-trace"
 let posthog: PostHog | undefined
 export function init(opts?: PostHogOptions) {
   if (env.POSTHOG_TOKEN && env.POSTHOG_API_HOST) {
+    console.log("initializing posthog client...")
     posthog = new PostHog(env.POSTHOG_TOKEN, {
       host: env.POSTHOG_API_HOST,
+      personalApiKey: env.POSTHOG_PERSONAL_TOKEN,
       ...opts,
     })
+  } else {
+    console.log("posthog disabled")
   }
+}
+
+export function shutdown() {
+  posthog?.shutdown()
 }
 
 export abstract class Flag<T> {
@@ -83,7 +91,14 @@ class NumberFlag extends Flag<number> {
 }
 
 export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
-  constructor(private readonly flagSchema: T) {}
+  // This is used to safely cache flags sets in the current request context.
+  // Because multiple sets could theoretically exist, we don't want the cache of
+  // one to leak into another.
+  private readonly setId: string
+
+  constructor(private readonly flagSchema: T) {
+    this.setId = crypto.randomUUID()
+  }
 
   defaults(): FlagValues<T> {
     return Object.keys(this.flagSchema).reduce((acc, key) => {
@@ -115,6 +130,12 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 
   async fetch(ctx?: UserCtx): Promise<FlagValues<T>> {
     return await tracer.trace("features.fetch", async span => {
+      const cachedFlags = context.getFeatureFlags<FlagValues<T>>(this.setId)
+      if (cachedFlags) {
+        span?.addTags({ fromCache: true })
+        return cachedFlags
+      }
+
       const tags: Record<string, any> = {}
       const flagValues = this.defaults()
       const currentTenantId = context.getTenantId()
@@ -128,6 +149,8 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
           continue
         }
 
+        tags[`readFromEnvironmentVars`] = true
+
         for (let feature of features) {
           let value = true
           if (feature.startsWith("!")) {
@@ -136,8 +159,9 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
             specificallySetFalse.add(feature)
           }
 
+          // ignore unknown flags
           if (!this.isFlagName(feature)) {
-            throw new Error(`Feature: ${feature} is not an allowed option`)
+            continue
           }
 
           if (typeof flagValues[feature] !== "boolean") {
@@ -146,13 +170,15 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 
           // @ts-expect-error - TS does not like you writing into a generic type,
           // but we know that it's okay in this case because it's just an object.
-          flagValues[feature] = value
+          flagValues[feature as keyof FlagValues] = value
           tags[`flags.${feature}.source`] = "environment"
         }
       }
 
       const license = ctx?.user?.license
       if (license) {
+        tags[`readFromLicense`] = true
+
         for (const feature of license.features) {
           if (!this.isFlagName(feature)) {
             continue
@@ -175,8 +201,25 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
       }
 
       const identity = context.getIdentity()
+      tags[`identity.type`] = identity?.type
+      tags[`identity.tenantId`] = identity?.tenantId
+      tags[`identity._id`] = identity?._id
+
       if (posthog && identity?.type === IdentityType.USER) {
-        const posthogFlags = await posthog.getAllFlagsAndPayloads(identity._id)
+        tags[`readFromPostHog`] = true
+
+        const personProperties: Record<string, string> = {}
+        if (identity.tenantId) {
+          personProperties.tenantId = identity.tenantId
+        }
+
+        const posthogFlags = await posthog.getAllFlagsAndPayloads(
+          identity._id,
+          {
+            personProperties,
+          }
+        )
+
         for (const [name, value] of Object.entries(posthogFlags.featureFlags)) {
           if (!this.isFlagName(name)) {
             // We don't want an unexpected PostHog flag to break the app, so we
@@ -207,6 +250,7 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
         }
       }
 
+      context.setFeatureFlags(this.setId, flagValues)
       for (const [key, value] of Object.entries(flagValues)) {
         tags[`flags.${key}.value`] = value
       }
@@ -222,8 +266,5 @@ export class FlagSet<V extends Flag<any>, T extends { [key: string]: V }> {
 // All of the machinery in this file is to make sure that flags have their
 // default values set correctly and their types flow through the system.
 export const flags = new FlagSet({
-  LICENSING: Flag.boolean(false),
-  GOOGLE_SHEETS: Flag.boolean(false),
-  USER_GROUPS: Flag.boolean(false),
-  ONBOARDING_TOUR: Flag.boolean(false),
+  DEFAULT_VALUES: Flag.boolean(false),
 })

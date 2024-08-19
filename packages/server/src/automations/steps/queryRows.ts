@@ -8,7 +8,7 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   EmptyFilterOption,
   SortOrder,
@@ -21,7 +21,7 @@ const SortOrderPretty = {
   [SortOrder.DESCENDING]: "Descending",
 }
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   description: "Query rows from the database",
   icon: "Search",
   name: "Query rows",

@@ -7,13 +7,13 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   UpdateRowStepInputs,
   UpdateRowStepOutputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Update Row",
   tagline: "Update a {{inputs.enriched.table.name}} row",
   icon: "Refresh",

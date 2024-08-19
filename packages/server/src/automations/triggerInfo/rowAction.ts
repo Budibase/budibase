@@ -2,12 +2,12 @@ import {
   AutomationCustomIOType,
   AutomationIOType,
   AutomationStepType,
-  AutomationTriggerSchema,
   AutomationTriggerStepId,
   AutomationEventType,
+  AutomationTriggerDefinition,
 } from "@budibase/types"
 
-export const definition: AutomationTriggerSchema = {
+export const definition: AutomationTriggerDefinition = {
   type: AutomationStepType.TRIGGER,
   name: "Row Action",
   event: AutomationEventType.ROW_ACTION, // TODO

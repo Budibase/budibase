@@ -308,16 +308,21 @@ export async function downloadAttachment(ctx: UserCtx) {
   if (attachments.length === 1) {
     const attachment = attachments[0]
     ctx.attachment(attachment.name)
-    ctx.body = await objectStore.getReadStream(
-      objectStore.ObjectStoreBuckets.APPS,
-      attachment.key
-    )
+    if (attachment.key) {
+      ctx.body = await objectStore.getReadStream(
+        objectStore.ObjectStoreBuckets.APPS,
+        attachment.key
+      )
+    }
   } else {
     const passThrough = new stream.PassThrough()
     const archive = archiver.create("zip")
     archive.pipe(passThrough)
 
     for (const attachment of attachments) {
+      if (!attachment.key) {
+        continue
+      }
       const attachmentStream = await objectStore.getReadStream(
         objectStore.ObjectStoreBuckets.APPS,
         attachment.key
