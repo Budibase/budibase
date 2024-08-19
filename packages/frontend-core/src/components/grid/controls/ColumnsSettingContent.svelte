@@ -125,10 +125,6 @@
                     label: schema.name,
                     schema,
                   }))
-                console.warn({
-                  columns,
-                  relationshipPanelColumns,
-                })
                 relationshipPanelAnchor = e.currentTarget
                 relationshipPanelOpen = !relationshipPanelOpen
               }}
