@@ -1,7 +1,7 @@
 import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { generator, structures } from "../../../tests"
-import RedisWrapper from "../redis"
-import { env } from "../.."
+import RedisWrapper, { closeAll } from "../redis"
+import env from "../../environment"
 import { randomUUID } from "crypto"
 
 jest.setTimeout(30000)
@@ -23,7 +23,10 @@ describe("redis", () => {
     env._set("REDIS_PASSWORD", 0)
   })
 
-  afterAll(() => container?.stop())
+  afterAll(() => {
+    container?.stop()
+    closeAll()
+  })
 
   beforeEach(async () => {
     redis = new RedisWrapper(structures.db.id())

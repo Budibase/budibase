@@ -32,7 +32,7 @@ describe("/api/global/self", () => {
 
       const res = await config.api.self
         .updateSelf(user, {
-          password: "newPassword",
+          password: "newPassword1",
         })
         .expect(200)
 

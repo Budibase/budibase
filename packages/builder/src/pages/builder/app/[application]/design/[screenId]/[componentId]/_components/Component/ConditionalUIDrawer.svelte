@@ -147,6 +147,15 @@
       onOperatorChange(condition, condition.operator)
     }
   }
+
+  const onSettingChange = (e, condition) => {
+    const setting = settings.find(x => x.key === e.detail)
+    if (setting?.defaultValue != null) {
+      condition.settingValue = setting.defaultValue
+    } else {
+      delete condition.settingValue
+    }
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -189,7 +198,7 @@
                 <Select
                   options={settingOptions}
                   bind:value={condition.setting}
-                  on:change={() => delete condition.settingValue}
+                  on:change={e => onSettingChange(e, condition)}
                 />
                 <div>TO</div>
                 {#if definition}
