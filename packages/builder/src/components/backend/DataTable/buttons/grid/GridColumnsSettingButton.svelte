@@ -1,9 +1,9 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Popover, Icon, notifications } from "@budibase/bbui"
-  import { getColumnIcon } from "../lib/utils"
-  import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
+  import ToggleActionButtonGroup from "components/common/ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
+  import { SchemaUtils } from "@budibase/frontend-core"
 
   export let allowViewReadonlyColumns = false
 
@@ -110,7 +110,7 @@
     <div class="columns">
       {#each displayColumns as column}
         <div class="column">
-          <Icon size="S" name={getColumnIcon(column)} />
+          <Icon size="S" name={SchemaUtils.getColumnIcon(column)} />
           <div class="column-label" title={column.label}>
             {column.label}
           </div>
