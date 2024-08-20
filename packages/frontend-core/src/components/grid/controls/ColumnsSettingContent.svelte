@@ -48,46 +48,53 @@
   }
 
   $: displayColumns = columns.map(c => {
-    const isRequired = helpers.schema.isRequired(c.schema.constraints)
-    const requiredTooltip = isRequired && "Required columns must be writable"
-    const editEnabled =
-      !isRequired || columnToPermissionOptions(c) !== FieldPermissions.WRITABLE
+    const isRequired =
+      c.primaryDisplay || helpers.schema.isRequired(c.schema.constraints)
+
+    const requiredTooltips = {
+      [FieldPermissions.WRITABLE]:
+        (c.primaryDisplay && "Display column must be writable") ||
+        (isRequired && "Required columns must be writable"),
+      [FieldPermissions.READONLY]:
+        (c.primaryDisplay && "Display column cannot be read-only") ||
+        (isRequired && "Required columns cannot be read-only"),
+      [FieldPermissions.HIDDEN]:
+        (c.primaryDisplay && "Display column cannot be hidden") ||
+        (isRequired && "Required columns cannot be hidden"),
+    }
+
     const options = []
 
-    if (permissionsObj[FieldPermissions.WRITABLE]) {
+    let permission
+    if ((permission = permissionsObj[FieldPermissions.WRITABLE])) {
+      const tooltip = requiredTooltips[FieldPermissions.WRITABLE] || "Writable"
       options.push({
         icon: "Edit",
         value: FieldPermissions.WRITABLE,
-        tooltip: (!editEnabled && requiredTooltip) || "Writable",
-        disabled:
-          !editEnabled || permissionsObj[FieldPermissions.WRITABLE].disabled,
+        tooltip,
+        disabled: isRequired || permission.disabled,
       })
     }
 
-    if (permissionsObj[FieldPermissions.READONLY]) {
+    if ((permission = permissionsObj[FieldPermissions.READONLY])) {
+      const tooltip =
+        (requiredTooltips[FieldPermissions.READONLY] || "Read-only") +
+        (permission.disabled && " (premium feature)")
       options.push({
         icon: "Visibility",
         value: FieldPermissions.READONLY,
-        tooltip: !permissionsObj[FieldPermissions.READONLY].disabled
-          ? requiredTooltip || "Read only"
-          : "Read only (premium feature)",
-        disabled:
-          permissionsObj[FieldPermissions.READONLY].disabled || isRequired,
+        tooltip,
+        disabled: permission.disabled || isRequired,
       })
     }
 
-    if (permissionsObj[FieldPermissions.HIDDEN]) {
+    if ((permission = permissionsObj[FieldPermissions.HIDDEN])) {
+      const tooltip = requiredTooltips[FieldPermissions.HIDDEN] || "Hidden"
       options.push({
         icon: "VisibilityOff",
         value: FieldPermissions.HIDDEN,
-        disabled:
-          c.primaryDisplay ||
-          isRequired ||
-          permissionsObj[FieldPermissions.HIDDEN].disabled,
-        tooltip:
-          (c.primaryDisplay && "Display column cannot be hidden") ||
-          requiredTooltip ||
-          "Hidden",
+        disabled: permission.disabled || isRequired,
+        tooltip,
       })
     }
 
