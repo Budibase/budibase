@@ -8,6 +8,7 @@ const blank = ({ route, screens }) => {
 
   const template = new Screen()
     .instanceName("Blank screen")
+    .customProps({ layout: "grid" })
     .role(Roles.BASIC)
     .route(validRoute)
     .json()

@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import Placeholder from "./Placeholder.svelte"
-  import Container from "./Container.svelte"
+  import Container from "./container/Container.svelte"
 
   const { Provider, ContextScopes } = getContext("sdk")
   const component = getContext("component")

@@ -5127,6 +5127,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/tabs/-/tabs-3.2.12.tgz#9b08f23d5aa881b3441af7757800c7173e5685ff"
   integrity sha512-rPFUW9SSW4+3/UJ3UrtY2/l3sQvlqB1fqxHLPDjgykvbfrnMejcCTNV4ZrFNHXpE/6+kGnk+yVViSPtWGwJzkA==
 
+"@spectrum-css/tag@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/tag/-/tag-3.0.0.tgz#b2e335dc526713b83f3e995e8d1d4fc84a3fc4df"
+  integrity sha512-a9z7ZTAWPonkWRNY5kxVaO6bxu9de3qUZWJ9Bl1YBlwWc8Fy1L7XqT4Wq3pW+4sktUbUUqqPYPIXK9xEFDofEw==
+
 "@spectrum-css/tags@3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/tags/-/tags-3.0.2.tgz#5bf35fb79c97cd9344de485bd4626ad5b9f07757"

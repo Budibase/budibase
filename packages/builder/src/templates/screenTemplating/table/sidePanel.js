@@ -31,26 +31,22 @@ const sidePanel = ({ tableOrView, permissions, screens }) => {
     type: "cta",
   })
 
-  buttonGroup.instanceName(`${tableOrView.name} - Create`).customProps({
-    hAlign: "right",
-    buttons: [createButton.json()],
-  })
-
-  const tableHeader = new Component("@budibase/standard-components/container")
-    .instanceName("Heading container")
+  buttonGroup
+    .instanceName(`${tableOrView.name} - Create`)
     .customProps({
-      direction: "row",
-      hAlign: "stretch",
+      hAlign: "right",
+      buttons: [createButton.json()],
     })
+    .gridDesktopColSpan(7, 13)
+    .gridDesktopRowSpan(1, 3)
 
   const heading = new Component("@budibase/standard-components/heading")
     .instanceName("Table heading")
     .customProps({
       text: tableOrView.name,
     })
-
-  tableHeader.addChild(heading)
-  tableHeader.addChild(buttonGroup)
+    .gridDesktopColSpan(1, 7)
+    .gridDesktopRowSpan(1, 3)
 
   const createFormBlock = new Component(
     "@budibase/standard-components/formblock"
@@ -130,13 +126,17 @@ const sidePanel = ({ tableOrView, permissions, screens }) => {
       ],
     })
     .instanceName(`${tableOrView.name} - Table`)
+    .gridDesktopColSpan(1, 13)
+    .gridDesktopRowSpan(3, 21)
 
   const template = new Screen()
     .route(getValidRoute(screens, tableOrView.name, permissions.write))
     .instanceName(`${tableOrView.name} - List and details`)
+    .customProps({ layout: "grid" })
     .role(permissions.write)
     .autoTableId(tableOrView.id)
-    .addChild(tableHeader)
+    .addChild(heading)
+    .addChild(buttonGroup)
     .addChild(tableBlock)
     .addChild(createRowSidePanel)
     .addChild(detailsSidePanel)

@@ -1,112 +1,96 @@
 <script>
-  import { onMount, onDestroy } from "svelte"
+  import { onMount, onDestroy, getContext } from "svelte"
   import { builderStore, componentStore } from "stores"
-  import { Utils } from "@budibase/frontend-core"
+  import { Utils, memo } from "@budibase/frontend-core"
+  import { GridRowHeight } from "constants"
+  import {
+    isGridEvent,
+    GridParams,
+    getGridVar,
+    Devices,
+    GridDragModes,
+  } from "utils/grid"
+
+  const context = getContext("context")
+
+  // Smallest possible 1x1 transparent GIF
+  const ghost = new Image(1, 1)
+  ghost.src =
+    "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
 
   let dragInfo
-  let gridStyles
-  let id
+  let styles = memo()
+
+  // Grid CSS variables
+  $: device = $context.device.mobile ? Devices.Mobile : Devices.Desktop
+  $: vars = {
+    colStart: getGridVar(device, GridParams.ColStart),
+    colEnd: getGridVar(device, GridParams.ColEnd),
+    rowStart: getGridVar(device, GridParams.RowStart),
+    rowEnd: getGridVar(device, GridParams.RowEnd),
+  }
 
   // Some memoisation of primitive types for performance
-  $: jsonStyles = JSON.stringify(gridStyles)
-  $: id = dragInfo?.id || id
+  $: id = dragInfo?.id
 
-  // Set ephemeral grid styles on the dragged component
+  // Set ephemeral styles
   $: instance = componentStore.actions.getComponentInstance(id)
-  $: $instance?.setEphemeralStyles({
-    ...gridStyles,
-    ...(gridStyles ? { "z-index": 999 } : null),
-  })
+  $: $instance?.setEphemeralStyles($styles)
 
-  // Util to check if a DND event originates from a grid (or inside a grid).
-  // This is important as we do not handle grid DND in this handler.
-  const isGridEvent = e => {
-    return (
-      e.target
-        .closest?.(".component")
-        ?.parentNode.closest(".component")
-        ?.childNodes[0].classList.contains("grid") ||
-      e.target.classList.contains("anchor")
-    )
-  }
+  // Sugar for a combination of both min and max
+  const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
 
-  // Util to get the inner DOM node by a component ID
-  const getDOMNode = id => {
-    const component = document.getElementsByClassName(id)[0]
-    return [...component.children][0]
-  }
-
-  const processEvent = Utils.throttle((mouseX, mouseY) => {
+  const processEvent = Utils.domDebounce((mouseX, mouseY) => {
     if (!dragInfo?.grid) {
       return
     }
-
-    const { mode, side, gridId, grid } = dragInfo
-    const {
-      startX,
-      startY,
-      rowStart,
-      rowEnd,
-      colStart,
-      colEnd,
-      rowDeltaMin,
-      rowDeltaMax,
-      colDeltaMin,
-      colDeltaMax,
-    } = grid
-
-    const domGrid = getDOMNode(gridId)
+    const { mode, side, grid, domGrid } = dragInfo
+    const { startX, startY, rowStart, rowEnd, colStart, colEnd } = grid
+    if (!domGrid) {
+      return
+    }
     const cols = parseInt(domGrid.dataset.cols)
-    const rows = parseInt(domGrid.dataset.rows)
-    const { width, height } = domGrid.getBoundingClientRect()
-
-    const colWidth = width / cols
+    const colSize = parseInt(domGrid.dataset.colSize)
     const diffX = mouseX - startX
-    let deltaX = Math.round(diffX / colWidth)
-    const rowHeight = height / rows
+    let deltaX = Math.round(diffX / colSize)
     const diffY = mouseY - startY
-    let deltaY = Math.round(diffY / rowHeight)
-
-    if (mode === "move") {
-      deltaY = Math.min(Math.max(deltaY, rowDeltaMin), rowDeltaMax)
-      deltaX = Math.min(Math.max(deltaX, colDeltaMin), colDeltaMax)
+    let deltaY = Math.round(diffY / GridRowHeight)
+    if (mode === GridDragModes.Move) {
+      deltaX = minMax(deltaX, 1 - colStart, cols + 1 - colEnd)
+      deltaY = Math.max(deltaY, 1 - rowStart)
       const newStyles = {
-        "grid-row-start": rowStart + deltaY,
-        "grid-row-end": rowEnd + deltaY,
-        "grid-column-start": colStart + deltaX,
-        "grid-column-end": colEnd + deltaX,
+        [vars.colStart]: colStart + deltaX,
+        [vars.colEnd]: colEnd + deltaX,
+        [vars.rowStart]: rowStart + deltaY,
+        [vars.rowEnd]: rowEnd + deltaY,
       }
-      if (JSON.stringify(newStyles) !== jsonStyles) {
-        gridStyles = newStyles
-      }
-    } else if (mode === "resize") {
+      styles.set(newStyles)
+    } else if (mode === GridDragModes.Resize) {
       let newStyles = {}
       if (side === "right") {
-        newStyles["grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles[vars.colEnd] = Math.max(colEnd + deltaX, colStart + 1)
       } else if (side === "left") {
-        newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
+        newStyles[vars.colStart] = Math.min(colStart + deltaX, colEnd - 1)
       } else if (side === "top") {
-        newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
+        newStyles[vars.rowStart] = Math.min(rowStart + deltaY, rowEnd - 1)
       } else if (side === "bottom") {
-        newStyles["grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
+        newStyles[vars.rowEnd] = Math.max(rowEnd + deltaY, rowStart + 1)
       } else if (side === "bottom-right") {
-        newStyles["grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
-        newStyles["grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
+        newStyles[vars.colEnd] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles[vars.rowEnd] = Math.max(rowEnd + deltaY, rowStart + 1)
       } else if (side === "bottom-left") {
-        newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
-        newStyles["grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
+        newStyles[vars.colStart] = Math.min(colStart + deltaX, colEnd - 1)
+        newStyles[vars.rowEnd] = Math.max(rowEnd + deltaY, rowStart + 1)
       } else if (side === "top-right") {
-        newStyles["grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
-        newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
+        newStyles[vars.colEnd] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles[vars.rowStart] = Math.min(rowStart + deltaY, rowEnd - 1)
       } else if (side === "top-left") {
-        newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
-        newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
+        newStyles[vars.colStart] = Math.min(colStart + deltaX, colEnd - 1)
+        newStyles[vars.rowStart] = Math.min(rowStart + deltaY, rowEnd - 1)
       }
-      if (JSON.stringify(newStyles) !== jsonStyles) {
-        gridStyles = newStyles
-      }
+      styles.set(newStyles)
     }
-  }, 100)
+  })
 
   const handleEvent = e => {
     e.preventDefault()
@@ -121,77 +105,64 @@
     }
 
     // Hide drag ghost image
-    e.dataTransfer.setDragImage(new Image(), 0, 0)
+    e.dataTransfer.setDragImage(ghost, 0, 0)
 
     // Extract state
     let mode, id, side
-    if (e.target.classList.contains("anchor")) {
-      // Handle resize
-      mode = "resize"
+    if (e.target.dataset.indicator === "true") {
+      mode = e.target.dataset.dragMode
       id = e.target.dataset.id
       side = e.target.dataset.side
     } else {
       // Handle move
-      mode = "move"
+      mode = GridDragModes.Move
       const component = e.target.closest(".component")
       id = component.dataset.id
     }
 
-    // Find grid parent
-    const domComponent = getDOMNode(id)
-    const gridId = domComponent?.closest(".grid")?.parentNode.dataset.id
-    if (!gridId) {
+    // If holding ctrl/cmd then leave behind a duplicate of this component
+    if (mode === GridDragModes.Move && (e.ctrlKey || e.metaKey)) {
+      builderStore.actions.duplicateComponent(id, "above", false)
+    }
+
+    // Find grid parent and read from DOM
+    const domComponent = document.getElementsByClassName(id)[0]
+    const domGrid = domComponent?.closest(".grid")
+    if (!domGrid) {
       return
     }
+    const styles = getComputedStyle(domComponent)
+
+    // Show as active
+    domComponent.classList.add("dragging")
+    domGrid.classList.add("highlight")
+    builderStore.actions.selectComponent(id)
 
     // Update state
     dragInfo = {
       domTarget: e.target,
+      domComponent,
+      domGrid,
       id,
-      gridId,
+      gridId: domGrid.parentNode.dataset.id,
       mode,
       side,
+      grid: {
+        startX: e.clientX,
+        startY: e.clientY,
+        rowStart: parseInt(styles["grid-row-start"]),
+        rowEnd: parseInt(styles["grid-row-end"]),
+        colStart: parseInt(styles["grid-column-start"]),
+        colEnd: parseInt(styles["grid-column-end"]),
+      },
     }
 
     // Add event handler to clear all drag state when dragging ends
     dragInfo.domTarget.addEventListener("dragend", stopDragging)
   }
 
-  // Callback when entering a potential drop target
-  const onDragEnter = e => {
-    // Skip if we aren't validly dragging currently
-    if (!dragInfo || dragInfo.grid) {
-      return
-    }
-
-    const domGrid = getDOMNode(dragInfo.gridId)
-    const gridCols = parseInt(domGrid.dataset.cols)
-    const gridRows = parseInt(domGrid.dataset.rows)
-    const domNode = getDOMNode(dragInfo.id)
-    const styles = window.getComputedStyle(domNode)
-    if (domGrid) {
-      const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
-      const getStyle = x => parseInt(styles?.[x] || "0")
-      const getColStyle = x => minMax(getStyle(x), 1, gridCols + 1)
-      const getRowStyle = x => minMax(getStyle(x), 1, gridRows + 1)
-      dragInfo.grid = {
-        startX: e.clientX,
-        startY: e.clientY,
-        rowStart: getRowStyle("grid-row-start"),
-        rowEnd: getRowStyle("grid-row-end"),
-        colStart: getColStyle("grid-column-start"),
-        colEnd: getColStyle("grid-column-end"),
-        rowDeltaMin: 1 - getRowStyle("grid-row-start"),
-        rowDeltaMax: gridRows + 1 - getRowStyle("grid-row-end"),
-        colDeltaMin: 1 - getColStyle("grid-column-start"),
-        colDeltaMax: gridCols + 1 - getColStyle("grid-column-end"),
-      }
-      handleEvent(e)
-    }
-  }
-
   const onDragOver = e => {
-    if (!dragInfo?.grid) {
+    if (!dragInfo) {
       return
     }
     handleEvent(e)
@@ -199,30 +170,33 @@
 
   // Callback when drag stops (whether dropped or not)
   const stopDragging = async () => {
-    // Save changes
-    if (gridStyles) {
-      await builderStore.actions.updateStyles(gridStyles, dragInfo.id)
+    if (!dragInfo) {
+      return
     }
+    const { id, domTarget, domGrid, domComponent } = dragInfo
 
-    // Reset listener
-    if (dragInfo?.domTarget) {
-      dragInfo.domTarget.removeEventListener("dragend", stopDragging)
+    // Reset DOM
+    domComponent.classList.remove("dragging")
+    domGrid.classList.remove("highlight")
+    domTarget.removeEventListener("dragend", stopDragging)
+
+    // Save changes
+    if ($styles) {
+      builderStore.actions.updateStyles($styles, id)
     }
 
     // Reset state
     dragInfo = null
-    gridStyles = null
+    styles.set(null)
   }
 
   onMount(() => {
     document.addEventListener("dragstart", onDragStart, false)
-    document.addEventListener("dragenter", onDragEnter, false)
     document.addEventListener("dragover", onDragOver, false)
   })
 
   onDestroy(() => {
     document.removeEventListener("dragstart", onDragStart, false)
-    document.removeEventListener("dragenter", onDragEnter, false)
     document.removeEventListener("dragover", onDragOver, false)
   })
 </script>
