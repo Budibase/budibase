@@ -71,20 +71,27 @@ export const getQueryableFields = async (
           // avoid circular loops
           continue
         }
-        const relatedTable = await sdk.tables.getTable(subSchema.tableId)
-        const relatedFields = await extractTableFields(
-          relatedTable,
-          Object.keys(relatedTable.schema),
-          [...fromTables, subSchema.tableId]
-        )
+        try {
+          const relatedTable = await sdk.tables.getTable(subSchema.tableId)
+          const relatedFields = await extractTableFields(
+            relatedTable,
+            Object.keys(relatedTable.schema),
+            [...fromTables, subSchema.tableId]
+          )
 
-        result.push(
-          ...relatedFields.flatMap(f => [
-            `${subSchema.name}.${f}`,
-            // should be able to filter by relationship using table name
-            `${relatedTable.name}.${f}`,
-          ])
-        )
+          result.push(
+            ...relatedFields.flatMap(f => [
+              `${subSchema.name}.${f}`,
+              // should be able to filter by relationship using table name
+              `${relatedTable.name}.${f}`,
+            ])
+          )
+        } catch (err: any) {
+          // if related table is removed, ignore
+          if (err.status !== 404) {
+            throw err
+          }
+        }
       } else {
         result.push(field)
       }
