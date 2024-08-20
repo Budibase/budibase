@@ -11,36 +11,41 @@ const getTableScreenTemplate = ({
   createScreenRoute,
   tableOrView,
   permissions,
+  gridLayout,
 }) => {
-  const newButton = new Component("@budibase/standard-components/button")
-    .instanceName("New button")
-    .customProps({
-      text: "Create row",
-      onClick: [
-        {
-          "##eventHandlerType": "Navigate To",
-          parameters: {
-            type: "url",
-            url: createScreenRoute,
-          },
+  const buttonGroup = new Component("@budibase/standard-components/buttongroup")
+  const createButton = new Component("@budibase/standard-components/button")
+
+  createButton.customProps({
+    onClick: [
+      {
+        "##eventHandlerType": "Navigate To",
+        parameters: {
+          type: "url",
+          url: createScreenRoute,
         },
-      ],
+      },
+    ],
+    text: "Create row",
+    type: "cta",
+  })
+
+  buttonGroup
+    .instanceName(`${tableOrView.name} - Create`)
+    .customProps({
+      hAlign: "right",
+      buttons: [createButton.json()],
     })
+    .gridDesktopColSpan(7, 13)
+    .gridDesktopRowSpan(1, 3)
 
   const heading = new Component("@budibase/standard-components/heading")
     .instanceName("Table heading")
     .customProps({
       text: tableOrView.name,
     })
-
-  const tableHeader = new Component("@budibase/standard-components/container")
-    .instanceName("Heading container")
-    .customProps({
-      direction: "row",
-      hAlign: "stretch",
-    })
-    .addChild(heading)
-    .addChild(newButton)
+    .gridDesktopColSpan(1, 7)
+    .gridDesktopRowSpan(1, 3)
 
   const updateScreenRouteSegments = updateScreenRoute.split(":id")
   if (updateScreenRouteSegments.length !== 2) {
@@ -67,14 +72,18 @@ const getTableScreenTemplate = ({
         },
       ],
     })
+    .gridDesktopColSpan(1, 13)
+    .gridDesktopRowSpan(3, 21)
 
   const template = new Screen()
     .route(route)
     .instanceName(`${tableOrView.name} - List`)
+    .customProps({ layout: gridLayout ? "grid" : "flex" })
     .role(permissions.write)
     .autoTableId(tableOrView.id)
-    .addChild(tableHeader)
     .addChild(tableBlock)
+    .addChild(heading)
+    .addChild(buttonGroup)
     .json()
 
   return {
@@ -300,6 +309,7 @@ const newScreen = ({ tableOrView, permissions, screens }) => {
     createScreenRoute,
     permissions,
     tableOrView,
+    gridLayout: true,
   })
 
   const updateScreenTemplate = getUpdateScreenTemplate({
@@ -307,6 +317,7 @@ const newScreen = ({ tableOrView, permissions, screens }) => {
     tableScreenRoute,
     tableOrView,
     permissions,
+    gridLayout: false,
   })
 
   const createScreenTemplate = getCreateScreenTemplate({
@@ -314,6 +325,7 @@ const newScreen = ({ tableOrView, permissions, screens }) => {
     tableScreenRoute,
     tableOrView,
     permissions,
+    gridLayout: false,
   })
 
   return [tableScreenTemplate, updateScreenTemplate, createScreenTemplate]
