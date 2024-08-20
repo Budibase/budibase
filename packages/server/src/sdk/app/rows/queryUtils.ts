@@ -59,14 +59,15 @@ export const getQueryableFields = async (
   const extractTableFields = async (
     table: Table,
     allowedFields: string[],
-    fromTables: string[]
+    fromTables: string[],
+    opts: { allowRelationships?: boolean } = { allowRelationships: true }
   ): Promise<string[]> => {
     const result = []
     for (const field of Object.keys(table.schema).filter(
       f => allowedFields.includes(f) && table.schema[f].visible !== false
     )) {
       const subSchema = table.schema[field]
-      if (subSchema.type === FieldType.LINK) {
+      if (opts.allowRelationships && subSchema.type === FieldType.LINK) {
         if (fromTables.includes(subSchema.tableId)) {
           // avoid circular loops
           continue
@@ -76,7 +77,9 @@ export const getQueryableFields = async (
           const relatedFields = await extractTableFields(
             relatedTable,
             Object.keys(relatedTable.schema),
-            [...fromTables, subSchema.tableId]
+            [...fromTables, subSchema.tableId],
+            // don't let it recurse back and forth between relationships
+            { allowRelationships: false }
           )
 
           result.push(
