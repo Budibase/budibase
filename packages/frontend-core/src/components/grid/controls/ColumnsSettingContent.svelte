@@ -11,6 +11,7 @@
   export let permissions = [FieldPermissions.WRITABLE, FieldPermissions.HIDDEN]
   export let disabledPermissions = []
   export let columns
+  export let fromRelationshipField
 
   const { datasource, dispatch } = getContext("grid")
   $: permissionsObj = permissions.reduce(
@@ -27,15 +28,20 @@
   let relationshipPanelOpen = false
   let relationshipPanelAnchor
   let relationshipPanelColumns = []
+  let relationshipField
 
   const toggleColumn = async (column, permission) => {
     const visible = permission !== FieldPermissions.HIDDEN
     const readonly = permission === FieldPermissions.READONLY
 
-    await datasource.actions.addSchemaMutation(column.name, {
-      visible,
-      readonly,
-    })
+    await datasource.actions.addSchemaMutation(
+      column.name,
+      {
+        visible,
+        readonly,
+      },
+      fromRelationshipField?.name
+    )
     try {
       await datasource.actions.saveSchemaMutations()
     } catch (e) {
@@ -168,6 +174,7 @@
 
     relationshipPanelAnchor = domElement
     relationshipPanelOpen = !relationshipPanelOpen
+    relationshipField = column
   }
 </script>
 
@@ -210,6 +217,7 @@
     <svelte:self
       columns={relationshipPanelColumns}
       permissions={[FieldPermissions.READONLY, FieldPermissions.HIDDEN]}
+      fromRelationshipField={relationshipField}
     />
   </Popover>
 {/if}
