@@ -30,6 +30,7 @@ import {
   withEnv as withCoreEnv,
   setEnv as setCoreEnv,
 } from "@budibase/backend-core"
+import sdk from "../../../sdk"
 
 describe.each([
   ["lucene", undefined],
@@ -120,6 +121,7 @@ describe.each([
   })
 
   beforeEach(() => {
+    jest.clearAllMocks()
     mocks.licenses.useCloudFree()
   })
 
@@ -1602,6 +1604,28 @@ describe.each([
           })
           expect(response.rows).toHaveLength(0)
         })
+
+      it("queries the row api passing the view fields only", async () => {
+        const searchSpy = jest.spyOn(sdk.rows, "search")
+
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+            one: { visible: false },
+          },
+        })
+
+        await config.api.viewV2.search(view.id, { query: {} })
+        expect(searchSpy).toHaveBeenCalledTimes(1)
+
+        expect(searchSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            fields: ["id"],
+          })
+        )
+      })
     })
 
     describe("permissions", () => {
