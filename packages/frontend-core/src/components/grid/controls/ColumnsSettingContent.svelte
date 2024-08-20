@@ -159,6 +159,7 @@
               schema =>
                 ![FieldType.LINK, FieldType.FORMULA].includes(schema.type)
             )
+            .filter(schema => schema.visible !== false)
             .map(column => {
               const isPrimaryDisplay = relTable.primaryDisplay === column.name
               const isReadonly = !!(
