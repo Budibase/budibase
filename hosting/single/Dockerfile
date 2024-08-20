@@ -64,11 +64,6 @@ RUN mkdir -p /var/log/nginx && \
   touch /var/run/nginx.pid && \
   usermod -a -G tty www-data
 
-WORKDIR /
-RUN mkdir -p scripts/integrations/oracle
-COPY packages/server/scripts/integrations/oracle scripts/integrations/oracle
-RUN /bin/bash -e ./scripts/integrations/oracle/instantclient/linux/install.sh
-
 # setup minio
 WORKDIR /minio
 COPY scripts/install-minio.sh ./install.sh

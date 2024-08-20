@@ -1,14 +1,22 @@
 import * as linkRows from "../../db/linkedRows"
 import { fixAutoColumnSubType, processFormulas } from "./utils"
-import { objectStore, utils } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  HTTPError,
+  objectStore,
+  utils,
+} from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import {
   AutoFieldSubType,
   FieldType,
+  IdentityType,
   Row,
   RowAttachment,
   Table,
+  User,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
@@ -18,7 +26,13 @@ import {
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
 import { isExternalTableID } from "../../integrations/utils"
-import { helpers } from "@budibase/shared-core"
+import {
+  helpers,
+  PROTECTED_EXTERNAL_COLUMNS,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
+import { processString } from "@budibase/string-templates"
+import { isUserMetadataTable } from "../../api/controllers/row/utils"
 
 export * from "./utils"
 export * from "./attachments"
@@ -44,9 +58,9 @@ export async function processAutoColumn(
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
-  let noUser = !userId
-  let isUserTable = table._id === InternalTables.USER_METADATA
-  let now = new Date().toISOString()
+  const noUser = !userId
+  const isUserTable = table._id === InternalTables.USER_METADATA
+  const now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
   const creating = !row._rev
   // check its not user table, or whether any of the processing options have been disabled
@@ -88,7 +102,34 @@ export async function processAutoColumn(
         break
     }
   }
-  return { table, row }
+}
+
+async function processDefaultValues(table: Table, row: Row) {
+  const ctx: { ["Current User"]?: User; user?: User } = {}
+
+  const identity = context.getIdentity()
+  if (identity?._id && identity.type === IdentityType.USER) {
+    const user = await cache.user.getUser(identity._id)
+    delete user.password
+
+    ctx["Current User"] = user
+    ctx.user = user
+  }
+
+  for (const [key, schema] of Object.entries(table.schema)) {
+    if ("default" in schema && schema.default != null && row[key] == null) {
+      const processed = await processString(schema.default, ctx)
+
+      try {
+        row[key] = coerce(processed, schema.type)
+      } catch (err: any) {
+        throw new HTTPError(
+          `Invalid default value for field '${key}' - ${err.message}`,
+          400
+        )
+      }
+    }
+  }
 }
 
 /**
@@ -129,10 +170,10 @@ export async function inputProcessing(
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
-  let clonedRow = cloneDeep(row)
+  const clonedRow = cloneDeep(row)
 
   const dontCleanseKeys = ["type", "_id", "_rev", "tableId"]
-  for (let [key, value] of Object.entries(clonedRow)) {
+  for (const [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
     // cleanse fields that aren't in the schema
     if (!field) {
@@ -182,8 +223,10 @@ export async function inputProcessing(
     clonedRow._rev = row._rev
   }
 
-  // handle auto columns - this returns an object like {table, row}
-  return processAutoColumn(userId, table, clonedRow, opts)
+  await processAutoColumn(userId, table, clonedRow, opts)
+  await processDefaultValues(table, clonedRow)
+
+  return { table, row: clonedRow }
 }
 
 /**
@@ -230,13 +273,13 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
 
   // process complex types: attachments, bb references...
-  for (let [property, column] of Object.entries(table.schema)) {
+  for (const [property, column] of Object.entries(table.schema)) {
     if (
       column.type === FieldType.ATTACHMENTS ||
       column.type === FieldType.ATTACHMENT_SINGLE ||
       column.type === FieldType.SIGNATURE_SINGLE
     ) {
-      for (let row of enriched) {
+      for (const row of enriched) {
         if (row[property] == null) {
           continue
         }
@@ -261,7 +304,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       !opts.skipBBReferences &&
       column.type == FieldType.BB_REFERENCE
     ) {
-      for (let row of enriched) {
+      for (const row of enriched) {
         row[property] = await processOutputBBReferences(
           row[property],
           column.subtype
@@ -271,11 +314,26 @@ export async function outputProcessing<T extends Row[] | Row>(
       !opts.skipBBReferences &&
       column.type == FieldType.BB_REFERENCE_SINGLE
     ) {
-      for (let row of enriched) {
+      for (const row of enriched) {
         row[property] = await processOutputBBReference(
           row[property],
           column.subtype
         )
+      }
+    } else if (column.type === FieldType.DATETIME && column.timeOnly) {
+      for (const row of enriched) {
+        if (row[property] instanceof Date) {
+          const hours = row[property].getUTCHours().toString().padStart(2, "0")
+          const minutes = row[property]
+            .getUTCMinutes()
+            .toString()
+            .padStart(2, "0")
+          const seconds = row[property]
+            .getUTCSeconds()
+            .toString()
+            .padStart(2, "0")
+          row[property] = `${hours}:${minutes}:${seconds}`
+        }
       }
     }
   }
@@ -290,14 +348,36 @@ export async function outputProcessing<T extends Row[] | Row>(
     )) as Row[]
   }
   // remove null properties to match internal API
-  if (isExternalTableID(table._id!)) {
-    for (let row of enriched) {
-      for (let key of Object.keys(row)) {
+  const isExternal = isExternalTableID(table._id!)
+  if (isExternal) {
+    for (const row of enriched) {
+      for (const key of Object.keys(row)) {
         if (row[key] === null) {
           delete row[key]
         }
       }
     }
   }
+
+  if (!isUserMetadataTable(table._id!)) {
+    const protectedColumns = isExternal
+      ? PROTECTED_EXTERNAL_COLUMNS
+      : PROTECTED_INTERNAL_COLUMNS
+
+    const tableFields = Object.keys(table.schema).filter(
+      f => table.schema[f].visible !== false
+    )
+    const fields = [...tableFields, ...protectedColumns].map(f =>
+      f.toLowerCase()
+    )
+    for (const row of enriched) {
+      for (const key of Object.keys(row)) {
+        if (!fields.includes(key.toLowerCase())) {
+          delete row[key]
+        }
+      }
+    }
+  }
+
   return (wasArray ? enriched : enriched[0]) as T
 }

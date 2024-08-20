@@ -106,12 +106,24 @@
     }
     const handleHashChange = () => {
       const { open: sidePanelOpen } = $sidePanelStore
-      if (sidePanelOpen) {
+      // only close if the sidepanel is open and theres no onload side panel actions on the screen.
+      if (
+        sidePanelOpen &&
+        !$screenStore.activeScreen.onLoad?.some(
+          item => item["##eventHandlerType"] === "Open Side Panel"
+        )
+      ) {
         sidePanelStore.actions.close()
       }
 
       const { open: modalOpen } = $modalStore
-      if (modalOpen) {
+      // only close if the modal is open and theres onload modals actions on the screen.
+      if (
+        modalOpen &&
+        !$screenStore.activeScreen.onLoad?.some(
+          item => item["##eventHandlerType"] === "Open Modal"
+        )
+      ) {
         modalStore.actions.close()
       }
     }

@@ -124,7 +124,7 @@
           <PropertyControl
             label="Text align"
             control={BarButtonList}
-            onChange={align => nav.syncAppNavigation({ textAlign: align })}
+            onChange={align => update("textAlign", align)}
             value={$nav.textAlign}
             props={{
               options: alignmentOptions,

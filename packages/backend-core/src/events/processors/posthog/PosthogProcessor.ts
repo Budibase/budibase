@@ -1,4 +1,4 @@
-import PostHog from "posthog-node"
+import { PostHog } from "posthog-node"
 import { Event, Identity, Group, BaseEvent } from "@budibase/types"
 import { EventProcessor } from "../types"
 import env from "../../../environment"

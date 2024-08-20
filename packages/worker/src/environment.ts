@@ -19,8 +19,6 @@ function parseIntSafe(number: any) {
 }
 
 const environment = {
-  // features
-  WORKER_FEATURES: process.env.WORKER_FEATURES,
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
@@ -28,6 +26,7 @@ const environment = {
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
+  PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
   // urls
   MINIO_URL: process.env.MINIO_URL,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
@@ -46,7 +45,6 @@ const environment = {
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
-  SQS_SEARCH_ENABLE: process.env.SQS_SEARCH_ENABLE,
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   // smtp
   SMTP_USER: process.env.SMTP_USER,

@@ -1,17 +1,17 @@
 import { helpers } from "@budibase/shared-core"
 import { TypeIconMap } from "../../../constants"
 
-// we can't use "-" for joining the ID/field, as this can be present in the ID or column name
-// using something very unusual to avoid this problem
+// We can't use "-" as a separator as this can be present in the ID
+// or column name, so we use something very unusual to avoid this problem
 const JOINING_CHARACTER = "‽‽"
 
 export const parseCellID = cellId => {
   if (!cellId) {
-    return { id: undefined, field: undefined }
+    return { rowId: undefined, field: undefined }
   }
   const parts = cellId.split(JOINING_CHARACTER)
   const field = parts.pop()
-  return { id: parts.join(JOINING_CHARACTER), field }
+  return { rowId: parts.join(JOINING_CHARACTER), field }
 }
 
 export const getCellID = (rowId, fieldName) => {

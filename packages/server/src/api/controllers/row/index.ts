@@ -117,7 +117,9 @@ export async function fetch(ctx: any) {
 
 export async function find(ctx: UserCtx<void, GetRowResponse>) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await pickApi(tableId).find(ctx)
+  const rowId = ctx.params.rowId
+
+  ctx.body = await sdk.rows.find(tableId, rowId)
 }
 
 function isDeleteRows(input: any): input is DeleteRows {
@@ -278,7 +280,8 @@ export async function downloadAttachment(ctx: UserCtx) {
   const { columnName } = ctx.params
 
   const tableId = utils.getTableId(ctx)
-  const row = await pickApi(tableId).find(ctx)
+  const rowId = ctx.params.rowId
+  const row = await sdk.rows.find(tableId, rowId)
 
   const table = await sdk.tables.getTable(tableId)
   const columnSchema = table.schema[columnName]
@@ -305,16 +308,21 @@ export async function downloadAttachment(ctx: UserCtx) {
   if (attachments.length === 1) {
     const attachment = attachments[0]
     ctx.attachment(attachment.name)
-    ctx.body = await objectStore.getReadStream(
-      objectStore.ObjectStoreBuckets.APPS,
-      attachment.key
-    )
+    if (attachment.key) {
+      ctx.body = await objectStore.getReadStream(
+        objectStore.ObjectStoreBuckets.APPS,
+        attachment.key
+      )
+    }
   } else {
     const passThrough = new stream.PassThrough()
     const archive = archiver.create("zip")
     archive.pipe(passThrough)
 
     for (const attachment of attachments) {
+      if (!attachment.key) {
+        continue
+      }
       const attachmentStream = await objectStore.getReadStream(
         objectStore.ObjectStoreBuckets.APPS,
         attachment.key

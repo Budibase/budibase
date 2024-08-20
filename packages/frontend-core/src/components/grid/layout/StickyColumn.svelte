@@ -13,22 +13,25 @@
   const {
     rows,
     selectedRows,
-    stickyColumn,
+    displayColumn,
     renderedRows,
     focusedCellId,
     hoveredRowId,
     config,
     selectedCellMap,
+    userCellMap,
     focusedRow,
     scrollLeft,
     dispatch,
     contentLines,
     isDragging,
+    isSelectingCells,
+    selectedCellCount,
   } = getContext("grid")
 
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).length
-  $: width = GutterWidth + ($stickyColumn?.width || 0)
+  $: width = GutterWidth + ($displayColumn?.width || 0)
 
   const selectAll = () => {
     const allSelected = selectedRowCount === rowCount
@@ -57,8 +60,8 @@
       rowSelected={selectedRowCount && selectedRowCount === rowCount}
       disabled={!$renderedRows.length}
     />
-    {#if $stickyColumn}
-      <HeaderCell column={$stickyColumn} orderable={false} idx="sticky">
+    {#if $displayColumn}
+      <HeaderCell column={$displayColumn} orderable={false} idx="sticky">
         <slot name="edit-column" />
       </HeaderCell>
     {/if}
@@ -69,9 +72,11 @@
   <GridScrollWrapper scrollVertically attachHandlers>
     {#each $renderedRows as row, idx}
       {@const rowSelected = !!$selectedRows[row._id]}
-      {@const rowHovered = $hoveredRowId === row._id}
+      {@const rowHovered =
+        $hoveredRowId === row._id &&
+        (!$selectedCellCount || !$isSelectingCells)}
       {@const rowFocused = $focusedRow?._id === row._id}
-      {@const cellId = getCellID(row._id, $stickyColumn?.name)}
+      {@const cellId = getCellID(row._id, $displayColumn?.name)}
       <div
         class="row"
         on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
@@ -79,20 +84,22 @@
         on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
       >
         <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
-        {#if $stickyColumn}
+        {#if $displayColumn}
           <DataCell
             {row}
             {cellId}
             {rowFocused}
-            selected={rowSelected}
+            {rowSelected}
+            cellSelected={$selectedCellMap[cellId]}
             highlighted={rowHovered || rowFocused}
             rowIdx={row.__idx}
             topRow={idx === 0}
             focused={$focusedCellId === cellId}
-            selectedUser={$selectedCellMap[cellId]}
-            width={$stickyColumn.width}
-            column={$stickyColumn}
+            selectedUser={$userCellMap[cellId]}
+            width={$displayColumn.width}
+            column={$displayColumn}
             contentLines={$contentLines}
+            isSelectingCells={$isSelectingCells}
           />
         {/if}
       </div>
@@ -107,9 +114,9 @@
         <GutterCell rowHovered={$hoveredRowId === BlankRowID}>
           <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
         </GutterCell>
-        {#if $stickyColumn}
+        {#if $displayColumn}
           <GridCell
-            width={$stickyColumn.width}
+            width={$displayColumn.width}
             highlighted={$hoveredRowId === BlankRowID}
           >
             <KeyboardShortcut padded keybind="Ctrl+Enter" />
@@ -155,7 +162,7 @@
 
   /* Don't show borders between cells in the sticky column */
   .sticky-column :global(.cell:not(:last-child)) {
-    border-right: none;
+    border-right-color: transparent;
   }
 
   .header {
@@ -163,6 +170,9 @@
   }
   .header :global(.cell) {
     background: var(--grid-background-alt);
+  }
+  .header :global(.cell::before) {
+    display: none;
   }
   .row {
     display: flex;

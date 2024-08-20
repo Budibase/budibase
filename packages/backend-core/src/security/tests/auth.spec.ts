@@ -4,7 +4,7 @@ import { PASSWORD_MAX_LENGTH, validatePassword } from "../auth"
 describe("auth", () => {
   describe("validatePassword", () => {
     it("a valid password returns successful", () => {
-      expect(validatePassword("password")).toEqual({ valid: true })
+      expect(validatePassword("password123!")).toEqual({ valid: true })
     })
 
     it.each([
@@ -14,7 +14,7 @@ describe("auth", () => {
     ])("%s returns unsuccessful", (_, password) => {
       expect(validatePassword(password as string)).toEqual({
         valid: false,
-        error: "Password invalid. Minimum 8 characters.",
+        error: "Password invalid. Minimum 12 characters.",
       })
     })
 

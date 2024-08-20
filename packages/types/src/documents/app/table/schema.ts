@@ -64,7 +64,7 @@ export interface AutoColumnFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.AUTO
   autocolumn: true
-  subtype?: AutoFieldSubType
+  subtype: AutoFieldSubType
   lastID?: number
   // if the column was turned to an auto-column for SQL, explains why (primary, foreign etc)
   autoReason?: AutoReason
@@ -81,11 +81,13 @@ export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
     toTable: string
     toKey: string
   }
+  default?: string
 }
 
 export interface JsonFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.JSON
   subtype?: JsonFieldSubType.ARRAY
+  default?: string
 }
 
 export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
@@ -94,11 +96,18 @@ export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   timeOnly?: boolean
   dateOnly?: boolean
   subtype?: AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT
+  default?: string
 }
 
 export interface LongFormFieldMetadata extends BaseFieldSchema {
   type: FieldType.LONGFORM
   useRichText?: boolean | null
+  default?: string
+}
+
+export interface StringFieldMetadata extends BaseFieldSchema {
+  type: FieldType.STRING
+  default?: string
 }
 
 export interface FormulaFieldMetadata extends BaseFieldSchema {
@@ -147,6 +156,21 @@ export interface FieldConstraints {
   }
 }
 
+export interface OptionsFieldMetadata extends BaseFieldSchema {
+  type: FieldType.OPTIONS
+  constraints: FieldConstraints & {
+    inclusion: string[]
+  }
+}
+
+export interface ArrayFieldMetadata extends BaseFieldSchema {
+  type: FieldType.ARRAY
+  constraints: FieldConstraints & {
+    type: JsonFieldSubType.ARRAY
+    inclusion: string[]
+  }
+}
+
 interface BaseFieldSchema extends UIFieldMetadata {
   type: FieldType
   name: string
@@ -171,6 +195,9 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.BB_REFERENCE
     | FieldType.BB_REFERENCE_SINGLE
     | FieldType.ATTACHMENTS
+    | FieldType.STRING
+    | FieldType.ARRAY
+    | FieldType.OPTIONS
   >
 }
 
@@ -182,10 +209,13 @@ export type FieldSchema =
   | FormulaFieldMetadata
   | NumberFieldMetadata
   | LongFormFieldMetadata
+  | StringFieldMetadata
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
   | AttachmentFieldMetadata
   | BBReferenceSingleFieldMetadata
+  | ArrayFieldMetadata
+  | OptionsFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema

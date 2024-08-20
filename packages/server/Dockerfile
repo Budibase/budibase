@@ -12,7 +12,6 @@ ENV COUCH_DB_URL=https://couchdb.budi.live:5984
 ENV BUDIBASE_ENVIRONMENT=PRODUCTION
 ENV SERVICE=app-service
 ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
-ENV TENANT_FEATURE_FLAGS=*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
 ENV TOP_LEVEL_PATH=/
 
@@ -20,11 +19,6 @@ ENV TOP_LEVEL_PATH=/
 RUN apt-get update \
     && apt-get install -y --no-install-recommends g++ make python3 jq
 RUN yarn global add pm2
-
-# Install client for oracle datasource
-RUN apt-get install unzip libaio1
-COPY packages/server/scripts/integrations/oracle/ scripts/integrations/oracle/
-RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh 
 
 # Install postgres client for pg_dump utils
 RUN apt update && apt upgrade -y \

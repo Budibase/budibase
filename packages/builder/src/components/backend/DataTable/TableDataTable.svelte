@@ -5,6 +5,7 @@
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
+  import GridCreateAutomationButton from "./buttons/grid/GridCreateAutomationButton.svelte"
   import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -81,6 +82,9 @@
         <GridCreateViewButton />
       {/if}
       <GridManageAccessButton />
+      {#if !isUsersTable}
+        <GridCreateAutomationButton />
+      {/if}
       {#if relationshipsEnabled}
         <GridRelationshipButton />
       {/if}

@@ -24,16 +24,6 @@ export enum FilterTypes {
   ONE_OF = "oneOf",
 }
 
-export const NoEmptyFilterStrings = [
-  FilterTypes.STRING,
-  FilterTypes.FUZZY,
-  FilterTypes.EQUAL,
-  FilterTypes.NOT_EQUAL,
-  FilterTypes.CONTAINS,
-  FilterTypes.NOT_CONTAINS,
-  FilterTypes.CONTAINS_ANY,
-]
-
 export const CanSwitchTypes = [
   [FieldType.JSON, FieldType.ARRAY],
   [
@@ -173,3 +163,9 @@ export const DEFAULT_INVENTORY_TABLE_ID = constants.DEFAULT_INVENTORY_TABLE_ID
 export const DEFAULT_EXPENSES_TABLE_ID = constants.DEFAULT_EXPENSES_TABLE_ID
 export const DEFAULT_EMPLOYEE_TABLE_ID = constants.DEFAULT_EMPLOYEE_TABLE_ID
 export const DEFAULT_BB_DATASOURCE_ID = constants.DEFAULT_BB_DATASOURCE_ID
+export const DEFAULT_TABLE_IDS = [
+  DEFAULT_JOBS_TABLE_ID,
+  DEFAULT_INVENTORY_TABLE_ID,
+  DEFAULT_EXPENSES_TABLE_ID,
+  DEFAULT_EMPLOYEE_TABLE_ID,
+]

@@ -2879,6 +2879,11 @@
         "placeholder": "Auto",
         "min": 80,
         "max": 9999
+      },
+      {
+        "type": "tableConditions",
+        "label": "Conditions",
+        "key": "conditions"
       }
     ]
   },
@@ -7303,7 +7308,6 @@
           {
             "type": "columns/grid",
             "key": "columns",
-            "nested": true,
             "resetOn": "table"
           }
         ]

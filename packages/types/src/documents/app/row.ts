@@ -131,7 +131,7 @@ export interface RowAttachment {
   size: number
   name: string
   extension: string
-  key: string
+  key?: string
   // Populated on read
   url?: string
 }

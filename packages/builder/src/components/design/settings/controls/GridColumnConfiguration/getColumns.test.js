@@ -72,6 +72,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "three",
           label: "three label",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
           _id: "two",
@@ -81,6 +83,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "two",
           label: "two label",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
           _id: "one",
@@ -90,6 +94,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "one",
           label: "one",
+          conditions: undefined,
+          schema: ctx.schema,
         },
       ])
 
@@ -101,6 +107,8 @@ describe("getColumns", () => {
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
         label: "four",
+        conditions: undefined,
+        schema: ctx.schema,
       })
     })
   })
@@ -126,6 +134,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "two",
           label: "two",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
           _id: "three",
@@ -135,6 +145,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "three",
           label: "three",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
           _id: "one",
@@ -144,6 +156,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "one",
           label: "one",
+          conditions: undefined,
+          schema: ctx.schema,
         },
       ])
 
@@ -155,6 +169,8 @@ describe("getColumns", () => {
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
         label: "four",
+        conditions: undefined,
+        schema: ctx.schema,
       })
     })
 
@@ -188,6 +204,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "three",
           label: "three label",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
           _id: "two",
@@ -197,6 +215,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "two",
           label: "two",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
           _id: "one",
@@ -206,6 +226,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "one",
           label: "one",
+          conditions: undefined,
+          schema: ctx.schema,
         },
       ])
 
@@ -217,6 +239,8 @@ describe("getColumns", () => {
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
         label: "four",
+        conditions: undefined,
+        schema: ctx.schema,
       })
     })
   })
@@ -247,6 +271,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "three",
           label: "three label",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
           _id: "two",
@@ -256,6 +282,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "two",
           label: "two",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
           _id: "one",
@@ -265,6 +293,8 @@ describe("getColumns", () => {
           componentName: "@budibase/standard-components/labelfield",
           field: "one",
           label: "one",
+          conditions: undefined,
+          schema: ctx.schema,
         },
       ])
 
@@ -276,6 +306,8 @@ describe("getColumns", () => {
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
         label: "four",
+        conditions: undefined,
+        schema: ctx.schema,
       })
     })
   })

@@ -34,6 +34,17 @@ export const IncludeDocs = {
  * @returns This will return an array of the linking documents that were found
  * (if any).
  */
+export function getLinkDocuments(args: {
+  tableId?: string
+  rowId?: string
+  fieldName?: string
+  includeDocs: boolean
+}): Promise<LinkDocument[]>
+export function getLinkDocuments(args: {
+  tableId?: string
+  rowId?: string
+  fieldName?: string
+}): Promise<LinkDocumentValue[]>
 export async function getLinkDocuments(args: {
   tableId?: string
   rowId?: string

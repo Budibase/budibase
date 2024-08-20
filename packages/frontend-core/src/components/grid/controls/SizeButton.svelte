@@ -8,14 +8,8 @@
     SmallRowHeight,
   } from "../lib/constants"
 
-  const {
-    stickyColumn,
-    columns,
-    rowHeight,
-    definition,
-    fixedRowHeight,
-    datasource,
-  } = getContext("grid")
+  const { columns, rowHeight, definition, fixedRowHeight, datasource } =
+    getContext("grid")
 
   // Some constants for column width options
   const smallColSize = 120
@@ -42,10 +36,9 @@
   let anchor
 
   // Column width sizes
-  $: allCols = $columns.concat($stickyColumn ? [$stickyColumn] : [])
-  $: allSmall = allCols.every(col => col.width === smallColSize)
-  $: allMedium = allCols.every(col => col.width === mediumColSize)
-  $: allLarge = allCols.every(col => col.width === largeColSize)
+  $: allSmall = $columns.every(col => col.width === smallColSize)
+  $: allMedium = $columns.every(col => col.width === mediumColSize)
+  $: allLarge = $columns.every(col => col.width === largeColSize)
   $: custom = !allSmall && !allMedium && !allLarge
   $: columnSizeOptions = [
     {
@@ -80,7 +73,7 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open}
-    disabled={!allCols.length}
+    disabled={!$columns.length}
   >
     Size
   </ActionButton>

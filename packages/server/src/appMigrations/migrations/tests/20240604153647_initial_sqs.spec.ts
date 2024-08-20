@@ -1,6 +1,10 @@
 import * as setup from "../../../api/routes/tests/utilities"
 import { basicTable } from "../../../tests/utilities/structures"
-import { db as dbCore, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
+import {
+  db as dbCore,
+  SQLITE_DESIGN_DOC_ID,
+  withEnv as withCoreEnv,
+} from "@budibase/backend-core"
 import {
   LinkDocument,
   DocumentType,
@@ -69,11 +73,14 @@ function oldLinkDocument(): Omit<LinkDocument, "tableId"> {
 type SQSEnvVar = "SQS_MIGRATION_ENABLE" | "SQS_SEARCH_ENABLE"
 
 async function sqsDisabled(envVar: SQSEnvVar, cb: () => Promise<void>) {
-  await config.withEnv({ [envVar]: "" }, cb)
+  await withCoreEnv({ [envVar]: "", SQS_SEARCH_ENABLE_TENANTS: [] }, cb)
 }
 
 async function sqsEnabled(envVar: SQSEnvVar, cb: () => Promise<void>) {
-  await config.withEnv({ [envVar]: "1" }, cb)
+  await withCoreEnv(
+    { [envVar]: "1", SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()] },
+    cb
+  )
 }
 
 describe.each(["SQS_MIGRATION_ENABLE", "SQS_SEARCH_ENABLE"] as SQSEnvVar[])(

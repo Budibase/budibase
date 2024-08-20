@@ -10,19 +10,23 @@
     focusedCellId,
     reorder,
     selectedRows,
-    visibleColumns,
+    scrollableColumns,
     hoveredRowId,
-    selectedCellMap,
     focusedRow,
     contentLines,
     isDragging,
     dispatch,
     rows,
     columnRenderMap,
+    userCellMap,
+    isSelectingCells,
+    selectedCellMap,
+    selectedCellCount,
   } = getContext("grid")
 
   $: rowSelected = !!$selectedRows[row._id]
-  $: rowHovered = $hoveredRowId === row._id
+  $: rowHovered =
+    $hoveredRowId === row._id && (!$selectedCellCount || !$isSelectingCells)
   $: rowFocused = $focusedRow?._id === row._id
   $: reorderSource = $reorder.sourceColumn
 </script>
@@ -36,22 +40,24 @@
   on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
   on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
 >
-  {#each $visibleColumns as column}
+  {#each $scrollableColumns as column}
     {@const cellId = getCellID(row._id, column.name)}
     <DataCell
       {cellId}
       {column}
       {row}
       {rowFocused}
+      {rowSelected}
+      cellSelected={$selectedCellMap[cellId]}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
-      selected={rowSelected}
       rowIdx={row.__idx}
       topRow={top}
       focused={$focusedCellId === cellId}
-      selectedUser={$selectedCellMap[cellId]}
+      selectedUser={$userCellMap[cellId]}
       width={column.width}
       contentLines={$contentLines}
       hidden={!$columnRenderMap[column.name]}
+      isSelectingCells={$isSelectingCells}
     />
   {/each}
 </div>

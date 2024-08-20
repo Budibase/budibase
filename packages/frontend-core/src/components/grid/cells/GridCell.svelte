@@ -11,13 +11,20 @@
   export let center = false
   export let readonly = false
   export let hidden = false
+  export let metadata = null
 
-  $: style = getStyle(width, selectedUser)
+  $: style = getStyle(width, selectedUser, metadata)
 
-  const getStyle = (width, selectedUser) => {
+  const getStyle = (width, selectedUser, metadata) => {
     let style = width === "auto" ? "width: auto;" : `flex: 0 0 ${width}px;`
     if (selectedUser) {
-      style += `--user-color:${selectedUser.color};`
+      style += `--user-color :${selectedUser.color};`
+    }
+    if (metadata?.backgroundColor) {
+      style += `--cell-background: ${metadata.backgroundColor};`
+    }
+    if (metadata?.textColor) {
+      style += `--cell-font-color: ${metadata.textColor};`
     }
     return style
   }
@@ -43,9 +50,10 @@
   on:mouseup
   on:click
   on:contextmenu
-  on:touchstart
+  on:touchstart|passive
   on:touchend
   on:touchcancel
+  on:mouseenter
   {style}
 >
   {#if error}
@@ -71,7 +79,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: flex-start;
-    color: var(--spectrum-global-color-gray-800);
+    color: var(--cell-font-color);
     font-size: var(--cell-font-size);
     gap: var(--cell-spacing);
     background: var(--cell-background);
@@ -93,9 +101,9 @@
   }
 
   /* Cell border */
-  .cell.focused:after,
-  .cell.error:after,
-  .cell.selected-other:not(.focused):after {
+  .cell.focused::after,
+  .cell.error::after,
+  .cell.selected-other:not(.focused)::after {
     content: " ";
     position: absolute;
     top: 0;
@@ -108,14 +116,30 @@
     box-sizing: border-box;
   }
 
+  /* Cell background overlay */
+  .cell.selected::before {
+    content: " ";
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    box-sizing: border-box;
+    height: calc(100% + 1px);
+    width: calc(100% + 1px);
+    opacity: 0.16;
+    background: var(--spectrum-global-color-blue-400);
+    z-index: 2;
+    pointer-events: none;
+  }
+
   /* Cell border for cells with labels */
-  .cell.error:after {
+  .cell.error::after {
     border-radius: 0 2px 2px 2px;
   }
-  .cell.top.error:after {
+  .cell.top.error::after {
     border-radius: 2px 2px 2px 0;
   }
-  .cell.selected-other:not(.focused):after {
+  .cell.selected-other:not(.focused)::after {
     border-radius: 2px;
   }
 
@@ -150,13 +174,9 @@
   .cell.focused.readonly {
     --cell-color: var(--spectrum-global-color-gray-600);
   }
-
-  .cell.highlighted:not(.focused),
+  .cell.highlighted:not(.focused):not(.selected),
   .cell.focused.readonly {
     --cell-background: var(--cell-background-hover);
-  }
-  .cell.selected:not(.focused) {
-    --cell-background: var(--spectrum-global-color-blue-100);
   }
 
   /* Label for additional text */

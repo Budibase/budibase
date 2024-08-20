@@ -58,7 +58,7 @@ function buildList(parts: string[], value: any) {
   if (!value) {
     return parts.length > 1 ? `${build()}` : build()
   } else {
-    return parts.length === 0 ? value : `${value}, ${build()}`
+    return parts.length === 0 ? value : `${build()}, ${value}`
   }
 }
 

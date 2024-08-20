@@ -92,25 +92,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   }
 }
 
-export async function find(ctx: UserCtx): Promise<Row> {
-  const id = ctx.params.rowId
-  const tableId = utils.getTableId(ctx)
-  const row = await sdk.rows.external.getRow(tableId, id, {
-    relationships: true,
-  })
-
-  if (!row) {
-    ctx.throw(404)
-  }
-
-  const table = await sdk.tables.getTable(tableId)
-  // Preserving links, as the outputProcessing does not support external rows yet and we don't need it in this use case
-  return await outputProcessing(table, row, {
-    squash: true,
-    preserveLinks: true,
-  })
-}
-
 export async function destroy(ctx: UserCtx) {
   const tableId = utils.getTableId(ctx)
   const _id = ctx.request.body._id
@@ -155,7 +136,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
   const table: Table = tables[tableName]
-  const row = response[0]
+  const row = response.rows[0]
   // this seems like a lot of work, but basically we need to dig deeper for the enrich
   // for a single row, there is probably a better way to do this with some smart multi-layer joins
   for (let [fieldName, field] of Object.entries(table.schema)) {
@@ -182,10 +163,14 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
       },
       includeSqlRelationships: IncludeRelationship.INCLUDE,
     })
-    row[fieldName] = await outputProcessing(linkedTable, relatedRows, {
-      squash: true,
-      preserveLinks: true,
-    })
+    row[fieldName] = await outputProcessing<Row[]>(
+      linkedTable,
+      relatedRows.rows,
+      {
+        squash: true,
+        preserveLinks: true,
+      }
+    )
   }
   return row
 }

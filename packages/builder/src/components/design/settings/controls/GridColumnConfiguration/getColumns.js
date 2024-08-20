@@ -68,6 +68,7 @@ const toGridFormat = draggableListColumns => {
     field: entry.field,
     active: entry.active,
     width: entry.width,
+    conditions: entry.conditions,
   }))
 }
 
@@ -83,6 +84,7 @@ const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
         label: column.label,
         columnType: schema[column.field].type,
         width: column.width,
+        conditions: column.conditions,
       },
       {}
     )
@@ -106,12 +108,12 @@ const getColumns = ({
     createComponent,
     schema
   )
-  const primary = draggableList.find(
-    entry => entry.field === primaryDisplayColumnName
-  )
-  const sortable = draggableList.filter(
-    entry => entry.field !== primaryDisplayColumnName
-  )
+  const primary = draggableList
+    .filter(entry => entry.field === primaryDisplayColumnName)
+    .map(instance => ({ ...instance, schema }))[0]
+  const sortable = draggableList
+    .filter(entry => entry.field !== primaryDisplayColumnName)
+    .map(instance => ({ ...instance, schema }))
 
   return {
     primary,

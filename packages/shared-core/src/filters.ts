@@ -6,6 +6,7 @@ import {
   SearchFilter,
   SearchFilters,
   SearchQueryFields,
+  ArrayOperator,
   SearchFilterOperator,
   SortType,
   FieldConstraints,
@@ -14,11 +15,16 @@ import {
   EmptyFilterOption,
   SearchResponse,
   Table,
+  BasicOperator,
+  RangeOperator,
+  LogicalOperator,
+  isLogicalSearchOperator,
 } from "@budibase/types"
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet, schema } from "./helpers"
-import _ from "lodash"
+import { isPlainObject, isEmpty } from "lodash"
+import { decodeNonAscii } from "./helpers/schema"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -103,29 +109,47 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotEquals.value,
   OperatorOptions.Contains.value,
   OperatorOptions.NotContains.value,
+  OperatorOptions.ContainsAny.value,
+  OperatorOptions.In.value,
 ] as (keyof SearchQueryFields)[]
 
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
+ *
+ * don't do a pure falsy check, as 0 is included
+ * https://github.com/Budibase/budibase/issues/10118
  */
-const cleanupQuery = (query: SearchFilters) => {
+export const cleanupQuery = (query: SearchFilters) => {
   if (!query) {
     return query
   }
   for (let filterField of NoEmptyFilterStrings) {
-    const operator = filterField as SearchFilterOperator
-    if (!query[operator]) {
+    if (!query[filterField]) {
       continue
     }
 
-    for (let [key, value] of Object.entries(query[operator]!)) {
-      if (value == null || value === "") {
-        delete query[operator]![key]
+    for (let filterType of Object.keys(query)) {
+      if (filterType !== filterField) {
+        continue
+      }
+      // don't know which one we're checking, type could be anything
+      const value = query[filterType] as unknown
+      if (typeof value === "object") {
+        for (let [key, value] of Object.entries(query[filterType] as object)) {
+          if (value == null || value === "" || isEmptyArray(value)) {
+            // @ts-ignore
+            delete query[filterField][key]
+          }
+        }
       }
     }
   }
   return query
+}
+
+function isEmptyArray(value: any) {
+  return Array.isArray(value) && value.length === 0
 }
 
 /**
@@ -160,8 +184,16 @@ export class ColumnSplitter {
   tableIds: string[]
   relationshipColumnNames: string[]
   relationships: string[]
+  aliases?: Record<string, string>
+  columnPrefix?: string
 
-  constructor(tables: Table[]) {
+  constructor(
+    tables: Table[],
+    opts?: {
+      aliases?: Record<string, string>
+      columnPrefix?: string
+    }
+  ) {
     this.tableNames = tables.map(table => table.name)
     this.tableIds = tables.map(table => table._id!)
     this.relationshipColumnNames = tables.flatMap(table =>
@@ -174,16 +206,38 @@ export class ColumnSplitter {
       .concat(this.relationshipColumnNames)
       // sort by length - makes sure there's no mis-matches due to similarities (sub column names)
       .sort((a, b) => b.length - a.length)
+
+    if (opts?.aliases) {
+      this.aliases = {}
+      for (const [key, value] of Object.entries(opts.aliases)) {
+        this.aliases[value] = key
+      }
+    }
+
+    this.columnPrefix = opts?.columnPrefix
   }
 
   run(key: string): {
     numberPrefix?: string
     relationshipPrefix?: string
+    tableName?: string
     column: string
   } {
     let { prefix, key: splitKey } = getKeyNumbering(key)
+
+    let tableName: string | undefined = undefined
+    if (this.aliases) {
+      for (const possibleAlias of Object.keys(this.aliases || {})) {
+        const withDot = `${possibleAlias}.`
+        if (splitKey.startsWith(withDot)) {
+          tableName = this.aliases[possibleAlias]!
+          splitKey = splitKey.slice(withDot.length)
+        }
+      }
+    }
+
     let relationship: string | undefined
-    for (let possibleRelationship of this.relationships) {
+    for (const possibleRelationship of this.relationships) {
       const withDot = `${possibleRelationship}.`
       if (splitKey.startsWith(withDot)) {
         const finalKeyParts = splitKey.split(withDot)
@@ -193,7 +247,15 @@ export class ColumnSplitter {
         break
       }
     }
+
+    if (this.columnPrefix) {
+      if (splitKey.startsWith(this.columnPrefix)) {
+        splitKey = decodeNonAscii(splitKey.slice(this.columnPrefix.length))
+      }
+    }
+
     return {
+      tableName,
       numberPrefix: prefix,
       relationshipPrefix: relationship,
       column: splitKey,
@@ -298,6 +360,8 @@ export const buildQuery = (filter: SearchFilter[]) => {
           high: value,
         }
       }
+    } else if (isLogicalSearchOperator(queryOperator)) {
+      // TODO
     } else if (query[queryOperator] && operator !== "onEmptyFilter") {
       if (type === "boolean") {
         // Transform boolean filters to cope with null.
@@ -310,21 +374,43 @@ export const buildQuery = (filter: SearchFilter[]) => {
           query.equal = query.equal || {}
           query.equal[field] = true
         } else {
-          query[queryOperator] = {
-            ...query[queryOperator],
-            [field]: value,
-          }
+          query[queryOperator] ??= {}
+          query[queryOperator]![field] = value
         }
       } else {
-        query[queryOperator] = {
-          ...query[queryOperator],
-          [field]: value,
-        }
+        query[queryOperator] ??= {}
+        query[queryOperator]![field] = value
       }
     }
   })
 
   return query
+}
+
+// The frontend can send single values for array fields sometimes, so to handle
+// this we convert them to arrays at the controller level so that nothing below
+// this has to worry about the non-array values.
+export function fixupFilterArrays(filters: SearchFilters) {
+  for (const searchField of Object.values(ArrayOperator)) {
+    const field = filters[searchField]
+    if (field == null || !isPlainObject(field)) {
+      continue
+    }
+
+    for (const key of Object.keys(field)) {
+      if (Array.isArray(field[key])) {
+        continue
+      }
+
+      const value = field[key] as any
+      if (typeof value === "string") {
+        field[key] = value.split(",").map((x: string) => x.trim())
+      } else {
+        field[key] = [value]
+      }
+    }
+  }
+  return filters
 }
 
 export const search = (
@@ -350,8 +436,15 @@ export const search = (
  * Performs a client-side search on an array of data
  * @param docs the data
  * @param query the JSON query
+ * @param findInDoc optional fn when trying to extract a value
+ * from custom doc type e.g. Google Sheets
+ *
  */
-export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
+export const runQuery = (
+  docs: Record<string, any>[],
+  query: SearchFilters,
+  findInDoc: Function = deepGet
+) => {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -360,6 +453,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   }
 
   query = cleanupQuery(query)
+  query = fixupFilterArrays(query)
 
   if (
     !hasFilters(query) &&
@@ -375,18 +469,21 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     ) =>
     (doc: Record<string, any>) => {
       for (const [key, testValue] of Object.entries(query[type] || {})) {
-        const result = test(deepGet(doc, removeKeyNumbering(key)), testValue)
+        const valueToCheck = isLogicalSearchOperator(type)
+          ? doc
+          : findInDoc(doc, removeKeyNumbering(key))
+        const result = test(valueToCheck, testValue)
         if (query.allOr && result) {
           return true
         } else if (!query.allOr && !result) {
           return false
         }
       }
-      return true
+      return !query.allOr
     }
 
   const stringMatch = match(
-    SearchFilterOperator.STRING,
+    BasicOperator.STRING,
     (docValue: any, testValue: any) => {
       if (!(typeof docValue === "string")) {
         return false
@@ -399,7 +496,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   )
 
   const fuzzyMatch = match(
-    SearchFilterOperator.FUZZY,
+    BasicOperator.FUZZY,
     (docValue: any, testValue: any) => {
       if (!(typeof docValue === "string")) {
         return false
@@ -412,17 +509,17 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
   )
 
   const rangeMatch = match(
-    SearchFilterOperator.RANGE,
+    RangeOperator.RANGE,
     (docValue: any, testValue: any) => {
       if (docValue == null || docValue === "") {
         return false
       }
 
-      if (_.isObject(testValue.low) && _.isEmpty(testValue.low)) {
+      if (isPlainObject(testValue.low) && isEmpty(testValue.low)) {
         testValue.low = undefined
       }
 
-      if (_.isObject(testValue.high) && _.isEmpty(testValue.high)) {
+      if (isPlainObject(testValue.high) && isEmpty(testValue.high)) {
         testValue.high = undefined
       }
 
@@ -501,11 +598,8 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     (...args: T): boolean =>
       !f(...args)
 
-  const equalMatch = match(SearchFilterOperator.EQUAL, _valueMatches)
-  const notEqualMatch = match(
-    SearchFilterOperator.NOT_EQUAL,
-    not(_valueMatches)
-  )
+  const equalMatch = match(BasicOperator.EQUAL, _valueMatches)
+  const notEqualMatch = match(BasicOperator.NOT_EQUAL, not(_valueMatches))
 
   const _empty = (docValue: any) => {
     if (typeof docValue === "string") {
@@ -514,32 +608,30 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     if (Array.isArray(docValue)) {
       return docValue.length === 0
     }
-    if (typeof docValue === "object") {
+    if (docValue && typeof docValue === "object") {
       return Object.keys(docValue).length === 0
     }
     return docValue == null
   }
 
-  const emptyMatch = match(SearchFilterOperator.EMPTY, _empty)
-  const notEmptyMatch = match(SearchFilterOperator.NOT_EMPTY, not(_empty))
+  const emptyMatch = match(BasicOperator.EMPTY, _empty)
+  const notEmptyMatch = match(BasicOperator.NOT_EMPTY, not(_empty))
 
-  const oneOf = match(
-    SearchFilterOperator.ONE_OF,
-    (docValue: any, testValue: any) => {
-      if (typeof testValue === "string") {
-        testValue = testValue.split(",")
-        if (typeof docValue === "number") {
-          testValue = testValue.map((item: string) => parseFloat(item))
-        }
-      }
-
-      if (!Array.isArray(testValue)) {
-        return false
-      }
-
-      return testValue.some(item => _valueMatches(docValue, item))
+  const oneOf = match(ArrayOperator.ONE_OF, (docValue: any, testValue: any) => {
+    if (typeof testValue === "string") {
+      testValue = testValue.split(",")
     }
-  )
+
+    if (typeof docValue === "number") {
+      testValue = testValue.map((item: string) => parseFloat(item))
+    }
+
+    if (!Array.isArray(testValue)) {
+      return false
+    }
+
+    return testValue.some(item => _valueMatches(docValue, item))
+  })
 
   const _contains =
     (f: "some" | "every") => (docValue: any, testValue: any) => {
@@ -566,7 +658,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     }
 
   const contains = match(
-    SearchFilterOperator.CONTAINS,
+    ArrayOperator.CONTAINS,
     (docValue: any, testValue: any) => {
       if (Array.isArray(testValue) && testValue.length === 0) {
         return true
@@ -575,7 +667,7 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
     }
   )
   const notContains = match(
-    SearchFilterOperator.NOT_CONTAINS,
+    ArrayOperator.NOT_CONTAINS,
     (docValue: any, testValue: any) => {
       // Not sure if this is logically correct, but at the time this code was
       // written the search endpoint behaved this way and we wanted to make this
@@ -586,13 +678,47 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       return not(_contains("every"))(docValue, testValue)
     }
   )
-  const containsAny = match(
-    SearchFilterOperator.CONTAINS_ANY,
-    _contains("some")
+  const containsAny = match(ArrayOperator.CONTAINS_ANY, _contains("some"))
+
+  const and = match(
+    LogicalOperator.AND,
+    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
+      if (!conditions.length) {
+        return false
+      }
+      for (const condition of conditions) {
+        const matchesCondition = runQuery([docValue], condition)
+        if (!matchesCondition.length) {
+          return false
+        }
+      }
+      return true
+    }
+  )
+  const or = match(
+    LogicalOperator.OR,
+    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
+      if (!conditions.length) {
+        return false
+      }
+      for (const condition of conditions) {
+        const matchesCondition = runQuery([docValue], {
+          ...condition,
+          allOr: true,
+        })
+        if (matchesCondition.length) {
+          return true
+        }
+      }
+      return false
+    }
   )
 
   const docMatch = (doc: Record<string, any>) => {
-    const filterFunctions = {
+    const filterFunctions: Record<
+      SearchFilterOperator,
+      (doc: Record<string, any>) => boolean
+    > = {
       string: stringMatch,
       fuzzy: fuzzyMatch,
       range: rangeMatch,
@@ -604,6 +730,8 @@ export const runQuery = (docs: Record<string, any>[], query: SearchFilters) => {
       contains: contains,
       containsAny: containsAny,
       notContains: notContains,
+      [LogicalOperator.AND]: and,
+      [LogicalOperator.OR]: or,
     }
 
     const results = Object.entries(query || {})

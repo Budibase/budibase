@@ -1,65 +1,36 @@
-import { Datasource, Query, SourceName } from "@budibase/types"
+import { Datasource, Query } from "@budibase/types"
 import * as setup from "./utilities"
-import { DatabaseName, getDatasource } from "../../integrations/tests/utils"
-import knex, { Knex } from "knex"
-import { generator } from "@budibase/backend-core/tests"
+import { DatabaseName } from "../../integrations/tests/utils"
+import { Knex } from "knex"
 
-function getKnexClientName(source: SourceName) {
-  switch (source) {
-    case SourceName.MYSQL:
-      return "mysql2"
-    case SourceName.SQL_SERVER:
-      return "mssql"
-    case SourceName.POSTGRES:
-      return "pg"
-  }
-  throw new Error(`Unsupported source: ${source}`)
-}
-
-describe.each(
-  [
-    DatabaseName.POSTGRES,
-    DatabaseName.MYSQL,
-    DatabaseName.SQL_SERVER,
-    DatabaseName.MARIADB,
-  ].map(name => [name, getDatasource(name)])
-)("execute query action (%s)", (_, dsProvider) => {
+describe.each([
+  DatabaseName.POSTGRES,
+  DatabaseName.MYSQL,
+  DatabaseName.SQL_SERVER,
+  DatabaseName.MARIADB,
+  DatabaseName.ORACLE,
+])("execute query action (%s)", name => {
   let tableName: string
   let client: Knex
   let datasource: Datasource
   let query: Query
-  let config = setup.getConfig()
+  const config = setup.getConfig()
 
   beforeAll(async () => {
     await config.init()
 
-    const ds = await dsProvider
-    datasource = await config.api.datasource.create(ds)
-    client = knex({
-      client: getKnexClientName(ds.source),
-      connection: ds.config,
-    })
+    const testSetup = await setup.setupTestDatasource(config, name)
+    datasource = testSetup.datasource
+    client = testSetup.client
   })
 
   beforeEach(async () => {
-    tableName = generator.guid()
-    await client.schema.createTable(tableName, table => {
-      table.string("a")
-      table.integer("b")
+    tableName = await setup.createTestTable(client, {
+      a: { type: "string" },
+      b: { type: "number" },
     })
-    await client(tableName).insert({ a: "string", b: 1 })
-    query = await config.api.query.save({
-      name: "test query",
-      datasourceId: datasource._id!,
-      parameters: [],
-      fields: {
-        sql: client(tableName).select("*").toSQL().toNative().sql,
-      },
-      transformer: "",
-      schema: {},
-      readable: true,
-      queryVerb: "read",
-    })
+    await setup.insertTestData(client, tableName, [{ a: "string", b: 1 }])
+    query = await setup.saveTestQuery(config, client, tableName, datasource)
   })
 
   afterEach(async () => {

@@ -12,6 +12,7 @@ import {
   Table,
   TableSchema,
   SqlClient,
+  ArrayOperator,
 } from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
@@ -76,7 +77,7 @@ export async function getDatasourceAndQuery(
 }
 
 export function cleanExportRows(
-  rows: any[],
+  rows: Row[],
   schema: TableSchema,
   format: string,
   columns?: string[],
@@ -310,4 +311,9 @@ function validateTimeOnlyField(
   }
 
   return res
+}
+
+// type-guard check
+export function isArrayFilter(operator: any): operator is ArrayOperator {
+  return Object.values(ArrayOperator).includes(operator)
 }

@@ -149,4 +149,8 @@ export class ApplicationAPI extends TestAPI {
       query: { status },
     })
   }
+
+  addSampleData = async (appId: string): Promise<void> => {
+    await this._post(`/api/applications/${appId}/sample`)
+  }
 }

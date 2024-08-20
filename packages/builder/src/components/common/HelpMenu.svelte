@@ -1,7 +1,6 @@
 <script>
   import FontAwesomeIcon from "./FontAwesomeIcon.svelte"
   import { Popover, Heading, Body } from "@budibase/bbui"
-  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
   import { licensing } from "stores/portal"
   import { isPremiumOrAbove } from "helpers/planTitle"
   import { ChangelogURL } from "constants"
@@ -62,31 +61,26 @@
         <Body size="S">Budibase University</Body>
       </a>
       <div class="divider" />
-      {#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING)}
-        <a
-          href={premiumOrAboveLicense
-            ? "mailto:support@budibase.com"
-            : "/builder/portal/account/usage"}
-        >
-          <div
-            class="premiumLinkContent"
-            class:disabled={!premiumOrAboveLicense}
-          >
-            <div class="icon">
-              <FontAwesomeIcon name="fa-solid fa-envelope" />
-            </div>
-            <Body size="S">Email support</Body>
+      <a
+        href={premiumOrAboveLicense
+          ? "mailto:support@budibase.com"
+          : "/builder/portal/account/usage"}
+      >
+        <div class="premiumLinkContent" class:disabled={!premiumOrAboveLicense}>
+          <div class="icon">
+            <FontAwesomeIcon name="fa-solid fa-envelope" />
           </div>
-          {#if !premiumOrAboveLicense}
-            <div class="premiumBadge">
-              <div class="icon">
-                <FontAwesomeIcon name="fa-solid fa-lock" />
-              </div>
-              <Body size="XS">Premium</Body>
+          <Body size="S">Email support</Body>
+        </div>
+        {#if !premiumOrAboveLicense}
+          <div class="premiumBadge">
+            <div class="icon">
+              <FontAwesomeIcon name="fa-solid fa-lock" />
             </div>
-          {/if}
-        </a>
-      {/if}
+            <Body size="XS">Premium</Body>
+          </div>
+        {/if}
+      </a>
     </nav>
   </Popover>
 </div>

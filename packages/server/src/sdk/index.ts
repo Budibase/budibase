@@ -10,6 +10,7 @@ import { default as users } from "./users"
 import { default as plugins } from "./plugins"
 import * as views from "./app/views"
 import * as permissions from "./app/permissions"
+import * as rowActions from "./app/rowActions"
 
 const sdk = {
   backups,
@@ -24,6 +25,7 @@ const sdk = {
   views,
   permissions,
   links,
+  rowActions,
 }
 
 // default export for TS

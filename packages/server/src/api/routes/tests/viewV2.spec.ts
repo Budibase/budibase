@@ -9,7 +9,6 @@ import {
   QuotaUsageType,
   Row,
   SaveTableRequest,
-  SearchFilterOperator,
   SortOrder,
   SortType,
   StaticQuotaName,
@@ -19,12 +18,19 @@ import {
   ViewUIFieldMetadata,
   ViewV2,
   SearchResponse,
+  BasicOperator,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
-import { db, roles } from "@budibase/backend-core"
+import {
+  db,
+  roles,
+  withEnv as withCoreEnv,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
+import sdk from "../../../sdk"
 
 describe.each([
   ["lucene", undefined],
@@ -33,6 +39,7 @@ describe.each([
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/v2/views (%s)", (name, dsProvider) => {
   const config = setup.getConfig()
   const isSqs = name === "sqs"
@@ -56,7 +63,7 @@ describe.each([
       primary: ["id"],
       schema: {
         id: {
-          type: FieldType.AUTO,
+          type: FieldType.NUMBER,
           name: "id",
           autocolumn: true,
           constraints: {
@@ -88,10 +95,15 @@ describe.each([
   }
 
   beforeAll(async () => {
+    await withCoreEnv({ SQS_SEARCH_ENABLE: isSqs ? "true" : "false" }, () =>
+      config.init()
+    )
     if (isSqs) {
-      envCleanup = config.setEnv({ SQS_SEARCH_ENABLE: "true" })
+      envCleanup = setCoreEnv({
+        SQS_SEARCH_ENABLE: "true",
+        SQS_SEARCH_ENABLE_TENANTS: [config.getTenantId()],
+      })
     }
-    await config.init()
 
     if (dsProvider) {
       datasource = await config.createDatasource({
@@ -109,6 +121,7 @@ describe.each([
   })
 
   beforeEach(() => {
+    jest.clearAllMocks()
     mocks.licenses.useCloudFree()
   })
 
@@ -149,7 +162,7 @@ describe.each([
         primaryDisplay: "id",
         query: [
           {
-            operator: SearchFilterOperator.EQUAL,
+            operator: BasicOperator.EQUAL,
             field: "field",
             value: "value",
           },
@@ -235,7 +248,7 @@ describe.each([
         schema: {
           id: {
             name: "id",
-            type: FieldType.AUTO,
+            type: FieldType.NUMBER,
             autocolumn: true,
             visible: true,
           },
@@ -561,7 +574,7 @@ describe.each([
         ...view,
         query: [
           {
-            operator: SearchFilterOperator.EQUAL,
+            operator: BasicOperator.EQUAL,
             field: "newField",
             value: "thatValue",
           },
@@ -589,7 +602,7 @@ describe.each([
         primaryDisplay: "Price",
         query: [
           {
-            operator: SearchFilterOperator.EQUAL,
+            operator: BasicOperator.EQUAL,
             field: generator.word(),
             value: generator.word(),
           },
@@ -673,7 +686,7 @@ describe.each([
           tableId: generator.guid(),
           query: [
             {
-              operator: SearchFilterOperator.EQUAL,
+              operator: BasicOperator.EQUAL,
               field: "newField",
               value: "thatValue",
             },
@@ -1016,6 +1029,11 @@ describe.each([
           schema: {
             one: { type: FieldType.STRING, name: "one" },
             two: { type: FieldType.STRING, name: "two" },
+            default: {
+              type: FieldType.STRING,
+              name: "default",
+              default: "default",
+            },
           },
         })
       )
@@ -1036,11 +1054,13 @@ describe.each([
           _viewId: view.id,
           one: "foo",
           two: "bar",
+          default: "ohnoes",
         })
 
         const row = await config.api.row.get(table._id!, newRow._id!)
         expect(row.one).toBeUndefined()
         expect(row.two).toEqual("bar")
+        expect(row.default).toEqual("default")
       })
 
       it("can't persist readonly columns", async () => {
@@ -1194,7 +1214,7 @@ describe.each([
           name: generator.guid(),
           query: [
             {
-              operator: SearchFilterOperator.EQUAL,
+              operator: BasicOperator.EQUAL,
               field: "two",
               value: "bar2",
             },
@@ -1471,6 +1491,141 @@ describe.each([
           }
         )
       })
+
+      isLucene &&
+        it("in lucene, cannot override a view filter", async () => {
+          await config.api.row.save(table._id!, {
+            one: "foo",
+            two: "bar",
+          })
+          const two = await config.api.row.save(table._id!, {
+            one: "foo2",
+            two: "bar2",
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            query: [
+              {
+                operator: BasicOperator.EQUAL,
+                field: "two",
+                value: "bar2",
+              },
+            ],
+            schema: {
+              id: { visible: true },
+              one: { visible: false },
+              two: { visible: true },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id, {
+            query: {
+              equal: {
+                two: "bar",
+              },
+            },
+          })
+          expect(response.rows).toHaveLength(1)
+          expect(response.rows).toEqual([
+            expect.objectContaining({ _id: two._id }),
+          ])
+        })
+
+      !isLucene &&
+        it("can filter a view without a view filter", async () => {
+          const one = await config.api.row.save(table._id!, {
+            one: "foo",
+            two: "bar",
+          })
+          await config.api.row.save(table._id!, {
+            one: "foo2",
+            two: "bar2",
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            schema: {
+              id: { visible: true },
+              one: { visible: false },
+              two: { visible: true },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id, {
+            query: {
+              equal: {
+                two: "bar",
+              },
+            },
+          })
+          expect(response.rows).toHaveLength(1)
+          expect(response.rows).toEqual([
+            expect.objectContaining({ _id: one._id }),
+          ])
+        })
+
+      !isLucene &&
+        it("cannot bypass a view filter", async () => {
+          await config.api.row.save(table._id!, {
+            one: "foo",
+            two: "bar",
+          })
+          await config.api.row.save(table._id!, {
+            one: "foo2",
+            two: "bar2",
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            query: [
+              {
+                operator: BasicOperator.EQUAL,
+                field: "two",
+                value: "bar2",
+              },
+            ],
+            schema: {
+              id: { visible: true },
+              one: { visible: false },
+              two: { visible: true },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id, {
+            query: {
+              equal: {
+                two: "bar",
+              },
+            },
+          })
+          expect(response.rows).toHaveLength(0)
+        })
+
+      it("queries the row api passing the view fields only", async () => {
+        const searchSpy = jest.spyOn(sdk.rows, "search")
+
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          schema: {
+            id: { visible: true },
+            one: { visible: false },
+          },
+        })
+
+        await config.api.viewV2.search(view.id, { query: {} })
+        expect(searchSpy).toHaveBeenCalledTimes(1)
+
+        expect(searchSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            fields: ["id"],
+          })
+        )
+      })
     })
 
     describe("permissions", () => {
@@ -1484,7 +1639,7 @@ describe.each([
       it("does not allow public users to fetch by default", async () => {
         await config.publish()
         await config.api.viewV2.publicSearch(view.id, undefined, {
-          status: 403,
+          status: 401,
         })
       })
 
@@ -1528,7 +1683,7 @@ describe.each([
         await config.publish()
 
         await config.api.viewV2.publicSearch(view.id, undefined, {
-          status: 403,
+          status: 401,
         })
       })
     })
@@ -1542,7 +1697,7 @@ describe.each([
             schema: {
               id: {
                 name: "id",
-                type: FieldType.AUTO,
+                type: FieldType.NUMBER,
                 autocolumn: true,
               },
               name: {

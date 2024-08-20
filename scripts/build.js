@@ -51,20 +51,6 @@ async function runBuild(entry, outfile) {
     fs.readFileSync(tsconfig, "utf-8")
   )
 
-  if (
-    !fs.existsSync(path.join(__dirname, "../packages/pro/src")) &&
-    tsconfigPathPluginContent.compilerOptions?.paths
-  ) {
-    // If we don't have pro, we cannot bundle backend-core.
-    // Otherwise, the main context will not be shared between libraries
-    delete tsconfigPathPluginContent?.compilerOptions?.paths?.[
-      "@budibase/backend-core"
-    ]
-    delete tsconfigPathPluginContent?.compilerOptions?.paths?.[
-      "@budibase/backend-core/*"
-    ]
-  }
-
   const sharedConfig = {
     entryPoints: [entry],
     bundle: true,
@@ -75,7 +61,7 @@ async function runBuild(entry, outfile) {
       svelteCompilePlugin,
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
       nodeExternalsPlugin({
-        allowList: ["@budibase/frontend-core", "svelte"],
+        allowList: ["@budibase/frontend-core", "@budibase/pro", "svelte"],
       }),
     ],
     preserveSymlinks: true,

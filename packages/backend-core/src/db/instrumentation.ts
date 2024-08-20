@@ -71,6 +71,16 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
+  bulkRemove(
+    documents: Document[],
+    opts?: { silenceErrors?: boolean }
+  ): Promise<void> {
+    return tracer.trace("db.bulkRemove", span => {
+      span?.addTags({ db_name: this.name, num_docs: documents.length })
+      return this.db.bulkRemove(documents, opts)
+    })
+  }
+
   put(
     document: AnyDocument,
     opts?: DatabasePutOpts | undefined

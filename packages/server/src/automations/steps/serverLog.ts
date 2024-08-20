@@ -1,10 +1,11 @@
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  ServerLogStepInputs,
+  ServerLogStepOutputs,
 } from "@budibase/types"
 
 /**
@@ -13,7 +14,7 @@ import {
  * GET/DELETE requests cannot handle body elements so they will not be sent if configured.
  */
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Backend log",
   tagline: "Console log a value in the backend",
   icon: "Monitoring",
@@ -53,7 +54,13 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs, appId }: AutomationStepInput) {
+export async function run({
+  inputs,
+  appId,
+}: {
+  inputs: ServerLogStepInputs
+  appId: string
+}): Promise<ServerLogStepOutputs> {
   const message = `App ${appId} - ${inputs.text}`
   console.log(message)
   return {

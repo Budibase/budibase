@@ -26,7 +26,7 @@
     "manifest": "ts-node ./scripts/gen-collection-info.ts"
   },
   "dependencies": {
-    "@budibase/handlebars-helpers": "^0.13.1",
+    "@budibase/handlebars-helpers": "^0.13.2",
     "dayjs": "^1.10.8",
     "handlebars": "^4.7.8",
     "lodash.clonedeep": "^4.5.0"

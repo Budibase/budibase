@@ -7,6 +7,7 @@ import {
   FieldType,
   FilterType,
   IncludeRelationship,
+  InternalSearchFilterOperator,
   isManyToOne,
   OneToManyRelationshipFieldMetadata,
   Operation,
@@ -65,9 +66,14 @@ export interface RunConfig {
   includeSqlRelationships?: IncludeRelationship
 }
 
+export type ExternalReadRequestReturnType = {
+  rows: Row[]
+  rawResponseSize: number
+}
+
 export type ExternalRequestReturnType<T extends Operation> =
   T extends Operation.READ
-    ? Row[]
+    ? ExternalReadRequestReturnType
     : T extends Operation.COUNT
     ? number
     : { row: Row; table: Table }
@@ -189,15 +195,23 @@ export class ExternalRequest<T extends Operation> {
     if (filters) {
       // need to map over the filters and make sure the _id field isn't present
       let prefix = 1
-      for (let operator of Object.values(filters)) {
-        for (let field of Object.keys(operator || {})) {
+      for (const [operatorType, operator] of Object.entries(filters)) {
+        const isArrayOp = sdk.rows.utils.isArrayFilter(operatorType)
+        for (const field of Object.keys(operator || {})) {
           if (dbCore.removeKeyNumbering(field) === "_id") {
             if (primary) {
               const parts = breakRowIdField(operator[field])
-              for (let field of primary) {
-                operator[`${prefix}:${field}`] = parts.shift()
+              if (primary.length > 1 && isArrayOp) {
+                operator[InternalSearchFilterOperator.COMPLEX_ID_OPERATOR] = {
+                  id: primary,
+                  values: parts[0],
+                }
+              } else {
+                for (let field of primary) {
+                  operator[`${prefix}:${field}`] = parts.shift()
+                }
+                prefix++
               }
-              prefix++
             }
             // make sure this field doesn't exist on any filter
             delete operator[field]
@@ -733,9 +747,11 @@ export class ExternalRequest<T extends Operation> {
     )
     // if reading it'll just be an array of rows, return whole thing
     if (operation === Operation.READ) {
-      return (
-        Array.isArray(output) ? output : [output]
-      ) as ExternalRequestReturnType<T>
+      const rows = Array.isArray(output) ? output : [output]
+      return {
+        rows,
+        rawResponseSize: responseRows.length,
+      } as ExternalRequestReturnType<T>
     } else {
       return { row: output[0], table } as ExternalRequestReturnType<T>
     }

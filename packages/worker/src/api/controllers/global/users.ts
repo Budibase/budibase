@@ -41,6 +41,14 @@ import { BpmStatusKey, BpmStatusValue } from "@budibase/shared-core"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
+const generatePassword = (length: number) => {
+  const array = new Uint8Array(length)
+  crypto.getRandomValues(array)
+  return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
+    .join("")
+    .slice(0, length)
+}
+
 export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
   try {
     const currentUserId = ctx.user?._id
@@ -62,7 +70,7 @@ export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
   const { email, ssoId } = ctx.request.body
   try {
     // Status is changed to 404 from getUserDoc if user is not found
-    let userByEmail = (await platform.users.getUserDoc(
+    const userByEmail = (await platform.users.getUserDoc(
       email
     )) as PlatformUserByEmail
     await platform.users.addSsoUser(
@@ -71,6 +79,13 @@ export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
       userByEmail.userId,
       userByEmail.tenantId
     )
+    // Need to get the _rev of the user doc to update
+    const userById = await platform.users.getUserDoc(userByEmail.userId)
+    await platform.users.updateUserDoc({
+      ...userById,
+      email,
+      ssoId,
+    })
     ctx.status = 200
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
@@ -268,7 +283,7 @@ export const find = async (ctx: any) => {
 
 export const tenantUserLookup = async (ctx: any) => {
   const id = ctx.params.id
-  const user = await userSdk.core.getPlatformUser(id)
+  const user = await userSdk.core.getFirstPlatformUser(id)
   if (user) {
     ctx.body = user
   } else {
@@ -289,7 +304,7 @@ export const onboardUsers = async (
 
   let createdPasswords: Record<string, string> = {}
   const users: User[] = ctx.request.body.map(invite => {
-    let password = Math.random().toString(36).substring(2, 22)
+    const password = generatePassword(12)
     createdPasswords[invite.email] = password
 
     return {

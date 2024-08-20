@@ -1,5 +1,4 @@
-import newid from "./newid"
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, utils } from "@budibase/backend-core"
 import {
   DatabaseQueryOpts,
   Datasource,
@@ -14,6 +13,8 @@ import {
 } from "@budibase/types"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
+
+const newid = utils.newid
 
 type Optional = string | null
 
@@ -56,14 +57,6 @@ export const getUserMetadataParams = dbCore.getUserMetadataParams
 export const generateUserMetadataID = dbCore.generateUserMetadataID
 export const getGlobalIDFromUserMetadataID =
   dbCore.getGlobalIDFromUserMetadataID
-export const CONSTANT_INTERNAL_ROW_COLS = [
-  "_id",
-  "_rev",
-  "type",
-  "createdAt",
-  "updatedAt",
-  "tableId",
-]
 
 /**
  * Gets parameters for retrieving tables, this is a utility function for the getDocParams function.
@@ -347,4 +340,12 @@ export function isRelationshipColumn(
   column: FieldSchema
 ): column is RelationshipFieldMetadata {
   return column.type === FieldType.LINK
+}
+
+/**
+ * Generates a new row actions ID.
+ * @returns The new row actions ID which the row actions doc can be stored under.
+ */
+export function generateRowActionsID(tableId: string) {
+  return `${DocumentType.ROW_ACTIONS}${SEPARATOR}${tableId}`
 }

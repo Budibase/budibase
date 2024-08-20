@@ -17,12 +17,12 @@
 
   export let blockIdx
   export let lastStep
+  export let modal
 
   let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   let triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let selectedAction
-  let actionVal
   let actions = Object.entries($automationStore.blockDefinitions.ACTION)
   let lockedFeatures = [
     ActionStepID.COLLECT,
@@ -91,19 +91,17 @@
     return acc
   }, {})
 
-  const selectAction = action => {
-    actionVal = action
+  const selectAction = async action => {
     selectedAction = action.name
-  }
 
-  async function addBlockToAutomation() {
     try {
       const newBlock = automationStore.actions.constructBlock(
         "ACTION",
-        actionVal.stepId,
-        actionVal
+        action.stepId,
+        action
       )
       await automationStore.actions.addBlockToAutomation(newBlock, blockIdx + 1)
+      modal.hide()
     } catch (error) {
       notifications.error("Error saving automation")
     }
@@ -114,10 +112,10 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <ModalContent
   title="Add automation step"
-  confirmText="Save"
   size="L"
+  showConfirmButton={false}
+  showCancelButton={false}
   disabled={!selectedAction}
-  onConfirm={addBlockToAutomation}
 >
   <Layout noPadding gap="XS">
     <Detail size="S">Apps</Detail>

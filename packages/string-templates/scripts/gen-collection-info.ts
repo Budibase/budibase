@@ -1,4 +1,7 @@
-import { HelperFunctionBuiltin } from "../src/helpers/constants"
+import {
+  HelperFunctionBuiltin,
+  EXTERNAL_FUNCTION_COLLECTIONS,
+} from "../src/helpers/constants"
 import { readFileSync, writeFileSync } from "fs"
 import { marked } from "marked"
 import { join, dirname } from "path"
@@ -14,21 +17,6 @@ type HelperInfo = {
   tags?: any[]
 }
 
-/**
- * full list of supported helpers can be found here:
- * https://github.com/budibase/handlebars-helpers
- */
-
-const COLLECTIONS = [
-  "math",
-  "array",
-  "number",
-  "url",
-  "string",
-  "comparison",
-  "object",
-  "uuid",
-]
 const FILENAME = join(__dirname, "..", "src", "manifest.json")
 const outputJSON: any = {}
 const ADDED_HELPERS = {
@@ -140,7 +128,7 @@ const excludeFunctions: Record<string, string[]> = { string: ["raw"] }
  */
 function run() {
   const foundNames: string[] = []
-  for (let collection of COLLECTIONS) {
+  for (let collection of EXTERNAL_FUNCTION_COLLECTIONS) {
     const collectionFile = readFileSync(
       `${dirname(
         require.resolve("@budibase/handlebars-helpers")

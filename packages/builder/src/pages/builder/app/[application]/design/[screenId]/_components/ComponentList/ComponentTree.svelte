@@ -1,7 +1,6 @@
 <script>
-  import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
-  import { notifications } from "@budibase/bbui"
+  import { Icon, notifications } from "@budibase/bbui"
   import {
     selectedScreen,
     componentStore,
@@ -9,6 +8,7 @@
     selectedComponent,
     hoverStore,
     componentTreeNodesStore,
+    contextMenuStore,
   } from "stores/builder"
   import {
     findComponentPath,
@@ -17,6 +17,7 @@
   } from "helpers/components"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
+  import getComponentContextMenuItems from "./getComponentContextMenuItems"
 
   export let components = []
   export let level = 0
@@ -85,6 +86,18 @@
   }
 
   const hover = hoverStore.hover
+
+  const openContextMenu = (e, component, opened) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const items = getComponentContextMenuItems(
+      component,
+      !opened,
+      componentStore
+    )
+    contextMenuStore.open(component._id, items, { x: e.clientX, y: e.clientY })
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions-->
@@ -93,6 +106,7 @@
   {#each filteredComponents || [] as component, index (component._id)}
     {@const opened = isOpen(component, openNodes)}
     <li
+      on:contextmenu={e => openContextMenu(e, component, opened)}
       on:click|stopPropagation={() => {
         componentStore.select(component._id)
       }}
@@ -107,7 +121,8 @@
         on:dragover={dragover(component, index)}
         on:iconClick={() => handleIconClick(component._id)}
         on:drop={onDrop}
-        hovering={$hoverStore.componentId === component._id}
+        hovering={$hoverStore.componentId === component._id ||
+          component._id === $contextMenuStore.id}
         on:mouseenter={() => hover(component._id)}
         on:mouseleave={() => hover(null)}
         text={getComponentText(component)}
@@ -120,7 +135,12 @@
         highlighted={isChildOfSelectedComponent(component)}
         selectedBy={$userSelectedResourceMap[component._id]}
       >
-        <ComponentDropdownMenu {opened} {component} />
+        <Icon
+          size="S"
+          hoverable
+          name="MoreSmallList"
+          on:click={e => openContextMenu(e, component, opened)}
+        />
       </NavItem>
 
       {#if opened}

@@ -100,51 +100,43 @@
   async function handleFile(e) {
     loading = true
     error = null
+    const previousValidation = validation
     validation = {}
 
     try {
       const response = await parseFile(e)
       rows = response.rows
       fileName = response.fileName
+
+      const newValidateHash = JSON.stringify(rows)
+      if (newValidateHash === validateHash) {
+        validation = previousValidation
+      } else {
+        await validate(rows)
+        validateHash = newValidateHash
+      }
     } catch (e) {
+      error = e.message || e
+    } finally {
       loading = false
-      error = e
     }
   }
 
   async function validate(rows) {
-    loading = true
     error = null
     validation = {}
     allValid = false
 
-    try {
-      if (rows.length > 0) {
-        const response = await API.validateExistingTableImport({
-          rows,
-          tableId,
-        })
+    if (rows.length > 0) {
+      const response = await API.validateExistingTableImport({
+        rows,
+        tableId,
+      })
 
-        validation = response.schemaValidation
-        invalidColumns = response.invalidColumns
-        allValid = response.allValid
-      }
-    } catch (e) {
-      error = e.message
+      validation = response.schemaValidation
+      invalidColumns = response.invalidColumns
+      allValid = response.allValid
     }
-
-    loading = false
-  }
-
-  $: {
-    // binding in consumer is causing double renders here
-    const newValidateHash = JSON.stringify(rows)
-
-    if (newValidateHash !== validateHash) {
-      validate(rows)
-    }
-
-    validateHash = newValidateHash
   }
 </script>
 

@@ -7,7 +7,7 @@
 
   const { API, cache } = getContext("grid")
 
-  export let value
+  export let value = []
   export let api
   export let readonly
   export let focused
@@ -30,14 +30,22 @@
   let container
   let anchor
 
+  $: fieldValue = parseValue(value)
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
-  $: lookupMap = buildLookupMap(value, isOpen)
+  $: lookupMap = buildLookupMap(fieldValue, isOpen)
   $: debouncedSearch(searchString)
   $: {
     if (!focused && isOpen) {
       close()
     }
+  }
+
+  const parseValue = value => {
+    if (Array.isArray(value) && value.every(x => x?._id)) {
+      return value
+    }
+    return []
   }
 
   // Builds a lookup map to quickly check which rows are selected
@@ -177,13 +185,13 @@
 
   // Toggles whether a row is included in the relationship or not
   const toggleRow = async row => {
-    if (value?.some(x => x._id === row._id)) {
+    if (fieldValue?.some(x => x._id === row._id)) {
       // If the row is already included, remove it and update the candidate
       // row to be the same position if possible
       if (oneRowOnly) {
         await onChange([])
       } else {
-        const newValue = value.filter(x => x._id !== row._id)
+        const newValue = fieldValue.filter(x => x._id !== row._id)
         if (!newValue.length) {
           candidateIndex = null
         } else {
@@ -196,7 +204,7 @@
       if (oneRowOnly) {
         await onChange([row])
       } else {
-        await onChange(sortRows([...(value || []), row]))
+        await onChange(sortRows([...(fieldValue || []), row]))
       }
       candidateIndex = null
     }
@@ -238,7 +246,7 @@
       class:wrap={editable || contentLines > 1}
       on:wheel={e => (focused ? e.stopPropagation() : null)}
     >
-      {#each value || [] as relationship}
+      {#each fieldValue || [] as relationship}
         {#if relationship[primaryDisplay] || relationship.primaryDisplay}
           <div class="badge">
             <span>
@@ -263,9 +271,9 @@
         </div>
       {/if}
     </div>
-    {#if !hideCounter && value?.length}
+    {#if !hideCounter && fieldValue?.length}
       <div class="count">
-        {value?.length || 0}
+        {fieldValue?.length || 0}
       </div>
     {/if}
   </div>

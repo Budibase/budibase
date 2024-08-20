@@ -2,10 +2,11 @@ import { OpenAI } from "openai"
 
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
+  OpenAIStepInputs,
+  OpenAIStepOutputs,
 } from "@budibase/types"
 import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
@@ -16,7 +17,7 @@ enum Model {
   GPT_4 = "gpt-4",
 }
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "OpenAI",
   tagline: "Send prompts to ChatGPT",
   icon: "Algorithm",
@@ -59,7 +60,11 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: OpenAIStepInputs
+}): Promise<OpenAIStepOutputs> {
   if (!env.OPENAI_API_KEY) {
     return {
       success: false,
