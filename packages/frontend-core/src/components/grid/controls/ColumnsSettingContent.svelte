@@ -6,11 +6,22 @@
   import { helpers } from "@budibase/shared-core"
   import { FieldType } from "@budibase/types"
   import { tables } from "stores/builder"
+  import { FieldPermissions } from "../../../constants"
 
-  export let allowViewReadonlyColumns
+  export let permissions = [FieldPermissions.WRITABLE, FieldPermissions.HIDDEN]
+  export let disabledPermissions = []
   export let columns
 
   const { datasource, dispatch } = getContext("grid")
+  $: permissionsObj = permissions.reduce(
+    (acc, c) => ({
+      ...acc,
+      [c]: {
+        disabled: disabledPermissions.includes(c),
+      },
+    }),
+    {}
+  )
 
   $: allowRelationshipSchemas = true // TODO
   let relationshipPanelOpen = false
@@ -18,8 +29,8 @@
   let relationshipPanelColumns = []
 
   const toggleColumn = async (column, permission) => {
-    const visible = permission !== PERMISSION_OPTIONS.HIDDEN
-    const readonly = permission === PERMISSION_OPTIONS.READONLY
+    const visible = permission !== FieldPermissions.HIDDEN
+    const readonly = permission === FieldPermissions.READONLY
 
     await datasource.actions.addSchemaMutation(column.name, {
       visible,
@@ -36,60 +47,63 @@
     dispatch(visible ? "show-column" : "hide-column")
   }
 
-  const PERMISSION_OPTIONS = {
-    WRITABLE: "writable",
-    READONLY: "readonly",
-    HIDDEN: "hidden",
-  }
-
   $: displayColumns = columns.map(c => {
     const isRequired = helpers.schema.isRequired(c.schema.constraints)
     const requiredTooltip = isRequired && "Required columns must be writable"
     const editEnabled =
-      !isRequired ||
-      columnToPermissionOptions(c) !== PERMISSION_OPTIONS.WRITABLE
-    const options = [
-      {
-        icon: "Edit",
-        value: PERMISSION_OPTIONS.WRITABLE,
-        tooltip: (!editEnabled && requiredTooltip) || "Writable",
-        disabled: !editEnabled,
-      },
-    ]
-    if ($datasource.type === "viewV2") {
+      !isRequired || columnToPermissionOptions(c) !== FieldPermissions.WRITABLE
+    const options = []
+
+    if (permissionsObj[FieldPermissions.WRITABLE]) {
       options.push({
-        icon: "Visibility",
-        value: PERMISSION_OPTIONS.READONLY,
-        tooltip: allowViewReadonlyColumns
-          ? requiredTooltip || "Read only"
-          : "Read only (premium feature)",
-        disabled: !allowViewReadonlyColumns || isRequired,
+        icon: "Edit",
+        value: FieldPermissions.WRITABLE,
+        tooltip: (!editEnabled && requiredTooltip) || "Writable",
+        disabled:
+          !editEnabled || permissionsObj[FieldPermissions.WRITABLE].disabled,
       })
     }
 
-    options.push({
-      icon: "VisibilityOff",
-      value: PERMISSION_OPTIONS.HIDDEN,
-      disabled: c.primaryDisplay || isRequired,
-      tooltip:
-        (c.primaryDisplay && "Display column cannot be hidden") ||
-        requiredTooltip ||
-        "Hidden",
-    })
+    if (permissionsObj[FieldPermissions.READONLY]) {
+      options.push({
+        icon: "Visibility",
+        value: FieldPermissions.READONLY,
+        tooltip: !permissionsObj[FieldPermissions.READONLY].disabled
+          ? requiredTooltip || "Read only"
+          : "Read only (premium feature)",
+        disabled:
+          permissionsObj[FieldPermissions.READONLY].disabled || isRequired,
+      })
+    }
+
+    if (permissionsObj[FieldPermissions.HIDDEN]) {
+      options.push({
+        icon: "VisibilityOff",
+        value: FieldPermissions.HIDDEN,
+        disabled:
+          c.primaryDisplay ||
+          isRequired ||
+          permissionsObj[FieldPermissions.HIDDEN].disabled,
+        tooltip:
+          (c.primaryDisplay && "Display column cannot be hidden") ||
+          requiredTooltip ||
+          "Hidden",
+      })
+    }
 
     return { ...c, options }
   })
 
   function columnToPermissionOptions(column) {
     if (column.schema.visible === false) {
-      return PERMISSION_OPTIONS.HIDDEN
+      return FieldPermissions.HIDDEN
     }
 
     if (column.schema.readonly) {
-      return PERMISSION_OPTIONS.READONLY
+      return FieldPermissions.READONLY
     }
 
-    return PERMISSION_OPTIONS.WRITABLE
+    return FieldPermissions.WRITABLE
   }
 
   function onRelationshipOpen(column, domElement) {
@@ -109,6 +123,7 @@
           schema: {
             ...column,
             visible: !!isPrimaryDisplay,
+            readonly: isPrimaryDisplay || column.readonly,
           },
         }
       })
@@ -158,8 +173,8 @@
     align="right-outside"
   >
     <svelte:self
-      {allowViewReadonlyColumns}
       columns={relationshipPanelColumns}
+      permissions={[FieldPermissions.READONLY, FieldPermissions.HIDDEN]}
     />
   </Popover>
 {/if}
