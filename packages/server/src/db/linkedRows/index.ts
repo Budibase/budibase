@@ -1,10 +1,10 @@
 import LinkController from "./LinkController"
 import {
   getLinkDocuments,
-  getUniqueByProp,
-  getRelatedTableForField,
-  getLinkedTableIDs,
   getLinkedTable,
+  getLinkedTableIDs,
+  getRelatedTableForField,
+  getUniqueByProp,
 } from "./linkUtils"
 import flatten from "lodash/flatten"
 import { USER_METDATA_PREFIX } from "../utils"
@@ -13,15 +13,24 @@ import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
 import {
-  Table,
-  Row,
-  LinkDocumentValue,
-  FieldType,
   ContextUser,
+  FieldType,
+  LinkDocumentValue,
+  Row,
+  Table,
 } from "@budibase/types"
 import sdk from "../../sdk"
 
 export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
+
+const INVALID_DISPLAY_COLUMN_TYPE = [
+  FieldType.LINK,
+  FieldType.ATTACHMENTS,
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.SIGNATURE_SINGLE,
+  FieldType.BB_REFERENCE,
+  FieldType.BB_REFERENCE_SINGLE,
+]
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
@@ -207,6 +216,31 @@ export async function attachFullLinkedDocs(
 }
 
 /**
+ * Finds a valid value for the primary display, avoiding columns which break things
+ * like relationships (can be circular).
+ * @param row The row to lift a value from for the primary display.
+ * @param table The related table to attempt to work out the primary display column from.
+ */
+function getPrimaryDisplayValue(row: Row, table?: Table) {
+  const primaryDisplay = table?.primaryDisplay
+  let invalid = true
+  if (primaryDisplay) {
+    const primaryDisplaySchema = table?.schema[primaryDisplay]
+    invalid = INVALID_DISPLAY_COLUMN_TYPE.includes(primaryDisplaySchema.type)
+  }
+  if (invalid || !primaryDisplay) {
+    const validKey = Object.keys(table?.schema || {}).find(
+      key =>
+        table?.schema[key].type &&
+        !INVALID_DISPLAY_COLUMN_TYPE.includes(table?.schema[key].type)
+    )
+    return validKey ? row[validKey] : undefined
+  } else {
+    return row[primaryDisplay]
+  }
+}
+
+/**
  * This function will take the given enriched rows and squash the links to only contain the primary display field.
  * @param table The table from which the rows originated.
  * @param enriched The pre-enriched rows (full docs) which are to be squashed.
@@ -232,9 +266,7 @@ export async function squashLinksToPrimaryDisplay(
         const linkTblId = link.tableId || getRelatedTableForField(table, column)
         const linkedTable = await getLinkedTable(linkTblId!, linkedTables)
         const obj: any = { _id: link._id }
-        if (linkedTable?.primaryDisplay && link[linkedTable.primaryDisplay]) {
-          obj.primaryDisplay = link[linkedTable.primaryDisplay]
-        }
+        obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
         newLinks.push(obj)
       }
       row[column] = newLinks
