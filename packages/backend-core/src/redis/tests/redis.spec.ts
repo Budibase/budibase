@@ -1,7 +1,7 @@
 import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { generator, structures } from "../../../tests"
 import RedisWrapper, { closeAll } from "../redis"
-import { env } from "../.."
+import env from "../../environment"
 import { randomUUID } from "crypto"
 
 jest.setTimeout(30000)
