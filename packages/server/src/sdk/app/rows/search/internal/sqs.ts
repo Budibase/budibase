@@ -297,7 +297,7 @@ export async function search(
     throw new Error("Unable to find table")
   }
 
-  const relationships = buildInternalRelationships(table)
+  const relationships = buildInternalRelationships(table, allTables)
 
   const searchFilters: SearchFilters = {
     ...cleanupFilters(query, table, allTables),
