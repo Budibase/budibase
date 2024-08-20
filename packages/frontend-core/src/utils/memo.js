@@ -4,7 +4,7 @@ import { writable, get, derived } from "svelte/store"
 // subscribed children will only fire when a new value is actually set
 export const memo = initialValue => {
   const store = writable(initialValue)
-  let currentJSON = null
+  let currentJSON = JSON.stringify(null)
 
   const tryUpdateValue = newValue => {
     const newJSON = JSON.stringify(newValue)
