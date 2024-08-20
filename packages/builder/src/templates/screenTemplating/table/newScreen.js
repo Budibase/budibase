@@ -4,7 +4,6 @@ import { capitalise } from "helpers"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import getValidRoute from "../getValidRoute"
 import { Helpers } from "@budibase/bbui"
-import { head } from "lodash"
 
 const getTableScreenTemplate = ({
   route,
