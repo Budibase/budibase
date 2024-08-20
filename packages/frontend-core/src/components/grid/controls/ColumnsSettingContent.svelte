@@ -14,6 +14,12 @@
   export let fromRelationshipField
 
   const { datasource, dispatch } = getContext("grid")
+
+  let relationshipPanelAnchor
+  let relationshipPanelColumns = []
+  let relationshipFieldName
+
+  $: relationshipField = columns.find(c => c.name === relationshipFieldName)
   $: permissionsObj = permissions.reduce(
     (acc, c) => ({
       ...acc,
@@ -25,33 +31,6 @@
   )
 
   $: allowRelationshipSchemas = true // TODO
-  let relationshipPanelOpen = false
-  let relationshipPanelAnchor
-  let relationshipPanelColumns = []
-  let relationshipField
-
-  const toggleColumn = async (column, permission) => {
-    const visible = permission !== FieldPermissions.HIDDEN
-    const readonly = permission === FieldPermissions.READONLY
-
-    await datasource.actions.addSchemaMutation(
-      column.name,
-      {
-        visible,
-        readonly,
-      },
-      fromRelationshipField?.name
-    )
-    try {
-      await datasource.actions.saveSchemaMutations()
-    } catch (e) {
-      notifications.error(e.message)
-    } finally {
-      await datasource.actions.resetSchemaMutations()
-      await datasource.actions.refreshDefinition()
-    }
-    dispatch(visible ? "show-column" : "hide-column")
-  }
 
   $: displayColumns = columns.map(c => {
     const isRequired =
@@ -135,6 +114,29 @@
     return { ...c, options }
   })
 
+  async function toggleColumn(column, permission) {
+    const visible = permission !== FieldPermissions.HIDDEN
+    const readonly = permission === FieldPermissions.READONLY
+
+    await datasource.actions.addSchemaMutation(
+      column.name,
+      {
+        visible,
+        readonly,
+      },
+      fromRelationshipField?.name
+    )
+    try {
+      await datasource.actions.saveSchemaMutations()
+    } catch (e) {
+      notifications.error(e.message)
+    } finally {
+      await datasource.actions.resetSchemaMutations()
+      await datasource.actions.refreshDefinition()
+    }
+    dispatch(visible ? "show-column" : "hide-column")
+  }
+
   function columnToPermissionOptions(column) {
     if (column.schema.visible === false) {
       return FieldPermissions.HIDDEN
@@ -147,34 +149,43 @@
     return FieldPermissions.WRITABLE
   }
 
-  function onRelationshipOpen(column, domElement) {
-    const relTable = $tables.list.find(
-      table => table._id === column.schema.tableId
-    )
-    relationshipPanelColumns = Object.values(relTable?.schema || {})
-      .filter(
-        schema => ![FieldType.LINK, FieldType.FORMULA].includes(schema.type)
-      )
-      .map(column => {
-        const isPrimaryDisplay = relTable.primaryDisplay === column.name
-        return {
-          name: column.name,
-          label: column.name,
-          primaryDisplay: isPrimaryDisplay,
-          schema: {
-            ...column,
-            visible: !!isPrimaryDisplay,
-            readonly: isPrimaryDisplay || column.readonly,
-          },
-        }
-      })
-      .sort((a, b) =>
-        a.primaryDisplay === b.primaryDisplay ? 0 : a.primaryDisplay ? -1 : 1
-      )
-
-    relationshipPanelAnchor = domElement
-    relationshipPanelOpen = !relationshipPanelOpen
-    relationshipField = column
+  $: {
+    if (relationshipField) {
+      cache.actions
+        .getTable(relationshipField.schema.tableId)
+        .then(relTable => {
+          relationshipPanelColumns = Object.values(relTable?.schema || {})
+            .filter(
+              schema =>
+                ![FieldType.LINK, FieldType.FORMULA].includes(schema.type)
+            )
+            .map(column => {
+              const isPrimaryDisplay = relTable.primaryDisplay === column.name
+              const isReadonly = !!(
+                isPrimaryDisplay ||
+                column.readonly ||
+                (relationshipField.schema?.schema || {})[column.name]?.readonly
+              )
+              return {
+                name: column.name,
+                label: column.name,
+                primaryDisplay: isPrimaryDisplay,
+                schema: {
+                  ...column,
+                  visible: isReadonly,
+                  readonly: isReadonly,
+                },
+              }
+            })
+            .sort((a, b) =>
+              a.primaryDisplay === b.primaryDisplay
+                ? 0
+                : a.primaryDisplay
+                ? -1
+                : 1
+            )
+        })
+    }
   }
 </script>
 
@@ -196,7 +207,10 @@
         {#if allowRelationshipSchemas && column.schema.type === FieldType.LINK}
           <div class="relationship-columns">
             <ActionButton
-              on:click={e => onRelationshipOpen(column, e.currentTarget)}
+              on:click={e => {
+                relationshipFieldName = column.name
+                relationshipPanelAnchor = e.currentTarget
+              }}
               size="S"
               icon="ChevronRight"
               quiet
@@ -210,7 +224,7 @@
 
 {#if allowRelationshipSchemas}
   <Popover
-    bind:open={relationshipPanelOpen}
+    open={!!relationshipField}
     anchor={relationshipPanelAnchor}
     align="right-outside"
   >
