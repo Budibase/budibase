@@ -229,12 +229,12 @@ function getPrimaryDisplayValue(row: Row, table?: Table) {
     invalid = INVALID_DISPLAY_COLUMN_TYPE.includes(primaryDisplaySchema.type)
   }
   if (invalid || !primaryDisplay) {
-    const validKey = Object.keys(table?.schema || {}).filter(
+    const validKey = Object.keys(table?.schema || {}).find(
       key =>
         table?.schema[key].type &&
         !INVALID_DISPLAY_COLUMN_TYPE.includes(table?.schema[key].type)
     )
-    return validKey[0] ? row[validKey[0]] : undefined
+    return validKey ? row[validKey] : undefined
   } else {
     return row[primaryDisplay]
   }
