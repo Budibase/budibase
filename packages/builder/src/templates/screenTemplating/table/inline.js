@@ -9,16 +9,21 @@ const inline = ({ tableOrView, permissions, screens }) => {
     .customProps({
       text: tableOrView.name,
     })
+    .gridDesktopColSpan(1, 13)
+    .gridDesktopRowSpan(1, 3)
 
   const tableBlock = new Component("@budibase/standard-components/gridblock")
     .instanceName(`${tableOrView.name} - Table`)
     .customProps({
       table: tableOrView.datasourceSelectFormat,
     })
+    .gridDesktopColSpan(1, 13)
+    .gridDesktopRowSpan(3, 21)
 
   const screenTemplate = new Screen()
     .route(getValidRoute(screens, tableOrView.name, permissions.write))
     .instanceName(`${tableOrView.name} - List`)
+    .customProps({ layout: "grid" })
     .role(permissions.write)
     .autoTableId(tableOrView.id)
     .addChild(heading)

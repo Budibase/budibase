@@ -54,4 +54,28 @@ export class Component extends BaseStructure {
   getId() {
     return this._json._id
   }
+
+  gridDesktopColSpan(start, end) {
+    this._json._styles.normal["--grid-desktop-col-start"] = start
+    this._json._styles.normal["--grid-desktop-col-end"] = end
+    return this
+  }
+
+  gridDesktopRowSpan(start, end) {
+    this._json._styles.normal["--grid-desktop-row-start"] = start
+    this._json._styles.normal["--grid-desktop-row-end"] = end
+    return this
+  }
+
+  gridMobileColSpan(start, end) {
+    this._json._styles.normal["--grid-mobile-col-start"] = start
+    this._json._styles.normal["--grid-mobile-col-end"] = end
+    return this
+  }
+
+  gridMobileRowSpan(start, end) {
+    this._json._styles.normal["--grid-mobile-row-start"] = start
+    this._json._styles.normal["--grid-mobile-row-end"] = end
+    return this
+  }
 }
