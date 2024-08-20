@@ -152,6 +152,7 @@ export const createActions = context => {
       return
     }
     schemaMutations.update($schemaMutations => {
+      console.log($schemaMutations)
       return {
         ...$schemaMutations,
         [field]: {

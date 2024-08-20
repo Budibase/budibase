@@ -20,7 +20,7 @@
   let confirmDeleteDialog
   let screenDetailsModal
 
-  const createDuplicateScreen = async ({ screenName, screenUrl }) => {
+  const createDuplicateScreen = async ({ route }) => {
     // Create a dupe and ensure it is unique
     let duplicateScreen = Helpers.cloneDeep(screen)
     delete duplicateScreen._id
@@ -28,9 +28,8 @@
     duplicateScreen.props = makeComponentUnique(duplicateScreen.props)
 
     // Attach the new name and URL
-    duplicateScreen.routing.route = sanitizeUrl(screenUrl)
+    duplicateScreen.routing.route = sanitizeUrl(route)
     duplicateScreen.routing.homeScreen = false
-    duplicateScreen.props._instanceName = screenName
 
     try {
       // Create the screen
@@ -136,8 +135,8 @@
 <Modal bind:this={screenDetailsModal}>
   <ScreenDetailsModal
     onConfirm={createDuplicateScreen}
-    screenUrl={screen?.routing.route}
-    screenRole={screen?.routing.roleId}
+    route={screen?.routing.route}
+    role={screen?.routing.roleId}
     confirmText="Duplicate"
   />
 </Modal>

@@ -36,7 +36,6 @@
   export let logoLinkUrl
   export let openLogoLinkInNewTab
   export let textAlign
-
   export let embedded = false
 
   const NavigationClasses = {
@@ -339,6 +338,7 @@
       />
     </div>
   </div>
+  <div class="modal-container" />
 </div>
 
 <style>
@@ -353,6 +353,9 @@
     z-index: 1;
     overflow: hidden;
     position: relative;
+
+    /* Deliberately unitless as we need to do unitless calculations in grids */
+    --grid-spacing: 4;
   }
   .component {
     display: contents;
@@ -415,7 +418,6 @@
     color: var(--navTextColor);
     opacity: 1;
   }
-
   .nav :global(h1) {
     color: var(--navTextColor);
   }
@@ -481,9 +483,10 @@
     position: relative;
     padding: 32px;
   }
-  .main.size--max {
-    padding: 0;
+  .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
+    padding: calc(32px - var(--grid-spacing) * 2px);
   }
+
   .layout--none .main {
     padding: 0;
   }
@@ -501,6 +504,9 @@
   }
   .size--max {
     width: 100%;
+  }
+  .main.size--max {
+    padding: 0;
   }
 
   /*  Nav components */
@@ -612,6 +618,10 @@
   /* Reduce padding */
   .mobile:not(.layout--none) .main {
     padding: 16px;
+  }
+  .mobile:not(.layout--none)
+    .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
+    padding: 6px;
   }
   .mobile .main.size--max {
     padding: 0;

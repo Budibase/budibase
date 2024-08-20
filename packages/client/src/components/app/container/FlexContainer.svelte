@@ -12,7 +12,7 @@
   export let wrap
   export let onClick
 
-  $: directionClass = direction ? `valid-container direction-${direction}` : ""
+  $: directionClass = direction ? `flex-container direction-${direction}` : ""
   $: hAlignClass = hAlign ? `hAlign-${hAlign}` : ""
   $: vAlignClass = vAlign ? `vAlign-${vAlign}` : ""
   $: sizeClass = size ? `size-${size}` : ""
@@ -39,11 +39,11 @@
 </div>
 
 <style>
-  .valid-container {
+  .flex-container {
     display: flex;
     max-width: 100%;
   }
-  .valid-container :global(.component > *) {
+  .flex-container :global(.component > *) {
     max-width: 100%;
   }
   .direction-row {

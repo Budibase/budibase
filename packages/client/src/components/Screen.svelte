@@ -13,8 +13,9 @@
   const onLoadActions = memo()
 
   // Get the screen definition for the current route
-  $: screenDefinition = $screenStore.activeScreen?.props
-  $: onLoadActions.set($screenStore.activeScreen?.onLoad)
+  $: screen = $screenStore.activeScreen
+  $: screenDefinition = { ...screen?.props, addEmptyRows: true }
+  $: onLoadActions.set(screen?.onLoad)
   $: runOnLoadActions($onLoadActions, params)
 
   // Enrich and execute any on load actions.
