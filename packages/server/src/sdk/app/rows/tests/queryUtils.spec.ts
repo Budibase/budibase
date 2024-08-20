@@ -386,35 +386,13 @@ describe("query utils", () => {
           expect(result).toEqual([
             "_id",
             "name",
-            // deep 1 aux1 primitive props
+            // aux1 primitive props
             "aux1.name",
             "aux1Table.name",
 
-            // deep 2 aux1 primitive props
-            "aux1.aux2_1.title",
-            "aux1Table.aux2_1.title",
-            "aux1.aux2Table.title",
-            "aux1Table.aux2Table.title",
-
-            // deep 2 aux2 primitive props
-            "aux1.aux2_2.title",
-            "aux1Table.aux2_2.title",
-            "aux1.aux2Table.title",
-            "aux1Table.aux2Table.title",
-
-            // deep 1 aux2 primitive props
+            // aux2 primitive props
             "aux2.title",
             "aux2Table.title",
-
-            // deep 2 aux2 primitive props
-            "aux2.aux1_1.name",
-            "aux2Table.aux1_1.name",
-            "aux2.aux1Table.name",
-            "aux2Table.aux1Table.name",
-            "aux2.aux1_2.name",
-            "aux2Table.aux1_2.name",
-            "aux2.aux1Table.name",
-            "aux2Table.aux1Table.name",
           ])
         })
 
@@ -426,35 +404,17 @@ describe("query utils", () => {
             "_id",
             "name",
 
-            // deep 1 aux2_1 primitive props
+            // aux2_1 primitive props
             "aux2_1.title",
             "aux2Table.title",
 
-            // deep 2 aux2_1 primitive props
-            "aux2_1.table.name",
-            "aux2Table.table.name",
-            "aux2_1.TestTable.name",
-            "aux2Table.TestTable.name",
-
-            // deep 1 aux2_2 primitive props
+            // aux2_2 primitive props
             "aux2_2.title",
             "aux2Table.title",
 
-            // deep 2 aux2_2 primitive props
-            "aux2_2.table.name",
-            "aux2Table.table.name",
-            "aux2_2.TestTable.name",
-            "aux2Table.TestTable.name",
-
-            // deep 1 table primitive props
+            // table primitive props
             "table.name",
             "TestTable.name",
-
-            // deep 2 table primitive props
-            "table.aux2.title",
-            "TestTable.aux2.title",
-            "table.aux2Table.title",
-            "TestTable.aux2Table.title",
           ])
         })
 
@@ -466,35 +426,17 @@ describe("query utils", () => {
             "_id",
             "title",
 
-            // deep 1 aux1_1 primitive props
+            // aux1_1 primitive props
             "aux1_1.name",
             "aux1Table.name",
 
-            // deep 2 aux1_1 primitive props
-            "aux1_1.table.name",
-            "aux1Table.table.name",
-            "aux1_1.TestTable.name",
-            "aux1Table.TestTable.name",
-
-            // deep 1 aux1_2 primitive props
+            // aux1_2 primitive props
             "aux1_2.name",
             "aux1Table.name",
 
-            // deep 2 aux1_2 primitive props
-            "aux1_2.table.name",
-            "aux1Table.table.name",
-            "aux1_2.TestTable.name",
-            "aux1Table.TestTable.name",
-
-            // deep 1 table primitive props
+            // table primitive props
             "table.name",
             "TestTable.name",
-
-            // deep 2 table primitive props
-            "table.aux1.name",
-            "TestTable.aux1.name",
-            "table.aux1Table.name",
-            "TestTable.aux1Table.name",
           ])
         })
       })
