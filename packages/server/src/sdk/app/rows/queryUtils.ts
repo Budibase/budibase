@@ -16,32 +16,32 @@ export const removeInvalidFilters = (
 
   validFields = validFields.map(f => f.toLowerCase())
   for (const filterKey of Object.keys(result) as (keyof SearchFilters)[]) {
-    if (typeof result[filterKey] !== "object") {
+    const filter = result[filterKey]
+    if (!filter || typeof filter !== "object") {
       continue
     }
     if (isLogicalSearchOperator(filterKey)) {
       const resultingConditions: SearchFilters[] = []
-      for (const condition of result[filterKey].conditions) {
+      for (const condition of filter.conditions) {
         const resultingCondition = removeInvalidFilters(condition, validFields)
         if (Object.keys(resultingCondition).length) {
           resultingConditions.push(resultingCondition)
         }
       }
       if (resultingConditions.length) {
-        result[filterKey].conditions = resultingConditions
+        filter.conditions = resultingConditions
       } else {
         delete result[filterKey]
       }
       continue
     }
 
-    const filter = result[filterKey]
     for (const columnKey of Object.keys(filter)) {
       const possibleKeys = [columnKey, db.removeKeyNumbering(columnKey)].map(
         c => c.toLowerCase()
       )
       if (!validFields.some(f => possibleKeys.includes(f.toLowerCase()))) {
-        delete filter[columnKey]
+        delete filter[columnKey as keyof typeof filter]
       }
     }
     if (!Object.keys(filter).length) {
@@ -59,24 +59,31 @@ export const getQueryableFields = async (
   const extractTableFields = async (
     table: Table,
     allowedFields: string[],
-    fromTables: string[]
+    fromTables: string[],
+    opts?: { noRelationships?: boolean }
   ): Promise<string[]> => {
     const result = []
     for (const field of Object.keys(table.schema).filter(
       f => allowedFields.includes(f) && table.schema[f].visible !== false
     )) {
       const subSchema = table.schema[field]
-      if (subSchema.type === FieldType.LINK) {
-        if (fromTables.includes(subSchema.tableId)) {
-          // avoid circular loops
-          continue
-        }
+      const isRelationship = subSchema.type === FieldType.LINK
+      // avoid relationship loops
+      if (
+        isRelationship &&
+        (opts?.noRelationships || fromTables.includes(subSchema.tableId))
+      ) {
+        continue
+      }
+      if (isRelationship) {
         try {
           const relatedTable = await sdk.tables.getTable(subSchema.tableId)
           const relatedFields = await extractTableFields(
             relatedTable,
             Object.keys(relatedTable.schema),
-            [...fromTables, subSchema.tableId]
+            [...fromTables, subSchema.tableId],
+            // don't let it recurse back and forth between relationships
+            { noRelationships: true }
           )
 
           result.push(
