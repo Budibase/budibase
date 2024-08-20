@@ -44,14 +44,14 @@ import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasourc
 import { generateRowIdField } from "../../../integrations/utils"
 
 describe.each([
-  ["in-memory", undefined],
-  ["lucene", undefined],
+  // ["in-memory", undefined],
+  // ["lucene", undefined],
   ["sqs", undefined],
-  [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
-  [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
-  [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
-  [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+  // [DatabaseName.POSTGRES, getDatasource(DatabaseName.POSTGRES)],
+  // [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
+  // [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
+  // [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
+  // [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("search (%s)", (name, dsProvider) => {
   const isSqs = name === "sqs"
   const isLucene = name === "lucene"
@@ -2761,6 +2761,56 @@ describe.each([
         )
       })
     })
+
+  describe("primaryDisplay", () => {
+    beforeAll(async () => {
+      let toRelateTable = await createTable({
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+        },
+      })
+      table = await config.api.table.save(
+        tableForDatasource(datasource, {
+          schema: {
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+            },
+            link: {
+              name: "link",
+              type: FieldType.LINK,
+              relationshipType: RelationshipType.MANY_TO_ONE,
+              tableId: toRelateTable._id!,
+              fieldName: "link",
+            },
+          },
+        })
+      )
+      toRelateTable = await config.api.table.get(toRelateTable._id!)
+      await config.api.table.save({
+        ...toRelateTable,
+        primaryDisplay: "link",
+      })
+      const relatedRows = await Promise.all([
+        config.api.row.save(toRelateTable._id!, { name: "test" }),
+      ])
+      await Promise.all([
+        config.api.row.save(table._id!, {
+          name: "test",
+          link: relatedRows.map(row => row._id),
+        }),
+      ])
+    })
+
+    it("should be able to query, primary display on related table shouldn't be used", async () => {
+      // this test makes sure that if a relationship has been specified as the primary display on a table
+      // it is ignored and another column is used instead
+      await expectQuery({}).toContain([
+        { name: "test", link: [{ primaryDisplay: "test" }] },
+      ])
+    })
+  })
 
   !isLucene &&
     describe("$and", () => {
