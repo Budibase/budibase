@@ -21,15 +21,7 @@
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
   import NewRow from "./NewRow.svelte"
   import { createGridWebsocket } from "../lib/websocket"
-  import {
-    MaxCellRenderOverflow,
-    GutterWidth,
-    DefaultRowHeight,
-    VPadding,
-    SmallRowHeight,
-    ControlsHeight,
-    ScrollBarSize,
-  } from "../lib/constants"
+  import * as Constants from "../lib/constants"
 
   export let API = null
   export let datasource = null
@@ -64,6 +56,7 @@
   // Build up context
   let context = {
     API: API || createAPIClient(),
+    Constants,
     gridID,
     props,
   }
@@ -112,8 +105,13 @@
 
   // Derive min height and make available in context
   const minHeight = derived(rowHeight, $height => {
-    const heightForControls = $$slots.controls ? ControlsHeight : 0
-    return VPadding + SmallRowHeight + $height + heightForControls
+    const heightForControls = $$slots.controls ? Constants.ControlsHeight : 0
+    return (
+      Constants.VPadding +
+      Constants.SmallRowHeight +
+      $height +
+      heightForControls
+    )
   })
   context = { ...context, minHeight }
 
@@ -141,7 +139,7 @@
   class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{ControlsHeight}px; --scroll-bar-size:{ScrollBarSize}px;"
+  style="--row-height:{$rowHeight}px; --default-row-height:{Constants.DefaultRowHeight}px; --gutter-width:{Constants.GutterWidth}px; --max-cell-render-overflow:{Constants.MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{Constants.ControlsHeight}px; --scroll-bar-size:{Constants.ScrollBarSize}px;"
 >
   {#if $$slots.controls}
     <div class="controls">

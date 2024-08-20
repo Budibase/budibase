@@ -1,34 +1,34 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Popover, Label } from "@budibase/bbui"
-  import {
-    DefaultColumnWidth,
-    LargeRowHeight,
-    MediumRowHeight,
-    SmallRowHeight,
-  } from "../lib/constants"
 
-  const { columns, rowHeight, definition, fixedRowHeight, datasource } =
-    getContext("grid")
+  const {
+    Constants,
+    columns,
+    rowHeight,
+    definition,
+    fixedRowHeight,
+    datasource,
+  } = getContext("grid")
 
   // Some constants for column width options
   const smallColSize = 120
-  const mediumColSize = DefaultColumnWidth
-  const largeColSize = DefaultColumnWidth * 1.5
+  const mediumColSize = Constants.DefaultColumnWidth
+  const largeColSize = Constants.DefaultColumnWidth * 1.5
 
   // Row height sizes
   const rowSizeOptions = [
     {
       label: "Small",
-      size: SmallRowHeight,
+      size: Constants.SmallRowHeight,
     },
     {
       label: "Medium",
-      size: MediumRowHeight,
+      size: Constants.MediumRowHeight,
     },
     {
       label: "Large",
-      size: LargeRowHeight,
+      size: Constants.LargeRowHeight,
     },
   ]
 
@@ -66,7 +66,6 @@
   }
 </script>
 
-#
 <div bind:this={anchor}>
   <ActionButton
     icon="MoveUpDown"
