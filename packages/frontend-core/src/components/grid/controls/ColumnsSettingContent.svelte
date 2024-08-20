@@ -225,6 +225,7 @@
 
 {#if allowRelationshipSchemas}
   <Popover
+    on:close={() => (relationshipFieldName = null)}
     open={!!relationshipField}
     anchor={relationshipPanelAnchor}
     align="right-outside"
