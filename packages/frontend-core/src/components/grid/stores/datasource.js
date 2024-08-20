@@ -147,17 +147,27 @@ export const createActions = context => {
   }
 
   // Adds a schema mutation for a single field
-  const addSchemaMutation = (field, mutation) => {
+  const addSchemaMutation = (field, mutation, fromNestedField) => {
     if (!field || !mutation) {
       return
     }
     schemaMutations.update($schemaMutations => {
-      return {
-        ...$schemaMutations,
-        [field]: {
-          ...$schemaMutations[field],
+      if (fromNestedField) {
+        const result = { ...$schemaMutations }
+        result[fromNestedField] ??= { schema: {} }
+        result[fromNestedField].schema[field] = {
+          ...result[fromNestedField].schema[field],
           ...mutation,
-        },
+        }
+        return result
+      } else {
+        return {
+          ...$schemaMutations,
+          [field]: {
+            ...$schemaMutations[field],
+            ...mutation,
+          },
+        }
       }
     })
   }
