@@ -3,6 +3,8 @@
 
   export let title
   export let align = "left"
+  export let minWidth
+  export let maxWidth
 
   let popover
   let anchor
@@ -18,7 +20,14 @@
   <slot name="anchor" {open} />
 </div>
 
-<Popover bind:this={popover} bind:open {anchor} {align} minWidth={300}>
+<Popover
+  bind:this={popover}
+  bind:open
+  {anchor}
+  {align}
+  minWidth={minWidth || 300}
+  {maxWidth}
+>
   <div class="detail-popover">
     <div class="detail-popover__header">
       <div class="detail-popover__title">
@@ -34,7 +43,6 @@
 
 <style>
   .detail-popover {
-    --padding: var(--spacing-l);
     background-color: var(--spectrum-alias-background-color-primary);
   }
   .detail-popover__header {
@@ -43,17 +51,17 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-    padding: var(--padding);
+    padding: var(--spacing-l) var(--spacing-xl);
   }
   .detail-popover__title {
     font-size: 16px;
     font-weight: 600;
   }
   .detail-popover__body {
-    padding: var(--padding);
+    padding: var(--spacing-xl) var(--spacing-xl);
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: var(--padding);
+    gap: var(--spacing-xl);
   }
 </style>

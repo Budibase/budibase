@@ -43,7 +43,6 @@
     <GridColumnsSettingButton />
     <GridManageAccessButton />
     <GridRowActionsButton />
-    <GridAutomationsButton />
     <GridScreensButton />
   </svelte:fragment>
   <svelte:fragment slot="controls-right">
