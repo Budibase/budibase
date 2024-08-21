@@ -149,12 +149,12 @@ class InternalBuilder {
     const primary = this.table.primary[0]
     const quotedAliasedPrimary =
       tableName && aliases?.[tableName]
-        ? this.quote(`${aliases?.[tableName]}.${primary}`)
+        ? `${aliases?.[tableName]}.${primary}`
         : primary
     return this.knex.raw(
-      `DENSE_RANK() over (order by ${quotedAliasedPrimary} ${direction}) as ${this.quote(
-        "_row_num"
-      )}`
+      `DENSE_RANK() over (order by ${this.quote(
+        quotedAliasedPrimary
+      )} ${direction}) as ${this.quote("_row_num")}`
     )
   }
 

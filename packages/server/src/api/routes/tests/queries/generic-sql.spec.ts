@@ -833,6 +833,7 @@ describe.each(
       })
       expect(res).toHaveLength(1)
       expect(res[0]).toEqual({
+        _row_num: expect.toBeOneOf(["1", 1]),
         id: 2,
         name: "two",
       })
