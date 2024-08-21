@@ -16,7 +16,6 @@
   const { datasource, dispatch } = getContext("grid")
 
   let relationshipPanelAnchor
-  let relationshipPanelColumns = []
   let relationshipFieldName
 
   $: relationshipField = columns.find(c => c.name === relationshipFieldName)
@@ -114,6 +113,25 @@
     return { ...c, options }
   })
 
+  $: relationshipPanelColumns = Object.entries(
+    relationshipField?.schema?.schema || {}
+  )
+    .map(([name, column]) => {
+      return {
+        name: name,
+        label: name,
+        primaryDisplay: column.primaryDisplay,
+        schema: {
+          ...column,
+          visible: column.visible,
+          readonly: column.readonly,
+        },
+      }
+    })
+    .sort((a, b) =>
+      a.primaryDisplay === b.primaryDisplay ? 0 : a.primaryDisplay ? -1 : 1
+    )
+
   async function toggleColumn(column, permission) {
     const visible = permission !== FieldPermissions.HIDDEN
     const readonly = permission === FieldPermissions.READONLY
@@ -147,46 +165,6 @@
     }
 
     return FieldPermissions.WRITABLE
-  }
-
-  $: {
-    if (relationshipField) {
-      cache.actions
-        .getTable(relationshipField.schema.tableId)
-        .then(relTable => {
-          relationshipPanelColumns = Object.values(relTable?.schema || {})
-            .filter(
-              schema =>
-                ![FieldType.LINK, FieldType.FORMULA].includes(schema.type)
-            )
-            .filter(schema => schema.visible !== false)
-            .map(column => {
-              const isPrimaryDisplay = relTable.primaryDisplay === column.name
-              const isReadonly = !!(
-                isPrimaryDisplay ||
-                column.readonly ||
-                (relationshipField.schema?.schema || {})[column.name]?.readonly
-              )
-              return {
-                name: column.name,
-                label: column.name,
-                primaryDisplay: isPrimaryDisplay,
-                schema: {
-                  ...column,
-                  visible: isReadonly,
-                  readonly: isReadonly,
-                },
-              }
-            })
-            .sort((a, b) =>
-              a.primaryDisplay === b.primaryDisplay
-                ? 0
-                : a.primaryDisplay
-                ? -1
-                : 1
-            )
-        })
-    }
   }
 </script>
 
