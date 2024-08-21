@@ -134,28 +134,41 @@ class InternalBuilder {
       .join(".")
   }
 
-  private generateRowNumberWindow(
-    sortOrder: SortOrder = SortOrder.ASCENDING
-  ): Knex.Raw {
+  private generateRowNumberWindow(): Knex.Raw {
     if (!this.table.primary) {
       throw new Error(
         "Cannot generate pagination information without primary keys"
       )
     }
+    let { sort } = this.query
     const tableName = getTableName(this.table)
     const aliases = this.query.tableAliases
-    const direction = sortOrder === SortOrder.ASCENDING ? "asc" : "desc"
-    // don't want to use quoted identifier here, the actual column is called alias.primary key, with dot
-    const primary = this.table.primary[0]
-    const quotedAliasedPrimary =
-      tableName && aliases?.[tableName]
-        ? `${aliases?.[tableName]}.${primary}`
-        : primary
-    return this.knex.raw(
-      `DENSE_RANK() over (order by ${this.quote(
-        quotedAliasedPrimary
-      )} ${direction}) as ${this.quote("_row_num")}`
-    )
+    const tableAlias = tableName ? aliases?.[tableName] : undefined
+    const rowNum = this.quote("_row_num")
+    const quoteOrderByKeys = (key: string) =>
+      this.quote(tableAlias ? `${tableAlias}.${key}` : key)
+    if (!sort) {
+      // don't want to use quoted identifier here, the actual column is called alias.primary key, with dot
+      const primary = this.table.primary[0]
+      return this.knex.raw(
+        `DENSE_RANK() over (order by ${quoteOrderByKeys(
+          primary
+        )} asc) as ${rowNum}`
+      )
+    } else {
+      // TODO: this mechanism doesn't work for all databases - need to consider
+      let orderBy = Object.entries(sort)
+        .map(
+          entry =>
+            `${quoteOrderByKeys(entry[0])} ${
+              entry[1].direction === SortOrder.ASCENDING ? "asc" : "desc"
+            }`
+        )
+        .join(", ")
+      return this.knex.raw(
+        `DENSE_RANK() over (order by ${orderBy}) as ${rowNum}`
+      )
+    }
   }
 
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
@@ -744,7 +757,6 @@ class InternalBuilder {
         const direction =
           value.direction === SortOrder.ASCENDING ? "asc" : "desc"
 
-        // TODO: figure out a way to remove this conditional, not relying on
         // the defaults of each datastore.
         let nulls: "first" | "last" | undefined = undefined
         if (
@@ -1020,6 +1032,7 @@ class InternalBuilder {
 
     const mainQuery = this.addFilters(query, filters, { relationship: true })
     if (paginationFilters) {
+      // TODO: need to factor sorting into our row numbering - right now it always re-sorts by primary key
       const rowNumberingSubQuery = subquery(
         this.knex.select("a1.*", this.generateRowNumberWindow()),
         "a1",
