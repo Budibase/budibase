@@ -143,6 +143,9 @@
     border-color: var(--spectrum-global-color-gray-300);
     overflow: auto;
     transition: opacity 260ms ease-out;
+    filter: none;
+    -webkit-filter: none;
+    box-shadow: 0 1px 4px var(--drop-shadow);
   }
   .blockPointerEvents {
     pointer-events: none;

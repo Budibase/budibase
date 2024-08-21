@@ -1,19 +1,8 @@
 <script>
   import { PermissionSource } from "@budibase/types"
   import { roles, permissions as permissionsStore } from "stores/builder"
-  import {
-    Label,
-    Input,
-    Select,
-    notifications,
-    Body,
-    ModalContent,
-    Tags,
-    Tag,
-    Icon,
-  } from "@budibase/bbui"
+  import { Label, Input, Select, notifications, Body } from "@budibase/bbui"
   import { capitalise } from "helpers"
-  import { getFormattedPlanName } from "helpers/planTitle"
   import { get } from "svelte/store"
 
   export let resourceId
@@ -69,8 +58,6 @@
     {}
   )
 
-  $: requiresPlanToModify = permissions.requiresPlanToModify
-
   let dependantsInfoMessage
   async function loadDependantInfo() {
     const dependantsInfo = await permissionsStore.getDependantsInfo(resourceId)
@@ -94,48 +81,33 @@
   loadDependantInfo()
 </script>
 
-<ModalContent showCancelButton={false} confirmText="Done">
-  <span slot="header">
-    Manage Access
-    {#if requiresPlanToModify}
-      <span class="lock-tag">
-        <Tags>
-          <Tag icon="LockClosed"
-            >{getFormattedPlanName(requiresPlanToModify)}</Tag
-          >
-        </Tags>
-      </span>
-    {/if}
-  </span>
-  <Body size="S">Specify the minimum access level role for this data.</Body>
-  <div class="row">
-    <Label extraSmall grey>Level</Label>
-    <Label extraSmall grey>Role</Label>
-    {#each Object.keys(computedPermissions) as level}
-      <Input value={capitalise(level)} disabled />
-      <Select
-        disabled={requiresPlanToModify}
-        placeholder={false}
-        value={computedPermissions[level].selectedValue}
-        on:change={e => changePermission(level, e.detail)}
-        options={computedPermissions[level].options}
-        getOptionLabel={x => x.name}
-        getOptionValue={x => x._id}
-      />
-    {/each}
-  </div>
+<Body size="S">Specify the minimum access level role for this data.</Body>
+<div class="row">
+  <Label extraSmall grey>Level</Label>
+  <Label extraSmall grey>Role</Label>
+  {#each Object.keys(computedPermissions) as level}
+    <Input value={capitalise(level)} disabled />
+    <Select
+      placeholder={false}
+      value={computedPermissions[level].selectedValue}
+      on:change={e => changePermission(level, e.detail)}
+      options={computedPermissions[level].options}
+      getOptionLabel={x => x.name}
+      getOptionValue={x => x._id}
+    />
+  {/each}
+</div>
 
-  {#if dependantsInfoMessage}
-    <div class="inheriting-resources">
-      <Icon name="Alert" />
-      <Body size="S">
-        <i>
-          {dependantsInfoMessage}
-        </i>
-      </Body>
-    </div>
-  {/if}
-</ModalContent>
+{#if dependantsInfoMessage}
+  <div class="inheriting-resources">
+    <Icon name="Alert" />
+    <Body size="S">
+      <i>
+        {dependantsInfoMessage}
+      </i>
+    </Body>
+  </div>
+{/if}
 
 <style>
   .row {
