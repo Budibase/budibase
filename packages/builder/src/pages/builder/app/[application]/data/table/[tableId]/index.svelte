@@ -2,11 +2,9 @@
   import { Banner } from "@budibase/bbui"
   import { datasources, tables, integrations, appStore } from "stores/builder"
   import { themeStore, admin } from "stores/portal"
-  import EditRolesButton from "components/backend/DataTable/buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
-  import GridCreateAutomationButton from "components/backend/DataTable/buttons/grid/GridCreateAutomationButton.svelte"
   import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -15,7 +13,8 @@
   import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
   import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
-  import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
+  import GridUsersTableButton from "components/backend/DataTable/buttons/grid/GridUsersTableButton.svelte"
+  import GridGenerateButton from "components/backend/DataTable/buttons/grid/GridGenerateButton.svelte"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
 
   const userSchemaOverrides = {
@@ -109,9 +108,6 @@
         <GridUsersTableButton />
       {/if}
       <GridManageAccessButton />
-      {#if !isUsersTable}
-        <GridCreateAutomationButton />
-      {/if}
       {#if relationshipsEnabled}
         <GridRelationshipButton />
       {/if}
@@ -119,6 +115,10 @@
         <GridImportButton />
       {/if}
       <GridExportButton />
+    </svelte:fragment>
+
+    <svelte:fragment slot="controls-right">
+      <GridGenerateButton />
     </svelte:fragment>
 
     <!-- Content for editing columns -->

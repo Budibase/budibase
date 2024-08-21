@@ -1,7 +1,14 @@
 <script>
   import { PermissionSource } from "@budibase/types"
   import { roles, permissions as permissionsStore } from "stores/builder"
-  import { Label, Input, Select, notifications, Body } from "@budibase/bbui"
+  import {
+    Label,
+    Input,
+    Select,
+    notifications,
+    Body,
+    Icon,
+  } from "@budibase/bbui"
   import { capitalise } from "helpers"
   import { get } from "svelte/store"
 

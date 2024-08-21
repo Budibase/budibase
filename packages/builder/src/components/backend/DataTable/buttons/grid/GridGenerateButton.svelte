@@ -1,20 +1,14 @@
 <script>
-  import {
-    ActionButton,
-    Popover,
-    Menu,
-    MenuItem,
-    notifications,
-  } from "@budibase/bbui"
+  import { ActionButton, Menu, MenuItem, notifications } from "@budibase/bbui"
   import { getContext } from "svelte"
   import { automationStore, tables, builderStore } from "stores/builder"
   import { TriggerStepID } from "constants/backend/automations"
   import { goto } from "@roxi/routify"
+  import DetailPopover from "components/common/DetailPopover.svelte"
 
   const { datasource } = getContext("grid")
 
   $: triggers = $automationStore.blockDefinitions.CREATABLE_TRIGGER
-
   $: table = $tables.list.find(table => table._id === $datasource.tableId)
 
   async function createAutomation(type) {
@@ -57,24 +51,12 @@
       notifications.error("Error creating automation")
     }
   }
-
-  let anchor
-  let open
 </script>
 
-<div bind:this={anchor}>
-  <ActionButton
-    icon="MagicWand"
-    quiet
-    size="M"
-    on:click={() => (open = !open)}
-    selected={open}
-  >
-    Generate
-  </ActionButton>
-</div>
-
-<Popover bind:open {anchor} align="left">
+<DetailPopover title="Generate">
+  <svelte:fragment slot="anchor" let:open>
+    <ActionButton icon="MagicWand" selected={open}>Generate</ActionButton>
+  </svelte:fragment>
   <Menu>
     <MenuItem
       icon="ShareAndroid"
@@ -95,7 +77,4 @@
       Automation: when row is updated
     </MenuItem>
   </Menu>
-</Popover>
-
-<style>
-</style>
+</DetailPopover>
