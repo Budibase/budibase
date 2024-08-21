@@ -1535,11 +1535,11 @@ describe.each([
             },
           })
           expect(response.rows).toHaveLength(1)
-          expect(response).toEqual({
-            rows: expect.arrayContaining([
+          expect(response.rows).toEqual(
+            expect.arrayContaining([
               expect.objectContaining({ _id: three._id }),
-            ]),
-          })
+            ])
+          )
         })
 
       !isLucene &&
@@ -1586,12 +1586,12 @@ describe.each([
             },
           })
           expect(response.rows).toHaveLength(2)
-          expect(response).toEqual({
-            rows: expect.arrayContaining([
+          expect(response.rows).toEqual(
+            expect.arrayContaining([
               expect.objectContaining({ _id: one._id }),
               expect.objectContaining({ _id: three._id }),
-            ]),
-          })
+            ])
+          )
         })
 
       isLucene &&
