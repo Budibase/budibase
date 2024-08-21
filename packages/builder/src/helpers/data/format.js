@@ -1,12 +1,14 @@
 export const datasourceSelect = {
-  table: (table, datasources) => ({
-    label: table.name,
-    tableId: table._id,
-    type: "table",
-    datasource: datasources.find(
-      datasource => datasource._id === table.sourceId || table.datasourceId
-    ),
-  }),
+  table: (table, datasources) => {
+    const sourceId = table.sourceId || table.datasourceId
+    const datasource = datasources.find(ds => ds._id === sourceId)
+    return {
+      label: table.name,
+      tableId: table._id,
+      type: "table",
+      datasourceName: datasource?.name,
+    }
+  },
   viewV2: view => ({
     ...view,
     label: view.name,
