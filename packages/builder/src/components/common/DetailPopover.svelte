@@ -34,7 +34,7 @@
 
 <style>
   .detail-popover {
-    --padding: 12px;
+    --padding: var(--spacing-l);
     background-color: var(--spectrum-alias-background-color-primary);
   }
   .detail-popover__header {
