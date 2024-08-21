@@ -2,22 +2,25 @@
   import { ActionButton, Modal } from "@budibase/bbui"
   import { permissions } from "stores/builder"
   import ManageAccessModal from "../modals/ManageAccessModal.svelte"
+  import DetailPopover from "components/common/DetailPopover.svelte"
 
   export let resourceId
-  export let disabled = false
 
-  let modal
   let resourcePermissions
 
-  async function openModal() {
-    resourcePermissions = await permissions.forResourceDetailed(resourceId)
-    modal.show()
+  $: fetchPermissions(resourceId)
+
+  const fetchPermissions = async id => {
+    console.log("getting perms for", id)
+    resourcePermissions = await permissions.forResourceDetailed(id)
   }
 </script>
 
-<ActionButton icon="LockClosed" quiet on:click={openModal} {disabled}>
-  Access
-</ActionButton>
-<Modal bind:this={modal}>
-  <ManageAccessModal {resourceId} permissions={resourcePermissions} />
-</Modal>
+<DetailPopover title="Manage access">
+  <svelte:fragment slot="anchor" let:open>
+    <ActionButton icon="LockClosed" selected={open} quiet>Access</ActionButton>
+  </svelte:fragment>
+  {#if resourcePermissions}
+    <ManageAccessModal {resourceId} permissions={resourcePermissions} />
+  {/if}
+</DetailPopover>
