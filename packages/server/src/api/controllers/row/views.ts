@@ -57,10 +57,9 @@ export async function searchView(
           }
         })
       })
-    } else {
-      const operator = query.allOr ? "$or" : "$and"
+    } else
       query = {
-        [operator]: {
+        $and: {
           conditions: [query, body.query],
         },
       }
