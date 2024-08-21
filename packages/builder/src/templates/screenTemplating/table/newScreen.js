@@ -81,9 +81,9 @@ const getTableScreenTemplate = ({
     .customProps({ layout: gridLayout ? "grid" : "flex" })
     .role(permissions.write)
     .autoTableId(tableOrView.id)
-    .addChild(tableBlock)
     .addChild(heading)
     .addChild(buttonGroup)
+    .addChild(tableBlock)
     .json()
 
   return {
