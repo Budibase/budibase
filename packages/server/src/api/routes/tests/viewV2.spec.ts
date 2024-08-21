@@ -1492,6 +1492,108 @@ describe.each([
         )
       })
 
+      !isLucene &&
+        it("can query on top of the view filters", async () => {
+          await config.api.row.save(table._id!, {
+            one: "foo",
+            two: "bar",
+          })
+          await config.api.row.save(table._id!, {
+            one: "foo2",
+            two: "bar2",
+          })
+          const three = await config.api.row.save(table._id!, {
+            one: "foo3",
+            two: "bar3",
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            query: [
+              {
+                operator: BasicOperator.NOT_EQUAL,
+                field: "two",
+                value: "bar2",
+              },
+            ],
+            schema: {
+              id: { visible: true },
+              one: { visible: false },
+              two: { visible: true },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id, {
+            query: {
+              [BasicOperator.NOT_EQUAL]: {
+                two: "bar",
+              },
+              [BasicOperator.NOT_EMPTY]: {
+                two: null,
+              },
+            },
+          })
+          expect(response.rows).toHaveLength(1)
+          expect(response).toEqual({
+            rows: expect.arrayContaining([
+              expect.objectContaining({ _id: three._id }),
+            ]),
+          })
+        })
+
+      !isLucene &&
+        it("can query on top of the view filters (using or filters)", async () => {
+          const one = await config.api.row.save(table._id!, {
+            one: "foo",
+            two: "bar",
+          })
+          await config.api.row.save(table._id!, {
+            one: "foo2",
+            two: "bar2",
+          })
+          const three = await config.api.row.save(table._id!, {
+            one: "foo3",
+            two: "bar3",
+          })
+
+          const view = await config.api.viewV2.create({
+            tableId: table._id!,
+            name: generator.guid(),
+            query: [
+              {
+                operator: BasicOperator.NOT_EQUAL,
+                field: "two",
+                value: "bar2",
+              },
+            ],
+            schema: {
+              id: { visible: true },
+              one: { visible: false },
+              two: { visible: true },
+            },
+          })
+
+          const response = await config.api.viewV2.search(view.id, {
+            query: {
+              allOr: true,
+              [BasicOperator.NOT_EQUAL]: {
+                two: "bar",
+              },
+              [BasicOperator.NOT_EMPTY]: {
+                two: null,
+              },
+            },
+          })
+          expect(response.rows).toHaveLength(2)
+          expect(response).toEqual({
+            rows: expect.arrayContaining([
+              expect.objectContaining({ _id: one._id }),
+              expect.objectContaining({ _id: three._id }),
+            ]),
+          })
+        })
+
       isLucene &&
         it.each([true, false])(
           "in lucene, cannot override a view filter",
