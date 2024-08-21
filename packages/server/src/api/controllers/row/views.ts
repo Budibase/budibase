@@ -57,13 +57,12 @@ export async function searchView(
           }
         })
       })
-    } else {
+    } else
       query = {
         $and: {
           conditions: [query, body.query],
         },
       }
-    }
   }
 
   await context.ensureSnippetContext(true)

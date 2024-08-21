@@ -36,6 +36,7 @@ import {
 } from "@budibase/types"
 import environment from "../environment"
 import { dataFilters, helpers } from "@budibase/shared-core"
+import { cloneDeep } from "lodash"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
 
@@ -268,6 +269,7 @@ class InternalBuilder {
   }
 
   private parseFilters(filters: SearchFilters): SearchFilters {
+    filters = cloneDeep(filters)
     for (const op of Object.values(BasicOperator)) {
       const filter = filters[op]
       if (!filter) {
@@ -371,10 +373,11 @@ class InternalBuilder {
             ),
             castedTypeValue.values
           )
-        } else if (!opts?.relationship && !isRelationshipField) {
+        } else if (!isRelationshipField) {
           const alias = getTableAlias(tableName)
           fn(alias ? `${alias}.${updatedKey}` : updatedKey, value)
-        } else if (opts?.relationship && isRelationshipField) {
+        }
+        if (opts?.relationship && isRelationshipField) {
           const [filterTableName, property] = updatedKey.split(".")
           const alias = getTableAlias(filterTableName)
           fn(alias ? `${alias}.${property}` : property, value)
