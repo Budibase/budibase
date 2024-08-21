@@ -151,7 +151,10 @@ export function buildExternalRelationships(
   return relationships
 }
 
-export function buildInternalRelationships(table: Table): RelationshipsJson[] {
+export function buildInternalRelationships(
+  table: Table,
+  allTables: Table[]
+): RelationshipsJson[] {
   const relationships: RelationshipsJson[] = []
   const links = Object.values(table.schema).filter(
     column => column.type === FieldType.LINK
@@ -164,6 +167,10 @@ export function buildInternalRelationships(table: Table): RelationshipsJson[] {
     const linkTableId = link.tableId!
     const junctionTableId = generateJunctionTableID(tableId, linkTableId)
     const isFirstTable = tableId > linkTableId
+    // skip relationships with missing table definitions
+    if (!allTables.find(table => table._id === linkTableId)) {
+      continue
+    }
     relationships.push({
       through: junctionTableId,
       column: link.name,
@@ -192,10 +199,10 @@ export function buildSqlFieldList(
   function extractRealFields(table: Table, existing: string[] = []) {
     return Object.entries(table.schema)
       .filter(
-        column =>
-          column[1].type !== FieldType.LINK &&
-          column[1].type !== FieldType.FORMULA &&
-          !existing.find((field: string) => field === column[0])
+        ([columnName, column]) =>
+          column.type !== FieldType.LINK &&
+          column.type !== FieldType.FORMULA &&
+          !existing.find((field: string) => field === columnName)
       )
       .map(column => `${table.name}.${column[0]}`)
   }

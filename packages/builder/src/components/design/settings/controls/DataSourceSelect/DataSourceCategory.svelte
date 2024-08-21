@@ -29,7 +29,7 @@
       on:click={() => onSelect(data)}
     >
       <span class="spectrum-Menu-itemLabel">
-        {data.datasource?.name ? `${data.datasource.name} - ` : ""}{data.label}
+        {data.datasourceName ? `${data.datasourceName} - ` : ""}{data.label}
       </span>
       <svg
         class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"

@@ -574,14 +574,25 @@ export class ComponentStore extends BudiStore {
       return
     }
 
-    // Determine the next component to select after deletion
+    // Determine the next component to select, and select it before deletion
+    // to avoid an intermediate state of no component selection
     const state = get(this.store)
-    let nextSelectedComponentId
+    let nextId
     if (state.selectedComponentId === component._id) {
-      nextSelectedComponentId = this.getNext()
-      if (!nextSelectedComponentId) {
-        nextSelectedComponentId = this.getPrevious()
+      nextId = this.getNext()
+      if (!nextId) {
+        nextId = this.getPrevious()
       }
+    }
+    if (nextId) {
+      // If this is the nav, select the screen instead
+      if (nextId.endsWith("-navigation")) {
+        nextId = nextId.replace("-navigation", "-screen")
+      }
+      this.update(state => {
+        state.selectedComponentId = nextId
+        return state
+      })
     }
 
     // Patch screen
@@ -601,14 +612,6 @@ export class ComponentStore extends BudiStore {
         child => child._id !== component._id
       )
     })
-
-    // Update selected component if required
-    if (nextSelectedComponentId) {
-      this.update(state => {
-        state.selectedComponentId = nextSelectedComponentId
-        return state
-      })
-    }
   }
 
   copy(component, cut = false, selectParent = true) {
@@ -616,6 +619,7 @@ export class ComponentStore extends BudiStore {
     this.update(state => {
       state.componentToPaste = cloneDeep(component)
       state.componentToPaste.isCut = cut
+      state.componentToPaste.screenId = get(screenStore).selectedScreenId
       return state
     })
 
@@ -650,7 +654,7 @@ export class ComponentStore extends BudiStore {
    * @param {object} targetScreen
    * @returns
    */
-  async paste(targetComponent, mode, targetScreen) {
+  async paste(targetComponent, mode, targetScreen, selectComponent = true) {
     const state = get(this.store)
     if (!state.componentToPaste) {
       return
@@ -674,14 +678,29 @@ export class ComponentStore extends BudiStore {
         return false
       }
       const cut = componentToPaste.isCut
+      const sourceScreenId = componentToPaste.screenId
       const originalId = componentToPaste._id
       delete componentToPaste.isCut
+      delete componentToPaste.screenId
 
       // Make new component unique if copying
       if (!cut) {
         componentToPaste = makeComponentUnique(componentToPaste)
       }
       newComponentId = componentToPaste._id
+
+      // Strip grid position metadata if pasting into a new screen, but keep
+      // alignment metadata
+      if (sourceScreenId && sourceScreenId !== screen._id) {
+        for (let style of Object.keys(componentToPaste._styles?.normal || {})) {
+          if (
+            style.startsWith("--grid") &&
+            (style.endsWith("-start") || style.endsWith("-end"))
+          ) {
+            delete componentToPaste._styles.normal[style]
+          }
+        }
+      }
 
       // Delete old component if cutting
       if (cut) {
@@ -725,12 +744,13 @@ export class ComponentStore extends BudiStore {
     await screenStore.patch(patch, targetScreenId)
 
     // Select the new component
-    this.update(state => {
-      state.selectedScreenId = targetScreenId
-      state.selectedComponentId = newComponentId
-
-      return state
-    })
+    if (selectComponent) {
+      this.update(state => {
+        state.selectedScreenId = targetScreenId
+        state.selectedComponentId = newComponentId
+        return state
+      })
+    }
 
     componentTreeNodesStore.makeNodeVisible(newComponentId)
   }
