@@ -1,5 +1,5 @@
 <script>
-  import { ActionButton, Modal } from "@budibase/bbui"
+  import { ActionButton } from "@budibase/bbui"
   import { permissions } from "stores/builder"
   import ManageAccessModal from "../modals/ManageAccessModal.svelte"
   import DetailPopover from "components/common/DetailPopover.svelte"
@@ -11,7 +11,6 @@
   $: fetchPermissions(resourceId)
 
   const fetchPermissions = async id => {
-    console.log("getting perms for", id)
     resourcePermissions = await permissions.forResourceDetailed(id)
   }
 </script>

@@ -1,12 +1,110 @@
 <script>
-  import { ActionButton } from "@budibase/bbui"
+  import {
+    ActionButton,
+    List,
+    ListItem,
+    Button,
+    Toggle,
+    notifications,
+  } from "@budibase/bbui"
   import DetailPopover from "components/common/DetailPopover.svelte"
+  import { getContext } from "svelte"
+  import { appStore, automationStore } from "stores/builder"
+  import { API } from "api"
+  import { goto, url } from "@roxi/routify"
+  import { derived } from "svelte/store"
+  import { getSequentialName } from "helpers/duplicate"
+
+  const { datasource } = getContext("grid")
+
+  let rowActions = []
+
+  $: ds = $datasource
+  $: tableId = ds?.tableId
+  $: isView = ds?.type === "viewV2"
+  $: fetchRowActions(tableId)
+  $: console.log(rowActions)
+  $: activeCount = 0
+  $: suffix = isView ? activeCount : rowActions.length
+
+  const rowActionUrl = derived([url, appStore], ([$url, $appStore]) => {
+    return ({ automationId }) => {
+      return $url(`/builder/app/${$appStore.appId}/automation/${automationId}`)
+    }
+  })
+
+  const fetchRowActions = async tableId => {
+    if (!tableId) {
+      rowActions = []
+      return
+    }
+    const res = await API.rowActions.fetch(tableId)
+    rowActions = Object.values(res || {})
+  }
+
+  const createRowAction = async () => {
+    try {
+      const name = getSequentialName(rowActions, "New row action ", {
+        getName: x => x.name,
+      })
+      const res = await API.rowActions.create({
+        name,
+        tableId,
+      })
+      console.log(res)
+      await automationStore.actions.fetch()
+      notifications.success("Row action created successfully")
+      $goto($rowActionUrl(res))
+    } catch (error) {
+      console.log(error)
+    }
+  }
 </script>
 
-<DetailPopover title="Row Actions">
+<DetailPopover title="Row Actions" minWidth={400} maxWidth={400}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton icon="Engagement" selected={open} quiet>
-      Row Actions
+      Row Actions ({suffix})
     </ActionButton>
   </svelte:fragment>
+  A row action is a user-triggered automation for a chosen row.
+  {#if isView && rowActions.length}
+    <br />
+    Use the toggle to enable/disable row actions for this view.
+    <br />
+  {/if}
+  {#if !rowActions.length}
+    <br />
+    You haven't created any row actions.
+  {:else}
+    <List>
+      {#each rowActions as action}
+        <ListItem title={action.name} url={$rowActionUrl(action)}>
+          <svelte:fragment slot="right">
+            {#if isView}
+              <span>
+                <Toggle />
+              </span>
+            {/if}
+          </svelte:fragment>
+        </ListItem>
+      {/each}
+    </List>
+  {/if}
+  <div>
+    <Button secondary icon="Engagement" on:click={createRowAction}>
+      Create row action
+    </Button>
+  </div>
 </DetailPopover>
+
+<style>
+  span :global(.spectrum-Switch) {
+    min-height: 0;
+    margin-right: 0;
+  }
+  span :global(.spectrum-Switch-switch) {
+    margin-bottom: 0;
+    margin-top: 2px;
+  }
+</style>

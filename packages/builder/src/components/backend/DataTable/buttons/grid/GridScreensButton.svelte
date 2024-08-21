@@ -1,7 +1,7 @@
 <script>
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, List, ListItem } from "@budibase/bbui"
   import DetailPopover from "components/common/DetailPopover.svelte"
-  import { screenStore } from "stores/builder"
+  import { screenStore, appStore } from "stores/builder"
   import { getContext } from "svelte"
 
   const { datasource } = getContext("grid")
@@ -20,10 +20,21 @@
   $: console.log(connectedScreens)
 </script>
 
-<DetailPopover title="Screens">
+<DetailPopover title="Screens" minWidth={400}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton icon="WebPage" selected={open} quiet>Screens</ActionButton>
   </svelte:fragment>
-  The following screens are connected to this data:
-  {connectedScreens.map(screen => screen.routing.route)}
+  {#if !connectedScreens.length}
+    There aren't any screens connected to this data.
+  {:else}
+    The following screens are connected to this data.
+    <List>
+      {#each connectedScreens as screen}
+        <ListItem
+          title={screen.routing.route}
+          url={`/builder/app/${$appStore.appId}/design/${screen._id}`}
+        />
+      {/each}
+    </List>
+  {/if}
 </DetailPopover>

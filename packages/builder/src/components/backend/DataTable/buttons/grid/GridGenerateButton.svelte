@@ -8,8 +8,13 @@
 
   const { datasource } = getContext("grid")
 
+  let popover
+
   $: triggers = $automationStore.blockDefinitions.CREATABLE_TRIGGER
   $: table = $tables.list.find(table => table._id === $datasource.tableId)
+
+  export const show = () => popover?.show()
+  export const hide = () => popover?.hide()
 
   async function createAutomation(type) {
     const triggerType = triggers[type]
@@ -53,7 +58,7 @@
   }
 </script>
 
-<DetailPopover title="Generate">
+<DetailPopover title="Generate" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton icon="MagicWand" selected={open}>Generate</ActionButton>
   </svelte:fragment>

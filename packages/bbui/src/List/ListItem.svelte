@@ -1,55 +1,50 @@
 <script>
-  import Body from "../Typography/Body.svelte"
-  import IconAvatar from "../Icon/IconAvatar.svelte"
-  import Label from "../Label/Label.svelte"
-  import Avatar from "../Avatar/Avatar.svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   export let icon = null
-  export let iconBackground = null
   export let iconColor = null
-  export let avatar = false
   export let title = null
   export let subtitle = null
-  export let hoverable = false
-
-  $: initials = avatar ? title?.[0] : null
+  export let url = null
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="list-item" class:hoverable on:click>
+<a href={url} class="list-item" class:hoverable={url != null} on:click>
   <div class="left">
     {#if icon}
-      <IconAvatar {icon} color={iconColor} background={iconBackground} />
+      <Icon name={icon} color={iconColor} />
     {/if}
-    {#if avatar}
-      <Avatar {initials} />
-    {/if}
-    {#if title}
-      <Body>{title}</Body>
-    {/if}
-    {#if subtitle}
-      <Label>{subtitle}</Label>
-    {/if}
-  </div>
-  {#if $$slots.default}
-    <div class="right">
-      <slot />
+    <div class="list-item__text">
+      {#if title}
+        <div class="list-item__title">
+          {title}
+        </div>
+      {/if}
+      {#if subtitle}
+        <div class="list-item__subtitle">
+          {subtitle}
+        </div>
+      {/if}
     </div>
-  {/if}
-</div>
+  </div>
+  <div class="right">
+    <slot name="right" />
+    <Icon name="ChevronRight" />
+  </div>
+</a>
 
 <style>
   .list-item {
-    padding: 0 16px;
-    height: 56px;
-    background: var(--spectrum-global-color-gray-50);
+    padding: var(--spacing-m);
+    background: var(--spectrum-global-color-gray-75);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     border: 1px solid var(--spectrum-global-color-gray-300);
     transition: background 130ms ease-out;
     gap: var(--spacing-m);
+    color: var(--spectrum-global-color-gray-800);
   }
   .list-item:not(:first-child) {
     border-top: none;
@@ -64,14 +59,15 @@
   }
   .hoverable:hover {
     cursor: pointer;
-    background: var(--spectrum-global-color-gray-75);
+    background: var(--spectrum-global-color-gray-200);
   }
+
   .left,
   .right {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-l);
   }
   .left {
     width: 0;
@@ -79,17 +75,20 @@
   }
   .right {
     flex: 0 0 auto;
+    color: var(--spectrum-global-color-gray-600);
   }
-  .list-item :global(.spectrum-Icon),
-  .list-item :global(.spectrum-Avatar) {
-    flex: 0 0 auto;
+
+  .list-item__text {
+    flex: 1 1 auto;
+    width: 0;
   }
-  .list-item :global(.spectrum-Body) {
-    color: var(--spectrum-global-color-gray-900);
-  }
-  .list-item :global(.spectrum-Body) {
+  .list-item__title,
+  .list-item__subtitle {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .list-item__subtitle {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>

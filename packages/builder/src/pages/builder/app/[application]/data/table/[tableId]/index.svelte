@@ -16,6 +16,7 @@
   import GridUsersTableButton from "components/backend/DataTable/buttons/grid/GridUsersTableButton.svelte"
   import GridGenerateButton from "components/backend/DataTable/buttons/grid/GridGenerateButton.svelte"
   import GridScreensButton from "components/backend/DataTable/buttons/grid/GridScreensButton.svelte"
+  import GridAutomationsButton from "components/backend/DataTable/buttons/grid/GridAutomationsButton.svelte"
   import GridRowActionsButton from "components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
 
@@ -26,6 +27,8 @@
     roleId: { displayName: "Role", disabled: true },
     status: { displayName: "Status", disabled: true },
   }
+
+  let generateButton
 
   $: autoColumnStatus = verifyAutocolumns($tables?.selected)
   $: duplicates = Object.values(autoColumnStatus).reduce((acc, status) => {
@@ -113,7 +116,12 @@
       {#if relationshipsEnabled}
         <GridRelationshipButton />
       {/if}
-      <GridRowActionsButton />
+      {#if !isUsersTable}
+        <GridRowActionsButton />
+      {/if}
+      <GridAutomationsButton
+        on:generate-automation={() => generateButton?.show()}
+      />
       <GridScreensButton />
       {#if !isUsersTable}
         <GridImportButton />
@@ -122,7 +130,7 @@
     </svelte:fragment>
 
     <svelte:fragment slot="controls-right">
-      <GridGenerateButton />
+      <GridGenerateButton bind:this={generateButton} />
     </svelte:fragment>
 
     <!-- Content for editing columns -->
