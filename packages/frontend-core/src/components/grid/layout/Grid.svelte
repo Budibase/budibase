@@ -147,6 +147,7 @@
         <slot name="controls" />
       </div>
       <div class="controls-right">
+        <slot name="controls-right" />
         {#if showAvatars}
           <UserAvatars />
         {/if}

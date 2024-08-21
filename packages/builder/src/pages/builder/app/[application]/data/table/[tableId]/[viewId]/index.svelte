@@ -9,7 +9,7 @@
   import GridSortButton from "components/backend/DataTable/buttons/grid/GridSortButton.svelte"
   import GridColumnsSettingButton from "components/backend/DataTable/buttons/grid/GridColumnsSettingButton.svelte"
   import GridSizeButton from "components/backend/DataTable/buttons/grid/GridSizeButton.svelte"
-  import GridCreateAutomationButton from "components/backend/DataTable/buttons/grid/GridCreateAutomationButton.svelte"
+  import GridGenerateButton from "components/backend/DataTable/buttons/grid/GridGenerateButton.svelte"
 
   $: id = $viewsV2.selected?.id
   $: datasource = {
@@ -36,10 +36,12 @@
   <svelte:fragment slot="controls">
     <GridFilterButton />
     <GridSortButton />
+    <GridSizeButton />
     <GridColumnsSettingButton />
     <GridManageAccessButton />
-    <GridSizeButton />
-    <GridCreateAutomationButton />
+  </svelte:fragment>
+  <svelte:fragment slot="controls-right">
+    <GridGenerateButton />
   </svelte:fragment>
   <GridCreateEditRowModal />
 </Grid>
