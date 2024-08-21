@@ -91,8 +91,11 @@ export async function find(ctx: UserCtx<void, TableResponse>) {
   const tableId = ctx.params.tableId
   const table = await sdk.tables.getTable(tableId)
 
-  let result = await sdk.tables.enrichRelationshipSchemas(table)
-  result = sdk.tables.enrichViewSchemas(result)
+  const enrichedSchema = await sdk.tables.enrichRelationshipSchema(table)
+  const result = sdk.tables.enrichViewSchemas({
+    ...table,
+    schema: enrichedSchema,
+  })
   ctx.body = result
 }
 
