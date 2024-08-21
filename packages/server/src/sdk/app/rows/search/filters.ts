@@ -5,6 +5,7 @@ import {
   Table,
 } from "@budibase/types"
 import { isPlainObject } from "lodash"
+import { dataFilters } from "@budibase/shared-core"
 
 export function getRelationshipColumns(table: Table): {
   name: string
@@ -58,5 +59,7 @@ export function updateFilterKeys(
       }
     }
   }
-  return filters
+  return dataFilters.recurseLogicalOperators(filters, (f: SearchFilters) => {
+    return updateFilterKeys(f, updates)
+  })
 }
