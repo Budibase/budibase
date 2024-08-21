@@ -465,20 +465,16 @@ class InternalBuilder {
 
     if (filters.$and) {
       const { $and } = filters
-      query = query.where(x => {
-        for (const condition of $and.conditions) {
-          x = this.addFilters(x, condition, opts)
-        }
-      })
+      for (const condition of $and.conditions) {
+        query = query.andWhere(b => this.addFilters(b, condition, opts))
+      }
     }
 
     if (filters.$or) {
       const { $or } = filters
-      query = query.where(x => {
-        for (const condition of $or.conditions) {
-          x = this.addFilters(x, { ...condition, allOr: true }, opts)
-        }
-      })
+      for (const condition of $or.conditions) {
+        query = query.orWhere(b => this.addFilters(b, condition, opts))
+      }
     }
 
     if (filters.oneOf) {
