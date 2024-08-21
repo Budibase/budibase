@@ -1,5 +1,5 @@
 import { SearchFilter, SortOrder, SortType } from "../../api"
-import { RelationFieldSchema, UIFieldMetadata } from "./table"
+import { UIFieldMetadata } from "./table"
 import { Document } from "../document"
 import { DBView } from "../../sdk"
 
