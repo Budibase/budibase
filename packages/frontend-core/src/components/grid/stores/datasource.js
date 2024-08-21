@@ -5,16 +5,24 @@ import { memo } from "../../../utils"
 export const createStores = () => {
   const definition = memo(null)
   const schemaMutations = memo({})
+  const subSchemaMutations = memo({})
 
   return {
     definition,
     schemaMutations,
+    subSchemaMutations,
   }
 }
 
 export const deriveStores = context => {
-  const { API, definition, schemaOverrides, datasource, schemaMutations } =
-    context
+  const {
+    API,
+    definition,
+    schemaOverrides,
+    datasource,
+    schemaMutations,
+    subSchemaMutations,
+  } = context
 
   const schema = derived(definition, $definition => {
     let schema = getDatasourceSchema({
@@ -40,8 +48,8 @@ export const deriveStores = context => {
   // Derives the total enriched schema, made up of the saved schema and any
   // prop and user overrides
   const enrichedSchema = derived(
-    [schema, schemaOverrides, schemaMutations],
-    ([$schema, $schemaOverrides, $schemaMutations]) => {
+    [schema, schemaOverrides, schemaMutations, subSchemaMutations],
+    ([$schema, $schemaOverrides, $schemaMutations, $subSchemaMutations]) => {
       if (!$schema) {
         return null
       }
@@ -51,6 +59,18 @@ export const deriveStores = context => {
           ...$schema[field],
           ...$schemaOverrides?.[field],
           ...$schemaMutations[field],
+        }
+
+        if ($subSchemaMutations[field]) {
+          enrichedSchema[field].schema ??= {}
+          for (const [fieldName, mutation] of Object.entries(
+            $subSchemaMutations[field]
+          )) {
+            enrichedSchema[field].schema[fieldName] = {
+              ...enrichedSchema[field].schema[fieldName],
+              ...mutation,
+            }
+          }
         }
       })
       return enrichedSchema
@@ -83,6 +103,7 @@ export const createActions = context => {
     viewV2,
     nonPlus,
     schemaMutations,
+    subSchemaMutations,
     schema,
     notifications,
   } = context
@@ -151,16 +172,21 @@ export const createActions = context => {
     if (!field || !mutation) {
       return
     }
-    schemaMutations.update($schemaMutations => {
-      if (fromNestedField) {
-        const result = { ...$schemaMutations }
-        result[fromNestedField] ??= { schema: {} }
-        result[fromNestedField].schema[field] = {
-          ...result[fromNestedField].schema[field],
-          ...mutation,
+    if (fromNestedField) {
+      subSchemaMutations.update($subSchemaMutations => {
+        return {
+          ...$subSchemaMutations,
+          [fromNestedField]: {
+            ...$subSchemaMutations[fromNestedField],
+            [field]: {
+              ...($subSchemaMutations[fromNestedField] || {})[field],
+              ...mutation,
+            },
+          },
         }
-        return result
-      } else {
+      })
+    } else {
+      schemaMutations.update($schemaMutations => {
         return {
           ...$schemaMutations,
           [field]: {
@@ -168,8 +194,8 @@ export const createActions = context => {
             ...mutation,
           },
         }
-      }
-    })
+      })
+    }
   }
 
   // Adds schema mutations for multiple fields at once
@@ -198,6 +224,7 @@ export const createActions = context => {
     }
     const $definition = get(definition)
     const $schemaMutations = get(schemaMutations)
+    const $subSchemaMutations = get(subSchemaMutations)
     const $schema = get(schema)
     let newSchema = {}
 
@@ -206,6 +233,17 @@ export const createActions = context => {
       newSchema[column] = {
         ...$schema[column],
         ...$schemaMutations[column],
+      }
+      if ($subSchemaMutations[column]) {
+        newSchema[column].schema ??= {}
+        for (const [fieldName, mutation] of Object.entries(
+          $subSchemaMutations[column]
+        )) {
+          newSchema[column].schema[fieldName] = {
+            ...newSchema[column].schema[fieldName],
+            ...mutation,
+          }
+        }
       }
     })
 
@@ -219,6 +257,7 @@ export const createActions = context => {
 
   const resetSchemaMutations = () => {
     schemaMutations.set({})
+    subSchemaMutations.set({})
   }
 
   // Adds a row to the datasource
