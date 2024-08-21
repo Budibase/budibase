@@ -15,7 +15,7 @@ import {
   Table,
   TableSourceType,
   UpdateViewRequest,
-  ViewUIFieldMetadata,
+  ViewFieldMetadata,
   ViewV2,
   SearchResponse,
   BasicOperator,
@@ -953,7 +953,7 @@ describe.each([
       const updatedTable = await config.api.table.get(table._id!)
       const viewSchema = updatedTable.views![view!.name!].schema as Record<
         string,
-        ViewUIFieldMetadata
+        ViewFieldMetadata
       >
       expect(viewSchema.Price?.visible).toEqual(false)
       expect(viewSchema.Category?.visible).toEqual(true)
