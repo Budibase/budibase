@@ -12,6 +12,7 @@ import {
   RelationshipFieldMetadata,
   Table,
   TableResponse,
+  TableSchema,
   TableSourceType,
   TableViewsResponse,
 } from "@budibase/types"
@@ -144,9 +145,9 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
   return processTables(tables)
 }
 
-export async function enrichRelationshipSchemas(
+export async function enrichRelationshipSchema(
   table: Table
-): Promise<TableResponse> {
+): Promise<TableSchema> {
   const tableCache: Record<string, Table> = {}
 
   async function populateRelTableSchema(field: RelationshipFieldMetadata) {
@@ -179,14 +180,14 @@ export async function enrichRelationshipSchemas(
     }
   }
 
-  const result: TableResponse = { ...table, schema: {}, views: {} }
+  const result: TableSchema = {}
   for (const fieldName of Object.keys(table.schema)) {
     const field = { ...table.schema[fieldName] }
     if (field.type === FieldType.LINK) {
       await populateRelTableSchema(field)
     }
 
-    result.schema[fieldName] = field
+    result[fieldName] = field
   }
   return result
 }
