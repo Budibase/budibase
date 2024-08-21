@@ -183,7 +183,7 @@
           value={columnToPermissionOptions(column)}
           options={column.options}
         />
-        {#if allowRelationshipSchemas && column.schema.type === FieldType.LINK}
+        {#if allowRelationshipSchemas && column.schema.type === FieldType.LINK && columnToPermissionOptions(column) !== FieldPermissions.HIDDEN}
           <div class="relationship-columns">
             <ActionButton
               on:click={e => {
