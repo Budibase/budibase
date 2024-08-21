@@ -38,7 +38,6 @@ export async function searchView(
   let query = dataFilters.buildQuery(view.query || [])
   if (body.query) {
     // Delete extraneous search params that cannot be overridden
-    delete body.query.allOr
     delete body.query.onEmptyFilter
 
     if (!isExternalTableID(view.tableId) && !db.isSqsEnabledForTenant()) {
@@ -57,14 +56,12 @@ export async function searchView(
           }
         })
       })
-    } else {
-      const operator = query.allOr ? "$or" : "$and"
+    } else
       query = {
-        [operator]: {
+        $and: {
           conditions: [query, body.query],
         },
       }
-    }
   }
 
   await context.ensureSnippetContext(true)
