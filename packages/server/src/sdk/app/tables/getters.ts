@@ -170,10 +170,11 @@ export async function enrichRelationshipSchemas(
       const isReadonly =
         isPrimaryDisplay || !!field.schema[relTableFieldName]?.readonly
       field.schema[relTableFieldName] = {
-        primaryDisplay: isPrimaryDisplay,
-        type: relTableField.type,
         visible: isReadonly,
         readonly: isReadonly,
+        // @ts-ignore this would require a big refactor around field typings, having document types and api dtos
+        primaryDisplay: isPrimaryDisplay,
+        type: relTableField.type,
       }
     }
   }
