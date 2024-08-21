@@ -18,6 +18,7 @@ export class Screen extends BaseStructure {
         },
         _children: [],
         _instanceName: "",
+        layout: "flex",
         direction: "column",
         hAlign: "stretch",
         vAlign: "top",
