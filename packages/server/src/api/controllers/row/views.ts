@@ -63,7 +63,6 @@ export async function searchView(
           conditions: [query, body.query],
         },
       }
-    }
   }
 
   await context.ensureSnippetContext(true)
