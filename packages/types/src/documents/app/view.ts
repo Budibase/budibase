@@ -1,5 +1,5 @@
 import { SearchFilter, SortOrder, SortType } from "../../api"
-import { UIFieldMetadata } from "./table"
+import { RelationSchemaField, UIFieldMetadata } from "./table"
 import { Document } from "../document"
 import { DBView } from "../../sdk"
 
@@ -31,11 +31,6 @@ export interface View {
   reduce?: any
   meta?: ViewTemplateOpts
   groupBy?: string
-}
-
-export type RelationSchemaField = {
-  visible?: boolean
-  readonly?: boolean
 }
 
 export type ViewFieldMetadata = UIFieldMetadata & {

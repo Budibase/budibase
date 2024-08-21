@@ -25,16 +25,13 @@ interface BaseRelationshipFieldMetadata
   tableId: string
   tableRev?: string
   subtype?: AutoFieldSubType.CREATED_BY | AutoFieldSubType.UPDATED_BY
-  schema?: RelationFieldSchema
+  schema?: Record<string, RelationSchemaField>
 }
 
-export type RelationFieldSchema = Record<
-  string,
-  {
-    visible?: boolean
-    readonly?: boolean
-  }
->
+export type RelationSchemaField = {
+  visible?: boolean
+  readonly?: boolean
+}
 
 // External tables use junction tables, internal tables don't require them
 type ManyToManyJunctionTableMetadata =
