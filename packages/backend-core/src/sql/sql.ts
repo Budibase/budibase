@@ -1007,14 +1007,12 @@ class InternalBuilder {
     // these are based on the _row_num
     let paginationFilters: SearchFilters | undefined
     if (!counting && foundLimit) {
-      const offset = foundOffset || 1
+      const offset = foundOffset || 0
       paginationFilters = {
         range: {
           _row_num: {
-            // our low/high is inclusive - to not exceed limit we need to exclude
-            // a single row on the end
-            low: offset,
-            high: offset + foundLimit - 1,
+            low: offset + 1,
+            high: offset + foundLimit,
           },
         },
       }
