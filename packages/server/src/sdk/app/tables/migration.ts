@@ -2,9 +2,8 @@ import { BadRequestError, context, db as dbCore } from "@budibase/backend-core"
 import {
   BBReferenceFieldMetadata,
   FieldSchema,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   InternalTable,
-  isBBReferenceField,
   isRelationshipField,
   LinkDocument,
   LinkInfo,
@@ -12,11 +11,14 @@ import {
   RelationshipType,
   Row,
   Table,
+  FieldType,
+  BBReferenceSingleFieldMetadata,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { isExternalTableID } from "../../../integrations/utils"
 import { EventType, updateLinks } from "../../../db/linkedRows"
 import { cloneDeep } from "lodash"
+import { isInternalColumnName } from "@budibase/shared-core"
 
 export interface MigrationResult {
   tablesUpdated: Table[]
@@ -24,25 +26,58 @@ export interface MigrationResult {
 
 export async function migrate(
   table: Table,
-  oldColumn: FieldSchema,
-  newColumn: FieldSchema
+  oldColumnName: string,
+  newColumnName: string
 ): Promise<MigrationResult> {
-  if (newColumn.name in table.schema) {
-    throw new BadRequestError(`Column "${newColumn.name}" already exists`)
+  if (newColumnName in table.schema) {
+    throw new BadRequestError(`Column "${newColumnName}" already exists`)
   }
 
-  if (newColumn.name === "") {
+  if (newColumnName === "") {
     throw new BadRequestError(`Column name cannot be empty`)
   }
 
-  if (dbCore.isInternalColumnName(newColumn.name)) {
+  if (isInternalColumnName(newColumnName)) {
     throw new BadRequestError(`Column name cannot be a reserved column name`)
+  }
+
+  const oldColumn = table.schema[oldColumnName]
+
+  if (!oldColumn) {
+    throw new BadRequestError(
+      `Column "${oldColumnName}" does not exist on table "${table.name}"`
+    )
+  }
+
+  if (
+    oldColumn.type !== FieldType.LINK ||
+    oldColumn.tableId !== InternalTable.USER_METADATA
+  ) {
+    throw new BadRequestError(
+      `Only user relationship migration columns is currently supported`
+    )
+  }
+
+  const type =
+    oldColumn.relationshipType === RelationshipType.ONE_TO_MANY
+      ? FieldType.BB_REFERENCE_SINGLE
+      : FieldType.BB_REFERENCE
+  const newColumn: FieldSchema = {
+    name: newColumnName,
+    type,
+    subtype: BBReferenceFieldSubType.USER,
+  }
+
+  if (newColumn.type === FieldType.BB_REFERENCE) {
+    newColumn.constraints = {
+      type: "array",
+    }
   }
 
   table.schema[newColumn.name] = newColumn
   table = await sdk.tables.saveTable(table)
 
-  let migrator = getColumnMigrator(table, oldColumn, newColumn)
+  const migrator = getColumnMigrator(table, oldColumn, newColumn)
   try {
     return await migrator.doMigration()
   } catch (e) {
@@ -75,11 +110,14 @@ function getColumnMigrator(
     throw new BadRequestError(`Column "${oldColumn.name}" does not exist`)
   }
 
-  if (!isBBReferenceField(newColumn)) {
+  if (
+    newColumn.type !== FieldType.BB_REFERENCE_SINGLE &&
+    newColumn.type !== FieldType.BB_REFERENCE
+  ) {
     throw new BadRequestError(`Column "${newColumn.name}" is not a user column`)
   }
 
-  if (newColumn.subtype !== "user" && newColumn.subtype !== "users") {
+  if (newColumn.subtype !== BBReferenceFieldSubType.USER) {
     throw new BadRequestError(`Column "${newColumn.name}" is not a user column`)
   }
 
@@ -96,7 +134,7 @@ function getColumnMigrator(
   }
 
   if (oldColumn.relationshipType === RelationshipType.ONE_TO_MANY) {
-    if (newColumn.subtype !== FieldSubtype.USER) {
+    if (newColumn.type !== FieldType.BB_REFERENCE_SINGLE) {
       throw new BadRequestError(
         `Column "${oldColumn.name}" is a one-to-many column but "${newColumn.name}" is not a single user column`
       )
@@ -107,22 +145,23 @@ function getColumnMigrator(
     oldColumn.relationshipType === RelationshipType.MANY_TO_MANY ||
     oldColumn.relationshipType === RelationshipType.MANY_TO_ONE
   ) {
-    if (newColumn.subtype !== FieldSubtype.USERS) {
+    if (newColumn.type !== FieldType.BB_REFERENCE) {
       throw new BadRequestError(
         `Column "${oldColumn.name}" is a ${oldColumn.relationshipType} column but "${newColumn.name}" is not a multi user column`
       )
     }
+
     return new MultiUserColumnMigrator(table, oldColumn, newColumn)
   }
 
   throw new BadRequestError(`Unknown migration type`)
 }
 
-abstract class UserColumnMigrator implements ColumnMigrator {
+abstract class UserColumnMigrator<T> implements ColumnMigrator {
   constructor(
     protected table: Table,
     protected oldColumn: RelationshipFieldMetadata,
-    protected newColumn: BBReferenceFieldMetadata
+    protected newColumn: T
   ) {}
 
   abstract updateRow(row: Row, linkInfo: LinkInfo): void
@@ -192,7 +231,7 @@ abstract class UserColumnMigrator implements ColumnMigrator {
   }
 }
 
-class SingleUserColumnMigrator extends UserColumnMigrator {
+class SingleUserColumnMigrator extends UserColumnMigrator<BBReferenceSingleFieldMetadata> {
   updateRow(row: Row, linkInfo: LinkInfo): void {
     row[this.newColumn.name] = dbCore.getGlobalIDFromUserMetadataID(
       linkInfo.rowId
@@ -200,7 +239,7 @@ class SingleUserColumnMigrator extends UserColumnMigrator {
   }
 }
 
-class MultiUserColumnMigrator extends UserColumnMigrator {
+class MultiUserColumnMigrator extends UserColumnMigrator<BBReferenceFieldMetadata> {
   updateRow(row: Row, linkInfo: LinkInfo): void {
     if (!row[this.newColumn.name]) {
       row[this.newColumn.name] = []

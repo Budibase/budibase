@@ -1,9 +1,8 @@
-import newid from "./newid"
 import { Row, Document, DBView } from "@budibase/types"
 
 // bypass the main application db config
 // use in memory pouchdb directly
-import { db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, utils } from "@budibase/backend-core"
 
 const Pouch = dbCore.getPouch({ inMemory: true })
 
@@ -16,7 +15,7 @@ export async function runView(
   // use a different ID each time for the DB, make sure they
   // are always unique for each query, don't want overlap
   // which could cause 409s
-  const db = new Pouch(newid())
+  const db = new Pouch(utils.newid())
   try {
     // write all the docs to the in memory Pouch (remove revs)
     await db.bulkDocs(

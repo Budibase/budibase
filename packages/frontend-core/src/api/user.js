@@ -235,6 +235,16 @@ export const buildUserEndpoints = API => ({
   },
 
   /**
+   * Removes multiple user invites from Redis cache
+   */
+  removeUserInvites: async inviteCodes => {
+    return await API.post({
+      url: "/api/global/users/multi/invite/delete",
+      body: inviteCodes,
+    })
+  },
+
+  /**
    * Accepts an invite to join the platform and creates a user.
    * @param inviteCode the invite code sent in the email
    * @param password the password for the newly created user

@@ -1,5 +1,5 @@
 <script>
-  import { AbsTooltip, Icon } from "@budibase/bbui"
+  import { Icon, TooltipType, TooltipPosition } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { helpers } from "@budibase/shared-core"
   import { UserAvatars } from "@budibase/frontend-core"
@@ -25,6 +25,7 @@
   export let selectedBy = null
   export let compact = false
   export let hovering = false
+  export let disabled = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -74,6 +75,7 @@
   class:scrollable
   class:highlighted
   class:selectedBy
+  class:disabled
   on:dragend
   on:dragstart
   on:dragover
@@ -81,6 +83,7 @@
   on:mouseenter
   on:mouseleave
   on:click={onClick}
+  on:contextmenu
   ondragover="return false"
   ondragenter="return false"
   {id}
@@ -112,9 +115,14 @@
       </div>
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
-        <AbsTooltip type="info" position="right" text={iconTooltip}>
-          <Icon color={iconColor} size="S" name={icon} />
-        </AbsTooltip>
+        <Icon
+          color={iconColor}
+          size="S"
+          name={icon}
+          tooltip={iconTooltip}
+          tooltipType={TooltipType.Info}
+          tooltipPosition={TooltipPosition.Right}
+        />
       </div>
     {/if}
     <div class="text" title={showTooltip ? text : null}>
@@ -164,6 +172,9 @@
     background-color: var(--spectrum-global-color-gray-300) !important;
     --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
+  }
+  .nav-item.disabled span {
+    color: var(--spectrum-global-color-gray-700);
   }
   .nav-item:hover,
   .hovering {

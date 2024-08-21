@@ -1,6 +1,12 @@
 import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
-import { FieldType, RenameColumn, Row, Table } from "@budibase/types"
+import {
+  FieldType,
+  RenameColumn,
+  Row,
+  RowAttachment,
+  Table,
+} from "@budibase/types"
 
 export class AttachmentCleanup {
   static async coreCleanup(fileListFn: () => string[]): Promise<void> {
@@ -21,11 +27,12 @@ export class AttachmentCleanup {
 
   private static extractAttachmentKeys(
     type: FieldType,
-    rowData: any
+    rowData: RowAttachment[] | RowAttachment
   ): string[] {
     if (
       type !== FieldType.ATTACHMENTS &&
-      type !== FieldType.ATTACHMENT_SINGLE
+      type !== FieldType.ATTACHMENT_SINGLE &&
+      type !== FieldType.SIGNATURE_SINGLE
     ) {
       return []
     }
@@ -34,10 +41,15 @@ export class AttachmentCleanup {
       return []
     }
 
-    if (type === FieldType.ATTACHMENTS) {
-      return rowData.map((attachment: any) => attachment.key)
+    if (type === FieldType.ATTACHMENTS && Array.isArray(rowData)) {
+      return rowData
+        .filter(attachment => attachment.key)
+        .map(attachment => attachment.key!)
+    } else if ("key" in rowData && rowData.key) {
+      return [rowData.key]
     }
-    return [rowData.key]
+
+    return []
   }
 
   private static async tableChange(
@@ -51,7 +63,8 @@ export class AttachmentCleanup {
       for (let [key, schema] of Object.entries(tableSchema)) {
         if (
           schema.type !== FieldType.ATTACHMENTS &&
-          schema.type !== FieldType.ATTACHMENT_SINGLE
+          schema.type !== FieldType.ATTACHMENT_SINGLE &&
+          schema.type !== FieldType.SIGNATURE_SINGLE
         ) {
           continue
         }
@@ -89,10 +102,12 @@ export class AttachmentCleanup {
       for (let [key, schema] of Object.entries(table.schema)) {
         if (
           schema.type !== FieldType.ATTACHMENTS &&
-          schema.type !== FieldType.ATTACHMENT_SINGLE
+          schema.type !== FieldType.ATTACHMENT_SINGLE &&
+          schema.type !== FieldType.SIGNATURE_SINGLE
         ) {
           continue
         }
+
         rows.forEach(row => {
           files = files.concat(
             AttachmentCleanup.extractAttachmentKeys(schema.type, row[key])
@@ -109,7 +124,8 @@ export class AttachmentCleanup {
       for (let [key, schema] of Object.entries(table.schema)) {
         if (
           schema.type !== FieldType.ATTACHMENTS &&
-          schema.type !== FieldType.ATTACHMENT_SINGLE
+          schema.type !== FieldType.ATTACHMENT_SINGLE &&
+          schema.type !== FieldType.SIGNATURE_SINGLE
         ) {
           continue
         }

@@ -81,6 +81,7 @@
   }
   input {
     flex: 1 1 auto;
+    width: 0;
     border: none;
     padding: var(--cell-padding);
     overflow: hidden;

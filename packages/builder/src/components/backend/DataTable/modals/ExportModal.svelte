@@ -8,7 +8,7 @@
   } from "@budibase/bbui"
   import download from "downloadjs"
   import { API } from "api"
-  import { LuceneUtils } from "@budibase/frontend-core"
+  import { QueryUtils } from "@budibase/frontend-core"
   import { utils } from "@budibase/shared-core"
   import { ROW_EXPORT_FORMATS } from "constants/backend"
 
@@ -49,7 +49,7 @@
     exportFormat = Array.isArray(options) ? options[0]?.key : []
   }
 
-  $: luceneFilter = LuceneUtils.buildLuceneQuery(appliedFilters)
+  $: query = QueryUtils.buildQuery(appliedFilters)
   $: exportOpDisplay = buildExportOpDisplay(
     sorting,
     filterDisplay,
@@ -139,7 +139,7 @@
           tableId: view,
           format: exportFormat,
           search: {
-            query: luceneFilter,
+            query,
             sort: sorting?.sortColumn,
             sortOrder: sorting?.sortOrder,
             paginate: false,

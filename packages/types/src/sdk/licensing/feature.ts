@@ -14,6 +14,7 @@ export enum Feature {
   OFFLINE = "offline",
   EXPANDED_PUBLIC_API = "expandedPublicApi",
   VIEW_PERMISSIONS = "viewPermissions",
+  VIEW_READONLY_COLUMNS = "viewReadonlyColumns",
 }
 
 export type PlanFeatures = { [key in PlanType]: Feature[] | undefined }

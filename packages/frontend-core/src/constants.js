@@ -1,10 +1,26 @@
 /**
  * Operator options for lucene queries
  */
-export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
+export {
+  OperatorOptions,
+  SqlNumberTypeRangeMap,
+  DEFAULT_BB_DATASOURCE_ID,
+} from "@budibase/shared-core"
 export { Feature as Features } from "@budibase/types"
 import { BpmCorrelationKey } from "@budibase/shared-core"
-import { FieldType, FieldTypeSubtypes } from "@budibase/types"
+import { FieldType, BBReferenceFieldSubType } from "@budibase/types"
+
+export const BannedSearchTypes = [
+  FieldType.LINK,
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.ATTACHMENTS,
+  FieldType.FORMULA,
+  FieldType.JSON,
+  FieldType.ATTACHMENT_SINGLE,
+  FieldType.SIGNATURE_SINGLE,
+  "jsonarray",
+  "queryarray",
+]
 
 // Cookie names
 export const Cookies = {
@@ -57,6 +73,7 @@ export const PlanType = {
   PRO: "pro",
   BUSINESS: "business",
   ENTERPRISE: "enterprise",
+  ENTERPRISE_BASIC_TRIAL: "enterprise_basic_trial",
 }
 
 /**
@@ -120,21 +137,27 @@ export const TypeIconMap = {
   [FieldType.OPTIONS]: "Dropdown",
   [FieldType.DATETIME]: "Calendar",
   [FieldType.BARCODEQR]: "Camera",
+  [FieldType.SIGNATURE_SINGLE]: "AnnotatePen",
   [FieldType.LONGFORM]: "TextAlignLeft",
   [FieldType.ARRAY]: "Duplicate",
   [FieldType.NUMBER]: "123",
   [FieldType.BOOLEAN]: "Boolean",
-  [FieldType.ATTACHMENTS]: "Attach",
-  [FieldType.ATTACHMENT_SINGLE]: "Attach",
+  [FieldType.ATTACHMENTS]: "DocumentFragmentGroup",
+  [FieldType.ATTACHMENT_SINGLE]: "DocumentFragment",
   [FieldType.LINK]: "DataCorrelated",
   [FieldType.FORMULA]: "Calculator",
   [FieldType.JSON]: "Brackets",
   [FieldType.BIGINT]: "TagBold",
   [FieldType.AUTO]: "MagicWand",
-  [FieldType.USER]: "User",
-  [FieldType.USERS]: "UserGroup",
   [FieldType.BB_REFERENCE]: {
-    [FieldTypeSubtypes.BB_REFERENCE.USER]: "User",
-    [FieldTypeSubtypes.BB_REFERENCE.USERS]: "UserGroup",
+    [BBReferenceFieldSubType.USER]: "UserGroup",
+    [BBReferenceFieldSubType.USERS]: "UserGroup",
+  },
+  [FieldType.BB_REFERENCE_SINGLE]: {
+    [BBReferenceFieldSubType.USER]: "User",
   },
 }
+
+export const OptionColours = [...new Array(12).keys()].map(idx => {
+  return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, 0.3)`
+})

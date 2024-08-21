@@ -1,6 +1,6 @@
 import {
   FieldType,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
   AutoFieldSubType,
   Hosting,
@@ -9,7 +9,10 @@ import { Constants } from "@budibase/frontend-core"
 
 const { TypeIconMap } = Constants
 
-export { RelationshipType } from "@budibase/types"
+export {
+  RelationshipType,
+  RowExportFormat as ROW_EXPORT_FORMATS,
+} from "@budibase/types"
 
 export const AUTO_COLUMN_SUB_TYPES = AutoFieldSubType
 
@@ -33,7 +36,7 @@ export const FIELDS = {
     },
   },
   BARCODEQR: {
-    name: "Barcode/QR",
+    name: "Barcode / QR",
     type: FieldType.BARCODEQR,
     icon: TypeIconMap[FieldType.BARCODEQR],
     constraints: {
@@ -43,7 +46,7 @@ export const FIELDS = {
     },
   },
   LONGFORM: {
-    name: "Long Form Text",
+    name: "Long form text",
     type: FieldType.LONGFORM,
     icon: TypeIconMap[FieldType.LONGFORM],
     constraints: {
@@ -53,7 +56,7 @@ export const FIELDS = {
     },
   },
   OPTIONS: {
-    name: "Options",
+    name: "Single select",
     type: FieldType.OPTIONS,
     icon: TypeIconMap[FieldType.OPTIONS],
     constraints: {
@@ -63,7 +66,7 @@ export const FIELDS = {
     },
   },
   ARRAY: {
-    name: "Multi-select",
+    name: "Multi select",
     type: FieldType.ARRAY,
     icon: TypeIconMap[FieldType.ARRAY],
     constraints: {
@@ -83,7 +86,7 @@ export const FIELDS = {
     },
   },
   BIGINT: {
-    name: "BigInt",
+    name: "Big integer",
     type: FieldType.BIGINT,
     icon: TypeIconMap[FieldType.BIGINT],
   },
@@ -97,7 +100,7 @@ export const FIELDS = {
     },
   },
   DATETIME: {
-    name: "Date/Time",
+    name: "Date / time",
     type: FieldType.DATETIME,
     icon: TypeIconMap[FieldType.DATETIME],
     constraints: {
@@ -111,7 +114,7 @@ export const FIELDS = {
     },
   },
   ATTACHMENT_SINGLE: {
-    name: "Attachment",
+    name: "Single attachment",
     type: FieldType.ATTACHMENT_SINGLE,
     icon: TypeIconMap[FieldType.ATTACHMENT_SINGLE],
     constraints: {
@@ -119,11 +122,19 @@ export const FIELDS = {
     },
   },
   ATTACHMENTS: {
-    name: "Attachment List",
+    name: "Multi attachment",
     type: FieldType.ATTACHMENTS,
     icon: TypeIconMap[FieldType.ATTACHMENTS],
     constraints: {
       type: "array",
+      presence: false,
+    },
+  },
+  SIGNATURE_SINGLE: {
+    name: "Signature",
+    type: FieldType.SIGNATURE_SINGLE,
+    icon: "AnnotatePen",
+    constraints: {
       presence: false,
     },
   },
@@ -137,7 +148,7 @@ export const FIELDS = {
     },
   },
   AUTO: {
-    name: "Auto Column",
+    name: "Auto column",
     type: FieldType.AUTO,
     icon: TypeIconMap[FieldType.AUTO],
     constraints: {},
@@ -158,16 +169,18 @@ export const FIELDS = {
     },
   },
   USER: {
-    name: "User",
-    type: FieldType.BB_REFERENCE,
-    subtype: FieldSubtype.USER,
-    icon: TypeIconMap[FieldType.USER],
+    name: "Single user",
+    type: FieldType.BB_REFERENCE_SINGLE,
+    subtype: BBReferenceFieldSubType.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE_SINGLE][
+      BBReferenceFieldSubType.USER
+    ],
   },
   USERS: {
-    name: "Users",
+    name: "Multi user",
     type: FieldType.BB_REFERENCE,
-    subtype: FieldSubtype.USERS,
-    icon: TypeIconMap[FieldType.USERS],
+    subtype: BBReferenceFieldSubType.USER,
+    icon: TypeIconMap[FieldType.BB_REFERENCE][BBReferenceFieldSubType.USER],
     constraints: {
       type: "array",
     },
@@ -253,6 +266,7 @@ export const SchemaTypeOptions = [
   { label: "Number", value: FieldType.NUMBER },
   { label: "Boolean", value: FieldType.BOOLEAN },
   { label: "Datetime", value: FieldType.DATETIME },
+  { label: "JSON", value: FieldType.JSON },
 ]
 
 export const SchemaTypeOptionsExpanded = SchemaTypeOptions.map(el => ({
@@ -288,15 +302,6 @@ export const PaginationLocations = [
   { label: "Request body", value: "body" },
 ]
 
-export const BannedSearchTypes = [
-  FieldType.LINK,
-  FieldType.ATTACHMENTS,
-  FieldType.FORMULA,
-  FieldType.JSON,
-  "jsonarray",
-  "queryarray",
-]
-
 export const DatasourceTypes = {
   RELATIONAL: "Relational",
   NON_RELATIONAL: "Non-relational",
@@ -304,10 +309,4 @@ export const DatasourceTypes = {
   OBJECT_STORE: "Object store",
   GRAPH: "Graph",
   API: "API",
-}
-
-export const ROW_EXPORT_FORMATS = {
-  CSV: "csv",
-  JSON: "json",
-  JSON_WITH_SCHEMA: "jsonWithSchema",
 }

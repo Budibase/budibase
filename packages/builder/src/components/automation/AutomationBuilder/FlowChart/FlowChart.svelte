@@ -9,7 +9,7 @@
   import TestDataModal from "./TestDataModal.svelte"
   import { flip } from "svelte/animate"
   import { fly } from "svelte/transition"
-  import { Icon, notifications, Modal } from "@budibase/bbui"
+  import { Icon, notifications, Modal, Toggle } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
 
@@ -54,6 +54,7 @@
   </div>
   <div class="controls">
     <div
+      class:disabled={!$selectedAutomation?.definition?.trigger}
       on:click={() => {
         testDataModal.show()
       }}
@@ -72,6 +73,17 @@
       >
         Test details
       </div>
+    </div>
+    <div class="setting-spacing">
+      <Toggle
+        text={automation.disabled ? "Paused" : "Activated"}
+        on:change={automationStore.actions.toggleDisabled(
+          automation._id,
+          automation.disabled
+        )}
+        disabled={!$selectedAutomation?.definition?.trigger}
+        value={!automation.disabled}
+      />
     </div>
   </div>
 </div>
@@ -102,7 +114,7 @@
   This action cannot be undone.
 </ConfirmDialog>
 
-<Modal bind:this={testDataModal} width="30%">
+<Modal bind:this={testDataModal} width="30%" zIndex={5}>
   <TestDataModal />
 </Modal>
 
@@ -138,7 +150,6 @@
   .header.scrolling {
     background: var(--background);
     border-bottom: var(--border-light);
-    border-left: var(--border-light);
     z-index: 1;
   }
 

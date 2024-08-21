@@ -2,7 +2,7 @@ import { searchInputMapping } from "../utils"
 import { db as dbCore } from "@budibase/backend-core"
 import {
   FieldType,
-  FieldTypeSubtypes,
+  BBReferenceFieldSubType,
   INTERNAL_TABLE_SOURCE_ID,
   RowSearchParams,
   Table,
@@ -19,8 +19,8 @@ const tableWithUserCol: Table = {
   schema: {
     user: {
       name: "user",
-      type: FieldType.BB_REFERENCE,
-      subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+      type: FieldType.BB_REFERENCE_SINGLE,
+      subtype: BBReferenceFieldSubType.USER,
     },
   },
 }
@@ -35,7 +35,7 @@ const tableWithUsersCol: Table = {
     user: {
       name: "user",
       type: FieldType.BB_REFERENCE,
-      subtype: FieldTypeSubtypes.BB_REFERENCE.USERS,
+      subtype: BBReferenceFieldSubType.USER,
     },
   },
 }

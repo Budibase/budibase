@@ -30,6 +30,7 @@ import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte
 import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
 import FormStepControls from "./controls/FormStepControls.svelte"
 import PaywalledSetting from "./controls/PaywalledSetting.svelte"
+import TableConditionEditor from "./controls/TableConditionEditor.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -61,6 +62,7 @@ const componentMap = {
   columns: ColumnEditor,
   "columns/basic": BasicColumnEditor,
   "columns/grid": GridColumnEditor,
+  tableConditions: TableConditionEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
@@ -76,7 +78,9 @@ const componentMap = {
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,
   "field/barcodeqr": FormFieldSelect,
+  "field/signature_single": FormFieldSelect,
   "field/bb_reference": FormFieldSelect,
+  "field/bb_reference_single": FormFieldSelect,
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,
@@ -85,6 +89,8 @@ const componentMap = {
   "validation/boolean": ValidationEditor,
   "validation/datetime": ValidationEditor,
   "validation/attachment": ValidationEditor,
+  "validation/attachment_single": ValidationEditor,
+  "validation/signature_single": ValidationEditor,
   "validation/link": ValidationEditor,
   "validation/bb_reference": ValidationEditor,
 }

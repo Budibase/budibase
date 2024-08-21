@@ -1,13 +1,15 @@
-import { Configuration, OpenAIApi } from "openai"
+import { OpenAI } from "openai"
+
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
+  OpenAIStepInputs,
+  OpenAIStepOutputs,
 } from "@budibase/types"
+import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
-import environment from "../../environment"
 
 enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
@@ -15,7 +17,7 @@ enum Model {
   GPT_4 = "gpt-4",
 }
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "OpenAI",
   tagline: "Send prompts to ChatGPT",
   icon: "Algorithm",
@@ -58,8 +60,12 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
-  if (!environment.OPENAI_API_KEY) {
+export async function run({
+  inputs,
+}: {
+  inputs: OpenAIStepInputs
+}): Promise<OpenAIStepOutputs> {
+  if (!env.OPENAI_API_KEY) {
     return {
       success: false,
       response:
@@ -75,13 +81,11 @@ export async function run({ inputs }: AutomationStepInput) {
   }
 
   try {
-    const configuration = new Configuration({
-      apiKey: environment.OPENAI_API_KEY,
+    const openai = new OpenAI({
+      apiKey: env.OPENAI_API_KEY,
     })
 
-    const openai = new OpenAIApi(configuration)
-
-    const completion = await openai.createChatCompletion({
+    const completion = await openai.chat.completions.create({
       model: inputs.model,
       messages: [
         {
@@ -90,8 +94,7 @@ export async function run({ inputs }: AutomationStepInput) {
         },
       ],
     })
-
-    const response = completion?.data?.choices[0]?.message?.content
+    const response = completion?.choices[0]?.message?.content
 
     return {
       response,

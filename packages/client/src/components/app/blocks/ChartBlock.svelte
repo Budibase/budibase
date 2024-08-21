@@ -32,9 +32,10 @@
 
   // Bar/Line/Area
   export let valueColumns
-  export let yAxisUnits
+  export let valueUnits
   export let yAxisLabel
   export let xAxisLabel
+  export let yAxisUnits
   export let curve
 
   // Area
@@ -51,8 +52,6 @@
   export let bucketCount
 
   let dataProviderId
-
-  $: colors = c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null
 </script>
 
 <Block>
@@ -84,10 +83,10 @@
           dataLabels,
           legend,
           animate,
-          ...colors,
-          yAxisUnits,
+          valueUnits,
           yAxisLabel,
           xAxisLabel,
+          yAxisUnits,
           stacked,
           horizontal,
           curve,
@@ -98,6 +97,11 @@
           lowColumn,
           dateColumn,
           bucketCount,
+          c1,
+          c2,
+          c3,
+          c4,
+          c5,
         }}
       />
     {/if}

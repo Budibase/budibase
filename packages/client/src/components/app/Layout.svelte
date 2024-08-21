@@ -12,6 +12,7 @@
     linkable,
     builderStore,
     sidePanelStore,
+    modalStore,
     appStore,
   } = sdk
   const context = getContext("context")
@@ -35,7 +36,6 @@
   export let logoLinkUrl
   export let openLogoLinkInNewTab
   export let textAlign
-
   export let embedded = false
 
   const NavigationClasses = {
@@ -73,7 +73,11 @@
     $context.device.width,
     $context.device.height
   )
-  $: autoCloseSidePanel = !$builderStore.inBuilder && $sidePanelStore.open
+  $: autoCloseSidePanel =
+    !$builderStore.inBuilder &&
+    $sidePanelStore.open &&
+    !$sidePanelStore.ignoreClicksOutside
+
   $: screenId = $builderStore.inBuilder
     ? `${$builderStore.screen?._id}-screen`
     : "screen"
@@ -191,6 +195,12 @@
     }
     return url
   }
+
+  const handleClickLink = () => {
+    mobileOpen = false
+    sidePanelStore.actions.close()
+    modalStore.actions.close()
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -281,7 +291,7 @@
                     url={navItem.url}
                     subLinks={navItem.subLinks}
                     internalLink={navItem.internalLink}
-                    on:clickLink={() => (mobileOpen = false)}
+                    on:clickLink={handleClickLink}
                     leftNav={navigation === "Left"}
                     {mobile}
                     {navStateStore}
@@ -316,10 +326,7 @@
   <div
     id="side-panel-container"
     class:open={$sidePanelStore.open}
-    use:clickOutside={{
-      callback: autoCloseSidePanel ? sidePanelStore.actions.close : null,
-      allowedType: "mousedown",
-    }}
+    use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
     class:builder={$builderStore.inBuilder}
   >
     <div class="side-panel-header">
@@ -331,6 +338,7 @@
       />
     </div>
   </div>
+  <div class="modal-container" />
 </div>
 
 <style>
@@ -345,6 +353,9 @@
     z-index: 1;
     overflow: hidden;
     position: relative;
+
+    /* Deliberately unitless as we need to do unitless calculations in grids */
+    --grid-spacing: 4;
   }
   .component {
     display: contents;
@@ -407,7 +418,6 @@
     color: var(--navTextColor);
     opacity: 1;
   }
-
   .nav :global(h1) {
     color: var(--navTextColor);
   }
@@ -473,9 +483,10 @@
     position: relative;
     padding: 32px;
   }
-  .main.size--max {
-    padding: 0;
+  .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
+    padding: calc(32px - var(--grid-spacing) * 2px);
   }
+
   .layout--none .main {
     padding: 0;
   }
@@ -493,6 +504,9 @@
   }
   .size--max {
     width: 100%;
+  }
+  .main.size--max {
+    padding: 0;
   }
 
   /*  Nav components */
@@ -604,6 +618,10 @@
   /* Reduce padding */
   .mobile:not(.layout--none) .main {
     padding: 16px;
+  }
+  .mobile:not(.layout--none)
+    .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
+    padding: 6px;
   }
   .mobile .main.size--max {
     padding: 0;

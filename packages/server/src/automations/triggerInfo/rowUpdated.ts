@@ -2,13 +2,14 @@ import {
   AutomationCustomIOType,
   AutomationIOType,
   AutomationStepType,
-  AutomationTriggerSchema,
+  AutomationTriggerDefinition,
   AutomationTriggerStepId,
+  AutomationEventType,
 } from "@budibase/types"
 
-export const definition: AutomationTriggerSchema = {
+export const definition: AutomationTriggerDefinition = {
   name: "Row Updated",
-  event: "row:update",
+  event: AutomationEventType.ROW_UPDATE,
   icon: "Refresh",
   tagline: "Row is updated in {{inputs.enriched.table.name}}",
   description: "Fired when a row is updated in your database",
@@ -22,15 +23,27 @@ export const definition: AutomationTriggerSchema = {
           customType: AutomationCustomIOType.TABLE,
           title: "Table",
         },
+        filters: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.TRIGGER_FILTER,
+          title: "Filtering",
+        },
       },
       required: ["tableId"],
     },
     outputs: {
       properties: {
-        row: {
+        oldRow: {
           type: AutomationIOType.OBJECT,
           customType: AutomationCustomIOType.ROW,
           description: "The row that was updated",
+          title: "Old Row",
+        },
+        row: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.ROW,
+          description: "The row before it was updated",
+          title: "Row",
         },
         id: {
           type: AutomationIOType.STRING,

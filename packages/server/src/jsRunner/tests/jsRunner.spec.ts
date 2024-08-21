@@ -71,6 +71,17 @@ describe("jsRunner (using isolated-vm)", () => {
         expect(result).toBeLessThanOrEqual(max)
       })
     })
+
+    describe("buffer", () => {
+      it("handle a buffer", async () => {
+        const base64 = Buffer.from("hello").toString("base64")
+        const result = await processJS(
+          `return Buffer.from("${base64}", "base64").toString("utf8")`
+        )
+        expect(result).toBeDefined()
+        expect(result).toEqual("hello")
+      })
+    })
   })
 
   // the test cases here were extracted from templates/real world examples of JS in Budibase
@@ -91,8 +102,13 @@ describe("jsRunner (using isolated-vm)", () => {
     })
 
     it("handle test case 2", async () => {
+      const todayDate = new Date()
+      // add a year and a month
+      todayDate.setMonth(new Date().getMonth() + 1)
+      todayDate.setFullYear(todayDate.getFullYear() + 1)
       const context = {
         "Purchase Date": DATE,
+        today: todayDate.toISOString(),
       }
       const result = await processJS(
         `
@@ -100,7 +116,7 @@ describe("jsRunner (using isolated-vm)", () => {
         let purchaseyear = purchase.getFullYear();
         let purchasemonth = purchase.getMonth();
 
-        var today = new Date ();
+        var today = new Date($("today"));
         let todayyear = today.getFullYear();
         let todaymonth = today.getMonth();
 
@@ -113,7 +129,7 @@ describe("jsRunner (using isolated-vm)", () => {
         context
       )
       expect(result).toBeDefined()
-      expect(result).toBe(3)
+      expect(result).toBe(1)
     })
 
     it("should handle test case 3", async () => {

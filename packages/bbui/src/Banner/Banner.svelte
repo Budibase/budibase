@@ -8,6 +8,8 @@
   export let size = "S"
   export let extraButtonText
   export let extraButtonAction
+  export let extraLinkText
+  export let extraLinkAction
   export let showCloseButton = true
 
   let show = true
@@ -28,8 +30,13 @@
       <use xlink:href="#spectrum-icon-18-{icon}" />
     </svg>
     <div class="spectrum-Toast-body">
-      <div class="spectrum-Toast-content">
+      <div class="spectrum-Toast-content row-content">
         <slot />
+        {#if extraLinkText}
+          <button class="link" on:click={extraLinkAction}>
+            <u>{extraLinkText}</u>
+          </button>
+        {/if}
       </div>
       {#if extraButtonText && extraButtonAction}
         <button
@@ -72,5 +79,24 @@
   }
   .spectrum-Button {
     border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .row-content {
+    display: flex;
+  }
+
+  .link {
+    background: none;
+    border: none;
+    margin: 0;
+    margin-left: 0.5em;
+    padding: 0;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+  }
+
+  u {
+    font-weight: 600;
   }
 </style>

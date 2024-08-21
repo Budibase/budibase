@@ -199,9 +199,8 @@ export const createPlatformUserView = async () => {
 
 export const queryPlatformView = async <T extends Document>(
   viewName: ViewName,
-  params: DatabaseQueryOpts,
-  opts?: QueryViewOptions
-): Promise<T[] | T> => {
+  params: DatabaseQueryOpts
+): Promise<T[]> => {
   const CreateFuncByName: any = {
     [ViewName.ACCOUNT_BY_EMAIL]: createPlatformAccountEmailView,
     [ViewName.PLATFORM_USERS_LOWERCASE]: createPlatformUserView,
@@ -209,7 +208,9 @@ export const queryPlatformView = async <T extends Document>(
 
   return doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: Database) => {
     const createFn = CreateFuncByName[viewName]
-    return queryView(viewName, params, db, createFn, opts)
+    return queryView(viewName, params, db, createFn, {
+      arrayResponse: true,
+    }) as Promise<T[]>
   })
 }
 

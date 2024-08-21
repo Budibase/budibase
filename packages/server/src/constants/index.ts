@@ -24,16 +24,6 @@ export enum FilterTypes {
   ONE_OF = "oneOf",
 }
 
-export const NoEmptyFilterStrings = [
-  FilterTypes.STRING,
-  FilterTypes.FUZZY,
-  FilterTypes.EQUAL,
-  FilterTypes.NOT_EQUAL,
-  FilterTypes.CONTAINS,
-  FilterTypes.NOT_CONTAINS,
-  FilterTypes.CONTAINS_ANY,
-]
-
 export const CanSwitchTypes = [
   [FieldType.JSON, FieldType.ARRAY],
   [
@@ -68,11 +58,6 @@ export enum DataSourceOperation {
 
 export enum DatasourceAuthTypes {
   GOOGLE = "google",
-}
-
-export enum SortDirection {
-  ASCENDING = "ASCENDING",
-  DESCENDING = "DESCENDING",
 }
 
 export const USERS_TABLE_SCHEMA: Table = {
@@ -173,8 +158,14 @@ export const devClientVersion = "0.0.0"
 export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 export const MAX_AUTOMATION_RECURRING_ERRORS = 5
 export const GOOGLE_SHEETS_PRIMARY_KEY = "rowNumber"
-export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
-export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
-export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
-export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
-export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
+export const DEFAULT_JOBS_TABLE_ID = constants.DEFAULT_JOBS_TABLE_ID
+export const DEFAULT_INVENTORY_TABLE_ID = constants.DEFAULT_INVENTORY_TABLE_ID
+export const DEFAULT_EXPENSES_TABLE_ID = constants.DEFAULT_EXPENSES_TABLE_ID
+export const DEFAULT_EMPLOYEE_TABLE_ID = constants.DEFAULT_EMPLOYEE_TABLE_ID
+export const DEFAULT_BB_DATASOURCE_ID = constants.DEFAULT_BB_DATASOURCE_ID
+export const DEFAULT_TABLE_IDS = [
+  DEFAULT_JOBS_TABLE_ID,
+  DEFAULT_INVENTORY_TABLE_ID,
+  DEFAULT_EXPENSES_TABLE_ID,
+  DEFAULT_EMPLOYEE_TABLE_ID,
+]

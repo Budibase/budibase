@@ -108,7 +108,12 @@ export const getSettingsDefinition = definition => {
   let settings = []
   definition.settings?.forEach(setting => {
     if (setting.section) {
-      settings = settings.concat(setting.settings || [])
+      settings = settings.concat(
+        (setting.settings || [])?.map(childSetting => ({
+          ...childSetting,
+          sectionDependsOn: setting.dependsOn,
+        }))
+      )
     } else {
       settings.push(setting)
     }

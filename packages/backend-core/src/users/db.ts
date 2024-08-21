@@ -18,6 +18,9 @@ import {
   User,
   UserStatus,
   UserGroup,
+  PlatformUserBySsoId,
+  PlatformUserById,
+  AnyDocument,
 } from "@budibase/types"
 import {
   getAccountHolderFromUserIds,
@@ -25,7 +28,11 @@ import {
   isCreator,
   validateUniqueUser,
 } from "./utils"
-import { searchExistingEmails } from "./lookup"
+import {
+  getFirstPlatformUser,
+  getPlatformUsers,
+  searchExistingEmails,
+} from "./lookup"
 import { hash } from "../utils"
 import { validatePassword } from "../security"
 
@@ -221,7 +228,7 @@ export class UserDB {
     const tenantId = getTenantId()
     const db = getGlobalDB()
 
-    let { email, _id, userGroups = [], roles } = user
+    const { email, _id, userGroups = [], roles } = user
 
     if (!email && !_id) {
       throw new Error("_id or email is required")
@@ -231,11 +238,10 @@ export class UserDB {
     if (_id) {
       // try to get existing user from db
       try {
-        dbUser = (await db.get(_id)) as User
-        if (email && dbUser.email !== email) {
-          throw "Email address cannot be changed"
+        dbUser = await usersCore.getById(_id)
+        if (email && dbUser.email !== email && !opts.allowChangingEmail) {
+          throw new Error("Email address cannot be changed")
         }
-        email = dbUser.email
       } catch (e: any) {
         if (e.status === 404) {
           // do nothing, save this new user with the id specified - required for SSO auth
@@ -271,13 +277,13 @@ export class UserDB {
 
       // make sure we set the _id field for a new user
       // Also if this is a new user, associate groups with them
-      let groupPromises = []
+      const groupPromises = []
       if (!_id) {
-        _id = builtUser._id!
-
         if (userGroups.length > 0) {
           for (let groupId of userGroups) {
-            groupPromises.push(UserDB.groups.addUsers(groupId, [_id!]))
+            groupPromises.push(
+              UserDB.groups.addUsers(groupId, [builtUser._id!])
+            )
           }
         }
       }
@@ -288,6 +294,11 @@ export class UserDB {
         builtUser._rev = response.rev
 
         await eventHelpers.handleSaveEvents(builtUser, dbUser)
+        if (dbUser && builtUser.email !== dbUser.email) {
+          // Remove the plaform email reference if the email changed
+          await platform.users.removeUser({ email: dbUser.email } as User)
+        }
+
         await platform.users.addUser(
           tenantId,
           builtUser._id!,
@@ -442,9 +453,32 @@ export class UserDB {
       creator => !!creator
     ).length
 
+    const ssoUsersToDelete: AnyDocument[] = []
     for (let user of usersToDelete) {
+      const platformUser = (await getFirstPlatformUser(
+        user._id!
+      )) as PlatformUserById
+      const ssoId = platformUser.ssoId
+      if (ssoId) {
+        // Need to get the _rev of the SSO user doc to delete it. The view also returns docs that have the ssoId property, so we need to ignore those.
+        const ssoUsers = (await getPlatformUsers(
+          ssoId
+        )) as PlatformUserBySsoId[]
+        ssoUsers
+          .filter(user => user.ssoId == null)
+          .forEach(user => {
+            ssoUsersToDelete.push({
+              ...user,
+              _deleted: true,
+            })
+          })
+      }
       await bulkDeleteProcessing(user)
     }
+
+    // Delete any associated SSO user docs
+    await platform.getPlatformDB().bulkDocs(ssoUsersToDelete)
+
     await UserDB.quotas.removeUsers(toDelete.length, creatorsToDeleteCount)
 
     // Build Response
@@ -492,7 +526,7 @@ export class UserDB {
 
     await platform.users.removeUser(dbUser)
 
-    await db.remove(userId, dbUser._rev)
+    await db.remove(userId, dbUser._rev!)
 
     const creatorsToDelete = (await isCreator(dbUser)) ? 1 : 0
     await UserDB.quotas.removeUsers(1, creatorsToDelete)

@@ -1,8 +1,14 @@
-import { DatabaseName, getDatasource } from "../../../integrations/tests/utils"
+import * as setup from "./utilities"
+
+import {
+  DatabaseName,
+  getDatasource,
+  knexClient,
+} from "../../../integrations/tests/utils"
 
 import tk from "timekeeper"
+import emitter from "../../../../src/events"
 import { outputProcessing } from "../../../utilities/rowProcessor"
-import * as setup from "./utilities"
 import { context, InternalTable, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
@@ -13,7 +19,7 @@ import {
   DeleteRow,
   FieldSchema,
   FieldType,
-  FieldTypeSubtypes,
+  BBReferenceFieldSubType,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
   NumberFieldMetadata,
@@ -24,15 +30,42 @@ import {
   StaticQuotaName,
   Table,
   TableSourceType,
+  UpdatedRowEventEmitter,
+  TableSchema,
+  JsonFieldSubType,
+  RowExportFormat,
 } from "@budibase/types"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
 import * as uuid from "uuid"
+import { Knex } from "knex"
+import { InternalTables } from "../../../db/utils"
+import { withEnv } from "../../../environment"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
+interface WaitOptions {
+  name: string
+  matchFn?: (event: any) => boolean
+}
+async function waitForEvent(
+  opts: WaitOptions,
+  callback: () => Promise<void>
+): Promise<any> {
+  const p = new Promise((resolve: any) => {
+    const listener = (event: any) => {
+      if (opts.matchFn && !opts.matchFn(event)) {
+        return
+      }
+      resolve(event)
+      emitter.off(opts.name, listener)
+    }
+    emitter.on(opts.name, listener)
+  })
 
-jest.unmock("mssql")
+  await callback()
+  return await p
+}
 
 describe.each([
   ["internal", undefined],
@@ -40,19 +73,25 @@ describe.each([
   [DatabaseName.MYSQL, getDatasource(DatabaseName.MYSQL)],
   [DatabaseName.SQL_SERVER, getDatasource(DatabaseName.SQL_SERVER)],
   [DatabaseName.MARIADB, getDatasource(DatabaseName.MARIADB)],
-])("/rows (%s)", (__, dsProvider) => {
+  [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
+])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
+  const isMSSQL = providerType === DatabaseName.SQL_SERVER
+  const isOracle = providerType === DatabaseName.ORACLE
   const config = setup.getConfig()
 
   let table: Table
   let datasource: Datasource | undefined
+  let client: Knex | undefined
 
   beforeAll(async () => {
     await config.init()
     if (dsProvider) {
+      const rawDatasource = await dsProvider
       datasource = await config.createDatasource({
-        datasource: await dsProvider,
+        datasource: rawDatasource,
       })
+      client = await knexClient(rawDatasource)
     }
   })
 
@@ -66,6 +105,23 @@ describe.each([
     // the table name they're writing to.
     ...overrides: Partial<Omit<SaveTableRequest, "name">>[]
   ): SaveTableRequest {
+    const defaultSchema: TableSchema = {
+      id: {
+        type: FieldType.NUMBER,
+        name: "id",
+        autocolumn: true,
+        constraints: {
+          presence: true,
+        },
+      },
+    }
+
+    for (const override of overrides) {
+      if (override.primary) {
+        delete defaultSchema.id
+      }
+    }
+
     const req: SaveTableRequest = {
       name: uuid.v4().substring(0, 10),
       type: "table",
@@ -74,18 +130,10 @@ describe.each([
         : TableSourceType.INTERNAL,
       sourceId: datasource ? datasource._id! : INTERNAL_TABLE_SOURCE_ID,
       primary: ["id"],
-      schema: {
-        id: {
-          type: FieldType.AUTO,
-          name: "id",
-          autocolumn: true,
-          constraints: {
-            presence: true,
-          },
-        },
-      },
+      schema: defaultSchema,
     }
-    return merge(req, ...overrides)
+    const merged = merge(req, ...overrides)
+    return merged
   }
 
   function defaultTable(
@@ -131,7 +179,17 @@ describe.each([
 
   const assertRowUsage = async (expected: number) => {
     const usage = await getRowUsage()
-    expect(usage).toBe(expected)
+
+    // Because our quota tracking is not perfect, we allow a 10% margin of
+    // error.  This is to account for the fact that parallel writes can result
+    // in some quota updates getting lost. We don't have any need to solve this
+    // right now, so we just allow for some error.
+    if (expected === 0) {
+      expect(usage).toEqual(0)
+      return
+    }
+    expect(usage).toBeGreaterThan(expected * 0.9)
+    expect(usage).toBeLessThan(expected * 1.1)
   }
 
   const defaultRowFields = isInternal
@@ -154,7 +212,7 @@ describe.each([
       })
       expect(row.name).toEqual("Test Contact")
       expect(row._rev).toBeDefined()
-      await assertRowUsage(rowUsage + 1)
+      await assertRowUsage(isInternal ? rowUsage + 1 : rowUsage)
     })
 
     it("fails to create a row for a table that does not exist", async () => {
@@ -194,39 +252,99 @@ describe.each([
       await assertRowUsage(rowUsage)
     })
 
-    it("increment row autoId per create row request", async () => {
-      const rowUsage = await getRowUsage()
+    isInternal &&
+      it("increment row autoId per create row request", async () => {
+        const rowUsage = await getRowUsage()
 
-      const newTable = await config.api.table.save(
-        saveTableRequest({
-          schema: {
-            "Row ID": {
-              name: "Row ID",
-              type: FieldType.NUMBER,
-              subtype: AutoFieldSubType.AUTO_ID,
-              icon: "ri-magic-line",
-              autocolumn: true,
-              constraints: {
-                type: "number",
-                presence: true,
-                numericality: {
-                  greaterThanOrEqualTo: "",
-                  lessThanOrEqualTo: "",
+        const newTable = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              "Row ID": {
+                name: "Row ID",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                icon: "ri-magic-line",
+                autocolumn: true,
+                constraints: {
+                  type: "number",
+                  presence: true,
+                  numericality: {
+                    greaterThanOrEqualTo: "",
+                    lessThanOrEqualTo: "",
+                  },
                 },
               },
             },
-          },
-        })
-      )
+          })
+        )
 
-      let previousId = 0
-      for (let i = 0; i < 10; i++) {
-        const row = await config.api.row.save(newTable._id!, {})
-        expect(row["Row ID"]).toBeGreaterThan(previousId)
-        previousId = row["Row ID"]
-      }
-      await assertRowUsage(rowUsage + 10)
-    })
+        let previousId = 0
+        for (let i = 0; i < 10; i++) {
+          const row = await config.api.row.save(newTable._id!, {})
+          expect(row["Row ID"]).toBeGreaterThan(previousId)
+          previousId = row["Row ID"]
+        }
+        await assertRowUsage(isInternal ? rowUsage + 10 : rowUsage)
+      })
+
+    isInternal &&
+      it("should increment auto ID correctly when creating rows in parallel", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              "Row ID": {
+                name: "Row ID",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                icon: "ri-magic-line",
+                autocolumn: true,
+                constraints: {
+                  type: "number",
+                  presence: true,
+                  numericality: {
+                    greaterThanOrEqualTo: "",
+                    lessThanOrEqualTo: "",
+                  },
+                },
+              },
+            },
+          })
+        )
+
+        const sequence = Array(50)
+          .fill(0)
+          .map((_, i) => i + 1)
+
+        // This block of code is simulating users creating auto ID rows at the
+        // same time. It's expected that this operation will sometimes return
+        // a document conflict error (409), but the idea is to retry in those
+        // situations. The code below does this a large number of times with
+        // small, random delays between them to try and get through the list
+        // as quickly as possible.
+        await Promise.all(
+          sequence.map(async () => {
+            const attempts = 30
+            for (let attempt = 0; attempt < attempts; attempt++) {
+              try {
+                await config.api.row.save(table._id!, {})
+                return
+              } catch (e) {
+                await new Promise(r => setTimeout(r, Math.random() * 50))
+              }
+            }
+            throw new Error(`Failed to create row after ${attempts} attempts`)
+          })
+        )
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows).toHaveLength(50)
+
+        // The main purpose of this test is to ensure that even under pressure,
+        // we maintain data integrity. An auto ID column should hand out
+        // monotonically increasing unique integers no matter what.
+        const ids = rows.map(r => r["Row ID"])
+        expect(ids).toEqual(expect.arrayContaining(sequence))
+      })
 
     isInternal &&
       it("row values are coerced", async () => {
@@ -244,6 +362,11 @@ describe.each([
           type: FieldType.ATTACHMENTS,
           name: "attachments",
           constraints: { type: "array", presence: false },
+        }
+        const signature: FieldSchema = {
+          type: FieldType.SIGNATURE_SINGLE,
+          name: "signature",
+          constraints: { presence: false },
         }
         const bool: FieldSchema = {
           type: FieldType.BOOLEAN,
@@ -267,7 +390,7 @@ describe.each([
         const arrayField: FieldSchema = {
           type: FieldType.ARRAY,
           constraints: {
-            type: "array",
+            type: JsonFieldSubType.ARRAY,
             presence: false,
             inclusion: ["One", "Two", "Three"],
           },
@@ -311,6 +434,8 @@ describe.each([
               attachmentListUndefined: attachmentList,
               attachmentListEmpty: attachmentList,
               attachmentListEmptyArrayStr: attachmentList,
+              signatureNull: signature,
+              signatureUndefined: signature,
               arrayFieldEmptyArrayStr: arrayField,
               arrayFieldArrayStrKnown: arrayField,
               arrayFieldNull: arrayField,
@@ -352,6 +477,8 @@ describe.each([
           attachmentListUndefined: undefined,
           attachmentListEmpty: "",
           attachmentListEmptyArrayStr: "[]",
+          signatureNull: null,
+          signatureUndefined: undefined,
           arrayFieldEmptyArrayStr: "[]",
           arrayFieldUndefined: undefined,
           arrayFieldNull: null,
@@ -386,6 +513,8 @@ describe.each([
         expect(row.attachmentListUndefined).toBe(undefined)
         expect(row.attachmentListEmpty).toEqual([])
         expect(row.attachmentListEmptyArrayStr).toEqual([])
+        expect(row.signatureNull).toEqual(null)
+        expect(row.signatureUndefined).toBe(undefined)
         expect(row.arrayFieldEmptyArrayStr).toEqual([])
         expect(row.arrayFieldNull).toEqual([])
         expect(row.arrayFieldUndefined).toEqual(undefined)
@@ -410,6 +539,258 @@ describe.each([
         )
         expect(response.message).toBe("Cannot create new user entry.")
       })
+
+    it("should not mis-parse date string out of JSON", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+            },
+          },
+        })
+      )
+
+      const row = await config.api.row.save(table._id!, {
+        name: `{ "foo": "2023-01-26T11:48:57.000Z" }`,
+      })
+
+      expect(row.name).toEqual(`{ "foo": "2023-01-26T11:48:57.000Z" }`)
+    })
+
+    describe("default values", () => {
+      let table: Table
+
+      describe("string column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                description: {
+                  name: "description",
+                  type: FieldType.STRING,
+                  default: "default description",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.description).toEqual("default description")
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            description: "specified description",
+          })
+          expect(row.description).toEqual("specified description")
+        })
+
+        it("uses the default value if value is null", async () => {
+          const row = await config.api.row.save(table._id!, {
+            description: null,
+          })
+          expect(row.description).toEqual("default description")
+        })
+
+        it("uses the default value if value is undefined", async () => {
+          const row = await config.api.row.save(table._id!, {
+            description: undefined,
+          })
+          expect(row.description).toEqual("default description")
+        })
+      })
+
+      describe("number column", () => {
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                age: {
+                  name: "age",
+                  type: FieldType.NUMBER,
+                  default: "25",
+                },
+              },
+            })
+          )
+        })
+
+        it("creates a new row with a default value successfully", async () => {
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.age).toEqual(25)
+        })
+
+        it("does not use default value if value specified", async () => {
+          const row = await config.api.row.save(table._id!, {
+            age: 30,
+          })
+          expect(row.age).toEqual(30)
+        })
+      })
+
+      describe("date column", () => {
+        it("creates a row with a default value successfully", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  default: "2023-01-26T11:48:57.000Z",
+                },
+              },
+            })
+          )
+          const row = await config.api.row.save(table._id!, {})
+          expect(row.date).toEqual("2023-01-26T11:48:57.000Z")
+        })
+
+        it("gives an error if the default value is invalid", async () => {
+          const table = await config.api.table.save(
+            saveTableRequest({
+              schema: {
+                date: {
+                  name: "date",
+                  type: FieldType.DATETIME,
+                  default: "invalid",
+                },
+              },
+            })
+          )
+          await config.api.row.save(
+            table._id!,
+            {},
+            {
+              status: 400,
+              body: {
+                message: `Invalid default value for field 'date' - Invalid date value: "invalid"`,
+              },
+            }
+          )
+        })
+      })
+
+      describe("bindings", () => {
+        describe("string column", () => {
+          beforeAll(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  description: {
+                    name: "description",
+                    type: FieldType.STRING,
+                    default: `{{ date now "YYYY-MM-DDTHH:mm:ss" }}`,
+                  },
+                },
+              })
+            )
+          })
+
+          it("can use bindings in default values", async () => {
+            const row = await config.api.row.save(table._id!, {})
+            expect(row.description).toMatch(
+              /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
+            )
+          })
+
+          it("does not use default value if value specified", async () => {
+            const row = await config.api.row.save(table._id!, {
+              description: "specified description",
+            })
+            expect(row.description).toEqual("specified description")
+          })
+
+          it("can bind the current user", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  user: {
+                    name: "user",
+                    type: FieldType.STRING,
+                    default: `{{ [Current User]._id }}`,
+                  },
+                },
+              })
+            )
+            const row = await config.api.row.save(table._id!, {})
+            expect(row.user).toEqual(config.getUser()._id)
+          })
+
+          it("cannot access current user password", async () => {
+            const table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  user: {
+                    name: "user",
+                    type: FieldType.STRING,
+                    default: `{{ user.password }}`,
+                  },
+                },
+              })
+            )
+            const row = await config.api.row.save(table._id!, {})
+            // For some reason it's null for internal tables, and undefined for
+            // external.
+            expect(row.user == null).toBe(true)
+          })
+        })
+
+        describe("number column", () => {
+          beforeAll(async () => {
+            table = await config.api.table.save(
+              saveTableRequest({
+                schema: {
+                  age: {
+                    name: "age",
+                    type: FieldType.NUMBER,
+                    default: `{{ sum 10 10 5 }}`,
+                  },
+                },
+              })
+            )
+          })
+
+          it("can use bindings in default values", async () => {
+            const row = await config.api.row.save(table._id!, {})
+            expect(row.age).toEqual(25)
+          })
+
+          describe("invalid default value", () => {
+            beforeAll(async () => {
+              table = await config.api.table.save(
+                saveTableRequest({
+                  schema: {
+                    age: {
+                      name: "age",
+                      type: FieldType.NUMBER,
+                      default: `{{ capitalize "invalid" }}`,
+                    },
+                  },
+                })
+              )
+            })
+
+            it("throws an error when invalid default value", async () => {
+              await config.api.row.save(
+                table._id!,
+                {},
+                {
+                  status: 400,
+                  body: {
+                    message:
+                      "Invalid default value for field 'age' - Invalid number value \"Invalid\"",
+                  },
+                }
+              )
+            })
+          })
+        })
+      })
+    })
   })
 
   describe("get", () => {
@@ -431,6 +812,23 @@ describe.each([
         status: 404,
       })
     })
+
+    isInternal &&
+      it("can search row from user table", async () => {
+        const res = await config.api.row.get(
+          InternalTables.USER_METADATA,
+          config.userMetadataId!
+        )
+
+        expect(res).toEqual({
+          ...config.getUser(),
+          _id: config.userMetadataId!,
+          _rev: expect.any(String),
+          roles: undefined,
+          roleId: "ADMIN",
+          tableId: InternalTables.USER_METADATA,
+        })
+      })
   })
 
   describe("fetch", () => {
@@ -466,6 +864,35 @@ describe.each([
       expect(res.name).toEqual("Updated Name")
       await assertRowUsage(rowUsage)
     })
+
+    !isInternal &&
+      it("can update a row on an external table with a primary key", async () => {
+        const tableName = uuid.v4().substring(0, 10)
+        await client!.schema.createTable(tableName, table => {
+          table.increments("id").primary()
+          table.string("name")
+        })
+
+        const res = await config.api.datasource.fetchSchema({
+          datasourceId: datasource!._id!,
+        })
+        const table = res.datasource.entities![tableName]
+
+        const row = await config.api.row.save(table._id!, {
+          id: 1,
+          name: "Row 1",
+        })
+
+        const updatedRow = await config.api.row.save(table._id!, {
+          _id: row._id!,
+          name: "Row 1 Updated",
+        })
+
+        expect(updatedRow.name).toEqual("Row 1 Updated")
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows).toHaveLength(1)
+      })
   })
 
   describe("patch", () => {
@@ -508,6 +935,32 @@ describe.each([
       expect(savedRow.description).toEqual(existing.description)
       expect(savedRow.name).toEqual("Updated Name")
       await assertRowUsage(rowUsage)
+    })
+
+    it("should update only the fields that are supplied and emit the correct oldRow", async () => {
+      let beforeRow = await config.api.row.save(table._id!, {
+        name: "test",
+        description: "test",
+      })
+      const opts = {
+        name: "row:update",
+        matchFn: (event: UpdatedRowEventEmitter) =>
+          event.row._id === beforeRow._id,
+      }
+      const event = await waitForEvent(opts, async () => {
+        await config.api.row.patch(table._id!, {
+          _id: beforeRow._id!,
+          _rev: beforeRow._rev!,
+          tableId: table._id!,
+          name: "Updated Name",
+        })
+      })
+
+      expect(event.oldRow).toBeDefined()
+      expect(event.oldRow.name).toEqual("test")
+      expect(event.row.name).toEqual("Updated Name")
+      expect(event.oldRow.description).toEqual(beforeRow.description)
+      expect(event.row.description).toEqual(beforeRow.description)
     })
 
     it("should throw an error when given improper types", async () => {
@@ -599,6 +1052,53 @@ describe.each([
       })
       expect(resp.relationship.length).toBe(1)
     })
+
+    !isInternal &&
+      // MSSQL needs a setting called IDENTITY_INSERT to be set to ON to allow writing
+      // to identity columns. This is not something Budibase does currently.
+      providerType !== DatabaseName.SQL_SERVER &&
+      it("should support updating fields that are part of a composite key", async () => {
+        const tableRequest = saveTableRequest({
+          primary: ["number", "string"],
+          schema: {
+            string: {
+              type: FieldType.STRING,
+              name: "string",
+            },
+            number: {
+              type: FieldType.NUMBER,
+              name: "number",
+            },
+          },
+        })
+
+        delete tableRequest.schema.id
+
+        const table = await config.api.table.save(tableRequest)
+
+        const stringValue = generator.word()
+
+        // MySQL and MariaDB auto-increment fields have a minimum value of 1. If
+        // you try to save a row with a value of 0 it will use 1 instead.
+        const naturalValue = generator.integer({ min: 1, max: 1000 })
+
+        const existing = await config.api.row.save(table._id!, {
+          string: stringValue,
+          number: naturalValue,
+        })
+
+        expect(existing._id).toEqual(`%5B${naturalValue}%2C'${stringValue}'%5D`)
+
+        const row = await config.api.row.patch(table._id!, {
+          _id: existing._id!,
+          _rev: existing._rev!,
+          tableId: table._id!,
+          string: stringValue,
+          number: 1500,
+        })
+
+        expect(row._id).toEqual(`%5B${"1500"}%2C'${stringValue}'%5D`)
+      })
   })
 
   describe("destroy", () => {
@@ -614,18 +1114,21 @@ describe.each([
         rows: [createdRow],
       })
       expect(res[0]._id).toEqual(createdRow._id)
-      await assertRowUsage(rowUsage - 1)
+      await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
     })
 
     it("should be able to bulk delete rows, including a row that doesn't exist", async () => {
       const createdRow = await config.api.row.save(table._id!, {})
+      const createdRow2 = await config.api.row.save(table._id!, {})
 
       const res = await config.api.row.bulkDelete(table._id!, {
-        rows: [createdRow, { _id: "9999999" }],
+        rows: [createdRow, createdRow2, { _id: "9999999" }],
       })
 
-      expect(res[0]._id).toEqual(createdRow._id)
-      expect(res.length).toEqual(1)
+      expect(res.map(r => r._id)).toEqual(
+        expect.arrayContaining([createdRow._id, createdRow2._id])
+      )
+      expect(res.length).toEqual(2)
     })
   })
 
@@ -677,7 +1180,7 @@ describe.each([
 
       expect(res.length).toEqual(2)
       await config.api.row.get(table._id!, row1._id!, { status: 404 })
-      await assertRowUsage(rowUsage - 2)
+      await assertRowUsage(isInternal ? rowUsage - 2 : rowUsage)
     })
 
     it("should be able to delete a variety of row set types", async () => {
@@ -694,7 +1197,7 @@ describe.each([
 
       expect(res.length).toEqual(3)
       await config.api.row.get(table._id!, row1._id!, { status: 404 })
-      await assertRowUsage(rowUsage - 3)
+      await assertRowUsage(isInternal ? rowUsage - 3 : rowUsage)
     })
 
     it("should accept a valid row object and delete the row", async () => {
@@ -705,35 +1208,24 @@ describe.each([
 
       expect(res.id).toEqual(row1._id)
       await config.api.row.get(table._id!, row1._id!, { status: 404 })
-      await assertRowUsage(rowUsage - 1)
+      await assertRowUsage(isInternal ? rowUsage - 1 : rowUsage)
     })
 
-    it("Should ignore malformed/invalid delete requests", async () => {
-      const rowUsage = await getRowUsage()
+    it.each([{ not: "valid" }, { rows: 123 }, "invalid"])(
+      "Should ignore malformed/invalid delete request: %s",
+      async (request: any) => {
+        const rowUsage = await getRowUsage()
 
-      await config.api.row.delete(table._id!, { not: "valid" } as any, {
-        status: 400,
-        body: {
-          message: "Invalid delete rows request",
-        },
-      })
+        await config.api.row.delete(table._id!, request, {
+          status: 400,
+          body: {
+            message: "Invalid delete rows request",
+          },
+        })
 
-      await config.api.row.delete(table._id!, { rows: 123 } as any, {
-        status: 400,
-        body: {
-          message: "Invalid delete rows request",
-        },
-      })
-
-      await config.api.row.delete(table._id!, "invalid" as any, {
-        status: 400,
-        body: {
-          message: "Invalid delete rows request",
-        },
-      })
-
-      await assertRowUsage(rowUsage)
-    })
+        await assertRowUsage(rowUsage)
+      }
+    )
   })
 
   describe("bulkImport", () => {
@@ -766,6 +1258,346 @@ describe.each([
 
         row = await config.api.row.save(table._id!, {})
         expect(row.autoId).toEqual(3)
+      })
+
+    it("should be able to bulkImport rows", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+            },
+            description: {
+              type: FieldType.STRING,
+              name: "description",
+            },
+          },
+        })
+      )
+
+      const rowUsage = await getRowUsage()
+
+      await config.api.row.bulkImport(table._id!, {
+        rows: [
+          {
+            name: "Row 1",
+            description: "Row 1 description",
+          },
+          {
+            name: "Row 2",
+            description: "Row 2 description",
+          },
+        ],
+      })
+
+      const rows = await config.api.row.fetch(table._id!)
+      expect(rows.length).toEqual(2)
+
+      rows.sort((a, b) => a.name.localeCompare(b.name))
+      expect(rows[0].name).toEqual("Row 1")
+      expect(rows[0].description).toEqual("Row 1 description")
+      expect(rows[1].name).toEqual("Row 2")
+      expect(rows[1].description).toEqual("Row 2 description")
+
+      await assertRowUsage(isInternal ? rowUsage + 2 : rowUsage)
+    })
+
+    isInternal &&
+      it("should be able to update existing rows on bulkImport", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+              },
+              description: {
+                type: FieldType.STRING,
+                name: "description",
+              },
+            },
+          })
+        )
+
+        const existingRow = await config.api.row.save(table._id!, {
+          name: "Existing row",
+          description: "Existing description",
+        })
+
+        const rowUsage = await getRowUsage()
+
+        await config.api.row.bulkImport(table._id!, {
+          rows: [
+            {
+              name: "Row 1",
+              description: "Row 1 description",
+            },
+            { ...existingRow, name: "Updated existing row" },
+            {
+              name: "Row 2",
+              description: "Row 2 description",
+            },
+          ],
+          identifierFields: ["_id"],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(3)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Row 1")
+        expect(rows[0].description).toEqual("Row 1 description")
+        expect(rows[1].name).toEqual("Row 2")
+        expect(rows[1].description).toEqual("Row 2 description")
+        expect(rows[2].name).toEqual("Updated existing row")
+        expect(rows[2].description).toEqual("Existing description")
+
+        await assertRowUsage(rowUsage + 2)
+      })
+
+    isInternal &&
+      it("should create new rows if not identifierFields are provided", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+              },
+              description: {
+                type: FieldType.STRING,
+                name: "description",
+              },
+            },
+          })
+        )
+
+        const existingRow = await config.api.row.save(table._id!, {
+          name: "Existing row",
+          description: "Existing description",
+        })
+
+        const rowUsage = await getRowUsage()
+
+        await config.api.row.bulkImport(table._id!, {
+          rows: [
+            {
+              name: "Row 1",
+              description: "Row 1 description",
+            },
+            { ...existingRow, name: "Updated existing row" },
+            {
+              name: "Row 2",
+              description: "Row 2 description",
+            },
+          ],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(4)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Existing row")
+        expect(rows[0].description).toEqual("Existing description")
+        expect(rows[1].name).toEqual("Row 1")
+        expect(rows[1].description).toEqual("Row 1 description")
+        expect(rows[2].name).toEqual("Row 2")
+        expect(rows[2].description).toEqual("Row 2 description")
+        expect(rows[3].name).toEqual("Updated existing row")
+        expect(rows[3].description).toEqual("Existing description")
+
+        await assertRowUsage(rowUsage + 3)
+      })
+
+    // Upserting isn't yet supported in MSSQL / Oracle, see:
+    //   https://github.com/knex/knex/pull/6050
+    !isMSSQL &&
+      !isOracle &&
+      it("should be able to update existing rows with bulkImport", async () => {
+        const table = await config.api.table.save(
+          saveTableRequest({
+            primary: ["userId"],
+            schema: {
+              userId: {
+                type: FieldType.NUMBER,
+                name: "userId",
+                constraints: {
+                  presence: true,
+                },
+              },
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+              },
+              description: {
+                type: FieldType.STRING,
+                name: "description",
+              },
+            },
+          })
+        )
+
+        const row1 = await config.api.row.save(table._id!, {
+          userId: 1,
+          name: "Row 1",
+          description: "Row 1 description",
+        })
+
+        const row2 = await config.api.row.save(table._id!, {
+          userId: 2,
+          name: "Row 2",
+          description: "Row 2 description",
+        })
+
+        await config.api.row.bulkImport(table._id!, {
+          identifierFields: ["userId"],
+          rows: [
+            {
+              userId: row1.userId,
+              name: "Row 1 updated",
+              description: "Row 1 description updated",
+            },
+            {
+              userId: row2.userId,
+              name: "Row 2 updated",
+              description: "Row 2 description updated",
+            },
+            {
+              userId: 3,
+              name: "Row 3",
+              description: "Row 3 description",
+            },
+          ],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(3)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Row 1 updated")
+        expect(rows[0].description).toEqual("Row 1 description updated")
+        expect(rows[1].name).toEqual("Row 2 updated")
+        expect(rows[1].description).toEqual("Row 2 description updated")
+        expect(rows[2].name).toEqual("Row 3")
+        expect(rows[2].description).toEqual("Row 3 description")
+      })
+
+    // Upserting isn't yet supported in MSSQL or Oracle, see:
+    //   https://github.com/knex/knex/pull/6050
+    !isMSSQL &&
+      !isOracle &&
+      !isInternal &&
+      it("should be able to update existing rows with composite primary keys with bulkImport", async () => {
+        const tableName = uuid.v4()
+        await client?.schema.createTable(tableName, table => {
+          table.integer("companyId")
+          table.integer("userId")
+          table.string("name")
+          table.string("description")
+          table.primary(["companyId", "userId"])
+        })
+
+        const resp = await config.api.datasource.fetchSchema({
+          datasourceId: datasource!._id!,
+        })
+        const table = resp.datasource.entities![tableName]
+
+        const row1 = await config.api.row.save(table._id!, {
+          companyId: 1,
+          userId: 1,
+          name: "Row 1",
+          description: "Row 1 description",
+        })
+
+        const row2 = await config.api.row.save(table._id!, {
+          companyId: 1,
+          userId: 2,
+          name: "Row 2",
+          description: "Row 2 description",
+        })
+
+        await config.api.row.bulkImport(table._id!, {
+          identifierFields: ["companyId", "userId"],
+          rows: [
+            {
+              companyId: 1,
+              userId: row1.userId,
+              name: "Row 1 updated",
+              description: "Row 1 description updated",
+            },
+            {
+              companyId: 1,
+              userId: row2.userId,
+              name: "Row 2 updated",
+              description: "Row 2 description updated",
+            },
+            {
+              companyId: 1,
+              userId: 3,
+              name: "Row 3",
+              description: "Row 3 description",
+            },
+          ],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(3)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Row 1 updated")
+        expect(rows[0].description).toEqual("Row 1 description updated")
+        expect(rows[1].name).toEqual("Row 2 updated")
+        expect(rows[1].description).toEqual("Row 2 description updated")
+        expect(rows[2].name).toEqual("Row 3")
+        expect(rows[2].description).toEqual("Row 3 description")
+      })
+
+    // Upserting isn't yet supported in MSSQL/Oracle, see:
+    //   https://github.com/knex/knex/pull/6050
+    !isMSSQL &&
+      !isOracle &&
+      !isInternal &&
+      it("should be able to update existing rows an autoID primary key", async () => {
+        const tableName = uuid.v4()
+        await client!.schema.createTable(tableName, table => {
+          table.increments("userId").primary()
+          table.string("name")
+        })
+
+        const resp = await config.api.datasource.fetchSchema({
+          datasourceId: datasource!._id!,
+        })
+        const table = resp.datasource.entities![tableName]
+
+        const row1 = await config.api.row.save(table._id!, {
+          name: "Clare",
+        })
+
+        const row2 = await config.api.row.save(table._id!, {
+          name: "Jeff",
+        })
+
+        await config.api.row.bulkImport(table._id!, {
+          identifierFields: ["userId"],
+          rows: [
+            {
+              userId: row1.userId,
+              name: "Clare updated",
+            },
+            {
+              userId: row2.userId,
+              name: "Jeff updated",
+            },
+          ],
+        })
+
+        const rows = await config.api.row.fetch(table._id!)
+        expect(rows.length).toEqual(2)
+
+        rows.sort((a, b) => a.name.localeCompare(b.name))
+        expect(rows[0].name).toEqual("Clare updated")
+        expect(rows[1].name).toEqual("Jeff updated")
       })
   })
 
@@ -830,70 +1662,91 @@ describe.each([
   })
 
   isInternal &&
-    describe("attachments", () => {
-      it("should allow enriching single attachment rows", async () => {
-        const table = await config.api.table.save(
+    describe("attachments and signatures", () => {
+      const coreAttachmentEnrichment = async (
+        schema: TableSchema,
+        field: string,
+        attachmentCfg: string | string[]
+      ) => {
+        const testTable = await config.api.table.save(
           defaultTable({
-            schema: {
-              attachment: {
-                type: FieldType.ATTACHMENT_SINGLE,
-                name: "attachment",
-                constraints: { presence: false },
-              },
-            },
+            schema,
           })
         )
-        const attachmentId = `${uuid.v4()}.csv`
-        const row = await config.api.row.save(table._id!, {
+        const attachmentToStoreKey = (attachmentId: string) => {
+          return {
+            key: `${config.getAppId()}/attachments/${attachmentId}`,
+          }
+        }
+        const draftRow = {
           name: "test",
           description: "test",
-          attachment: {
-            key: `${config.getAppId()}/attachments/${attachmentId}`,
-          },
+          [field]:
+            typeof attachmentCfg === "string"
+              ? attachmentToStoreKey(attachmentCfg)
+              : attachmentCfg.map(attachmentToStoreKey),
+          tableId: testTable._id,
+        }
+        const row = await config.api.row.save(testTable._id!, draftRow)
 
-          tableId: table._id,
-        })
-        await config.withEnv({ SELF_HOSTED: "true" }, async () => {
+        await withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
-            const enriched = await outputProcessing(table, [row])
-            expect((enriched as Row[])[0].attachment.url).toBe(
-              `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
-            )
+            const enriched: Row[] = await outputProcessing(testTable, [row])
+            const [targetRow] = enriched
+            const attachmentEntries = Array.isArray(targetRow[field])
+              ? targetRow[field]
+              : [targetRow[field]]
+
+            for (const entry of attachmentEntries) {
+              const attachmentId = entry.key.split("/").pop()
+              expect(entry.url.split("?")[0]).toBe(
+                `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
+              )
+            }
           })
         })
+      }
+
+      it("should allow enriching single attachment rows", async () => {
+        await coreAttachmentEnrichment(
+          {
+            attachment: {
+              type: FieldType.ATTACHMENT_SINGLE,
+              name: "attachment",
+              constraints: { presence: false },
+            },
+          },
+          "attachment",
+          `${uuid.v4()}.csv`
+        )
       })
 
       it("should allow enriching attachment list rows", async () => {
-        const table = await config.api.table.save(
-          defaultTable({
-            schema: {
-              attachment: {
-                type: FieldType.ATTACHMENTS,
-                name: "attachment",
-                constraints: { type: "array", presence: false },
-              },
+        await coreAttachmentEnrichment(
+          {
+            attachments: {
+              type: FieldType.ATTACHMENTS,
+              name: "attachments",
+              constraints: { type: "array", presence: false },
             },
-          })
+          },
+          "attachments",
+          [`${uuid.v4()}.csv`]
         )
-        const attachmentId = `${uuid.v4()}.csv`
-        const row = await config.api.row.save(table._id!, {
-          name: "test",
-          description: "test",
-          attachment: [
-            {
-              key: `${config.getAppId()}/attachments/${attachmentId}`,
+      })
+
+      it("should allow enriching signature rows", async () => {
+        await coreAttachmentEnrichment(
+          {
+            signature: {
+              type: FieldType.SIGNATURE_SINGLE,
+              name: "signature",
+              constraints: { presence: false },
             },
-          ],
-          tableId: table._id,
-        })
-        await config.withEnv({ SELF_HOSTED: "true" }, async () => {
-          return context.doInAppContext(config.getAppId(), async () => {
-            const enriched = await outputProcessing(table, [row])
-            expect((enriched as Row[])[0].attachment[0].url).toBe(
-              `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
-            )
-          })
-        })
+          },
+          "signature",
+          `${uuid.v4()}.png`
+        )
       })
     })
 
@@ -902,23 +1755,38 @@ describe.each([
       table = await config.api.table.save(defaultTable())
     })
 
-    it("should allow exporting all columns", async () => {
-      const existing = await config.api.row.save(table._id!, {})
-      const res = await config.api.row.exportRows(table._id!, {
-        rows: [existing._id!],
-      })
-      const results = JSON.parse(res)
-      expect(results.length).toEqual(1)
-      const row = results[0]
+    isInternal &&
+      it("should not export internal couchdb fields", async () => {
+        const existing = await config.api.row.save(table._id!, {
+          name: generator.guid(),
+          description: generator.paragraph(),
+        })
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: [existing._id!],
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(1)
+        const row = results[0]
 
-      // Ensure all original columns were exported
-      expect(Object.keys(row).length).toBeGreaterThanOrEqual(
-        Object.keys(existing).length
-      )
-      Object.keys(existing).forEach(key => {
-        expect(row[key]).toEqual(existing[key])
+        expect(Object.keys(row)).toEqual(["_id", "name", "description"])
       })
-    })
+
+    !isInternal &&
+      it("should allow exporting all columns", async () => {
+        const existing = await config.api.row.save(table._id!, {})
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: [existing._id!],
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(1)
+        const row = results[0]
+
+        // Ensure all original columns were exported
+        expect(Object.keys(row).length).toBe(Object.keys(existing).length)
+        Object.keys(existing).forEach(key => {
+          expect(row[key]).toEqual(existing[key])
+        })
+      })
 
     it("should allow exporting only certain columns", async () => {
       const existing = await config.api.row.save(table._id!, {})
@@ -946,29 +1814,245 @@ describe.each([
       expect(row._id).toEqual(existing._id)
     })
 
-    it("should return an error on composite keys", async () => {
-      const existing = await config.api.row.save(table._id!, {})
-      await config.api.row.exportRows(
-        table._id!,
-        {
-          rows: [`['${existing._id!}']`, "['d001', '10111']"],
-        },
-        {
-          status: 400,
-          body: {
-            message: "Export data does not support composite keys.",
-          },
-        }
-      )
-    })
-
     it("should return an error if no table is found", async () => {
       const existing = await config.api.row.save(table._id!, {})
       await config.api.row.exportRows(
         "1234567",
         { rows: [existing._id!] },
+        RowExportFormat.JSON,
         { status: 404 }
       )
+    })
+
+    // MSSQL needs a setting called IDENTITY_INSERT to be set to ON to allow writing
+    // to identity columns. This is not something Budibase does currently.
+    providerType !== DatabaseName.SQL_SERVER &&
+      it("should handle filtering by composite primary keys", async () => {
+        const tableRequest = saveTableRequest({
+          primary: ["number", "string"],
+          schema: {
+            string: {
+              type: FieldType.STRING,
+              name: "string",
+            },
+            number: {
+              type: FieldType.NUMBER,
+              name: "number",
+            },
+          },
+        })
+        delete tableRequest.schema.id
+
+        const table = await config.api.table.save(tableRequest)
+        const toCreate = generator
+          .unique(() => generator.integer({ min: 0, max: 10000 }), 10)
+          .map(number => ({ number, string: generator.word({ length: 30 }) }))
+
+        const rows = await Promise.all(
+          toCreate.map(d => config.api.row.save(table._id!, d))
+        )
+
+        const res = await config.api.row.exportRows(table._id!, {
+          rows: _.sampleSize(rows, 3).map(r => r._id!),
+        })
+        const results = JSON.parse(res)
+        expect(results.length).toEqual(3)
+      })
+
+    describe("should allow exporting all column types", () => {
+      let tableId: string
+      let expectedRowData: Row
+
+      beforeAll(async () => {
+        const fullSchema = setup.structures.fullSchemaWithoutLinks({
+          allRequired: true,
+        })
+
+        const table = await config.api.table.save(
+          saveTableRequest({
+            ...setup.structures.basicTable(),
+            schema: fullSchema,
+            primary: ["string"],
+          })
+        )
+        tableId = table._id!
+
+        const rowValues: Record<keyof typeof fullSchema, any> = {
+          [FieldType.STRING]: generator.guid(),
+          [FieldType.LONGFORM]: generator.paragraph(),
+          [FieldType.OPTIONS]: "option 2",
+          [FieldType.ARRAY]: ["options 2", "options 4"],
+          [FieldType.NUMBER]: generator.natural(),
+          [FieldType.BOOLEAN]: generator.bool(),
+          [FieldType.DATETIME]: generator.date().toISOString(),
+          [FieldType.ATTACHMENTS]: [setup.structures.basicAttachment()],
+          [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
+          [FieldType.FORMULA]: undefined, // generated field
+          [FieldType.AUTO]: undefined, // generated field
+          [FieldType.JSON]: { name: generator.guid() },
+          [FieldType.INTERNAL]: generator.guid(),
+          [FieldType.BARCODEQR]: generator.guid(),
+          [FieldType.SIGNATURE_SINGLE]: setup.structures.basicAttachment(),
+          [FieldType.BIGINT]: generator.integer().toString(),
+          [FieldType.BB_REFERENCE]: [{ _id: config.getUser()._id }],
+          [FieldType.BB_REFERENCE_SINGLE]: { _id: config.getUser()._id },
+        }
+        const row = await config.api.row.save(table._id!, rowValues)
+        expectedRowData = {
+          _id: row._id,
+          [FieldType.STRING]: rowValues[FieldType.STRING],
+          [FieldType.LONGFORM]: rowValues[FieldType.LONGFORM],
+          [FieldType.OPTIONS]: rowValues[FieldType.OPTIONS],
+          [FieldType.ARRAY]: rowValues[FieldType.ARRAY],
+          [FieldType.NUMBER]: rowValues[FieldType.NUMBER],
+          [FieldType.BOOLEAN]: rowValues[FieldType.BOOLEAN],
+          [FieldType.DATETIME]: rowValues[FieldType.DATETIME],
+          [FieldType.ATTACHMENTS]: rowValues[FieldType.ATTACHMENTS].map(
+            (a: any) =>
+              expect.objectContaining({
+                ...a,
+                url: expect.any(String),
+              })
+          ),
+          [FieldType.ATTACHMENT_SINGLE]: expect.objectContaining({
+            ...rowValues[FieldType.ATTACHMENT_SINGLE],
+            url: expect.any(String),
+          }),
+          [FieldType.FORMULA]: fullSchema[FieldType.FORMULA].formula,
+          [FieldType.AUTO]: expect.any(Number),
+          [FieldType.JSON]: rowValues[FieldType.JSON],
+          [FieldType.INTERNAL]: rowValues[FieldType.INTERNAL],
+          [FieldType.BARCODEQR]: rowValues[FieldType.BARCODEQR],
+          [FieldType.SIGNATURE_SINGLE]: expect.objectContaining({
+            ...rowValues[FieldType.SIGNATURE_SINGLE],
+            url: expect.any(String),
+          }),
+          [FieldType.BIGINT]: rowValues[FieldType.BIGINT],
+          [FieldType.BB_REFERENCE]: rowValues[FieldType.BB_REFERENCE].map(
+            expect.objectContaining
+          ),
+          [FieldType.BB_REFERENCE_SINGLE]: expect.objectContaining(
+            rowValues[FieldType.BB_REFERENCE_SINGLE]
+          ),
+        }
+      })
+
+      it("as csv", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.CSV
+        )
+
+        const jsonResult = await config.api.table.csvToJson({
+          csvString: exportedValue,
+        })
+
+        const stringified = (value: string) =>
+          JSON.stringify(value).replace(/"/g, "'")
+
+        const matchingObject = (key: string, value: any, isArray: boolean) => {
+          const objectMatcher = `{'${key}':'${value[key]}'.*?}`
+          if (isArray) {
+            return expect.stringMatching(new RegExp(`^\\[${objectMatcher}\\]$`))
+          }
+          return expect.stringMatching(new RegExp(`^${objectMatcher}$`))
+        }
+
+        expect(jsonResult).toEqual([
+          {
+            ...expectedRowData,
+            auto: expect.any(String),
+            array: stringified(expectedRowData["array"]),
+            attachment: matchingObject(
+              "key",
+              expectedRowData["attachment"][0].sample,
+              true
+            ),
+            attachment_single: matchingObject(
+              "key",
+              expectedRowData["attachment_single"].sample,
+              false
+            ),
+            boolean: stringified(expectedRowData["boolean"]),
+            json: stringified(expectedRowData["json"]),
+            number: stringified(expectedRowData["number"]),
+            signature_single: matchingObject(
+              "key",
+              expectedRowData["signature_single"].sample,
+              false
+            ),
+            bb_reference: matchingObject(
+              "_id",
+              expectedRowData["bb_reference"][0].sample,
+              true
+            ),
+            bb_reference_single: matchingObject(
+              "_id",
+              expectedRowData["bb_reference_single"].sample,
+              false
+            ),
+          },
+        ])
+      })
+
+      it("as json", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.JSON
+        )
+
+        const json = JSON.parse(exportedValue)
+        expect(json).toEqual([expectedRowData])
+      })
+
+      it("as json with schema", async () => {
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.JSON_WITH_SCHEMA
+        )
+
+        const json = JSON.parse(exportedValue)
+        expect(json).toEqual({
+          schema: expect.any(Object),
+          rows: [expectedRowData],
+        })
+      })
+
+      it("exported data can be re-imported", async () => {
+        // export all
+        const exportedValue = await config.api.row.exportRows(
+          tableId,
+          { query: {} },
+          RowExportFormat.CSV
+        )
+
+        // import all twice
+        const rows = await config.api.table.csvToJson({
+          csvString: exportedValue,
+        })
+        await config.api.row.bulkImport(tableId, {
+          rows,
+        })
+        await config.api.row.bulkImport(tableId, {
+          rows,
+        })
+
+        const { rows: allRows } = await config.api.row.search(tableId)
+
+        const expectedRow = {
+          ...expectedRowData,
+          _id: expect.any(String),
+          _rev: expect.any(String),
+          type: "row",
+          tableId: tableId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+        expect(allRows).toEqual([expectedRow, expectedRow, expectedRow])
+      })
     })
   })
 
@@ -1015,12 +2099,12 @@ describe.each([
         user: {
           name: "user",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          subtype: BBReferenceFieldSubType.USER,
         },
         users: {
           name: "users",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USERS,
+          subtype: BBReferenceFieldSubType.USERS,
         },
       }),
       () => config.createUser(),
@@ -1373,7 +2457,7 @@ describe.each([
 
   describe("Formula JS protection", () => {
     it("should time out JS execution if a single cell takes too long", async () => {
-      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 40 }, async () => {
+      await withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 40 }, async () => {
         const js = Buffer.from(
           `
               let i = 0;
@@ -1411,7 +2495,7 @@ describe.each([
     })
 
     it("should time out JS execution if a multiple cells take too long", async () => {
-      await config.withEnv(
+      await withEnv(
         {
           JS_PER_INVOCATION_TIMEOUT_MS: 40,
           JS_PER_REQUEST_TIMEOUT_MS: 80,
@@ -1522,3 +2606,5 @@ describe.each([
     })
   })
 })
+
+// todo: remove me

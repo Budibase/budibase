@@ -8,26 +8,20 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
   EmptyFilterOption,
-  SearchFilters,
-  Table,
+  SortOrder,
+  QueryRowsStepInputs,
+  QueryRowsStepOutputs,
 } from "@budibase/types"
-import { db as dbCore } from "@budibase/backend-core"
-
-enum SortOrder {
-  ASCENDING = "ascending",
-  DESCENDING = "descending",
-}
 
 const SortOrderPretty = {
   [SortOrder.ASCENDING]: "Ascending",
   [SortOrder.DESCENDING]: "Descending",
 }
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   description: "Query rows from the database",
   icon: "Search",
   name: "Query rows",
@@ -98,38 +92,6 @@ async function getTable(appId: string, tableId: string) {
   return ctx.body
 }
 
-function typeCoercion(filters: SearchFilters, table: Table) {
-  if (!filters || !table) {
-    return filters
-  }
-  for (let key of Object.keys(filters)) {
-    const searchParam = filters[key as keyof SearchFilters]
-    if (typeof searchParam === "object") {
-      for (let [property, value] of Object.entries(searchParam)) {
-        // We need to strip numerical prefixes here, so that we can look up
-        // the correct field name in the schema
-        const columnName = dbCore.removeKeyNumbering(property)
-        const column = table.schema[columnName]
-
-        // convert string inputs
-        if (!column || typeof value !== "string") {
-          continue
-        }
-        if (column.type === FieldType.NUMBER) {
-          if (key === "oneOf") {
-            searchParam[property] = value
-              .split(",")
-              .map(item => parseFloat(item))
-          } else {
-            searchParam[property] = parseFloat(value)
-          }
-        }
-      }
-    }
-  }
-  return filters
-}
-
 function hasNullFilters(filters: any[]) {
   return (
     filters.length === 0 ||
@@ -137,7 +99,13 @@ function hasNullFilters(filters: any[]) {
   )
 }
 
-export async function run({ inputs, appId }: AutomationStepInput) {
+export async function run({
+  inputs,
+  appId,
+}: {
+  inputs: QueryRowsStepInputs
+  appId: string
+}): Promise<QueryRowsStepOutputs> {
   const { tableId, filters, sortColumn, sortOrder, limit } = inputs
   if (!tableId) {
     return {
@@ -149,12 +117,12 @@ export async function run({ inputs, appId }: AutomationStepInput) {
   }
   const table = await getTable(appId, tableId)
   let sortType = FieldType.STRING
-  if (table && table.schema && table.schema[sortColumn] && sortColumn) {
+  if (sortColumn && table && table.schema && table.schema[sortColumn]) {
     const fieldType = table.schema[sortColumn].type
     sortType =
       fieldType === FieldType.NUMBER ? FieldType.NUMBER : FieldType.STRING
   }
-  const ctx: any = buildCtx(appId, null, {
+  const ctx = buildCtx(appId, null, {
     params: {
       tableId,
     },
@@ -162,7 +130,7 @@ export async function run({ inputs, appId }: AutomationStepInput) {
       sortType,
       limit,
       sort: sortColumn,
-      query: typeCoercion(filters || {}, table),
+      query: filters || {},
       // default to ascending, like data tab
       sortOrder: sortOrder || SortOrder.ASCENDING,
     },

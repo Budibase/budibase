@@ -12,7 +12,7 @@
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { LuceneUtils, Constants } from "@budibase/frontend-core"
+  import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { selectedComponent, componentStore } from "stores/builder"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
@@ -119,7 +119,7 @@
   }
 
   const getOperatorOptions = condition => {
-    return LuceneUtils.getValidOperatorsForType({ type: condition.valueType })
+    return QueryUtils.getValidOperatorsForType({ type: condition.valueType })
   }
 
   const onOperatorChange = (condition, newOperator) => {
@@ -138,13 +138,22 @@
     condition.referenceValue = null
 
     // Ensure a valid operator is set
-    const validOperators = LuceneUtils.getValidOperatorsForType({
+    const validOperators = QueryUtils.getValidOperatorsForType({
       type: newType,
     }).map(x => x.value)
     if (!validOperators.includes(condition.operator)) {
       condition.operator =
         validOperators[0] ?? Constants.OperatorOptions.Equals.value
       onOperatorChange(condition, condition.operator)
+    }
+  }
+
+  const onSettingChange = (e, condition) => {
+    const setting = settings.find(x => x.key === e.detail)
+    if (setting?.defaultValue != null) {
+      condition.settingValue = setting.defaultValue
+    } else {
+      delete condition.settingValue
     }
   }
 </script>
@@ -189,7 +198,7 @@
                 <Select
                   options={settingOptions}
                   bind:value={condition.setting}
-                  on:change={() => delete condition.settingValue}
+                  on:change={e => onSettingChange(e, condition)}
                 />
                 <div>TO</div>
                 {#if definition}

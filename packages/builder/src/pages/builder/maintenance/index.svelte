@@ -33,7 +33,8 @@
             </Body>
           </Layout>
           <Button
-            on:click={() => (window.location = "https://docs.budibase.com")}
+            on:click={() =>
+              (window.location = "https://docs.budibase.com/docs/migrations")}
             >Migration guide</Button
           >
         {/if}

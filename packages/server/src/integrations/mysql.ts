@@ -14,10 +14,10 @@ import {
   TableSourceType,
   DatasourcePlusQueryResponse,
   SqlQueryBinding,
+  SqlClient,
 } from "@budibase/types"
 import {
   getSqlQuery,
-  SqlClient,
   buildExternalTableId,
   generateColumnDefinition,
   finaliseExternalTables,
@@ -26,10 +26,12 @@ import {
 } from "./utils"
 import dayjs from "dayjs"
 import { NUMBER_REGEX } from "../utilities"
-import Sql from "./base/sql"
 import { MySQLColumn } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
+import { sql } from "@budibase/backend-core"
 import mysql from "mysql2/promise"
+
+const Sql = sql.Sql
 
 interface MySQLConfig extends mysql.ConnectionOptions {
   database: string
@@ -270,9 +272,9 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     } catch (err: any) {
       let readableMessage = getReadableErrorMessage(SourceName.MYSQL, err.errno)
       if (readableMessage) {
-        throw new Error(readableMessage)
+        throw new Error(readableMessage, { cause: err })
       } else {
-        throw new Error(err.message as string)
+        throw err
       }
     } finally {
       if (opts?.connect && this.client) {

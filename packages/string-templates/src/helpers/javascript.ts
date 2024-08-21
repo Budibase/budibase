@@ -33,7 +33,12 @@ const removeSquareBrackets = (value: string) => {
 // Our context getter function provided to JS code as $.
 // Extracts a value from context.
 const getContextValue = (path: string, context: any) => {
+  const literalStringRegex = /^(["'`]).*\1$/
   let data = context
+  // check if it's a literal string - just return path if its quoted
+  if (literalStringRegex.test(path)) {
+    return path.substring(1, path.length - 1)
+  }
   path.split(".").forEach(key => {
     if (data == null || typeof data !== "object") {
       return null

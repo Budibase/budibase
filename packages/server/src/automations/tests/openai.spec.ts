@@ -1,15 +1,15 @@
-const setup = require("./utilities")
+import { getConfig, runStep, afterAll as _afterAll } from "./utilities"
+import { OpenAI } from "openai"
+import {
+  withEnv as withCoreEnv,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
 
-import environment from "../../environment"
-import openai from "openai"
-
-jest.mock(
-  "openai",
-  jest.fn(() => ({
-    Configuration: jest.fn(),
-    OpenAIApi: jest.fn(() => ({
-      createChatCompletion: jest.fn(() => ({
-        data: {
+jest.mock("openai", () => ({
+  OpenAI: jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: jest.fn(() => ({
           choices: [
             {
               message: {
@@ -17,55 +17,52 @@ jest.mock(
               },
             },
           ],
-        },
-      })),
-    })),
-  }))
-)
+        })),
+      },
+    },
+  })),
+}))
 
-const mockedOpenAIApi = openai.OpenAIApi as jest.MockedClass<
-  typeof openai.OpenAIApi
->
+const mockedOpenAI = OpenAI as jest.MockedClass<typeof OpenAI>
 
 const OPENAI_PROMPT = "What is the meaning of life?"
 
 describe("test the openai action", () => {
-  let config = setup.getConfig()
+  let config = getConfig()
+  let resetEnv: () => void | undefined
 
   beforeAll(async () => {
     await config.init()
   })
 
   beforeEach(() => {
-    environment.OPENAI_API_KEY = "abc123"
+    resetEnv = setCoreEnv({ OPENAI_API_KEY: "abc123" })
   })
 
-  afterAll(setup.afterAll)
+  afterEach(() => {
+    resetEnv()
+  })
+
+  afterAll(_afterAll)
 
   it("should present the correct error message when the OPENAI_API_KEY variable isn't set", async () => {
-    delete environment.OPENAI_API_KEY
-
-    let res = await setup.runStep("OPENAI", {
-      prompt: OPENAI_PROMPT,
+    await withCoreEnv({ OPENAI_API_KEY: "" }, async () => {
+      let res = await runStep("OPENAI", { prompt: OPENAI_PROMPT })
+      expect(res.response).toEqual(
+        "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable."
+      )
+      expect(res.success).toBeFalsy()
     })
-    expect(res.response).toEqual(
-      "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable."
-    )
-    expect(res.success).toBeFalsy()
   })
 
   it("should be able to receive a response from ChatGPT given a prompt", async () => {
-    const res = await setup.runStep("OPENAI", {
-      prompt: OPENAI_PROMPT,
-    })
+    const res = await runStep("OPENAI", { prompt: OPENAI_PROMPT })
     expect(res.response).toEqual("This is a test")
     expect(res.success).toBeTruthy()
   })
 
   it("should present the correct error message when a prompt is not provided", async () => {
-    const res = await setup.runStep("OPENAI", {
-      prompt: null,
-    })
+    const res = await runStep("OPENAI", { prompt: null })
     expect(res.response).toEqual(
       "Budibase OpenAI Automation Failed: No prompt supplied"
     )
@@ -73,18 +70,22 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when an error is thrown from the createChatCompletion call", async () => {
-    mockedOpenAIApi.mockImplementation(
+    mockedOpenAI.mockImplementation(
       () =>
         ({
-          createChatCompletion: jest.fn(() => {
-            throw new Error(
-              "An error occurred while calling createChatCompletion"
-            )
-          }),
+          chat: {
+            completions: {
+              create: jest.fn(() => {
+                throw new Error(
+                  "An error occurred while calling createChatCompletion"
+                )
+              }),
+            },
+          },
         } as any)
     )
 
-    const res = await setup.runStep("OPENAI", {
+    const res = await runStep("OPENAI", {
       prompt: OPENAI_PROMPT,
     })
 

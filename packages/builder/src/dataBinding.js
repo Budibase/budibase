@@ -6,6 +6,7 @@ import {
   findAllMatchingComponents,
   findComponent,
   findComponentPath,
+  getComponentContexts,
 } from "helpers/components"
 import {
   componentStore,
@@ -29,6 +30,8 @@ import { JSONUtils, Constants } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
 import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
+import { FIELDS, DB_TYPE_INTERNAL } from "constants/backend"
+import { FieldType } from "@budibase/types"
 
 const { ContextScopes } = Constants
 
@@ -211,7 +214,7 @@ export const getComponentBindableProperties = (asset, componentId) => {
  * both global and local bindings, taking into account a component's position
  * in the component tree.
  */
-export const getComponentContexts = (
+export const getAllComponentContexts = (
   asset,
   componentId,
   type,
@@ -227,11 +230,6 @@ export const getComponentContexts = (
 
   // Processes all contexts exposed by a component
   const processContexts = scope => component => {
-    const def = componentStore.getDefinition(component._component)
-    if (!def?.context) {
-      return
-    }
-
     // Filter out global contexts not in the same branch.
     // Global contexts are only valid if their branch root is an ancestor of
     // this component.
@@ -240,8 +238,8 @@ export const getComponentContexts = (
       return
     }
 
-    // Process all contexts provided by this component
-    const contexts = Array.isArray(def.context) ? def.context : [def.context]
+    const componentType = component._component
+    const contexts = getComponentContexts(componentType)
     contexts.forEach(context => {
       // Ensure type matches
       if (type && context.type !== type) {
@@ -259,7 +257,7 @@ export const getComponentContexts = (
       if (!map[component._id]) {
         map[component._id] = {
           component,
-          definition: def,
+          definition: componentStore.getDefinition(componentType),
           contexts: [],
         }
       }
@@ -284,7 +282,7 @@ export const getComponentContexts = (
 }
 
 /**
- * Gets all data provider components above a component.
+ * Gets all components available to this component that expose a certain action
  */
 export const getActionProviders = (
   asset,
@@ -292,36 +290,30 @@ export const getActionProviders = (
   actionType,
   options = { includeSelf: false }
 ) => {
-  if (!asset) {
-    return []
-  }
-
-  // Get all components
-  const components = findAllComponents(asset.props)
-
-  // Find matching contexts and generate bindings
-  let providers = []
-  components.forEach(component => {
-    if (!options?.includeSelf && component._id === componentId) {
-      return
-    }
-    const def = componentStore.getDefinition(component._component)
-    const actions = (def?.actions || []).map(action => {
-      return typeof action === "string" ? { type: action } : action
-    })
-    const action = actions.find(x => x.type === actionType)
-    if (action) {
-      let runtimeBinding = component._id
-      if (action.suffix) {
-        runtimeBinding += `-${action.suffix}`
-      }
-      providers.push({
-        readableBinding: component._instanceName,
-        runtimeBinding,
-      })
-    }
+  const contexts = getAllComponentContexts(asset, componentId, "action", {
+    includeSelf: options?.includeSelf,
   })
-  return providers
+  return (
+    contexts
+      // Find the definition of the action in question, if one is provided
+      .map(context => ({
+        ...context,
+        action: context.contexts[0]?.actions?.find(x => x.type === actionType),
+      }))
+      // Filter out contexts which don't have this action
+      .filter(({ action }) => action != null)
+      // Generate bindings for this component and action
+      .map(({ component, action }) => {
+        let runtimeBinding = component._id
+        if (action.suffix) {
+          runtimeBinding += `-${action.suffix}`
+        }
+        return {
+          readableBinding: component._instanceName,
+          runtimeBinding,
+        }
+      })
+  )
 }
 
 /**
@@ -369,7 +361,7 @@ export const getDatasourceForProvider = (asset, component) => {
  */
 const getContextBindings = (asset, componentId) => {
   // Get all available contexts for this component
-  const componentContexts = getComponentContexts(asset, componentId)
+  const componentContexts = getAllComponentContexts(asset, componentId)
 
   // Generate bindings for each context
   return componentContexts
@@ -491,7 +483,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
         icon: bindingCategory.icon,
         display: {
           name: `${fieldSchema.name || key}`,
-          type: fieldSchema.type,
+          type: fieldSchema.display?.type || fieldSchema.type,
         },
       })
     })
@@ -554,6 +546,9 @@ const getComponentBindingCategory = (component, context, def) => {
 export const getUserBindings = () => {
   let bindings = []
   const { schema } = getSchemaForDatasourcePlus(TableNames.USERS)
+  // add props that are not in the user metadata table schema
+  // but will be there for logged-in user
+  schema["globalId"] = { type: FieldType.STRING }
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
 
@@ -727,7 +722,7 @@ const getRoleBindings = () => {
   return (get(rolesStore) || []).map(role => {
     return {
       type: "context",
-      runtimeBinding: `trim "${role._id}"`,
+      runtimeBinding: `'${role._id}'`,
       readableBinding: `Role.${role.name}`,
       category: "Role",
       icon: "UserGroup",
@@ -829,7 +824,7 @@ export const getActionBindings = (actions, actionId) => {
  * @return {{schema: Object, table: Object}}
  */
 export const getSchemaForDatasourcePlus = (resourceId, options) => {
-  const isViewV2 = resourceId?.includes("view_")
+  const isViewV2 = resourceId?.startsWith("view_")
   const datasource = isViewV2
     ? {
         type: "viewV2",
@@ -986,7 +981,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     }
 
     // Determine if we should add ID and rev to the schema
-    const isInternal = table && !table.sql
+    const isInternal = table && table?.sourceType === DB_TYPE_INTERNAL
     const isDSPlus = ["table", "link", "viewV2"].includes(datasource.type)
 
     // ID is part of the readable schema for all tables
@@ -1019,15 +1014,23 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     // are objects
     let fixedSchema = {}
     Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+      const field = Object.values(FIELDS).find(
+        field =>
+          field.type === fieldSchema.type &&
+          field.subtype === fieldSchema.subtype
+      )
+
       if (typeof fieldSchema === "string") {
         fixedSchema[fieldName] = {
           type: fieldSchema,
           name: fieldName,
+          display: { type: fieldSchema },
         }
       } else {
         fixedSchema[fieldName] = {
           ...fieldSchema,
           name: fieldName,
+          display: { type: field?.name || fieldSchema.type },
         }
       }
     })
@@ -1106,50 +1109,51 @@ export const getAllStateVariables = () => {
   getAllAssets().forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
       const settings = componentStore.getComponentSettings(component._component)
+      const nestedTypes = [
+        "buttonConfiguration",
+        "fieldConfiguration",
+        "stepConfiguration",
+      ]
 
+      // Extracts all event settings from a component instance.
+      // Recurses into nested types to find all event-like settings at any
+      // depth.
       const parseEventSettings = (settings, comp) => {
+        if (!settings?.length) {
+          return
+        }
+
+        // Extract top level event settings
         settings
           .filter(setting => setting.type === "event")
           .forEach(setting => {
             eventSettings.push(comp[setting.key])
           })
-      }
 
-      const parseComponentSettings = (settings, component) => {
-        // Parse the nested button configurations
+        // Recurse into any nested instance types
         settings
-          .filter(setting => setting.type === "buttonConfiguration")
+          .filter(setting => nestedTypes.includes(setting.type))
           .forEach(setting => {
-            const buttonConfig = component[setting.key]
+            const instances = comp[setting.key]
+            if (Array.isArray(instances) && instances.length) {
+              instances.forEach(instance => {
+                let type = instance?._component
 
-            if (Array.isArray(buttonConfig)) {
-              buttonConfig.forEach(button => {
-                const nestedSettings = componentStore.getComponentSettings(
-                  button._component
-                )
-                parseEventSettings(nestedSettings, button)
+                // Backwards compatibility for multi-step from blocks which
+                // didn't set a proper component type previously.
+                if (setting.type === "stepConfiguration" && !type) {
+                  type = "@budibase/standard-components/multistepformblockstep"
+                }
+
+                // Parsed nested component instances inside this setting
+                const nestedSettings = componentStore.getComponentSettings(type)
+                parseEventSettings(nestedSettings, instance)
               })
             }
           })
-
-        parseEventSettings(settings, component)
       }
 
-      // Parse the base component settings
-      parseComponentSettings(settings, component)
-
-      // Parse step configuration
-      const stepSetting = settings.find(
-        setting => setting.type === "stepConfiguration"
-      )
-      const steps = stepSetting ? component[stepSetting.key] : []
-      const stepDefinition = componentStore.getComponentSettings(
-        "@budibase/standard-components/multistepformblockstep"
-      )
-
-      steps?.forEach(step => {
-        parseComponentSettings(stepDefinition, step)
-      })
+      parseEventSettings(settings, component)
     })
   })
 

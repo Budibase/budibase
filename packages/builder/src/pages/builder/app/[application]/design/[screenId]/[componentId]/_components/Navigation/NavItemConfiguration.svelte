@@ -48,7 +48,9 @@
       ...navItems,
       {
         id: generate(),
-        text: getSequentialName(navItems, "Nav Item ", x => x.text),
+        text: getSequentialName(navItems, "Nav Item ", {
+          getName: x => x.text,
+        }),
         url: "",
         roleId: Constants.Roles.BASIC,
         type: "link",

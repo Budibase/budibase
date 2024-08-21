@@ -10,25 +10,35 @@ import {
   isExternalTableID,
   isSQL,
 } from "../../../integrations/utils"
-import { events } from "@budibase/backend-core"
+import { events, HTTPError } from "@budibase/backend-core"
 import {
   BulkImportRequest,
   BulkImportResponse,
+  CsvToJsonRequest,
+  CsvToJsonResponse,
   FetchTablesResponse,
+  FieldType,
   MigrateRequest,
   MigrateResponse,
-  Row,
   SaveTableRequest,
   SaveTableResponse,
   Table,
   TableResponse,
   TableSourceType,
   UserCtx,
+  ValidateNewTableImportRequest,
+  ValidateTableImportRequest,
+  ValidateTableImportResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
 import { cloneDeep, isEqual } from "lodash"
+import {
+  helpers,
+  PROTECTED_EXTERNAL_COLUMNS,
+  PROTECTED_INTERNAL_COLUMNS,
+} from "@budibase/shared-core"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -38,6 +48,20 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
     return external
   }
   return internal
+}
+
+function checkDefaultFields(table: Table) {
+  for (const [key, field] of Object.entries(table.schema)) {
+    if (!("default" in field) || field.default == null) {
+      continue
+    }
+    if (helpers.schema.isRequired(field.constraints)) {
+      throw new HTTPError(
+        `Cannot make field "${key}" required, it has a default value.`,
+        400
+      )
+    }
+  }
 }
 
 // covers both internal and external
@@ -75,6 +99,8 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const table = ctx.request.body
   const isImport = table.rows
   const renaming = ctx.request.body._rename
+
+  checkDefaultFields(table)
 
   const api = pickApi({ table })
   let savedTable = await api.save(ctx, renaming)
@@ -127,7 +153,9 @@ export async function bulkImport(
   ctx.body = { message: `Bulk rows created.` }
 }
 
-export async function csvToJson(ctx: UserCtx) {
+export async function csvToJson(
+  ctx: UserCtx<CsvToJsonRequest, CsvToJsonResponse>
+) {
   const { csvString } = ctx.request.body
 
   const result = await jsonFromCsvString(csvString)
@@ -136,24 +164,40 @@ export async function csvToJson(ctx: UserCtx) {
   ctx.body = result
 }
 
-export async function validateNewTableImport(ctx: UserCtx) {
-  const { rows, schema }: { rows: unknown; schema: unknown } = ctx.request.body
+export async function validateNewTableImport(
+  ctx: UserCtx<ValidateNewTableImportRequest, ValidateTableImportResponse>
+) {
+  const { rows, schema } = ctx.request.body
 
   if (isRows(rows) && isSchema(schema)) {
     ctx.status = 200
-    ctx.body = validateSchema(rows, schema)
+    ctx.body = validateSchema(rows, schema, PROTECTED_INTERNAL_COLUMNS)
   } else {
     ctx.status = 422
   }
 }
 
-export async function validateExistingTableImport(ctx: UserCtx) {
-  const { rows, tableId }: { rows: Row[]; tableId?: string } = ctx.request.body
+export async function validateExistingTableImport(
+  ctx: UserCtx<ValidateTableImportRequest, ValidateTableImportResponse>
+) {
+  const { rows, tableId } = ctx.request.body
 
   let schema = null
+
+  let protectedColumnNames
   if (tableId) {
     const table = await sdk.tables.getTable(tableId)
     schema = table.schema
+
+    if (!isExternalTable(table)) {
+      schema._id = {
+        name: "_id",
+        type: FieldType.STRING,
+      }
+      protectedColumnNames = PROTECTED_INTERNAL_COLUMNS.filter(x => x !== "_id")
+    } else {
+      protectedColumnNames = PROTECTED_EXTERNAL_COLUMNS
+    }
   } else {
     ctx.status = 422
     return
@@ -161,7 +205,7 @@ export async function validateExistingTableImport(ctx: UserCtx) {
 
   if (tableId && isRows(rows) && isSchema(schema)) {
     ctx.status = 200
-    ctx.body = validateSchema(rows, schema)
+    ctx.body = validateSchema(rows, schema, protectedColumnNames)
   } else {
     ctx.status = 422
   }
@@ -180,5 +224,5 @@ export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
   }
 
   ctx.status = 200
-  ctx.body = { message: `Column ${oldColumn.name} migrated.` }
+  ctx.body = { message: `Column ${oldColumn} migrated.` }
 }

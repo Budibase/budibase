@@ -1,7 +1,7 @@
 import { outputProcessing } from "../../utilities/rowProcessor"
 import { InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
-import { roles, context } from "@budibase/backend-core"
+import { roles, context, db as dbCore } from "@budibase/backend-core"
 import { ContextUser, Row, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 import { processUser } from "../../utilities/global"
@@ -27,6 +27,8 @@ export async function fetchSelf(ctx: UserCtx) {
 
   const appId = context.getAppId()
   let user: ContextUser = await getFullUser(userId)
+  // add globalId of user
+  user.globalId = dbCore.getGlobalIDFromUserMetadataID(userId)
   // this shouldn't be returned by the app self
   delete user.roles
   // forward the csrf token from the session

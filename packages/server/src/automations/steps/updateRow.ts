@@ -1,3 +1,4 @@
+import { EventEmitter } from "events"
 import * as rowController from "../../api/controllers/row"
 import * as automationUtils from "../automationUtils"
 import { buildCtx } from "./utils"
@@ -6,12 +7,13 @@ import {
   AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
-  AutomationStepInput,
-  AutomationStepSchema,
+  AutomationStepDefinition,
   AutomationStepType,
+  UpdateRowStepInputs,
+  UpdateRowStepOutputs,
 } from "@budibase/types"
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Update Row",
   tagline: "Update a {{inputs.enriched.table.name}} row",
   icon: "Refresh",
@@ -70,8 +72,15 @@ export const definition: AutomationStepSchema = {
     },
   },
 }
-
-export async function run({ inputs, appId, emitter }: AutomationStepInput) {
+export async function run({
+  inputs,
+  appId,
+  emitter,
+}: {
+  inputs: UpdateRowStepInputs
+  appId: string
+  emitter: EventEmitter
+}): Promise<UpdateRowStepOutputs> {
   if (inputs.rowId == null || inputs.row == null) {
     return {
       success: false,
@@ -82,34 +91,75 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   }
   const tableId = inputs.row.tableId
 
-  // clear any undefined, null or empty string properties so that they aren't updated
-  for (let propKey of Object.keys(inputs.row)) {
-    const clearRelationships =
-      inputs.meta?.fields?.[propKey]?.clearRelationships
-    if (
-      (inputs.row[propKey] == null || inputs.row[propKey]?.length === 0) &&
-      !clearRelationships
-    ) {
-      delete inputs.row[propKey]
-    }
-  }
+  // Base update
+  let rowUpdate: Record<string, any>
 
-  // have to clean up the row, remove the table from it
-  const ctx: any = buildCtx(appId, emitter, {
-    body: {
-      ...inputs.row,
-      _id: inputs.rowId,
+  // Legacy
+  // Find previously set values and add them to the update. Ensure empty relationships
+  // are added to the update if clearRelationships is true
+  const legacyUpdated = Object.keys(inputs.row || {}).reduce(
+    (acc: Record<string, any>, key: string) => {
+      const isEmpty = inputs.row[key] == null || inputs.row[key]?.length === 0
+      const fieldConfig = inputs.meta?.fields || {}
+
+      if (isEmpty) {
+        if (
+          Object.hasOwn(fieldConfig, key) &&
+          fieldConfig[key].clearRelationships === true
+        ) {
+          // Explicitly clear the field on update
+          acc[key] = []
+        }
+      } else {
+        // Keep non-empty values
+        acc[key] = inputs.row[key]
+      }
+      return acc
     },
-    params: {
-      rowId: inputs.rowId,
-      tableId: tableId,
+    {}
+  )
+
+  // The source of truth for inclusion in the update is: inputs.meta?.fields
+  const parsedUpdate = Object.keys(inputs.meta?.fields || {}).reduce(
+    (acc: Record<string, any>, key: string) => {
+      const fieldConfig = inputs.meta?.fields?.[key] || {}
+      // Ignore legacy config.
+      if (Object.hasOwn(fieldConfig, "clearRelationships")) {
+        return acc
+      }
+      acc[key] =
+        !inputs.row[key] || inputs.row[key]?.length === 0 ? "" : inputs.row[key]
+      return acc
     },
-  })
+    {}
+  )
+
+  rowUpdate = {
+    tableId,
+    ...parsedUpdate,
+    ...legacyUpdated,
+  }
 
   try {
     if (tableId) {
-      inputs.row = await automationUtils.cleanUpRow(tableId, inputs.row)
+      rowUpdate = await automationUtils.cleanUpRow(tableId, rowUpdate)
+
+      rowUpdate = await automationUtils.sendAutomationAttachmentsToStorage(
+        tableId,
+        rowUpdate
+      )
     }
+    // have to clean up the row, remove the table from it
+    const ctx: any = buildCtx(appId, emitter, {
+      body: {
+        ...rowUpdate,
+        _id: inputs.rowId,
+      },
+      params: {
+        rowId: inputs.rowId,
+        tableId,
+      },
+    })
     await rowController.patch(ctx)
     return {
       row: ctx.body,

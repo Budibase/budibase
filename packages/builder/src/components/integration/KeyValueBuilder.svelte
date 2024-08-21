@@ -37,6 +37,7 @@
   export let customButtonText = null
   export let keyBindings = false
   export let allowJS = false
+  export let actionButtonDisabled = false
   export let compare = (option, value) => option === value
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
@@ -189,7 +190,14 @@
 {/if}
 {#if !readOnly && !noAddButton}
   <div>
-    <ActionButton icon="Add" secondary thin outline on:click={addEntry}>
+    <ActionButton
+      disabled={actionButtonDisabled}
+      icon="Add"
+      secondary
+      thin
+      outline
+      on:click={addEntry}
+    >
       {#if customButtonText}
         {customButtonText}
       {:else}

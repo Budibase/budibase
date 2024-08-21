@@ -9,7 +9,7 @@
     FancyInput,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { users, organisation, auth } from "stores/portal"
+  import { users, organisation, auth, admin } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { onMount } from "svelte"
@@ -23,6 +23,7 @@
   let loaded = false
 
   $: company = $organisation.company || "Budibase"
+  $: passwordMinLength = $admin.passwordMinLength ?? 12
 
   async function acceptInvite() {
     form.validate()
@@ -32,8 +33,14 @@
     onboarding = true
     try {
       const { password, firstName, lastName } = formData
-      await users.acceptInvite(inviteCode, password, firstName, lastName)
+      const user = await users.acceptInvite(
+        inviteCode,
+        password,
+        firstName,
+        lastName
+      )
       notifications.success("Invitation accepted successfully")
+      auth.setOrg(user.tenantId)
       await login()
     } catch (error) {
       notifications.error(error.message)
@@ -66,7 +73,7 @@
       notifications.success("Logged in successfully")
       $goto("../portal")
     } catch (err) {
-      notifications.error(err.message ? err.message : "Invalid credentials") //not likely, considering.
+      notifications.error(err.message ? err.message : "Something went wrong")
     }
   }
 
@@ -79,8 +86,15 @@
       notifications.error("Error getting invite config")
     }
   })
+
+  const handleKeydown = evt => {
+    if (evt.key === "Enter") {
+      acceptInvite()
+    }
+  }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 {#if loaded}
   <TestimonialPage>
     <Layout gap="M" noPadding>
@@ -141,12 +155,19 @@
                   password: e.detail,
                 }
               }}
+              validateOn="blur"
               validate={() => {
                 let fieldError = {}
 
-                fieldError["password"] = !formData.password
-                  ? "Please enter a password"
-                  : undefined
+                function validatePassword() {
+                  if (!formData.password) {
+                    return "Please enter a password"
+                  } else if (formData.password.length < passwordMinLength) {
+                    return `Please enter at least ${passwordMinLength} characters`
+                  }
+                  return undefined
+                }
+                fieldError["password"] = validatePassword()
 
                 fieldError["confirmationPassword"] =
                   !passwordsMatch(

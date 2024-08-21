@@ -75,13 +75,6 @@
     if (!context || !binding.value || binding.value === "") {
       return
     }
-
-    // Roles have always been broken for JS. We need to exclude them from
-    // showing a popover as it will show "Error while executing JS".
-    if (binding.category === "Role") {
-      return
-    }
-
     stopHidingPopover()
     popoverAnchor = target
     hoverTarget = {

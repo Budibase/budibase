@@ -1,24 +1,24 @@
 <script>
-  import { getColor } from "../lib/utils"
   import { onMount, getContext } from "svelte"
-  import { Icon, Input, ProgressCircle, clickOutside } from "@budibase/bbui"
+  import { Icon, Input, ProgressCircle } from "@budibase/bbui"
   import { debounce } from "../../../utils/utils"
+  import GridPopover from "../overlays/GridPopover.svelte"
+  import { OptionColours } from "../../../constants"
 
-  const { API, dispatch, cache } = getContext("grid")
+  const { API, cache } = getContext("grid")
 
-  export let value
+  export let value = []
   export let api
   export let readonly
   export let focused
   export let schema
   export let onChange
-  export let invertX = false
-  export let invertY = false
   export let contentLines = 1
   export let searchFunction = API.searchTable
   export let primaryDisplay
+  export let hideCounter = false
 
-  const color = getColor(0)
+  const color = OptionColours[0]
 
   let isOpen = false
   let searchResults
@@ -27,17 +27,25 @@
   let candidateIndex
   let lastSearchId
   let searching = false
-  let valuesHeight = 0
   let container
+  let anchor
 
+  $: fieldValue = parseValue(value)
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
-  $: lookupMap = buildLookupMap(value, isOpen)
+  $: lookupMap = buildLookupMap(fieldValue, isOpen)
   $: debouncedSearch(searchString)
   $: {
-    if (!focused) {
+    if (!focused && isOpen) {
       close()
     }
+  }
+
+  const parseValue = value => {
+    if (Array.isArray(value) && value.every(x => x?._id)) {
+      return value
+    }
+    return []
   }
 
   // Builds a lookup map to quickly check which rows are selected
@@ -125,7 +133,6 @@
 
   const open = async () => {
     isOpen = true
-    valuesHeight = container.getBoundingClientRect().height
 
     // Find the primary display for the related table
     if (!primaryDisplay) {
@@ -178,13 +185,13 @@
 
   // Toggles whether a row is included in the relationship or not
   const toggleRow = async row => {
-    if (value?.some(x => x._id === row._id)) {
+    if (fieldValue?.some(x => x._id === row._id)) {
       // If the row is already included, remove it and update the candidate
       // row to be the same position if possible
       if (oneRowOnly) {
         await onChange([])
       } else {
-        const newValue = value.filter(x => x._id !== row._id)
+        const newValue = fieldValue.filter(x => x._id !== row._id)
         if (!newValue.length) {
           candidateIndex = null
         } else {
@@ -197,19 +204,11 @@
       if (oneRowOnly) {
         await onChange([row])
       } else {
-        await onChange(sortRows([...(value || []), row]))
+        await onChange(sortRows([...(fieldValue || []), row]))
       }
       candidateIndex = null
     }
     close()
-  }
-
-  const showRelationship = async id => {
-    const relatedRow = await API.fetchRow({
-      tableId: schema.tableId,
-      rowId: id,
-    })
-    dispatch("edit-row", relatedRow)
   }
 
   const readable = value => {
@@ -238,8 +237,8 @@
   class="wrapper"
   class:editable
   class:focused
-  class:invertY
   style="--color:{color};"
+  bind:this={anchor}
 >
   <div class="container" bind:this={container}>
     <div
@@ -247,14 +246,10 @@
       class:wrap={editable || contentLines > 1}
       on:wheel={e => (focused ? e.stopPropagation() : null)}
     >
-      {#each value || [] as relationship}
+      {#each fieldValue || [] as relationship}
         {#if relationship[primaryDisplay] || relationship.primaryDisplay}
           <div class="badge">
-            <span
-              on:click={editable
-                ? () => showRelationship(relationship._id)
-                : null}
-            >
+            <span>
               {readable(
                 relationship[primaryDisplay] || relationship.primaryDisplay
               )}
@@ -276,22 +271,19 @@
         </div>
       {/if}
     </div>
-    {#if value?.length}
+    {#if !hideCounter && fieldValue?.length}
       <div class="count">
-        {value?.length || 0}
+        {fieldValue?.length || 0}
       </div>
     {/if}
   </div>
+</div>
 
-  {#if isOpen}
-    <div
-      class="dropdown"
-      class:invertX
-      class:invertY
-      on:wheel|stopPropagation
-      use:clickOutside={close}
-      style="--values-height:{valuesHeight}px;"
-    >
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+{#if isOpen}
+  <GridPopover open={isOpen} {anchor} on:close={close}>
+    <div class="dropdown" on:wheel|stopPropagation>
       <div class="search">
         <Input
           autofocus
@@ -327,8 +319,8 @@
         </div>
       {/if}
     </div>
-  {/if}
-</div>
+  </GridPopover>
+{/if}
 
 <style>
   .wrapper {
@@ -337,7 +329,6 @@
     min-height: var(--row-height);
     max-height: var(--row-height);
     overflow: hidden;
-    --max-relationship-height: 96px;
   }
   .wrapper.focused {
     position: absolute;
@@ -349,10 +340,6 @@
     max-height: none;
     overflow: visible;
   }
-  .wrapper.invertY {
-    top: auto;
-    bottom: 0;
-  }
 
   .container {
     min-height: var(--row-height);
@@ -363,7 +350,6 @@
   .focused .container {
     overflow-y: auto;
     border-radius: 2px;
-    max-height: var(--max-relationship-height);
   }
   .focused .container:after {
     content: " ";
@@ -426,10 +412,6 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .editable .values .badge span:hover {
-    cursor: pointer;
-    text-decoration: underline;
-  }
 
   .add {
     background: var(--spectrum-global-color-gray-200);
@@ -446,30 +428,9 @@
   }
 
   .dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    max-height: calc(
-      var(--max-cell-render-height) + var(--row-height) - var(--values-height)
-    );
-    background: var(--grid-background-alt);
-    border: var(--cell-border);
-    box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    padding: 0 0 8px 0;
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
-  }
-  .dropdown.invertY {
-    transform: translateY(-100%);
-    top: -1px;
-  }
-  .dropdown.invertX {
-    left: auto;
-    right: 0;
   }
 
   .searching {
@@ -497,7 +458,8 @@
     cursor: pointer;
   }
   .result .badge {
-    max-width: calc(100% - 30px);
+    flex: 1 1 auto;
+    overflow: hidden;
   }
 
   .search {
@@ -505,7 +467,6 @@
     display: flex;
     align-items: center;
     margin: 4px var(--cell-padding);
-    width: calc(100% - 2 * var(--cell-padding));
   }
   .search :global(.spectrum-Textfield) {
     min-width: 0;

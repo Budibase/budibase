@@ -1,9 +1,14 @@
 <script>
-  import { FieldType, FieldSubtype } from "@budibase/types"
+  import {
+    FieldType,
+    BBReferenceFieldSubType,
+    SourceName,
+  } from "@budibase/types"
   import { Select, Toggle, Multiselect } from "@budibase/bbui"
   import { DB_TYPE_INTERNAL } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
+  import { tables, datasources } from "stores/builder"
 
   let error = null
   let fileName = null
@@ -55,22 +60,33 @@
       value: FieldType.ATTACHMENT_SINGLE,
     },
     {
+      label: "Signature",
+      value: FieldType.SIGNATURE_SINGLE,
+    },
+    {
       label: "Attachment list",
       value: FieldType.ATTACHMENTS,
     },
     {
-      label: "User",
-      value: `${FieldType.BB_REFERENCE}${FieldSubtype.USER}`,
+      label: "Users",
+      value: `${FieldType.BB_REFERENCE}${BBReferenceFieldSubType.USER}`,
     },
     {
       label: "Users",
-      value: `${FieldType.BB_REFERENCE}${FieldSubtype.USERS}`,
+      value: `${FieldType.BB_REFERENCE}${BBReferenceFieldSubType.USERS}`,
+    },
+    {
+      label: "User",
+      value: `${FieldType.BB_REFERENCE_SINGLE}${BBReferenceFieldSubType.USER}`,
     },
   ]
 
   $: {
     schema = fetchSchema(tableId)
   }
+
+  $: table = $tables.list.find(table => table._id === tableId)
+  $: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
 
   async function fetchSchema(tableId) {
     try {
@@ -84,51 +100,43 @@
   async function handleFile(e) {
     loading = true
     error = null
+    const previousValidation = validation
     validation = {}
 
     try {
       const response = await parseFile(e)
       rows = response.rows
       fileName = response.fileName
+
+      const newValidateHash = JSON.stringify(rows)
+      if (newValidateHash === validateHash) {
+        validation = previousValidation
+      } else {
+        await validate(rows)
+        validateHash = newValidateHash
+      }
     } catch (e) {
+      error = e.message || e
+    } finally {
       loading = false
-      error = e
     }
   }
 
   async function validate(rows) {
-    loading = true
     error = null
     validation = {}
     allValid = false
 
-    try {
-      if (rows.length > 0) {
-        const response = await API.validateExistingTableImport({
-          rows,
-          tableId,
-        })
+    if (rows.length > 0) {
+      const response = await API.validateExistingTableImport({
+        rows,
+        tableId,
+      })
 
-        validation = response.schemaValidation
-        invalidColumns = response.invalidColumns
-        allValid = response.allValid
-      }
-    } catch (e) {
-      error = e.message
+      validation = response.schemaValidation
+      invalidColumns = response.invalidColumns
+      allValid = response.allValid
     }
-
-    loading = false
-  }
-
-  $: {
-    // binding in consumer is causing double renders here
-    const newValidateHash = JSON.stringify(rows)
-
-    if (newValidateHash !== validateHash) {
-      validate(rows)
-    }
-
-    validateHash = newValidateHash
   }
 </script>
 
@@ -177,20 +185,25 @@
       </div>
     {/each}
   </div>
-  {#if tableType === DB_TYPE_INTERNAL}
-    <br />
+  <br />
+  <!-- SQL Server doesn't yet support overwriting rows by existing keys -->
+  {#if datasource?.source !== SourceName.SQL_SERVER}
     <Toggle
       bind:value={updateExistingRows}
       on:change={() => (identifierFields = [])}
       thin
       text="Update existing rows"
     />
-    {#if updateExistingRows}
+  {/if}
+  {#if updateExistingRows}
+    {#if tableType === DB_TYPE_INTERNAL}
       <Multiselect
         label="Identifier field(s)"
         options={Object.keys(validation)}
         bind:value={identifierFields}
       />
+    {:else}
+      <p>Rows will be updated based on the table's primary key.</p>
     {/if}
   {/if}
   {#if invalidColumns.length > 0}

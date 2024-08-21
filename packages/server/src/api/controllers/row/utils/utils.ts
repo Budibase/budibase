@@ -1,5 +1,5 @@
 import { InternalTables } from "../../../../db/utils"
-import * as userController from "../../user"
+
 import { context } from "@budibase/backend-core"
 import {
   Ctx,
@@ -8,13 +8,12 @@ import {
   RelationshipsJson,
   Row,
   Table,
-  UserCtx,
 } from "@budibase/types"
 import {
   processDates,
   processFormulas,
 } from "../../../../utilities/rowProcessor"
-import { updateRelationshipColumns } from "./sqlUtils"
+import { isKnexEmptyReadResponse, updateRelationshipColumns } from "./sqlUtils"
 import {
   basicProcessing,
   generateIdForRow,
@@ -22,8 +21,9 @@ import {
   getInternalRowId,
 } from "./basic"
 import sdk from "../../../../sdk"
-
+import { processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
+import { getFullUser } from "../../../../utilities/users"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -63,16 +63,12 @@ export async function processRelationshipFields(
   return row
 }
 
-export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
+export async function findRow(tableId: string, rowId: string) {
   const db = context.getAppDB()
   let row: Row
   // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {
-    ctx.params = {
-      id: rowId,
-    }
-    await userController.findMetadata(ctx)
-    row = ctx.body
+    row = await getFullUser(rowId)
   } else {
     row = await db.get(rowId)
   }
@@ -117,6 +113,19 @@ export async function validate(
   })
 }
 
+function fixBooleanFields({ row, table }: { row: Row; table: Table }) {
+  for (let col of Object.values(table.schema)) {
+    if (col.type === FieldType.BOOLEAN) {
+      if (row[col.name] === 1) {
+        row[col.name] = true
+      } else if (row[col.name] === 0) {
+        row[col.name] = false
+      }
+    }
+  }
+  return row
+}
+
 export async function sqlOutputProcessing(
   rows: DatasourcePlusQueryResponse,
   table: Table,
@@ -124,7 +133,7 @@ export async function sqlOutputProcessing(
   relationships: RelationshipsJson[],
   opts?: { sqs?: boolean }
 ): Promise<Row[]> {
-  if (!Array.isArray(rows) || rows.length === 0 || rows[0].read === true) {
+  if (isKnexEmptyReadResponse(rows)) {
     return []
   }
   let finalRows: { [key: string]: Row } = {}
@@ -161,7 +170,9 @@ export async function sqlOutputProcessing(
     if (thisRow._id == null) {
       throw new Error("Unable to generate row ID for SQL rows")
     }
-    finalRows[thisRow._id] = thisRow
+
+    finalRows[thisRow._id] = fixBooleanFields({ row: thisRow, table })
+
     // do this at end once its been added to the final rows
     finalRows = await updateRelationshipColumns(
       table,
@@ -188,4 +199,64 @@ export async function sqlOutputProcessing(
 
 export function isUserMetadataTable(tableId: string) {
   return tableId === InternalTables.USER_METADATA
+}
+
+export async function enrichArrayContext(
+  fields: any[],
+  inputs = {},
+  helpers = true
+): Promise<any[]> {
+  const map: Record<string, any> = {}
+  for (let index in fields) {
+    map[index] = fields[index]
+  }
+  const output = await enrichSearchContext(map, inputs, helpers)
+  const outputArray: any[] = []
+  for (let [key, value] of Object.entries(output)) {
+    outputArray[parseInt(key)] = value
+  }
+  return outputArray
+}
+
+export async function enrichSearchContext(
+  fields: Record<string, any>,
+  inputs = {},
+  helpers = true
+): Promise<Record<string, any>> {
+  const enrichedQuery: Record<string, any> = {}
+  if (!fields || !inputs) {
+    return enrichedQuery
+  }
+  const parameters = { ...inputs }
+
+  if (Array.isArray(fields)) {
+    return enrichArrayContext(fields, inputs, helpers)
+  }
+
+  // enrich the fields with dynamic parameters
+  for (let key of Object.keys(fields)) {
+    if (fields[key] == null) {
+      enrichedQuery[key] = null
+      continue
+    }
+    if (typeof fields[key] === "object") {
+      // enrich nested fields object
+      enrichedQuery[key] = await enrichSearchContext(
+        fields[key],
+        parameters,
+        helpers
+      )
+    } else if (typeof fields[key] === "string") {
+      // enrich string value as normal
+      enrichedQuery[key] = processStringSync(fields[key], parameters, {
+        noEscaping: true,
+        noHelpers: !helpers,
+        escapeNewlines: true,
+      })
+    } else {
+      enrichedQuery[key] = fields[key]
+    }
+  }
+
+  return enrichedQuery
 }

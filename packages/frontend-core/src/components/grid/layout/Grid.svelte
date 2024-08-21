@@ -1,15 +1,18 @@
 <script>
   import { setContext, onMount } from "svelte"
-  import { writable } from "svelte/store"
+  import { writable, derived } from "svelte/store"
   import { fade } from "svelte/transition"
   import { clickOutside, ProgressCircle } from "@budibase/bbui"
   import { createEventManagers } from "../lib/events"
   import { createAPIClient } from "../../../api"
   import { attachStores } from "../stores"
   import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
+  import BulkDuplicationHandler from "../controls/BulkDuplicationHandler.svelte"
+  import ClipboardHandler from "../controls/ClipboardHandler.svelte"
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
+  import PopoverOverlay from "../overlays/PopoverOverlay.svelte"
   import HeaderRow from "./HeaderRow.svelte"
   import ScrollOverlay from "../overlays/ScrollOverlay.svelte"
   import MenuOverlay from "../overlays/MenuOverlay.svelte"
@@ -17,21 +20,23 @@
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
   import SortButton from "../controls/SortButton.svelte"
-  import HideColumnsButton from "../controls/HideColumnsButton.svelte"
+  import ColumnsSettingButton from "../controls/ColumnsSettingButton.svelte"
   import SizeButton from "../controls/SizeButton.svelte"
   import NewRow from "./NewRow.svelte"
   import { createGridWebsocket } from "../lib/websocket"
   import {
-    MaxCellRenderHeight,
-    MaxCellRenderWidthOverflow,
+    MaxCellRenderOverflow,
     GutterWidth,
     DefaultRowHeight,
+    VPadding,
+    SmallRowHeight,
+    ControlsHeight,
+    ScrollBarSize,
   } from "../lib/constants"
 
   export let API = null
   export let datasource = null
   export let schemaOverrides = null
-  export let columnWhitelist = null
   export let canAddRows = true
   export let canExpandRows = true
   export let canEditRows = true
@@ -50,9 +55,13 @@
   export let notifySuccess = null
   export let notifyError = null
   export let buttons = null
+  export let darkMode
+  export let isCloud = null
+  export let allowViewReadonlyColumns = false
+  export let rowConditions = null
 
   // Unique identifier for DOM nodes inside this instance
-  const rand = Math.random()
+  const gridID = `grid-${Math.random().toString().slice(2)}`
 
   // Store props in a store for reference in other stores
   const props = writable($$props)
@@ -60,7 +69,7 @@
   // Build up context
   let context = {
     API: API || createAPIClient(),
-    rand,
+    gridID,
     props,
   }
   context = { ...context, ...createEventManagers() }
@@ -84,7 +93,6 @@
   $: props.set({
     datasource,
     schemaOverrides,
-    columnWhitelist,
     canAddRows,
     canExpandRows,
     canEditRows,
@@ -103,7 +111,18 @@
     notifySuccess,
     notifyError,
     buttons,
+    darkMode,
+    isCloud,
+    allowViewReadonlyColumns,
+    rowConditions,
   })
+
+  // Derive min height and make available in context
+  const minHeight = derived(rowHeight, $height => {
+    const heightForControls = showControls ? ControlsHeight : 0
+    return VPadding + SmallRowHeight + $height + heightForControls
+  })
+  context = { ...context, minHeight }
 
   // Set context for children to consume
   setContext("grid", context)
@@ -122,21 +141,21 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="grid"
-  id="grid-{rand}"
+  id={gridID}
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
   class:stripe={stripeRows}
   class:quiet
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
+  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-overflow:{MaxCellRenderOverflow}px; --content-lines:{$contentLines}; --min-height:{$minHeight}px; --controls-height:{ControlsHeight}px; --scroll-bar-size:{ScrollBarSize}px;"
 >
   {#if showControls}
     <div class="controls">
       <div class="controls-left">
         <slot name="filter" />
         <SortButton />
-        <HideColumnsButton />
+        <ColumnsSettingButton {allowViewReadonlyColumns} />
         <SizeButton />
         <slot name="controls" />
       </div>
@@ -181,6 +200,7 @@
           <ReorderOverlay />
           <ScrollOverlay />
           <MenuOverlay />
+          <PopoverOverlay />
         </div>
       </div>
     </div>
@@ -190,9 +210,11 @@
       <ProgressCircle />
     </div>
   {/if}
-  {#if $config.canDeleteRows}
-    <BulkDeleteHandler />
+  {#if $config.canAddRows}
+    <BulkDuplicationHandler />
   {/if}
+  <BulkDeleteHandler />
+  <ClipboardHandler />
   <KeyboardManager />
 </div>
 
@@ -210,7 +232,7 @@
     --cell-spacing: 4px;
     --cell-border: 1px solid var(--spectrum-global-color-gray-200);
     --cell-font-size: 14px;
-    --controls-height: 50px;
+    --cell-font-color: var(--spectrum-global-color-gray-800);
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
@@ -219,6 +241,7 @@
     position: relative;
     overflow: hidden;
     background: var(--grid-background);
+    min-height: var(--min-height);
   }
   .grid,
   .grid :global(*) {
@@ -265,7 +288,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--spectrum-global-color-gray-200);
+    border-bottom: var(--cell-border);
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
     background: var(--grid-background-alt);
@@ -335,8 +358,13 @@
     transition: none;
   }
 
-  /* Overrides */
-  .grid.quiet :global(.grid-data-content .row > .cell:not(:last-child)) {
+  /* Overrides for quiet */
+  .grid.quiet :global(.grid-data-content .row > .cell:not(:last-child)),
+  .grid.quiet :global(.sticky-column .row > .cell),
+  .grid.quiet :global(.new-row .row > .cell:not(:last-child)) {
     border-right: none;
+  }
+  .grid.quiet :global(.sticky-column:before) {
+    display: none;
   }
 </style>

@@ -223,7 +223,7 @@
     height: 420px;
     background: var(--background);
     border: var(--border-light);
-    z-index: 100;
+    z-index: 1000;
     border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;

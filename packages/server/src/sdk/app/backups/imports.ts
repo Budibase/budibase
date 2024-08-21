@@ -34,7 +34,7 @@ type TemplateType = {
 
 function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
   // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
-  const urlParts = attachment.key.split("/")
+  const urlParts = attachment.key?.split("/") || []
   // remove the app ID
   urlParts.shift()
   // add new app ID
@@ -68,7 +68,8 @@ export async function updateAttachmentColumns(prodAppId: string, db: Database) {
               rewriteAttachmentUrl(prodAppId, attachment)
             )
           } else if (
-            columnType === FieldType.ATTACHMENT_SINGLE &&
+            (columnType === FieldType.ATTACHMENT_SINGLE ||
+              columnType === FieldType.SIGNATURE_SINGLE) &&
             row[column]
           ) {
             row[column] = rewriteAttachmentUrl(prodAppId, row[column])

@@ -25,6 +25,7 @@ export interface SearchViewRowRequest
     | "bookmark"
     | "paginate"
     | "query"
+    | "countRows"
   > {}
 
 export interface SearchRowResponse {
@@ -36,7 +37,7 @@ export interface PaginatedSearchRowResponse
     PaginationResponse {}
 
 export interface ExportRowsRequest {
-  rows: string[]
+  rows?: string[]
   columns?: string[]
   query?: SearchFilters
   sort?: string

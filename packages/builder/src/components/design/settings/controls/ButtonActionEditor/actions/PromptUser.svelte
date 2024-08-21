@@ -1,8 +1,10 @@
 <script>
-  import { Body, Label, Input } from "@budibase/bbui"
+  import { Body, Label } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
+  export let bindings
 
   onMount(() => {
     if (!parameters.confirm) {
@@ -15,11 +17,34 @@
   <Body size="S">Enter the message you wish to display to the user.</Body>
   <div class="params">
     <Label small>Title</Label>
-    <Input placeholder="Prompt User" bind:value={parameters.customTitleText} />
+    <DrawerBindableInput
+      placeholder="Prompt User"
+      value={parameters.customTitleText}
+      on:change={e => (parameters.customTitleText = e.detail)}
+      {bindings}
+    />
     <Label small>Message</Label>
-    <Input
+    <DrawerBindableInput
       placeholder="Are you sure you want to continue?"
-      bind:value={parameters.confirmText}
+      value={parameters.confirmText}
+      on:change={e => (parameters.confirmText = e.detail)}
+      {bindings}
+    />
+
+    <Label small>Confirm Text</Label>
+    <DrawerBindableInput
+      placeholder="Confirm"
+      value={parameters.confirmButtonText}
+      on:change={e => (parameters.confirmButtonText = e.detail)}
+      {bindings}
+    />
+
+    <Label small>Cancel Text</Label>
+    <DrawerBindableInput
+      placeholder="Cancel"
+      value={parameters.cancelButtonText}
+      on:change={e => (parameters.cancelButtonText = e.detail)}
+      {bindings}
     />
   </div>
 </div>

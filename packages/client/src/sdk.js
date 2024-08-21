@@ -11,6 +11,7 @@ import {
   currentRole,
   environmentStore,
   sidePanelStore,
+  modalStore,
   dndIsDragging,
   confirmationStore,
   roleStore,
@@ -31,7 +32,7 @@ import { enrichButtonActions } from "./utils/buttonActions.js"
 import { processStringSync, makePropSafe } from "@budibase/string-templates"
 import {
   fetchData,
-  LuceneUtils,
+  QueryUtils,
   Constants,
   RowUtils,
   memo,
@@ -53,6 +54,7 @@ export default {
   componentStore,
   environmentStore,
   sidePanelStore,
+  modalStore,
   dndIsDragging,
   currentRole,
   confirmationStore,
@@ -65,7 +67,7 @@ export default {
   getAction,
   fetchDatasourceSchema,
   fetchData,
-  LuceneUtils,
+  QueryUtils,
   ContextScopes: Constants.ContextScopes,
   getAPIKey,
   enrichButtonActions,

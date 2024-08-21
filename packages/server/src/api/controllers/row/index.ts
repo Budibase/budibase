@@ -2,7 +2,7 @@ import stream from "stream"
 import archiver from "archiver"
 
 import { quotas } from "@budibase/pro"
-import { objectStore } from "@budibase/backend-core"
+import { objectStore, context } from "@budibase/backend-core"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTableID } from "../../../integrations/utils"
@@ -55,13 +55,13 @@ export async function patch(
     return save(ctx)
   }
   try {
-    const { row, table } = await pickApi(tableId).patch(ctx)
+    const { row, table, oldRow } = await pickApi(tableId).patch(ctx)
     if (!row) {
       ctx.throw(404, "Row not found")
     }
     ctx.status = 200
     ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
+      ctx.eventEmitter.emitRow(`row:update`, appId, row, table, oldRow)
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
@@ -84,9 +84,11 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
   if (body && body._id) {
     return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
-  const { row, table, squashed } = await quotas.addRow(() =>
-    sdk.rows.save(tableId, ctx.request.body, ctx.user?._id)
-  )
+  const { row, table, squashed } = tableId.includes("datasource_plus")
+    ? await sdk.rows.save(tableId, ctx.request.body, ctx.user?._id)
+    : await quotas.addRow(() =>
+        sdk.rows.save(tableId, ctx.request.body, ctx.user?._id)
+      )
   ctx.status = 200
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
   ctx.message = `${table.name} saved successfully`
@@ -115,7 +117,9 @@ export async function fetch(ctx: any) {
 
 export async function find(ctx: UserCtx<void, GetRowResponse>) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await pickApi(tableId).find(ctx)
+  const rowId = ctx.params.rowId
+
+  ctx.body = await sdk.rows.find(tableId, rowId)
 }
 
 function isDeleteRows(input: any): input is DeleteRows {
@@ -152,7 +156,9 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   deleteRequest.rows = await processDeleteRowsRequest(ctx)
 
   const { rows } = await pickApi(tableId).bulkDestroy(ctx)
-  await quotas.removeRows(rows.length)
+  if (!tableId.includes("datasource_plus")) {
+    await quotas.removeRows(rows.length)
+  }
 
   for (let row of rows) {
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
@@ -167,7 +173,9 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   const tableId = utils.getTableId(ctx)
 
   const resp = await pickApi(tableId).destroy(ctx)
-  await quotas.removeRow()
+  if (!tableId.includes("datasource_plus")) {
+    await quotas.removeRow()
+  }
 
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
   gridSocket?.emitRowDeletion(ctx, resp.row)
@@ -198,8 +206,18 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const tableId = utils.getTableId(ctx)
 
+  await context.ensureSnippetContext(true)
+
+  const enrichedQuery = await utils.enrichSearchContext(
+    { ...ctx.request.body.query },
+    {
+      user: sdk.users.getUserContextBindings(ctx.user),
+    }
+  )
+
   const searchParams: RowSearchParams = {
     ...ctx.request.body,
+    query: enrichedQuery,
     tableId,
   }
 
@@ -262,7 +280,8 @@ export async function downloadAttachment(ctx: UserCtx) {
   const { columnName } = ctx.params
 
   const tableId = utils.getTableId(ctx)
-  const row = await pickApi(tableId).find(ctx)
+  const rowId = ctx.params.rowId
+  const row = await sdk.rows.find(tableId, rowId)
 
   const table = await sdk.tables.getTable(tableId)
   const columnSchema = table.schema[columnName]
@@ -289,16 +308,21 @@ export async function downloadAttachment(ctx: UserCtx) {
   if (attachments.length === 1) {
     const attachment = attachments[0]
     ctx.attachment(attachment.name)
-    ctx.body = await objectStore.getReadStream(
-      objectStore.ObjectStoreBuckets.APPS,
-      attachment.key
-    )
+    if (attachment.key) {
+      ctx.body = await objectStore.getReadStream(
+        objectStore.ObjectStoreBuckets.APPS,
+        attachment.key
+      )
+    }
   } else {
     const passThrough = new stream.PassThrough()
     const archive = archiver.create("zip")
     archive.pipe(passThrough)
 
     for (const attachment of attachments) {
+      if (!attachment.key) {
+        continue
+      }
       const attachmentStream = await objectStore.getReadStream(
         objectStore.ObjectStoreBuckets.APPS,
         attachment.key

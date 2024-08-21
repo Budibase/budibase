@@ -15,7 +15,7 @@
     "prebuild": "rimraf dist/",
     "build": "node ../../scripts/build.js",
     "postbuild": "copyfiles -f ../../yarn.lock ./dist/",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null --target es2020",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "run:docker": "node dist/index.js",
     "debug": "yarn build && node --expose-gc --inspect=9223 dist/index.js",
@@ -42,7 +42,7 @@
     "@budibase/string-templates": "0.0.0",
     "@budibase/types": "0.0.0",
     "@koa/router": "8.0.8",
-    "@techpass/passport-openidconnect": "0.3.2",
+    "@techpass/passport-openidconnect": "0.3.3",
     "@types/global-agent": "2.1.1",
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.1.0",
@@ -69,8 +69,7 @@
     "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "1.1.1",
     "server-destroy": "1.0.1",
-    "undici": "^6.0.1",
-    "undici-types": "^6.0.1"
+    "knex": "2.4.2"
   },
   "devDependencies": {
     "@swc/core": "1.3.71",
@@ -90,7 +89,7 @@
     "rimraf": "3.0.2",
     "supertest": "6.3.3",
     "timekeeper": "2.2.0",
-    "typescript": "5.2.2",
+    "typescript": "5.5.2",
     "update-dotenv": "1.1.1"
   },
   "nx": {

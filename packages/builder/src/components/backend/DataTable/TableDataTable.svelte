@@ -1,9 +1,11 @@
 <script>
   import { datasources, tables, integrations, appStore } from "stores/builder"
+  import { themeStore, admin } from "stores/portal"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
+  import GridCreateAutomationButton from "./buttons/grid/GridCreateAutomationButton.svelte"
   import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -37,6 +39,9 @@
   })
   $: relationshipsEnabled = relationshipSupport(tableDatasource)
 
+  $: currentTheme = $themeStore?.theme
+  $: darkMode = !currentTheme.includes("light")
+
   const relationshipSupport = datasource => {
     const integration = $integrations[datasource?.source]
     return !isInternal && integration?.relationships !== false
@@ -55,6 +60,7 @@
 <div class="wrapper">
   <Grid
     {API}
+    {darkMode}
     datasource={gridDatasource}
     canAddRows={!isUsersTable}
     canDeleteRows={!isUsersTable}
@@ -63,6 +69,7 @@
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}
+    isCloud={$admin.cloud}
   >
     <svelte:fragment slot="filter">
       {#if isUsersTable && $appStore.features.disableUserMetadata}
@@ -75,6 +82,9 @@
         <GridCreateViewButton />
       {/if}
       <GridManageAccessButton />
+      {#if !isUsersTable}
+        <GridCreateAutomationButton />
+      {/if}
       {#if relationshipsEnabled}
         <GridRelationshipButton />
       {/if}
@@ -106,6 +116,5 @@
     display: flex;
     flex-direction: column;
     background: var(--background);
-    overflow: hidden;
   }
 </style>

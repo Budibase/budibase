@@ -21,6 +21,7 @@ let cleanupInterval: NodeJS.Timeout
 async function cleanup() {
   for (let queue of QUEUES) {
     await queue.clean(CLEANUP_PERIOD_MS, "completed")
+    await queue.clean(CLEANUP_PERIOD_MS, "failed")
   }
 }
 

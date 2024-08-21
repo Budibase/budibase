@@ -1,7 +1,7 @@
 // need to handle table name + field or just field, depending on if relationships used
 import { FieldType, Row, Table } from "@budibase/types"
+import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 import { generateRowIdField } from "../../../../integrations/utils"
-import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 
 function extractFieldValue({
   row,
@@ -71,14 +71,16 @@ export function basicProcessing({
 }): Row {
   const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
-  for (let field of Object.values(table.schema)) {
-    const fieldName = field.name
-    const value = extractFieldValue({
+  for (let fieldName of Object.keys(table.schema)) {
+    let value = extractFieldValue({
       row,
       tableName: table.name,
       fieldName,
       isLinked,
     })
+    if (value instanceof Buffer) {
+      value = value.toString()
+    }
     // all responses include "select col as table.col" so that overlaps are handled
     if (value != null) {
       thisRow[fieldName] = value
@@ -90,12 +92,12 @@ export function basicProcessing({
     thisRow._rev = "rev"
   } else {
     const columns = Object.keys(table.schema)
-    for (let internalColumn of [...CONSTANT_INTERNAL_ROW_COLS, ...columns]) {
+    for (let internalColumn of [...PROTECTED_INTERNAL_COLUMNS, ...columns]) {
       thisRow[internalColumn] = extractFieldValue({
         row,
         tableName: table._id!,
         fieldName: internalColumn,
-        isLinked: false,
+        isLinked,
       })
     }
   }
@@ -104,12 +106,17 @@ export function basicProcessing({
 
 export function fixArrayTypes(row: Row, table: Table) {
   for (let [fieldName, schema] of Object.entries(table.schema)) {
-    if (schema.type === FieldType.ARRAY && typeof row[fieldName] === "string") {
+    if (
+      [FieldType.ARRAY, FieldType.BB_REFERENCE].includes(schema.type) &&
+      typeof row[fieldName] === "string"
+    ) {
       try {
         row[fieldName] = JSON.parse(row[fieldName])
       } catch (err) {
-        // couldn't convert back to array, ignore
-        delete row[fieldName]
+        if (!helpers.schema.isDeprecatedSingleUserColumn(schema)) {
+          // couldn't convert back to array, ignore
+          delete row[fieldName]
+        }
       }
     }
   }

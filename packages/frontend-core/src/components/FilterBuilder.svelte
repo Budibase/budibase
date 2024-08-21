@@ -11,20 +11,34 @@
     Label,
     Multiselect,
   } from "@budibase/bbui"
-  import { FieldType, SearchFilterOperator } from "@budibase/types"
+  import { ArrayOperator, FieldType } from "@budibase/types"
   import { generate } from "shortid"
-  import { LuceneUtils, Constants } from "@budibase/frontend-core"
+  import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import FilterUsers from "./FilterUsers.svelte"
 
-  const { OperatorOptions } = Constants
+  const { OperatorOptions, DEFAULT_BB_DATASOURCE_ID } = Constants
 
   export let schemaFields
   export let filters = []
+  export let tables = []
   export let datasource
   export let behaviourFilters = false
   export let allowBindings = false
   export let filtersLabel = "Filters"
+  export let showFilterEmptyDropdown = true
+  $: {
+    if (
+      tables.find(
+        table =>
+          table._id === datasource?.tableId &&
+          table.sourceId === DEFAULT_BB_DATASOURCE_ID
+      ) &&
+      !schemaFields.some(field => field.name === "_id")
+    ) {
+      schemaFields = [...schemaFields, { name: "_id", type: "string" }]
+    }
+  }
 
   $: matchAny = filters?.find(filter => filter.operator === "allOr") != null
   $: onEmptyFilter =
@@ -33,7 +47,6 @@
   $: fieldFilters = filters.filter(
     filter => filter.operator !== "allOr" && !filter.onEmptyFilter
   )
-
   const behaviourOptions = [
     { value: "and", label: "Match all filters" },
     { value: "or", label: "Match any filter" },
@@ -42,15 +55,12 @@
     { value: "all", label: "Return all table rows" },
     { value: "none", label: "Return no rows" },
   ]
-
   const context = getContext("context")
 
-  $: fieldOptions = (schemaFields ?? [])
-    .filter(field => getValidOperatorsForType(field).length)
-    .map(field => ({
-      label: field.displayName || field.name,
-      value: field.name,
-    }))
+  $: fieldOptions = (schemaFields || []).map(field => ({
+    label: field.displayName || field.name,
+    value: field.name,
+  }))
 
   const addFilter = () => {
     filters = [
@@ -110,7 +120,7 @@
       return []
     }
 
-    return LuceneUtils.getValidOperatorsForType(
+    return QueryUtils.getValidOperatorsForType(
       filter,
       filter.field || filter.name,
       datasource
@@ -124,6 +134,8 @@
     const fieldSchema = schemaFields.find(x => x.name === filter.field)
     filter.type = fieldSchema?.type
     filter.subtype = fieldSchema?.subtype
+    filter.formulaType = fieldSchema?.formulaType
+    filter.constraints = fieldSchema?.constraints
 
     // Update external type based on field
     filter.externalType = getSchema(filter)?.externalType
@@ -202,7 +214,7 @@
                 on:change={e => handleAllOr(e.detail)}
                 placeholder={null}
               />
-              {#if datasource?.type === "table"}
+              {#if datasource?.type === "table" && showFilterEmptyDropdown}
                 <Select
                   label="When filter empty"
                   value={onEmptyFilter}
@@ -252,7 +264,7 @@
                 <slot name="binding" {filter} />
               {:else if [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA].includes(filter.type)}
                 <Input disabled={filter.noValue} bind:value={filter.value} />
-              {:else if filter.type === FieldType.ARRAY || (filter.type === FieldType.OPTIONS && filter.operator === SearchFilterOperator.ONE_OF)}
+              {:else if filter.type === FieldType.ARRAY || (filter.type === FieldType.OPTIONS && filter.operator === ArrayOperator.ONE_OF)}
                 <Multiselect
                   disabled={filter.noValue}
                   options={getFieldOptions(filter.field)}
@@ -280,7 +292,7 @@
                   timeOnly={getSchema(filter)?.timeOnly}
                   bind:value={filter.value}
                 />
-              {:else if filter.type === FieldType.BB_REFERENCE}
+              {:else if [FieldType.BB_REFERENCE, FieldType.BB_REFERENCE_SINGLE].includes(filter.type)}
                 <FilterUsers
                   bind:value={filter.value}
                   multiselect={[
@@ -288,6 +300,7 @@
                     OperatorOptions.ContainsAny.value,
                   ].includes(filter.operator)}
                   disabled={filter.noValue}
+                  type={filter.valueType}
                 />
               {:else}
                 <Input disabled />
@@ -324,8 +337,6 @@
 <style>
   .container {
     width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
   }
   .fields {
     display: grid;

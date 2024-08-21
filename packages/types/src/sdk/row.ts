@@ -17,6 +17,7 @@ export interface SearchParams {
   fields?: string[]
   indexer?: () => Promise<any>
   rows?: Row[]
+  countRows?: boolean
 }
 
 // when searching for rows we want a more extensive search type that requires certain properties
@@ -28,4 +29,10 @@ export interface SearchResponse<T> {
   hasNextPage?: boolean
   bookmark?: string | number
   totalRows?: number
+}
+
+export enum RowExportFormat {
+  CSV = "csv",
+  JSON = "json",
+  JSON_WITH_SCHEMA = "jsonWithSchema",
 }

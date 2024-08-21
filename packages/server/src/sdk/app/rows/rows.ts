@@ -34,3 +34,7 @@ export async function save(
 ) {
   return pickApi(tableId).save(tableId, row, userId)
 }
+
+export async function find(tableId: string, rowId: string) {
+  return pickApi(tableId).find(tableId, rowId)
+}

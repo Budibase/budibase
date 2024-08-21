@@ -14,15 +14,12 @@
   const dispatch = createEventDispatcher()
 
   export let value = ""
-  export let maxIconsPerPage = 30
+  export let maxIconsPerPage = 10
 
   let searchTerm = ""
   let selectedLetter = "A"
-
   let currentPage = 1
   let filteredIcons = findIconByTerm(selectedLetter)
-
-  $: dispatch("change", value)
 
   const alphabet = [
     "A",
@@ -107,12 +104,15 @@
     loading = false
   }
 
-  $: displayValue = value ? value.substring(3) : "Pick icon"
+  const select = icon => {
+    value = icon
+    dispatch("change", icon)
+  }
 
-  $: totalPages = Math.ceil(filteredIcons.length / maxIconsPerPage)
+  $: displayValue = value ? value.substring(3) : "Pick icon"
+  $: totalPages = Math.max(1, Math.ceil(filteredIcons.length / maxIconsPerPage))
   $: pageEndIdx = maxIconsPerPage * currentPage
   $: pagedIcons = filteredIcons.slice(pageEndIdx - maxIconsPerPage, pageEndIdx)
-
   $: pagerText = `Page ${currentPage} of ${totalPages}`
 </script>
 
@@ -123,49 +123,52 @@
 </div>
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<Popover bind:this={dropdown} on:open={setSelectedUI} anchor={buttonAnchor}>
+<Popover
+  bind:this={dropdown}
+  on:open={setSelectedUI}
+  anchor={buttonAnchor}
+  resizable={false}
+>
   <div class="container">
-    <div class="search-area">
-      <div class="alphabet-area">
-        {#each alphabet as letter, idx}
-          <span
-            class="letter"
-            class:letter-selected={letter === selectedLetter}
-            on:click={() => switchLetter(letter)}
-          >
-            {letter}
-          </span>
-          {#if idx !== alphabet.length - 1}<span>-</span>{/if}
-        {/each}
-      </div>
-      <div class="search-input">
-        <div class="input-wrapper" style={`width: ${value ? "425" : "510"}px`}>
-          <Input
-            bind:value={searchTerm}
-            on:keyup={event => {
-              if (event.key === "Enter") {
-                searchForIcon()
-              }
-            }}
-            thin
-            placeholder="Search Icon"
-          />
-        </div>
-        <Button secondary on:click={searchForIcon}>Search</Button>
-        {#if value}
-          <Button primary on:click={() => (value = null)}>Clear</Button>
-        {/if}
-      </div>
-      <div class="page-area">
-        <div class="pager">
-          <span on:click={() => pageClick(false)}>
-            <i class="page-btn ri-arrow-left-line ri-sm" />
-          </span>
-          <span>{pagerText}</span>
-          <span on:click={() => pageClick(true)}>
-            <i class="page-btn ri-arrow-right-line ri-sm" />
-          </span>
-        </div>
+    <div class="alphabet-area">
+      {#each alphabet as letter, idx}
+        <span
+          class="letter"
+          class:letter-selected={letter === selectedLetter}
+          on:click={() => switchLetter(letter)}
+        >
+          {letter}
+        </span>
+        {#if idx !== alphabet.length - 1}<span>-</span>{/if}
+      {/each}
+    </div>
+    <div class="search-input">
+      <Input
+        bind:value={searchTerm}
+        on:keyup={event => {
+          if (event.key === "Enter") {
+            searchForIcon()
+          }
+        }}
+        thin
+        placeholder="Search icons"
+      />
+      <Button secondary on:click={searchForIcon}>Search</Button>
+      {#if value}
+        <Button primary on:click={() => select(null)}>Clear</Button>
+      {/if}
+    </div>
+    <div class="page-area">
+      <div class="pager">
+        <i
+          on:click={() => pageClick(false)}
+          class="page-btn ri-arrow-left-line ri-sm"
+        />
+        <span>{pagerText}</span>
+        <i
+          on:click={() => pageClick(true)}
+          class="page-btn ri-arrow-right-line ri-sm"
+        />
       </div>
     </div>
     {#if pagedIcons.length > 0}
@@ -175,7 +178,7 @@
             <div
               class="icon-container"
               class:selected={value === `ri-${icon}-fill`}
-              on:click={() => (value = `ri-${icon}-fill`)}
+              on:click={() => select(`ri-${icon}-fill`)}
             >
               <div class="icon-preview">
                 <i class={`ri-${icon}-fill ri-xl`} />
@@ -185,7 +188,7 @@
             <div
               class="icon-container"
               class:selected={value === `ri-${icon}-line`}
-              on:click={() => (value = `ri-${icon}-line`)}
+              on:click={() => select(`ri-${icon}-line`)}
             >
               <div class="icon-preview">
                 <i class={`ri-${icon}-line ri-xl`} />
@@ -196,11 +199,7 @@
         {/if}
       </div>
     {:else}
-      <div class="no-icons">
-        <h5>
-          {`There is no icons for this ${searchTerm ? "search" : "page"}`}
-        </h5>
-      </div>
+      <div class="no-icons">No icons found</div>
     {/if}
   </div>
 </Popover>
@@ -208,11 +207,13 @@
 <style>
   .container {
     width: 610px;
-    height: 350px;
+    height: 380px;
     display: flex;
     flex-direction: column;
-    padding: 10px 0px 10px 15px;
-    overflow-x: hidden;
+    gap: var(--spacing-l);
+    align-items: stretch;
+    padding: var(--spacing-l);
+    background: var(--spectrum-global-color-gray-100);
   }
   .search-area {
     flex: 0 0 80px;
@@ -223,22 +224,18 @@
     flex: 1;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    grid-gap: 5px;
+    grid-gap: 8px;
     justify-content: flex-start;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 10px;
   }
   .no-icons {
     display: flex;
     justify-content: center;
     align-items: center;
+    color: var(--spectrum-global-color-gray-600);
   }
   .alphabet-area {
     display: flex;
     flex-flow: row wrap;
-    padding-bottom: 10px;
-    padding-right: 15px;
     justify-content: space-around;
   }
   .loading-container {
@@ -248,43 +245,55 @@
   }
   .search-input {
     display: flex;
-    flex-flow: row nowrap;
-    width: 100%;
-    padding-right: 15px;
     gap: 10px;
   }
-  .input-wrapper {
-    width: 510px;
-    margin-right: 5px;
+  .search-input :global(> :first-child) {
+    flex: 1 1 auto;
   }
   .page-area {
-    padding: 10px;
     display: flex;
     justify-content: center;
+    user-select: none;
+  }
+  .pager {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+  .page-area i {
+    font-size: 16px;
+    transition: color 130ms ease-out;
+  }
+  .page-area i:hover {
+    color: var(--spectrum-global-color-blue-600);
+    cursor: pointer;
   }
   .letter {
-    color: var(--blue);
+    color: var(--spectrum-global-color-gray-700);
+    transition: color 130ms ease-out;
   }
   .letter:hover {
     cursor: pointer;
-    text-decoration: underline;
   }
-  .letter-selected {
-    text-decoration: underline;
+  .letter-selected,
+  .letter:hover {
+    color: var(--spectrum-global-color-blue-600);
   }
   .icon-container {
-    height: 100px;
+    height: 60px;
     display: flex;
     justify-content: center;
     flex-direction: column;
-    border: var(--border-dark);
+    border: 1px solid var(--spectrum-global-color-gray-400);
+    border-radius: 4px;
+    transition: background 130ms ease-out;
   }
   .icon-container:hover {
     cursor: pointer;
-    background: var(--grey-2);
+    background: var(--spectrum-global-color-gray-200);
   }
-  .selected {
-    background: var(--grey-3);
+  .icon-container.selected {
+    background: var(--spectrum-global-color-gray-300);
   }
   .icon-preview {
     flex: 1;
@@ -296,9 +305,11 @@
     flex: 0 0 20px;
     text-align: center;
     font-size: 12px;
+    margin-bottom: 2px;
+    color: var(--spectrum-global-color-gray-700);
   }
   .page-btn {
-    color: var(--blue);
+    color: var(--spectrum-global-color-gray-700);
   }
   .page-btn:hover {
     cursor: pointer;

@@ -23,7 +23,7 @@
   },
   "sort": {
     "productname": {
-      "direction": "ASCENDING"
+      "direction": "ascending"
     }
   },
   "paginate": {
@@ -50,9 +50,7 @@
     "table": {
       "type": "table",
       "_id": "datasource_plus_8066e56456784eb2a00129d31be5c3e7__products",
-      "primary": [
-        "productid"
-      ],
+      "primary": ["productid"],
       "name": "products",
       "schema": {
         "productname": {

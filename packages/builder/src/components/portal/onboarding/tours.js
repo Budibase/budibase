@@ -10,7 +10,6 @@ import {
   NewFormSteps,
 } from "./steps"
 import { API } from "api"
-import { customPositionHandler } from "components/design/settings/controls/EditComponentPopover"
 
 const ONBOARDING_EVENT_PREFIX = "onboarding"
 
@@ -187,7 +186,6 @@ const getTours = () => {
             tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_CREATE_STEPS)
             builderStore.highlightSetting("steps", "info")
           },
-          positionHandler: customPositionHandler,
           align: "left-outside",
         },
       ],
@@ -203,7 +201,6 @@ const getTours = () => {
             tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_ROW_ID)
             builderStore.highlightSetting("rowId", "info")
           },
-          positionHandler: customPositionHandler,
           align: "left-outside",
         },
         {
@@ -219,7 +216,6 @@ const getTours = () => {
             tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_VIEW_UPDATE_STEPS)
             builderStore.highlightSetting("steps", "info")
           },
-          positionHandler: customPositionHandler,
           align: "left-outside",
           scrollIntoView: true,
         },

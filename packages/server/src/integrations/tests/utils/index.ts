@@ -1,11 +1,14 @@
+import "./images"
 import { Datasource, SourceName } from "@budibase/types"
 import * as postgres from "./postgres"
 import * as mongodb from "./mongodb"
 import * as mysql from "./mysql"
 import * as mssql from "./mssql"
 import * as mariadb from "./mariadb"
-import { GenericContainer } from "testcontainers"
+import * as oracle from "./oracle"
+import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { testContainerUtils } from "@budibase/backend-core/tests"
+import cloneDeep from "lodash/cloneDeep"
 
 export type DatasourceProvider = () => Promise<Datasource>
 
@@ -15,6 +18,7 @@ export enum DatabaseName {
   MYSQL = "mysql",
   SQL_SERVER = "mssql",
   MARIADB = "mariadb",
+  ORACLE = "oracle",
 }
 
 const providers: Record<DatabaseName, DatasourceProvider> = {
@@ -23,6 +27,7 @@ const providers: Record<DatabaseName, DatasourceProvider> = {
   [DatabaseName.MYSQL]: mysql.getDatasource,
   [DatabaseName.SQL_SERVER]: mssql.getDatasource,
   [DatabaseName.MARIADB]: mariadb.getDatasource,
+  [DatabaseName.ORACLE]: oracle.getDatasource,
 }
 
 export function getDatasourceProviders(
@@ -47,16 +52,19 @@ export async function getDatasources(
   return Promise.all(sourceNames.map(sourceName => providers[sourceName]()))
 }
 
-export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
+export async function knexClient(ds: Datasource) {
   switch (ds.source) {
     case SourceName.POSTGRES: {
-      return postgres.rawQuery(ds, sql)
+      return postgres.knexClient(ds)
     }
     case SourceName.MYSQL: {
-      return mysql.rawQuery(ds, sql)
+      return mysql.knexClient(ds)
     }
     case SourceName.SQL_SERVER: {
-      return mssql.rawQuery(ds, sql)
+      return mssql.knexClient(ds)
+    }
+    case SourceName.ORACLE: {
+      return oracle.knexClient(ds)
     }
     default: {
       throw new Error(`Unsupported source: ${ds.source}`)
@@ -65,11 +73,43 @@ export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
 }
 
 export async function startContainer(container: GenericContainer) {
-  if (process.env.REUSE_CONTAINERS) {
-    container = container.withReuse()
+  const imageName = (container as any).imageName.string as string
+  let key: string = imageName
+  if (imageName.includes("@sha256")) {
+    key = imageName.split("@")[0]
+  }
+  key = key.replaceAll("/", "-").replaceAll(":", "-")
+
+  container = container
+    .withReuse()
+    .withLabels({ "com.budibase": "true" })
+    .withName(`${key}_testcontainer`)
+
+  let startedContainer: StartedTestContainer | undefined = undefined
+  let lastError = undefined
+  for (let i = 0; i < 10; i++) {
+    try {
+      // container.start() is not an idempotent operation, calling `start`
+      // modifies the internal state of a GenericContainer instance such that
+      // the hash it uses to determine reuse changes. We need to clone the
+      // container before calling start to ensure that we're using the same
+      // reuse hash every time.
+      const containerCopy = cloneDeep(container)
+      startedContainer = await containerCopy.start()
+      lastError = undefined
+      break
+    } catch (e: any) {
+      lastError = e
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
   }
 
-  const startedContainer = await container.start()
+  if (!startedContainer) {
+    if (lastError) {
+      throw lastError
+    }
+    throw new Error(`failed to start container: ${imageName}`)
+  }
 
   const info = testContainerUtils.getContainerById(startedContainer.getId())
   if (!info) {

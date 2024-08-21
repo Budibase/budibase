@@ -1,4 +1,6 @@
+import { setEnv as setCoreEnv } from "@budibase/backend-core"
 import type { GoogleSpreadsheetWorksheet } from "google-spreadsheet"
+import nock from "nock"
 
 jest.mock("google-auth-library")
 const { OAuth2Client } = require("google-auth-library")
@@ -39,7 +41,7 @@ describe("Google Sheets Integration", () => {
   let cleanupEnv: () => void
 
   beforeAll(() => {
-    cleanupEnv = config.setCoreEnv({
+    cleanupEnv = setCoreEnv({
       GOOGLE_CLIENT_ID: "test",
       GOOGLE_CLIENT_SECRET: "test",
     })
@@ -62,6 +64,13 @@ describe("Google Sheets Integration", () => {
     await config.init()
 
     jest.clearAllMocks()
+
+    nock.cleanAll()
+    nock("https://www.googleapis.com/").post("/oauth2/v4/token").reply(200, {
+      grant_type: "client_credentials",
+      client_id: "your-client-id",
+      client_secret: "your-client-secret",
+    })
   })
 
   function createBasicTable(name: string, columns: string[]): Table {
@@ -129,10 +138,11 @@ describe("Google Sheets Integration", () => {
       })
       expect(sheet.loadHeaderRow).toHaveBeenCalledTimes(1)
       expect(sheet.setHeaderRow).toHaveBeenCalledTimes(1)
-      expect(sheet.setHeaderRow).toHaveBeenCalledWith(["name"])
-
-      // No undefined are sent
-      expect((sheet.setHeaderRow as any).mock.calls[0][0]).toHaveLength(1)
+      expect(sheet.setHeaderRow).toHaveBeenCalledWith([
+        "name",
+        "description",
+        "location",
+      ])
     })
   })
 

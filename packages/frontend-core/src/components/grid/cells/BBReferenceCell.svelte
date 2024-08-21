@@ -1,25 +1,36 @@
 <script>
   import { getContext } from "svelte"
+  import { helpers } from "@budibase/shared-core"
   import RelationshipCell from "./RelationshipCell.svelte"
-  import { FieldSubtype, RelationshipType } from "@budibase/types"
+  import {
+    BBReferenceFieldSubType,
+    FieldType,
+    RelationshipType,
+  } from "@budibase/types"
 
   export let api
+  export let hideCounter = false
+  export let schema
 
   const { API } = getContext("grid")
-  const { subtype } = $$props.schema
+  const { type, subtype } = schema
 
-  const schema = {
+  $: schema = {
     ...$$props.schema,
     // This is not really used, just adding some content to be able to render the relationship cell
     tableId: "external",
     relationshipType:
-      subtype === FieldSubtype.USER
+      type === FieldType.BB_REFERENCE_SINGLE ||
+      helpers.schema.isDeprecatedSingleUserColumn(schema)
         ? RelationshipType.ONE_TO_MANY
         : RelationshipType.MANY_TO_MANY,
   }
 
   async function searchFunction(searchParams) {
-    if (subtype !== FieldSubtype.USER && subtype !== FieldSubtype.USERS) {
+    if (
+      subtype !== BBReferenceFieldSubType.USER &&
+      subtype !== BBReferenceFieldSubType.USERS
+    ) {
       throw `Search for '${subtype}' not implemented`
     }
 
@@ -41,8 +52,9 @@
 
 <RelationshipCell
   bind:api
-  {...$$props}
+  {...$$restProps}
   {schema}
   {searchFunction}
   primaryDisplay={"email"}
+  {hideCounter}
 />

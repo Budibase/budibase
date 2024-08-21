@@ -24,8 +24,14 @@ import {
   Query,
   Webhook,
   WebhookActionType,
+  AutomationEventType,
+  LoopStepType,
+  FieldSchema,
+  BBReferenceFieldSubType,
+  JsonFieldSubType,
+  AutoFieldSubType,
 } from "@budibase/types"
-import { LoopInput, LoopStepType } from "../../definitions/automations"
+import { LoopInput } from "../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -37,7 +43,7 @@ export function tableForDatasource(
 ): Table {
   return merge(
     {
-      name: generator.guid(),
+      name: generator.guid().substring(0, 10),
       type: "table",
       sourceType: datasource
         ? TableSourceType.EXTERNAL
@@ -71,6 +77,32 @@ export function basicTable(
           constraints: {
             type: "string",
           },
+        },
+      },
+    },
+    ...extra
+  )
+}
+
+export function basicTableWithAttachmentField(
+  datasource?: Datasource,
+  ...extra: Partial<Table>[]
+): Table {
+  return tableForDatasource(
+    datasource,
+    {
+      name: "TestTable",
+      schema: {
+        file_attachment: {
+          type: FieldType.ATTACHMENTS,
+          name: "description",
+          constraints: {
+            type: "array",
+          },
+        },
+        single_file_attachment: {
+          type: FieldType.ATTACHMENT_SINGLE,
+          name: "description",
         },
       },
     },
@@ -119,6 +151,8 @@ export function automationStep(
   return {
     id: utils.newid(),
     ...actionDefinition,
+    stepId: AutomationActionStepId.CREATE_ROW,
+    inputs: { row: {} },
   }
 }
 
@@ -128,11 +162,14 @@ export function automationTrigger(
   return {
     id: utils.newid(),
     ...triggerDefinition,
-  }
+  } as AutomationTrigger
 }
 
-export function newAutomation({ steps, trigger }: any = {}) {
-  const automation: any = basicAutomation()
+export function newAutomation({
+  steps,
+  trigger,
+}: { steps?: AutomationStep[]; trigger?: AutomationTrigger } = {}) {
+  const automation = basicAutomation()
 
   if (trigger) {
     automation.definition.trigger = trigger
@@ -146,6 +183,16 @@ export function newAutomation({ steps, trigger }: any = {}) {
     automation.definition.steps = [automationStep()]
   }
 
+  return automation
+}
+
+export function rowActionAutomation() {
+  const automation = newAutomation({
+    trigger: {
+      ...automationTrigger(),
+      stepId: AutomationTriggerStepId.ROW_ACTION,
+    },
+  })
   return automation
 }
 
@@ -164,7 +211,9 @@ export function basicAutomation(appId?: string): Automation {
         description: "test",
         type: AutomationStepType.TRIGGER,
         id: "test",
-        inputs: {},
+        inputs: {
+          fields: {},
+        },
         schema: {
           inputs: {
             properties: {},
@@ -196,7 +245,7 @@ export function serverLogAutomation(appId?: string): Automation {
         description: "test",
         type: AutomationStepType.TRIGGER,
         id: "test",
-        inputs: {},
+        inputs: { fields: {} },
         schema: {
           inputs: {
             properties: {},
@@ -279,7 +328,7 @@ export function loopAutomation(
       trigger: {
         id: "a",
         type: "TRIGGER",
-        event: "row:save",
+        event: AutomationEventType.ROW_SAVE,
         stepId: AutomationTriggerStepId.ROW_SAVED,
         inputs: {
           tableId,
@@ -321,7 +370,7 @@ export function collectAutomation(tableId?: string): Automation {
       trigger: {
         id: "a",
         type: "TRIGGER",
-        event: "row:save",
+        event: AutomationEventType.ROW_SAVE,
         stepId: AutomationTriggerStepId.ROW_SAVED,
         inputs: {
           tableId,
@@ -330,7 +379,86 @@ export function collectAutomation(tableId?: string): Automation {
       },
     },
   }
-  return automation as Automation
+  return automation
+}
+
+export function filterAutomation(appId: string, tableId?: string): Automation {
+  const automation: Automation = {
+    name: "looping",
+    type: "automation",
+    appId,
+    definition: {
+      steps: [
+        {
+          name: "Filter Step",
+          tagline: "An automation filter step",
+          description: "A filter automation",
+          id: "b",
+          icon: "Icon",
+          type: AutomationStepType.ACTION,
+          internal: true,
+          stepId: AutomationActionStepId.FILTER,
+          inputs: { field: "name", value: "test", condition: "EQ" },
+          schema: BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT.schema,
+        },
+      ],
+      trigger: {
+        name: "trigger Step",
+        tagline: "An automation trigger",
+        description: "A trigger",
+        icon: "Icon",
+        id: "a",
+        type: AutomationStepType.TRIGGER,
+        event: "row:save",
+        stepId: AutomationTriggerStepId.ROW_SAVED,
+        inputs: {
+          tableId: tableId!,
+        },
+        schema: TRIGGER_DEFINITIONS.ROW_SAVED.schema,
+      },
+    },
+  }
+  return automation
+}
+
+export function updateRowAutomationWithFilters(
+  appId: string,
+  tableId: string
+): Automation {
+  const automation: Automation = {
+    name: "updateRowWithFilters",
+    type: "automation",
+    appId,
+    definition: {
+      steps: [
+        {
+          name: "Filter Step",
+          tagline: "An automation filter step",
+          description: "A filter automation",
+          icon: "Icon",
+          id: "b",
+          type: AutomationStepType.ACTION,
+          internal: true,
+          stepId: AutomationActionStepId.SERVER_LOG,
+          inputs: { text: "log statement" },
+          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
+        },
+      ],
+      trigger: {
+        name: "trigger Step",
+        tagline: "An automation trigger",
+        description: "A trigger",
+        icon: "Icon",
+        id: "a",
+        type: AutomationStepType.TRIGGER,
+        event: "row:update",
+        stepId: AutomationTriggerStepId.ROW_UPDATED,
+        inputs: { tableId },
+        schema: TRIGGER_DEFINITIONS.ROW_UPDATED.schema,
+      },
+    },
+  }
+  return automation
 }
 
 export function basicAutomationResults(
@@ -453,5 +581,163 @@ export function basicEnvironmentVariable(
     name,
     production: prod,
     development: dev || prod,
+  }
+}
+
+export function fullSchemaWithoutLinks({
+  allRequired,
+}: {
+  allRequired?: boolean
+}) {
+  const schema: {
+    [type in Exclude<FieldType, FieldType.LINK>]: FieldSchema & { type: type }
+  } = {
+    [FieldType.STRING]: {
+      name: "string",
+      type: FieldType.STRING,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.LONGFORM]: {
+      name: "longform",
+      type: FieldType.LONGFORM,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.OPTIONS]: {
+      name: "options",
+      type: FieldType.OPTIONS,
+      constraints: {
+        presence: allRequired,
+        inclusion: ["option 1", "option 2", "option 3", "option 4"],
+      },
+    },
+    [FieldType.ARRAY]: {
+      name: "array",
+      type: FieldType.ARRAY,
+      constraints: {
+        presence: allRequired,
+        type: JsonFieldSubType.ARRAY,
+        inclusion: ["options 1", "options 2", "options 3", "options 4"],
+      },
+    },
+    [FieldType.NUMBER]: {
+      name: "number",
+      type: FieldType.NUMBER,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.BOOLEAN]: {
+      name: "boolean",
+      type: FieldType.BOOLEAN,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.DATETIME]: {
+      name: "datetime",
+      type: FieldType.DATETIME,
+      dateOnly: true,
+      timeOnly: false,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.FORMULA]: {
+      name: "formula",
+      type: FieldType.FORMULA,
+      formula: "any formula",
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.BARCODEQR]: {
+      name: "barcodeqr",
+      type: FieldType.BARCODEQR,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.BIGINT]: {
+      name: "bigint",
+      type: FieldType.BIGINT,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.BB_REFERENCE]: {
+      name: "user",
+      type: FieldType.BB_REFERENCE,
+      subtype: BBReferenceFieldSubType.USER,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.BB_REFERENCE_SINGLE]: {
+      name: "users",
+      type: FieldType.BB_REFERENCE_SINGLE,
+      subtype: BBReferenceFieldSubType.USER,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.ATTACHMENTS]: {
+      name: "attachments",
+      type: FieldType.ATTACHMENTS,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.ATTACHMENT_SINGLE]: {
+      name: "attachment_single",
+      type: FieldType.ATTACHMENT_SINGLE,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.AUTO]: {
+      name: "auto",
+      type: FieldType.AUTO,
+      subtype: AutoFieldSubType.AUTO_ID,
+      autocolumn: true,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.JSON]: {
+      name: "json",
+      type: FieldType.JSON,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.INTERNAL]: {
+      name: "internal",
+      type: FieldType.INTERNAL,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+    [FieldType.SIGNATURE_SINGLE]: {
+      name: "signature_single",
+      type: FieldType.SIGNATURE_SINGLE,
+      constraints: {
+        presence: allRequired,
+      },
+    },
+  }
+
+  return schema
+}
+export function basicAttachment() {
+  return {
+    key: generator.guid(),
+    name: generator.word(),
+    extension: generator.word(),
+    size: generator.natural(),
+    url: `/${generator.guid()}`,
   }
 }

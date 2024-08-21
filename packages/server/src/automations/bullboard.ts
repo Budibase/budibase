@@ -3,6 +3,7 @@ import { KoaAdapter } from "@bull-board/koa"
 import { queue } from "@budibase/backend-core"
 import * as automation from "../threads/automation"
 import { backups } from "@budibase/pro"
+import { getAppMigrationQueue } from "../appMigrations/queue"
 import { createBullBoard } from "@bull-board/api"
 import BullQueue from "bull"
 
@@ -16,9 +17,13 @@ const PATH_PREFIX = "/bulladmin"
 export async function init() {
   // Set up queues for bull board admin
   const backupQueue = backups.getBackupQueue()
+  const appMigrationQueue = getAppMigrationQueue()
   const queues = [automationQueue]
   if (backupQueue) {
     queues.push(backupQueue)
+  }
+  if (appMigrationQueue) {
+    queues.push(appMigrationQueue)
   }
   const adapters = []
   const serverAdapter: any = new KoaAdapter()

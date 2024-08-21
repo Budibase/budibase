@@ -281,7 +281,7 @@ export function doInScimContext(task: any) {
   return newContext(updates, task)
 }
 
-export async function ensureSnippetContext() {
+export async function ensureSnippetContext(enabled = !env.isTest()) {
   const ctx = getCurrentContext()
 
   // If we've already added snippets to context, continue
@@ -292,7 +292,7 @@ export async function ensureSnippetContext() {
   // Otherwise get snippets for this app and update context
   let snippets: Snippet[] | undefined
   const db = getAppDB()
-  if (db && !env.isTest()) {
+  if (db && enabled) {
     const app = await db.get<App>(DocumentType.APP_METADATA)
     snippets = app.snippets
   }
@@ -374,4 +374,23 @@ export function getCurrentContext(): ContextMap | undefined {
   } catch (e) {
     return undefined
   }
+}
+
+export function getFeatureFlags<T extends Record<string, any>>(
+  key: string
+): T | undefined {
+  const context = getCurrentContext()
+  if (!context) {
+    return undefined
+  }
+  return context.featureFlagCache?.[key] as T
+}
+
+export function setFeatureFlags(key: string, value: Record<string, any>) {
+  const context = getCurrentContext()
+  if (!context) {
+    return
+  }
+  context.featureFlagCache ??= {}
+  context.featureFlagCache[key] = value
 }

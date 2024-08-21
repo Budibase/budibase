@@ -18,6 +18,7 @@ import {
   timers,
   redis,
   cache,
+  features,
 } from "@budibase/backend-core"
 
 db.init()
@@ -88,9 +89,14 @@ const shutdown = () => {
 }
 
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
-  console.log(`Worker running on ${JSON.stringify(server.address())}`)
+  let startupLog = `Worker running on ${JSON.stringify(server.address())}`
+  if (env.BUDIBASE_ENVIRONMENT) {
+    startupLog = `${startupLog} - environment: "${env.BUDIBASE_ENVIRONMENT}"`
+  }
+  console.log(startupLog)
   await initPro()
   await redis.clients.init()
+  features.init()
   cache.docWritethrough.init()
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues

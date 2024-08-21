@@ -12,6 +12,7 @@ import {
   uploadStore,
   rowSelectionStore,
   sidePanelStore,
+  modalStore,
 } from "stores"
 import { API } from "api"
 import { ActionTypes } from "constants"
@@ -238,8 +239,15 @@ const triggerAutomationHandler = async action => {
   }
 }
 const navigationHandler = action => {
-  const { url, peek, externalNewTab } = action.parameters
+  let { url, peek, externalNewTab, type } = action.parameters
+
+  // Ensure in-app navigation starts with a slash
+  if (type === "screen" && url && !url.startsWith("/")) {
+    url = `/${url}`
+  }
+
   routeStore.actions.navigate(url, peek, externalNewTab)
+  closeSidePanelHandler()
 }
 
 const queryExecutionHandler = async action => {
@@ -332,31 +340,59 @@ const s3UploadHandler = async action => {
   }
 }
 
+/**
+ * For new configs, "rows" is defined and enriched to be the array of rows to
+ * export. For old configs it will be undefined and we need to use the legacy
+ * row selection store in combination with the tableComponentId parameter.
+ */
 const exportDataHandler = async action => {
-  let selection = rowSelectionStore.actions.getSelection(
-    action.parameters.tableComponentId
-  )
-  if (selection.selectedRows && selection.selectedRows.length > 0) {
+  let { tableComponentId, rows, type, columns, delimiter, customHeaders } =
+    action.parameters
+  let tableId
+
+  // Handle legacy configs using the row selection store
+  if (!rows?.length) {
+    const selection = rowSelectionStore.actions.getSelection(tableComponentId)
+    if (selection?.selectedRows?.length) {
+      rows = selection.selectedRows
+      tableId = selection.tableId
+    }
+  }
+
+  // Get table ID from first row if needed
+  if (!tableId) {
+    tableId = rows?.[0]?.tableId
+  }
+
+  // Handle no rows selected
+  if (!rows?.length) {
+    notificationStore.actions.error("Please select at least one row")
+  }
+  // Handle case where we're not using a DS+
+  else if (!tableId) {
+    notificationStore.actions.error(
+      "You can only export data from table datasources"
+    )
+  }
+  // Happy path when we have both rows and table ID
+  else {
     try {
+      // Flatten rows if required
+      if (typeof rows[0] !== "string") {
+        rows = rows.map(row => row._id)
+      }
       const data = await API.exportRows({
-        tableId: selection.tableId,
-        rows: selection.selectedRows,
-        format: action.parameters.type,
-        columns: action.parameters.columns?.map(
-          column => column.name || column
-        ),
-        delimiter: action.parameters.delimiter,
-        customHeaders: action.parameters.customHeaders,
+        tableId,
+        rows,
+        format: type,
+        columns: columns?.map(column => column.name || column),
+        delimiter,
+        customHeaders,
       })
-      download(
-        new Blob([data], { type: "text/plain" }),
-        `${selection.tableId}.${action.parameters.type}`
-      )
+      download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
     } catch (error) {
       notificationStore.actions.error("There was an error exporting the data")
     }
-  } else {
-    notificationStore.actions.error("Please select at least one row")
   }
 }
 
@@ -381,11 +417,11 @@ const continueIfHandler = action => {
 }
 
 const showNotificationHandler = action => {
-  const { message, type, autoDismiss } = action.parameters
+  const { message, type, autoDismiss, duration } = action.parameters
   if (!message || !type) {
     return
   }
-  notificationStore.actions[type]?.(message, autoDismiss)
+  notificationStore.actions[type]?.(message, autoDismiss, duration)
 }
 
 const promptUserHandler = () => {}
@@ -399,6 +435,17 @@ const openSidePanelHandler = action => {
 
 const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
+}
+
+const openModalHandler = action => {
+  const { id } = action.parameters
+  if (id) {
+    modalStore.actions.open(id)
+  }
+}
+
+const closeModalHandler = () => {
+  modalStore.actions.close()
 }
 
 const downloadFileHandler = async action => {
@@ -464,6 +511,8 @@ const handlerMap = {
   ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: openSidePanelHandler,
   ["Close Side Panel"]: closeSidePanelHandler,
+  ["Open Modal"]: openModalHandler,
+  ["Close Modal"]: closeModalHandler,
   ["Download File"]: downloadFileHandler,
 }
 
@@ -473,6 +522,7 @@ const confirmTextMap = {
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
   ["Prompt User"]: "Are you sure you want to continue?",
+  ["Duplicate Row"]: "Are you sure you want to duplicate this row?",
 }
 
 /**
@@ -533,6 +583,11 @@ export const enrichButtonActions = (actions, context) => {
             const defaultTitleText = action["##eventHandlerType"]
             const customTitleText =
               action.parameters?.customTitleText || defaultTitleText
+            const cancelButtonText =
+              action.parameters?.cancelButtonText || "Cancel"
+            const confirmButtonText =
+              action.parameters?.confirmButtonText || "Confirm"
+
             confirmationStore.actions.showConfirmation(
               customTitleText,
               confirmText,
@@ -541,23 +596,31 @@ export const enrichButtonActions = (actions, context) => {
                 // then execute the rest of the actions in the chain
                 const result = await callback()
                 if (result !== false) {
-                  // Generate a new total context to pass into the next enrichment
+                  // Generate a new total context for the next enrichment
                   buttonContext.push(result)
                   const newContext = { ...context, actions: buttonContext }
 
-                  // Enrich and call the next button action if there is more than one action remaining
+                  // Enrich and call the next button action if there is more
+                  // than one action remaining
                   const next = enrichButtonActions(
                     actions.slice(i + 1),
                     newContext
                   )
-                  resolve(typeof next === "function" ? await next() : true)
+                  if (typeof next === "function") {
+                    // Pass the event context back into the new action chain
+                    resolve(await next(eventContext))
+                  } else {
+                    resolve(true)
+                  }
                 } else {
                   resolve(false)
                 }
               },
               () => {
                 resolve(false)
-              }
+              },
+              confirmButtonText,
+              cancelButtonText
             )
           })
         }

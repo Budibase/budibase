@@ -19,6 +19,7 @@ export const INITIAL_APP_META_STATE = {
     showNotificationAction: false,
     sidePanel: false,
   },
+  typeSupportPresets: {},
   features: {
     componentValidation: false,
     disableUserMetadata: false,
@@ -76,6 +77,13 @@ export class AppMetaStore extends BudiStore {
         ...INITIAL_APP_META_STATE.clientFeatures,
         ...features,
       },
+    }))
+  }
+
+  syncClientTypeSupportPresets(typeSupportPresets) {
+    this.update(state => ({
+      ...state,
+      typeSupportPresets,
     }))
   }
 

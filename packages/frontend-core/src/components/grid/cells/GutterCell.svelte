@@ -21,7 +21,17 @@
     svelteDispatch("select")
     const id = row?._id
     if (id) {
-      selectedRows.actions.toggleRow(id)
+      // Bulk select with shift
+      if (e.shiftKey) {
+        // Prevent default if already selected, to prevent checkbox clearing
+        if (rowSelected) {
+          e.preventDefault()
+        } else {
+          selectedRows.actions.bulkSelectRows(id)
+        }
+      } else {
+        selectedRows.actions.toggleRow(id)
+      }
     }
   }
 
@@ -44,6 +54,7 @@
   selected={rowSelected}
   {defaultHeight}
   rowIdx={row?.__idx}
+  metadata={row?.__metadata?.row}
 >
   <div class="gutter">
     {#if $$slots.default}
@@ -52,16 +63,14 @@
       <div
         on:click={select}
         class="checkbox"
-        class:visible={$config.canDeleteRows &&
-          (disableNumber || rowSelected || rowHovered || rowFocused)}
+        class:visible={disableNumber || rowSelected || rowHovered || rowFocused}
       >
         <Checkbox value={rowSelected} {disabled} />
       </div>
       {#if !disableNumber}
         <div
           class="number"
-          class:visible={!$config.canDeleteRows ||
-            !(rowSelected || rowHovered || rowFocused)}
+          class:visible={!(rowSelected || rowHovered || rowFocused)}
         >
           {row.__idx + 1}
         </div>
@@ -107,7 +116,7 @@
     margin: 3px 0 0 0;
   }
   .number {
-    color: var(--spectrum-global-color-gray-500);
+    color: val(--cell-font-color, var(--spectrum-global-color-gray-500));
   }
   .checkbox.visible,
   .number.visible {
@@ -117,19 +126,11 @@
   .expand {
     margin-right: 4px;
   }
-  .expand {
+  .expand:not(.visible),
+  .expand:not(.visible) :global(*) {
     opacity: 0;
+    pointer-events: none !important;
   }
-  .expand :global(.spectrum-Icon) {
-    pointer-events: none;
-  }
-  .expand.visible {
-    opacity: 1;
-  }
-  .expand.visible :global(.spectrum-Icon) {
-    pointer-events: all;
-  }
-
   .delete:hover {
     cursor: pointer;
   }

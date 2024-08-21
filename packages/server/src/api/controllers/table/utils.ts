@@ -15,7 +15,7 @@ import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events, context } from "@budibase/backend-core"
+import { events, context, db as dbCore } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
   ContextUser,
@@ -33,6 +33,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import env from "../../../environment"
+import { runStaticFormulaChecks } from "./bulkFormula"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
   const db = context.getAppDB()
@@ -121,13 +122,16 @@ export function makeSureTableUpToDate(table: Table, tableToSave: Table) {
 export async function importToRows(
   data: Row[],
   table: Table,
-  user?: ContextUser
+  user?: ContextUser,
+  opts?: { keepCouchId: boolean }
 ) {
-  let originalTable = table
-  let finalData: any = []
+  const originalTable = table
+  const finalData: Row[] = []
+  const keepCouchId = !!opts?.keepCouchId
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
-    row._id = generateRowID(table._id!)
+    row._id = (keepCouchId && row._id) || generateRowID(table._id!)
+    row.type = "row"
     row.tableId = table._id
 
     // We use a reference to table here and update it after input processing,
@@ -176,9 +180,13 @@ export async function handleDataImport(
   }
 
   const db = context.getAppDB()
-  const data = parse(importRows, schema)
+  const data = parse(importRows, table)
 
-  let finalData: any = await importToRows(data, table, user)
+  const finalData = await importToRows(data, table, user, {
+    keepCouchId: identifierFields.includes("_id"),
+  })
+
+  let newRowCount = finalData.length
 
   //Set IDs of finalData to match existing row if an update is expected
   if (identifierFields.length > 0) {
@@ -201,12 +209,14 @@ export async function handleDataImport(
           if (match) {
             finalItem._id = doc._id
             finalItem._rev = doc._rev
+
+            newRowCount--
           }
         })
       })
   }
 
-  await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
+  await quotas.addRows(newRowCount, () => db.bulkDocs(finalData), {
     tableId: table._id,
   })
 
@@ -322,8 +332,8 @@ class TableSaveFunctions {
       importRows: this.importRows,
       user: this.user,
     })
-    if (env.SQS_SEARCH_ENABLE) {
-      await sdk.tables.sqs.addTableToSqlite(table)
+    if (dbCore.isSqsEnabledForTenant()) {
+      await sdk.tables.sqs.addTable(table)
     }
     return table
   }
@@ -493,6 +503,32 @@ export function setStaticSchemas(datasource: Datasource, table: Table) {
     delete table.schema?.id
   }
   return table
+}
+
+export async function internalTableCleanup(table: Table, rows?: Row[]) {
+  const db = context.getAppDB()
+  const tableId = table._id!
+  // remove table search index
+  if (!env.isTest() || env.COUCH_DB_URL) {
+    const currentIndexes = await db.getIndexes()
+    const existingIndex = currentIndexes.indexes.find(
+      (existing: any) => existing.name === `search:${tableId}`
+    )
+    if (existingIndex) {
+      await db.deleteIndex(existingIndex)
+    }
+  }
+
+  // has to run after, make sure it has _id
+  await runStaticFormulaChecks(table, {
+    deletion: true,
+  })
+  if (rows) {
+    await AttachmentCleanup.tableDelete(table, rows)
+  }
+  if (dbCore.isSqsEnabledForTenant()) {
+    await sdk.tables.sqs.removeTable(table)
+  }
 }
 
 const _TableSaveFunctions = TableSaveFunctions

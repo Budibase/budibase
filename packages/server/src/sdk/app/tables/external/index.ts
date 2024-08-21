@@ -6,6 +6,7 @@ import {
   Table,
   TableRequest,
   ViewV2,
+  AutoFieldSubType,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { buildExternalTableId } from "../../../../integrations/utils"
@@ -29,6 +30,62 @@ import { populateExternalTableSchemas } from "../validation"
 import datasourceSdk from "../../datasources"
 import * as viewSdk from "../../views"
 
+const DEFAULT_PRIMARY_COLUMN = "id"
+
+function noPrimaryKey(table: Table) {
+  return table.primary == null || table.primary.length === 0
+}
+
+function validate(table: Table, oldTable?: Table) {
+  if (
+    !oldTable &&
+    table.schema[DEFAULT_PRIMARY_COLUMN] &&
+    noPrimaryKey(table)
+  ) {
+    throw new Error(
+      "External tables with no `primary` column set will define an `id` column, but we found an `id` column in the supplied schema. Either set a `primary` column or remove the `id` column."
+    )
+  }
+
+  if (hasTypeChanged(table, oldTable)) {
+    throw new Error("A column type has changed.")
+  }
+
+  const autoSubTypes = Object.values(AutoFieldSubType)
+  // check for auto columns, they are not allowed
+  for (let [key, column] of Object.entries(table.schema)) {
+    // this column is a special case, do not validate it
+    if (key === DEFAULT_PRIMARY_COLUMN) {
+      continue
+    }
+    // the auto-column type should never be used
+    if (column.type === FieldType.AUTO) {
+      throw new Error(
+        `Column "${key}" has type "${FieldType.AUTO}" - this is not supported.`
+      )
+    }
+
+    if (
+      column.subtype &&
+      autoSubTypes.includes(column.subtype as AutoFieldSubType)
+    ) {
+      throw new Error(
+        `Column "${key}" has subtype "${column.subtype}" - this is not supported.`
+      )
+    }
+
+    if (column.type === FieldType.DATETIME) {
+      const oldColumn = oldTable?.schema[key] as typeof column
+
+      if (oldColumn && column.timeOnly !== oldColumn.timeOnly) {
+        throw new Error(
+          `Column "${key}" can not change from time to datetime or viceversa.`
+        )
+      }
+    }
+  }
+}
+
 export async function save(
   datasourceId: string,
   update: Table,
@@ -47,26 +104,16 @@ export async function save(
     oldTable = await getTable(tableId)
   }
 
-  if (
-    !oldTable &&
-    (tableToSave.primary == null || tableToSave.primary.length === 0)
-  ) {
-    if (tableToSave.schema.id) {
-      throw new Error(
-        "External tables with no `primary` column set will define an `id` column, but we found an `id` column in the supplied schema. Either set a `primary` column or remove the `id` column."
-      )
-    }
+  // this will throw an error if something is wrong
+  validate(tableToSave, oldTable)
 
-    tableToSave.primary = ["id"]
-    tableToSave.schema.id = {
+  if (!oldTable && noPrimaryKey(tableToSave)) {
+    tableToSave.primary = [DEFAULT_PRIMARY_COLUMN]
+    tableToSave.schema[DEFAULT_PRIMARY_COLUMN] = {
       type: FieldType.NUMBER,
       autocolumn: true,
-      name: "id",
+      name: DEFAULT_PRIMARY_COLUMN,
     }
-  }
-
-  if (hasTypeChanged(tableToSave, oldTable)) {
-    throw new Error("A column type has changed.")
   }
 
   for (let view in tableToSave.views) {

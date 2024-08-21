@@ -1,9 +1,10 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
-import { rawQuery } from "./mysql"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
+import { knexClient } from "./mysql"
+import { MARIADB_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
 
@@ -18,7 +19,7 @@ class MariaDBWaitStrategy extends AbstractWaitStrategy {
     await logs.waitUntilReady(container, boundPorts, startTime)
 
     const command = Wait.forSuccessfulCommand(
-      `mysqladmin ping -h localhost -P 3306 -u root -ppassword`
+      `/usr/local/bin/healthcheck.sh --innodb_initialized`
     )
     await command.waitUntilReady(container)
   }
@@ -27,7 +28,7 @@ class MariaDBWaitStrategy extends AbstractWaitStrategy {
 export async function getDatasource(): Promise<Datasource> {
   if (!ports) {
     ports = startContainer(
-      new GenericContainer("mariadb:lts")
+      new GenericContainer(MARIADB_IMAGE)
         .withExposedPorts(3306)
         .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
         .withWaitStrategy(new MariaDBWaitStrategy())
@@ -55,7 +56,8 @@ export async function getDatasource(): Promise<Datasource> {
   }
 
   const database = generator.guid().replaceAll("-", "")
-  await rawQuery(datasource, `CREATE DATABASE \`${database}\``)
+  const client = await knexClient(datasource)
+  await client.raw(`CREATE DATABASE \`${database}\``)
   datasource.config.database = database
   return datasource
 }

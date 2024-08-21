@@ -28,11 +28,9 @@ export class ScreenStore extends BudiStore {
     this.reset = this.reset.bind(this)
     this.syncAppScreens = this.syncAppScreens.bind(this)
     this.validate = this.validate.bind(this)
-    this.save = this.save.bind(this)
     this.patch = this.patch.bind(this)
     this.replace = this.replace.bind(this)
     this.saveScreen = this.saveScreen.bind(this)
-    this.delete = this.delete.bind(this)
     this.deleteScreen = this.deleteScreen.bind(this)
     this.syncScreenData = this.syncScreenData.bind(this)
     this.updateSetting = this.updateSetting.bind(this)
@@ -52,6 +50,9 @@ export class ScreenStore extends BudiStore {
         }
       },
     })
+
+    this.delete = this.history.wrapDeleteDoc(this.deleteScreen)
+    this.save = this.history.wrapSaveDoc(this.saveScreen)
   }
 
   /**
@@ -125,7 +126,14 @@ export class ScreenStore extends BudiStore {
         return
       }
 
-      if (type === "@budibase/standard-components/sidepanel") {
+      // Sidepanels and modals can be nested anywhere in the component tree, but really they are always rendered at the top level.
+      // Because of this, it doesn't make sense to carry over any parent illegal children to them, so the array is reset here.
+      if (
+        [
+          "@budibase/standard-components/sidepanel",
+          "@budibase/standard-components/modal",
+        ].includes(type)
+      ) {
         illegalChildren = []
       }
 
@@ -373,25 +381,6 @@ export class ScreenStore extends BudiStore {
       return state
     })
     return null
-  }
-
-  /**
-   * {@link deleteScreen} wrapped to enable history tracking
-   * @param {object | array} screen
-   *
-   */
-  async delete(screens_x) {
-    const wrappedFn = this.history.wrapDeleteDoc(this.deleteScreen)
-    return wrappedFn(screens_x)
-  }
-
-  /**
-   * {@link saveScreen} wrapped to enable history tracking
-   * @param {object} screen
-   */
-  async save(screen) {
-    const wrappedFn = this.history.wrapSaveDoc(this.saveScreen)
-    return wrappedFn(screen)
   }
 
   /**

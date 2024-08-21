@@ -3,7 +3,7 @@ import {
   CreateViewRequest,
   Ctx,
   RequiredKeys,
-  UIFieldMetadata,
+  ViewUIFieldMetadata,
   UpdateViewRequest,
   ViewResponse,
   ViewResponseEnriched,
@@ -18,25 +18,21 @@ async function parseSchema(view: CreateViewRequest) {
   const finalViewSchema =
     view.schema &&
     Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
-      const fieldSchema: RequiredKeys<UIFieldMetadata> = {
+      const fieldSchema: RequiredKeys<ViewUIFieldMetadata> = {
         order: schemaValue.order,
         width: schemaValue.width,
         visible: schemaValue.visible,
+        readonly: schemaValue.readonly,
         icon: schemaValue.icon,
       }
       Object.entries(fieldSchema)
         .filter(([, val]) => val === undefined)
         .forEach(([key]) => {
-          delete fieldSchema[key as keyof UIFieldMetadata]
+          delete fieldSchema[key as keyof ViewUIFieldMetadata]
         })
       p[fieldName] = fieldSchema
       return p
-    }, {} as Record<string, RequiredKeys<UIFieldMetadata>>)
-  for (let [key, column] of Object.entries(finalViewSchema)) {
-    if (!column.visible) {
-      delete finalViewSchema[key]
-    }
-  }
+    }, {} as Record<string, RequiredKeys<ViewUIFieldMetadata>>)
   return finalViewSchema
 }
 

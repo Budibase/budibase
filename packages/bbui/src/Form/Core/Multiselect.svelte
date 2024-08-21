@@ -17,6 +17,8 @@
   export let customPopoverHeight
   export let open = false
   export let loading
+  export let onOptionMouseenter = () => {}
+  export let onOptionMouseleave = () => {}
 
   const dispatch = createEventDispatcher()
 
@@ -97,4 +99,6 @@
   {autoWidth}
   {customPopoverHeight}
   {loading}
+  {onOptionMouseenter}
+  {onOptionMouseleave}
 />

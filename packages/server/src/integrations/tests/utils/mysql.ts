@@ -1,9 +1,10 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
-import mysql from "mysql2/promise"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
+import knex from "knex"
+import { MYSQL_IMAGE } from "./images"
 
 let ports: Promise<testContainerUtils.Port[]>
 
@@ -30,7 +31,7 @@ class MySQLWaitStrategy extends AbstractWaitStrategy {
 export async function getDatasource(): Promise<Datasource> {
   if (!ports) {
     ports = startContainer(
-      new GenericContainer("mysql:8.3")
+      new GenericContainer(MYSQL_IMAGE)
         .withExposedPorts(3306)
         .withEnvironment({ MYSQL_ROOT_PASSWORD: "password" })
         .withWaitStrategy(new MySQLWaitStrategy().withStartupTimeout(10000))
@@ -38,6 +39,9 @@ export async function getDatasource(): Promise<Datasource> {
   }
 
   const port = (await ports).find(x => x.container === 3306)?.host
+  if (!port) {
+    throw new Error("MySQL port not found")
+  }
 
   const datasource: Datasource = {
     type: "datasource_plus",
@@ -53,12 +57,13 @@ export async function getDatasource(): Promise<Datasource> {
   }
 
   const database = generator.guid().replaceAll("-", "")
-  await rawQuery(datasource, `CREATE DATABASE \`${database}\``)
+  const client = await knexClient(datasource)
+  await client.raw(`CREATE DATABASE \`${database}\``)
   datasource.config!.database = database
   return datasource
 }
 
-export async function rawQuery(ds: Datasource, sql: string) {
+export async function knexClient(ds: Datasource) {
   if (!ds.config) {
     throw new Error("Datasource config is missing")
   }
@@ -66,11 +71,8 @@ export async function rawQuery(ds: Datasource, sql: string) {
     throw new Error("Datasource source is not MySQL")
   }
 
-  const connection = await mysql.createConnection(ds.config)
-  try {
-    const [rows] = await connection.query(sql)
-    return rows
-  } finally {
-    connection.end()
-  }
+  return knex({
+    client: "mysql2",
+    connection: ds.config,
+  })
 }

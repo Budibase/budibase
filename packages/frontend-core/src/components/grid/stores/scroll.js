@@ -1,6 +1,13 @@
 import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
-import { Padding, GutterWidth, FocusedCellMinOffset } from "../lib/constants"
+import {
+  GutterWidth,
+  FocusedCellMinOffset,
+  ScrollBarSize,
+  HPadding,
+  VPadding,
+} from "../lib/constants"
+import { parseCellID } from "../lib/utils"
 
 export const createStores = () => {
   const scroll = writable({
@@ -9,8 +16,8 @@ export const createStores = () => {
   })
 
   // Derive height and width as primitives to avoid wasted computation
-  const scrollTop = derived(scroll, $scroll => $scroll.top, 0)
-  const scrollLeft = derived(scroll, $scroll => $scroll.left, 0)
+  const scrollTop = derived(scroll, $scroll => Math.round($scroll.top))
+  const scrollLeft = derived(scroll, $scroll => Math.round($scroll.left))
 
   return {
     scroll,
@@ -23,7 +30,7 @@ export const deriveStores = context => {
   const {
     rows,
     visibleColumns,
-    stickyColumn,
+    displayColumn,
     rowHeight,
     width,
     height,
@@ -31,51 +38,31 @@ export const deriveStores = context => {
   } = context
 
   // Memoize store primitives
-  const stickyColumnWidth = derived(stickyColumn, $col => $col?.width || 0, 0)
-
-  // Derive vertical limits
-  const contentHeight = derived(
-    [rows, rowHeight],
-    ([$rows, $rowHeight]) => ($rows.length + 1) * $rowHeight + Padding,
-    0
-  )
-  const maxScrollTop = derived(
-    [height, contentHeight],
-    ([$height, $contentHeight]) => Math.max($contentHeight - $height, 0),
-    0
-  )
+  const stickyWidth = derived(displayColumn, $displayColumn => {
+    return ($displayColumn?.width || 0) + GutterWidth
+  })
 
   // Derive horizontal limits
   const contentWidth = derived(
-    [visibleColumns, stickyColumnWidth, buttonColumnWidth],
-    ([$visibleColumns, $stickyColumnWidth, $buttonColumnWidth]) => {
-      const space = Math.max(Padding, $buttonColumnWidth - 1)
-      let width = GutterWidth + space + $stickyColumnWidth
+    [visibleColumns, buttonColumnWidth],
+    ([$visibleColumns, $buttonColumnWidth]) => {
+      let width = GutterWidth + Math.max($buttonColumnWidth, HPadding)
       $visibleColumns.forEach(col => {
         width += col.width
       })
       return width
-    },
-    0
+    }
   )
   const screenWidth = derived(
-    [width, stickyColumnWidth],
-    ([$width, $stickyColumnWidth]) => $width + GutterWidth + $stickyColumnWidth,
-    0
+    [width, stickyWidth],
+    ([$width, $stickyWidth]) => {
+      return $width + $stickyWidth
+    }
   )
   const maxScrollLeft = derived(
     [contentWidth, screenWidth],
     ([$contentWidth, $screenWidth]) => {
-      return Math.max($contentWidth - $screenWidth, 0)
-    },
-    0
-  )
-
-  // Derive whether to show scrollbars or not
-  const showVScrollbar = derived(
-    [contentHeight, height],
-    ([$contentHeight, $height]) => {
-      return $contentHeight > $height
+      return Math.round(Math.max($contentWidth - $screenWidth, 0))
     }
   )
   const showHScrollbar = derived(
@@ -85,7 +72,31 @@ export const deriveStores = context => {
     }
   )
 
+  // Derive vertical limits
+  const contentHeight = derived(
+    [rows, rowHeight, showHScrollbar],
+    ([$rows, $rowHeight, $showHScrollbar]) => {
+      let height = ($rows.length + 1) * $rowHeight + VPadding
+      if ($showHScrollbar) {
+        height += ScrollBarSize * 2
+      }
+      return height
+    }
+  )
+  const maxScrollTop = derived(
+    [height, contentHeight],
+    ([$height, $contentHeight]) =>
+      Math.round(Math.max($contentHeight - $height, 0))
+  )
+  const showVScrollbar = derived(
+    [contentHeight, height],
+    ([$contentHeight, $height]) => {
+      return $contentHeight > $height
+    }
+  )
+
   return {
+    stickyWidth,
     contentHeight,
     contentWidth,
     screenWidth,
@@ -103,11 +114,13 @@ export const initialise = context => {
     scroll,
     bounds,
     rowHeight,
-    visibleColumns,
+    stickyWidth,
     scrollTop,
     maxScrollTop,
     scrollLeft,
     maxScrollLeft,
+    buttonColumnWidth,
+    columnLookupMap,
   } = context
 
   // Ensure scroll state never goes invalid, which can happen when changing
@@ -175,15 +188,16 @@ export const initialise = context => {
 
     // Ensure horizontal position is viewable
     // Check horizontal position of columns next
-    const $visibleColumns = get(visibleColumns)
-    const columnName = $focusedCellId?.split("-")[1]
-    const column = $visibleColumns.find(col => col.name === columnName)
-    if (!column) {
+    const { field } = parseCellID($focusedCellId)
+    const column = get(columnLookupMap)[field]
+    if (!column || column.primaryDisplay) {
       return
     }
 
     // Ensure column is not cutoff on left edge
-    let delta = $scroll.left - column.left + FocusedCellMinOffset
+    const $stickyWidth = get(stickyWidth)
+    let delta =
+      $scroll.left - column.__left + FocusedCellMinOffset + $stickyWidth
     if (delta > 0) {
       scroll.update(state => ({
         ...state,
@@ -193,9 +207,11 @@ export const initialise = context => {
 
     // Ensure column is not cutoff on right edge
     else {
-      const rightEdge = column.left + column.width
-      const rightBound = $bounds.width + $scroll.left - FocusedCellMinOffset
-      delta = rightEdge - rightBound
+      const $buttonColumnWidth = get(buttonColumnWidth)
+      const rightEdge = column.__left + column.width
+      const rightBound =
+        $bounds.width + $scroll.left - FocusedCellMinOffset - $buttonColumnWidth
+      delta = rightEdge - rightBound - $stickyWidth
       if (delta > 0) {
         scroll.update(state => ({
           ...state,

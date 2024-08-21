@@ -19,6 +19,14 @@ export const generateAppID = (tenantId?: string | null) => {
 }
 
 /**
+ * Generates a new table ID.
+ * @returns The new table ID which the table doc can be stored under.
+ */
+export function generateTableID() {
+  return `${DocumentType.TABLE}${SEPARATOR}${newid()}`
+}
+
+/**
  * Gets a new row ID for the specified table.
  * @param tableId The table which the row is being created for.
  * @param id If an ID is to be used then the UUID can be substituted for this.

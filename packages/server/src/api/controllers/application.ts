@@ -52,6 +52,8 @@ import {
   FetchAppPackageResponse,
   DuplicateAppRequest,
   DuplicateAppResponse,
+  UpdateAppRequest,
+  UpdateAppResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -356,11 +358,14 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
       await createApp(appId)
     }
 
-    // Initialise the app migration version as the latest one
-    await appMigrations.updateAppMigrationMetadata({
-      appId,
-      version: appMigrations.getLatestMigrationId(),
-    })
+    const latestMigrationId = appMigrations.getLatestEnabledMigrationId()
+    if (latestMigrationId) {
+      // Initialise the app migration version as the latest one
+      await appMigrations.updateAppMigrationMetadata({
+        appId,
+        version: latestMigrationId,
+      })
+    }
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
@@ -450,7 +455,7 @@ export async function create(ctx: UserCtx<CreateAppRequest, App>) {
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
 export async function update(
-  ctx: UserCtx<{ name?: string; url?: string }, App>
+  ctx: UserCtx<UpdateAppRequest, UpdateAppResponse>
 ) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   // validation

@@ -1,6 +1,8 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
 
+export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 /**
  * Utility to wrap an async function and ensure all invocations happen
  * sequentially.
@@ -153,6 +155,7 @@ export const buildFormBlockButtonConfig = props => {
         providerId: formId,
         tableId: resourceId,
         notificationOverride,
+        confirm: null,
       },
     },
     {
@@ -160,6 +163,9 @@ export const buildFormBlockButtonConfig = props => {
     },
     {
       "##eventHandlerType": "Close Side Panel",
+    },
+    {
+      "##eventHandlerType": "Close Modal",
     },
     // Clear a create form once submitted
     ...(actionType !== "Create"

@@ -100,9 +100,6 @@
       on:click={() => {
         get(store).actions.select(draggableItem.id)
       }}
-      on:mousedown={() => {
-        get(store).actions.select()
-      }}
       bind:this={anchors[draggableItem.id]}
       class:highlighted={draggableItem.id === $store.selected}
     >

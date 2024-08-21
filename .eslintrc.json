@@ -1,4 +1,5 @@
 {
+  "root": true,
   "env": {
     "browser": true,
     "es6": true,
@@ -42,6 +43,7 @@
       },
       "rules": {
         "no-unused-vars": "off",
+        "local-rules/no-barrel-imports": "error",
         "local-rules/no-budibase-imports": "error",
         "local-rules/no-console-error": "error",
         "@typescript-eslint/no-unused-vars": [
@@ -53,7 +55,10 @@
             "ignoreRestSiblings": true
           }
         ],
-        "local-rules/no-budibase-imports": "error"
+        "no-redeclare": "off",
+        "@typescript-eslint/no-redeclare": "error",
+        // have to turn this off to allow function overloading in typescript
+        "no-dupe-class-members": "off"
       }
     },
     {
@@ -86,7 +91,10 @@
         "jest/expect-expect": "off",
         // We do this in some tests where the behaviour of internal tables
         // differs to external, but the API is broadly the same
-        "jest/no-conditional-expect": "off"
+        "jest/no-conditional-expect": "off",
+        // have to turn this off to allow function overloading in typescript
+        "no-dupe-class-members": "off",
+        "no-redeclare": "off"
       }
     },
     {

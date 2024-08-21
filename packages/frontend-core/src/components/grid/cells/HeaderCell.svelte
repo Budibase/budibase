@@ -1,20 +1,14 @@
 <script>
   import { getContext, onMount, tick } from "svelte"
   import { canBeDisplayColumn, canBeSortColumn } from "@budibase/shared-core"
-  import {
-    Icon,
-    Popover,
-    Menu,
-    MenuItem,
-    clickOutside,
-    Modal,
-  } from "@budibase/bbui"
+  import { Icon, Menu, MenuItem, Modal } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
   import { getColumnIcon } from "../lib/utils"
   import MigrationModal from "../controls/MigrationModal.svelte"
   import { debounce } from "../../../utils/utils"
   import { FieldType, FormulaType } from "@budibase/types"
   import { TableNames } from "../../../constants"
+  import GridPopover from "../overlays/GridPopover.svelte"
 
   export let column
   export let idx
@@ -23,20 +17,19 @@
     reorder,
     isReordering,
     isResizing,
-    rand,
     sort,
-    visibleColumns,
+    scrollableColumns,
     dispatch,
     subscribe,
     config,
     ui,
-    columns,
     definition,
     datasource,
     schema,
     focusedCellId,
     filter,
     inlineFilters,
+    keyboardBlocked,
   } = getContext("grid")
 
   const searchableTypes = [
@@ -52,20 +45,26 @@
   let open = false
   let editIsOpen = false
   let timeout
-  let popover
   let migrationModal
   let searchValue
   let input
 
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
-  $: canMoveRight = orderable && idx < $visibleColumns.length - 1
+  $: canMoveRight = orderable && idx < $scrollableColumns.length - 1
   $: sortingLabels = getSortingLabels(column.schema?.type)
   $: searchable = isColumnSearchable(column)
   $: resetSearchValue(column.name)
   $: searching = searchValue != null
   $: debouncedUpdateFilter(searchValue)
   $: orderable = !column.primaryDisplay
+  $: editable = $config.canEditColumns && !column.schema.disabled
+  $: keyboardBlocked.set(open)
+
+  const close = () => {
+    open = false
+    editIsOpen = false
+  }
 
   const getSortingLabels = type => {
     switch (type) {
@@ -106,12 +105,8 @@
     dispatch("edit-column", column.schema)
   }
 
-  const cancelEdit = () => {
-    popover.hide()
-    editIsOpen = false
-  }
-
   const onMouseDown = e => {
+    ui.actions.blur()
     if ((e.touches?.length || e.button === 0) && orderable) {
       timeout = setTimeout(() => {
         reorder.actions.startReordering(column.name, e)
@@ -128,8 +123,14 @@
 
   const onContextMenu = e => {
     e.preventDefault()
-    ui.actions.blur()
-    open = !open
+
+    // The timeout allows time for clickoutside to close other open popvers
+    // before we show this one. Without the timeout, this popover closes again
+    // before it's even visible as clickoutside closes it.
+    setTimeout(() => {
+      ui.actions.blur()
+      open = !open
+    }, 10)
   }
 
   const sortAscending = () => {
@@ -159,17 +160,13 @@
   }
 
   const makeDisplayColumn = () => {
-    columns.actions.changePrimaryDisplay(column.name)
+    datasource.actions.changePrimaryDisplay(column.name)
     open = false
   }
 
   const hideColumn = () => {
-    columns.update(state => {
-      const index = state.findIndex(col => col.name === column.name)
-      state[index].visible = false
-      return state.slice()
-    })
-    columns.actions.saveChanges()
+    datasource.actions.addSchemaMutation(column.name, { visible: false })
+    datasource.actions.saveSchemaMutations()
     open = false
   }
 
@@ -237,7 +234,15 @@
   }
   const debouncedUpdateFilter = debounce(updateFilter, 250)
 
-  onMount(() => subscribe("close-edit-column", cancelEdit))
+  const handleDoubleClick = () => {
+    if (!editable || searching) {
+      return
+    }
+    open = true
+    editColumn()
+  }
+
+  onMount(() => subscribe("close-edit-column", close))
 </script>
 
 <Modal bind:this={migrationModal}>
@@ -247,14 +252,15 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
+  bind:this={anchor}
   class="header-cell"
+  style="flex: 0 0 {column.width}px;"
   class:open
   class:searchable
   class:searching
-  style="flex: 0 0 {column.width}px;"
-  bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
   class:sticky={idx === "sticky"}
+  on:dblclick={handleDoubleClick}
 >
   <GridCell
     on:mousedown={onMouseDown}
@@ -264,7 +270,7 @@
     on:touchcancel={onMouseUp}
     on:contextmenu={onContextMenu}
     width={column.width}
-    left={column.left}
+    left={column.__left}
     defaultHeight
     center
   >
@@ -314,89 +320,84 @@
   </GridCell>
 </div>
 
-<Popover
-  bind:open
-  bind:this={popover}
-  {anchor}
-  align="right"
-  offset={0}
-  popoverTarget={document.getElementById(`grid-${rand}`)}
-  customZindex={50}
->
-  {#if editIsOpen}
-    <div
-      use:clickOutside={() => {
-        editIsOpen = false
-      }}
-      class="content"
-    >
-      <slot />
-    </div>
-  {:else}
-    <Menu>
-      <MenuItem
-        icon="Edit"
-        on:click={editColumn}
-        disabled={!$config.canEditColumns || column.schema.disabled}
-      >
-        Edit column
-      </MenuItem>
-      <MenuItem
-        icon="Duplicate"
-        on:click={duplicateColumn}
-        disabled={!$config.canEditColumns}
-      >
-        Duplicate column
-      </MenuItem>
-      <MenuItem
-        icon="Label"
-        on:click={makeDisplayColumn}
-        disabled={column.primaryDisplay ||
-          !canBeDisplayColumn(column.schema.type)}
-      >
-        Use as display column
-      </MenuItem>
-      <MenuItem
-        icon="SortOrderUp"
-        on:click={sortAscending}
-        disabled={!canBeSortColumn(column.schema.type) ||
-          (column.name === $sort.column && $sort.order === "ascending")}
-      >
-        Sort {sortingLabels.ascending}
-      </MenuItem>
-      <MenuItem
-        icon="SortOrderDown"
-        on:click={sortDescending}
-        disabled={!canBeSortColumn(column.schema.type) ||
-          (column.name === $sort.column && $sort.order === "descending")}
-      >
-        Sort {sortingLabels.descending}
-      </MenuItem>
-      <MenuItem disabled={!canMoveLeft} icon="ChevronLeft" on:click={moveLeft}>
-        Move left
-      </MenuItem>
-      <MenuItem
-        disabled={!canMoveRight}
-        icon="ChevronRight"
-        on:click={moveRight}
-      >
-        Move right
-      </MenuItem>
-      <MenuItem
-        disabled={column.primaryDisplay || !$config.showControls}
-        icon="VisibilityOff"
-        on:click={hideColumn}
-      >
-        Hide column
-      </MenuItem>
-      {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS}
-        <MenuItem icon="User" on:click={openMigrationModal}>
-          Migrate to user column
+{#if open}
+  <GridPopover
+    {anchor}
+    align="left"
+    on:close={close}
+    maxHeight={null}
+    resizable
+  >
+    {#if editIsOpen}
+      <div class="content">
+        <slot />
+      </div>
+    {:else}
+      <Menu>
+        <MenuItem icon="Edit" on:click={editColumn} disabled={!editable}>
+          Edit column
         </MenuItem>
-      {/if}
-    </Menu>
-  {/if}
-</Popover>
+        <MenuItem
+          icon="Duplicate"
+          on:click={duplicateColumn}
+          disabled={!$config.canEditColumns}
+        >
+          Duplicate column
+        </MenuItem>
+        <MenuItem
+          icon="Label"
+          on:click={makeDisplayColumn}
+          disabled={column.primaryDisplay ||
+            !canBeDisplayColumn(column.schema.type)}
+        >
+          Use as display column
+        </MenuItem>
+        <MenuItem
+          icon="SortOrderUp"
+          on:click={sortAscending}
+          disabled={!canBeSortColumn(column.schema.type) ||
+            (column.name === $sort.column && $sort.order === "ascending")}
+        >
+          Sort {sortingLabels.ascending}
+        </MenuItem>
+        <MenuItem
+          icon="SortOrderDown"
+          on:click={sortDescending}
+          disabled={!canBeSortColumn(column.schema.type) ||
+            (column.name === $sort.column && $sort.order === "descending")}
+        >
+          Sort {sortingLabels.descending}
+        </MenuItem>
+        <MenuItem
+          disabled={!canMoveLeft}
+          icon="ChevronLeft"
+          on:click={moveLeft}
+        >
+          Move left
+        </MenuItem>
+        <MenuItem
+          disabled={!canMoveRight}
+          icon="ChevronRight"
+          on:click={moveRight}
+        >
+          Move right
+        </MenuItem>
+        <MenuItem
+          disabled={column.primaryDisplay || !$config.showControls}
+          icon="VisibilityOff"
+          on:click={hideColumn}
+        >
+          Hide column
+        </MenuItem>
+        {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS && !column.schema.autocolumn}
+          <MenuItem icon="User" on:click={openMigrationModal}>
+            Migrate to user column
+          </MenuItem>
+        {/if}
+      </Menu>
+    {/if}
+  </GridPopover>
+{/if}
 
 <style>
   .header-cell {
@@ -490,7 +491,7 @@
   }
 
   .content {
-    width: 300px;
+    width: 360px;
     padding: 20px;
     display: flex;
     flex-direction: column;

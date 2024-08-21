@@ -5,14 +5,17 @@
   import { goto } from "@roxi/routify"
   import { UserAvatars } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
-  import AppRowContext from "./AppRowContext.svelte"
+  import AppContextMenuModals from "./AppContextMenuModals.svelte"
+  import getAppContextMenuItems from "./getAppContextMenuItems.js"
   import FavouriteAppButton from "pages/builder/portal/apps/FavouriteAppButton.svelte"
+  import { contextMenuStore } from "stores/builder"
 
   export let app
   export let lockedAction
 
-  let actionsOpen = false
+  let appContextMenuModals
 
+  $: contextMenuOpen = `${app.appId}-index` === $contextMenuStore.id
   $: editing = app.sessions?.length
   $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
   $: unclickable = !isBuilder && !app.deployed
@@ -40,16 +43,35 @@
       window.open(`/app${app.url}`, "_blank")
     }
   }
+
+  const openContextMenu = e => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const items = getAppContextMenuItems({
+      app,
+      onDuplicate: appContextMenuModals?.showDuplicateModal,
+      onExportDev: appContextMenuModals?.showExportDevModal,
+      onExportProd: appContextMenuModals?.showExportProdModal,
+      onDelete: appContextMenuModals?.showDeleteModal,
+    })
+
+    contextMenuStore.open(`${app.appId}-index`, items, {
+      x: e.clientX,
+      y: e.clientY,
+    })
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
+  class:contextMenuOpen
   class="app-row"
   class:unclickable
-  class:actionsOpen
   class:favourite={app.favourite}
   on:click={lockedAction || handleDefaultClick}
+  on:contextmenu={openContextMenu}
 >
   <div class="title">
     <div class="app-icon">
@@ -89,14 +111,11 @@
           </Button>
         </div>
         <div class="row-action">
-          <AppRowContext
-            {app}
-            on:open={() => {
-              actionsOpen = true
-            }}
-            on:close={() => {
-              actionsOpen = false
-            }}
+          <Icon
+            on:click={openContextMenu}
+            size="S"
+            hoverable
+            name="MoreSmallList"
           />
         </div>
       {:else}
@@ -109,6 +128,7 @@
       <FavouriteAppButton {app} noWrap />
     </div>
   </div>
+  <AppContextMenuModals {app} bind:this={appContextMenuModals} />
 </div>
 
 <style>
@@ -123,7 +143,8 @@
     transition: border 130ms ease-out;
     border: 1px solid transparent;
   }
-  .app-row:not(.unclickable):hover {
+  .app-row:not(.unclickable):hover,
+  .contextMenuOpen {
     cursor: pointer;
     border-color: var(--spectrum-global-color-gray-300);
   }
@@ -132,9 +153,9 @@
     display: none;
   }
 
+  .app-row.contextMenuOpen .favourite-icon,
   .app-row:hover .favourite-icon,
-  .app-row.favourite .favourite-icon,
-  .app-row.actionsOpen .favourite-icon {
+  .app-row.favourite .favourite-icon {
     display: flex;
   }
 
@@ -176,8 +197,8 @@
     display: none;
   }
 
-  .app-row:hover .app-row-actions,
-  .app-row.actionsOpen .app-row-actions {
+  .app-row.contextMenuOpen .app-row-actions,
+  .app-row:hover .app-row-actions {
     gap: var(--spacing-m);
     flex-direction: row;
     justify-content: flex-end;

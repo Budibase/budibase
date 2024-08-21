@@ -233,9 +233,9 @@
         response.info = response.info || { code: 200 }
         // if existing schema, copy over what it is
         if (schema) {
-          for (let [name, field] of Object.entries(schema)) {
-            if (response.schema[name]) {
-              response.schema[name] = field
+          for (let [name, field] of Object.entries(response.schema)) {
+            if (!schema[name]) {
+              schema[name] = field
             }
           }
         }
@@ -695,7 +695,7 @@
                   menuItems={schemaMenuItems}
                   showMenu={!schemaReadOnly}
                   readOnly={schemaReadOnly}
-                  compare={(option, value) => option.type === value.type}
+                  compare={(option, value) => option.type === value?.type}
                 />
               </Tab>
             {/if}

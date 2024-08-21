@@ -5,6 +5,7 @@
 
   export let bindings = []
   export let value = ""
+  export let allowHBS = true
   export let allowJS = false
   export let allowHelpers = true
   export let autofocusEditor = false
@@ -31,6 +32,7 @@
   context={{ ...$previewStore.selectedComponentContext, ...context }}
   snippets={$snippets}
   {value}
+  {allowHBS}
   {allowJS}
   {allowHelpers}
   {autofocusEditor}

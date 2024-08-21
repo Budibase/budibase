@@ -86,6 +86,7 @@ router
 
 router.post(
   "/api/v2/views/:viewId/search",
+  internalSearchValidator(),
   authorizedResource(PermissionType.VIEW, PermissionLevel.READ, "viewId"),
   rowController.views.searchView
 )

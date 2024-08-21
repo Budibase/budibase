@@ -32,7 +32,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   try {
     oldRow = await outputProcessing(
       dbTable,
-      await utils.findRow(ctx, tableId, inputs._id!)
+      await utils.findRow(tableId, inputs._id!)
     )
   } catch (err) {
     if (isUserTable) {
@@ -85,22 +85,15 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row as any
     await userController.updateMetadata(ctx as any)
-    return { row: ctx.body as Row, table }
+    return { row: ctx.body as Row, table, oldRow }
   }
 
-  return finaliseRow(table, row, {
+  const result = await finaliseRow(table, row, {
     oldTable: dbTable,
     updateFormula: true,
   })
-}
 
-export async function find(ctx: UserCtx): Promise<Row> {
-  const tableId = utils.getTableId(ctx),
-    rowId = ctx.params.rowId
-  const table = await sdk.tables.getTable(tableId)
-  let row = await utils.findRow(ctx, tableId, rowId)
-  row = await outputProcessing(table, row)
-  return row
+  return { ...result, oldRow }
 }
 
 export async function destroy(ctx: UserCtx) {
@@ -193,7 +186,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
     sdk.tables.getTable(tableId),
     linkRows.getLinkDocuments({ tableId, rowId, fieldName }),
   ])
-  let row = await utils.findRow(ctx, tableId, rowId)
+  let row = await utils.findRow(tableId, rowId)
   row = await outputProcessing(table, row)
   const linkVals = links as LinkDocumentValue[]
 

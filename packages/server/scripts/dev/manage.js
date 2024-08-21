@@ -43,11 +43,11 @@ async function init() {
     BB_ADMIN_USER_EMAIL: "",
     BB_ADMIN_USER_PASSWORD: "",
     PLUGINS_DIR: "",
-    TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR",
     HTTP_MIGRATIONS: "0",
     HTTP_LOGGING: "0",
     VERSION: "0.0.0+local",
     PASSWORD_MIN_LENGTH: "1",
+    SQS_SEARCH_ENABLE: "1",
   }
 
   config = { ...config, ...existingConfig }

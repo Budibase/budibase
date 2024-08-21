@@ -1,10 +1,9 @@
 import { writable, derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { LuceneUtils } from "../utils"
+import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
 
-const { buildLuceneQuery, luceneLimit, runLuceneQuery, luceneSort } =
-  LuceneUtils
+const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
 
 /**
  * Parent class which handles the implementation of fetching data from an
@@ -177,10 +176,10 @@ export default class DataFetch {
       }
     }
 
-    // Build the lucene query
+    // Build the query
     let query = this.options.query
     if (!query) {
-      query = buildLuceneQuery(filter)
+      query = buildQuery(filter)
     }
 
     // Update store
@@ -229,17 +228,17 @@ export default class DataFetch {
 
     // If we don't support searching, do a client search
     if (!this.features.supportsSearch && clientSideSearching) {
-      rows = runLuceneQuery(rows, query)
+      rows = runQuery(rows, query)
     }
 
     // If we don't support sorting, do a client-side sort
     if (!this.features.supportsSort && clientSideSorting) {
-      rows = luceneSort(rows, sortColumn, sortOrder, sortType)
+      rows = sort(rows, sortColumn, sortOrder, sortType)
     }
 
     // If we don't support pagination, do a client-side limit
     if (!this.features.supportsPagination && clientSideLimiting) {
-      rows = luceneLimit(rows, limit)
+      rows = queryLimit(rows, limit)
     }
 
     return {

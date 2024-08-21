@@ -13,7 +13,9 @@
   onMount(() => subscribe("edit-column", editColumn))
 </script>
 
-<CreateEditColumn
-  field={editableColumn}
-  on:updatecolumns={rows.actions.refreshData}
-/>
+{#if editableColumn}
+  <CreateEditColumn
+    field={editableColumn}
+    on:updatecolumns={rows.actions.refreshData}
+  />
+{/if}

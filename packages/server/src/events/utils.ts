@@ -7,6 +7,7 @@ type BBEventOpts = {
   appId: string
   table?: Table
   row?: Row
+  oldRow?: Row
   metadata?: any
 }
 
@@ -18,6 +19,7 @@ type BBEvent = {
   appId: string
   tableId?: string
   row?: Row
+  oldRow?: Row
   table?: BBEventTable
   id?: string
   revision?: string
@@ -31,9 +33,11 @@ export function rowEmission({
   row,
   table,
   metadata,
+  oldRow,
 }: BBEventOpts) {
   let event: BBEvent = {
     row,
+    oldRow,
     appId,
     tableId: row?.tableId,
   }

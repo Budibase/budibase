@@ -459,10 +459,11 @@ describe("scim", () => {
       it("should return 404 when requesting unexisting user id", async () => {
         const response = await findScimUser(structures.uuid(), { expect: 404 })
 
-        expect(response).toEqual({
-          message: "missing",
-          status: 404,
-        })
+        expect(response).toEqual(
+          expect.objectContaining({
+            status: 404,
+          })
+        )
       })
     })
 
@@ -572,6 +573,41 @@ describe("scim", () => {
         await patchScimUser({ id: user.id, body })
 
         expect(events.user.updated).toHaveBeenCalledTimes(1)
+      })
+
+      it("an existing user's email can be updated", async () => {
+        const newEmail = structures.generator.email()
+        const body: ScimUpdateRequest = {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          Operations: [
+            {
+              op: "Replace",
+              path: 'emails[type eq "work"].value',
+              value: newEmail,
+            },
+          ],
+        }
+
+        const response = await patchScimUser({ id: user.id, body })
+
+        const expectedScimUser: ScimUserResponse = {
+          ...user,
+          emails: [
+            {
+              value: newEmail,
+              type: "work",
+              primary: true,
+            },
+          ],
+        }
+        expect(response).toEqual(expectedScimUser)
+
+        const persistedUser = await config.api.scimUsersAPI.find(user.id)
+        expect(persistedUser).toEqual(expectedScimUser)
+
+        expect((await config.api.users.getUser(user.id)).body).toEqual(
+          expect.objectContaining({ _id: user.id, email: newEmail })
+        )
       })
     })
 
@@ -861,10 +897,11 @@ describe("scim", () => {
       it("should return 404 when requesting unexisting group id", async () => {
         const response = await findScimGroup(structures.uuid(), { expect: 404 })
 
-        expect(response).toEqual({
-          message: "missing",
-          status: 404,
-        })
+        expect(response).toEqual(
+          expect.objectContaining({
+            status: 404,
+          })
+        )
       })
 
       it("should allow excluding members", async () => {

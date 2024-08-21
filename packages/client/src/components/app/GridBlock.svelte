@@ -1,8 +1,8 @@
 <script>
   // NOTE: this is not a block - it's just named as such to avoid confusing users,
   // because it functions similarly to one
-  import { getContext } from "svelte"
-  import { get } from "svelte/store"
+  import { getContext, onMount } from "svelte"
+  import { get, derived, readable } from "svelte/store"
   import { Grid } from "@budibase/frontend-core"
 
   // table is actually any datasource, but called table for legacy compatibility
@@ -19,10 +19,10 @@
   export let columns = null
   export let onRowClick = null
   export let buttons = null
-  export let repeat = null
 
   const context = getContext("context")
   const component = getContext("component")
+  const { environmentStore } = getContext("sdk")
   const {
     styleable,
     API,
@@ -36,17 +36,21 @@
   } = getContext("sdk")
 
   let grid
+  let gridContext
+  let minHeight = 0
 
-  $: columnWhitelist = parsedColumns
-    ?.filter(col => col.active)
-    ?.map(col => col.field)
+  $: currentTheme = $context?.device?.theme
+  $: darkMode = !currentTheme?.includes("light")
+  $: parsedColumns = getParsedColumns(columns)
   $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
-  $: parsedColumns = getParsedColumns(columns)
+  $: selectedRows = deriveSelectedRows(gridContext)
+  $: styles = patchStyles($component.styles, minHeight)
+  $: data = { selectedRows: $selectedRows }
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
-      callback: () => grid?.getContext()?.rows.actions.refreshData(),
+      callback: () => gridContext?.rows.actions.refreshData(),
       metadata: { dataSource: table },
     },
   ]
@@ -57,7 +61,13 @@
     const goldenRow = generateGoldenSample(rows)
     const id = get(component).id
     return {
+      // Not sure what this one is for...
       [id]: goldenRow,
+
+      // For row conditions context
+      row: goldenRow,
+
+      // For button action context
       eventContext: {
         row: goldenRow,
       },
@@ -66,12 +76,14 @@
 
   // Parses columns to fix older formats
   const getParsedColumns = columns => {
+    if (!columns?.length) {
+      return []
+    }
     // If the first element has an active key all elements should be in the new format
-    if (columns?.length && columns[0]?.active !== undefined) {
+    if (columns[0].active !== undefined) {
       return columns
     }
-
-    return columns?.map(column => ({
+    return columns.map(column => ({
       label: column.displayName || column.name,
       field: column.name,
       active: true,
@@ -80,9 +92,15 @@
 
   const getSchemaOverrides = columns => {
     let overrides = {}
-    columns?.forEach(column => {
+    columns.forEach((column, idx) => {
       overrides[column.field] = {
         displayName: column.label,
+        order: idx,
+        conditions: column.conditions,
+        visible: !!column.active,
+      }
+      if (column.width) {
+        overrides[column.field].width = column.width
       }
     })
     return overrides
@@ -96,6 +114,7 @@
       size: "M",
       text: settings.text,
       type: settings.type,
+      icon: settings.icon,
       onClick: async row => {
         // Create a fake, ephemeral context to run the buttons actions with
         const id = get(component).id
@@ -106,53 +125,80 @@
       },
     }))
   }
+
+  const deriveSelectedRows = gridContext => {
+    if (!gridContext) {
+      return readable([])
+    }
+    return derived(
+      [gridContext.selectedRows, gridContext.rowLookupMap],
+      ([$selectedRows, $rowLookupMap]) => {
+        return Object.entries($selectedRows || {})
+          .filter(([_, selected]) => selected)
+          .map(([rowId]) => {
+            return gridContext.rows.actions.cleanRow($rowLookupMap[rowId])
+          })
+      }
+    )
+  }
+
+  const patchStyles = (styles, minHeight) => {
+    return {
+      ...styles,
+      normal: {
+        ...styles?.normal,
+        "min-height": `${minHeight}px`,
+      },
+    }
+  }
+
+  onMount(() => {
+    gridContext = grid.getContext()
+    gridContext.minHeight.subscribe($height => (minHeight = $height))
+  })
 </script>
 
-<div
-  use:styleable={$component.styles}
-  class:in-builder={$builderStore.inBuilder}
->
-  <Provider {actions}>
-    <Grid
-      bind:this={grid}
-      datasource={table}
-      {API}
-      {stripeRows}
-      {quiet}
-      {initialFilter}
-      {initialSortColumn}
-      {initialSortOrder}
-      {fixedRowHeight}
-      {columnWhitelist}
-      {schemaOverrides}
-      {repeat}
-      canAddRows={allowAddRows}
-      canEditRows={allowEditRows}
-      canDeleteRows={allowDeleteRows}
-      canEditColumns={false}
-      canExpandRows={false}
-      canSaveSchema={false}
-      showControls={false}
-      notifySuccess={notificationStore.actions.success}
-      notifyError={notificationStore.actions.error}
-      buttons={enrichedButtons}
-      on:rowclick={e => onRowClick?.({ row: e.detail })}
-    />
-  </Provider>
+<div use:styleable={styles} class:in-builder={$builderStore.inBuilder}>
+  <Grid
+    bind:this={grid}
+    datasource={table}
+    {API}
+    {stripeRows}
+    {quiet}
+    {darkMode}
+    {initialFilter}
+    {initialSortColumn}
+    {initialSortOrder}
+    {fixedRowHeight}
+    {schemaOverrides}
+    canAddRows={allowAddRows}
+    canEditRows={allowEditRows}
+    canDeleteRows={allowDeleteRows}
+    canEditColumns={false}
+    canExpandRows={false}
+    canSaveSchema={false}
+    showControls={false}
+    notifySuccess={notificationStore.actions.success}
+    notifyError={notificationStore.actions.error}
+    buttons={enrichedButtons}
+    isCloud={$environmentStore.cloud}
+    on:rowclick={e => onRowClick?.({ row: e.detail })}
+  />
 </div>
+
+<Provider {data} {actions} />
 
 <style>
   div {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    border: 1px solid var(--spectrum-global-color-gray-300);
+    border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 4px;
     overflow: hidden;
-    min-height: 230px;
     height: 410px;
   }
-  div.in-builder :global(*) {
-    pointer-events: none;
+  div.in-builder :global(> *) {
+    pointer-events: none !important;
   }
 </style>

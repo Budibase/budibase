@@ -1,5 +1,4 @@
-import newid from "./newid"
-import { db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, utils } from "@budibase/backend-core"
 import {
   DatabaseQueryOpts,
   Datasource,
@@ -10,9 +9,12 @@ import {
   RelationshipFieldMetadata,
   SourceName,
   VirtualDocumentType,
+  LinkDocument,
 } from "@budibase/types"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
+
+const newid = utils.newid
 
 type Optional = string | null
 
@@ -40,7 +42,6 @@ export const USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${dbCore.Inte
 export const LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`
 export const TABLE_ROW_PREFIX = `${DocumentType.ROW}${SEPARATOR}${DocumentType.TABLE}`
 export const AUTOMATION_LOG_PREFIX = `${DocumentType.AUTOMATION_LOG}${SEPARATOR}`
-export const SQS_DATASOURCE_INTERNAL = "internal"
 export const ViewName = dbCore.ViewName
 export const InternalTables = dbCore.InternalTable
 export const UNICODE_MAX = dbCore.UNICODE_MAX
@@ -56,14 +57,6 @@ export const getUserMetadataParams = dbCore.getUserMetadataParams
 export const generateUserMetadataID = dbCore.generateUserMetadataID
 export const getGlobalIDFromUserMetadataID =
   dbCore.getGlobalIDFromUserMetadataID
-export const CONSTANT_INTERNAL_ROW_COLS = [
-  "_id",
-  "_rev",
-  "type",
-  "createdAt",
-  "updatedAt",
-  "tableId",
-]
 
 /**
  * Gets parameters for retrieving tables, this is a utility function for the getDocParams function.
@@ -77,7 +70,7 @@ export function getTableParams(tableId?: Optional, otherProps = {}) {
  * @returns The new table ID which the table doc can be stored under.
  */
 export function generateTableID() {
-  return `${DocumentType.TABLE}${SEPARATOR}${newid()}`
+  return dbCore.generateTableID()
 }
 
 /**
@@ -138,8 +131,22 @@ export function generateLinkID(
 /**
  * Gets parameters for retrieving link docs, this is a utility function for the getDocParams function.
  */
-export function getLinkParams(otherProps: any = {}) {
+function getLinkParams(otherProps: Partial<DatabaseQueryOpts> = {}) {
   return getDocParams(DocumentType.LINK, null, otherProps)
+}
+
+/**
+ * Gets all the link docs document from the current app db.
+ */
+export async function allLinkDocs() {
+  const db = context.getAppDB()
+
+  const response = await db.allDocs<LinkDocument>(
+    getLinkParams({
+      include_docs: true,
+    })
+  )
+  return response.rows.map(row => row.doc!)
 }
 
 /**
@@ -333,4 +340,12 @@ export function isRelationshipColumn(
   column: FieldSchema
 ): column is RelationshipFieldMetadata {
   return column.type === FieldType.LINK
+}
+
+/**
+ * Generates a new row actions ID.
+ * @returns The new row actions ID which the row actions doc can be stored under.
+ */
+export function generateRowActionsID(tableId: string) {
+  return `${DocumentType.ROW_ACTIONS}${SEPARATOR}${tableId}`
 }

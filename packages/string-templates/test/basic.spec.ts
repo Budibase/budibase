@@ -320,3 +320,21 @@ describe("should leave HBS blocks if not found using option", () => {
     expect(output).toBe("{{ a }}, 1")
   })
 })
+
+describe("check multiple space behaviour", () => {
+  it("should remove whitespace and use the helper correctly", async () => {
+    const output = await processString("{{   add   num1   num2 }}", {
+      num1: 1,
+      num2: 2,
+    })
+    expect(output).toEqual("3")
+  })
+
+  it("should ensure that whitespace within a string is respected", async () => {
+    const output = await processString("{{ trimRight 'test   string  ' }}", {
+      num1: 1,
+      num2: 2,
+    })
+    expect(output).toEqual("test   string")
+  })
+})

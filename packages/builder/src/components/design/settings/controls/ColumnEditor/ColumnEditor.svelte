@@ -1,11 +1,11 @@
 <script>
   import { Button, ActionButton, Drawer } from "@budibase/bbui"
+  import { search } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
   import ColumnDrawer from "./ColumnDrawer.svelte"
   import { cloneDeep } from "lodash/fp"
   import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
-  import { selectedScreen } from "stores/builder"
-  import { getFields } from "helpers/searchFields"
+  import { selectedScreen, tables } from "stores/builder"
 
   export let componentInstance
   export let value = []
@@ -25,9 +25,13 @@
     : enrichedSchemaFields?.map(field => field.name)
   $: sanitisedValue = getValidColumns(value, options)
   $: updateBoundValue(sanitisedValue)
-  $: enrichedSchemaFields = getFields(Object.values(schema || {}), {
-    allowLinks: true,
-  })
+  $: enrichedSchemaFields = search.getFields(
+    $tables.list,
+    Object.values(schema || {}),
+    {
+      allowLinks: true,
+    }
+  )
 
   $: {
     value = (value || []).filter(

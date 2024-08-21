@@ -3,6 +3,7 @@
   import { Button } from "@budibase/bbui"
   import GridCell from "../cells/GridCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
+  import { BlankRowID } from "../lib/constants"
 
   const {
     renderedRows,
@@ -12,21 +13,24 @@
     rows,
     focusedRow,
     selectedRows,
-    visibleColumns,
-    scroll,
+    scrollableColumns,
+    scrollLeft,
     isDragging,
     buttonColumnWidth,
+    showVScrollbar,
+    dispatch,
   } = getContext("grid")
 
-  let measureContainer
+  let container
 
   $: buttons = $props.buttons?.slice(0, 3) || []
-  $: columnsWidth = $visibleColumns.reduce(
+  $: columnsWidth = $scrollableColumns.reduce(
     (total, col) => (total += col.width),
     0
   )
-  $: end = columnsWidth - 1 - $scroll.left
-  $: left = Math.min($width - $buttonColumnWidth, end)
+  $: columnEnd = columnsWidth - $scrollLeft - 1
+  $: gridEnd = $width - $buttonColumnWidth - 1
+  $: left = Math.min(columnEnd, gridEnd)
 
   const handleClick = async (button, row) => {
     await button.onClick?.(rows.actions.cleanRow(row))
@@ -37,33 +41,21 @@
   onMount(() => {
     const observer = new ResizeObserver(entries => {
       const width = entries?.[0]?.contentRect?.width ?? 0
-      buttonColumnWidth.set(width)
+      buttonColumnWidth.set(Math.floor(width) - 1)
     })
-    observer.observe(measureContainer)
+    observer.observe(container)
   })
 </script>
-
-<!-- Hidden copy of buttons to measure -->
-<div class="measure" bind:this={measureContainer}>
-  <GridCell width="auto">
-    <div class="buttons">
-      {#each buttons as button}
-        <Button size="S">
-          {button.text || "Button"}
-        </Button>
-      {/each}
-    </div>
-  </GridCell>
-</div>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="button-column"
   style="left:{left}px"
   class:hidden={$buttonColumnWidth === 0}
+  class:right-border={left !== gridEnd}
 >
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
-    <GridScrollWrapper scrollVertically attachHandlers>
+    <GridScrollWrapper scrollVertically attachHandlers bind:ref={container}>
       {#each $renderedRows as row}
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
@@ -78,8 +70,9 @@
             rowIdx={row.__idx}
             selected={rowSelected}
             highlighted={rowHovered || rowFocused}
+            metadata={row.__metadata?.row}
           >
-            <div class="buttons">
+            <div class="buttons" class:offset={$showVScrollbar}>
               {#each buttons as button}
                 <Button
                   newStyles
@@ -91,6 +84,9 @@
                   overBackground={button.type === "overBackground"}
                   on:click={() => handleClick(button, row)}
                 >
+                  {#if button.icon}
+                    <i class="{button.icon} S" />
+                  {/if}
                   {button.text || "Button"}
                 </Button>
               {/each}
@@ -98,6 +94,17 @@
           </GridCell>
         </div>
       {/each}
+      <div
+        class="row blank"
+        on:mouseenter={$isDragging ? null : () => ($hoveredRowId = BlankRowID)}
+        on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+      >
+        <GridCell
+          width={$buttonColumnWidth}
+          highlighted={$hoveredRowId === BlankRowID}
+          on:click={() => dispatch("add-row-inline")}
+        />
+      </div>
     </GridScrollWrapper>
   </div>
 </div>
@@ -130,16 +137,23 @@
     gap: var(--cell-padding);
     height: inherit;
   }
+  .buttons.offset {
+    padding-right: calc(var(--cell-padding) + 2 * var(--scroll-bar-size) - 2px);
+  }
+  .buttons :global(.spectrum-Button-Label) {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .blank :global(.cell:hover) {
+    cursor: pointer;
+  }
 
-  /* Add left cell border */
+  /* Add left cell border to all cells */
   .button-column :global(.cell) {
     border-left: var(--cell-border);
   }
-
-  /* Hidden copy of buttons to measure width against */
-  .measure {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
+  .button-column:not(.right-border) :global(.cell) {
+    border-right-color: transparent;
   }
 </style>

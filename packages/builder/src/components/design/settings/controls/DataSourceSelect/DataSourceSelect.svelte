@@ -34,6 +34,7 @@
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "api"
+  import { datasourceSelect as format } from "helpers/data/format"
 
   export let value = {}
   export let otherSources
@@ -51,21 +52,15 @@
   let modal
 
   $: text = value?.label ?? "Choose an option"
-  $: tables = $tablesStore.list.map(m => ({
-    label: m.name,
-    tableId: m._id,
-    type: "table",
-  }))
+  $: tables = $tablesStore.list.map(table =>
+    format.table(table, $datasources.list)
+  )
   $: viewsV1 = $viewsStore.list.map(view => ({
     ...view,
     label: view.name,
     type: "view",
   }))
-  $: viewsV2 = $viewsV2Store.list.map(view => ({
-    ...view,
-    label: view.name,
-    type: "viewV2",
-  }))
+  $: viewsV2 = $viewsV2Store.list.map(format.viewV2)
   $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
   $: queries = $queriesStore.list
     .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
@@ -112,6 +107,7 @@
     })
   $: fields = bindings
     .filter(x => arrayTypes.includes(x.fieldSchema?.type))
+    .filter(x => x.fieldSchema?.tableId != null)
     .map(binding => {
       const { providerId, readableBinding, runtimeBinding } = binding
       const { name, type, tableId } = binding.fieldSchema
@@ -309,7 +305,7 @@
     {#if links?.length}
       <DataSourceCategory
         dividerState={true}
-        heading="Links"
+        heading="Relationships"
         dataSet={links}
         {value}
         onSelect={handleSelected}

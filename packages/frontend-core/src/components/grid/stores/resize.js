@@ -6,7 +6,6 @@ const initialState = {
   initialMouseX: null,
   initialWidth: null,
   column: null,
-  columnIdx: null,
   width: 0,
   left: 0,
 }
@@ -21,7 +20,7 @@ export const createStores = () => {
 }
 
 export const createActions = context => {
-  const { resize, columns, stickyColumn, ui } = context
+  const { resize, ui, datasource } = context
 
   // Starts resizing a certain column
   const startResizing = (column, e) => {
@@ -32,20 +31,13 @@ export const createActions = context => {
     e.preventDefault()
     ui.actions.blur()
 
-    // Find and cache index
-    let columnIdx = get(columns).findIndex(col => col.name === column.name)
-    if (columnIdx === -1) {
-      columnIdx = "sticky"
-    }
-
     // Set initial store state
     resize.set({
       width: column.width,
-      left: column.left,
+      left: column.__left,
       initialWidth: column.width,
       initialMouseX: x,
       column: column.name,
-      columnIdx,
     })
 
     // Add mouse event listeners to handle resizing
@@ -58,7 +50,7 @@ export const createActions = context => {
 
   // Handler for moving the mouse to resize columns
   const onResizeMouseMove = e => {
-    const { initialMouseX, initialWidth, width, columnIdx } = get(resize)
+    const { initialMouseX, initialWidth, width, column } = get(resize)
     const { x } = parseEventLocation(e)
     const dx = x - initialMouseX
     const newWidth = Math.round(Math.max(MinColumnWidth, initialWidth + dx))
@@ -69,17 +61,7 @@ export const createActions = context => {
     }
 
     // Update column state
-    if (columnIdx === "sticky") {
-      stickyColumn.update(state => ({
-        ...state,
-        width: newWidth,
-      }))
-    } else {
-      columns.update(state => {
-        state[columnIdx].width = newWidth
-        return [...state]
-      })
-    }
+    datasource.actions.addSchemaMutation(column, { width })
 
     // Update state
     resize.update(state => ({
@@ -101,26 +83,16 @@ export const createActions = context => {
 
     // Persist width if it changed
     if ($resize.width !== $resize.initialWidth) {
-      await columns.actions.saveChanges()
+      await datasource.actions.saveSchemaMutations()
     }
   }
 
   // Resets a column size back to default
   const resetSize = async column => {
-    const $stickyColumn = get(stickyColumn)
-    if (column.name === $stickyColumn?.name) {
-      stickyColumn.update(state => ({
-        ...state,
-        width: DefaultColumnWidth,
-      }))
-    } else {
-      columns.update(state => {
-        const columnIdx = state.findIndex(x => x.name === column.name)
-        state[columnIdx].width = DefaultColumnWidth
-        return [...state]
-      })
-    }
-    await columns.actions.saveChanges()
+    datasource.actions.addSchemaMutation(column.name, {
+      width: DefaultColumnWidth,
+    })
+    await datasource.actions.saveSchemaMutations()
   }
 
   return {

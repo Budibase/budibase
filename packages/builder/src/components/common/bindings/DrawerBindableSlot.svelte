@@ -4,10 +4,11 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "dataBinding"
+  import { FieldType } from "@budibase/types"
 
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
-  import { isJSBinding } from "@budibase/string-templates"
+  import { isJSBinding, findHBSBlocks } from "@budibase/string-templates"
 
   export let panel = ClientBindingPanel
   export let value = ""
@@ -19,13 +20,18 @@
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
-  export let drawerLeft
   export let type
   export let schema
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
   let currentVal = value
+
+  let attachmentTypes = [
+    FieldType.ATTACHMENT_SINGLE,
+    FieldType.ATTACHMENTS,
+    FieldType.SIGNATURE_SINGLE,
+  ]
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
@@ -98,10 +104,15 @@
     datetime: isValidDate,
     link: hasValidLinks,
     bb_reference: hasValidLinks,
+    bb_reference_single: hasValidLinks,
     array: hasValidOptions,
     longform: value => !isJSBinding(value),
     json: value => !isJSBinding(value),
+    options: value => !isJSBinding(value) && !findHBSBlocks(value)?.length,
     boolean: isValidBoolean,
+    attachment: false,
+    attachment_single: false,
+    signature_single: false,
   }
 
   const isValid = value => {
@@ -116,7 +127,17 @@
     if (type === "json" && !isJSBinding(value)) {
       return "json-slot-icon"
     }
-    if (!["string", "number", "bigint", "barcodeqr"].includes(type)) {
+    if (
+      ![
+        "string",
+        "number",
+        "bigint",
+        "barcodeqr",
+        "attachment",
+        "signature_single",
+        "attachment_single",
+      ].includes(type)
+    ) {
       return "slot-icon"
     }
     return ""
@@ -148,16 +169,9 @@
       <Icon disabled={isJS} size="S" name="Close" />
     </div>
   {:else}
-    <slot
-      {label}
-      {disabled}
-      readonly={isJS}
-      value={isJS ? "(JavaScript function)" : readableValue}
-      {placeholder}
-      {updateOnChange}
-    />
+    <slot />
   {/if}
-  {#if !disabled && type !== "formula"}
+  {#if !disabled && type !== "formula" && !disabled && !attachmentTypes.includes(type)}
     <div
       class={`icon ${getIconClass(value, type)}`}
       on:click={() => {
@@ -173,7 +187,7 @@
   on:drawerShow
   bind:this={bindingDrawer}
   title={title ?? placeholder ?? "Bindings"}
-  left={drawerLeft}
+  forceModal={true}
 >
   <Button cta slot="buttons" on:click={saveBinding}>Save</Button>
   <svelte:component

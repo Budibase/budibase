@@ -23,13 +23,37 @@ describe("should be able to re-write attachment URLs", () => {
     await config.init()
   })
 
-  it("should update URLs on a number of rows over the limit", async () => {
+  const coreBehaviour = async (tblSchema: any, row: any) => {
     const table = await config.api.table.save({
       name: "photos",
       type: "table",
       sourceId: INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
-      schema: {
+      schema: tblSchema,
+    })
+
+    for (let i = 0; i < FIND_LIMIT * 4; i++) {
+      await config.api.row.save(table._id!, {
+        ...row,
+      })
+    }
+
+    const db = dbCore.getDB(config.getAppId())
+    await config.doInContext(config.getAppId(), () =>
+      sdk.backups.updateAttachmentColumns(db.name, db)
+    )
+
+    return {
+      db,
+      rows: (await sdk.rows.getAllInternalRows(db.name)).filter(
+        row => row.tableId === table._id
+      ),
+    }
+  }
+
+  it("Attachment field, should update URLs on a number of rows over the limit", async () => {
+    const { rows, db } = await coreBehaviour(
+      {
         photo: {
           type: FieldType.ATTACHMENT_SINGLE,
           name: "photo",
@@ -43,21 +67,11 @@ describe("should be able to re-write attachment URLs", () => {
           name: "otherCol",
         },
       },
-    })
-
-    for (let i = 0; i < FIND_LIMIT * 4; i++) {
-      await config.api.row.save(table._id!, {
+      {
         photo: { ...attachment },
         gallery: [{ ...attachment }, { ...attachment }],
         otherCol: "string",
-      })
-    }
-
-    const db = dbCore.getDB(config.getAppId())
-    await sdk.backups.updateAttachmentColumns(db.name, db)
-
-    const rows = (await sdk.rows.getAllInternalRows(db.name)).filter(
-      row => row.tableId === table._id
+      }
     )
     for (const row of rows) {
       expect(row.otherCol).toBe("string")
@@ -67,6 +81,29 @@ describe("should be able to re-write attachment URLs", () => {
       expect(row.gallery[0].key).toBe(`${db.name}/attachments/a.png`)
       expect(row.gallery[1].url).toBe("")
       expect(row.gallery[1].key).toBe(`${db.name}/attachments/a.png`)
+    }
+  })
+  it("Signature field, should update URLs on a number of rows over the limit", async () => {
+    const { rows, db } = await coreBehaviour(
+      {
+        signature: {
+          type: FieldType.SIGNATURE_SINGLE,
+          name: "signature",
+        },
+        otherCol: {
+          type: FieldType.STRING,
+          name: "otherCol",
+        },
+      },
+      {
+        signature: { ...attachment },
+        otherCol: "string",
+      }
+    )
+    for (const row of rows) {
+      expect(row.otherCol).toBe("string")
+      expect(row.signature.url).toBe("")
+      expect(row.signature.key).toBe(`${db.name}/attachments/a.png`)
     }
   })
 })

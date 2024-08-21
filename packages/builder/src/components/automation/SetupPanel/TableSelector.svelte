@@ -8,6 +8,7 @@
 
   export let value
   export let isTrigger
+  export let disabled = false
 
   $: filteredTables = $tables.list.filter(table => {
     return !isTrigger || table._id !== TableNames.USERS
@@ -25,4 +26,5 @@
   options={filteredTables}
   getOptionLabel={table => table.name}
   getOptionValue={table => table._id}
+  {disabled}
 />

@@ -1,39 +1,41 @@
 import {
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
+  DatasourcePlus,
+  DatasourcePlusQueryResponse,
   Integration,
   Operation,
-  Table,
-  TableSchema,
   QueryJson,
   QueryType,
-  SqlQuery,
-  DatasourcePlus,
-  DatasourceFeature,
-  ConnectionInfo,
-  SourceName,
   Schema,
+  SourceName,
+  SqlClient,
+  SqlQuery,
+  Table,
+  TableSchema,
   TableSourceType,
-  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import {
-  getSqlQuery,
   buildExternalTableId,
-  generateColumnDefinition,
-  finaliseExternalTables,
-  SqlClient,
   checkExternalTables,
+  finaliseExternalTables,
+  generateColumnDefinition,
+  getSqlQuery,
   HOST_ADDRESS,
 } from "./utils"
-import Sql from "./base/sql"
-import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
+import { MSSQLColumn, MSSQLTablesResponse } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import sqlServer from "mssql"
-
-const DEFAULT_SCHEMA = "dbo"
-
+import { sql } from "@budibase/backend-core"
 import { ConfidentialClientApplication } from "@azure/msal-node"
+import env from "../environment"
 
 import { utils } from "@budibase/shared-core"
+
+const Sql = sql.Sql
+
+const DEFAULT_SCHEMA = "dbo"
 
 enum MSSQLConfigAuthType {
   AZURE_ACTIVE_DIRECTORY = "Azure Active Directory",
@@ -245,6 +247,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         options: {
           encrypt,
           enableArithAbort: true,
+          requestTimeout: env.QUERY_THREAD_TIMEOUT,
         },
       }
       if (encrypt) {
@@ -590,8 +593,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       scriptParts.push(createTableStatement)
     }
 
-    const schema = scriptParts.join("\n")
-    return schema
+    return scriptParts.join("\n")
   }
 }
 

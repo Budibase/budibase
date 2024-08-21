@@ -31,7 +31,7 @@ import {
 } from "@budibase/types"
 import {
   getAppMigrationVersion,
-  getLatestMigrationId,
+  getLatestEnabledMigrationId,
 } from "../../../appMigrations"
 
 import send from "koa-send"
@@ -133,7 +133,7 @@ const requiresMigration = async (ctx: Ctx) => {
     ctx.throw("AppId could not be found")
   }
 
-  const latestMigration = getLatestMigrationId()
+  const latestMigration = getLatestEnabledMigrationId()
   if (!latestMigration) {
     return false
   }
@@ -292,11 +292,6 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     ctx.throw(400, "The specified datasource could not be found")
   }
 
-  // Ensure we aren't using a custom endpoint
-  if (datasource?.config?.endpoint) {
-    ctx.throw(400, "S3 datasources with custom endpoints are not supported")
-  }
-
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
@@ -309,6 +304,7 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     try {
       const s3 = new AWS.S3({
         region: awsRegion,
+        endpoint: datasource?.config?.endpoint || undefined,
         accessKeyId: datasource?.config?.accessKeyId as string,
         secretAccessKey: datasource?.config?.secretAccessKey as string,
         apiVersion: "2006-03-01",
@@ -316,7 +312,11 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
       })
       const params = { Bucket: bucket, Key: key }
       signedUrl = s3.getSignedUrl("putObject", params)
-      publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
+      if (datasource?.config?.endpoint) {
+        publicUrl = `${datasource.config.endpoint}/${bucket}/${key}`
+      } else {
+        publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
+      }
     } catch (error: any) {
       ctx.throw(400, error)
     }

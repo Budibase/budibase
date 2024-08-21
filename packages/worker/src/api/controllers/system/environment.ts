@@ -1,13 +1,7 @@
 import { Ctx, MaintenanceType } from "@budibase/types"
 import env from "../../../environment"
-import { env as coreEnv } from "@budibase/backend-core"
+import { env as coreEnv, db as dbCore } from "@budibase/backend-core"
 import nodeFetch from "node-fetch"
-
-// When we come to move to SQS fully and move away from Clouseau, we will need
-// to flip this to true (or remove it entirely). This will then be used to
-// determine if we should show the maintenance page that links to the SQS
-// migration docs.
-const sqsRequired = false
 
 let sqsAvailable: boolean
 async function isSqsAvailable() {
@@ -18,7 +12,12 @@ async function isSqsAvailable() {
   }
 
   try {
-    await nodeFetch(coreEnv.COUCH_DB_SQL_URL, {
+    const couchInfo = dbCore.getCouchInfo()
+    if (!couchInfo.sqlUrl) {
+      sqsAvailable = false
+      return false
+    }
+    await nodeFetch(couchInfo.sqlUrl, {
       timeout: 1000,
     })
     sqsAvailable = true
@@ -30,7 +29,7 @@ async function isSqsAvailable() {
 }
 
 async function isSqsMissing() {
-  return sqsRequired && !(await isSqsAvailable())
+  return coreEnv.SQS_SEARCH_ENABLE && !(await isSqsAvailable())
 }
 
 export const fetch = async (ctx: Ctx) => {
@@ -43,6 +42,7 @@ export const fetch = async (ctx: Ctx) => {
     baseUrl: env.PLATFORM_URL,
     isDev: env.isDev() && !env.isTest(),
     maintenance: [],
+    passwordMinLength: env.PASSWORD_MIN_LENGTH,
   }
 
   if (env.SELF_HOSTED) {

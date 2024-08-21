@@ -3,7 +3,7 @@ import {
   Table,
   DocumentType,
   SEPARATOR,
-  FieldSubtype,
+  BBReferenceFieldSubType,
   SearchFilters,
   SearchIndex,
   SearchResponse,
@@ -56,6 +56,7 @@ function userColumnMapping(column: string, options: RowSearchParams) {
     if (!isString && !isArray) {
       return filterValue
     }
+
     const processString = (input: string) => {
       const rowPrefix = DocumentType.ROW + SEPARATOR
       if (input.startsWith(rowPrefix)) {
@@ -64,6 +65,7 @@ function userColumnMapping(column: string, options: RowSearchParams) {
         return input
       }
     }
+
     if (isArray) {
       return filterValue.map(el => {
         if (typeof el === "string") {
@@ -86,19 +88,38 @@ export function searchInputMapping(table: Table, options: RowSearchParams) {
   }
   for (let [key, column] of Object.entries(table.schema)) {
     switch (column.type) {
-      case FieldType.BB_REFERENCE: {
+      case FieldType.BB_REFERENCE_SINGLE: {
         const subtype = column.subtype
         switch (subtype) {
-          case FieldSubtype.USER:
-          case FieldSubtype.USERS:
+          case BBReferenceFieldSubType.USER:
             userColumnMapping(key, options)
             break
+
           default:
             utils.unreachable(subtype)
         }
         break
       }
+      case FieldType.BB_REFERENCE: {
+        userColumnMapping(key, options)
+        break
+      }
     }
   }
   return options
+}
+
+export function isSearchingByRowID(query: SearchFilters): boolean {
+  for (let searchField of Object.values(query)) {
+    if (typeof searchField !== "object") {
+      continue
+    }
+    const hasId = Object.keys(searchField).find(
+      key => dbCore.removeKeyNumbering(key) === "_id" && searchField[key]
+    )
+    if (hasId) {
+      return true
+    }
+  }
+  return false
 }

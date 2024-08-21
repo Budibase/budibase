@@ -1,37 +1,33 @@
 <script>
   import { getContext } from "svelte"
   import GridScrollWrapper from "../layout/GridScrollWrapper.svelte"
-  import { DefaultRowHeight, GutterWidth } from "../lib/constants"
+  import { DefaultRowHeight } from "../lib/constants"
 
   const {
     isReordering,
     reorder,
-    visibleColumns,
-    stickyColumn,
+    columnLookupMap,
     rowHeight,
     renderedRows,
     scrollLeft,
+    stickyWidth,
   } = getContext("grid")
 
-  $: targetColumn = $reorder.targetColumn
-  $: minLeft = GutterWidth + ($stickyColumn?.width || 0)
-  $: left = getLeft(targetColumn, $stickyColumn, $visibleColumns, $scrollLeft)
+  $: targetColumn = $columnLookupMap[$reorder.targetColumn]
+  $: insertAfter = $reorder.insertAfter
+  $: left = getLeft(targetColumn, insertAfter, $scrollLeft)
   $: height = $rowHeight * $renderedRows.length + DefaultRowHeight
   $: style = `left:${left}px; height:${height}px;`
-  $: visible = $isReordering && left >= minLeft
+  $: visible = $isReordering && left >= $stickyWidth
 
-  const getLeft = (targetColumn, stickyColumn, visibleColumns, scrollLeft) => {
-    let left = GutterWidth + (stickyColumn?.width || 0) - scrollLeft
-
-    // If this is not the sticky column, add additional left space
-    if (targetColumn !== stickyColumn?.name) {
-      const column = visibleColumns.find(x => x.name === targetColumn)
-      if (!column) {
-        return left
-      }
-      left += column.left + column.width
+  const getLeft = (targetColumn, insertAfter, scrollLeft) => {
+    if (!targetColumn) {
+      return 0
     }
-
+    let left = targetColumn.__left - scrollLeft
+    if (insertAfter) {
+      left += targetColumn.width
+    }
     return left
   }
 </script>

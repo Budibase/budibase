@@ -1,3 +1,4 @@
+ARG BASEIMG=budibase/couchdb:v3.3.3
 FROM node:20-slim as build
 
 # install node-gyp dependencies
@@ -32,7 +33,7 @@ COPY packages/worker/dist packages/worker/dist
 COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
 
 
-FROM budibase/couchdb:v3.3.3 as runner
+FROM $BASEIMG as runner
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
@@ -62,11 +63,6 @@ RUN mkdir -p /var/log/nginx && \
   touch /var/log/nginx/error.log && \
   touch /var/run/nginx.pid && \
   usermod -a -G tty www-data
-
-WORKDIR /
-RUN mkdir -p scripts/integrations/oracle
-COPY packages/server/scripts/integrations/oracle scripts/integrations/oracle
-RUN /bin/bash -e ./scripts/integrations/oracle/instantclient/linux/install.sh
 
 # setup minio
 WORKDIR /minio

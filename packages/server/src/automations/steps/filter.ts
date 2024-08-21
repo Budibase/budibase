@@ -1,9 +1,10 @@
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
-  AutomationStepInput,
+  AutomationStepDefinition,
   AutomationStepType,
   AutomationIOType,
+  FilterStepInputs,
+  FilterStepOutputs,
 } from "@budibase/types"
 
 export const FilterConditions = {
@@ -20,7 +21,7 @@ export const PrettyFilterConditions = {
   [FilterConditions.LESS_THAN]: "Less than",
 }
 
-export const definition: AutomationStepSchema = {
+export const definition: AutomationStepDefinition = {
   name: "Condition",
   tagline: "{{inputs.field}} {{inputs.condition}} {{inputs.value}}",
   icon: "Branch2",
@@ -69,11 +70,20 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs }: AutomationStepInput) {
+export async function run({
+  inputs,
+}: {
+  inputs: FilterStepInputs
+}): Promise<FilterStepOutputs> {
   try {
     let { field, condition, value } = inputs
     // coerce types so that we can use them
-    if (!isNaN(value) && !isNaN(field)) {
+    if (
+      !isNaN(value) &&
+      !isNaN(field) &&
+      typeof field !== "boolean" &&
+      typeof value !== "boolean"
+    ) {
       value = parseFloat(value)
       field = parseFloat(field)
     } else if (!isNaN(Date.parse(value)) && !isNaN(Date.parse(field))) {

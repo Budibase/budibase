@@ -1,6 +1,7 @@
 import { mocks, structures } from "@budibase/backend-core/tests"
 import { context, events } from "@budibase/backend-core"
 import { Event, IdentityType } from "@budibase/types"
+import { auditLogs } from "@budibase/pro"
 import { TestConfiguration } from "../../../../tests"
 
 mocks.licenses.useAuditLogs()
@@ -12,10 +13,13 @@ const BASE_IDENTITY = {
 const USER_AUDIT_LOG_COUNT = 3
 const APP_ID = "app_1"
 
-describe("/api/global/auditlogs", () => {
+describe.each(["lucene", "sql"])("/api/global/auditlogs (%s)", method => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
+    if (method === "sql") {
+      auditLogs.useSQLSearch()
+    }
     await config.beforeAll()
   })
 

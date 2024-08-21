@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, db as dbCore, env } from "@budibase/backend-core"
 import { getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
@@ -27,12 +27,16 @@ export function processTable(table: Table): Table {
       sourceType: TableSourceType.EXTERNAL,
     }
   } else {
-    return {
+    const processed: Table = {
       ...table,
       type: "table",
       sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
     }
+    if (dbCore.isSqsEnabledForTenant()) {
+      processed.sql = !!env.SQS_SEARCH_ENABLE
+    }
+    return processed
   }
 }
 
@@ -85,10 +89,10 @@ export async function getExternalTable(
 export async function getTable(tableId: string): Promise<Table> {
   const db = context.getAppDB()
   let output: Table
-  if (isExternalTableID(tableId)) {
+  if (tableId && isExternalTableID(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
-    const datasource = await datasources.get(datasourceId!)
-    const table = await getExternalTable(datasourceId!, tableName!)
+    const datasource = await datasources.get(datasourceId)
+    const table = await getExternalTable(datasourceId, tableName)
     output = { ...table, sql: isSQL(datasource) }
   } else {
     output = await db.get<Table>(tableId)

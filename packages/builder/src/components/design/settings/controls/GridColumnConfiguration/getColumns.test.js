@@ -65,38 +65,50 @@ describe("getColumns", () => {
     it("returns the selected and unselected fields in the modern format, respecting the original order", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
+          _id: "three",
           _instanceName: "three",
           active: true,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "three",
           label: "three label",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
+          _id: "two",
           _instanceName: "two",
           active: true,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "two",
           label: "two label",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
+          _id: "one",
           _instanceName: "one",
           active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "one",
           label: "one",
+          conditions: undefined,
+          schema: ctx.schema,
         },
       ])
 
       expect(ctx.columns.primary).toEqual({
+        _id: "four",
         _instanceName: "four",
         active: true,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
         label: "four",
+        conditions: undefined,
+        schema: ctx.schema,
       })
     })
   })
@@ -115,38 +127,50 @@ describe("getColumns", () => {
     it("returns all columns, with non-hidden columns automatically selected", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
+          _id: "two",
           _instanceName: "two",
           active: true,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "two",
           label: "two",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
+          _id: "three",
           _instanceName: "three",
           active: true,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "three",
           label: "three",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
+          _id: "one",
           _instanceName: "one",
           active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "one",
           label: "one",
+          conditions: undefined,
+          schema: ctx.schema,
         },
       ])
 
       expect(ctx.columns.primary).toEqual({
+        _id: "four",
         _instanceName: "four",
         active: true,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
         label: "four",
+        conditions: undefined,
+        schema: ctx.schema,
       })
     })
 
@@ -173,38 +197,50 @@ describe("getColumns", () => {
     it("returns all columns, including those missing from the initial data", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
+          _id: "three",
           _instanceName: "three",
           active: true,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "three",
           label: "three label",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
+          _id: "two",
           _instanceName: "two",
           active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "two",
           label: "two",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
+          _id: "one",
           _instanceName: "one",
           active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "one",
           label: "one",
+          conditions: undefined,
+          schema: ctx.schema,
         },
       ])
 
       expect(ctx.columns.primary).toEqual({
+        _id: "four",
         _instanceName: "four",
         active: true,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
         label: "four",
+        conditions: undefined,
+        schema: ctx.schema,
       })
     })
   })
@@ -228,38 +264,50 @@ describe("getColumns", () => {
     it("returns all valid columns, excluding those that aren't valid for the schema", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
+          _id: "three",
           _instanceName: "three",
           active: true,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "three",
           label: "three label",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
+          _id: "two",
           _instanceName: "two",
           active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "two",
           label: "two",
+          conditions: undefined,
+          schema: ctx.schema,
         },
         {
+          _id: "one",
           _instanceName: "one",
           active: false,
           columnType: "foo",
           componentName: "@budibase/standard-components/labelfield",
           field: "one",
           label: "one",
+          conditions: undefined,
+          schema: ctx.schema,
         },
       ])
 
       expect(ctx.columns.primary).toEqual({
+        _id: "four",
         _instanceName: "four",
         active: true,
         columnType: "foo",
         componentName: "@budibase/standard-components/labelfield",
         field: "four",
         label: "four",
+        conditions: undefined,
+        schema: ctx.schema,
       })
     })
   })
@@ -318,6 +366,7 @@ describe("getColumns", () => {
       beforeEach(ctx => {
         ctx.updateSortable([
           {
+            _id: "three",
             _instanceName: "three",
             active: true,
             columnType: "foo",
@@ -326,6 +375,7 @@ describe("getColumns", () => {
             label: "three",
           },
           {
+            _id: "one",
             _instanceName: "one",
             active: true,
             columnType: "foo",
@@ -334,6 +384,7 @@ describe("getColumns", () => {
             label: "one",
           },
           {
+            _id: "two",
             _instanceName: "two",
             active: false,
             columnType: "foo",

@@ -1,12 +1,18 @@
-import { SqlClient } from "../utils"
-import Sql from "../base/sql"
 import {
   FieldType,
   Operation,
+  PaginationJson,
   QueryJson,
+  SearchFilters,
+  SortJson,
+  SqlClient,
   Table,
   TableSourceType,
 } from "@budibase/types"
+import { sql } from "@budibase/backend-core"
+import { merge } from "lodash"
+
+const Sql = sql.Sql
 
 const TABLE_NAME = "test"
 const TABLE: Table = {
@@ -23,7 +29,16 @@ const TABLE: Table = {
   primary: ["id"],
 }
 
-function endpoint(table: any, operation: any) {
+const ORACLE_TABLE: Partial<Table> = {
+  schema: {
+    name: {
+      name: "name",
+      type: FieldType.STRING,
+    },
+  },
+}
+
+function endpoint(table: string, operation: Operation) {
   return {
     datasourceId: "Postgres",
     operation: operation,
@@ -37,64 +52,28 @@ function generateReadJson({
   filters,
   sort,
   paginate,
-}: any = {}): QueryJson {
-  const tableObj = { ...TABLE }
+}: {
+  table?: Partial<Table>
+  fields?: string[]
+  filters?: SearchFilters
+  sort?: SortJson
+  paginate?: PaginationJson
+} = {}): QueryJson {
+  let tableObj: Table = { ...TABLE }
   if (table) {
-    tableObj.name = table
+    tableObj = merge(TABLE, table)
   }
   return {
-    endpoint: endpoint(table || TABLE_NAME, "READ"),
+    endpoint: endpoint(tableObj.name || TABLE_NAME, Operation.READ),
     resource: {
       fields: fields || [],
     },
     filters: filters || {},
     sort: sort || {},
-    paginate: paginate || {},
+    paginate: paginate || undefined,
     meta: {
       table: tableObj,
     },
-  }
-}
-
-function generateCreateJson(table = TABLE_NAME, body = {}): QueryJson {
-  return {
-    endpoint: endpoint(table, "CREATE"),
-    meta: {
-      table: TABLE,
-    },
-    body,
-  }
-}
-
-function generateUpdateJson({
-  table = TABLE_NAME,
-  body = {},
-  filters = {},
-  meta = {},
-}: {
-  table: string
-  body?: any
-  filters?: any
-  meta?: any
-}): QueryJson {
-  if (!meta.table) {
-    meta.table = TABLE
-  }
-  return {
-    endpoint: endpoint(table, "UPDATE"),
-    filters,
-    body,
-    meta,
-  }
-}
-
-function generateDeleteJson(table = TABLE_NAME, filters = {}): QueryJson {
-  return {
-    endpoint: endpoint(table, "DELETE"),
-    meta: {
-      table: TABLE,
-    },
-    filters,
   }
 }
 
@@ -178,358 +157,11 @@ describe("SQL query builder", () => {
     sql = new Sql(client, limit)
   })
 
-  it("should test a basic read", () => {
-    const query = sql._query(generateReadJson())
-    expect(query).toEqual({
-      bindings: [limit],
-      sql: `select * from (select * from "${TABLE_NAME}" limit $1) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should test a read with specific columns", () => {
-    const nameProp = `${TABLE_NAME}.name`,
-      ageProp = `${TABLE_NAME}.age`
-    const query = sql._query(
-      generateReadJson({
-        fields: [nameProp, ageProp],
-      })
-    )
-    expect(query).toEqual({
-      bindings: [limit],
-      sql: `select "${TABLE_NAME}"."name" as "${nameProp}", "${TABLE_NAME}"."age" as "${ageProp}" from (select * from "${TABLE_NAME}" limit $1) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should test a where string starts with read", () => {
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          string: {
-            name: "John",
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: ["John%", limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."name" ilike $1 limit $2) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should test a where range read", () => {
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          range: {
-            age: {
-              low: 2,
-              high: 10,
-            },
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [2, 10, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age" between $1 and $2 limit $3) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should test for multiple IDs with OR", () => {
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          equal: {
-            age: 10,
-            name: "John",
-          },
-          allOr: true,
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10, "John", limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where ("${TABLE_NAME}"."age" = $1) or ("${TABLE_NAME}"."name" = $2) limit $3) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should allow filtering on a related field", () => {
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          equal: {
-            age: 10,
-            "task.name": "task 1",
-          },
-        },
-      })
-    )
-    // order of bindings changes because relationship filters occur outside inner query
-    expect(query).toEqual({
-      bindings: [10, limit, "task 1"],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age" = $1 limit $2) as "${TABLE_NAME}" where "task"."name" = $3`,
-    })
-  })
-
-  it("should test an create statement", () => {
-    const query = sql._query(
-      generateCreateJson(TABLE_NAME, {
-        name: "Michael",
-        age: 45,
-      })
-    )
-    expect(query).toEqual({
-      bindings: [45, "Michael"],
-      sql: `insert into "${TABLE_NAME}" ("age", "name") values ($1, $2) returning *`,
-    })
-  })
-
-  it("should test an update statement", () => {
-    const query = sql._query(
-      generateUpdateJson({
-        table: TABLE_NAME,
-        body: {
-          name: "John",
-        },
-        filters: {
-          equal: {
-            id: 1001,
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: ["John", 1001],
-      sql: `update "${TABLE_NAME}" set "name" = $1 where "${TABLE_NAME}"."id" = $2 returning *`,
-    })
-  })
-
-  it("should test a delete statement", () => {
-    const query = sql._query(
-      generateDeleteJson(TABLE_NAME, {
-        equal: {
-          id: 1001,
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [1001],
-      sql: `delete from "${TABLE_NAME}" where "${TABLE_NAME}"."id" = $1 returning *`,
-    })
-  })
-
-  it("should work with MS-SQL", () => {
-    const query = new Sql(SqlClient.MS_SQL, 10)._query(generateReadJson())
-    expect(query).toEqual({
-      bindings: [10],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}]) as [${TABLE_NAME}]`,
-    })
-  })
-
-  it("should work with MySQL", () => {
-    const query = new Sql(SqlClient.MY_SQL, 10)._query(generateReadJson())
-    expect(query).toEqual({
-      bindings: [10],
-      sql: `select * from (select * from \`${TABLE_NAME}\` limit ?) as \`${TABLE_NAME}\``,
-    })
-  })
-
-  it("should use greater than when only low range specified", () => {
-    const date = new Date()
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          range: {
-            property: {
-              low: date,
-            },
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [date, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" >= $1 limit $2) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should use less than when only high range specified", () => {
-    const date = new Date()
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          range: {
-            property: {
-              high: date,
-            },
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [date, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" <= $1 limit $2) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should use AND like expression for MS-SQL when filter is contains", () => {
-    const query = new Sql(SqlClient.MS_SQL, 10)._query(
-      generateReadJson({
-        filters: {
-          contains: {
-            age: [20, 25],
-            name: ["John", "Mary"],
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10, "%20%", "%25%", `%"john"%`, `%"mary"%`],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER([${TABLE_NAME}].[age]) LIKE @p1 AND LOWER([${TABLE_NAME}].[age]) LIKE @p2) and (LOWER([${TABLE_NAME}].[name]) LIKE @p3 AND LOWER([${TABLE_NAME}].[name]) LIKE @p4)) as [${TABLE_NAME}]`,
-    })
-  })
-
-  it("should use JSON_CONTAINS expression for MySQL when filter is contains", () => {
-    const query = new Sql(SqlClient.MY_SQL, 10)._query(
-      generateReadJson({
-        filters: {
-          contains: {
-            age: [20],
-            name: ["John"],
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10],
-      sql: `select * from (select * from \`${TABLE_NAME}\` where JSON_CONTAINS(${TABLE_NAME}.age, '[20]') and JSON_CONTAINS(${TABLE_NAME}.name, '["John"]') limit ?) as \`${TABLE_NAME}\``,
-    })
-  })
-
-  it("should use jsonb operator expression for PostgreSQL when filter is contains", () => {
-    const query = new Sql(SqlClient.POSTGRES, 10)._query(
-      generateReadJson({
-        filters: {
-          contains: {
-            age: [20],
-            name: ["John"],
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age"::jsonb @> '[20]' and "${TABLE_NAME}"."name"::jsonb @> '["John"]' limit $1) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should use NOT like expression for MS-SQL when filter is notContains", () => {
-    const query = new Sql(SqlClient.MS_SQL, 10)._query(
-      generateReadJson({
-        filters: {
-          notContains: {
-            age: [20],
-            name: ["John"],
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10, "%20%", `%"john"%`],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where NOT (LOWER([${TABLE_NAME}].[age]) LIKE @p1) and NOT (LOWER([${TABLE_NAME}].[name]) LIKE @p2)) as [${TABLE_NAME}]`,
-    })
-  })
-
-  it("should use NOT JSON_CONTAINS expression for MySQL when filter is notContains", () => {
-    const query = new Sql(SqlClient.MY_SQL, 10)._query(
-      generateReadJson({
-        filters: {
-          notContains: {
-            age: [20],
-            name: ["John"],
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10],
-      sql: `select * from (select * from \`${TABLE_NAME}\` where NOT JSON_CONTAINS(${TABLE_NAME}.age, '[20]') and NOT JSON_CONTAINS(${TABLE_NAME}.name, '["John"]') limit ?) as \`${TABLE_NAME}\``,
-    })
-  })
-
-  it("should use jsonb operator NOT expression for PostgreSQL when filter is notContains", () => {
-    const query = new Sql(SqlClient.POSTGRES, 10)._query(
-      generateReadJson({
-        filters: {
-          notContains: {
-            age: [20],
-            name: ["John"],
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10],
-      sql: `select * from (select * from "${TABLE_NAME}" where NOT "${TABLE_NAME}"."age"::jsonb @> '[20]' and NOT "${TABLE_NAME}"."name"::jsonb @> '["John"]' limit $1) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should use OR like expression for MS-SQL when filter is containsAny", () => {
-    const query = new Sql(SqlClient.MS_SQL, 10)._query(
-      generateReadJson({
-        filters: {
-          containsAny: {
-            age: [20, 25],
-            name: ["John", "Mary"],
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10, "%20%", "%25%", `%"john"%`, `%"mary"%`],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER([${TABLE_NAME}].[age]) LIKE @p1 OR LOWER([${TABLE_NAME}].[age]) LIKE @p2) and (LOWER([${TABLE_NAME}].[name]) LIKE @p3 OR LOWER([${TABLE_NAME}].[name]) LIKE @p4)) as [${TABLE_NAME}]`,
-    })
-  })
-
-  it("should use JSON_OVERLAPS expression for MySQL when filter is containsAny", () => {
-    const query = new Sql(SqlClient.MY_SQL, 10)._query(
-      generateReadJson({
-        filters: {
-          containsAny: {
-            age: [20, 25],
-            name: ["John", "Mary"],
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10],
-      sql: `select * from (select * from \`${TABLE_NAME}\` where JSON_OVERLAPS(${TABLE_NAME}.age, '[20,25]') and JSON_OVERLAPS(${TABLE_NAME}.name, '["John","Mary"]') limit ?) as \`${TABLE_NAME}\``,
-    })
-  })
-
-  it("should use ?| operator expression for PostgreSQL when filter is containsAny", () => {
-    const query = new Sql(SqlClient.POSTGRES, 10)._query(
-      generateReadJson({
-        filters: {
-          containsAny: {
-            age: [20, 25],
-            name: ["John", "Mary"],
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [10],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age"::jsonb ?| array [20,25] and "${TABLE_NAME}"."name"::jsonb ?| array ['John','Mary'] limit $1) as "${TABLE_NAME}"`,
-    })
-  })
-
   it("should add the schema to the LEFT JOIN", () => {
     const query = sql._query(generateRelationshipJson({ schema: "production" }))
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" limit $1) as "brands" left join "production"."products" as "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
+      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" order by "test"."id" asc limit $1) as "brands" left join "production"."products" as "products" on "brands"."brand_id" = "products"."brand_id" order by "test"."id" asc limit $2`,
     })
   })
 
@@ -537,7 +169,7 @@ describe("SQL query builder", () => {
     const query = sql._query(generateRelationshipJson())
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" limit $1) as "brands" left join "products" as "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
+      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" order by "test"."id" asc limit $1) as "brands" left join "products" as "products" on "brands"."brand_id" = "products"."brand_id" order by "test"."id" asc limit $2`,
     })
   })
 
@@ -547,81 +179,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" limit $1) as "stores" left join "production"."stocks" as "stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" as "products" on "products"."product_id" = "stocks"."product_id" limit $2`,
-    })
-  })
-
-  it("should handle table names with dashes when performing a LIKE in MySQL", () => {
-    const tableName = "Table-Name-With-Dashes"
-    const query = new Sql(SqlClient.MY_SQL, limit)._query(
-      generateReadJson({
-        table: tableName,
-        filters: {
-          string: {
-            name: "John",
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: ["john%", limit],
-      sql: `select * from (select * from \`${tableName}\` where LOWER(\`${tableName}\`.\`name\`) LIKE ? limit ?) as \`${tableName}\``,
-    })
-  })
-
-  it("should handle table names with dashes when performing a LIKE in SQL Server", () => {
-    const tableName = "Table-Name-With-Dashes"
-    const query = new Sql(SqlClient.MS_SQL, limit)._query(
-      generateReadJson({
-        table: tableName,
-        filters: {
-          string: {
-            name: "John",
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [limit, "john%"],
-      sql: `select * from (select top (@p0) * from [${tableName}] where LOWER([${tableName}].[name]) LIKE @p1) as [${tableName}]`,
-    })
-  })
-
-  it("should ignore high range value if it is an empty object", () => {
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          range: {
-            dob: {
-              low: "2000-01-01 00:00:00",
-              high: {},
-            },
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: ["2000-01-01 00:00:00", 500],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" >= $1 limit $2) as "${TABLE_NAME}"`,
-    })
-  })
-
-  it("should ignore low range value if it is an empty object", () => {
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          range: {
-            dob: {
-              low: {},
-              high: "2010-01-01 00:00:00",
-            },
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: ["2010-01-01 00:00:00", 500],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" <= $1 limit $2) as "${TABLE_NAME}"`,
+      sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" order by "test"."id" asc limit $1) as "stores" left join "production"."stocks" as "stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" as "products" on "products"."product_id" = "stocks"."product_id" order by "test"."id" asc limit $2`,
     })
   })
 
@@ -636,8 +194,8 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: ["john%", limit],
-      sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
+      bindings: ["john%", limit, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -651,8 +209,8 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit],
-      sql: `select * from (select * from (select * from "test" where (LOWER("test"."age") LIKE :1 AND LOWER("test"."age") LIKE :2) and (LOWER("test"."name") LIKE :3 AND LOWER("test"."name") LIKE :4)) where rownum <= :5) "test"`,
+      bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where COALESCE(LOWER("test"."age"), '') LIKE :1 AND COALESCE(LOWER("test"."age"), '') LIKE :2 and COALESCE(LOWER("test"."name"), '') LIKE :3 AND COALESCE(LOWER("test"."name"), '') LIKE :4 order by "test"."id" asc) where rownum <= :5) "test" order by "test"."id" asc) where rownum <= :6`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -665,143 +223,44 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: [`%jo%`, limit],
-      sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
+      bindings: [`%jo%`, limit, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1 order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
   })
 
-  it("should sort SQL Server tables by the primary key if no sort data is provided", () => {
-    let query = new Sql(SqlClient.MS_SQL, limit)._query(
+  it("should use an oracle compatible coalesce query for oracle when using the equals filter", () => {
+    let query = new Sql(SqlClient.ORACLE, limit)._query(
       generateReadJson({
-        sort: {},
-        paginate: {
-          limit: 10,
+        table: ORACLE_TABLE,
+        filters: {
+          equal: {
+            name: "John",
+          },
         },
       })
     )
+
     expect(query).toEqual({
-      bindings: [10],
-      sql: `select * from (select top (@p0) * from [test] order by [test].[id] asc) as [test]`,
+      bindings: ["John", limit, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") = :1) order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
   })
 
-  it("should not parse JSON string as Date", () => {
-    let query = new Sql(SqlClient.POSTGRES, limit)._query(
-      generateCreateJson(TABLE_NAME, {
-        name: '{ "created_at":"2023-09-09T03:21:06.024Z" }',
+  it("should use an oracle compatible coalesce query for oracle when using the not equals filter", () => {
+    let query = new Sql(SqlClient.ORACLE, limit)._query(
+      generateReadJson({
+        table: ORACLE_TABLE,
+        filters: {
+          notEqual: {
+            name: "John",
+          },
+        },
       })
     )
-    expect(query).toEqual({
-      bindings: ['{ "created_at":"2023-09-09T03:21:06.024Z" }'],
-      sql: `insert into "test" ("name") values ($1) returning *`,
-    })
-  })
 
-  it("should parse and trim valid string as Date", () => {
-    const dateObj = new Date("2023-09-09T03:21:06.024Z")
-    let query = new Sql(SqlClient.POSTGRES, limit)._query(
-      generateCreateJson(TABLE_NAME, {
-        name: " 2023-09-09T03:21:06.024Z ",
-      })
-    )
     expect(query).toEqual({
-      bindings: [dateObj],
-      sql: `insert into "test" ("name") values ($1) returning *`,
+      bindings: ["John", limit, 5000],
+      sql: `select * from (select * from (select * from (select * from "test" where (to_char("test"."name") IS NOT NULL AND to_char("test"."name") != :1) OR to_char("test"."name") IS NULL order by "test"."id" asc) where rownum <= :2) "test" order by "test"."id" asc) where rownum <= :3`,
     })
-  })
-
-  it("should be able to rename column for MySQL", () => {
-    const table: Table = {
-      type: "table",
-      sourceType: TableSourceType.EXTERNAL,
-      name: TABLE_NAME,
-      schema: {
-        first_name: {
-          type: FieldType.STRING,
-          name: "first_name",
-          externalType: "varchar(45)",
-        },
-      },
-      sourceId: "SOURCE_ID",
-    }
-    const oldTable: Table = {
-      ...table,
-      schema: {
-        name: {
-          type: FieldType.STRING,
-          name: "name",
-          externalType: "varchar(45)",
-        },
-      },
-    }
-    const query = new Sql(SqlClient.MY_SQL, limit)._query({
-      table,
-      endpoint: {
-        datasourceId: "MySQL",
-        operation: Operation.UPDATE_TABLE,
-        entityId: TABLE_NAME,
-      },
-      meta: {
-        table: oldTable,
-        tables: { [oldTable.name]: oldTable },
-        renamed: {
-          old: "name",
-          updated: "first_name",
-        },
-      },
-    })
-    expect(query).toEqual({
-      bindings: [],
-      sql: `alter table \`${TABLE_NAME}\` rename column \`name\` to \`first_name\`;`,
-    })
-  })
-
-  it("should be able to delete a column", () => {
-    const table: Table = {
-      type: "table",
-      sourceType: TableSourceType.EXTERNAL,
-      name: TABLE_NAME,
-      schema: {
-        first_name: {
-          type: FieldType.STRING,
-          name: "first_name",
-          externalType: "varchar(45)",
-        },
-      },
-      sourceId: "SOURCE_ID",
-    }
-    const oldTable: Table = {
-      ...table,
-      schema: {
-        first_name: {
-          type: FieldType.STRING,
-          name: "first_name",
-          externalType: "varchar(45)",
-        },
-        last_name: {
-          type: FieldType.STRING,
-          name: "last_name",
-          externalType: "varchar(45)",
-        },
-      },
-    }
-    const query = sql._query({
-      table,
-      endpoint: {
-        datasourceId: "Postgres",
-        operation: Operation.UPDATE_TABLE,
-        entityId: TABLE_NAME,
-      },
-      meta: {
-        table: oldTable,
-        tables: [oldTable],
-      },
-    })
-    expect(query).toEqual([
-      {
-        bindings: [],
-        sql: `alter table "${TABLE_NAME}" drop column "last_name"`,
-      },
-    ])
   })
 })

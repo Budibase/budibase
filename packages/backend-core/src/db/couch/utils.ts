@@ -21,7 +21,7 @@ export async function directCouchUrlCall({
   url: string
   cookie: string
   method: string
-  body?: any
+  body?: Record<string, any>
 }) {
   const params: any = {
     method: method,

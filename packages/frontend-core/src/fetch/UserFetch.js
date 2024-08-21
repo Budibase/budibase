@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
 import DataFetch from "./DataFetch.js"
 import { TableNames } from "../constants"
-import { LuceneUtils } from "../utils"
+import { QueryUtils } from "../utils"
 
 export default class UserFetch extends DataFetch {
   constructor(opts) {
@@ -33,7 +33,7 @@ export default class UserFetch extends DataFetch {
     let finalQuery
     // convert old format to new one - we now allow use of the lucene format
     const { appId, paginated, ...rest } = query
-    if (!LuceneUtils.hasFilters(query) && rest.email != null) {
+    if (!QueryUtils.hasFilters(query) && rest.email != null) {
       finalQuery = { string: { email: rest.email } }
     } else {
       finalQuery = rest

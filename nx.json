@@ -1,4 +1,5 @@
 {
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx-cloud",
@@ -9,7 +10,23 @@
   },
   "targetDefaults": {
     "build": {
-      "inputs": ["{workspaceRoot}/scripts/*", "{workspaceRoot}/lerna.json"]
+      "inputs": [
+        "{workspaceRoot}/scripts/*",
+        "{workspaceRoot}/lerna.json",
+        "{workspaceRoot}/.github/workflows/*"
+      ]
+    },
+    "test": {
+      "inputs": [
+        "{workspaceRoot}/scripts/*",
+        "{workspaceRoot}/lerna.json",
+        "{workspaceRoot}/.github/workflows/*"
+      ]
     }
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "sharedGlobals": [],
+    "production": ["default"]
   }
 }

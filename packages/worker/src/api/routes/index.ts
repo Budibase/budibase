@@ -1,6 +1,7 @@
 import Router from "@koa/router"
 import { api as pro } from "@budibase/pro"
 import userRoutes from "./global/users"
+import tenantRoutes from "./global/tenant"
 import configRoutes from "./global/configs"
 import workspaceRoutes from "./global/workspaces"
 import templateRoutes from "./global/templates"
@@ -40,6 +41,7 @@ export const routes: Router[] = [
   accountRoutes,
   restoreRoutes,
   eventRoutes,
+  tenantRoutes,
   pro.scim,
 ]
 

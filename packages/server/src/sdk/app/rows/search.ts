@@ -2,19 +2,19 @@ import {
   EmptyFilterOption,
   Row,
   RowSearchParams,
-  SearchFilters,
   SearchResponse,
+  SortOrder,
 } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
-import { NoEmptyFilterStrings } from "../../../constants"
-import * as sqs from "./search/sqs"
-import env from "../../../environment"
 import { ExportRowsParams, ExportRowsResult } from "./search/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../index"
 import { searchInputMapping } from "./search/utils"
+import { db as dbCore } from "@budibase/backend-core"
+import tracer from "dd-trace"
+import { getQueryableFields, removeInvalidFilters } from "./queryUtils"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -31,63 +31,80 @@ function pickApi(tableId: any) {
   return internal
 }
 
-function isEmptyArray(value: any) {
-  return Array.isArray(value) && value.length === 0
-}
-
-// don't do a pure falsy check, as 0 is included
-// https://github.com/Budibase/budibase/issues/10118
-export function removeEmptyFilters(filters: SearchFilters) {
-  for (let filterField of NoEmptyFilterStrings) {
-    if (!filters[filterField]) {
-      continue
-    }
-
-    for (let filterType of Object.keys(filters)) {
-      if (filterType !== filterField) {
-        continue
-      }
-      // don't know which one we're checking, type could be anything
-      const value = filters[filterType] as unknown
-      if (typeof value === "object") {
-        for (let [key, value] of Object.entries(
-          filters[filterType] as object
-        )) {
-          if (value == null || value === "" || isEmptyArray(value)) {
-            // @ts-ignore
-            delete filters[filterField][key]
-          }
-        }
-      }
-    }
-  }
-  return filters
-}
-
 export async function search(
   options: RowSearchParams
 ): Promise<SearchResponse<Row>> {
-  const isExternalTable = isExternalTableID(options.tableId)
-  options.query = removeEmptyFilters(options.query || {})
-  if (
-    !dataFilters.hasFilters(options.query) &&
-    options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
-  ) {
-    return {
-      rows: [],
+  return await tracer.trace("search", async span => {
+    span?.addTags({
+      tableId: options.tableId,
+      query: options.query,
+      sort: options.sort,
+      sortOrder: options.sortOrder,
+      sortType: options.sortType,
+      limit: options.limit,
+      bookmark: options.bookmark,
+      paginate: options.paginate,
+      fields: options.fields,
+      countRows: options.countRows,
+    })
+
+    const isExternalTable = isExternalTableID(options.tableId)
+    options.query = dataFilters.cleanupQuery(options.query || {})
+    options.query = dataFilters.fixupFilterArrays(options.query)
+
+    span?.addTags({
+      cleanedQuery: options.query,
+      isExternalTable,
+    })
+
+    if (
+      !dataFilters.hasFilters(options.query) &&
+      options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
+    ) {
+      span?.addTags({ emptyQuery: true })
+      return {
+        rows: [],
+      }
     }
-  }
 
-  const table = await sdk.tables.getTable(options.tableId)
-  options = searchInputMapping(table, options)
+    if (options.sortOrder) {
+      options.sortOrder = options.sortOrder.toLowerCase() as SortOrder
+    }
 
-  if (isExternalTable) {
-    return external.search(options, table)
-  } else if (env.SQS_SEARCH_ENABLE) {
-    return sqs.search(options, table)
-  } else {
-    return internal.search(options, table)
-  }
+    const table = await sdk.tables.getTable(options.tableId)
+    options = searchInputMapping(table, options)
+
+    if (options.query) {
+      const tableFields = Object.keys(table.schema).filter(
+        f => table.schema[f].visible !== false
+      )
+
+      const queriableFields = await getQueryableFields(
+        options.fields?.filter(f => tableFields.includes(f)) ?? tableFields,
+        table
+      )
+      options.query = removeInvalidFilters(options.query, queriableFields)
+    }
+
+    let result: SearchResponse<Row>
+    if (isExternalTable) {
+      span?.addTags({ searchType: "external" })
+      result = await external.search(options, table)
+    } else if (dbCore.isSqsEnabledForTenant()) {
+      span?.addTags({ searchType: "sqs" })
+      result = await internal.sqs.search(options, table)
+    } else {
+      span?.addTags({ searchType: "lucene" })
+      result = await internal.lucene.search(options, table)
+    }
+
+    span?.addTags({
+      foundRows: result.rows.length,
+      totalRows: result.totalRows,
+    })
+
+    return result
+  })
 }
 
 export async function exportRows(

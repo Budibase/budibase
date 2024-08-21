@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
+import { cloneDeep } from "lodash"
 
 function isTest() {
   return isJest()
@@ -93,22 +94,32 @@ function isApps() {
   return environment.SERVICE_TYPE === ServiceType.APPS
 }
 
+function isQA() {
+  return environment.BUDIBASE_ENVIRONMENT === "QA"
+}
+
 const environment = {
   isTest,
   isJest,
   isDev,
   isWorker,
   isApps,
+  isQA,
   isProd: () => {
     return !isDev()
   },
+  BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK,
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
-  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || "http://localhost:4006",
+  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL,
+  SQS_SEARCH_ENABLE: process.env.SQS_SEARCH_ENABLE,
+  SQS_SEARCH_ENABLE_TENANTS:
+    process.env.SQS_SEARCH_ENABLE_TENANTS?.split(",") || [],
+  SQS_MIGRATION_ENABLE: process.env.SQS_MIGRATION_ENABLE,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -119,6 +130,7 @@ const environment = {
   REDIS_CLUSTERED: process.env.REDIS_CLUSTERED,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
+  AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN,
   AWS_REGION: process.env.AWS_REGION,
   MINIO_URL: process.env.MINIO_URL,
   MINIO_ENABLED: process.env.MINIO_ENABLED || 1,
@@ -133,6 +145,8 @@ const environment = {
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL || "",
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
+  POSTHOG_PERSONAL_TOKEN: process.env.POSTHOG_PERSONAL_TOKEN,
+  POSTHOG_API_HOST: process.env.POSTHOG_API_HOST || "https://us.i.posthog.com",
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   CLOUDFRONT_CDN: process.env.CLOUDFRONT_CDN,
@@ -158,6 +172,9 @@ const environment = {
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
   HTTP_LOGGING: httpLogging(),
   ENABLE_AUDIT_LOG_IP_ADDR: process.env.ENABLE_AUDIT_LOG_IP_ADDR,
+  // Couch/search
+  SQL_LOGGING_ENABLE: process.env.SQL_LOGGING_ENABLE,
+  SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
   // smtp
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
   SMTP_USER: process.env.SMTP_USER,
@@ -189,7 +206,53 @@ const environment = {
   },
   ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
   DISABLE_SCIM_CALLS: process.env.DISABLE_SCIM_CALLS,
+  BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
+  BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 }
+
+export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
+  const oldEnv = cloneDeep(environment)
+
+  let key: keyof typeof newEnvVars
+  for (key in newEnvVars) {
+    environment._set(key, newEnvVars[key])
+  }
+
+  return () => {
+    for (const [key, value] of Object.entries(oldEnv)) {
+      environment._set(key, value)
+    }
+  }
+}
+
+export function withEnv<T>(envVars: Partial<typeof environment>, f: () => T) {
+  const cleanup = setEnv(envVars)
+  const result = f()
+  if (result instanceof Promise) {
+    return result.finally(cleanup)
+  } else {
+    cleanup()
+    return result
+  }
+}
+
+type EnvironmentKey = keyof typeof environment
+export const SECRETS: EnvironmentKey[] = [
+  "API_ENCRYPTION_KEY",
+  "BB_ADMIN_USER_PASSWORD",
+  "COUCH_DB_PASSWORD",
+  "COUCH_DB_SQL_URL",
+  "COUCH_DB_URL",
+  "GOOGLE_CLIENT_SECRET",
+  "INTERNAL_API_KEY_FALLBACK",
+  "INTERNAL_API_KEY",
+  "JWT_SECRET",
+  "MINIO_ACCESS_KEY",
+  "MINIO_SECRET_KEY",
+  "OPENAI_API_KEY",
+  "REDIS_PASSWORD",
+]
 
 // clean up any environment variable edge cases
 for (let [key, value] of Object.entries(environment)) {

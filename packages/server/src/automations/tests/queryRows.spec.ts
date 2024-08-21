@@ -1,14 +1,4 @@
-// lucene searching not supported in test due to use of PouchDB
-let rows: Row[] = []
-jest.mock("../../sdk/app/rows/search/internalSearch", () => ({
-  fullSearch: jest.fn(() => {
-    return {
-      rows,
-    }
-  }),
-  paginatedSearch: jest.fn(),
-}))
-import { Row, Table } from "@budibase/types"
+import { Table } from "@budibase/types"
 import * as setup from "./utilities"
 
 const NAME = "Test"
@@ -25,8 +15,8 @@ describe("Test a query step automation", () => {
       description: "original description",
       tableId: table._id,
     }
-    rows.push(await config.createRow(row))
-    rows.push(await config.createRow(row))
+    await config.createRow(row)
+    await config.createRow(row)
   })
 
   afterAll(setup.afterAll)

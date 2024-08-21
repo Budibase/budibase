@@ -1,5 +1,6 @@
-import flatpickr from "flatpickr"
+import dayjs from "dayjs"
 import { FieldTypes } from "../../../constants"
+import { Helpers } from "@budibase/bbui"
 
 /**
  * Creates a validation function from a combination of schema-level constraints
@@ -81,7 +82,7 @@ export const createValidatorFromConstraints = (
     // Date constraint
     if (exists(schemaConstraints.datetime?.earliest)) {
       const limit = schemaConstraints.datetime.earliest
-      const limitString = flatpickr.formatDate(new Date(limit), "F j Y, H:i")
+      const limitString = Helpers.getDateDisplayValue(dayjs(limit))
       rules.push({
         type: "datetime",
         constraint: "minValue",
@@ -91,7 +92,7 @@ export const createValidatorFromConstraints = (
     }
     if (exists(schemaConstraints.datetime?.latest)) {
       const limit = schemaConstraints.datetime.latest
-      const limitString = flatpickr.formatDate(new Date(limit), "F j Y, H:i")
+      const limitString = Helpers.getDateDisplayValue(dayjs(limit))
       rules.push({
         type: "datetime",
         constraint: "maxValue",
@@ -199,6 +200,17 @@ const parseType = (value, type) => {
     return value
   }
 
+  // Parse attachment/signature single, treating no key as null
+  if (
+    type === FieldTypes.ATTACHMENT_SINGLE ||
+    type === FieldTypes.SIGNATURE_SINGLE
+  ) {
+    if (!value?.key) {
+      return null
+    }
+    return value
+  }
+
   // Parse links, treating no elements as null
   if (type === FieldTypes.LINK) {
     if (!Array.isArray(value) || !value.length) {
@@ -245,10 +257,8 @@ const maxLengthHandler = (value, rule) => {
 // Evaluates a max file size (MB) constraint
 const maxFileSizeHandler = (value, rule) => {
   const limit = parseType(rule.value, "number")
-  return (
-    value == null ||
-    !value.some(attachment => attachment.size / 1000000 > limit)
-  )
+  const check = attachment => attachment.size / 1000000 > limit
+  return value == null || !(value?.key ? check(value) : value.some(check))
 }
 
 // Evaluates a max total upload size (MB) constraint
@@ -256,8 +266,11 @@ const maxUploadSizeHandler = (value, rule) => {
   const limit = parseType(rule.value, "number")
   return (
     value == null ||
-    value.reduce((acc, currentItem) => acc + currentItem.size, 0) / 1000000 <=
-      limit
+    (value?.key
+      ? value.size / 1000000 <= limit
+      : value.reduce((acc, currentItem) => acc + currentItem.size, 0) /
+          1000000 <=
+        limit)
   )
 }
 

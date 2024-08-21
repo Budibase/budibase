@@ -1,5 +1,9 @@
 import {
+  DatasourcePlusQueryResponse,
+  DSPlusOperation,
   FieldType,
+  isManyToOne,
+  isOneToMany,
   ManyToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
   RelationshipsJson,
@@ -16,6 +20,20 @@ export function isManyToMany(
   field: RelationshipFieldMetadata
 ): field is ManyToManyRelationshipFieldMetadata {
   return !!(field as ManyToManyRelationshipFieldMetadata).through
+}
+
+function isCorrectRelationship(
+  relationship: RelationshipsJson,
+  table1: Table,
+  table2: Table,
+  row: Row
+): boolean {
+  const junctionTableId = generateJunctionTableID(table1._id!, table2._id!)
+  const possibleColumns = [
+    `${junctionTableId}.doc1.fieldName`,
+    `${junctionTableId}.doc2.fieldName`,
+  ]
+  return !!possibleColumns.find(col => row[col] === relationship.column)
 }
 
 /**
@@ -60,7 +78,12 @@ export async function updateRelationshipColumns(
     if (!linked._id) {
       continue
     }
-    columns[relationship.column] = linked
+    if (
+      !opts?.sqs ||
+      isCorrectRelationship(relationship, table, linkedTable, row)
+    ) {
+      columns[relationship.column] = linked
+    }
   }
   for (let [column, related] of Object.entries(columns)) {
     if (!row._id) {
@@ -91,12 +114,12 @@ export function buildExternalRelationships(
 ): RelationshipsJson[] {
   const relationships = []
   for (let [fieldName, field] of Object.entries(table.schema)) {
-    if (field.type !== FieldType.LINK) {
+    if (field.type !== FieldType.LINK || !field.tableId) {
       continue
     }
     const { tableName: linkTableName } = breakExternalTableId(field.tableId)
     // no table to link to, this is not a valid relationships
-    if (!linkTableName || !tables[linkTableName]) {
+    if (!tables[linkTableName]) {
       continue
     }
     const linkTable = tables[linkTableName]
@@ -108,7 +131,7 @@ export function buildExternalRelationships(
       // need to specify where to put this back into
       column: fieldName,
     }
-    if (isManyToMany(field)) {
+    if (isManyToMany(field) && field.through) {
       const { tableName: throughTableName } = breakExternalTableId(
         field.through
       )
@@ -118,7 +141,7 @@ export function buildExternalRelationships(
       definition.to = field.throughFrom || linkTable.primary[0]
       definition.fromPrimary = table.primary[0]
       definition.toPrimary = linkTable.primary[0]
-    } else {
+    } else if (isManyToOne(field) || isOneToMany(field)) {
       // if no foreign key specified then use the name of the field in other table
       definition.from = field.foreignKey || table.primary[0]
       definition.to = field.fieldName
@@ -128,7 +151,10 @@ export function buildExternalRelationships(
   return relationships
 }
 
-export function buildInternalRelationships(table: Table): RelationshipsJson[] {
+export function buildInternalRelationships(
+  table: Table,
+  allTables: Table[]
+): RelationshipsJson[] {
   const relationships: RelationshipsJson[] = []
   const links = Object.values(table.schema).filter(
     column => column.type === FieldType.LINK
@@ -141,6 +167,10 @@ export function buildInternalRelationships(table: Table): RelationshipsJson[] {
     const linkTableId = link.tableId!
     const junctionTableId = generateJunctionTableID(tableId, linkTableId)
     const isFirstTable = tableId > linkTableId
+    // skip relationships with missing table definitions
+    if (!allTables.find(table => table._id === linkTableId)) {
+      continue
+    }
     relationships.push({
       through: junctionTableId,
       column: link.name,
@@ -169,26 +199,36 @@ export function buildSqlFieldList(
   function extractRealFields(table: Table, existing: string[] = []) {
     return Object.entries(table.schema)
       .filter(
-        column =>
-          column[1].type !== FieldType.LINK &&
-          column[1].type !== FieldType.FORMULA &&
-          !existing.find((field: string) => field === column[0])
+        ([columnName, column]) =>
+          column.type !== FieldType.LINK &&
+          column.type !== FieldType.FORMULA &&
+          !existing.find((field: string) => field === columnName)
       )
       .map(column => `${table.name}.${column[0]}`)
   }
   let fields = extractRealFields(table)
   for (let field of Object.values(table.schema)) {
-    if (field.type !== FieldType.LINK || !opts?.relationships) {
+    if (
+      field.type !== FieldType.LINK ||
+      !opts?.relationships ||
+      !field.tableId
+    ) {
       continue
     }
     const { tableName: linkTableName } = breakExternalTableId(field.tableId)
-    if (linkTableName) {
-      const linkTable = tables[linkTableName]
-      if (linkTable) {
-        const linkedFields = extractRealFields(linkTable, fields)
-        fields = fields.concat(linkedFields)
-      }
+    const linkTable = tables[linkTableName]
+    if (linkTable) {
+      const linkedFields = extractRealFields(linkTable, fields)
+      fields = fields.concat(linkedFields)
     }
   }
   return fields
+}
+
+export function isKnexEmptyReadResponse(resp: DatasourcePlusQueryResponse) {
+  return (
+    !Array.isArray(resp) ||
+    resp.length === 0 ||
+    (DSPlusOperation.READ in resp[0] && resp[0].read === true)
+  )
 }

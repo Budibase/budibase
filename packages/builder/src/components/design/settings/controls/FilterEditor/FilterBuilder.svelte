@@ -4,6 +4,7 @@
 
   import { dataFilters } from "@budibase/shared-core"
   import { FilterBuilder } from "@budibase/frontend-core"
+  import { tables } from "stores/builder"
 
   import { createEventDispatcher, onMount } from "svelte"
 
@@ -13,7 +14,7 @@
   export let panel = ClientBindingPanel
   export let allowBindings = true
   export let datasource
-
+  export let showFilterEmptyDropdown
   const dispatch = createEventDispatcher()
 
   let rawFilters
@@ -58,9 +59,11 @@
 <FilterBuilder
   bind:filters={rawFilters}
   behaviourFilters={true}
+  tables={$tables.list}
   {schemaFields}
   {datasource}
   {allowBindings}
+  {showFilterEmptyDropdown}
 >
   <div slot="filtering-hero-content" />
 

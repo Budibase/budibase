@@ -206,7 +206,7 @@
           error: initialError,
           disabled:
             disabled || fieldDisabled || (isAutoColumn && !editAutoColumns),
-          readonly: readonly || fieldReadOnly,
+          readonly: readonly || fieldReadOnly || schema?.[field]?.readonly,
           defaultValue,
           validator,
           lastUpdate: Date.now(),

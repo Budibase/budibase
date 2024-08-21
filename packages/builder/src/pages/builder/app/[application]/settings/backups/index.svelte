@@ -1,7 +1,6 @@
 <script>
   import {
     Button,
-    DatePicker,
     Divider,
     Layout,
     notifications,
@@ -25,13 +24,13 @@
   import BackupsDefault from "assets/backups-default.png"
   import { BackupTrigger, BackupType } from "constants/backend/backups"
   import { onMount } from "svelte"
+  import DateRangePicker from "components/common/DateRangePicker.svelte"
 
   let loading = true
   let backupData = null
   let pageInfo = createPaginationStore()
   let filterOpt = null
-  let startDate = null
-  let endDate = null
+  let dateRange = []
   let filters = [
     {
       label: "Manual backup",
@@ -52,7 +51,7 @@
   ]
 
   $: page = $pageInfo.page
-  $: fetchBackups(filterOpt, page, startDate, endDate)
+  $: fetchBackups(filterOpt, page, dateRange)
 
   let schema = {
     type: {
@@ -99,14 +98,22 @@
     })
   }
 
-  async function fetchBackups(filters, page, startDate, endDate) {
-    const response = await backups.searchBackups({
+  async function fetchBackups(filters, page, dateRange = []) {
+    const body = {
       appId: $appStore.appId,
       ...filters,
       page,
-      startDate,
-      endDate,
-    })
+    }
+
+    const [startDate, endDate] = dateRange
+    if (startDate) {
+      body.startDate = startDate
+    }
+    if (endDate) {
+      body.endDate = endDate
+    }
+
+    const response = await backups.searchBackups(body)
     pageInfo.fetched(response.hasNextPage, response.nextPage)
 
     // flatten so we have an easier structure to use for the table schema
@@ -121,7 +128,7 @@
       })
       await fetchBackups(filterOpt, page)
       notifications.success(response.message)
-    } catch {
+    } catch (err) {
       notifications.error("Unable to create backup")
     }
   }
@@ -165,7 +172,7 @@
   }
 
   onMount(async () => {
-    await fetchBackups(filterOpt, page, startDate, endDate)
+    await fetchBackups(filterOpt, page, dateRange)
     loading = false
   })
 </script>
@@ -207,7 +214,7 @@
         View plans
       </Button>
     </div>
-  {:else if !backupData?.length && !loading && !filterOpt && !startDate}
+  {:else if !backupData?.length && !loading && !filterOpt && !dateRange?.length}
     <div class="center">
       <Layout noPadding gap="S" justifyItems="center">
         <img height="130px" src={BackupsDefault} alt="BackupsDefault" />
@@ -236,21 +243,15 @@
               bind:value={filterOpt}
             />
           </div>
-          <DatePicker
-            range={true}
-            label="Date Range"
-            on:change={e => {
-              if (e.detail[0].length > 1) {
-                startDate = e.detail[0][0].toISOString()
-                endDate = e.detail[0][1].toISOString()
-              }
-            }}
+          <DateRangePicker
+            value={dateRange}
+            on:change={e => (dateRange = e.detail)}
           />
         </div>
         <div>
-          <Button cta disabled={loading} on:click={createManualBackup}
-            >Create new backup</Button
-          >
+          <Button cta disabled={loading} on:click={createManualBackup}>
+            Create new backup
+          </Button>
         </div>
       </div>
       <div class="table">
