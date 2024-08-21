@@ -13,6 +13,7 @@
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "utils/components.js"
   import { DNDPlaceholderID } from "constants"
+  import { isGridEvent } from "utils/grid"
 
   const ThrottleRate = 130
 
@@ -24,15 +25,6 @@
 
   // Local flag for whether we are awaiting an async drop event
   let dropping = false
-
-  // Util to check if a DND event originates from a grid (or inside a grid).
-  // This is important as we do not handle grid DND in this handler.
-  const isGridEvent = e => {
-    return e.target
-      ?.closest?.(".component")
-      ?.parentNode?.closest?.(".component")
-      ?.childNodes[0]?.classList.contains("grid")
-  }
 
   // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
@@ -267,7 +259,7 @@
     // Check if we're adding a new component rather than moving one
     if (source.newComponentType) {
       dropping = true
-      await builderStore.actions.dropNewComponent(
+      builderStore.actions.dropNewComponent(
         source.newComponentType,
         drop.parent,
         drop.index
