@@ -25,7 +25,7 @@ interface BaseRelationshipFieldMetadata
   tableId: string
   tableRev?: string
   subtype?: AutoFieldSubType.CREATED_BY | AutoFieldSubType.UPDATED_BY
-  schema: RelationFieldSchema
+  schema?: RelationFieldSchema
 }
 
 export type RelationFieldSchema = Record<
