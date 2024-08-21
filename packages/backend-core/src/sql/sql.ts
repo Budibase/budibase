@@ -337,7 +337,7 @@ class InternalBuilder {
     if (!filters) {
       return query
     }
-    filters = this.parseFilters(filters)
+    filters = this.parseFilters({ ...filters })
     const aliases = this.query.tableAliases
     // if all or specified in filters, then everything is an or
     const allOr = filters.allOr
@@ -466,15 +466,21 @@ class InternalBuilder {
     if (filters.$and) {
       const { $and } = filters
       for (const condition of $and.conditions) {
-        query = query.andWhere(b => this.addFilters(b, condition, opts))
+        query = query.where(b => {
+          this.addFilters(b, condition, opts)
+        })
       }
     }
 
     if (filters.$or) {
       const { $or } = filters
-      for (const condition of $or.conditions) {
-        query = query.orWhere(b => this.addFilters(b, condition, opts))
-      }
+      query = query.where(b => {
+        for (const condition of $or.conditions) {
+          b.orWhere(c =>
+            this.addFilters(c, { ...condition, allOr: true }, opts)
+          )
+        }
+      })
     }
 
     if (filters.oneOf) {
