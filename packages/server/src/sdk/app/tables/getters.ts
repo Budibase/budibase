@@ -7,7 +7,9 @@ import {
 } from "../../../integrations/utils"
 import {
   Database,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  RelationshipFieldMetadata,
   Table,
   TableResponse,
   TableSourceType,
@@ -140,6 +142,52 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
     tables = tables.concat(internalTables)
   }
   return processTables(tables)
+}
+
+export async function enrichRelationshipSchemas(
+  table: Table
+): Promise<TableResponse> {
+  const tableCache: Record<string, Table> = {}
+
+  async function populateRelTableSchema(field: RelationshipFieldMetadata) {
+    if (!tableCache[field.tableId]) {
+      tableCache[field.tableId] = await sdk.tables.getTable(field.tableId)
+    }
+    const relTable = tableCache[field.tableId]
+
+    for (const relTableFieldName of Object.keys(relTable.schema)) {
+      const relTableField = relTable.schema[relTableFieldName]
+      if (relTableField.type === FieldType.LINK) {
+        continue
+      }
+
+      if (relTableField.visible === false) {
+        continue
+      }
+
+      field.schema ??= {}
+      const isPrimaryDisplay = relTableFieldName === relTable.primaryDisplay
+      const isReadonly =
+        isPrimaryDisplay || !!field.schema[relTableFieldName]?.readonly
+      field.schema[relTableFieldName] = {
+        primaryDisplay: isPrimaryDisplay,
+        type: relTableField.type,
+        visible: isReadonly,
+        readonly: isReadonly,
+      }
+    }
+  }
+
+  const result: TableResponse = { ...table, schema: {}, views: {} }
+  for (const fieldName of Object.keys(table.schema)) {
+    const field = { ...table.schema[fieldName] }
+    if (field.type === FieldType.LINK) {
+      await populateRelTableSchema(field)
+    }
+
+    result.schema[fieldName] = field
+  }
+  return result
 }
 
 export function enrichViewSchemas(table: Table): TableResponse {

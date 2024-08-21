@@ -91,7 +91,9 @@ export async function find(ctx: UserCtx<void, TableResponse>) {
   const tableId = ctx.params.tableId
   const table = await sdk.tables.getTable(tableId)
 
-  ctx.body = sdk.tables.enrichViewSchemas(table)
+  let result = await sdk.tables.enrichRelationshipSchemas(table)
+  result = sdk.tables.enrichViewSchemas(result)
+  ctx.body = result
 }
 
 export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
