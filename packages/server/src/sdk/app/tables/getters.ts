@@ -157,6 +157,8 @@ export async function enrichRelationshipSchema(
     }
     const relTable = tableCache[field.tableId]
 
+    const fieldSchema = field.schema || {}
+
     const resultSchema: Record<string, RelationSchemaField> = {}
 
     for (const relTableFieldName of Object.keys(relTable.schema)) {
@@ -169,10 +171,7 @@ export async function enrichRelationshipSchema(
         continue
       }
 
-      const isPrimaryDisplay = relTableFieldName === relTable.primaryDisplay
-      const isReadonly =
-        isPrimaryDisplay ||
-        !!(field.schema && field.schema[relTableFieldName]?.readonly)
+      const isReadonly = !!fieldSchema[relTableFieldName]?.readonly
       resultSchema[relTableFieldName] = {
         visible: isReadonly,
         readonly: isReadonly,
