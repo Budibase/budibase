@@ -3,12 +3,20 @@
   import { Modal, notifications, Layout } from "@budibase/bbui"
   import NavHeader from "components/common/NavHeader.svelte"
   import { onMount } from "svelte"
-  import { automationStore } from "stores/builder"
+  import { automationStore, tables } from "stores/builder"
   import AutomationNavItem from "./AutomationNavItem.svelte"
+  import { TriggerStepID } from "constants/backend/automations"
 
   export let modal
   export let webhookModal
   let searchString
+
+  const dsTriggers = [
+    TriggerStepID.ROW_SAVED,
+    TriggerStepID.ROW_UPDATED,
+    TriggerStepID.ROW_DELETED,
+    TriggerStepID.ROW_ACTION,
+  ]
 
   $: filteredAutomations = $automationStore.automations
     .filter(automation => {
@@ -29,18 +37,46 @@
       return lowerA > lowerB ? 1 : -1
     })
 
-  $: groupedAutomations = filteredAutomations.reduce((acc, auto) => {
-    const catName = auto.definition?.trigger?.event || "No Trigger"
-    acc[catName] ??= {
-      icon: auto.definition?.trigger?.icon || "AlertCircle",
-      name: (auto.definition?.trigger?.name || "No Trigger").toUpperCase(),
-      entries: [],
-    }
-    acc[catName].entries.push(auto)
-    return acc
-  }, {})
+  $: groupedAutomations = groupAutomations(filteredAutomations)
 
   $: showNoResults = searchString && !filteredAutomations.length
+
+  const groupAutomations = automations => {
+    let groups = {}
+
+    for (let auto of automations) {
+      let category = null
+      let dataTrigger = false
+
+      // Group by datasource if possible
+      if (dsTriggers.includes(auto.definition?.trigger?.stepId)) {
+        if (auto.definition.trigger.inputs?.tableId) {
+          const tableId = auto.definition.trigger.inputs?.tableId
+          category = $tables.list.find(x => x._id === tableId)?.name
+        }
+      }
+      // Otherwise group by trigger
+      if (!category) {
+        category = auto.definition?.trigger?.name || "No Trigger"
+      } else {
+        dataTrigger = true
+      }
+      groups[category] ??= {
+        icon: auto.definition?.trigger?.icon || "AlertCircle",
+        name: category.toUpperCase(),
+        entries: [],
+        dataTrigger,
+      }
+      groups[category].entries.push(auto)
+    }
+
+    return Object.values(groups).sort((a, b) => {
+      if (a.dataTrigger === b.dataTrigger) {
+        return a.name < b.name ? -1 : 1
+      }
+      return a.dataTrigger ? -1 : 1
+    })
+  }
 
   onMount(async () => {
     try {
