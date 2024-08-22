@@ -33,7 +33,13 @@
       <div class="detail-popover__title">
         {title}
       </div>
-      <Icon name="Close" />
+      <Icon
+        name="Close"
+        hoverable
+        color="var(--spectrum-global-color-gray-600)"
+        hoverColor="var(--spectum-global-color-gray-900)"
+        on:click={hide}
+      />
     </div>
     <div class="detail-popover__body">
       <slot />
