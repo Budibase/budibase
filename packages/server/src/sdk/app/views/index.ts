@@ -153,11 +153,12 @@ export function allowedFields(view: View | ViewV2) {
   ]
 }
 
-export function enrichSchema(
+export async function enrichSchema(
   view: ViewV2,
   tableSchema: TableSchema
-): ViewV2Enriched {
+): Promise<ViewV2Enriched> {
   let schema = cloneDeep(tableSchema)
+
   const anyViewOrder = Object.values(view.schema || {}).some(
     ui => ui.order != null
   )
@@ -170,6 +171,8 @@ export function enrichSchema(
       order: anyViewOrder ? ui?.order ?? undefined : schema[key].order,
     }
   }
+
+  schema = await sdk.tables.enrichRelationshipSchema(schema)
 
   return {
     ...view,
