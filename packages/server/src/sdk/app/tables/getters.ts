@@ -146,7 +146,7 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
 }
 
 export async function enrichRelationshipSchema(
-  table: Table
+  schema: TableSchema
 ): Promise<TableSchema> {
   const tableCache: Record<string, Table> = {}
 
@@ -178,8 +178,8 @@ export async function enrichRelationshipSchema(
   }
 
   const result: TableSchema = {}
-  for (const fieldName of Object.keys(table.schema)) {
-    const field = { ...table.schema[fieldName] }
+  for (const fieldName of Object.keys(schema)) {
+    const field = { ...schema[fieldName] }
     if (field.type === FieldType.LINK) {
       await populateRelTableSchema(field)
     }
