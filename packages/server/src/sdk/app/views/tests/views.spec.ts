@@ -315,6 +315,12 @@ describe("table sdk", () => {
             relationshipType: RelationshipType.ONE_TO_MANY,
             fieldName: "table",
             tableId: "otherTableId",
+            schema: {
+              title: {
+                visible: true,
+                readonly: true,
+              },
+            },
           },
         },
       }
