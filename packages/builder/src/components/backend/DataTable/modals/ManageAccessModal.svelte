@@ -17,6 +17,32 @@
 
   const inheritedRoleId = "inherited"
 
+  let dependantsInfoMessage
+
+  $: loadDependantInfo(resourceId)
+  $: computedPermissions = Object.entries(permissions.permissions).reduce(
+    (p, [level, roleInfo]) => {
+      p[level] = {
+        selectedValue:
+          roleInfo.permissionType === PermissionSource.INHERITED
+            ? inheritedRoleId
+            : roleInfo.role,
+        options: [...$roles],
+      }
+      if (roleInfo.inheritablePermission) {
+        p[level].inheritOption = roleInfo.inheritablePermission
+        p[level].options.unshift({
+          _id: inheritedRoleId,
+          name: `Inherit (${
+            get(roles).find(x => x._id === roleInfo.inheritablePermission).name
+          })`,
+        })
+      }
+      return p
+    },
+    {}
+  )
+
   async function changePermission(level, role) {
     try {
       if (role === inheritedRoleId) {
@@ -41,36 +67,9 @@
     }
   }
 
-  $: computedPermissions = Object.entries(permissions.permissions).reduce(
-    (p, [level, roleInfo]) => {
-      p[level] = {
-        selectedValue:
-          roleInfo.permissionType === PermissionSource.INHERITED
-            ? inheritedRoleId
-            : roleInfo.role,
-        options: [...get(roles)],
-      }
-
-      if (roleInfo.inheritablePermission) {
-        p[level].inheritOption = roleInfo.inheritablePermission
-        p[level].options.unshift({
-          _id: inheritedRoleId,
-          name: `Inherit (${
-            get(roles).find(x => x._id === roleInfo.inheritablePermission).name
-          })`,
-        })
-      }
-      return p
-    },
-    {}
-  )
-
-  let dependantsInfoMessage
-  async function loadDependantInfo() {
+  async function loadDependantInfo(resourceId) {
     const dependantsInfo = await permissionsStore.getDependantsInfo(resourceId)
-
     const resourceByType = dependantsInfo?.resourceByType
-
     if (resourceByType) {
       const total = Object.values(resourceByType).reduce((p, c) => p + c, 0)
       let resourceDisplay =
@@ -85,7 +84,6 @@
       }
     }
   }
-  loadDependantInfo()
 </script>
 
 <Body size="S">Specify the minimum access level role for this data.</Body>
@@ -122,11 +120,6 @@
     grid-template-columns: 1fr 1fr;
     grid-gap: var(--spacing-s);
   }
-
-  .lock-tag {
-    padding-left: var(--spacing-s);
-  }
-
   .inheriting-resources {
     display: flex;
     gap: var(--spacing-s);
