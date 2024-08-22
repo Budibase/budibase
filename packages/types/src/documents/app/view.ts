@@ -1,5 +1,5 @@
 import { SearchFilter, SortOrder, SortType } from "../../api"
-import { UIFieldMetadata } from "./table"
+import { RelationSchemaField, UIFieldMetadata } from "./table"
 import { Document } from "../document"
 import { DBView } from "../../sdk"
 
@@ -33,8 +33,9 @@ export interface View {
   groupBy?: string
 }
 
-export type ViewUIFieldMetadata = UIFieldMetadata & {
+export type ViewFieldMetadata = UIFieldMetadata & {
   readonly?: boolean
+  schema?: Record<string, RelationSchemaField>
 }
 
 export interface ViewV2 {
@@ -49,7 +50,7 @@ export interface ViewV2 {
     order?: SortOrder
     type?: SortType
   }
-  schema?: Record<string, ViewUIFieldMetadata>
+  schema?: Record<string, ViewFieldMetadata>
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
