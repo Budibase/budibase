@@ -116,6 +116,20 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.In.value,
 ] as (keyof SearchQueryFields)[]
 
+export function recurseLogicalOperators(
+  filters: SearchFilters,
+  fn: (f: SearchFilters) => SearchFilters
+) {
+  for (const logical of Object.values(LogicalOperator)) {
+    if (filters[logical]) {
+      filters[logical]!.conditions = filters[logical]!.conditions.map(
+        condition => fn(condition)
+      )
+    }
+  }
+  return filters
+}
+
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
@@ -148,6 +162,7 @@ export const cleanupQuery = (query: SearchFilters) => {
       }
     }
   }
+  query = recurseLogicalOperators(query, cleanupQuery)
   return query
 }
 
@@ -562,6 +577,7 @@ export function fixupFilterArrays(filters: SearchFilters) {
       }
     }
   }
+  recurseLogicalOperators(filters, fixupFilterArrays)
   return filters
 }
 

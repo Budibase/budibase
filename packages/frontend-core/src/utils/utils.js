@@ -156,6 +156,7 @@ export const buildFormBlockButtonConfig = props => {
         providerId: formId,
         tableId: resourceId,
         notificationOverride,
+        confirm: null,
       },
     },
     {
