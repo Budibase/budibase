@@ -19,7 +19,14 @@
 
 <DetailPopover title="Screens" minWidth={400}>
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton icon="WebPage" selected={open} quiet>Screens</ActionButton>
+    <ActionButton
+      icon="WebPage"
+      selected={open || connectedScreens.length}
+      quiet
+      accentColor="#364800"
+    >
+      Screens
+    </ActionButton>
   </svelte:fragment>
   {#if !connectedScreens.length}
     There aren't any screens connected to this data.

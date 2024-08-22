@@ -39,9 +39,14 @@
 
 <DetailPopover title="Automations" minWidth={400} bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton icon="JourneyVoyager" selected={open} quiet
-      >Automations</ActionButton
+    <ActionButton
+      icon="JourneyVoyager"
+      selected={open || connectedAutomations.length}
+      quiet
+      accentColor="#5610AD"
     >
+      Automations
+    </ActionButton>
   </svelte:fragment>
   {#if !connectedAutomations.length}
     There aren't any automations connected to this data.
