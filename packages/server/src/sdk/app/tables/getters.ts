@@ -9,6 +9,7 @@ import {
   Database,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  RelationSchemaField,
   RelationshipFieldMetadata,
   Table,
   TableResponse,
@@ -156,6 +157,8 @@ export async function enrichRelationshipSchema(
     }
     const relTable = tableCache[field.tableId]
 
+    const resultSchema: Record<string, RelationSchemaField> = {}
+
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]
       if (relTableField.type === FieldType.LINK) {
@@ -166,15 +169,16 @@ export async function enrichRelationshipSchema(
         continue
       }
 
-      field.schema ??= {}
       const isPrimaryDisplay = relTableFieldName === relTable.primaryDisplay
       const isReadonly =
-        isPrimaryDisplay || !!field.schema[relTableFieldName]?.readonly
-      field.schema[relTableFieldName] = {
+        isPrimaryDisplay ||
+        !!(field.schema && field.schema[relTableFieldName]?.readonly)
+      resultSchema[relTableFieldName] = {
         visible: isReadonly,
         readonly: isReadonly,
       }
     }
+    field.schema = resultSchema
   }
 
   const result: TableSchema = {}
