@@ -83,7 +83,7 @@
         del,
       ]
     } else {
-      return [pause, del]
+      return [del]
     }
   }
 
