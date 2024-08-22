@@ -253,20 +253,33 @@ export async function squashLinksToPrimaryDisplay(
   // will populate this as we find them
   const linkedTables = [table]
   const isArray = Array.isArray(enriched)
-  let enrichedArray = !isArray ? [enriched] : enriched
-  for (let row of enrichedArray) {
+  const enrichedArray = !isArray ? [enriched] : enriched
+  for (const row of enrichedArray) {
     // this only fetches the table if its not already in array
     const rowTable = await getLinkedTable(row.tableId!, linkedTables)
-    for (let [column, schema] of Object.entries(rowTable?.schema || {})) {
+    const safeSchema =
+      (rowTable?.schema &&
+        (await sdk.tables.enrichRelationshipSchema(rowTable.schema))) ||
+      {}
+    for (let [column, schema] of Object.entries(safeSchema)) {
       if (schema.type !== FieldType.LINK || !Array.isArray(row[column])) {
         continue
       }
       const newLinks = []
-      for (let link of row[column]) {
+      for (const link of row[column]) {
         const linkTblId = link.tableId || getRelatedTableForField(table, column)
         const linkedTable = await getLinkedTable(linkTblId!, linkedTables)
         const obj: any = { _id: link._id }
         obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
+
+        if (schema.schema) {
+          for (const relField of Object.entries(schema.schema)
+            .filter(([_, field]) => field.visible !== false)
+            .map(([fieldKey]) => fieldKey)) {
+            obj[relField] = link[relField]
+          }
+        }
+
         newLinks.push(obj)
       }
       row[column] = newLinks
