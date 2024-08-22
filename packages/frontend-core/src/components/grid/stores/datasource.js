@@ -168,34 +168,38 @@ export const createActions = context => {
   }
 
   // Adds a schema mutation for a single field
-  const addSchemaMutation = (field, mutation, fromNestedField) => {
+  const addSchemaMutation = (field, mutation) => {
     if (!field || !mutation) {
       return
     }
-    if (fromNestedField) {
-      subSchemaMutations.update($subSchemaMutations => {
-        return {
-          ...$subSchemaMutations,
-          [fromNestedField]: {
-            ...$subSchemaMutations[fromNestedField],
-            [field]: {
-              ...($subSchemaMutations[fromNestedField] || {})[field],
-              ...mutation,
-            },
-          },
-        }
-      })
-    } else {
-      schemaMutations.update($schemaMutations => {
-        return {
-          ...$schemaMutations,
+    schemaMutations.update($schemaMutations => {
+      return {
+        ...$schemaMutations,
+        [field]: {
+          ...$schemaMutations[field],
+          ...mutation,
+        },
+      }
+    })
+  }
+
+  // Adds a nested schema mutation for a single field
+  const addSubSchemaMutation = (field, fromField, mutation) => {
+    if (!field || !fromField || !mutation) {
+      return
+    }
+    subSchemaMutations.update($subSchemaMutations => {
+      return {
+        ...$subSchemaMutations,
+        [fromField]: {
+          ...$subSchemaMutations[fromField],
           [field]: {
-            ...$schemaMutations[field],
+            ...($subSchemaMutations[fromField] || {})[field],
             ...mutation,
           },
-        }
-      })
-    }
+        },
+      }
+    })
   }
 
   // Adds schema mutations for multiple fields at once
@@ -304,6 +308,7 @@ export const createActions = context => {
         canUseColumn,
         changePrimaryDisplay,
         addSchemaMutation,
+        addSubSchemaMutation,
         addSchemaMutations,
         saveSchemaMutations,
         resetSchemaMutations,
