@@ -62,24 +62,35 @@
   <svelte:fragment slot="anchor" let:open>
     <ActionButton icon="MagicWand" selected={open}>Generate</ActionButton>
   </svelte:fragment>
-  <Menu>
-    <MenuItem
-      icon="ShareAndroid"
-      on:click={() => {
-        open = false
-        createAutomation(TriggerStepID.ROW_SAVED)
-      }}
-    >
-      Automation: when row is created
-    </MenuItem>
-    <MenuItem
-      icon="ShareAndroid"
-      on:click={() => {
-        open = false
-        createAutomation(TriggerStepID.ROW_UPDATED)
-      }}
-    >
-      Automation: when row is updated
-    </MenuItem>
-  </Menu>
+  <div class="menu">
+    <Menu>
+      <MenuItem
+        icon="ShareAndroid"
+        on:click={() => {
+          open = false
+          createAutomation(TriggerStepID.ROW_SAVED)
+        }}
+      >
+        Automation: when row is created
+      </MenuItem>
+      <MenuItem
+        icon="ShareAndroid"
+        on:click={() => {
+          open = false
+          createAutomation(TriggerStepID.ROW_UPDATED)
+        }}
+      >
+        Automation: when row is updated
+      </MenuItem>
+    </Menu>
+  </div>
 </DetailPopover>
+
+<style>
+  .menu {
+    margin: 0 calc(-1 * var(--spacing-xl));
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+</style>
