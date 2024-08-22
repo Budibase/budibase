@@ -11,13 +11,10 @@
   $: connectedScreens = findConnectedScreens($screenStore.screens, resourceId)
 
   const findConnectedScreens = (screens, resourceId) => {
-    console.log(resourceId)
     return screens.filter(screen => {
       return JSON.stringify(screen).includes(`"${resourceId}"`)
     })
   }
-
-  $: console.log(connectedScreens)
 </script>
 
 <DetailPopover title="Screens" minWidth={400}>

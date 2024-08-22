@@ -23,7 +23,6 @@
   $: tableId = ds?.tableId
   $: isView = ds?.type === "viewV2"
   $: fetchRowActions(tableId)
-  $: console.log(rowActions)
   $: activeCount = 0
   $: suffix = isView ? activeCount : rowActions.length
 
@@ -51,12 +50,12 @@
         name,
         tableId,
       })
-      console.log(res)
       await automationStore.actions.fetch()
       notifications.success("Row action created successfully")
       $goto($rowActionUrl(res))
     } catch (error) {
-      console.log(error)
+      console.error(error)
+      notifications.error("Error creating row action")
     }
   }
 </script>
