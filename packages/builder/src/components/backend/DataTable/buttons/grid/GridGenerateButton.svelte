@@ -5,6 +5,7 @@
   import { TriggerStepID } from "constants/backend/automations"
   import { goto } from "@roxi/routify"
   import DetailPopover from "components/common/DetailPopover.svelte"
+  import MagicWand from "./magic-wand.svg"
 
   const { datasource } = getContext("grid")
 
@@ -60,7 +61,12 @@
 
 <DetailPopover title="Generate" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton icon="MagicWand" selected={open}>Generate</ActionButton>
+    <ActionButton selected={open}>
+      <div class="center">
+        <img height={16} alt="magic wand" src={MagicWand} />
+        Generate
+      </div>
+    </ActionButton>
   </svelte:fragment>
   <div class="menu">
     <Menu>
@@ -92,5 +98,10 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
+  }
+  .center {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 </style>
