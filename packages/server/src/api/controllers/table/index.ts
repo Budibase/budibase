@@ -84,14 +84,22 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     }
   })
 
-  ctx.body = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
+  const result: FetchTablesResponse = []
+  for (const table of [...internal, ...external]) {
+    result.push(await sdk.tables.enrichViewSchemas(table))
+  }
+  ctx.body = result
 }
 
 export async function find(ctx: UserCtx<void, TableResponse>) {
   const tableId = ctx.params.tableId
   const table = await sdk.tables.getTable(tableId)
 
-  ctx.body = sdk.tables.enrichViewSchemas(table)
+  const result = await sdk.tables.enrichViewSchemas({
+    ...table,
+    schema: await sdk.tables.enrichRelationshipSchema(table.schema),
+  })
+  ctx.body = result
 }
 
 export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
@@ -105,7 +113,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const api = pickApi({ table })
   let savedTable = await api.save(ctx, renaming)
   if (!table._id) {
-    savedTable = sdk.tables.enrichViewSchemas(savedTable)
+    savedTable = await sdk.tables.enrichViewSchemas(savedTable)
     await events.table.created(savedTable)
   } else {
     await events.table.updated(savedTable)

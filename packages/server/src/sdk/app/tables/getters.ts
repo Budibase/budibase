@@ -7,9 +7,13 @@ import {
 } from "../../../integrations/utils"
 import {
   Database,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  RelationSchemaField,
+  RelationshipFieldMetadata,
   Table,
   TableResponse,
+  TableSchema,
   TableSourceType,
   TableViewsResponse,
 } from "@budibase/types"
@@ -142,16 +146,66 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
   return processTables(tables)
 }
 
-export function enrichViewSchemas(table: Table): TableResponse {
+export async function enrichRelationshipSchema(
+  schema: TableSchema
+): Promise<TableSchema> {
+  const tableCache: Record<string, Table> = {}
+
+  async function populateRelTableSchema(field: RelationshipFieldMetadata) {
+    if (!tableCache[field.tableId]) {
+      tableCache[field.tableId] = await sdk.tables.getTable(field.tableId)
+    }
+    const relTable = tableCache[field.tableId]
+
+    const resultSchema: Record<string, RelationSchemaField> = {}
+
+    for (const relTableFieldName of Object.keys(relTable.schema)) {
+      const relTableField = relTable.schema[relTableFieldName]
+      if (relTableField.type === FieldType.LINK) {
+        continue
+      }
+
+      if (relTableField.visible === false) {
+        continue
+      }
+
+      const isPrimaryDisplay = relTableFieldName === relTable.primaryDisplay
+      const isReadonly =
+        isPrimaryDisplay ||
+        !!(field.schema && field.schema[relTableFieldName]?.readonly)
+      resultSchema[relTableFieldName] = {
+        visible: isReadonly,
+        readonly: isReadonly,
+      }
+    }
+    field.schema = resultSchema
+  }
+
+  const result: TableSchema = {}
+  for (const fieldName of Object.keys(schema)) {
+    const field = { ...schema[fieldName] }
+    if (field.type === FieldType.LINK) {
+      await populateRelTableSchema(field)
+    }
+
+    result[fieldName] = field
+  }
+  return result
+}
+
+export async function enrichViewSchemas(table: Table): Promise<TableResponse> {
+  const views = []
+  for (const view of Object.values(table.views ?? [])) {
+    if (sdk.views.isV2(view)) {
+      views.push(await sdk.views.enrichSchema(view, table.schema))
+    } else views.push(view)
+  }
+
   return {
     ...table,
-    views: Object.values(table.views ?? [])
-      .map(v =>
-        sdk.views.isV2(v) ? sdk.views.enrichSchema(v, table.schema) : v
-      )
-      .reduce((p, v) => {
-        p[v.name!] = v
-        return p
-      }, {} as TableViewsResponse),
+    views: views.reduce((p, v) => {
+      p[v.name!] = v
+      return p
+    }, {} as TableViewsResponse),
   }
 }
