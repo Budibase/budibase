@@ -60,7 +60,7 @@ describe("table sdk", () => {
     },
   }
 
-  describe("enrichViewSchemas", () => {
+  describe("enrichSchema", () => {
     it("should fetch the default schema if not overridden", async () => {
       const tableId = basicTable._id!
       const view: ViewV2 = {
