@@ -115,35 +115,31 @@
   })
 
   let relationshipPanelColumns = []
-  $: {
+  async function fetchRelationshipPanelColumns(relationshipField) {
     relationshipPanelColumns = []
-    if (relationshipField) {
-      cache.actions.getTable(relationshipField.tableId).then(table => {
-        relationshipPanelColumns = Object.entries(
-          relationshipField?.schema || {}
-        )
-          .map(([name, column]) => {
-            return {
-              name: name,
-              label: name,
-              primaryDisplay: name === table.primaryDisplay,
-              schema: {
-                type: table.schema[name].type,
-                visible: column.visible,
-                readonly: column.readonly,
-              },
-            }
-          })
-          .sort((a, b) =>
-            a.primaryDisplay === b.primaryDisplay
-              ? 0
-              : a.primaryDisplay
-              ? -1
-              : 1
-          )
-      })
+    if (!relationshipField) {
+      return
     }
+
+    const table = await cache.actions.getTable(relationshipField.tableId)
+    relationshipPanelColumns = Object.entries(relationshipField?.schema || {})
+      .map(([name, column]) => {
+        return {
+          name: name,
+          label: name,
+          primaryDisplay: name === table.primaryDisplay,
+          schema: {
+            type: table.schema[name].type,
+            visible: column.visible,
+            readonly: column.readonly,
+          },
+        }
+      })
+      .sort((a, b) =>
+        a.primaryDisplay === b.primaryDisplay ? 0 : a.primaryDisplay ? -1 : 1
+      )
   }
+  $: fetchRelationshipPanelColumns(relationshipField)
 
   async function toggleColumn(column, permission) {
     const visible = permission !== FieldPermissions.HIDDEN
@@ -217,7 +213,7 @@
 {#if allowRelationshipSchemas}
   <Popover
     on:close={() => (relationshipFieldName = null)}
-    open={!!relationshipPanelColumns}
+    open={!!relationshipField}
     anchor={relationshipPanelAnchor}
     align="right-outside"
   >
