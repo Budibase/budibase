@@ -97,13 +97,14 @@ describe("Captures of real examples", () => {
       const filters = queryJson.filters?.oneOf?.taskid as number[]
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
-        bindings: [...filters, limit, limit],
-        sql: multiline(`select "a"."executorid" as "a.executorid", "a"."taskname" as "a.taskname", 
-              "a"."taskid" as "a.taskid", "a"."completed" as "a.completed", "a"."qaid" as "a.qaid", 
-              "b"."productname" as "b.productname", "b"."productid" as "b.productid" 
-              from (select * from "tasks" as "a" where "a"."taskid" in ($1, $2) order by "a"."taskid" asc limit $3) as "a" 
-              left join "products_tasks" as "c" on "a"."taskid" = "c"."taskid" 
-              left join "products" as "b" on "b"."productid" = "c"."productid" order by "a"."taskid" asc limit $4`),
+        bindings: [...filters, limit, ...filters, limit],
+        sql: multiline(
+          `select "a"."executorid" as "a.executorid", "a"."taskname" as "a.taskname", "a"."taskid" as "a.taskid",
+          "a"."completed" as "a.completed", "a"."qaid" as "a.qaid", "b"."productname" as "b.productname", "b"."productid" as "b.productid"
+          from (select * from "tasks" as "a" where "a"."taskid" in ($1, $2) order by "a"."taskid" asc limit $3) as "a"
+          left join "products_tasks" as "c" on "a"."taskid" = "c"."taskid" left join "products" as "b" on "b"."productid" = "c"."productid"
+          where "a"."taskid" in ($4, $5) order by "a"."taskid" asc limit $6`
+        ),
       })
     })
 
@@ -123,6 +124,7 @@ describe("Captures of real examples", () => {
           rangeValue.low,
           rangeValue.high,
           equalValue,
+          true,
           limit,
         ],
         sql: expect.stringContaining(
@@ -186,8 +188,9 @@ describe("Captures of real examples", () => {
       }, queryJson)
       expect(returningQuery).toEqual({
         sql: multiline(`select top (@p0) * from (select top (@p1) * from [people] where CASE WHEN [people].[name] = @p2 
-          THEN 1 ELSE 0 END = 1 and CASE WHEN [people].[age] = @p3 THEN 1 ELSE 0 END = 1 order by [people].[name] asc) as [people]`),
-        bindings: [5000, 1, "Test", 22],
+             THEN 1 ELSE 0 END = 1 and CASE WHEN [people].[age] = @p3 THEN 1 ELSE 0 END = 1 order by [people].[name] asc) as [people] 
+             where CASE WHEN [people].[name] = @p4 THEN 1 ELSE 0 END = 1 and CASE WHEN [people].[age] = @p5 THEN 1 ELSE 0 END = 1`),
+        bindings: [5000, 1, "Test", 22, "Test", 22],
       })
     })
   })
