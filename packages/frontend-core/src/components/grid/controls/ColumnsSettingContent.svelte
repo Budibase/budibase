@@ -116,6 +116,7 @@
 
   let relationshipPanelColumns = []
   $: {
+    relationshipPanelColumns = []
     if (relationshipField) {
       cache.actions.getTable(relationshipField.tableId).then(table => {
         relationshipPanelColumns = Object.entries(
@@ -141,8 +142,6 @@
               : 1
           )
       })
-    } else {
-      relationshipPanelColumns = []
     }
   }
 
@@ -218,7 +217,7 @@
 {#if allowRelationshipSchemas}
   <Popover
     on:close={() => (relationshipFieldName = null)}
-    open={!!relationshipField}
+    open={!!relationshipPanelColumns}
     anchor={relationshipPanelAnchor}
     align="right-outside"
   >
