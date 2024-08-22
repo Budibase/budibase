@@ -60,10 +60,10 @@
   }
 </script>
 
-<DetailPopover title="Row Actions" minWidth={400} maxWidth={400}>
+<DetailPopover title="Row actions" minWidth={400} maxWidth={400}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton icon="Engagement" selected={open} quiet>
-      Row Actions ({suffix})
+      Row actions ({suffix})
     </ActionButton>
   </svelte:fragment>
   A row action is a user-triggered automation for a chosen row.
