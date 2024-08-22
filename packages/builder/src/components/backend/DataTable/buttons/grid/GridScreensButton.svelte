@@ -9,6 +9,7 @@
   $: ds = $datasource
   $: resourceId = ds?.type === "table" ? ds.tableId : ds?.id
   $: connectedScreens = findConnectedScreens($screenStore.screens, resourceId)
+  $: screenCount = connectedScreens.length
 
   const findConnectedScreens = (screens, resourceId) => {
     return screens.filter(screen => {
@@ -21,11 +22,11 @@
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       icon="WebPage"
-      selected={open || connectedScreens.length}
+      selected={open || screenCount}
       quiet
       accentColor="#364800"
     >
-      Screens
+      Screens{screenCount ? `: ${screenCount}` : ""}
     </ActionButton>
   </svelte:fragment>
   {#if !connectedScreens.length}

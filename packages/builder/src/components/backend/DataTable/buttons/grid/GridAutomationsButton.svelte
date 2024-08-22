@@ -21,6 +21,7 @@
     $automationStore.automations,
     resourceId
   )
+  $: automationCount = connectedAutomations.length
 
   const findConnectedAutomations = (automations, resourceId) => {
     return automations.filter(automation => {
@@ -41,11 +42,11 @@
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       icon="JourneyVoyager"
-      selected={open || connectedAutomations.length}
+      selected={open || automationCount}
       quiet
       accentColor="#5610AD"
     >
-      Automations
+      Automations{automationCount ? `: ${automationCount}` : ""}
     </ActionButton>
   </svelte:fragment>
   {#if !connectedAutomations.length}
