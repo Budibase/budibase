@@ -5,7 +5,6 @@
   import ToggleActionButtonGroup from "./ToggleActionButtonGroup.svelte"
   import { helpers } from "@budibase/shared-core"
   import { FieldType } from "@budibase/types"
-  import { tables } from "stores/builder"
   import { FieldPermissions } from "../../../constants"
 
   export let permissions = [FieldPermissions.WRITABLE, FieldPermissions.HIDDEN]
@@ -13,12 +12,14 @@
   export let columns
   export let fromRelationshipField
 
-  const { datasource, dispatch } = getContext("grid")
+  const { datasource, dispatch, cache } = getContext("grid")
 
   let relationshipPanelAnchor
   let relationshipFieldName
 
-  $: relationshipField = columns.find(c => c.name === relationshipFieldName)
+  $: relationshipField = columns.find(
+    c => c.name === relationshipFieldName
+  )?.schema
   $: permissionsObj = permissions.reduce(
     (acc, c) => ({
       ...acc,
@@ -113,24 +114,37 @@
     return { ...c, options }
   })
 
-  $: relationshipPanelColumns = Object.entries(
-    relationshipField?.schema?.schema || {}
-  )
-    .map(([name, column]) => {
-      return {
-        name: name,
-        label: name,
-        primaryDisplay: column.primaryDisplay,
-        schema: {
-          ...column,
-          visible: column.visible,
-          readonly: column.readonly,
-        },
-      }
-    })
-    .sort((a, b) =>
-      a.primaryDisplay === b.primaryDisplay ? 0 : a.primaryDisplay ? -1 : 1
-    )
+  let relationshipPanelColumns = []
+  $: {
+    if (relationshipField) {
+      cache.actions.getTable(relationshipField.tableId).then(table => {
+        relationshipPanelColumns = Object.entries(
+          relationshipField?.schema || {}
+        )
+          .map(([name, column]) => {
+            return {
+              name: name,
+              label: name,
+              primaryDisplay: name === table.primaryDisplay,
+              schema: {
+                type: table.schema[name].type,
+                visible: column.visible,
+                readonly: column.readonly,
+              },
+            }
+          })
+          .sort((a, b) =>
+            a.primaryDisplay === b.primaryDisplay
+              ? 0
+              : a.primaryDisplay
+              ? -1
+              : 1
+          )
+      })
+    } else {
+      relationshipPanelColumns = []
+    }
+  }
 
   async function toggleColumn(column, permission) {
     const visible = permission !== FieldPermissions.HIDDEN
