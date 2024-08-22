@@ -1,5 +1,6 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Helpers } from "@budibase/bbui"
+import * as Constants from "../constants"
 
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -349,4 +350,100 @@ export const buildMultiStepFormBlockDefaultProps = props => {
     buttons,
     title,
   }
+}
+
+/**
+ * Processes the filter config. Filters are migrated
+ * SearchFilter[] to SearchFilterGroup
+ *
+ *  This is supposed to be in shared-core
+ * @param {Object[]} filter
+ */
+export const migrateSearchFilters = filters => {
+  const defaultCfg = {
+    logicalOperator: Constants.FilterOperator.ALL,
+    groups: [],
+  }
+
+  const filterWhitelistKeys = [
+    "field",
+    "operator",
+    "valueType", // bb
+    "value",
+    "type",
+    "noValue", // bb
+  ]
+
+  /**
+   * Review these
+   * externalType, formulaType, subtype
+   */
+
+  if (Array.isArray(filters)) {
+    const baseGroup = {
+      filters: [],
+      logicalOperator: Constants.FilterOperator.ALL,
+    }
+
+    const migratedSetting = filters.reduce((acc, filter) => {
+      // Sort the properties for easier debugging
+      // Remove unset values
+      const filterEntries = Object.entries(filter)
+        .sort((a, b) => {
+          return a[0].localeCompare(b[0])
+        })
+        .filter(x => x[1] ?? false)
+
+      // Scrub invalid filters
+      const { operator, onEmptyFilter, field, valueType } = filter
+      if (!field || !valueType) {
+        // THIS SCRUBS THE 2 GLOBALS
+        // return acc
+      }
+
+      if (filterEntries.length == 1) {
+        console.log("### one entry ")
+        const [key, value] = filterEntries[0]
+        // Global
+        if (key === "onEmptyFilter") {
+          // unset otherwise, seems to be the default
+          acc.onEmptyFilter = value
+        } else if (key === "operator" && value === "allOr") {
+          // Group 1 logical operator
+          baseGroup.logicalOperator = Constants.FilterOperator.ANY
+        }
+
+        return acc
+      }
+
+      // Process settings??
+      const whiteListedFilterSettings = filterEntries.reduce((acc, entry) => {
+        const [key, value] = entry
+
+        if (filterWhitelistKeys.includes(key)) {
+          if (key === "field") {
+            acc.push([key, value.replace(/^[0-9]+:/, "")])
+          } else {
+            acc.push([key, value])
+          }
+        }
+        return acc
+      }, [])
+
+      const migratedFilter = Object.fromEntries(whiteListedFilterSettings)
+
+      baseGroup.filters.push(migratedFilter)
+
+      if (!acc.groups.length) {
+        // init the base group
+        acc.groups.push(baseGroup)
+      }
+
+      return acc
+    }, defaultCfg)
+
+    console.log("MIGRATED ", migratedSetting)
+    return migratedSetting
+  }
+  return false
 }

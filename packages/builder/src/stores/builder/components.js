@@ -29,7 +29,7 @@ import {
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
 import BudiStore from "../BudiStore"
-import { Utils } from "@budibase/frontend-core"
+import { Utils, Constants } from "@budibase/frontend-core"
 import { FieldType } from "@budibase/types"
 
 export const INITIAL_COMPONENTS_STATE = {
@@ -193,6 +193,26 @@ export class ComponentStore extends BudiStore {
       if (!("buttonPosition" in enrichedComponent)) {
         enrichedComponent["buttonPosition"] = "top"
         migrated = true
+      }
+    }
+
+    if (!enrichedComponent?._component) {
+      return migrated
+    }
+
+    const def = this.getDefinition(enrichedComponent?._component)
+    const filterableTypes = def.settings.filter(setting =>
+      setting?.type?.startsWith("filter")
+    )
+
+    // Map this?
+    for (let setting of filterableTypes) {
+      const updateFilter = Utils.migrateSearchFilters(
+        enrichedComponent[setting.key]
+      )
+      // DEAN - switch to real value when complete
+      if (updateFilter) {
+        enrichedComponent[setting.key + "_x"] = updateFilter
       }
     }
 
@@ -405,7 +425,13 @@ export class ComponentStore extends BudiStore {
       screen: get(selectedScreen),
       useDefaultValues: true,
     })
-    this.migrateSettings(instance)
+
+    try {
+      this.migrateSettings(instance)
+    } catch (e) {
+      console.error(e)
+      throw e
+    }
 
     // Custom post processing for creation only
     let extras = {}
@@ -555,7 +581,10 @@ export class ComponentStore extends BudiStore {
       const patchResult = patchFn(component, screen)
 
       // Post processing
-      const migrated = this.migrateSettings(component)
+      // DEAN - SKIP ON SAVE FOR THE MOMENT
+      const migrated = null
+
+      this.migrateSettings(component)
 
       // Returning an explicit false signifies that we should skip this
       // update. If we migrated something, ensure we never skip.
