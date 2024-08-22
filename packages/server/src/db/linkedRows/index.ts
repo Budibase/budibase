@@ -272,7 +272,8 @@ export async function squashLinksToPrimaryDisplay(
         const obj: any = { _id: link._id }
         obj.primaryDisplay = getPrimaryDisplayValue(link, linkedTable)
 
-        if (schema.schema) {
+        const allowRelationshipSchemas = true // TODO
+        if (schema.schema && allowRelationshipSchemas) {
           for (const relField of Object.entries(schema.schema)
             .filter(([_, field]) => field.visible !== false)
             .map(([fieldKey]) => fieldKey)) {
