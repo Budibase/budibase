@@ -145,14 +145,21 @@
     const visible = permission !== FieldPermissions.HIDDEN
     const readonly = permission === FieldPermissions.READONLY
 
-    await datasource.actions.addSchemaMutation(
-      column.name,
-      {
+    if (!fromRelationshipField) {
+      await datasource.actions.addSchemaMutation(column.name, {
         visible,
         readonly,
-      },
-      fromRelationshipField?.name
-    )
+      })
+    } else {
+      await datasource.actions.addSubSchemaMutation(
+        column.name,
+        fromRelationshipField.name,
+        {
+          visible,
+          readonly,
+        }
+      )
+    }
     try {
       await datasource.actions.saveSchemaMutations()
     } catch (e) {
