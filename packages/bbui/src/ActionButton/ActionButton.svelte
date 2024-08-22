@@ -1,16 +1,11 @@
 <script>
   import "@spectrum-css/actionbutton/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
   import Tooltip from "../Tooltip/Tooltip.svelte"
   import { fade } from "svelte/transition"
   import { hexToRGBA } from "../helpers"
 
-  const dispatch = createEventDispatcher()
-
   export let quiet = false
-  export let emphasized = false
   export let selected = false
-  export let longPressable = false
   export let disabled = false
   export let icon = ""
   export let size = "M"
@@ -33,82 +28,50 @@
     style += `--accent-border-color:${hexToRGBA(color, 0.35)};`
     return style
   }
-
-  function longPress(element) {
-    if (!longPressable) return
-    let timer
-
-    const listener = () => {
-      timer = setTimeout(() => {
-        dispatch("longpress")
-      }, 700)
-    }
-
-    element.addEventListener("pointerdown", listener)
-
-    return {
-      destroy() {
-        clearTimeout(timer)
-        element.removeEventListener("pointerdown", longPress)
-      },
-    }
-  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<span
-  class="btn-wrap"
+<button
+  class="spectrum-ActionButton spectrum-ActionButton--size{size}"
+  class:spectrum-ActionButton--quiet={quiet}
+  class:is-selected={selected}
+  class:noPadding
+  class:fullWidth
+  class:active
+  class:disabled
+  class:accent={accentColor != null}
+  on:click|preventDefault
   on:mouseover={() => (showTooltip = true)}
   on:mouseleave={() => (showTooltip = false)}
   on:focus={() => (showTooltip = true)}
+  {disabled}
   style={accentStyle}
 >
-  <button
-    use:longPress
-    class:spectrum-ActionButton--quiet={quiet}
-    class:spectrum-ActionButton--emphasized={emphasized}
-    class:is-selected={selected}
-    class:noPadding
-    class:fullWidth
-    class="spectrum-ActionButton spectrum-ActionButton--size{size}"
-    class:active
-    class:disabled
-    class:accent={accentColor != null}
-    {disabled}
-    on:longPress
-    on:click|preventDefault
-  >
-    {#if longPressable}
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-CornerTriangle100 spectrum-ActionButton-hold"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-css-icon-CornerTriangle100" />
-      </svg>
-    {/if}
-    {#if icon}
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeS"
-        focusable="false"
-        aria-hidden="true"
-        aria-label={icon}
-      >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
-      </svg>
-    {/if}
-    {#if $$slots}
-      <span class="spectrum-ActionButton-label"><slot /></span>
-    {/if}
-    {#if tooltip && showTooltip}
-      <div class="tooltip" in:fade={{ duration: 130, delay: 250 }}>
-        <Tooltip textWrapping direction="bottom" text={tooltip} />
-      </div>
-    {/if}
-  </button>
-</span>
+  {#if icon}
+    <svg
+      class="spectrum-Icon spectrum-Icon--sizeS"
+      focusable="false"
+      aria-hidden="true"
+      aria-label={icon}
+    >
+      <use xlink:href="#spectrum-icon-18-{icon}" />
+    </svg>
+  {/if}
+  {#if $$slots}
+    <span class="spectrum-ActionButton-label"><slot /></span>
+  {/if}
+  {#if tooltip && showTooltip}
+    <div class="tooltip" in:fade={{ duration: 130, delay: 250 }}>
+      <Tooltip textWrapping direction="bottom" text={tooltip} />
+    </div>
+  {/if}
+</button>
 
 <style>
+  button {
+    transition: filter 130ms ease-out, background 130ms ease-out,
+      border 130ms ease-out, color 130ms ease-out;
+  }
   .fullWidth {
     width: 100%;
   }
@@ -120,9 +83,7 @@
     margin-left: 0;
     transition: color ease-out 130ms;
   }
-  .is-selected:not(.spectrum-ActionButton--emphasized):not(
-      .spectrum-ActionButton--quiet
-    ) {
+  .is-selected:not(.spectrum-ActionButton--quiet) {
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-gray-500);
   }
@@ -137,7 +98,7 @@
     padding: 0;
     min-width: 0;
   }
-  .is-selected:not(.emphasized) .spectrum-Icon {
+  .is-selected .spectrum-Icon {
     color: var(--spectrum-global-color-gray-900);
   }
   .is-selected.disabled .spectrum-Icon {
@@ -154,10 +115,12 @@
     text-align: center;
     z-index: 1;
   }
-
-  button.accent.is-selected,
-  button:active.accent {
+  .accent.is-selected,
+  .accent:active {
     border: 1px solid var(--accent-border-color);
     background: var(--accent-bg-color);
+  }
+  .accent:hover {
+    filter: brightness(1.2);
   }
 </style>
