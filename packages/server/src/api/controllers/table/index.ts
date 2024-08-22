@@ -88,7 +88,7 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
   for (const table of [...internal, ...external]) {
     result.push(await sdk.tables.enrichViewSchemas(table))
   }
-  ctx.body = result //
+  ctx.body = result
 }
 
 export async function find(ctx: UserCtx<void, TableResponse>) {
