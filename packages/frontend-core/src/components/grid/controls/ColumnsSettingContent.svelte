@@ -122,22 +122,19 @@
     }
 
     const table = await cache.actions.getTable(relationshipField.tableId)
-    relationshipPanelColumns = Object.entries(relationshipField?.schema || {})
-      .map(([name, column]) => {
-        return {
-          name: name,
-          label: name,
-          primaryDisplay: name === table.primaryDisplay,
-          schema: {
-            type: table.schema[name].type,
-            visible: column.visible,
-            readonly: column.readonly,
-          },
-        }
-      })
-      .sort((a, b) =>
-        a.primaryDisplay === b.primaryDisplay ? 0 : a.primaryDisplay ? -1 : 1
-      )
+    relationshipPanelColumns = Object.entries(
+      relationshipField?.schema || {}
+    ).map(([name, column]) => {
+      return {
+        name: name,
+        label: name,
+        schema: {
+          type: table.schema[name].type,
+          visible: column.visible,
+          readonly: column.readonly,
+        },
+      }
+    })
   }
   $: fetchRelationshipPanelColumns(relationshipField)
 
