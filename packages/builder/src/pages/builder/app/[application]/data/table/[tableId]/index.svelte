@@ -128,9 +128,10 @@
       {/if}
       <GridExportButton />
     </svelte:fragment>
-
     <svelte:fragment slot="controls-right">
-      <GridGenerateButton bind:this={generateButton} />
+      {#if !isUsersTable}
+        <GridGenerateButton bind:this={generateButton} />
+      {/if}
     </svelte:fragment>
 
     <!-- Content for editing columns -->
