@@ -213,10 +213,15 @@
 {#if allowRelationshipSchemas}
   <Popover
     on:close={() => (relationshipFieldName = null)}
-    open={!!relationshipField}
+    open={relationshipFieldName}
     anchor={relationshipPanelAnchor}
     align="right-outside"
   >
+    {#if relationshipPanelColumns.length}
+      <div class="relationship-header">
+        {relationshipFieldName} columns
+      </div>
+    {/if}
     <svelte:self
       columns={relationshipPanelColumns}
       permissions={[FieldPermissions.READONLY, FieldPermissions.HIDDEN]}
@@ -261,5 +266,9 @@
   .column-options {
     display: flex;
     gap: var(--spacing-xs);
+  }
+  .relationship-header {
+    color: var(--spectrum-global-color-gray-600);
+    padding: 12px 12px 0 12px;
   }
 </style>
