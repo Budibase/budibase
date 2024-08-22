@@ -99,7 +99,9 @@
 <NavItem
   on:contextmenu={openContextMenu}
   {icon}
-  iconColor={"var(--spectrum-global-color-gray-900)"}
+  iconColor={automation.disabled
+    ? "var(--spectrum-global-color-gray-600)"
+    : "var(--spectrum-global-color-gray-900)"}
   text={automation.displayName}
   selected={automation._id === $selectedAutomation?._id}
   hovering={automation._id === $contextMenuStore.id}
@@ -107,9 +109,7 @@
   selectedBy={$userSelectedResourceMap[automation._id]}
   disabled={automation.disabled}
 >
-  <div class="icon">
-    <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
-  </div>
+  <Icon on:click={openContextMenu} size="S" hoverable name="MoreSmallList" />
 </NavItem>
 
 <ConfirmDialog
@@ -123,12 +123,3 @@
   This action cannot be undone.
 </ConfirmDialog>
 <UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
-
-<style>
-  div.icon {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-  }
-</style>
