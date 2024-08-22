@@ -3,6 +3,7 @@
   import { createEventDispatcher } from "svelte"
   import Tooltip from "../Tooltip/Tooltip.svelte"
   import { fade } from "svelte/transition"
+  import { hexToRGBA } from "../helpers"
 
   const dispatch = createEventDispatcher()
 
@@ -17,8 +18,21 @@
   export let fullWidth = false
   export let noPadding = false
   export let tooltip = ""
+  export let accentColor = null
 
   let showTooltip = false
+
+  $: accentStyle = getAccentStyle(accentColor)
+
+  const getAccentStyle = color => {
+    if (!color) {
+      return ""
+    }
+    let style = ""
+    style += `--accent-bg-color:${hexToRGBA(color, 0.15)};`
+    style += `--accent-border-color:${hexToRGBA(color, 0.35)};`
+    return style
+  }
 
   function longPress(element) {
     if (!longPressable) return
@@ -47,6 +61,7 @@
   on:mouseover={() => (showTooltip = true)}
   on:mouseleave={() => (showTooltip = false)}
   on:focus={() => (showTooltip = true)}
+  style={accentStyle}
 >
   <button
     use:longPress
@@ -58,6 +73,7 @@
     class="spectrum-ActionButton spectrum-ActionButton--size{size}"
     class:active
     class:disabled
+    class:accent={accentColor != null}
     {disabled}
     on:longPress
     on:click|preventDefault
@@ -137,5 +153,11 @@
     transform: translateX(-50%);
     text-align: center;
     z-index: 1;
+  }
+
+  button.accent.is-selected,
+  button:active.accent {
+    border: 1px solid var(--accent-border-color);
+    background: var(--accent-bg-color);
   }
 </style>

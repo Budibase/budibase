@@ -23,8 +23,8 @@
   $: tableId = ds?.tableId
   $: isView = ds?.type === "viewV2"
   $: fetchRowActions(tableId)
-  $: activeCount = 0
-  $: suffix = isView ? activeCount : rowActions.length
+  $: viewActiveCount = 0
+  $: activeCount = isView ? viewActiveCount : rowActions.length
 
   const rowActionUrl = derived([url, appStore], ([$url, $appStore]) => {
     return ({ automationId }) => {
@@ -62,8 +62,13 @@
 
 <DetailPopover title="Row actions" minWidth={400} maxWidth={400}>
   <svelte:fragment slot="anchor" let:open>
-    <ActionButton icon="Engagement" selected={open} quiet>
-      Row actions ({suffix})
+    <ActionButton
+      icon="Engagement"
+      selected={open || activeCount}
+      quiet
+      accentColor="#A24400"
+    >
+      Row actions ({activeCount})
     </ActionButton>
   </svelte:fragment>
   A row action is a user-triggered automation for a chosen row.

@@ -22,6 +22,7 @@
     on:click={() => (open = !open)}
     selected={open || anyRestricted}
     disabled={!$columns.length}
+    accentColor="#674D00"
   >
     {text}
   </ActionButton>
