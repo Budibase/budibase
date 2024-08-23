@@ -1073,7 +1073,7 @@
                   >
                     <CodeEditor
                       value={inputData[key]}
-                      on:change={e => {
+                      on:blur={e => {
                         // need to pass without the value inside
                         onChange({ [key]: e.detail })
                         inputData[key] = e.detail
