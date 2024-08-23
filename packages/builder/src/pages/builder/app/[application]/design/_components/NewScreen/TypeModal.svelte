@@ -7,6 +7,7 @@
   export let types
   export let onCancel = () => {}
   export let onConfirm = () => {}
+  export let showCancelButton = true
 </script>
 
 <ModalContent
@@ -17,6 +18,7 @@
   {onCancel}
   disabled={!selectedType}
   size="L"
+  {showCancelButton}
 >
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
