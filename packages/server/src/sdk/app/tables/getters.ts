@@ -171,9 +171,10 @@ export async function enrichRelationshipSchema(
         continue
       }
 
+      const isVisible = !!fieldSchema[relTableFieldName]?.visible
       const isReadonly = !!fieldSchema[relTableFieldName]?.readonly
       resultSchema[relTableFieldName] = {
-        visible: isReadonly,
+        visible: isVisible,
         readonly: isReadonly,
       }
     }
