@@ -69,7 +69,7 @@
   {/if}
   <div>
     <Button secondary icon="JourneyVoyager" on:click={generateAutomation}>
-      Generate new automation
+      Generate automation
     </Button>
   </div>
 </DetailPopover>
