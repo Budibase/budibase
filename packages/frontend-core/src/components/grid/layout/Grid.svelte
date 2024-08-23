@@ -277,7 +277,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    border-bottom: var(--cell-border);
+    border-bottom: var(--border-light);
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
     background: var(--grid-background-alt);
