@@ -3,8 +3,7 @@ export { FieldType as FieldTypes } from "@budibase/types"
 export const ActionTypes = {
   ValidateForm: "ValidateForm",
   UpdateFieldValue: "UpdateFieldValue",
-  RefreshDatasource:
-     "RefreshDatasource",
+  RefreshDatasource: "RefreshDatasource",
   AddDataProviderQueryExtension: "AddDataProviderQueryExtension",
   RemoveDataProviderQueryExtension: "RemoveDataProviderQueryExtension",
   SetDataProviderSorting: "SetDataProviderSorting",
