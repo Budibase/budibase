@@ -2533,60 +2533,65 @@ describe.each([
       tableId = table._id!
     })
 
-    it("can retrieve rows with populated relationships", async () => {
-      const otherRows = _.sampleSize(auxData, 5)
+    it.each([
+      ["get row", (rowId: string) => config.api.row.get(tableId, rowId)],
+    ])(
+      "can retrieve rows with populated relationships (via %s)",
+      async (__, retrieveDelegate) => {
+        const otherRows = _.sampleSize(auxData, 5)
 
-      const row = await config.api.row.save(tableId, {
-        title: generator.word(),
-        relWithNoSchema: [otherRows[0]],
-        relWithEmptySchema: [otherRows[1]],
-        relWithFullSchema: [otherRows[2]],
-        relWithHalfSchema: [otherRows[3]],
-        relWithIllegalSchema: [otherRows[4]],
-      })
-
-      const retrieved = await config.api.row.get(tableId, row._id!)
-      expect(retrieved).toEqual(
-        expect.objectContaining({
-          title: row.title,
-          relWithNoSchema: [
-            {
-              _id: otherRows[0]._id,
-              primaryDisplay: otherRows[0].name,
-            },
-          ],
-          relWithEmptySchema: [
-            {
-              _id: otherRows[1]._id,
-              primaryDisplay: otherRows[1].name,
-            },
-          ],
-          relWithFullSchema: [
-            {
-              _id: otherRows[2]._id,
-              primaryDisplay: otherRows[2].name,
-              name: otherRows[2].name,
-              age: otherRows[2].age,
-              id: otherRows[2].id,
-            },
-          ],
-          relWithHalfSchema: [
-            {
-              _id: otherRows[3]._id,
-              primaryDisplay: otherRows[3].name,
-              name: otherRows[3].name,
-            },
-          ],
-          relWithIllegalSchema: [
-            {
-              _id: otherRows[4]._id,
-              primaryDisplay: otherRows[4].name,
-              name: otherRows[4].name,
-            },
-          ],
+        const row = await config.api.row.save(tableId, {
+          title: generator.word(),
+          relWithNoSchema: [otherRows[0]],
+          relWithEmptySchema: [otherRows[1]],
+          relWithFullSchema: [otherRows[2]],
+          relWithHalfSchema: [otherRows[3]],
+          relWithIllegalSchema: [otherRows[4]],
         })
-      )
-    })
+
+        const retrieved = await retrieveDelegate(row._id!)
+        expect(retrieved).toEqual(
+          expect.objectContaining({
+            title: row.title,
+            relWithNoSchema: [
+              {
+                _id: otherRows[0]._id,
+                primaryDisplay: otherRows[0].name,
+              },
+            ],
+            relWithEmptySchema: [
+              {
+                _id: otherRows[1]._id,
+                primaryDisplay: otherRows[1].name,
+              },
+            ],
+            relWithFullSchema: [
+              {
+                _id: otherRows[2]._id,
+                primaryDisplay: otherRows[2].name,
+                name: otherRows[2].name,
+                age: otherRows[2].age,
+                id: otherRows[2].id,
+              },
+            ],
+            relWithHalfSchema: [
+              {
+                _id: otherRows[3]._id,
+                primaryDisplay: otherRows[3].name,
+                name: otherRows[3].name,
+              },
+            ],
+            relWithIllegalSchema: [
+              {
+                _id: otherRows[4]._id,
+                primaryDisplay: otherRows[4].name,
+                name: otherRows[4].name,
+              },
+            ],
+          })
+        )
+      }
+    )
   })
 
   describe("Formula fields", () => {
