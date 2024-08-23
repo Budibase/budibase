@@ -83,7 +83,7 @@
   {:else}
     <List>
       {#each rowActions as action}
-        <ListItem title={action.name} url={$rowActionUrl(action)}>
+        <ListItem title={action.name} url={$rowActionUrl(action)} showArrow>
           <svelte:fragment slot="right">
             {#if isView}
               <span>

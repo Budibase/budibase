@@ -1,10 +1,13 @@
 <script>
-  import { ActionButton, List, ListItem } from "@budibase/bbui"
+  import { ActionButton, List, ListItem, Button } from "@budibase/bbui"
   import DetailPopover from "components/common/DetailPopover.svelte"
   import { screenStore, appStore } from "stores/builder"
-  import { getContext } from "svelte"
+  import { getContext, createEventDispatcher } from "svelte"
 
   const { datasource } = getContext("grid")
+  const dispatch = createEventDispatcher()
+
+  let popover
 
   $: ds = $datasource
   $: resourceId = ds?.type === "table" ? ds.tableId : ds?.id
@@ -16,9 +19,14 @@
       return JSON.stringify(screen).includes(`"${resourceId}"`)
     })
   }
+
+  const generateScreen = () => {
+    popover?.hide()
+    dispatch("request-generate")
+  }
 </script>
 
-<DetailPopover title="Screens" minWidth={400}>
+<DetailPopover title="Screens" minWidth={400} bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       icon="WebPage"
@@ -38,8 +46,14 @@
         <ListItem
           title={screen.routing.route}
           url={`/builder/app/${$appStore.appId}/design/${screen._id}`}
+          showArrow
         />
       {/each}
     </List>
   {/if}
+  <div>
+    <Button secondary icon="WebPage" on:click={generateScreen}>
+      Generate app screen
+    </Button>
+  </div>
 </DetailPopover>

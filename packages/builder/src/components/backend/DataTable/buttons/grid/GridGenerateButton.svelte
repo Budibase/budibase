@@ -1,5 +1,5 @@
 <script>
-  import { ActionButton, Menu, MenuItem, notifications } from "@budibase/bbui"
+  import { ActionButton, ListItem, notifications } from "@budibase/bbui"
   import { getContext } from "svelte"
   import {
     automationStore,
@@ -13,12 +13,12 @@
   import MagicWand from "./magic-wand.svg"
   import { AutoScreenTypes } from "constants"
   import CreateScreenModal from "pages/builder/app/[application]/design/_components/NewScreen/CreateScreenModal.svelte"
+  import { getSequentialName } from "helpers/duplicate"
 
   const { datasource } = getContext("grid")
 
   let popover
   let createScreenModal
-  let isCreatingScreen
 
   $: triggers = $automationStore.blockDefinitions.CREATABLE_TRIGGER
   $: table = $tables.list.find(table => table._id === $datasource.tableId)
@@ -39,9 +39,19 @@
       return
     }
 
-    const automationName = `${table.name} : Row ${
-      type === TriggerStepID.ROW_SAVED ? "created" : "updated"
-    }`
+    const suffixMap = {
+      [TriggerStepID.ROW_SAVED]: "created",
+      [TriggerStepID.ROW_UPDATED]: "updated",
+      [TriggerStepID.ROW_DELETED]: "deleted",
+    }
+    const namePrefix = `Row ${suffixMap[type]} `
+    const automationName = getSequentialName(
+      $automationStore.automations,
+      namePrefix,
+      {
+        getName: x => x.name,
+      }
+    )
     const triggerBlock = automationStore.actions.constructBlock(
       "TRIGGER",
       triggerType.stepId,
@@ -59,10 +69,10 @@
         "/builder/app/:application/data",
         window.location.pathname
       )
-      $goto(`/builder/app/${response.appId}/automation/${response.id}`)
-      notifications.success(`Automation created`)
+      $goto(`/builder/app/${response.appId}/automation/${response._id}`)
+      notifications.success(`Automation created successfully`)
     } catch (e) {
-      console.error("Error creating automation", e)
+      console.error(e)
       notifications.error("Error creating automation")
     }
   }
@@ -79,7 +89,7 @@
   }
 </script>
 
-<DetailPopover title="Generate" bind:this={popover}>
+<DetailPopover title="Generate" bind:this={popover} minWidth={400}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton selected={open}>
       <div class="center">
@@ -88,60 +98,94 @@
       </div>
     </ActionButton>
   </svelte:fragment>
-  <div class="menu">
-    <Menu>
-      <MenuItem
-        icon="ShareAndroid"
-        on:click={() => {
-          open = false
-          createAutomation(TriggerStepID.ROW_SAVED)
-        }}
-      >
-        Automation: when row is created
-      </MenuItem>
-      <MenuItem
-        icon="ShareAndroid"
-        on:click={() => {
-          open = false
-          createAutomation(TriggerStepID.ROW_UPDATED)
-        }}
-      >
-        Automation: when row is updated
-      </MenuItem>
-      <MenuItem
-        icon="WebPage"
-        on:click={() => {
-          open = false
-          startScreenWizard(AutoScreenTypes.TABLE)
-        }}
-      >
-        CRUD app
-      </MenuItem>
-      <MenuItem
-        icon="WebPage"
-        on:click={() => {
-          open = false
-          startScreenWizard(AutoScreenTypes.FORM)
-        }}
-      >
-        Form
-      </MenuItem>
-    </Menu>
+
+  {#if $datasource.type === "table"}
+    Generate a new app screen or automation from this data.
+  {:else}
+    Generate a new app screen from this data.
+  {/if}
+
+  <div class="generate-section">
+    <div class="generate-section__title">App screens</div>
+    <div class="generate-section__options">
+      <div>
+        <ListItem
+          title="CRUD app"
+          icon="TableEdit"
+          hoverable
+          on:click={() => startScreenWizard(AutoScreenTypes.TABLE)}
+          iconColor="var(--spectrum-global-color-gray-600)"
+        />
+      </div>
+      <div>
+        <ListItem
+          title="Form"
+          icon="Form"
+          hoverable
+          on:click={() => startScreenWizard(AutoScreenTypes.FORM)}
+          iconColor="var(--spectrum-global-color-gray-600)"
+        />
+      </div>
+    </div>
   </div>
+
+  {#if $datasource.type === "table"}
+    <div class="generate-section">
+      <div class="generate-section__title">Automation triggers (When a...)</div>
+      <div class="generate-section__options">
+        <div>
+          <ListItem
+            title="Row is created"
+            icon="TableRowAddBottom"
+            hoverable
+            on:click={() => createAutomation(TriggerStepID.ROW_SAVED)}
+            iconColor="var(--spectrum-global-color-gray-600)"
+          />
+        </div>
+        <div>
+          <ListItem
+            title="Row is updated"
+            icon="Refresh"
+            hoverable
+            on:click={() => createAutomation(TriggerStepID.ROW_UPDATED)}
+            iconColor="var(--spectrum-global-color-gray-600)"
+          />
+        </div>
+        <div>
+          <ListItem
+            title="Row is deleted"
+            icon="TableRowRemoveCenter"
+            hoverable
+            on:click={() => createAutomation(TriggerStepID.ROW_DELETED)}
+            iconColor="var(--spectrum-global-color-gray-600)"
+          />
+        </div>
+      </div>
+    </div>
+  {/if}
 </DetailPopover>
 
 <CreateScreenModal bind:this={createScreenModal} />
 
 <style>
-  .menu {
-    margin: 0 calc(-1 * var(--spacing-xl));
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-  }
   .center {
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .generate-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .generate-section__title {
+    color: var(--spectrum-global-color-gray-600);
+  }
+  .generate-section__options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-column-gap: 16px;
+    grid-row-gap: 8px;
   }
 </style>

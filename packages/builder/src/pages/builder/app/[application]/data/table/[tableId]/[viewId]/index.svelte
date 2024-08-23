@@ -12,7 +12,8 @@
   import GridGenerateButton from "components/backend/DataTable/buttons/grid/GridGenerateButton.svelte"
   import GridScreensButton from "components/backend/DataTable/buttons/grid/GridScreensButton.svelte"
   import GridRowActionsButton from "components/backend/DataTable/buttons/grid/GridRowActionsButton.svelte"
-  import GridAutomationsButton from "components/backend/DataTable/buttons/grid/GridAutomationsButton.svelte"
+
+  let generateButton
 
   $: id = $viewsV2.selected?.id
   $: datasource = {
@@ -43,10 +44,10 @@
     <GridColumnsSettingButton />
     <GridManageAccessButton />
     <GridRowActionsButton />
-    <GridScreensButton />
+    <GridScreensButton on:request-generate={() => generateButton?.show()} />
   </svelte:fragment>
   <svelte:fragment slot="controls-right">
-    <GridGenerateButton />
+    <GridGenerateButton bind:this={generateButton} />
   </svelte:fragment>
   <GridCreateEditRowModal />
 </Grid>
