@@ -34,7 +34,7 @@
     "dist"
   ],
   "dependencies": {
-    "@adobe/spectrum-css-workflow-icons": "3.0.0",
+    "@adobe/spectrum-css-workflow-icons": "1.2.1",
     "@budibase/shared-core": "0.0.0",
     "@budibase/string-templates": "0.0.0",
     "@spectrum-css/accordion": "3.0.24",
