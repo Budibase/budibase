@@ -147,7 +147,7 @@ export async function sqlOutputProcessing(
       row._id = rowId
     }
     // this is a relationship of some sort
-    if (finalRows[rowId]) {
+    if (!opts?.sqs && finalRows[rowId]) {
       finalRows = await updateRelationshipColumns(
         table,
         tables,
@@ -174,14 +174,16 @@ export async function sqlOutputProcessing(
     finalRows[thisRow._id] = fixBooleanFields({ row: thisRow, table })
 
     // do this at end once its been added to the final rows
-    finalRows = await updateRelationshipColumns(
-      table,
-      tables,
-      row,
-      finalRows,
-      relationships,
-      opts
-    )
+    if (!opts?.sqs) {
+      finalRows = await updateRelationshipColumns(
+        table,
+        tables,
+        row,
+        finalRows,
+        relationships,
+        opts
+      )
+    }
   }
 
   // make sure all related rows are correct
