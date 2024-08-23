@@ -45,6 +45,7 @@ import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import env from "../../../environment"
 import { makeExternalQuery } from "../../../integrations/base/query"
+import { dataFilters } from "@budibase/shared-core"
 
 export interface ManyRelationship {
   tableId?: string
@@ -195,29 +196,33 @@ export class ExternalRequest<T extends Operation> {
     if (filters) {
       // need to map over the filters and make sure the _id field isn't present
       let prefix = 1
-      for (const [operatorType, operator] of Object.entries(filters)) {
-        const isArrayOp = sdk.rows.utils.isArrayFilter(operatorType)
-        for (const field of Object.keys(operator || {})) {
-          if (dbCore.removeKeyNumbering(field) === "_id") {
-            if (primary) {
-              const parts = breakRowIdField(operator[field])
-              if (primary.length > 1 && isArrayOp) {
-                operator[InternalSearchFilterOperator.COMPLEX_ID_OPERATOR] = {
-                  id: primary,
-                  values: parts[0],
+      const checkFilters = (innerFilters: SearchFilters): SearchFilters => {
+        for (const [operatorType, operator] of Object.entries(innerFilters)) {
+          const isArrayOp = sdk.rows.utils.isArrayFilter(operatorType)
+          for (const field of Object.keys(operator || {})) {
+            if (dbCore.removeKeyNumbering(field) === "_id") {
+              if (primary) {
+                const parts = breakRowIdField(operator[field])
+                if (primary.length > 1 && isArrayOp) {
+                  operator[InternalSearchFilterOperator.COMPLEX_ID_OPERATOR] = {
+                    id: primary,
+                    values: parts[0],
+                  }
+                } else {
+                  for (let field of primary) {
+                    operator[`${prefix}:${field}`] = parts.shift()
+                  }
+                  prefix++
                 }
-              } else {
-                for (let field of primary) {
-                  operator[`${prefix}:${field}`] = parts.shift()
-                }
-                prefix++
               }
+              // make sure this field doesn't exist on any filter
+              delete operator[field]
             }
-            // make sure this field doesn't exist on any filter
-            delete operator[field]
           }
         }
+        return dataFilters.recurseLogicalOperators(innerFilters, checkFilters)
       }
+      checkFilters(filters)
     }
     // there is no id, just use the user provided filters
     if (!idCopy || !table) {
