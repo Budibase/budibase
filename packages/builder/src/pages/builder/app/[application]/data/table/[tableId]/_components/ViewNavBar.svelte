@@ -48,17 +48,27 @@
   $: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
   $: tableSelectedBy = $userSelectedResourceMap[table?._id]
   $: tableEditable = table?._id !== TableNames.USERS
-  $: activeId = $params.viewId ?? $params.tableId
+  $: activeId = $params.viewName ?? $params.viewId ?? $params.tableId
   $: views = Object.values(table?.views || {})
     .filter(x => x.version === 2)
     .slice()
     .sort(alphabetical)
+  $: v1Views = Object.values(table?.views || {})
+    .filter(x => x.version !== 2)
+    .slice()
+    .sort(alphabetical)
   $: setUpObserver(views)
+  $: hasViews = v1Views.length || views.length
+
   $: overflowedViews = views.filter(view => !viewVisibiltyMap[view.id])
   $: viewHidden = viewVisibiltyMap[activeId] === false
 
   const viewUrl = derived([url, params], ([$url, $params]) => viewId => {
     return $url(`../${$params.tableId}/${encodeURIComponent(viewId)}`)
+  })
+
+  const viewV1Url = derived([url, params], ([$url, $params]) => viewName => {
+    return $url(`../${$params.tableId}/v1/${encodeURIComponent(viewName)}`)
   })
 
   const tableUrl = derived(url, $url => tableId => $url(`../${tableId}`))
@@ -176,8 +186,8 @@
 
 <div class="nav">
   <IntegrationIcon
-    integrationType={datasource.source}
-    schema={datasource.schema}
+    integrationType={datasource?.source}
+    schema={datasource?.schema}
     size="24"
   />
   <a
@@ -202,8 +212,32 @@
       />
     {/if}
   </a>
-  {#if views.length}
+  {#if hasViews}
     <div class="nav__views" bind:this={viewContainer}>
+      {#each v1Views as view (view.name)}
+        {@const selectedBy = $userSelectedResourceMap[view.name]}
+        <a
+          href={$viewV1Url(view.name)}
+          class="nav-item"
+          class:active={view.name === activeId}
+          on:contextmenu={e => openViewContextMenu(e, view)}
+          data-id={view.name}
+        >
+          <div class="nav-item__title">
+            {view.name}
+          </div>
+          {#if selectedBy}
+            <UserAvatars size="XS" users={selectedBy} />
+          {/if}
+          <Icon
+            on:click={e => openViewContextMenu(e, view)}
+            hoverable
+            name="MoreSmallList"
+            color="var(--spectrum-global-color-gray-600)"
+            hoverColor="var(--spectrum-global-color-gray-900)"
+          />
+        </a>
+      {/each}
       {#each views as view (view.id)}
         {@const selectedBy = $userSelectedResourceMap[view.id]}
         <a
@@ -231,7 +265,7 @@
       {/each}
     </div>
   {/if}
-  {#if !views.length && tableEditable}
+  {#if !hasViews && tableEditable}
     <Button cta on:click={createViewModal?.show}>Create a view</Button>
     <span>
       To create subsets of data, control access and more, create a view.
@@ -274,7 +308,7 @@
       {/each}
     </ActionMenu>
   {/if}
-  {#if views.length}
+  {#if hasViews}
     <Icon
       name="Add"
       size="L"
