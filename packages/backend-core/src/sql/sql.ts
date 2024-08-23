@@ -761,8 +761,17 @@ class InternalBuilder {
     const { resource, tableAliases: aliases, endpoint } = this.query
     const fields = resource?.fields || []
     const jsonField = (field: string) => {
-      const unAliased = field.split(".").slice(1).join(".")
-      return `'${unAliased}',${field}`
+      const parts = field.split(".")
+      let tableField: string, unaliased: string
+      if (parts.length > 1) {
+        const alias = parts.shift()!
+        unaliased = parts.join(".")
+        tableField = `${this.quote(alias)}.${this.quote(unaliased)}`
+      } else {
+        unaliased = parts.join(".")
+        tableField = this.quote(unaliased)
+      }
+      return `'${unaliased}',${tableField}`
     }
     for (let relationship of relationships) {
       const {
