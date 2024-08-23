@@ -268,8 +268,8 @@
   {/if}
   {#if overflowedViews.length}
     <ActionMenu align="right" bind:this={overflowMenu}>
-      <div slot="control">
-        <ActionButton icon="ChevronDown" quiet selected={viewHidden}>
+      <div slot="control" let:open>
+        <ActionButton icon="ChevronDown" quiet selected={open || viewHidden}>
           {overflowedViews.length} more
         </ActionButton>
       </div>

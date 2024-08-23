@@ -15,6 +15,7 @@
   let anchor
   let dropdown
   let timeout
+  let open
 
   // This is needed because display: contents is considered "invisible".
   // It should only ever be an action button, so should be fine.
@@ -63,10 +64,11 @@
   on:mouseenter={openOnHover ? show : null}
   on:mouseleave={openOnHover ? queueHide : null}
 >
-  <slot name="control" />
+  <slot name="control" {open} />
 </div>
 <Popover
   bind:this={dropdown}
+  bind:open
   {anchor}
   {align}
   {portalTarget}
