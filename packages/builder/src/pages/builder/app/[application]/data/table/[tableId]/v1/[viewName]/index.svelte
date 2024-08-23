@@ -57,29 +57,34 @@
   }
 </script>
 
-{#if view}
-  <Table
-    title={decodeURI(name)}
-    {schema}
-    tableId={view.tableId}
-    {data}
-    {loading}
-    rowCount={10}
-    allowEditing={false}
-    bind:hideAutocolumns
-  >
-    <ViewFilterButton {view} />
-    <CalculateButton {view} />
-    {#if view.calculation}
-      <GroupByButton {view} />
-    {/if}
-    <ManageAccessButton resourceId={decodeURI(name)} />
-    <HideAutocolumnButton bind:hideAutocolumns />
-    <ExportButton view={view.name} formats={supportedFormats} />
-  </Table>
-{:else}<i>Create your first table to start building</i>{/if}
+<div class="view-v1">
+  {#if view}
+    <Table
+      title={decodeURI(name)}
+      {schema}
+      tableId={view.tableId}
+      {data}
+      {loading}
+      rowCount={10}
+      allowEditing={false}
+      bind:hideAutocolumns
+    >
+      <ViewFilterButton {view} />
+      <CalculateButton {view} />
+      {#if view.calculation}
+        <GroupByButton {view} />
+      {/if}
+      <ManageAccessButton resourceId={decodeURI(name)} />
+      <HideAutocolumnButton bind:hideAutocolumns />
+      <ExportButton view={view.name} formats={supportedFormats} />
+    </Table>
+  {:else}<i>Create your first table to start building</i>{/if}
+</div>
 
 <style>
+  .view-v1 {
+    padding: var(--spacing-xl);
+  }
   i {
     font-size: var(--font-size-m);
     color: var(--grey-4);
