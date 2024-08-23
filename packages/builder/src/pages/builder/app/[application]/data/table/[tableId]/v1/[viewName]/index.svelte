@@ -17,9 +17,9 @@
   let loading = false
 
   $: view = $views.selected
-  $: name = view.name
-  $: schema = view.schema
-  $: calculation = view.calculation
+  $: name = view?.name
+  $: schema = view?.schema
+  $: calculation = view?.calculation
   $: supportedFormats = Object.values(ROW_EXPORT_FORMATS).filter(key => {
     if (calculation && key === ROW_EXPORT_FORMATS.JSON_WITH_SCHEMA) {
       return false
@@ -28,7 +28,7 @@
   })
 
   // Fetch rows for specified view
-  $: fetchViewData(name, view.field, view.groupBy, view.calculation)
+  $: fetchViewData(name, view?.field, view?.groupBy, view?.calculation)
 
   async function fetchViewData(name, field, groupBy, calculation) {
     loading = true
