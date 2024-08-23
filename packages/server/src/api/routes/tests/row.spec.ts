@@ -2535,6 +2535,36 @@ describe.each([
 
     it.each([
       ["get row", (rowId: string) => config.api.row.get(tableId, rowId)],
+      [
+        "fetch",
+        async (rowId: string) => {
+          const rows = await config.api.row.fetch(tableId)
+          return rows.find(r => r._id === rowId)
+        },
+      ],
+      [
+        "search",
+        async (rowId: string) => {
+          const { rows } = await config.api.row.search(tableId)
+          return rows.find(r => r._id === rowId)
+        },
+      ],
+      [
+        "from view",
+        async (rowId: string) => {
+          const table = await config.api.table.get(tableId)
+          const view = await config.api.viewV2.create({
+            name: generator.guid(),
+            tableId,
+            schema: Object.keys(table.schema).reduce(
+              (acc, c) => ({ ...acc, [c]: { visible: true } }),
+              {}
+            ),
+          })
+          const { rows } = await config.api.viewV2.search(view.id)
+          return rows.find(r => r._id === rowId)
+        },
+      ],
     ])(
       "can retrieve rows with populated relationships (via %s)",
       async (__, retrieveDelegate) => {
