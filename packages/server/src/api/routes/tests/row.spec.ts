@@ -2554,6 +2554,8 @@ describe.each([
       tableId = table._id!
     })
 
+    // Upserting isn't yet supported in MSSQL or Oracle, see:
+    //   https://github.com/knex/knex/pull/6050
     !isMSSQL &&
       !isOracle &&
       it.each([
