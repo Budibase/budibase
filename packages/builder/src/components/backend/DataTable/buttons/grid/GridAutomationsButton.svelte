@@ -34,7 +34,7 @@
 
   const generateAutomation = () => {
     popover?.hide()
-    dispatch("generate-automation")
+    dispatch("request-generate")
   }
 </script>
 
@@ -62,6 +62,7 @@
             : "var(--spectrum-global-color-green-600)"}
           title={automation.name}
           url={`/builder/app/${$appStore.appId}/automation/${automation._id}`}
+          showArrow
         />
       {/each}
     </List>

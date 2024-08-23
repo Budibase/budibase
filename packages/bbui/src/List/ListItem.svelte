@@ -6,11 +6,18 @@
   export let title = null
   export let subtitle = null
   export let url = null
+  export let hoverable = false
+  export let showArrow = false
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<a href={url} class="list-item" class:hoverable={url != null} on:click>
+<a
+  href={url}
+  class="list-item"
+  class:hoverable={hoverable || url != null}
+  on:click
+>
   <div class="left">
     {#if icon}
       <Icon name={icon} color={iconColor} />
@@ -30,7 +37,9 @@
   </div>
   <div class="right">
     <slot name="right" />
-    <Icon name="ChevronRight" />
+    {#if showArrow}
+      <Icon name="ChevronRight" />
+    {/if}
   </div>
 </a>
 

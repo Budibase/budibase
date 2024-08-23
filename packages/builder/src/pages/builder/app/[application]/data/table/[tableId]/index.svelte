@@ -120,9 +120,9 @@
         <GridRowActionsButton />
       {/if}
       <GridAutomationsButton
-        on:generate-automation={() => generateButton?.show()}
+        on:request-generate={() => generateButton?.show()}
       />
-      <GridScreensButton />
+      <GridScreensButton on:request-generate={() => generateButton?.show()} />
       {#if !isUsersTable}
         <GridImportButton />
       {/if}
