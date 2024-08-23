@@ -39,6 +39,7 @@ import { dataFilters, helpers } from "@budibase/shared-core"
 import { cloneDeep } from "lodash"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
+const MAX_SQS_RELATIONSHIP_FIELDS = 63
 
 function getBaseLimit() {
   const envLimit = environment.SQL_MAX_ROWS
@@ -800,9 +801,15 @@ class InternalBuilder {
         alias: throughAlias,
         schema: endpoint.schema,
       })
-      const relationshipFields = fields.filter(
+      let relationshipFields = fields.filter(
         field => field.split(".")[0] === toAlias
       )
+      if (this.client === SqlClient.SQL_LITE) {
+        relationshipFields = relationshipFields.slice(
+          0,
+          MAX_SQS_RELATIONSHIP_FIELDS
+        )
+      }
       const fieldList: string = relationshipFields
         .map(field => jsonField(field))
         .join(",")
