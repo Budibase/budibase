@@ -48,7 +48,9 @@
   $: datasource = $datasources.list.find(ds => ds._id === table?.sourceId)
   $: tableSelectedBy = $userSelectedResourceMap[table?._id]
   $: tableEditable = table?._id !== TableNames.USERS
-  $: activeId = $params.viewName ?? $params.viewId ?? $params.tableId
+  $: activeId = decodeURIComponent(
+    $params.viewName ?? $params.viewId ?? $params.tableId
+  )
   $: views = Object.values(table?.views || {})
     .filter(x => x.version === 2)
     .slice()
