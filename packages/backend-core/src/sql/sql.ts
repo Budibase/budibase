@@ -126,10 +126,18 @@ class InternalBuilder {
   }
 
   private generateSelectStatement(): (string | Knex.Raw)[] | "*" {
-    const { resource, meta } = this.query
+    const { endpoint, resource, meta, tableAliases } = this.query
 
     if (!resource || !resource.fields || resource.fields.length === 0) {
       return "*"
+    }
+
+    // no relationships - select everything in SQLite
+    if (this.client === SqlClient.SQL_LITE) {
+      const alias = tableAliases?.[endpoint.entityId]
+        ? tableAliases?.[endpoint.entityId]
+        : endpoint.entityId
+      return [this.knex.raw(`${this.quote(alias)}.*`)]
     }
 
     const schema = meta.table.schema
@@ -745,16 +753,83 @@ class InternalBuilder {
     return withSchema
   }
 
+  addJsonRelationships(
+    query: Knex.QueryBuilder,
+    fromTable: string,
+    relationships: RelationshipsJson[]
+  ): Knex.QueryBuilder {
+    const { resource, tableAliases: aliases, endpoint } = this.query
+    const fields = resource?.fields || []
+    const jsonField = (field: string) => {
+      const unAliased = field.split(".").slice(1).join(".")
+      return `'${unAliased}',${field}`
+    }
+    for (let relationship of relationships) {
+      const {
+        tableName: toTable,
+        through: throughTable,
+        to: toKey,
+        from: fromKey,
+        fromPrimary,
+        toPrimary,
+      } = relationship
+      // skip invalid relationships
+      if (!toTable || !fromTable || !fromPrimary || !toPrimary) {
+        continue
+      }
+      if (!throughTable) {
+        throw new Error("Only many-to-many implemented for JSON relationships")
+      }
+      const toAlias = aliases?.[toTable] || toTable,
+        throughAlias = aliases?.[throughTable] || throughTable,
+        fromAlias = aliases?.[fromTable] || fromTable
+      let toTableWithSchema = this.tableNameWithSchema(toTable, {
+        alias: toAlias,
+        schema: endpoint.schema,
+      })
+      let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
+        alias: throughAlias,
+        schema: endpoint.schema,
+      })
+      const relationshipFields = fields.filter(
+        field => field.split(".")[0] === toAlias
+      )
+      const fieldList: string = relationshipFields
+        .map(field => jsonField(field))
+        .join(",")
+      let rawJsonArray: Knex.Raw
+      switch (this.client) {
+        case SqlClient.SQL_LITE:
+          rawJsonArray = this.knex.raw(
+            `json_group_array(json_object(${fieldList}))`
+          )
+          break
+        default:
+          throw new Error(`JSON relationships not implement for ${this.client}`)
+      }
+      const subQuery = this.knex
+        .select(rawJsonArray)
+        .from(toTableWithSchema)
+        .join(throughTableWithSchema, function () {
+          this.on(`${toAlias}.${toPrimary}`, "=", `${throughAlias}.${toKey}`)
+        })
+        .where(
+          `${throughAlias}.${fromKey}`,
+          "=",
+          this.knex.raw(this.quotedIdentifier(`${fromAlias}.${fromPrimary}`))
+        )
+      query = query.select({ [relationship.column]: subQuery })
+    }
+    return query
+  }
+
   addRelationships(
     query: Knex.QueryBuilder,
     fromTable: string,
-    relationships: RelationshipsJson[] | undefined,
-    schema: string | undefined,
+    relationships: RelationshipsJson[],
+    schema?: string,
     aliases?: Record<string, string>
   ): Knex.QueryBuilder {
-    if (!relationships) {
-      return query
-    }
     const tableSets: Record<string, [RelationshipsJson]> = {}
     // aggregate into table sets (all the same to tables)
     for (let relationship of relationships) {
@@ -957,42 +1032,27 @@ class InternalBuilder {
       if (foundOffset != null) {
         query = query.offset(foundOffset)
       }
-      // add sorting to pre-query
-      // no point in sorting when counting
-      query = this.addSorting(query)
     }
-    // add filters to the query (where)
-    query = this.addFilters(query, filters)
 
-    const alias = tableAliases?.[tableName] || tableName
-    let preQuery: Knex.QueryBuilder = this.knex({
-      // the typescript definition for the knex constructor doesn't support this
-      // syntax, but it is the only way to alias a pre-query result as part of
-      // a query - there is an alias dictionary type, but it assumes it can only
-      // be a table name, not a pre-query
-      [alias]: query as any,
-    })
     // if counting, use distinct count, else select
-    preQuery = !counting
-      ? preQuery.select(this.generateSelectStatement())
-      : this.addDistinctCount(preQuery)
+    query = !counting
+      ? query.select(this.generateSelectStatement())
+      : this.addDistinctCount(query)
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClient.MS_SQL && !counting) {
-      preQuery = this.addSorting(preQuery)
+      query = this.addSorting(query)
     }
     // handle joins
-    query = this.addRelationships(
-      preQuery,
-      tableName,
-      relationships,
-      endpoint.schema,
-      tableAliases
-    )
-
-    // add a base limit over the whole query
-    // if counting we can't set this limit
-    if (limits?.base) {
-      query = query.limit(limits.base)
+    if (relationships && this.client === SqlClient.SQL_LITE) {
+      query = this.addJsonRelationships(query, tableName, relationships)
+    } else if (relationships) {
+      query = this.addRelationships(
+        query,
+        tableName,
+        relationships,
+        endpoint.schema,
+        tableAliases
+      )
     }
 
     return this.addFilters(query, filters, { relationship: true })
