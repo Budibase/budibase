@@ -2534,24 +2534,24 @@ describe.each([
     })
 
     it.each([
-      ["get row", (rowId: string) => config.api.row.get(tableId, rowId)],
+      ["get row", (row: Row) => config.api.row.get(tableId, row._id!)],
       [
         "fetch",
-        async (rowId: string) => {
+        async (row: Row) => {
           const rows = await config.api.row.fetch(tableId)
-          return rows.find(r => r._id === rowId)
+          return rows.find(r => r._id === row._id)
         },
       ],
       [
         "search",
-        async (rowId: string) => {
+        async (row: Row) => {
           const { rows } = await config.api.row.search(tableId)
-          return rows.find(r => r._id === rowId)
+          return rows.find(r => r._id === row._id)
         },
       ],
       [
         "from view",
-        async (rowId: string) => {
+        async (row: Row) => {
           const table = await config.api.table.get(tableId)
           const view = await config.api.viewV2.create({
             name: generator.guid(),
@@ -2562,9 +2562,10 @@ describe.each([
             ),
           })
           const { rows } = await config.api.viewV2.search(view.id)
-          return rows.find(r => r._id === rowId)
+          return rows.find(r => r._id === row._id!)
         },
       ],
+      ["from original saved row", (row: Row) => row],
     ])(
       "can retrieve rows with populated relationships (via %s)",
       async (__, retrieveDelegate) => {
@@ -2579,7 +2580,7 @@ describe.each([
           relWithIllegalSchema: [otherRows[4]],
         })
 
-        const retrieved = await retrieveDelegate(row._id!)
+        const retrieved = await retrieveDelegate(row)
         expect(retrieved).toEqual(
           expect.objectContaining({
             title: row.title,
