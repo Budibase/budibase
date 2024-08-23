@@ -89,7 +89,7 @@
   }
 </script>
 
-<DetailPopover title="Generate" bind:this={popover} minWidth={400}>
+<DetailPopover title="Generate" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton selected={open}>
       <div class="center">

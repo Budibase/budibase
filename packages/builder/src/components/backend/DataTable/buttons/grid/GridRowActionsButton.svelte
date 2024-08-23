@@ -60,7 +60,7 @@
   }
 </script>
 
-<DetailPopover title="Row actions" minWidth={400} maxWidth={400}>
+<DetailPopover title="Row actions">
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       icon="Engagement"

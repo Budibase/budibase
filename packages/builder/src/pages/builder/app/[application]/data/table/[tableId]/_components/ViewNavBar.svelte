@@ -26,6 +26,7 @@
   import CreateViewModal from "./CreateViewModal.svelte"
   import { onDestroy } from "svelte"
   import { derived } from "svelte/store"
+  import CreateViewButton from "./CreateViewButton.svelte"
 
   // View overflow
   let observer
@@ -34,7 +35,6 @@
   let overflowMenu
 
   // Editing table
-  let createViewModal
   let editTableModal
   let deleteTableModal
 
@@ -268,7 +268,7 @@
     </div>
   {/if}
   {#if !hasViews && tableEditable}
-    <Button cta on:click={createViewModal?.show}>Create a view</Button>
+    <CreateViewButton firstView {table} />
     <span>
       To create subsets of data, control access and more, create a view.
     </span>
@@ -311,19 +311,11 @@
     </ActionMenu>
   {/if}
   {#if hasViews}
-    <Icon
-      name="Add"
-      size="L"
-      hoverable
-      color="var(--spectrum-global-color-gray-600)"
-      hoverColor="var(--spectrum-global-color-gray-900)"
-      on:click={createViewModal?.show}
-    />
+    <CreateViewButton firstView={false} {table} />
   {/if}
 </div>
 
 {#if table && tableEditable}
-  <CreateViewModal {table} bind:this={createViewModal} />
   <EditTableModal {table} bind:this={editTableModal} />
   <DeleteTableModal {table} bind:this={deleteTableModal} />
 {/if}
@@ -343,7 +335,7 @@
     justify-content: flex-start;
     align-items: center;
     padding: 0 var(--spacing-xl);
-    gap: 12px;
+    gap: 8px;
   }
   .nav__views {
     flex: 0 1 auto;
@@ -353,7 +345,6 @@
     align-items: center;
     overflow: hidden;
     gap: 8px;
-    margin-left: -4px;
   }
 
   /* Table and view items */

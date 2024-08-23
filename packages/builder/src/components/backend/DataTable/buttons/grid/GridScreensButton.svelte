@@ -26,7 +26,7 @@
   }
 </script>
 
-<DetailPopover title="Screens" minWidth={400} bind:this={popover}>
+<DetailPopover title="Screens" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       icon="WebPage"

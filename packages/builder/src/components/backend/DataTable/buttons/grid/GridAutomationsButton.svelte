@@ -38,7 +38,7 @@
   }
 </script>
 
-<DetailPopover title="Automations" minWidth={400} bind:this={popover}>
+<DetailPopover title="Automations" bind:this={popover}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       icon="JourneyVoyager"
