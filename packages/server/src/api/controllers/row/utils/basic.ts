@@ -1,5 +1,5 @@
 // need to handle table name + field or just field, depending on if relationships used
-import { FieldType, Row, Table } from "@budibase/types"
+import { FieldSchema, FieldType, Row, Table } from "@budibase/types"
 import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 import { generateRowIdField } from "../../../../integrations/utils"
 
@@ -82,7 +82,7 @@ export function basicProcessing({
       value = value.toString()
     }
     // all responses include "select col as table.col" so that overlaps are handled
-    if (value != null) {
+    else if (value != null) {
       thisRow[fieldName] = value
     }
   }
@@ -93,12 +93,17 @@ export function basicProcessing({
   } else {
     const columns = Object.keys(table.schema)
     for (let internalColumn of [...PROTECTED_INTERNAL_COLUMNS, ...columns]) {
-      thisRow[internalColumn] = extractFieldValue({
+      const schema: FieldSchema | undefined = table.schema[internalColumn]
+      let value = extractFieldValue({
         row,
         tableName: table._id!,
         fieldName: internalColumn,
         isLinked,
       })
+      if (sqs && schema?.type === FieldType.LINK && typeof value === "string") {
+        value = JSON.parse(value)
+      }
+      thisRow[internalColumn] = value
     }
   }
   return thisRow
