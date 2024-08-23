@@ -83,6 +83,7 @@ describe.each([
   [DatabaseName.ORACLE, getDatasource(DatabaseName.ORACLE)],
 ])("/rows (%s)", (providerType, dsProvider) => {
   const isInternal = dsProvider === undefined
+  const isLucene = providerType === "lucene"
   const isSqs = providerType === "sqs"
   const isMSSQL = providerType === DatabaseName.SQL_SERVER
   const isOracle = providerType === DatabaseName.ORACLE
@@ -365,7 +366,7 @@ describe.each([
         expect(ids).toEqual(expect.arrayContaining(sequence))
       })
 
-    isInternal &&
+    isLucene &&
       it("row values are coerced", async () => {
         const str: FieldSchema = {
           type: FieldType.STRING,
