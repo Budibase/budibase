@@ -35,6 +35,9 @@
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
   $: {
+    // Disable pointer events for the initial part of the animation, because we
+    // fly from top to bottom and initially can be positioned under the cursor,
+    // causing a flashing hover state in the content
     if (open && animate) {
       blockPointerEvents = true
       clearTimeout(timeout)
