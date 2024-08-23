@@ -88,16 +88,15 @@
     display: grid;
     place-items: center;
     transition: background 130ms ease-out;
+    cursor: pointer;
   }
-  .icon:hover,
   .icon:active,
   .icon.open {
     background: var(--spectrum-global-color-gray-300);
-    cursor: pointer;
   }
-  .icon:hover :global(.spectrum-Icon),
-  .icon:active :global(.spectrum-Icon),
-  .icon.open :global(.spectrum-Icon) {
+  .icon:hover :global(svg),
+  .icon:active :global(svg),
+  .icon.open :global(svg) {
     color: var(--spectrum-global-color-gray-900) !important;
   }
 </style>
