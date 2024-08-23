@@ -140,7 +140,6 @@
           }
         : undefined,
     })
-    dispatch("insert", editor.state.doc.toString())
   }
 
   // Match decoration for HBS bindings

@@ -1078,13 +1078,8 @@
                   >
                     <CodeEditor
                       value={inputData[key]}
-                      on:blur={e => {
+                      on:change={e => {
                         // need to pass without the value inside
-                        inputData[key] = e.detail
-                      }}
-                      on:insert={e => {
-                        // Blur events only happen once after inserting a binding
-                        // State will now update on insert
                         inputData[key] = e.detail
                       }}
                       completions={stepCompletions}
