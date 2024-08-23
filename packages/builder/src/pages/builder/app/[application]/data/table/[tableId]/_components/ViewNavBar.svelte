@@ -13,11 +13,10 @@
   import EditTableModal from "components/backend/TableNavigator/TableNavItem/EditModal.svelte"
   import DeleteTableModal from "components/backend/TableNavigator/TableNavItem/DeleteConfirmationModal.svelte"
   import { UserAvatars } from "@budibase/frontend-core"
-  import { tick } from "svelte"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
   import { TableNames } from "constants"
   import { alphabetical } from "components/backend/TableNavigator/utils"
-  import { onDestroy } from "svelte"
+  import { tick, onDestroy } from "svelte"
   import { derived } from "svelte/store"
   import CreateViewButton from "./CreateViewButton.svelte"
 
