@@ -6,13 +6,7 @@
     contextMenuStore,
   } from "stores/builder"
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
-  import {
-    Icon,
-    Button,
-    ActionButton,
-    ActionMenu,
-    MenuItem,
-  } from "@budibase/bbui"
+  import { Icon, ActionButton, ActionMenu, MenuItem } from "@budibase/bbui"
   import { params, url } from "@roxi/routify"
   import EditViewModal from "./EditViewModal.svelte"
   import DeleteViewModal from "./DeleteViewModal.svelte"
@@ -23,7 +17,6 @@
   import { DB_TYPE_EXTERNAL } from "constants/backend"
   import { TableNames } from "constants"
   import { alphabetical } from "components/backend/TableNavigator/utils"
-  import CreateViewModal from "./CreateViewModal.svelte"
   import { onDestroy } from "svelte"
   import { derived } from "svelte/store"
   import CreateViewButton from "./CreateViewButton.svelte"
